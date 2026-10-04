@@ -8912,6 +8912,12 @@ abstract class AppLocalizations {
   /// **'PHOTOS DU COLIS (OPTIONNEL)'**
   String get bidCreatePhotosSectionLabel;
 
+  /// Titre de la section description quand seuls des articles de la grille sont choisis : la description devient facultative (FLUTTER-B7)
+  ///
+  /// In fr, this message translates to:
+  /// **'DESCRIPTION (OPTIONNELLE)'**
+  String get bidCreateDescriptionSectionLabelOptional;
+
   /// Titre de la section description du formulaire d'offre (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -9107,7 +9113,7 @@ abstract class AppLocalizations {
   /// Sous-titre du choix de paiement mobile money, noms de marque (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Orange Money, Wave, MTN'**
+  /// **'Orange Money, MTN, Moov'**
   String get bidCreateMobileMoneySubtitle;
 
   /// Sous-titre du choix de paiement en espèces (create_bid_bottom_sheet.dart)
@@ -15632,7 +15638,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la tuile mobile money : noms de marques, identique fr/en (wallet_topup_method_screen.dart _mobileMoneyMethod).
   ///
   /// In fr, this message translates to:
-  /// **'Orange Money, Wave, MTN MoMo'**
+  /// **'Orange Money, MTN MoMo, Moov'**
   String get walletTopupMethodMobileMoneySubtitle;
 
   /// Titre de l'écran de choix de méthode de recharge (wallet_topup_method_screen.dart).
@@ -17876,7 +17882,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la tuile « Versement mobile money » (profile_sections.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Zone CFA : Orange Money, Wave, MTN'**
+  /// **'Zone CFA : Orange Money, MTN, Moov'**
   String get profileMoneyMobileMoneyPayoutSubtitle;
 
   /// Tuile de la section ARGENT (profile_sections.dart).
@@ -25197,6 +25203,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Dernier report possible pour ce trajet.} other{Encore {count} reports possibles pour ce trajet.}}'**
   String tripRescheduleRemaining(int count);
 
+  /// Tuile Reporter grisée : un colis du trajet est en route, arrivé ou livré (FLUTTER-BD)
+  ///
+  /// In fr, this message translates to:
+  /// **'Un colis est déjà en route, arrivé ou livré : le trajet ne peut plus être reporté.'**
+  String get tripRescheduleParcelOnTheWayMessage;
+
   /// Tuile Reporter grisée (owner_action_grid.dart)
   ///
   /// In fr, this message translates to:
@@ -26588,6 +26600,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'APPELS'**
   String get notificationSettingsSectionCalls;
+
+  /// Confirmation de remise : code saisi incomplet (FLUTTER-BA)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait contient 6 chiffres.'**
+  String get scanConfirmCodeIncomplete;
 }
 
 class _AppLocalizationsDelegate

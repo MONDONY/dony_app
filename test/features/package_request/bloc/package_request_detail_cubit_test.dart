@@ -160,6 +160,20 @@ void main() {
     ).called(1),
   );
 
+  test(
+    'load : fermé pendant l appel (retour arrière), aucune erreur (FLUTTER-B0)',
+    () async {
+      final pending = Completer<PackageRequest>();
+      when(() => requests.getById('pr-1')).thenAnswer((_) => pending.future);
+      final cubit = build();
+      final loading = cubit.load();
+      await cubit.close();
+      pending.complete(_req(PackageRequestStatus.open));
+      await expectLater(loading, completes);
+      expect(cubit.isClosed, isTrue);
+    },
+  );
+
   blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
     'load : les voyageurs ayant déjà un fil sont exclus',
     build: build,

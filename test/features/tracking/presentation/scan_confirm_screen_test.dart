@@ -158,6 +158,36 @@ void main() {
     await tester.tap(find.text('Confirmer la livraison'));
     await tester.pump();
     verifyNever(() => bloc.add(any(that: isA<ConfirmDeliveryRequested>())));
+    // Le refus est expliqué (FLUTTER-BA) : il passait pour une panne.
+    expect(
+      find.text('Le code de retrait contient 6 chiffres.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('ARRIVEE — code collé avec espace : chiffres seuls gardés', (
+    tester,
+  ) async {
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(bloc, const Stream<TrackingState>.empty());
+    await tester.pumpWidget(_wrap('ARRIVEE', bloc));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), '123 456');
+    await tester.pump();
+    await tester.tap(find.text('Confirmer la livraison'));
+    await tester.pump();
+    verify(
+      () => bloc.add(
+        any(
+          that: isA<ConfirmDeliveryRequested>().having(
+            (e) => e.code,
+            'code',
+            '123456',
+          ),
+        ),
+      ),
+    ).called(1);
   });
 
   // ─── ARRIVEE — code = 6 → dispatches ConfirmDeliveryRequested ────────────

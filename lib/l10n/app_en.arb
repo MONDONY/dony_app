@@ -1557,6 +1557,7 @@
   "@bidCreatePhotosSectionLabel": {
     "description": "Titre de la section photos du formulaire d'offre (create_bid_bottom_sheet.dart)"
   },
+  "bidCreateDescriptionSectionLabelOptional": "DESCRIPTION (OPTIONAL)",
   "bidCreateDescriptionSectionLabel": "DESCRIPTION (TO THE TRAVELER)",
   "@bidCreateDescriptionSectionLabel": {
     "description": "Titre de la section description du formulaire d'offre (create_bid_bottom_sheet.dart)"
@@ -1700,7 +1701,7 @@
   "@bidCreateCardModeSubtitle": {
     "description": "Sous-titre du choix de paiement par carte (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateMobileMoneySubtitle": "Orange Money, Wave, MTN",
+  "bidCreateMobileMoneySubtitle": "Orange Money, MTN, Moov",
   "@bidCreateMobileMoneySubtitle": {
     "description": "Sous-titre du choix de paiement mobile money, noms de marque (create_bid_bottom_sheet.dart)"
   },
@@ -4921,7 +4922,7 @@
   "@walletTopupMethodCardSubtitle": {
     "description": "Sous-titre de la tuile carte bancaire : noms de marques, identique fr/en (wallet_topup_method_screen.dart _cardMethod)."
   },
-  "walletTopupMethodMobileMoneySubtitle": "Orange Money, Wave, MTN MoMo",
+  "walletTopupMethodMobileMoneySubtitle": "Orange Money, MTN MoMo, Moov",
   "@walletTopupMethodMobileMoneySubtitle": {
     "description": "Sous-titre de la tuile mobile money : noms de marques, identique fr/en (wallet_topup_method_screen.dart _mobileMoneyMethod)."
   },
@@ -6626,7 +6627,7 @@
   "profileMoneyReceivePayments": "Get paid",
   "profileMoneyVerifyIdentityToActivate": "Verify your identity to activate",
   "profileMoneyMobileMoneyPayout": "Mobile money payout",
-  "profileMoneyMobileMoneyPayoutSubtitle": "CFA zone: Orange Money, Wave, MTN",
+  "profileMoneyMobileMoneyPayoutSubtitle": "CFA zone: Orange Money, MTN, Moov",
   "profileMoneyCashCommissionCard": "Cash service fee card",
   "profileSectionReputation": "MY REPUTATION",
   "profileReputationPublicProfile": "My public profile",
@@ -8615,6 +8616,7 @@
       }
     }
   },
+  "tripRescheduleParcelOnTheWayMessage": "A parcel is already on its way, arrived or delivered: this trip can no longer be rescheduled.",
   "tripRescheduleLimitReachedMessage": "Already rescheduled twice: cancel and post a new trip",
   "profilePublicLastSeenToday": "Seen today",
   "profilePublicLastSeenYesterday": "Seen yesterday",
@@ -8908,5 +8910,6 @@
   "callLockScreenLater": "Later",
   "callLockScreenSettingsLabel": "Calls on the lock screen",
   "callLockScreenSettingsAllowed": "Yadony calls show up even when your phone is locked.",
-  "notificationSettingsSectionCalls": "CALLS"
+  "notificationSettingsSectionCalls": "CALLS",
+  "scanConfirmCodeIncomplete": "The pickup code has 6 digits."
 }

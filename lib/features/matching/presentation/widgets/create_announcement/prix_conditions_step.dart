@@ -970,7 +970,7 @@ class PrixConditionsStep extends StatelessWidget {
                     ? l.tripPublishMobileMoneyIneligibleSubtitle
                     : !mobileMoneyAccountActive
                     ? l.tripPublishMobileMoneyInactiveSubtitle
-                    : 'Orange Money, Wave, MTN', // i18n-ignore : noms de marques
+                    : 'Orange Money, MTN, Moov', // i18n-ignore : noms de marques
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               contentPadding: const EdgeInsets.symmetric(

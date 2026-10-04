@@ -456,7 +456,7 @@ void main() {
         );
         expect(find.byKey(const Key('payment-method-cash')), findsNothing);
         expect(find.text('Mobile money'), findsOneWidget);
-        expect(find.text('Orange Money, Wave, MTN'), findsOneWidget);
+        expect(find.text('Orange Money, MTN, Moov'), findsOneWidget);
       },
     );
 

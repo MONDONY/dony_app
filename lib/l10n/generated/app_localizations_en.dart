@@ -5362,6 +5362,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidCreatePhotosSectionLabel => 'PARCEL PHOTOS (OPTIONAL)';
 
   @override
+  String get bidCreateDescriptionSectionLabelOptional =>
+      'DESCRIPTION (OPTIONAL)';
+
+  @override
   String get bidCreateDescriptionSectionLabel =>
       'DESCRIPTION (TO THE TRAVELER)';
 
@@ -5473,7 +5477,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidCreateCardModeSubtitle => 'Locked until delivery';
 
   @override
-  String get bidCreateMobileMoneySubtitle => 'Orange Money, Wave, MTN';
+  String get bidCreateMobileMoneySubtitle => 'Orange Money, MTN, Moov';
 
   @override
   String get bidCreateCashModeSubtitle => 'Hand to hand, at drop-off';
@@ -9413,7 +9417,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletTopupMethodMobileMoneySubtitle =>
-      'Orange Money, Wave, MTN MoMo';
+      'Orange Money, MTN MoMo, Moov';
 
   @override
   String get walletTopupMethodTitle => 'Top up · Step 1/2';
@@ -10753,7 +10757,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileMoneyMobileMoneyPayoutSubtitle =>
-      'CFA zone: Orange Money, Wave, MTN';
+      'CFA zone: Orange Money, MTN, Moov';
 
   @override
   String get profileMoneyCashCommissionCard => 'Cash service fee card';
@@ -15218,6 +15222,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get tripRescheduleParcelOnTheWayMessage =>
+      'A parcel is already on its way, arrived or delivered: this trip can no longer be rescheduled.';
+
+  @override
   String get tripRescheduleLimitReachedMessage =>
       'Already rescheduled twice: cancel and post a new trip';
 
@@ -16086,4 +16094,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationSettingsSectionCalls => 'CALLS';
+
+  @override
+  String get scanConfirmCodeIncomplete => 'The pickup code has 6 digits.';
 }

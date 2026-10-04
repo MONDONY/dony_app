@@ -237,7 +237,7 @@ void main() {
         );
         expect(tile.value, isFalse);
         expect(tile.onChanged, isNotNull);
-        expect(find.text('Orange Money, Wave, MTN'), findsOneWidget);
+        expect(find.text('Orange Money, MTN, Moov'), findsOneWidget);
         expect(
           find.byKey(const Key('activate-mobile-money-cta')),
           findsNothing,
@@ -272,7 +272,7 @@ void main() {
           find.byKey(const Key('payment-method-mobile-money')),
         );
         expect(tile.onChanged, isNotNull);
-        expect(find.text('Orange Money, Wave, MTN'), findsOneWidget);
+        expect(find.text('Orange Money, MTN, Moov'), findsOneWidget);
       },
     );
   });
@@ -406,7 +406,7 @@ void main() {
         find.byKey(const Key('payment-method-mobile-money')),
       );
       expect(tile.onChanged, isNotNull);
-      expect(find.text('Orange Money, Wave, MTN'), findsOneWidget);
+      expect(find.text('Orange Money, MTN, Moov'), findsOneWidget);
 
       // Disposition "Stripe non configuré" plus haute (bannière
       // d'explication en plus) : la bascule est hors du viewport de test

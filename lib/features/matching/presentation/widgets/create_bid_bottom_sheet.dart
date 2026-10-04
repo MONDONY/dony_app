@@ -304,10 +304,35 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     };
   }
 
+  /// L'expéditeur n'a choisi que des articles de la grille du voyageur (pas
+  /// de poids au kilo, pas d'article hors grille) : les articles disent déjà
+  /// ce que contient le colis. Ni catégorie ni description ne sont alors
+  /// réclamées (FLUTTER-B7).
+  bool get _onlyGridSelected =>
+      widget.announcement.priceGridItems.isNotEmpty &&
+      _gridQuantitiesNotifier.value.values.any((q) => q > 0) &&
+      _weightNotifier.value <= 0 &&
+      (!widget.negotiation || _customItemsNotifier.value.isEmpty);
+
+  /// Le contenu se déduit des articles de grille choisis.
+  bool get _contentFromGrid => _isGridOnly || _onlyGridSelected;
+
   String get _contentCategoryValue =>
-      (_isGridOnly ? _gridDerivedCategories : _categoriesNotifier.value).join(
-        ', ',
-      );
+      (_contentFromGrid ? _gridDerivedCategories : _categoriesNotifier.value)
+          .join(', ');
+
+  /// Description envoyée au voyageur. Laissée vide sur une sélection de
+  /// grille seule, elle reprend les articles choisis (« 2 × Valise ») : le
+  /// back l'exige, et le voyageur lit ainsi ce que contient le colis.
+  String get _descriptionValue {
+    final typed = _descCtrl.text.trim();
+    if (typed.isNotEmpty || !_onlyGridSelected) return typed;
+    final q = _gridQuantitiesNotifier.value;
+    return [
+      for (final item in widget.announcement.priceGridItems)
+        if ((q[item.id] ?? 0) > 0) '${q[item.id]} × ${item.label}',
+    ].join(', ');
+  }
 
   /// Catalogue proposé à l'expéditeur, sans jamais un type refusé par le
   /// voyageur : sans liste d'acceptés, tout le catalogue était proposé, refus
@@ -557,7 +582,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         (_gridQuantitiesNotifier.value.isNotEmpty || customOk);
     // En grille pure, le contenu se déduit des articles choisis (gridOk le
     // couvre déjà) — pas de combobox à remplir séparément.
-    final categoriesOk = _isGridOnly || _categoriesNotifier.value.isNotEmpty;
+    final categoriesOk =
+        _contentFromGrid || _categoriesNotifier.value.isNotEmpty;
     // Poids manquant sur un trajet au kilo, sans article de grille pour le
     // remplacer : le bouton reste grisé, on dit pourquoi (FLUTTER-7Q).
     final missingWeight =
@@ -734,7 +760,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// le disclaimer sont demandés dès maintenant : décision produit assumée, le
   /// voyageur doit pouvoir juger le colis complet avant d'accepter un prix.
   void _goToNegotiationPicker() {
-    if (_descCtrl.text.trim().isEmpty) {
+    if (_descriptionValue.isEmpty) {
       _showError(context.l10n.bidCreateDescriptionRequiredError);
       return;
     }
@@ -774,7 +800,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       BidNegotiationProposeRequested(
         announcementId: widget.announcement.id,
         weightKg: weight > 0 ? weight : null,
-        description: _descCtrl.text.trim(),
+        description: _descriptionValue,
         contentCategory: _contentCategoryValue,
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
@@ -893,7 +919,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   // ── Step navigation ─────────────────────────────────────────────────────────
 
   void _goToPicker() {
-    if (_descCtrl.text.trim().isEmpty) {
+    if (_descriptionValue.isEmpty) {
       _showError(context.l10n.bidCreateDescriptionRequiredError);
       return;
     }
@@ -920,7 +946,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         : null;
     _formData = _CollectedFormData(
       weightKg: _weightNotifier.value,
-      description: _descCtrl.text.trim(),
+      description: _descriptionValue,
       contentCategory: _contentCategoryValue,
       recipientName: _recipientNameCtrl.text.trim(),
       recipientPhone: _recipientPhoneCtrl.text.trim(),
@@ -1349,10 +1375,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ],
 
             // ── Contenu ───────────────────────────────────────────────────
-            // Masqué en grille pure : le contenu se déduit des articles
-            // choisis ci-dessus (cf. `_contentCategoryValue`), pas besoin de
-            // le ressaisir dans un combobox séparé.
-            if (!_isGridOnly) ...[
+            // Masqué en grille pure, ou quand seuls des articles de la grille
+            // sont choisis : le contenu se déduit des articles choisis
+            // ci-dessus (cf. `_contentCategoryValue`), pas besoin de le
+            // ressaisir dans un combobox séparé.
+            if (!_contentFromGrid) ...[
               ListenableBuilder(
                 listenable: Listenable.merge([
                   _categoriesNotifier,
@@ -1371,7 +1398,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Description ───────────────────────────────────────────────
-            _SectionLabel(label: context.l10n.bidCreateDescriptionSectionLabel),
+            _SectionLabel(
+              label: _onlyGridSelected
+                  ? context.l10n.bidCreateDescriptionSectionLabelOptional
+                  : context.l10n.bidCreateDescriptionSectionLabel,
+            ),
             const SizedBox(height: DonySpacing.sm),
             DonyTextField(
               controller: _descCtrl,
@@ -2731,8 +2762,8 @@ class _ModeAmountRow extends StatelessWidget {
 // Couleurs de marque des opérateurs (comme _payPalGold dans la feuille de
 // paiement) : reconnues avant d'être lues, jamais sémantiques.
 const _orangeMoneyBrand = Color(0xFFFF7900);
-const _waveBrand = Color(0xFF1DC3F5);
 const _mtnBrand = Color(0xFFFFCC00);
+const _moovBrand = Color(0xFF0072BC);
 
 class _OperatorChips extends StatelessWidget {
   const _OperatorChips();
@@ -2748,12 +2779,12 @@ class _OperatorChips extends StatelessWidget {
           brand: _orangeMoneyBrand,
         ),
         _OperatorChip(
-          label: 'Wave', // i18n-ignore — nom de marque
-          brand: _waveBrand,
-        ),
-        _OperatorChip(
           label: 'MTN', // i18n-ignore — nom de marque
           brand: _mtnBrand,
+        ),
+        _OperatorChip(
+          label: 'Moov', // i18n-ignore — nom de marque
+          brand: _moovBrand,
         ),
       ],
     );

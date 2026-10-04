@@ -1126,5 +1126,38 @@ void main() {
         expect(btn.onPressed, isNotNull);
       },
     );
+
+    testWidgets(
+      'trajet mixte, articles de grille seuls : ni contenu ni description '
+      'réclamés (FLUTTER-B7)',
+      (tester) async {
+        await _openSheet(tester, _mixedAnnouncement());
+        expect(find.text('CONTENU DU COLIS'), findsOneWidget);
+        expect(find.text('DESCRIPTION (AU VOYAGEUR)'), findsOneWidget);
+
+        await tester.tap(find.text('Choisir mes articles'));
+        await tester.pump();
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('grid-item-add-item-1')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('grid-sheet-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('CONTENU DU COLIS'), findsNothing);
+        expect(find.text('DESCRIPTION (OPTIONNELLE)'), findsOneWidget);
+
+        await tester.tap(find.byType(Checkbox).first);
+        await tester.pump();
+        final btn = tester.widget<DonyButton>(
+          find
+              .ancestor(
+                of: find.text('Envoyer'),
+                matching: find.byType(DonyButton),
+              )
+              .first,
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
   });
 }
