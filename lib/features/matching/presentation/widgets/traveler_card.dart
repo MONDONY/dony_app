@@ -58,6 +58,10 @@ class TravelerCard extends StatelessWidget {
   /// ligne ; le détail complet reste sur l'écran du trajet.
   static const int _maxVisibleChips = 1;
 
+  /// Opacité d'une carte déjà sollicitée ou complète : moins visible, mais
+  /// encore lisible.
+  static const double _dimmedOpacity = 0.55;
+
   String _displayName(BuildContext context) =>
       announcement.traveler?.travelerName(context.l10n) ??
       context.l10n.tripTravelerFallbackName;
@@ -124,6 +128,12 @@ class TravelerCard extends StatelessWidget {
     final categories = announcement.acceptedContentTypes ?? [];
     final hasExistingBid = existingBidStatus != null;
     final bidStyle = _bidStyle(cs, l);
+    // Trajet déjà sollicité ou complet : la carte s'efface pour laisser voir
+    // les voyageurs encore disponibles, mais reste cliquable (FLUTTER-BG). Un
+    // trajet complet affiche sa pastille « Complet » ; sa demande est refusée
+    // dans le détail.
+    final isFull = announcement.isFull && !hasExistingBid && !isOwnAnnouncement;
+    final dimmed = (hasExistingBid || isFull) && !isOwnAnnouncement;
 
     // Bordure : un bid existant prime ; sinon, une annonce dont l'expéditeur
     // courant est le voyageur (« Votre trajet ») est surlignée en primaire pour
@@ -152,224 +162,237 @@ class TravelerCard extends StatelessWidget {
 
     return _PressableCard(
           onTap: onTap,
-          child: Container(
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(color: borderColor, width: borderWidth),
-              boxShadow: const [
-                BoxShadow(
-                  color: DonyColors.shadow,
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(DonySpacing.base),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (hasExistingBid) ...[
-                  _ExistingBidChip(
-                    label: bidStyle.label,
-                    bg: bidStyle.chipBg,
-                    fg: bidStyle.chipFg,
+          child: Opacity(
+            key: const Key('traveler-card-opacity'),
+            opacity: dimmed ? _dimmedOpacity : 1,
+            child: Container(
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+                border: Border.all(color: borderColor, width: borderWidth),
+                boxShadow: const [
+                  BoxShadow(
+                    color: DonyColors.shadow,
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
                   ),
-                  const SizedBox(height: DonySpacing.sm),
                 ],
-                if (distanceBadge != null) ...[
-                  _DistanceBadge(label: distanceBadge!),
-                  const SizedBox(height: DonySpacing.sm),
-                ],
-
-                // ── Zone 1 : trajet (hero) ──
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _RouteHeader(
-                        departureCity: announcement.departureCity,
-                        arrivalCity: announcement.arrivalCity,
-                        depFlag: depFlag,
-                        arrFlag: arrFlag,
-                        showChevron: isOwnAnnouncement,
-                      ),
+              ),
+              padding: const EdgeInsets.all(DonySpacing.base),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (hasExistingBid) ...[
+                    _ExistingBidChip(
+                      label: bidStyle.label,
+                      bg: bidStyle.chipBg,
+                      fg: bidStyle.chipFg,
                     ),
-                    // Pas de SizedBox : le padding interne du bouton (halo autour
-                    // de l'icône) suffit à l'écarter du corridor. En ajouter un
-                    // creusait un vide visible entre le signet et le trajet.
-                    if (showFavorite)
-                      _buildFavoriteHeart(context, announcement.id),
+                    const SizedBox(height: DonySpacing.sm),
+                  ] else if (isFull) ...[
+                    _FullTripChip(label: l.listingStatusFull),
+                    const SizedBox(height: DonySpacing.sm),
                   ],
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                Row(
-                  children: [
-                    DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
-                    const SizedBox(width: DonySpacing.xs),
-                    Text(
-                      dateStr,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                  if (distanceBadge != null) ...[
+                    _DistanceBadge(label: distanceBadge!),
+                    const SizedBox(height: DonySpacing.sm),
+                  ],
+
+                  // ── Zone 1 : trajet (hero) ──
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _RouteHeader(
+                          departureCity: announcement.departureCity,
+                          arrivalCity: announcement.arrivalCity,
+                          depFlag: depFlag,
+                          arrFlag: arrFlag,
+                          showChevron: isOwnAnnouncement,
+                        ),
                       ),
-                    ),
-                    // Audience de mon trajet : visible de moi seul.
-                    if (OwnerViewsLabel.isVisible(
-                      count: announcement.uniqueViewerCount,
-                      isOwner: isOwnAnnouncement,
-                    )) ...[
+                      // Pas de SizedBox : le padding interne du bouton (halo autour
+                      // de l'icône) suffit à l'écarter du corridor. En ajouter un
+                      // creusait un vide visible entre le signet et le trajet.
+                      if (showFavorite)
+                        _buildFavoriteHeart(context, announcement.id),
+                    ],
+                  ),
+                  const SizedBox(height: DonySpacing.xs),
+                  Row(
+                    children: [
+                      DonyIcon(
+                        'calendar',
+                        size: 13,
+                        color: cs.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: DonySpacing.xs),
                       Text(
-                        '  ·  ',
+                        dateStr,
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
-                      OwnerViewsLabel(
+                      // Audience de mon trajet : visible de moi seul.
+                      if (OwnerViewsLabel.isVisible(
                         count: announcement.uniqueViewerCount,
                         isOwner: isOwnAnnouncement,
-                      ),
-                    ],
-                  ],
-                ),
-
-                const SizedBox(height: DonySpacing.md),
-                Divider(height: 1, thickness: 1, color: cs.outline),
-                const SizedBox(height: DonySpacing.md),
-
-                // ── Zone 2 : voyageur + prix ──
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DonyAvatar(
-                      name: _displayName(context),
-                      imageUrl: traveler?.avatarUrl,
-                      verified: traveler?.kycVerified ?? false,
-                      pro: isProAccount,
-                    ),
-                    const SizedBox(width: DonySpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _displayName(context),
-                            style: tt.titleLarge,
-                            overflow: TextOverflow.ellipsis,
+                      )) ...[
+                        Text(
+                          '  ·  ',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
                           ),
-                          const SizedBox(height: DonySpacing.xxs),
-                          // Note et trajets seuls ici ; les badges sont en dessous,
-                          // pleine largeur (voir plus bas). Wrap et non Row : ne
-                          // déborde jamais si l'espace manque.
-                          Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: DonySpacing.xxs,
-                            children: [
-                              DonyIcon('star', size: 13, color: cs.warning),
-                              Text(
-                                rating != null
-                                    ? rating.toStringAsFixed(1)
-                                    : '-',
-                                style: tt.titleSmall?.copyWith(
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
-                              ),
-                              if (totalTrips != null)
+                        ),
+                        OwnerViewsLabel(
+                          count: announcement.uniqueViewerCount,
+                          isOwner: isOwnAnnouncement,
+                        ),
+                      ],
+                    ],
+                  ),
+
+                  const SizedBox(height: DonySpacing.md),
+                  Divider(height: 1, thickness: 1, color: cs.outline),
+                  const SizedBox(height: DonySpacing.md),
+
+                  // ── Zone 2 : voyageur + prix ──
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DonyAvatar(
+                        name: _displayName(context),
+                        imageUrl: traveler?.avatarUrl,
+                        verified: traveler?.kycVerified ?? false,
+                        pro: isProAccount,
+                      ),
+                      const SizedBox(width: DonySpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _displayName(context),
+                              style: tt.titleLarge,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: DonySpacing.xxs),
+                            // Note et trajets seuls ici ; les badges sont en dessous,
+                            // pleine largeur (voir plus bas). Wrap et non Row : ne
+                            // déborde jamais si l'espace manque.
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: DonySpacing.xxs,
+                              children: [
+                                DonyIcon('star', size: 13, color: cs.warning),
                                 Text(
-                                  l.listingTravelerTrips(totalTrips),
-                                  style: tt.bodySmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
+                                  rating != null
+                                      ? rating.toStringAsFixed(1)
+                                      : '-',
+                                  style: tt.titleSmall?.copyWith(
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
                                   ),
                                 ),
-                            ],
+                                if (totalTrips != null)
+                                  Text(
+                                    l.listingTravelerTrips(totalTrips),
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: DonySpacing.sm),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            priceLabel,
+                            style: tt.titleLarge?.copyWith(
+                              color: cs.success,
+                              fontWeight: FontWeight.w700,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
+                          // Mode MIXED : le prix est une grille, pas un montant
+                          // unique au kilo, donc pas d'équivalent converti ici.
+                          if (announcement.pricingMode != 'MIXED')
+                            ConvertedPriceLabel(
+                              originalCurrency: announcement.currency,
+                              // Le prix d'origine affiché ci-dessus
+                              // (priceLabel) est le BRUT expéditeur
+                              // (senderPricePerKg) : l'estimation doit être sur
+                              // la même base, pas le net voyageur converti tel
+                              // quel par le serveur.
+                              convertedPricePerKg:
+                                  announcement.convertedSenderPricePerKg,
+                              convertedCurrency: announcement.convertedCurrency,
+                            ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
+                    ],
+                  ),
+                  // Badges pleine largeur, hors de la colonne du voyageur : sinon ils
+                  // partageaient l'espace avec le prix et débordaient différemment
+                  // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
+                  // ils disposent de toute la largeur de la carte et s'alignent de
+                  // façon identique dans les deux vues.
+                  if (isKiloPro || isProAccount || announcement.isUrgent) ...[
+                    const SizedBox(height: DonySpacing.sm),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: DonySpacing.xxs,
+                      runSpacing: DonySpacing.xxs,
                       children: [
-                        Text(
-                          priceLabel,
-                          style: tt.titleLarge?.copyWith(
-                            color: cs.success,
-                            fontWeight: FontWeight.w700,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                        // Mode MIXED : le prix est une grille, pas un montant
-                        // unique au kilo, donc pas d'équivalent converti ici.
-                        if (announcement.pricingMode != 'MIXED')
-                          ConvertedPriceLabel(
-                            originalCurrency: announcement.currency,
-                            // Le prix d'origine affiché ci-dessus
-                            // (priceLabel) est le BRUT expéditeur
-                            // (senderPricePerKg) : l'estimation doit être sur
-                            // la même base, pas le net voyageur converti tel
-                            // quel par le serveur.
-                            convertedPricePerKg:
-                                announcement.convertedSenderPricePerKg,
-                            convertedCurrency: announcement.convertedCurrency,
-                          ),
+                        if (isKiloPro) const _KycBadge(),
+                        if (isProAccount) const _ProBadge(),
+                        if (announcement.isUrgent) const DonyUrgentBadge(),
                       ],
                     ),
                   ],
-                ),
-                // Badges pleine largeur, hors de la colonne du voyageur : sinon ils
-                // partageaient l'espace avec le prix et débordaient différemment
-                // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
-                // ils disposent de toute la largeur de la carte et s'alignent de
-                // façon identique dans les deux vues.
-                if (isKiloPro || isProAccount || announcement.isUrgent) ...[
                   const SizedBox(height: DonySpacing.sm),
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: DonySpacing.xxs,
-                    runSpacing: DonySpacing.xxs,
+                  Row(
                     children: [
-                      if (isKiloPro) const _KycBadge(),
-                      if (isProAccount) const _ProBadge(),
-                      if (announcement.isUrgent) const DonyUrgentBadge(),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: DonySpacing.sm),
-                Row(
-                  children: [
-                    const DonyEmoji.parcel(size: 13),
-                    const SizedBox(width: DonySpacing.xxs),
-                    Text(
-                      announcement.capacityUnit == 'KG_FREE'
-                          ? l.tripKgFree
-                          : l.listingKgAvailableLabel(
-                              announcement.availableKg.toStringAsFixed(0),
-                            ),
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                      const DonyEmoji.parcel(size: 13),
+                      const SizedBox(width: DonySpacing.xxs),
+                      Text(
+                        announcement.capacityUnit == 'KG_FREE'
+                            ? l.tripKgFree
+                            : l.listingKgAvailableLabel(
+                                announcement.availableKg.toStringAsFixed(0),
+                              ),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                       ),
-                    ),
-                    if (isOwnAnnouncement) ...[
-                      const Spacer(),
-                      const _OwnTripPill(),
+                      if (isOwnAnnouncement) ...[
+                        const Spacer(),
+                        const _OwnTripPill(),
+                      ],
                     ],
-                  ],
-                ),
-                if (categories.isNotEmpty) ...[
-                  const SizedBox(height: DonySpacing.sm),
-                  _CategoryChips(
-                    categories: categories,
-                    maxVisible: _maxVisibleChips,
                   ),
+                  if (categories.isNotEmpty) ...[
+                    const SizedBox(height: DonySpacing.sm),
+                    _CategoryChips(
+                      categories: categories,
+                      maxVisible: _maxVisibleChips,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         )
@@ -621,6 +644,36 @@ class _ExistingBidChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Pastille « Complet » d'un trajet qui n'accepte plus de demande.
+class _FullTripChip extends StatelessWidget {
+  const _FullTripChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('traveler-card-full-chip'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.warningLight,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: DonyColors.amberDark,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

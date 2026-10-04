@@ -250,6 +250,41 @@ Future<void> showTravelerAnnouncementSheet(
         final tt = Theme.of(innerCtx).textTheme;
         final cs = Theme.of(innerCtx).colorScheme;
         final innerL = innerCtx.l10n;
+        // Trajet complet : on peut le consulter, mais plus lui faire de
+        // demande ni lui proposer de prix (FLUTTER-BG).
+        if (announcement.isFull) {
+          return Column(
+            key: const Key('trip-full-footer'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    DonyIcon('info', size: 16, color: cs.onSurfaceVariant),
+                    const SizedBox(width: DonySpacing.xs),
+                    Flexible(
+                      child: Text(
+                        innerL.listingTripFullMessage,
+                        textAlign: TextAlign.center,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              DonyButton(
+                key: const Key('make-request-btn-disabled'),
+                label: innerL.listingMakeRequestButton,
+                iconAsset: 'send',
+                onPressed: null,
+              ),
+            ],
+          );
+        }
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [

@@ -16229,4 +16229,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorTrackingNumberRequiredMessage =>
       'Saisis le numéro de suivi donné par l\'expéditeur pour valider la remise.';
+
+  @override
+  String get listingTripFullMessage =>
+      'Ce trajet est complet : il n\'accepte plus de demande.';
 }

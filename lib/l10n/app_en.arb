@@ -8921,5 +8921,6 @@
   "errorTrackingNumberMismatchTitle": "Wrong tracking number",
   "errorTrackingNumberMismatchMessage": "This number does not match this parcel. Ask the sender for it.",
   "errorTrackingNumberRequiredTitle": "Tracking number required",
-  "errorTrackingNumberRequiredMessage": "Enter the tracking number given by the sender to confirm the handover."
+  "errorTrackingNumberRequiredMessage": "Enter the tracking number given by the sender to confirm the handover.",
+  "listingTripFullMessage": "This trip is full: it no longer accepts requests."
 }

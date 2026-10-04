@@ -428,6 +428,30 @@ void main() {
     });
   }
 
+  testWidgets('trajet complet → détail consultable, bouton de demande grisé '
+      '(FLUTTER-BG)', (tester) async {
+    await tester.pumpWidget(
+      _harness(announcement: _buildAnnouncement(status: 'FULL')),
+    );
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+
+    // Le détail reste lisible.
+    expect(find.text('Détail du trajet'), findsOneWidget);
+    expect(find.text('Ibrahima Diallo'), findsOneWidget);
+    // Le bouton est là mais inactif, avec la raison.
+    expect(find.byKey(const Key('trip-full-footer')), findsOneWidget);
+    expect(
+      find.text("Ce trajet est complet : il n'accepte plus de demande."),
+      findsOneWidget,
+    );
+    final button = tester.widget<DonyButton>(
+      find.byKey(const Key('make-request-btn-disabled')),
+    );
+    expect(button.onPressed, isNull);
+    expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
+  });
+
   testWidgets('affiche le badge KYC quand le voyageur est vérifié', (
     tester,
   ) async {
