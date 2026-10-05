@@ -17,6 +17,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
+import 'package:dony/features/payments/wallet/presentation/commission_funding_options.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -270,13 +271,31 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
+          CommissionFundingOptions(
+            alternatives: state.alternatives,
+            onSelected: (currency) {
+              context.pop();
+              _lastCashAcceptBidId = state.bidId;
+              context.read<BidAcceptanceBloc>().add(
+                ace.BidAcceptRequested(state.bidId, fundingCurrency: currency),
+              );
+            },
+          ),
         ],
       ),
       stickyBottom: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: l.bidListWalletTopupButton,
+            label: commissionTopupLabel(
+              l,
+              tripCurrency: commissionTripCurrency(
+                bidCurrency: state.bidCurrency,
+                breakdown: state.breakdown,
+                currency: state.currency,
+              ),
+              fallback: l.bidListWalletTopupButton,
+            ),
             onPressed: () async {
               context.pop();
               final recharged = await context.push<bool>(

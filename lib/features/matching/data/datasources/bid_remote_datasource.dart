@@ -232,11 +232,17 @@ class BidRemoteDatasource {
   Future<AcceptanceResponse> acceptBidWithCommission(
     String bidId, {
     String commissionSource = 'WALLET_FIRST',
+    String? fundingCurrency,
   }) async {
     try {
       final response = await _apiClient.dio.post(
         '/bids/$bidId/accept-with-commission',
-        queryParameters: {'commissionSource': commissionSource},
+        queryParameters: {
+          'commissionSource': commissionSource,
+          // Complément pris dans ce portefeuille au taux du jour, au lieu de
+          // celui de la devise active (FLUTTER-CG).
+          'fundingCurrency': ?fundingCurrency,
+        },
       );
       return AcceptanceResponse.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {

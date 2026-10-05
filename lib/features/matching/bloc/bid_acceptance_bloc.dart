@@ -24,8 +24,20 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
     Emitter<BidAcceptanceState> emit,
   ) async {
     emit(BidAccepting());
+    final fundingCurrency = e.fundingCurrency;
+    if (fundingCurrency != null) {
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.commissionFundingCurrencyChosen,
+          properties: {'currency': fundingCurrency, 'context': 'bid'},
+        ),
+      );
+    }
     try {
-      final r = await _repo.acceptBidWithCommission(e.bidId);
+      final r = await _repo.acceptBidWithCommission(
+        e.bidId,
+        fundingCurrency: fundingCurrency,
+      );
       await _handleResponse(r, e.bidId, emit);
     } catch (_) {
       // AppException.message n'est jamais un texte affichable (voir sa doc) :
@@ -98,6 +110,8 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
             bidId: bidId,
             currency: r.currency,
             breakdown: r.breakdown,
+            bidCurrency: r.bidCurrency,
+            alternatives: r.alternatives,
           ),
         );
         return;

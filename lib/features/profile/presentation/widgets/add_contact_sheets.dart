@@ -176,6 +176,9 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   PhoneCountry _country = kDefaultPhoneCountry;
   String _pendingPhone = '';
 
+  /// Vrai entre l'envoi du code de vérification et sa réponse.
+  bool _verifySubmitted = false;
+
   @override
   void initState() {
     super.initState();
@@ -207,6 +210,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   void _verifyOtp() {
     final code = _otpCtrl.text;
     if (code.length != 6) return;
+    _verifySubmitted = true;
     context.read<AuthBloc>().add(
       AuthAddPhoneFromProfileRequested(phoneNumber: _pendingPhone, code: code),
     );
@@ -223,13 +227,19 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
           widget.stepNotifier.value = _ContactStep.otp;
           widget.onSubmitReady(_handleSubmit);
         } else if (state is AuthProfileUpdated) {
+          // AuthProfileUpdated part aussi d'une resynchronisation du profil
+          // en arrière-plan : seule la vérification lancée ici ferme l'écran
+          // (FLUTTER-BX). `true` signale à l'appelant que le contact a changé.
+          if (!_verifySubmitted) return;
+          _verifySubmitted = false;
           DonySnackbar.show(
             context,
             message: context.l10n.contactPhoneAddedSuccess,
             type: DonySnackbarType.success,
           );
-          Navigator.of(context, rootNavigator: true).pop();
+          Navigator.of(context, rootNavigator: true).pop(true);
         } else if (state is AuthError) {
+          _verifySubmitted = false;
           ErrorPresenter.show(context, state.error);
         }
       },
@@ -440,6 +450,9 @@ class _AddEmailContentState extends State<_AddEmailContent> {
   final _otpCtrl = TextEditingController();
   String _pendingEmail = '';
 
+  /// Vrai entre l'envoi du code de vérification et sa réponse.
+  bool _verifySubmitted = false;
+
   static final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   @override
@@ -473,6 +486,7 @@ class _AddEmailContentState extends State<_AddEmailContent> {
   void _verifyOtp() {
     final code = _otpCtrl.text;
     if (code.length != 6) return;
+    _verifySubmitted = true;
     context.read<AuthBloc>().add(
       AuthAddEmailFromProfileRequested(email: _pendingEmail, code: code),
     );
@@ -489,13 +503,19 @@ class _AddEmailContentState extends State<_AddEmailContent> {
           widget.stepNotifier.value = _ContactStep.otp;
           widget.onSubmitReady(_handleSubmit);
         } else if (state is AuthProfileUpdated) {
+          // AuthProfileUpdated part aussi d'une resynchronisation du profil
+          // en arrière-plan : seule la vérification lancée ici ferme l'écran
+          // (FLUTTER-BX). `true` signale à l'appelant que le contact a changé.
+          if (!_verifySubmitted) return;
+          _verifySubmitted = false;
           DonySnackbar.show(
             context,
             message: context.l10n.contactEmailVerifiedSuccess,
             type: DonySnackbarType.success,
           );
-          Navigator.of(context, rootNavigator: true).pop();
+          Navigator.of(context, rootNavigator: true).pop(true);
         } else if (state is AuthError) {
+          _verifySubmitted = false;
           ErrorPresenter.show(context, state.error);
         }
       },

@@ -133,6 +133,82 @@ void main() {
       },
     );
 
+    // ── FLUTTER-BX : seule la vérification lancée ici ferme l'écran ──────────
+    Future<List<Object?>> pumpPushed(
+      WidgetTester tester,
+      StreamController<AuthState> controller,
+    ) async {
+      final results = <Object?>[];
+      whenListen<AuthState>(
+        mockAuthBloc,
+        controller.stream,
+        initialState: const AuthAuthenticated(_user),
+      );
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () async => results.add(
+                await Navigator.of(context).push<Object?>(
+                  MaterialPageRoute(builder: (_) => const EditEmailScreen()),
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+          mockAuthBloc,
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      return results;
+    }
+
+    testWidgets(
+      'AuthProfileUpdated de fond (synchro) : l\'écran reste ouvert',
+      (tester) async {
+        final controller = StreamController<AuthState>();
+        final results = await pumpPushed(tester, controller);
+
+        controller.add(const AuthProfileUpdated(_user));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(EditEmailScreen), findsOneWidget);
+        expect(results, isEmpty);
+        await controller.close();
+      },
+    );
+
+    testWidgets(
+      'code vérifié puis AuthProfileUpdated : ferme l\'écran avec true',
+      (tester) async {
+        final controller = StreamController<AuthState>();
+        final results = await pumpPushed(tester, controller);
+
+        await tester.enterText(find.byType(TextField), 'nouvel@email.com');
+        await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le code'));
+        await tester.pump();
+        controller.add(const AuthEmailOtpSent('nouvel@email.com'));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(Pinput), '123456');
+        await tester.pump();
+        verify(
+          () => mockAuthBloc.add(
+            any(that: isA<AuthAddEmailFromProfileRequested>()),
+          ),
+        ).called(1);
+
+        controller.add(
+          AuthProfileUpdated(_user.copyWith(email: 'nouvel@email.com')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(EditEmailScreen), findsNothing);
+        expect(results, [true]);
+        await controller.close();
+      },
+    );
+
     testWidgets(
       'étape code : « Code envoyé à » met l\'email en gras (emphasizedSpans)',
       (tester) async {

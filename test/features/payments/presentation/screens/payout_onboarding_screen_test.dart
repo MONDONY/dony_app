@@ -110,7 +110,21 @@ Widget _wrap(
         ),
         GoRoute(
           path: '/profile/edit/email',
-          builder: (_, _) => const Scaffold(body: Text('Edit email route')),
+          builder: (context, _) => Scaffold(
+            body: Column(
+              children: [
+                const Text('Edit email route'),
+                TextButton(
+                  onPressed: () => context.pop(true),
+                  child: const Text('email-added'),
+                ),
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: const Text('email-cancelled'),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     ),
@@ -303,6 +317,65 @@ void main() {
         expect(find.text('Edit email route'), findsOneWidget);
       },
     );
+
+    // ── FLUTTER-BX : retour de l'ajout d'email ────────────────────────────────
+
+    for (final (label, button, retried) in [
+      ('email ajouté → la demande est relancée', 'email-added', true),
+      ('ajout abandonné → rien n\'est relancé', 'email-cancelled', false),
+    ]) {
+      testWidgets('contact-email-required : $label', (tester) async {
+        const error = PaymentError(
+          ValidationException('Email requis', code: 'contact-email-required'),
+        );
+        whenListen<PaymentState>(
+          mockBloc,
+          Stream.value(error),
+          initialState: error,
+        );
+        await tester.pumpWidget(_wrap(mockBloc));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        await tester.ensureVisible(find.text('Ajouter mon adresse e-mail'));
+        await tester.tap(find.text('Ajouter mon adresse e-mail'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(button));
+        await tester.pumpAndSettle();
+
+        if (retried) {
+          verify(
+            () => mockBloc.add(const PaymentConnectAccountRequested()),
+          ).called(1);
+        } else {
+          verifyNever(
+            () => mockBloc.add(const PaymentConnectAccountRequested()),
+          );
+        }
+      });
+    }
+
+    testWidgets('affiche l\'email de contact quand il est connu', (
+      tester,
+    ) async {
+      final auth = MockAuthBloc();
+      when(() => auth.state).thenReturn(
+        AuthAuthenticated(_kUser.copyWith(email: 'ibra@example.com')),
+      );
+      when(() => auth.stream).thenAnswer((_) => const Stream.empty());
+      await tester.pumpWidget(_wrap(mockBloc, authBloc: auth));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('E-mail de contact : ibra@example.com'), findsOneWidget);
+    });
+
+    testWidgets('sans email connu : aucune ligne d\'email de contact', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.textContaining('E-mail de contact'), findsNothing);
+    });
 
     testWidgets('autre erreur : pas de bouton d\'ajout d\'email', (
       tester,

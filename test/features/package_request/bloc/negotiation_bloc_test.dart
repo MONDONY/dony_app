@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
@@ -840,6 +842,85 @@ void main() {
       verify: (_) => verify(
         () => repo.settleCommission('t-1', commissionSource: 'CARD'),
       ).called(1),
+    );
+
+    // ── FLUTTER-CG : complément depuis un autre portefeuille ───────────────
+    test('fundingCurrency transmis au repository + '
+        'commission_funding_currency_chosen (contexte negotiation)', () async {
+      final backend = MockAnalyticsBackend();
+      final analytics = makeEnabledAnalytics(backend);
+      await analytics.onConfigured();
+      when(
+        () => repo.settleCommission(
+          any(),
+          commissionSource: any(named: 'commissionSource'),
+          fundingCurrency: any(named: 'fundingCurrency'),
+        ),
+      ).thenAnswer(
+        (_) async =>
+            const AcceptanceResponse(status: AcceptanceStatus.accepted),
+      );
+      final bloc = NegotiationBloc(repo, analytics: analytics);
+      bloc.add(
+        const NegotiationSettleCommissionRequested(
+          't-1',
+          fundingCurrency: 'XOF',
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is NegotiationCommissionSettled);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => repo.settleCommission('t-1', fundingCurrency: 'XOF'),
+      ).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.commissionFundingCurrencyChosen, {
+          'currency': 'XOF',
+          'context': 'negotiation',
+        }),
+      ).called(1);
+      await bloc.close();
+    });
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'solde insuffisant : bidCurrency et alternatives portés par l\'état',
+      build: () {
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenAnswer(
+          (_) async => const AcceptanceResponse(
+            status: AcceptanceStatus.insufficientWallet,
+            availableBalance: 0,
+            requiredCommission: 1,
+            hasCard: false,
+            currency: 'EUR',
+            bidCurrency: 'EUR',
+            alternatives: [
+              CommissionFundingAlternative(
+                currency: 'XOF',
+                balance: 12000,
+                requiredAmount: 656,
+              ),
+            ],
+          ),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationCommissionInsufficientWallet>()
+            .having((s) => s.bidCurrency, 'bidCurrency', 'EUR')
+            .having(
+              (s) => s.alternatives.single.currency,
+              'alternative',
+              'XOF',
+            ),
+      ],
     );
 
     blocTest<NegotiationBloc, NegotiationState>(

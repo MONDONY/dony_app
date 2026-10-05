@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
+import 'package:dony/features/payments/wallet/presentation/commission_funding_options.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -15,15 +17,20 @@ import 'package:go_router/go_router.dart';
 /// ce flux jumeau, l'accord est déjà acquis (l'expéditeur a accepté l'offre) :
 /// aucun bouton de refus ici, seulement des chemins pour compléter le
 /// règlement. [onRetry] relance le règlement (`useCard: true` force la carte,
-/// `false` retente le portefeuille après une recharge réussie).
+/// `false` retente le portefeuille après une recharge réussie ; avec
+/// `fundingCurrency`, le reste est pris dans ce portefeuille au taux du jour,
+/// voir [alternatives]).
 Future<void> showCommissionSettlementSheet(
   BuildContext context, {
   required double requiredCommission,
   required double availableBalance,
   required bool hasCard,
   required String currency,
-  required void Function({required bool useCard}) onRetry,
+  required void Function({required bool useCard, String? fundingCurrency})
+  onRetry,
   CommissionShortfall? breakdown,
+  String? bidCurrency,
+  List<CommissionFundingAlternative> alternatives = const [],
 }) {
   final cs = Theme.of(context).colorScheme;
   final l = context.l10n;
@@ -59,13 +66,28 @@ Future<void> showCommissionSettlementSheet(
             context,
           ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
+        CommissionFundingOptions(
+          alternatives: alternatives,
+          onSelected: (fundingCurrency) {
+            context.pop();
+            onRetry(useCard: false, fundingCurrency: fundingCurrency);
+          },
+        ),
       ],
     ),
     stickyBottom: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label: l.negotiationCommissionSettlementTopupButton,
+          label: commissionTopupLabel(
+            l,
+            tripCurrency: commissionTripCurrency(
+              bidCurrency: bidCurrency,
+              breakdown: breakdown,
+              currency: currency,
+            ),
+            fallback: l.negotiationCommissionSettlementTopupButton,
+          ),
           onPressed: () async {
             context.pop();
             // /topup/method est le point d'entrée correct : il compose le

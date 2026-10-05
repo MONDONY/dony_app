@@ -55,4 +55,46 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     verifyNever(() => backend.capture(any(), any()));
   });
+
+  test('commission_funding_currency_chosen : devise choisie, contexte bid, '
+      'transmise au dépôt (FLUTTER-CG)', () async {
+    when(
+      () => repo.acceptBidWithCommission('bid1', fundingCurrency: 'XOF'),
+    ).thenAnswer(
+      (_) async => const AcceptanceResponse(status: AcceptanceStatus.accepted),
+    );
+    final bloc = makeBloc();
+    bloc.add(BidAcceptRequested('bid1', fundingCurrency: 'XOF'));
+    await bloc.stream.firstWhere((s) => s is BidAccepted);
+    await Future<void>.delayed(Duration.zero);
+    verify(
+      () => repo.acceptBidWithCommission('bid1', fundingCurrency: 'XOF'),
+    ).called(1);
+    verify(
+      () => backend.capture(AnalyticsEvents.commissionFundingCurrencyChosen, {
+        'currency': 'XOF',
+        'context': 'bid',
+      }),
+    ).called(1);
+  });
+
+  test(
+    'sans devise choisie : pas de commission_funding_currency_chosen',
+    () async {
+      when(() => repo.acceptBidWithCommission('bid1')).thenAnswer(
+        (_) async =>
+            const AcceptanceResponse(status: AcceptanceStatus.accepted),
+      );
+      final bloc = makeBloc();
+      bloc.add(BidAcceptRequested('bid1'));
+      await bloc.stream.firstWhere((s) => s is BidAccepted);
+      await Future<void>.delayed(Duration.zero);
+      verifyNever(
+        () => backend.capture(
+          AnalyticsEvents.commissionFundingCurrencyChosen,
+          any(),
+        ),
+      );
+    },
+  );
 }

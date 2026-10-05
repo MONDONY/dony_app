@@ -19,7 +19,13 @@ List<String> commissionShortfallLines(
   if (breakdown == null) {
     return [
       l.walletShortfallRequired(formatPriceIn(requiredCommission, currency)),
-      l.walletShortfallBalance(formatPriceIn(availableBalance, currency)),
+      // Devise toujours nommée : « 0 € » seul laissait croire que tout le
+      // portefeuille était vide, alors qu'un autre en devise locale pouvait
+      // être garni (FLUTTER-CG).
+      l.walletShortfallBalance(
+        SupportedCurrency.fromCodeOrDefault(currency).code,
+        formatPriceIn(availableBalance, currency),
+      ),
     ];
   }
   final bidName = SupportedCurrency.fromCodeOrDefault(

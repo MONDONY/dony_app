@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -138,5 +139,69 @@ void main() {
 
     expect(r.breakdown, isNull);
     expect(r.hasCard, isTrue);
+  });
+
+  // ── FLUTTER-CG : devise du trajet et autres portefeuilles ─────────────────
+
+  test('INSUFFICIENT_WALLET : bidCurrency et alternatives parsés', () {
+    final r = AcceptanceResponse.fromJson({
+      'status': 'INSUFFICIENT_WALLET',
+      'availableBalance': 0,
+      'requiredCommission': 1,
+      'hasCard': false,
+      'currency': 'EUR',
+      'bidCurrency': 'eur',
+      'alternatives': [
+        {'currency': 'xof', 'balance': 12000, 'required': 656},
+      ],
+    });
+
+    expect(r.bidCurrency, 'EUR');
+    expect(r.alternatives, const [
+      CommissionFundingAlternative(
+        currency: 'XOF',
+        balance: 12000,
+        requiredAmount: 656,
+      ),
+    ]);
+  });
+
+  test('ancien back : ni bidCurrency ni alternatives', () {
+    final r = AcceptanceResponse.fromJson({
+      'status': 'INSUFFICIENT_WALLET',
+      'availableBalance': 0,
+      'requiredCommission': 1,
+    });
+
+    expect(r.bidCurrency, isNull);
+    expect(r.alternatives, isEmpty);
+  });
+
+  test('alternatives mal formées : entrées ignorées, jamais d\'exception', () {
+    final r = AcceptanceResponse.fromJson({
+      'status': 'INSUFFICIENT_WALLET',
+      'alternatives': [
+        {'currency': 'XAF'},
+        {'required': 3},
+        'XOF',
+        {'currency': 'USD', 'required': 1.2},
+      ],
+    });
+
+    expect(r.alternatives, const [
+      CommissionFundingAlternative(
+        currency: 'USD',
+        balance: 0,
+        requiredAmount: 1.2,
+      ),
+    ]);
+  });
+
+  test('alternatives qui n\'est pas une liste : liste vide', () {
+    final r = AcceptanceResponse.fromJson({
+      'status': 'INSUFFICIENT_WALLET',
+      'alternatives': {'currency': 'XOF'},
+    });
+    expect(r.alternatives, isEmpty);
   });
 }

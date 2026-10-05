@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
@@ -11,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/presentation/screens/bid_accepted_success_screen.dart';
 import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
 import 'package:flutter/material.dart';
@@ -494,7 +496,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Recharger mon portefeuille'));
+      await tester.tap(find.text('Recharger en EUR'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('topup-done')));
       await tester.pumpAndSettle();
@@ -519,6 +521,72 @@ void main() {
       await tester.tap(find.text('Voir la demande'));
       await tester.pumpAndSettle();
       expect(find.text('Bid detail w-1'), findsOneWidget);
+    });
+
+    testWidgets('solde insuffisant en EUR, portefeuille XOF garni → option '
+        '« Payer avec mon solde XOF » + avertissement, relance avec '
+        'fundingCurrency (FLUTTER-CG)', (tester) async {
+      final ctrl = _wireStates(bidBloc);
+      addTearDown(ctrl.close);
+      final acceptance = wireAcceptance();
+      addTearDown(acceptance.close);
+
+      await _pump(tester, bidBloc, acceptanceBloc);
+      ctrl.add(
+        BidListLoaded([
+          _makeBid(
+            status: 'PENDING',
+            id: 'w-2',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      acceptance.add(
+        acs.BidWalletInsufficient(
+          availableBalance: 0,
+          requiredCommission: 1,
+          hasCard: false,
+          bidId: 'w-2',
+          currency: 'EUR',
+          bidCurrency: 'EUR',
+          alternatives: const [
+            CommissionFundingAlternative(
+              currency: 'XOF',
+              balance: 12000,
+              requiredAmount: 656,
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recharger en EUR'), findsOneWidget);
+      expect(find.textContaining('Solde du portefeuille EUR'), findsOneWidget);
+      expect(find.text('Payer avec mon solde XOF'), findsOneWidget);
+      expect(
+        find.text('≈ ${formatPriceIn(656, 'XOF')} au taux du jour'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining("Yadony n'est pas responsable"),
+        findsOneWidget,
+      );
+
+      await tester.ensureVisible(find.text('Payer avec mon solde XOF'));
+      await tester.tap(find.text('Payer avec mon solde XOF'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => acceptanceBloc.add(
+          any(
+            that: isA<ace.BidAcceptRequested>()
+                .having((e) => e.bidId, 'bidId', 'w-2')
+                .having((e) => e.fundingCurrency, 'fundingCurrency', 'XOF'),
+          ),
+        ),
+      ).called(1);
     });
 
     testWidgets(

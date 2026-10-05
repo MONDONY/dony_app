@@ -621,6 +621,28 @@ void main() {
       expect((capturedQuery as Map)['commissionSource'], 'WALLET_FIRST');
     });
 
+    test('forwards fundingCurrency when chosen (FLUTTER-CG)', () async {
+      dynamic capturedQuery;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/settle-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        capturedQuery = inv.namedArguments[const Symbol('queryParameters')];
+        return _ok({
+          'status': 'ACCEPTED',
+        }, '/negotiations/th-1/settle-commission');
+      });
+
+      await repo.settleCommission('th-1', fundingCurrency: 'XOF');
+
+      expect(capturedQuery, {
+        'commissionSource': 'WALLET_FIRST',
+        'fundingCurrency': 'XOF',
+      });
+    });
+
     test('forwards CARD commissionSource when specified', () async {
       dynamic capturedQuery;
       when(

@@ -398,6 +398,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `negotiation_nudge_sent` | NegotiationBloc._onNudge() — relance envoyée |
 | `negotiation_commission_settled` | NegotiationBloc._handleCommissionResponse() — voyageur a réglé la commission Yadony d'un accord cash (direct ou après 3DS), l'accord est scellé (propriété `thread_id`) |
 | `negotiation_commission_declined` | NegotiationBloc._onDeclineCommission() — voyageur renonce explicitement au règlement, la demande est libérée immédiatement pour un autre voyageur |
+| `commission_funding_currency_chosen` | BidAcceptanceBloc._accept (`context: bid`) · NegotiationBloc._onSettleCommission (`context: negotiation`) — commission d'un accord en espèces : le voyageur choisit, sur la feuille « Solde insuffisant », de payer le complément depuis un autre portefeuille converti au taux du jour (`fundingCurrency`, FLUTTER-CG). Propriété `currency` : code ISO du portefeuille choisi. Jamais de montant ni de solde |
 | `messages_negotiations_shortcut_opened` | NegotiationsShortcutSection — ligne « Discussions de prix » épinglée sous « Support Yadony » en tête de Messages, visible dès qu'une négociation (demande d'envoi ou prix d'un trajet) est ouverte, raccourci vers `/negotiations` (FLUTTER-44). Propriétés `open_count`, `awaiting_me_count` (c'est à l'utilisateur de répondre ou de payer) |
 | `conversation_opened` | ChatScreen.initState |
 | `message_sent` | ChatBloc._onSendText() |

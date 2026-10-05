@@ -165,6 +165,14 @@ abstract final class AnalyticsEvents {
   /// propriétés (aucune PII).
   static const negotiationCommissionDeclined =
       'negotiation_commission_declined';
+
+  /// Commission d'un accord en espèces (offre ou fil de négociation) : le
+  /// voyageur choisit de payer le complément depuis un autre portefeuille,
+  /// converti au taux du jour (FLUTTER-CG). Propriétés `currency` (code ISO
+  /// du portefeuille choisi) et `context` (`bid`/`negotiation`). Jamais de
+  /// montant ni de solde.
+  static const commissionFundingCurrencyChosen =
+      'commission_funding_currency_chosen';
   static const firmPriceTaken = 'firm_price_taken';
   static const paymentMethodSelected = 'payment_method_selected';
 
