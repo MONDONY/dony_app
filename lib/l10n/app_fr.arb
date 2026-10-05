@@ -10782,6 +10782,27 @@
   "@chatEmptyStateTitle": {
     "description": "Texte de l'état vide d'une conversation sans message (chat_screen.dart)."
   },
+  "chatMessagingMutedTitle": "Messagerie suspendue",
+  "@chatMessagingMutedTitle": {
+    "description": "Titre du bandeau qui remplace la saisie quand un admin a coupé la messagerie (chat_screen.dart, FLUTTER-CT)."
+  },
+  "chatMessagingMutedUntil": "Un administrateur a suspendu votre messagerie jusqu'au {date}. Vous pouvez lire vos conversations, mais pas envoyer de message.",
+  "@chatMessagingMutedUntil": {
+    "description": "Description du bandeau de coupure de messagerie avec sa date de fin (chat_screen.dart).",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "chatMessagingMutedIndefinite": "Un administrateur a suspendu votre messagerie jusqu'à nouvel ordre. Vous pouvez lire vos conversations, mais pas envoyer de message.",
+  "@chatMessagingMutedIndefinite": {
+    "description": "Description du bandeau de coupure de messagerie sans date de fin (chat_screen.dart)."
+  },
+  "chatMessagingMutedContactSupport": "Contacter le support",
+  "@chatMessagingMutedContactSupport": {
+    "description": "Bouton du bandeau de coupure de messagerie vers le support (chat_screen.dart)."
+  },
+  "chatSendRejected": "Votre message n'a pas pu être envoyé : vous ne pouvez pas écrire dans cette conversation pour le moment.",
+  "@chatSendRejected": {
+    "description": "Snackbar quand Firestore refuse l'envoi d'un message (permission-denied) ; le texte est rendu dans le champ (chat_screen.dart, FLUTTER-CV)."
+  },
   "chatReadOnlyBannerMessage": "Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.",
   "@chatReadOnlyBannerMessage": {
     "description": "Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner)."

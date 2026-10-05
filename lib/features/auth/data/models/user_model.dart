@@ -41,6 +41,16 @@ class UserModel extends Equatable {
   /// champ (compatibilité avec un backend plus ancien).
   final String? preferredLanguage;
 
+  /// Fin de la coupure de messagerie posée par un administrateur, `null` sans
+  /// coupure en cours. Firestore refuse alors tout envoi : l'écran de
+  /// conversation l'explique au lieu d'échouer en silence (FLUTTER-CT/CV).
+  final DateTime? messagingMutedUntil;
+
+  /// Messagerie coupée à l'instant [now] (par défaut, maintenant).
+  bool isMessagingMuted([DateTime? now]) =>
+      messagingMutedUntil != null &&
+      messagingMutedUntil!.isAfter(now ?? DateTime.now());
+
   const UserModel({
     required this.id,
     this.username,
@@ -66,6 +76,7 @@ class UserModel extends Equatable {
     this.languages = const [],
     this.averageRating,
     this.preferredLanguage,
+    this.messagingMutedUntil,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -102,6 +113,9 @@ class UserModel extends Equatable {
         const [],
     averageRating: (json['averageRating'] as num?)?.toDouble(),
     preferredLanguage: json['preferredLanguage'] as String?,
+    messagingMutedUntil: json['messagingMutedUntil'] == null
+        ? null
+        : DateTime.tryParse(json['messagingMutedUntil'] as String),
   );
 
   Map<String, dynamic> toJson() => {
@@ -129,6 +143,7 @@ class UserModel extends Equatable {
     'languages': languages,
     'averageRating': averageRating,
     'preferredLanguage': preferredLanguage,
+    'messagingMutedUntil': messagingMutedUntil?.toIso8601String(),
   };
 
   UserModel copyWith({
@@ -156,6 +171,7 @@ class UserModel extends Equatable {
     List<String>? languages,
     double? averageRating,
     String? preferredLanguage,
+    DateTime? messagingMutedUntil,
   }) => UserModel(
     id: id ?? this.id,
     username: username ?? this.username,
@@ -181,6 +197,7 @@ class UserModel extends Equatable {
     languages: languages ?? this.languages,
     averageRating: averageRating ?? this.averageRating,
     preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+    messagingMutedUntil: messagingMutedUntil ?? this.messagingMutedUntil,
   );
 
   /// Nom affiché : prénom et nom si renseignés, sinon le [username] du compte.
@@ -273,5 +290,6 @@ class UserModel extends Equatable {
     languages,
     averageRating,
     preferredLanguage,
+    messagingMutedUntil,
   ];
 }

@@ -11,6 +11,9 @@ import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/calls/bloc/call_lock_screen_cubit.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/calls/presentation/widgets/call_lock_screen_prompt.dart';
@@ -99,6 +102,14 @@ class _ChatScreenState extends State<ChatScreen> {
         unawaited(CallLockScreenPrompt.maybeShow(context));
       }
     });
+    // Coupure de messagerie connue : le profil est relu, car une levée par
+    // l'admin n'envoie aucune push et le bandeau resterait affiché.
+    final auth = _MessagingMuteGate.maybeAuthBloc(context);
+    if (auth != null &&
+        !auth.isClosed &&
+        (auth.state.currentUser?.isMessagingMuted() ?? false)) {
+      auth.add(const AuthProfileRefreshRequested());
+    }
     // Abonnement côté widget (et non dans ChatBloc) : ce qu'il déclenche est une
     // navigation, qui n'appartient pas au BLoC.
     _blockSub = _blockEvents()?.changes.listen(_onBlockChange);
@@ -308,6 +319,25 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _isSending = false);
   }
 
+  /// Firestore a refusé l'envoi : le texte revient dans le champ, le profil
+  /// est relu pour faire apparaître une coupure de messagerie posée entre-temps.
+  void _onSendRejected(ChatSendRejected state) {
+    final text = state.text;
+    if (text != null && _controller.text.isEmpty) {
+      _controller.text = text;
+      _controller.selection = TextSelection.collapsed(offset: text.length);
+    }
+    final auth = _MessagingMuteGate.maybeAuthBloc(context);
+    if (auth != null && !auth.isClosed) {
+      auth.add(const AuthProfileRefreshRequested());
+    }
+    DonySnackbar.show(
+      context,
+      message: context.l10n.chatSendRejected,
+      type: DonySnackbarType.error,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -515,9 +545,16 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: BlocConsumer<ChatBloc, ChatState>(
         listenWhen: (_, current) =>
-            current is ChatConversationDeleted || current is ChatError,
+            current is ChatConversationDeleted ||
+            current is ChatError ||
+            current is ChatSendRejected,
+        // Signal ponctuel aussitôt remplacé par l'état précédent : jamais
+        // dessiné, la liste des messages reste à l'écran.
+        buildWhen: (_, current) => current is! ChatSendRejected,
         listener: (context, state) {
-          if (state is ChatConversationDeleted) {
+          if (state is ChatSendRejected) {
+            _onSendRejected(state);
+          } else if (state is ChatConversationDeleted) {
             getIt<ConversationListBloc>().add(
               ConversationRemovedLocally(widget.conversation.id),
             );
@@ -672,11 +709,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
 
-              _InputBar(
-                controller: _controller,
-                isSending: _isSending,
-                disabled: isReadOnly,
-                onSendText: _sendText,
+              _MessagingMuteGate(
+                builder: (mutedUntil) => mutedUntil != null
+                    ? _MutedBanner(until: mutedUntil)
+                    : _InputBar(
+                        controller: _controller,
+                        isSending: _isSending,
+                        disabled: isReadOnly,
+                        onSendText: _sendText,
+                      ),
               ),
             ],
           );
@@ -726,6 +767,112 @@ class _ParticipantHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
           child: child,
         ),
+      ),
+    );
+  }
+}
+
+/// Fin de la coupure de messagerie du compte connecté, `null` sans coupure.
+/// Sans `AuthBloc` au-dessus (tests d'écran isolés), la saisie reste ouverte :
+/// Firestore reste le seul point d'application de la coupure.
+class _MessagingMuteGate extends StatelessWidget {
+  const _MessagingMuteGate({required this.builder});
+
+  final Widget Function(DateTime? mutedUntil) builder;
+
+  static AuthBloc? maybeAuthBloc(BuildContext context) {
+    try {
+      return BlocProvider.of<AuthBloc>(context);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static DateTime? _mutedUntil(AuthState state) {
+    final user = state.currentUser;
+    return (user?.isMessagingMuted() ?? false)
+        ? user!.messagingMutedUntil
+        : null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = maybeAuthBloc(context);
+    if (auth == null) return builder(null);
+    return BlocBuilder<AuthBloc, AuthState>(
+      bloc: auth,
+      buildWhen: (a, b) => _mutedUntil(a) != _mutedUntil(b),
+      builder: (context, state) => builder(_mutedUntil(state)),
+    );
+  }
+}
+
+/// Remplace la saisie quand un administrateur a coupé la messagerie du
+/// compte : l'utilisateur sait pourquoi il ne peut plus écrire, et jusqu'à
+/// quand. Le motif de la coupure n'est jamais affiché.
+class _MutedBanner extends StatelessWidget {
+  const _MutedBanner({required this.until});
+
+  final DateTime until;
+
+  /// Au-delà, la coupure est « jusqu'à nouvel ordre » (le back pose 100 ans).
+  static const _indefinite = Duration(days: 365 * 10);
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final indefinite = until.difference(DateTime.now()) > _indefinite;
+    final local = until.toLocal();
+    final description = indefinite
+        ? l.chatMessagingMutedIndefinite
+        : l.chatMessagingMutedUntil(
+            DateFormat.yMMMd(
+              Localizations.localeOf(context).toString(),
+            ).add_Hm().format(local),
+          );
+    return Container(
+      key: const Key('chat-messaging-muted'),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: cs.errorContainer.withValues(alpha: 0.35),
+        border: Border(top: BorderSide(color: cs.outlineVariant)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.md,
+        DonySpacing.lg,
+        DonySpacing.md + MediaQuery.of(context).padding.bottom,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              DonyIcon('lock', size: 18, color: cs.error),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  l.chatMessagingMutedTitle,
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            description,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: () => unawaited(context.push<void>('/support')),
+              child: Text(l.chatMessagingMutedContactSupport),
+            ),
+          ),
+        ],
       ),
     );
   }

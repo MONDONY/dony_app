@@ -9939,6 +9939,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatEmptyStateTitle => 'Démarrez la conversation !';
 
   @override
+  String get chatMessagingMutedTitle => 'Messagerie suspendue';
+
+  @override
+  String chatMessagingMutedUntil(String date) {
+    return 'Un administrateur a suspendu votre messagerie jusqu\'au $date. Vous pouvez lire vos conversations, mais pas envoyer de message.';
+  }
+
+  @override
+  String get chatMessagingMutedIndefinite =>
+      'Un administrateur a suspendu votre messagerie jusqu\'à nouvel ordre. Vous pouvez lire vos conversations, mais pas envoyer de message.';
+
+  @override
+  String get chatMessagingMutedContactSupport => 'Contacter le support';
+
+  @override
+  String get chatSendRejected =>
+      'Votre message n\'a pas pu être envoyé : vous ne pouvez pas écrire dans cette conversation pour le moment.';
+
+  @override
   String get chatReadOnlyBannerMessage =>
       'Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.';
 

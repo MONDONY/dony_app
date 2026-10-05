@@ -5542,6 +5542,27 @@
   "@chatEmptyStateTitle": {
     "description": "Texte de l'état vide d'une conversation sans message (chat_screen.dart)."
   },
+  "chatMessagingMutedTitle": "Messages suspended",
+  "@chatMessagingMutedTitle": {
+    "description": "Titre du bandeau qui remplace la saisie quand un admin a coupé la messagerie (chat_screen.dart, FLUTTER-CT)."
+  },
+  "chatMessagingMutedUntil": "An administrator suspended your messages until {date}. You can read your conversations but not send messages.",
+  "@chatMessagingMutedUntil": {
+    "description": "Description du bandeau de coupure de messagerie avec sa date de fin (chat_screen.dart).",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "chatMessagingMutedIndefinite": "An administrator suspended your messages until further notice. You can read your conversations but not send messages.",
+  "@chatMessagingMutedIndefinite": {
+    "description": "Description du bandeau de coupure de messagerie sans date de fin (chat_screen.dart)."
+  },
+  "chatMessagingMutedContactSupport": "Contact support",
+  "@chatMessagingMutedContactSupport": {
+    "description": "Bouton du bandeau de coupure de messagerie vers le support (chat_screen.dart)."
+  },
+  "chatSendRejected": "Your message couldn't be sent: you can't write in this conversation right now.",
+  "@chatSendRejected": {
+    "description": "Snackbar quand Firestore refuse l'envoi d'un message (permission-denied) ; le texte est rendu dans le champ (chat_screen.dart, FLUTTER-CV)."
+  },
   "chatReadOnlyBannerMessage": "The other person has left this conversation. You're in read-only mode.",
   "@chatReadOnlyBannerMessage": {
     "description": "Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner)."

@@ -16397,6 +16397,36 @@ abstract class AppLocalizations {
   /// **'Démarrez la conversation !'**
   String get chatEmptyStateTitle;
 
+  /// Titre du bandeau qui remplace la saisie quand un admin a coupé la messagerie (chat_screen.dart, FLUTTER-CT).
+  ///
+  /// In fr, this message translates to:
+  /// **'Messagerie suspendue'**
+  String get chatMessagingMutedTitle;
+
+  /// Description du bandeau de coupure de messagerie avec sa date de fin (chat_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un administrateur a suspendu votre messagerie jusqu\'au {date}. Vous pouvez lire vos conversations, mais pas envoyer de message.'**
+  String chatMessagingMutedUntil(String date);
+
+  /// Description du bandeau de coupure de messagerie sans date de fin (chat_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un administrateur a suspendu votre messagerie jusqu\'à nouvel ordre. Vous pouvez lire vos conversations, mais pas envoyer de message.'**
+  String get chatMessagingMutedIndefinite;
+
+  /// Bouton du bandeau de coupure de messagerie vers le support (chat_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le support'**
+  String get chatMessagingMutedContactSupport;
+
+  /// Snackbar quand Firestore refuse l'envoi d'un message (permission-denied) ; le texte est rendu dans le champ (chat_screen.dart, FLUTTER-CV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre message n\'a pas pu être envoyé : vous ne pouvez pas écrire dans cette conversation pour le moment.'**
+  String get chatSendRejected;
+
   /// Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner).
   ///
   /// In fr, this message translates to:

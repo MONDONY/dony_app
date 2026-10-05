@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -6,6 +7,10 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
@@ -34,6 +39,9 @@ import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
+
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 class _MockContactRevealBloc
     extends MockBloc<ContactRevealEvent, ContactRevealState>
@@ -985,5 +993,104 @@ void main() {
         verifyNever(() => reveal.add(any()));
       },
     );
+    group('messagerie coupée par un admin (FLUTTER-CT/CV)', () {
+      late _MockAuthBloc auth;
+
+      setUp(() {
+        auth = _MockAuthBloc();
+        registerFallbackValue(const AuthProfileRefreshRequested());
+        when(() => auth.isClosed).thenReturn(false);
+      });
+
+      Future<void> pumpWithAuth(WidgetTester tester, AuthState state) async {
+        when(() => auth.state).thenReturn(state);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            home: MultiBlocProvider(
+              providers: [
+                BlocProvider<AuthBloc>.value(value: auth),
+                BlocProvider<ChatBloc>.value(value: bloc),
+              ],
+              child: const ChatScreen(conversation: _conversation),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      UserModel user({DateTime? mutedUntil}) => UserModel(
+        id: 'me',
+        roles: const ['SENDER'],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+        messagingMutedUntil: mutedUntil,
+      );
+
+      testWidgets('coupure en cours : bandeau à la place de la saisie, '
+          'profil relu', (tester) async {
+        when(() => bloc.state).thenReturn(const ChatLoaded([]));
+        final until = DateTime.now().add(const Duration(days: 2));
+        await pumpWithAuth(tester, AuthAuthenticated(user(mutedUntil: until)));
+
+        expect(find.text('Messagerie suspendue'), findsOneWidget);
+        expect(
+          find.textContaining(
+            'Un administrateur a suspendu votre messagerie '
+            "jusqu'au",
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Contacter le support'), findsOneWidget);
+        expect(find.byType(TextField), findsNothing);
+        verify(() => auth.add(const AuthProfileRefreshRequested())).called(1);
+      });
+
+      testWidgets('coupure sans fin : « jusqu\'à nouvel ordre »', (
+        tester,
+      ) async {
+        when(() => bloc.state).thenReturn(const ChatLoaded([]));
+        final until = DateTime.now().add(const Duration(days: 36500));
+        await pumpWithAuth(tester, AuthAuthenticated(user(mutedUntil: until)));
+
+        expect(find.textContaining("jusqu'à nouvel ordre"), findsOneWidget);
+      });
+
+      testWidgets('sans coupure : saisie normale, profil non relu', (
+        tester,
+      ) async {
+        when(() => bloc.state).thenReturn(const ChatLoaded([]));
+        await pumpWithAuth(tester, AuthAuthenticated(user()));
+
+        expect(find.text('Messagerie suspendue'), findsNothing);
+        expect(find.byType(TextField), findsOneWidget);
+        verifyNever(() => auth.add(any()));
+      });
+
+      testWidgets('envoi refusé : texte rendu, message, profil relu', (
+        tester,
+      ) async {
+        const loaded = ChatLoaded([]);
+        final controller = StreamController<ChatState>.broadcast();
+        addTearDown(controller.close);
+        when(() => bloc.state).thenReturn(loaded);
+        when(() => bloc.stream).thenAnswer((_) => controller.stream);
+        await pumpWithAuth(tester, AuthAuthenticated(user()));
+
+        controller.add(const ChatSendRejected(loaded, text: 'Bonjour Kadi'));
+        await tester.pump();
+        controller.add(loaded);
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(
+          find.textContaining("Votre message n'a pas pu être envoyé"),
+          findsOneWidget,
+        );
+        final field = tester.widget<TextField>(find.byType(TextField));
+        expect(field.controller?.text, 'Bonjour Kadi');
+        verify(() => auth.add(const AuthProfileRefreshRequested())).called(1);
+        await tester.pump(const Duration(seconds: 5));
+      });
+    });
   });
 }

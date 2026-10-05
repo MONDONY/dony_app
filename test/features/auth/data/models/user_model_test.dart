@@ -16,6 +16,38 @@ void main() {
       status: 'ACTIVE',
     );
 
+    group('messagingMutedUntil (FLUTTER-CT/CV)', () {
+      test('lu depuis /auth/me, aller-retour toJson', () {
+        final user = UserModel.fromJson(const {
+          'id': 'u1',
+          'roles': <String>[],
+          'messagingMutedUntil': '2026-10-12T14:00:00Z',
+        });
+        expect(user.messagingMutedUntil, DateTime.utc(2026, 10, 12, 14));
+        expect(
+          UserModel.fromJson(user.toJson()).messagingMutedUntil,
+          user.messagingMutedUntil,
+        );
+      });
+
+      test('absent → null, messagerie ouverte', () {
+        final user = UserModel.fromJson(const {
+          'id': 'u1',
+          'roles': <String>[],
+        });
+        expect(user.messagingMutedUntil, isNull);
+        expect(user.isMessagingMuted(), isFalse);
+      });
+
+      test('coupée tant que la date de fin est future', () {
+        final user = baseUser.copyWith(
+          messagingMutedUntil: DateTime.utc(2026, 10, 12),
+        );
+        expect(user.isMessagingMuted(DateTime.utc(2026, 10, 11)), isTrue);
+        expect(user.isMessagingMuted(DateTime.utc(2026, 10, 13)), isFalse);
+      });
+    });
+
     // ─── displayName ──────────────────────────────────────────────────────────
 
     group('displayName', () {

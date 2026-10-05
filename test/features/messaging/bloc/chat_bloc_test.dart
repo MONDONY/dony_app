@@ -7,6 +7,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
@@ -262,5 +263,100 @@ void main() {
         ).called(1);
       },
     );
+
+    group('envoi refusé par Firestore (FLUTTER-CT/CV)', () {
+      FirebaseException denied() => FirebaseException(
+        plugin: 'cloud_firestore',
+        code: 'permission-denied',
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'permission-denied : signal ChatSendRejected avec le texte, puis '
+        "l'état précédent ; aucun aperçu ni analytics",
+        build: () {
+          when(
+            () => firestoreRepo.sendTextMessage(
+              firestoreConversationId: any(named: 'firestoreConversationId'),
+              senderFirebaseUid: any(named: 'senderFirebaseUid'),
+              body: any(named: 'body'),
+            ),
+          ).thenThrow(denied());
+          return makeBloc();
+        },
+        seed: () => ChatLoaded([msg]),
+        act: (b) => b.add(
+          const ChatTextSendRequested(
+            firestoreConversationId: 'conv_bid1',
+            conversationId: 'conv-1',
+            senderFirebaseUid: 'uid-1',
+            body: 'Bonjour',
+          ),
+        ),
+        expect: () => [
+          isA<ChatSendRejected>()
+              .having((s) => s.text, 'text', 'Bonjour')
+              .having((s) => s.previous, 'previous', isA<ChatLoaded>()),
+          isA<ChatLoaded>().having((s) => s.messages.length, 'count', 1),
+        ],
+        verify: (_) {
+          verifyNever(() => convRepo.updateLastMessage(any(), any()));
+        },
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'permission-denied sur une position : signal sans texte',
+        build: () {
+          when(
+            () => firestoreRepo.sendLocationMessage(
+              firestoreConversationId: any(named: 'firestoreConversationId'),
+              senderFirebaseUid: any(named: 'senderFirebaseUid'),
+              latitude: any(named: 'latitude'),
+              longitude: any(named: 'longitude'),
+            ),
+          ).thenThrow(denied());
+          return makeBloc();
+        },
+        seed: () => const ChatLoaded([]),
+        act: (b) => b.add(
+          const ChatLocationSendRequested(
+            firestoreConversationId: 'conv_bid1',
+            conversationId: 'conv-1',
+            senderFirebaseUid: 'uid-1',
+            latitude: 1,
+            longitude: 2,
+          ),
+        ),
+        expect: () => [
+          isA<ChatSendRejected>().having((s) => s.text, 'text', isNull),
+          isA<ChatLoaded>(),
+        ],
+      );
+
+      blocTest<ChatBloc, ChatState>(
+        'autre erreur Firestore : remonte comme avant',
+        build: () {
+          when(
+            () => firestoreRepo.sendTextMessage(
+              firestoreConversationId: any(named: 'firestoreConversationId'),
+              senderFirebaseUid: any(named: 'senderFirebaseUid'),
+              body: any(named: 'body'),
+            ),
+          ).thenThrow(
+            FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+          );
+          return makeBloc();
+        },
+        act: (b) => b.add(
+          const ChatTextSendRequested(
+            firestoreConversationId: 'conv_bid1',
+            conversationId: 'conv-1',
+            senderFirebaseUid: 'uid-1',
+            body: 'Bonjour',
+          ),
+        ),
+        expect: () => <ChatState>[],
+        errors: () => [isA<FirebaseException>()],
+      );
+    });
   });
 }
