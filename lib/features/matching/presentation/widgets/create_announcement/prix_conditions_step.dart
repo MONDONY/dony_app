@@ -741,6 +741,7 @@ class PrixConditionsStep extends StatelessWidget {
         stripeState.accountStatus.isComplete) {
       return _CardStatus.active;
     }
+    if (stripeState is StripeAccountLoading) return _CardStatus.checking;
     if (!stripeState.connectAvailableInCountry) {
       return _CardStatus.countryUnavailable;
     }
@@ -772,11 +773,34 @@ class PrixConditionsStep extends StatelessWidget {
     return CaSectionCard(
       child: Column(
         children: [
-          // ── Carte bancaire (toujours verrouillée, ON seulement si utilisable)
+          // ── Carte bancaire (ON seulement si utilisable) ─────────────────────
+          // L'interrupteur ne bascule jamais : sa valeur vient du statut
+          // Stripe. Il reste pourtant touchable, comme les espèces, pour
+          // expliquer son état ou mener à l'activation. Désactivé, un toucher
+          // ne faisait rien, sans un mot (Sentry FLUTTER-CS/D2).
           SwitchListTile(
             key: const Key('payment-method-stripe'),
             value: cardActive,
-            onChanged: null,
+            onChanged: switch (cardStatus) {
+              _CardStatus.checking => null,
+              _CardStatus.active => (_) => DonySnackbar.show(
+                ctx,
+                message: l.tripPublishCardActiveExplanation,
+              ),
+              _CardStatus.notConfigured => (_) => ctx.push(
+                '/connect/onboarding/intro',
+              ),
+              _CardStatus.countryUnavailable => (_) => DonySnackbar.show(
+                ctx,
+                message: l.tripPublishCashOnlyBannerNoConnect,
+              ),
+              _CardStatus.currencyUnavailable => (_) => DonySnackbar.show(
+                ctx,
+                message: l.tripPublishCardCurrencyUnavailableNotice(
+                  currency.code,
+                ),
+              ),
+            },
             activeThumbColor: cs.primary,
             title: Row(
               children: [
@@ -795,12 +819,24 @@ class PrixConditionsStep extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: DonySpacing.xs),
-                DonyIcon('lock', size: 14, color: cs.onSurfaceVariant),
+                // Le cadenas ne sert qu'à dire « pas disponible ici » : sur une
+                // carte active, il se lisait comme un blocage.
+                if (cardStatus == _CardStatus.checking) ...[
+                  const SizedBox(width: DonySpacing.sm),
+                  const SizedBox.square(
+                    key: Key('card-status-checking'),
+                    dimension: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ] else if (!cardActive) ...[
+                  const SizedBox(width: DonySpacing.xs),
+                  DonyIcon('lock', size: 14, color: cs.onSurfaceVariant),
+                ],
               ],
             ),
             subtitle: Text(switch (cardStatus) {
               _CardStatus.active => l.tripPublishCardPaymentSubtitle,
+              _CardStatus.checking => l.tripPublishCardCheckingSubtitle,
               _CardStatus.notConfigured =>
                 l.tripPublishCardNotConfiguredSubtitle,
               _CardStatus.countryUnavailable ||
@@ -812,7 +848,7 @@ class PrixConditionsStep extends StatelessWidget {
               vertical: DonySpacing.xs,
             ),
           ),
-          if (!cardActive)
+          if (!cardActive && cardStatus != _CardStatus.checking)
             _noticePadding(switch (cardStatus) {
               _CardStatus.notConfigured => PaymentSetupNotice(
                 key: const Key('card-setup-notice'),
@@ -828,7 +864,8 @@ class PrixConditionsStep extends StatelessWidget {
                 message: l.tripPublishCashOnlyBannerNoConnect,
               ),
               _CardStatus.currencyUnavailable ||
-              _CardStatus.active => PaymentSetupNotice(
+              _CardStatus.active ||
+              _CardStatus.checking => PaymentSetupNotice(
                 key: const Key('card-setup-notice'),
                 message: l.tripPublishCardCurrencyUnavailableNotice(
                   currency.code,
@@ -1047,6 +1084,10 @@ enum _CardStatus {
 
   /// La devise du trajet ne se paie pas par carte (zone CFA notamment).
   currencyUnavailable,
+
+  /// Statut Stripe en cours de rechargement : ni « activé » ni « non
+  /// configuré » tant que la réponse n'est pas arrivée.
+  checking,
 }
 
 /// Bouton de sélection du mode de tarification dans le toggle.

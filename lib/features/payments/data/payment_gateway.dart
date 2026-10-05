@@ -12,6 +12,36 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 /// stripe_android dans pubspec.yaml).
 const String kStripeEphemeralKeyApiVersion = '2024-06-20';
 
+/// Adresse de retour dans l'app après une redirection Stripe (3-D Secure,
+/// page de la banque). Le schéma `yadony` est déclaré côté iOS et Android ; le
+/// plugin Stripe consomme ce lien natif avant Flutter, et `_handleDeepLink`
+/// l'ignore (chemin absent de sa liste blanche).
+const String kStripeReturnUrl = 'yadony://stripe-redirect';
+
+/// Paramètres communs à toutes les feuilles Stripe de l'app : paiement d'une
+/// offre, d'une négociation et carte de commission.
+///
+/// Link est coupé. Une carte enregistrée « avec Link » redemandait une
+/// vérification Link au paiement suivant, qui échouait (refus sur une carte
+/// déjà enregistrée, Sentry FLUTTER-CR) ou laissait l'utilisateur coincé dans
+/// l'écran Link sans retour possible vers l'app (Sentry FLUTTER-D5). Les
+/// cartes sont donc enregistrées directement sur le client Stripe Yadony.
+SetupPaymentSheetParameters yadonyPaymentSheetParameters({
+  String? paymentIntentClientSecret,
+  String? setupIntentClientSecret,
+  String? customerId,
+  String? customerEphemeralKeySecret,
+}) => SetupPaymentSheetParameters(
+  paymentIntentClientSecret: paymentIntentClientSecret,
+  setupIntentClientSecret: setupIntentClientSecret,
+  customerId: customerId,
+  customerEphemeralKeySecret: customerEphemeralKeySecret,
+  merchantDisplayName: 'Yadony', // i18n-ignore : nom de marque
+  style: ThemeMode.system,
+  returnURL: kStripeReturnUrl,
+  linkDisplayParams: const LinkDisplayParams(linkDisplay: LinkDisplay.never),
+);
+
 /// L'utilisateur a fermé/annulé le flux de confirmation (wallet, 3DS, PayPal,
 /// PaymentSheet carte).
 /// Non bloquant : la sheet revient à l'état prêt, sans message d'erreur.
@@ -171,12 +201,10 @@ class StripePaymentGateway implements PaymentGateway {
     required String customerEphemeralKeySecret,
   }) => _mapStripeErrors(
     () => Stripe.instance.initPaymentSheet(
-      paymentSheetParameters: SetupPaymentSheetParameters(
+      paymentSheetParameters: yadonyPaymentSheetParameters(
         paymentIntentClientSecret: clientSecret,
         customerId: customerId,
         customerEphemeralKeySecret: customerEphemeralKeySecret,
-        merchantDisplayName: 'Yadony', // i18n-ignore : nom de marque
-        style: ThemeMode.system,
       ),
     ),
   );

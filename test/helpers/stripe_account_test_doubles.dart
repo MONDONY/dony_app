@@ -29,6 +29,7 @@ MockStripeAccountBloc stubStripeAccountBloc({
   final bloc = MockStripeAccountBloc();
   when(() => bloc.state).thenReturn(state);
   when(() => bloc.stream).thenAnswer((_) => Stream.value(bloc.state));
+  when(() => bloc.isClosed).thenReturn(false);
   return bloc;
 }
 

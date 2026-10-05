@@ -168,6 +168,7 @@ _MockStripeAccountBloc _makeStripeBloc() {
   final b = _MockStripeAccountBloc();
   when(() => b.state).thenReturn(const StripeAccountInitial());
   when(() => b.stream).thenAnswer((_) => const Stream.empty());
+  when(() => b.isClosed).thenReturn(false);
   return b;
 }
 
@@ -718,6 +719,48 @@ void main() {
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.text('Publier un trajet'), findsOneWidget);
+    });
+
+    // Sentry FLUTTER-CS/D2 : le statut Stripe chargé au démarrage pouvait
+    // manquer ou dater d'avant la fin de l'onboarding, et la carte restait
+    // verrouillée sur un compte complet.
+    testWidgets('redemande le statut Stripe à chaque ouverture, avec '
+        'indicateur', (tester) async {
+      setupViewport(tester);
+      registerFallbackValue(const StripeAccountStatusLoaded());
+      final stripe = _makeStripeBloc();
+      getIt.unregister<StripeAccountBloc>();
+      getIt.registerFactory<StripeAccountBloc>(() => stripe);
+      addTearDown(() {
+        getIt.unregister<StripeAccountBloc>();
+        getIt.registerFactory<StripeAccountBloc>(_makeStripeBloc);
+      });
+
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      final events = verify(() => stripe.add(captureAny())).captured;
+      expect(
+        events.whereType<StripeAccountStatusRefreshed>().single.showProgress,
+        isTrue,
+      );
+    });
+
+    testWidgets('bloc Stripe fermé (après déconnexion) : aucun envoi', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      final stripe = _makeStripeBloc();
+      when(() => stripe.isClosed).thenReturn(true);
+      getIt.unregister<StripeAccountBloc>();
+      getIt.registerFactory<StripeAccountBloc>(() => stripe);
+      addTearDown(() {
+        getIt.unregister<StripeAccountBloc>();
+        getIt.registerFactory<StripeAccountBloc>(_makeStripeBloc);
+      });
+
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      verifyNever(() => stripe.add(any()));
     });
 
     testWidgets(
@@ -1543,6 +1586,7 @@ void main() {
       final stripe = _MockStripeAccountBloc();
       when(() => stripe.state).thenReturn(StripeAccountReady(stripeStatus));
       when(() => stripe.stream).thenAnswer((_) => const Stream.empty());
+      when(() => stripe.isClosed).thenReturn(false);
       getIt.unregister<StripeAccountBloc>();
       getIt.registerFactory<StripeAccountBloc>(() => stripe);
       addTearDown(() {
@@ -2621,6 +2665,7 @@ void main() {
         ),
       );
       when(() => b.stream).thenAnswer((_) => const Stream.empty());
+      when(() => b.isClosed).thenReturn(false);
       if (getIt.isRegistered<StripeAccountBloc>()) {
         getIt.unregister<StripeAccountBloc>();
       }

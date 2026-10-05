@@ -38,6 +38,12 @@ class StripeAccountBloc extends Bloc<StripeAccountEvent, StripeAccountState> {
     StripeAccountStatusRefreshed event,
     Emitter<StripeAccountState> emit,
   ) async {
+    final current = state;
+    final alreadyComplete =
+        current is StripeAccountReady && current.accountStatus.isComplete;
+    if (event.showProgress && !alreadyComplete) {
+      emit(const StripeAccountLoading());
+    }
     try {
       emit(StripeAccountReady(await _repository.refreshAccountStatus()));
       return;

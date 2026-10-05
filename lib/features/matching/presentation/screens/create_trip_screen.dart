@@ -150,6 +150,16 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         }
       });
     }
+
+    // La ligne « Carte bancaire » se lit sur le statut Stripe chargé au
+    // démarrage du shell. S'il manque (session pas prête à ce moment-là),
+    // a échoué ou date d'avant la fin de l'onboarding, la carte restait
+    // verrouillée sur un compte pourtant complet (Sentry FLUTTER-CS/D2).
+    // On redemande donc le statut à Stripe à chaque ouverture.
+    final stripeBloc = getIt<StripeAccountBloc>();
+    if (!stripeBloc.isClosed) {
+      stripeBloc.add(const StripeAccountStatusRefreshed(showProgress: true));
+    }
   }
 
   @override

@@ -12,6 +12,7 @@ import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/presentation/widgets/commission_card_empty_state.dart';
 import 'package:dony/features/payments/cash/presentation/widgets/commission_card_expiration_banner.dart';
 import 'package:dony/features/payments/cash/presentation/widgets/commission_card_preview.dart';
+import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -170,10 +171,8 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
 
     try {
       await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
+        paymentSheetParameters: yadonyPaymentSheetParameters(
           setupIntentClientSecret: clientSecret,
-          merchantDisplayName: 'Yadony', // i18n-ignore : nom de marque
-          style: ThemeMode.system,
         ),
       );
       await Stripe.instance.presentPaymentSheet();
