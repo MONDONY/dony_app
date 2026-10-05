@@ -187,7 +187,9 @@ void main() {
         when(
           () => mockDio.put(
             '/travelers/me/price-grid/reorder',
-            data: ['uuid-2', 'uuid-1'],
+            data: {
+              'orderedIds': ['uuid-2', 'uuid-1'],
+            },
           ),
         ).thenAnswer(
           (_) async => Response(

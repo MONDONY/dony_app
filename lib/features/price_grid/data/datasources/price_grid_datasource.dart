@@ -54,7 +54,9 @@ class PriceGridDatasource {
   Future<List<PriceGridItemModel>> reorder(List<String> orderedIds) async {
     final response = await _apiClient.dio.put(
       '/travelers/me/price-grid/reorder',
-      data: orderedIds,
+      // Le back attend un objet {orderedIds: [...]} (PriceGridReorderRequest) :
+      // une liste brute était refusée en 400 (YADONY-BACK-STAGING-H).
+      data: {'orderedIds': orderedIds},
     );
     final data = response.data;
     if (data is! List) {
