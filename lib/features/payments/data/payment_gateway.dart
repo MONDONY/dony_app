@@ -99,10 +99,28 @@ abstract class PaymentGateway {
   Future<void> presentPaymentSheet();
 }
 
+const _kStripePublishableKey = String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
+
+/// Google Pay doit tourner dans son environnement de test quand la clé
+/// Stripe est une clé de test (staging, dev) : en production, Google refuse
+/// les cartes de test et le paiement échouait (FLUTTER-CK, FLUTTER-CJ).
+@visibleForTesting
+bool isGooglePayTestEnv(String publishableKey) =>
+    publishableKey.startsWith('pk_test'); // i18n-ignore : préfixe de clé Stripe
+
 class StripePaymentGateway implements PaymentGateway {
+  StripePaymentGateway({String publishableKey = _kStripePublishableKey})
+    : _googlePayTestEnv = isGooglePayTestEnv(publishableKey);
+
+  final bool _googlePayTestEnv;
+
   @override
   Future<bool> isPlatformPaySupported() =>
-      Stripe.instance.isPlatformPaySupported();
+      Stripe.instance.isPlatformPaySupported(
+        googlePay: Platform.isAndroid
+            ? IsGooglePaySupportedParams(testEnv: _googlePayTestEnv)
+            : null,
+      );
 
   @override
   Future<void> confirmPlatformPay({
@@ -130,6 +148,7 @@ class StripePaymentGateway implements PaymentGateway {
                 merchantCountryCode: 'FR',
                 currencyCode: currencyCode.toUpperCase(),
                 merchantName: 'Yadony', // i18n-ignore : nom de marque
+                testEnv: _googlePayTestEnv,
               ),
             ),
     ),

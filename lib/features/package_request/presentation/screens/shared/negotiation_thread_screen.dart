@@ -100,12 +100,16 @@ class _ThreadViewState extends State<_ThreadView> {
             hasCard: state.hasCard,
             currency: state.currency ?? 'EUR',
             breakdown: state.breakdown,
-            onRetry: ({required useCard}) => ctx.read<NegotiationBloc>().add(
-              NegotiationSettleCommissionRequested(
-                state.threadId,
-                useCard: useCard,
-              ),
-            ),
+            bidCurrency: state.bidCurrency,
+            alternatives: state.alternatives,
+            onRetry: ({required useCard, fundingCurrency}) =>
+                ctx.read<NegotiationBloc>().add(
+                  NegotiationSettleCommissionRequested(
+                    state.threadId,
+                    useCard: useCard,
+                    fundingCurrency: fundingCurrency,
+                  ),
+                ),
           );
         }
         // Commission réglée : l'accord est scellé. On recharge le fil pour

@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 
 abstract class BidAcceptanceState {}
@@ -32,6 +33,12 @@ class BidWalletInsufficient extends BidAcceptanceState {
   final String? currency;
   final CommissionShortfall? breakdown;
 
+  /// Devise du trajet, pour proposer de recharger dans cette devise.
+  final String? bidCurrency;
+
+  /// Autres portefeuilles utilisables au taux du jour (FLUTTER-CG).
+  final List<CommissionFundingAlternative> alternatives;
+
   BidWalletInsufficient({
     required this.availableBalance,
     required this.requiredCommission,
@@ -39,5 +46,7 @@ class BidWalletInsufficient extends BidAcceptanceState {
     required this.bidId,
     this.currency,
     this.breakdown,
+    this.bidCurrency,
+    this.alternatives = const [],
   });
 }

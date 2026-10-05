@@ -95,7 +95,7 @@ void main() {
 
       expect(lines, [
         'Commission requise : ${formatPriceIn(1.60, 'EUR')}',
-        'Solde du portefeuille : ${formatPriceIn(1.33, 'EUR')}',
+        'Solde du portefeuille EUR : ${formatPriceIn(1.33, 'EUR')}',
       ]);
     });
 
@@ -157,7 +157,7 @@ void main() {
 
       expect(lines, [
         'Service fee due: ${formatPriceIn(1.60, 'EUR')}',
-        'Wallet balance: ${formatPriceIn(1.33, 'EUR')}',
+        'EUR wallet balance: ${formatPriceIn(1.33, 'EUR')}',
       ]);
     });
   });

@@ -216,13 +216,24 @@ class NotificationService {
     return route;
   }
 
-  // Emits void whenever a new foreground notification arrives (for badge refresh)
-  final _newNotificationController = StreamController<String?>.broadcast();
+  // Émet chaque push reçue application ouverte (badges, écrans ouverts).
+  final _newNotificationController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   /// Une push reçue application ouverte, portant son `type` (`null` s'il
   /// manque) pour que l'abonné ne recharge que ce qu'elle concerne.
   Stream<String?> get newNotificationStream =>
+      _newNotificationController.stream.map((data) => data['type'] as String?);
+
+  /// Une push reçue application ouverte, avec tout son `data` (`type`,
+  /// `bidId`…) : un écran ouvert sur une ressource se recharge quand la push
+  /// la concerne (FLUTTER-CH).
+  Stream<Map<String, dynamic>> get foregroundPushStream =>
       _newNotificationController.stream;
+
+  @visibleForTesting
+  void emitForegroundPush(Map<String, dynamic> data) =>
+      _newNotificationController.add(data);
 
   /// Résolus sans `BuildContext` (pas encore disponible à [initialize]) à
   /// partir de [AppL10n.current]. [refreshChannelNames] les recrée ensuite
@@ -830,7 +841,9 @@ class NotificationService {
       return;
     }
     _ackIfCritical(message.data);
-    _newNotificationController.add(message.data['type'] as String?);
+    _newNotificationController.add(
+      Map<String, dynamic>.unmodifiable(message.data),
+    );
     if (_handleSupportForeground(message.data)) return;
     final notification = message.notification;
     if (notification == null) return;

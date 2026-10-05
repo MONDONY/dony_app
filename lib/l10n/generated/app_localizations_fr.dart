@@ -9242,8 +9242,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String walletShortfallBalance(String amount) {
-    return 'Solde du portefeuille : $amount';
+  String walletShortfallBalance(String currency, String amount) {
+    return 'Solde du portefeuille $currency : $amount';
   }
 
   @override
@@ -16255,4 +16255,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailSectionPickup => 'RÉCUPÉRATION À L\'ARRIVÉE';
+
+  @override
+  String payoutContactEmailLabel(String email) {
+    return 'E-mail de contact : $email';
+  }
+
+  @override
+  String walletShortfallTopupInCurrency(String currency) {
+    return 'Recharger en $currency';
+  }
+
+  @override
+  String walletShortfallPayWithCurrency(String currency) {
+    return 'Payer avec mon solde $currency';
+  }
+
+  @override
+  String walletShortfallAlternativeApprox(String amount) {
+    return '≈ $amount au taux du jour';
+  }
+
+  @override
+  String get walletShortfallRateDisclaimer =>
+      'Conversion au taux du jour appliqué par Yadony, à titre indicatif. Yadony n\'est pas responsable d\'un écart avec le taux réel au moment du paiement.';
 }

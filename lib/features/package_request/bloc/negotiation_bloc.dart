@@ -6,6 +6,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -350,6 +351,7 @@ class NegotiationSettleCommissionRequested extends NegotiationEvent {
   const NegotiationSettleCommissionRequested(
     this.threadId, {
     this.useCard = false,
+    this.fundingCurrency,
   });
   final String threadId;
 
@@ -357,8 +359,13 @@ class NegotiationSettleCommissionRequested extends NegotiationEvent {
   /// an insufficient-wallet response). False uses `WALLET_FIRST`.
   final bool useCard;
 
+  /// Wallet chosen by the traveler to pay, at today's rate, what the
+  /// trip-currency wallet doesn't cover (FLUTTER-CG). `null` keeps the
+  /// default order (trip currency, then active currency).
+  final String? fundingCurrency;
+
   @override
-  List<Object?> get props => [threadId, useCard];
+  List<Object?> get props => [threadId, useCard, fundingCurrency];
 }
 
 /// Traveler explicitly renounces settling the commission. The request is
@@ -474,6 +481,8 @@ class NegotiationCommissionInsufficientWallet extends NegotiationState {
     required this.threadId,
     this.currency,
     this.breakdown,
+    this.bidCurrency,
+    this.alternatives = const [],
   });
   final double availableBalance;
   final double requiredCommission;
@@ -481,6 +490,12 @@ class NegotiationCommissionInsufficientWallet extends NegotiationState {
   final String threadId;
   final String? currency;
   final CommissionShortfall? breakdown;
+
+  /// Currency of the thread (the trip), to offer a top-up in that currency.
+  final String? bidCurrency;
+
+  /// Other wallets usable at today's rate (FLUTTER-CG).
+  final List<CommissionFundingAlternative> alternatives;
   @override
   List<Object?> get props => [
     availableBalance,
@@ -489,6 +504,8 @@ class NegotiationCommissionInsufficientWallet extends NegotiationState {
     threadId,
     currency,
     breakdown,
+    bidCurrency,
+    alternatives,
   ];
 }
 
@@ -1004,9 +1021,19 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
           return;
         }
       }
+      final fundingCurrency = e.useCard ? null : e.fundingCurrency;
+      if (fundingCurrency != null) {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.commissionFundingCurrencyChosen,
+            properties: {'currency': fundingCurrency, 'context': 'negotiation'},
+          ),
+        );
+      }
       final response = await _repository.settleCommission(
         e.threadId,
         commissionSource: e.useCard ? 'CARD' : 'WALLET_FIRST',
+        fundingCurrency: fundingCurrency,
       );
       await _handleCommissionResponse(response, e.threadId, emit);
     } catch (err) {
@@ -1106,6 +1133,8 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
             threadId: threadId,
             currency: r.currency,
             breakdown: r.breakdown,
+            bidCurrency: r.bidCurrency,
+            alternatives: r.alternatives,
           ),
         );
         return;

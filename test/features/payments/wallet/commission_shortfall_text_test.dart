@@ -18,7 +18,7 @@ void main() {
     expect(lines, hasLength(2));
     expect(lines[0], startsWith('Commission requise : '));
     expect(lines[0], contains('1,60'));
-    expect(lines[1], startsWith('Solde du portefeuille : '));
+    expect(lines[1], startsWith('Solde du portefeuille EUR : '));
     expect(lines[1], contains('1,33'));
   });
 

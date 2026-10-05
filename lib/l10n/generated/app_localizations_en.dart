@@ -9186,8 +9186,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String walletShortfallBalance(String amount) {
-    return 'Wallet balance: $amount';
+  String walletShortfallBalance(String currency, String amount) {
+    return '$currency wallet balance: $amount';
   }
 
   @override
@@ -16159,4 +16159,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailSectionPickup => 'PICKUP ON ARRIVAL';
+
+  @override
+  String payoutContactEmailLabel(String email) {
+    return 'Contact email: $email';
+  }
+
+  @override
+  String walletShortfallTopupInCurrency(String currency) {
+    return 'Top up in $currency';
+  }
+
+  @override
+  String walletShortfallPayWithCurrency(String currency) {
+    return 'Pay with my $currency balance';
+  }
+
+  @override
+  String walletShortfallAlternativeApprox(String amount) {
+    return '≈ $amount at today\'s rate';
+  }
+
+  @override
+  String get walletShortfallRateDisclaimer =>
+      'Converted at today\'s rate applied by Yadony, for information only. Yadony is not responsible for any difference with the actual rate at the time of payment.';
 }

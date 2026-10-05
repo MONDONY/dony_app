@@ -15274,11 +15274,11 @@ abstract class AppLocalizations {
   /// **'Commission requise : {amount}'**
   String walletShortfallRequired(String amount);
 
-  /// Sheet « Solde insuffisant », sans breakdown : deuxième ligne (commission_shortfall_text.dart).
+  /// Sheet « Solde insuffisant », sans breakdown : deuxième ligne, devise du solde toujours explicite (commission_shortfall_text.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Solde du portefeuille : {amount}'**
-  String walletShortfallBalance(String amount);
+  /// **'Solde du portefeuille {currency} : {amount}'**
+  String walletShortfallBalance(String currency, String amount);
 
   /// Sheet « Solde insuffisant », avec breakdown : montant de la commission dans la devise du colis (commission_shortfall_text.dart).
   ///
@@ -26714,6 +26714,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'RÉCUPÉRATION À L\'ARRIVÉE'**
   String get bidDetailSectionPickup;
+
+  /// Email de contact connu, transmis à Stripe, affiché sur l'écran des paiements (payout_onboarding_screen.dart _ContactEmailRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'E-mail de contact : {email}'**
+  String payoutContactEmailLabel(String email);
+
+  /// Sheet « Solde insuffisant » : bouton de recharge, nommant la devise du trajet (code ISO) qui couvre la commission (commission_funding_options.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger en {currency}'**
+  String walletShortfallTopupInCurrency(String currency);
+
+  /// Sheet « Solde insuffisant » : payer le reste de la commission depuis un autre portefeuille (code ISO), converti au taux du jour (commission_funding_options.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer avec mon solde {currency}'**
+  String walletShortfallPayWithCurrency(String currency);
+
+  /// Sheet « Solde insuffisant » : montant prélevé dans l'autre portefeuille, au taux du jour (commission_funding_options.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'≈ {amount} au taux du jour'**
+  String walletShortfallAlternativeApprox(String amount);
+
+  /// Sheet « Solde insuffisant » : avertissement sous les options de paiement depuis un autre portefeuille (commission_funding_options.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversion au taux du jour appliqué par Yadony, à titre indicatif. Yadony n\'est pas responsable d\'un écart avec le taux réel au moment du paiement.'**
+  String get walletShortfallRateDisclaimer;
 }
 
 class _AppLocalizationsDelegate

@@ -273,11 +273,16 @@ class NegotiationRepository {
   Future<AcceptanceResponse> settleCommission(
     String threadId, {
     String commissionSource = 'WALLET_FIRST',
+    String? fundingCurrency,
   }) async {
     try {
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         '/negotiations/$threadId/settle-commission',
-        queryParameters: {'commissionSource': commissionSource},
+        queryParameters: {
+          'commissionSource': commissionSource,
+          // Complément pris dans ce portefeuille au taux du jour (FLUTTER-CG).
+          'fundingCurrency': ?fundingCurrency,
+        },
       );
       return AcceptanceResponse.fromJson(response.data!);
     } on DioException catch (e) {

@@ -27,8 +27,10 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/payments/wallet/presentation/commission_funding_options.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -80,8 +82,12 @@ class _BidDetailView extends StatefulWidget {
 
 class _BidDetailViewState extends State<_BidDetailView> {
   // Statuts vivants : le colis peut encore transitionner vers COMPLETED
-  // à tout moment → le polling doit rester actif.
+  // à tout moment → le polling doit rester actif. PENDING et
+  // PAYMENT_ESCROWED attendent la réponse du voyageur : sans relevé,
+  // l'expéditeur ne voyait jamais l'acceptation (FLUTTER-CH).
   static const _kPollingStatuses = {
+    'PENDING',
+    'PAYMENT_ESCROWED',
     'ACCEPTED',
     'HANDED_OVER',
     'IN_TRANSIT',
@@ -95,6 +101,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
   late BidModel _bid;
   bool _skeletonLoading = false;
   Timer? _refreshTimer;
+  StreamSubscription<Map<String, dynamic>>? _pushSub;
 
   final _existingPaymentNotifier = ValueNotifier<PaymentModel?>(null);
   final _paymentLoadedNotifier = ValueNotifier<bool>(false);
@@ -109,6 +116,19 @@ class _BidDetailViewState extends State<_BidDetailView> {
     if (_kPollingStatuses.contains(_bid.status)) {
       _refreshTimer = Timer.periodic(_kPollingInterval, (_) => _pollDetail());
     }
+    if (getIt.isRegistered<NotificationService>()) {
+      _pushSub = getIt<NotificationService>().foregroundPushStream.listen(
+        _onForegroundPush,
+      );
+    }
+  }
+
+  /// Une push reçue application ouverte qui concerne ce colis (acceptation,
+  /// refus, remise…) le relit aussitôt, sans attendre le prochain relevé.
+  void _onForegroundPush(Map<String, dynamic> data) {
+    if (!mounted) return;
+    if (data['bidId']?.toString() != _bid.id) return;
+    context.read<BidBloc>().add(BidDetailRequested(_bid.id));
   }
 
   /// Relit le colis, sauf si personne ne le regarde : un autre écran ouvert
@@ -125,6 +145,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    unawaited(_pushSub?.cancel());
     _existingPaymentNotifier.dispose();
     _paymentLoadedNotifier.dispose();
     super.dispose();
@@ -219,13 +240,30 @@ class _BidDetailViewState extends State<_BidDetailView> {
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
+          CommissionFundingOptions(
+            alternatives: state.alternatives,
+            onSelected: (currency) {
+              context.pop();
+              context.read<BidAcceptanceBloc>().add(
+                ace.BidAcceptRequested(state.bidId, fundingCurrency: currency),
+              );
+            },
+          ),
         ],
       ),
       stickyBottom: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: l.bidDetailTopupWallet,
+            label: commissionTopupLabel(
+              l,
+              tripCurrency: commissionTripCurrency(
+                bidCurrency: state.bidCurrency,
+                breakdown: state.breakdown,
+                currency: state.currency,
+              ),
+              fallback: l.bidDetailTopupWallet,
+            ),
             onPressed: () async {
               context.pop();
               // /topup/method est le point d'entrée correct : il compose le

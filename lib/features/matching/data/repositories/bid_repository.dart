@@ -122,9 +122,11 @@ class BidRepository {
   Future<AcceptanceResponse> acceptBidWithCommission(
     String bidId, {
     String commissionSource = 'WALLET_FIRST',
+    String? fundingCurrency,
   }) => _datasource.acceptBidWithCommission(
     bidId,
     commissionSource: commissionSource,
+    fundingCurrency: fundingCurrency,
   );
 
   Future<ConfirmResponse> confirmCommissionAcceptance(String bidId) =>

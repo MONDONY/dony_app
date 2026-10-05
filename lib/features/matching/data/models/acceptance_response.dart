@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 
 enum AcceptanceStatus { accepted, requires3ds, insufficientWallet, failed }
@@ -13,6 +14,13 @@ class AcceptanceResponse {
   final String? currency;
   final CommissionShortfall? breakdown;
 
+  /// Devise du trajet (colis ou fil), absente d'un ancien back.
+  final String? bidCurrency;
+
+  /// Autres portefeuilles capables de couvrir le reste au taux du jour. Vide
+  /// avec un ancien back.
+  final List<CommissionFundingAlternative> alternatives;
+
   const AcceptanceResponse({
     required this.status,
     this.clientSecret,
@@ -23,6 +31,8 @@ class AcceptanceResponse {
     this.hasCard,
     this.currency,
     this.breakdown,
+    this.bidCurrency,
+    this.alternatives = const [],
   });
 
   factory AcceptanceResponse.fromJson(Map<String, dynamic> json) {
@@ -46,6 +56,10 @@ class AcceptanceResponse {
               json['breakdown'] as Map<String, dynamic>,
             )
           : null,
+      bidCurrency: (json['bidCurrency'] as String?)?.toUpperCase(),
+      alternatives: CommissionFundingAlternative.listFromJson(
+        json['alternatives'],
+      ),
     );
   }
 }

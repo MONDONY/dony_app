@@ -11,6 +11,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -432,10 +433,12 @@ void main() {
   group('showCommissionSettlementSheet', () {
     late bool retryCalled;
     late bool retryUseCard;
+    String? retryFundingCurrency;
 
     setUp(() {
       retryCalled = false;
       retryUseCard = false;
+      retryFundingCurrency = null;
     });
 
     Widget wrapSheet({
@@ -443,6 +446,8 @@ void main() {
       double requiredCommission = 5,
       double availableBalance = 1,
       CommissionShortfall? breakdown,
+      String? bidCurrency,
+      List<CommissionFundingAlternative> alternatives = const [],
     }) {
       final router = GoRouter(
         initialLocation: '/',
@@ -459,9 +464,12 @@ void main() {
                     hasCard: hasCard,
                     currency: 'EUR',
                     breakdown: breakdown,
-                    onRetry: ({required useCard}) {
+                    bidCurrency: bidCurrency,
+                    alternatives: alternatives,
+                    onRetry: ({required useCard, fundingCurrency}) {
                       retryCalled = true;
                       retryUseCard = useCard;
+                      retryFundingCurrency = fundingCurrency;
                     },
                   ),
                   child: const Text('open'),
@@ -492,7 +500,7 @@ void main() {
       expect(find.text('Solde insuffisant'), findsOneWidget);
       expect(find.textContaining(formatPriceIn(5, 'EUR')), findsOneWidget);
       expect(find.textContaining(formatPriceIn(1, 'EUR')), findsOneWidget);
-      expect(find.text('Recharger mon portefeuille'), findsOneWidget);
+      expect(find.text('Recharger en EUR'), findsOneWidget);
       expect(find.text('Payer par carte'), findsOneWidget);
       expect(find.text('Ajouter une carte'), findsNothing);
     });
@@ -550,13 +558,13 @@ void main() {
     );
 
     testWidgets(
-      'tap "Recharger mon portefeuille" → navigue vers /payments/wallet/topup/method',
+      'tap "Recharger en EUR" → navigue vers /payments/wallet/topup/method',
       (tester) async {
         await tester.pumpWidget(wrapSheet(hasCard: true));
         await tester.tap(find.text('open'));
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Recharger mon portefeuille'));
+        await tester.tap(find.text('Recharger en EUR'));
         await tester.pumpAndSettle();
 
         expect(find.text('TOPUP_METHOD'), findsOneWidget);
@@ -565,6 +573,65 @@ void main() {
         expect(retryCalled, isFalse);
       },
     );
+
+    // ── FLUTTER-CG : autre portefeuille au taux du jour ─────────────────────
+
+    testWidgets(
+      'alternative XOF : option, montant au taux du jour et avertissement',
+      (tester) async {
+        await tester.pumpWidget(
+          wrapSheet(
+            hasCard: true,
+            bidCurrency: 'EUR',
+            availableBalance: 0,
+            alternatives: const [
+              CommissionFundingAlternative(
+                currency: 'XOF',
+                balance: 12000,
+                requiredAmount: 656,
+              ),
+            ],
+          ),
+        );
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Recharger en EUR'), findsOneWidget);
+        expect(
+          find.textContaining('Solde du portefeuille EUR'),
+          findsOneWidget,
+        );
+        expect(find.text('Payer avec mon solde XOF'), findsOneWidget);
+        expect(
+          find.text('≈ ${formatPriceIn(656, 'XOF')} au taux du jour'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining("Yadony n'est pas responsable"),
+          findsOneWidget,
+        );
+
+        await tester.ensureVisible(find.text('Payer avec mon solde XOF'));
+        await tester.tap(find.text('Payer avec mon solde XOF'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Solde insuffisant'), findsNothing);
+        expect(retryCalled, isTrue);
+        expect(retryUseCard, isFalse);
+        expect(retryFundingCurrency, 'XOF');
+      },
+    );
+
+    testWidgets('sans alternative : ni option ni avertissement', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrapSheet(hasCard: true));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Payer avec mon solde'), findsNothing);
+      expect(find.textContaining('taux du jour'), findsNothing);
+    });
 
     testWidgets('anglais : titre, hint et boutons traduits', (tester) async {
       useEnglish();
@@ -577,7 +644,7 @@ void main() {
         find.textContaining('Top up your wallet or pay the service fee'),
         findsOneWidget,
       );
-      expect(find.text('Top up my wallet'), findsOneWidget);
+      expect(find.text('Top up in EUR'), findsOneWidget);
       expect(find.text('Pay by card'), findsOneWidget);
     });
   });
@@ -689,7 +756,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Solde insuffisant'), findsOneWidget);
-      expect(find.text('Recharger mon portefeuille'), findsOneWidget);
+      expect(find.text('Recharger en EUR'), findsOneWidget);
       expect(find.text('Payer par carte'), findsOneWidget);
     });
 

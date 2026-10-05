@@ -530,6 +530,50 @@ void main() {
       expect((capturedQuery as Map)['commissionSource'], 'WALLET_FIRST');
     });
 
+    test('forwards fundingCurrency when chosen (FLUTTER-CG)', () async {
+      dynamic capturedQuery;
+      when(
+        () => mockDio.post(
+          '/bids/bid-001/accept-with-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        capturedQuery = inv.namedArguments[const Symbol('queryParameters')];
+        return _ok({
+          'status': 'ACCEPTED',
+        }, '/bids/bid-001/accept-with-commission');
+      });
+
+      await datasource.acceptBidWithCommission(
+        'bid-001',
+        fundingCurrency: 'XOF',
+      );
+
+      expect(capturedQuery, {
+        'commissionSource': 'WALLET_FIRST',
+        'fundingCurrency': 'XOF',
+      });
+    });
+
+    test('omits fundingCurrency by default', () async {
+      dynamic capturedQuery;
+      when(
+        () => mockDio.post(
+          '/bids/bid-001/accept-with-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        capturedQuery = inv.namedArguments[const Symbol('queryParameters')];
+        return _ok({
+          'status': 'ACCEPTED',
+        }, '/bids/bid-001/accept-with-commission');
+      });
+
+      await datasource.acceptBidWithCommission('bid-001');
+
+      expect((capturedQuery as Map).containsKey('fundingCurrency'), isFalse);
+    });
+
     test('forwards CARD commissionSource when specified', () async {
       dynamic capturedQuery;
       when(

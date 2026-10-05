@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -262,6 +263,10 @@ class _OnboardingView extends StatelessWidget {
         state is PaymentError &&
         (state as PaymentError).error.code ==
             'contact-email-required'; // i18n-ignore
+    // Email de contact transmis à Stripe, affiché dès qu'il est connu : après
+    // l'avoir ajouté, l'utilisateur voit qu'il est bien pris en compte.
+    final email = context.watch<AuthBloc>().state.currentUser?.email?.trim();
+    final contactEmail = (email == null || email.isEmpty) ? null : email;
 
     return Scaffold(
       appBar: DonyAppBar(title: l.payoutTitle),
@@ -301,6 +306,10 @@ class _OnboardingView extends StatelessWidget {
                           const SizedBox(height: DonySpacing.lg),
                           const _BenefitsSection(),
                           const SizedBox(height: DonySpacing.lg),
+                          if (contactEmail != null) ...[
+                            _ContactEmailRow(email: contactEmail),
+                            const SizedBox(height: DonySpacing.md),
+                          ],
                           if (isPending) ...[
                             // Ne plus dire « Stripe finalise votre compte » : dans
                             // le cas courant Stripe n'attend rien, il manque des
@@ -337,8 +346,19 @@ class _OnboardingView extends StatelessWidget {
                               label: l.payoutAddEmailButton,
                               variant: DonyButtonVariant.secondary,
                               iconAsset: 'mail',
-                              onPressed: () =>
-                                  context.push('/profile/edit/email'),
+                              // Au retour avec un email vérifié, la demande
+                              // est relancée : l'erreur périmée disparaît et
+                              // l'inscription Stripe reprend (FLUTTER-BX).
+                              onPressed: () async {
+                                final added = await context.push<bool>(
+                                  '/profile/edit/email',
+                                );
+                                if ((added ?? false) && context.mounted) {
+                                  context.read<PaymentBloc>().add(
+                                    const PaymentConnectAccountRequested(),
+                                  );
+                                }
+                              },
                             ),
                             const SizedBox(height: DonySpacing.md),
                           ],
@@ -377,6 +397,30 @@ class _OnboardingView extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _ContactEmailRow extends StatelessWidget {
+  const _ContactEmailRow({required this.email});
+
+  final String email;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        DonyIcon('mail', size: 18, color: cs.onSurfaceVariant),
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(
+          child: Text(
+            context.l10n.payoutContactEmailLabel(email),
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -263,5 +264,36 @@ void main() {
     },
     act: (b) => b.add(BidAcceptWithCardRequested('bid_x')),
     expect: () => [isA<BidAccepting>(), isA<BidAccepted>()],
+  );
+
+  blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+    'insufficient wallet carries bidCurrency and alternatives (FLUTTER-CG)',
+    build: () {
+      when(() => repo.acceptBidWithCommission('bid_x')).thenAnswer(
+        (_) async => const AcceptanceResponse(
+          status: AcceptanceStatus.insufficientWallet,
+          availableBalance: 0,
+          requiredCommission: 1,
+          hasCard: false,
+          currency: 'EUR',
+          bidCurrency: 'EUR',
+          alternatives: [
+            CommissionFundingAlternative(
+              currency: 'XOF',
+              balance: 12000,
+              requiredAmount: 656,
+            ),
+          ],
+        ),
+      );
+      return BidAcceptanceBloc(repo, stripe);
+    },
+    act: (b) => b.add(BidAcceptRequested('bid_x')),
+    expect: () => [
+      isA<BidAccepting>(),
+      isA<BidWalletInsufficient>()
+          .having((s) => s.bidCurrency, 'bidCurrency', 'EUR')
+          .having((s) => s.alternatives.single.currency, 'alternative', 'XOF'),
+    ],
   );
 }

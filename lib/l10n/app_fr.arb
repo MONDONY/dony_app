@@ -9802,10 +9802,13 @@
       }
     }
   },
-  "walletShortfallBalance": "Solde du portefeuille : {amount}",
+  "walletShortfallBalance": "Solde du portefeuille {currency} : {amount}",
   "@walletShortfallBalance": {
-    "description": "Sheet « Solde insuffisant », sans breakdown : deuxième ligne (commission_shortfall_text.dart).",
+    "description": "Sheet « Solde insuffisant », sans breakdown : deuxième ligne, devise du solde toujours explicite (commission_shortfall_text.dart).",
     "placeholders": {
+      "currency": {
+        "type": "String"
+      },
       "amount": {
         "type": "String"
       }
@@ -18652,5 +18655,45 @@
   "bidDetailSectionPickup": "RÉCUPÉRATION À L'ARRIVÉE",
   "@bidDetailSectionPickup": {
     "description": "Section de l'adresse de récupération du destinataire, Plus de détails (details_accordion.dart)"
+  },
+  "payoutContactEmailLabel": "E-mail de contact : {email}",
+  "@payoutContactEmailLabel": {
+    "description": "Email de contact connu, transmis à Stripe, affiché sur l'écran des paiements (payout_onboarding_screen.dart _ContactEmailRow).",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallTopupInCurrency": "Recharger en {currency}",
+  "@walletShortfallTopupInCurrency": {
+    "description": "Sheet « Solde insuffisant » : bouton de recharge, nommant la devise du trajet (code ISO) qui couvre la commission (commission_funding_options.dart).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallPayWithCurrency": "Payer avec mon solde {currency}",
+  "@walletShortfallPayWithCurrency": {
+    "description": "Sheet « Solde insuffisant » : payer le reste de la commission depuis un autre portefeuille (code ISO), converti au taux du jour (commission_funding_options.dart).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallAlternativeApprox": "≈ {amount} au taux du jour",
+  "@walletShortfallAlternativeApprox": {
+    "description": "Sheet « Solde insuffisant » : montant prélevé dans l'autre portefeuille, au taux du jour (commission_funding_options.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallRateDisclaimer": "Conversion au taux du jour appliqué par Yadony, à titre indicatif. Yadony n'est pas responsable d'un écart avec le taux réel au moment du paiement.",
+  "@walletShortfallRateDisclaimer": {
+    "description": "Sheet « Solde insuffisant » : avertissement sous les options de paiement depuis un autre portefeuille (commission_funding_options.dart)."
   }
 }
