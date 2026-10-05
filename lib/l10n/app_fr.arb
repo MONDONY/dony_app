@@ -1503,6 +1503,14 @@
   "@tripPublishCashLockedExplanation": {
     "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M)."
   },
+  "tripPublishCardActiveExplanation": "Le paiement par carte est activé sur ce trajet : les expéditeurs pourront payer par carte, l'argent est séquestré jusqu'à la livraison.",
+  "@tripPublishCardActiveExplanation": {
+    "description": "Message au toucher de la ligne carte quand elle est active (prix_conditions_step.dart, Sentry FLUTTER-CS/D2)."
+  },
+  "tripPublishCardCheckingSubtitle": "Vérification de votre compte de paiement…",
+  "@tripPublishCardCheckingSubtitle": {
+    "description": "Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_conditions_step.dart, Sentry FLUTTER-D2)."
+  },
   "tripPublishCashSubtitle": "Commission prélevée au voyageur à la remise",
   "@tripPublishCashSubtitle": {
     "description": "Sous-titre de la ligne paiement en espèces"

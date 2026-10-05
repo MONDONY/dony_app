@@ -784,6 +784,14 @@
   "@tripPublishCashLockedExplanation": {
     "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M)."
   },
+  "tripPublishCardActiveExplanation": "Card payment is on for this trip: senders can pay by card, and the money is held until delivery.",
+  "@tripPublishCardActiveExplanation": {
+    "description": "Message shown when tapping the active card row."
+  },
+  "tripPublishCardCheckingSubtitle": "Checking your payment account…",
+  "@tripPublishCardCheckingSubtitle": {
+    "description": "Card row subtitle while the Stripe status reloads."
+  },
   "tripPublishCashSubtitle": "Service fee charged to the traveler at drop-off",
   "tripPublishAcceptedContentSectionLabel": "What I accept",
   "tripPublishRefusedContentSectionLabel": "What I refuse",

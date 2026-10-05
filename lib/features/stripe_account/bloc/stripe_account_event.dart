@@ -9,7 +9,14 @@ class StripeAccountStatusLoaded extends StripeAccountEvent {
 }
 
 class StripeAccountStatusRefreshed extends StripeAccountEvent {
-  const StripeAccountStatusRefreshed();
+  /// Passe par [StripeAccountLoading] pendant l'appel quand le compte n'est
+  /// pas déjà complet. Pour un écran qui affiche le statut : sans cela, il
+  /// montrerait « non activé » le temps de la resynchronisation, alors que la
+  /// réponse va peut-être dire le contraire (Sentry FLUTTER-D2). Un compte
+  /// complet reste affiché tel quel pendant l'appel.
+  final bool showProgress;
+
+  const StripeAccountStatusRefreshed({this.showProgress = false});
 }
 
 /// Revient à [StripeAccountInitial], comme un `StripeAccountBloc` tout neuf.

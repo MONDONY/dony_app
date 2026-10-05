@@ -4766,6 +4766,18 @@ abstract class AppLocalizations {
   /// **'Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c\'est le mode qui permet aux expéditeurs de réserver.'**
   String get tripPublishCashLockedExplanation;
 
+  /// Message au toucher de la ligne carte quand elle est active (prix_conditions_step.dart, Sentry FLUTTER-CS/D2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement par carte est activé sur ce trajet : les expéditeurs pourront payer par carte, l\'argent est séquestré jusqu\'à la livraison.'**
+  String get tripPublishCardActiveExplanation;
+
+  /// Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_conditions_step.dart, Sentry FLUTTER-D2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification de votre compte de paiement…'**
+  String get tripPublishCardCheckingSubtitle;
+
   /// Sous-titre de la ligne paiement en espèces
   ///
   /// In fr, this message translates to:

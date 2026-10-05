@@ -2791,6 +2791,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Without card payment on this trip, cash always stays accepted: it is how senders can book.';
 
   @override
+  String get tripPublishCardActiveExplanation =>
+      'Card payment is on for this trip: senders can pay by card, and the money is held until delivery.';
+
+  @override
+  String get tripPublishCardCheckingSubtitle =>
+      'Checking your payment account…';
+
+  @override
   String get tripPublishCashSubtitle =>
       'Service fee charged to the traveler at drop-off';
 

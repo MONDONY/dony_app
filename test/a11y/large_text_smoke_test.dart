@@ -402,6 +402,7 @@ _TripMockStripeAccountBloc _tripMakeStripeBloc() {
   final b = _TripMockStripeAccountBloc();
   when(() => b.state).thenReturn(const StripeAccountInitial());
   when(() => b.stream).thenAnswer((_) => const Stream.empty());
+  when(() => b.isClosed).thenReturn(false);
   return b;
 }
 

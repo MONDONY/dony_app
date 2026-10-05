@@ -16,6 +16,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
@@ -93,6 +94,7 @@ Widget _host({
   double initialAvailableKg = 10,
   SupportedCurrency? currency = SupportedCurrency.eur,
   ValueNotifier<bool>? negotiableNotifier,
+  bool withRouter = false,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -130,40 +132,52 @@ Widget _host({
   final refusedCtrl = TextEditingController();
   final customPriceCtrl = TextEditingController();
 
-  return MaterialApp(
-    home: Scaffold(
-      body: MultiBlocProvider(
-        providers: [
-          BlocProvider<AnnouncementFormBloc>(
-            create: (_) => AnnouncementFormBloc(
-              analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-            ),
-          ),
-          BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
-          BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
-        ],
-        child: SingleChildScrollView(
-          child: PrixConditionsStep(
-            currency: currency,
-            priceOptionNotifier: priceOptionNotifier,
-            customPriceNotifier: customPriceNotifier,
-            availableKgNotifier: availableKgNotifier,
-            cashEnabledNotifier: cashEnabledNotifier,
-            kgPriceEnabledNotifier: kgPriceEnabledNotifier,
-            mobileMoneyEnabledNotifier: mobileMoneyEnabledNotifier,
-            currencyNotifier: currencyNotifier,
-            negotiableNotifier: resolvedNegotiableNotifier,
-            selectedContentNotifier: selectedContentNotifier,
-            customAcceptedNotifier: customAcceptedNotifier,
-            refusedTypesNotifier: refusedTypesNotifier,
-            catalogLabelsNotifier: catalogLabelsNotifier,
-            descriptionCtrl: descriptionCtrl,
-            customAcceptedCtrl: customAcceptedCtrl,
-            refusedCtrl: refusedCtrl,
-            customPriceCtrl: customPriceCtrl,
+  final page = Scaffold(
+    body: MultiBlocProvider(
+      providers: [
+        BlocProvider<AnnouncementFormBloc>(
+          create: (_) => AnnouncementFormBloc(
+            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
           ),
         ),
+        BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
+        BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
+      ],
+      child: SingleChildScrollView(
+        child: PrixConditionsStep(
+          currency: currency,
+          priceOptionNotifier: priceOptionNotifier,
+          customPriceNotifier: customPriceNotifier,
+          availableKgNotifier: availableKgNotifier,
+          cashEnabledNotifier: cashEnabledNotifier,
+          kgPriceEnabledNotifier: kgPriceEnabledNotifier,
+          mobileMoneyEnabledNotifier: mobileMoneyEnabledNotifier,
+          currencyNotifier: currencyNotifier,
+          negotiableNotifier: resolvedNegotiableNotifier,
+          selectedContentNotifier: selectedContentNotifier,
+          customAcceptedNotifier: customAcceptedNotifier,
+          refusedTypesNotifier: refusedTypesNotifier,
+          catalogLabelsNotifier: catalogLabelsNotifier,
+          descriptionCtrl: descriptionCtrl,
+          customAcceptedCtrl: customAcceptedCtrl,
+          refusedCtrl: refusedCtrl,
+          customPriceCtrl: customPriceCtrl,
+        ),
       ),
+    ),
+  );
+  if (!withRouter) return MaterialApp(home: page);
+  // Routeur minimal : la ligne carte non configurée mène à l'onboarding.
+  return MaterialApp.router(
+    routerConfig: GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => page),
+        GoRoute(
+          path: '/connect/onboarding/intro',
+          builder: (_, _) =>
+              const Scaffold(body: Text('stripe-onboarding-intro')),
+        ),
+      ],
     ),
   );
 }
@@ -175,6 +189,7 @@ Future<void> _pump(
   CommissionMethodState? commissionState,
   ValueNotifier<bool>? negotiableNotifier,
   SupportedCurrency currency = SupportedCurrency.eur,
+  bool withRouter = false,
 }) async {
   await tester.pumpWidget(
     _host(
@@ -182,6 +197,7 @@ Future<void> _pump(
       commissionState: commissionState,
       negotiableNotifier: negotiableNotifier,
       currency: currency,
+      withRouter: withRouter,
     ),
   );
   await tester.pump(const Duration(milliseconds: 200));
@@ -321,8 +337,11 @@ void main() {
       expect(find.text('Modes de paiement acceptés'), findsOneWidget);
     });
 
+    // Sentry FLUTTER-CS/D2 : la ligne carte, inerte et surmontée d'un
+    // cadenas, se lisait « bloquée » même active.
     testWidgets(
-      'switch Stripe visible et désactivé (toujours ON, non éditable)',
+      'switch Stripe actif : un toucher explique sans couper la carte, sans '
+      'cadenas',
       (tester) async {
         await _pump(
           tester,
@@ -331,21 +350,116 @@ void main() {
         );
         final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
         expect(stripeSwitch, findsOneWidget);
-        final sw = tester.widget<Switch>(
-          find.descendant(of: stripeSwitch, matching: find.byType(Switch)).last,
-        );
         expect(
-          sw.value,
+          find.descendant(
+            of: stripeSwitch,
+            matching: find.byWidgetPredicate(
+              (w) => w is DonyIcon && w.name == 'lock',
+            ),
+          ),
+          findsNothing,
+        );
+
+        await tester.tap(stripeSwitch);
+        await tester.pump();
+
+        expect(
+          tester.widget<SwitchListTile>(stripeSwitch).value,
           isTrue,
-          reason: 'Stripe est toujours activé (verrouillé)',
+          reason: 'La valeur vient du statut Stripe, jamais du toucher',
         );
         expect(
-          sw.onChanged,
-          isNull,
-          reason: 'Stripe switch ne doit pas être modifiable',
+          find.textContaining('Le paiement par carte est activé sur ce trajet'),
+          findsOneWidget,
         );
+        await tester.pump(const Duration(seconds: 5));
       },
     );
+
+    testWidgets(
+      'statut Stripe en rechargement : indicateur, ni « activé » ni encart '
+      '« non activé »',
+      (tester) async {
+        await _pump(tester, stripeState: const StripeAccountLoading());
+        final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
+        expect(tester.widget<SwitchListTile>(stripeSwitch).value, isFalse);
+        expect(tester.widget<SwitchListTile>(stripeSwitch).onChanged, isNull);
+        expect(find.byKey(const Key('card-status-checking')), findsOneWidget);
+        expect(
+          find.text('Vérification de votre compte de paiement…'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('card-setup-notice')), findsNothing);
+      },
+    );
+
+    testWidgets('statut en rechargement mais trajet en XOF : la devise prime, '
+        'pas d\'indicateur', (tester) async {
+      await _pump(
+        tester,
+        stripeState: const StripeAccountLoading(),
+        currency: SupportedCurrency.xof,
+      );
+      expect(find.byKey(const Key('card-status-checking')), findsNothing);
+      expect(find.text('Indisponible sur ce trajet'), findsOneWidget);
+    });
+
+    testWidgets(
+      'Stripe non configuré : toucher la ligne carte mène à l\'activation',
+      (tester) async {
+        await _pump(
+          tester,
+          stripeState: _stripeNotConfiguredState,
+          withRouter: true,
+        );
+        final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
+        await tester.ensureVisible(stripeSwitch);
+        await tester.pump();
+        await tester.tap(stripeSwitch);
+        await tester.pumpAndSettle();
+
+        expect(find.text('stripe-onboarding-intro'), findsOneWidget);
+      },
+    );
+
+    testWidgets('pays non couvert : toucher la ligne carte explique pourquoi', (
+      tester,
+    ) async {
+      await _pump(tester, stripeState: _stripeCountryUnavailableState);
+      final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
+      await tester.ensureVisible(stripeSwitch);
+      await tester.pump();
+      await tester.tap(stripeSwitch);
+      await tester.pump();
+
+      // Une fois dans l'encart, une fois dans le message du toucher.
+      expect(
+        find.text(
+          'Le paiement par carte n\'est pas encore disponible dans votre '
+          'pays. Vos trajets sont publiés en espèces.',
+        ),
+        findsNWidgets(2),
+      );
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('trajet en XOF : toucher la ligne carte rappelle la devise', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        stripeState: _stripeConfiguredState,
+        currency: SupportedCurrency.xof,
+      );
+      final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
+      await tester.ensureVisible(stripeSwitch);
+      await tester.pump();
+      await tester.tap(stripeSwitch);
+      await tester.pump();
+
+      expect(find.textContaining('trajets en XOF'), findsNWidgets(2));
+      await tester.pump(const Duration(seconds: 5));
+    });
 
     testWidgets(
       'switch Espèces activé même sans carte commission (vérif. reportée à l\'acceptation)',
@@ -433,7 +547,9 @@ void main() {
         find.byKey(const Key('payment-method-stripe')),
       );
       expect(stripeSwitch.value, isFalse);
-      expect(stripeSwitch.onChanged, isNull);
+      // Touchable pour expliquer l'indisponibilité, jamais basculable : la
+      // valeur vient du statut (Sentry FLUTTER-CS/D2).
+      expect(stripeSwitch.onChanged, isNotNull);
       expect(find.text('Indisponible sur ce trajet'), findsOneWidget);
       expect(
         find.text(
@@ -509,8 +625,8 @@ void main() {
         expect(stripeSwitch.value, isFalse);
         expect(
           stripeSwitch.onChanged,
-          isNull,
-          reason: 'Carte verrouillée sans Stripe configuré',
+          isNotNull,
+          reason: 'Non basculable, mais un toucher mène à l\'activation',
         );
 
         expect(find.text('Activer les paiements par carte'), findsOneWidget);

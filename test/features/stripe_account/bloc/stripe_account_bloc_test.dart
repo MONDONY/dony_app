@@ -172,6 +172,61 @@ void main() {
       act: (b) => b.add(const StripeAccountStatusRefreshed()),
       expect: () => [isA<StripeAccountLoadError>()],
     );
+
+    // Sentry FLUTTER-D2 : à l'ouverture de « Publier un trajet », l'écran
+    // montrait « non activé » pendant la resynchronisation.
+    blocTest<StripeAccountBloc, StripeAccountState>(
+      'showProgress sur un statut jamais chargé : [Loading, Ready]',
+      build: buildBloc,
+      setUp: () {
+        when(
+          () => mockRepo.refreshAccountStatus(),
+        ).thenAnswer((_) async => _complete);
+      },
+      act: (b) => b.add(const StripeAccountStatusRefreshed(showProgress: true)),
+      expect: () => [
+        isA<StripeAccountLoading>(),
+        isA<StripeAccountReady>().having(
+          (s) => s.accountStatus.isComplete,
+          'isComplete',
+          isTrue,
+        ),
+      ],
+    );
+
+    blocTest<StripeAccountBloc, StripeAccountState>(
+      'showProgress sur un compte incomplet : [Loading, Ready]',
+      build: buildBloc,
+      seed: () =>
+          const StripeAccountReady(ConnectAccountStatus(status: 'NOT_CREATED')),
+      setUp: () {
+        when(
+          () => mockRepo.refreshAccountStatus(),
+        ).thenAnswer((_) async => _complete);
+      },
+      act: (b) => b.add(const StripeAccountStatusRefreshed(showProgress: true)),
+      expect: () => [isA<StripeAccountLoading>(), isA<StripeAccountReady>()],
+    );
+
+    blocTest<StripeAccountBloc, StripeAccountState>(
+      'showProgress sur un compte complet : pas de Loading, la carte reste '
+      'affichée active pendant l\'appel',
+      build: buildBloc,
+      seed: () => const StripeAccountReady(_complete),
+      setUp: () {
+        when(
+          () => mockRepo.refreshAccountStatus(),
+        ).thenAnswer((_) async => _disabled);
+      },
+      act: (b) => b.add(const StripeAccountStatusRefreshed(showProgress: true)),
+      expect: () => [
+        isA<StripeAccountReady>().having(
+          (s) => s.accountStatus.isDisabled,
+          'isDisabled',
+          isTrue,
+        ),
+      ],
+    );
   });
 
   group('StripeAccountReset', () {

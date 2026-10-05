@@ -2802,6 +2802,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c\'est le mode qui permet aux expéditeurs de réserver.';
 
   @override
+  String get tripPublishCardActiveExplanation =>
+      'Le paiement par carte est activé sur ce trajet : les expéditeurs pourront payer par carte, l\'argent est séquestré jusqu\'à la livraison.';
+
+  @override
+  String get tripPublishCardCheckingSubtitle =>
+      'Vérification de votre compte de paiement…';
+
+  @override
   String get tripPublishCashSubtitle =>
       'Commission prélevée au voyageur à la remise';
 
