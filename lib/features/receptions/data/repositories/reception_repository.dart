@@ -14,4 +14,10 @@ class ReceptionRepository {
   Future<Reception> confirm(String bidId) => _datasource.confirm(bidId);
 
   Future<void> decline(String bidId) => _datasource.decline(bidId);
+
+  Future<void> rateTraveler(
+    String bidId, {
+    required int stars,
+    String? comment,
+  }) => _datasource.rateTraveler(bidId, stars: stars, comment: comment);
 }

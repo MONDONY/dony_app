@@ -323,4 +323,177 @@ void main() {
       ],
     );
   });
+
+  group('noter le voyageur (FLUTTER-CA)', () {
+    const rateable = Reception(
+      bidId: _id,
+      linkStatus: 'CONFIRMED',
+      bidStatus: 'COMPLETED',
+      canRate: true,
+    );
+    const rated = Reception(
+      bidId: _id,
+      linkStatus: 'CONFIRMED',
+      bidStatus: 'COMPLETED',
+      myRating: 4,
+    );
+
+    void stubRate([Object? error]) {
+      final call = when(
+        () => repository.rateTraveler(
+          _id,
+          stars: any(named: 'stars'),
+          comment: any(named: 'comment'),
+        ),
+      );
+      if (error != null) {
+        call.thenThrow(error);
+      } else {
+        call.thenAnswer((_) async {});
+      }
+    }
+
+    blocTest<ReceptionDetailCubit, ReceptionDetailState>(
+      'succès : commentaire nettoyé, détail rechargé, événement sans '
+      'commentaire ni identifiant',
+      build: () {
+        stubRate();
+        when(() => repository.getReception(_id)).thenAnswer((_) async => rated);
+        return ReceptionDetailCubit(repository, analytics);
+      },
+      seed: () => const ReceptionDetailLoaded(rateable),
+      act: (cubit) => cubit.rateTraveler(stars: 4, comment: '  Top  '),
+      expect: () => [
+        _loaded(ReceptionAction.rating),
+        _loaded(
+          ReceptionAction.rated,
+        ).having((s) => s.reception.myRating, 'myRating', 4),
+      ],
+      verify: (_) {
+        verify(
+          () => repository.rateTraveler(_id, stars: 4, comment: 'Top'),
+        ).called(1);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.receptionTravelerRated,
+            properties: {'stars': 4},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<ReceptionDetailCubit, ReceptionDetailState>(
+      'commentaire vide : envoyé sans commentaire',
+      build: () {
+        stubRate();
+        when(() => repository.getReception(_id)).thenAnswer((_) async => rated);
+        return ReceptionDetailCubit(repository, analytics);
+      },
+      seed: () => const ReceptionDetailLoaded(rateable),
+      act: (cubit) => cubit.rateTraveler(stars: 5, comment: '   '),
+      verify: (_) =>
+          verify(() => repository.rateTraveler(_id, stars: 5)).called(1),
+    );
+
+    blocTest<ReceptionDetailCubit, ReceptionDetailState>(
+      'note enregistrée mais rechargement raté : la note s\'affiche quand même',
+      build: () {
+        stubRate();
+        when(
+          () => repository.getReception(_id),
+        ).thenThrow(const OfflineException());
+        return ReceptionDetailCubit(repository, analytics);
+      },
+      seed: () => const ReceptionDetailLoaded(rateable),
+      act: (cubit) => cubit.rateTraveler(stars: 3),
+      expect: () => [
+        _loaded(ReceptionAction.rating),
+        _loaded(ReceptionAction.rated)
+            .having((s) => s.reception.myRating, 'myRating', 3)
+            .having((s) => s.reception.canRate, 'canRate', false),
+      ],
+    );
+
+    blocTest<ReceptionDetailCubit, ReceptionDetailState>(
+      '409 déjà noté : détail rechargé, message dédié, aucun événement',
+      build: () {
+        stubRate(
+          const ConflictException('déjà', code: 'reception-already-rated'),
+        );
+        when(() => repository.getReception(_id)).thenAnswer((_) async => rated);
+        return ReceptionDetailCubit(repository, analytics);
+      },
+      seed: () => const ReceptionDetailLoaded(rateable),
+      act: (cubit) => cubit.rateTraveler(stars: 2),
+      expect: () => [
+        _loaded(ReceptionAction.rating),
+        _loaded(
+          ReceptionAction.alreadyRated,
+        ).having((s) => s.reception.myRating, 'myRating', 4),
+      ],
+      verify: (_) => verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.receptionTravelerRated,
+          properties: any(named: 'properties'),
+        ),
+      ),
+    );
+
+    blocTest<ReceptionDetailCubit, ReceptionDetailState>(
+      '409 colis pas livré : erreur présentée par le catalogue',
+      build: () {
+        stubRate(
+          const ConflictException(
+            'pas livré',
+            code: 'reception-rating-not-allowed',
+          ),
+        );
+        return ReceptionDetailCubit(repository, analytics);
+      },
+      seed: () => const ReceptionDetailLoaded(rateable),
+      act: (cubit) => cubit.rateTraveler(stars: 5),
+      expect: () => [
+        _loaded(ReceptionAction.rating),
+        _loaded(ReceptionAction.failed).having(
+          (s) => s.actionError?.code,
+          'code',
+          'reception-rating-not-allowed',
+        ),
+      ],
+      verify: (_) => verifyNever(() => repository.getReception(any())),
+    );
+
+    blocTest<ReceptionDetailCubit, ReceptionDetailState>(
+      'déjà noté : rien n\'est envoyé',
+      build: () => ReceptionDetailCubit(repository, analytics),
+      seed: () => const ReceptionDetailLoaded(rated),
+      act: (cubit) => cubit.rateTraveler(stars: 4),
+      expect: () => <ReceptionDetailState>[],
+      verify: (_) => verifyNever(
+        () => repository.rateTraveler(
+          any(),
+          stars: any(named: 'stars'),
+          comment: any(named: 'comment'),
+        ),
+      ),
+    );
+
+    blocTest<ReceptionDetailCubit, ReceptionDetailState>(
+      'note hors bornes : rien n\'est envoyé',
+      build: () => ReceptionDetailCubit(repository, analytics),
+      seed: () => const ReceptionDetailLoaded(rateable),
+      act: (cubit) async {
+        await cubit.rateTraveler(stars: 0);
+        await cubit.rateTraveler(stars: 6);
+      },
+      expect: () => <ReceptionDetailState>[],
+      verify: (_) => verifyNever(
+        () => repository.rateTraveler(
+          any(),
+          stars: any(named: 'stars'),
+          comment: any(named: 'comment'),
+        ),
+      ),
+    );
+  });
 }

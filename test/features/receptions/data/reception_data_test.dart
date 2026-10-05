@@ -104,6 +104,41 @@ void main() {
     });
   });
 
+  group('Reception.fromJson — note du voyageur (FLUTTER-CA)', () {
+    test('canRate et myRating lus', () {
+      final r = Reception.fromJson({
+        ..._confirmedJson(),
+        'bidStatus': 'COMPLETED',
+        'canRate': false,
+        'myRating': 4,
+      });
+      expect(r.canRate, isFalse);
+      expect(r.myRating, 4);
+
+      final rateable = Reception.fromJson({
+        ..._confirmedJson(),
+        'canRate': true,
+        'myRating': null,
+      });
+      expect(rateable.canRate, isTrue);
+      expect(rateable.myRating, isNull);
+    });
+
+    test('back antérieur ou valeurs inattendues : ni notation ni note', () {
+      final old = Reception.fromJson(_confirmedJson());
+      expect(old.canRate, isFalse);
+      expect(old.myRating, isNull);
+
+      final odd = Reception.fromJson({
+        ..._confirmedJson(),
+        'canRate': 'true',
+        'myRating': 9,
+      });
+      expect(odd.canRate, isFalse);
+      expect(odd.myRating, isNull);
+    });
+  });
+
   group('ReceptionRemoteDatasource', () {
     late MockApiClient apiClient;
     late MockDio dio;
@@ -157,6 +192,34 @@ void main() {
       final r = await repository.confirm(_bidId);
 
       expect(r.isConfirmed, isTrue);
+    });
+
+    test('POST /receptions/{bidId}/rating : étoiles et commentaire', () async {
+      when(
+        () => dio.post<dynamic>(any(), data: any(named: 'data')),
+      ).thenAnswer((_) async => _response({'id': 'r1'}, status: 201));
+
+      await repository.rateTraveler(_bidId, stars: 5, comment: 'Parfait');
+
+      verify(
+        () => dio.post<dynamic>(
+          '/receptions/$_bidId/rating',
+          data: {'stars': 5, 'comment': 'Parfait'},
+        ),
+      ).called(1);
+    });
+
+    test('POST /receptions/{bidId}/rating sans commentaire', () async {
+      when(
+        () => dio.post<dynamic>(any(), data: any(named: 'data')),
+      ).thenAnswer((_) async => _response({'id': 'r1'}, status: 201));
+
+      await repository.rateTraveler(_bidId, stars: 3);
+
+      verify(
+        () =>
+            dio.post<dynamic>('/receptions/$_bidId/rating', data: {'stars': 3}),
+      ).called(1);
     });
 
     test('POST /receptions/{bidId}/decline', () async {

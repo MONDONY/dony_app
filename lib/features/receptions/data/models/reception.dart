@@ -28,6 +28,8 @@ class Reception {
     this.travelerAvatarUrl,
     this.senderId,
     this.senderAvatarUrl,
+    this.canRate = false,
+    this.myRating,
   });
 
   static const pending = 'PENDING';
@@ -70,6 +72,40 @@ class Reception {
   final String? senderId;
   final String? senderAvatarUrl;
 
+  /// Le destinataire peut noter le voyageur (FLUTTER-CA) : lien confirmé,
+  /// colis livré, aucune note destinataire sur ce colis. `false` sur un back
+  /// antérieur, qui n'envoie pas le champ.
+  final bool canRate;
+
+  /// Étoiles (1 à 5) de la note laissée depuis ce compte, `null` s'il n'a
+  /// pas noté (ou back antérieur).
+  final int? myRating;
+
+  /// Copie après une note acceptée par le serveur, quand le rechargement du
+  /// détail échoue : l'écran montre la note plutôt que de la reproposer.
+  Reception withMyRating(int stars) => Reception(
+    bidId: bidId,
+    linkStatus: linkStatus,
+    bidStatus: bidStatus,
+    senderFirstName: senderFirstName,
+    departureCity: departureCity,
+    arrivalCity: arrivalCity,
+    departureDate: departureDate,
+    arrivalDate: arrivalDate,
+    recipientName: recipientName,
+    trackingNumber: trackingNumber,
+    travelerFirstName: travelerFirstName,
+    arrivalInstructions: arrivalInstructions,
+    weightKg: weightKg,
+    confirmationCode: confirmationCode,
+    updatedAt: updatedAt,
+    travelerId: travelerId,
+    travelerAvatarUrl: travelerAvatarUrl,
+    senderId: senderId,
+    senderAvatarUrl: senderAvatarUrl,
+    myRating: stars,
+  );
+
   bool get isPending => linkStatus == pending;
   bool get isConfirmed => linkStatus == confirmed;
 
@@ -108,6 +144,13 @@ class Reception {
       return trimmed.isEmpty ? null : trimmed;
     }
 
+    int? stars(String key) {
+      final value = json[key];
+      if (value is! num) return null;
+      final n = value.toInt();
+      return n >= 1 && n <= 5 ? n : null;
+    }
+
     DateTime? date(String key) {
       final value = json[key];
       return value is String ? DateTime.tryParse(value) : null;
@@ -135,6 +178,8 @@ class Reception {
       travelerAvatarUrl: text('travelerAvatarUrl'),
       senderId: text('senderId'),
       senderAvatarUrl: text('senderAvatarUrl'),
+      canRate: json['canRate'] == true,
+      myRating: stars('myRating'),
     );
   }
 }

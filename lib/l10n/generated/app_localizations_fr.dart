@@ -16289,4 +16289,42 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationsActionRequired => 'Action requise';
+
+  @override
+  String get receptionRateTitle => 'Noter le voyageur';
+
+  @override
+  String receptionRateIntro(String name) {
+    return 'Le colis est livré. Comment s\'est passé le transport avec $name ?';
+  }
+
+  @override
+  String get receptionRateIntroNoName =>
+      'Le colis est livré. Comment s\'est passé le transport ?';
+
+  @override
+  String get receptionRatedTitle => 'Vous avez noté le voyageur';
+
+  @override
+  String receptionRatedStarsSemantics(int stars) {
+    return '$stars étoiles sur 5';
+  }
+
+  @override
+  String get receptionAlreadyRatedSnackbar =>
+      'Vous aviez déjà noté le voyageur pour ce colis.';
+
+  @override
+  String get errorReceptionRatingNotAllowedTitle => 'Pas encore possible';
+
+  @override
+  String get errorReceptionRatingNotAllowedMessage =>
+      'Vous pourrez noter le voyageur une fois le colis livré.';
+
+  @override
+  String get errorReceptionNotRecipientTitle => 'Action impossible';
+
+  @override
+  String get errorReceptionNotRecipientMessage =>
+      'Seul le destinataire confirmé de ce colis peut noter le voyageur.';
 }
