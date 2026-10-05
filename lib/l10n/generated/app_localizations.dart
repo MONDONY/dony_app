@@ -26744,6 +26744,84 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Conversion au taux du jour appliqué par Yadony, à titre indicatif. Yadony n\'est pas responsable d\'un écart avec le taux réel au moment du paiement.'**
   String get walletShortfallRateDisclaimer;
+
+  /// Recharge mobile money : puce qui ouvre la saisie libre d'un montant, à côté des montants proposés (FLUTTER-CF).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre montant'**
+  String get walletTopupCustomAmountChip;
+
+  /// Recharge mobile money : erreur du champ « Autre montant » quand le montant saisi vaut 0 (FLUTTER-CF).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indique un montant supérieur à 0.'**
+  String get walletTopupCustomAmountInvalid;
+
+  /// Libellé d'accessibilité du voyant clignotant des « Discussions de prix » (Messages, Activités) quand c'est à l'utilisateur d'agir (FLUTTER-BY).
+  ///
+  /// In fr, this message translates to:
+  /// **'Action requise'**
+  String get negotiationsActionRequired;
+
+  /// Écran /receptions/{bidId} : titre de la carte de notation du voyageur, colis livré (FLUTTER-CA).
+  ///
+  /// In fr, this message translates to:
+  /// **'Noter le voyageur'**
+  String get receptionRateTitle;
+
+  /// Carte de notation du voyageur par le destinataire (FLUTTER-CA), avec le prénom du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est livré. Comment s\'est passé le transport avec {name} ?'**
+  String receptionRateIntro(String name);
+
+  /// Carte de notation du voyageur par le destinataire, prénom du voyageur inconnu (FLUTTER-CA).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est livré. Comment s\'est passé le transport ?'**
+  String get receptionRateIntroNoName;
+
+  /// Carte en lecture seule de la note laissée par le destinataire (FLUTTER-CA).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez noté le voyageur'**
+  String get receptionRatedTitle;
+
+  /// Libellé d'accessibilité des étoiles de la note laissée par le destinataire (FLUTTER-CA).
+  ///
+  /// In fr, this message translates to:
+  /// **'{stars} étoiles sur 5'**
+  String receptionRatedStarsSemantics(int stars);
+
+  /// Snackbar : 409 reception-already-rated, le détail est rechargé (FLUTTER-CA).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous aviez déjà noté le voyageur pour ce colis.'**
+  String get receptionAlreadyRatedSnackbar;
+
+  /// ErrorCatalog : 409 reception-rating-not-allowed, colis pas encore livré (FLUTTER-CA).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore possible'**
+  String get errorReceptionRatingNotAllowedTitle;
+
+  /// ErrorCatalog : 409 reception-rating-not-allowed (FLUTTER-CA).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez noter le voyageur une fois le colis livré.'**
+  String get errorReceptionRatingNotAllowedMessage;
+
+  /// ErrorCatalog : 403 reception-not-recipient (FLUTTER-CA).
+  ///
+  /// In fr, this message translates to:
+  /// **'Action impossible'**
+  String get errorReceptionNotRecipientTitle;
+
+  /// ErrorCatalog : 403 reception-not-recipient (FLUTTER-CA).
+  ///
+  /// In fr, this message translates to:
+  /// **'Seul le destinataire confirmé de ce colis peut noter le voyageur.'**
+  String get errorReceptionNotRecipientMessage;
 }
 
 class _AppLocalizationsDelegate

@@ -17,6 +17,14 @@ enum ReceptionAction {
 
   /// Destinataire confirmé retiré du colis (FLUTTER-9F) : l'écran se ferme.
   withdrawn,
+
+  /// Note du voyageur en cours d'envoi, puis acceptée (FLUTTER-CA).
+  rating,
+  rated,
+
+  /// Le voyageur était déjà noté (autre appareil, lien de suivi) : le
+  /// détail est rechargé, l'écran l'explique sans parler d'erreur.
+  alreadyRated,
   failed,
 }
 
@@ -43,7 +51,8 @@ class ReceptionDetailLoaded extends ReceptionDetailState {
 
   bool get busy =>
       action == ReceptionAction.confirming ||
-      action == ReceptionAction.declining;
+      action == ReceptionAction.declining ||
+      action == ReceptionAction.rating;
 }
 
 /// Chargement impossible. Une [NotFoundException] veut dire que le colis
@@ -156,6 +165,61 @@ class ReceptionDetailCubit extends Cubit<ReceptionDetailState> {
       if (error is ConflictException) {
         // Déjà confirmé ailleurs (autre appareil) : on montre l'état réel.
         await _reloadAfterConflict(reception, error);
+        return;
+      }
+      _fail(reception, error);
+    }
+  }
+
+  /// Le destinataire confirmé note le voyageur après livraison (FLUTTER-CA).
+  /// Le détail est rechargé ensuite : `canRate` tombe et `myRating` arrive
+  /// du serveur. Seul le nombre d'étoiles part dans l'analytics, jamais le
+  /// commentaire ni un identifiant.
+  Future<void> rateTraveler({required int stars, String? comment}) async {
+    final current = state;
+    if (current is! ReceptionDetailLoaded || current.busy) return;
+    final reception = current.reception;
+    if (!reception.canRate || stars < 1 || stars > 5) return;
+    final trimmed = comment?.trim();
+    emit(ReceptionDetailLoaded(reception, action: ReceptionAction.rating));
+    try {
+      await _repository.rateTraveler(
+        reception.bidId,
+        stars: stars,
+        comment: (trimmed == null || trimmed.isEmpty) ? null : trimmed,
+      );
+      if (isClosed) return;
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.receptionTravelerRated,
+          properties: {'stars': stars},
+        ),
+      );
+      Reception fresh;
+      try {
+        fresh = await _repository.getReception(reception.bidId);
+      } catch (_) {
+        // La note est enregistrée : un rechargement raté ne doit pas la
+        // reproposer.
+        fresh = reception.withMyRating(stars);
+      }
+      if (isClosed) return;
+      emit(ReceptionDetailLoaded(fresh, action: ReceptionAction.rated));
+    } catch (e) {
+      if (isClosed) return;
+      final error = unwrapDioError(e);
+      if (error is ConflictException &&
+          error.code == 'reception-already-rated') {
+        try {
+          final fresh = await _repository.getReception(reception.bidId);
+          if (isClosed) return;
+          emit(
+            ReceptionDetailLoaded(fresh, action: ReceptionAction.alreadyRated),
+          );
+        } catch (_) {
+          if (isClosed) return;
+          _fail(reception, error);
+        }
         return;
       }
       _fail(reception, error);

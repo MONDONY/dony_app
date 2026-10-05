@@ -9,6 +9,8 @@ import 'package:dony/features/matching/presentation/widgets/billet/copy_code_but
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/presentation/widgets/recipient_conversation_launcher.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/features/ratings/presentation/rating_labels.dart';
+import 'package:dony/features/ratings/presentation/widgets/star_selector.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
@@ -111,11 +113,20 @@ class _ReceptionDetailView extends StatelessWidget {
         } else {
           context.go('/tracking');
         }
+      case ReceptionAction.rated:
+        DonySnackbar.show(
+          context,
+          message: l.ratingThanksSnackbar,
+          type: DonySnackbarType.success,
+        );
+      case ReceptionAction.alreadyRated:
+        DonySnackbar.show(context, message: l.receptionAlreadyRatedSnackbar);
       case ReceptionAction.failed:
         ErrorPresenter.show(context, state.actionError);
       case ReceptionAction.idle ||
           ReceptionAction.confirming ||
-          ReceptionAction.declining:
+          ReceptionAction.declining ||
+          ReceptionAction.rating:
         break;
     }
   }
@@ -678,6 +689,12 @@ class _ConfirmedContent extends StatelessWidget {
             _ReceptionSteps(done: done, accent: heroColors.last),
           ],
         ),
+        // Colis livré : le destinataire note le voyageur (FLUTTER-CA), puis
+        // relit sa note. Juste sous l'étape, c'est la seule action restante.
+        if (reception.canRate)
+          _RateTravelerCard(travelerName: reception.travelerFirstName)
+        else if (reception.myRating case final stars?)
+          _MyRatingCard(stars: stars),
         if (code != null)
           _PickupCodeCard(code: code)
         else if (reception.bidStatus == 'ACCEPTED')
@@ -1313,7 +1330,11 @@ class _BottomBar extends StatelessWidget {
                       DonyButton(
                         key: const Key('reception-withdraw'),
                         label: l.receptionWithdrawButton,
-                        variant: DonyButtonVariant.ghost,
+                        // Rouge, icône comprise (FLUTTER-C9) : le geste
+                        // prévient l'expéditeur et le voyageur, il ne se
+                        // lit pas comme une simple navigation.
+                        iconAsset: 'user-x',
+                        variant: DonyButtonVariant.destructiveGhost,
                         isLoading: state.action == ReceptionAction.declining,
                         onPressed: locked ? null : () => _withdraw(context),
                       ),
@@ -1344,6 +1365,179 @@ class _BottomBar extends StatelessWidget {
                   ],
                 ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Note du voyageur (FLUTTER-CA)
+// ─────────────────────────────────────────────────────────────
+
+/// « Noter le voyageur » : étoiles et commentaire facultatif, envoyés par
+/// [ReceptionDetailCubit.rateTraveler]. Même sélecteur et même champ que la
+/// note expéditeur → voyageur (`RatingBottomSheet`), liés ici au cubit de
+/// l'écran plutôt qu'au `RatingBloc`.
+class _RateTravelerCard extends StatefulWidget {
+  const _RateTravelerCard({required this.travelerName});
+
+  final String? travelerName;
+
+  @override
+  State<_RateTravelerCard> createState() => _RateTravelerCardState();
+}
+
+class _RateTravelerCardState extends State<_RateTravelerCard> {
+  /// Saisie locale (étoiles, commentaire) : aucun `setState`, la note vit
+  /// dans un [ValueNotifier] comme dans `RatingBottomSheet`.
+  final ValueNotifier<int> _stars = ValueNotifier(0);
+  final TextEditingController _comment = TextEditingController();
+
+  @override
+  void dispose() {
+    _stars.dispose();
+    _comment.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final name = widget.travelerName;
+    final sending = context.select<ReceptionDetailCubit, bool>((c) {
+      final state = c.state;
+      return state is ReceptionDetailLoaded &&
+          state.action == ReceptionAction.rating;
+    });
+
+    return _Surface(
+      key: const Key('reception-rate-card'),
+      child: ValueListenableBuilder<int>(
+        valueListenable: _stars,
+        builder: (context, stars, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const _IconBubble(icon: 'star', color: DonyColors.starGold),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Text(l.receptionRateTitle, style: tt.titleLarge),
+                ),
+              ],
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              name != null
+                  ? l.receptionRateIntro(name)
+                  : l.receptionRateIntroNoName,
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.45,
+              ),
+            ),
+            StarSelector(
+              key: const Key('reception-rate-stars'),
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
+              selected: stars,
+              onSelect: (value) => _stars.value = value,
+            ),
+            if (stars > 0)
+              Center(
+                child: Text(
+                  ratingStarLabel(l, stars),
+                  style: tt.labelLarge?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            const SizedBox(height: DonySpacing.base),
+            TextField(
+              key: const Key('reception-rate-comment'),
+              controller: _comment,
+              maxLines: 3,
+              maxLength: 200,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                labelText: l.ratingCommentLabel,
+                hintText: l.ratingCommentHint,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            DonyButton(
+              key: const Key('reception-rate-submit'),
+              label: l.ratingSubmitAction,
+              iconAsset: 'star',
+              flat: true,
+              isLoading: sending,
+              onPressed: stars == 0 || sending
+                  ? null
+                  : () => context.read<ReceptionDetailCubit>().rateTraveler(
+                      stars: stars,
+                      comment: _comment.text,
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Note déjà laissée, en lecture seule : « Vous avez noté le voyageur » et
+/// ses étoiles, lues d'un bloc par le lecteur d'écran.
+class _MyRatingCard extends StatelessWidget {
+  const _MyRatingCard({required this.stars});
+
+  final int stars;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return _Surface(
+      key: const Key('reception-my-rating'),
+      child: Row(
+        children: [
+          const _IconBubble(icon: 'star', color: DonyColors.starGold),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Text(
+              l.receptionRatedTitle,
+              style: tt.titleMedium?.copyWith(color: cs.onSurface),
+            ),
+          ),
+          Semantics(
+            label: l.receptionRatedStarsSemantics(stars),
+            excludeSemantics: true,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 1; i <= 5; i++)
+                  DonyIcon(
+                    'star',
+                    size: 18,
+                    color: i <= stars ? DonyColors.starGold : cs.outlineVariant,
+                  ),
+                // La note s'écrit aussi en chiffres : jamais par la seule
+                // couleur des étoiles.
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  '$stars/5',
+                  style: tt.labelLarge?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

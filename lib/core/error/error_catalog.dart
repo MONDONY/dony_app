@@ -822,6 +822,21 @@ abstract final class ErrorCatalog {
     // le parcours de recharge tutoie (« Valide le paiement sur ton
     // téléphone », « Payer avec un autre numéro »). L'app écrit donc son
     // propre texte plutôt que d'afficher le detail brut.
+    // ─── Note du voyageur par le destinataire (FLUTTER-CA) ────────────
+    // `reception-already-rated` n'est pas ici : l'écran recharge le détail
+    // et l'explique lui-même, ce n'est pas une erreur pour l'utilisateur.
+    'reception-rating-not-allowed': _Entry(
+      title: (l) => l.errorReceptionRatingNotAllowedTitle,
+      message: (l) => l.errorReceptionRatingNotAllowedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
+    'reception-not-recipient': _Entry(
+      title: (l) => l.errorReceptionNotRecipientTitle,
+      message: (l) => l.errorReceptionNotRecipientMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
     'topup-already-pending': _Entry(
       title: (l) => l.errorTopupAlreadyPendingTitle,
       message: (l) => l.errorTopupAlreadyPendingMessage,

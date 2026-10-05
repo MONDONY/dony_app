@@ -8972,5 +8972,32 @@
   "walletShortfallRateDisclaimer": "Converted at today's rate applied by Yadony, for information only. Yadony is not responsible for any difference with the actual rate at the time of payment.",
   "@walletShortfallRateDisclaimer": {
     "description": "Sheet « Solde insuffisant » : avertissement sous les options de paiement depuis un autre portefeuille (commission_funding_options.dart)."
-  }
+  },
+  "walletTopupCustomAmountChip": "Other amount",
+  "walletTopupCustomAmountInvalid": "Enter an amount above 0.",
+  "negotiationsActionRequired": "Action required",
+  "receptionRateTitle": "Rate the traveler",
+  "receptionRateIntro": "Your parcel has been delivered. How did it go with {name}?",
+  "@receptionRateIntro": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionRateIntroNoName": "Your parcel has been delivered. How did it go?",
+  "receptionRatedTitle": "You rated the traveler",
+  "receptionRatedStarsSemantics": "{stars} stars out of 5",
+  "@receptionRatedStarsSemantics": {
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "receptionAlreadyRatedSnackbar": "You had already rated the traveler for this parcel.",
+  "errorReceptionRatingNotAllowedTitle": "Not possible yet",
+  "errorReceptionRatingNotAllowedMessage": "You can rate the traveler once the parcel has been delivered.",
+  "errorReceptionNotRecipientTitle": "Action not allowed",
+  "errorReceptionNotRecipientMessage": "Only the confirmed recipient of this parcel can rate the traveler."
 }

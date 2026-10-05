@@ -30,6 +30,21 @@ class ReceptionRemoteDatasource {
     return Reception.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Le destinataire confirmé note le voyageur après livraison (FLUTTER-CA) :
+  /// 201. 403 `reception-not-recipient`, 409 `reception-rating-not-allowed`
+  /// (colis pas livré) ou `reception-already-rated`, 422 validation.
+  /// Commentaire omis quand il est vide.
+  Future<void> rateTraveler(
+    String bidId, {
+    required int stars,
+    String? comment,
+  }) async {
+    await _apiClient.dio.post(
+      '/receptions/$bidId/rating',
+      data: {'stars': stars, 'comment': ?comment},
+    );
+  }
+
   /// « Ce n'est pas pour moi » : 204, 409 si le lien est déjà confirmé.
   Future<void> decline(String bidId) async {
     await _apiClient.dio.post('/receptions/$bidId/decline');

@@ -185,7 +185,7 @@ Text(
 DonyButton(
   label: 'Publier un colis',
   onPressed: () {},
-  variant: DonyButtonVariant.primary,   // primary | secondary | ghost | destructive
+  variant: DonyButtonVariant.primary,   // primary | secondary | ghost | destructive | destructiveGhost (texte rouge, action destructive secondaire)
   icon: Icons.send,                     // optionnel
   isLoading: false,                     // optionnel
 )

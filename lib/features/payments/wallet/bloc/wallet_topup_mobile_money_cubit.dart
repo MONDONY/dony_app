@@ -94,14 +94,19 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   /// Initie la recharge avec l'opérateur sélectionné (`null` si
   /// [loadProviders] n'a jamais été appelé : le back retient alors celui
   /// qu'il détecte lui-même), puis démarre le sondage du statut.
+  ///
+  /// [custom] : montant saisi via « Autre montant » plutôt que choisi parmi
+  /// les montants proposés (FLUTTER-CF). Seul ce drapeau part dans
+  /// l'analytics, jamais le montant.
   Future<void> initiate({
     required double amount,
     required String phoneNumber,
+    bool custom = false,
   }) async {
     if (_initiating) return;
     _initiating = true;
     try {
-      await _initiate(amount: amount, phoneNumber: phoneNumber);
+      await _initiate(amount: amount, phoneNumber: phoneNumber, custom: custom);
     } finally {
       _initiating = false;
     }
@@ -110,6 +115,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   Future<void> _initiate({
     required double amount,
     required String phoneNumber,
+    required bool custom,
   }) async {
     stopPolling();
     final generation = ++_generation;
@@ -131,7 +137,11 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.walletTopupMobileMoneyInitiated,
-          properties: {'provider': topup.provider, 'currency': topup.currency},
+          properties: {
+            'provider': topup.provider,
+            'currency': topup.currency,
+            'custom': custom,
+          },
         ),
       );
       startPolling();

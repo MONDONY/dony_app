@@ -177,7 +177,45 @@ void main() {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.walletTopupMobileMoneyInitiated,
-            properties: {'provider': 'ORANGE_SEN', 'currency': 'XOF'},
+            properties: {
+              'provider': 'ORANGE_SEN',
+              'currency': 'XOF',
+              'custom': false,
+            },
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<WalletTopupMobileMoneyCubit, WalletTopupMobileMoneyState>(
+      "initiate(custom: true) : « Autre montant » marqué dans l'event, "
+      'jamais le montant (FLUTTER-CF)',
+      build: () {
+        when(
+          () => repo.topupMobileMoney(
+            amount: any(named: 'amount'),
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        ).thenAnswer((_) async => topup);
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) async => statusFor('PENDING'));
+        return cubit;
+      },
+      act: (c) =>
+          c.initiate(amount: 12500, phoneNumber: phoneNumber, custom: true),
+      skip: 2,
+      expect: () => <WalletTopupMobileMoneyState>[],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupMobileMoneyInitiated,
+            properties: {
+              'provider': 'ORANGE_SEN',
+              'currency': 'XOF',
+              'custom': true,
+            },
           ),
         ).called(1);
       },

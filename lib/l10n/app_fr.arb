@@ -18695,5 +18695,67 @@
   "walletShortfallRateDisclaimer": "Conversion au taux du jour appliqué par Yadony, à titre indicatif. Yadony n'est pas responsable d'un écart avec le taux réel au moment du paiement.",
   "@walletShortfallRateDisclaimer": {
     "description": "Sheet « Solde insuffisant » : avertissement sous les options de paiement depuis un autre portefeuille (commission_funding_options.dart)."
+  },
+  "walletTopupCustomAmountChip": "Autre montant",
+  "@walletTopupCustomAmountChip": {
+    "description": "Recharge mobile money : puce qui ouvre la saisie libre d'un montant, à côté des montants proposés (FLUTTER-CF)."
+  },
+  "walletTopupCustomAmountInvalid": "Indique un montant supérieur à 0.",
+  "@walletTopupCustomAmountInvalid": {
+    "description": "Recharge mobile money : erreur du champ « Autre montant » quand le montant saisi vaut 0 (FLUTTER-CF)."
+  },
+  "negotiationsActionRequired": "Action requise",
+  "@negotiationsActionRequired": {
+    "description": "Libellé d'accessibilité du voyant clignotant des « Discussions de prix » (Messages, Activités) quand c'est à l'utilisateur d'agir (FLUTTER-BY)."
+  },
+  "receptionRateTitle": "Noter le voyageur",
+  "@receptionRateTitle": {
+    "description": "Écran /receptions/{bidId} : titre de la carte de notation du voyageur, colis livré (FLUTTER-CA)."
+  },
+  "receptionRateIntro": "Le colis est livré. Comment s'est passé le transport avec {name} ?",
+  "@receptionRateIntro": {
+    "description": "Carte de notation du voyageur par le destinataire (FLUTTER-CA), avec le prénom du voyageur.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionRateIntroNoName": "Le colis est livré. Comment s'est passé le transport ?",
+  "@receptionRateIntroNoName": {
+    "description": "Carte de notation du voyageur par le destinataire, prénom du voyageur inconnu (FLUTTER-CA)."
+  },
+  "receptionRatedTitle": "Vous avez noté le voyageur",
+  "@receptionRatedTitle": {
+    "description": "Carte en lecture seule de la note laissée par le destinataire (FLUTTER-CA)."
+  },
+  "receptionRatedStarsSemantics": "{stars} étoiles sur 5",
+  "@receptionRatedStarsSemantics": {
+    "description": "Libellé d'accessibilité des étoiles de la note laissée par le destinataire (FLUTTER-CA).",
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "receptionAlreadyRatedSnackbar": "Vous aviez déjà noté le voyageur pour ce colis.",
+  "@receptionAlreadyRatedSnackbar": {
+    "description": "Snackbar : 409 reception-already-rated, le détail est rechargé (FLUTTER-CA)."
+  },
+  "errorReceptionRatingNotAllowedTitle": "Pas encore possible",
+  "@errorReceptionRatingNotAllowedTitle": {
+    "description": "ErrorCatalog : 409 reception-rating-not-allowed, colis pas encore livré (FLUTTER-CA)."
+  },
+  "errorReceptionRatingNotAllowedMessage": "Vous pourrez noter le voyageur une fois le colis livré.",
+  "@errorReceptionRatingNotAllowedMessage": {
+    "description": "ErrorCatalog : 409 reception-rating-not-allowed (FLUTTER-CA)."
+  },
+  "errorReceptionNotRecipientTitle": "Action impossible",
+  "@errorReceptionNotRecipientTitle": {
+    "description": "ErrorCatalog : 403 reception-not-recipient (FLUTTER-CA)."
+  },
+  "errorReceptionNotRecipientMessage": "Seul le destinataire confirmé de ce colis peut noter le voyageur.",
+  "@errorReceptionNotRecipientMessage": {
+    "description": "ErrorCatalog : 403 reception-not-recipient (FLUTTER-CA)."
   }
 }

@@ -19,6 +19,7 @@ import 'package:dony/features/payments/wallet/data/repositories/wallet_repositor
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_args.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +35,12 @@ import 'package:go_router/go_router.dart';
 /// ce rail, une borne devinée ici serait fausse. Le serveur reste seul
 /// décideur (422 `topup-amount-out-of-range`).
 const double _minTopupEur = 5.0;
+
+/// Chiffres de la partie entière acceptés par le champ « Autre montant »
+/// (mobile money). Une limite de saisie, pas une borne métier : les bornes
+/// de l'opérateur (pawaPay, par réseau) ne sont connues que du serveur, qui
+/// refuse en 422 `topup-amount-out-of-range` avec un message qui les nomme.
+const int _customAmountMaxDigits = 7;
 
 class WalletTopupAmountScreen extends StatefulWidget {
   final String paymentMethod;
@@ -63,6 +70,16 @@ class WalletTopupAmountScreen extends StatefulWidget {
 class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   // setState toléré ici : état UI local (saisie montant + devise résolue).
   String _rawAmount = '';
+
+  /// Mobile money : « Autre montant » choisi (FLUTTER-CF). Le champ libre
+  /// remplace alors les montants proposés.
+  bool _customAmount = false;
+
+  /// Le champ « Autre montant » a perdu le focus au moins une fois : la
+  /// validation ne s'affiche qu'à partir de là, jamais pendant la frappe.
+  bool _customTouched = false;
+  final TextEditingController _customController = TextEditingController();
+  final FocusNode _customFocus = FocusNode();
 
   /// Devise réelle du wallet (source de vérité serveur), chargée à
   /// l'ouverture. `ActiveCurrency.current` (cache Hive d'une préférence
@@ -97,6 +114,22 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     // avertir quand l'opérateur crédite une autre devise que la devise
     // active — un solde qui arriverait alors verrouillé.
     unawaited(_loadWalletCurrency());
+    _customFocus.addListener(_onCustomFocusChanged);
+  }
+
+  @override
+  void dispose() {
+    _customFocus
+      ..removeListener(_onCustomFocusChanged)
+      ..dispose();
+    _customController.dispose();
+    super.dispose();
+  }
+
+  void _onCustomFocusChanged() {
+    if (!_customFocus.hasFocus && !_customTouched && mounted) {
+      setState(() => _customTouched = true);
+    }
   }
 
   Future<void> _loadWalletCurrency() async {
@@ -154,7 +187,51 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   }
 
   void _setQuickAmount(int amount) {
-    setState(() => _rawAmount = amount.toString());
+    setState(() {
+      _rawAmount = amount.toString();
+      _customAmount = false;
+      _customTouched = false;
+      _customController.clear();
+    });
+  }
+
+  /// « Autre montant » : repart d'un montant vide et ouvre le clavier
+  /// numérique sur le champ libre.
+  void _selectCustomAmount() {
+    setState(() {
+      _customAmount = true;
+      _customTouched = false;
+      _rawAmount = '';
+      _customController.clear();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _customFocus.requestFocus();
+    });
+  }
+
+  void _onCustomAmountChanged(String value) {
+    setState(() => _rawAmount = value.replaceAll(',', '.'));
+  }
+
+  /// Saisie limitée à un montant plausible pour la devise : entier pour le
+  /// F CFA (pas de centimes), deux décimales au plus sinon.
+  TextInputFormatter _customAmountFormatter(SupportedCurrency currency) {
+    final pattern = currency.minorUnit == 0
+        ? RegExp('^\\d{0,$_customAmountMaxDigits}\$')
+        : RegExp(
+            '^\\d{0,$_customAmountMaxDigits}([.,]\\d{0,${currency.minorUnit}})?\$',
+          );
+    return TextInputFormatter.withFunction(
+      (oldValue, newValue) =>
+          pattern.hasMatch(newValue.text) ? newValue : oldValue,
+    );
+  }
+
+  /// Erreur du champ « Autre montant », affichée après la perte de focus :
+  /// un montant nul. Les bornes de l'opérateur restent côté serveur.
+  String? _customAmountError(AppLocalizations l) {
+    if (!_customTouched || _customController.text.isEmpty) return null;
+    return _amount > 0 ? null : l.walletTopupCustomAmountInvalid;
   }
 
   String get _displayAmount {
@@ -342,8 +419,9 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     );
   }
 
-  /// Étape 2/2 mobile money : mêmes `_AmountDisplay`/`_QuickAmountRow`/
-  /// `DonyKeypad` que Stripe, mais liés à [WalletTopupMobileMoneyCubit]
+  /// Étape 2/2 mobile money : mêmes `_AmountDisplay`/`_QuickAmountRow` que
+  /// Stripe, plus la puce « Autre montant » et son champ libre à la place du
+  /// pavé `DonyKeypad` (FLUTTER-CF), liés à [WalletTopupMobileMoneyCubit]
   /// (jamais [WalletBloc]). `initiate()` déclenche la recharge ; la
   /// transition vers [WalletTopupMobileMoneyAwaiting] pousse l'écran
   /// d'attente en remplaçant cet écran de montant dans la pile
@@ -463,19 +541,47 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                       ),
                     ],
 
+                    const SizedBox(height: DonySpacing.base),
+                    // Montants proposés + « Autre montant » (FLUTTER-CF) :
+                    // un testeur ne voyait pas qu'il pouvait saisir un autre
+                    // montant, le pavé numérique tombait sous la ligne de
+                    // flottaison derrière les bandeaux. Le champ libre ouvre
+                    // le clavier numérique du système, l'unité en suffixe.
                     _QuickAmountRow(
                           amounts: _quickAmounts,
-                          currentAmount: _amount,
+                          currentAmount: _customAmount ? -1 : _amount,
                           currency: currency,
                           onSelect: _setQuickAmount,
+                          customLabel: l.walletTopupCustomAmountChip,
+                          customActive: _customAmount,
+                          onCustom: _selectCustomAmount,
                         )
                         .animate(delay: 60.ms)
                         .fadeIn(duration: 250.ms)
                         .slideY(begin: 0.04, curve: Curves.easeOutCubic),
 
-                    const SizedBox(height: DonySpacing.xxl),
-
-                    DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
+                    if (_customAmount) ...[
+                      const SizedBox(height: DonySpacing.xl),
+                      TextField(
+                            key: const Key('wallet-topup-custom-amount-field'),
+                            controller: _customController,
+                            focusNode: _customFocus,
+                            keyboardType: TextInputType.numberWithOptions(
+                              decimal: currency.minorUnit > 0,
+                            ),
+                            textInputAction: TextInputAction.done,
+                            inputFormatters: [_customAmountFormatter(currency)],
+                            onChanged: _onCustomAmountChanged,
+                            decoration: InputDecoration(
+                              labelText: l.walletTopupAmountLabel,
+                              suffixText: currency.symbol,
+                              errorText: _customAmountError(l),
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(duration: 250.ms)
+                          .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                    ],
                   ],
                 ),
               ),
@@ -484,6 +590,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
               amount: _amount,
               currency: currency,
               phoneNumber: phoneNumber,
+              custom: _customAmount,
             ),
           ],
         ),
@@ -499,11 +606,16 @@ class _MobileMoneyStickyButton extends StatelessWidget {
     required this.amount,
     required this.currency,
     required this.phoneNumber,
+    required this.custom,
   });
 
   final double amount;
   final SupportedCurrency currency;
   final String phoneNumber;
+
+  /// Montant saisi via « Autre montant » : seul ce drapeau part dans
+  /// l'analytics, jamais le montant.
+  final bool custom;
 
   @override
   Widget build(BuildContext context) {
@@ -520,7 +632,14 @@ class _MobileMoneyStickyButton extends StatelessWidget {
             ? l.walletTopupProcessing
             : amount <= 0
             ? l.walletTopupEnterAmount
-            : l.walletTopupPayAmount('${amount.toInt()}', currency.symbol);
+            : l.walletTopupPayAmount(
+                // Un montant saisi peut porter des centimes (devise qui en
+                // a) : ne jamais les tronquer dans le libellé du paiement.
+                amount == amount.truncateToDouble()
+                    ? '${amount.toInt()}'
+                    : amount.toStringAsFixed(currency.minorUnit),
+                currency.symbol,
+              );
 
         return Padding(
           padding: EdgeInsets.fromLTRB(
@@ -536,6 +655,7 @@ class _MobileMoneyStickyButton extends StatelessWidget {
                 ? () => context.read<WalletTopupMobileMoneyCubit>().initiate(
                     amount: amount,
                     phoneNumber: phoneNumber,
+                    custom: custom,
                   )
                 : null,
           ),
@@ -609,6 +729,9 @@ class _QuickAmountRow extends StatelessWidget {
     required this.currentAmount,
     required this.currency,
     required this.onSelect,
+    this.customLabel,
+    this.customActive = false,
+    this.onCustom,
   });
 
   final List<int> amounts;
@@ -616,45 +739,88 @@ class _QuickAmountRow extends StatelessWidget {
   final SupportedCurrency currency;
   final void Function(int) onSelect;
 
+  /// Puce « Autre montant », en dernier, quand [onCustom] est fourni.
+  final String? customLabel;
+  final bool customActive;
+  final VoidCallback? onCustom;
+
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Wrap(
       spacing: DonySpacing.sm,
       runSpacing: DonySpacing.sm,
       alignment: WrapAlignment.center,
-      children: amounts.map((a) {
-        final isActive = currentAmount == a.toDouble();
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          decoration: BoxDecoration(
-            color: isActive ? DonyColors.blue50 : cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.full),
-            border: Border.all(
-              color: isActive ? cs.primary : cs.outline,
-              width: isActive ? 2 : 1,
-            ),
-          ),
-          child: InkWell(
+      children: [
+        for (final a in amounts)
+          _AmountChip(
+            label: '$a ${currency.symbol}',
+            isActive: currentAmount == a.toDouble(),
             onTap: () => onSelect(a),
-            borderRadius: BorderRadius.circular(DonyRadius.full),
+          ),
+        if (onCustom != null && customLabel != null)
+          _AmountChip(
+            key: const Key('wallet-topup-custom-amount-chip'),
+            label: customLabel!,
+            isActive: customActive,
+            onTap: onCustom!,
+          ),
+      ],
+    );
+  }
+}
+
+class _AmountChip extends StatelessWidget {
+  const _AmountChip({
+    super.key,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: isActive,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        decoration: BoxDecoration(
+          color: isActive ? DonyColors.blue50 : cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          border: Border.all(
+            color: isActive ? cs.primary : cs.outline,
+            width: isActive ? 2 : 1,
+          ),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: DonySpacing.base,
                 vertical: DonySpacing.sm,
               ),
-              child: Text(
-                '$a ${currency.symbol}',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: isActive ? cs.primary : cs.onSurfaceVariant,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+              child: Center(
+                widthFactor: 1,
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: isActive ? cs.primary : cs.onSurfaceVariant,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  ),
                 ),
               ),
             ),
           ),
-        );
-      }).toList(),
+        ),
+      ),
     );
   }
 }

@@ -16183,4 +16183,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walletShortfallRateDisclaimer =>
       'Converted at today\'s rate applied by Yadony, for information only. Yadony is not responsible for any difference with the actual rate at the time of payment.';
+
+  @override
+  String get walletTopupCustomAmountChip => 'Other amount';
+
+  @override
+  String get walletTopupCustomAmountInvalid => 'Enter an amount above 0.';
+
+  @override
+  String get negotiationsActionRequired => 'Action required';
+
+  @override
+  String get receptionRateTitle => 'Rate the traveler';
+
+  @override
+  String receptionRateIntro(String name) {
+    return 'Your parcel has been delivered. How did it go with $name?';
+  }
+
+  @override
+  String get receptionRateIntroNoName =>
+      'Your parcel has been delivered. How did it go?';
+
+  @override
+  String get receptionRatedTitle => 'You rated the traveler';
+
+  @override
+  String receptionRatedStarsSemantics(int stars) {
+    return '$stars stars out of 5';
+  }
+
+  @override
+  String get receptionAlreadyRatedSnackbar =>
+      'You had already rated the traveler for this parcel.';
+
+  @override
+  String get errorReceptionRatingNotAllowedTitle => 'Not possible yet';
+
+  @override
+  String get errorReceptionRatingNotAllowedMessage =>
+      'You can rate the traveler once the parcel has been delivered.';
+
+  @override
+  String get errorReceptionNotRecipientTitle => 'Action not allowed';
+
+  @override
+  String get errorReceptionNotRecipientMessage =>
+      'Only the confirmed recipient of this parcel can rate the traveler.';
 }

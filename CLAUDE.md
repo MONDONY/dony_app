@@ -414,7 +414,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `message_blocked` | ChatScreen._sendText() — message refusé par ChatMessageValidator (propriété `reason`) |
 | `wallet_topup_started` | WalletTopupAmountScreen.initState |
 | `wallet_topup_completed` | WalletBloc (après topup réussi) |
-| `wallet_topup_mobile_money_initiated` | WalletTopupMobileMoneyCubit.initiate() — dépôt pawaPay lancé pour une recharge du portefeuille, avant confirmation (propriétés `provider`, `currency`). Jamais le montant ni le numéro de téléphone, même masqué |
+| `wallet_topup_mobile_money_initiated` | WalletTopupMobileMoneyCubit.initiate() — dépôt pawaPay lancé pour une recharge du portefeuille, avant confirmation (propriétés `provider`, `currency`, `custom` : montant saisi via « Autre montant » plutôt que choisi parmi les montants proposés, FLUTTER-CF). Jamais le montant ni le numéro de téléphone, même masqué |
 | `wallet_topup_mobile_money_confirmed` | WalletTopupMobileMoneyCubit._poll() — recharge confirmée par pawaPay, portefeuille crédité, une seule fois par recharge (mêmes propriétés `provider`, `currency`) |
 | `disputes_opened` | DisputeListBloc._onLoad — premier chargement de « Mes litiges » (propriété `count`) |
 | `dispute_detail_opened` | DisputeDetailScreen.initState — ouverture du détail d'un litige (propriété `status`) |
@@ -487,6 +487,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `reception_confirmed` | ReceptionDetailCubit.confirm — « Oui, c'est pour moi » accepté par le serveur (`POST /receptions/{bidId}/confirm`), propriété `bid_status` |
 | `reception_declined` | ReceptionDetailCubit.decline — « Ce n'est pas pour moi » confirmé dans le dialogue puis accepté par le serveur (204), propriété `bid_status`. Non émis sur un 409 (colis déjà confirmé ailleurs) |
 | `reception_withdrawn` | ReceptionDetailCubit.decline — « Me retirer de ce colis » confirmé dans le dialogue puis accepté par le serveur (`POST /receptions/{bidId}/decline` sur un lien `CONFIRMED`, 204), tant que le colis est en cours (FLUTTER-9F). L'expéditeur et le voyageur reçoivent `RECIPIENT_WITHDRAWN`. Propriété `bid_status`. Non émis sur un 409 (`reception-not-withdrawable`, colis déjà livré) |
+| `reception_traveler_rated` | ReceptionDetailCubit.rateTraveler — le destinataire confirmé note le voyageur depuis `/receptions/{bidId}` une fois le colis livré, note acceptée par le serveur (`POST /receptions/{bidId}/rating`, 201, FLUTTER-CA). Propriété `stars` (1 à 5). Non émis sur un 409 (`reception-already-rated`, `reception-rating-not-allowed`). Jamais le commentaire ni un identifiant |
 | `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriétés `route`, `kind` : `bug`/`feedback`/`suggestion`, type choisi par le testeur sur les puces « Bug / Avis / Suggestion », `attachment_count` : captures jointes par le testeur, jamais leur contenu) |
 | `profile_photo_updated` | AuthBloc._onAvatarUploadRequested() — upload photo de profil réussi |
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |

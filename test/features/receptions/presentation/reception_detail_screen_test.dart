@@ -88,6 +88,12 @@ void main() {
     when(() => cubit.retry()).thenAnswer((_) async {});
     when(() => cubit.confirm()).thenAnswer((_) async {});
     when(() => cubit.decline()).thenAnswer((_) async {});
+    when(
+      () => cubit.rateTraveler(
+        stars: any(named: 'stars'),
+        comment: any(named: 'comment'),
+      ),
+    ).thenAnswer((_) async {});
     if (getIt.isRegistered<ReceptionDetailCubit>()) {
       getIt.unregister<ReceptionDetailCubit>();
     }
@@ -405,6 +411,25 @@ void main() {
         );
         await tester.pumpAndSettle();
         verify(() => cubit.decline()).called(1);
+      },
+    );
+
+    testWidgets(
+      '« Me retirer de ce colis » est rouge, icône comprise (FLUTTER-C9)',
+      (tester) async {
+        stub(ReceptionDetailLoaded(_confirmed()));
+        await pump(tester);
+
+        final withdraw = find.byKey(const Key('reception-withdraw'));
+        final button = tester.widget<DonyButton>(withdraw);
+        expect(button.variant, DonyButtonVariant.destructiveGhost);
+        expect(button.iconAsset, 'user-x');
+
+        final error = Theme.of(tester.element(withdraw)).colorScheme.error;
+        final textButton = tester.widget<TextButton>(
+          find.descendant(of: withdraw, matching: find.byType(TextButton)),
+        );
+        expect(textButton.style?.foregroundColor?.resolve({}), error);
       },
     );
 
@@ -863,6 +888,158 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('Ce colis est-il pour vous ?'), findsOneWidget);
+    });
+  });
+
+  group('noter le voyageur (FLUTTER-CA)', () {
+    const delivered = Reception(
+      bidId: _id,
+      linkStatus: 'CONFIRMED',
+      bidStatus: 'COMPLETED',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      travelerFirstName: 'Ibrahima',
+      canRate: true,
+    );
+    const ratedReception = Reception(
+      bidId: _id,
+      linkStatus: 'CONFIRMED',
+      bidStatus: 'COMPLETED',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      travelerFirstName: 'Ibrahima',
+      myRating: 4,
+    );
+
+    testWidgets('colis livré : étoiles, commentaire facultatif, envoi', (
+      tester,
+    ) async {
+      stub(const ReceptionDetailLoaded(delivered));
+      await pump(tester);
+
+      expect(find.byKey(const Key('reception-rate-card')), findsOneWidget);
+      expect(find.text('Noter le voyageur'), findsOneWidget);
+      expect(
+        find.textContaining('Comment s\'est passé le transport avec Ibrahima'),
+        findsOneWidget,
+      );
+
+      // Sans étoile, l'envoi reste désactivé.
+      final submit = find.byKey(const Key('reception-rate-submit'));
+      expect(tester.widget<DonyButton>(submit).onPressed, isNull);
+
+      await tester.tap(find.bySemanticsLabel('Noter 4 sur 5'));
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('reception-rate-comment')),
+        'Très sérieux',
+      );
+      await tester.pump();
+
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pump();
+
+      verify(
+        () => cubit.rateTraveler(stars: 4, comment: 'Très sérieux'),
+      ).called(1);
+    });
+
+    testWidgets('note déjà laissée : lecture seule, en chiffres aussi', (
+      tester,
+    ) async {
+      stub(const ReceptionDetailLoaded(ratedReception));
+      await pump(tester);
+
+      expect(find.byKey(const Key('reception-rate-card')), findsNothing);
+      expect(find.byKey(const Key('reception-my-rating')), findsOneWidget);
+      expect(find.text('Vous avez noté le voyageur'), findsOneWidget);
+      expect(find.text('4/5'), findsOneWidget);
+      expect(find.bySemanticsLabel('4 étoiles sur 5'), findsOneWidget);
+    });
+
+    testWidgets('colis en cours ou back antérieur : ni carte ni note', (
+      tester,
+    ) async {
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester);
+
+      expect(find.byKey(const Key('reception-rate-card')), findsNothing);
+      expect(find.byKey(const Key('reception-my-rating')), findsNothing);
+    });
+
+    testWidgets('note acceptée : remerciement, puis la note s\'affiche', (
+      tester,
+    ) async {
+      stub(
+        const ReceptionDetailLoaded(delivered),
+        later: [
+          const ReceptionDetailLoaded(
+            delivered,
+            action: ReceptionAction.rating,
+          ),
+          const ReceptionDetailLoaded(
+            ratedReception,
+            action: ReceptionAction.rated,
+          ),
+        ],
+      );
+      await pump(tester);
+
+      expect(find.text('Merci pour votre évaluation !'), findsOneWidget);
+      expect(find.byKey(const Key('reception-my-rating')), findsOneWidget);
+    });
+
+    testWidgets('déjà noté ailleurs : message dédié, pas d\'erreur', (
+      tester,
+    ) async {
+      stub(
+        const ReceptionDetailLoaded(delivered),
+        later: [
+          const ReceptionDetailLoaded(
+            ratedReception,
+            action: ReceptionAction.alreadyRated,
+          ),
+        ],
+      );
+      await pump(tester);
+
+      expect(
+        find.text('Vous aviez déjà noté le voyageur pour ce colis.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('reception-my-rating')), findsOneWidget);
+    });
+
+    testWidgets('colis pas livré (409) : message du catalogue', (tester) async {
+      stub(
+        const ReceptionDetailLoaded(delivered),
+        later: [
+          const ReceptionDetailLoaded(
+            delivered,
+            action: ReceptionAction.failed,
+            actionError: ConflictException(
+              'x',
+              code: 'reception-rating-not-allowed',
+            ),
+          ),
+        ],
+      );
+      await pump(tester);
+
+      expect(
+        find.textContaining(
+          'Vous pourrez noter le voyageur une fois le colis livré.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('anglais', (tester) async {
+      stub(const ReceptionDetailLoaded(ratedReception));
+      await pump(tester, locale: AppL10n.en);
+
+      expect(find.text('You rated the traveler'), findsOneWidget);
     });
   });
 }

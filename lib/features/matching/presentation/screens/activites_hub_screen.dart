@@ -796,6 +796,11 @@ class _ActivityGrid extends StatelessWidget {
         emptyHint: l.activityTileNegotiationsEmptyHint,
         isLoading: state.status == NegotiationListStatus.loading,
         hasError: state.status == NegotiationListStatus.error,
+        // Même source que le point de l'onglet Activités : seules les offres
+        // auxquelles c'est à l'utilisateur de répondre (FLUTTER-BY).
+        actionLabel: state.actionableCount > 0
+            ? l.messagesNegotiationsShortcutAwaiting(state.actionableCount)
+            : null,
         onTap: () => _openRoute(
           context,
           AnalyticsEvents.activitesHubNegotiationsOpened,
