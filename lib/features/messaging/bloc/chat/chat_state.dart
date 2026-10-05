@@ -35,3 +35,14 @@ class ChatDeletingConversation extends ChatState {
 class ChatConversationDeleted extends ChatState {
   const ChatConversationDeleted();
 }
+
+/// Envoi refusé par les règles Firestore (`permission-denied`) : messagerie
+/// coupée par un administrateur, ou conversation fermée. Signal ponctuel,
+/// aussitôt suivi de [previous] : l'écran l'écoute sans jamais le dessiner
+/// (FLUTTER-CT/CV). [text] rend le texte saisi, `null` pour une photo ou
+/// une position.
+class ChatSendRejected extends ChatState {
+  final ChatState previous;
+  final String? text;
+  const ChatSendRejected(this.previous, {this.text});
+}

@@ -9877,6 +9877,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatEmptyStateTitle => 'Start the conversation!';
 
   @override
+  String get chatMessagingMutedTitle => 'Messages suspended';
+
+  @override
+  String chatMessagingMutedUntil(String date) {
+    return 'An administrator suspended your messages until $date. You can read your conversations but not send messages.';
+  }
+
+  @override
+  String get chatMessagingMutedIndefinite =>
+      'An administrator suspended your messages until further notice. You can read your conversations but not send messages.';
+
+  @override
+  String get chatMessagingMutedContactSupport => 'Contact support';
+
+  @override
+  String get chatSendRejected =>
+      'Your message couldn\'t be sent: you can\'t write in this conversation right now.';
+
+  @override
   String get chatReadOnlyBannerMessage =>
       'The other person has left this conversation. You\'re in read-only mode.';
 

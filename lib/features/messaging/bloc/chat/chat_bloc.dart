@@ -90,11 +90,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatTextSendRequested event,
     Emitter<ChatState> emit,
   ) async {
-    await _firestoreRepo.sendTextMessage(
-      firestoreConversationId: event.firestoreConversationId,
-      senderFirebaseUid: event.senderFirebaseUid,
-      body: event.body,
+    final sent = await _rejectable(
+      emit,
+      () => _firestoreRepo.sendTextMessage(
+        firestoreConversationId: event.firestoreConversationId,
+        senderFirebaseUid: event.senderFirebaseUid,
+        body: event.body,
+      ),
+      text: event.body,
     );
+    if (!sent) return;
     final preview = event.body.length > 80
         ? '${event.body.substring(0, 77)}...'
         : event.body;
@@ -111,11 +116,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       event.bytes,
       event.filename,
     );
-    await _firestoreRepo.sendImageMessage(
-      firestoreConversationId: event.firestoreConversationId,
-      senderFirebaseUid: event.senderFirebaseUid,
-      imageUrl: result['presignedUrl']!,
+    final sent = await _rejectable(
+      emit,
+      () => _firestoreRepo.sendImageMessage(
+        firestoreConversationId: event.firestoreConversationId,
+        senderFirebaseUid: event.senderFirebaseUid,
+        imageUrl: result['presignedUrl']!,
+      ),
     );
+    if (!sent) return;
     await _conversationRepo.updateLastMessage(
       event.conversationId,
       kChatPreviewPhoto,
@@ -126,16 +135,42 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatLocationSendRequested event,
     Emitter<ChatState> emit,
   ) async {
-    await _firestoreRepo.sendLocationMessage(
-      firestoreConversationId: event.firestoreConversationId,
-      senderFirebaseUid: event.senderFirebaseUid,
-      latitude: event.latitude,
-      longitude: event.longitude,
+    final sent = await _rejectable(
+      emit,
+      () => _firestoreRepo.sendLocationMessage(
+        firestoreConversationId: event.firestoreConversationId,
+        senderFirebaseUid: event.senderFirebaseUid,
+        latitude: event.latitude,
+        longitude: event.longitude,
+      ),
     );
+    if (!sent) return;
     await _conversationRepo.updateLastMessage(
       event.conversationId,
       kChatPreviewLocation,
     );
+  }
+
+  /// Écrit dans Firestore ; `false` si les règles refusent l'écriture
+  /// (`permission-denied` : messagerie coupée par un administrateur ou
+  /// conversation fermée). Le refus n'est plus une erreur non rattrapée
+  /// (crash fatal Sentry FLUTTER-CV) : l'écran l'explique et rend le texte.
+  /// Toute autre erreur remonte comme avant.
+  Future<bool> _rejectable(
+    Emitter<ChatState> emit,
+    Future<void> Function() write, {
+    String? text,
+  }) async {
+    try {
+      await write();
+      return true;
+    } on FirebaseException catch (e) {
+      if (e.code != 'permission-denied') rethrow;
+      final previous = state;
+      emit(ChatSendRejected(previous, text: text));
+      emit(previous);
+      return false;
+    }
   }
 
   Future<void> _onDeleteConversation(

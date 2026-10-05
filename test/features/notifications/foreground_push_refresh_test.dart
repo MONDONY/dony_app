@@ -23,6 +23,14 @@ void main() {
       expect(refresh.activityIndicators, isTrue);
     });
 
+    test('messagerie coupée par un admin : le profil est relu', () {
+      final refresh = ForegroundPushRefresh.forType('MESSAGING_MUTED');
+      expect(refresh.profile, isTrue);
+      expect(refresh.notificationFeed, isTrue);
+      expect(refresh.activityIndicators, isFalse);
+      expect(ForegroundPushRefresh.forType('BID_RECEIVED').profile, isFalse);
+    });
+
     test('type absent : tout, par prudence', () {
       final refresh = ForegroundPushRefresh.forType(null);
       expect(refresh.notificationFeed, isTrue);

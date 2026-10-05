@@ -202,6 +202,12 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           // négociation : rafraîchir les compteurs de l'onglet aussi.
           _loadActivityIndicators();
         }
+        if (refresh.profile) {
+          final authBloc = context.read<AuthBloc>();
+          if (!authBloc.isClosed) {
+            authBloc.add(const AuthProfileRefreshRequested());
+          }
+        }
       });
     });
   }
