@@ -8,6 +8,7 @@ import 'package:dony/features/matching/presentation/widgets/arrival_instructions
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
@@ -102,6 +103,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       SenderHeroCard(bid: widget.bid),
       if (TripRescheduleCard.shouldShow(widget.bid))
         TripRescheduleCard(bid: widget.bid, isSender: true),
+      // Lieu de remise puis lieu de récupération, ouvrables dans la carte
+      // native ; la mini-carte suit l'étape du colis.
+      if (ParcelLocationsCard.shouldShow(widget.bid))
+        ParcelLocationsCard(bid: widget.bid),
       // Hors du hero, qui les masquait dès qu'une contestation, une absence
       // ou la livraison prenait la place.
       if (_activeStatuses.contains(status) &&

@@ -45,4 +45,35 @@ void main() {
       expect(BidModel.fromJson(_minimalBid()).recipientAppStatus, isNull);
     });
   });
+
+  group('BidModel.handoverAddress / deliveryAddress (carte Lieux)', () {
+    test('fromJson lit les deux adresses avec leurs coordonnées', () {
+      final json = _minimalBid()
+        ..['handoverAddress'] = {
+          'label': '22 Rue du Séminaire, Chevilly-Larue',
+          'lat': 48.7667,
+          'lng': 2.3508,
+        }
+        ..['deliveryAddress'] = {
+          'label': 'ACI 2000, Bamako',
+          'lat': 12.6362,
+          'lng': -8.0121,
+        };
+      final model = BidModel.fromJson(json);
+      expect(
+        model.handoverAddress?.label,
+        '22 Rue du Séminaire, Chevilly-Larue',
+      );
+      expect(model.handoverAddress?.lat, 48.7667);
+      expect(model.deliveryAddress?.label, 'ACI 2000, Bamako');
+      expect(model.deliveryAddress?.lng, -8.0121);
+      expect(model.toJson()['deliveryAddress'], model.deliveryAddress);
+    });
+
+    test('ancien back sans les champs → null', () {
+      final model = BidModel.fromJson(_minimalBid());
+      expect(model.handoverAddress, isNull);
+      expect(model.deliveryAddress, isNull);
+    });
+  });
 }

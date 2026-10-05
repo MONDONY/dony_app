@@ -16237,4 +16237,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get reportSentTitle => 'Signalement envoyé';
+
+  @override
+  String get addressCopiedMessage => 'Adresse copiée';
+
+  @override
+  String get parcelLocationsCurrentStep => 'Étape en cours';
+
+  @override
+  String get parcelLocationsHandedOver => 'Remis';
+
+  @override
+  String get parcelLocationsDelivered => 'Livré';
+
+  @override
+  String get parcelLocationsOnArrival => 'À l\'arrivée';
+
+  @override
+  String get bidDetailSectionPickup => 'RÉCUPÉRATION À L\'ARRIVÉE';
 }

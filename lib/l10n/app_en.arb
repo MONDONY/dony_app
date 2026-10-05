@@ -8923,5 +8923,11 @@
   "errorTrackingNumberRequiredTitle": "Tracking number required",
   "errorTrackingNumberRequiredMessage": "Enter the tracking number given by the sender to confirm the handover.",
   "listingTripFullMessage": "This trip is full: it no longer accepts requests.",
-  "reportSentTitle": "Report sent"
+  "reportSentTitle": "Report sent",
+  "addressCopiedMessage": "Address copied",
+  "parcelLocationsCurrentStep": "Current step",
+  "parcelLocationsHandedOver": "Handed over",
+  "parcelLocationsDelivered": "Delivered",
+  "parcelLocationsOnArrival": "On arrival",
+  "bidDetailSectionPickup": "PICKUP ON ARRIVAL"
 }

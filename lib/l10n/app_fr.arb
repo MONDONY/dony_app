@@ -18628,5 +18628,29 @@
   "reportSentTitle": "Signalement envoyé",
   "@reportSentTitle": {
     "description": "Titre de la confirmation d'envoi d'un signalement (incident_report_screen.dart, FLUTTER-BJ)"
+  },
+  "addressCopiedMessage": "Adresse copiée",
+  "@addressCopiedMessage": {
+    "description": "Snackbar après appui long sur une adresse (address_location_row.dart)"
+  },
+  "parcelLocationsCurrentStep": "Étape en cours",
+  "@parcelLocationsCurrentStep": {
+    "description": "Pastille de l'adresse de l'étape du moment, carte Lieux de la fiche colis (parcel_locations_card.dart)"
+  },
+  "parcelLocationsHandedOver": "Remis",
+  "@parcelLocationsHandedOver": {
+    "description": "Pastille du lieu de remise une fois le colis remis au voyageur (parcel_locations_card.dart)"
+  },
+  "parcelLocationsDelivered": "Livré",
+  "@parcelLocationsDelivered": {
+    "description": "Pastille du lieu de récupération une fois le colis récupéré (parcel_locations_card.dart)"
+  },
+  "parcelLocationsOnArrival": "À l'arrivée",
+  "@parcelLocationsOnArrival": {
+    "description": "Pastille du lieu de récupération avant la remise au voyageur (parcel_locations_card.dart)"
+  },
+  "bidDetailSectionPickup": "RÉCUPÉRATION À L'ARRIVÉE",
+  "@bidDetailSectionPickup": {
+    "description": "Section de l'adresse de récupération du destinataire, Plus de détails (details_accordion.dart)"
   }
 }

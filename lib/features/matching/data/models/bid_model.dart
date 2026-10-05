@@ -1,5 +1,6 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -249,6 +250,15 @@ class BidModel {
   /// trajet n'a jamais été reporté (ou back antérieur au report de trajet).
   final TripRescheduleInfo? reschedule;
 
+  /// Lieu de remise du colis au voyageur, avec ses coordonnées (adresse de
+  /// départ du trajet). Nul sur un back antérieur : la carte Lieux est alors
+  /// masquée.
+  final AddressData? handoverAddress;
+
+  /// Lieu où le destinataire récupère le colis à l'arrivée (adresse d'arrivée
+  /// du trajet). Nul pour une demande sortie de la course ou un back antérieur.
+  final AddressData? deliveryAddress;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -322,6 +332,8 @@ class BidModel {
     this.photos = const [],
     this.currency = 'EUR',
     this.reschedule,
+    this.handoverAddress,
+    this.deliveryAddress,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>
