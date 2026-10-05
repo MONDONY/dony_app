@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_locations_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -11,24 +14,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-/// Statuts pour lesquels le colis a déjà été remis au voyageur : la « présence »
-/// y est implicite, on n'affiche donc plus « Non encore ».
-const _kRemisStatuses = <String>{
-  'HANDED_OVER',
-  'IN_TRANSIT',
-  // ARRIVED implique HANDED_OVER (le scan Transit est facultatif) : le colis a
-  // forcément été remis.
-  'ARRIVED',
-  'COMPLETED',
-  'DELIVERED',
-};
-
 /// Accordéon « Plus de détails » — tout ce que l'app sait de la demande :
 ///   1. DEMANDE (référence, dates d'envoi et de mise à jour, paiement, promo)
-///   2. FENÊTRE DE REMISE
-///   3. TRAJET (itinéraire, départ, arrivée, retrait à l'arrivée)
-///   4. LIEN DE SUIVI (si autorisé et trackingToken != null)
-///   5. RESPONSABILITÉ LÉGALE
+///   2. DÉPÔT DU COLIS (lieu ouvrable dans la carte, date limite, remise)
+///   3. RÉCUPÉRATION À L'ARRIVÉE (lieu ouvrable dans la carte, instructions)
+///   4. TRAJET (itinéraire, départ, arrivée, tarif)
+///   5. LIEN DE SUIVI (si autorisé et trackingToken != null)
+///   6. RESPONSABILITÉ LÉGALE
 ///
 /// NOTE : ce widget est un [StatefulWidget] pour gérer l'état UI `_open`
 /// (pattern AnimatedSize standard). Ce setState local ne gère que l'ouverture/
@@ -108,6 +100,10 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
       time,
     );
   }
+
+  bool get _hasInstructions =>
+      bid.arrivalInstructions != null &&
+      bid.arrivalInstructions!.trim().isNotEmpty;
 
   /// « 14:30:00 » (LocalTime du back) → « 14:30 ».
   static String _hhmm(String time) =>
@@ -217,13 +213,20 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                         const SizedBox(height: DonySpacing.md),
                         Divider(color: cs.outline, height: 1),
                         const SizedBox(height: DonySpacing.md),
-                        // Section 1 — DÉPÔT DU COLIS
+                        // Section — DÉPÔT DU COLIS
                         _SectionLabel(label: l.bidDetailSectionDropoff),
                         const SizedBox(height: DonySpacing.sm),
-                        InfoRow(
-                          label: l.bidDetailLocationLabel,
-                          value: bid.handoverLocation ?? '-',
-                        ),
+                        if (bid.handoverAddress != null)
+                          _AddressInfoRow(
+                            key: const Key('details-handover-address'),
+                            label: l.bidDetailLocationLabel,
+                            address: bid.handoverAddress!,
+                          )
+                        else
+                          InfoRow(
+                            label: l.bidDetailLocationLabel,
+                            value: bid.handoverLocation ?? '-',
+                          ),
                         if (bid.handoverDeadline != null) ...[
                           const SizedBox(height: DonySpacing.sm),
                           InfoRow(
@@ -239,19 +242,42 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                         // remise (phase ACCEPTED). Une fois le colis remis, on
                         // affiche l'état réel plutôt qu'un trompeur « Non encore ».
                         InfoRow(
-                          label: _kRemisStatuses.contains(bid.status)
+                          label: kParcelHandedOverStatuses.contains(bid.status)
                               ? l.bidDetailHandoverStatusLabel
                               : l.bidDetailPresenceConfirmedLabel,
-                          value: _kRemisStatuses.contains(bid.status)
+                          value: kParcelHandedOverStatuses.contains(bid.status)
                               ? l.bidDetailParcelHandedOverValue
                               : (bid.voyageurConfirmed
                                     ? l.bidDetailYesValue
                                     : l.bidDetailNotYetValue),
                         ),
+                        if (bid.deliveryAddress != null ||
+                            _hasInstructions) ...[
+                          const SizedBox(height: DonySpacing.md),
+                          Divider(color: cs.outline, height: 1),
+                          const SizedBox(height: DonySpacing.md),
+                          // Section — RÉCUPÉRATION À L'ARRIVÉE
+                          _SectionLabel(label: l.bidDetailSectionPickup),
+                          if (bid.deliveryAddress != null) ...[
+                            const SizedBox(height: DonySpacing.sm),
+                            _AddressInfoRow(
+                              key: const Key('details-delivery-address'),
+                              label: l.bidDetailLocationLabel,
+                              address: bid.deliveryAddress!,
+                            ),
+                          ],
+                          if (_hasInstructions) ...[
+                            const SizedBox(height: DonySpacing.sm),
+                            InfoRow(
+                              label: l.bidDetailPickupInstructionsLabel,
+                              value: bid.arrivalInstructions!.trim(),
+                            ),
+                          ],
+                        ],
                         const SizedBox(height: DonySpacing.md),
                         Divider(color: cs.outline, height: 1),
                         const SizedBox(height: DonySpacing.md),
-                        // Section 2 — TRAJET
+                        // Section — TRAJET
                         _SectionLabel(label: l.listingHeroTripLabelCaps),
                         const SizedBox(height: DonySpacing.sm),
                         InfoRow(label: l.bidDetailRouteLabel, value: _route),
@@ -279,14 +305,6 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                             value: _arrivalValue(context),
                           ),
                         ],
-                        if (bid.arrivalInstructions != null &&
-                            bid.arrivalInstructions!.trim().isNotEmpty) ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          InfoRow(
-                            label: l.bidDetailPickupInstructionsLabel,
-                            value: bid.arrivalInstructions!.trim(),
-                          ),
-                        ],
                         if (bid.senderPricePerKg != null &&
                             bid.senderPricePerKg! > 0) ...[
                           const SizedBox(height: DonySpacing.sm),
@@ -299,7 +317,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                             ),
                           ),
                         ],
-                        // Section 3 — LIEN DE SUIVI (conditionnel)
+                        // Section — LIEN DE SUIVI (conditionnel)
                         if (widget.showTrackingLink &&
                             bid.trackingToken != null) ...[
                           const SizedBox(height: DonySpacing.md),
@@ -312,7 +330,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                         const SizedBox(height: DonySpacing.md),
                         Divider(color: cs.outline, height: 1),
                         const SizedBox(height: DonySpacing.md),
-                        // Section 4 — RESPONSABILITÉ LÉGALE
+                        // Section — RESPONSABILITÉ LÉGALE
                         _SectionLabel(label: l.bidDetailSectionLegal),
                         const SizedBox(height: DonySpacing.sm),
                         _DisclaimerRow(bid: bid),
@@ -342,6 +360,56 @@ class _SectionLabel extends StatelessWidget {
         color: cs.onSurfaceVariant,
         letterSpacing: 0.8,
         fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+}
+
+// ── Adresse ouvrable dans la carte ───────────────────────────────────────────
+
+/// [InfoRow] dont la valeur est une adresse : tap = ouvre l'app de carte
+/// native, appui long = copie.
+class _AddressInfoRow extends StatelessWidget {
+  final String label;
+  final AddressData address;
+  const _AddressInfoRow({
+    super.key,
+    required this.label,
+    required this.address,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => openAddressInMaps(address),
+      onLongPress: () => copyAddress(context, address),
+      borderRadius: BorderRadius.circular(DonyRadius.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              address.label,
+              style: tt.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: cs.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          DonyIcon('map-pin', size: 14, color: cs.primary),
+        ],
       ),
     );
   }

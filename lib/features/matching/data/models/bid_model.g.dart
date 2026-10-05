@@ -122,6 +122,12 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   reschedule: json['reschedule'] == null
       ? null
       : TripRescheduleInfo.fromJson(json['reschedule'] as Map<String, dynamic>),
+  handoverAddress: json['handoverAddress'] == null
+      ? null
+      : AddressData.fromJson(json['handoverAddress'] as Map<String, dynamic>),
+  deliveryAddress: json['deliveryAddress'] == null
+      ? null
+      : AddressData.fromJson(json['deliveryAddress'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -201,6 +207,8 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'photos': instance.photos,
   'currency': instance.currency,
   'reschedule': instance.reschedule,
+  'handoverAddress': instance.handoverAddress,
+  'deliveryAddress': instance.deliveryAddress,
 };
 
 const _$BidPaymentMethodEnumMap = {

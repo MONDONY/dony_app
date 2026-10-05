@@ -16141,4 +16141,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportSentTitle => 'Report sent';
+
+  @override
+  String get addressCopiedMessage => 'Address copied';
+
+  @override
+  String get parcelLocationsCurrentStep => 'Current step';
+
+  @override
+  String get parcelLocationsHandedOver => 'Handed over';
+
+  @override
+  String get parcelLocationsDelivered => 'Delivered';
+
+  @override
+  String get parcelLocationsOnArrival => 'On arrival';
+
+  @override
+  String get bidDetailSectionPickup => 'PICKUP ON ARRIVAL';
 }

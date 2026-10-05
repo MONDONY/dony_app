@@ -27,6 +27,7 @@ import 'package:dony/features/matching/presentation/arrival_label.dart';
 import 'package:dony/features/matching/presentation/existing_trip_request.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/trip_view_recording.dart';
+import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
@@ -1166,7 +1167,7 @@ class _LocationsCard extends StatelessWidget {
           if (pickup != null && delivery != null)
             _RouteMiniMap(pickup: pickup, delivery: delivery),
           if (pickup != null)
-            _LocationRow(
+            AddressLocationRow(
               key: const Key('location-pickup'),
               iconAsset: 'upload',
               iconColor: cs.primary,
@@ -1177,7 +1178,7 @@ class _LocationsCard extends StatelessWidget {
           if (pickup != null && delivery != null)
             Divider(height: 1, color: cs.surfaceContainerHighest),
           if (delivery != null)
-            _LocationRow(
+            AddressLocationRow(
               key: const Key('location-delivery'),
               iconAsset: 'download',
               iconColor: DonyColors.accent,
@@ -1186,88 +1187,6 @@ class _LocationsCard extends StatelessWidget {
               address: delivery,
             ),
         ],
-      ),
-    );
-  }
-}
-
-/// Une ligne d'adresse entièrement tappable : ouvre le point dans l'app de
-/// carte native (Plans sur iOS, Google Maps sur Android). Le badge
-/// « Itinéraire » signale l'affordance sans laisser croire à un lien web.
-class _LocationRow extends StatelessWidget {
-  const _LocationRow({
-    super.key,
-    required this.iconAsset,
-    required this.iconColor,
-    required this.iconBackground,
-    required this.title,
-    required this.address,
-  });
-
-  final String iconAsset;
-  final Color iconColor;
-  final Color iconBackground;
-  final String title;
-  final AddressData address;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: () => unawaited(
-        openInMaps(
-          getIt<ExternalUrlLauncher>(),
-          lat: address.lat,
-          lng: address.lng,
-          label: address.label,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(DonySpacing.md),
-        child: Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: iconBackground,
-                borderRadius: BorderRadius.circular(DonyRadius.sm),
-              ),
-              alignment: Alignment.center,
-              child: DonyIcon(iconAsset, size: 14, color: iconColor),
-            ),
-            const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: DonySpacing.xxs),
-                  Text(address.label, style: tt.bodyMedium),
-                ],
-              ),
-            ),
-            const SizedBox(width: DonySpacing.sm),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DonyIcon('map-pin', size: 13, color: cs.primary),
-                const SizedBox(width: DonySpacing.xxs),
-                Text(
-                  context.l10n.listingRouteLabel,
-                  style: tt.bodySmall?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

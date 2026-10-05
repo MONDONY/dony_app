@@ -2,6 +2,7 @@
 // trajet (motif fixe branché par langue, details_accordion.dart:64-73 —
 // corrigé en K3 : la locale 'fr_FR' codée en dur devient `locale`) et la date
 // limite de dépôt (squelette yMd, déjà correcte, non-régression).
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:flutter/material.dart';
@@ -131,5 +132,60 @@ void main() {
     expect(find.text('14:30'), findsOneWidget);
     expect(find.text('21:05'), findsOneWidget);
     expect(find.text('Marché Sandaga, porte 3'), findsOneWidget);
+  });
+
+  testWidgets(
+    'adresses servies : lieu de dépôt ouvrable et section Récupération à '
+    "l'arrivée avec adresse et instructions",
+    (tester) async {
+      final bid = BidModel(
+        id: 'bid-001',
+        announcementId: 'ann-001',
+        senderId: 'sender-001',
+        status: 'ACCEPTED',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        handoverLocation: '22 Rue du Séminaire, Chevilly-Larue',
+        handoverAddress: const AddressData(
+          label: '22 Rue du Séminaire, Chevilly-Larue',
+          lat: 48.7667,
+          lng: 2.3508,
+        ),
+        deliveryAddress: const AddressData(
+          label: 'ACI 2000, Bamako',
+          lat: 12.6362,
+          lng: -8.0121,
+        ),
+        arrivalInstructions: 'Appeler à l\'arrivée',
+      );
+      await tester.pumpWidget(_host(bid));
+      await ouvrir(tester);
+
+      expect(find.byKey(const Key('details-handover-address')), findsOneWidget);
+      expect(find.text("RÉCUPÉRATION À L'ARRIVÉE"), findsOneWidget);
+      expect(find.byKey(const Key('details-delivery-address')), findsOneWidget);
+      expect(find.text('ACI 2000, Bamako'), findsOneWidget);
+      expect(find.text("Appeler à l'arrivée"), findsOneWidget);
+    },
+  );
+
+  testWidgets('ancien back sans adresses : lieu de dépôt en texte simple', (
+    tester,
+  ) async {
+    final bid = BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: 'sender-001',
+      status: 'ACCEPTED',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      handoverLocation: '22 Rue du Séminaire, Chevilly-Larue',
+    );
+    await tester.pumpWidget(_host(bid));
+    await ouvrir(tester);
+
+    expect(find.text('22 Rue du Séminaire, Chevilly-Larue'), findsOneWidget);
+    expect(find.byKey(const Key('details-handover-address')), findsNothing);
+    expect(find.text("RÉCUPÉRATION À L'ARRIVÉE"), findsNothing);
   });
 }

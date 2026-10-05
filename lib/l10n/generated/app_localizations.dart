@@ -26678,6 +26678,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Signalement envoyé'**
   String get reportSentTitle;
+
+  /// Snackbar après appui long sur une adresse (address_location_row.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse copiée'**
+  String get addressCopiedMessage;
+
+  /// Pastille de l'adresse de l'étape du moment, carte Lieux de la fiche colis (parcel_locations_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape en cours'**
+  String get parcelLocationsCurrentStep;
+
+  /// Pastille du lieu de remise une fois le colis remis au voyageur (parcel_locations_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis'**
+  String get parcelLocationsHandedOver;
+
+  /// Pastille du lieu de récupération une fois le colis récupéré (parcel_locations_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Livré'**
+  String get parcelLocationsDelivered;
+
+  /// Pastille du lieu de récupération avant la remise au voyageur (parcel_locations_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À l\'arrivée'**
+  String get parcelLocationsOnArrival;
+
+  /// Section de l'adresse de récupération du destinataire, Plus de détails (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'RÉCUPÉRATION À L\'ARRIVÉE'**
+  String get bidDetailSectionPickup;
 }
 
 class _AppLocalizationsDelegate
