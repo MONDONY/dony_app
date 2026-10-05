@@ -11,6 +11,9 @@ class ScanPosition {
 
   /// « Rue, ville, pays », `null` si le géocodage inverse a échoué.
   final String? label;
+
+  ScanPosition withLabel(String? label) =>
+      ScanPosition(lat: lat, lon: lon, label: label);
 }
 
 /// Position du voyageur au moment d'une étape, et son inscription dans les
@@ -19,27 +22,56 @@ class ScanPosition {
 class ScanLocator {
   const ScanLocator();
 
-  /// Position actuelle, `null` sans permission ou en cas d'échec.
+  /// Attente maximale d'un relevé GPS frais. Au-delà (intérieur, batterie
+  /// faible), la dernière position connue du téléphone prend le relais
+  /// (FLUTTER-D1 : sans limite, l'appareil photo attendait indéfiniment).
+  static const fixTimeout = Duration(seconds: 8);
+
+  /// Attente maximale du géocodage inverse, qui passe par le réseau.
+  static const labelTimeout = Duration(seconds: 4);
+
+  /// Position actuelle avec son lieu lisible, `null` sans permission ou en
+  /// cas d'échec.
   Future<ScanPosition?> capture() async {
+    final position = await captureCoordinates();
+    if (position == null) return null;
+    return resolveLabel(position);
+  }
+
+  /// Coordonnées seules, sans réseau : relevé frais borné par [fixTimeout],
+  /// sinon dernière position connue, sinon `null`.
+  Future<ScanPosition?> captureCoordinates() async {
     try {
       final permission = await Geolocator.requestPermission();
       if (permission != LocationPermission.always &&
           permission != LocationPermission.whileInUse) {
         return null;
       }
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
-      return ScanPosition(
-        lat: position.latitude,
-        lon: position.longitude,
-        label: await _resolveLabel(position.latitude, position.longitude),
-      );
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        ).timeout(fixTimeout);
+      } catch (_) {
+        position = await Geolocator.getLastKnownPosition();
+      }
+      if (position == null) return null;
+      return ScanPosition(lat: position.latitude, lon: position.longitude);
     } catch (_) {
       return null;
     }
+  }
+
+  /// [position] complétée de son lieu lisible ; inchangée si le géocodage
+  /// échoue ou dépasse [labelTimeout].
+  Future<ScanPosition> resolveLabel(ScanPosition position) async {
+    final label = await _resolveLabel(
+      position.lat,
+      position.lon,
+    ).timeout(labelTimeout, onTimeout: () => null);
+    return position.withLabel(label);
   }
 
   Future<String?> _resolveLabel(double lat, double lon) async {
