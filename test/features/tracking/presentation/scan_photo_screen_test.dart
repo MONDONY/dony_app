@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dony/core/design/theme/app_theme.dart';
@@ -8,6 +9,7 @@ import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -296,7 +298,10 @@ void main() {
       media = _MockMedia();
       tmp = Directory.systemTemp.createTempSync('scan_photo');
       registerFallbackValue(_here);
-      when(() => locator.capture()).thenAnswer((_) async => _here);
+      when(
+        () => locator.captureCoordinates(),
+      ).thenAnswer((_) async => const ScanPosition(lat: 14.7, lon: -17.4));
+      when(() => locator.resolveLabel(any())).thenAnswer((_) async => _here);
       when(() => locator.writeExif(any(), any())).thenAnswer((_) async {});
       if (getIt.isRegistered<DonyMediaService>()) {
         getIt.unregister<DonyMediaService>();
@@ -351,6 +356,65 @@ void main() {
       expect(result?.position?.label, 'Dakar');
       verify(() => locator.writeExif(file.path, _here)).called(1);
       expect(find.text('ouvrir'), findsOneWidget);
+    });
+
+    testWidgets(
+      "GPS sans réponse : l'appareil photo s'ouvre tout de suite (FLUTTER-D1)",
+      (tester) async {
+        final never = Completer<ScanPosition?>();
+        when(
+          () => locator.captureCoordinates(),
+        ).thenAnswer((_) => never.future);
+        final file = File('${tmp.path}/colis.jpg')..writeAsBytesSync([1, 2, 3]);
+        final shot = Completer<XFile?>();
+        when(
+          () => media.pick(source: ImageSource.camera),
+        ).thenAnswer((_) => shot.future);
+        ScanPhotoResult? result;
+        await open(tester, _resultRouter('DEPART', locator, (r) => result = r));
+
+        await tester.tap(find.text('Prendre la photo'));
+        await tester.pump();
+        // L'appareil photo est ouvert alors que la position n'est pas là.
+        verify(() => media.pick(source: ImageSource.camera)).called(1);
+
+        shot.complete(XFile(file.path));
+        await tester.pump();
+        expect(find.text('Localisation…'), findsOneWidget);
+
+        // Attente bornée : la photo part sans position.
+        await tester.pump(const Duration(seconds: 5));
+        for (var i = 0; i < 40 && result == null; i++) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 50)),
+          );
+          await tester.pump();
+        }
+        await tester.pumpAndSettle();
+        expect(result?.photoPath, file.path);
+        expect(result?.position, isNull);
+        verifyNever(() => locator.writeExif(any(), any()));
+      },
+    );
+
+    testWidgets('accès à l\'appareil photo refusé : message et réglages', (
+      tester,
+    ) async {
+      when(
+        () => media.pick(source: ImageSource.camera),
+      ).thenThrow(PlatformException(code: 'camera_access_denied'));
+      await open(tester, _resultRouter('DEPART', locator, (_) {}));
+
+      await tester.tap(find.text('Prendre la photo'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        find.textContaining("L'accès à l'appareil photo est refusé"),
+        findsOneWidget,
+      );
+      expect(find.text('Réglages'), findsOneWidget);
+      expect(find.text('Prendre la photo'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
     });
 
     testWidgets('photo de plus de 10 Mo : refusée, écran conservé', (

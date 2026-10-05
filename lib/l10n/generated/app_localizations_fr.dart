@@ -10269,6 +10269,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanPhotoOpeningLoading => 'Ouverture...';
 
   @override
+  String get scanPhotoLocating => 'Localisation…';
+
+  @override
+  String get scanCameraAccessDenied =>
+      'L\'accès à l\'appareil photo est refusé. Autorisez-le dans les réglages pour prendre la photo.';
+
+  @override
+  String get scanCameraUnavailable =>
+      'L\'appareil photo n\'a pas pu s\'ouvrir. Réessayez.';
+
+  @override
+  String get scanOpenSettings => 'Réglages';
+
+  @override
   String get scanTakePhotoButton => 'Prendre la photo';
 
   @override

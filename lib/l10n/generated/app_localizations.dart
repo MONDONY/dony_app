@@ -16973,6 +16973,30 @@ abstract class AppLocalizations {
   /// **'Ouverture...'**
   String get scanPhotoOpeningLoading;
 
+  /// Libellé du bouton pendant l'attente bornée de la position GPS après la photo (scan_photo_screen.dart, FLUTTER-D1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation…'**
+  String get scanPhotoLocating;
+
+  /// Snackbar quand l'accès à l'appareil photo est refusé dans les réglages (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'accès à l\'appareil photo est refusé. Autorisez-le dans les réglages pour prendre la photo.'**
+  String get scanCameraAccessDenied;
+
+  /// Snackbar quand l'appareil photo ne s'ouvre pas pour une autre raison (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'appareil photo n\'a pas pu s\'ouvrir. Réessayez.'**
+  String get scanCameraUnavailable;
+
+  /// Action de la snackbar d'accès refusé : ouvre les réglages de l'app (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réglages'**
+  String get scanOpenSettings;
+
   /// Bouton principal de prise de photo (scan_photo_screen.dart), distinct de commonTakePhoto (« une » vs « la »).
   ///
   /// In fr, this message translates to:

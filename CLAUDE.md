@@ -168,7 +168,7 @@ Les scans QR fonctionnent sans connexion :
 
 ### 8. QR Photo + GPS
 
-- Capturer `Geolocator.getCurrentPosition()` **avant** `ImagePicker.pickImage()`
+- Lancer la recherche GPS **dès l'ouverture** de l'écran photo, avant `ImagePicker.pickImage()`, mais ne **jamais** bloquer l'ouverture de l'appareil photo sur elle (FLUTTER-D1) : relevé frais borné (`ScanLocator.fixTimeout`, repli sur la dernière position connue), puis attente d'au plus 5 s après la photo ; sans position, l'étape part sans coordonnées. Le lieu lisible (géocodage, réseau) se calcule en parallèle, borné par `ScanLocator.labelTimeout`
 - Écrire lat/lon dans les métadonnées EXIF (package `exif`)
 - Photo : qualité 85 %, max 1920×1080, taille max 10 MB (valider avant upload)
 

@@ -5964,6 +5964,22 @@
   "@scanPhotoOpeningLoading": {
     "description": "Libellé du bouton pendant l'ouverture de la caméra (scan_photo_screen.dart)."
   },
+  "scanPhotoLocating": "Locating…",
+  "@scanPhotoLocating": {
+    "description": "Libellé du bouton pendant l'attente bornée de la position GPS après la photo (scan_photo_screen.dart, FLUTTER-D1)."
+  },
+  "scanCameraAccessDenied": "Camera access is denied. Allow it in Settings to take the photo.",
+  "@scanCameraAccessDenied": {
+    "description": "Snackbar quand l'accès à l'appareil photo est refusé dans les réglages (scan_photo_screen.dart)."
+  },
+  "scanCameraUnavailable": "The camera couldn't open. Please try again.",
+  "@scanCameraUnavailable": {
+    "description": "Snackbar quand l'appareil photo ne s'ouvre pas pour une autre raison (scan_photo_screen.dart)."
+  },
+  "scanOpenSettings": "Settings",
+  "@scanOpenSettings": {
+    "description": "Action de la snackbar d'accès refusé : ouvre les réglages de l'app (scan_photo_screen.dart)."
+  },
   "scanTakePhotoButton": "Take the photo",
   "@scanTakePhotoButton": {
     "description": "Bouton principal de prise de photo (scan_photo_screen.dart), distinct de commonTakePhoto (« une » vs « la »)."

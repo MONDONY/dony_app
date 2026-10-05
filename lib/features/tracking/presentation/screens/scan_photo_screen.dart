@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
@@ -9,6 +10,8 @@ import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -61,12 +64,17 @@ class ScanPhotoScreen extends StatefulWidget {
 }
 
 class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
-  final ValueNotifier<bool> _loading = ValueNotifier(false);
+  final ValueNotifier<_Busy> _busy = ValueNotifier(_Busy.idle);
 
-  /// Position relevée à l'ouverture, AVANT la photo : `null` tant qu'elle
-  /// n'est pas connue (ou introuvable).
+  /// Position relevée en arrière-plan dès l'ouverture : `null` tant qu'elle
+  /// n'est pas connue (ou introuvable). Les coordonnées arrivent d'abord, le
+  /// lieu lisible (réseau) ensuite.
   final ValueNotifier<ScanPosition?> _position = ValueNotifier(null);
   late final Future<void> _gpsFuture;
+
+  /// Attente maximale de la position une fois la photo prise. L'appareil
+  /// photo, lui, ne l'attend jamais (FLUTTER-D1).
+  static const _positionGrace = Duration(seconds: 5);
 
   bool get _photoRequired =>
       widget.returnResult ||
@@ -81,27 +89,34 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
 
   @override
   void dispose() {
-    _loading.dispose();
+    _busy.dispose();
     _position.dispose();
     super.dispose();
   }
 
   Future<void> _captureGps() async {
-    final position = await widget.locator.capture();
-    if (mounted) _position.value = position;
+    final coordinates = await widget.locator.captureCoordinates();
+    if (coordinates == null || !mounted) return;
+    _position.value = coordinates;
+    final located = await widget.locator.resolveLabel(coordinates);
+    if (mounted) _position.value = located;
   }
 
   Future<void> _takePhoto() async {
-    _loading.value = true;
-    await _gpsFuture;
+    _busy.value = _Busy.opening;
     try {
+      // La recherche GPS, lancée à l'ouverture de l'écran, continue pendant
+      // la prise de vue : l'appareil photo s'ouvre sans l'attendre.
       final picked = await getIt<DonyMediaService>().pick(
         source: ImageSource.camera,
       );
       if (picked == null || !mounted) {
-        _loading.value = false;
+        if (mounted) _busy.value = _Busy.idle;
         return;
       }
+      _busy.value = _Busy.locating;
+      await _gpsFuture.timeout(_positionGrace, onTimeout: () {});
+      if (!mounted) return;
       final position = _position.value;
       if (position != null) {
         await widget.locator.writeExif(picked.path, position);
@@ -120,19 +135,37 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
         );
         return;
       }
+      _busy.value = _Busy.idle;
       _navigateToConfirm(photoPath: picked.path);
     } on MediaFileTooLargeException catch (e) {
       if (!mounted) return;
-      _loading.value = false;
+      _busy.value = _Busy.idle;
       DonySnackbar.show(
         context,
         message: context.l10n.scanPhotoTooLarge(e.maxMb),
         type: DonySnackbarType.error,
       );
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      _busy.value = _Busy.idle;
+      // Accès refusé dans les réglages : sans message, rien ne s'ouvrait.
+      final denied = e.code == 'camera_access_denied';
+      DonySnackbar.show(
+        context,
+        message: denied
+            ? context.l10n.scanCameraAccessDenied
+            : context.l10n.scanCameraUnavailable,
+        type: DonySnackbarType.error,
+        actionLabel: denied ? context.l10n.scanOpenSettings : null,
+        onAction: denied ? () => unawaited(openSettings()) : null,
+      );
     } catch (_) {
-      if (mounted) _loading.value = false;
+      if (mounted) _busy.value = _Busy.idle;
     }
   }
+
+  /// Réglages de l'app, pour rendre l'accès à l'appareil photo.
+  Future<bool> openSettings() => Geolocator.openAppSettings();
 
   void _skipPhoto() => _navigateToConfirm(photoPath: null);
 
@@ -352,59 +385,37 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                   DonySpacing.lg,
                   bottomPad + DonySpacing.lg,
                 ),
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: _loading,
-                  builder: (context, loading, _) => Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: loading ? null : _takePhoto,
-                          icon: loading
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: DonyColors.neutral0,
-                                  ),
-                                )
-                              : const DonyIcon('camera'),
-                          label: Text(
-                            loading
-                                ? l.scanPhotoOpeningLoading
-                                : l.scanTakePhotoButton,
-                          ),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: DonyColors.neutral0,
-                            foregroundColor: DonyColors.ink900,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: DonySpacing.base,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                DonyRadius.lg,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (!_photoRequired) ...[
-                        const SizedBox(height: DonySpacing.sm),
+                child: ValueListenableBuilder<_Busy>(
+                  valueListenable: _busy,
+                  builder: (context, busy, _) {
+                    final loading = busy != _Busy.idle;
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         SizedBox(
                           width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: loading ? null : _skipPhoto,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: DonyColors.neutral0,
-                              side: BorderSide(
-                                color: DonyColors.neutral0.withValues(
-                                  alpha: 0.4,
-                                ),
-                              ),
+                          child: FilledButton.icon(
+                            onPressed: loading ? null : _takePhoto,
+                            icon: loading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: DonyColors.neutral0,
+                                    ),
+                                  )
+                                : const DonyIcon('camera'),
+                            label: Text(switch (busy) {
+                              _Busy.idle => l.scanTakePhotoButton,
+                              _Busy.opening => l.scanPhotoOpeningLoading,
+                              _Busy.locating => l.scanPhotoLocating,
+                            }),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: DonyColors.neutral0,
+                              foregroundColor: DonyColors.ink900,
                               padding: const EdgeInsets.symmetric(
-                                vertical: DonySpacing.md,
+                                vertical: DonySpacing.base,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(
@@ -412,44 +423,69 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                 ),
                               ),
                             ),
-                            child: Text(l.scanSkipPhotoButton),
                           ),
                         ),
-                      ],
-                      const SizedBox(height: DonySpacing.sm),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          DonyIcon(
-                            'map-pin',
-                            color: DonyColors.neutral0.withValues(alpha: 0.5),
-                            size: 12,
-                          ),
-                          const SizedBox(width: DonySpacing.xs),
-                          Flexible(
-                            child: ValueListenableBuilder<ScanPosition?>(
-                              valueListenable: _position,
-                              builder: (context, position, _) {
-                                final label = position?.label;
-                                return Text(
-                                  widget.returnResult && label != null
-                                      ? l.suiviPositionSaved(label)
-                                      : l.scanAutoGeolocation,
-                                  key: const Key('scan-photo-position'),
-                                  textAlign: TextAlign.center,
-                                  style: tt.labelSmall?.copyWith(
-                                    color: DonyColors.neutral0.withValues(
-                                      alpha: 0.5,
-                                    ),
+                        if (!_photoRequired) ...[
+                          const SizedBox(height: DonySpacing.sm),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: loading ? null : _skipPhoto,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: DonyColors.neutral0,
+                                side: BorderSide(
+                                  color: DonyColors.neutral0.withValues(
+                                    alpha: 0.4,
                                   ),
-                                );
-                              },
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: DonySpacing.md,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    DonyRadius.lg,
+                                  ),
+                                ),
+                              ),
+                              child: Text(l.scanSkipPhotoButton),
                             ),
                           ),
                         ],
-                      ),
-                    ],
-                  ),
+                        const SizedBox(height: DonySpacing.sm),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            DonyIcon(
+                              'map-pin',
+                              color: DonyColors.neutral0.withValues(alpha: 0.5),
+                              size: 12,
+                            ),
+                            const SizedBox(width: DonySpacing.xs),
+                            Flexible(
+                              child: ValueListenableBuilder<ScanPosition?>(
+                                valueListenable: _position,
+                                builder: (context, position, _) {
+                                  final label = position?.label;
+                                  return Text(
+                                    widget.returnResult && label != null
+                                        ? l.suiviPositionSaved(label)
+                                        : l.scanAutoGeolocation,
+                                    key: const Key('scan-photo-position'),
+                                    textAlign: TextAlign.center,
+                                    style: tt.labelSmall?.copyWith(
+                                      color: DonyColors.neutral0.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -459,6 +495,10 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
     );
   }
 }
+
+/// Étape du bouton principal : repos, ouverture de l'appareil photo, puis
+/// attente bornée de la position une fois la photo prise.
+enum _Busy { idle, opening, locating }
 
 /// En-tête du mode « retour de résultat » : « Photo du colis de X » et
 /// l'étape qu'elle valide.
