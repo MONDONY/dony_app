@@ -1313,7 +1313,11 @@ class _BottomBar extends StatelessWidget {
                       DonyButton(
                         key: const Key('reception-withdraw'),
                         label: l.receptionWithdrawButton,
-                        variant: DonyButtonVariant.ghost,
+                        // Rouge, icône comprise (FLUTTER-C9) : le geste
+                        // prévient l'expéditeur et le voyageur, il ne se
+                        // lit pas comme une simple navigation.
+                        iconAsset: 'user-x',
+                        variant: DonyButtonVariant.destructiveGhost,
                         isLoading: state.action == ReceptionAction.declining,
                         onPressed: locked ? null : () => _withdraw(context),
                       ),

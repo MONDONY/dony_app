@@ -408,6 +408,25 @@ void main() {
       },
     );
 
+    testWidgets(
+      '« Me retirer de ce colis » est rouge, icône comprise (FLUTTER-C9)',
+      (tester) async {
+        stub(ReceptionDetailLoaded(_confirmed()));
+        await pump(tester);
+
+        final withdraw = find.byKey(const Key('reception-withdraw'));
+        final button = tester.widget<DonyButton>(withdraw);
+        expect(button.variant, DonyButtonVariant.destructiveGhost);
+        expect(button.iconAsset, 'user-x');
+
+        final error = Theme.of(tester.element(withdraw)).colorScheme.error;
+        final textButton = tester.widget<TextButton>(
+          find.descendant(of: withdraw, matching: find.byType(TextButton)),
+        );
+        expect(textButton.style?.foregroundColor?.resolve({}), error);
+      },
+    );
+
     testWidgets('colis remis : plus de retrait possible', (tester) async {
       stub(
         ReceptionDetailLoaded(_confirmed(bidStatus: 'COMPLETED', code: null)),

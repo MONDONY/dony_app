@@ -198,6 +198,10 @@ void main() {
         find.byKey(const Key('messages-negotiations-shortcut-badge')),
         findsNothing,
       );
+      expect(
+        find.byKey(const Key('messages-negotiations-shortcut-led')),
+        findsNothing,
+      );
     });
 
     testWidgets('une offre attend l\'utilisateur : pastille et sous-titre '
@@ -212,6 +216,32 @@ void main() {
           matching: find.text('1'),
         ),
         findsOneWidget,
+      ); // Voyant clignotant (FLUTTER-BY), nommé au lecteur d'écran.
+      final led = find.byKey(const Key('messages-negotiations-shortcut-led'));
+      expect(led, findsOneWidget);
+      expect(
+        find.descendant(of: led, matching: find.byType(FadeTransition)),
+        findsOneWidget,
+      );
+      expect(find.bySemanticsLabel(RegExp('Action requise')), findsOneWidget);
+    });
+
+    testWidgets('réduction des animations : voyant fixe, toujours présent', (
+      tester,
+    ) async {
+      seed(threads: [_thread('a', myTurn: true)]);
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      await pump(tester);
+
+      final led = find.byKey(const Key('messages-negotiations-shortcut-led'));
+      expect(led, findsOneWidget);
+      expect(
+        find.descendant(of: led, matching: find.byType(FadeTransition)),
+        findsNothing,
       );
     });
 
@@ -221,7 +251,9 @@ void main() {
       await pump(tester);
 
       await tester.tap(find.byKey(const Key('messages-negotiations-shortcut')));
-      await tester.pumpAndSettle();
+      // Le voyant clignote en boucle : pumpAndSettle n'aboutirait jamais.
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('ecran-negociations'), findsOneWidget);
       verify(
@@ -232,7 +264,8 @@ void main() {
       ).called(1);
 
       GoRouter.of(tester.element(find.text('ecran-negociations'))).pop();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
 
       // Un refresh à l'ouverture, un au retour.
       verify(

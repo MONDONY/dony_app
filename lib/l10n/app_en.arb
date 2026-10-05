@@ -8972,5 +8972,8 @@
   "walletShortfallRateDisclaimer": "Converted at today's rate applied by Yadony, for information only. Yadony is not responsible for any difference with the actual rate at the time of payment.",
   "@walletShortfallRateDisclaimer": {
     "description": "Sheet « Solde insuffisant » : avertissement sous les options de paiement depuis un autre portefeuille (commission_funding_options.dart)."
-  }
+  },
+  "walletTopupCustomAmountChip": "Other amount",
+  "walletTopupCustomAmountInvalid": "Enter an amount above 0.",
+  "negotiationsActionRequired": "Action required"
 }

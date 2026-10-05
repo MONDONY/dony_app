@@ -5,7 +5,6 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
@@ -114,11 +113,7 @@ void main() {
     return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
   }
 
-  /// Tape un raccourci de montant rapide (1000/2000/5000/10000 en F CFA) —
-  /// évite de taper le
-  /// clavier numérique, dont la dernière rangée (« 0 ») déborde du viewport
-  /// de test par défaut (800×600) une fois le contenu scrollable pris en
-  /// compte.
+  /// Tape un raccourci de montant rapide (1000/2000/5000/10000 en F CFA).
   Future<void> tapQuickAmount(WidgetTester tester, int amount) async {
     final finder = find.text('$amount F CFA');
     await tester.ensureVisible(finder);
@@ -137,9 +132,14 @@ void main() {
       await tapQuickAmount(tester, 5000);
 
       expect(find.textContaining('F CFA'), findsWidgets);
-      // Le clavier ne propose jamais de virgule décimale.
-      final keypad = tester.widget<DonyKeypad>(find.byType(DonyKeypad));
-      expect(keypad.onDecimal, isNull);
+      // « Autre montant » : clavier numérique sans virgule décimale.
+      await tester.ensureVisible(find.text('Autre montant'));
+      await tester.tap(find.text('Autre montant'));
+      await tester.pumpAndSettle();
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('wallet-topup-custom-amount-field')),
+      );
+      expect(field.keyboardType, const TextInputType.numberWithOptions());
       // Bandeau dédié au F CFA sans centimes.
       expect(
         find.textContaining('Le F CFA ne connaît pas les centimes'),
@@ -198,6 +198,111 @@ void main() {
       cubit.stopPolling();
     },
   );
+
+  group('« Autre montant » (FLUTTER-CF)', () {
+    Future<void> openCustom(WidgetTester tester) async {
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+      final chip = find.byKey(const Key('wallet-topup-custom-amount-chip'));
+      await tester.ensureVisible(chip);
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+    }
+
+    Finder field() => find.byKey(const Key('wallet-topup-custom-amount-field'));
+
+    testWidgets('les montants proposés restent, le champ libre est absent '
+        'tant que « Autre montant » n\'est pas choisi', (tester) async {
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      for (final a in const [1000, 2000, 5000, 10000]) {
+        expect(find.text('$a F CFA'), findsOneWidget);
+      }
+      expect(find.text('Autre montant'), findsOneWidget);
+      expect(field(), findsNothing);
+    });
+
+    testWidgets('champ libre : unité en suffixe, montant saisi payé et '
+        'marqué « custom » côté analytics', (tester) async {
+      await openCustom(tester);
+
+      expect(field(), findsOneWidget);
+      final decoration = tester.widget<TextField>(field()).decoration!;
+      expect(decoration.suffixText, 'F CFA');
+      expect(decoration.labelText, 'Montant à recharger');
+      // Le choix d'« Autre montant » repart d'un montant vide.
+      expect(find.text('Entrez un montant'), findsOneWidget);
+
+      await tester.enterText(field(), '12500');
+      await tester.pump();
+
+      final pay = find.text('Payer 12500 F CFA');
+      expect(pay, findsOneWidget);
+      await tester.ensureVisible(pay);
+      await tester.tap(pay);
+      await tester.pumpAndSettle();
+
+      verify(
+        () =>
+            repo.topupMobileMoney(amount: 12500, phoneNumber: '+221771234567'),
+      ).called(1);
+      expect(capturedArgs!.amount, 12500);
+      cubit.stopPolling();
+    });
+
+    testWidgets('F CFA : ni centimes ni lettres dans le champ', (tester) async {
+      await openCustom(tester);
+
+      await tester.enterText(field(), '1500,5');
+      await tester.pump();
+      expect(tester.widget<TextField>(field()).controller!.text, isEmpty);
+
+      await tester.enterText(field(), '1500');
+      await tester.pump();
+      await tester.enterText(field(), '1500a');
+      await tester.pump();
+      expect(tester.widget<TextField>(field()).controller!.text, '1500');
+    });
+
+    testWidgets('montant nul : erreur à la perte de focus, bouton désactivé', (
+      tester,
+    ) async {
+      await openCustom(tester);
+
+      await tester.enterText(field(), '0');
+      await tester.pump();
+      // Pas d'erreur pendant la frappe.
+      expect(find.text('Indique un montant supérieur à 0.'), findsNothing);
+
+      // « OK » du clavier : le champ perd le focus.
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      expect(find.text('Indique un montant supérieur à 0.'), findsOneWidget);
+      expect(find.text('Entrez un montant'), findsOneWidget);
+    });
+
+    testWidgets('revenir à un montant proposé referme le champ libre', (
+      tester,
+    ) async {
+      await openCustom(tester);
+      await tester.enterText(field(), '7777');
+      await tester.pump();
+
+      await tapQuickAmount(tester, 2000);
+      await tester.pumpAndSettle();
+
+      expect(field(), findsNothing);
+      expect(find.text('Payer 2000 F CFA'), findsOneWidget);
+    });
+
+    testWidgets('anglais : « Other amount »', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+      expect(find.text('Other amount'), findsOneWidget);
+    });
+  });
 
   testWidgets('anglais : montant sans décimales et bouton Pay traduits', (
     tester,

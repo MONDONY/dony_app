@@ -16183,4 +16183,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walletShortfallRateDisclaimer =>
       'Converted at today\'s rate applied by Yadony, for information only. Yadony is not responsible for any difference with the actual rate at the time of payment.';
+
+  @override
+  String get walletTopupCustomAmountChip => 'Other amount';
+
+  @override
+  String get walletTopupCustomAmountInvalid => 'Enter an amount above 0.';
+
+  @override
+  String get negotiationsActionRequired => 'Action required';
 }

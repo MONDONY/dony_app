@@ -26744,6 +26744,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Conversion au taux du jour appliqué par Yadony, à titre indicatif. Yadony n\'est pas responsable d\'un écart avec le taux réel au moment du paiement.'**
   String get walletShortfallRateDisclaimer;
+
+  /// Recharge mobile money : puce qui ouvre la saisie libre d'un montant, à côté des montants proposés (FLUTTER-CF).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre montant'**
+  String get walletTopupCustomAmountChip;
+
+  /// Recharge mobile money : erreur du champ « Autre montant » quand le montant saisi vaut 0 (FLUTTER-CF).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indique un montant supérieur à 0.'**
+  String get walletTopupCustomAmountInvalid;
+
+  /// Libellé d'accessibilité du voyant clignotant des « Discussions de prix » (Messages, Activités) quand c'est à l'utilisateur d'agir (FLUTTER-BY).
+  ///
+  /// In fr, this message translates to:
+  /// **'Action requise'**
+  String get negotiationsActionRequired;
 }
 
 class _AppLocalizationsDelegate

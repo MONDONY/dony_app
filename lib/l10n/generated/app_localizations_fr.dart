@@ -16279,4 +16279,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get walletShortfallRateDisclaimer =>
       'Conversion au taux du jour appliqué par Yadony, à titre indicatif. Yadony n\'est pas responsable d\'un écart avec le taux réel au moment du paiement.';
+
+  @override
+  String get walletTopupCustomAmountChip => 'Autre montant';
+
+  @override
+  String get walletTopupCustomAmountInvalid =>
+      'Indique un montant supérieur à 0.';
+
+  @override
+  String get negotiationsActionRequired => 'Action requise';
 }

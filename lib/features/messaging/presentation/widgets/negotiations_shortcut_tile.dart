@@ -132,7 +132,10 @@ class NegotiationsShortcutTile extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: '${l.negotiationListTitle}, $subtitle',
+      label: awaiting
+          ? '${l.negotiationListTitle}, ${l.negotiationsActionRequired}, '
+                '$subtitle'
+          : '${l.negotiationListTitle}, $subtitle',
       excludeSemantics: true,
       child: Material(
         color: awaiting
@@ -148,20 +151,37 @@ class NegotiationsShortcutTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: cs.secondaryContainer,
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                  ),
-                  child: Center(
-                    child: DonyIcon(
-                      'arrow-left-right',
-                      size: 22,
-                      color: cs.onSecondaryContainer,
+                // Voyant clignotant sur l'icône quand c'est à l'utilisateur
+                // d'agir (FLUTTER-BY), doublé du compteur et du sous-titre :
+                // l'information ne passe jamais par la couleur seule.
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: cs.secondaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                      ),
+                      child: Center(
+                        child: DonyIcon(
+                          'arrow-left-right',
+                          size: 22,
+                          color: cs.onSecondaryContainer,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (awaiting)
+                      Positioned(
+                        top: -3,
+                        right: -3,
+                        child: DonyPulsingDot(
+                          key: const Key('messages-negotiations-shortcut-led'),
+                          semanticLabel: l.negotiationsActionRequired,
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(

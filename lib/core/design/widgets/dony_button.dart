@@ -11,6 +11,10 @@ enum DonyButtonVariant {
   secondary,
   ghost,
   destructive,
+
+  /// Action destructive secondaire (« Me retirer de ce colis ») : texte et
+  /// icône rouges sans aplat, pour ne pas concurrencer l'action principale.
+  destructiveGhost,
   success,
   accent,
 }
@@ -222,6 +226,15 @@ class _DonyButtonState extends State<DonyButton> {
         ),
         child: content,
       ),
+      DonyButtonVariant.destructiveGhost => TextButton(
+        onPressed: widget.isLoading ? null : widget.onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: cs.error,
+          minimumSize: minSize,
+          padding: padding,
+        ),
+        child: content,
+      ),
     };
 
     return GestureDetector(
@@ -249,6 +262,7 @@ class _DonyButtonState extends State<DonyButton> {
       DonyButtonVariant.accent => onBrand,
       DonyButtonVariant.secondary => cs.primary,
       DonyButtonVariant.ghost => cs.onSurfaceVariant,
+      DonyButtonVariant.destructiveGhost => cs.error,
     };
   }
 }

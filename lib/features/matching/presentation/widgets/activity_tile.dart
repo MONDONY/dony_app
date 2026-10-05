@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Compteur indisponible : tiret court, jamais de tiret cadratin dans l'UI.
@@ -215,6 +216,7 @@ class ActivityTile extends StatelessWidget {
     this.emptyHint,
     this.isLoading = false,
     this.hasError = false,
+    this.actionLabel,
   });
 
   /// Nom du SVG dans `assets/icons/`, sans extension.
@@ -237,13 +239,20 @@ class ActivityTile extends StatelessWidget {
   final bool isLoading;
   final bool hasError;
 
+  /// Une action attend l'utilisateur dans cette liste (une offre à laquelle
+  /// répondre, FLUTTER-BY) : remplace le sous-titre et allume un voyant
+  /// clignotant à côté du compteur. `null` quand rien n'est attendu de lui.
+  final String? actionLabel;
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final radius = BorderRadius.circular(DonyRadius.card);
     final pending = !isLoading && !hasError && value > 0;
-    final line = pending || emptyHint == null ? subtitle : emptyHint;
+    final action = !isLoading && !hasError ? actionLabel : null;
+    final line =
+        action ?? (pending || emptyHint == null ? subtitle : emptyHint);
 
     return Material(
       color: cs.surfaceContainerHighest,
@@ -268,6 +277,17 @@ class ActivityTile extends StatelessWidget {
                     borderRadius: DonyRadius.iconBtn,
                   ),
                   const Spacer(),
+                  if (action != null)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: DonySpacing.sm,
+                        right: DonySpacing.sm,
+                      ),
+                      child: DonyPulsingDot(
+                        key: const Key('activity-tile-action-led'),
+                        semanticLabel: context.l10n.negotiationsActionRequired,
+                      ),
+                    ),
                   _SecondaryTrailing(
                     value: value,
                     isLoading: isLoading,
@@ -287,8 +307,10 @@ class ActivityTile extends StatelessWidget {
                 Text(
                   line,
                   style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontWeight: pending ? FontWeight.w600 : null,
+                    color: action != null ? cs.onSurface : cs.onSurfaceVariant,
+                    fontWeight: pending || action != null
+                        ? FontWeight.w600
+                        : null,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

@@ -1,7 +1,10 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../../helpers/l10n_test_helpers.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
@@ -221,6 +224,82 @@ void main() {
       await tester.pump();
 
       expect(tapped, isTrue);
+    });
+  });
+
+  group('ActivityTile — action attendue (FLUTTER-BY)', () {
+    ActivityTile actionTile({String? actionLabel, bool isLoading = false}) =>
+        ActivityTile(
+          iconName: 'arrow-left-right',
+          color: Colors.blue,
+          value: 2,
+          label: 'Discussions de prix',
+          subtitle: 'Vos négociations en cours',
+          isLoading: isLoading,
+          actionLabel: actionLabel,
+          onTap: () {},
+        );
+
+    final led = find.byKey(const Key('activity-tile-action-led'));
+
+    testWidgets('voyant clignotant, sous-titre d\'action et libellé '
+        'd\'accessibilité', (tester) async {
+      await tester.pumpWidget(
+        localizedApp(
+          Scaffold(
+            body: actionTile(actionLabel: 'Une offre attend votre réponse'),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(led, findsOneWidget);
+      expect(find.text('Une offre attend votre réponse'), findsOneWidget);
+      expect(find.text('Vos négociations en cours'), findsNothing);
+      expect(find.bySemanticsLabel(RegExp('Action requise')), findsOneWidget);
+      expect(
+        find.descendant(of: led, matching: find.byType(FadeTransition)),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('réduction des animations : voyant fixe', (tester) async {
+      await tester.pumpWidget(
+        localizedApp(
+          MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: Scaffold(
+              body: actionTile(actionLabel: 'Une offre attend votre réponse'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(led, findsOneWidget);
+      expect(
+        find.descendant(of: led, matching: find.byType(FadeTransition)),
+        findsNothing,
+      );
+    });
+
+    testWidgets('rien à faire ou chargement : pas de voyant', (tester) async {
+      await tester.pumpWidget(localizedApp(Scaffold(body: actionTile())));
+      expect(led, findsNothing);
+      expect(find.text('Vos négociations en cours'), findsOneWidget);
+
+      await tester.pumpWidget(
+        localizedApp(
+          Scaffold(
+            body: actionTile(
+              actionLabel: 'Une offre attend votre réponse',
+              isLoading: true,
+            ),
+          ),
+        ),
+      );
+      expect(led, findsNothing);
+      expect(find.byType(DonyPulsingDot), findsNothing);
     });
   });
 
