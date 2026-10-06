@@ -28,6 +28,12 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
   /// périmée écraserait une liste plus fraîche.
   int _generation = 0;
 
+  /// Choix automatique de l'onglet demandé par l'ouverture de l'écran
+  /// ([TravelerBidsRequested.autoSelectFilter]), en attente du prochain
+  /// chargement abouti. Porté par le bloc et non par l'événement : un
+  /// chargement plus récent (hub, push) peut doubler celui de l'écran.
+  bool _autoSelectPending = false;
+
   /// Toutes les demandes sont chargées d'un bloc puis filtrées côté client :
   /// les compteurs par onglet doivent rester justes sans un appel par filtre.
   TravelerBidsBloc(this._repository, this._analytics)
@@ -46,6 +52,7 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
       event.done?.complete();
       return;
     }
+    if (event.autoSelectFilter) _autoSelectPending = true;
     final generation = ++_generation;
 
     final filter = current is TravelerBidsLoaded
@@ -75,23 +82,26 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
         event.done?.complete();
         return;
       }
-      emit(
-        TravelerBidsLoaded(
-          bids: bids,
-          page: page - 1,
-          hasMore: !isLast,
-          // Le filtre courant, pas celui du départ : l'utilisateur a pu
-          // changer d'onglet pendant le chargement.
-          filter: state is TravelerBidsLoaded
-              ? (state as TravelerBidsLoaded).filter
-              : filter,
-        ),
+      final loaded = TravelerBidsLoaded(
+        bids: bids,
+        page: page - 1,
+        hasMore: !isLast,
+        // Le filtre courant, pas celui du départ : l'utilisateur a pu
+        // changer d'onglet pendant le chargement.
+        filter: state is TravelerBidsLoaded
+            ? (state as TravelerBidsLoaded).filter
+            : filter,
       );
+      final autoSelect = _autoSelectPending;
+      _autoSelectPending = false;
+      emit(autoSelect ? loaded.copyWith(filter: loaded.openingFilter) : loaded);
       event.done?.complete();
     } catch (e) {
       final error = unwrapDioError(e);
       event.done?.complete(error);
       if (generation != _generation) return;
+      // Sans données fraîches, pas de décision : l'onglet reste celui affiché.
+      _autoSelectPending = false;
       // Un refresh raté ne doit pas vider une liste déjà affichée.
       if (state is! TravelerBidsLoaded) {
         emit(TravelerBidsError(error));
@@ -130,6 +140,9 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
     TravelerBidsFilterChanged event,
     Emitter<TravelerBidsState> emit,
   ) {
+    // Un onglet choisi (par l'utilisateur ou imposé) l'emporte sur le choix
+    // automatique de l'ouverture.
+    _autoSelectPending = false;
     final current = state;
     if (current is TravelerBidsLoaded) {
       unawaited(

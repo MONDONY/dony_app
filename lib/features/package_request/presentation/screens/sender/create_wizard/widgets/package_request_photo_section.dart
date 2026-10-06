@@ -112,6 +112,13 @@ class PackageRequestPhotoSection extends StatelessWidget {
                 height: 1.4,
               ),
             ),
+            Text(
+              l10n.requestCreatePhotosCategoryReminder,
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
             const SizedBox(height: DonySpacing.sm),
             // Vide : un seul CTA plein largeur — c'est la première chose que
             // l'expéditeur doit remarquer sur cette étape, pas une case parmi

@@ -17,14 +17,25 @@ sealed class TravelerBidsEvent extends Equatable {
 /// réponse et signaler un échec (un refresh raté laisse la liste intacte, donc
 /// aucun changement d'état visible). Un chargement doublé par un plus récent
 /// se termine avec `null` sans rien émettre.
+///
+/// [autoSelectFilter] : posé par l'ouverture de l'écran « Demandes » sans
+/// onglet imposé. Au premier chargement abouti qui suit, si l'onglet courant
+/// est vide, le bloc bascule sur le premier onglet non vide (À traiter →
+/// Acceptées → Terminées, À traiter si tout est vide). Un choix d'onglet de
+/// l'utilisateur entre-temps annule la décision.
 class TravelerBidsRequested extends TravelerBidsEvent {
   final bool force;
   final Completer<Object?>? done;
+  final bool autoSelectFilter;
 
-  const TravelerBidsRequested({this.force = false, this.done});
+  const TravelerBidsRequested({
+    this.force = false,
+    this.done,
+    this.autoSelectFilter = false,
+  });
 
   @override
-  List<Object?> get props => [force, done];
+  List<Object?> get props => [force, done, autoSelectFilter];
 }
 
 /// Charge la page suivante et l'ajoute à la liste courante.

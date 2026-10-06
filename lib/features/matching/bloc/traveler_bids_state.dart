@@ -79,6 +79,17 @@ class TravelerBidsLoaded extends TravelerBidsState {
 
   int countFor(TravelerBidFilter f) => _byFilter[f]!.length;
 
+  /// Onglet à montrer à l'ouverture de l'écran : le courant s'il a du
+  /// contenu, sinon le premier non vide dans l'ordre des onglets, sinon
+  /// « À traiter ».
+  TravelerBidFilter get openingFilter {
+    if (countFor(filter) > 0) return filter;
+    for (final f in TravelerBidFilter.values) {
+      if (countFor(f) > 0) return f;
+    }
+    return TravelerBidFilter.aTraiter;
+  }
+
   TravelerBidsLoaded copyWith({
     List<BidModel>? bids,
     int? page,

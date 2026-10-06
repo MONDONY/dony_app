@@ -10,7 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Destinations proposées d'emblée (corridors de lancement) ; « Autre » en plus.
 const List<String> kIntentDestinations = ['SN', 'CI', 'ML', 'CM'];
 
-/// « Vous utilisez Yadony pour… » + « Vers quel pays ? », lu et écrit dans [IntentCubit].
+/// « Vous utilisez Yadony pour… » + « Votre destination principale », lu et écrit dans [IntentCubit].
 class IntentForm extends StatelessWidget {
   const IntentForm({super.key});
 
@@ -48,6 +48,14 @@ class IntentForm extends StatelessWidget {
         Text(
           l.intentDestinationTitle,
           style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          l.intentDestinationHint,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
         ),
         const SizedBox(height: DonySpacing.sm),
         Wrap(

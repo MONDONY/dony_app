@@ -394,6 +394,19 @@ void main() {
       },
     );
 
+    testWidgets('code promo : aide « pas un code de parrainage »', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(const Step3RecapBudget()));
+      await tester.enterText(find.byType(TextFormField).first, '32');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Code promo Yadony (pas un code de parrainage).'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('budget indicatif saisi : le bouton se dégrise', (
       tester,
     ) async {

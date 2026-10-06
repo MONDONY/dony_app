@@ -798,7 +798,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPromoNotFoundMessage =>
-      'Ce code promo n\'existe pas. Vérifie la saisie et réessaie.';
+      'Ce code promo n\'existe pas. Vérifie la saisie et réessaie. Un code parrain se saisit à l\'inscription ou dans Moi › « J\'ai un code parrain ».';
 
   @override
   String get errorPromoExpiredTitle => 'Code promo expiré';
@@ -3872,6 +3872,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get requestCreatePhotosHint =>
       'Visibles par les voyageurs. Ajoutées à l\'offre quand un trajet est lié.';
+
+  @override
+  String get promoCodeNotReferralHint =>
+      'Code promo Yadony (pas un code de parrainage).';
+
+  @override
+  String get requestCreatePhotosCategoryReminder =>
+      'Vérifiez que le contenu photographié correspond à la catégorie déclarée.';
 
   @override
   String get requestCreateAddPhotoSemantic => 'Ajouter une photo du colis';
@@ -16113,7 +16121,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get intentBothHint => 'J\'envoie et je voyage';
 
   @override
-  String get intentDestinationTitle => 'Vers quel pays ?';
+  String get intentDestinationTitle => 'Votre destination principale';
+
+  @override
+  String get intentDestinationHint =>
+      'Pour personnaliser votre accueil. Vous pouvez envoyer et voyager vers tous les pays desservis.';
 
   @override
   String get intentDestinationOther => 'Autre';

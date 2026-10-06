@@ -409,6 +409,13 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                               ),
                             ],
                           ),
+                          const SizedBox(height: DonySpacing.xs),
+                          Text(
+                            l10n.promoCodeNotReferralHint,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
                           if (quote != null && quote.promoApplied) ...[
                             const SizedBox(height: DonySpacing.xs),
                             Row(

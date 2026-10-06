@@ -46,6 +46,45 @@ void main() {
     expect(find.byKey(const Key('intent-destination-OTHER')), findsOneWidget);
   });
 
+  testWidgets('destination principale : titre et aide sans ambiguïté', (
+    tester,
+  ) async {
+    await pump(tester);
+    expect(find.text('Votre destination principale'), findsOneWidget);
+    expect(
+      find.text(
+        'Pour personnaliser votre accueil. Vous pouvez envoyer et voyager '
+        'vers tous les pays desservis.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Vers quel pays ?'), findsNothing);
+  });
+
+  testWidgets('destination principale : textes anglais', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: BlocProvider<IntentCubit>.value(
+            value: cubit,
+            child: const SingleChildScrollView(child: IntentForm()),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Your main destination'), findsOneWidget);
+    expect(
+      find.text(
+        'Used to personalise your home screen. You can still send and travel '
+        'to every country we serve.',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('les taps sélectionnent', (tester) async {
     await pump(tester);
     await tester.tap(find.byKey(const Key('intent-option-traveler')));

@@ -8,6 +8,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/share_position.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
@@ -200,7 +201,31 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: DonyAppBar(title: context.l10n.listingHeroTripLabel),
+      appBar: DonyAppBar(
+        title: context.l10n.listingHeroTripLabel,
+        // Partage à portée de pouce : la tuile « Affiche » de la grille reste
+        // en bas de page, sous le détail du trajet.
+        actions: [
+          BlocBuilder<AnnouncementBloc, AnnouncementState>(
+            builder: (context, state) {
+              final a = state is AnnouncementDetailLoaded
+                  ? state.announcement
+                  : (_current ?? widget.initial);
+              if (a == null ||
+                  !_isOwner(context, a) ||
+                  !canShareTripPoster(a)) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                key: const Key('trip-owner-share-button'),
+                tooltip: context.l10n.tripPosterShareButton,
+                icon: const DonyIcon('share-2', size: 22),
+                onPressed: () => openTripPoster(context, a),
+              );
+            },
+          ),
+        ],
+      ),
       body: MultiBlocListener(
         listeners: [
           BlocListener<AuthBloc, AuthState>(

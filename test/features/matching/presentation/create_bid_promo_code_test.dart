@@ -257,6 +257,47 @@ void main() {
     expect(find.text('Ex: WELCOME10'), findsOneWidget);
   });
 
+  testWidgets('aide sous le champ : code promo, pas code de parrainage', (
+    tester,
+  ) async {
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    expect(
+      find.text('Code promo Yadony (pas un code de parrainage).'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('code introuvable : renvoie vers la saisie du code parrain', (
+    tester,
+  ) async {
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+
+    final promoField = find.ancestor(
+      of: find.text('Ex: WELCOME10'),
+      matching: find.byType(TextFormField),
+    );
+    await tester.enterText(promoField, 'PARRAIN42');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Appliquer'));
+    await tester.pump();
+
+    bidStream.add(
+      BidPromoError(const ServerException('not found', 'promo-not-found')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        "Ce code promo n'existe pas. Vérifie la saisie et réessaie. "
+        "Un code parrain se saisit à l'inscription ou dans Moi › "
+        "« J'ai un code parrain ».",
+      ),
+      findsWidgets,
+    );
+  });
+
   testWidgets('le bouton Appliquer est présent', (tester) async {
     await openSheet(tester);
     await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
