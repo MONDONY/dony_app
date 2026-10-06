@@ -1,5 +1,11 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,49 +43,185 @@ enum PaymentCapabilityBlock {
       code == null ? null : _byCode[code];
 }
 
+/// Ce qui empêche le voyageur d'encaisser par carte, quand on le sait.
+///
+/// Trois situations très différentes derrière le même 422, chacune avec sa
+/// propre consigne : une activation à faire, un pays de profil à renseigner,
+/// ou un pays que Stripe ne couvre pas.
+enum CardCapabilityGap {
+  /// Stripe couvre le pays : il suffit d'activer le paiement carte.
+  activatable,
+
+  /// Aucun pays de résidence au profil : le serveur ne peut pas savoir si
+  /// Stripe le couvre (`StripeConnectCountries.isSupported(null)` est faux).
+  /// Dire « pas disponible dans ton pays » serait faux : il faut le renseigner.
+  countryMissing,
+
+  /// Pays renseigné, mais Stripe n'y ouvre pas de compte connecté.
+  countryUnsupported,
+}
+
+/// Le colis n'accepte-t-il que la carte ?
+///
+/// Miroir de `NegotiationService.assertNonEmptyOrThrow` côté serveur : seuls
+/// la carte, l'espèce et le mobile money comptent comme rails. Les rails
+/// retirés (Wave, Orange Money) ne sont jamais fournissables et ne sauvent
+/// donc pas un colis « carte seule ».
+bool acceptsCardOnly(Set<PaymentMethod> accepted) =>
+    accepted.contains(PaymentMethod.stripe) &&
+    !accepted.contains(PaymentMethod.cash) &&
+    !accepted.contains(PaymentMethod.mobileMoney);
+
+CardCapabilityGap _gapFor({
+  required bool connectAvailableInCountry,
+  required String? profileCountry,
+}) {
+  if (connectAvailableInCountry) {
+    return CardCapabilityGap.activatable;
+  }
+  return (profileCountry == null || profileCountry.trim().isEmpty)
+      ? CardCapabilityGap.countryMissing
+      : CardCapabilityGap.countryUnsupported;
+}
+
+/// Blocage carte **avéré**, pour prévenir le voyageur avant qu'il remplisse
+/// un formulaire que le serveur refusera (FLUTTER-E9).
+///
+/// `null` quand le voyageur peut encaisser par carte, ou quand on ne le sait
+/// pas (statut en cours de chargement, en erreur, jamais chargé) : dans ce
+/// cas on ne bloque rien, le 422 du serveur reste le garde-fou.
+CardCapabilityGap? knownCardCapabilityGap(
+  StripeAccountState stripeState, {
+  required String? profileCountry,
+}) => switch (stripeState) {
+  StripeAccountReady(:final accountStatus) when !accountStatus.isComplete =>
+    _gapFor(
+      connectAvailableInCountry: accountStatus.connectAvailableInCountry,
+      profileCountry: profileCountry,
+    ),
+  _ => null,
+};
+
 /// `payment-method/card-capability-required` : le colis n'accepte que la
 /// carte et le voyageur n'a pas encore activé les paiements par carte
 /// (onboarding Stripe Connect). Réutilise le flux d'onboarding existant
 /// (`/connect/onboarding/intro`, cf. `announcement_detail_body.dart`).
+///
+/// Ouverte à deux moments : en amont, depuis la fiche du colis, et en filet
+/// de sécurité quand le serveur renvoie le 422 à l'envoi.
 Future<void> showCardCapabilityRequiredSheet(BuildContext context) async {
   final cs = Theme.of(context).colorScheme;
+  final tt = Theme.of(context).textTheme;
   final l = context.l10n;
+  final stripeBloc = context.read<StripeAccountBloc>();
 
-  // Deux blocages très différents derrière le même 422 : une activation à
-  // faire, ou un pays que Stripe ne couvre pas. Dans le second cas, « active
-  // les paiements par carte » est une consigne que le voyageur ne peut pas
-  // suivre — il faut le dire, pas le renvoyer vers un parcours sans issue.
-  final connectAvailable = context
-      .read<StripeAccountBloc>()
-      .state
-      .connectAvailableInCountry;
+  // Le pays n'est lu que s'il sert : quand Stripe couvre le pays, la consigne
+  // est la même quel qu'il soit.
+  final connectAvailable = stripeBloc.state.connectAvailableInCountry;
+  final profileCountry = connectAvailable
+      ? null
+      : context.read<BusinessPrefsBloc>().state.country;
+  final gap = _gapFor(
+    connectAvailableInCountry: connectAvailable,
+    profileCountry: profileCountry,
+  );
+
+  void close() => Navigator.of(context, rootNavigator: true).pop();
+
+  // Le statut Connect dépend du pays du profil (côté serveur) : au retour des
+  // préférences, on le redemande pour que la fiche et cette feuille reflètent
+  // le nouveau pays sans attendre un redémarrage.
+  void openCountryPrefs() {
+    close();
+    unawaited(
+      context.push<void>('/settings/preferences').whenComplete(() {
+        if (!stripeBloc.isClosed) {
+          stripeBloc.add(const StripeAccountStatusRefreshed());
+        }
+      }),
+    );
+  }
+
+  final bodyStyle = tt.bodyMedium?.copyWith(color: cs.onSurface);
+
+  final (String title, Widget child, Widget stickyBottom) = switch (gap) {
+    CardCapabilityGap.activatable => (
+      l.negotiationCardCapabilityRequiredTitle,
+      Text(l.negotiationCardCapabilityRequiredBody, style: bodyStyle),
+      DonyButton(
+        key: const Key('activate-card-payment-cta'),
+        label: l.negotiationCardCapabilityActivateButton,
+        onPressed: () {
+          close();
+          context.push('/connect/onboarding/intro');
+        },
+      ),
+    ),
+    CardCapabilityGap.countryMissing => (
+      l.negotiationCardCapabilityRequiredTitle,
+      Text(
+        l.negotiationCardCapabilityCountryMissingBody,
+        key: const Key('card-capability-country-missing'),
+        style: bodyStyle,
+      ),
+      DonyButton(
+        key: const Key('card-capability-set-country'),
+        label: l.negotiationCardCapabilitySetCountryButton,
+        onPressed: openCountryPrefs,
+      ),
+    ),
+    CardCapabilityGap.countryUnsupported => (
+      l.negotiationCardCapabilityUnavailableTitle,
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l.negotiationCardCapabilityUnavailableBody, style: bodyStyle),
+          const SizedBox(height: DonySpacing.md),
+          Row(
+            children: [
+              DonyIcon('globe', size: 16, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  l.negotiationCardCapabilityProfileCountry(
+                    countryName(l, profileCountry!.trim().toUpperCase()),
+                  ),
+                  key: const Key('card-capability-profile-country'),
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            key: const Key('card-capability-unavailable-close'),
+            label: l.negotiationCardCapabilityUnderstoodButton,
+            onPressed: close,
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          DonyButton(
+            key: const Key('card-capability-change-country'),
+            label: l.negotiationCardCapabilityChangeCountryButton,
+            variant: DonyButtonVariant.ghost,
+            onPressed: openCountryPrefs,
+          ),
+        ],
+      ),
+    ),
+  };
 
   await DonyBottomSheet.show<void>(
     context,
-    title: connectAvailable
-        ? l.negotiationCardCapabilityRequiredTitle
-        : l.negotiationCardCapabilityUnavailableTitle,
-    child: Text(
-      connectAvailable
-          ? l.negotiationCardCapabilityRequiredBody
-          : l.negotiationCardCapabilityUnavailableBody,
-      style: Theme.of(
-        context,
-      ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
-    ),
-    stickyBottom: connectAvailable
-        ? DonyButton(
-            key: const Key('activate-card-payment-cta'),
-            label: l.negotiationCardCapabilityActivateButton,
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).pop();
-              context.push('/connect/onboarding/intro');
-            },
-          )
-        : DonyButton(
-            key: const Key('card-capability-unavailable-close'),
-            label: l.negotiationCardCapabilityUnderstoodButton,
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          ),
+    title: title,
+    child: child,
+    stickyBottom: stickyBottom,
   );
 }

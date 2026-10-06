@@ -3165,6 +3165,20 @@
   "@negotiationCardCapabilityUnderstoodButton": {
     "description": "Bouton de fermeture quand aucune action n'est possible (payment_capability_block_sheets.dart)"
   },
+  "negotiationCardCapabilityCountryMissingBody": "The sender only accepts card payment for this parcel. Add your country of residence to activate card payments.",
+  "negotiationCardCapabilitySetCountryButton": "Add my country",
+  "negotiationCardCapabilityProfileCountry": "Your profile country: {country}",
+  "@negotiationCardCapabilityProfileCountry": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationCardCapabilityChangeCountryButton": "Change my country",
+  "requestPublicCardOnlyWarning": "This parcel only accepts card payment: activate card payments to offer your trip.",
+  "requestPublicCardOnlyWarningCountryMissing": "This parcel only accepts card payment: add your country of residence to activate card payments.",
+  "requestPublicCardOnlyWarningCountryUnsupported": "This parcel only accepts card payment, and Stripe doesn't support activating it from your country yet.",
   "negotiationCardRoundShortLabel": "Rd. {round}/5 · {timeAgo}",
   "@negotiationCardRoundShortLabel": {
     "description": "Ligne round abrégé + horodatage relatif d'une carte de négociation colis ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _NegoCard)",
