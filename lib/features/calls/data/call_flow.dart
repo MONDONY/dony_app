@@ -16,6 +16,7 @@ class CallObservation {
     this.remoteName,
     this.otherMemberRejected = false,
     this.disconnectReason,
+    this.audioOutput,
   });
 
   /// L'autre partie est dans l'appel (participant connecté).
@@ -28,6 +29,9 @@ class CallObservation {
   /// Non nul quand le SDK a déconnecté l'appel : `rejected` | `missed` |
   /// `hangup` | `failed`.
   final String? disconnectReason;
+
+  /// Sortie audio réellement utilisée, recopiée telle quelle dans le snapshot.
+  final CallAudioOutput? audioOutput;
 }
 
 enum CallFlowAction {
@@ -85,6 +89,7 @@ class CallFlow {
           phase: CallPhase.connected,
           connectedAt: _connectedAt,
           remoteName: _remoteName,
+          audioOutput: o.audioOutput,
         ),
         wasGone ? CallFlowAction.cancelRemoteGoneTimer : CallFlowAction.none,
       );
@@ -101,6 +106,7 @@ class CallFlow {
     return CallFlowDecision(
       ActiveCallSnapshot(
         phase: outgoing ? CallPhase.ringing : CallPhase.connecting,
+        audioOutput: o.audioOutput,
       ),
     );
   }
