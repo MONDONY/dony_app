@@ -19,6 +19,7 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     this._gateway,
     this._analytics, {
     RingbackTone? ringback,
+    this.ringTimeout = const Duration(seconds: 60),
   }) : _ringback = ringback,
        super(const CallIdle()) {
     on<CallStartRequested>(_onStart);
@@ -27,6 +28,7 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     on<CallSpeakerToggleRequested>(_onSpeakerToggle);
     on<CallHangUpRequested>(_onHangUp);
     on<_CallSnapshotReceived>(_onSnapshot);
+    on<_CallRingTimedOut>(_onRingTimedOut);
     _snapshots = _gateway.activeCall.listen(
       (s) => add(_CallSnapshotReceived(s)),
     );
@@ -39,6 +41,12 @@ class CallBloc extends Bloc<CallEvent, CallState> {
   /// Tonalité de retour d'appel chez l'appelant (FLUTTER-9V), `null` en test.
   final RingbackTone? _ringback;
   late final StreamSubscription<ActiveCallSnapshot> _snapshots;
+
+  /// Durée maximale de sonnerie d'un appel sortant. Le minuteur de Stream
+  /// ne démarre qu'une fois l'appel rejoint : si la connexion traîne, rien
+  /// ne bornait la sonnerie et l'écran restait sur « Ça sonne… ».
+  final Duration ringTimeout;
+  Timer? _ringGuard;
 
   /// La tonalité suit l'état : elle joue tant qu'un appel sortant sonne
   /// chez l'autre, et se tait à tout autre état (décroché, refus, sans
@@ -54,6 +62,24 @@ class CallBloc extends Bloc<CallEvent, CallState> {
   }
 
   bool get _live => state is CallStarting || state is CallInProgress;
+
+  /// Appel en cours (création, sonnerie, connexion ou conversation) : la
+  /// barre d'appel et l'écran réduit s'appuient dessus.
+  bool get isLive => _live;
+
+  /// Toujours en sonnerie après [ringTimeout] : sans réponse, on raccroche.
+  void _armRingGuard() {
+    _ringGuard?.cancel();
+    _ringGuard = Timer(ringTimeout, () {
+      final current = state;
+      if (isClosed ||
+          current is! CallInProgress ||
+          current.phase == CallPhase.connected) {
+        return;
+      }
+      add(const _CallRingTimedOut());
+    });
+  }
 
   Future<void> _onStart(
     CallStartRequested event,
@@ -75,9 +101,10 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     var joining = false;
     try {
       final call = await _repository.startCall(event.conversationId);
-      // Écran fermé pendant la création : l'autre sonne déjà, personne ne
-      // rejoindra l'appel de ce côté.
-      if (isClosed) {
+      // Écran fermé, ou raccroché, pendant la création : l'autre sonne déjà,
+      // personne ne rejoindra l'appel de ce côté. Sans le second test, la
+      // sonnerie réapparaissait après « Appel terminé ».
+      if (isClosed || state is! CallStarting) {
         await _gateway.cancelOutgoing(call.callId);
         return;
       }
@@ -85,9 +112,26 @@ class CallBloc extends Bloc<CallEvent, CallState> {
       emit(
         CallInProgress(phase: CallPhase.ringing, remoteName: event.remoteName),
       );
+      _armRingGuard();
       joining = true;
       await _gateway.joinOutgoing(call.callId);
-      if (isClosed) await _gateway.hangUp();
+      // Raccroché pendant la connexion : l'appel rejoint après coup gardait
+      // le micro ouvert, plus personne ne le quittait.
+      if (isClosed || state is! CallInProgress) {
+        await _gateway.hangUp();
+        return;
+      }
+      // Rejoindre l'appel reconfigure la session audio (Stream/WebRTC), ce
+      // qui peut couper la tonalité de retour déjà lancée : on la relance tant
+      // que ça sonne encore (FLUTTER-9V).
+      final ringback = _ringback;
+      final current = state;
+      if (ringback != null &&
+          current is CallInProgress &&
+          current.phase == CallPhase.ringing) {
+        await ringback.stop();
+        if (!isClosed && state == current) await ringback.start();
+      }
     } catch (e) {
       if (joining) await _gateway.hangUp();
       final error = unwrapDioError(e);
@@ -173,6 +217,25 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     }
   }
 
+  Future<void> _onRingTimedOut(
+    _CallRingTimedOut event,
+    Emitter<CallState> emit,
+  ) async {
+    final current = state;
+    if (current is! CallInProgress || current.phase == CallPhase.connected) {
+      return;
+    }
+    await _gateway.hangUp();
+    if (state is! CallInProgress) return;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.callEnded,
+        properties: {'reason': 'missed'},
+      ),
+    );
+    emit(const CallEnded(reason: 'missed'));
+  }
+
   Future<void> _onHangUp(
     CallHangUpRequested event,
     Emitter<CallState> emit,
@@ -228,6 +291,7 @@ class CallBloc extends Bloc<CallEvent, CallState> {
 
   @override
   Future<void> close() async {
+    _ringGuard?.cancel();
     await _snapshots.cancel();
     await _ringback?.dispose();
     if (_live) await _gateway.hangUp();

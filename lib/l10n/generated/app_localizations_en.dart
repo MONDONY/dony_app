@@ -15871,6 +15871,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callStatusRinging => 'Ringing…';
 
   @override
+  String get callMinimize => 'Minimize call';
+
+  @override
+  String get callBannerTitle => 'Call in progress';
+
+  @override
+  String get callBannerReturn => 'Return';
+
+  @override
+  String get callBannerReturnHint =>
+      'Call in progress, tap to return to the call';
+
+  @override
   String get callStatusEnded => 'Call ended';
 
   @override

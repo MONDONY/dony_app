@@ -26,7 +26,6 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/personal_info_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
-import 'package:dony/features/calls/bloc/call_bloc.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
@@ -1178,17 +1177,13 @@ final appRouter = GoRouter(
                 state.pathParameters['callId']!,
                 state.uri.queryParameters,
               );
+        // Le bloc de l'appel vit dans ActiveCallHolder, pas dans la route :
+        // réduire l'écran (ou le retour système) ne raccroche plus. La barre
+        // d'appel rouvre l'appel par `activeCallLocation`.
         return CustomTransitionPage<void>(
+          key: state.pageKey,
           name: '/calls',
-          child: BlocProvider<CallBloc>(
-            create: (_) {
-              final bloc = getIt<CallBloc>();
-              final initial = args.initialEvent;
-              if (initial != null) bloc.add(initial);
-              return bloc;
-            },
-            child: CallScreen(args: args),
-          ),
+          child: ActiveCallScope(args: args),
           transitionsBuilder: (context, animation, secondaryAnimation, child) =>
               FadeTransition(opacity: animation, child: child),
         );

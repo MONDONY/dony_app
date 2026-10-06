@@ -276,4 +276,59 @@ void main() {
       expect(CallScreenArgs.fromRoute('x', const {}).initialEvent, isNull);
     });
   });
+
+  // FLUTTER-DF/DG : quitter l'écran sans raccrocher.
+  group('réduire', () {
+    testWidgets('pendant l\'appel : « Réduire » ferme l\'écran sans '
+        'raccrocher', (tester) async {
+      await pump(
+        tester,
+        const CallInProgress(phase: CallPhase.ringing, remoteName: 'Moussa K.'),
+      );
+
+      await tester.tap(find.byKey(const Key('call-minimize')));
+      await tester.pump();
+
+      expect(closed, 1);
+      verifyNever(() => bloc.add(const CallHangUpRequested()));
+    });
+
+    testWidgets('appel terminé : pas de bouton « Réduire »', (tester) async {
+      await pump(tester, const CallEnded(reason: 'hangup'));
+      await tester.pump(const Duration(seconds: 2));
+
+      final button = tester.widget<IconButton>(
+        find.byKey(const Key('call-minimize')),
+      );
+      expect(button.onPressed, isNull);
+      expect(
+        tester
+            .widget<Visibility>(
+              find.ancestor(
+                of: find.byKey(const Key('call-minimize')),
+                matching: find.byType(Visibility),
+              ),
+            )
+            .visible,
+        isFalse,
+      );
+    });
+  });
+
+  group('CallScreenArgs.withAvatarFallback', () {
+    test('garde sa photo, sinon prend celle de l\'appel courant', () {
+      const withPhoto = CallScreenArgs(
+        remoteName: 'A',
+        remoteAvatarUrl: 'https://a',
+      );
+      expect(
+        identical(withPhoto.withAvatarFallback('https://b'), withPhoto),
+        isTrue,
+      );
+      const without = CallScreenArgs(remoteName: 'A', conversationId: 'c1');
+      final filled = without.withAvatarFallback('https://b');
+      expect(filled.remoteAvatarUrl, 'https://b');
+      expect(filled.conversationId, 'c1');
+    });
+  });
 }

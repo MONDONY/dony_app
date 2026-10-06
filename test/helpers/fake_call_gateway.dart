@@ -17,6 +17,9 @@ class FakeCallGateway implements CallGateway {
   Object? throwOnConnect;
   bool microphoneAllowed = true;
 
+  /// Suspend [joinOutgoing] jusqu'à sa complétion (course raccrocher/rejoindre).
+  Completer<void>? joinGate;
+
   @override
   Future<void> connect({
     required String apiKey,
@@ -44,6 +47,8 @@ class FakeCallGateway implements CallGateway {
   Future<void> joinOutgoing(String callId) async {
     log.add('join:$callId');
     if (throwOnJoin != null) throw throwOnJoin!;
+    final gate = joinGate;
+    if (gate != null) await gate.future;
   }
 
   @override

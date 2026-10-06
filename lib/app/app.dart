@@ -23,9 +23,11 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
+import 'package:dony/features/calls/bloc/active_call_holder.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/call_session_service.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
+import 'package:dony/features/calls/presentation/widgets/active_call_banner.dart';
 import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
 import 'package:dony/features/connectivity/presentation/widgets/connectivity_banner.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -573,6 +575,14 @@ class _DonyAppState extends State<DonyApp> {
                                   // TOUTE route (shell ou pushée), jamais
                                   // seulement les onglets du shell.
                                   const ConnectivityBanner(),
+                                  // Appel en cours écran réduit : toucher
+                                  // la barre rouvre l'appel (FLUTTER-DG).
+                                  ActiveCallBanner(
+                                    holder: getIt<ActiveCallHolder>(),
+                                    onReturnToCall: () => unawaited(
+                                      appRouter.push(activeCallLocation),
+                                    ),
+                                  ),
                                   Expanded(
                                     child: LanguageSyncGate(
                                       child: AnalyticsConsentGate(

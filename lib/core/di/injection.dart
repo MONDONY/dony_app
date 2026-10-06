@@ -34,6 +34,7 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
 import 'package:dony/features/billing/data/billing_repository.dart';
+import 'package:dony/features/calls/bloc/active_call_holder.dart';
 import 'package:dony/features/calls/bloc/call_bloc.dart';
 import 'package:dony/features/calls/bloc/call_lock_screen_cubit.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
@@ -1087,6 +1088,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
       ringback: AudioPlayersRingbackTone(),
     ),
+  );
+  // Appel en cours tenu hors de son écran (réduire, barre d'appel : FLUTTER-DG).
+  getIt.registerLazySingleton<ActiveCallHolder>(
+    () => ActiveCallHolder(() => getIt<CallBloc>()),
   );
   // Appels Yadony sur l'écran verrouillé (FLUTTER-92).
   getIt.registerLazySingleton<CallLockScreenService>(CallLockScreenService.new);
