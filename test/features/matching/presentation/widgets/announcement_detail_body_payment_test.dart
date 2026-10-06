@@ -1,3 +1,4 @@
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
@@ -12,6 +13,7 @@ import '../../../../helpers/stripe_account_test_doubles.dart';
 
 AnnouncementModel _announcement({
   required Set<BidPaymentMethod> acceptedPaymentMethods,
+  String currency = 'EUR',
 }) {
   final now = DateTime(2026, 7, 20);
   return AnnouncementModel(
@@ -27,10 +29,15 @@ AnnouncementModel _announcement({
     createdAt: now,
     updatedAt: now,
     acceptedPaymentMethods: acceptedPaymentMethods,
+    currency: currency,
   );
 }
 
-Widget _wrap(AnnouncementModel a, {StripeAccountState? stripeState}) {
+Widget _wrap(
+  AnnouncementModel a, {
+  StripeAccountState? stripeState,
+  VoidCallback? onEnableCardOnTrip,
+}) {
   final router = GoRouter(
     initialLocation: '/detail',
     routes: [
@@ -41,7 +48,12 @@ Widget _wrap(AnnouncementModel a, {StripeAccountState? stripeState}) {
               ? stubStripeAccountBloc()
               : stubStripeAccountBloc(state: stripeState),
           child: Scaffold(
-            body: SingleChildScrollView(child: AnnouncementDetailBody(a: a)),
+            body: SingleChildScrollView(
+              child: AnnouncementDetailBody(
+                a: a,
+                onEnableCardOnTrip: onEnableCardOnTrip,
+              ),
+            ),
           ),
         ),
       ),
@@ -132,6 +144,70 @@ void main() {
         ),
         findsNothing,
       );
+      expect(find.text('Activer les paiements par carte'), findsNothing);
+    });
+
+    // Sentry FLUTTER-DH : trajet publié en espèces avant l'activation de
+    // Stripe. Renvoyer vers l'activation, déjà faite, faisait croire à un échec.
+    testWidgets('Stripe déjà activé : propose d\'ajouter la carte à CE trajet, '
+        'sans renvoyer vers l\'activation', (tester) async {
+      var editOpened = 0;
+      final a = _announcement(acceptedPaymentMethods: {BidPaymentMethod.cash});
+
+      await tester.pumpWidget(
+        _wrap(
+          a,
+          stripeState: const StripeAccountReady(
+            ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+          ),
+          onEnableCardOnTrip: () => editOpened++,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Le paiement par carte est activé sur votre compte, mais ce trajet '
+          'n\'accepte encore que les espèces.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('activate-card-payments-cta')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('enable-card-on-trip-cta')));
+      await tester.pump();
+
+      expect(editOpened, 1);
+    });
+
+    testWidgets('Stripe activé mais aucune action fournie : pas d\'encart '
+        'trompeur', (tester) async {
+      final a = _announcement(acceptedPaymentMethods: {BidPaymentMethod.cash});
+
+      await tester.pumpWidget(
+        _wrap(
+          a,
+          stripeState: const StripeAccountReady(
+            ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('enable-card-on-trip-cta')), findsNothing);
+      expect(find.byKey(const Key('activate-card-payments-cta')), findsNothing);
+    });
+
+    testWidgets('trajet en XOF : la carte n\'existe pas en zone CFA, pas '
+        'd\'encart', (tester) async {
+      final a = _announcement(
+        acceptedPaymentMethods: {BidPaymentMethod.cash},
+        currency: 'XOF',
+      );
+
+      await tester.pumpWidget(_wrap(a));
+      await tester.pumpAndSettle();
+
       expect(find.text('Activer les paiements par carte'), findsNothing);
     });
   });

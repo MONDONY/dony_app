@@ -1544,6 +1544,102 @@ void main() {
     );
   });
 
+  // Sentry FLUTTER-DE : le catalogue échouait faute de numéro exploitable
+  // (téléphone du compte en +33). L'écran montrait un bouton « Payer » grisé
+  // et un champ « facultatif » : le paiement a expiré sans aucune tentative.
+  group('ChooseOperator sans catalogue — numéro payeur à saisir', () {
+    testWidgets(
+      'numéro refusé (payer-unsupported) : saisie obligatoire expliquée, '
+      'relance du catalogue avec le numéro saisi',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            error: ValidationException(
+              'Ce numéro paie en EUR',
+              code: 'mobile-money-payer-unsupported',
+            ),
+          ),
+        );
+
+        await pumpScreen(tester);
+
+        expect(
+          find.byKey(const Key('mobile-money-payer-phone-needed')),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Ce numéro ne peut pas payer en mobile money'),
+          findsOneWidget,
+        );
+        expect(find.text('Avec quel opérateur ?'), findsNothing);
+
+        await tester.enterText(
+          find.byKey(const Key('mobile-money-phone-required-field')),
+          '+225 07 07 07 07 07',
+        );
+        await tester.pump();
+        await tester.tap(find.text('Réessayer'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(
+              scope: MobileMoneyScope.bid(bidId),
+              phoneNumber: '+2250707070707',
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets('aucun numéro (phone-required) : même corps, texte dédié', (
+      tester,
+    ) async {
+      stub(
+        const MobileMoneyPaymentChooseOperator(
+          status: noDepositStatus,
+          error: ValidationException(
+            'Aucun numéro',
+            code: 'mobile-money-phone-required',
+          ),
+        ),
+      );
+
+      await pumpScreen(tester);
+
+      expect(
+        find.text(
+          "Ton compte Yadony n'a pas de numéro de téléphone : indique "
+          'le numéro mobile money qui paiera.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('catalogue déjà affiché : une erreur garde le bandeau du choix '
+        'd\'opérateur, sans basculer sur la saisie', (tester) async {
+      stub(
+        const MobileMoneyPaymentChooseOperator(
+          status: noDepositStatus,
+          catalog: catalog,
+          error: ValidationException(
+            'Ce numéro paie en EUR',
+            code: 'mobile-money-payer-unsupported',
+          ),
+        ),
+      );
+
+      await pumpScreen(tester);
+
+      expect(
+        find.byKey(const Key('mobile-money-payer-phone-needed')),
+        findsNothing,
+      );
+      expect(find.text('Avec quel opérateur ?'), findsOneWidget);
+    });
+  });
+
   group('anglais', () {
     testWidgets(
       'PIN opérateur connu : montant, opérateur et texte PIN traduits',

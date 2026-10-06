@@ -8174,6 +8174,18 @@ abstract class AppLocalizations {
   /// **'Activer les paiements par carte'**
   String get listingActivateCardPaymentsButton;
 
+  /// Encart d'un trajet en espèces seulement quand le compte Stripe est déjà activé (announcement_detail_body.dart, Sentry FLUTTER-DH).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement par carte est activé sur votre compte, mais ce trajet n\'accepte encore que les espèces.'**
+  String get listingCashOnlyCardReadyMessage;
+
+  /// Bouton de cet encart : ouvre l'édition du trajet, où la carte est proposée (Sentry FLUTTER-DH).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter la carte à ce trajet'**
+  String get listingEnableCardOnTripButton;
+
   /// Titre de la section contenus acceptés (announcement_detail_body.dart)
   ///
   /// In fr, this message translates to:
@@ -15183,6 +15195,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ton compte Yadony n\'a pas de numéro de téléphone : indique le numéro mobile money qui paiera.'**
   String get mobileMoneyPhoneRequiredExplanation;
+
+  /// Écran de paiement mobile money quand le numéro payeur est refusé, souvent un numéro étranger comme +33 (mobile_money_awaiting_screen.dart, Sentry FLUTTER-DE).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro ne peut pas payer en mobile money pour ce colis. Indique le numéro mobile money qui paiera (Côte d\'Ivoire, Sénégal, Mali…).'**
+  String get mobileMoneyPayerUnsupportedExplanation;
 
   /// Libellé du champ de saisie obligatoire du corps dédié « numéro manquant » (mobile_money_awaiting_screen.dart _PhoneRequiredBody).
   ///

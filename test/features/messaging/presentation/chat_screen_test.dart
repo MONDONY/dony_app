@@ -298,13 +298,15 @@ void main() {
     testWidgets(
       'date separator and message time render like the old fr pattern',
       (tester) async {
-        final date = DateTime(2026, 10, 6, 14, 5);
+        // Date passée fixe : le 6 octobre 2026, ce test lisait « Aujourd'hui »
+        // au lieu de la date complète.
+        final date = DateTime(2025, 10, 6, 14, 5);
         when(() => bloc.state).thenReturn(
           ChatLoaded([_makeMsg(id: 'm1', body: 'Bien reçu', sentAt: date)]),
         );
         await _pump(tester, bloc);
 
-        expect(find.text('6 octobre 2026'), findsOneWidget);
+        expect(find.text('6 octobre 2025'), findsOneWidget);
         expect(find.text('14:05'), findsOneWidget);
       },
     );
@@ -313,7 +315,7 @@ void main() {
       tester,
     ) async {
       useEnglish();
-      final date = DateTime(2026, 10, 6, 14, 5);
+      final date = DateTime(2025, 10, 6, 14, 5);
       when(() => bloc.state).thenReturn(
         ChatLoaded([_makeMsg(id: 'm1', body: 'Got it', sentAt: date)]),
       );

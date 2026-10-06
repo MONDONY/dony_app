@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -21,7 +22,17 @@ import 'package:intl/intl.dart';
 /// Ne contient AUCUNE action — uniquement la présentation des données du trajet.
 class AnnouncementDetailBody extends StatelessWidget {
   final AnnouncementModel a;
-  const AnnouncementDetailBody({super.key, required this.a});
+
+  /// Ouvre l'édition du trajet pour y ajouter la carte, puis recharge le
+  /// détail. Fourni par l'écran du propriétaire. Sans lui, l'encart d'un
+  /// trajet en espèces sur un compte Stripe déjà activé n'a pas d'action.
+  final VoidCallback? onEnableCardOnTrip;
+
+  const AnnouncementDetailBody({
+    super.key,
+    required this.a,
+    this.onEnableCardOnTrip,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -245,11 +256,25 @@ class AnnouncementDetailBody extends StatelessWidget {
         // y sont en espèces par construction, la bannière s'afficherait donc
         // sur chacun d'eux, indéfiniment, pour un reproche que le voyageur
         // n'a aucun moyen de lever.
+        //
+        // Muet aussi pour une devise sans carte (zone CFA) : activer Stripe
+        // n'y changerait rien.
+        //
+        // Compte Stripe déjà activé : renvoyer vers l'activation faisait
+        // croire qu'elle avait échoué (Sentry FLUTTER-DH). L'encart propose
+        // alors d'ajouter la carte à CE trajet, par son édition.
         if (a.acceptedPaymentMethods.length == 1 &&
-            a.acceptedPaymentMethods.contains(BidPaymentMethod.cash))
+            a.acceptedPaymentMethods.contains(BidPaymentMethod.cash) &&
+            SupportedCurrency.fromCodeOrDefault(a.currency).isStripeEligible)
           BlocBuilder<StripeAccountBloc, StripeAccountState>(
             builder: (context, stripeState) {
               if (!stripeState.connectAvailableInCountry) {
+                return const SizedBox.shrink();
+              }
+              final stripeReady =
+                  stripeState is StripeAccountReady &&
+                  stripeState.accountStatus.isComplete;
+              if (stripeReady && onEnableCardOnTrip == null) {
                 return const SizedBox.shrink();
               }
               return Column(
@@ -258,13 +283,21 @@ class AnnouncementDetailBody extends StatelessWidget {
                   DonyStatusBanner(
                     type: DonyStatusBannerType.warning,
                     iconAsset: 'triangle-alert',
-                    message: l.listingCashOnlyNudgeMessage,
-                    action: TextButton(
-                      key: const Key('activate-card-payments-cta'),
-                      onPressed: () =>
-                          context.push('/connect/onboarding/intro'),
-                      child: Text(l.listingActivateCardPaymentsButton),
-                    ),
+                    message: stripeReady
+                        ? l.listingCashOnlyCardReadyMessage
+                        : l.listingCashOnlyNudgeMessage,
+                    action: stripeReady
+                        ? TextButton(
+                            key: const Key('enable-card-on-trip-cta'),
+                            onPressed: onEnableCardOnTrip,
+                            child: Text(l.listingEnableCardOnTripButton),
+                          )
+                        : TextButton(
+                            key: const Key('activate-card-payments-cta'),
+                            onPressed: () =>
+                                context.push('/connect/onboarding/intro'),
+                            child: Text(l.listingActivateCardPaymentsButton),
+                          ),
                   ).animate().fadeIn(delay: 120.ms),
                   const SizedBox(height: DonySpacing.md),
                 ],

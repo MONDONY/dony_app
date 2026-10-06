@@ -146,6 +146,14 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   static bool _isPhoneRequired(Object error) =>
       error is AppException && error.code == 'mobile-money-phone-required';
 
+  /// Le catalogue des opérateurs n'a pas pu être chargé faute d'un numéro
+  /// payeur exploitable : aucun numéro, ou un numéro que pawaPay refuse
+  /// (souvent le téléphone du compte, étranger, par exemple +33).
+  static bool _needsPayerPhone(Object? error) =>
+      error is AppException &&
+      (error.code == 'mobile-money-phone-required' ||
+          error.code == 'mobile-money-payer-unsupported');
+
   /// Ouvert depuis le détail (`push<bool>`), l'écran rend son résultat au
   /// parent. Ouvert depuis la push « paiement en attente » (lien profond,
   /// seule page de la pile), il n'a rien à dépiler : `pop` levait
@@ -265,6 +273,29 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
           builder: (context, state) => switch (state) {
             MobileMoneyPaymentInitial() || MobileMoneyPaymentLoading() =>
               Center(child: CircularProgressIndicator(color: cs.primary)),
+            // Aucun opérateur affichable faute de numéro payeur exploitable.
+            // Le choix d'opérateur montrait alors un bandeau rouge, un bouton
+            // « Payer » grisé et, pour seule issue, un champ « facultatif » :
+            // l'expéditrice a laissé expirer son paiement (Sentry FLUTTER-DE).
+            final MobileMoneyPaymentChooseOperator s
+                when s.catalog == null &&
+                    !s.isLoadingCatalog &&
+                    _needsPayerPhone(s.error) =>
+              _PhoneRequiredBody(
+                key: const Key('mobile-money-payer-phone-needed'),
+                message: _isPhoneRequired(s.error!)
+                    ? l.mobileMoneyPhoneRequiredExplanation
+                    : l.mobileMoneyPayerUnsupportedExplanation,
+                phoneController: _payerPhoneController,
+                onRetry: () => context.read<MobileMoneyPaymentBloc>().add(
+                  MobileMoneyPaymentProvidersRequested(
+                    scope: widget.scope,
+                    phoneNumber: normalizePayerPhone(
+                      _payerPhoneController.text,
+                    ),
+                  ),
+                ),
+              ),
             final MobileMoneyPaymentChooseOperator s => _ChooseOperatorBody(
               state: s,
               remaining: _remaining,
@@ -309,6 +340,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             // obligatoire, plutôt que le DonyEmptyState générique.
             final MobileMoneyPaymentError e when _isPhoneRequired(e.error) =>
               _PhoneRequiredBody(
+                message: l.mobileMoneyPhoneRequiredExplanation,
                 phoneController: _payerPhoneController,
                 onRetry: () => _retry(_payerPhoneController.text),
               ),
@@ -838,10 +870,13 @@ class _FailedBody extends StatelessWidget {
 /// directement au [TextEditingController], déjà un `Listenable`.
 class _PhoneRequiredBody extends StatelessWidget {
   const _PhoneRequiredBody({
+    super.key,
+    required this.message,
     required this.phoneController,
     required this.onRetry,
   });
 
+  final String message;
   final TextEditingController phoneController;
   final VoidCallback onRetry;
 
@@ -858,11 +893,7 @@ class _PhoneRequiredBody extends StatelessWidget {
         children: [
           Center(child: DonyIcon('smartphone', color: cs.primary, size: 48)),
           const SizedBox(height: DonySpacing.base),
-          Text(
-            l.mobileMoneyPhoneRequiredExplanation,
-            textAlign: TextAlign.center,
-            style: tt.bodyMedium,
-          ),
+          Text(message, textAlign: TextAlign.center, style: tt.bodyMedium),
           const SizedBox(height: DonySpacing.xl),
           DonyTextField(
             key: const Key('mobile-money-phone-required-field'),

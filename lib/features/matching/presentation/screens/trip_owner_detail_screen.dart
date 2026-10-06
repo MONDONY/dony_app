@@ -349,7 +349,12 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                     ),
                     const SizedBox(height: DonySpacing.md),
                   ],
-                  AnnouncementDetailBody(a: a),
+                  AnnouncementDetailBody(
+                    a: a,
+                    onEnableCardOnTrip: isOwner
+                        ? () => unawaited(_openEditToEnableCard(context))
+                        : null,
+                  ),
                   const SizedBox(height: DonySpacing.lg),
                   if (isOwner) TripAudienceSection(announcementId: a.id),
                   OwnerActionGrid(a: a, isOwner: isOwner),
@@ -499,6 +504,25 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
       await CancellationBottomSheet.show(
         context,
         announcementId: announcementId,
+      );
+    }
+  }
+
+  /// Trajet publié en espèces avant l'activation de Stripe : l'édition
+  /// propose désormais la carte (statut rechargé à l'ouverture), puis le
+  /// détail est relu pour que l'encart disparaisse (Sentry FLUTTER-DH).
+  Future<void> _openEditToEnableCard(BuildContext context) async {
+    final current = _current;
+    if (current == null) {
+      return;
+    }
+    final changed = await context.push<bool>(
+      '/trips/create',
+      extra: CreateTripArgs(announcement: current),
+    );
+    if ((changed ?? false) && context.mounted) {
+      context.read<AnnouncementBloc>().add(
+        AnnouncementDetailRequested(widget.announcementId),
       );
     }
   }

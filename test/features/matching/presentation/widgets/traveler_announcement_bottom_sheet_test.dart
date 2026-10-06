@@ -1157,7 +1157,7 @@ void main() {
       expect(find.text('par kilo'), findsOneWidget);
     });
 
-    testWidgets('trajet négociable → mention et lien « Proposer un prix »', (
+    testWidgets('trajet négociable → bouton secondaire « Proposer un prix »', (
       tester,
     ) async {
       final a = _buildAnnouncement(kycVerified: true, negotiable: true);
@@ -1165,9 +1165,14 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Trajet négociable'), findsOneWidget);
       expect(find.text('Proposer un prix'), findsOneWidget);
-      expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
+      // Vrai bouton secondaire, plus un lien texte discret (Sentry FLUTTER-DA).
+      expect(
+        tester
+            .widget<DonyButton>(find.byKey(const Key('negotiate-price-btn')))
+            .variant,
+        DonyButtonVariant.secondary,
+      );
     });
 
     testWidgets(
@@ -1227,9 +1232,14 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Trajet négociable'), findsOneWidget);
       expect(find.text('Proposer un prix'), findsOneWidget);
-      expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
+      // Vrai bouton secondaire, plus un lien texte discret (Sentry FLUTTER-DA).
+      expect(
+        tester
+            .widget<DonyButton>(find.byKey(const Key('negotiate-price-btn')))
+            .variant,
+        DonyButtonVariant.secondary,
+      );
     });
 
     testWidgets('prix ferme → aucune mention de négociation', (tester) async {
