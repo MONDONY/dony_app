@@ -43,3 +43,8 @@ class _CallSnapshotReceived extends CallEvent {
 
   final ActiveCallSnapshot snapshot;
 }
+
+/// Sonnerie sortante restée sans réponse au-delà de `ringTimeout`.
+class _CallRingTimedOut extends CallEvent {
+  const _CallRingTimedOut();
+}

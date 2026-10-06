@@ -15962,6 +15962,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get callStatusRinging => 'Ça sonne…';
 
   @override
+  String get callMinimize => 'Réduire l\'appel';
+
+  @override
+  String get callBannerTitle => 'Appel en cours';
+
+  @override
+  String get callBannerReturn => 'Revenir';
+
+  @override
+  String get callBannerReturnHint =>
+      'Appel en cours, toucher pour revenir à l\'appel';
+
+  @override
   String get callStatusEnded => 'Appel terminé';
 
   @override

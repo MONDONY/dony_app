@@ -26247,6 +26247,30 @@ abstract class AppLocalizations {
   /// **'Ça sonne…'**
   String get callStatusRinging;
 
+  /// Bouton de l'écran d'appel : quitte l'écran sans raccrocher, l'appel continue (call_screen.dart, FLUTTER-DG).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réduire l\'appel'**
+  String get callMinimize;
+
+  /// Barre d'appel en haut de l'app quand le nom de l'interlocuteur n'est pas encore connu (active_call_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel en cours'**
+  String get callBannerTitle;
+
+  /// Action de la barre d'appel en cours : rouvre l'écran d'appel (active_call_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenir'**
+  String get callBannerReturn;
+
+  /// Libellé d'accessibilité de la barre d'appel en cours (active_call_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel en cours, toucher pour revenir à l\'appel'**
+  String get callBannerReturnHint;
+
   /// Statut de l'écran d'appel à la fin de l'appel.
   ///
   /// In fr, this message translates to:

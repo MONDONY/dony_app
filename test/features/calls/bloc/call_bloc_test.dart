@@ -435,6 +435,10 @@ void main() {
       verify: (_) => expect(ringback.log, [
         'stop', // CallStarting
         'start', // ça sonne
+        // Appel rejoint : Stream reconfigure la session audio, la tonalité
+        // est relancée pour ne pas rester muette.
+        'stop',
+        'start',
         'stop', // décroché
         'dispose', // écran fermé
       ]),
@@ -468,4 +472,129 @@ void main() {
       verify: (_) => expect(ringback.log, isNot(contains('start'))),
     );
   });
+
+  // FLUTTER-DF : raccrocher pendant la création ou la connexion de l'appel.
+  group('raccrocher pendant la mise en place', () {
+    blocTest<CallBloc, CallState>(
+      'pendant la connexion : la sonnerie ne réapparaît pas et l\'appel '
+      'rejoint après coup est quitté',
+      build: build,
+      setUp: () {
+        backStarts();
+        gateway.joinGate = Completer<void>();
+      },
+      act: (bloc) async {
+        bloc.add(const CallStartRequested('c1', 'Moussa'));
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const CallHangUpRequested());
+        await Future<void>.delayed(Duration.zero);
+        gateway.joinGate!.complete();
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<CallStarting>(),
+        isA<CallInProgress>(),
+        isA<CallEnded>().having((s) => s.reason, 'reason', 'hangup'),
+      ],
+      verify: (_) => expect(gateway.log.where((e) => e == 'hangUp').length, 2),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'pendant la création par le back : l\'appel créé est annulé, sans '
+      'sonnerie',
+      build: build,
+      setUp: () {
+        final created = Completer<StartedCall>();
+        when(
+          () => repository.startCall('c1'),
+        ).thenAnswer((_) => created.future);
+        addTearDown(() {
+          if (!created.isCompleted) {
+            created.complete(
+              const StartedCall(callId: 'x1', callType: 'audio_call'),
+            );
+          }
+        });
+        _pendingStart = created;
+      },
+      act: (bloc) async {
+        bloc.add(const CallStartRequested('c1', 'Moussa'));
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const CallHangUpRequested());
+        await Future<void>.delayed(Duration.zero);
+        _pendingStart!.complete(
+          const StartedCall(callId: 'x1', callType: 'audio_call'),
+        );
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [isA<CallStarting>(), isA<CallEnded>()],
+      verify: (_) {
+        expect(gateway.log, contains('cancel:x1'));
+        expect(gateway.log, isNot(contains('join:x1')));
+      },
+    );
+  });
+
+  // FLUTTER-DF : une connexion qui traîne laissait sonner sans fin.
+  group('sonnerie bornée', () {
+    CallBloc buildQuick() => CallBloc(
+      repository,
+      gateway,
+      analytics,
+      ringTimeout: const Duration(milliseconds: 30),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'sans réponse après le délai : raccroché, « sans réponse »',
+      build: buildQuick,
+      setUp: backStarts,
+      act: (bloc) async {
+        bloc.add(const CallStartRequested('c1', 'Moussa'));
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+      },
+      expect: () => [
+        isA<CallStarting>(),
+        isA<CallInProgress>(),
+        isA<CallEnded>().having((s) => s.reason, 'reason', 'missed'),
+      ],
+      verify: (_) => expect(gateway.log, contains('hangUp')),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'décroché avant le délai : l\'appel continue',
+      build: buildQuick,
+      setUp: backStarts,
+      act: (bloc) async {
+        bloc.add(const CallStartRequested('c1', 'Moussa'));
+        await Future<void>.delayed(Duration.zero);
+        gateway.activeCallController.add(
+          ActiveCallSnapshot(phase: CallPhase.connected, connectedAt: t0),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+      },
+      // Aucun CallEnded : le délai n'a pas raccroché un appel décroché.
+      expect: () => [
+        isA<CallStarting>(),
+        isA<CallInProgress>().having(
+          (s) => s.phase,
+          'phase',
+          CallPhase.ringing,
+        ),
+        isA<CallInProgress>().having(
+          (s) => s.phase,
+          'phase',
+          CallPhase.connected,
+        ),
+      ],
+      verify: (bloc) => expect(bloc.isLive, isTrue),
+    );
+  });
+
+  test('isLive : faux au repos et après la fin', () async {
+    final bloc = build();
+    expect(bloc.isLive, isFalse);
+    await bloc.close();
+  });
 }
+
+Completer<StartedCall>? _pendingStart;

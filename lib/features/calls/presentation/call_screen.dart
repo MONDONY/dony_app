@@ -1,10 +1,14 @@
 import 'dart:async';
 
 import 'package:app_settings/app_settings.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/calls/bloc/active_call_holder.dart';
 import 'package:dony/features/calls/bloc/call_bloc.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/presentation/widgets/call_controls.dart';
+import 'package:dony/features/calls/presentation/widgets/call_timer.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,6 +67,18 @@ class CallScreenArgs {
     );
   }
 
+  /// Même appel, avec la photo de l'interlocuteur si elle manquait (retour
+  /// depuis la barre d'appel, dont la route ne porte pas la photo).
+  CallScreenArgs withAvatarFallback(String? url) => remoteAvatarUrl != null
+      ? this
+      : CallScreenArgs(
+          remoteName: remoteName,
+          remoteAvatarUrl: url,
+          conversationId: conversationId,
+          incomingCallId: incomingCallId,
+          acceptedNatively: acceptedNatively,
+        );
+
   /// Ce que l'écran demande au [CallBloc] en s'ouvrant.
   CallEvent? get initialEvent {
     if (conversationId != null) {
@@ -79,8 +95,62 @@ class CallScreenArgs {
   }
 }
 
+/// Route de retour vers l'appel en cours, ouverte par la barre d'appel.
+const activeCallLocation = '/calls/active';
+
+/// Fournit à l'écran d'appel le [CallBloc] de l'appel courant, tenu par
+/// [ActiveCallHolder] et non par la route : quitter l'écran ne raccroche
+/// plus (FLUTTER-DF/DG). Le bloc est obtenu une seule fois, dans
+/// `initState` : GoRouter peut rebâtir la page à chaque navigation, et un
+/// second `blocFor` relancerait un appel terminé.
+///
+/// Signale aussi la présence de l'écran, pour masquer la barre d'appel.
+class ActiveCallScope extends StatefulWidget {
+  const ActiveCallScope({super.key, required this.args, this.holder});
+
+  final CallScreenArgs args;
+
+  /// Injecté en test, sinon celui de l'app.
+  final ActiveCallHolder? holder;
+
+  @override
+  State<ActiveCallScope> createState() => _ActiveCallScopeState();
+}
+
+class _ActiveCallScopeState extends State<ActiveCallScope> {
+  late final ActiveCallHolder _holder =
+      widget.holder ?? getIt<ActiveCallHolder>();
+  late final CallBloc _bloc = _holder.blocFor(
+    widget.args.initialEvent,
+    avatarUrl: widget.args.remoteAvatarUrl,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _holder.callScreenVisible.value = true;
+  }
+
+  @override
+  void dispose() {
+    _holder.callScreenVisible.value = false;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => BlocProvider<CallBloc>.value(
+    value: _bloc,
+    child: CallScreen(
+      args: widget.args.withAvatarFallback(_holder.remoteAvatarUrl),
+    ),
+  );
+}
+
 /// Écran plein écran d'un appel audio : nom, statut, chronomètre, et trois
 /// commandes (micro, haut-parleur, raccrocher). Se ferme seul à la fin.
+///
+/// Pendant l'appel, « Réduire » (ou le retour système) quitte l'écran sans
+/// raccrocher : la barre d'appel, en haut de l'app, y ramène.
 class CallScreen extends StatelessWidget {
   const CallScreen({
     super.key,
@@ -136,13 +206,30 @@ class CallScreen extends StatelessWidget {
       builder: (context, state) {
         final inProgress = state is CallInProgress ? state : null;
         final name = inProgress?.remoteName ?? args.remoteName;
+        final live = state is CallStarting || state is CallInProgress;
         return Scaffold(
           backgroundColor: cs.surface,
           body: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
               child: Column(
                 children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Visibility(
+                      visible: live,
+                      maintainSize: true,
+                      maintainAnimation: true,
+                      maintainState: true,
+                      child: IconButton(
+                        key: const Key('call-minimize'),
+                        tooltip: context.l10n.callMinimize,
+                        icon: const DonyIcon('chevron-down', size: 28),
+                        onPressed: live ? () => _close(context) : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   _Avatar(name: name, url: args.remoteAvatarUrl),
                   const SizedBox(height: 20),
                   Text(
@@ -225,7 +312,7 @@ class _StatusLine extends StatelessWidget {
     if (current is CallInProgress &&
         current.phase == CallPhase.connected &&
         current.connectedAt != null) {
-      return _Timer(since: current.connectedAt!, style: style);
+      return CallTimer(since: current.connectedAt!, style: style);
     }
     final text = switch (current) {
       CallInProgress(phase: CallPhase.ringing) => l.callStatusRinging,
@@ -239,30 +326,5 @@ class _StatusLine extends StatelessWidget {
       _ => l.callStatusConnecting,
     };
     return Text(text, style: style, textAlign: TextAlign.center);
-  }
-}
-
-class _Timer extends StatelessWidget {
-  const _Timer({required this.since, this.style});
-
-  final DateTime since;
-  final TextStyle? style;
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<int>(
-      stream: Stream<int>.periodic(const Duration(seconds: 1), (i) => i),
-      builder: (context, _) {
-        final elapsed = DateTime.now().difference(since);
-        final minutes = elapsed.inMinutes.toString().padLeft(2, '0');
-        final seconds = (elapsed.inSeconds % 60).toString().padLeft(2, '0');
-        return Text(
-          '$minutes:$seconds',
-          style: style?.copyWith(
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        );
-      },
-    );
   }
 }
