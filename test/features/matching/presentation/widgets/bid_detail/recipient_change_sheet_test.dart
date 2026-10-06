@@ -9,6 +9,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/recipient_change/recipient_change_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
@@ -329,4 +330,65 @@ void main() {
 
     expect(find.text('Nom du destinataire modifié.'), findsOneWidget);
   });
+
+  testWidgets(
+    'expéditeur, destinataire en refus : « Désigner un autre destinataire » '
+    'ouvre la feuille de changement puis recharge le bid (FLUTTER-E8)',
+    (tester) async {
+      stubChange(() async => _bid());
+      final declined = BidModel(
+        id: 'bid-1',
+        announcementId: 'ann-1',
+        senderId: 'sender-1',
+        status: 'IN_TRANSIT',
+        recipientName: 'Fatou Sow',
+        recipientPhone: '+221771234567',
+        recipientAppStatus: 'DECLINED',
+        trackingToken: 'tok',
+        createdAt: DateTime(2026, 10),
+        updatedAt: DateTime(2026, 10),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider<BidBloc>.value(
+            value: bidBloc,
+            child: Scaffold(
+              body: SingleChildScrollView(
+                child: PrevenirDestinataireCard(bid: declined),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('recipient-declined-change')));
+      await tester.pumpAndSettle();
+      expect(find.text('Modifier le destinataire'), findsOneWidget);
+
+      await tester.enterText(phoneField(), '+221781112233');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => repository.changeRecipient(
+          'bid-1',
+          recipientName: 'Fatou Sow',
+          recipientPhone: '+221781112233',
+        ),
+      ).called(1);
+      verify(
+        () => bidBloc.add(
+          any(
+            that: isA<BidDetailRequested>().having(
+              (e) => e.bidId,
+              'bidId',
+              'bid-1',
+            ),
+          ),
+        ),
+      ).called(1);
+    },
+  );
 }

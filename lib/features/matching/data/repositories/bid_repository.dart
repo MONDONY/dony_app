@@ -108,6 +108,9 @@ class BidRepository {
     recipientPhone: recipientPhone,
   );
 
+  Future<BidModel> requestRecipientReplacement(String bidId) =>
+      _datasource.requestRecipientReplacement(bidId);
+
   Future<void> hideBid(String bidId) => _datasource.hideBid(bidId);
 
   Future<void> dismissBidAsTraveler(String bidId) =>

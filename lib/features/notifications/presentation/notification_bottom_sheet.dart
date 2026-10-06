@@ -742,6 +742,7 @@ class _NotificationIcon extends StatelessWidget {
       'RECIPIENT_PARCEL_RESCHEDULED' => (cs.warning, 'calendar'),
       'RECIPIENT_DECLINED' => (cs.warning, 'user-x'),
       'RECIPIENT_WITHDRAWN' => (cs.warning, 'user-x'),
+      'RECIPIENT_REPLACEMENT_REQUESTED' => (cs.warning, 'user-plus'),
       'RECIPIENT_CHANGED' => (cs.warning, 'refresh-cw'),
 
       // Informe / met en relation

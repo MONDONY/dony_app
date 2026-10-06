@@ -130,6 +130,19 @@ class BidModel {
   /// l'app seulement (Sentry FLUTTER-6J). `false` sur un back antérieur.
   @JsonKey(defaultValue: false)
   final bool recipientPhoneHidden;
+
+  /// Vue voyageur : le destinataire a refusé le colis ou s'en est retiré (lien
+  /// `DECLINED`, yadony-back #412). [recipientName] et [recipientPhone] sont
+  /// alors `null` : le voyageur peut demander à l'expéditeur d'en désigner un
+  /// autre. Toujours `false` pour l'expéditeur (il lit [recipientAppStatus]) et
+  /// sur un back antérieur.
+  @JsonKey(defaultValue: false)
+  final bool recipientDeclined;
+
+  /// Dernière demande de remplacement faite par le voyageur depuis le refus en
+  /// cours (UTC). Une nouvelle demande est possible 12 h après. `null` sans
+  /// demande, hors refus ou sur un back antérieur.
+  final DateTime? recipientReplacementRequestedAt;
   final String status;
   final String? rejectionReason;
   final String? handoverLocation;
@@ -276,6 +289,8 @@ class BidModel {
     this.recipientPhone,
     this.recipientAppStatus,
     this.recipientPhoneHidden = false,
+    this.recipientDeclined = false,
+    this.recipientReplacementRequestedAt,
     required this.status,
     this.rejectionReason,
     this.handoverLocation,
@@ -395,6 +410,19 @@ class BidModel {
   /// CancellationGuard reste l'autorité). Consommé par les options sheets voyageur
   /// et expéditeur.
   bool get canCancelAfterHandover => status == 'HANDED_OVER' && !hasDeparted;
+
+  /// Délai minimal entre deux demandes de remplacement du destinataire (miroir
+  /// de `RecipientReplacementService.COOLDOWN` côté back).
+  static const recipientReplacementCooldown = Duration(hours: 12);
+
+  /// Instant à partir duquel le voyageur peut redemander un autre destinataire,
+  /// ou `null` si aucune demande n'a été faite depuis le refus en cours.
+  DateTime? get nextRecipientReplacementAllowedAt =>
+      recipientReplacementRequestedAt?.add(recipientReplacementCooldown);
+
+  /// Le destinataire est en refus côté expéditeur (il a refusé le colis ou
+  /// s'en est retiré).
+  bool get isRecipientDeclinedForSender => recipientAppStatus == 'DECLINED';
 
   /// L'expéditeur peut changer de destinataire jusqu'à la remise : demande
   /// acceptée, colis chez le voyageur, en route ou arrivé. Miroir de la

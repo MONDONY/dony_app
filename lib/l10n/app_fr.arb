@@ -17774,17 +17774,12 @@
   "@receptionDeclineDialogTitle": {
     "description": "Titre du dialogue de confirmation du refus (reception_detail_screen.dart)."
   },
-  "receptionDeclineDialogMessage": "Il disparaîtra de votre liste et l'expéditeur sera invité à vérifier le numéro du destinataire.",
-  "@receptionDeclineDialogMessage": {
-    "description": "Message du dialogue de confirmation du refus (reception_detail_screen.dart)."
-  },
   "receptionDeclinedSnackbar": "C'est noté, ce colis a été retiré de votre liste.",
   "@receptionDeclinedSnackbar": {
     "description": "Confirmation après le refus d'un colis (reception_detail_screen.dart)."
   },
   "receptionWithdrawButton": "Me retirer de ce colis",
   "receptionWithdrawDialogTitle": "Vous retirer de ce colis ?",
-  "receptionWithdrawDialogMessage": "Vous ne le suivrez plus et ne verrez plus son code de retrait. L’expéditeur et le voyageur seront prévenus.",
   "receptionWithdrawConfirm": "Me retirer",
   "receptionWithdrawnSnackbar": "C’est noté, l’expéditeur et le voyageur sont prévenus.",
   "receptionConfirmedSnackbar": "C'est noté, vous suivez ce colis.",
@@ -17930,9 +17925,9 @@
       }
     }
   },
-  "recipientAppDeclined": "Le titulaire de ce numéro indique que ce colis n'est pas pour lui. Vérifiez le numéro du destinataire.",
+  "recipientAppDeclined": "Ce destinataire a refusé le colis.",
   "@recipientAppDeclined": {
-    "description": "Vue expéditeur : le titulaire du numéro a refusé le colis (prevenir_destinataire_card.dart)."
+    "description": "Vue expéditeur : le destinataire a refusé le colis ou s'en est retiré, formulation neutre (prevenir_destinataire_card.dart, FLUTTER-E8)."
   },
   "recipientAppConfirmedAnonymous": "Le destinataire suit le colis dans Yadony",
   "@recipientAppConfirmedAnonymous": {
@@ -18863,5 +18858,98 @@
   "errorReceptionNotRecipientMessage": "Seul le destinataire confirmé de ce colis peut noter le voyageur.",
   "@errorReceptionNotRecipientMessage": {
     "description": "ErrorCatalog : 403 reception-not-recipient (FLUTTER-CA)."
+  },
+  "recipientDeclinedTravelerTitle": "Destinataire à redésigner",
+  "@recipientDeclinedTravelerTitle": {
+    "description": "Vue voyageur : le destinataire a refusé le colis ou s'en est retiré, nom et numéro masqués (recipient_declined_panel.dart, FLUTTER-E8)."
+  },
+  "recipientDeclinedTravelerBody": "Le destinataire a refusé le colis. L'expéditeur est prévenu.",
+  "@recipientDeclinedTravelerBody": {
+    "description": "Vue voyageur : explication sous « Destinataire à redésigner » (recipient_declined_panel.dart)."
+  },
+  "recipientReplacementRequestButton": "Demander un autre destinataire",
+  "@recipientReplacementRequestButton": {
+    "description": "Vue voyageur : bouton qui demande à l'expéditeur de désigner un autre destinataire (recipient_declined_panel.dart)."
+  },
+  "recipientReplacementSentButton": "Demande envoyée",
+  "@recipientReplacementSentButton": {
+    "description": "Vue voyageur : bouton désactivé après la demande, pendant les 12 h de délai (recipient_declined_panel.dart)."
+  },
+  "recipientReplacementNextAt": "Nouvelle demande possible à {time}",
+  "@recipientReplacementNextAt": {
+    "description": "Vue voyageur : heure (aujourd'hui) à partir de laquelle une nouvelle demande est possible (recipient_declined_panel.dart).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientReplacementNextOn": "Nouvelle demande possible le {date} à {time}",
+  "@recipientReplacementNextOn": {
+    "description": "Vue voyageur : date et heure à partir desquelles une nouvelle demande est possible (recipient_declined_panel.dart).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientReplacementNextLater": "Nouvelle demande possible dans 12 h",
+  "@recipientReplacementNextLater": {
+    "description": "Vue voyageur : repli quand l'heure de la prochaine demande est inconnue (recipient_declined_panel.dart)."
+  },
+  "recipientReplacementConfirmTitle": "Demander un autre destinataire ?",
+  "@recipientReplacementConfirmTitle": {
+    "description": "Titre de la feuille de confirmation de la demande de remplacement (recipient_declined_panel.dart)."
+  },
+  "recipientReplacementConfirmBody": "L'expéditeur recevra une notification lui demandant de désigner un autre destinataire. Vous pourrez renouveler la demande 12 h plus tard.",
+  "@recipientReplacementConfirmBody": {
+    "description": "Texte de la feuille de confirmation de la demande de remplacement (recipient_declined_panel.dart)."
+  },
+  "recipientReplacementConfirmSend": "Envoyer la demande",
+  "@recipientReplacementConfirmSend": {
+    "description": "Bouton de la feuille de confirmation de la demande de remplacement (recipient_declined_panel.dart)."
+  },
+  "recipientReplacementSentSnackbar": "Demande envoyée à l'expéditeur.",
+  "@recipientReplacementSentSnackbar": {
+    "description": "Snackbar après une demande de remplacement réussie (recipient_declined_panel.dart)."
+  },
+  "recipientReplacementTooSoonSnackbar": "Vous avez déjà prévenu l'expéditeur. Nouvelle demande possible 12 h après la précédente.",
+  "@recipientReplacementTooSoonSnackbar": {
+    "description": "Snackbar sur un 429 recipient-replacement-too-soon (recipient_declined_panel.dart)."
+  },
+  "recipientReplacementConflictSnackbar": "Le destinataire a déjà changé ou le colis n'est plus en cours. Le détail est mis à jour.",
+  "@recipientReplacementConflictSnackbar": {
+    "description": "Snackbar sur un 409 de la demande de remplacement (recipient_declined_panel.dart)."
+  },
+  "recipientDeclinedSenderTitle": "Destinataire à remplacer",
+  "@recipientDeclinedSenderTitle": {
+    "description": "Vue expéditeur : titre de l'encart quand le destinataire a refusé le colis ou s'en est retiré (prevenir_destinataire_card.dart)."
+  },
+  "recipientDeclinedSenderBody": "Désignez un autre destinataire : il pourra suivre le colis et recevoir le code de retrait.",
+  "@recipientDeclinedSenderBody": {
+    "description": "Vue expéditeur : explication sous le bandeau de refus (prevenir_destinataire_card.dart)."
+  },
+  "recipientDeclinedSenderButton": "Désigner un autre destinataire",
+  "@recipientDeclinedSenderButton": {
+    "description": "Vue expéditeur : bouton qui ouvre la feuille de changement de destinataire après un refus (prevenir_destinataire_card.dart)."
+  },
+  "recipientReplacementRequestedSender": "Le voyageur vous demande d'en désigner un autre.",
+  "@recipientReplacementRequestedSender": {
+    "description": "Vue expéditeur : le voyageur a demandé un autre destinataire après le refus (prevenir_destinataire_card.dart)."
+  },
+  "receptionLeaveWarning": "Vous ne pourrez plus voir ce colis ni son code de retrait. Confirmer ?",
+  "@receptionLeaveWarning": {
+    "description": "Feuille de confirmation avant « Ce n'est pas pour moi » ou « Me retirer de ce colis » (reception_detail_screen.dart, FLUTTER-E8)."
+  },
+  "receptionDeclineSheetNote": "L'expéditeur sera invité à vérifier le numéro du destinataire.",
+  "@receptionDeclineSheetNote": {
+    "description": "Feuille de confirmation du refus : conséquence pour l'expéditeur (reception_detail_screen.dart)."
+  },
+  "receptionWithdrawSheetNote": "L'expéditeur et le voyageur seront prévenus.",
+  "@receptionWithdrawSheetNote": {
+    "description": "Feuille de confirmation du retrait : conséquence pour l'expéditeur et le voyageur (reception_detail_screen.dart)."
   }
 }

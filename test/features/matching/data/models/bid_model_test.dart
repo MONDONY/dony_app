@@ -46,6 +46,61 @@ void main() {
     });
   });
 
+  group('BidModel.recipientDeclined (FLUTTER-E8, yadony-back #412)', () {
+    test('ancien back sans les champs : false et null', () {
+      final model = BidModel.fromJson(_minimalBid());
+      expect(model.recipientDeclined, isFalse);
+      expect(model.recipientReplacementRequestedAt, isNull);
+      expect(model.nextRecipientReplacementAllowedAt, isNull);
+    });
+
+    test('fromJson lit le refus et la dernière demande (UTC)', () {
+      final json = _minimalBid()
+        ..['recipientDeclined'] = true
+        ..['recipientReplacementRequestedAt'] = '2026-10-06T08:30:00Z';
+      final model = BidModel.fromJson(json);
+      expect(model.recipientDeclined, isTrue);
+      expect(
+        model.recipientReplacementRequestedAt,
+        DateTime.utc(2026, 10, 6, 8, 30),
+      );
+      expect(
+        model.nextRecipientReplacementAllowedAt,
+        DateTime.utc(2026, 10, 6, 20, 30),
+      );
+      final out = model.toJson();
+      expect(out['recipientDeclined'], isTrue);
+      expect(
+        out['recipientReplacementRequestedAt'],
+        '2026-10-06T08:30:00.000Z',
+      );
+    });
+
+    test('null explicite toléré', () {
+      final json = _minimalBid()
+        ..['recipientDeclined'] = null
+        ..['recipientReplacementRequestedAt'] = null;
+      final model = BidModel.fromJson(json);
+      expect(model.recipientDeclined, isFalse);
+      expect(model.recipientReplacementRequestedAt, isNull);
+    });
+
+    test('isRecipientDeclinedForSender suit recipientAppStatus', () {
+      expect(
+        BidModel.fromJson(
+          _minimalBid()..['recipientAppStatus'] = 'DECLINED',
+        ).isRecipientDeclinedForSender,
+        isTrue,
+      );
+      expect(
+        BidModel.fromJson(
+          _minimalBid()..['recipientAppStatus'] = 'CONFIRMED',
+        ).isRecipientDeclinedForSender,
+        isFalse,
+      );
+    });
+  });
+
   group('BidModel.handoverAddress / deliveryAddress (carte Lieux)', () {
     test('fromJson lit les deux adresses avec leurs coordonnées', () {
       final json = _minimalBid()

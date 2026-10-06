@@ -480,6 +480,7 @@ void main() {
       'RECIPIENT_CONFIRMED',
       'RECIPIENT_DECLINED',
       'RECIPIENT_WITHDRAWN',
+      'RECIPIENT_REPLACEMENT_REQUESTED',
     ]) {
       test('$type ouvre le détail d\'envoi de l\'expéditeur', () {
         expect(

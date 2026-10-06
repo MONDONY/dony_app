@@ -211,6 +211,18 @@ class BidRemoteDatasource {
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Le voyageur demande à l'expéditeur de désigner un autre destinataire,
+  /// après un refus (lien `DECLINED`, yadony-back #412). Rend le bid à jour
+  /// (`recipientReplacementRequestedAt` renseigné). Erreurs : 403 `forbidden`,
+  /// 409 `recipient-not-declined` / `recipient-replacement-not-allowed`, 429
+  /// `recipient-replacement-too-soon` avec `nextRequestAllowedAt`.
+  Future<BidModel> requestRecipientReplacement(String bidId) async {
+    final response = await _apiClient.dio.post(
+      '/bids/$bidId/recipient/replacement-request',
+    );
+    return BidModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<void> hideBid(String bidId) async {
     await _apiClient.dio.delete('/bids/$bidId/me');
   }

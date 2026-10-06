@@ -23,6 +23,11 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   recipientPhone: json['recipientPhone'] as String?,
   recipientAppStatus: json['recipientAppStatus'] as String?,
   recipientPhoneHidden: json['recipientPhoneHidden'] as bool? ?? false,
+  recipientDeclined: json['recipientDeclined'] as bool? ?? false,
+  recipientReplacementRequestedAt:
+      json['recipientReplacementRequestedAt'] == null
+      ? null
+      : DateTime.parse(json['recipientReplacementRequestedAt'] as String),
   status: json['status'] as String,
   rejectionReason: json['rejectionReason'] as String?,
   handoverLocation: json['handoverLocation'] as String?,
@@ -147,6 +152,9 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'recipientPhone': instance.recipientPhone,
   'recipientAppStatus': instance.recipientAppStatus,
   'recipientPhoneHidden': instance.recipientPhoneHidden,
+  'recipientDeclined': instance.recipientDeclined,
+  'recipientReplacementRequestedAt': instance.recipientReplacementRequestedAt
+      ?.toIso8601String(),
   'status': instance.status,
   'rejectionReason': instance.rejectionReason,
   'handoverLocation': instance.handoverLocation,

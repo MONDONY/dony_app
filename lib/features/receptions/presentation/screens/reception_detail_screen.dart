@@ -13,6 +13,7 @@ import 'package:dony/features/ratings/presentation/rating_labels.dart';
 import 'package:dony/features/ratings/presentation/widgets/star_selector.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
+import 'package:dony/features/receptions/presentation/widgets/reception_leave_confirm_sheet.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -1239,31 +1240,15 @@ class _BottomBar extends StatelessWidget {
   final ReceptionDetailLoaded state;
   final ReceptionTimelineOpener openTimeline;
 
-  /// « Me retirer de ce colis » (FLUTTER-9F) : destructif, l'expéditeur et
-  /// le voyageur sont prévenus.
-  Future<void> _withdraw(BuildContext context) async {
-    final l = context.l10n;
+  /// « Me retirer de ce colis » (FLUTTER-9F) et « Ce n'est pas pour moi » :
+  /// destructifs, l'expéditeur (et le voyageur pour un retrait) sont
+  /// prévenus. Confirmés dans une feuille qui dit ce que le destinataire perd
+  /// (FLUTTER-E8) ; « Annuler » n'appelle rien.
+  Future<void> _leave(BuildContext context, ReceptionLeaveKind kind) async {
     final cubit = context.read<ReceptionDetailCubit>();
-    final confirmed = await DonyDialog.show(
+    final confirmed = await ReceptionLeaveConfirmSheet.show(
       context,
-      title: l.receptionWithdrawDialogTitle,
-      message: l.receptionWithdrawDialogMessage,
-      confirmLabel: l.receptionWithdrawConfirm,
-      variant: DonyDialogVariant.destructive,
-      iconAsset: 'user-x',
-    );
-    if (confirmed ?? false) await cubit.decline();
-  }
-
-  Future<void> _decline(BuildContext context) async {
-    final l = context.l10n;
-    final cubit = context.read<ReceptionDetailCubit>();
-    final confirmed = await DonyDialog.show(
-      context,
-      title: l.receptionDeclineDialogTitle,
-      message: l.receptionDeclineDialogMessage,
-      confirmLabel: l.receptionDeclineButton,
-      iconAsset: 'circle-help',
+      kind: kind,
     );
     if (confirmed ?? false) await cubit.decline();
   }
@@ -1336,7 +1321,10 @@ class _BottomBar extends StatelessWidget {
                         iconAsset: 'user-x',
                         variant: DonyButtonVariant.destructiveGhost,
                         isLoading: state.action == ReceptionAction.declining,
-                        onPressed: locked ? null : () => _withdraw(context),
+                        onPressed: locked
+                            ? null
+                            : () =>
+                                  _leave(context, ReceptionLeaveKind.withdraw),
                       ),
                     ],
                   ],
@@ -1360,7 +1348,9 @@ class _BottomBar extends StatelessWidget {
                       label: l.receptionDeclineButton,
                       variant: DonyButtonVariant.ghost,
                       isLoading: state.action == ReceptionAction.declining,
-                      onPressed: locked ? null : () => _decline(context),
+                      onPressed: locked
+                          ? null
+                          : () => _leave(context, ReceptionLeaveKind.decline),
                     ),
                   ],
                 ),

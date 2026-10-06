@@ -415,6 +415,11 @@ abstract final class AnalyticsEvents {
   static const recipientNotified = 'recipient_notified';
   static const bidRecipientChanged = 'bid_recipient_changed';
 
+  // Le destinataire a refusé le colis : le voyageur demande à l'expéditeur
+  // d'en désigner un autre (FLUTTER-E8). Statut du colis et issue seulement.
+  static const recipientReplacementRequested =
+      'recipient_replacement_requested';
+
   // Le voyageur prévient les destinataires de ses colis (lot 3B). Jamais le
   // nom ni le numéro : canal, statut, compteurs.
   static const recipientsNotifyOpened = 'recipients_notify_opened';

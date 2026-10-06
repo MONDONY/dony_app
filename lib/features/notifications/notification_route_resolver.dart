@@ -91,6 +91,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // Expéditeur et voyageur : le destinataire s'est retiré du colis
     // (FLUTTER-9F), le détail permet de changer de destinataire.
     'RECIPIENT_WITHDRAWN' when _isUuid(bidId) => '/bids/$bidId',
+    // Expéditeur : le destinataire a refusé et le voyageur demande d'en
+    // désigner un autre (FLUTTER-E8) ; le détail d'envoi ouvre le changement.
+    'RECIPIENT_REPLACEMENT_REQUESTED' when _isUuid(bidId) => '/bids/$bidId',
     // Ancien destinataire : il n'a plus accès au colis, on l'emmène sur
     // l'onglet Suivi (sa liste « Colis à recevoir », à jour).
     'RECIPIENT_PARCEL_REASSIGNED' => '/tracking',

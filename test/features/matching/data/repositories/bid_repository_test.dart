@@ -256,6 +256,15 @@ void main() {
       expect(result.status, 'ACCEPTED');
     });
 
+    test('requestRecipientReplacement delegates correctly', () async {
+      when(
+        () => mockDs.requestRecipientReplacement('bid-001'),
+      ).thenAnswer((_) async => _bid(status: 'IN_TRANSIT'));
+
+      final result = await repo.requestRecipientReplacement('bid-001');
+      expect(result.status, 'IN_TRANSIT');
+    });
+
     test('confirmCommissionAcceptance delegates correctly', () async {
       const response = ConfirmResponse(accepted: true);
       when(

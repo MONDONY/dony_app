@@ -10,6 +10,7 @@ import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -80,9 +81,16 @@ class PrevenirDestinataireCard extends StatelessWidget {
 
   static const _codeStatuses = <String>{'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'};
 
-  /// Visible tant que le colis n'est pas remis et que le lien de suivi existe.
+  /// Visible tant que le colis n'est pas remis et que le lien de suivi existe,
+  /// ou dès que le destinataire a refusé alors qu'il peut encore être changé :
+  /// l'encart devient alors « Destinataire à remplacer ».
   static bool shouldShow(BidModel bid) =>
-      bid.trackingToken != null && _statuses.contains(bid.status);
+      (bid.trackingToken != null && _statuses.contains(bid.status)) ||
+      _declinedActionable(bid);
+
+  /// Destinataire en refus ou retiré (FLUTTER-E8) et colis encore modifiable.
+  static bool _declinedActionable(BidModel bid) =>
+      bid.isRecipientDeclinedForSender && bid.canChangeRecipient;
 
   /// Le code ne part qu'une fois le colis confié au voyageur.
   static bool withCode(BidModel bid) =>
@@ -131,6 +139,13 @@ class PrevenirDestinataireCard extends StatelessWidget {
     final hasCode = withCode(bid);
     final appStatus = bid.recipientAppStatus;
 
+    // Le destinataire a refusé le colis ou s'en est retiré (FLUTTER-E8) :
+    // renvoyer le lien et le code au même numéro n'aurait pas de sens. Le
+    // bouton WhatsApp cède la place à « Désigner un autre destinataire ».
+    if (appStatus == 'DECLINED') {
+      return _DeclinedRecipientCard(bid: bid);
+    }
+
     return DetailCard(
       title: l.recipientNotifyTitle(name),
       child: Column(
@@ -144,14 +159,6 @@ class PrevenirDestinataireCard extends StatelessWidget {
               text: (rawName == null || rawName.isEmpty)
                   ? l.recipientAppConfirmedAnonymous
                   : l.recipientAppConfirmed(rawName),
-            ),
-            const SizedBox(height: DonySpacing.md),
-          ] else if (appStatus == 'DECLINED') ...[
-            _RecipientAppNotice(
-              key: const Key('recipient-app-declined'),
-              iconAsset: 'triangle-alert',
-              color: cs.warning,
-              text: l.recipientAppDeclined,
             ),
             const SizedBox(height: DonySpacing.md),
           ],
@@ -176,20 +183,79 @@ class PrevenirDestinataireCard extends StatelessWidget {
   }
 }
 
+/// Encart « Destinataire à remplacer » (vue expéditeur) : le destinataire a
+/// refusé le colis ou s'en est retiré (`recipientAppStatus == DECLINED`). Le
+/// bandeau orange reste neutre (« Ce destinataire a refusé le colis. »), dit
+/// si le voyageur demande un autre destinataire
+/// (`recipientReplacementRequestedAt`), et l'action principale ouvre la
+/// feuille « Modifier le destinataire », comme le bouton « Modifier » de la
+/// carte « Colis & destinataire ».
+class _DeclinedRecipientCard extends StatelessWidget {
+  const _DeclinedRecipientCard({required this.bid});
+
+  final BidModel bid;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final requested = bid.recipientReplacementRequestedAt != null;
+
+    return DetailCard(
+      key: const Key('recipient-declined-sender'),
+      title: l.recipientDeclinedSenderTitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _RecipientAppNotice(
+            key: const Key('recipient-app-declined'),
+            iconAsset: 'triangle-alert',
+            color: cs.warning,
+            text: l.recipientAppDeclined,
+            detail: requested ? l.recipientReplacementRequestedSender : null,
+            detailKey: const Key('recipient-replacement-requested'),
+          ),
+          if (bid.canChangeRecipient) ...[
+            const SizedBox(height: DonySpacing.md),
+            Text(
+              l.recipientDeclinedSenderBody,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: DonySpacing.md),
+            DonyButton(
+              key: const Key('recipient-declined-change'),
+              label: l.recipientDeclinedSenderButton,
+              iconAsset: 'user-plus',
+              onPressed: () => openRecipientChangeSheet(context, bid),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 /// Ligne d'état du destinataire dans Yadony (lot 2) : il suit le colis
-/// (`CONFIRMED`), ou le titulaire du numéro dit que le colis n'est pas pour
-/// lui (`DECLINED`). Le bouton WhatsApp reste en dessous dans les deux cas.
+/// (`CONFIRMED`), ou il a refusé le colis ou s'en est retiré (`DECLINED`,
+/// [_DeclinedRecipientCard], avec la demande du voyageur en [detail]).
 class _RecipientAppNotice extends StatelessWidget {
   const _RecipientAppNotice({
     super.key,
     required this.iconAsset,
     required this.color,
     required this.text,
+    this.detail,
+    this.detailKey,
   });
 
   final String iconAsset;
   final Color color;
   final String text;
+
+  /// Seconde ligne, plus discrète (demande du voyageur).
+  final String? detail;
+  final Key? detailKey;
 
   @override
   Widget build(BuildContext context) {
@@ -207,12 +273,25 @@ class _RecipientAppNotice extends StatelessWidget {
           DonyIcon(iconAsset, size: 18, color: color),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
-            child: Text(
-              text,
-              style: tt.bodyMedium?.copyWith(
-                color: cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text,
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (detail != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    detail!,
+                    key: detailKey,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

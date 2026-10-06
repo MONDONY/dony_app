@@ -102,6 +102,7 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.d
 import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/recipient_change/recipient_change_cubit.dart';
+import 'package:dony/features/matching/bloc/recipient_replacement/recipient_replacement_cubit.dart';
 import 'package:dony/features/matching/bloc/revenue_details_cubit.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
@@ -354,6 +355,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<RecipientChangeCubit>(
     () =>
         RecipientChangeCubit(getIt<BidRepository>(), getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<RecipientReplacementCubit>(
+    () => RecipientReplacementCubit(
+      getIt<BidRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerLazySingleton<EnvoisRefreshNotifier>(
     () => EnvoisRefreshNotifier(),

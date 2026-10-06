@@ -192,6 +192,12 @@ class RecipientContactActions extends StatelessWidget {
           ),
         );
 
+    // Le destinataire a refusé le colis (FLUTTER-E8) : le back ne sert plus
+    // son numéro, aucun canal ne doit rester.
+    if (bid.recipientDeclined) {
+      return const SizedBox.shrink();
+    }
+
     // Le destinataire a masqué son numéro (Sentry FLUTTER-6J) : ni WhatsApp,
     // ni SMS, ni appel ; seule la messagerie de l'app reste.
     if (bid.recipientPhoneHidden) {
@@ -394,8 +400,10 @@ class TravelerRecipientContactCard extends StatelessWidget {
   final ContactLinkLauncher? launcher;
 
   /// Visible une fois la demande acceptée ([bidAllowsContact]) et le numéro
-  /// du destinataire connu.
+  /// du destinataire connu. Jamais quand il a refusé le colis : la carte
+  /// « Colis & destinataire » porte alors l'encart de remplacement.
   static bool shouldShow(BidModel bid) =>
+      !bid.recipientDeclined &&
       bidAllowsContact(bid.status) &&
       ((bid.recipientPhone?.trim().isNotEmpty ?? false) ||
           (bid.recipientPhoneHidden && recipientReachableInApp(bid)));

@@ -15411,10 +15411,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receptionDeclineDialogTitle => 'Not your parcel?';
 
   @override
-  String get receptionDeclineDialogMessage =>
-      'It will be removed from your list and the sender will be asked to check the recipient\'s number.';
-
-  @override
   String get receptionDeclinedSnackbar =>
       'Got it, this parcel has been removed from your list.';
 
@@ -15423,10 +15419,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receptionWithdrawDialogTitle => 'Withdraw from this parcel?';
-
-  @override
-  String get receptionWithdrawDialogMessage =>
-      'You will no longer follow it or see its pickup code. The sender and the traveler will be notified.';
 
   @override
   String get receptionWithdrawConfirm => 'Withdraw';
@@ -15546,8 +15538,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recipientAppDeclined =>
-      'The owner of this number says this parcel isn\'t for them. Check the recipient\'s number.';
+  String get recipientAppDeclined => 'This recipient declined the parcel.';
 
   @override
   String get recipientAppConfirmedAnonymous =>
@@ -16323,4 +16314,77 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorReceptionNotRecipientMessage =>
       'Only the confirmed recipient of this parcel can rate the traveler.';
+
+  @override
+  String get recipientDeclinedTravelerTitle => 'Recipient to be replaced';
+
+  @override
+  String get recipientDeclinedTravelerBody =>
+      'The recipient declined the parcel. The sender has been notified.';
+
+  @override
+  String get recipientReplacementRequestButton => 'Ask for another recipient';
+
+  @override
+  String get recipientReplacementSentButton => 'Request sent';
+
+  @override
+  String recipientReplacementNextAt(String time) {
+    return 'You can ask again at $time';
+  }
+
+  @override
+  String recipientReplacementNextOn(String date, String time) {
+    return 'You can ask again on $date at $time';
+  }
+
+  @override
+  String get recipientReplacementNextLater => 'You can ask again in 12 hours';
+
+  @override
+  String get recipientReplacementConfirmTitle => 'Ask for another recipient?';
+
+  @override
+  String get recipientReplacementConfirmBody =>
+      'The sender will get a notification asking them to choose another recipient. You can ask again 12 hours later.';
+
+  @override
+  String get recipientReplacementConfirmSend => 'Send request';
+
+  @override
+  String get recipientReplacementSentSnackbar => 'Request sent to the sender.';
+
+  @override
+  String get recipientReplacementTooSoonSnackbar =>
+      'You already notified the sender. You can ask again 12 hours after your last request.';
+
+  @override
+  String get recipientReplacementConflictSnackbar =>
+      'The recipient has already changed or the parcel is no longer in progress. The details have been updated.';
+
+  @override
+  String get recipientDeclinedSenderTitle => 'Recipient to replace';
+
+  @override
+  String get recipientDeclinedSenderBody =>
+      'Choose another recipient: they\'ll be able to track the parcel and get the pickup code.';
+
+  @override
+  String get recipientDeclinedSenderButton => 'Choose another recipient';
+
+  @override
+  String get recipientReplacementRequestedSender =>
+      'The traveler is asking you to choose another one.';
+
+  @override
+  String get receptionLeaveWarning =>
+      'You will no longer see this parcel or its pickup code. Confirm?';
+
+  @override
+  String get receptionDeclineSheetNote =>
+      'The sender will be asked to check the recipient\'s number.';
+
+  @override
+  String get receptionWithdrawSheetNote =>
+      'The sender and the traveler will be notified.';
 }

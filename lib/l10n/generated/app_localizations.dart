@@ -25485,12 +25485,6 @@ abstract class AppLocalizations {
   /// **'Ce colis n\'est pas pour vous ?'**
   String get receptionDeclineDialogTitle;
 
-  /// Message du dialogue de confirmation du refus (reception_detail_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Il disparaîtra de votre liste et l\'expéditeur sera invité à vérifier le numéro du destinataire.'**
-  String get receptionDeclineDialogMessage;
-
   /// Confirmation après le refus d'un colis (reception_detail_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -25508,12 +25502,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous retirer de ce colis ?'**
   String get receptionWithdrawDialogTitle;
-
-  /// No description provided for @receptionWithdrawDialogMessage.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous ne le suivrez plus et ne verrez plus son code de retrait. L’expéditeur et le voyageur seront prévenus.'**
-  String get receptionWithdrawDialogMessage;
 
   /// No description provided for @receptionWithdrawConfirm.
   ///
@@ -25701,10 +25689,10 @@ abstract class AppLocalizations {
   /// **'{name} suit le colis dans Yadony'**
   String recipientAppConfirmed(String name);
 
-  /// Vue expéditeur : le titulaire du numéro a refusé le colis (prevenir_destinataire_card.dart).
+  /// Vue expéditeur : le destinataire a refusé le colis ou s'en est retiré, formulation neutre (prevenir_destinataire_card.dart, FLUTTER-E8).
   ///
   /// In fr, this message translates to:
-  /// **'Le titulaire de ce numéro indique que ce colis n\'est pas pour lui. Vérifiez le numéro du destinataire.'**
+  /// **'Ce destinataire a refusé le colis.'**
   String get recipientAppDeclined;
 
   /// Vue expéditeur : le destinataire, sans nom saisi, a confirmé le colis dans l'app (prevenir_destinataire_card.dart).
@@ -26972,6 +26960,126 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Seul le destinataire confirmé de ce colis peut noter le voyageur.'**
   String get errorReceptionNotRecipientMessage;
+
+  /// Vue voyageur : le destinataire a refusé le colis ou s'en est retiré, nom et numéro masqués (recipient_declined_panel.dart, FLUTTER-E8).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire à redésigner'**
+  String get recipientDeclinedTravelerTitle;
+
+  /// Vue voyageur : explication sous « Destinataire à redésigner » (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire a refusé le colis. L\'expéditeur est prévenu.'**
+  String get recipientDeclinedTravelerBody;
+
+  /// Vue voyageur : bouton qui demande à l'expéditeur de désigner un autre destinataire (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander un autre destinataire'**
+  String get recipientReplacementRequestButton;
+
+  /// Vue voyageur : bouton désactivé après la demande, pendant les 12 h de délai (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée'**
+  String get recipientReplacementSentButton;
+
+  /// Vue voyageur : heure (aujourd'hui) à partir de laquelle une nouvelle demande est possible (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle demande possible à {time}'**
+  String recipientReplacementNextAt(String time);
+
+  /// Vue voyageur : date et heure à partir desquelles une nouvelle demande est possible (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle demande possible le {date} à {time}'**
+  String recipientReplacementNextOn(String date, String time);
+
+  /// Vue voyageur : repli quand l'heure de la prochaine demande est inconnue (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle demande possible dans 12 h'**
+  String get recipientReplacementNextLater;
+
+  /// Titre de la feuille de confirmation de la demande de remplacement (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander un autre destinataire ?'**
+  String get recipientReplacementConfirmTitle;
+
+  /// Texte de la feuille de confirmation de la demande de remplacement (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur recevra une notification lui demandant de désigner un autre destinataire. Vous pourrez renouveler la demande 12 h plus tard.'**
+  String get recipientReplacementConfirmBody;
+
+  /// Bouton de la feuille de confirmation de la demande de remplacement (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer la demande'**
+  String get recipientReplacementConfirmSend;
+
+  /// Snackbar après une demande de remplacement réussie (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée à l\'expéditeur.'**
+  String get recipientReplacementSentSnackbar;
+
+  /// Snackbar sur un 429 recipient-replacement-too-soon (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà prévenu l\'expéditeur. Nouvelle demande possible 12 h après la précédente.'**
+  String get recipientReplacementTooSoonSnackbar;
+
+  /// Snackbar sur un 409 de la demande de remplacement (recipient_declined_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire a déjà changé ou le colis n\'est plus en cours. Le détail est mis à jour.'**
+  String get recipientReplacementConflictSnackbar;
+
+  /// Vue expéditeur : titre de l'encart quand le destinataire a refusé le colis ou s'en est retiré (prevenir_destinataire_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire à remplacer'**
+  String get recipientDeclinedSenderTitle;
+
+  /// Vue expéditeur : explication sous le bandeau de refus (prevenir_destinataire_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Désignez un autre destinataire : il pourra suivre le colis et recevoir le code de retrait.'**
+  String get recipientDeclinedSenderBody;
+
+  /// Vue expéditeur : bouton qui ouvre la feuille de changement de destinataire après un refus (prevenir_destinataire_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Désigner un autre destinataire'**
+  String get recipientDeclinedSenderButton;
+
+  /// Vue expéditeur : le voyageur a demandé un autre destinataire après le refus (prevenir_destinataire_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur vous demande d\'en désigner un autre.'**
+  String get recipientReplacementRequestedSender;
+
+  /// Feuille de confirmation avant « Ce n'est pas pour moi » ou « Me retirer de ce colis » (reception_detail_screen.dart, FLUTTER-E8).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne pourrez plus voir ce colis ni son code de retrait. Confirmer ?'**
+  String get receptionLeaveWarning;
+
+  /// Feuille de confirmation du refus : conséquence pour l'expéditeur (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur sera invité à vérifier le numéro du destinataire.'**
+  String get receptionDeclineSheetNote;
+
+  /// Feuille de confirmation du retrait : conséquence pour l'expéditeur et le voyageur (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur et le voyageur seront prévenus.'**
+  String get receptionWithdrawSheetNote;
 }
 
 class _AppLocalizationsDelegate
