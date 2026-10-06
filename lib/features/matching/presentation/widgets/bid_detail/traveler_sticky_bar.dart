@@ -5,6 +5,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
+import 'package:dony/features/tracking/presentation/widgets/suivi_validate_content.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -216,9 +217,17 @@ class _DeliverBar extends StatelessWidget {
       }
     }
     if (!context.mounted) return;
+    // Le colis est déjà ouvert : remise directe par photo puis code, comme
+    // l'onglet Suivi. Passer par l'identification faisait retaper au
+    // voyageur le numéro de suivi d'un colis qu'il avait sous les yeux
+    // (Sentry FLUTTER-CX).
     await context.push<void>(
-      '/tracking/scan/identify',
-      extra: <String, dynamic>{'etape': 'ARRIVEE', 'focusNumber': false},
+      '/tracking/scan/photo',
+      extra: <String, dynamic>{
+        'bidId': bid.id,
+        'etape': 'ARRIVEE',
+        'packageLabel': suiviParcelLabel(bid),
+      },
     );
   }
 

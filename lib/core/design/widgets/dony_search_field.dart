@@ -83,6 +83,11 @@ class _DonySearchFieldState extends State<DonySearchField> {
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
       textInputAction: TextInputAction.search,
+      // Toucher hors du champ ferme le clavier, comme DonyTextField
+      // (FLUTTER-A3). Sur iOS seule la touche « Rechercher » le fermait : un
+      // filtre sans résultat, qui ne défile pas, laissait le clavier ouvert
+      // sans issue (Sentry FLUTTER-CQ, écran Mes négociations).
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       style: Theme.of(
         context,
       ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),

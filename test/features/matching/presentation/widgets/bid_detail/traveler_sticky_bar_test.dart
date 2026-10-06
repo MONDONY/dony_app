@@ -363,10 +363,15 @@ void main() {
             ),
           ),
         ),
+        // Sentry FLUTTER-CX : remise directe par photo puis code, le colis
+        // étant déjà ouvert (plus d'identification à refaire).
         GoRoute(
-          path: '/tracking/scan/identify',
+          path: '/tracking/scan/photo',
           builder: (context, state) {
-            pushedRoutes.add('/tracking/scan/identify');
+            final extra = state.extra! as Map<String, dynamic>;
+            pushedRoutes.add(
+              '/tracking/scan/photo:${extra['bidId']}:${extra['etape']}',
+            );
             return const Scaffold();
           },
         ),
@@ -401,7 +406,7 @@ void main() {
       final pushed = await pumpDeliver(tester, 'ARRIVED', announcementBloc);
 
       expect(find.text('Vous êtes arrivé à Dakar ?'), findsNothing);
-      expect(pushed, contains('/tracking/scan/identify'));
+      expect(pushed, contains('/tracking/scan/photo:b1:ARRIVEE'));
       verifyNever(() => announcementBloc.add(any()));
     });
 
@@ -424,7 +429,7 @@ void main() {
         (added as AnnouncementTripMarkArrivedRequested).announcementId,
         'a1',
       );
-      expect(pushed, contains('/tracking/scan/identify'));
+      expect(pushed, contains('/tracking/scan/photo:b1:ARRIVEE'));
     });
 
     testWidgets('en route : « Pas encore » remet sans rien déclarer', (
@@ -436,7 +441,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verifyNever(() => announcementBloc.add(any()));
-      expect(pushed, contains('/tracking/scan/identify'));
+      expect(pushed, contains('/tracking/scan/photo:b1:ARRIVEE'));
     });
   });
 

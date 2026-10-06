@@ -8,6 +8,7 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/notifications/presentation/announcements_inbox_screen.dart';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -823,6 +824,25 @@ void main() {
   });
 
   group('NotificationService._routeForMessage', () {
+    // Sentry FLUTTER-D4 : la push d'une annonce ne portait aucune route.
+    test('ADMIN_BROADCAST ouvre la boîte des annonces', () {
+      expect(
+        service.testRouteForMessage({
+          'type': 'ADMIN_BROADCAST',
+          'broadcastId': 'b-1',
+        }),
+        '/notifications/annonces',
+      );
+      expect(
+        NotificationService.announcementsInboxRoute,
+        AnnouncementsInboxScreen.route,
+      );
+    });
+
+    test('type inconnu : toujours aucune route', () {
+      expect(service.testRouteForMessage({'type': 'NEW_TYPE'}), isNull);
+    });
+
     test('BID_CREATED ouvre la demande dans « Demandes reçues »', () {
       expect(
         service.testRouteForMessage({

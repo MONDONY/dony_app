@@ -284,6 +284,11 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                                       );
                                     },
                                     child: ListView.separated(
+                                      // Faire défiler la liste ferme le
+                                      // clavier de la recherche (FLUTTER-CQ).
+                                      keyboardDismissBehavior:
+                                          ScrollViewKeyboardDismissBehavior
+                                              .onDrag,
                                       padding: EdgeInsets.fromLTRB(
                                         DonySpacing.base,
                                         DonySpacing.sm,

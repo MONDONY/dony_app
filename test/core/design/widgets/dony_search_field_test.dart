@@ -39,4 +39,29 @@ void main() {
     await tester.pump();
     expect(find.byTooltip('Clear'), findsOneWidget);
   });
+
+  // Sentry FLUTTER-CQ : sur iOS, seule la touche « Rechercher » fermait le
+  // clavier ; un filtre sans résultat laissait l'utilisateur bloqué.
+  testWidgets('toucher hors du champ ferme le clavier', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        const Column(
+          children: [
+            DonySearchField(),
+            SizedBox(key: Key('outside'), height: 200, width: 200),
+          ],
+        ),
+      ),
+    );
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(FocusManager.instance.primaryFocus?.context?.widget, isNotNull);
+    final editable = tester.state<EditableTextState>(find.byType(EditableText));
+    expect(editable.widget.focusNode.hasFocus, isTrue);
+
+    await tester.tapAt(tester.getCenter(find.byKey(const Key('outside'))));
+    await tester.pump();
+
+    expect(editable.widget.focusNode.hasFocus, isFalse);
+  });
 }

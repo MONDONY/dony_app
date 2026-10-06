@@ -10030,11 +10030,11 @@
       }
     }
   },
-  "walletInfoBalanceDesc": "Le montant utilisable pour payer un envoi ou demander un remboursement.",
+  "walletInfoBalanceDesc": "Le montant qui règle les frais de service de tes trajets payés en espèces. Tu peux aussi en demander le remboursement.",
   "@walletInfoBalanceDesc": {
     "description": "Description de la ligne « Solde disponible » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
   },
-  "walletInfoTopUpDesc": "Ajoute des fonds par carte bancaire. Le crédit apparaît dès la validation du paiement.",
+  "walletInfoTopUpDesc": "Ajoute des fonds par carte bancaire ou par mobile money, selon ta devise. Le crédit apparaît dès la validation du paiement.",
   "@walletInfoTopUpDesc": {
     "description": "Description de la ligne « Recharger » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
   },
@@ -16853,7 +16853,7 @@
       }
     }
   },
-  "suiviPhotoRequiredFor": "{step, select, DEPART{Obligatoire pour valider le départ} TRANSIT{Obligatoire pour valider le transit} other{Obligatoire pour valider l'arrivée}}",
+  "suiviPhotoRequiredFor": "{step, select, DEPART{Obligatoire pour valider la récupération} TRANSIT{Obligatoire pour valider le transit} other{Obligatoire pour valider l'arrivée}}",
   "@suiviPhotoRequiredFor": {
     "description": "Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart, _ResultHeader).",
     "placeholders": {
@@ -16866,7 +16866,7 @@
   "@suiviNumberRecapTitle": {
     "description": "Titre de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart)."
   },
-  "suiviPhotoAndValidate": "{step, select, DEPART{Photo et valider le départ} TRANSIT{Photo et valider le transit} other{Photo et valider l'arrivée}}",
+  "suiviPhotoAndValidate": "{step, select, DEPART{Photo et valider la récupération} TRANSIT{Photo et valider le transit} other{Photo et valider l'arrivée}}",
   "@suiviPhotoAndValidate": {
     "description": "Bouton de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart).",
     "placeholders": {
