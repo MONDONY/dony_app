@@ -7,6 +7,7 @@ import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -80,8 +81,12 @@ const _owner = UserModel(
 AnnouncementModel _makeAnnouncement({
   String status = 'ACTIVE',
   String? arrivalInstructions,
+  Set<BidPaymentMethod> acceptedPaymentMethods = const {
+    BidPaymentMethod.stripe,
+  },
 }) => AnnouncementModel(
   arrivalInstructions: arrivalInstructions,
+  acceptedPaymentMethods: acceptedPaymentMethods,
   id: 'ann-trip-001',
   travelerId: _ownerId,
   departureCity: 'Paris',
@@ -119,6 +124,7 @@ Future<void> _pump(
   required _MockBidBloc bidBloc,
   required _MockCancellationBloc cancelBloc,
   required _MockAuthBloc authBloc,
+  StripeAccountState? stripeState,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1.0;
@@ -139,10 +145,23 @@ Future<void> _pump(
             // Fourni à l'échelle de l'app dans `app.dart` : le corps de détail
             // le lit pour savoir si Stripe couvre le pays du voyageur.
             BlocProvider<StripeAccountBloc>.value(
-              value: stubStripeAccountBloc(),
+              value: stripeState == null
+                  ? stubStripeAccountBloc()
+                  : stubStripeAccountBloc(state: stripeState),
             ),
           ],
           child: const TripOwnerDetailScreen(announcementId: 'ann-trip-001'),
+        ),
+      ),
+      // Édition du trajet : rend « modifié » pour que l'écran relise le
+      // détail au retour.
+      GoRoute(
+        path: '/trips/create',
+        builder: (ctx, _) => Scaffold(
+          body: TextButton(
+            onPressed: () => ctx.pop(true),
+            child: const Text('TRIP_EDIT_SAVE'),
+          ),
         ),
       ),
       // Destinations poussées après les snackbars d'erreur typée (KYC,
@@ -559,6 +578,7 @@ void main() {
     WidgetTester tester, {
     required AnnouncementModel announcement,
     required AuthState auth,
+    StripeAccountState? stripeState,
   }) async {
     when(
       () => annBloc.state,
@@ -583,9 +603,43 @@ void main() {
       bidBloc: bidBloc,
       cancelBloc: cancelBloc,
       authBloc: authBloc,
+      stripeState: stripeState,
     );
     await tester.pumpAndSettle();
   }
+
+  // Sentry FLUTTER-DH : trajet publié en espèces avant l'activation de Stripe.
+  testWidgets(
+    'propriétaire, Stripe activé, trajet en espèces : « Ajouter la carte » '
+    'ouvre l\'édition puis relit le détail',
+    (tester) async {
+      await pumpOwnerWith(
+        tester,
+        announcement: _makeAnnouncement(
+          acceptedPaymentMethods: const {BidPaymentMethod.cash},
+        ),
+        auth: const AuthAuthenticated(_owner),
+        stripeState: const StripeAccountReady(
+          ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+        ),
+      );
+      clearInteractions(annBloc);
+
+      final cta = find.byKey(const Key('enable-card-on-trip-cta'));
+      await tester.ensureVisible(cta);
+      await tester.pumpAndSettle();
+      await tester.tap(cta);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('TRIP_EDIT_SAVE'));
+      await tester.pumpAndSettle();
+
+      registerFallbackValue(AnnouncementDetailRequested('fallback'));
+      final reloads = verify(
+        () => annBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementDetailRequested>();
+      expect(reloads.single.id, 'ann-trip-001');
+    },
+  );
 
   // Le voyageur ne relisait son texte que dans la feuille d'édition, qui
   // disparaît avec le dernier colis actif.

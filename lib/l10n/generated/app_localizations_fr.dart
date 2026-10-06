@@ -4895,6 +4895,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Activer les paiements par carte';
 
   @override
+  String get listingCashOnlyCardReadyMessage =>
+      'Le paiement par carte est activé sur votre compte, mais ce trajet n\'accepte encore que les espèces.';
+
+  @override
+  String get listingEnableCardOnTripButton => 'Ajouter la carte à ce trajet';
+
+  @override
   String get listingAcceptedContentTitle => 'Ce que j\'accepte';
 
   @override
@@ -9184,6 +9191,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get mobileMoneyPhoneRequiredExplanation =>
       'Ton compte Yadony n\'a pas de numéro de téléphone : indique le numéro mobile money qui paiera.';
+
+  @override
+  String get mobileMoneyPayerUnsupportedExplanation =>
+      'Ce numéro ne peut pas payer en mobile money pour ce colis. Indique le numéro mobile money qui paiera (Côte d\'Ivoire, Sénégal, Mali…).';
 
   @override
   String get mobileMoneyPhoneThatWillPayLabel => 'Numéro qui paiera';

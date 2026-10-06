@@ -294,41 +294,22 @@ Future<void> showTravelerAnnouncementSheet(
               iconAsset: 'send',
               onPressed: () => openCreateBid(negotiation: false),
             ),
-            // Entrée de négociation reléguée en lien : un seul CTA dominant
-            // (redesign « Corridor héro »). Réservée aux trajets ouverts aux
-            // propositions : sur un prix ferme, il n'y aurait rien à proposer.
-            // Voir `canNegotiate` plus haut pour l'exclusion mobile-money-only.
-            if (canNegotiate)
-              InkWell(
+            // Vrai bouton secondaire, plus un lien texte : relégué sous le CTA,
+            // il passait inaperçu et l'expéditrice payait au prix affiché sans
+            // savoir qu'elle pouvait proposer le sien (Sentry FLUTTER-DA).
+            // Réservé aux trajets ouverts aux propositions : sur un prix ferme,
+            // il n'y aurait rien à proposer. Voir `canNegotiate` plus haut pour
+            // l'exclusion mobile-money-only.
+            if (canNegotiate) ...[
+              const SizedBox(height: DonySpacing.sm),
+              DonyButton(
                 key: const Key('negotiate-price-btn'),
-                borderRadius: BorderRadius.circular(DonyRadius.sm),
-                onTap: () => openCreateBid(negotiation: true),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 44),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        innerL.listingNegotiableTripPrefix,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      Text(
-                        innerL.listingProposePriceLink,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                label: innerL.listingProposePriceLink,
+                iconAsset: 'handshake',
+                variant: DonyButtonVariant.secondary,
+                onPressed: () => openCreateBid(negotiation: true),
               ),
+            ],
           ],
         );
       },
