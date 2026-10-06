@@ -138,15 +138,13 @@ UserModel _fakeUser(String id) => UserModel(
 // ─── Widget builders ──────────────────────────────────────────────────────────
 
 /// Builds a full test app with all 3 blocs injected.
-/// [showSubscribe] controls ProfilePublicScreen.showSubscribe.
 /// [screenUserId] is the userId passed to ProfilePublicScreen (the profile being viewed).
 /// [authUserId] is the id of the logged-in user (from AuthBloc).
 Widget _wrap(
   MockProfilePublicBloc profileBloc, {
   MockTravelerSubscribeBloc? subscribeBloc,
   MockAuthBloc? authBloc,
-  bool showSubscribe = false,
-  String screenUserId = _userId,
+  String? screenUserId = _userId,
   String authUserId = _currentUserId,
 }) {
   // Only create default mocks when the caller didn't provide one.
@@ -156,11 +154,12 @@ Widget _wrap(
   if (subscribeBloc != null) {
     subBloc = subscribeBloc;
   } else {
+    // Statut déjà chargé : le bouton apparaît sur tout profil d'un autre, un
+    // état initial (spinner infini) bloquerait les pumpAndSettle.
+    const ready = TravelerSubscribeState(status: TravelerSubscribeStatus.ready);
     subBloc = MockTravelerSubscribeBloc();
-    when(() => subBloc.state).thenReturn(const TravelerSubscribeState());
-    when(
-      () => subBloc.stream,
-    ).thenAnswer((_) => Stream.value(const TravelerSubscribeState()));
+    when(() => subBloc.state).thenReturn(ready);
+    when(() => subBloc.stream).thenAnswer((_) => Stream.value(ready));
   }
 
   final MockAuthBloc aBloc;
@@ -187,10 +186,7 @@ Widget _wrap(
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, _) => ProfilePublicScreen(
-              userId: screenUserId,
-              showSubscribe: showSubscribe,
-            ),
+            builder: (_, _) => ProfilePublicScreen(userId: screenUserId),
           ),
           GoRoute(
             path: '/profile/reviews',
@@ -213,8 +209,7 @@ Widget _wrapLoaded({
   required ProfilePublicModel profile,
   MockTravelerSubscribeBloc? subscribeBloc,
   MockAuthBloc? authBloc,
-  bool showSubscribe = false,
-  String screenUserId = _userId,
+  String? screenUserId = _userId,
   String authUserId = _currentUserId,
 }) {
   final bloc = MockProfilePublicBloc();
@@ -228,7 +223,6 @@ Widget _wrapLoaded({
     bloc,
     subscribeBloc: subscribeBloc,
     authBloc: authBloc,
-    showSubscribe: showSubscribe,
     screenUserId: screenUserId,
     authUserId: authUserId,
   );
@@ -493,7 +487,19 @@ void main() {
     await tester.pumpWidget(_wrapLoaded(profile: _profile));
     await tester.pump(const Duration(milliseconds: 600));
 
-    final containers = tester.widgetList<Container>(find.byType(Container));
+    // Le bouton « S'abonner » (présent sur tout profil d'un autre) porte son
+    // propre dégradé de marque : seul le fond du hero est visé ici.
+    final buttonContainers = tester
+        .widgetList<Container>(
+          find.descendant(
+            of: find.byType(DonyButton),
+            matching: find.byType(Container),
+          ),
+        )
+        .toSet();
+    final containers = tester
+        .widgetList<Container>(find.byType(Container))
+        .where((c) => !buttonContainers.contains(c));
     final hasBlueHeroGradient = containers.any((c) {
       final decoration = c.decoration;
       if (decoration is! BoxDecoration ||
@@ -515,11 +521,7 @@ void main() {
     when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
 
     await tester.pumpWidget(
-      _wrapLoaded(
-        profile: _profile,
-        subscribeBloc: subBloc,
-        showSubscribe: true,
-      ),
+      _wrapLoaded(profile: _profile, subscribeBloc: subBloc),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -741,46 +743,53 @@ void main() {
 
   // ── 9. Subscribe action — compact, in-hero ────────────────────────────────
 
-  testWidgets(
-    'subscribe button appears when showSubscribe=true and userId != currentUser',
-    (tester) async {
-      final subBloc = MockTravelerSubscribeBloc();
-      const subState = TravelerSubscribeState(
-        status: TravelerSubscribeStatus.ready,
-      );
-      when(() => subBloc.state).thenReturn(subState);
-      when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
+  // Sentry FLUTTER-DB : le bouton dépend du seul profil consulté, plus d'un
+  // drapeau de l'écran appelant. Tout profil qui n'est pas le mien l'affiche.
 
+  MockTravelerSubscribeBloc readySubBloc() {
+    final subBloc = MockTravelerSubscribeBloc();
+    const subState = TravelerSubscribeState(
+      status: TravelerSubscribeStatus.ready,
+    );
+    when(() => subBloc.state).thenReturn(subState);
+    when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
+    return subBloc;
+  }
+
+  List<LoadSubscribeStatus> loadCalls(MockTravelerSubscribeBloc subBloc) {
+    final calls = verify(
+      () => subBloc.add(captureAny()),
+    ).captured.whereType<LoadSubscribeStatus>().toList();
+    return calls;
+  }
+
+  testWidgets(
+    "profil d'un autre ouvert sans drapeau (chat, fil, réception) → bouton",
+    (tester) async {
+      final subBloc = readySubBloc();
+
+      // Les appelants ne passent plus qu'un userId, comme l'en-tête du chat.
       await tester.pumpWidget(
-        _wrapLoaded(
-          profile: _profile,
-          subscribeBloc: subBloc,
-          showSubscribe: true,
-        ),
+        _wrapLoaded(profile: _profile, subscribeBloc: subBloc),
       );
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.text("S'abonner"), findsOneWidget);
+      final calls = loadCalls(subBloc);
+      expect(calls, hasLength(1));
+      expect(calls.single.travelerId, _userId);
     },
   );
 
-  testWidgets('subscribe button absent when showSubscribe=false', (
+  testWidgets('mon profil (id égal à mon id) → ni bouton ni chargement', (
     tester,
   ) async {
-    await tester.pumpWidget(_wrapLoaded(profile: _profile));
-    await tester.pump(const Duration(milliseconds: 600));
+    final subBloc = readySubBloc();
 
-    expect(find.text("S'abonner"), findsNothing);
-    expect(find.text('Abonné ✓'), findsNothing);
-  });
-
-  testWidgets('subscribe button absent when viewing own profile', (
-    tester,
-  ) async {
     await tester.pumpWidget(
       _wrapLoaded(
         profile: _profile,
-        showSubscribe: true,
+        subscribeBloc: subBloc,
         authUserId: _userId, // same → own profile
       ),
     );
@@ -788,6 +797,104 @@ void main() {
 
     expect(find.text("S'abonner"), findsNothing);
     expect(find.text('Abonné ✓'), findsNothing);
+    verifyNever(() => subBloc.add(any()));
+  });
+
+  testWidgets('mon profil (userId null) → ni bouton ni chargement', (
+    tester,
+  ) async {
+    final subBloc = readySubBloc();
+
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        subscribeBloc: subBloc,
+        screenUserId: null,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text("S'abonner"), findsNothing);
+    verifyNever(() => subBloc.add(any()));
+  });
+
+  testWidgets(
+    'utilisateur courant inconnu : statut chargé une fois le profil reçu',
+    (tester) async {
+      final subBloc = readySubBloc();
+      final authBloc = MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => Stream.value(const AuthInitial()));
+
+      final profileBloc = MockProfilePublicBloc();
+      final loaded = ProfilePublicLoaded(
+        profile: _profile,
+        recentRatings: _ratingSummary,
+      );
+      whenListen(
+        profileBloc,
+        Stream.fromIterable([loaded]),
+        initialState: const ProfilePublicLoading(),
+      );
+
+      await tester.pumpWidget(
+        _wrap(profileBloc, subscribeBloc: subBloc, authBloc: authBloc),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text("S'abonner"), findsOneWidget);
+      final calls = loadCalls(subBloc);
+      expect(calls, hasLength(1));
+      expect(calls.single.travelerId, _userId);
+    },
+  );
+
+  testWidgets(
+    'utilisateur courant inconnu, profil en chargement : rien avant le profil',
+    (tester) async {
+      final subBloc = readySubBloc();
+      final authBloc = MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => Stream.value(const AuthInitial()));
+
+      final profileBloc = MockProfilePublicBloc();
+      when(() => profileBloc.state).thenReturn(const ProfilePublicLoading());
+      when(() => profileBloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await tester.pumpWidget(
+        _wrap(profileBloc, subscribeBloc: subBloc, authBloc: authBloc),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      verifyNever(() => subBloc.add(any()));
+    },
+  );
+
+  testWidgets('le statut n\'est chargé qu\'une fois (init puis profil reçu)', (
+    tester,
+  ) async {
+    final subBloc = readySubBloc();
+    final profileBloc = MockProfilePublicBloc();
+    final loaded = ProfilePublicLoaded(
+      profile: _profile,
+      recentRatings: _ratingSummary,
+    );
+    whenListen(
+      profileBloc,
+      Stream.fromIterable([loaded]),
+      initialState: const ProfilePublicLoading(),
+    );
+
+    await tester.pumpWidget(_wrap(profileBloc, subscribeBloc: subBloc));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(loadCalls(subBloc), hasLength(1));
   });
 
   testWidgets('shows "Abonné ✓" + bell icon when already subscribed', (
@@ -803,11 +910,7 @@ void main() {
     when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
 
     await tester.pumpWidget(
-      _wrapLoaded(
-        profile: _profile,
-        subscribeBloc: subBloc,
-        showSubscribe: true,
-      ),
+      _wrapLoaded(profile: _profile, subscribeBloc: subBloc),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -825,11 +928,7 @@ void main() {
     when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
 
     await tester.pumpWidget(
-      _wrapLoaded(
-        profile: _profile,
-        subscribeBloc: subBloc,
-        showSubscribe: true,
-      ),
+      _wrapLoaded(profile: _profile, subscribeBloc: subBloc),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -850,11 +949,7 @@ void main() {
     when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
 
     await tester.pumpWidget(
-      _wrapLoaded(
-        profile: _profile,
-        subscribeBloc: subBloc,
-        showSubscribe: true,
-      ),
+      _wrapLoaded(profile: _profile, subscribeBloc: subBloc),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -880,11 +975,7 @@ void main() {
       when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
 
       await tester.pumpWidget(
-        _wrapLoaded(
-          profile: _profile,
-          subscribeBloc: subBloc,
-          showSubscribe: true,
-        ),
+        _wrapLoaded(profile: _profile, subscribeBloc: subBloc),
       );
       await tester.pump(const Duration(milliseconds: 600));
 

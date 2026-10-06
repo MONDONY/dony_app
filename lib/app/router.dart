@@ -1552,10 +1552,7 @@ final appRouter = GoRouter(
             ),
             BlocProvider(create: (_) => getIt<TravelerSubscribeBloc>()),
           ],
-          child: ProfilePublicScreen(
-            userId: args.userId,
-            showSubscribe: args.showSubscribe,
-          ),
+          child: ProfilePublicScreen(userId: args.userId),
         );
       },
     ),
