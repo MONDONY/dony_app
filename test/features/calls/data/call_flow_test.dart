@@ -155,4 +155,28 @@ void main() {
     expect(seen.firstTime('a'), isFalse);
     expect(seen.firstTime('b'), isTrue);
   });
+  // FLUTTER-E1 : la sortie audio réelle accompagne chaque snapshot vivant.
+  group('sortie audio', () {
+    const headphones = CallAudioOutput(
+      type: 'Headphones',
+      speaker: false,
+      external: true,
+    );
+
+    test('recopiée dans le snapshot connecté', () {
+      final d = incoming().onObservation(
+        const CallObservation(remotePresent: true, audioOutput: headphones),
+      );
+      expect(d.snapshot?.phase, CallPhase.connected);
+      expect(d.snapshot?.audioOutput, headphones);
+    });
+
+    test('recopiée pendant la sonnerie', () {
+      final d = outgoing().onObservation(
+        const CallObservation(audioOutput: headphones),
+      );
+      expect(d.snapshot?.phase, CallPhase.ringing);
+      expect(d.snapshot?.audioOutput, headphones);
+    });
+  });
 }

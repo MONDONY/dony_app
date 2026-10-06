@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/repositories/calls_repository.dart';
 import 'package:dony/features/calls/data/ringback_tone.dart';
@@ -47,6 +48,10 @@ class CallBloc extends Bloc<CallEvent, CallState> {
   /// ne bornait la sonnerie et l'écran restait sur « Ça sonne… ».
   final Duration ringTimeout;
   Timer? _ringGuard;
+
+  /// Bascule de sortie audio en cours : les snapshots reçus entre-temps
+  /// décrivent encore l'ancienne route et ne doivent pas remettre le bouton.
+  bool _switchingSpeaker = false;
 
   /// La tonalité suit l'état : elle joue tant qu'un appel sortant sonne
   /// chez l'autre, et se tait à tout autre état (décroché, refus, sans
@@ -197,24 +202,39 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     // choix est alors appliqué au décroché (_applySpeakerOnConnect).
     emit(current.copyWith(speakerOn: on));
     if (current.phase != CallPhase.connected) return;
+    _switchingSpeaker = true;
     try {
       await _gateway.setSpeakerOn(on);
     } catch (_) {
       // Sortie audio inchangée : le bouton revient à l'état réel.
       final latest = state;
       if (latest is CallInProgress) emit(latest.copyWith(speakerOn: !on));
+    } finally {
+      _switchingSpeaker = false;
     }
   }
 
   /// Haut-parleur choisi pendant la sonnerie : appliqué dès que l'autre
   /// décroche. Un échec laisse la sortie par défaut, et le bouton le dit.
   Future<void> _applySpeakerOnConnect(Emitter<CallState> emit) async {
+    _switchingSpeaker = true;
     try {
       await _gateway.setSpeakerOn(true);
     } catch (_) {
       final latest = state;
       if (latest is CallInProgress) emit(latest.copyWith(speakerOn: false));
+    } finally {
+      _switchingSpeaker = false;
     }
+  }
+
+  /// État du bouton haut-parleur au snapshot connecté [snapshot] (FLUTTER-E1) :
+  /// il suit la sortie réelle, sauf pendant une bascule demandée (la route
+  /// observée est alors encore l'ancienne) ou quand le SDK ne la connaît pas.
+  bool _speakerFor(CallInProgress current, ActiveCallSnapshot snapshot) {
+    final output = snapshot.audioOutput;
+    if (_switchingSpeaker || output == null) return current.speakerOn;
+    return output.speaker;
   }
 
   Future<void> _onRingTimedOut(
@@ -273,14 +293,28 @@ class CallBloc extends Bloc<CallEvent, CallState> {
         if (justConnected) {
           unawaited(_analytics.logEvent(AnalyticsEvents.callConnected));
         }
+        final output = snapshot.audioOutput;
+        // Haut-parleur choisi pendant la sonnerie : appliqué au décroché, sauf
+        // si un casque (filaire, Bluetooth, voiture) est la sortie courante —
+        // le son doit rester dans le casque (FLUTTER-E1).
+        final ringingChoice = justConnected && current.speakerOn;
+        final skipRingingChoice = ringingChoice && (output?.external ?? false);
         emit(
           current.copyWith(
             phase: CallPhase.connected,
             connectedAt: snapshot.connectedAt,
             remoteName: snapshot.remoteName,
+            speakerOn: ringingChoice
+                ? !skipRingingChoice
+                : _speakerFor(current, snapshot),
           ),
         );
-        if (justConnected && current.speakerOn) {
+        if (skipRingingChoice) {
+          AppLog.info(
+            'calls: ringing speaker choice skipped',
+            data: {'output': output!.type},
+          );
+        } else if (ringingChoice) {
           await _applySpeakerOnConnect(emit);
         }
       case CallPhase.ringing:

@@ -297,6 +297,186 @@ void main() {
     );
   });
 
+  // FLUTTER-E1 : casque branché, le son restait sur le haut-parleur.
+  group('sortie audio réelle', () {
+    const speaker = CallAudioOutput(
+      type: 'Speaker',
+      speaker: true,
+      external: false,
+    );
+    const receiver = CallAudioOutput(
+      type: 'Receiver',
+      speaker: false,
+      external: false,
+    );
+    const headphones = CallAudioOutput(
+      type: 'Headphones',
+      speaker: false,
+      external: true,
+    );
+    const connected = CallInProgress(
+      phase: CallPhase.connected,
+      remoteName: 'Moussa',
+    );
+
+    ActiveCallSnapshot live(CallAudioOutput? output) => ActiveCallSnapshot(
+      phase: CallPhase.connected,
+      connectedAt: t0,
+      audioOutput: output,
+    );
+
+    blocTest<CallBloc, CallState>(
+      'le bouton suit la route réelle à chaque changement',
+      build: build,
+      seed: () => connected,
+      act: (bloc) async {
+        gateway.activeCallController.add(live(speaker));
+        await Future<void>.delayed(Duration.zero);
+        gateway.activeCallController.add(live(headphones));
+        await Future<void>.delayed(Duration.zero);
+        // Route inconnue : le bouton ne bouge pas.
+        gateway.activeCallController.add(live(null));
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', true),
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', false),
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', false),
+      ],
+      verify: (_) => expect(gateway.log, ['hangUp']),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'au décroché, le bouton reflète la sortie courante',
+      build: build,
+      seed: () =>
+          const CallInProgress(phase: CallPhase.connecting, remoteName: 'Awa'),
+      act: (bloc) async {
+        gateway.activeCallController.add(live(speaker));
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<CallInProgress>()
+            .having((s) => s.phase, 'phase', CallPhase.connected)
+            .having((s) => s.speakerOn, 'speakerOn', true),
+      ],
+      verify: (_) => expect(gateway.log, ['hangUp']),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'HP choisi pendant la sonnerie, casque branché : le casque garde le son',
+      build: build,
+      seed: () => const CallInProgress(
+        phase: CallPhase.ringing,
+        remoteName: 'Moussa',
+        speakerOn: true,
+      ),
+      act: (bloc) async {
+        gateway.activeCallController.add(live(headphones));
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<CallInProgress>()
+            .having((s) => s.phase, 'phase', CallPhase.connected)
+            .having((s) => s.speakerOn, 'speakerOn', false),
+      ],
+      verify: (_) => expect(gateway.log, ['hangUp']),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'HP choisi pendant la sonnerie, pas de casque : appliqué au décroché',
+      build: build,
+      seed: () => const CallInProgress(
+        phase: CallPhase.ringing,
+        remoteName: 'Moussa',
+        speakerOn: true,
+      ),
+      act: (bloc) async {
+        gateway.activeCallController.add(live(receiver));
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<CallInProgress>()
+            .having((s) => s.phase, 'phase', CallPhase.connected)
+            .having((s) => s.speakerOn, 'speakerOn', true),
+      ],
+      verify: (_) => expect(gateway.log, ['speaker:true', 'hangUp']),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'HP de sonnerie refusé au décroché : bouton remis sur la sortie réelle',
+      build: build,
+      setUp: () => gateway.throwOnSpeaker = StateError('Call not connected'),
+      seed: () => const CallInProgress(
+        phase: CallPhase.ringing,
+        remoteName: 'Moussa',
+        speakerOn: true,
+      ),
+      act: (bloc) async {
+        gateway.activeCallController.add(live(receiver));
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', true),
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', false),
+      ],
+      errors: () => isEmpty,
+    );
+
+    blocTest<CallBloc, CallState>(
+      'couper le HP : la bascule est demandée et la route la confirme',
+      build: build,
+      seed: () => connected.copyWith(speakerOn: true),
+      act: (bloc) async {
+        bloc.add(const CallSpeakerToggleRequested());
+        await Future<void>.delayed(Duration.zero);
+        gateway.activeCallController.add(live(headphones));
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', false),
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', false),
+      ],
+      verify: (_) => expect(gateway.log, ['speaker:false', 'hangUp']),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'couper le HP sans sortie disponible : le bouton revient sur HP',
+      build: build,
+      setUp: () => gateway.throwOnSpeaker = StateError('No audio output'),
+      seed: () => connected.copyWith(speakerOn: true),
+      act: (bloc) => bloc.add(const CallSpeakerToggleRequested()),
+      expect: () => [
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', false),
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', true),
+      ],
+      errors: () => isEmpty,
+    );
+
+    blocTest<CallBloc, CallState>(
+      'pendant la bascule, l\'ancienne route ne remet pas le bouton',
+      build: build,
+      setUp: () => gateway.speakerGate = Completer<void>(),
+      seed: () => connected,
+      act: (bloc) async {
+        bloc.add(const CallSpeakerToggleRequested());
+        await Future<void>.delayed(Duration.zero);
+        gateway.activeCallController.add(live(receiver));
+        await Future<void>.delayed(Duration.zero);
+        gateway.speakerGate!.complete();
+        await Future<void>.delayed(Duration.zero);
+        gateway.activeCallController.add(live(speaker));
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', true),
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', true),
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', true),
+      ],
+      verify: (_) => expect(gateway.log, ['speaker:true', 'hangUp']),
+    );
+  });
+
   group('appel entrant', () {
     blocTest<CallBloc, CallState>(
       'décrocher depuis l\'app',

@@ -20,6 +20,10 @@ class FakeCallGateway implements CallGateway {
   /// Suspend [joinOutgoing] jusqu'à sa complétion (course raccrocher/rejoindre).
   Completer<void>? joinGate;
 
+  /// Suspend [setSpeakerOn] jusqu'à sa complétion (route observée pendant la
+  /// bascule).
+  Completer<void>? speakerGate;
+
   @override
   Future<void> connect({
     required String apiKey,
@@ -71,6 +75,8 @@ class FakeCallGateway implements CallGateway {
   Future<void> setSpeakerOn(bool on) async {
     if (throwOnSpeaker != null) throw throwOnSpeaker!;
     log.add('speaker:$on');
+    final gate = speakerGate;
+    if (gate != null) await gate.future;
   }
 
   @override

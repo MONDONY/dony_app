@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/config/stream_push_providers.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
+import 'package:dony/core/services/app_log.dart';
+import 'package:dony/features/calls/data/audio_output_choice.dart';
 import 'package:dony/features/calls/data/call_flow.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/models/call_token.dart';
@@ -37,6 +39,9 @@ class StreamCallGateway implements CallGateway {
   Timer? _remoteGoneTimer;
   CompositeSubscription? _ringing;
   StreamSubscription<CallState>? _stateSub;
+
+  /// Dernière sortie audio journalisée, pour ne tracer que les changements.
+  CallAudioOutput? _lastAudioOutput;
   final _announced = SeenCallIds();
   final _active = StreamController<ActiveCallSnapshot>.broadcast();
   final _incoming = StreamController<IncomingCall>.broadcast();
@@ -233,12 +238,43 @@ class StreamCallGateway implements CallGateway {
         (await RtcMediaDeviceNotifier.instance.audioOutputs())
             .getDataOrNull() ??
         const [];
-    final target = on
-        ? devices.where((d) => d.isSpeaker).firstOrNull
-        : devices.where((d) => !d.isSpeaker).firstOrNull;
-    if (target != null) {
-      _check(await call.setAudioOutputDevice(target));
+    // FLUTTER-E1 : sur iOS, une fois sur le haut-parleur, la liste ne contient
+    // plus que lui ; sans sortie de repli, couper le haut-parleur ne faisait
+    // rien, en silence, alors que le bouton s'affichait coupé.
+    final target = audioOutputTarget(
+      devices,
+      speakerOn: on,
+      allowSyntheticEarpiece: defaultTargetPlatform == TargetPlatform.iOS,
+    );
+    final before = callAudioOutputOf(call.state.value.audioOutputDevice);
+    final available = devices.map((d) => callAudioOutputOf(d)!.type).join(',');
+    if (target == null) {
+      AppLog.warn(
+        'calls: audio output unavailable',
+        data: {
+          'requestedSpeaker': on,
+          'before': before?.type ?? 'unknown',
+          'available': available,
+        },
+      );
+      // Le bloc remet le bouton sur la sortie réelle.
+      throw StateError('No audio output for speaker=$on');
     }
+    final result = await call.setAudioOutputDevice(target);
+    AppLog.info(
+      'calls: audio output switch',
+      data: {
+        'requestedSpeaker': on,
+        'target': callAudioOutputOf(target)!.type,
+        'before': before?.type ?? 'unknown',
+        'after':
+            callAudioOutputOf(call.state.value.audioOutputDevice)?.type ??
+            'unknown',
+        'available': available,
+        'success': result.isSuccess,
+      },
+    );
+    _check(result);
   }
 
   @override
@@ -263,6 +299,7 @@ class StreamCallGateway implements CallGateway {
     _stateSub = null;
     _call = null;
     _flow = null;
+    _lastAudioOutput = null;
   }
 
   void _onState(Call call, CallState state) {
@@ -270,6 +307,19 @@ class StreamCallGateway implements CallGateway {
     if (flow == null || !identical(_call, call)) return;
     final remote = state.callParticipants.where((p) => !p.isLocal).firstOrNull;
     final status = state.status;
+    final audioOutput = callAudioOutputOf(state.audioOutputDevice);
+    if (audioOutput != null && audioOutput != _lastAudioOutput) {
+      // Trace de route (casque branché, AirPods, bascule HP) pour Sentry.
+      AppLog.info(
+        'calls: audio route',
+        data: {
+          'type': audioOutput.type,
+          'speaker': audioOutput.speaker,
+          'external': audioOutput.external,
+        },
+      );
+    }
+    _lastAudioOutput = audioOutput ?? _lastAudioOutput;
     _apply(
       call,
       flow.onObservation(
@@ -282,6 +332,7 @@ class StreamCallGateway implements CallGateway {
           disconnectReason: status is CallStatusDisconnected
               ? _endReason(status.reason)
               : null,
+          audioOutput: audioOutput,
         ),
       ),
     );

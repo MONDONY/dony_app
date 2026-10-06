@@ -20,6 +20,7 @@ class ActiveCallSnapshot {
     this.connectedAt,
     this.remoteName,
     this.endReason,
+    this.audioOutput,
   });
 
   final CallPhase phase;
@@ -28,6 +29,39 @@ class ActiveCallSnapshot {
 
   /// `rejected` | `missed` | `hangup` | `failed`, seulement en [CallPhase.ended].
   final String? endReason;
+
+  /// Sortie audio réellement utilisée, `null` tant que le SDK ne la connaît
+  /// pas (iOS laisse l'OS choisir quand un casque est branché au départ).
+  final CallAudioOutput? audioOutput;
+}
+
+/// Sortie audio d'un appel (FLUTTER-E1).
+class CallAudioOutput {
+  const CallAudioOutput({
+    required this.type,
+    required this.speaker,
+    required this.external,
+  });
+
+  /// Type de port (`Headphones`, `BluetoothHFP`, `Speaker`, `Receiver`,
+  /// `wired-headset`…), jamais le nom de l'appareil.
+  final String type;
+
+  /// Haut-parleur du téléphone.
+  final bool speaker;
+
+  /// Casque filaire, Bluetooth ou voiture.
+  final bool external;
+
+  @override
+  bool operator ==(Object other) =>
+      other is CallAudioOutput &&
+      other.type == type &&
+      other.speaker == speaker &&
+      other.external == external;
+
+  @override
+  int get hashCode => Object.hash(type, speaker, external);
 }
 
 abstract class CallGateway {
