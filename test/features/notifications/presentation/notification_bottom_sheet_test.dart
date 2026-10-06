@@ -213,6 +213,10 @@ void main() {
       );
       expect(await iconAssetFor(tester, 'RECIPIENT_CONFIRMED'), 'badge-check');
       expect(await iconAssetFor(tester, 'RECIPIENT_DECLINED'), 'user-x');
+      expect(
+        await iconAssetFor(tester, 'RECIPIENT_REPLACEMENT_REQUESTED'),
+        'user-plus',
+      );
       expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_CANCELLED'), 'ban');
       expect(
         await iconAssetFor(tester, 'RECIPIENT_PARCEL_REASSIGNED'),

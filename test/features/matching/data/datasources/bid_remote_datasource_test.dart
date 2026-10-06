@@ -203,6 +203,34 @@ void main() {
     });
   });
 
+  // ── requestRecipientReplacement ─────────────────────────────────────────────
+
+  group('requestRecipientReplacement', () {
+    test(
+      'POST /bids/{id}/recipient/replacement-request sans corps, rend le bid',
+      () async {
+        const path = '/bids/bid-001/recipient/replacement-request';
+        final updated = {
+          ..._bidJson,
+          'recipientDeclined': true,
+          'recipientReplacementRequestedAt': '2026-10-06T08:30:00Z',
+        };
+        when(
+          () => mockDio.post(path),
+        ).thenAnswer((_) async => _ok(updated, path));
+
+        final result = await datasource.requestRecipientReplacement('bid-001');
+
+        verify(() => mockDio.post(path)).called(1);
+        expect(result.recipientDeclined, isTrue);
+        expect(
+          result.recipientReplacementRequestedAt,
+          DateTime.utc(2026, 10, 6, 8, 30),
+        );
+      },
+    );
+  });
+
   // ── changeRecipient ─────────────────────────────────────────────────────────
 
   group('changeRecipient', () {

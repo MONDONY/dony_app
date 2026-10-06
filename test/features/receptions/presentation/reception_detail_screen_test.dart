@@ -279,30 +279,42 @@ void main() {
       verify(() => cubit.confirm()).called(1);
     });
 
-    testWidgets('refus : confirmation légère avant d\'envoyer', (tester) async {
-      stub(const ReceptionDetailLoaded(_pending));
-      await pump(tester);
+    testWidgets(
+      'refus : feuille de confirmation avant d\'envoyer (FLUTTER-E8)',
+      (tester) async {
+        stub(const ReceptionDetailLoaded(_pending));
+        await pump(tester);
 
-      await tester.tap(find.byKey(const Key('reception-decline')));
-      await tester.pumpAndSettle();
-      expect(find.text('Ce colis n\'est pas pour vous ?'), findsOneWidget);
+        await tester.tap(find.byKey(const Key('reception-decline')));
+        await tester.pumpAndSettle();
+        expect(find.text('Ce colis n\'est pas pour vous ?'), findsOneWidget);
+        expect(
+          find.text(
+            'Vous ne pourrez plus voir ce colis ni son code de retrait. '
+            'Confirmer ?',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'L\'expéditeur sera invité à vérifier le numéro du destinataire.',
+          ),
+          findsOneWidget,
+        );
 
-      // Annuler : rien ne part.
-      await tester.tap(find.text('Annuler'));
-      await tester.pumpAndSettle();
-      verifyNever(() => cubit.decline());
+        // Annuler : rien ne part.
+        await tester.tap(find.byKey(const Key('reception-leave-cancel')));
+        await tester.pumpAndSettle();
+        verifyNever(() => cubit.decline());
+        expect(find.byKey(const Key('reception-leave-confirm')), findsNothing);
 
-      await tester.tap(find.byKey(const Key('reception-decline')));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.descendant(
-          of: find.byType(Dialog),
-          matching: find.text('Ce n\'est pas pour moi'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      verify(() => cubit.decline()).called(1);
-    });
+        await tester.tap(find.byKey(const Key('reception-decline')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('reception-leave-confirm')));
+        await tester.pumpAndSettle();
+        verify(() => cubit.decline()).called(1);
+      },
+    );
 
     testWidgets('geste en cours : boutons bloqués', (tester) async {
       stub(
@@ -315,7 +327,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('reception-decline')));
       await tester.pump();
-      expect(find.byType(Dialog), findsNothing);
+      expect(find.byKey(const Key('reception-leave-confirm')), findsNothing);
     });
 
     testWidgets('refusé : retour à l\'onglet Suivi avec un message', (
@@ -402,13 +414,32 @@ void main() {
         await tester.tap(find.byKey(const Key('reception-withdraw')));
         await tester.pumpAndSettle();
         expect(find.text('Vous retirer de ce colis ?'), findsOneWidget);
-
-        await tester.tap(
-          find.descendant(
-            of: find.byType(Dialog),
-            matching: find.text('Me retirer'),
+        expect(
+          find.text(
+            'Vous ne pourrez plus voir ce colis ni son code de retrait. '
+            'Confirmer ?',
           ),
+          findsOneWidget,
         );
+        expect(
+          find.text('L\'expéditeur et le voyageur seront prévenus.'),
+          findsOneWidget,
+        );
+        final confirm = tester.widget<DonyButton>(
+          find.byKey(const Key('reception-leave-confirm')),
+        );
+        expect(confirm.label, 'Me retirer');
+        expect(confirm.variant, DonyButtonVariant.destructive);
+
+        // Annuler : rien ne part (cas réel : retrait par erreur).
+        await tester.tap(find.byKey(const Key('reception-leave-cancel')));
+        await tester.pumpAndSettle();
+        verifyNever(() => cubit.decline());
+
+        await tester.ensureVisible(find.byKey(const Key('reception-withdraw')));
+        await tester.tap(find.byKey(const Key('reception-withdraw')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('reception-leave-confirm')));
         await tester.pumpAndSettle();
         verify(() => cubit.decline()).called(1);
       },

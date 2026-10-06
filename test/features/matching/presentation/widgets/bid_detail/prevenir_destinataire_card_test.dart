@@ -129,6 +129,33 @@ void main() {
     });
   });
 
+  group('PrevenirDestinataireCard.shouldShow — refus (FLUTTER-E8)', () {
+    test('refus sans lien de suivi mais modifiable : visible', () {
+      expect(
+        PrevenirDestinataireCard.shouldShow(
+          _bid(trackingToken: null, recipientAppStatus: 'DECLINED'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('refus sur un colis livré : masqué', () {
+      expect(
+        PrevenirDestinataireCard.shouldShow(
+          _bid(status: 'COMPLETED', recipientAppStatus: 'DECLINED'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('sans refus ni lien : masqué', () {
+      expect(
+        PrevenirDestinataireCard.shouldShow(_bid(trackingToken: null)),
+        isFalse,
+      );
+    });
+  });
+
   group('PrevenirDestinataireCard', () {
     late _MockLauncher launcher;
     late List<String> shared;
@@ -239,18 +266,69 @@ void main() {
       );
     });
 
-    testWidgets('numéro refusé : avertissement de vérification', (
+    testWidgets(
+      'destinataire en refus : bandeau neutre, « Prévenir » neutralisé, '
+      'action « Désigner un autre destinataire » (FLUTTER-E8)',
+      (tester) async {
+        await pump(
+          tester,
+          _bid(status: 'IN_TRANSIT', recipientAppStatus: 'DECLINED'),
+        );
+
+        expect(
+          find.byKey(const Key('recipient-declined-sender')),
+          findsOneWidget,
+        );
+        expect(find.text('Destinataire à remplacer'), findsOneWidget);
+        expect(find.byKey(const Key('recipient-app-declined')), findsOneWidget);
+        expect(find.text('Ce destinataire a refusé le colis.'), findsOneWidget);
+        expect(find.byKey(const Key('recipient-app-confirmed')), findsNothing);
+        // Le code ne repart pas vers le numéro qui a refusé.
+        expect(find.text('Prévenir sur WhatsApp'), findsNothing);
+        expect(find.text('Envoyer le code sur WhatsApp'), findsNothing);
+        expect(find.text('Prévenir Fatou'), findsNothing);
+        expect(
+          find.byKey(const Key('recipient-declined-change')),
+          findsOneWidget,
+        );
+        expect(find.text('Désigner un autre destinataire'), findsOneWidget);
+        // Pas de demande du voyageur : pas de mention.
+        expect(
+          find.byKey(const Key('recipient-replacement-requested')),
+          findsNothing,
+        );
+        verifyNever(() => launcher.open(any()));
+      },
+    );
+
+    testWidgets('refus + demande du voyageur : mention dans le bandeau', (
       tester,
     ) async {
-      await pump(tester, _bid(recipientAppStatus: 'DECLINED'));
+      await pump(
+        tester,
+        BidModel(
+          id: 'bid-001',
+          announcementId: 'ann-001',
+          senderId: 'sender-001',
+          status: 'ARRIVED',
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+          recipientName: 'Fatou',
+          recipientPhone: '+221 70 000 00 00',
+          trackingToken: 'tok-abc123',
+          recipientAppStatus: 'DECLINED',
+          recipientReplacementRequestedAt: DateTime.utc(2026, 10, 6, 8),
+        ),
+      );
 
-      expect(find.byKey(const Key('recipient-app-declined')), findsOneWidget);
       expect(
-        find.textContaining('Vérifiez le numéro du destinataire.'),
+        find.byKey(const Key('recipient-replacement-requested')),
         findsOneWidget,
       );
-      expect(find.byKey(const Key('recipient-app-confirmed')), findsNothing);
-      expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
+      expect(
+        find.text('Le voyageur vous demande d\'en désigner un autre.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('lien en attente ou absent : encart inchangé', (tester) async {

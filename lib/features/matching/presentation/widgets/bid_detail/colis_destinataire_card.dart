@@ -8,6 +8,7 @@ import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_photo_viewer_modal.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
+import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_declined_panel.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -60,11 +61,19 @@ class ColisDestinataireCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: DonySpacing.sm),
-          InfoRow(
-            label: l.bidDetailRecipientLabel,
-            value: bid.recipientName ?? '-',
-          ),
-          if (isSender || bidAllowsContact(bid.status)) ...[
+          // Vue voyageur, destinataire en refus (FLUTTER-E8) : ni nom ni
+          // numéro, l'encart propose d'en demander un autre à l'expéditeur.
+          if (!isSender && bid.recipientDeclined) ...[
+            const SizedBox(height: DonySpacing.xs),
+            RecipientDeclinedPanel(bid: bid),
+          ] else ...[
+            InfoRow(
+              label: l.bidDetailRecipientLabel,
+              value: bid.recipientName ?? '-',
+            ),
+          ],
+          if (isSender ||
+              (bidAllowsContact(bid.status) && !bid.recipientDeclined)) ...[
             const SizedBox(height: DonySpacing.sm),
             InfoRow(
               label: l.bidDetailPhoneLabel,

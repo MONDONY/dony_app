@@ -9,6 +9,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_contact.dart';
+import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_declined_panel.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -145,8 +146,13 @@ class _RecipientRow extends StatelessWidget {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    // Destinataire en refus (FLUTTER-E8) : ni nom, ni numéro, ni canal ;
+    // l'encart propose d'en demander un autre à l'expéditeur.
+    final declined = bid.recipientDeclined;
     final rawName = bid.recipientName?.trim();
-    final name = (rawName == null || rawName.isEmpty)
+    final name = declined
+        ? l.recipientDeclinedTravelerTitle
+        : (rawName == null || rawName.isEmpty)
         ? l.notifyRecipientsFallbackName
         : rawName;
     final phone = bid.recipientPhone?.trim();
@@ -187,7 +193,9 @@ class _RecipientRow extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            hasPhone
+            declined
+                ? _statusLabel(l)
+                : hasPhone
                 ? '${_statusLabel(l)} · $phone'
                 : bid.recipientPhoneHidden
                 ? '${_statusLabel(l)} · ${l.recipientPhoneHiddenLabel}'
@@ -212,7 +220,10 @@ class _RecipientRow extends StatelessWidget {
               ],
             ),
           ],
-          if (hasPhone || (bid.recipientPhoneHidden && inApp)) ...[
+          if (declined) ...[
+            const SizedBox(height: DonySpacing.md),
+            RecipientDeclinedPanel(bid: bid, showTitle: false),
+          ] else if (hasPhone || (bid.recipientPhoneHidden && inApp)) ...[
             const SizedBox(height: DonySpacing.md),
             RecipientContactActions(
               bid: bid,

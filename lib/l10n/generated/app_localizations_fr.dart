@@ -15510,10 +15510,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get receptionDeclineDialogTitle => 'Ce colis n\'est pas pour vous ?';
 
   @override
-  String get receptionDeclineDialogMessage =>
-      'Il disparaîtra de votre liste et l\'expéditeur sera invité à vérifier le numéro du destinataire.';
-
-  @override
   String get receptionDeclinedSnackbar =>
       'C\'est noté, ce colis a été retiré de votre liste.';
 
@@ -15522,10 +15518,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get receptionWithdrawDialogTitle => 'Vous retirer de ce colis ?';
-
-  @override
-  String get receptionWithdrawDialogMessage =>
-      'Vous ne le suivrez plus et ne verrez plus son code de retrait. L’expéditeur et le voyageur seront prévenus.';
 
   @override
   String get receptionWithdrawConfirm => 'Me retirer';
@@ -15644,8 +15636,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get recipientAppDeclined =>
-      'Le titulaire de ce numéro indique que ce colis n\'est pas pour lui. Vérifiez le numéro du destinataire.';
+  String get recipientAppDeclined => 'Ce destinataire a refusé le colis.';
 
   @override
   String get recipientAppConfirmedAnonymous =>
@@ -16432,4 +16423,81 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorReceptionNotRecipientMessage =>
       'Seul le destinataire confirmé de ce colis peut noter le voyageur.';
+
+  @override
+  String get recipientDeclinedTravelerTitle => 'Destinataire à redésigner';
+
+  @override
+  String get recipientDeclinedTravelerBody =>
+      'Le destinataire a refusé le colis. L\'expéditeur est prévenu.';
+
+  @override
+  String get recipientReplacementRequestButton =>
+      'Demander un autre destinataire';
+
+  @override
+  String get recipientReplacementSentButton => 'Demande envoyée';
+
+  @override
+  String recipientReplacementNextAt(String time) {
+    return 'Nouvelle demande possible à $time';
+  }
+
+  @override
+  String recipientReplacementNextOn(String date, String time) {
+    return 'Nouvelle demande possible le $date à $time';
+  }
+
+  @override
+  String get recipientReplacementNextLater =>
+      'Nouvelle demande possible dans 12 h';
+
+  @override
+  String get recipientReplacementConfirmTitle =>
+      'Demander un autre destinataire ?';
+
+  @override
+  String get recipientReplacementConfirmBody =>
+      'L\'expéditeur recevra une notification lui demandant de désigner un autre destinataire. Vous pourrez renouveler la demande 12 h plus tard.';
+
+  @override
+  String get recipientReplacementConfirmSend => 'Envoyer la demande';
+
+  @override
+  String get recipientReplacementSentSnackbar =>
+      'Demande envoyée à l\'expéditeur.';
+
+  @override
+  String get recipientReplacementTooSoonSnackbar =>
+      'Vous avez déjà prévenu l\'expéditeur. Nouvelle demande possible 12 h après la précédente.';
+
+  @override
+  String get recipientReplacementConflictSnackbar =>
+      'Le destinataire a déjà changé ou le colis n\'est plus en cours. Le détail est mis à jour.';
+
+  @override
+  String get recipientDeclinedSenderTitle => 'Destinataire à remplacer';
+
+  @override
+  String get recipientDeclinedSenderBody =>
+      'Désignez un autre destinataire : il pourra suivre le colis et recevoir le code de retrait.';
+
+  @override
+  String get recipientDeclinedSenderButton => 'Désigner un autre destinataire';
+
+  @override
+  String get recipientReplacementRequestedSender =>
+      'Le voyageur vous demande d\'en désigner un autre.';
+
+  @override
+  String get receptionLeaveWarning =>
+      'Vous ne pourrez plus voir ce colis ni son code de retrait. Confirmer ?';
+
+  @override
+  String get receptionDeclineSheetNote =>
+      'L\'expéditeur sera invité à vérifier le numéro du destinataire.';
+
+  @override
+  String get receptionWithdrawSheetNote =>
+      'L\'expéditeur et le voyageur seront prévenus.';
 }
