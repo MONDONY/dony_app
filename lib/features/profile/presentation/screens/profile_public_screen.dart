@@ -30,22 +30,16 @@ import 'package:intl/intl.dart';
 
 class ProfilePublicArgs {
   final String? userId;
-  final bool showSubscribe;
 
-  const ProfilePublicArgs({this.userId, this.showSubscribe = false});
+  const ProfilePublicArgs({this.userId});
 }
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 class ProfilePublicScreen extends StatefulWidget {
-  const ProfilePublicScreen({
-    super.key,
-    this.userId,
-    this.showSubscribe = false,
-  });
+  const ProfilePublicScreen({super.key, this.userId});
 
   final String? userId;
-  final bool showSubscribe;
 
   @override
   State<ProfilePublicScreen> createState() => _ProfilePublicScreenState();
@@ -56,21 +50,69 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
       ? widget.userId!
       : FirebaseAuth.instance.currentUser?.uid ?? '';
 
+  /// Sans identifiant explicite, l'écran affiche le profil de l'utilisateur
+  /// courant (repli sur l'uid Firebase, qui n'est pas l'id métier : on ne peut
+  /// donc pas le comparer à celui d'AuthBloc).
+  bool get _opensOwnProfileByDefault => widget.userId?.isNotEmpty != true;
+
+  /// Garde : le statut d'abonnement n'est chargé qu'une fois par écran, que
+  /// la décision soit prise à l'init ou au chargement du profil.
+  bool _subscribeStatusRequested = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final bloc = context.read<ProfilePublicBloc>();
       if (bloc.state is ProfilePublicInitial) {
         bloc.add(ProfilePublicRequested(_effectiveUserId));
       }
-      // Load subscribe status only if we should show the button
-      if (widget.showSubscribe && _effectiveUserId.isNotEmpty) {
-        context.read<TravelerSubscribeBloc>().add(
-          LoadSubscribeStatus(_effectiveUserId),
-        );
-      }
+      // Si l'on sait déjà qu'il s'agit du profil d'un autre, le statut
+      // d'abonnement part tout de suite ; sinon on attend le profil chargé
+      // (BlocListener du build).
+      final loaded = bloc.state is ProfilePublicLoaded
+          ? (bloc.state as ProfilePublicLoaded).profile
+          : null;
+      _maybeLoadSubscribeStatus(context, loadedProfile: loaded);
     });
+  }
+
+  /// Le bouton « S'abonner » vaut pour tout profil qui n'est pas le mien :
+  /// tout compte peut être voyageur (Sentry FLUTTER-DB). Ce n'est donc pas
+  /// l'écran appelant qui décide.
+  bool _isOwnProfile(
+    BuildContext context, {
+    ProfilePublicModel? loadedProfile,
+  }) {
+    if (_opensOwnProfileByDefault) return true;
+    final currentUserId = _currentUserId(context);
+    if (currentUserId == null) return false;
+    if (currentUserId == widget.userId) return true;
+    return loadedProfile != null && loadedProfile.userId == currentUserId;
+  }
+
+  /// Faute d'utilisateur courant connu, on ne peut écarter le cas « mon
+  /// profil » qu'avec le profil chargé : on attend alors celui-ci.
+  bool _canDecideOwnership(
+    BuildContext context, {
+    ProfilePublicModel? loadedProfile,
+  }) =>
+      _opensOwnProfileByDefault ||
+      _currentUserId(context) != null ||
+      loadedProfile != null;
+
+  void _maybeLoadSubscribeStatus(
+    BuildContext context, {
+    ProfilePublicModel? loadedProfile,
+  }) {
+    if (_subscribeStatusRequested) return;
+    if (!_canDecideOwnership(context, loadedProfile: loadedProfile)) return;
+    if (_isOwnProfile(context, loadedProfile: loadedProfile)) return;
+    _subscribeStatusRequested = true;
+    context.read<TravelerSubscribeBloc>().add(
+      LoadSubscribeStatus(_effectiveUserId),
+    );
   }
 
   /// Returns the current user's id from AuthBloc, or null.
@@ -92,15 +134,21 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = _currentUserId(context);
-    final viewedUserId = _effectiveUserId;
-    final isOwnProfile = currentUserId != null && currentUserId == viewedUserId;
-    final showButton = widget.showSubscribe && !isOwnProfile;
-
     final l = context.l10n;
 
-    return BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
+    return BlocConsumer<ProfilePublicBloc, ProfilePublicState>(
+      listenWhen: (_, current) => current is ProfilePublicLoaded,
+      listener: (context, state) {
+        if (state is ProfilePublicLoaded) {
+          _maybeLoadSubscribeStatus(context, loadedProfile: state.profile);
+        }
+      },
       builder: (context, state) {
+        final isOwnProfile = _isOwnProfile(
+          context,
+          loadedProfile: state is ProfilePublicLoaded ? state.profile : null,
+        );
+        final showButton = !isOwnProfile;
         // Nom affiché de la personne consultée, connu seulement une fois le
         // profil chargé. Il nomme les entrées du menu ⋯ (« Signaler X »,
         // « Bloquer X ») ; tant qu'il manque, l'entrée « Bloquer » reste
@@ -133,12 +181,18 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
             error: state.error,
             retryLabel: l.commonRetry,
             onRetry: () => context.read<ProfilePublicBloc>().add(
-              ProfilePublicRequested(viewedUserId),
+              ProfilePublicRequested(_effectiveUserId),
             ),
           );
         } else if (state is ProfilePublicLoaded) {
           body = _LoadedView(
-            userId: viewedUserId,
+            // Mon profil ouvert sans id : l'id métier vient du profil chargé,
+            // le repli Firebase n'est lu qu'en dernier recours.
+            userId: !_opensOwnProfileByDefault
+                ? widget.userId!
+                : state.profile.userId.isNotEmpty
+                ? state.profile.userId
+                : _effectiveUserId,
             profile: state.profile,
             recentRatings: state.recentRatings,
             showSubscribeButton: showButton,
@@ -169,7 +223,7 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
                               '/settings/report-incident',
                               extra: {
                                 'targetType': IncidentTargetType.user,
-                                'targetId': viewedUserId,
+                                'targetId': _effectiveUserId,
                               },
                             );
                           case 'block':
@@ -179,7 +233,7 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
                             if (viewedName != null) {
                               showBlockConfirmDialog(
                                 context,
-                                userId: viewedUserId,
+                                userId: _effectiveUserId,
                                 displayName: viewedName,
                               );
                             }

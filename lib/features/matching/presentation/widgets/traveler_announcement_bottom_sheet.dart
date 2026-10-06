@@ -1399,10 +1399,7 @@ class _TravelerCard extends StatelessWidget {
             ? null
             : () => context.push(
                 '/profile/public',
-                extra: ProfilePublicArgs(
-                  userId: traveler.id,
-                  showSubscribe: true,
-                ),
+                extra: ProfilePublicArgs(userId: traveler.id),
               ),
         child: Padding(
           padding: const EdgeInsets.all(DonySpacing.md),

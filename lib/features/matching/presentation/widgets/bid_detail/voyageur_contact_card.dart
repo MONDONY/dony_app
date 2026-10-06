@@ -79,10 +79,7 @@ class VoyageurContactCard extends StatelessWidget {
       onTap: canOpenProfile
           ? () => context.push(
               '/profile/public',
-              extra: ProfilePublicArgs(
-                userId: bid.travelerId,
-                showSubscribe: true,
-              ),
+              extra: ProfilePublicArgs(userId: bid.travelerId),
             )
           : null,
       borderRadius: BorderRadius.circular(DonyRadius.card),
