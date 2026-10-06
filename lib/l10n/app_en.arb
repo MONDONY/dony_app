@@ -4781,11 +4781,11 @@
       }
     }
   },
-  "walletInfoBalanceDesc": "The amount you can use to pay for a shipment or request a refund.",
+  "walletInfoBalanceDesc": "The amount that covers the service fees of your trips paid in cash. You can also request a refund of it.",
   "@walletInfoBalanceDesc": {
     "description": "Description de la ligne « Solde disponible » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
   },
-  "walletInfoTopUpDesc": "Add funds by credit card. The credit appears as soon as the payment is validated.",
+  "walletInfoTopUpDesc": "Add funds by credit card or mobile money, depending on your currency. The credit appears as soon as the payment is validated.",
   "@walletInfoTopUpDesc": {
     "description": "Description de la ligne « Recharger » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
   },
@@ -8061,7 +8061,7 @@
       }
     }
   },
-  "suiviPhotoRequiredFor": "{step, select, DEPART{Required to validate the departure} TRANSIT{Required to validate the transit} other{Required to validate the arrival}}",
+  "suiviPhotoRequiredFor": "{step, select, DEPART{Required to validate the collection} TRANSIT{Required to validate the transit} other{Required to validate the arrival}}",
   "@suiviPhotoRequiredFor": {
     "description": "Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart, _ResultHeader).",
     "placeholders": {
@@ -8074,7 +8074,7 @@
   "@suiviNumberRecapTitle": {
     "description": "Titre de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart)."
   },
-  "suiviPhotoAndValidate": "{step, select, DEPART{Photo and validate the departure} TRANSIT{Photo and validate the transit} other{Photo and validate the arrival}}",
+  "suiviPhotoAndValidate": "{step, select, DEPART{Photo and validate the collection} TRANSIT{Photo and validate the transit} other{Photo and validate the arrival}}",
   "@suiviPhotoAndValidate": {
     "description": "Bouton de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart).",
     "placeholders": {

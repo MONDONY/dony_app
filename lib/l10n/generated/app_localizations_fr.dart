@@ -9393,11 +9393,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletInfoBalanceDesc =>
-      'Le montant utilisable pour payer un envoi ou demander un remboursement.';
+      'Le montant qui règle les frais de service de tes trajets payés en espèces. Tu peux aussi en demander le remboursement.';
 
   @override
   String get walletInfoTopUpDesc =>
-      'Ajoute des fonds par carte bancaire. Le crédit apparaît dès la validation du paiement.';
+      'Ajoute des fonds par carte bancaire ou par mobile money, selon ta devise. Le crédit apparaît dès la validation du paiement.';
 
   @override
   String get walletInfoRefundDesc =>
@@ -14772,7 +14772,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String suiviPhotoRequiredFor(String step) {
     String _temp0 = intl.Intl.selectLogic(step, {
-      'DEPART': 'Obligatoire pour valider le départ',
+      'DEPART': 'Obligatoire pour valider la récupération',
       'TRANSIT': 'Obligatoire pour valider le transit',
       'other': 'Obligatoire pour valider l\'arrivée',
     });
@@ -14785,7 +14785,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String suiviPhotoAndValidate(String step) {
     String _temp0 = intl.Intl.selectLogic(step, {
-      'DEPART': 'Photo et valider le départ',
+      'DEPART': 'Photo et valider la récupération',
       'TRANSIT': 'Photo et valider le transit',
       'other': 'Photo et valider l\'arrivée',
     });

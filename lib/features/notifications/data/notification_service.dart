@@ -898,8 +898,25 @@ class NotificationService {
 
   /// Maps the FCM data `type` field to a GoRouter path via the shared resolver
   /// (also used by the in-app notification inbox, so both surfaces agree).
-  String? _routeForMessage(Map<String, dynamic> data) =>
-      resolveNotificationRoute(data['type'] as String?, data);
+  ///
+  /// Annonce de l'équipe (ADMIN_BROADCAST) : la push ne porte que
+  /// `broadcastId`, le résolveur n'a pas de route, et toucher la notification
+  /// ouvrait l'app sans rien montrer (Sentry FLUTTER-D4). Elle ouvre la boîte
+  /// des annonces. Ce repli reste ici et non dans le résolveur partagé : la
+  /// boîte de réception, qui l'appelle aussi, ouvre le détail d'une annonce.
+  String? _routeForMessage(Map<String, dynamic> data) {
+    final type = data['type'] as String?;
+    return resolveNotificationRoute(type, data) ??
+        (type == adminBroadcastType ? announcementsInboxRoute : null);
+  }
+
+  /// Type FCM d'une annonce envoyée par l'équipe.
+  @visibleForTesting
+  static const adminBroadcastType = 'ADMIN_BROADCAST';
+
+  /// Route de la boîte des annonces (`AnnouncementsInboxScreen.route`).
+  @visibleForTesting
+  static const announcementsInboxRoute = '/notifications/annonces';
 
   void dispose() {
     _navigationController.close();

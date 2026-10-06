@@ -15514,13 +15514,13 @@ abstract class AppLocalizations {
   /// Description de la ligne « Solde disponible » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:
-  /// **'Le montant utilisable pour payer un envoi ou demander un remboursement.'**
+  /// **'Le montant qui règle les frais de service de tes trajets payés en espèces. Tu peux aussi en demander le remboursement.'**
   String get walletInfoBalanceDesc;
 
   /// Description de la ligne « Recharger » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:
-  /// **'Ajoute des fonds par carte bancaire. Le crédit apparaît dès la validation du paiement.'**
+  /// **'Ajoute des fonds par carte bancaire ou par mobile money, selon ta devise. Le crédit apparaît dès la validation du paiement.'**
   String get walletInfoTopUpDesc;
 
   /// Description de la ligne « Rembourser » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
@@ -24426,7 +24426,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart, _ResultHeader).
   ///
   /// In fr, this message translates to:
-  /// **'{step, select, DEPART{Obligatoire pour valider le départ} TRANSIT{Obligatoire pour valider le transit} other{Obligatoire pour valider l\'arrivée}}'**
+  /// **'{step, select, DEPART{Obligatoire pour valider la récupération} TRANSIT{Obligatoire pour valider le transit} other{Obligatoire pour valider l\'arrivée}}'**
   String suiviPhotoRequiredFor(String step);
 
   /// Titre de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart).
@@ -24438,7 +24438,7 @@ abstract class AppLocalizations {
   /// Bouton de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{step, select, DEPART{Photo et valider le départ} TRANSIT{Photo et valider le transit} other{Photo et valider l\'arrivée}}'**
+  /// **'{step, select, DEPART{Photo et valider la récupération} TRANSIT{Photo et valider le transit} other{Photo et valider l\'arrivée}}'**
   String suiviPhotoAndValidate(String step);
 
   /// Titre du colis dans la feuille récapitulative (suivi_parcel_sheets.dart, _NumberRecap).
