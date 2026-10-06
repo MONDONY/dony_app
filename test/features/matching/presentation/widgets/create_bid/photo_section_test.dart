@@ -54,4 +54,29 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('rappel : contenu photographié conforme à la catégorie', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap());
+
+    expect(
+      find.text(
+        'Vérifiez que le contenu photographié correspond à la catégorie déclarée.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('en anglais : rappel de catégorie traduit', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(wrap());
+
+    expect(
+      find.text(
+        'Make sure the photographed contents match the declared category.',
+      ),
+      findsOneWidget,
+    );
+  });
 }

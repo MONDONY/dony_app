@@ -98,6 +98,14 @@ class PhotoSection extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              context.l10n.requestCreatePhotosCategoryReminder,
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
             const SizedBox(height: DonySpacing.sm),
             // Vide : un seul CTA plein largeur, comme le wizard de demande
             // d'envoi. Une case de 64 px se rate quand on fait défiler vite.

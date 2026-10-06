@@ -1445,7 +1445,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPromoNotFoundMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce code promo n\'existe pas. Vérifie la saisie et réessaie.'**
+  /// **'Ce code promo n\'existe pas. Vérifie la saisie et réessaie. Un code parrain se saisit à l\'inscription ou dans Moi › « J\'ai un code parrain ».'**
   String get errorPromoNotFoundMessage;
 
   /// No description provided for @errorPromoExpiredTitle.
@@ -6502,6 +6502,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Visibles par les voyageurs. Ajoutées à l\'offre quand un trajet est lié.'**
   String get requestCreatePhotosHint;
+
+  /// Aide sous le champ code promo (create_bid_bottom_sheet.dart, step_3_recap_budget.dart) : distingue le code promo du code parrain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code promo Yadony (pas un code de parrainage).'**
+  String get promoCodeNotReferralHint;
+
+  /// Rappel sous l'aide des photos du colis : le contenu photographié doit correspondre à la catégorie déclarée (package_request_photo_section.dart, create_bid/photo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez que le contenu photographié correspond à la catégorie déclarée.'**
+  String get requestCreatePhotosCategoryReminder;
 
   /// Libellé d'accessibilité du bouton d'ajout de photo (package_request_photo_section.dart)
   ///
@@ -26469,11 +26481,17 @@ abstract class AppLocalizations {
   /// **'J\'envoie et je voyage'**
   String get intentBothHint;
 
-  /// Question du pays de destination visé
+  /// Titre du choix du pays de destination principal (intent_form.dart). Formulé pour ne pas laisser croire que le choix limite les envois ou trajets à ce pays.
   ///
   /// In fr, this message translates to:
-  /// **'Vers quel pays ?'**
+  /// **'Votre destination principale'**
   String get intentDestinationTitle;
+
+  /// Aide sous le titre « Votre destination principale » (intent_form.dart) : le pays choisi ne sert qu'à personnaliser l'accueil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour personnaliser votre accueil. Vous pouvez envoyer et voyager vers tous les pays desservis.'**
+  String get intentDestinationHint;
 
   /// Choix d'un pays de destination non listé
   ///

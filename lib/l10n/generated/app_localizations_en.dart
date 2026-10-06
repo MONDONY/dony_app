@@ -793,7 +793,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPromoNotFoundMessage =>
-      'This promo code doesn\'t exist. Check what you entered and try again.';
+      'This promo code doesn\'t exist. Check what you entered and try again. A referral code goes in at sign-up or under Profile › “I have a referral code”.';
 
   @override
   String get errorPromoExpiredTitle => 'Promo code expired';
@@ -3853,6 +3853,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get requestCreatePhotosHint =>
       'Visible to travelers. Added to the offer once a trip is linked.';
+
+  @override
+  String get promoCodeNotReferralHint =>
+      'Yadony promo code (not a referral code).';
+
+  @override
+  String get requestCreatePhotosCategoryReminder =>
+      'Make sure the photographed contents match the declared category.';
 
   @override
   String get requestCreateAddPhotoSemantic => 'Add a photo of the parcel';
@@ -15993,7 +16001,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get intentBothHint => 'I send and I travel';
 
   @override
-  String get intentDestinationTitle => 'To which country?';
+  String get intentDestinationTitle => 'Your main destination';
+
+  @override
+  String get intentDestinationHint =>
+      'Used to personalise your home screen. You can still send and travel to every country we serve.';
 
   @override
   String get intentDestinationOther => 'Other';

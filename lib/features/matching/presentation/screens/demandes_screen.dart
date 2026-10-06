@@ -69,8 +69,14 @@ class DemandesScreen extends StatelessWidget {
                     const TravelerBidsFilterChanged(TravelerBidFilter.aTraiter),
                   )
                   ..add(const TravelerBidsRequested(force: true)))
-              : (getIt<TravelerBidsBloc>()
-                  ..add(const TravelerBidsRequested(force: true))),
+              // Sans onglet imposé, le bloc ouvre sur le premier onglet non
+              // vide une fois la liste chargée.
+              : (getIt<TravelerBidsBloc>()..add(
+                  const TravelerBidsRequested(
+                    force: true,
+                    autoSelectFilter: true,
+                  ),
+                )),
         ),
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),

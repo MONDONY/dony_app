@@ -102,12 +102,12 @@ class OwnerActionGrid extends StatelessWidget {
       // ── Affiche partageable — uniquement tant qu'il reste de la place ──
       // Une affiche n'a de sens que sur un trajet encore remplissable : la
       // poster sur un trajet complet ferait venir des expéditeurs pour rien.
-      if (isActive)
+      if (canShareTripPoster(a))
         _tile(
           iconAsset: 'share-2',
           label: l.tripOwnerPosterTile,
           accent: cs.primary,
-          onTap: () => context.push('/announcements/${a.id}/affiche', extra: a),
+          onTap: () => openTripPoster(context, a),
         ),
       if (isActive && !hasBids)
         _tile(
@@ -242,6 +242,17 @@ class OwnerActionGrid extends StatelessWidget {
       ],
     );
   }
+}
+
+/// `true` si le trajet peut être partagé par son affiche : uniquement tant
+/// qu'il reste de la place (ACTIVE). Même règle pour la tuile « Affiche » et
+/// l'icône de partage de l'en-tête du détail.
+bool canShareTripPoster(AnnouncementModel a) => a.status == 'ACTIVE';
+
+/// Ouvre l'affiche partageable du trajet (lien, légende, image), action
+/// commune à la tuile « Affiche » et à l'icône de partage de l'en-tête.
+void openTripPoster(BuildContext context, AnnouncementModel a) {
+  context.push('/announcements/${a.id}/affiche', extra: a);
 }
 
 /// Statuts de colis qui interdisent de reporter le trajet.

@@ -56,6 +56,29 @@ void main() {
     expect(find.byKey(const Key('pr-add-photo')), findsOneWidget);
   });
 
+  testWidgets('rappel : contenu photographié conforme à la catégorie', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap());
+    expect(
+      find.text(
+        'Vérifiez que le contenu photographié correspond à la catégorie déclarée.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('anglais : rappel de catégorie traduit', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(wrap());
+    expect(
+      find.text(
+        'Make sure the photographed contents match the declared category.',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('bouton ajouter masqué quand 4 photos', (tester) async {
     // Pré-remplit le cubit à 4 (via emit interne par add simulé impossible ici) :
     // on vérifie plutôt le compteur passe à mesure. Avec 0 photo, bouton présent.

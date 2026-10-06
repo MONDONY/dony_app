@@ -1520,6 +1520,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: DonySpacing.xs),
+                        Text(
+                          context.l10n.promoCodeNotReferralHint,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
                         if (quote != null && quote.promoApplied) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Row(

@@ -236,7 +236,7 @@
   "errorFirebaseErrorTitle": "Connexion impossible",
   "errorFirebaseErrorMessage": "La connexion n'a pas pu aboutir. Réessaie dans un instant.",
   "errorPromoNotFoundTitle": "Code promo introuvable",
-  "errorPromoNotFoundMessage": "Ce code promo n'existe pas. Vérifie la saisie et réessaie.",
+  "errorPromoNotFoundMessage": "Ce code promo n'existe pas. Vérifie la saisie et réessaie. Un code parrain se saisit à l'inscription ou dans Moi › « J'ai un code parrain ».",
   "errorPromoExpiredTitle": "Code promo expiré",
   "errorPromoExpiredMessage": "Ce code promo n'est plus valide (expiré ou pas encore actif).",
   "errorPromoLimitReachedTitle": "Code promo épuisé",
@@ -2897,6 +2897,14 @@
   "requestCreatePhotosHint": "Visibles par les voyageurs. Ajoutées à l'offre quand un trajet est lié.",
   "@requestCreatePhotosHint": {
     "description": "Texte d'aide sous le titre de la section photos (package_request_photo_section.dart)"
+  },
+  "promoCodeNotReferralHint": "Code promo Yadony (pas un code de parrainage).",
+  "@promoCodeNotReferralHint": {
+    "description": "Aide sous le champ code promo (create_bid_bottom_sheet.dart, step_3_recap_budget.dart) : distingue le code promo du code parrain."
+  },
+  "requestCreatePhotosCategoryReminder": "Vérifiez que le contenu photographié correspond à la catégorie déclarée.",
+  "@requestCreatePhotosCategoryReminder": {
+    "description": "Rappel sous l'aide des photos du colis : le contenu photographié doit correspondre à la catégorie déclarée (package_request_photo_section.dart, create_bid/photo_section.dart)."
   },
   "requestCreateAddPhotoSemantic": "Ajouter une photo du colis",
   "@requestCreateAddPhotoSemantic": {
@@ -18454,9 +18462,13 @@
   "@intentBothHint": {
     "description": "Précision du choix les deux"
   },
-  "intentDestinationTitle": "Vers quel pays ?",
+  "intentDestinationTitle": "Votre destination principale",
   "@intentDestinationTitle": {
-    "description": "Question du pays de destination visé"
+    "description": "Titre du choix du pays de destination principal (intent_form.dart). Formulé pour ne pas laisser croire que le choix limite les envois ou trajets à ce pays."
+  },
+  "intentDestinationHint": "Pour personnaliser votre accueil. Vous pouvez envoyer et voyager vers tous les pays desservis.",
+  "@intentDestinationHint": {
+    "description": "Aide sous le titre « Votre destination principale » (intent_form.dart) : le pays choisi ne sert qu'à personnaliser l'accueil."
   },
   "intentDestinationOther": "Autre",
   "@intentDestinationOther": {

@@ -176,6 +176,15 @@ Future<void> _pump(
         path: '/profile/upgrade-to-pro',
         builder: (ctx, _) => const Scaffold(body: Text('UPGRADE_TO_PRO')),
       ),
+      // Affiche partageable : même destination pour la tuile « Affiche » et
+      // l'icône de partage de l'en-tête.
+      GoRoute(
+        path: '/announcements/:id/affiche',
+        builder: (ctx, state) => Scaffold(
+          appBar: AppBar(),
+          body: Text('AFFICHE:${state.pathParameters['id']}'),
+        ),
+      ),
     ],
   );
 
@@ -900,6 +909,86 @@ void main() {
 
     expect(find.byType(TripOwnerDetailScreen), findsOneWidget);
     expect(find.text('Faire une demande'), findsNothing);
+  });
+
+  group('partage depuis l’en-tête', () {
+    final shareButton = find.byKey(const Key('trip-owner-share-button'));
+
+    testWidgets('propriétaire, trajet actif : icône de partage visible', (
+      tester,
+    ) async {
+      await pumpOwnerWith(
+        tester,
+        announcement: _makeAnnouncement(),
+        auth: const AuthAuthenticated(_owner),
+      );
+
+      expect(
+        find.descendant(of: find.byType(AppBar), matching: shareButton),
+        findsOneWidget,
+      );
+      // Le bouton du bas reste en place.
+      expect(find.text('Affiche'), findsOneWidget);
+    });
+
+    testWidgets('l’icône ouvre la même affiche que la tuile « Affiche »', (
+      tester,
+    ) async {
+      await pumpOwnerWith(
+        tester,
+        announcement: _makeAnnouncement(),
+        auth: const AuthAuthenticated(_owner),
+      );
+
+      await tester.tap(shareButton);
+      await tester.pumpAndSettle();
+      expect(find.text('AFFICHE:ann-trip-001'), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      final tile = find.text('Affiche');
+      await tester.ensureVisible(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      expect(find.text('AFFICHE:ann-trip-001'), findsOneWidget);
+    });
+
+    testWidgets('trajet complet : pas d’icône (pas de tuile non plus)', (
+      tester,
+    ) async {
+      await pumpOwnerWith(
+        tester,
+        announcement: _makeAnnouncement(status: 'FULL'),
+        auth: const AuthAuthenticated(_owner),
+      );
+
+      expect(shareButton, findsNothing);
+      expect(find.text('Affiche'), findsNothing);
+    });
+
+    testWidgets('visiteur non propriétaire : pas d’icône', (tester) async {
+      final announcement = _makeAnnouncement();
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        const Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
+
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+
+      expect(shareButton, findsNothing);
+    });
   });
 
   group('traductions', () {

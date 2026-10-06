@@ -466,4 +466,266 @@ void main() {
       },
     );
   });
+
+  group('onglet d’ouverture (autoSelectFilter)', () {
+    const open = TravelerBidsRequested(force: true, autoSelectFilter: true);
+    late Completer<TravelerBidsPage> pendingResponse;
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      '« À traiter » vide : bascule sur le premier onglet non vide',
+      build: () {
+        stub(_page([_bid('b1', 'ACCEPTED'), _bid('b2', 'NO_SHOW')]));
+        return bloc();
+      },
+      act: (b) => b.add(open),
+      expect: () => [
+        isA<TravelerBidsLoading>(),
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          TravelerBidFilter.acceptees,
+        ),
+      ],
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'seules des demandes terminées : « Terminées »',
+      build: () {
+        stub(_page([_bid('b1', 'NO_SHOW')]));
+        return bloc();
+      },
+      act: (b) => b.add(open),
+      skip: 1,
+      expect: () => [
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          TravelerBidFilter.terminees,
+        ),
+      ],
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      '« À traiter » non vide : reste sur « À traiter »',
+      build: () {
+        stub(_page([_bid('b1', 'PENDING'), _bid('b2', 'ACCEPTED')]));
+        return bloc();
+      },
+      act: (b) => b.add(open),
+      skip: 1,
+      expect: () => [
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          TravelerBidFilter.aTraiter,
+        ),
+      ],
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'tout vide : reste sur « À traiter »',
+      build: () {
+        stub(_page(const []));
+        return bloc();
+      },
+      act: (b) => b.add(open),
+      skip: 1,
+      expect: () => [
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          TravelerBidFilter.aTraiter,
+        ),
+      ],
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'sans le drapeau : pas de bascule (rechargements du hub, du shell)',
+      build: () {
+        stub(_page([_bid('b1', 'ACCEPTED')]));
+        return bloc();
+      },
+      act: (b) => b.add(const TravelerBidsRequested(force: true)),
+      skip: 1,
+      expect: () => [
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          TravelerBidFilter.aTraiter,
+        ),
+      ],
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'onglet choisi pendant le rechargement : jamais écrasé',
+      build: () {
+        final response = Completer<TravelerBidsPage>();
+        when(
+          () => repository.getTravelerBids(
+            page: any(named: 'page'),
+            size: any(named: 'size'),
+          ),
+        ).thenAnswer((_) => response.future);
+        pendingResponse = response;
+        return bloc();
+      },
+      seed: () => TravelerBidsLoaded(
+        bids: const [],
+        page: 0,
+        hasMore: false,
+        filter: TravelerBidFilter.aTraiter,
+      ),
+      act: (b) async {
+        b.add(open);
+        await Future<void>.delayed(Duration.zero);
+        b.add(const TravelerBidsFilterChanged(TravelerBidFilter.terminees));
+        await Future<void>.delayed(Duration.zero);
+        pendingResponse.complete(_page([_bid('b1', 'ACCEPTED')]));
+      },
+      expect: () => [
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'choix de l’utilisateur',
+          TravelerBidFilter.terminees,
+        ),
+        isA<TravelerBidsLoaded>()
+            .having((s) => s.bids.length, 'bids', 1)
+            .having(
+              (s) => s.filter,
+              'toujours le choix de l’utilisateur',
+              TravelerBidFilter.terminees,
+            ),
+      ],
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'onglet courant non vide (dernier choix gardé) : conservé',
+      build: () {
+        stub(_page([_bid('b1', 'PENDING'), _bid('b2', 'NO_SHOW')]));
+        return bloc();
+      },
+      seed: () => TravelerBidsLoaded(
+        bids: const [],
+        page: 0,
+        hasMore: false,
+        filter: TravelerBidFilter.terminees,
+      ),
+      act: (b) => b.add(open),
+      expect: () => [
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          TravelerBidFilter.terminees,
+        ),
+      ],
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'une seule décision : le rechargement suivant ne bascule plus',
+      build: () {
+        var calls = 0;
+        when(
+          () => repository.getTravelerBids(
+            page: any(named: 'page'),
+            size: any(named: 'size'),
+          ),
+        ).thenAnswer((_) async {
+          calls++;
+          return calls == 1
+              ? _page([_bid('b1', 'ACCEPTED')])
+              : _page([_bid('b2', 'NO_SHOW')]);
+        });
+        return bloc();
+      },
+      act: (b) async {
+        b.add(open);
+        await Future<void>.delayed(Duration.zero);
+        b.add(const TravelerBidsRequested(force: true));
+      },
+      skip: 1,
+      expect: () => [
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          TravelerBidFilter.acceptees,
+        ),
+        isA<TravelerBidsLoaded>()
+            .having((s) => s.bids.single.id, 'bid', 'b2')
+            .having(
+              (s) => s.filter,
+              'filter inchangé',
+              TravelerBidFilter.acceptees,
+            ),
+      ],
+    );
+
+    test('doublé par un chargement plus récent : la décision suit', () async {
+      final slow = Completer<TravelerBidsPage>();
+      var calls = 0;
+      when(
+        () => repository.getTravelerBids(
+          page: any(named: 'page'),
+          size: any(named: 'size'),
+        ),
+      ).thenAnswer((_) {
+        calls++;
+        if (calls == 1) return slow.future;
+        return Future.value(_page([_bid('b1', 'ACCEPTED')]));
+      });
+      final b = bloc();
+      final done = Completer<Object?>();
+      b
+        ..add(open)
+        ..add(TravelerBidsRequested(force: true, done: done));
+      await done.future;
+      slow.complete(_page(const []));
+
+      expect(
+        b.state,
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          TravelerBidFilter.acceptees,
+        ),
+      );
+      await b.close();
+    });
+
+    test('échec du chargement : décision abandonnée', () async {
+      var calls = 0;
+      when(
+        () => repository.getTravelerBids(
+          page: any(named: 'page'),
+          size: any(named: 'size'),
+        ),
+      ).thenAnswer((_) async {
+        calls++;
+        if (calls == 1) throw Exception('réseau');
+        return _page([_bid('b1', 'ACCEPTED')]);
+      });
+      final b = bloc();
+      final failed = Completer<Object?>();
+      b.add(
+        TravelerBidsRequested(
+          force: true,
+          autoSelectFilter: true,
+          done: failed,
+        ),
+      );
+      expect(await failed.future, isNotNull);
+      final done = Completer<Object?>();
+      b.add(TravelerBidsRequested(force: true, done: done));
+      await done.future;
+
+      expect(
+        b.state,
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          TravelerBidFilter.aTraiter,
+        ),
+      );
+      await b.close();
+    });
+  });
 }
