@@ -104,6 +104,11 @@ void main() {
     final continueButton = find.byKey(const Key('intent-sheet-continue'));
     expect(continueButton, findsOneWidget);
     await tester.tap(find.byKey(const Key('intent-option-sender')));
+    // La ligne d'aide sous « Votre destination principale » (DQ) allonge la
+    // feuille : la puce peut passer sous le bouton collé en bas, on la fait
+    // défiler à l'écran comme le ferait l'utilisateur.
+    await tester.ensureVisible(find.byKey(const Key('intent-destination-CI')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('intent-destination-CI')));
     await tester.pump();
     await tester.tap(continueButton);
