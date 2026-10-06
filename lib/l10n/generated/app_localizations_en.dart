@@ -6594,6 +6594,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negotiationCardCapabilityUnderstoodButton => 'Got it';
 
   @override
+  String get negotiationCardCapabilityCountryMissingBody =>
+      'The sender only accepts card payment for this parcel. Add your country of residence to activate card payments.';
+
+  @override
+  String get negotiationCardCapabilitySetCountryButton => 'Add my country';
+
+  @override
+  String negotiationCardCapabilityProfileCountry(String country) {
+    return 'Your profile country: $country';
+  }
+
+  @override
+  String get negotiationCardCapabilityChangeCountryButton =>
+      'Change my country';
+
+  @override
+  String get requestPublicCardOnlyWarning =>
+      'This parcel only accepts card payment: activate card payments to offer your trip.';
+
+  @override
+  String get requestPublicCardOnlyWarningCountryMissing =>
+      'This parcel only accepts card payment: add your country of residence to activate card payments.';
+
+  @override
+  String get requestPublicCardOnlyWarningCountryUnsupported =>
+      'This parcel only accepts card payment, and Stripe doesn\'t support activating it from your country yet.';
+
+  @override
   String negotiationCardRoundShortLabel(int round, String timeAgo) {
     return 'Rd. $round/5 · $timeAgo';
   }

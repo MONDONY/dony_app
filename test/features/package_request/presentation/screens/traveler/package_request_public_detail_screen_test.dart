@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -15,9 +16,12 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,7 +29,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/currency_test_doubles.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
+import '../../../../../helpers/stripe_account_test_doubles.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -62,6 +68,7 @@ PackageRequest _makeRequest({
   bool negotiable = true,
   double? targetPriceEur,
   double? grossPriceEur,
+  Set<PaymentMethod> acceptedPaymentMethods = const {},
 }) => PackageRequest(
   id: 'pr-owner-test',
   senderId: _senderId,
@@ -79,6 +86,7 @@ PackageRequest _makeRequest({
   negotiable: negotiable,
   targetPriceEur: targetPriceEur,
   grossPriceEur: grossPriceEur,
+  acceptedPaymentMethods: acceptedPaymentMethods,
 );
 
 // ── Pump helper (pile navigable) ─────────────────────────────────────────────
@@ -89,6 +97,7 @@ PackageRequest _makeRequest({
 Future<GoRouter> _pumpRouted(
   WidgetTester tester, {
   required _MockAuthBloc authBloc,
+  MockStripeAccountBloc? stripeBloc,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1.0;
@@ -115,8 +124,20 @@ Future<GoRouter> _pumpRouted(
   );
 
   await tester.pumpWidget(
-    BlocProvider<AuthBloc>.value(
-      value: authBloc,
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>.value(value: authBloc),
+        // Fournis à l'échelle de l'app (`app.dart`) : la fiche y lit la
+        // capacité carte du voyageur (FLUTTER-E9).
+        BlocProvider<StripeAccountBloc>.value(
+          value: stripeBloc ?? stubStripeAccountBloc(),
+        ),
+        BlocProvider<BusinessPrefsBloc>.value(
+          value: stubBusinessPrefsBloc(
+            state: const BusinessPrefsState(country: 'FR'),
+          ),
+        ),
+      ],
       child: MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
     ),
   );
@@ -436,6 +457,154 @@ void main() {
         expect(find.text('Proposer mon trajet'), findsNothing);
       },
     );
+  });
+
+  // ── FLUTTER-E9 : colis carte seule, capacité lue sur le StripeAccountBloc ──
+  group('voyageur, colis carte seule (FLUTTER-E9)', () {
+    const traveler = UserModel(
+      id: 'traveler-card',
+      roles: [],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
+    late _MockNegotiationBloc negoBloc;
+
+    setUpAll(() async {
+      registerFallbackValue(const StripeAccountStatusLoaded());
+      await initializeDateFormatting('fr');
+    });
+
+    setUp(() {
+      negoBloc = _MockNegotiationBloc();
+      when(() => negoBloc.state).thenReturn(const NegotiationInitial());
+      when(
+        () => negoBloc.stream,
+      ).thenAnswer((_) => const Stream<NegotiationState>.empty());
+      final priceRepo = _MockPriceEstimationRepository();
+      final announcementRepo = _MockAnnouncementRepository();
+      when(
+        () => priceRepo.estimate(
+          from: any(named: 'from'),
+          to: any(named: 'to'),
+          weight: any(named: 'weight'),
+          currency: any(named: 'currency'),
+        ),
+      ).thenThrow(Exception('no estimate'));
+      when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
+      );
+      getIt
+        ..registerFactory<NegotiationBloc>(() => negoBloc)
+        ..registerLazySingleton<PriceEstimationRepository>(() => priceRepo)
+        ..registerLazySingleton<AnnouncementRepository>(() => announcementRepo);
+      when(() => repo.getById(any())).thenAnswer(
+        (_) async =>
+            _makeRequest(acceptedPaymentMethods: const {PaymentMethod.stripe}),
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(traveler));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(traveler),
+      );
+    });
+
+    tearDown(() {
+      getIt
+        ..unregister<NegotiationBloc>()
+        ..unregister<PriceEstimationRepository>()
+        ..unregister<AnnouncementRepository>();
+    });
+
+    testWidgets('statut chargé sans carte → avertissement + feuille au tap', (
+      tester,
+    ) async {
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('card-only-warning')), findsOneWidget);
+      await tester.tap(find.text('Proposer mon trajet'));
+      await tester.pumpAndSettle();
+      expect(find.text('Paiement carte requis'), findsOneWidget);
+      expect(find.text('Faire une offre'), findsNothing);
+    });
+
+    testWidgets('compte carte complet → formulaire normal', (tester) async {
+      await _pumpRouted(
+        tester,
+        authBloc: authBloc,
+        stripeBloc: stubStripeAccountBloc(
+          state: const StripeAccountReady(
+            ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('card-only-warning')), findsNothing);
+      await tester.tap(find.text('Proposer mon trajet'));
+      await tester.pumpAndSettle();
+      expect(find.text('Faire une offre'), findsOneWidget);
+    });
+
+    testWidgets('statut inconnu (chargement) → rien n\'est bloqué', (
+      tester,
+    ) async {
+      await _pumpRouted(
+        tester,
+        authBloc: authBloc,
+        stripeBloc: stubStripeAccountBloc(state: const StripeAccountLoading()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('card-only-warning')), findsNothing);
+      await tester.tap(find.text('Proposer mon trajet'));
+      await tester.pumpAndSettle();
+      expect(find.text('Faire une offre'), findsOneWidget);
+    });
+
+    testWidgets('statut jamais chargé ou en erreur → chargement demandé', (
+      tester,
+    ) async {
+      for (final state in const <StripeAccountState>[
+        StripeAccountInitial(),
+        StripeAccountLoadError(),
+      ]) {
+        final stripeBloc = stubStripeAccountBloc(state: state);
+        await _pumpRouted(tester, authBloc: authBloc, stripeBloc: stripeBloc);
+        await tester.pumpAndSettle();
+
+        verify(
+          () => stripeBloc.add(any(that: isA<StripeAccountStatusLoaded>())),
+        ).called(1);
+        expect(find.byKey(const Key('card-only-warning')), findsNothing);
+      }
+    });
+
+    testWidgets('statut déjà chargé → pas de rechargement', (tester) async {
+      final stripeBloc = stubStripeAccountBloc();
+      await _pumpRouted(tester, authBloc: authBloc, stripeBloc: stripeBloc);
+      await tester.pumpAndSettle();
+
+      verifyNever(() => stripeBloc.add(any()));
+    });
+
+    testWidgets('invité → statut Connect jamais demandé', (tester) async {
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthGuestSessionReady(),
+      );
+      final stripeBloc = stubStripeAccountBloc(
+        state: const StripeAccountInitial(),
+      );
+      await _pumpRouted(tester, authBloc: authBloc, stripeBloc: stripeBloc);
+      await tester.pumpAndSettle();
+
+      verifyNever(() => stripeBloc.add(any()));
+      expect(find.byKey(const Key('card-only-warning')), findsNothing);
+    });
   });
 
   // ── Voyageur : prix ferme (_FirmPriceCta) — erreur passée par le catalogue ──

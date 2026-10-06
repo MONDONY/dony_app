@@ -28,7 +28,10 @@ import 'package:dony/features/package_request/presentation/package_request_label
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
+import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -63,7 +66,24 @@ class _PackageRequestPublicDetailScreenState
         AnalyticsEvents.packageRequestDetailOpened,
       ),
     );
+    _ensureStripeStatusLoaded();
     _load();
+  }
+
+  /// Le CTA prévient le voyageur d'un colis « carte seule » qu'il ne pourra
+  /// pas honorer (FLUTTER-E9) : il lui faut son statut Connect. Le shell le
+  /// charge au démarrage ; on ne le redemande ici que s'il manque ou a
+  /// échoué (lien partagé ouvert à froid, réseau coupé au démarrage). Un
+  /// visiteur non connecté n'a pas de compte Connect à lire.
+  void _ensureStripeStatusLoaded() {
+    if (context.read<AuthBloc>().state.currentUserId == null) {
+      return;
+    }
+    final stripeBloc = context.read<StripeAccountBloc>();
+    final state = stripeBloc.state;
+    if (state is StripeAccountInitial || state is StripeAccountLoadError) {
+      stripeBloc.add(const StripeAccountStatusLoaded());
+    }
   }
 
   Future<void> _load() async {
@@ -268,11 +288,26 @@ class _PackageRequestPublicDetailScreenState
               )
             : _request == null
             ? const SizedBox.shrink()
-            : PackageRequestPublicDetailBody(
-                request: _request!,
-                announcement: announcement,
-                currentUserId: currentUserId,
-                onChanged: _load,
+            : BlocBuilder<StripeAccountBloc, StripeAccountState>(
+                builder: (context, stripeState) =>
+                    BlocSelector<
+                      BusinessPrefsBloc,
+                      BusinessPrefsState,
+                      String?
+                    >(
+                      selector: (prefs) => prefs.country,
+                      builder: (context, profileCountry) =>
+                          PackageRequestPublicDetailBody(
+                            request: _request!,
+                            announcement: announcement,
+                            currentUserId: currentUserId,
+                            onChanged: _load,
+                            cardCapabilityGap: knownCardCapabilityGap(
+                              stripeState,
+                              profileCountry: profileCountry,
+                            ),
+                          ),
+                    ),
               ),
       ),
     );
@@ -288,6 +323,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     this.announcement,
     this.currentUserId,
     this.onChanged,
+    this.cardCapabilityGap,
   });
 
   final PackageRequest request;
@@ -302,6 +338,18 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   /// propriétaire, fermeture de la sheet d'offre ou retour de la négociation
   /// côté voyageur (le CTA dépend de [PackageRequest.viewerThreadId]).
   final VoidCallback? onChanged;
+
+  /// Ce qui empêche le voyageur d'encaisser par carte, quand c'est **avéré**
+  /// (cf. [knownCardCapabilityGap]) ; `null` s'il le peut ou si on l'ignore.
+  final CardCapabilityGap? cardCapabilityGap;
+
+  /// Le voyageur ne pourra pas honorer ce colis « carte seule » : le serveur
+  /// refuserait l'offre en 422 après qu'il a rempli tout le formulaire
+  /// (FLUTTER-E9). On le lui dit avant, et le CTA ouvre la même feuille que
+  /// le 422 au lieu du formulaire. Statut inconnu : rien n'est bloqué.
+  bool get _cardOnlyBlocked =>
+      cardCapabilityGap != null &&
+      acceptsCardOnly(request.acceptedPaymentMethods);
 
   String get _sizeLabel => switch (request.parcelSize.name.toUpperCase()) {
     'SMALL' => 'S',
@@ -337,6 +385,13 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     // dony_urgency.dart.
     final isUrgent = isUrgentDate(r.desiredDate);
     final isGuest = currentUserId == null;
+    // Seul un voyageur sur le point de faire une offre est concerné : ni le
+    // visiteur, ni le propriétaire, ni celui qui a déjà une offre en cours.
+    final cardBlocked =
+        !isGuest &&
+        currentUserId != r.senderId &&
+        r.viewerThreadId == null &&
+        _cardOnlyBlocked;
     return Stack(
       children: [
         SingleChildScrollView(
@@ -529,6 +584,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                 const SizedBox(height: DonySpacing.md),
                 _PaymentMethodsCard(methods: r.acceptedPaymentMethods),
               ],
+              if (cardBlocked) ...[
+                const SizedBox(height: DonySpacing.sm),
+                _CardOnlyWarning(gap: cardCapabilityGap!),
+              ],
               if (r.pickupNeighborhood != null ||
                   r.deliveryNeighborhood != null) ...[
                 const SizedBox(height: DonySpacing.md),
@@ -579,13 +638,17 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                 )
               : r.negotiable
               ? DonyButton(
+                  key: const Key('propose-trip'),
                   label: l.requestPublicProposeTripCta,
-                  onPressed: () => _makeOffer(context),
+                  onPressed: () => cardBlocked
+                      ? showCardCapabilityRequiredSheet(context)
+                      : _makeOffer(context),
                 )
               : _FirmPriceCta(
                   request: r,
                   announcement: announcement,
                   onChanged: onChanged,
+                  cardBlocked: cardBlocked,
                 ),
         ),
       ],
@@ -969,6 +1032,7 @@ class _FirmPriceCta extends StatelessWidget {
     required this.request,
     this.announcement,
     this.onChanged,
+    this.cardBlocked = false,
   });
 
   final PackageRequest request;
@@ -977,7 +1041,14 @@ class _FirmPriceCta extends StatelessWidget {
   /// Rappelé à la fermeture de la sheet, cf. [PackageRequestPublicDetailBody.onChanged].
   final VoidCallback? onChanged;
 
+  /// Colis « carte seule » que le voyageur ne peut pas encaisser : le CTA
+  /// ouvre la feuille d'explication au lieu du formulaire d'offre.
+  final bool cardBlocked;
+
   Future<void> _take(BuildContext context, double price) async {
+    if (cardBlocked) {
+      return showCardCapabilityRequiredSheet(context);
+    }
     await MakeOfferBottomSheet.show(
       context,
       packageRequestId: request.id,
@@ -1037,6 +1108,55 @@ class _FirmPriceCta extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+/// Avertissement sous les moyens de paiement : le colis n'accepte que la
+/// carte et le voyageur ne peut pas encore l'encaisser. La consigne suit la
+/// cause réelle (activation, pays à renseigner, pays non couvert).
+class _CardOnlyWarning extends StatelessWidget {
+  const _CardOnlyWarning({required this.gap});
+
+  final CardCapabilityGap gap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final message = switch (gap) {
+      CardCapabilityGap.activatable => l.requestPublicCardOnlyWarning,
+      CardCapabilityGap.countryMissing =>
+        l.requestPublicCardOnlyWarningCountryMissing,
+      CardCapabilityGap.countryUnsupported =>
+        l.requestPublicCardOnlyWarningCountryUnsupported,
+    };
+    return Container(
+      key: const Key('card-only-warning'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.warning.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            // Aligne optiquement l'icône sur la première ligne du texte.
+            padding: const EdgeInsets.only(top: 1),
+            child: DonyIcon('info', size: 16, color: cs.warning),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: tt.bodySmall?.copyWith(color: cs.onSurface, height: 1.4),
+            ),
+          ),
+        ],
       ),
     );
   }

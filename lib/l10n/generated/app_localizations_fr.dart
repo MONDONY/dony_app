@@ -6629,6 +6629,34 @@ class AppLocalizationsFr extends AppLocalizations {
   String get negotiationCardCapabilityUnderstoodButton => 'J\'ai compris';
 
   @override
+  String get negotiationCardCapabilityCountryMissingBody =>
+      'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Renseigne ton pays de résidence pour activer le paiement carte.';
+
+  @override
+  String get negotiationCardCapabilitySetCountryButton => 'Renseigner mon pays';
+
+  @override
+  String negotiationCardCapabilityProfileCountry(String country) {
+    return 'Ton pays de profil : $country';
+  }
+
+  @override
+  String get negotiationCardCapabilityChangeCountryButton =>
+      'Modifier mon pays';
+
+  @override
+  String get requestPublicCardOnlyWarning =>
+      'Ce colis n\'accepte que la carte : active le paiement carte pour le proposer.';
+
+  @override
+  String get requestPublicCardOnlyWarningCountryMissing =>
+      'Ce colis n\'accepte que la carte : renseigne ton pays de résidence pour activer le paiement carte.';
+
+  @override
+  String get requestPublicCardOnlyWarningCountryUnsupported =>
+      'Ce colis n\'accepte que la carte, et Stripe ne permet pas encore de l\'activer depuis ton pays.';
+
+  @override
   String negotiationCardRoundShortLabel(int round, String timeAgo) {
     return 'R.$round/5 · $timeAgo';
   }

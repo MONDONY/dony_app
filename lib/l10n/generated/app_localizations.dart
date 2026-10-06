@@ -10986,6 +10986,48 @@ abstract class AppLocalizations {
   /// **'J\'ai compris'**
   String get negotiationCardCapabilityUnderstoodButton;
 
+  /// Corps de la feuille quand le profil n'a pas de pays de résidence : Stripe ne peut pas être évalué (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Renseigne ton pays de résidence pour activer le paiement carte.'**
+  String get negotiationCardCapabilityCountryMissingBody;
+
+  /// Bouton vers les préférences pour saisir le pays de résidence (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseigner mon pays'**
+  String get negotiationCardCapabilitySetCountryButton;
+
+  /// Pays de résidence du profil, affiché quand Stripe ne le couvre pas ; `country` déjà traduit (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton pays de profil : {country}'**
+  String negotiationCardCapabilityProfileCountry(String country);
+
+  /// Bouton secondaire vers les préférences pour changer de pays (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier mon pays'**
+  String get negotiationCardCapabilityChangeCountryButton;
+
+  /// Avertissement sur la fiche d'un colis carte seule quand le voyageur n'a pas activé la carte (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'accepte que la carte : active le paiement carte pour le proposer.'**
+  String get requestPublicCardOnlyWarning;
+
+  /// Avertissement sur la fiche d'un colis carte seule quand le profil n'a pas de pays (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'accepte que la carte : renseigne ton pays de résidence pour activer le paiement carte.'**
+  String get requestPublicCardOnlyWarningCountryMissing;
+
+  /// Avertissement sur la fiche d'un colis carte seule quand Stripe ne couvre pas le pays du voyageur (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'accepte que la carte, et Stripe ne permet pas encore de l\'activer depuis ton pays.'**
+  String get requestPublicCardOnlyWarningCountryUnsupported;
+
   /// Ligne round abrégé + horodatage relatif d'une carte de négociation colis ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _NegoCard)
   ///
   /// In fr, this message translates to:
