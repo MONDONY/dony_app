@@ -28,7 +28,15 @@ import 'package:go_router/go_router.dart';
     open: requests.activeCount + openTrips.length,
     awaitingMe:
         requests.actionableCount +
-        openTrips.where((s) => s.myTurn || s.needsMyPayment).length,
+        openTrips
+            .where(
+              // `myTurn` n'a de sens qu'en pleine discussion : le back le
+              // laissait à vrai sur un fil PENDING (FLUTTER-EA), allumant
+              // « Une offre attend votre réponse » sans offre à traiter.
+              (s) =>
+                  (s.status == 'NEGOTIATING' && s.myTurn) || s.needsMyPayment,
+            )
+            .length,
   );
 }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -90,4 +92,48 @@ void main() {
       isA<NotificationDetailError>(),
     ],
   );
+
+  group('écran quitté pendant le chargement (FLUTTER-EC/ED)', () {
+    test('réponse arrivée après close : aucune exception, rien émis', () async {
+      final completer = Completer<NotificationDetail>();
+      when(
+        () => repository.getDetail('a1'),
+      ).thenAnswer((_) => completer.future);
+      final cubit = NotificationDetailCubit(repository, analytics);
+      final states = <NotificationDetailState>[];
+      final sub = cubit.stream.listen(states.add);
+
+      final loading = cubit.load('a1');
+      await Future<void>.delayed(Duration.zero);
+      await cubit.close();
+      completer.complete(_detail());
+      await loading;
+
+      expect(states, [const NotificationDetailLoading()]);
+      verifyNever(() => repository.markRead(any()));
+      verifyNever(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      );
+      await sub.cancel();
+    });
+
+    test('erreur arrivée après close : aucune exception, rien émis', () async {
+      final completer = Completer<NotificationDetail>();
+      when(
+        () => repository.getDetail('a1'),
+      ).thenAnswer((_) => completer.future);
+      final cubit = NotificationDetailCubit(repository, analytics);
+      final states = <NotificationDetailState>[];
+      final sub = cubit.stream.listen(states.add);
+
+      final loading = cubit.load('a1');
+      await Future<void>.delayed(Duration.zero);
+      await cubit.close();
+      completer.completeError(Exception('timeout'));
+      await loading;
+
+      expect(states, [const NotificationDetailLoading()]);
+      await sub.cancel();
+    });
+  });
 }

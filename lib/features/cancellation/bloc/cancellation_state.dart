@@ -19,6 +19,12 @@ class RematchSuggestionsLoaded extends CancellationState {
 
 class NoShowReported extends CancellationState {}
 
+/// L'expéditeur a signalé l'absence du voyageur : le back annule et
+/// rembourse aussitôt, sans délai de contestation (FLUTTER-E3). Sous-type de
+/// [NoShowReported] pour que les écouteurs existants (refetch) continuent de
+/// réagir ; seul le message diffère.
+class TravelerNoShowReported extends NoShowReported {}
+
 class NoShowContested extends CancellationState {}
 
 class DeliveryNoShowReported extends CancellationState {}

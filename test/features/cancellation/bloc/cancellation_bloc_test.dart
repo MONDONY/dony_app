@@ -206,7 +206,7 @@ void main() {
 
   group('TravelerNoShowReportRequested', () {
     blocTest<CancellationBloc, CancellationState>(
-      'emits [Loading, NoShowReported] and calls reportTravelerNoShow on success',
+      'emits [Loading, TravelerNoShowReported] and calls reportTravelerNoShow on success',
       build: buildBloc,
       setUp: () {
         when(
@@ -214,7 +214,7 @@ void main() {
         ).thenAnswer((_) async {});
       },
       act: (b) => b.add(TravelerNoShowReportRequested('bid-1')),
-      expect: () => [isA<CancellationLoading>(), isA<NoShowReported>()],
+      expect: () => [isA<CancellationLoading>(), isA<TravelerNoShowReported>()],
       verify: (_) {
         verify(() => mockRepo.reportTravelerNoShow('bid-1')).called(1);
       },

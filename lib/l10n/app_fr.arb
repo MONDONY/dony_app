@@ -6181,6 +6181,23 @@
   "@negotiationMakeOfferTravelDateLabel": {
     "description": "Label majuscule du champ date (make_offer_bottom_sheet.dart)"
   },
+  "negotiationMakeOfferTravelDateHint": "Entre le {start} et le {end} (demande du {desired} ± {days} j)",
+  "@negotiationMakeOfferTravelDateHint": {
+    "description": "Aide sous le champ date de la feuille d'offre : fenêtre permise (date souhaitée ± tolérance, jamais avant aujourd'hui) — make_offer_bottom_sheet.dart (FLUTTER-E7)",
+    "placeholders": {
+      "start": {"type": "String"},
+      "end": {"type": "String"},
+      "desired": {"type": "String"},
+      "days": {"type": "int"}
+    }
+  },
+  "negotiationMakeOfferTravelDateHintExact": "Le {desired} uniquement (date de la demande, sans tolérance)",
+  "@negotiationMakeOfferTravelDateHintExact": {
+    "description": "Aide sous le champ date quand la demande n'a pas de tolérance : seul le jour souhaité est permis — make_offer_bottom_sheet.dart (FLUTTER-E7)",
+    "placeholders": {
+      "desired": {"type": "String"}
+    }
+  },
   "negotiationMakeOfferSelectDatePlaceholder": "Sélectionner…",
   "@negotiationMakeOfferSelectDatePlaceholder": {
     "description": "Texte du champ date tant qu'aucune date n'est choisie (make_offer_bottom_sheet.dart)"
@@ -6751,7 +6768,7 @@
   "@bidDetailSenderNoShowSheetBody": {
     "description": "Corps de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)"
   },
-  "bidDetailSenderNoShowSheetHint": "Le voyageur aura 24 h pour contester. Sans réponse de sa part, l'envoi sera annulé.",
+  "bidDetailSenderNoShowSheetHint": "Votre envoi sera annulé immédiatement. Si vous avez payé en ligne, vous serez remboursé intégralement.",
   "@bidDetailSenderNoShowSheetHint": {
     "description": "Note explicative de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)"
   },
@@ -7033,6 +7050,10 @@
   "bidDetailAcceptedSetHandoverWindow": "Demande acceptée ! Définissez maintenant la fenêtre de remise.",
   "@bidDetailAcceptedSetHandoverWindow": {
     "description": "Snackbar après acceptation via BidAcceptanceBloc (bid_detail_screen.dart)"
+  },
+  "bidDetailTravelerNoShowReportedSnackbar": "Absence du voyageur signalée : votre envoi est annulé.",
+  "@bidDetailTravelerNoShowReportedSnackbar": {
+    "description": "Snackbar TravelerNoShowReported : l'expéditeur a signalé l'absence du voyageur, le back annule et rembourse aussitôt, sans contestation (bid_detail_screen.dart, FLUTTER-E3)"
   },
   "bidDetailNoShowReportedSnackbar": "Absence signalée. L'expéditeur a 24 h pour contester.",
   "@bidDetailNoShowReportedSnackbar": {

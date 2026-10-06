@@ -6363,6 +6363,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negotiationMakeOfferTravelDateLabel => 'TRAVEL DATE';
 
   @override
+  String negotiationMakeOfferTravelDateHint(
+    String start,
+    String end,
+    String desired,
+    int days,
+  ) {
+    return 'Between $start and $end (requested $desired ± $days d)';
+  }
+
+  @override
+  String negotiationMakeOfferTravelDateHintExact(String desired) {
+    return '$desired only (requested date, no flexibility)';
+  }
+
+  @override
   String get negotiationMakeOfferSelectDatePlaceholder => 'Select…';
 
   @override
@@ -6800,7 +6815,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailSenderNoShowSheetHint =>
-      'The traveler will have 24 hours to contest. If they don\'t respond, the shipment will be canceled.';
+      'Your shipment will be canceled right away. If you paid online, you\'ll get a full refund.';
 
   @override
   String get bidDetailSenderContestationExpired => 'Expired';
@@ -7019,6 +7034,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidDetailAcceptedSetHandoverWindow =>
       'Request accepted! Now set the drop-off window.';
+
+  @override
+  String get bidDetailTravelerNoShowReportedSnackbar =>
+      'Traveler no-show reported: your shipment has been canceled.';
 
   @override
   String get bidDetailNoShowReportedSnackbar =>

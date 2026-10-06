@@ -87,7 +87,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     emit(CancellationLoading());
     try {
       await _repository.reportTravelerNoShow(event.bidId);
-      emit(NoShowReported());
+      emit(TravelerNoShowReported());
       unawaited(_analytics.logEvent(AnalyticsEvents.noShowReportedBySender));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));

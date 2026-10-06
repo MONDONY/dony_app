@@ -703,7 +703,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       final ctx = widget.lockContext!;
       _departureCityNotifier.value = ctx.departureCity;
       _arrivalCityNotifier.value = ctx.arrivalCity;
-      _departureDateNotifier.value = ctx.desiredDate;
+      _departureDateNotifier.value = ctx.preferredDate ?? ctx.desiredDate;
       _availableKgNotifier.value = ctx.weightKg;
       _transportModeNotifier.value = ctx.transportMode;
     }
@@ -1599,10 +1599,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     DateTime firstDate = today;
     DateTime lastDate = today.add(const Duration(days: 365));
     if (_isLocked) {
-      final lc = widget.lockContext!;
-      // Clamp to today as floor — backend rejects past dates regardless of tolerance.
-      firstDate = lc.earliestDate.isBefore(today) ? today : lc.earliestDate;
-      lastDate = lc.latestDate;
+      // Fenêtre de la demande, plancher aujourd'hui : même calcul que la
+      // feuille d'offre (LockedTripContext.travelDateWindow).
+      final window = widget.lockContext!.travelWindow;
+      firstDate = window.first;
+      lastDate = window.last;
     }
     final initial =
         _departureDateNotifier.value ??

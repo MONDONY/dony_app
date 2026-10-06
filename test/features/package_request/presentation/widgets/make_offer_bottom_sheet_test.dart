@@ -6,6 +6,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
@@ -133,6 +134,9 @@ void main() {
     bool isFirmPrice = false,
     double? targetPriceEur,
     double? displayPriceEur,
+    DateTime? desiredDate,
+    int dateToleranceDays = 3,
+    void Function(Object? extra)? onTripsCreate,
   }) => MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
@@ -149,8 +153,8 @@ void main() {
                 // Aligné sur `_sampleAnnouncement().departureDate` (12 juin
                 // 2026) pour que le trajet reste dans la fenêtre de tolérance
                 // de TripPickerSection.
-                desiredDate: DateTime(2026, 6, 12),
-                dateToleranceDays: 3,
+                desiredDate: desiredDate ?? DateTime(2026, 6, 12),
+                dateToleranceDays: dateToleranceDays,
                 transportMode: TransportMode.plane,
                 initialDate: initialDate,
                 isFirmPrice: isFirmPrice,
@@ -170,20 +174,23 @@ void main() {
         // succès → `pop(true)`, annulation/retour → `pop()` (aucune valeur).
         GoRoute(
           path: '/trips/create',
-          builder: (routeCtx, _) => Scaffold(
-            body: Column(
-              children: [
-                ElevatedButton(
-                  onPressed: () => Navigator.of(routeCtx).pop(true),
-                  child: const Text('Simuler trajet créé'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(routeCtx).pop(),
-                  child: const Text('Simuler annulation'),
-                ),
-              ],
-            ),
-          ),
+          builder: (routeCtx, routeState) {
+            onTripsCreate?.call(routeState.extra);
+            return Scaffold(
+              body: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(routeCtx).pop(true),
+                    child: const Text('Simuler trajet créé'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(routeCtx).pop(),
+                    child: const Text('Simuler annulation'),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ],
     ),
@@ -301,7 +308,12 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('12 juin 2026'), findsOneWidget);
+      // Texte exact du champ : l'aide sous le champ cite aussi la date de
+      // la demande (« demande du 12 juin 2026 »).
+      expect(
+        find.text(DateFormat.yMMMEd('fr').format(DateTime(2026, 6, 12))),
+        findsOneWidget,
+      );
       expect(find.text('Sélectionner…'), findsNothing);
     });
 
@@ -676,5 +688,126 @@ void main() {
       expect(find.text('high'), findsOneWidget);
       expect(find.text('élevée'), findsNothing);
     });
+  });
+
+  group('MakeOfferBottomSheet — fenêtre de la date de voyage (FLUTTER-E7)', () {
+    DateTime today() => DateUtils.dateOnly(DateTime.now());
+    DateTime day(int offset) {
+      final t = today();
+      return DateTime(t.year, t.month, t.day + offset);
+    }
+
+    Future<void> openSheet(WidgetTester tester, Widget app) async {
+      await tester.pumpWidget(app);
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+    }
+
+    Future<DatePickerDialog> openPicker(
+      WidgetTester tester,
+      Finder field,
+    ) async {
+      await tester.ensureVisible(field);
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+      return tester.widget<DatePickerDialog>(find.byType(DatePickerDialog));
+    }
+
+    testWidgets('le sélecteur est borné à souhaitée ± tolérance', (
+      tester,
+    ) async {
+      await openSheet(tester, wrap(desiredDate: day(20)));
+      final picker = await openPicker(tester, find.text('Sélectionner…'));
+      expect(picker.firstDate, day(17));
+      expect(picker.lastDate, day(23));
+      expect(picker.initialDate, day(20));
+    });
+
+    testWidgets('la borne basse ne passe jamais avant aujourd\'hui', (
+      tester,
+    ) async {
+      await openSheet(tester, wrap(desiredDate: day(1), dateToleranceDays: 5));
+      final picker = await openPicker(tester, find.text('Sélectionner…'));
+      expect(picker.firstDate, today());
+      expect(picker.lastDate, day(6));
+    });
+
+    testWidgets('une date pré-remplie hors fenêtre est ramenée dedans', (
+      tester,
+    ) async {
+      final outside = day(60);
+      await openSheet(tester, wrap(initialDate: outside, desiredDate: day(20)));
+      final picker = await openPicker(
+        tester,
+        find.text(DateFormat.yMMMEd('fr').format(outside)),
+      );
+      expect(picker.initialDate, day(23));
+    });
+
+    testWidgets('tolérance 0 : seul le jour souhaité, aide dédiée', (
+      tester,
+    ) async {
+      await openSheet(tester, wrap(desiredDate: day(10), dateToleranceDays: 0));
+      final desired = DateFormat.yMMMd('fr').format(day(10));
+      expect(
+        find.text(
+          'Le $desired uniquement (date de la demande, sans tolérance)',
+        ),
+        findsOneWidget,
+      );
+      final picker = await openPicker(tester, find.text('Sélectionner…'));
+      expect(picker.firstDate, day(10));
+      expect(picker.lastDate, day(10));
+    });
+
+    testWidgets('aide sous le champ, en français', (tester) async {
+      await openSheet(tester, wrap(desiredDate: day(20)));
+      final fmt = DateFormat.yMMMd('fr');
+      expect(
+        find.text(
+          'Entre le ${fmt.format(day(17))} et le ${fmt.format(day(23))} '
+          '(demande du ${fmt.format(day(20))} ± 3 j)',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('aide sous le champ, en anglais', (tester) async {
+      useEnglish();
+      await openSheet(tester, wrap(desiredDate: day(20)));
+      final fmt = DateFormat.yMMMd('en');
+      expect(
+        find.text(
+          'Between ${fmt.format(day(17))} and ${fmt.format(day(23))} '
+          '(requested ${fmt.format(day(20))} ± 3 d)',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'le trajet dédié reçoit la date choisie, ramenée dans la fenêtre',
+      (tester) async {
+        Object? extra;
+        await openSheet(
+          tester,
+          wrap(
+            initialDate: day(60),
+            desiredDate: day(20),
+            onTripsCreate: (e) => extra = e,
+          ),
+        );
+        await tester.enterText(find.byType(TextFormField).first, '25');
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Créer un nouveau trajet'));
+        await tester.tap(find.text('Créer un nouveau trajet'));
+        await tester.pumpAndSettle();
+
+        expect(extra, isA<CreateTripArgs>());
+        final lock = (extra! as CreateTripArgs).lockContext!;
+        expect(lock.preferredDate, day(23));
+        expect(lock.desiredDate, day(20));
+      },
+    );
   });
 }

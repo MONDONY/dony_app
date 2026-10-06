@@ -17,6 +17,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 // ── Mock ──────────────────────────────────────────────────────────────────────
 
 class _MockCancellationBloc
@@ -183,11 +185,15 @@ void main() {
 
       // The confirmation sheet should be visible
       expect(find.textContaining("Signaler l'absence"), findsWidgets);
-      // Délai de contestation aligné sur le serveur (24 h, pas 48 h).
+      // Le back annule et rembourse aussitôt, sans contestation (FLUTTER-E3).
       expect(
-        find.textContaining('Le voyageur aura 24 h pour contester'),
+        find.text(
+          'Votre envoi sera annulé immédiatement. Si vous avez payé en ligne, '
+          'vous serez remboursé intégralement.',
+        ),
         findsOneWidget,
       );
+      expect(find.textContaining('pour contester'), findsNothing);
 
       // Tap the confirmation button in stickyBottom (the DonyButton in the sheet)
       final confirmBtn = find.descendant(
@@ -203,6 +209,32 @@ void main() {
           any(that: isA<TravelerNoShowReportRequested>()),
         ),
       ).called(1);
+    },
+  );
+
+  testWidgets(
+    '5 bis · feuille de signalement en anglais : annulation immédiate, '
+    'pas de délai de contestation (FLUTTER-E3)',
+    (tester) async {
+      useEnglish();
+      final bid = _bid(
+        status: 'ACCEPTED',
+        handoverDeadline: DateTime.now().subtract(const Duration(hours: 2)),
+      );
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      await tester.tap(find.text("Report the traveler's no-show"));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Your shipment will be canceled right away. If you paid online, '
+          "you'll get a full refund.",
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('contest'), findsNothing);
     },
   );
 

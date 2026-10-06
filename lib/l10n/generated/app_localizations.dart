@@ -10596,6 +10596,23 @@ abstract class AppLocalizations {
   /// **'DATE DE VOYAGE'**
   String get negotiationMakeOfferTravelDateLabel;
 
+  /// Aide sous le champ date de la feuille d'offre : fenêtre permise (date souhaitée ± tolérance, jamais avant aujourd'hui) — make_offer_bottom_sheet.dart (FLUTTER-E7)
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre le {start} et le {end} (demande du {desired} ± {days} j)'**
+  String negotiationMakeOfferTravelDateHint(
+    String start,
+    String end,
+    String desired,
+    int days,
+  );
+
+  /// Aide sous le champ date quand la demande n'a pas de tolérance : seul le jour souhaité est permis — make_offer_bottom_sheet.dart (FLUTTER-E7)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le {desired} uniquement (date de la demande, sans tolérance)'**
+  String negotiationMakeOfferTravelDateHintExact(String desired);
+
   /// Texte du champ date tant qu'aucune date n'est choisie (make_offer_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -11313,7 +11330,7 @@ abstract class AppLocalizations {
   /// Note explicative de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)
   ///
   /// In fr, this message translates to:
-  /// **'Le voyageur aura 24 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.'**
+  /// **'Votre envoi sera annulé immédiatement. Si vous avez payé en ligne, vous serez remboursé intégralement.'**
   String get bidDetailSenderNoShowSheetHint;
 
   /// _ContestationHero, decompte expire (sender_hero_card.dart)
@@ -11681,6 +11698,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Demande acceptée ! Définissez maintenant la fenêtre de remise.'**
   String get bidDetailAcceptedSetHandoverWindow;
+
+  /// Snackbar TravelerNoShowReported : l'expéditeur a signalé l'absence du voyageur, le back annule et rembourse aussitôt, sans contestation (bid_detail_screen.dart, FLUTTER-E3)
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence du voyageur signalée : votre envoi est annulé.'**
+  String get bidDetailTravelerNoShowReportedSnackbar;
 
   /// Snackbar NoShowReported (bid_detail_screen.dart)
   ///
