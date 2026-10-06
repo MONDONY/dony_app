@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dony/core/services/app_log.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 /// Tonalité de retour d'appel (« tuut… tuut… ») jouée chez l'appelant tant
 /// que l'autre ne décroche pas (FLUTTER-9V).
@@ -23,7 +24,20 @@ abstract interface class RingbackTone {
 
 class AudioPlayersRingbackTone implements RingbackTone {
   AudioPlayersRingbackTone({AudioPlayer? player})
-    : _player = player ?? AudioPlayer(playerId: 'yadony-ringback');
+    : _player = player ?? AudioPlayer(playerId: nextPlayerId());
+
+  static int _created = 0;
+
+  /// Identifiant du lecteur natif, UNIQUE par instance.
+  ///
+  /// Il était fixe (`yadony-ringback`) alors que chaque appel crée sa propre
+  /// instance : sur iOS, `audioplayers_darwin` range les lecteurs natifs par
+  /// identifiant, si bien que la fermeture de l'appel précédent détruisait le
+  /// lecteur de l'appel suivant. Le `play()` recevait alors « Player has not
+  /// yet been created or has already been disposed » (Sentry FLUTTER-9V, 30
+  /// échecs en 24 h, tous sur iPhone).
+  @visibleForTesting
+  static String nextPlayerId() => 'yadony-ringback-${_created++}';
 
   static const asset = 'sounds/ringback_fr.wav';
 
