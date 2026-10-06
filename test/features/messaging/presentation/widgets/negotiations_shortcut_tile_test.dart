@@ -94,6 +94,29 @@ void main() {
       expect(counts.open, 2);
       expect(counts.awaitingMe, 1);
     });
+
+    test('myTurn ne compte que sur un fil en discussion (FLUTTER-EA)', () {
+      final counts = negotiationsShortcutCounts(
+        NegotiationListState(),
+        BidNegotiationListState(
+          summaries: [
+            _trip('t1', myTurn: true),
+            _trip('t2', status: 'PENDING', myTurn: true),
+            _trip('t3', status: 'PENDING', myTurn: true, role: 'TRAVELER'),
+            _trip('t4', status: 'AWAITING_PAYMENT', myTurn: true),
+            _trip(
+              't5',
+              status: 'AWAITING_PAYMENT',
+              myTurn: true,
+              role: 'TRAVELER',
+            ),
+          ],
+        ),
+      );
+      expect(counts.open, 5);
+      // t1 (NEGOTIATING, à moi) + t4 (accord carte à payer par l'expéditeur).
+      expect(counts.awaitingMe, 2);
+    });
   });
 
   group('NegotiationsShortcutSection', () {

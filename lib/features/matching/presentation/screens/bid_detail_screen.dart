@@ -341,7 +341,11 @@ class _BidDetailViewState extends State<_BidDetailView> {
           if (state is NoShowReported) {
             DonySnackbar.show(
               context,
-              message: l.bidDetailNoShowReportedSnackbar,
+              // Signalement par l'expéditeur : annulation immédiate, pas de
+              // délai de contestation à annoncer (FLUTTER-E3).
+              message: state is TravelerNoShowReported
+                  ? l.bidDetailTravelerNoShowReportedSnackbar
+                  : l.bidDetailNoShowReportedSnackbar,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is DeliveryNoShowReported) {

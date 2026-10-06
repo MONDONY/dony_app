@@ -2866,6 +2866,8 @@
   "@negotiationMakeOfferTravelDateLabel": {
     "description": "Label majuscule du champ date (make_offer_bottom_sheet.dart)"
   },
+  "negotiationMakeOfferTravelDateHint": "Between {start} and {end} (requested {desired} ± {days} d)",
+  "negotiationMakeOfferTravelDateHintExact": "{desired} only (requested date, no flexibility)",
   "negotiationMakeOfferSelectDatePlaceholder": "Select…",
   "@negotiationMakeOfferSelectDatePlaceholder": {
     "description": "Texte du champ date tant qu'aucune date n'est choisie (make_offer_bottom_sheet.dart)"
@@ -3414,7 +3416,7 @@
   "@bidDetailSenderNoShowSheetBody": {
     "description": "Corps de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)"
   },
-  "bidDetailSenderNoShowSheetHint": "The traveler will have 24 hours to contest. If they don't respond, the shipment will be canceled.",
+  "bidDetailSenderNoShowSheetHint": "Your shipment will be canceled right away. If you paid online, you'll get a full refund.",
   "@bidDetailSenderNoShowSheetHint": {
     "description": "Note explicative de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)"
   },
@@ -3670,6 +3672,7 @@
   "bidDetailPayByCard": "Pay by card",
   "bidDetailAddCard": "Add a card",
   "bidDetailAcceptedSetHandoverWindow": "Request accepted! Now set the drop-off window.",
+  "bidDetailTravelerNoShowReportedSnackbar": "Traveler no-show reported: your shipment has been canceled.",
   "bidDetailNoShowReportedSnackbar": "No-show reported. The sender has 24 hours to contest.",
   "bidDetailDeliveryNoShowReportedSnackbar": "No-show reported. The other party has 24 hours to contest.",
   "bidDetailContestSentSnackbar": "Contest sent. Our team will review your request.",

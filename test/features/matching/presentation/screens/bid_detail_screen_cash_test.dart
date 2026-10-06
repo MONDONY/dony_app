@@ -691,6 +691,38 @@ void main() {
     );
 
     testWidgets(
+      'TravelerNoShowReported → snackbar d\'annulation, sans délai de '
+      'contestation (FLUTTER-E3) + refetch',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+        whenListen(
+          cancellationBloc,
+          Stream<CancellationState>.fromIterable([TravelerNoShowReported()]),
+          initialState: CancellationInitial(),
+        );
+
+        await _pump(tester, bid: _makeBid(), authBloc: authBloc);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Absence du voyageur signalée : votre envoi est annulé.'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('pour contester'), findsNothing);
+        verify(
+          () => bidBloc.add(any(that: isA<BidDetailRequested>())),
+        ).called(2);
+      },
+    );
+
+    testWidgets(
       'DeliveryNoShowReported → snackbar info + refetch BidDetailRequested',
       (tester) async {
         final authBloc = _MockAuthBloc();

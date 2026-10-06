@@ -6394,6 +6394,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get negotiationMakeOfferTravelDateLabel => 'DATE DE VOYAGE';
 
   @override
+  String negotiationMakeOfferTravelDateHint(
+    String start,
+    String end,
+    String desired,
+    int days,
+  ) {
+    return 'Entre le $start et le $end (demande du $desired ± $days j)';
+  }
+
+  @override
+  String negotiationMakeOfferTravelDateHintExact(String desired) {
+    return 'Le $desired uniquement (date de la demande, sans tolérance)';
+  }
+
+  @override
   String get negotiationMakeOfferSelectDatePlaceholder => 'Sélectionner…';
 
   @override
@@ -6836,7 +6851,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailSenderNoShowSheetHint =>
-      'Le voyageur aura 24 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.';
+      'Votre envoi sera annulé immédiatement. Si vous avez payé en ligne, vous serez remboursé intégralement.';
 
   @override
   String get bidDetailSenderContestationExpired => 'Délai expiré';
@@ -7056,6 +7071,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidDetailAcceptedSetHandoverWindow =>
       'Demande acceptée ! Définissez maintenant la fenêtre de remise.';
+
+  @override
+  String get bidDetailTravelerNoShowReportedSnackbar =>
+      'Absence du voyageur signalée : votre envoi est annulé.';
 
   @override
   String get bidDetailNoShowReportedSnackbar =>

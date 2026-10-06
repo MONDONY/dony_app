@@ -40,6 +40,9 @@ class NotificationDetailCubit extends Cubit<NotificationDetailState> {
     emit(const NotificationDetailLoading());
     try {
       final detail = await _repository.getDetail(id);
+      // L'écran peut être quitté pendant le chargement : un emit sur un cubit
+      // fermé lèverait un StateError (FLUTTER-EC/ED).
+      if (isClosed) return;
       emit(NotificationDetailLoaded(detail));
       unawaited(
         _analytics.logEvent(
@@ -52,6 +55,7 @@ class NotificationDetailCubit extends Cubit<NotificationDetailState> {
         unawaited(_repository.markRead(id).catchError((_) {}));
       }
     } catch (e) {
+      if (isClosed) return;
       emit(NotificationDetailError(unwrapDioError(e)));
     }
   }

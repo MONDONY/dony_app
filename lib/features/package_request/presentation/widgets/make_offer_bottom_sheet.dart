@@ -335,12 +335,32 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     super.dispose();
   }
 
-  DateTime _clampDate(DateTime d) {
-    final now = DateTime.now();
-    final last = now.add(const Duration(days: 90));
-    if (d.isBefore(now)) return now;
-    if (d.isAfter(last)) return last;
-    return d;
+  /// Fenêtre de dates de la demande (souhaitée ± tolérance, jamais avant
+  /// aujourd'hui) : la seule que le back accepte (FLUTTER-E7). Recalculée à
+  /// chaque appel pour suivre le changement de jour, feuille ouverte.
+  ({DateTime first, DateTime last}) get _travelWindow =>
+      LockedTripContext.travelDateWindow(
+        desiredDate: widget.requestDesiredDate,
+        toleranceDays: widget.requestDateToleranceDays,
+      );
+
+  DateTime _clampDate(DateTime d) =>
+      LockedTripContext.clampToWindow(d, _travelWindow);
+
+  /// Ligne d'aide sous le champ date : la fenêtre permise, et d'où elle vient.
+  String _travelWindowHint(AppLocalizations l) {
+    final window = _travelWindow;
+    final fmt = DateFormat.yMMMd(l.localeName);
+    final desired = fmt.format(widget.requestDesiredDate);
+    if (widget.requestDateToleranceDays <= 0) {
+      return l.negotiationMakeOfferTravelDateHintExact(desired);
+    }
+    return l.negotiationMakeOfferTravelDateHint(
+      fmt.format(window.first),
+      fmt.format(window.last),
+      desired,
+      widget.requestDateToleranceDays,
+    );
   }
 
   void _submit() {
@@ -513,13 +533,16 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   iconBgKey: _TileColor.amber,
                   child: InkWell(
                     onTap: () async {
+                      // Bornée à la fenêtre de la demande : hors de celle-ci,
+                      // le back rejette l'offre (FLUTTER-E7).
+                      final window = _travelWindow;
                       final picked = await showDatePicker(
                         context: ctx,
                         initialDate: _clampDate(
-                          date ?? DateTime.now().add(const Duration(days: 7)),
+                          date ?? widget.requestDesiredDate,
                         ),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(const Duration(days: 90)),
+                        firstDate: window.first,
+                        lastDate: window.last,
                       );
                       if (picked != null) _dateNotifier.value = picked;
                     },
@@ -557,6 +580,14 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                       ),
                     ),
                   ),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                _travelWindowHint(l),
+                key: const Key('make-offer-travel-date-hint'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: DonySpacing.md),
@@ -629,6 +660,10 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                               offerBody: _bodyCtrl.text.trim().isEmpty
                                   ? null
                                   : _bodyCtrl.text.trim(),
+                              // La date choisie ici pré-remplit le trajet
+                              // dédié, ramenée dans la fenêtre de la demande
+                              // (FLUTTER-E7).
+                              preferredDate: _clampDate(travelDate),
                             ),
                             negotiationBloc: context.read<NegotiationBloc>(),
                           ),
