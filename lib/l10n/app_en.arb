@@ -9098,5 +9098,15 @@
   "receptionDeclineSheetNote": "The sender will be asked to check the recipient's number.",
   "receptionWithdrawSheetNote": "The sender and the traveler will be notified.",
   "deliveryLockedUntilDeparture": "Available after the trip departs (on {date} at {time})",
-  "deliveryLockedUntilDepartureDay": "Available after the trip departs (on {date})"
+  "deliveryLockedUntilDepartureDay": "Available after the trip departs (on {date})",
+  "chatReplyAction": "Reply",
+  "chatReplyingTo": "Replying to {name}",
+  "chatReplyingToSelf": "Replying to your message",
+  "chatReplyCancelSemantics": "Cancel reply",
+  "chatQuoteYou": "You",
+  "chatQuotePhoto": "Photo",
+  "chatQuoteLocation": "Location",
+  "chatQuoteUnavailable": "Message unavailable",
+  "chatQuoteLoading": "Loading…",
+  "chatQuoteShowSemantics": "Show quoted message"
 }

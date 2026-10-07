@@ -15,7 +15,18 @@ class ChatLoading extends ChatState {
 
 class ChatLoaded extends ChatState {
   final List<MessageModel> messages;
-  const ChatLoaded(this.messages);
+
+  /// Message auquel l'utilisateur répond, `null` hors réponse (FLUTTER-86).
+  final MessageModel? replyingTo;
+
+  /// Messages cités hors des 50 chargés, relus à l'unité : une valeur `null`
+  /// signale un message introuvable, une clé absente une lecture en cours.
+  final Map<String, MessageModel?> quotedMessages;
+  const ChatLoaded(
+    this.messages, {
+    this.replyingTo,
+    this.quotedMessages = const {},
+  });
 }
 
 class ChatError extends ChatState {
@@ -25,7 +36,10 @@ class ChatError extends ChatState {
 
 class ChatReadOnly extends ChatState {
   final List<MessageModel> messages;
-  const ChatReadOnly(this.messages);
+
+  /// Cf. [ChatLoaded.quotedMessages] : les citations restent lisibles.
+  final Map<String, MessageModel?> quotedMessages;
+  const ChatReadOnly(this.messages, {this.quotedMessages = const {}});
 }
 
 class ChatDeletingConversation extends ChatState {
