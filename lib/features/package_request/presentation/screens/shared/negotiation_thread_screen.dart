@@ -7,9 +7,11 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/widgets/commission_settlement_sheet.dart';
+import 'package:dony/features/package_request/presentation/widgets/nego_archive_actions.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/linked_trip_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
@@ -38,7 +40,13 @@ class NegotiationThreadScreen extends StatelessWidget {
     return BlocProvider(
       create: (_) =>
           getIt<NegotiationBloc>()..add(NegotiationFetchRequested(threadId)),
-      child: _ThreadView(threadId: threadId, viewerUserId: viewerUserId),
+      // Archiver / supprimer un fil terminé passe par la liste partagée ;
+      // l'issue est commentée ici, puis on revient à la liste.
+      child: NegoArchiveDetailListener(
+        kind: NegoEntryKind.request,
+        id: threadId,
+        child: _ThreadView(threadId: threadId, viewerUserId: viewerUserId),
+      ),
     );
   }
 }
@@ -237,6 +245,17 @@ class _ThreadViewState extends State<_ThreadView> {
                   ),
                 ),
               ],
+            ),
+          ),
+        // Fil terminé (FLUTTER-EJ) : on peut le ranger ou le retirer de sa
+        // liste, pour soi seulement.
+        if (thread != null && !thread.status.isActive)
+          Padding(
+            padding: const EdgeInsets.only(right: DonySpacing.sm),
+            child: NegoArchiveMenuButton(
+              kind: NegoEntryKind.request,
+              id: thread.id,
+              archived: thread.archived,
             ),
           ),
         const DonyFeedbackButton(),

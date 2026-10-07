@@ -119,10 +119,35 @@ class BidNegotiationRemoteDatasource {
     );
   }
 
-  Future<List<BidNegotiationSummary>> myNegotiations() async {
-    final response = await _apiClient.dio.get('/bids/negotiations/me');
+  /// Discussions de prix de trajet de l'appelant. [archived] choisit entre la
+  /// liste courante et le filtre « Archivées » (yadony-back #423) ; un backend
+  /// antérieur ignore le paramètre et renvoie la liste courante, que l'appelant
+  /// filtre alors sur `archived`.
+  Future<List<BidNegotiationSummary>> myNegotiations({
+    bool archived = false,
+  }) async {
+    final response = await _apiClient.dio.get(
+      '/bids/negotiations/me',
+      queryParameters: {'archived': archived},
+    );
     return ((response.data as List<dynamic>?) ?? const [])
         .map((e) => BidNegotiationSummary.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Range un fil terminé dans ses archives (pour soi seulement). 204.
+  Future<void> archive(String bidId) async {
+    await _apiClient.dio.post('/bids/$bidId/negotiation/archive');
+  }
+
+  /// Ressort un fil des archives. 204.
+  Future<void> unarchive(String bidId) async {
+    await _apiClient.dio.post('/bids/$bidId/negotiation/unarchive');
+  }
+
+  /// Retire un fil terminé de sa liste, sans retour (l'autre participant le
+  /// garde). 204.
+  Future<void> delete(String bidId) async {
+    await _apiClient.dio.delete('/bids/$bidId/negotiation');
   }
 }

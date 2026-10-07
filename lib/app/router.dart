@@ -600,7 +600,10 @@ final appRouter = GoRouter(
           create: (_) =>
               getIt<BidNegotiationBloc>()
                 ..add(BidNegotiationFetchRequested(bidId)),
-          child: BidNegotiationThreadScreen(bidId: bidId),
+          child: BidNegotiationThreadScreen(
+            bidId: bidId,
+            archived: state.uri.queryParameters['archived'] == 'true',
+          ),
         );
       },
     ),

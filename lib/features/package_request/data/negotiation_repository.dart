@@ -39,13 +39,34 @@ class NegotiationRepository {
     return NegotiationThread.fromJson(response.data!);
   }
 
-  Future<List<NegotiationThread>> findMine() async {
+  /// Fils de l'appelant. [archived] choisit entre la liste courante et le
+  /// filtre « Archivées » (yadony-back #423) ; un backend antérieur ignore le
+  /// paramètre et renvoie la liste courante, que l'appelant filtre alors sur
+  /// `archived`.
+  Future<List<NegotiationThread>> findMine({bool archived = false}) async {
     final response = await _apiClient.dio.get<List<dynamic>>(
       '/negotiations/me',
+      queryParameters: {'archived': archived},
     );
     return (response.data ?? <dynamic>[])
         .map((e) => NegotiationThread.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Range un fil terminé dans ses archives (pour soi seulement). 204.
+  Future<void> archive(String id) async {
+    await _apiClient.dio.post<void>('/negotiations/$id/archive');
+  }
+
+  /// Ressort un fil des archives. 204.
+  Future<void> unarchive(String id) async {
+    await _apiClient.dio.post<void>('/negotiations/$id/unarchive');
+  }
+
+  /// Retire un fil terminé de sa liste, sans retour (l'autre participant le
+  /// garde). 204.
+  Future<void> delete(String id) async {
+    await _apiClient.dio.delete<void>('/negotiations/$id');
   }
 
   Future<NegotiationThread> getById(String id) async {

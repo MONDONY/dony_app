@@ -65,6 +65,12 @@ class BidNegotiationRepository {
   Future<BidCheckoutResponseModel> negotiationCheckout(String bidId) =>
       _datasource.negotiationCheckout(bidId);
 
-  Future<List<BidNegotiationSummary>> myNegotiations() =>
-      _datasource.myNegotiations();
+  Future<List<BidNegotiationSummary>> myNegotiations({bool archived = false}) =>
+      _datasource.myNegotiations(archived: archived);
+
+  Future<void> archive(String bidId) => _datasource.archive(bidId);
+
+  Future<void> unarchive(String bidId) => _datasource.unarchive(bidId);
+
+  Future<void> delete(String bidId) => _datasource.delete(bidId);
 }

@@ -9129,5 +9129,16 @@
   "conversationUnmuteAction": "Unmute",
   "@conversationUnmuteAction": {"description": "Libellé court du SlidableAction de réactivation des notifications de conversation_list_screen.dart (FLUTTER-CM)."},
   "conversationNotificationsMutedSemantics": "Notifications muted",
-  "@conversationNotificationsMutedSemantics": {"description": "Libellé d'accessibilité de la cloche barrée d'une conversation en sourdine (conversation_tile.dart)."}
+  "@conversationNotificationsMutedSemantics": {"description": "Libellé d'accessibilité de la cloche barrée d'une conversation en sourdine (conversation_tile.dart)."},
+  "negotiationFilterArchivedLabel": "Archived",
+  "negotiationArchiveAction": "Archive",
+  "negotiationUnarchiveAction": "Unarchive",
+  "negotiationArchivedSnackbar": "Discussion archived",
+  "negotiationUnarchivedSnackbar": "Discussion unarchived",
+  "negotiationDeletedSnackbar": "Discussion deleted",
+  "negotiationDeleteConfirmTitle": "Delete this discussion?",
+  "negotiationDeleteConfirmMessage": "This discussion will disappear from your list. The other participant keeps it.",
+  "negotiationStillOpenSnackbar": "This discussion is still in progress",
+  "negotiationArchiveUnavailableSnackbar": "This action isn't available yet. Please try again later.",
+  "negotiationEmptyArchivedFilter": "Discussions you archive will appear here."
 }

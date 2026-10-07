@@ -477,6 +477,9 @@ void main() {
       await tester.pump();
       expect(find.text('Paris → Abidjan'), findsOneWidget);
       expect(find.text('Paris → Dakar'), findsNothing);
+      // Les tuiles sont désormais clés par fil (balayage d'archivage) : la
+      // carte restante remonte d'un rang et rejoue son entrée en cascade.
+      await tester.pumpAndSettle();
     });
 
     testWidgets('le chip En cours filtre par statut actif', (tester) async {

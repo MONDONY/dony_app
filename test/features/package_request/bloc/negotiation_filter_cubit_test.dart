@@ -118,4 +118,22 @@ void main() {
       expect(negoMatchesPreset(cancelled, NegoQuickFilter.active), isFalse);
     });
   });
+
+  // Filtre « Archivées » (FLUTTER-EJ) : la source est déjà la liste
+  // archivée, le preset ne filtre plus rien.
+  group('negoMatchesPreset — archived', () {
+    test('preset archived laisse tout passer', () {
+      final open = _t();
+      final done = _t(arrivee: 'Lomé', status: NegotiationThreadStatus.expired);
+      expect(negoMatchesPreset(open, NegoQuickFilter.archived), isTrue);
+      expect(negoMatchesPreset(done, NegoQuickFilter.archived), isTrue);
+    });
+
+    test('setPreset(archived) est émis par le cubit', () {
+      final cubit = NegotiationFilterCubit()
+        ..setPreset(NegoQuickFilter.archived);
+      expect(cubit.state.preset, NegoQuickFilter.archived);
+      cubit.close();
+    });
+  });
 }

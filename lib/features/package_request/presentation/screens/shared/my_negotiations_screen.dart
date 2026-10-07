@@ -12,9 +12,11 @@ import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/features/package_request/data/models/nego_archive.dart';
 import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/presentation/widgets/nego_archive_actions.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
@@ -22,6 +24,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 
 class MyNegotiationsScreen extends StatefulWidget {
@@ -115,214 +118,486 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
     super.dispose();
   }
 
+  void _refreshAll(BuildContext context) {
+    context.read<NegotiationListBloc>().add(
+      const NegotiationListRefreshRequested(),
+    );
+    context.read<BidNegotiationListBloc>().add(
+      const BidNegotiationListRefreshRequested(),
+    );
+  }
+
+  void _fetchArchived(BuildContext context) {
+    context.read<NegotiationListBloc>().add(
+      const NegotiationListArchivedFetchRequested(),
+    );
+    context.read<BidNegotiationListBloc>().add(
+      const BidNegotiationListArchivedFetchRequested(),
+    );
+  }
+
+  void _selectPreset(BuildContext context, NegoQuickFilter preset) {
+    _filterCubit.setPreset(preset);
+    // Les archives se chargent à la demande, et se rechargent à chaque visite
+    // du filtre : un fil archivé depuis le détail doit y apparaître.
+    if (preset == NegoQuickFilter.archived) {
+      _fetchArchived(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: _filterCubit,
-      child: BlocBuilder<NegotiationFilterCubit, NegotiationFilterState>(
-        builder: (context, filter) =>
-            BlocBuilder<NegotiationListBloc, NegotiationListState>(
-              builder: (context, state) =>
-                  BlocBuilder<BidNegotiationListBloc, BidNegotiationListState>(
-                    builder: (context, tripState) {
-                      // Les deux sources sont indépendantes : tant que l'une a
-                      // quelque chose à montrer, l'écran la montre. Chargement,
-                      // erreur et vide ne concernent donc que le cas où les deux
-                      // sont muettes.
-                      final bothEmpty =
-                          state.threads.isEmpty && tripState.summaries.isEmpty;
-                      final anyLoading =
-                          state.status == NegotiationListStatus.loading ||
-                          tripState.status == BidNegotiationListStatus.loading;
-                      final anyError =
-                          state.status == NegotiationListStatus.error ||
-                          tripState.status == BidNegotiationListStatus.error;
-
-                      if (bothEmpty && anyLoading) {
-                        return ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(
-                            DonySpacing.lg,
-                            DonySpacing.lg,
-                            DonySpacing.lg,
-                            DonySpacing.huge,
-                          ),
-                          itemCount: 4,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: DonySpacing.md),
-                          itemBuilder: (_, _) => const DonyUserCardSkeleton(),
-                        );
-                      }
-                      if (bothEmpty && anyError) {
-                        final errorObj =
-                            state.errorMessage ?? tripState.errorMessage;
-                        return _ErrorState(
-                          message: errorObj != null
-                              ? ErrorPresenter.resolve(
-                                  errorObj,
-                                  l10n: context.l10n,
-                                ).message
-                              : context.l10n.requestListErrorFallback,
-                          onRetry: () {
-                            context.read<NegotiationListBloc>().add(
-                              const NegotiationListRefreshRequested(),
-                            );
-                            context.read<BidNegotiationListBloc>().add(
-                              const BidNegotiationListRefreshRequested(),
-                            );
-                          },
-                        );
-                      }
-                      if (bothEmpty) {
-                        // Sans action, un compte neuf restait devant un
-                        // écran inerte : 6 rage clicks PostHog en 13 min le
-                        // 27/09, juste après une inscription.
-                        return DonyEmptyState(
-                          title: context.l10n.negotiationEmptyTitle,
-                          description: context.l10n.negotiationEmptyDescription,
-                          mascotte: DonyMascotteType.assis,
-                          actionLabel:
-                              context.l10n.negotiationEmptySearchTripAction,
-                          onAction: () => context.go('/home'),
-                        );
-                      }
-
-                      final all = <NegoEntry>[
-                        ...state.threads.map(NegoEntry.fromRequest),
-                        ...tripState.summaries.map(NegoEntry.fromTrip),
-                      ];
-                      final activeCount = all.where((e) => e.isActive).length;
-                      final terminalCount = all.length - activeCount;
-                      final filtered = applyNegotiationFilters(all, filter);
-
-                      return Column(
-                        children: [
-                          // Search bar
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              DonySpacing.base,
-                              DonySpacing.sm,
-                              DonySpacing.base,
-                              0,
-                            ),
-                            child: DonySearchField(
-                              hint: context.l10n.negotiationSearchHint,
-                              controller: _searchController,
-                              onChanged: _onQuery,
-                              onClear: () => _filterCubit.setQuery(''),
-                            ),
-                          ),
-                          // Filter chips
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              DonySpacing.base,
-                              DonySpacing.md,
-                              DonySpacing.base,
-                              DonySpacing.xs,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _FilterChip(
-                                    label: context.l10n
-                                        .negotiationFilterAllCountLabel(
-                                          all.length,
-                                        ),
-                                    active:
-                                        filter.preset == NegoQuickFilter.all,
-                                    onTap: () => _filterCubit.setPreset(
-                                      NegoQuickFilter.all,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: DonySpacing.xs + 2),
-                                Expanded(
-                                  child: _FilterChip(
-                                    label: context.l10n
-                                        .negotiationFilterActiveCountLabel(
-                                          activeCount,
-                                        ),
-                                    active:
-                                        filter.preset == NegoQuickFilter.active,
-                                    onTap: () => _filterCubit.setPreset(
-                                      NegoQuickFilter.active,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: DonySpacing.xs + 2),
-                                Expanded(
-                                  child: _FilterChip(
-                                    label: context.l10n
-                                        .negotiationFilterTerminalCountLabel(
-                                          terminalCount,
-                                        ),
-                                    active:
-                                        filter.preset ==
-                                        NegoQuickFilter.terminal,
-                                    onTap: () => _filterCubit.setPreset(
-                                      NegoQuickFilter.terminal,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // List
-                          Expanded(
-                            child: filtered.isEmpty
-                                ? _FilterEmptyState(
-                                    preset: filter.preset,
-                                    hasQuery: filter.query.isNotEmpty,
-                                  )
-                                : RefreshIndicator(
-                                    color: DonyColors.primary,
-                                    onRefresh: () async {
-                                      context.read<NegotiationListBloc>().add(
-                                        const NegotiationListRefreshRequested(),
-                                      );
-                                      context.read<BidNegotiationListBloc>().add(
-                                        const BidNegotiationListRefreshRequested(),
-                                      );
-                                    },
-                                    child: ListView.separated(
-                                      // Faire défiler la liste ferme le
-                                      // clavier de la recherche (FLUTTER-CQ).
-                                      keyboardDismissBehavior:
-                                          ScrollViewKeyboardDismissBehavior
-                                              .onDrag,
-                                      padding: EdgeInsets.fromLTRB(
-                                        DonySpacing.base,
-                                        DonySpacing.sm,
-                                        DonySpacing.base,
-                                        MediaQuery.of(context).padding.bottom +
-                                            100,
-                                      ),
-                                      itemCount: filtered.length,
-                                      separatorBuilder: (_, i) =>
-                                          const SizedBox(
-                                            height: DonySpacing.sm,
-                                          ),
-                                      itemBuilder: (_, i) =>
-                                          switch (filtered[i]) {
-                                            RequestNegoEntry(:final thread) =>
-                                              _NegoCard(
-                                                thread: thread,
-                                                index: i,
-                                              ),
-                                            TripNegoEntry(:final summary) =>
-                                              _TripNegoCard(
-                                                summary: summary,
-                                                index: i,
-                                              ),
-                                          },
-                                    ),
-                                  ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-            ),
+      child: MultiBlocListener(
+        listeners: [
+          // Échecs d'archivage / suppression lancés depuis la liste. Ceux du
+          // détail sont commentés par le détail lui-même.
+          BlocListener<NegotiationListBloc, NegotiationListState>(
+            listenWhen: (a, b) =>
+                b.lastAction != null &&
+                a.lastAction != b.lastAction &&
+                !b.lastAction!.fromDetail,
+            listener: (ctx, state) =>
+                showNegoArchiveFailure(ctx, state.lastAction!),
+          ),
+          BlocListener<BidNegotiationListBloc, BidNegotiationListState>(
+            listenWhen: (a, b) =>
+                b.lastAction != null &&
+                a.lastAction != b.lastAction &&
+                !b.lastAction!.fromDetail,
+            listener: (ctx, state) =>
+                showNegoArchiveFailure(ctx, state.lastAction!),
+          ),
+        ],
+        child: BlocBuilder<NegotiationFilterCubit, NegotiationFilterState>(
+          builder: (context, filter) =>
+              BlocBuilder<NegotiationListBloc, NegotiationListState>(
+                builder: (context, state) =>
+                    BlocBuilder<
+                      BidNegotiationListBloc,
+                      BidNegotiationListState
+                    >(
+                      builder: (context, tripState) =>
+                          _buildContent(context, filter, state, tripState),
+                    ),
+              ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    NegotiationFilterState filter,
+    NegotiationListState state,
+    BidNegotiationListState tripState,
+  ) {
+    final archivedMode = filter.preset == NegoQuickFilter.archived;
+
+    // Les deux sources sont indépendantes : tant que l'une a quelque chose à
+    // montrer, l'écran la montre. Chargement, erreur et vide ne concernent
+    // donc que le cas où les deux sont muettes.
+    final bothEmpty = state.threads.isEmpty && tripState.summaries.isEmpty;
+    final anyLoading =
+        state.status == NegotiationListStatus.loading ||
+        tripState.status == BidNegotiationListStatus.loading;
+    final anyError =
+        state.status == NegotiationListStatus.error ||
+        tripState.status == BidNegotiationListStatus.error;
+
+    if (!archivedMode && bothEmpty && anyLoading) {
+      return const _SkeletonList();
+    }
+    if (!archivedMode && bothEmpty && anyError) {
+      return _ErrorState(
+        message: _errorText(context, state.errorMessage, tripState),
+        onRetry: () => _refreshAll(context),
+      );
+    }
+
+    final all = <NegoEntry>[
+      ...state.threads.map(NegoEntry.fromRequest),
+      ...tripState.summaries.map(NegoEntry.fromTrip),
+    ];
+    final activeCount = all.where((e) => e.isActive).length;
+    final terminalCount = all.length - activeCount;
+
+    final Widget list;
+    if (archivedMode) {
+      list = _buildArchivedList(context, filter, state, tripState);
+    } else if (bothEmpty) {
+      // Sans action, un compte neuf restait devant un écran inerte : 6 rage
+      // clicks PostHog en 13 min le 27/09, juste après une inscription. La
+      // puce « Archivées » reste au-dessus : un fil rangé doit rester
+      // atteignable même quand plus rien n'est en cours.
+      list = DonyEmptyState(
+        title: context.l10n.negotiationEmptyTitle,
+        description: context.l10n.negotiationEmptyDescription,
+        mascotte: DonyMascotteType.assis,
+        actionLabel: context.l10n.negotiationEmptySearchTripAction,
+        onAction: () => context.go('/home'),
+      );
+    } else {
+      list = _buildEntries(
+        context,
+        applyNegotiationFilters(all, filter),
+        filter,
+        archived: false,
+      );
+    }
+
+    return Column(
+      children: [
+        if (!bothEmpty || archivedMode)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.base,
+              DonySpacing.sm,
+              DonySpacing.base,
+              0,
+            ),
+            child: DonySearchField(
+              hint: context.l10n.negotiationSearchHint,
+              controller: _searchController,
+              onChanged: _onQuery,
+              onClear: () => _filterCubit.setQuery(''),
+            ),
+          ),
+        _FilterChips(
+          preset: filter.preset,
+          allCount: all.length,
+          activeCount: activeCount,
+          terminalCount: terminalCount,
+          onSelected: (preset) => _selectPreset(context, preset),
+        ),
+        Expanded(child: list),
+      ],
+    );
+  }
+
+  String _errorText(
+    BuildContext context,
+    Object? requestError,
+    BidNegotiationListState tripState,
+  ) {
+    final errorObj = requestError ?? tripState.errorMessage;
+    return errorObj != null
+        ? ErrorPresenter.resolve(errorObj, l10n: context.l10n).message
+        : context.l10n.requestListErrorFallback;
+  }
+
+  Widget _buildArchivedList(
+    BuildContext context,
+    NegotiationFilterState filter,
+    NegotiationListState state,
+    BidNegotiationListState tripState,
+  ) {
+    final entries = <NegoEntry>[
+      ...state.archivedThreads.map(NegoEntry.fromRequest),
+      ...tripState.archivedSummaries.map(NegoEntry.fromTrip),
+    ];
+    final loading =
+        state.archivedStatus == NegotiationListStatus.loading ||
+        tripState.archivedStatus == BidNegotiationListStatus.loading;
+    final error =
+        state.archivedStatus == NegotiationListStatus.error ||
+        tripState.archivedStatus == BidNegotiationListStatus.error;
+    if (entries.isEmpty && loading) {
+      return const _SkeletonList();
+    }
+    if (entries.isEmpty && error) {
+      return _ErrorState(
+        message: _errorText(context, state.errorMessage, tripState),
+        onRetry: () => _fetchArchived(context),
+      );
+    }
+    return _buildEntries(
+      context,
+      applyNegotiationFilters(entries, filter),
+      filter,
+      archived: true,
+    );
+  }
+
+  Widget _buildEntries(
+    BuildContext context,
+    List<NegoEntry> filtered,
+    NegotiationFilterState filter, {
+    required bool archived,
+  }) {
+    if (filtered.isEmpty) {
+      return _FilterEmptyState(
+        preset: filter.preset,
+        hasQuery: filter.query.isNotEmpty,
+      );
+    }
+    return RefreshIndicator(
+      color: DonyColors.primary,
+      onRefresh: () async =>
+          archived ? _fetchArchived(context) : _refreshAll(context),
+      child: SlidableAutoCloseBehavior(
+        child: ListView.separated(
+          // Faire défiler la liste ferme le clavier de la recherche
+          // (FLUTTER-CQ).
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.fromLTRB(
+            DonySpacing.base,
+            DonySpacing.sm,
+            DonySpacing.base,
+            MediaQuery.of(context).padding.bottom + 100,
+          ),
+          itemCount: filtered.length,
+          separatorBuilder: (_, i) => const SizedBox(height: DonySpacing.sm),
+          itemBuilder: (_, i) => switch (filtered[i]) {
+            final RequestNegoEntry e => _ArchivableTile(
+              key: ValueKey('req-${e.thread.id}'),
+              id: e.thread.id,
+              kind: NegoEntryKind.request,
+              finished: !e.isActive,
+              archived: archived,
+              child: _NegoCard(thread: e.thread, index: i),
+            ),
+            final TripNegoEntry e => _ArchivableTile(
+              key: ValueKey('trip-${e.summary.bidId}'),
+              id: e.summary.bidId,
+              kind: NegoEntryKind.trip,
+              finished: !e.isActive,
+              archived: archived,
+              child: _TripNegoCard(
+                summary: e.summary,
+                index: i,
+                archived: archived,
+              ),
+            ),
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ── Liste squelette ───────────────────────────────────────────────────────────
+
+class _SkeletonList extends StatelessWidget {
+  const _SkeletonList();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.lg,
+        DonySpacing.lg,
+        DonySpacing.huge,
+      ),
+      itemCount: 4,
+      separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+      itemBuilder: (_, _) => const DonyUserCardSkeleton(),
+    );
+  }
+}
+
+// ── Puces de filtre ───────────────────────────────────────────────────────────
+
+class _FilterChips extends StatelessWidget {
+  const _FilterChips({
+    required this.preset,
+    required this.allCount,
+    required this.activeCount,
+    required this.terminalCount,
+    required this.onSelected,
+  });
+
+  final NegoQuickFilter preset;
+  final int allCount;
+  final int activeCount;
+  final int terminalCount;
+  final ValueChanged<NegoQuickFilter> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final chips = <(NegoQuickFilter, String)>[
+      (NegoQuickFilter.all, l.negotiationFilterAllCountLabel(allCount)),
+      (
+        NegoQuickFilter.active,
+        l.negotiationFilterActiveCountLabel(activeCount),
+      ),
+      (
+        NegoQuickFilter.terminal,
+        l.negotiationFilterTerminalCountLabel(terminalCount),
+      ),
+      (NegoQuickFilter.archived, l.negotiationFilterArchivedLabel),
+    ];
+    // Quatre puces ne tiennent plus à parts égales sur un petit écran : la
+    // rangée défile plutôt que de tronquer un libellé.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.base,
+        DonySpacing.md,
+        DonySpacing.base,
+        DonySpacing.xs,
+      ),
+      child: Row(
+        children: [
+          for (final (i, (value, label)) in chips.indexed) ...[
+            if (i > 0) const SizedBox(width: DonySpacing.xs + 2),
+            _FilterChip(
+              key: Key('nego-filter-${value.name}'),
+              label: label,
+              active: preset == value,
+              onTap: () => onSelected(value),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Tuile archivable ──────────────────────────────────────────────────────────
+
+/// Balayage Archiver / Supprimer d'une discussion terminée, repris des
+/// conversations de Messages (`conversation_list_screen.dart`). Sous le filtre
+/// « Archivées », la seule action est « Désarchiver ». Une discussion en cours
+/// n'a aucune action : le serveur la refuserait (409).
+class _ArchivableTile extends StatelessWidget {
+  const _ArchivableTile({
+    super.key,
+    required this.id,
+    required this.kind,
+    required this.finished,
+    required this.archived,
+    required this.child,
+  });
+
+  final String id;
+  final NegoEntryKind kind;
+  final bool finished;
+  final bool archived;
+  final Widget child;
+
+  void _dispatch(BuildContext context, NegoArchiveAction action) {
+    if (kind == NegoEntryKind.request) {
+      context.read<NegotiationListBloc>().add(
+        NegotiationArchiveActionRequested(id, action),
+      );
+    } else {
+      context.read<BidNegotiationListBloc>().add(
+        BidNegotiationArchiveActionRequested(id, action),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!finished) {
+      return child;
+    }
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+
+    final actions = archived
+        ? [
+            SlidableAction(
+              key: const Key('nego-slide-unarchive'),
+              onPressed: (ctx) {
+                _dispatch(ctx, NegoArchiveAction.unarchive);
+                DonySnackbar.show(
+                  ctx,
+                  message: l.negotiationUnarchivedSnackbar,
+                );
+              },
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+              icon: Icons.unarchive_outlined,
+              label: l.negotiationUnarchiveAction,
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+            ),
+          ]
+        : [
+            SlidableAction(
+              key: const Key('nego-slide-archive'),
+              onPressed: (ctx) {
+                // Capturer les BLoCs avant tout : le volet se referme au tap
+                // et démonte ctx.
+                final requests = ctx.read<NegotiationListBloc>();
+                final trips = ctx.read<BidNegotiationListBloc>();
+                _dispatch(ctx, NegoArchiveAction.archive);
+                DonySnackbar.show(
+                  ctx,
+                  message: l.negotiationArchivedSnackbar,
+                  actionLabel: l.commonCancel,
+                  onAction: () => kind == NegoEntryKind.request
+                      ? requests.add(
+                          NegotiationArchiveActionRequested(
+                            id,
+                            NegoArchiveAction.unarchive,
+                          ),
+                        )
+                      : trips.add(
+                          BidNegotiationArchiveActionRequested(
+                            id,
+                            NegoArchiveAction.unarchive,
+                          ),
+                        ),
+                );
+              },
+              backgroundColor: cs.warning,
+              foregroundColor: cs.onPrimary,
+              icon: Icons.archive_outlined,
+              label: l.negotiationArchiveAction,
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(DonyRadius.card),
+              ),
+            ),
+            SlidableAction(
+              key: const Key('nego-slide-delete'),
+              onPressed: (ctx) {
+                // Capturer les BLoCs avant la feuille : le volet Slidable se
+                // referme au tap (autoClose) et démonte ctx pendant qu'elle
+                // est ouverte.
+                final requests = ctx.read<NegotiationListBloc>();
+                final trips = ctx.read<BidNegotiationListBloc>();
+                confirmDeleteNegotiation(ctx).then((confirmed) {
+                  if (!confirmed) return;
+                  if (kind == NegoEntryKind.request) {
+                    requests.add(
+                      NegotiationArchiveActionRequested(
+                        id,
+                        NegoArchiveAction.delete,
+                      ),
+                    );
+                  } else {
+                    trips.add(
+                      BidNegotiationArchiveActionRequested(
+                        id,
+                        NegoArchiveAction.delete,
+                      ),
+                    );
+                  }
+                });
+              },
+              backgroundColor: cs.error,
+              foregroundColor: cs.onError,
+              icon: Icons.delete_outline_rounded,
+              label: l.commonDelete,
+              borderRadius: const BorderRadius.horizontal(
+                right: Radius.circular(DonyRadius.card),
+              ),
+            ),
+          ];
+
+    return Slidable(
+      key: ValueKey('slidable-$id'),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: archived ? 0.35 : 0.55,
+        children: actions,
+      ),
+      child: child,
     );
   }
 }
@@ -331,6 +606,7 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
 
 class _FilterChip extends StatelessWidget {
   const _FilterChip({
+    super.key,
     required this.label,
     required this.active,
     required this.onTap,
@@ -346,7 +622,10 @@ class _FilterChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: 9),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md + 2,
+          vertical: 9,
+        ),
         decoration: BoxDecoration(
           color: active ? DonyColors.primary : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -355,14 +634,13 @@ class _FilterChip extends StatelessWidget {
             width: 1.5,
           ),
         ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: active ? Colors.white : cs.onSurfaceVariant,
-            ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: active ? Colors.white : cs.onSurfaceVariant,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ),
@@ -384,6 +662,7 @@ class _FilterEmptyState extends StatelessWidget {
     return switch (preset) {
       NegoQuickFilter.active => l.negotiationEmptyActiveFilter,
       NegoQuickFilter.terminal => l.negotiationEmptyTerminalFilter,
+      NegoQuickFilter.archived => l.negotiationEmptyArchivedFilter,
       NegoQuickFilter.all => l.negotiationEmptyTitle,
     };
   }
@@ -638,10 +917,18 @@ class _NegoCard extends StatelessWidget {
 /// ni statut de paiement, seulement de quoi reconnaître la discussion et
 /// l'ouvrir.
 class _TripNegoCard extends StatelessWidget {
-  const _TripNegoCard({required this.summary, required this.index});
+  const _TripNegoCard({
+    required this.summary,
+    required this.index,
+    this.archived = false,
+  });
 
   final BidNegotiationSummary summary;
   final int index;
+
+  /// Ouvert depuis « Archivées » : le détail de trajet ne dit pas s'il est
+  /// archivé, la route le lui transmet pour proposer « Désarchiver ».
+  final bool archived;
 
   /// Le résumé ne porte que le brut. L'afficher au voyageur lui montrerait un
   /// montant qui n'est pas le sien : côté voyageur, le chiffre attend le fil.
@@ -667,7 +954,11 @@ class _TripNegoCard extends StatelessWidget {
       dimmed: isTerminal,
       highlighted: summary.hasUnread,
       index: index,
-      onTap: () => context.push('/bids/${summary.bidId}/negotiation'),
+      onTap: () => context.push(
+        archived
+            ? '/bids/${summary.bidId}/negotiation?archived=true'
+            : '/bids/${summary.bidId}/negotiation',
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
