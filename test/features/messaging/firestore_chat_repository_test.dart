@@ -237,4 +237,108 @@ void main() {
     );
     expect(snap.docs.first.data()['body'], isNull);
   });
+
+  group('réponse à un message (FLUTTER-86)', () {
+    Future<Map<String, dynamic>> onlyMessage(String conv) async {
+      final snap = await fakeFirestore
+          .collection('conversations')
+          .doc(conv)
+          .collection('messages')
+          .get();
+      expect(snap.docs, hasLength(1));
+      return snap.docs.first.data();
+    }
+
+    test('message ordinaire : clé replyToId absente (ancien format)', () async {
+      await repo.sendTextMessage(
+        firestoreConversationId: 'c-plain',
+        senderFirebaseUid: 'uid',
+        body: 'Salut',
+      );
+      await repo.sendImageMessage(
+        firestoreConversationId: 'c-plain-img',
+        senderFirebaseUid: 'uid',
+        imageUrl: 'https://s3/x.jpg',
+      );
+      await repo.sendLocationMessage(
+        firestoreConversationId: 'c-plain-loc',
+        senderFirebaseUid: 'uid',
+        latitude: 1,
+        longitude: 2,
+      );
+      for (final conv in ['c-plain', 'c-plain-img', 'c-plain-loc']) {
+        final data = await onlyMessage(conv);
+        expect(data.containsKey('replyToId'), isFalse, reason: conv);
+      }
+      expect((await onlyMessage('c-plain')).keys.toSet(), {
+        'senderId',
+        'body',
+        'imageUrl',
+        'type',
+        'sentAt',
+        'readAt',
+      });
+    });
+
+    test(
+      'réponse : seule la clé replyToId s’ajoute, jamais d’extrait',
+      () async {
+        await repo.sendTextMessage(
+          firestoreConversationId: 'c-reply',
+          senderFirebaseUid: 'uid',
+          body: 'Oui',
+          replyToId: 'abc123',
+        );
+        await repo.sendImageMessage(
+          firestoreConversationId: 'c-reply-img',
+          senderFirebaseUid: 'uid',
+          imageUrl: 'https://s3/x.jpg',
+          replyToId: 'abc123',
+        );
+        await repo.sendLocationMessage(
+          firestoreConversationId: 'c-reply-loc',
+          senderFirebaseUid: 'uid',
+          latitude: 1,
+          longitude: 2,
+          replyToId: 'abc123',
+        );
+        final text = await onlyMessage('c-reply');
+        expect(text['replyToId'], 'abc123');
+        expect(text.keys.toSet(), {
+          'senderId',
+          'body',
+          'imageUrl',
+          'type',
+          'sentAt',
+          'readAt',
+          'replyToId',
+        });
+        expect((await onlyMessage('c-reply-img'))['replyToId'], 'abc123');
+        expect((await onlyMessage('c-reply-loc'))['replyToId'], 'abc123');
+      },
+    );
+
+    test('getMessage : relit un message cité de la conversation', () async {
+      await fakeFirestore
+          .collection('conversations')
+          .doc('c1')
+          .collection('messages')
+          .doc('old42')
+          .set({
+            'senderId': 'uid-a',
+            'body': 'Ancien',
+            'type': 'TEXT',
+            'sentAt': '2026-10-01T10:00:00.000Z',
+          });
+      final m = await repo.getMessage('c1', 'old42');
+      expect(m?.id, 'old42');
+      expect(m?.body, 'Ancien');
+    });
+
+    test('getMessage : null si introuvable ou id hors forme', () async {
+      expect(await repo.getMessage('c1', 'missing'), isNull);
+      expect(await repo.getMessage('c1', '../x'), isNull);
+      expect(await repo.getMessage('c1', ''), isNull);
+    });
+  });
 }

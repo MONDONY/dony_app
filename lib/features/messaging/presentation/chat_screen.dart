@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
@@ -34,6 +35,7 @@ import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
@@ -67,6 +69,14 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isSending = false;
 
   StreamSubscription<BlockChange>? _blockSub;
+
+  // Réponse à un message (FLUTTER-86) : focus de la saisie au début d'une
+  // réponse, clé de chaque bulle pour défiler jusqu'au message cité, et
+  // bulle brièvement surlignée à l'arrivée.
+  final _inputFocus = FocusNode();
+  final Map<String, GlobalKey> _messageKeys = {};
+  final _highlighted = ValueNotifier<String?>(null);
+  Timer? _highlightTimer;
 
   String get _myUid {
     try {
@@ -150,6 +160,9 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _blockSub?.cancel();
+    _highlightTimer?.cancel();
+    _highlighted.dispose();
+    _inputFocus.dispose();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -308,15 +321,99 @@ class _ChatScreenState extends State<ChatScreen> {
       (r) => now.difference(r.at) > const Duration(seconds: 30),
     );
 
-    context.read<ChatBloc>().add(
+    final bloc = context.read<ChatBloc>();
+    final current = bloc.state;
+    bloc.add(
       ChatTextSendRequested(
         firestoreConversationId: widget.conversation.firestoreConversationId,
         conversationId: widget.conversation.id,
         senderFirebaseUid: _myUid,
         body: text,
+        replyToId: current is ChatLoaded ? current.replyingTo?.id : null,
       ),
     );
     setState(() => _isSending = false);
+  }
+
+  /// Appui long « Répondre » ou balayage d'une bulle (FLUTTER-86).
+  void _startReply(MessageModel message) {
+    unawaited(HapticFeedback.selectionClick());
+    context.read<ChatBloc>().add(ChatReplyStarted(message));
+    _inputFocus.requestFocus();
+  }
+
+  GlobalKey _keyFor(String messageId) =>
+      _messageKeys.putIfAbsent(messageId, GlobalKey.new);
+
+  /// Auteur affiché d'une citation : « Vous » ou l'interlocuteur.
+  String _authorOf(MessageModel message, String otherName) =>
+      message.senderId == _myUid ? context.l10n.chatQuoteYou : otherName;
+
+  /// Citation d'un message, reconstituée à partir de son seul `replyToId` :
+  /// cherchée dans le fil chargé, sinon dans les messages relus à l'unité.
+  _QuoteData? _quoteFor(
+    MessageModel message,
+    Map<String, MessageModel> loaded,
+    Map<String, MessageModel?> quotedMessages,
+    String otherName,
+  ) {
+    final id = message.replyToId;
+    if (id == null) return null;
+    final inThread = loaded[id];
+    if (inThread != null) {
+      return _QuoteData(
+        message: inThread,
+        author: _authorOf(inThread, otherName),
+        inThread: true,
+      );
+    }
+    if (!quotedMessages.containsKey(id)) return const _QuoteData.pending();
+    final fetched = quotedMessages[id];
+    return _QuoteData(
+      message: fetched,
+      author: fetched == null ? null : _authorOf(fetched, otherName),
+    );
+  }
+
+  /// Défile jusqu'au message cité, présent dans le fil chargé. La liste est
+  /// inversée et ses hauteurs variables : tant que la bulle n'est pas
+  /// construite, on remonte d'un écran (le message cité est toujours plus
+  /// ancien que la réponse, donc plus haut), puis on la centre.
+  Future<void> _scrollToMessage(String messageId) async {
+    for (var step = 0; step < 40; step++) {
+      if (!mounted) return;
+      final target = _messageKeys[messageId]?.currentContext;
+      if (target != null && target.mounted) {
+        await Scrollable.ensureVisible(
+          target,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+        _flash(messageId);
+        return;
+      }
+      if (!_scrollController.hasClients) return;
+      final position = _scrollController.position;
+      if (position.pixels >= position.maxScrollExtent) return;
+      await _scrollController.animateTo(
+        math.min(
+          position.pixels + position.viewportDimension * 0.8,
+          position.maxScrollExtent,
+        ),
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.linear,
+      );
+    }
+  }
+
+  void _flash(String messageId) {
+    if (!mounted) return;
+    _highlightTimer?.cancel();
+    _highlighted.value = messageId;
+    _highlightTimer = Timer(const Duration(milliseconds: 900), () {
+      if (mounted) _highlighted.value = null;
+    });
   }
 
   /// Firestore a refusé l'envoi : le texte revient dans le champ, le profil
@@ -627,6 +724,18 @@ class _ChatScreenState extends State<ChatScreen> {
                       ChatReadOnly(:final messages) => messages,
                       _ => null,
                     };
+                    final quotedMessages = switch (state) {
+                      ChatLoaded(:final quotedMessages) => quotedMessages,
+                      ChatReadOnly(:final quotedMessages) => quotedMessages,
+                      _ => const <String, MessageModel?>{},
+                    };
+                    final loaded = {
+                      for (final m in messages ?? const <MessageModel>[])
+                        m.id: m,
+                    };
+                    _messageKeys.removeWhere(
+                      (id, _) => !loaded.containsKey(id),
+                    );
 
                     if (messages != null) {
                       if (messages.isEmpty) {
@@ -666,6 +775,17 @@ class _ChatScreenState extends State<ChatScreen> {
                         itemBuilder: (context, index) {
                           final message = messages[index];
                           final isMe = message.senderId == _myUid;
+                          final quote = _quoteFor(
+                            message,
+                            loaded,
+                            quotedMessages,
+                            displayName,
+                          );
+                          final canReply =
+                              !isReadOnly &&
+                              !message.isDeleted &&
+                              message.type != MessageType.system;
+                          final quotedId = message.replyToId;
                           final showSep = _showDateSeparator(messages, index);
                           // Dernier d'un groupe (visuellement en bas du groupe) :
                           // le message plus récent (index-1) a un autre expéditeur,
@@ -683,22 +803,46 @@ class _ChatScreenState extends State<ChatScreen> {
                                   cs: cs,
                                   tt: tt,
                                 ),
-                              _MessageBubble(
-                                    message: message,
-                                    isMe: isMe,
-                                    isLastOfGroup: isLastOfGroup,
-                                  )
-                                  .animate()
-                                  .fadeIn(
-                                    duration: 180.ms,
-                                    curve: Curves.easeOutCubic,
-                                  )
-                                  .slideY(
-                                    begin: 0.06,
-                                    end: 0,
-                                    duration: 180.ms,
-                                    curve: Curves.easeOutCubic,
-                                  ),
+                              KeyedSubtree(
+                                key: _keyFor(message.id),
+                                child: ValueListenableBuilder<String?>(
+                                  valueListenable: _highlighted,
+                                  builder: (context, highlighted, child) =>
+                                      _HighlightFlash(
+                                        active: highlighted == message.id,
+                                        child: child!,
+                                      ),
+                                  child:
+                                      _MessageBubble(
+                                            message: message,
+                                            isMe: isMe,
+                                            isLastOfGroup: isLastOfGroup,
+                                            quote: quote,
+                                            onReply: canReply
+                                                ? () => _startReply(message)
+                                                : null,
+                                            onQuoteTap:
+                                                quote != null &&
+                                                    quote.inThread &&
+                                                    quotedId != null
+                                                ? () => unawaited(
+                                                    _scrollToMessage(quotedId),
+                                                  )
+                                                : null,
+                                          )
+                                          .animate()
+                                          .fadeIn(
+                                            duration: 180.ms,
+                                            curve: Curves.easeOutCubic,
+                                          )
+                                          .slideY(
+                                            begin: 0.06,
+                                            end: 0,
+                                            duration: 180.ms,
+                                            curve: Curves.easeOutCubic,
+                                          ),
+                                ),
+                              ),
                             ],
                           );
                         },
@@ -712,11 +856,26 @@ class _ChatScreenState extends State<ChatScreen> {
               _MessagingMuteGate(
                 builder: (mutedUntil) => mutedUntil != null
                     ? _MutedBanner(until: mutedUntil)
-                    : _InputBar(
-                        controller: _controller,
-                        isSending: _isSending,
-                        disabled: isReadOnly,
-                        onSendText: _sendText,
+                    : _ComposeArea(
+                        replyingTo: state is ChatLoaded
+                            ? state.replyingTo
+                            : null,
+                        replyAuthorIsMe: state is ChatLoaded
+                            ? state.replyingTo?.senderId == _myUid
+                            : false,
+                        otherName: displayName,
+                        onCancelReply: () => context.read<ChatBloc>().add(
+                          const ChatReplyCancelled(),
+                        ),
+                        input: _InputBar(
+                          controller: _controller,
+                          focusNode: _inputFocus,
+                          showTopBorder:
+                              state is! ChatLoaded || state.replyingTo == null,
+                          isSending: _isSending,
+                          disabled: isReadOnly,
+                          onSendText: _sendText,
+                        ),
                       ),
               ),
             ],
@@ -1106,11 +1265,52 @@ class _MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isMe;
   final bool isLastOfGroup;
+
+  /// Citation affichée au-dessus du contenu, `null` hors réponse.
+  final _QuoteData? quote;
+
+  /// Cite ce message dans la saisie ; `null` quand on ne peut pas y répondre
+  /// (fil en lecture seule, message supprimé ou système).
+  final VoidCallback? onReply;
+
+  /// Défile jusqu'au message cité ; `null` s'il n'est pas dans le fil chargé.
+  final VoidCallback? onQuoteTap;
   const _MessageBubble({
     required this.message,
     required this.isMe,
     this.isLastOfGroup = true,
+    this.quote,
+    this.onReply,
+    this.onQuoteTap,
   });
+
+  /// Photo ou position : pas de texte sélectionnable, l'appui long ouvre un
+  /// menu « Répondre » à l'endroit du doigt. Le texte, lui, l'ajoute à son
+  /// menu de sélection natif (cf. [_TextContent]).
+  Future<void> _showReplyMenu(BuildContext context, Offset at) async {
+    final onReply = this.onReply;
+    if (onReply == null) return;
+    unawaited(HapticFeedback.mediumImpact());
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final chosen = await showMenu<bool>(
+      context: context,
+      position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
+      items: [
+        PopupMenuItem<bool>(
+          value: true,
+          child: Row(
+            children: [
+              Icon(Icons.reply_rounded, size: 20, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.sm),
+              Text(l.chatReplyAction),
+            ],
+          ),
+        ),
+      ],
+    );
+    if (chosen == true) onReply();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1152,7 +1352,13 @@ class _MessageBubble extends StatelessWidget {
       bottomRight: isMe ? tail : const Radius.circular(DonyRadius.card),
     );
 
-    return Padding(
+    final replyLabel = l.chatReplyAction;
+    final onReply = this.onReply;
+    final longPressable =
+        onReply != null &&
+        (message.type == MessageType.image ||
+            message.type == MessageType.location);
+    Widget bubble = Padding(
       padding: EdgeInsets.only(bottom: isLastOfGroup ? DonySpacing.sm : 2),
       child: Row(
         mainAxisAlignment: isMe
@@ -1186,24 +1392,27 @@ class _MessageBubble extends StatelessWidget {
                               ),
                             ],
                     ),
-                    child: message.isDeleted
-                        ? _DeletedContent(isMe: isMe, cs: cs, tt: tt)
-                        : message.type == MessageType.image
-                        ? _ImageContent(imageUrl: message.imageUrl)
-                        : message.type == MessageType.location
-                        ? _LocationContent(
-                            latitude: message.latitude ?? 0,
-                            longitude: message.longitude ?? 0,
-                            isMe: isMe,
-                            cs: cs,
-                            tt: tt,
-                          )
-                        : _TextContent(
-                            body: message.body ?? '',
-                            isMe: isMe,
-                            cs: cs,
-                            tt: tt,
-                          ),
+                    child: _withQuote(
+                      message.isDeleted
+                          ? _DeletedContent(isMe: isMe, cs: cs, tt: tt)
+                          : message.type == MessageType.image
+                          ? _ImageContent(imageUrl: message.imageUrl)
+                          : message.type == MessageType.location
+                          ? _LocationContent(
+                              latitude: message.latitude ?? 0,
+                              longitude: message.longitude ?? 0,
+                              isMe: isMe,
+                              cs: cs,
+                              tt: tt,
+                            )
+                          : _TextContent(
+                              body: message.body ?? '',
+                              isMe: isMe,
+                              cs: cs,
+                              tt: tt,
+                              onReply: onReply,
+                            ),
+                    ),
                   ),
                   // Horodatage + accusé : seulement sur le dernier du groupe.
                   if (isLastOfGroup) ...[
@@ -1241,6 +1450,462 @@ class _MessageBubble extends StatelessWidget {
         ],
       ),
     );
+    if (onReply == null) return bubble;
+    if (longPressable) {
+      bubble = GestureDetector(
+        onLongPressStart: (details) =>
+            unawaited(_showReplyMenu(context, details.globalPosition)),
+        child: bubble,
+      );
+    }
+    return Semantics(
+      customSemanticsActions: {
+        CustomSemanticsAction(label: replyLabel): onReply,
+      },
+      child: _SwipeToReply(onReply: onReply, child: bubble),
+    );
+  }
+
+  Widget _withQuote(Widget content) {
+    final quote = this.quote;
+    if (quote == null) return content;
+    // La citation prend la largeur du contenu (ou la sienne si plus large) :
+    // IntrinsicWidth aligne les deux blocs sans étirer une bulle courte.
+    return IntrinsicWidth(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _QuoteBlock(quote: quote, isMe: isMe, onTap: onQuoteTap),
+          content,
+        ],
+      ),
+    );
+  }
+}
+
+// ── Réponse à un message (FLUTTER-86) ─────────────────────────────────────────
+
+/// Citation reconstituée à l'affichage : [message] `null` et [pending] faux
+/// pour un message introuvable ; [inThread] quand il est dans le fil chargé
+/// (un tap y fait défiler).
+class _QuoteData {
+  final MessageModel? message;
+  final String? author;
+  final bool inThread;
+  final bool pending;
+  const _QuoteData({this.message, this.author, this.inThread = false})
+    : pending = false;
+  const _QuoteData.pending()
+    : message = null,
+      author = null,
+      inThread = false,
+      pending = true;
+}
+
+/// Une ligne d'aperçu d'un message cité : icône éventuelle + libellé.
+/// `italic` pour les états (supprimé, introuvable, chargement).
+(String? icon, String text, bool italic) _quoteSnippet(
+  AppLocalizations l,
+  MessageModel? message, {
+  bool pending = false,
+}) {
+  if (pending) return (null, l.chatQuoteLoading, true);
+  if (message == null) return (null, l.chatQuoteUnavailable, true);
+  if (message.isDeleted) return (null, l.chatMessageDeleted, true);
+  return switch (message.type) {
+    MessageType.image => ('image', l.chatQuotePhoto, false),
+    MessageType.location => ('map-pin', l.chatQuoteLocation, false),
+    _ => (null, message.body ?? '', false),
+  };
+}
+
+class _QuoteBlock extends StatelessWidget {
+  final _QuoteData quote;
+  final bool isMe;
+  final VoidCallback? onTap;
+  const _QuoteBlock({required this.quote, required this.isMe, this.onTap});
+
+  // Retrait de la citation dans la bulle : rayon intérieur concentrique
+  // (rayon de la bulle − retrait).
+  static const _inset = 6.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final (icon, text, italic) = _quoteSnippet(
+      l,
+      quote.message,
+      pending: quote.pending,
+    );
+    final accent = isMe ? cs.onPrimary : cs.primary;
+    final muted = isMe
+        ? cs.onPrimary.withValues(alpha: 0.78)
+        : cs.onSurfaceVariant;
+    final author = quote.author;
+    final radius = BorderRadius.circular(DonyRadius.card - _inset);
+
+    final body = Container(
+      decoration: BoxDecoration(
+        color: isMe
+            ? cs.onPrimary.withValues(alpha: 0.16)
+            : cs.primary.withValues(alpha: 0.07),
+        borderRadius: radius,
+        border: Border(left: BorderSide(color: accent, width: 3)),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.sm,
+        DonySpacing.xs + 2,
+        DonySpacing.sm,
+        DonySpacing.xs + 2,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (author != null)
+            Text(
+              author,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: tt.labelSmall?.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                DonyIcon(icon, size: 13, color: muted),
+                const SizedBox(width: DonySpacing.xs),
+              ],
+              Flexible(
+                child: Text(
+                  text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(
+                    color: muted,
+                    fontStyle: italic ? FontStyle.italic : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final onTap = this.onTap;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_inset, _inset, _inset, 0),
+      child: onTap == null
+          ? body
+          : Semantics(
+              button: true,
+              hint: l.chatQuoteShowSemantics,
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  key: const Key('chat-quote-tap'),
+                  borderRadius: radius,
+                  onTap: onTap,
+                  child: body,
+                ),
+              ),
+            ),
+    );
+  }
+}
+
+/// Balayage vers la droite sur une bulle pour y répondre. Le geste ne
+/// démarre que sur la bulle, jamais au bord gauche de l'écran : le retour
+/// iOS par le bord garde la priorité. Au-delà du seuil, retour haptique ;
+/// relâché au-delà, la réponse démarre. La bulle revient toujours en place.
+///
+/// Suivi par pointeur brut ([Listener]) et non par un recognizer : le texte
+/// sélectionnable de la bulle gagnerait l'arène des glissements horizontaux
+/// et le balayage ne partirait jamais. Le geste ne s'engage que nettement
+/// horizontal, le défilement vertical du fil n'est donc pas gêné.
+class _SwipeToReply extends StatefulWidget {
+  final VoidCallback onReply;
+  final Widget child;
+  const _SwipeToReply({required this.onReply, required this.child});
+
+  @override
+  State<_SwipeToReply> createState() => _SwipeToReplyState();
+}
+
+class _SwipeToReplyState extends State<_SwipeToReply>
+    with SingleTickerProviderStateMixin {
+  static const _threshold = 56.0;
+  static const _maxOffset = 72.0;
+
+  /// Zone du bord gauche réservée au retour iOS (20 pt côté Cupertino).
+  static const _edgeGuard = 28.0;
+
+  late final AnimationController _offset = AnimationController(
+    vsync: this,
+    upperBound: _maxOffset,
+  );
+  int? _pointer;
+  Offset _start = Offset.zero;
+  bool _engaged = false;
+  bool _armed = false;
+
+  @override
+  void dispose() {
+    _offset.dispose();
+    super.dispose();
+  }
+
+  void _onDown(PointerDownEvent event) {
+    if (_pointer != null) return;
+    final edge = _edgeGuard + MediaQuery.paddingOf(context).left;
+    if (event.position.dx <= edge) return;
+    _pointer = event.pointer;
+    _start = event.position;
+    _engaged = false;
+  }
+
+  void _onMove(PointerMoveEvent event) {
+    if (event.pointer != _pointer) return;
+    if (!_engaged) {
+      final moved = event.position - _start;
+      if (moved.dx > kTouchSlop && moved.dx > moved.dy.abs() * 2) {
+        _engaged = true;
+      } else if (moved.distance > kTouchSlop) {
+        // Défilement ou glissement vers la gauche : on s'efface.
+        _pointer = null;
+      }
+      return;
+    }
+    // Résistance croissante : la bulle suit le doigt puis freine.
+    final resistance = 1 - (_offset.value / _maxOffset) * 0.6;
+    _offset.value = (_offset.value + event.delta.dx * resistance).clamp(
+      0.0,
+      _maxOffset,
+    );
+    final armed = _offset.value >= _threshold;
+    if (armed && !_armed) unawaited(HapticFeedback.selectionClick());
+    _armed = armed;
+  }
+
+  void _onRelease(PointerEvent event, {required bool cancelled}) {
+    if (event.pointer != _pointer) return;
+    if (_armed && !cancelled) widget.onReply();
+    _pointer = null;
+    _engaged = false;
+    _armed = false;
+    unawaited(
+      _offset.animateTo(
+        0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Listener(
+      onPointerDown: _onDown,
+      onPointerMove: _onMove,
+      onPointerUp: (e) => _onRelease(e, cancelled: false),
+      onPointerCancel: (e) => _onRelease(e, cancelled: true),
+      child: AnimatedBuilder(
+        animation: _offset,
+        child: widget.child,
+        builder: (context, child) {
+          final progress = (_offset.value / _threshold).clamp(0.0, 1.0);
+          return Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Opacity(
+                    opacity: progress,
+                    child: Transform.scale(
+                      scale: 0.25 + 0.75 * progress,
+                      child: Icon(
+                        Icons.reply_rounded,
+                        size: 20,
+                        color: cs.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Transform.translate(
+                offset: Offset(_offset.value, 0),
+                child: child,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Surlignage bref de la bulle atteinte depuis une citation.
+class _HighlightFlash extends StatelessWidget {
+  final bool active;
+  final Widget child;
+  const _HighlightFlash({required this.active, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: active ? 0.10 : 0),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Barre « Réponse à … ✕ » au-dessus de la saisie, puis la saisie. La barre
+/// entre et sort en glissant (taille + fondu), sans pousser la saisie d'un
+/// coup.
+class _ComposeArea extends StatelessWidget {
+  final MessageModel? replyingTo;
+  final bool replyAuthorIsMe;
+  final String otherName;
+  final VoidCallback onCancelReply;
+  final Widget input;
+  const _ComposeArea({
+    required this.replyingTo,
+    required this.replyAuthorIsMe,
+    required this.otherName,
+    required this.onCancelReply,
+    required this.input,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final replyingTo = this.replyingTo;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) => SizeTransition(
+            sizeFactor: animation,
+            alignment: Alignment.bottomCenter,
+            child: FadeTransition(opacity: animation, child: child),
+          ),
+          child: replyingTo == null
+              ? const SizedBox(width: double.infinity)
+              : _ReplyBar(
+                  key: ValueKey(replyingTo.id),
+                  message: replyingTo,
+                  title: replyAuthorIsMe
+                      ? context.l10n.chatReplyingToSelf
+                      : context.l10n.chatReplyingTo(otherName),
+                  onCancel: onCancelReply,
+                ),
+        ),
+        input,
+      ],
+    );
+  }
+}
+
+class _ReplyBar extends StatelessWidget {
+  final MessageModel message;
+  final String title;
+  final VoidCallback onCancel;
+  const _ReplyBar({
+    super.key,
+    required this.message,
+    required this.title,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final (icon, text, italic) = _quoteSnippet(l, message);
+    return Container(
+      key: const Key('chat-reply-bar'),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outlineVariant)),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.xs,
+        0,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.reply_rounded, size: 20, color: cs.primary),
+          const SizedBox(width: DonySpacing.sm),
+          Container(width: 3, height: 34, color: cs.primary),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.labelMedium?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Row(
+                  children: [
+                    if (icon != null) ...[
+                      DonyIcon(icon, size: 13, color: cs.onSurfaceVariant),
+                      const SizedBox(width: DonySpacing.xs),
+                    ],
+                    Expanded(
+                      child: Text(
+                        text,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontStyle: italic ? FontStyle.italic : null,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            key: const Key('chat-reply-cancel'),
+            tooltip: l.chatReplyCancelSemantics,
+            onPressed: onCancel,
+            icon: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1251,11 +1916,15 @@ class _TextContent extends StatelessWidget {
   final bool isMe;
   final ColorScheme cs;
   final TextTheme tt;
+
+  /// Ajoute « Répondre » en tête du menu de sélection (FLUTTER-86).
+  final VoidCallback? onReply;
   const _TextContent({
     required this.body,
     required this.isMe,
     required this.cs,
     required this.tt,
+    this.onReply,
   });
 
   // « Copier le message » recopie la bulle entière : une adresse ou un
@@ -1310,6 +1979,14 @@ class _TextContent extends StatelessWidget {
           AdaptiveTextSelectionToolbar.buttonItems(
             anchors: editableTextState.contextMenuAnchors,
             buttonItems: [
+              if (onReply case final reply?)
+                ContextMenuButtonItem(
+                  label: context.l10n.chatReplyAction,
+                  onPressed: () {
+                    editableTextState.hideToolbar();
+                    reply();
+                  },
+                ),
               ...editableTextState.contextMenuButtonItems,
               ContextMenuButtonItem(
                 label: copyLabel,
@@ -1480,14 +2157,20 @@ class _DeletedContent extends StatelessWidget {
 
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final bool isSending;
   final bool disabled;
+
+  /// Faux sous la barre de réponse, qui porte alors le filet supérieur.
+  final bool showTopBorder;
   final VoidCallback onSendText;
 
   const _InputBar({
     required this.controller,
+    this.focusNode,
     required this.isSending,
     this.disabled = false,
+    this.showTopBorder = true,
     required this.onSendText,
   });
 
@@ -1531,7 +2214,9 @@ class _InputBar extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: cs.surface,
-          border: Border(top: BorderSide(color: cs.outlineVariant)),
+          border: showTopBorder
+              ? Border(top: BorderSide(color: cs.outlineVariant))
+              : null,
         ),
         padding: EdgeInsets.fromLTRB(
           DonySpacing.lg,
@@ -1554,6 +2239,7 @@ class _InputBar extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: controller,
+                  focusNode: focusNode,
                   maxLines: null,
                   minLines: 1,
                   maxLength: ChatMessageRules.maxLength,

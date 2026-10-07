@@ -27175,6 +27175,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Disponible après le départ du trajet (le {date})'**
   String deliveryLockedUntilDepartureDay(String date);
+
+  /// Entrée de l'appui long sur une bulle et action du lecteur d'écran : citer ce message dans la réponse (FLUTTER-86, chat_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Répondre'**
+  String get chatReplyAction;
+
+  /// Barre au-dessus de la saisie pendant une réponse (FLUTTER-86). name : nom de l'interlocuteur cité.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse à {name}'**
+  String chatReplyingTo(String name);
+
+  /// Barre au-dessus de la saisie quand l'utilisateur cite son propre message (FLUTTER-86).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse à votre message'**
+  String get chatReplyingToSelf;
+
+  /// Nom accessible du ✕ de la barre de réponse (FLUTTER-86).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la réponse'**
+  String get chatReplyCancelSemantics;
+
+  /// Auteur affiché dans une citation quand le message cité est le sien (FLUTTER-86).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous'**
+  String get chatQuoteYou;
+
+  /// Extrait d'une citation dont le message cité est une photo (FLUTTER-86).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo'**
+  String get chatQuotePhoto;
+
+  /// Extrait d'une citation dont le message cité est une position partagée (FLUTTER-86).
+  ///
+  /// In fr, this message translates to:
+  /// **'Position'**
+  String get chatQuoteLocation;
+
+  /// Extrait d'une citation dont le message cité est introuvable (FLUTTER-86).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message indisponible'**
+  String get chatQuoteUnavailable;
+
+  /// Extrait d'une citation pendant la lecture du message cité, hors des messages chargés (FLUTTER-86).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chargement…'**
+  String get chatQuoteLoading;
+
+  /// Indication du lecteur d'écran sur une citation : un tap fait défiler jusqu'au message cité (FLUTTER-86).
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher le message cité'**
+  String get chatQuoteShowSemantics;
 }
 
 class _AppLocalizationsDelegate

@@ -4,6 +4,37 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 void main() {
+  group('MessageModel.replyToId (FLUTTER-86)', () {
+    Map<String, dynamic> doc([Object? replyToId]) => {
+      'senderId': 'uid-a',
+      'body': 'Oui',
+      'type': 'TEXT',
+      'sentAt': '2026-10-07T10:00:00.000Z',
+      'replyToId': ?replyToId,
+    };
+
+    test('sans replyToId (ancien format) : null', () {
+      expect(MessageModel.fromFirestore('m', doc()).replyToId, isNull);
+    });
+
+    test('avec replyToId : lu tel quel', () {
+      expect(
+        MessageModel.fromFirestore('m', doc('AbC123xyz')).replyToId,
+        'AbC123xyz',
+      );
+    });
+
+    test('valeur hors forme (type, chemin, longueur) : ignorée', () {
+      for (final bad in [42, '', 'a/b', 'x' * 41, 'id-avec-tiret']) {
+        expect(
+          MessageModel.fromFirestore('m', doc(bad)).replyToId,
+          isNull,
+          reason: '$bad',
+        );
+      }
+    });
+  });
+
   group('MessageModel.fromFirestore', () {
     test('parses TEXT message with all fields', () {
       final m = MessageModel.fromFirestore('id-1', {

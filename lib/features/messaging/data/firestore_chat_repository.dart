@@ -24,6 +24,7 @@ class FirestoreChatRepository {
     required String firestoreConversationId,
     required String senderFirebaseUid,
     required String body,
+    String? replyToId,
   }) async {
     await _firestore
         .collection('conversations')
@@ -36,6 +37,7 @@ class FirestoreChatRepository {
           'type': 'TEXT',
           'sentAt': DateTime.now().toUtc().toIso8601String(),
           'readAt': null,
+          ..._replyTo(replyToId),
         });
   }
 
@@ -43,6 +45,7 @@ class FirestoreChatRepository {
     required String firestoreConversationId,
     required String senderFirebaseUid,
     required String imageUrl,
+    String? replyToId,
   }) async {
     await _firestore
         .collection('conversations')
@@ -55,6 +58,7 @@ class FirestoreChatRepository {
           'type': 'IMAGE',
           'sentAt': DateTime.now().toUtc().toIso8601String(),
           'readAt': null,
+          ..._replyTo(replyToId),
         });
   }
 
@@ -63,6 +67,7 @@ class FirestoreChatRepository {
     required String senderFirebaseUid,
     required double latitude,
     required double longitude,
+    String? replyToId,
   }) async {
     await _firestore
         .collection('conversations')
@@ -77,7 +82,33 @@ class FirestoreChatRepository {
           'longitude': longitude,
           'sentAt': DateTime.now().toUtc().toIso8601String(),
           'readAt': null,
+          ..._replyTo(replyToId),
         });
+  }
+
+  /// Clé `replyToId` écrite seulement pour une réponse (FLUTTER-86) : un
+  /// message ordinaire garde exactement l'ancien format, que les règles
+  /// Firestore (liste blanche de clés) acceptent déjà.
+  static Map<String, Object> _replyTo(String? replyToId) =>
+      replyToId == null ? const {} : {'replyToId': replyToId};
+
+  /// Message cité absent des 50 derniers chargés : relu à l'unité pour
+  /// reconstituer la citation. `null` s'il n'existe pas (ou plus) ou si l'id
+  /// n'a pas la forme d'un id de message (jamais de chemin arbitraire).
+  Future<MessageModel?> getMessage(
+    String firestoreConversationId,
+    String messageId,
+  ) async {
+    if (!MessageModel.validReplyToId.hasMatch(messageId)) return null;
+    final doc = await _firestore
+        .collection('conversations')
+        .doc(firestoreConversationId)
+        .collection('messages')
+        .doc(messageId)
+        .get();
+    final data = doc.data();
+    if (!doc.exists || data == null) return null;
+    return MessageModel.fromFirestore(doc.id, data);
   }
 
   /// Marks all messages from the other participant as read by setting [readAt].

@@ -16556,4 +16556,36 @@ class AppLocalizationsFr extends AppLocalizations {
   String deliveryLockedUntilDepartureDay(String date) {
     return 'Disponible après le départ du trajet (le $date)';
   }
+
+  @override
+  String get chatReplyAction => 'Répondre';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Réponse à $name';
+  }
+
+  @override
+  String get chatReplyingToSelf => 'Réponse à votre message';
+
+  @override
+  String get chatReplyCancelSemantics => 'Annuler la réponse';
+
+  @override
+  String get chatQuoteYou => 'Vous';
+
+  @override
+  String get chatQuotePhoto => 'Photo';
+
+  @override
+  String get chatQuoteLocation => 'Position';
+
+  @override
+  String get chatQuoteUnavailable => 'Message indisponible';
+
+  @override
+  String get chatQuoteLoading => 'Chargement…';
+
+  @override
+  String get chatQuoteShowSemantics => 'Afficher le message cité';
 }
