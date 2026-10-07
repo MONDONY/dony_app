@@ -1270,4 +1270,61 @@ void main() {
       });
     }
   });
+
+  // FLUTTER-CB (yadony-back #419) : code de livraison saisi avant le départ
+  // du trajet. Le back répond 422 au lieu de terminer le colis.
+  group('ErrorCatalog — codes de livraison', () {
+    const codes = [
+      'code-not-generated',
+      'code-expired',
+      'code-incorrect',
+      'trip-not-departed',
+    ];
+
+    test('chaque code a une entrée dédiée, warning, jamais le générique', () {
+      for (final code in codes) {
+        final error = ValidationException('detail brut backend', code: code);
+        expect(ErrorCatalog.isKnown(error), isTrue, reason: code);
+        final p = ErrorCatalog.lookup(error);
+        expect(p.severity, ErrorSeverity.warning, reason: code);
+        expect(p.message, isNot(contains('brut')), reason: code);
+      }
+    });
+
+    test('trip-not-departed : titre et message FR', () {
+      final p = ErrorCatalog.lookup(
+        const ValidationException('x', code: 'trip-not-departed'),
+      );
+      expect(p.title, 'Trajet pas encore parti');
+      expect(
+        p.message,
+        "La livraison ne peut être confirmée qu'après le départ du trajet. "
+        'Réessayez après le trajet.',
+      );
+      expect(p.icon, Icons.schedule_rounded);
+    });
+
+    test('trip-not-departed : titre et message EN', () {
+      final p = ErrorCatalog.lookup(
+        const ValidationException('x', code: 'trip-not-departed'),
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(p.title, 'Trip not departed yet');
+      expect(
+        p.message,
+        'Delivery can only be confirmed once the trip has departed. '
+        'Please try again after the trip.',
+      );
+    });
+
+    test('distinct de code-incorrect (rien à corriger dans le code)', () {
+      final departed = ErrorCatalog.lookup(
+        const ValidationException('x', code: 'trip-not-departed'),
+      );
+      final incorrect = ErrorCatalog.lookup(
+        const ValidationException('x', code: 'code-incorrect'),
+      );
+      expect(departed.title, isNot(incorrect.title));
+    });
+  });
 }

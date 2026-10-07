@@ -908,6 +908,18 @@ abstract class AppLocalizations {
   /// **'Le code saisi est incorrect. Vérifie auprès de l\'expéditeur.'**
   String get errorCodeIncorrectMessage;
 
+  /// No description provided for @errorTripNotDepartedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet pas encore parti'**
+  String get errorTripNotDepartedTitle;
+
+  /// No description provided for @errorTripNotDepartedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'La livraison ne peut être confirmée qu\'après le départ du trajet. Réessayez après le trajet.'**
+  String get errorTripNotDepartedMessage;
+
   /// No description provided for @errorTooManyAttemptsTitle.
   ///
   /// In fr, this message translates to:
@@ -27145,6 +27157,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'expéditeur et le voyageur seront prévenus.'**
   String get receptionWithdrawSheetNote;
+
+  /// Sous le bouton de confirmation de livraison, désactivé tant que le trajet n'est pas parti (FLUTTER-CB, delivery_departure_gate.dart). date : date localisée, time : heure localisée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible après le départ du trajet (le {date} à {time})'**
+  String deliveryLockedUntilDeparture(String date, String time);
+
+  /// Variante sans heure de départ connue : la livraison s'ouvre le lendemain du jour de départ (FLUTTER-CB, delivery_departure_gate.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible après le départ du trajet (le {date})'**
+  String deliveryLockedUntilDepartureDay(String date);
 }
 
 class _AppLocalizationsDelegate

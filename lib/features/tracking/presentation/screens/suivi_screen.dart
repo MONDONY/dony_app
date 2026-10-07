@@ -16,6 +16,7 @@ import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_header.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_parcel_sheets.dart';
@@ -426,6 +427,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
           'etape': step,
           'packageLabel': label,
           'scanMethod': method,
+          'deliveryWindow': DeliveryWindow.fromBid(bid),
         },
       );
       if (mounted) _reloadTrips();

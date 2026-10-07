@@ -481,6 +481,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le code saisi est incorrect. Vérifie auprès de l\'expéditeur.';
 
   @override
+  String get errorTripNotDepartedTitle => 'Trajet pas encore parti';
+
+  @override
+  String get errorTripNotDepartedMessage =>
+      'La livraison ne peut être confirmée qu\'après le départ du trajet. Réessayez après le trajet.';
+
+  @override
   String get errorTooManyAttemptsTitle => 'Trop de tentatives';
 
   @override
@@ -16534,4 +16541,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get receptionWithdrawSheetNote =>
       'L\'expéditeur et le voyageur seront prévenus.';
+
+  @override
+  String deliveryLockedUntilDeparture(String date, String time) {
+    return 'Disponible après le départ du trajet (le $date à $time)';
+  }
+
+  @override
+  String deliveryLockedUntilDepartureDay(String date) {
+    return 'Disponible après le départ du trajet (le $date)';
+  }
 }

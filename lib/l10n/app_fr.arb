@@ -147,6 +147,8 @@
   "errorCodeExpiredMessage": "Ce code a expiré. Demande à l'expéditeur d'en générer un nouveau.",
   "errorCodeIncorrectTitle": "Code incorrect",
   "errorCodeIncorrectMessage": "Le code saisi est incorrect. Vérifie auprès de l'expéditeur.",
+  "errorTripNotDepartedTitle": "Trajet pas encore parti",
+  "errorTripNotDepartedMessage": "La livraison ne peut être confirmée qu'après le départ du trajet. Réessayez après le trajet.",
   "errorTooManyAttemptsTitle": "Trop de tentatives",
   "errorTooManyAttemptsMessage": "Tu as fait trop d'essais. Patiente quelques minutes avant de réessayer.",
   "errorTooManyRefreshesTitle": "Limite atteinte",
@@ -18992,5 +18994,20 @@
   "receptionWithdrawSheetNote": "L'expéditeur et le voyageur seront prévenus.",
   "@receptionWithdrawSheetNote": {
     "description": "Feuille de confirmation du retrait : conséquence pour l'expéditeur et le voyageur (reception_detail_screen.dart)."
+  },
+  "deliveryLockedUntilDeparture": "Disponible après le départ du trajet (le {date} à {time})",
+  "@deliveryLockedUntilDeparture": {
+    "description": "Sous le bouton de confirmation de livraison, désactivé tant que le trajet n'est pas parti (FLUTTER-CB, delivery_departure_gate.dart). date : date localisée, time : heure localisée.",
+    "placeholders": {
+      "date": { "type": "String" },
+      "time": { "type": "String" }
+    }
+  },
+  "deliveryLockedUntilDepartureDay": "Disponible après le départ du trajet (le {date})",
+  "@deliveryLockedUntilDepartureDay": {
+    "description": "Variante sans heure de départ connue : la livraison s'ouvre le lendemain du jour de départ (FLUTTER-CB, delivery_departure_gate.dart).",
+    "placeholders": {
+      "date": { "type": "String" }
+    }
   }
 }

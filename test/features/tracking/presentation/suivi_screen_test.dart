@@ -1239,6 +1239,8 @@ void main() {
         'etape': 'ARRIVEE',
         'packageLabel': 'Kadi',
         'scanMethod': ScanMethod.manual,
+        // Bid sans date de départ : le serveur tranche (FLUTTER-CB).
+        'deliveryWindow': null,
       });
       GoRouter.of(tester.element(find.text('page /tracking/scan/photo'))).pop();
       await settle(tester);
@@ -1720,6 +1722,8 @@ void main() {
         'etape': 'ARRIVEE',
         'packageLabel': 'Sali',
         'scanMethod': ScanMethod.qr,
+        // Bid sans date de départ : le serveur tranche (FLUTTER-CB).
+        'deliveryWindow': null,
       });
     });
 
@@ -1855,6 +1859,8 @@ void main() {
         'etape': 'ARRIVEE',
         'packageLabel': 'Kadi',
         'scanMethod': ScanMethod.manual,
+        // Bid sans date de départ : le serveur tranche (FLUTTER-CB).
+        'deliveryWindow': null,
       });
     });
 
