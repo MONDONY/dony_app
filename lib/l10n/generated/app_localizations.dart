@@ -15642,6 +15642,12 @@ abstract class AppLocalizations {
   /// **'Reste dans sa devise d\'origine ({currency}).'**
   String walletLockedCurrencyNote(String currency);
 
+  /// Ligne fixe de l'écran Portefeuille : à quoi sert le solde (commission des demandes en espèces) et ce qu'il ne paie pas (l'envoi d'un colis).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre solde sert à régler la commission Yadony des demandes payées en espèces. Il ne paie pas l\'envoi d\'un colis, qui se règle par carte, PayPal ou mobile money.'**
+  String get walletPurposeNote;
+
   /// Description de la ligne « Solde disponible » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:

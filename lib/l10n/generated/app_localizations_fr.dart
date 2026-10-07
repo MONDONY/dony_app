@@ -9479,6 +9479,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get walletPurposeNote =>
+      'Votre solde sert à régler la commission Yadony des demandes payées en espèces. Il ne paie pas l\'envoi d\'un colis, qui se règle par carte, PayPal ou mobile money.';
+
+  @override
   String get walletInfoBalanceDesc =>
       'Le montant qui règle les frais de service de tes trajets payés en espèces. Tu peux aussi en demander le remboursement.';
 

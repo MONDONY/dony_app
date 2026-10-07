@@ -4809,6 +4809,10 @@
       }
     }
   },
+  "walletPurposeNote": "Your balance pays the Yadony commission on requests paid in cash. It does not pay for sending a parcel, which is paid by card, PayPal or mobile money.",
+  "@walletPurposeNote": {
+    "description": "Ligne fixe de l'écran Portefeuille : à quoi sert le solde (commission des demandes en espèces) et ce qu'il ne paie pas (l'envoi d'un colis)."
+  },
   "walletInfoBalanceDesc": "The amount that covers the service fees of your trips paid in cash. You can also request a refund of it.",
   "@walletInfoBalanceDesc": {
     "description": "Description de la ligne « Solde disponible » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
