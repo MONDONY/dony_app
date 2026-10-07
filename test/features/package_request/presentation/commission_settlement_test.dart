@@ -129,7 +129,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Régler la commission'), findsOneWidget);
-      expect(find.text('Confirme ta prise en charge'), findsOneWidget);
+      expect(find.text('Confirmez votre prise en charge'), findsOneWidget);
       expect(find.text('Renoncer à ce colis'), findsOneWidget);
       // Montant de la commission affiché dans le bandeau.
       expect(
@@ -177,7 +177,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Régler la commission'), findsNothing);
-      expect(find.text('Confirme ta prise en charge'), findsNothing);
+      expect(find.text('Confirmez votre prise en charge'), findsNothing);
     });
 
     testWidgets(
@@ -256,7 +256,7 @@ void main() {
       );
     });
 
-    testWidgets('compte à rebours : échéance future → "Il te reste …"', (
+    testWidgets('compte à rebours : échéance future → "Il vous reste …"', (
       tester,
     ) async {
       // +30s de marge sur la minute ronde : le moindre délai entre le calcul
@@ -282,7 +282,7 @@ void main() {
       addTearDown(() => tester.pumpWidget(const SizedBox()));
       await tester.pump();
 
-      expect(find.text('Il te reste 1h 45min'), findsOneWidget);
+      expect(find.text('Il vous reste 1h 45min'), findsOneWidget);
     });
 
     testWidgets(
@@ -322,7 +322,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Régler la commission'), findsOneWidget);
-        expect(find.textContaining('Il te reste'), findsNothing);
+        expect(find.textContaining('Il vous reste'), findsNothing);
         expect(find.text('Délai écoulé'), findsNothing);
       },
     );
@@ -378,7 +378,7 @@ void main() {
         find.byKey(const Key('commission-travel-date-passed')),
         findsOneWidget,
       );
-      expect(find.textContaining('Il te reste'), findsNothing);
+      expect(find.textContaining('Il vous reste'), findsNothing);
       final button = tester.widget<DonyButton>(
         find.byKey(const Key('commission-pay-button')),
       );
@@ -841,7 +841,7 @@ void main() {
 
       expect(find.text('Succès commission t1'), findsOneWidget);
       expect(
-        find.text('Commission réglée : ce colis est à toi !'),
+        find.text('Commission réglée : ce colis est à vous !'),
         findsNothing,
       );
       verify(() => bloc.add(const NegotiationFetchRequested('t1'))).called(1);

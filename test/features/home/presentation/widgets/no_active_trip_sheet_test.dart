@@ -38,8 +38,8 @@ void main() {
     expect(find.text('Aucun trajet actif'), findsOneWidget);
     expect(
       find.text(
-        'Ce filtre ne montre que les colis compatibles avec tes '
-        "trajets à venir. Publie un trajet pour t'en servir.",
+        'Ce filtre ne montre que les colis compatibles avec vos '
+        'trajets à venir. Publiez un trajet pour vous en servir.',
       ),
       findsOneWidget,
     );

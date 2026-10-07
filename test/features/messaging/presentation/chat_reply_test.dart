@@ -136,13 +136,13 @@ void main() {
       when(() => bloc.state).thenReturn(
         ChatLoaded([
           _msg('r1', senderId: '', body: 'Oui', replyToId: 'm1'),
-          _msg('m1', body: 'Tu confirmes ?'),
+          _msg('m1', body: 'Vous confirmez ?'),
         ]),
       );
       await _pump(tester, bloc);
 
       expect(_quoteText('Modibo Coulibaly'), findsOneWidget);
-      expect(_quoteText('Tu confirmes ?'), findsOneWidget);
+      expect(_quoteText('Vous confirmez ?'), findsOneWidget);
     });
 
     testWidgets('photo, position et message supprimé : libellés dédiés', (
@@ -533,7 +533,7 @@ void main() {
     testWidgets('le validateur anti-contournement s’applique aux réponses', (
       tester,
     ) async {
-      final m1 = _msg('m1', body: 'Ton numéro ?');
+      final m1 = _msg('m1', body: 'Votre numéro ?');
       when(() => bloc.state).thenReturn(ChatLoaded([m1], replyingTo: m1));
       await _pump(tester, bloc);
 

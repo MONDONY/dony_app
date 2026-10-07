@@ -64,8 +64,8 @@ void main() {
     test('un seul réseau : fr et en', () {
       expect(
         fr.mobileMoneyNoCommonNetwork('Aminata', 'Wave', 'Sénégal'),
-        "Aminata accepte Wave, qui n'existent pas pour ton numéro "
-        '(Sénégal). Change de numéro payeur ou écris-lui depuis la '
+        "Aminata accepte Wave, qui n'existent pas pour votre numéro "
+        '(Sénégal). Changez de numéro payeur ou écrivez-lui depuis la '
         'conversation.',
       );
       expect(
@@ -84,7 +84,7 @@ void main() {
           'Bénin',
         ),
         "Aminata accepte Wave et Orange Money, qui n'existent pas pour "
-        'ton numéro (Bénin). Change de numéro payeur ou écris-lui depuis '
+        'votre numéro (Bénin). Changez de numéro payeur ou écrivez-lui depuis '
         'la conversation.',
       );
       expect(
@@ -108,8 +108,8 @@ void main() {
           'Côte d\'Ivoire',
         ),
         "Aminata accepte Wave, Orange Money et MTN, qui n'existent pas "
-        "pour ton numéro (Côte d'Ivoire). Change de numéro payeur ou "
-        'écris-lui depuis la conversation.',
+        "pour votre numéro (Côte d'Ivoire). Changez de numéro payeur ou "
+        'écrivez-lui depuis la conversation.',
       );
       expect(
         en.mobileMoneyNoCommonNetwork(
@@ -156,7 +156,7 @@ void main() {
       expect(
         fr.mobileMoneyAcceptsAndReceives('Aminata', 'Wave et Orange Money'),
         'Aminata accepte Wave et Orange Money, et reçoit sur le réseau '
-        'que tu choisis.',
+        'que vous choisissez.',
       );
       expect(
         en.mobileMoneyAcceptsAndReceives('Aminata', 'Wave and Orange Money'),
@@ -170,8 +170,8 @@ void main() {
     test('opérateur connu : le nom est inséré, fr et en', () {
       expect(
         fr.mobileMoneyPinSent('Orange Money'),
-        'Valide le paiement sur ton téléphone : une demande de code PIN '
-        "vient de t'être envoyée par Orange Money.",
+        'Validez le paiement sur votre téléphone : une demande de code PIN '
+        'vient de vous être envoyée par Orange Money.',
       );
       expect(
         en.mobileMoneyPinSent('Orange Money'),
@@ -183,8 +183,8 @@ void main() {
     test('opérateur inconnu : repli générique, fr et en', () {
       expect(
         fr.mobileMoneyPinSentUnknownProvider,
-        'Valide le paiement sur ton téléphone : une demande de code PIN '
-        "vient de t'être envoyée par ton opérateur.",
+        'Validez le paiement sur votre téléphone : une demande de code PIN '
+        'vient de vous être envoyée par votre opérateur.',
       );
       expect(
         en.mobileMoneyPinSentUnknownProvider,
@@ -198,7 +198,7 @@ void main() {
     test('portée bid : demande annulée, fr et en', () {
       expect(
         fr.mobileMoneyExpiredBid,
-        'Délai dépassé. La demande a été annulée, refais une offre au '
+        'Délai dépassé. La demande a été annulée, refaites une offre au '
         'voyageur.',
       );
       expect(
@@ -211,7 +211,7 @@ void main() {
     test('portée négociation : retour à « à payer », fr et en', () {
       expect(
         fr.mobileMoneyExpiredNegotiation,
-        'Délai dépassé. Le fil est revenu à « à payer » : tu peux '
+        'Délai dépassé. Le fil est revenu à « à payer » : vous pouvez '
         'relancer le paiement ou changer de moyen de paiement depuis le '
         'fil.',
       );

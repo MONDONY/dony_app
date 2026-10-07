@@ -196,7 +196,7 @@ void main() {
       expect(
         find.text(
           "La personne recevra l'invitation dans Yadony si elle a un compte. "
-          "Sinon, invite-la à installer l'app.",
+          "Sinon, invitez-la à installer l'app.",
         ),
         findsOneWidget,
       );

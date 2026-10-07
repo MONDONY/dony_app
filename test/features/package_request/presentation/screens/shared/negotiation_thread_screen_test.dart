@@ -230,9 +230,9 @@ void main() {
         await tester.pumpAndSettle();
 
         // Proposition du voyageur : 30 × 1,12.
-        expect(find.text('Tu paies 33,60\u00A0€'), findsOneWidget);
+        expect(find.text('Vous payez 33,60\u00A0€'), findsOneWidget);
         // Contre-offre de l'expéditeur : 50 × 1,12 (bulle + carte PRIX ACTUEL).
-        expect(find.text('Tu paies 56,00\u00A0€'), findsNWidgets(2));
+        expect(find.text('Vous payez 56,00\u00A0€'), findsNWidgets(2));
       },
     );
 

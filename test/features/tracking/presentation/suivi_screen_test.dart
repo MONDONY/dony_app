@@ -816,7 +816,7 @@ void main() {
     testWidgets('échec de Mes envois → Réessayer', (tester) async {
       when(() => bidRepo.getMyBids()).thenThrow(Exception('offline'));
       await pump(tester, roles: ['SENDER']);
-      expect(text('Impossible de charger tes envois.'), findsOneWidget);
+      expect(text('Impossible de charger vos envois.'), findsOneWidget);
 
       when(() => bidRepo.getMyBids()).thenAnswer((_) async => []);
       await tester.tap(text('Réessayer'));
@@ -835,7 +835,7 @@ void main() {
       expect(find.byKey(const Key('fake-camera')), findsOneWidget);
       expect(
         text(
-          "Scanne le QR d'un colis de ton trajet.\n"
+          "Scannez le QR d'un colis de votre trajet.\n"
           "L'étape suivante est validée toute seule.",
         ),
         findsOneWidget,
@@ -869,7 +869,7 @@ void main() {
       await pump(tester);
       expect(
         text(
-          'Scanne un QR pour voir où en est le colis.\n'
+          'Scannez un QR pour voir où en est le colis.\n'
           "Rien n'est validé dans ce mode.",
         ),
         findsOneWidget,
@@ -1012,7 +1012,7 @@ void main() {
       await enterTrackingNumber(tester, bidId: 'un-autre-colis');
       expect(
         text(
-          'Ce numéro ne correspond pas à ce colis. Vérifie-le avec l\'expéditeur.',
+          'Ce numéro ne correspond pas à ce colis. Vérifiez-le avec l\'expéditeur.',
         ),
         findsOneWidget,
       );
@@ -1025,7 +1025,7 @@ void main() {
       await tapVisible(tester, const Key('suivi-validate-madou'));
       await tester.tap(find.byKey(const Key('suivi-tracking-number-continue')));
       await settle(tester);
-      expect(text('Saisis le numéro de suivi.'), findsOneWidget);
+      expect(text('Saisissez le numéro de suivi.'), findsOneWidget);
       expect(visited, isNot(contains('/tracking/scan/photo')));
     });
 
@@ -1113,7 +1113,7 @@ void main() {
       await settle(tester);
       expect(text("Ce colis n'est pas sur ce trajet"), findsOneWidget);
       expect(
-        text('Le colis de Fatou voyage sur ton trajet du sam. 3 oct. :'),
+        text('Le colis de Fatou voyage sur votre trajet du sam. 3 oct. :'),
         findsOneWidget,
       );
       expect(
@@ -1153,7 +1153,7 @@ void main() {
 
       scan!('00000000-0000-0000-0000-000000000000');
       await settle(tester);
-      expect(text("Ce colis n'est pas sur tes trajets"), findsOneWidget);
+      expect(text("Ce colis n'est pas sur vos trajets"), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('suivi-follow-parcel')));
       await settle(tester);
@@ -1172,7 +1172,7 @@ void main() {
       await settle(tester);
       await tester.tap(find.byKey(const Key('suivi-scan-another')));
       await settle(tester);
-      expect(text("Ce colis n'est pas sur tes trajets"), findsNothing);
+      expect(text("Ce colis n'est pas sur vos trajets"), findsNothing);
       expect(cameraPaused?.value, isFalse);
     });
 
@@ -1327,7 +1327,7 @@ void main() {
       expect(find.byKey(const Key('suivi-sheet')), findsOneWidget);
       expect(
         text(
-          "Scanne le QR d'un colis de ton trajet.\n"
+          "Scannez le QR d'un colis de votre trajet.\n"
           "L'étape suivante est validée toute seule.",
         ),
         findsOneWidget,
@@ -1648,7 +1648,7 @@ void main() {
       await tapVisible(tester, const Key('suivi-step-mode'));
       expect(
         text(
-          "Chaque scan valide l'étape suivante du colis. Force une étape "
+          "Chaque scan valide l'étape suivante du colis. Forcez une étape "
           'seulement pour rattraper un oubli.',
         ),
         findsOneWidget,
@@ -1670,7 +1670,7 @@ void main() {
       expect(visited, isEmpty);
       expect(
         text(
-          'Départ forcé : scanne le colis à valider.\n'
+          'Départ forcé : scannez le colis à valider.\n'
           "L'étape repasse ensuite en automatique.",
         ),
         findsOneWidget,
@@ -1726,7 +1726,7 @@ void main() {
       await settle(tester);
       expect(
         text(
-          'Arrivée forcée : scanne le colis à remettre.\n'
+          'Arrivée forcée : scannez le colis à remettre.\n'
           "L'étape repasse ensuite en automatique.",
         ),
         findsOneWidget,
@@ -1763,7 +1763,7 @@ void main() {
       expect(cameraPaused?.value, isFalse);
       expect(
         text(
-          'Transit facultatif : scanne le colis à valider.\n'
+          'Transit facultatif : scannez le colis à valider.\n'
           "L'étape repasse ensuite en automatique.",
         ),
         findsOneWidget,
@@ -1773,7 +1773,7 @@ void main() {
       scan!('madou');
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      expect(text("Valide d'abord la récupération de Madou."), findsOneWidget);
+      expect(text("Validez d'abord la récupération de Madou."), findsOneWidget);
       await settle(tester, rounds: 12);
 
       await openNumberField(tester);
@@ -1828,7 +1828,7 @@ void main() {
       expect(text('Transit'), findsOneWidget);
       expect(
         text(
-          'Sans QR code, une photo du colis est obligatoire. Ta position '
+          'Sans QR code, une photo du colis est obligatoire. Votre position '
           "est enregistrée avec l'étape.",
         ),
         findsOneWidget,
@@ -1929,7 +1929,7 @@ void main() {
       await pump(tester);
       await openNumberField(tester);
       await submitNumber(tester, 'DON-AUTRE1');
-      expect(text("Ce colis n'est pas sur tes trajets"), findsOneWidget);
+      expect(text("Ce colis n'est pas sur vos trajets"), findsOneWidget);
     });
 
     testWidgets('numéro introuvable ou non lié au compte', (tester) async {
@@ -1945,7 +1945,7 @@ void main() {
 
       await submitNumber(tester, 'DON-NOPE01');
       expect(
-        text('Numéro introuvable. Vérifie-le et réessaie.'),
+        text('Numéro introuvable. Vérifiez-le et réessayez.'),
         findsOneWidget,
       );
       await tester.enterText(
@@ -1953,10 +1953,13 @@ void main() {
         'DON-NOPE0',
       );
       await settle(tester, rounds: 1);
-      expect(text('Numéro introuvable. Vérifie-le et réessaie.'), findsNothing);
+      expect(
+        text('Numéro introuvable. Vérifiez-le et réessayez.'),
+        findsNothing,
+      );
 
       await submitNumber(tester, 'DON-PRIVE1');
-      expect(text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
+      expect(text("Ce colis n'est pas lié à votre compte"), findsOneWidget);
       expect(text('Réessayer'), findsNothing);
     });
   });
@@ -1975,10 +1978,10 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('suivi-number-submit')));
       await settle(tester);
-      expect(text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
+      expect(text("Ce colis n'est pas lié à votre compte"), findsOneWidget);
       expect(
         text(
-          "Seuls l'expéditeur et le voyageur peuvent le suivre ici. Demande "
+          "Seuls l'expéditeur et le voyageur peuvent le suivre ici. Demandez "
           "le lien de suivi à l'expéditeur.",
         ),
         findsOneWidget,
@@ -2003,7 +2006,7 @@ void main() {
       await pump(tester, location: '/?mode=suivre');
       scan!('00000000-0000-0000-0000-000000000000');
       await settle(tester);
-      expect(text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
+      expect(text("Ce colis n'est pas lié à votre compte"), findsOneWidget);
       expect(text('Réessayer'), findsNothing);
     });
   });
@@ -2162,7 +2165,7 @@ void main() {
         expect(tester.takeException(), isNull);
         expect(text('Choisir un trajet'), findsOneWidget);
         expect(
-          text("C'est ton seul trajet en cours ou à venir."),
+          text("C'est votre seul trajet en cours ou à venir."),
           findsOneWidget,
         );
         expect(text('sam. 26 sept. · 3 colis · 2 à valider'), findsOneWidget);
@@ -2195,7 +2198,7 @@ void main() {
         await settle(tester);
         expect(tester.takeException(), isNull);
         expect(
-          text("C'est ton seul trajet en cours ou à venir."),
+          text("C'est votre seul trajet en cours ou à venir."),
           findsNothing,
         );
         expect(text('sam. 26 sept. · 2 colis · 2 à valider'), findsOneWidget);

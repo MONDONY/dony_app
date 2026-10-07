@@ -27,7 +27,7 @@ void main() {
     testWidgets('passe au champ suivant à la validation clavier', (
       tester,
     ) async {
-      // Vérifie le comportement, pas seulement la déclaration : `next` doit
+      // Vérifiez le comportement, pas seulement la déclaration : `next` doit
       // réellement déplacer le focus.
       final premier = FocusNode();
       final second = FocusNode();

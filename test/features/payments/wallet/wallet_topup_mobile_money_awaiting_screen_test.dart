@@ -98,11 +98,14 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('Valide le paiement sur ton téléphone'), findsOneWidget);
+      expect(
+        find.text('Validez le paiement sur votre téléphone'),
+        findsOneWidget,
+      );
       expect(find.textContaining('+221 ** ** 12 34'), findsOneWidget);
       expect(find.textContaining('Orange Money'), findsWidgets);
       expect(
-        find.text('La confirmation est automatique, garde cet écran ouvert.'),
+        find.text('La confirmation est automatique, gardez cet écran ouvert.'),
         findsOneWidget,
       );
       expect(find.text('Montant'), findsOneWidget);
@@ -203,7 +206,10 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('Valide le paiement sur ton téléphone'), findsOneWidget);
+      expect(
+        find.text('Validez le paiement sur votre téléphone'),
+        findsOneWidget,
+      );
 
       await tester.tap(find.text('Payer avec un autre numéro'));
       await tester.pump(const Duration(milliseconds: 350));
@@ -367,7 +373,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pump();
       await tester.pump();
-      expect(find.text('Valide le paiement sur ton téléphone'), findsOneWidget);
+      expect(
+        find.text('Validez le paiement sur votre téléphone'),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byType(DonyAppBarBackButton));
       await tester.pump(const Duration(milliseconds: 350));

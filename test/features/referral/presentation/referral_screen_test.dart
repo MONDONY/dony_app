@@ -147,7 +147,7 @@ void main() {
     // distingue ce bandeau du sous-titre de la hero card, qui répète la même
     // formulation générique.
     expect(
-      find.text('🎁 Tu as un bon de -50% sur ta prochaine commission'),
+      find.text('🎁 Vous avez un bon de -50% sur votre prochaine commission'),
       findsOneWidget,
     );
   });
@@ -172,7 +172,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(
-      find.text('🎁 Tu as 2 bons de -50% sur tes prochaines commissions'),
+      find.text('🎁 Vous avez 2 bons de -50% sur vos prochaines commissions'),
       findsOneWidget,
     );
   });
@@ -207,7 +207,7 @@ void main() {
 
     // Le pourcentage promis vient du serveur (voucherFactor) : plus aucun
     // montant ni devise écrits en dur dans l'écran.
-    expect(find.text('Invite et gagne -50%'), findsOneWidget);
+    expect(find.text('Invitez et gagnez -50%'), findsOneWidget);
   });
 
   // 9 bis. Sans barème serveur, la promesse chiffrée disparaît : aucun
@@ -229,7 +229,7 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Invite tes proches'), findsOneWidget);
+    expect(find.text('Invitez vos proches'), findsOneWidget);
     expect(find.textContaining('-50%'), findsNothing);
     expect(find.textContaining('-null%'), findsNothing);
   });
@@ -256,7 +256,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(
-        find.text('🎁 Tu as un bon de réduction sur ta prochaine commission'),
+        find.text(
+          '🎁 Vous avez un bon de réduction sur votre prochaine commission',
+        ),
         findsOneWidget,
       );
       expect(find.textContaining('%'), findsNothing);
@@ -322,7 +324,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(
-      find.text('🎁 Tu as 3 bons de -50% sur tes prochaines commissions'),
+      find.text('🎁 Vous avez 3 bons de -50% sur vos prochaines commissions'),
       findsOneWidget,
     );
   });
@@ -346,7 +348,7 @@ void main() {
       expect(captured, hasLength(1));
       expect(
         captured.single.message,
-        "Salut ! Utilise mon code Yadony : ${_testInfo.code} pour t'inscrire, "
+        'Bonjour ! Utilisez mon code Yadony : ${_testInfo.code} pour vous inscrire, '
         'ça m\'aide à gagner une réduction sur ma prochaine commission. '
         '${_testInfo.shareUrl}',
       );

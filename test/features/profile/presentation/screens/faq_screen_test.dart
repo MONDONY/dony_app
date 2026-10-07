@@ -151,7 +151,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(
-      find.text('Recherche une réponse ou parcours les catégories.'),
+      find.text('Recherchez une réponse ou parcourez les catégories.'),
       findsOneWidget,
     );
   });
@@ -239,7 +239,7 @@ void main() {
 
     expect(find.text('Aucun résultat'), findsOneWidget);
     expect(
-      find.text('Essaie avec d\'autres mots-clés ou contacte notre équipe.'),
+      find.text('Essayez avec d\'autres mots-clés ou contactez notre équipe.'),
       findsOneWidget,
     );
   });

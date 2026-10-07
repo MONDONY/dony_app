@@ -418,7 +418,7 @@ void main() {
     await _openSheet(tester, bloc);
 
     expect(find.text('Réessayer'), findsNothing);
-    expect(find.text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
+    expect(find.text("Ce colis n'est pas lié à votre compte"), findsOneWidget);
   });
 
   group('instructions de retrait', () {

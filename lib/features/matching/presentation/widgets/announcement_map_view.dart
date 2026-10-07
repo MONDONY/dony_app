@@ -105,6 +105,26 @@ const Duration kMapRecreateAfterPause = Duration(seconds: 3);
 bool shouldRecreateNativeMap(Duration pausedFor) =>
     pausedFor >= kMapRecreateAfterPause;
 
+/// Délai au-delà duquel une carte native toujours pas créée est annoncée
+/// comme indisponible (FLUTTER-CD) : sans message, une carte vide laisse
+/// croire que la recherche ne charge pas.
+const Duration kMapLoadTimeout = Duration(seconds: 10);
+
+/// Message discret à afficher sur la carte, ou null quand tout va bien
+/// (FLUTTER-CD). La panne de la carte prime sur la localisation refusée.
+@visibleForTesting
+String? mapNoticeMessage(
+  AppLocalizations l, {
+  required bool mapUnavailable,
+  required LocationAccess? locationAccess,
+}) {
+  if (mapUnavailable) return l.listingMapUnavailable;
+  if (locationAccess != null && locationAccess != LocationAccess.granted) {
+    return l.listingMapLocationOff;
+  }
+  return null;
+}
+
 class _AnnouncementMapViewState extends State<AnnouncementMapView>
     with WidgetsBindingObserver {
   GoogleMapController? _mapController;
@@ -133,10 +153,21 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
   // Improvement A: signature guard to skip redundant re-clustering.
   String? _lastMarkerSignature;
 
+  /// Surveille la création de la carte native (FLUTTER-CD).
+  Timer? _mapLoadWatchdog;
+  bool _mapUnavailable = false;
+
+  /// Résultat de la demande de localisation à l'ouverture (null : en cours).
+  LocationAccess? _locationAccess;
+
+  /// Le message de la carte a été fermé par l'utilisateur.
+  bool _noticeDismissed = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _startMapWatchdog();
     // `_prewarmCommonIcons` construit des marqueurs via `_buildMarker`, qui
     // lit `context.l10n` (le libellé de grille tarifaire) : un `Localizations`
     // ne peut pas être consulté avant la fin de `initState`, d'où le report
@@ -149,8 +180,18 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
 
   @override
   void dispose() {
+    _mapLoadWatchdog?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _startMapWatchdog() {
+    _mapLoadWatchdog?.cancel();
+    _mapLoadWatchdog = Timer(kMapLoadTimeout, () {
+      if (mounted && _mapController == null) {
+        setState(() => _mapUnavailable = true);
+      }
+    });
   }
 
   /// Le moteur Flutter survit à l'Activity Android (moteur en cache,
@@ -174,6 +215,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
         _mapController = null;
         _lastMarkerSignature = null;
       });
+      _startMapWatchdog();
     }
   }
 
@@ -225,6 +267,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
   Future<void> _initLocationOnOpen() async {
     _awaitingFirstLocation = true;
     final access = await requestLocationAccess(widget.locationService);
+    if (mounted) setState(() => _locationAccess = access);
     if (access != LocationAccess.granted) {
       _awaitingFirstLocation = false;
       if (mounted) {
@@ -503,6 +546,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
           style: widget.mapStyle ?? resolveMapStyle(_brightness),
           onMapCreated: (controller) {
             _mapController = controller;
+            _mapLoadWatchdog?.cancel();
+            if (_mapUnavailable) setState(() => _mapUnavailable = false);
             // Carte recréée après une pause : on garde la caméra de
             // l'utilisateur au lieu de recadrer sur sa position.
             if (_lastCamera == null) _applyInitialCamera();
@@ -522,8 +567,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
           zoomControlsEnabled: false,
           mapToolbarEnabled: false,
         ),
+        _buildNotice(context, fabBottom),
         if (widget.onNearMeToggle != null)
-          Positioned(
+          // Animé : le bouton suit la feuille de résultats quand elle s'ouvre
+          // à mi-hauteur (FLUTTER-CD).
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
             bottom: fabBottom,
             right: DonySpacing.lg,
             child: _NearMeFab(
@@ -534,6 +584,84 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
             ),
           ),
       ],
+    );
+  }
+
+  /// Message discret, à gauche du bouton « Près de moi » : carte qui ne se
+  /// charge pas, ou position non partagée (FLUTTER-CD). Fermable.
+  Widget _buildNotice(BuildContext context, double fabBottom) {
+    final message = _noticeDismissed || widget.isNearMeActive
+        ? null
+        : mapNoticeMessage(
+            context.l10n,
+            mapUnavailable: _mapUnavailable,
+            locationAccess: _locationGranted ? null : _locationAccess,
+          );
+    final cs = Theme.of(context).colorScheme;
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      left: DonySpacing.lg,
+      right: DonySpacing.lg + 48 + DonySpacing.sm,
+      bottom: fabBottom,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        child: message == null
+            ? const SizedBox.shrink()
+            : Align(
+                key: ValueKey(message),
+                alignment: Alignment.bottomLeft,
+                child: Container(
+                  key: const Key('map-notice'),
+                  padding: const EdgeInsets.only(left: DonySpacing.md),
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.10),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _mapUnavailable
+                            ? Icons.map_outlined
+                            : Icons.location_off_outlined,
+                        size: 16,
+                        color: cs.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: DonySpacing.sm),
+                      Flexible(
+                        child: Text(
+                          message,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ),
+                      IconButton(
+                        key: const Key('map-notice-close'),
+                        tooltip: context.l10n.commonClose,
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        color: cs.onSurfaceVariant,
+                        onPressed: () =>
+                            setState(() => _noticeDismissed = true),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+      ),
     );
   }
 

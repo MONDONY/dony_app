@@ -70,7 +70,7 @@ void main() {
 
       expect(find.text('Paiement carte requis'), findsOneWidget);
       expect(
-        find.textContaining('Active les paiements par carte'),
+        find.textContaining('Activez les paiements par carte'),
         findsOneWidget,
       );
       expect(find.text('Activer le paiement carte'), findsOneWidget);
@@ -179,7 +179,7 @@ void main() {
 
         expect(
           find.textContaining(
-            'Renseigne ton pays de résidence pour activer le paiement carte',
+            'Renseignez votre pays de résidence pour activer le paiement carte',
           ),
           findsOneWidget,
         );

@@ -75,9 +75,9 @@ void main() {
   });
 
   group('PhoneAuthScreen — affichage', () {
-    testWidgets('affiche le titre Ton numéro', (tester) async {
+    testWidgets('affiche le titre Votre numéro', (tester) async {
       await _pump(tester, mockAuthBloc);
-      expect(find.text('Ton numéro'), findsOneWidget);
+      expect(find.text('Votre numéro'), findsOneWidget);
     });
 
     testWidgets('affiche le sous-titre envoi code SMS', (tester) async {

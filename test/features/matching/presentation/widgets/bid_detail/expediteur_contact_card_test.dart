@@ -359,7 +359,7 @@ void main() {
 
     expect(find.textContaining('Numéro indisponible'), findsNothing);
     expect(
-      find.textContaining('Tu n\'as pas les droits nécessaires'),
+      find.textContaining('Vous n\'avez pas les droits nécessaires'),
       findsOneWidget,
     );
   });

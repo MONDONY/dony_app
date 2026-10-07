@@ -420,7 +420,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(
-      find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+      find.text(
+        'Une erreur est survenue. Vérifiez votre connexion et réessayez.',
+      ),
       findsOneWidget,
     );
     expect(find.text('boom'), findsNothing);

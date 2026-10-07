@@ -381,13 +381,15 @@ void main() {
         expect(find.text('+225 ** ** ** 12'), findsOneWidget);
         expect(
           find.text(
-            'Valide le paiement sur ton téléphone : une demande de code PIN '
-            "vient de t'être envoyée par Orange Money.",
+            'Validez le paiement sur votre téléphone : une demande de code PIN '
+            'vient de vous être envoyée par Orange Money.',
           ),
           findsOneWidget,
         );
         expect(
-          find.text('La confirmation est automatique, garde cet écran ouvert.'),
+          find.text(
+            'La confirmation est automatique, gardez cet écran ouvert.',
+          ),
           findsOneWidget,
         );
         expect(find.text('Ouvrir Wave'), findsNothing);
@@ -405,8 +407,8 @@ void main() {
 
       expect(
         find.text(
-          'Valide le paiement sur ton téléphone : une demande de code PIN '
-          "vient de t'être envoyée par ton opérateur.",
+          'Validez le paiement sur votre téléphone : une demande de code PIN '
+          'vient de vous être envoyée par votre opérateur.',
         ),
         findsOneWidget,
       );
@@ -422,7 +424,7 @@ void main() {
       await pumpScreen(tester);
 
       expect(
-        find.text("Termine le paiement dans l'application Wave"),
+        find.text("Terminez le paiement dans l'application Wave"),
         findsOneWidget,
       );
       expect(find.text('Ouvrir Wave'), findsOneWidget);
@@ -925,7 +927,7 @@ void main() {
       await pumpScreen(tester);
 
       expect(
-        find.textContaining("qui n'existent pas pour ton numéro (Bénin)"),
+        find.textContaining("qui n'existent pas pour votre numéro (Bénin)"),
         findsOneWidget,
       );
       final button = tester.widget<DonyButton>(
@@ -1358,7 +1360,7 @@ void main() {
 
       expect(
         find.text(
-          'Délai dépassé. La demande a été annulée, refais une offre au '
+          'Délai dépassé. La demande a été annulée, refaites une offre au '
           'voyageur.',
         ),
         findsOneWidget,
@@ -1392,7 +1394,7 @@ void main() {
 
         expect(
           find.text(
-            'Délai dépassé. Le fil est revenu à « à payer » : tu peux '
+            'Délai dépassé. Le fil est revenu à « à payer » : vous pouvez '
             'relancer le paiement ou changer de moyen de paiement depuis le '
             'fil.',
           ),
@@ -1419,7 +1421,7 @@ void main() {
 
       expect(find.text('host'), findsOneWidget);
       expect(
-        find.text('Paiement confirmé, ton envoi est sécurisé'),
+        find.text('Paiement confirmé, votre envoi est sécurisé'),
         findsOneWidget,
       );
       expect(await poppedResult, isTrue);
@@ -1486,7 +1488,7 @@ void main() {
 
         expect(
           find.text(
-            "Ton compte Yadony n'a pas de numéro de téléphone : indique "
+            "Votre compte Yadony n'a pas de numéro de téléphone : indiquez "
             'le numéro mobile money qui paiera.',
           ),
           findsOneWidget,
@@ -1610,7 +1612,7 @@ void main() {
 
       expect(
         find.text(
-          "Ton compte Yadony n'a pas de numéro de téléphone : indique "
+          "Votre compte Yadony n'a pas de numéro de téléphone : indiquez "
           'le numéro mobile money qui paiera.',
         ),
         findsOneWidget,

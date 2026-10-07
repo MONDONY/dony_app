@@ -17,7 +17,7 @@ void main() {
 
       expect(find.text('Choisir une adresse de remise'), findsOneWidget);
       expect(
-        find.text('Où tu récupères les colis des expéditeurs'),
+        find.text('Où vous récupérez les colis des expéditeurs'),
         findsOneWidget,
       );
     });
@@ -27,7 +27,7 @@ void main() {
 
       expect(find.text('Choisir une adresse de livraison'), findsOneWidget);
       expect(
-        find.text('Où tu déposes les colis à destination'),
+        find.text('Où vous déposez les colis à destination'),
         findsOneWidget,
       );
     });

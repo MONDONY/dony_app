@@ -57,7 +57,7 @@ void main() {
     test('duplicate → même message que l\'ancien texte fixe en fr', () {
       expect(
         chatBlockedMessage(fr, 'duplicate'),
-        'Tu viens d\'envoyer ce message.',
+        'Vous venez d\'envoyer ce message.',
       );
       expect(
         chatBlockedMessage(en, 'duplicate'),
@@ -68,7 +68,7 @@ void main() {
     test('rate → même message que l\'ancien texte fixe en fr', () {
       expect(
         chatBlockedMessage(fr, 'rate'),
-        'Tu envoies trop de messages, patiente un instant.',
+        'Vous envoyez trop de messages, patientez un instant.',
       );
       expect(
         chatBlockedMessage(en, 'rate'),
@@ -81,7 +81,7 @@ void main() {
       () {
         expect(
           chatBlockedMessage(fr, 'contact'),
-          'Pour ta sécurité, garde les échanges et le paiement sur Yadony. '
+          'Pour votre sécurité, gardez les échanges et le paiement sur Yadony. '
           'Le partage de coordonnées est interdit.',
         );
         expect(
@@ -95,8 +95,8 @@ void main() {
     test('contact avec terme → avertissement qui cite le terme', () {
       expect(
         chatBlockedMessage(fr, 'contact', term: 'insta'),
-        'Ton message semble contenir des coordonnées (« insta »). '
-        'Pour ta sécurité, garde les échanges et le paiement sur Yadony.',
+        'Votre message semble contenir des coordonnées (« insta »). '
+        'Pour votre sécurité, gardez les échanges et le paiement sur Yadony.',
       );
       expect(
         chatBlockedMessage(en, 'contact', term: 'insta'),
@@ -144,7 +144,7 @@ void main() {
     test('profanity → même message que l\'ancien texte fixe en fr', () {
       expect(
         chatBlockedMessage(fr, 'profanity'),
-        'Reste courtois : ce message contient des termes interdits.',
+        'Restez courtois : ce message contient des termes interdits.',
       );
       expect(
         chatBlockedMessage(en, 'profanity'),

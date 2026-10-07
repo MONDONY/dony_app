@@ -256,7 +256,7 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
 
-      // Confirme le paiement (auth biométrique mockée en succès) → ouvre la
+      // Confirmez le paiement (auth biométrique mockée en succès) → ouvre la
       // DonyPaymentSheet Stripe. `pumpAndSettle` n'est PAS utilisable ici : le
       // bouton "Payer" de la sheet extérieure passe en `isLoading: true`
       // (spinner indéterminé) et reste monté sous la DonyPaymentSheet tant
@@ -655,7 +655,7 @@ void main() {
 
         expect(find.text('Payer par mobile money'), findsOneWidget);
         expect(
-          find.textContaining('Tu valides le paiement sur ton téléphone'),
+          find.textContaining('Vous validez le paiement sur votre téléphone'),
           findsOneWidget,
         );
         expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);

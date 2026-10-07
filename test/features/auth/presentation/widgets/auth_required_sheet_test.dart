@@ -53,7 +53,7 @@ void main() {
       expect(find.text('Se connecter'), findsOneWidget);
       expect(find.text('Continuer à explorer'), findsOneWidget);
       expect(
-        find.text('Connecte-toi pour utiliser cette action.'),
+        find.text('Connectez-vous pour utiliser cette action.'),
         findsOneWidget,
       );
     });
@@ -62,7 +62,7 @@ void main() {
       await _open(tester, reason: AuthRequiredReason.report);
 
       expect(
-        find.text('Connecte-toi pour signaler une annonce.'),
+        find.text('Connectez-vous pour signaler une annonce.'),
         findsOneWidget,
       );
     });
@@ -71,7 +71,9 @@ void main() {
       await _open(tester, reason: AuthRequiredReason.offer);
 
       expect(
-        find.text('Connecte-toi pour proposer ton trajet en toute sécurité.'),
+        find.text(
+          'Connectez-vous pour proposer votre trajet en toute sécurité.',
+        ),
         findsOneWidget,
       );
     });

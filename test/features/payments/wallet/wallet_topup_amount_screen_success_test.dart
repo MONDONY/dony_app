@@ -215,7 +215,7 @@ void main() {
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Recharge réussie !'), findsOneWidget);
     expect(
-      find.text('Ton solde sera crédité dans un instant.'),
+      find.text('Votre solde sera crédité dans un instant.'),
       findsOneWidget,
     );
     expect(find.text('Voir mon solde'), findsOneWidget);

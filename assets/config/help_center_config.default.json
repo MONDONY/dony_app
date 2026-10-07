@@ -119,7 +119,7 @@
     {
       "id": "tuto_alertes_corridor",
       "title": "Créer une alerte corridor",
-      "description": "Être prévenu automatiquement dès qu'un trajet ou un colis apparaît sur ton corridor.",
+      "description": "Être prévenu automatiquement dès qu'un trajet ou un colis apparaît sur votre corridor.",
       "youtubeVideoId": "22_4Rnh9FpQ",
       "order": 10,
       "active": true,
@@ -129,7 +129,7 @@
     {
       "id": "tuto_modeles_trajet",
       "title": "Créer un modèle de trajet",
-      "description": "Publier tes trajets récurrents en quelques secondes grâce aux modèles.",
+      "description": "Publier vos trajets récurrents en quelques secondes grâce aux modèles.",
       "youtubeVideoId": "l3NQvNJvG94",
       "order": 11,
       "active": false,
@@ -138,7 +138,7 @@
     {
       "id": "tuto_destinataires",
       "title": "Gérer mes destinataires",
-      "description": "Enregistrer tes proches pour envoyer un colis en un seul tap.",
+      "description": "Enregistrer vos proches pour envoyer un colis en un seul tap.",
       "youtubeVideoId": "jV2E3J1H8gM",
       "order": 12,
       "active": true,
@@ -148,7 +148,7 @@
     {
       "id": "tuto_demandes_recues",
       "title": "Gérer les demandes reçues",
-      "description": "Accepter ou refuser une demande d'expéditeur sur l'un de tes trajets.",
+      "description": "Accepter ou refuser une demande d'expéditeur sur l'un de vos trajets.",
       "youtubeVideoId": "l3NQvNJvG94",
       "order": 13,
       "active": false,
@@ -157,7 +157,7 @@
     {
       "id": "tuto_recharge_mobile_money",
       "title": "Recharger mon solde",
-      "description": "Recharger ton portefeuille Yadony par carte bancaire ou mobile money (Orange Money, Wave, MTN MoMo).",
+      "description": "Recharger votre portefeuille Yadony par carte bancaire ou mobile money (Orange Money, Wave, MTN MoMo).",
       "youtubeVideoId": "iBQQPfrBioQ",
       "order": 14,
       "active": true,

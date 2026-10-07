@@ -41,7 +41,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.textContaining("Tous les utilisateurs pourront t'envoyer"),
+        find.textContaining('Tous les utilisateurs pourront vous envoyer'),
         findsOneWidget,
       );
       expect(

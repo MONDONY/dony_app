@@ -286,7 +286,9 @@ void main() {
       await t.pumpAndSettle();
 
       expect(
-        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        find.text(
+          'Une erreur est survenue. Vérifiez votre connexion et réessayez.',
+        ),
         findsOneWidget,
       );
       expect(find.text('détail technique brut'), findsNothing);

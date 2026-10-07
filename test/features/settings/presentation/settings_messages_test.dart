@@ -11,20 +11,20 @@ void main() {
   group('devicesSignedInCount — correction d\'accord « appareil(s) »', () {
     test('fr, 1 appareil : nouveau rendu accordé', () {
       final l = AppL10n.current;
-      expect(l.devicesSignedInCount(1), 'Tu es connecté sur 1 appareil');
+      expect(l.devicesSignedInCount(1), 'Vous êtes connecté sur 1 appareil');
       // L'ancien texte concaténé ne distinguait jamais le singulier.
       expect(
         l.devicesSignedInCount(1),
-        isNot('Tu es connecté sur 1 appareil(s)'),
+        isNot('Vous êtes connecté sur 1 appareil(s)'),
       );
     });
 
     test('fr, 3 appareils : nouveau rendu accordé', () {
       final l = AppL10n.current;
-      expect(l.devicesSignedInCount(3), 'Tu es connecté sur 3 appareils');
+      expect(l.devicesSignedInCount(3), 'Vous êtes connecté sur 3 appareils');
       expect(
         l.devicesSignedInCount(3),
-        isNot('Tu es connecté sur 3 appareil(s)'),
+        isNot('Vous êtes connecté sur 3 appareil(s)'),
       );
     });
 

@@ -84,7 +84,9 @@ void main() {
 
       expect(find.text('Réessayer'), findsOneWidget);
       expect(
-        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        find.text(
+          'Une erreur est survenue. Vérifiez votre connexion et réessayez.',
+        ),
         findsOneWidget,
       );
       expect(find.text('detail technique brut'), findsNothing);

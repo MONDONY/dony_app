@@ -264,6 +264,24 @@ void main() {
     }
   });
 
+  // FLUTTER-CD : l'app passait du « tu » au « vous » d'un écran à l'autre.
+  // Ton unique : le vouvoiement. Garde-fou sur les pronoms (les impératifs
+  // à la 2e personne du singulier se relisent à la main).
+  test('le français vouvoie : aucun pronom de tutoiement', () {
+    final tutoiement = RegExp(
+      r"(?<![\wÀ-ÿ’'-])(tu|te|ton|ta|tes|toi)(?![\wÀ-ÿ’'])"
+      r"|(?<![\wÀ-ÿ’'-])t['’](?=[a-zà-ÿ])|-toi\b|-tu\b",
+      caseSensitive: false,
+    );
+    for (final entry in fr.entries) {
+      expect(
+        tutoiement.hasMatch(entry.value),
+        isFalse,
+        reason: '${entry.key} : ${entry.value}',
+      );
+    }
+  });
+
   test("l'anglais est traduit (pas une copie du français)", () {
     for (final key in fr.keys) {
       if (_sameInBothLanguages.contains(key)) continue;

@@ -479,7 +479,7 @@ void main() {
         ),
         true,
       );
-      expect(find.textContaining('paie par mobile money'), findsOneWidget);
+      expect(find.textContaining('payez par mobile money'), findsOneWidget);
       expect(find.textContaining('En attente de confirmation'), findsNothing);
     },
   );
@@ -489,7 +489,7 @@ void main() {
   ) async {
     await _pump(tester, _bid(status: 'AWAITING_PAYMENT'), true);
     expect(find.textContaining('En attente de confirmation'), findsOneWidget);
-    expect(find.textContaining('paie par mobile money'), findsNothing);
+    expect(find.textContaining('payez par mobile money'), findsNothing);
   });
 
   // ── Traveler dispatch ───────────────────────────────────────────────────────

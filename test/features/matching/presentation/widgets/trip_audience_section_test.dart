@@ -49,8 +49,8 @@ void main() {
 
     await _pump(tester, cubit);
 
-    expect(find.text('12 personnes ont vu ton trajet'), findsOneWidget);
-    expect(find.text('7 vues de ton affiche partagée'), findsOneWidget);
+    expect(find.text('12 personnes ont vu votre trajet'), findsOneWidget);
+    expect(find.text('7 vues de votre affiche partagée'), findsOneWidget);
   });
 
   testWidgets('une personne, affiche jamais consultée : pas de ligne affiche', (
@@ -64,7 +64,7 @@ void main() {
 
     await _pump(tester, cubit);
 
-    expect(find.text('1 personne a vu ton trajet'), findsOneWidget);
+    expect(find.text('1 personne a vu votre trajet'), findsOneWidget);
     expect(find.textContaining('affiche'), findsNothing);
   });
 
@@ -78,7 +78,7 @@ void main() {
     await _pump(tester, cubit);
 
     expect(find.byKey(const Key('trip-audience-card')), findsOneWidget);
-    expect(find.text("Personne n'a encore vu ton trajet"), findsOneWidget);
+    expect(find.text("Personne n'a encore vu votre trajet"), findsOneWidget);
     expect(find.textContaining('affiche'), findsNothing);
   });
 
@@ -93,7 +93,7 @@ void main() {
 
       await _pump(tester, cubit);
 
-      expect(find.text('3 vues de ton affiche partagée'), findsOneWidget);
+      expect(find.text('3 vues de votre affiche partagée'), findsOneWidget);
       expect(find.textContaining('ton trajet'), findsNothing);
     },
   );

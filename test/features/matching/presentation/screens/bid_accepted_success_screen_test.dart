@@ -48,7 +48,7 @@ void main() {
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Demande acceptée !'), findsOneWidget);
     expect(
-      find.textContaining('Le colis est réservé sur ton trajet'),
+      find.textContaining('Le colis est réservé sur votre trajet'),
       findsOneWidget,
     );
     expect(find.text('Voir la demande'), findsOneWidget);

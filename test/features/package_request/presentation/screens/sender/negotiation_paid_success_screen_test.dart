@@ -40,7 +40,7 @@ void main() {
 
     expect(find.text('Offre acceptée et payée !'), findsOneWidget);
     expect(
-      find.textContaining('Ton argent est bloqué et sécurisé'),
+      find.textContaining('Votre argent est bloqué et sécurisé'),
       findsOneWidget,
     );
     expect(find.text('Voir le suivi'), findsOneWidget);

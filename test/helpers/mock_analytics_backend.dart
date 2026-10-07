@@ -12,7 +12,7 @@ class MockHiveService extends Mock implements HiveService {}
 
 class MockBox extends Mock implements Box<dynamic> {}
 
-/// Crée un AnalyticsService déjà configuré + consenti (isEnabled = true).
+/// Créez un AnalyticsService déjà configuré + consenti (isEnabled = true).
 AnalyticsService makeEnabledAnalytics(MockAnalyticsBackend backend) {
   final hive = MockHiveService();
   final box = MockBox();
@@ -30,7 +30,7 @@ AnalyticsService makeEnabledAnalytics(MockAnalyticsBackend backend) {
   return service;
 }
 
-/// Crée un AnalyticsService configuré mais sans consentement (isEnabled = false).
+/// Créez un AnalyticsService configuré mais sans consentement (isEnabled = false).
 AnalyticsService makeDisabledAnalytics(MockAnalyticsBackend backend) {
   final hive = MockHiveService();
   final box = MockBox();

@@ -165,6 +165,38 @@ String homePullHintLabel(
   return down ? l.homePullToMap : homePullUpLabel(l, mode: mode, count: count);
 }
 
+/// Hauteur d'ouverture de la feuille de résultats (FLUTTER-CD) : ≈ 60 % de
+/// la zone, sans jamais monter au-dessus de la barre de recherche (bas de
+/// [overlayBottom]) ni masquer le bouton « Près de moi » posé juste au-dessus
+/// de la feuille. Null quand la place manque (paysage, texte très agrandi) :
+/// la feuille reste alors à sa hauteur repliée [peekSize].
+@visibleForTesting
+double? computeHomeRaisedSheetSize({
+  required double areaHeight,
+  required double areaTop,
+  required double? overlayBottom,
+  required double peekSize,
+  double preferred = kHomeRaisedSheetSize,
+}) {
+  if (areaHeight <= 0) return null;
+  // Barre du haut non mesurée : on suppose son plafond (45 % de la zone).
+  final overlay = (overlayBottom ?? areaTop + areaHeight * 0.45) - areaTop;
+  final reserved = overlay + kHomeNearMeFabClearance;
+  final fit = 1 - reserved / areaHeight;
+  final target = math.min(preferred, fit);
+  // Moins de 8 points au-dessus de la hauteur repliée : rien à gagner.
+  if (target < peekSize + 0.08) return null;
+  return target;
+}
+
+/// Hauteur d'ouverture visée pour la feuille de résultats.
+const double kHomeRaisedSheetSize = 0.60;
+
+/// Place réservée entre la barre du haut et la feuille ouverte : bouton
+/// « Près de moi » (48), son décalage au-dessus de la feuille (sm + lg, voir
+/// `fabBottomPadding`) et un espace sous la barre du haut (sm).
+const double kHomeNearMeFabClearance = 48 + DonySpacing.sm * 2 + DonySpacing.lg;
+
 /// Nomme le corridor courant : « 5 colis cherchent un voyageur sur Lyon →
 /// Bamako » en mode trajets, son symétrique « 12 voyageurs passent sur Lyon →
 /// Bamako » en mode colis. Jamais de tiret cadratin ici, c'est un texte
@@ -324,6 +356,27 @@ class _MapSenderViewState extends State<_MapSenderView> {
   double _sheetSize = 0.20;
   bool get _isMapHidden => _sheetSize > 0.92;
 
+  /// Hauteur d'ouverture de la feuille (≈ 60 %), mesurée au premier rendu
+  /// pour ne jamais recouvrir la barre de recherche ni le bouton « Près de
+  /// moi ». Null tant qu'elle n'est pas mesurée, ou quand l'écran est trop bas
+  /// pour la loger (paysage, texte très agrandi) : la feuille reste repliée.
+  double? _raisedSize;
+
+  /// Marge basse du bouton « Près de moi » quand la feuille est à
+  /// mi-hauteur : juste au-dessus d'elle.
+  double? _raisedFabPadding;
+
+  /// La feuille ne monte qu'une fois, au premier affichage de la liste.
+  bool _didRaiseOnOpen = false;
+
+  /// Enveloppe de la barre du haut (corridor, mode, filtres), mesurée pour
+  /// caler la hauteur d'ouverture de la feuille juste en dessous.
+  final _topOverlayKey = GlobalKey();
+
+  /// Feuille ouverte à mi-hauteur : les annonces sont visibles, la carte
+  /// reste au-dessus (FLUTTER-CD).
+  bool get _isSheetRaised => !_isMapHidden && _sheetSize > _peekSize + 0.08;
+
   // Cached markers for package_requests (rebuilt when search results change).
   Set<Marker> _packageRequestMarkers = {};
   List<PackageRequestSearchItem> _lastBuiltRequests = const [];
@@ -437,9 +490,54 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (!_sheetController.isAttached) return;
     final newSize = _sheetController.size;
     final wasHidden = _isMapHidden;
+    final wasRaised = _isSheetRaised;
     _sheetSize = newSize;
-    // Rebuild quand l'état plein écran change (swap indications / filtres).
-    if (wasHidden != _isMapHidden) setState(() {});
+    // Rebuild quand l'état plein écran ou mi-hauteur change (swap indications
+    // / filtres, position du bouton « Près de moi »).
+    if (wasHidden != _isMapHidden || wasRaised != _isSheetRaised) {
+      setState(() {});
+    }
+  }
+
+  /// FLUTTER-CD : la feuille repliée laissait un nouvel utilisateur devant
+  /// une carte vide, persuadé que rien ne chargeait. À l'ouverture, la feuille
+  /// monte d'elle-même pour montrer les premières annonces ; la carte reste
+  /// au-dessus, et l'indication « voir la carte » la replie.
+  void _raiseSheetOnOpen() {
+    if (!mounted || !_sheetController.isAttached) return;
+    final target = computeHomeRaisedSheetSize(
+      areaHeight: _areaHeight(),
+      areaTop: _areaTop(),
+      overlayBottom: _topOverlayBottom(),
+      peekSize: _peekSize,
+    );
+    if (target == null) return;
+    final areaHeight = _areaHeight();
+    setState(() {
+      _raisedSize = target;
+      _raisedFabPadding = areaHeight * target + DonySpacing.sm;
+    });
+    _sheetController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  RenderBox? _areaBox() {
+    final ro = context.findRenderObject();
+    return ro is RenderBox && ro.hasSize ? ro : null;
+  }
+
+  double _areaHeight() =>
+      _areaBox()?.size.height ?? MediaQuery.sizeOf(context).height;
+
+  double _areaTop() => _areaBox()?.localToGlobal(Offset.zero).dy ?? 0;
+
+  double? _topOverlayBottom() {
+    final ro = _topOverlayKey.currentContext?.findRenderObject();
+    if (ro is! RenderBox || !ro.hasSize) return null;
+    return ro.localToGlobal(Offset(0, ro.size.height)).dy;
   }
 
   /// Drag manuel de la poignée → pilote directement la taille du sheet (un
@@ -448,14 +546,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
   void _onHandleDrag(BuildContext context, DragUpdateDetails d) {
     if (!_sheetController.isAttached) return;
     final h = MediaQuery.of(context).size.height;
-    final next = (_sheetController.size - d.primaryDelta! / h).clamp(0.30, 1.0);
+    final next = (_sheetController.size - d.primaryDelta! / h).clamp(
+      _peekSize,
+      1.0,
+    );
     _sheetController.jumpTo(next);
   }
 
   /// Aimante le sheet au snap le plus proche au relâcher de la poignée.
   void _snapSheet() {
     if (!_sheetController.isAttached) return;
-    const snaps = [0.30, 0.6, 1.0];
+    final snaps = [_peekSize, _raisedSize ?? 0.6, 1.0];
     final s = _sheetController.size;
     var best = snaps.first;
     for (final v in snaps) {
@@ -1070,6 +1171,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   void _exitNearMeAndShowList() {
+    // La feuille s'ouvre ici en plein écran : pas de montée à mi-hauteur.
+    _didRaiseOnOpen = true;
     _deactivateNearMe();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_sheetController.isAttached) return;
@@ -1364,6 +1467,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 ) +
                                 MediaQuery.of(context).padding.bottom +
                                 DonySpacing.base
+                          // Feuille ouverte à mi-hauteur : le bouton se pose
+                          // juste au-dessus d'elle au lieu d'être recouvert.
+                          : _isSheetRaised && _raisedFabPadding != null
+                          ? _raisedFabPadding!
                           : MediaQuery.of(context).size.height * 0.45,
                       selectedAnnouncementId: _selectedAnnouncementId,
                       onAnnouncementSelected: (id) =>
@@ -1383,6 +1490,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeInOut,
                         child: ConstrainedBox(
+                          key: _topOverlayKey,
                           constraints: BoxConstraints(
                             maxHeight: MediaQuery.sizeOf(context).height * 0.45,
                           ),
@@ -1455,9 +1563,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             .clamp(0.30, 0.90)
                             .toDouble();
                         _peekSize = peekSize;
-                        final middleSnap = peekSize < 0.5
-                            ? 0.6
-                            : (peekSize + 1) / 2;
+                        final middleSnap =
+                            _raisedSize ??
+                            (peekSize < 0.5 ? 0.6 : (peekSize + 1) / 2);
+                        if (!_didRaiseOnOpen) {
+                          _didRaiseOnOpen = true;
+                          WidgetsBinding.instance.addPostFrameCallback(
+                            (_) => _raiseSheetOnOpen(),
+                          );
+                        }
                         return DraggableScrollableSheet(
                           controller: _sheetController,
                           initialChildSize: peekSize,
@@ -2068,7 +2182,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
           ),
           if (!_isMapHidden)
-            _pullHintForMode(cs, down: false, tripCount: tripCount),
+            // Mi-hauteur : les annonces sont déjà là, l'indication propose la
+            // carte (FLUTTER-CD). Repliée : elle propose la liste.
+            _pullHintForMode(cs, down: _isSheetRaised, tripCount: tripCount),
           Divider(height: 1, color: cs.outline),
           Expanded(
             child: NotificationListener<ScrollNotification>(

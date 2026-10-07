@@ -320,7 +320,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('61 %'), findsOneWidget);
-      expect(find.textContaining('Ton trajet du'), findsNothing);
+      expect(find.textContaining('Votre trajet du'), findsNothing);
     });
 
     testWidgets('le libellé du trajet ne contient jamais de tiret cadratin', (
@@ -376,22 +376,23 @@ void main() {
       expect(find.text('Open budget'), findsOneWidget);
     });
 
-    testWidgets('score de match : « Ton trajet du » devient « Your trip on »', (
-      tester,
-    ) async {
-      useEnglish();
-      await tester.pumpWidget(
-        wrap(
-          PackageRequestListCard(
-            item: _item(
-              matchScore: 94,
-              matchedTripDepartureDate: DateTime(2026, 7, 12),
+    testWidgets(
+      'score de match : « Votre trajet du » devient « Your trip on »',
+      (tester) async {
+        useEnglish();
+        await tester.pumpWidget(
+          wrap(
+            PackageRequestListCard(
+              item: _item(
+                matchScore: 94,
+                matchedTripDepartureDate: DateTime(2026, 7, 12),
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Your trip on'), findsOneWidget);
-    });
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Your trip on'), findsOneWidget);
+      },
+    );
   });
 }

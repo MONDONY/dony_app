@@ -5261,6 +5261,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingNearMeActivateTooltip => 'See travelers near me';
 
   @override
+  String get listingMapUnavailable =>
+      'The map can\'t load right now. Listings are still available in the list.';
+
+  @override
+  String get listingMapLocationOff =>
+      'Location not shared: the map shows all listings.';
+
+  @override
   String get listingFilterTripsTitle => 'Filter trips';
 
   @override
@@ -10030,6 +10038,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatBidStatusTripCancelled => 'Trip canceled';
+
+  @override
+  String get chatSystemViewTracking => 'View tracking';
 
   @override
   String get chatMessageDeleted => 'Message deleted';

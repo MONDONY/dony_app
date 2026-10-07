@@ -585,7 +585,7 @@ void main() {
         expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
         expect(find.text('Some unrelated business error'), findsNothing);
         expect(
-          find.text('Vérifie les informations saisies puis réessaie.'),
+          find.text('Vérifiez les informations saisies puis réessayez.'),
           findsOneWidget,
         );
       },

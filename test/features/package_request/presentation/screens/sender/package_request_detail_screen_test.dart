@@ -326,7 +326,7 @@ void main() {
 
       expect(find.text('Cette demande n\'existe plus'), findsOneWidget);
       expect(find.text('Réessayer'), findsNothing);
-      expect(find.text('Impossible de charger ta demande'), findsNothing);
+      expect(find.text('Impossible de charger votre demande'), findsNothing);
     },
   );
 
@@ -344,7 +344,7 @@ void main() {
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Impossible de charger ta demande'), findsOneWidget);
+    expect(find.text('Impossible de charger votre demande'), findsOneWidget);
 
     await tester.tap(find.text('Réessayer'));
     await tester.pumpAndSettle();
@@ -420,7 +420,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => repo.cancel('pr-1')).called(1);
-      expect(find.text('Tu as annulé cette demande'), findsOneWidget);
+      expect(find.text('Vous avez annulé cette demande'), findsOneWidget);
       expect(find.text('Publier une demande similaire'), findsOneWidget);
       // Preuve robuste (harnais pushable) : toujours sur le détail, jamais
       // revenu sur la route parente.
@@ -450,12 +450,12 @@ void main() {
 
       verify(() => repo.cancel('pr-1')).called(1);
       expect(
-        find.text('Une erreur est survenue. Réessaie dans un instant.'),
+        find.text('Une erreur est survenue. Réessayez dans un instant.'),
         findsOneWidget,
       );
       expect(find.byType(SnackBar), findsOneWidget);
       // Toujours le cas publié (pas annulé) : le billet reste affiché.
-      expect(find.text('Tu as annulé cette demande'), findsNothing);
+      expect(find.text('Vous avez annulé cette demande'), findsNothing);
       expect(find.text('DIV'), findsOneWidget);
     },
   );

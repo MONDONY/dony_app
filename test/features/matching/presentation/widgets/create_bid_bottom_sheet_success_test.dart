@@ -415,9 +415,9 @@ void main() {
       expect(find.text('Offre envoyée !'), findsOneWidget);
       expect(
         find.textContaining(
-          'Paiement mobile money : si le voyageur accepte, tu recevras une '
-          'notification et auras 30 minutes pour valider le paiement sur '
-          'ton téléphone. Le montant est gardé en sécurité par Yadony '
+          'Paiement mobile money : si le voyageur accepte, vous recevrez une '
+          'notification et aurez 30 minutes pour valider le paiement sur '
+          'votre téléphone. Le montant est gardé en sécurité par Yadony '
           'jusqu\'à la livraison.',
         ),
         findsOneWidget,
@@ -449,7 +449,10 @@ void main() {
 
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Offre envoyée !'), findsOneWidget);
-      expect(find.text('Le voyageur va examiner ta demande.'), findsOneWidget);
+      expect(
+        find.text('Le voyageur va examiner votre demande.'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -469,7 +472,10 @@ void main() {
 
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Offre envoyée !'), findsOneWidget);
-      expect(find.text('Le voyageur va examiner ta demande.'), findsOneWidget);
+      expect(
+        find.text('Le voyageur va examiner votre demande.'),
+        findsOneWidget,
+      );
     },
   );
 }

@@ -883,7 +883,7 @@ void main() {
       ).called(1);
       expect(find.text('QR du colis'), findsOneWidget);
       expect(
-        find.text('Tu n\'as pas les droits nécessaires pour cette action.'),
+        find.text('Vous n\'avez pas les droits nécessaires pour cette action.'),
         findsOneWidget,
       );
       expect(find.textContaining('interdit'), findsNothing);

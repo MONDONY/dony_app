@@ -120,7 +120,7 @@ void main() {
       await tester.pumpWidget(wrap(Step1TrajetColis(key: key)));
       key.currentState!.submit();
       await tester.pump();
-      expect(find.text('Choisis une date souhaitée'), findsNothing);
+      expect(find.text('Choisissez une date souhaitée'), findsNothing);
       expect(find.text('Date de départ obligatoire'), findsOneWidget);
     });
   });

@@ -29,7 +29,7 @@ void main() {
   Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
   testWidgets(
-    'ThreadMessageBubble — traveler with proposedPriceEur=35 shows "Tu reçois 35,00 €"',
+    'ThreadMessageBubble — traveler with proposedPriceEur=35 shows "Vous recevez 35,00 €"',
     (tester) async {
       await tester.pumpWidget(
         wrap(
@@ -41,7 +41,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Tu reçois 35,00\u00A0€'), findsOneWidget);
+      expect(find.text('Vous recevez 35,00\u00A0€'), findsOneWidget);
     },
   );
 
@@ -60,7 +60,7 @@ void main() {
       );
 
       // gross = 35 * 1.12 = 39.20
-      expect(find.text('Tu paies 39,20\u00A0€'), findsOneWidget);
+      expect(find.text('Vous payez 39,20\u00A0€'), findsOneWidget);
     },
   );
 

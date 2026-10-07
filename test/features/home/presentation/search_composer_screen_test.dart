@@ -413,7 +413,7 @@ void main() {
       },
     );
 
-    testWidgets('permission accordée : active le filtre, affiche le rayon par '
+    testWidgets('permission accordée : activez le filtre, affiche le rayon par '
         'défaut (25 km)', (tester) async {
       GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
 

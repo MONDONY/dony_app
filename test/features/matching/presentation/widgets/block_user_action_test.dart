@@ -97,7 +97,7 @@ void main() {
     await tester.pump();
 
     expect(
-      find.text('Une erreur est survenue. Réessaie plus tard.'),
+      find.text('Une erreur est survenue. Réessayez plus tard.'),
       findsOneWidget,
     );
     // Le dialog reste ouvert pour laisser réessayer.

@@ -16,14 +16,14 @@ void main() {
           const ThreadStateBanner(
             icon: Icons.hourglass_top_rounded,
             message: 'Le voyageur prépare son trajet',
-            subtitle: 'Tu seras notifié dès qu\'il l\'aura confirmé.',
+            subtitle: 'Vous serez notifié dès qu\'il l\'aura confirmé.',
             tint: Color(0xFFB5781E),
           ),
         ),
       );
       expect(find.text('Le voyageur prépare son trajet'), findsOneWidget);
       expect(
-        find.text('Tu seras notifié dès qu\'il l\'aura confirmé.'),
+        find.text('Vous serez notifié dès qu\'il l\'aura confirmé.'),
         findsOneWidget,
       );
       expect(find.byIcon(Icons.hourglass_top_rounded), findsOneWidget);

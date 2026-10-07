@@ -141,7 +141,7 @@ void main() {
   test('le motif ne retient que six chiffres isolés, pas une empreinte', () {
     final matcher = RegExp(AndroidSmsCodeRetriever.codeMatcher);
     const sms =
-        'Ton code Yadony est : 482913. Valable 10 minutes.\nQR5XSgGkFEN';
+        'Votre code Yadony est : 482913. Valable 10 minutes.\nQR5XSgGkFEN';
 
     expect(matcher.firstMatch(sms)?.group(0), '482913');
     expect(matcher.hasMatch('QR5XSgGkFEN AB12345678CD'), isFalse);

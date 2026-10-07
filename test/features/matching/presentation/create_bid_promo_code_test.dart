@@ -290,7 +290,7 @@ void main() {
 
     expect(
       find.text(
-        "Ce code promo n'existe pas. Vérifie la saisie et réessaie. "
+        "Ce code promo n'existe pas. Vérifiez la saisie et réessayez. "
         "Un code parrain se saisit à l'inscription ou dans Moi › "
         "« J'ai un code parrain ».",
       ),
@@ -419,7 +419,7 @@ void main() {
       expect(
         find.text(
           "Quelque chose s'est mal passé de notre côté. On regarde ça, "
-          'réessaie dans un instant.',
+          'réessayez dans un instant.',
         ),
         findsWidgets,
       );
@@ -523,7 +523,7 @@ void main() {
     expect(
       find.text(
         "Quelque chose s'est mal passé de notre côté. On regarde ça, "
-        'réessaie dans un instant.',
+        'réessayez dans un instant.',
       ),
       findsWidgets,
     );

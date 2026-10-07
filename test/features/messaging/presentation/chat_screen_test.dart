@@ -469,7 +469,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       verifyNever(() => bloc.add(any(that: isA<ChatTextSendRequested>())));
-      expect(find.textContaining('garde les échanges'), findsOneWidget);
+      expect(find.textContaining('gardez les échanges'), findsOneWidget);
     });
 
     testWidgets('le menu ⋯ propose de signaler et de bloquer l interlocuteur', (
@@ -1253,6 +1253,169 @@ void main() {
       expect(drafts.read('conv-1'), 'en cours');
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    });
+  });
+
+  // FLUTTER-CD : « Consultez les instructions de retrait dans le suivi »
+  // laissait l'utilisateur chercher le suivi lui-même.
+  group('message système qui renvoie au suivi', () {
+    const arrived =
+        'Votre voyageur est arrivé à destination. Consultez les instructions '
+        'de retrait dans le suivi.';
+
+    Future<List<String>> pumpWith(
+      WidgetTester tester,
+      List<MessageModel> messages, {
+      ConversationModel conversation = _conversation,
+    }) async {
+      when(() => bloc.state).thenReturn(ChatLoaded(messages));
+      final reveal = _MockContactRevealBloc();
+      when(() => reveal.state).thenReturn(const ContactRevealInitial());
+      final routes = <String>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider<ChatBloc>.value(value: bloc),
+              BlocProvider<ContactRevealBloc>.value(value: reveal),
+            ],
+            child: ChatScreen(
+              conversation: conversation,
+              onNavigate: (path, _) => routes.add(path),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      return routes;
+    }
+
+    testWidgets('lien « Voir le suivi » sous le message, vers le bid', (
+      tester,
+    ) async {
+      final routes = await pumpWith(tester, [
+        _makeMsg(
+          id: 's1',
+          body: arrived,
+          senderId: 'SYSTEM',
+          type: MessageType.system,
+        ),
+      ]);
+
+      final link = find.byKey(const Key('chat-system-open-tracking'));
+      expect(link, findsOneWidget);
+      expect(find.text('Voir le suivi'), findsOneWidget);
+      // Juste sous le message.
+      expect(
+        tester.getTopLeft(link).dy,
+        greaterThan(tester.getBottomLeft(find.text(arrived)).dy - 1),
+      );
+
+      await tester.tap(link);
+      await tester.pump();
+      expect(routes, ['/bids/bid-1']);
+    });
+
+    testWidgets('destinataire : le lien mène à sa réception', (tester) async {
+      setSmsAuthEnabled(true);
+      addTearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+      final routes = await pumpWith(
+        tester,
+        [
+          _makeMsg(
+            id: 's1',
+            body: arrived,
+            senderId: 'SYSTEM',
+            type: MessageType.system,
+          ),
+        ],
+        conversation: const ConversationModel(
+          id: 'conv-r',
+          bidId: 'bid-r',
+          firestoreConversationId: 'rconv_bid-r',
+          otherParticipant: ParticipantModel(
+            id: 'uid-r',
+            name: 'Awa Diallo',
+            role: 'Voyageur',
+          ),
+          kind: ConversationModel.kindRecipientTraveler,
+          viewerRole: 'RECIPIENT',
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('chat-system-open-tracking')));
+      await tester.pump();
+      expect(routes, ['/receptions/bid-r']);
+    });
+
+    testWidgets('autre message système ou message d\'un participant : rien', (
+      tester,
+    ) async {
+      await pumpWith(tester, [
+        _makeMsg(
+          id: 's0',
+          body:
+              'Connexion établie ! Vous pouvez maintenant échanger pour '
+              'organiser la remise.',
+          senderId: 'SYSTEM',
+          type: MessageType.system,
+        ),
+        // Même texte écrit par une personne : pas un message de la plateforme.
+        _makeMsg(id: 'm1', body: arrived),
+      ]);
+
+      expect(find.byKey(const Key('chat-system-open-tracking')), findsNothing);
+    });
+  });
+
+  group('systemMessageLinksToTracking', () {
+    MessageModel sys(String? body, {String? deletedAt}) => MessageModel(
+      id: 's',
+      senderId: 'SYSTEM',
+      body: body,
+      type: MessageType.system,
+      sentAt: DateTime(2026, 10, 7),
+      deletedAt: deletedAt,
+    );
+
+    test('détecte les renvois au suivi, sans tenir compte de la casse', () {
+      expect(
+        systemMessageLinksToTracking(
+          sys('Consultez les instructions de retrait dans le suivi.'),
+        ),
+        isTrue,
+      );
+      expect(
+        systemMessageLinksToTracking(sys('Les instructions DANS LE SUIVI')),
+        isTrue,
+      );
+      expect(
+        systemMessageLinksToTracking(
+          sys('See the pickup instructions in the tracking.'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('ignore les autres messages', () {
+      expect(systemMessageLinksToTracking(sys('Connexion établie !')), isFalse);
+      expect(systemMessageLinksToTracking(sys(null)), isFalse);
+      expect(systemMessageLinksToTracking(sys('')), isFalse);
+      expect(
+        systemMessageLinksToTracking(sys('dans le suivi', deletedAt: 'x')),
+        isFalse,
+      );
+      expect(
+        systemMessageLinksToTracking(
+          _makeMsg(id: 't', body: 'regarde dans le suivi'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('trackingPathFor : bid ou réception selon le spectateur', () {
+      expect(trackingPathFor(_conversation), '/bids/bid-1');
     });
   });
 }

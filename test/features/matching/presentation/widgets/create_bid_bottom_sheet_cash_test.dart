@@ -400,7 +400,7 @@ void main() {
     testWidgets('annonce Stripe-only → sélecteur non affiché', (tester) async {
       await _openSheet(tester, _announcement());
 
-      expect(find.text('Comment veux-tu payer ?'), findsNothing);
+      expect(find.text('Comment voulez-vous payer ?'), findsNothing);
       expect(find.byKey(const Key('payment-method-cash')), findsNothing);
     });
 
@@ -410,7 +410,7 @@ void main() {
       await _openSheet(tester, _announcement(cashEnabled: true));
       await _goToPaymentPicker(tester);
 
-      expect(find.text('Comment veux-tu payer ?'), findsOneWidget);
+      expect(find.text('Comment voulez-vous payer ?'), findsOneWidget);
       expect(find.byKey(const Key('payment-method-stripe')), findsOneWidget);
       expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
       // La tuile STRIPE annonce les wallets via les logos de marque.

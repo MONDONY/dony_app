@@ -46,7 +46,7 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Voyageurs sur ton axe'), findsOneWidget);
+    expect(find.text('Voyageurs sur votre axe'), findsOneWidget);
     expect(find.byType(CompatibleTravelerCard), findsNWidgets(2));
     await tester.tap(find.text('Inviter').first);
     expect(invited, ['a']);
@@ -58,12 +58,12 @@ void main() {
       _wrap(
         RequestTravelersFold(
           trips: [_trip('a'), _trip('b')],
-          label: '2 voyageurs sur ton axe',
+          label: '2 voyageurs sur votre axe',
           onTap: () => taps++,
         ),
       ),
     );
-    await tester.tap(find.text('2 voyageurs sur ton axe'));
+    await tester.tap(find.text('2 voyageurs sur votre axe'));
     expect(taps, 1);
   });
 

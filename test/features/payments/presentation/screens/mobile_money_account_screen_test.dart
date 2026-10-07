@@ -223,11 +223,11 @@ void main() {
           await pumpScreen(tester);
 
           expect(find.text('Numéro de versement'), findsOneWidget);
-          expect(find.text('Confirme le numéro'), findsOneWidget);
+          expect(find.text('Confirmez le numéro'), findsOneWidget);
           expect(
             find.textContaining(
-              'Indique le numéro mobile money qui recevra tes versements. '
-              'Il peut être différent de ton numéro Yadony',
+              'Indiquez le numéro mobile money qui recevra vos versements. '
+              'Il peut être différent de votre numéro Yadony',
             ),
             findsOneWidget,
           );
@@ -542,14 +542,14 @@ void main() {
 
         expect(
           find.text(
-            'Ton versement est désactivé. Indique le numéro mobile money '
+            'Votre versement est désactivé. Indiquez le numéro mobile money '
             'pour le réactiver.',
           ),
           findsOneWidget,
         );
         expect(find.textContaining('précédent'), findsNothing);
         expect(find.text('Numéro de versement'), findsOneWidget);
-        expect(find.text('Confirme le numéro'), findsOneWidget);
+        expect(find.text('Confirmez le numéro'), findsOneWidget);
         expect(find.text('Réactiver'), findsOneWidget);
 
         final button = tester.widget<DonyButton>(find.byType(DonyButton));
@@ -566,7 +566,7 @@ void main() {
 
         expect(
           find.text(
-            'Ton versement est désactivé. Indique le numéro mobile money '
+            'Votre versement est désactivé. Indiquez le numéro mobile money '
             'pour le réactiver (précédent : +225 07 ** ** 67).',
           ),
           findsOneWidget,
@@ -674,7 +674,7 @@ void main() {
       await pumpScreen(tester);
 
       expect(find.text('boom interne'), findsNothing);
-      expect(find.text('Impossible de charger ton compte'), findsOneWidget);
+      expect(find.text('Impossible de charger votre compte'), findsOneWidget);
 
       await tester.tap(find.text('Réessayer'));
       await tester.pump();
@@ -690,7 +690,9 @@ void main() {
         stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
         await pumpScreen(tester);
         expect(
-          find.text('Confirme ton numéro pour voir les réseaux disponibles.'),
+          find.text(
+            'Confirmez votre numéro pour voir les réseaux disponibles.',
+          ),
           findsOneWidget,
         );
         final button = tester.widget<DonyButton>(
@@ -740,7 +742,7 @@ void main() {
         expect(find.text("Côte d'Ivoire, XOF"), findsOneWidget);
         expect(
           find.text(
-            "L'expéditeur paie avec l'un des réseaux cochés. Tu reçois sur ce même réseau.",
+            "L'expéditeur paie avec l'un des réseaux cochés. Vous recevez sur ce même réseau.",
           ),
           findsOneWidget,
         );
@@ -902,7 +904,7 @@ void main() {
 
         expect(
           find.text(
-            "Le choix des réseaux n'est pas encore disponible. Ton "
+            "Le choix des réseaux n'est pas encore disponible. Votre "
             'opérateur sera détecté automatiquement.',
           ),
           findsOneWidget,
@@ -1405,7 +1407,7 @@ void main() {
 
         expect(
           find.text(
-            "Le choix des réseaux n'est pas encore disponible. Ton "
+            "Le choix des réseaux n'est pas encore disponible. Votre "
             'opérateur sera détecté automatiquement.',
           ),
           findsOneWidget,

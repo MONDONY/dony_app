@@ -35,7 +35,7 @@ Widget _wrap(Widget child, MockAuthBloc authBloc) {
   );
 }
 
-/// Retrouve le `TextSpan` portant exactement [text] dans l'arbre — même
+/// Retrouvez le `TextSpan` portant exactement [text] dans l'arbre — même
 /// helper que `reception_confirm_screen_test.dart` pour vérifier la mise en
 /// forme produite par `emphasizedSpans`.
 TextSpan? _findSpan(WidgetTester tester, String text) {

@@ -466,7 +466,7 @@ Widget _buildHome({
 String titreListe(WidgetTester tester) =>
     tester.widget<Text>(find.byKey(const Key('results-header-title'))).data!;
 
-/// Sous-titre de l'en-tête de liste (« Ils peuvent emporter ton colis »).
+/// Sous-titre de l'en-tête de liste (« Ils peuvent emporter votre colis »).
 String sousTitreListe(WidgetTester tester) =>
     tester.widget<Text>(find.byKey(const Key('results-header-subtitle'))).data!;
 
@@ -536,6 +536,15 @@ Future<void> pumpHome(
     ),
   );
   await tester.pump(const Duration(milliseconds: 1000));
+}
+
+/// FLUTTER-CD : la feuille de résultats s'ouvre à mi-hauteur. La replier par
+/// son indication « voir la carte » rend l'état replié (peek) des tests qui
+/// partent de là.
+Future<void> replierFeuille(WidgetTester tester) async {
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Tirer vers le bas pour voir la carte'));
+  await tester.pumpAndSettle();
 }
 
 /// Sélectionne une ville dans un [CityAutocompleteField] de la feuille de
@@ -1049,6 +1058,7 @@ void main() {
         expect(bug.dx, greaterThan(header.dx));
 
         // Déplié : il rejoint la barre de recherche de la feuille.
+        await replierFeuille(tester);
         await tester.tap(find.textContaining('Tirer pour voir'));
         await tester.pumpAndSettle();
         expect(
@@ -1093,6 +1103,7 @@ void main() {
         );
 
         await pumpHome(tester, tripResults: [_makeAnn()]);
+        await replierFeuille(tester);
 
         expect(
           find.textContaining('Tirer pour voir le voyageur'),
@@ -1129,6 +1140,7 @@ void main() {
         );
 
         await pumpHome(tester, tripResults: [_makeAnn()]);
+        await replierFeuille(tester);
         await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
@@ -1150,6 +1162,7 @@ void main() {
       await pumpHome(tester, tripResults: [_makeAnn()]);
       await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
+      await replierFeuille(tester);
       await tester.tap(find.textContaining('Tirer pour voir'));
       await tester.pumpAndSettle();
 
@@ -1938,7 +1951,7 @@ void main() {
       // passerait trivialement sur un écran où rien ne s'est ouvert.
       expect(find.text('Aucun trajet actif'), findsOneWidget);
       expect(
-        find.textContaining('Publie un trajet pour t\'en servir.'),
+        find.textContaining('Publiez un trajet pour vous en servir.'),
         findsOneWidget,
       );
 
@@ -2070,7 +2083,7 @@ void main() {
 
       expect(titreListe(tester), '2 colis compatibles');
       expect(titreListe(tester), isNot(contains('à transporter')));
-      expect(find.text('Avec tes 3 trajets actifs'), findsOneWidget);
+      expect(find.text('Avec vos 3 trajets actifs'), findsOneWidget);
     });
 
     testWidgets('un seul résultat et un seul trajet : accord au singulier', (
@@ -2087,7 +2100,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(titreListe(tester), '1 colis compatible');
-      expect(sousTitreListe(tester), 'Avec ton trajet actif');
+      expect(sousTitreListe(tester), 'Avec votre trajet actif');
     });
 
     testWidgets('filtre inactif : l\'en-tête reste celui des demandes', (
@@ -2567,6 +2580,7 @@ void main() {
 
         // Déplie la feuille en plein écran par l'indication de drag : la
         // pastille « Carte » descend alors dans la feuille.
+        await replierFeuille(tester);
         await tester.tap(find.textContaining('Tirer pour voir'));
         await tester.pump(const Duration(milliseconds: 400));
         await tester.pump(const Duration(milliseconds: 400));
@@ -3213,6 +3227,174 @@ void main() {
         find.textContaining(DateFormat.MMMEd('en').format(date)),
         findsOneWidget,
       );
+    });
+  });
+
+  // FLUTTER-CD : « 17 voyageurs disponibles » au-dessus d'une carte vide, la
+  // feuille repliée tout en bas : un nouvel utilisateur croyait que rien ne
+  // chargeait. La feuille s'ouvre désormais à mi-hauteur, annonces visibles.
+  group('FLUTTER-CD : feuille de résultats ouverte à l\'ouverture', () {
+    double hauteurFeuille(WidgetTester tester) {
+      final ecran =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      final haut = tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy;
+      return (ecran - haut) / ecran;
+    }
+
+    testWidgets('la feuille monte à ≈ 60 % et montre les premières annonces', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        tripResults: [
+          _makeAnn(),
+          _makeAnn(id: 'a2'),
+        ],
+      );
+      await tester.pumpAndSettle();
+
+      expect(hauteurFeuille(tester), closeTo(kHomeRaisedSheetSize, 0.01));
+      // Une annonce est à l'écran sans rien tirer.
+      final carte = tester.getRect(find.byType(TravelerCard).first);
+      expect(carte.top, lessThan(2000));
+      expect(carte.top, greaterThan(2000 * (1 - kHomeRaisedSheetSize)));
+      // L'indication propose la carte, plus la liste.
+      expect(find.text('Tirer vers le bas pour voir la carte'), findsOneWidget);
+      expect(find.textContaining('Tirer pour voir'), findsNothing);
+      // La barre de recherche reste visible au-dessus de la feuille.
+      final barre = tester.getRect(find.byKey(const Key('corridor-bar')));
+      expect(
+        barre.bottom,
+        lessThan(tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy),
+      );
+      // Le bouton « Près de moi » se pose juste au-dessus de la feuille.
+      final fab = tester.getRect(find.byKey(const Key('near-me-fab')));
+      expect(
+        fab.bottom,
+        lessThan(tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy),
+      );
+      expect(fab.top, greaterThan(barre.bottom));
+    });
+
+    testWidgets(
+      '« voir la carte » replie la feuille, la carte redevient visible',
+      (tester) async {
+        await pumpHome(tester, tripResults: [_makeAnn()]);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Tirer vers le bas pour voir la carte'));
+        await tester.pumpAndSettle();
+
+        expect(hauteurFeuille(tester), lessThan(0.35));
+        expect(find.textContaining('Tirer pour voir'), findsOneWidget);
+        // Le bouton « Près de moi » reste au-dessus de la feuille repliée.
+        expect(
+          tester.getRect(find.byKey(const Key('near-me-fab'))).bottom,
+          lessThan(tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy),
+        );
+      },
+    );
+
+    testWidgets('pendant le chargement, la feuille ouverte montre l\'attente', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementLoading()),
+      );
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      expect(tester.takeException(), isNull);
+      expect(hauteurFeuille(tester), closeTo(kHomeRaisedSheetSize, 0.01));
+    });
+
+    testWidgets('sans résultat, l\'état vide reste affiché dans la feuille', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const []);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Aucun voyageur sur ce trajet'), findsOneWidget);
+      expect(hauteurFeuille(tester), closeTo(kHomeRaisedSheetSize, 0.01));
+    });
+
+    testWidgets('paysage : la feuille reste repliée faute de place', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(820, 360);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Tirer pour voir'), findsOneWidget);
+    });
+  });
+
+  group('computeHomeRaisedSheetSize', () {
+    test('écran haut : 60 %', () {
+      expect(
+        computeHomeRaisedSheetSize(
+          areaHeight: 2000,
+          areaTop: 0,
+          overlayBottom: 250,
+          peekSize: 0.30,
+        ),
+        kHomeRaisedSheetSize,
+      );
+    });
+
+    test('barre du haut haute : la feuille s\'arrête sous elle', () {
+      final size = computeHomeRaisedSheetSize(
+        areaHeight: 800,
+        areaTop: 0,
+        overlayBottom: 300,
+        peekSize: 0.30,
+      )!;
+      expect(size, lessThan(kHomeRaisedSheetSize));
+      expect(800 * (1 - size), 300 + kHomeNearMeFabClearance);
+    });
+
+    test('pas de place : null, la feuille reste repliée', () {
+      expect(
+        computeHomeRaisedSheetSize(
+          areaHeight: 360,
+          areaTop: 0,
+          overlayBottom: 200,
+          peekSize: 0.33,
+        ),
+        isNull,
+      );
+      expect(
+        computeHomeRaisedSheetSize(
+          areaHeight: 0,
+          areaTop: 0,
+          overlayBottom: 0,
+          peekSize: 0.30,
+        ),
+        isNull,
+      );
+    });
+
+    test('barre non mesurée : plafond de 45 % supposé', () {
+      final size = computeHomeRaisedSheetSize(
+        areaHeight: 1000,
+        areaTop: 0,
+        overlayBottom: null,
+        peekSize: 0.30,
+      )!;
+      expect(size, closeTo(1 - (450 + kHomeNearMeFabClearance) / 1000, 1e-9));
     });
   });
 }
