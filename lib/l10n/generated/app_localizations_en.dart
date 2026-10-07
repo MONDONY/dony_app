@@ -9422,6 +9422,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get walletPurposeNote =>
+      'Your balance pays the Yadony commission on requests paid in cash. It does not pay for sending a parcel, which is paid by card, PayPal or mobile money.';
+
+  @override
   String get walletInfoBalanceDesc =>
       'The amount that covers the service fees of your trips paid in cash. You can also request a refund of it.';
 

@@ -273,6 +273,27 @@ class _LoadedView extends StatelessWidget {
             ),
           ),
 
+          // ── À quoi sert le solde ─────────────────────────────────────────────
+          // Une ligne, toujours visible : des expéditeurs rechargeaient pour
+          // payer un envoi, ce que le portefeuille ne fait pas (FLUTTER-DS).
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.lg,
+                DonySpacing.lg,
+                0,
+              ),
+              child: Text(
+                l.walletPurposeNote,
+                key: const Key('wallet-purpose-note'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+
           // ── Bandeau de confirmation d'une recharge mobile money ──────────────
           SliverToBoxAdapter(
             child: ValueListenableBuilder<WalletTopupStatusModel?>(
