@@ -19111,5 +19111,19 @@
   "negotiationArchiveUnavailableSnackbar": "Cette action n'est pas encore disponible. Réessayez plus tard.",
   "@negotiationArchiveUnavailableSnackbar": {"description": "Snackbar quand le serveur ne connaît pas encore l'archivage / la suppression d'une discussion (404/405 d'un backend antérieur, FLUTTER-EJ)."},
   "negotiationEmptyArchivedFilter": "Les discussions que vous archivez apparaîtront ici.",
-  "@negotiationEmptyArchivedFilter": {"description": "État vide du filtre « Archivées » (my_negotiations_screen.dart, FLUTTER-EJ)."}
+  "@negotiationEmptyArchivedFilter": {"description": "État vide du filtre « Archivées » (my_negotiations_screen.dart, FLUTTER-EJ)."},
+  "homePublishButtonSemantics": "Publier : envoyer un colis ou publier un trajet",
+  "@homePublishButtonSemantics": {"description": "Libellé d'accessibilité du bouton rond « + Publier » de la rangée du haut de l'accueil, à côté de la cloche (FLUTTER-B8)."},
+  "homePublishButtonTooltip": "Publier",
+  "@homePublishButtonTooltip": {"description": "Info-bulle (appui long) du bouton rond « + Publier » de l'accueil."},
+  "homePublishSheetTitle": "Que voulez-vous publier ?",
+  "@homePublishSheetTitle": {"description": "Titre de la feuille ouverte par le bouton « + Publier » de l'accueil."},
+  "homePublishSendParcel": "Envoyer un colis",
+  "@homePublishSendParcel": {"description": "Choix de la feuille « + Publier » : ouvre l'intro d'envoi de colis."},
+  "homePublishSendParcelSubtitle": "Trouvez un voyageur pour votre colis",
+  "@homePublishSendParcelSubtitle": {"description": "Sous-titre du choix « Envoyer un colis » de la feuille « + Publier »."},
+  "homePublishTrip": "Publier un trajet",
+  "@homePublishTrip": {"description": "Choix de la feuille « + Publier » : ouvre l'intro de publication de trajet."},
+  "homePublishTripSubtitle": "Proposez vos kilos disponibles",
+  "@homePublishTripSubtitle": {"description": "Sous-titre du choix « Publier un trajet » de la feuille « + Publier »."}
 }

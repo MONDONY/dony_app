@@ -16676,4 +16676,27 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get negotiationEmptyArchivedFilter =>
       'Les discussions que vous archivez apparaîtront ici.';
+
+  @override
+  String get homePublishButtonSemantics =>
+      'Publier : envoyer un colis ou publier un trajet';
+
+  @override
+  String get homePublishButtonTooltip => 'Publier';
+
+  @override
+  String get homePublishSheetTitle => 'Que voulez-vous publier ?';
+
+  @override
+  String get homePublishSendParcel => 'Envoyer un colis';
+
+  @override
+  String get homePublishSendParcelSubtitle =>
+      'Trouvez un voyageur pour votre colis';
+
+  @override
+  String get homePublishTrip => 'Publier un trajet';
+
+  @override
+  String get homePublishTripSubtitle => 'Proposez vos kilos disponibles';
 }
