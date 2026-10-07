@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
@@ -624,4 +626,88 @@ void main() {
       },
     );
   }
+
+  group('sourdine depuis le volet glissant (FLUTTER-CM)', () {
+    Future<void> swipeRight(WidgetTester tester) async {
+      await tester.drag(find.text('Aïcha Bah'), const Offset(300, 0));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('« Sourdine » envoie la bascule au BLoC', (tester) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await _pump(tester, bloc);
+
+      await swipeRight(tester);
+      expect(find.text('Sourdine'), findsOneWidget);
+      await tester.tap(find.text('Sourdine'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => bloc.add(
+          any(
+            that: predicate<ConversationListEvent>(
+              (e) =>
+                  e is ConversationNotificationsMuteToggled &&
+                  e.conversationId == 'conv-1',
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('fil en sourdine : « Réactiver » et cloche barrée', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        ConversationListLoaded([_conv.copyWith(notificationsMuted: true)]),
+      );
+      await _pump(tester, bloc);
+
+      expect(find.byKey(const Key('conversation-tile-muted')), findsOneWidget);
+      await swipeRight(tester);
+      expect(find.text('Réactiver'), findsOneWidget);
+    });
+
+    testWidgets('confirmation puis échec : snackbars issues du BLoC', (
+      tester,
+    ) async {
+      final controller = StreamController<ConversationListState>.broadcast();
+      addTearDown(controller.close);
+      when(() => bloc.stream).thenAnswer((_) => controller.stream);
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await _pump(tester, bloc);
+
+      controller.add(
+        ConversationListLoaded([
+          _conv.copyWith(notificationsMuted: true),
+        ], muteFeedback: const ConversationMuteFeedback(muted: true)),
+      );
+      await tester.pump();
+      expect(
+        find.text('Notifications coupées pour cette conversation'),
+        findsOneWidget,
+      );
+
+      controller.add(
+        ConversationListLoaded([
+          _conv,
+        ], muteFeedback: const ConversationMuteFeedback(muted: false)),
+      );
+      await tester.pump();
+      expect(find.text('Notifications réactivées'), findsOneWidget);
+
+      controller.add(
+        ConversationListLoaded(
+          [_conv],
+          muteFeedback: const ConversationMuteFeedback(
+            muted: true,
+            error: NetworkException('boom'),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.byType(SnackBar), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

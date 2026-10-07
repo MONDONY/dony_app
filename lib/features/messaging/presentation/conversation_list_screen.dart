@@ -71,7 +71,11 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         bottom: false,
-        child: BlocBuilder<ConversationListBloc, ConversationListState>(
+        child: BlocConsumer<ConversationListBloc, ConversationListState>(
+          listenWhen: (previous, current) =>
+              current is ConversationListLoaded && current.muteFeedback != null,
+          listener: (context, state) =>
+              _showMuteFeedback(context, state as ConversationListLoaded),
           builder: (context, state) {
             final filter = state is ConversationListLoaded
                 ? state.filter
@@ -93,6 +97,22 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
           },
         ),
       ),
+    );
+  }
+
+  /// Retour d'une bascule de sourdine faite depuis le volet glissant.
+  void _showMuteFeedback(BuildContext context, ConversationListLoaded state) {
+    final feedback = state.muteFeedback!;
+    if (feedback.error != null) {
+      ErrorPresenter.show(context, feedback.error);
+      return;
+    }
+    final l = context.l10n;
+    DonySnackbar.show(
+      context,
+      message: feedback.muted
+          ? l.chatNotificationsMutedSnackbar
+          : l.chatNotificationsUnmutedSnackbar,
     );
   }
 
@@ -573,8 +593,32 @@ class _SlidableTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
 
+    final muted = conversation.notificationsMuted;
     return Slidable(
       key: ValueKey(conversation.id),
+      // Sourdine (FLUTTER-CM) : balayage vers la droite, à part d'Archiver et
+      // Supprimer. La snackbar part à la réponse du serveur (listener de
+      // l'écran), pas au tap : un échec annule la bascule.
+      startActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            key: const Key('conversation-swipe-notifications'),
+            onPressed: (ctx) => ctx.read<ConversationListBloc>().add(
+              ConversationNotificationsMuteToggled(conversation.id),
+            ),
+            backgroundColor: cs.surfaceContainerHighest,
+            foregroundColor: cs.onSurface,
+            icon: muted
+                ? Icons.notifications_active_outlined
+                : Icons.notifications_off_outlined,
+            label: muted
+                ? l.conversationUnmuteAction
+                : l.conversationMuteAction,
+          ),
+        ],
+      ),
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
         extentRatio: 0.45,

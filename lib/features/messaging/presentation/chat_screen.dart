@@ -28,6 +28,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
+import 'package:dony/features/messaging/bloc/conversation_notifications/conversation_notifications_cubit.dart';
 import 'package:dony/features/messaging/data/chat_draft_store.dart';
 import 'package:dony/features/messaging/data/chat_message_validator.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
@@ -478,8 +479,65 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  /// Sourdine du fil (FLUTTER-CM), fournie par la route. Absente (tests
+  /// d'écran isolés), l'entrée du menu ⋯ n'est pas proposée.
+  ConversationNotificationsCubit? _notificationsCubit(BuildContext context) {
+    try {
+      return BlocProvider.of<ConversationNotificationsCubit>(context);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Confirmation ou échec d'une bascule de sourdine. La liste des
+  /// conversations suit chaque changement (mise à jour optimiste puis retour
+  /// arrière) sans nouvel appel : le chat a déjà parlé au serveur.
+  void _onNotificationsChanged(
+    BuildContext context,
+    ConversationNotificationsState state,
+  ) {
+    if (getIt.isRegistered<ConversationListBloc>()) {
+      getIt<ConversationListBloc>().add(
+        ConversationNotificationsMuteSynced(
+          widget.conversation.id,
+          muted: state.muted,
+        ),
+      );
+    }
+    final l = context.l10n;
+    switch (state.outcome) {
+      case ConversationNotificationsOutcome.muted:
+        DonySnackbar.show(context, message: l.chatNotificationsMutedSnackbar);
+      case ConversationNotificationsOutcome.unmuted:
+        DonySnackbar.show(context, message: l.chatNotificationsUnmutedSnackbar);
+      case ConversationNotificationsOutcome.failed:
+        ErrorPresenter.show(context, state.error);
+      case null:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final notifications = _notificationsCubit(context);
+    final scaffold = _buildScaffold(context, notifications);
+    if (notifications == null) return scaffold;
+    return BlocListener<
+      ConversationNotificationsCubit,
+      ConversationNotificationsState
+    >(
+      bloc: notifications,
+      listenWhen: (previous, current) =>
+          previous.muted != current.muted || current.outcome != null,
+      listener: _onNotificationsChanged,
+      child: scaffold,
+    );
+  }
+
+  Widget _buildScaffold(
+    BuildContext context,
+    ConversationNotificationsCubit? notifications,
+  ) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
@@ -623,9 +681,17 @@ class _ChatScreenState extends State<ChatScreen> {
                   );
                 case 'delete':
                   _confirmAndDelete();
+                case 'notifications':
+                  unawaited(notifications?.toggle());
               }
             },
             itemBuilder: (_) => [
+              if (notifications != null)
+                _notificationsMenuItem(
+                  muted: notifications.state.muted,
+                  cs: cs,
+                  tt: tt,
+                ),
               PopupMenuItem(
                 value: 'report',
                 child: Row(
@@ -924,6 +990,37 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  /// « Mettre en sourdine » ou « Réactiver les notifications », selon l'état
+  /// lu à l'ouverture du menu.
+  PopupMenuItem<String> _notificationsMenuItem({
+    required bool muted,
+    required ColorScheme cs,
+    required TextTheme tt,
+  }) {
+    final l = context.l10n;
+    return PopupMenuItem(
+      key: const Key('chat-menu-notifications'),
+      value: 'notifications',
+      child: Row(
+        children: [
+          DonyIcon(
+            muted ? 'bell' : 'bell-off',
+            size: 20,
+            color: cs.onSurfaceVariant,
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          Flexible(
+            child: Text(
+              muted ? l.chatUnmuteNotifications : l.chatMuteNotifications,
+              style: tt.bodyMedium,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

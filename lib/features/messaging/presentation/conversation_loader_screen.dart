@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
+import 'package:dony/features/messaging/bloc/conversation_notifications/conversation_notifications_cubit.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
@@ -91,6 +92,10 @@ class _ConversationLoaderScreenState extends State<ConversationLoaderScreen> {
           providers: [
             BlocProvider(create: (_) => getIt<ChatBloc>()),
             BlocProvider(create: (_) => getIt<ContactRevealBloc>()),
+            BlocProvider(
+              create: (_) =>
+                  getIt<ConversationNotificationsCubit>(param1: conversation),
+            ),
           ],
           child: ChatScreen(conversation: conversation),
         );

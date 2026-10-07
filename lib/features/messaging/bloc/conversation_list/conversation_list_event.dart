@@ -46,3 +46,21 @@ class ConversationUnarchiveRequested extends ConversationListEvent {
   final String conversationId;
   const ConversationUnarchiveRequested(this.conversationId);
 }
+
+/// Volet glissant « Sourdine » / « Réactiver » : bascule optimiste des
+/// notifications du fil, annulée si le serveur refuse (FLUTTER-CM).
+class ConversationNotificationsMuteToggled extends ConversationListEvent {
+  final String conversationId;
+  const ConversationNotificationsMuteToggled(this.conversationId);
+}
+
+/// Bascule faite depuis l'écran de chat, qui a déjà appelé l'API : la liste
+/// reflète l'état sans nouvel appel.
+class ConversationNotificationsMuteSynced extends ConversationListEvent {
+  final String conversationId;
+  final bool muted;
+  const ConversationNotificationsMuteSynced(
+    this.conversationId, {
+    required this.muted,
+  });
+}
