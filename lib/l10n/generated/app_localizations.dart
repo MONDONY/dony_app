@@ -581,13 +581,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorCountryLockedTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Pays verrouillé'**
+  /// **'Pays de résidence verrouillé'**
   String get errorCountryLockedTitle;
 
   /// No description provided for @errorCountryLockedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de changer de pays : un envoi est en cours, ton portefeuille n\'est pas vide, ou ton compte de paiement est déjà créé.'**
+  /// **'Impossible de modifier votre pays de résidence : un envoi est en cours, votre portefeuille n\'est pas vide, ou votre compte de paiement est déjà créé. Contactez le support pour le faire modifier.'**
   String get errorCountryLockedMessage;
 
   /// No description provided for @errorCountryUnsupportedTitle.
@@ -4829,8 +4829,14 @@ abstract class AppLocalizations {
   /// Bannière quand Stripe n'est pas disponible dans le pays du voyageur
   ///
   /// In fr, this message translates to:
-  /// **'Le paiement par carte n\'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.'**
+  /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.'**
   String get tripPublishCashOnlyBannerNoConnect;
+
+  /// Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.'**
+  String tripPublishCashOnlyBannerNoConnectCountry(String country);
 
   /// CTA vers l'onboarding Stripe Connect depuis la bannière espèces uniquement
   ///
@@ -11054,7 +11060,7 @@ abstract class AppLocalizations {
   /// Corps de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur n\'accepte que le paiement par carte pour ce colis, et Stripe ne permet pas encore d\'ouvrir un compte de paiement depuis ton pays. Tu peux lier les colis payés en espèces.'**
+  /// **'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. L\'encaissement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez : Stripe ne permet pas encore d\'ouvrir un compte de paiement depuis ce pays. Vous pouvez lier les colis payés en espèces.'**
   String get negotiationCardCapabilityUnavailableBody;
 
   /// Bouton vers l'onboarding Stripe Connect (payment_capability_block_sheets.dart)
@@ -11084,13 +11090,13 @@ abstract class AppLocalizations {
   /// Pays de résidence du profil, affiché quand Stripe ne le couvre pas ; `country` déjà traduit (payment_capability_block_sheets.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ton pays de profil : {country}'**
+  /// **'Votre pays de résidence (profil) : {country}'**
   String negotiationCardCapabilityProfileCountry(String country);
 
   /// Bouton secondaire vers les préférences pour changer de pays (payment_capability_block_sheets.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Modifier mon pays'**
+  /// **'Modifier mon pays de résidence'**
   String get negotiationCardCapabilityChangeCountryButton;
 
   /// Avertissement sur la fiche d'un colis carte seule quand le voyageur n'a pas activé la carte (package_request_public_detail_screen.dart)
@@ -11108,8 +11114,14 @@ abstract class AppLocalizations {
   /// Avertissement sur la fiche d'un colis carte seule quand Stripe ne couvre pas le pays du voyageur (package_request_public_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ce colis n\'accepte que la carte, et Stripe ne permet pas encore de l\'activer depuis ton pays.'**
+  /// **'Ce colis n\'accepte que la carte. L\'encaissement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le permet pas encore depuis ce pays.'**
   String get requestPublicCardOnlyWarningCountryUnsupported;
+
+  /// Avertissement de la fiche colis « carte seule » quand Stripe ne couvre pas le pays de résidence du profil, pays nommé (package_request_public_detail_screen.dart, _CardOnlyWarning, FLUTTER-EE).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'accepte que la carte. L\'encaissement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le permet pas encore depuis ce pays.'**
+  String requestPublicCardOnlyWarningResidenceCountry(String country);
 
   /// Ligne round abrégé + horodatage relatif d'une carte de négociation colis ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _NegoCard)
   ///
@@ -20773,14 +20785,20 @@ abstract class AppLocalizations {
   /// Libellé de la tuile pays et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42).
   ///
   /// In fr, this message translates to:
-  /// **'Pays'**
+  /// **'Pays de résidence'**
   String get prefsCountryLabel;
 
   /// Sous-titre quand le pays est verrouillé (business_prefs_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Verrouillé : un envoi est en cours ou votre compte de paiement est créé'**
+  /// **'Verrouillé : envoi en cours, portefeuille non vide ou compte de paiement créé'**
   String get prefsCountryLockedSubtitle;
+
+  /// Feuille ouverte au toucher de la ligne Pays de résidence verrouillée (business_prefs_screen.dart, FLUTTER-EE) : bouton vers le support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le support'**
+  String get prefsCountryLockedSupportCta;
 
   /// Valeur affichée tant qu'aucun pays n'est choisi (business_prefs_screen.dart)
   ///

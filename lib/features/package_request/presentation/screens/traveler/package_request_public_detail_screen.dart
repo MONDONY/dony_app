@@ -32,6 +32,8 @@ import 'package:dony/features/package_request/presentation/widgets/payment_capab
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/presentation/residence_country_settings.dart';
+import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -306,6 +308,7 @@ class _PackageRequestPublicDetailScreenState
                               stripeState,
                               profileCountry: profileCountry,
                             ),
+                            profileCountry: profileCountry,
                           ),
                     ),
               ),
@@ -324,6 +327,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     this.currentUserId,
     this.onChanged,
     this.cardCapabilityGap,
+    this.profileCountry,
   });
 
   final PackageRequest request;
@@ -342,6 +346,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   /// Ce qui empêche le voyageur d'encaisser par carte, quand c'est **avéré**
   /// (cf. [knownCardCapabilityGap]) ; `null` s'il le peut ou si on l'ignore.
   final CardCapabilityGap? cardCapabilityGap;
+
+  /// Pays de résidence du profil (code ISO), nommé dans l'avertissement
+  /// « carte seule » quand Stripe ne le couvre pas (FLUTTER-EE).
+  final String? profileCountry;
 
   /// Le voyageur ne pourra pas honorer ce colis « carte seule » : le serveur
   /// refuserait l'offre en 422 après qu'il a rempli tout le formulaire
@@ -586,7 +594,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
               ],
               if (cardBlocked) ...[
                 const SizedBox(height: DonySpacing.sm),
-                _CardOnlyWarning(gap: cardCapabilityGap!),
+                _CardOnlyWarning(
+                  gap: cardCapabilityGap!,
+                  profileCountry: profileCountry,
+                ),
               ],
               if (r.pickupNeighborhood != null ||
                   r.deliveryNeighborhood != null) ...[
@@ -1116,22 +1127,38 @@ class _FirmPriceCta extends StatelessWidget {
 /// Avertissement sous les moyens de paiement : le colis n'accepte que la
 /// carte et le voyageur ne peut pas encore l'encaisser. La consigne suit la
 /// cause réelle (activation, pays à renseigner, pays non couvert).
+///
+/// Pays non couvert ou absent : c'est le pays de résidence du profil qui
+/// décide, pas le pays où se trouve le voyageur. L'avertissement le nomme et
+/// mène à son réglage (FLUTTER-EE : une testeuse vivant aux États-Unis avec
+/// la Côte d'Ivoire comme pays de résidence n'avait pas compris).
 class _CardOnlyWarning extends StatelessWidget {
-  const _CardOnlyWarning({required this.gap});
+  const _CardOnlyWarning({required this.gap, this.profileCountry});
 
   final CardCapabilityGap gap;
+  final String? profileCountry;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
+    final country = profileCountry?.trim().toUpperCase() ?? '';
     final message = switch (gap) {
       CardCapabilityGap.activatable => l.requestPublicCardOnlyWarning,
       CardCapabilityGap.countryMissing =>
         l.requestPublicCardOnlyWarningCountryMissing,
+      CardCapabilityGap.countryUnsupported when country.isNotEmpty =>
+        l.requestPublicCardOnlyWarningResidenceCountry(countryName(l, country)),
       CardCapabilityGap.countryUnsupported =>
         l.requestPublicCardOnlyWarningCountryUnsupported,
+    };
+    final countryLinkLabel = switch (gap) {
+      CardCapabilityGap.activatable => null,
+      CardCapabilityGap.countryMissing =>
+        l.negotiationCardCapabilitySetCountryButton,
+      CardCapabilityGap.countryUnsupported =>
+        l.negotiationCardCapabilityChangeCountryButton,
     };
     return Container(
       key: const Key('card-only-warning'),
@@ -1151,9 +1178,36 @@ class _CardOnlyWarning extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
-            child: Text(
-              message,
-              style: tt.bodySmall?.copyWith(color: cs.onSurface, height: 1.4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurface,
+                    height: 1.4,
+                  ),
+                ),
+                if (countryLinkLabel != null)
+                  TextButton(
+                    key: const Key('card-only-warning-country-link'),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 44),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      alignment: Alignment.centerLeft,
+                    ),
+                    onPressed: () =>
+                        unawaited(openResidenceCountrySettings(context)),
+                    child: Text(
+                      countryLinkLabel,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],

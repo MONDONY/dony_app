@@ -80,8 +80,8 @@
   "errorCurrencyMismatchMessage": "This trip is no longer available in your currency. Change your country in Settings to see it.",
   "errorCountryRequiredTitle": "Country missing",
   "errorCountryRequiredMessage": "Set your country in Settings, under Preferences, before creating your payment account. It sets your currency and can't be changed afterwards.",
-  "errorCountryLockedTitle": "Country locked",
-  "errorCountryLockedMessage": "You can't change your country: a parcel is in progress, your wallet isn't empty, or your payment account is already set up.",
+  "errorCountryLockedTitle": "Country of residence locked",
+  "errorCountryLockedMessage": "You can't change your country of residence: a parcel is in progress, your wallet isn't empty, or your payment account is already set up. Contact support to have it changed.",
   "errorCountryUnsupportedTitle": "Country not served",
   "errorCountryUnsupportedMessage": "Yadony doesn't serve this country yet. Choose another one.",
   "errorDeletionImpossibleTitle": "Can't delete",
@@ -800,7 +800,16 @@
   "tripPublishRefusedContentHint": "E.g. Liquids, Perishable goods…",
   "tripPublishNoteToSendersSectionLabel": "Note to senders",
   "tripPublishNoteToSendersHint": "E.g. I prefer well-packed parcels. Contact me before departure.",
-  "tripPublishCashOnlyBannerNoConnect": "Card payment isn't available in your country yet. Your trips are posted in cash.",
+  "tripPublishCashOnlyBannerNoConnect": "Card payment depends on the country of residence in your profile, not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash.",
+  "tripPublishCashOnlyBannerNoConnectCountry": "Card payment depends on the country of residence in your profile ({country}), not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash.",
+  "@tripPublishCashOnlyBannerNoConnectCountry": {
+    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
   "tripPublishActivateCardPaymentsCta": "Activate card payments",
   "tripPublishCardNotConfiguredSubtitle": "Not set up, turn it on to offer secure payment",
   "tripPublishMobileMoneyIneligibleSubtitle": "Available for trips in XOF or XAF",
@@ -3166,7 +3175,7 @@
   "@negotiationCardCapabilityRequiredBody": {
     "description": "Corps de la feuille quand Stripe Connect est disponible dans le pays (payment_capability_block_sheets.dart)"
   },
-  "negotiationCardCapabilityUnavailableBody": "The sender only accepts card payment for this parcel, and Stripe doesn't yet support opening a payment account from your country. You can link parcels paid in cash.",
+  "negotiationCardCapabilityUnavailableBody": "The sender only accepts card payment for this parcel. Receiving card payments depends on the country of residence in your profile, not on the country you're in: Stripe doesn't yet support opening a payment account from that country. You can link parcels paid in cash.",
   "@negotiationCardCapabilityUnavailableBody": {
     "description": "Corps de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)"
   },
@@ -3180,7 +3189,7 @@
   },
   "negotiationCardCapabilityCountryMissingBody": "The sender only accepts card payment for this parcel. Add your country of residence to activate card payments.",
   "negotiationCardCapabilitySetCountryButton": "Add my country",
-  "negotiationCardCapabilityProfileCountry": "Your profile country: {country}",
+  "negotiationCardCapabilityProfileCountry": "Your country of residence (profile): {country}",
   "@negotiationCardCapabilityProfileCountry": {
     "placeholders": {
       "country": {
@@ -3188,10 +3197,19 @@
       }
     }
   },
-  "negotiationCardCapabilityChangeCountryButton": "Change my country",
+  "negotiationCardCapabilityChangeCountryButton": "Change my country of residence",
   "requestPublicCardOnlyWarning": "This parcel only accepts card payment: activate card payments to offer your trip.",
   "requestPublicCardOnlyWarningCountryMissing": "This parcel only accepts card payment: add your country of residence to activate card payments.",
-  "requestPublicCardOnlyWarningCountryUnsupported": "This parcel only accepts card payment, and Stripe doesn't support activating it from your country yet.",
+  "requestPublicCardOnlyWarningCountryUnsupported": "This parcel only accepts card payment. Receiving card payments depends on the country of residence in your profile, not on the country you're in. Stripe doesn't support it from that country yet.",
+  "requestPublicCardOnlyWarningResidenceCountry": "This parcel only accepts card payment. Receiving card payments depends on the country of residence in your profile ({country}), not on the country you're in. Stripe doesn't support it from that country yet.",
+  "@requestPublicCardOnlyWarningResidenceCountry": {
+    "description": "Avertissement de la fiche colis « carte seule » quand Stripe ne couvre pas le pays de résidence du profil, pays nommé (package_request_public_detail_screen.dart, _CardOnlyWarning, FLUTTER-EE).",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
   "negotiationCardRoundShortLabel": "Rd. {round}/5 · {timeAgo}",
   "@negotiationCardRoundShortLabel": {
     "description": "Ligne round abrégé + horodatage relatif d'une carte de négociation colis ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _NegoCard)",
@@ -7208,8 +7226,12 @@
   "prefsSectionUnits": "UNITS",
   "prefsWeightUnitLabel": "Weight unit",
   "prefsSectionCurrency": "CURRENCY",
-  "prefsCountryLabel": "Country",
-  "prefsCountryLockedSubtitle": "Locked: a shipment is in progress or your payment account has been created",
+  "prefsCountryLabel": "Country of residence",
+  "prefsCountryLockedSubtitle": "Locked: a shipment is in progress, your wallet isn't empty or your payment account has been created",
+  "prefsCountryLockedSupportCta": "Contact support",
+  "@prefsCountryLockedSupportCta": {
+    "description": "Feuille ouverte au toucher de la ligne Pays de résidence verrouillée (business_prefs_screen.dart, FLUTTER-EE) : bouton vers le support."
+  },
   "prefsCountryPlaceholder": "Choose my country",
   "prefsCurrencyLabel": "Currency",
   "prefsCurrencyLockedSheetTitle": "Your currency stays {currency} for now",

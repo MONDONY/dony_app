@@ -28,6 +28,7 @@ import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,6 +36,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/currency_test_doubles.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_analytics_backend.dart';
 
@@ -95,6 +97,7 @@ Widget _host({
   SupportedCurrency? currency = SupportedCurrency.eur,
   ValueNotifier<bool>? negotiableNotifier,
   bool withRouter = false,
+  String? residenceCountry,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -142,6 +145,12 @@ Widget _host({
         ),
         BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
         BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
+        if (residenceCountry != null)
+          BlocProvider<BusinessPrefsBloc>.value(
+            value: stubBusinessPrefsBloc(
+              state: BusinessPrefsState(country: residenceCountry),
+            ),
+          ),
       ],
       child: SingleChildScrollView(
         child: PrixConditionsStep(
@@ -177,6 +186,10 @@ Widget _host({
           builder: (_, _) =>
               const Scaffold(body: Text('stripe-onboarding-intro')),
         ),
+        GoRoute(
+          path: '/settings/preferences',
+          builder: (_, _) => const Scaffold(body: Text('prefs-screen')),
+        ),
       ],
     ),
   );
@@ -190,6 +203,7 @@ Future<void> _pump(
   ValueNotifier<bool>? negotiableNotifier,
   SupportedCurrency currency = SupportedCurrency.eur,
   bool withRouter = false,
+  String? residenceCountry,
 }) async {
   await tester.pumpWidget(
     _host(
@@ -198,6 +212,7 @@ Future<void> _pump(
       negotiableNotifier: negotiableNotifier,
       currency: currency,
       withRouter: withRouter,
+      residenceCountry: residenceCountry,
     ),
   );
   await tester.pump(const Duration(milliseconds: 200));
@@ -435,8 +450,9 @@ void main() {
       // Une fois dans l'encart, une fois dans le message du toucher.
       expect(
         find.text(
-          'Le paiement par carte n\'est pas encore disponible dans votre '
-          'pays. Vos trajets sont publiés en espèces.',
+          'Le paiement par carte dépend du pays de résidence indiqué dans '
+          'votre profil, et non du pays où vous vous trouvez. Stripe ne le '
+          'couvre pas encore : vos trajets sont publiés en espèces.',
         ),
         findsNWidgets(2),
       );
@@ -725,7 +741,7 @@ void main() {
 
         expect(
           find.textContaining(
-            'Le paiement par carte n\'est pas encore disponible',
+            'Le paiement par carte dépend du pays de résidence',
           ),
           findsOneWidget,
         );
@@ -737,6 +753,32 @@ void main() {
         );
       },
     );
+
+    testWidgets('pays de résidence non couvert : nommé, lien vers son réglage '
+        '(FLUTTER-EE)', (tester) async {
+      await _pump(
+        tester,
+        stripeState: _stripeCountryUnavailableState,
+        withRouter: true,
+        residenceCountry: 'CI',
+      );
+
+      expect(
+        find.text(
+          'Le paiement par carte dépend du pays de résidence indiqué dans '
+          'votre profil (Côte d\'Ivoire), et non du pays où vous vous '
+          'trouvez. Stripe ne le couvre pas encore : vos trajets sont '
+          'publiés en espèces.',
+        ),
+        findsOneWidget,
+      );
+      final cta = find.byKey(const Key('change-residence-country-cta'));
+      await tester.ensureVisible(cta);
+      await tester.pump();
+      await tester.tap(cta);
+      await tester.pumpAndSettle();
+      expect(find.text('prefs-screen'), findsOneWidget);
+    });
 
     testWidgets(
       'onboarding incomplet mais pays couvert : invite bien à activer',
