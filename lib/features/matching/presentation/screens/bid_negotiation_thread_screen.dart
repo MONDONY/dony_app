@@ -6,6 +6,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
@@ -15,14 +16,17 @@ import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/presentation/activity_refresh.dart';
 import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:dony/features/package_request/presentation/widgets/nego_archive_actions.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 /// Fil de négociation du prix d'un trajet.
 ///
@@ -35,9 +39,14 @@ class BidNegotiationThreadScreen extends StatefulWidget {
     super.key,
     required this.bidId,
     this.archived = false,
+    this.viewerUserId,
   });
 
   final String bidId;
+
+  /// Utilisateur courant, pour poser chaque bulle du bon côté. Absent, le fil
+  /// le déduit du rôle et de l'auteur de la première proposition.
+  final String? viewerUserId;
 
   /// Ouvert depuis le filtre « Archivées » : le détail de trajet ne porte pas
   /// toujours `archived`, la route le transmet pour proposer « Désarchiver ».
@@ -231,7 +240,10 @@ class _BidNegotiationThreadScreenState
                         bidId: widget.bidId,
                       ),
                 body: negotiation != null
-                    ? _ThreadBody(negotiation: negotiation)
+                    ? _ThreadBody(
+                        negotiation: negotiation,
+                        viewerUserId: widget.viewerUserId,
+                      )
                     : switch (state) {
                         BidNegotiationError(:final error) => DonyEmptyState(
                           key: const Key('nego-error'),
@@ -258,29 +270,110 @@ class _BidNegotiationThreadScreenState
 }
 
 class _ThreadBody extends StatelessWidget {
-  const _ThreadBody({required this.negotiation});
+  const _ThreadBody({required this.negotiation, this.viewerUserId});
 
   final BidNegotiation negotiation;
+  final String? viewerUserId;
 
   @override
   Widget build(BuildContext context) {
+    // Entrée en cascade, par blocs de sens (héros, contexte, colis, échanges),
+    // jouée une seule fois au chargement du fil.
+    Widget enter(Widget child, int step) => child
+        .animate()
+        .fadeIn(duration: 220.ms, delay: (60 * step).ms)
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _AmountHeader(negotiation: negotiation),
+        enter(_TripNegoHero(negotiation: negotiation), 0),
+        const SizedBox(height: DonySpacing.base),
+        enter(_TripContextCard(negotiation: negotiation), 1),
+        const SizedBox(height: DonySpacing.md),
+        enter(_ParcelSummary(negotiation: negotiation), 2),
         const SizedBox(height: DonySpacing.xl),
-        _ParcelSummary(negotiation: negotiation),
-        const SizedBox(height: DonySpacing.xl),
-        _MessagesTimeline(negotiation: negotiation),
+        _MessagesTimeline(negotiation: negotiation, viewerUserId: viewerUserId),
       ],
     );
   }
 }
 
+/// Variante visuelle (dégradé, icône, pastille) du fil de trajet, reprise du
+/// fil « demande de colis » pour que les deux discussions de prix se lisent de
+/// la même façon.
+@visibleForTesting
+ThreadStatusVariant tripNegoVariant(BidNegotiation n) {
+  if (n.isAwaitingMobileMoneyPayment) {
+    return ThreadStatusVariant.awaitingDeposit;
+  }
+  if (n.isAwaitingCardPayment) return ThreadStatusVariant.awaitingPayment;
+  if (n.isAwaitingCashSettlement) {
+    return ThreadStatusVariant.awaitingCommission;
+  }
+  return switch (n.status) {
+    'NEGOTIATING' => ThreadStatusVariant.open,
+    'ACCEPTED' => ThreadStatusVariant.accepted,
+    _ => ThreadStatusVariant.terminal,
+  };
+}
+
 /// Montant en tête. Le voyageur lit ce qu'il touchera, l'expéditeur ce qu'il
 /// paiera : deux nombres différents, jamais affichés ensemble.
-class _AmountHeader extends StatelessWidget {
-  const _AmountHeader({required this.negotiation});
+class _TripNegoHero extends StatelessWidget {
+  const _TripNegoHero({required this.negotiation});
+
+  final BidNegotiation negotiation;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final isTraveler = negotiation.isTravelerView;
+    final amount = isTraveler
+        ? (negotiation.netEur ?? 0)
+        : negotiation.proposedGrossEur;
+    final variant = tripNegoVariant(negotiation);
+    final negotiating = negotiation.status == 'NEGOTIATING';
+
+    return DonyNegoHeroCard(
+      key: const Key('nego-hero'),
+      margin: EdgeInsets.zero,
+      gradient: variant.gradient,
+      shadowColor: variant.shadowColor,
+      iconAsset: variant.iconAsset,
+      caption: isTraveler
+          ? l.negotiationThreadYouWouldReceive
+          : l.negotiationThreadYouWouldPay,
+      amount: formatPriceIn(amount, negotiation.currency),
+      amountKey: Key(isTraveler ? 'nego-net-amount' : 'nego-total-amount'),
+      badgeLabel: variant.badge(l),
+      roundLabel: l.negotiationThreadRoundLabel(
+        negotiation.round,
+        negotiation.maxRounds,
+      ),
+      roundsCount: negotiation.round,
+      maxRounds: negotiation.maxRounds,
+      // Au plafond, seuls l'acceptation et le refus restent possibles : on le
+      // dit avant que le bouton grisé ne le fasse deviner.
+      warning: negotiating && negotiation.myTurn && !negotiation.canCounter
+          ? l.negotiationLastRoundWarning
+          : null,
+      turnLabel: !negotiating
+          ? null
+          : negotiation.myTurn
+          ? l.negotiationThreadYourTurn
+          : l.negotiationThreadTheirTurn(
+              negotiation.counterpartyName ??
+                  l.negotiationTripCardCounterpartyFallback,
+            ),
+      myTurn: negotiation.myTurn,
+    );
+  }
+}
+
+/// Avec qui l'on négocie, et sur quel trajet.
+class _TripContextCard extends StatelessWidget {
+  const _TripContextCard({required this.negotiation});
 
   final BidNegotiation negotiation;
 
@@ -288,46 +381,89 @@ class _AmountHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final isTraveler = negotiation.isTravelerView;
-    final amount = isTraveler
-        ? (negotiation.netEur ?? 0)
-        : negotiation.proposedGrossEur;
+    final l = context.l10n;
+    final name =
+        negotiation.counterpartyName ??
+        l.negotiationTripCardCounterpartyFallback;
+    final dep = negotiation.departureCity;
+    final arr = negotiation.arrivalCity;
+    final route = dep != null && arr != null
+        ? '$dep → $arr'
+        : l.requestCreateRecapTrip;
+    final date = negotiation.departureDate;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(DonySpacing.lg),
-      decoration: BoxDecoration(
-        color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return _Surface(
+      key: const Key('nego-trip-context'),
+      child: Row(
         children: [
-          Text(
-            isTraveler
-                ? context.l10n.negotiationThreadYouWouldReceive
-                : context.l10n.negotiationThreadYouWouldPay,
-            style: tt.bodySmall?.copyWith(color: cs.onPrimaryContainer),
-          ),
-          const SizedBox(height: DonySpacing.xxs),
-          Text(
-            formatPriceIn(amount, negotiation.currency),
-            key: Key(isTraveler ? 'nego-net-amount' : 'nego-total-amount'),
-            style: tt.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: cs.onPrimaryContainer,
+          DonyAvatar(name: name),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.titleLarge?.copyWith(color: cs.onSurface),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  date == null
+                      ? route
+                      : '$route · ${DateFormat.MMMd(l.localeName).format(date)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: DonySpacing.xs),
-          Text(
-            context.l10n.negotiationThreadRoundLabel(
-              negotiation.round,
-              negotiation.maxRounds,
+          const SizedBox(width: DonySpacing.sm),
+          Container(
+            padding: const EdgeInsets.all(DonySpacing.sm),
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            style: tt.bodySmall?.copyWith(color: cs.onPrimaryContainer),
+            child: DonyIcon('plane', color: cs.primary, size: 18),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Fond de carte commun aux blocs du fil : surface, ombre douce plutôt
+/// qu'un trait dur, rayon des cartes.
+class _Surface extends StatelessWidget {
+  const _Surface({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.6)),
+        boxShadow: const [
+          BoxShadow(
+            color: DonyColors.shadow,
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }
@@ -343,62 +479,103 @@ class _ParcelSummary extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final weight = negotiation.weightKg;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.negotiationThreadParcelSectionTitle,
-          style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: DonySpacing.md),
-        if (weight != null && weight > 0)
-          _SummaryLine(
-            icon: Icons.inventory_2_rounded,
-            label: '${weight.toStringAsFixed(weight % 1 == 0 ? 0 : 1)} kg',
+    return _Surface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              DonyIcon('package', color: cs.onSurfaceVariant, size: 16),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  negotiation.contentCategory?.isNotEmpty ?? false
+                      ? '${context.l10n.negotiationThreadParcelSectionTitle} · ${negotiation.contentCategory}'
+                      : context.l10n.negotiationThreadParcelSectionTitle,
+                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              if (weight != null && weight > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.sm,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                  ),
+                  child: Text(
+                    '${weight.toStringAsFixed(weight % 1 == 0 ? 0 : 1)} kg',
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w700,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+            ],
           ),
-        for (final line in negotiation.gridItems)
-          _SummaryLine(
-            icon: Icons.category_rounded,
-            label: line.label,
-            trailing:
-                '${line.quantity} × ${formatPriceIn(line.unitPriceDisplayEur, negotiation.currency)}',
-          ),
-        for (final item in negotiation.customItems)
-          _SummaryLine(
-            icon: Icons.add_box_rounded,
-            label: item.label,
-            trailing:
-                '${item.quantity} × ${formatPriceIn(item.amountEur, negotiation.currency)}',
-          ),
-        if (negotiation.photoUrls.isNotEmpty) ...[
-          const SizedBox(height: DonySpacing.md),
-          SizedBox(
-            height: 72,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: negotiation.photoUrls.length,
-              separatorBuilder: (_, _) => const SizedBox(width: DonySpacing.sm),
-              itemBuilder: (context, i) => ClipRRect(
-                key: Key('nego-photo-$i'),
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                child: DonyImage(
-                  url: negotiation.photoUrls[i],
-                  width: 72,
-                  height: 72,
+          if (negotiation.gridItems.isNotEmpty ||
+              negotiation.customItems.isNotEmpty)
+            const SizedBox(height: DonySpacing.md),
+          for (final line in negotiation.gridItems)
+            _SummaryLine(
+              icon: Icons.category_rounded,
+              label: line.label,
+              trailing:
+                  '${line.quantity} × ${formatPriceIn(line.unitPriceDisplayEur, negotiation.currency)}',
+            ),
+          for (final item in negotiation.customItems)
+            _SummaryLine(
+              icon: Icons.add_box_rounded,
+              label: item.label,
+              trailing:
+                  '${item.quantity} × ${formatPriceIn(item.amountEur, negotiation.currency)}',
+            ),
+          if (negotiation.photoUrls.isNotEmpty) ...[
+            const SizedBox(height: DonySpacing.sm),
+            SizedBox(
+              height: 72,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: negotiation.photoUrls.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(width: DonySpacing.sm),
+                itemBuilder: (context, i) => Container(
+                  key: Key('nego-photo-$i'),
+                  foregroundDecoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    // Liseré neutre : la photo garde un bord net sur
+                    // n'importe quel fond (noir en clair, blanc en sombre).
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    child: DonyImage(
+                      url: negotiation.photoUrls[i],
+                      width: 72,
+                      height: 72,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
+          if (negotiation.description != null &&
+              negotiation.description!.isNotEmpty) ...[
+            const SizedBox(height: DonySpacing.md),
+            Text(
+              negotiation.description!,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
         ],
-        if (negotiation.description != null &&
-            negotiation.description!.isNotEmpty) ...[
-          const SizedBox(height: DonySpacing.md),
-          Text(
-            negotiation.description!,
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
@@ -425,7 +602,10 @@ class _SummaryLine extends StatelessWidget {
           if (trailing != null)
             Text(
               trailing!,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
         ],
       ),
@@ -433,69 +613,97 @@ class _SummaryLine extends StatelessWidget {
   }
 }
 
+/// Échanges en bulles de chat, comme le fil « demande de colis ».
+///
+/// Le montant de chaque message est le TOTAL proposé (brut) : c'est le seul
+/// que porte un message de trajet, et c'est ce qu'affichait déjà la liste
+/// d'échanges. Le net du voyageur reste en tête, dans la carte héros.
 class _MessagesTimeline extends StatelessWidget {
-  const _MessagesTimeline({required this.negotiation});
+  const _MessagesTimeline({required this.negotiation, this.viewerUserId});
 
   final BidNegotiation negotiation;
+  final String? viewerUserId;
+
+  /// Auteur côté expéditeur : seul l'expéditeur propose sur un trajet, le
+  /// premier message PROPOSAL est donc le sien. Sert de repli quand l'écran
+  /// ne connaît pas l'utilisateur courant.
+  String? get _senderId {
+    for (final m in negotiation.messages) {
+      if (m.kind == BidNegotiationMessageKind.proposal) return m.authorId;
+    }
+    return null;
+  }
+
+  bool _isMine(BidNegotiationMessage m) {
+    final me = viewerUserId;
+    if (me != null && me.isNotEmpty) return m.authorId == me;
+    final sender = _senderId;
+    if (sender == null) return false;
+    return (m.authorId == sender) != negotiation.isTravelerView;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    if (negotiation.messages.isEmpty) return const SizedBox.shrink();
+    final l = context.l10n;
+    final messages = negotiation.messages;
+    if (messages.isEmpty) return const SizedBox.shrink();
 
     return Column(
+      key: const Key('nego-timeline'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.l10n.negotiationThreadExchangesTitle,
+          l.negotiationThreadExchangesTitle,
           style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: DonySpacing.md),
-        for (final message in negotiation.messages)
-          Container(
-            margin: const EdgeInsets.only(bottom: DonySpacing.sm),
-            padding: const EdgeInsets.all(DonySpacing.md),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _kindLabel(context.l10n, message.kind),
-                  style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                if (message.proposedGrossEur != null) ...[
-                  const SizedBox(height: DonySpacing.xxs),
-                  Text(
-                    formatPriceIn(
-                      message.proposedGrossEur!,
-                      negotiation.currency,
-                    ),
-                    style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ],
-                if (message.body != null && message.body!.isNotEmpty) ...[
-                  const SizedBox(height: DonySpacing.xxs),
-                  Text(message.body!, style: tt.bodyMedium),
-                ],
-              ],
-            ),
+        for (var i = 0; i < messages.length; i++)
+          Builder(
+            builder: (context) {
+              final m = messages[i];
+              final mine = _isMine(m);
+              final isLast = i == messages.length - 1;
+              // Dernière offre reçue, à traiter : c'est à moi de jouer.
+              final highlight =
+                  isLast &&
+                  !mine &&
+                  negotiation.myTurn &&
+                  negotiation.status == 'NEGOTIATING' &&
+                  (m.kind == BidNegotiationMessageKind.proposal ||
+                      m.kind == BidNegotiationMessageKind.counter);
+              return DonyNegoBubble(
+                    key: Key('nego-bubble-${m.id}'),
+                    kindLabel: _kindLabel(l, m.kind),
+                    mine: mine,
+                    highlight: highlight,
+                    priceText: m.proposedGrossEur == null
+                        ? null
+                        : formatPriceIn(
+                            m.proposedGrossEur!,
+                            negotiation.currency,
+                          ),
+                    body: m.body,
+                    sentAt: m.createdAt?.toLocal(),
+                  )
+                  .animate()
+                  .fadeIn(duration: 200.ms, delay: (40 * i).ms)
+                  .slideY(begin: 0.05);
+            },
           ),
       ],
     );
   }
 
+  /// Mêmes capitales que les bulles du fil « demande de colis ».
   static String _kindLabel(
     AppLocalizations l,
     BidNegotiationMessageKind kind,
   ) => switch (kind) {
-    BidNegotiationMessageKind.proposal => l.negotiationThreadKindProposal,
-    BidNegotiationMessageKind.counter => l.negotiationThreadKindCounter,
-    BidNegotiationMessageKind.accept => l.negotiationThreadKindAccepted,
-    BidNegotiationMessageKind.reject => l.negotiationThreadKindRejected,
+    BidNegotiationMessageKind.proposal => l.negotiationMessageKindProposalBadge,
+    BidNegotiationMessageKind.counter => l.negotiationMessageKindCounterBadge,
+    BidNegotiationMessageKind.accept => l.negotiationStatusBadgeAccepted,
+    BidNegotiationMessageKind.reject => l.negotiationMessageKindRejectedBadge,
   };
 }
 
@@ -508,13 +716,19 @@ class _ThreadActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
-    Widget hint(String message, String key) => Text(
-      message,
+    // Même bandeau d'état que le fil « demande de colis » : icône et teinte
+    // disent l'étape d'un coup d'œil, la phrase la détaille.
+    Widget hint(
+      String message,
+      String key, {
+      required String icon,
+      required Color tint,
+    }) => DonyNegoStateBanner(
       key: Key(key),
-      textAlign: TextAlign.center,
-      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+      message: message,
+      iconAsset: icon,
+      tint: tint,
     );
 
     // ── Après accord ────────────────────────────────────────────────────────
@@ -529,8 +743,13 @@ class _ThreadActions extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            hint(l.negotiationThreadPayHint, 'nego-pay-hint'),
-            const SizedBox(height: DonySpacing.sm),
+            hint(
+              l.negotiationThreadPayHint,
+              'nego-pay-hint',
+              icon: 'smartphone',
+              tint: DonyColors.threadStatusViolet,
+            ),
+            const SizedBox(height: DonySpacing.md),
             DonyButton(
               key: const Key('nego-pay-mobile-money-btn'),
               label: l.bidDetailPayByMobileMoney,
@@ -558,6 +777,8 @@ class _ThreadActions extends StatelessWidget {
       return hint(
         l.negotiationThreadAwaitingSenderPaymentHint,
         'nego-awaiting-payment-hint',
+        icon: 'clock',
+        tint: cs.warning,
       );
     }
 
@@ -567,8 +788,13 @@ class _ThreadActions extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            hint(l.negotiationThreadPayHint, 'nego-pay-hint'),
-            const SizedBox(height: DonySpacing.sm),
+            hint(
+              l.negotiationThreadPayHint,
+              'nego-pay-hint',
+              icon: 'credit-card',
+              tint: DonyColors.threadStatusViolet,
+            ),
+            const SizedBox(height: DonySpacing.md),
             DonyButton(
               key: const Key('nego-pay-btn'),
               label: l.negotiationThreadPayButton,
@@ -580,6 +806,8 @@ class _ThreadActions extends StatelessWidget {
       return hint(
         l.negotiationThreadAwaitingSenderPaymentHint,
         'nego-awaiting-payment-hint',
+        icon: 'clock',
+        tint: cs.warning,
       );
     }
 
@@ -589,11 +817,21 @@ class _ThreadActions extends StatelessWidget {
             ? l.negotiationThreadCashTravelerHint
             : l.negotiationThreadCashSenderHint,
         'nego-awaiting-traveler-hint',
+        icon: 'banknote',
+        tint: negotiation.isTravelerView
+            ? DonyColors.threadStatusOrange
+            : cs.success,
       );
     }
 
     if (negotiation.isClosed) {
-      return hint(_closedLabel(l, negotiation), 'nego-closed-hint');
+      final accepted = negotiation.status == 'ACCEPTED';
+      return hint(
+        _closedLabel(l, negotiation),
+        'nego-closed-hint',
+        icon: accepted ? 'circle-check' : 'circle-x',
+        tint: accepted ? cs.success : cs.onSurfaceVariant,
+      );
     }
 
     if (!negotiation.myTurn) {
@@ -610,8 +848,10 @@ class _ThreadActions extends StatelessWidget {
                   l.negotiationThreadCounterpartyFallback,
             ),
             'nego-waiting-hint',
+            icon: 'hourglass',
+            tint: cs.primary,
           ),
-          const SizedBox(height: DonySpacing.sm),
+          const SizedBox(height: DonySpacing.md),
           DonyButton(
             key: const Key('nego-cancel-btn'),
             label: l.negotiationThreadCancelButton,

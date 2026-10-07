@@ -844,7 +844,9 @@ class _NegoCard extends StatelessWidget {
               const SizedBox(width: 6),
               const _SourcePill(kind: NegoEntryKind.request),
               const SizedBox(width: 4),
-              _StatusPill(status: thread.status),
+              _StatusPill(
+                variant: ThreadStatusVariant.fromThread(thread.status),
+              ),
             ],
           ),
           const SizedBox(height: 6),
@@ -913,9 +915,10 @@ class _NegoCard extends StatelessWidget {
 
 /// Pendant de [_NegoCard] pour les fils de trajet.
 ///
-/// Volontairement plus sobre : un résumé de trajet ne porte ni rounds détaillés
-/// ni statut de paiement, seulement de quoi reconnaître la discussion et
-/// l'ouvrir.
+/// Même lecture que la carte d'une demande (FLUTTER-BM) : bande et pastille de
+/// statut, montant mis en avant, interlocuteur, tour en cours et qui doit
+/// jouer. Le résumé ne porte ni le plafond de tours ni le détail du paiement :
+/// la carte s'en tient à ce qu'il dit.
 class _TripNegoCard extends StatelessWidget {
   const _TripNegoCard({
     required this.summary,
@@ -934,6 +937,31 @@ class _TripNegoCard extends StatelessWidget {
   /// montant qui n'est pas le sien : côté voyageur, le chiffre attend le fil.
   bool get _showsAmount => summary.role != 'TRAVELER';
 
+  bool get _negotiating => summary.status == 'NEGOTIATING';
+
+  /// La main est à moi : répondre en pleine discussion, ou payer un accord.
+  bool get _actionRequired =>
+      (_negotiating && summary.myTurn) || summary.needsMyPayment;
+
+  ThreadStatusVariant get _variant => switch (summary.status) {
+    'NEGOTIATING' => ThreadStatusVariant.open,
+    'AWAITING_PAYMENT' => ThreadStatusVariant.awaitingPayment,
+    'PENDING' => ThreadStatusVariant.awaitingCommission,
+    'ACCEPTED' => ThreadStatusVariant.accepted,
+    _ => ThreadStatusVariant.terminal,
+  };
+
+  /// Mêmes couleurs que la bande de [_NegoCard], variante par variante.
+  Color get _stripColor => switch (_variant) {
+    ThreadStatusVariant.open => DonyColors.primary,
+    ThreadStatusVariant.awaitingTrip => DonyColors.threadStatusAmber,
+    ThreadStatusVariant.awaitingPayment ||
+    ThreadStatusVariant.awaitingDeposit => DonyColors.threadStatusViolet,
+    ThreadStatusVariant.awaitingCommission => DonyColors.threadStatusOrange,
+    ThreadStatusVariant.accepted => DonyColors.threadStatusGreen,
+    ThreadStatusVariant.terminal => DonyColors.neutral300,
+  };
+
   String _route(AppLocalizations l) {
     final dep = summary.departureCity;
     final arr = summary.arrivalCity;
@@ -947,12 +975,14 @@ class _TripNegoCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final isTerminal = summary.isClosed;
+    final name =
+        summary.counterpartyName ?? l.negotiationTripCardCounterpartyFallback;
 
     return _NegoCardShell(
       key: Key('trip-nego-card-${summary.bidId}'),
-      stripColor: isTerminal ? DonyColors.neutral300 : DonyColors.primary,
+      stripColor: _stripColor,
       dimmed: isTerminal,
-      highlighted: summary.hasUnread,
+      highlighted: summary.hasUnread || _actionRequired,
       index: index,
       onTap: () => context.push(
         archived
@@ -962,6 +992,7 @@ class _TripNegoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Ligne 1 : route + montant
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -986,12 +1017,18 @@ class _TripNegoCard extends StatelessWidget {
                         summary.proposedGrossEur,
                         summary.currency,
                       ),
+                      key: Key('trip-nego-amount-${summary.bidId}'),
                       style: tt.headlineMedium?.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: isTerminal ? cs.onSurfaceVariant : cs.onSurface,
+                        color: isTerminal
+                            ? cs.onSurfaceVariant
+                            : _actionRequired
+                            ? cs.primary
+                            : cs.onSurface,
                         letterSpacing: -0.5,
                         height: 1.0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                     Text(
@@ -1007,12 +1044,14 @@ class _TripNegoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
+          // Ligne 2 : interlocuteur + source + statut
           Row(
             children: [
+              DonyAvatar(name: name, size: DonyAvatarSize.sm),
+              const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  summary.counterpartyName ??
-                      l.negotiationTripCardCounterpartyFallback,
+                  name,
                   overflow: TextOverflow.ellipsis,
                   style: tt.bodySmall?.copyWith(
                     fontSize: 11,
@@ -1023,22 +1062,113 @@ class _TripNegoCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               const _SourcePill(kind: NegoEntryKind.trip),
+              const SizedBox(width: 4),
+              _StatusPill(variant: _variant),
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            l.negotiationTripCardRoundLabel(
-              summary.round,
-              _timeAgo(l, summary.updatedAt ?? DateTime.now()),
-            ),
-            overflow: TextOverflow.ellipsis,
-            style: tt.bodySmall?.copyWith(
-              fontSize: 11,
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
+          // Ligne 3 : qui doit jouer + tour + badge NOUVEAU
+          Row(
+            children: [
+              if (_negotiating) ...[
+                _TurnChip(
+                  myTurn: summary.myTurn,
+                  label: summary.myTurn
+                      ? l.negotiationThreadYourTurn
+                      : l.negotiationThreadTheirTurn(name),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Expanded(
+                child: Text(
+                  l.negotiationTripCardRoundLabel(
+                    summary.round,
+                    _timeAgo(l, summary.updatedAt ?? DateTime.now()),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(
+                    fontSize: 11,
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              if (summary.hasUnread)
+                Container(
+                  key: Key('trip-nego-new-${summary.bidId}'),
+                  margin: const EdgeInsets.only(left: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: DonyColors.primary,
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                  ),
+                  child: Text(
+                    l.negotiationMessageNewBadge,
+                    style: tt.bodySmall?.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// « À vous de jouer » / « Au tour de … » sur une carte de trajet. Plein et
+/// accentué quand la main est à l'utilisateur, discret sinon.
+class _TurnChip extends StatelessWidget {
+  const _TurnChip({required this.myTurn, required this.label});
+
+  final bool myTurn;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final fg = myTurn ? cs.primary : cs.onSurfaceVariant;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 160),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: myTurn
+              ? cs.primary.withValues(alpha: 0.10)
+              : cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: fg),
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: tt.bodySmall?.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: fg,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1169,44 +1299,43 @@ class _SourcePill extends StatelessWidget {
 
 // ── Status pill ───────────────────────────────────────────────────────────────
 
+/// Pastille de statut, partagée par les cartes « demande » et « trajet » :
+/// elle se lit sur la variante visuelle du fil, pas sur un statut serveur,
+/// pour que les deux natures de discussion portent les mêmes couleurs.
 class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.status});
-  final NegotiationThreadStatus status;
+  const _StatusPill({required this.variant});
+  final ThreadStatusVariant variant;
 
   @override
   Widget build(BuildContext context) {
-    final (fg, bg) = switch (status) {
-      NegotiationThreadStatus.open => (
-        DonyColors.primary,
-        const Color(0xFFEEF3FF),
-      ),
-      NegotiationThreadStatus.awaitingTrip => (
+    final (fg, bg) = switch (variant) {
+      ThreadStatusVariant.open => (DonyColors.primary, const Color(0xFFEEF3FF)),
+      ThreadStatusVariant.awaitingTrip => (
         DonyColors.threadPillAmberFg,
         const Color(0xFFFEF3C7),
       ),
-      NegotiationThreadStatus.awaitingPayment => (
+      // Dépôt mobile money en cours : même violet que le paiement, dont il
+      // est une étape.
+      ThreadStatusVariant.awaitingPayment ||
+      ThreadStatusVariant.awaitingDeposit => (
         DonyColors.threadStatusViolet,
         const Color(0xFFF5F3FF),
       ),
-      NegotiationThreadStatus.awaitingCommission => (
+      ThreadStatusVariant.awaitingCommission => (
         DonyColors.threadPillOrangeFg,
         const Color(0xFFFFEDD5),
       ),
-      // Dépôt mobile money en cours : même violet que le paiement, dont il
-      // est une étape.
-      NegotiationThreadStatus.awaitingDeposit => (
-        DonyColors.threadStatusViolet,
-        const Color(0xFFF5F3FF),
-      ),
-      NegotiationThreadStatus.accepted => (
+      ThreadStatusVariant.accepted => (
         DonyColors.threadStatusGreen,
         const Color(0xFFDCFCE7),
       ),
-      _ => (DonyColors.threadPillNeutralFg, const Color(0xFFF3F4F6)),
+      ThreadStatusVariant.terminal => (
+        DonyColors.threadPillNeutralFg,
+        const Color(0xFFF3F4F6),
+      ),
     };
-    // Même texte, même clé que la pastille du hero card (ThreadHeroCard) : la
-    // variante ne sert ici qu'à retrouver le libellé, pas la couleur.
-    final label = ThreadStatusVariant.fromThread(status).badge(context.l10n);
+    // Même texte, même clé que la pastille du hero card (ThreadHeroCard).
+    final label = variant.badge(context.l10n);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(

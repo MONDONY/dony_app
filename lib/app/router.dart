@@ -594,14 +594,23 @@ final appRouter = GoRouter(
     // matche, et `:bidId` avalerait le segment `negotiation`.
     GoRoute(
       path: '/bids/:bidId/negotiation',
-      builder: (_, state) {
+      builder: (context, state) {
         final bidId = state.pathParameters['bidId']!;
+        // Sert seulement à poser les bulles du bon côté (FLUTTER-BM) : le fil
+        // sait se replier sans lui.
+        final authState = context.read<AuthBloc>().state;
+        final userId = authState is AuthAuthenticated
+            ? authState.user.id
+            : authState is AuthProfileUpdated
+            ? authState.user.id
+            : null;
         return BlocProvider<BidNegotiationBloc>(
           create: (_) =>
               getIt<BidNegotiationBloc>()
                 ..add(BidNegotiationFetchRequested(bidId)),
           child: BidNegotiationThreadScreen(
             bidId: bidId,
+            viewerUserId: userId,
             archived: state.uri.queryParameters['archived'] == 'true',
           ),
         );

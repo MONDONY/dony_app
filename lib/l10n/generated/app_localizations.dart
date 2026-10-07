@@ -9558,29 +9558,11 @@ abstract class AppLocalizations {
   /// **'Échanges'**
   String get negotiationThreadExchangesTitle;
 
-  /// Libellé d'un message de type proposition initiale (bid_negotiation_thread_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Proposition'**
-  String get negotiationThreadKindProposal;
-
   /// Libellé d'un message de type contre-offre (bid_negotiation_thread_screen.dart)
   ///
   /// In fr, this message translates to:
   /// **'Contre-offre'**
   String get negotiationThreadKindCounter;
-
-  /// Libellé d'un message d'acceptation (bid_negotiation_thread_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Acceptée'**
-  String get negotiationThreadKindAccepted;
-
-  /// Libellé d'un message de refus (bid_negotiation_thread_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Refusée'**
-  String get negotiationThreadKindRejected;
 
   /// Consigne de paiement, accord carte côté expéditeur (bid_negotiation_thread_screen.dart)
   ///
@@ -9641,6 +9623,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'En attente de la réponse de {name}.'**
   String negotiationThreadWaitingForReply(String name);
+
+  /// Pastille « qui doit jouer » quand la main est à l'utilisateur (fil de prix d'un trajet et sa carte dans la liste, FLUTTER-BM)
+  ///
+  /// In fr, this message translates to:
+  /// **'À vous de jouer'**
+  String get negotiationThreadYourTurn;
+
+  /// Pastille « qui doit jouer » quand la main est à l'interlocuteur, nom ou repli traduit (FLUTTER-BM)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au tour de {name}'**
+  String negotiationThreadTheirTurn(String name);
 
   /// Bouton secondaire de l'état « en attente de l'autre » : clôt tout le fil de prix d'un trajet, pour les deux parties (POST /bids/{id}/negotiation/cancel, bid_negotiation_thread_screen.dart, FLUTTER-EQ)
   ///
