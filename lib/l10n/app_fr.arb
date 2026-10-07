@@ -92,8 +92,8 @@
   "errorCurrencyMismatchMessage": "Ce trajet n'est plus disponible dans ta devise. Change de pays dans Réglages pour le voir.",
   "errorCountryRequiredTitle": "Pays manquant",
   "errorCountryRequiredMessage": "Renseigne ton pays dans Réglages, rubrique Préférences, avant de créer ton compte de paiement. Il détermine ta devise et ne pourra plus être modifié ensuite.",
-  "errorCountryLockedTitle": "Pays verrouillé",
-  "errorCountryLockedMessage": "Impossible de changer de pays : un envoi est en cours, ton portefeuille n'est pas vide, ou ton compte de paiement est déjà créé.",
+  "errorCountryLockedTitle": "Pays de résidence verrouillé",
+  "errorCountryLockedMessage": "Impossible de modifier votre pays de résidence : un envoi est en cours, votre portefeuille n'est pas vide, ou votre compte de paiement est déjà créé. Contactez le support pour le faire modifier.",
   "errorCountryUnsupportedTitle": "Pays non desservi",
   "errorCountryUnsupportedMessage": "Yadony ne dessert pas encore ce pays. Choisis-en un autre.",
   "errorDeletionImpossibleTitle": "Suppression impossible",
@@ -114,8 +114,8 @@
   "errorBidNotFoundMessage": "Cette demande n'existe plus.",
   "errorContactKycRequiredTitle": "Profil vérifié requis",
   "errorContactKycRequiredMessage": "Ce voyageur ne reçoit que des profils vérifiés. Vérifie ton identité pour lui envoyer une demande.",
-  "errorBidNotAcceptedTitle": "Demande non acceptée",
-  "errorBidNotAcceptedMessage": "Cette demande doit être acceptée par le voyageur avant cette étape.",
+  "errorBidNotAcceptedTitle": "Étape impossible pour ce colis",
+  "errorBidNotAcceptedMessage": "Ce colis n'est pas à une étape qui permet cette action. Son statut a peut-être changé entre-temps (trajet marqué arrivé, colis livré ou annulé).",
   "errorBidNotDeliveredTitle": "Colis non livré",
   "errorBidNotDeliveredMessage": "Cette action nécessite que le colis ait été livré.",
   "errorCallInProgressTitle": "Appel déjà en cours",
@@ -1537,9 +1537,18 @@
   "@tripPublishNoteToSendersHint": {
     "description": "Indice du champ de note libre aux expéditeurs"
   },
-  "tripPublishCashOnlyBannerNoConnect": "Le paiement par carte n'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.",
+  "tripPublishCashOnlyBannerNoConnect": "Le paiement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.",
   "@tripPublishCashOnlyBannerNoConnect": {
     "description": "Bannière quand Stripe n'est pas disponible dans le pays du voyageur"
+  },
+  "tripPublishCashOnlyBannerNoConnectCountry": "Le paiement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.",
+  "@tripPublishCashOnlyBannerNoConnectCountry": {
+    "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
   },
   "tripPublishActivateCardPaymentsCta": "Activer les paiements par carte",
   "@tripPublishActivateCardPaymentsCta": {
@@ -6523,7 +6532,7 @@
   "@negotiationCardCapabilityRequiredBody": {
     "description": "Corps de la feuille quand Stripe Connect est disponible dans le pays (payment_capability_block_sheets.dart)"
   },
-  "negotiationCardCapabilityUnavailableBody": "L'expéditeur n'accepte que le paiement par carte pour ce colis, et Stripe ne permet pas encore d'ouvrir un compte de paiement depuis ton pays. Tu peux lier les colis payés en espèces.",
+  "negotiationCardCapabilityUnavailableBody": "L'expéditeur n'accepte que le paiement par carte pour ce colis. L'encaissement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez : Stripe ne permet pas encore d'ouvrir un compte de paiement depuis ce pays. Vous pouvez lier les colis payés en espèces.",
   "@negotiationCardCapabilityUnavailableBody": {
     "description": "Corps de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)"
   },
@@ -6543,7 +6552,7 @@
   "@negotiationCardCapabilitySetCountryButton": {
     "description": "Bouton vers les préférences pour saisir le pays de résidence (payment_capability_block_sheets.dart)"
   },
-  "negotiationCardCapabilityProfileCountry": "Ton pays de profil : {country}",
+  "negotiationCardCapabilityProfileCountry": "Votre pays de résidence (profil) : {country}",
   "@negotiationCardCapabilityProfileCountry": {
     "description": "Pays de résidence du profil, affiché quand Stripe ne le couvre pas ; `country` déjà traduit (payment_capability_block_sheets.dart)",
     "placeholders": {
@@ -6552,7 +6561,7 @@
       }
     }
   },
-  "negotiationCardCapabilityChangeCountryButton": "Modifier mon pays",
+  "negotiationCardCapabilityChangeCountryButton": "Modifier mon pays de résidence",
   "@negotiationCardCapabilityChangeCountryButton": {
     "description": "Bouton secondaire vers les préférences pour changer de pays (payment_capability_block_sheets.dart)"
   },
@@ -6564,9 +6573,18 @@
   "@requestPublicCardOnlyWarningCountryMissing": {
     "description": "Avertissement sur la fiche d'un colis carte seule quand le profil n'a pas de pays (package_request_public_detail_screen.dart)"
   },
-  "requestPublicCardOnlyWarningCountryUnsupported": "Ce colis n'accepte que la carte, et Stripe ne permet pas encore de l'activer depuis ton pays.",
+  "requestPublicCardOnlyWarningCountryUnsupported": "Ce colis n'accepte que la carte. L'encaissement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le permet pas encore depuis ce pays.",
   "@requestPublicCardOnlyWarningCountryUnsupported": {
     "description": "Avertissement sur la fiche d'un colis carte seule quand Stripe ne couvre pas le pays du voyageur (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicCardOnlyWarningResidenceCountry": "Ce colis n'accepte que la carte. L'encaissement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le permet pas encore depuis ce pays.",
+  "@requestPublicCardOnlyWarningResidenceCountry": {
+    "description": "Avertissement de la fiche colis « carte seule » quand Stripe ne couvre pas le pays de résidence du profil, pays nommé (package_request_public_detail_screen.dart, _CardOnlyWarning, FLUTTER-EE).",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
   },
   "negotiationCardRoundShortLabel": "R.{round}/5 · {timeAgo}",
   "@negotiationCardRoundShortLabel": {
@@ -6678,9 +6696,9 @@
   "@bidDetailSenderEscrowedTitle": {
     "description": "PAYMENT_ESCROWED, titre (sender_hero_card.dart)"
   },
-  "bidDetailSenderEscrowedSubtitle": "{amount} séquestrés. En attente de remise.",
+  "bidDetailSenderEscrowedSubtitle": "{amount} séquestrés. En attente de la réponse du voyageur.",
   "@bidDetailSenderEscrowedSubtitle": {
-    "description": "PAYMENT_ESCROWED, sous-titre (sender_hero_card.dart)",
+    "description": "PAYMENT_ESCROWED (payé, le voyageur n'a pas encore accepté), sous-titre (sender_hero_card.dart)",
     "placeholders": {
       "amount": {
         "type": "String"
@@ -13870,13 +13888,17 @@
   "@prefsSectionCurrency": {
     "description": "En-tête de section (business_prefs_screen.dart)"
   },
-  "prefsCountryLabel": "Pays",
+  "prefsCountryLabel": "Pays de résidence",
   "@prefsCountryLabel": {
     "description": "Libellé de la tuile pays et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42)."
   },
-  "prefsCountryLockedSubtitle": "Verrouillé : un envoi est en cours ou votre compte de paiement est créé",
+  "prefsCountryLockedSubtitle": "Verrouillé : envoi en cours, portefeuille non vide ou compte de paiement créé",
   "@prefsCountryLockedSubtitle": {
     "description": "Sous-titre quand le pays est verrouillé (business_prefs_screen.dart)"
+  },
+  "prefsCountryLockedSupportCta": "Contacter le support",
+  "@prefsCountryLockedSupportCta": {
+    "description": "Feuille ouverte au toucher de la ligne Pays de résidence verrouillée (business_prefs_screen.dart, FLUTTER-EE) : bouton vers le support."
   },
   "prefsCountryPlaceholder": "Choisir mon pays",
   "@prefsCountryPlaceholder": {
@@ -17170,6 +17192,19 @@
         "type": "String"
       }
     }
+  },
+  "suiviTransitTripArrived": "Trajet déjà marqué arrivé : le transit de {parcel} n'est plus possible. Il ne reste que la remise au destinataire.",
+  "@suiviTransitTripArrived": {
+    "description": "Transit forcé sur un colis dont le trajet est déjà marqué arrivé (ARRIVED), refusé par le serveur (suivi_screen.dart, FLUTTER-D6).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviForceTransitTripArrived": "Trajet déjà marqué arrivé",
+  "@suiviForceTransitTripArrived": {
+    "description": "Raison affichée sous l'étape Transit grisée de « Forcer une étape » quand le trajet est déjà marqué arrivé (suivi_parcel_sheets.dart, FLUTTER-D6)."
   },
   "trackingReadOnlyLabel": "Suivi en lecture seule",
   "@trackingReadOnlyLabel": {

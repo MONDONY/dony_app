@@ -1689,6 +1689,32 @@ void main() {
       expect(lastExtra?['etape'], 'DEPART');
     });
 
+    testWidgets(
+      'trajet marqué arrivé : transit grisé avec la raison (FLUTTER-D6)',
+      (tester) async {
+        stubTrips(
+          [_trip('trip-a', 'IN_PROGRESS', 'Bobo-Dioulasso', 'Yaoundé')],
+          {
+            'trip-a': [
+              _bid('sali', 'ARRIVED', name: 'Sali', number: 'DON-SAL003'),
+            ],
+          },
+        );
+        await pump(tester);
+        await openNumberField(tester);
+
+        await tapVisible(tester, const Key('suivi-force-step'));
+        expect(text('Trajet déjà marqué arrivé'), findsOneWidget);
+        expect(text('Facultatif'), findsNothing);
+        await tester.tap(find.byKey(const Key('suivi-force-TRANSIT')));
+        await settle(tester);
+        // Toucher le transit grisé ne choisit rien : la feuille reste ouverte.
+        expect(text('Trajet déjà marqué arrivé'), findsOneWidget);
+        expect(text('Étape : automatique'), findsOneWidget);
+        expect(visited, isEmpty);
+      },
+    );
+
     testWidgets('arrivée forcée : flux de remise, Automatique l\'annule', (
       tester,
     ) async {

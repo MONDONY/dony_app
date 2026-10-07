@@ -175,4 +175,28 @@ void main() {
       );
     });
   });
+
+  group('transitClosedByArrival (FLUTTER-D6)', () {
+    test('colis ARRIVED, aucun colis récupéré → transit fermé', () {
+      expect(
+        transitClosedByArrival([_bid('ARRIVED'), _bid('COMPLETED')]),
+        isTrue,
+      );
+    });
+
+    test('un colis encore HANDED_OVER → transit encore possible', () {
+      expect(
+        transitClosedByArrival([_bid('ARRIVED'), _bid('HANDED_OVER')]),
+        isFalse,
+      );
+    });
+
+    test('trajet pas encore arrivé → transit possible', () {
+      expect(
+        transitClosedByArrival([_bid('HANDED_OVER'), _bid('IN_TRANSIT')]),
+        isFalse,
+      );
+      expect(transitClosedByArrival(const []), isFalse);
+    });
+  });
 }

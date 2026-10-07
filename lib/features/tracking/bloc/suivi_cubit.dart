@@ -97,6 +97,14 @@ final class SuiviStepAlreadyDone extends SuiviEffect {
   final String step;
 }
 
+/// Transit forcé sur un colis dont le trajet est déjà marqué arrivé
+/// (`ARRIVED`) : le back le refuserait (422, FLUTTER-D6). Seule la remise
+/// reste possible.
+final class SuiviStepTripArrived extends SuiviEffect {
+  const SuiviStepTripArrived(this.bid);
+  final BidModel bid;
+}
+
 /// Colis du trajet affiché dont toutes les étapes sont déjà validées.
 final class SuiviStepsAllDone extends SuiviEffect {
   const SuiviStepsAllDone(this.bid);
@@ -488,6 +496,9 @@ class SuiviCubit extends Cubit<SuiviState> {
     final progress = colisStepProgress(bid);
     if (forced != null && forced != 'DEPART' && !progress.depart) {
       return SuiviStepNeedsDepart(bid);
+    }
+    if (forced == 'TRANSIT' && bid.status == 'ARRIVED') {
+      return SuiviStepTripArrived(bid);
     }
     if ((forced == 'DEPART' && progress.depart) ||
         (forced == 'TRANSIT' && progress.transit)) {

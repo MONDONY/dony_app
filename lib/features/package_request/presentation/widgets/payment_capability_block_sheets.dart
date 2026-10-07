@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/presentation/residence_country_settings.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -128,18 +129,9 @@ Future<void> showCardCapabilityRequiredSheet(BuildContext context) async {
 
   void close() => Navigator.of(context, rootNavigator: true).pop();
 
-  // Le statut Connect dépend du pays du profil (côté serveur) : au retour des
-  // préférences, on le redemande pour que la fiche et cette feuille reflètent
-  // le nouveau pays sans attendre un redémarrage.
   void openCountryPrefs() {
     close();
-    unawaited(
-      context.push<void>('/settings/preferences').whenComplete(() {
-        if (!stripeBloc.isClosed) {
-          stripeBloc.add(const StripeAccountStatusRefreshed());
-        }
-      }),
-    );
+    unawaited(openResidenceCountrySettings(context));
   }
 
   final bodyStyle = tt.bodyMedium?.copyWith(color: cs.onSurface);

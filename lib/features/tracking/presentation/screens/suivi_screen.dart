@@ -11,6 +11,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
+import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
@@ -332,6 +333,9 @@ class _SuiviBodyState extends State<_SuiviBody> {
       case SuiviStepNeedsDepart(:final bid):
         _refuse(context.l10n.suiviStepNeedsDepart(suiviParcelLabel(bid)));
         cubit.releaseScan();
+      case SuiviStepTripArrived(:final bid):
+        _refuse(context.l10n.suiviTransitTripArrived(suiviParcelLabel(bid)));
+        cubit.releaseScan();
       case SuiviStepAlreadyDone(:final bid, :final step):
         _refuse(context.l10n.suiviStepAlreadyDone(step, suiviParcelLabel(bid)));
         cubit.releaseScan();
@@ -527,7 +531,12 @@ class _SuiviBodyState extends State<_SuiviBody> {
   /// scanné ou saisi, la feuille se replie sur la caméra.
   Future<void> _forceStep() async {
     final cubit = context.read<SuiviCubit>();
-    final step = await showSuiviForceStepSheet(context);
+    final hub = context.read<ScanHubCubit>().state;
+    final step = await showSuiviForceStepSheet(
+      context,
+      transitClosed:
+          hub is ScanHubLoaded && transitClosedByArrival(hub.selectedTripBids),
+    );
     if (!mounted || step == null) return;
     cubit.forceStep(step);
     _collapseSheet();

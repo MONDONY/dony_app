@@ -56,6 +56,10 @@ void main() {
           path: '/payments/wallet',
           builder: (_, _) => const Scaffold(body: Text('Portefeuille')),
         ),
+        GoRoute(
+          path: '/support',
+          builder: (_, _) => const Scaffold(body: Text('Support')),
+        ),
       ],
     ),
   );
@@ -171,13 +175,13 @@ void main() {
         matching: find.byType(DonyListTile),
       ),
     );
-    expect(tile.enabled, isFalse);
     // Griser sans expliquer laisse l'utilisateur croire à un bug : le
     // sous-titre doit dire pourquoi le pays est figé.
     expect(tile.subtitle, isNotNull);
     expect(
       find.textContaining(
-        'Verrouillé : un envoi est en cours ou votre compte de paiement est créé',
+        'Verrouillé : envoi en cours, portefeuille non vide ou compte de '
+        'paiement créé',
       ),
       findsOneWidget,
     );
@@ -329,6 +333,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Rechercher un pays'), findsNothing);
+    // FLUTTER-EE : à la place, la raison et le chemin vers le support.
+    expect(find.byKey(const Key('prefs-country-locked-sheet')), findsOneWidget);
+    expect(
+      find.textContaining('Contactez le support pour le faire modifier'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('prefs-country-locked-support')));
+    await tester.pumpAndSettle();
+    expect(find.text('Support'), findsOneWidget);
   });
 
   // ── Tuile Devise ────────────────────────────────────────────────────────
@@ -457,7 +470,10 @@ void main() {
           matching: find.byType(DonyListTile),
         ),
       );
-      expect(countryTile.enabled, isFalse);
+      // Le pays verrouillé reste touchable (feuille vers le support,
+      // FLUTTER-EE) : le verrou se lit dans son sous-titre.
+      expect(countryTile.subtitle, isNotNull);
+      expect(currencyTile.subtitle, isNull);
       expect(currencyTile.enabled, isTrue);
     },
   );

@@ -1,6 +1,8 @@
 // Étape 2 du formulaire "Publier un trajet" : Prix & Conditions.
 // Extrait de create_announcement_bottom_sheet.dart — refactor pur, zéro changement
 // de comportement.
+import 'dart:async';
+
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -17,7 +19,10 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/payment_setup_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/presentation/residence_country_settings.dart';
+import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -766,6 +771,18 @@ class PrixConditionsStep extends StatelessWidget {
     required SupportedCurrency currency,
   }) {
     final cardActive = cardStatus == _CardStatus.active;
+    // Carte indisponible dans le pays : c'est le pays de résidence du profil
+    // qui décide, pas le pays où se trouve le voyageur. On le nomme et on
+    // mène à son réglage (FLUTTER-EE). Lecture tolérante : le wizard peut
+    // être monté sans les préférences (tests isolés).
+    final residenceCountry =
+        ctx.read<BusinessPrefsBloc?>()?.state.country?.trim().toUpperCase() ??
+        '';
+    final noConnectMessage = residenceCountry.isEmpty
+        ? l.tripPublishCashOnlyBannerNoConnect
+        : l.tripPublishCashOnlyBannerNoConnectCountry(
+            countryName(l, residenceCountry),
+          );
     // Sans carte, les espèces sont le seul mode garanti : la soumission les
     // ajoute d'office, l'écran les montre donc activées et verrouillées. Au
     // moins un mode de paiement est requis pour publier. Post-frame pour ne
@@ -799,7 +816,7 @@ class PrixConditionsStep extends StatelessWidget {
               ),
               _CardStatus.countryUnavailable => (_) => DonySnackbar.show(
                 ctx,
-                message: l.tripPublishCashOnlyBannerNoConnect,
+                message: noConnectMessage,
               ),
               _CardStatus.currencyUnavailable => (_) => DonySnackbar.show(
                 ctx,
@@ -868,7 +885,10 @@ class PrixConditionsStep extends StatelessWidget {
               ),
               _CardStatus.countryUnavailable => PaymentSetupNotice(
                 key: const Key('card-setup-notice'),
-                message: l.tripPublishCashOnlyBannerNoConnect,
+                message: noConnectMessage,
+                ctaLabel: l.negotiationCardCapabilityChangeCountryButton,
+                ctaKey: const Key('change-residence-country-cta'),
+                onCtaTap: () => unawaited(openResidenceCountrySettings(ctx)),
               ),
               _CardStatus.currencyUnavailable ||
               _CardStatus.active ||

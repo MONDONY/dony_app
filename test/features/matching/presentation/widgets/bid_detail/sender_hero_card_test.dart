@@ -125,6 +125,13 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('Paiement sécurisé'), findsOneWidget);
+    // FLUTTER-E5 : payé mais pas encore accepté, on attend le voyageur et
+    // non la remise (qui n'a de sens qu'après acceptation, statut ACCEPTED).
+    expect(
+      find.textContaining('En attente de la réponse du voyageur'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('En attente de remise'), findsNothing);
   });
 
   // ── Test 3: ACCEPTED fenêtre future ─────────────────────────────────────────

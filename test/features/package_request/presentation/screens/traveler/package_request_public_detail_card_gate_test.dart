@@ -111,6 +111,7 @@ void main() {
     PackageRequest request, {
     CardCapabilityGap? gap,
     StripeAccountState? stripeState,
+    String? profileCountry,
   }) async {
     final router = GoRouter(
       initialLocation: '/',
@@ -122,6 +123,7 @@ void main() {
               request: request,
               currentUserId: 'traveler-1',
               cardCapabilityGap: gap,
+              profileCountry: profileCountry,
             ),
           ),
         ),
@@ -226,15 +228,64 @@ void main() {
         );
 
         expect(
-          find.textContaining('Stripe ne permet pas encore de l\'activer'),
+          find.textContaining('dépend du pays de résidence'),
           findsOneWidget,
         );
 
         await tester.tap(find.byKey(const Key('propose-trip')));
         await tester.pumpAndSettle();
-        expect(find.text('Ton pays de profil : France'), findsOneWidget);
+        expect(
+          find.text('Votre pays de résidence (profil) : France'),
+          findsOneWidget,
+        );
       },
     );
+
+    testWidgets('pays de résidence non couvert : nommé, lien vers son réglage '
+        '(FLUTTER-EE)', (tester) async {
+      await pump(
+        tester,
+        _req(),
+        gap: CardCapabilityGap.countryUnsupported,
+        stripeState: stripeCountryUnavailableState,
+        profileCountry: 'CI',
+      );
+
+      expect(
+        find.text(
+          'Ce colis n\'accepte que la carte. L\'encaissement par carte '
+          'dépend du pays de résidence indiqué dans votre profil (Côte '
+          'd\'Ivoire), et non du pays où vous vous trouvez. Stripe ne le '
+          'permet pas encore depuis ce pays.',
+        ),
+        findsOneWidget,
+      );
+      final link = find.byKey(const Key('card-only-warning-country-link'));
+      await tester.ensureVisible(link);
+      await tester.pumpAndSettle();
+      await tester.tap(link);
+      await tester.pumpAndSettle();
+      expect(find.text('PREFS'), findsOneWidget);
+    });
+
+    testWidgets('pays non renseigné : lien « Renseigner mon pays »', (
+      tester,
+    ) async {
+      await pump(tester, _req(), gap: CardCapabilityGap.countryMissing);
+
+      expect(find.text('Renseigner mon pays'), findsOneWidget);
+    });
+
+    testWidgets('activation possible : pas de lien vers le pays', (
+      tester,
+    ) async {
+      await pump(tester, _req(), gap: CardCapabilityGap.activatable);
+
+      expect(
+        find.byKey(const Key('card-only-warning-country-link')),
+        findsNothing,
+      );
+    });
 
     testWidgets('offre déjà en cours : pas d\'avertissement', (tester) async {
       await pump(

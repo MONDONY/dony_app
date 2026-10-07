@@ -142,10 +142,13 @@ void main() {
         await tester.tap(find.byKey(const Key('open')));
         await tester.pumpAndSettle();
 
-        expect(find.text('Ton pays de profil : Sénégal'), findsOneWidget);
-        expect(find.text('Modifier mon pays'), findsOneWidget);
+        expect(
+          find.text('Votre pays de résidence (profil) : Sénégal'),
+          findsOneWidget,
+        );
+        expect(find.text('Modifier mon pays de résidence'), findsOneWidget);
 
-        await tester.tap(find.text('Modifier mon pays'));
+        await tester.tap(find.text('Modifier mon pays de résidence'));
         await tester.pumpAndSettle();
         expect(find.text('PREFS'), findsOneWidget);
         expect(find.text('Colis indisponible'), findsNothing);
@@ -214,8 +217,11 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Your profile country: France'), findsOneWidget);
-      expect(find.text('Change my country'), findsOneWidget);
+      expect(
+        find.text('Your country of residence (profile): France'),
+        findsOneWidget,
+      );
+      expect(find.text('Change my country of residence'), findsOneWidget);
     });
   });
 

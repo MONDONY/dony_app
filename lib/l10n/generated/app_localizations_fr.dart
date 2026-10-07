@@ -289,11 +289,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Renseigne ton pays dans Réglages, rubrique Préférences, avant de créer ton compte de paiement. Il détermine ta devise et ne pourra plus être modifié ensuite.';
 
   @override
-  String get errorCountryLockedTitle => 'Pays verrouillé';
+  String get errorCountryLockedTitle => 'Pays de résidence verrouillé';
 
   @override
   String get errorCountryLockedMessage =>
-      'Impossible de changer de pays : un envoi est en cours, ton portefeuille n\'est pas vide, ou ton compte de paiement est déjà créé.';
+      'Impossible de modifier votre pays de résidence : un envoi est en cours, votre portefeuille n\'est pas vide, ou votre compte de paiement est déjà créé. Contactez le support pour le faire modifier.';
 
   @override
   String get errorCountryUnsupportedTitle => 'Pays non desservi';
@@ -364,11 +364,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce voyageur ne reçoit que des profils vérifiés. Vérifie ton identité pour lui envoyer une demande.';
 
   @override
-  String get errorBidNotAcceptedTitle => 'Demande non acceptée';
+  String get errorBidNotAcceptedTitle => 'Étape impossible pour ce colis';
 
   @override
   String get errorBidNotAcceptedMessage =>
-      'Cette demande doit être acceptée par le voyageur avant cette étape.';
+      'Ce colis n\'est pas à une étape qui permet cette action. Son statut a peut-être changé entre-temps (trajet marqué arrivé, colis livré ou annulé).';
 
   @override
   String get errorBidNotDeliveredTitle => 'Colis non livré';
@@ -2839,7 +2839,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishCashOnlyBannerNoConnect =>
-      'Le paiement par carte n\'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.';
+      'Le paiement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.';
+
+  @override
+  String tripPublishCashOnlyBannerNoConnectCountry(String country) {
+    return 'Le paiement par carte dépend du pays de résidence indiqué dans votre profil ($country), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.';
+  }
 
   @override
   String get tripPublishActivateCardPaymentsCta =>
@@ -6674,7 +6679,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationCardCapabilityUnavailableBody =>
-      'L\'expéditeur n\'accepte que le paiement par carte pour ce colis, et Stripe ne permet pas encore d\'ouvrir un compte de paiement depuis ton pays. Tu peux lier les colis payés en espèces.';
+      'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. L\'encaissement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez : Stripe ne permet pas encore d\'ouvrir un compte de paiement depuis ce pays. Vous pouvez lier les colis payés en espèces.';
 
   @override
   String get negotiationCardCapabilityActivateButton =>
@@ -6692,12 +6697,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String negotiationCardCapabilityProfileCountry(String country) {
-    return 'Ton pays de profil : $country';
+    return 'Votre pays de résidence (profil) : $country';
   }
 
   @override
   String get negotiationCardCapabilityChangeCountryButton =>
-      'Modifier mon pays';
+      'Modifier mon pays de résidence';
 
   @override
   String get requestPublicCardOnlyWarning =>
@@ -6709,7 +6714,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPublicCardOnlyWarningCountryUnsupported =>
-      'Ce colis n\'accepte que la carte, et Stripe ne permet pas encore de l\'activer depuis ton pays.';
+      'Ce colis n\'accepte que la carte. L\'encaissement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le permet pas encore depuis ce pays.';
+
+  @override
+  String requestPublicCardOnlyWarningResidenceCountry(String country) {
+    return 'Ce colis n\'accepte que la carte. L\'encaissement par carte dépend du pays de résidence indiqué dans votre profil ($country), et non du pays où vous vous trouvez. Stripe ne le permet pas encore depuis ce pays.';
+  }
 
   @override
   String negotiationCardRoundShortLabel(int round, String timeAgo) {
@@ -6795,7 +6805,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String bidDetailSenderEscrowedSubtitle(String amount) {
-    return '$amount séquestrés. En attente de remise.';
+    return '$amount séquestrés. En attente de la réponse du voyageur.';
   }
 
   @override
@@ -12493,11 +12503,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get prefsSectionCurrency => 'DEVISE';
 
   @override
-  String get prefsCountryLabel => 'Pays';
+  String get prefsCountryLabel => 'Pays de résidence';
 
   @override
   String get prefsCountryLockedSubtitle =>
-      'Verrouillé : un envoi est en cours ou votre compte de paiement est créé';
+      'Verrouillé : envoi en cours, portefeuille non vide ou compte de paiement créé';
+
+  @override
+  String get prefsCountryLockedSupportCta => 'Contacter le support';
 
   @override
   String get prefsCountryPlaceholder => 'Choisir mon pays';
@@ -15033,6 +15046,14 @@ class AppLocalizationsFr extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String suiviTransitTripArrived(String parcel) {
+    return 'Trajet déjà marqué arrivé : le transit de $parcel n\'est plus possible. Il ne reste que la remise au destinataire.';
+  }
+
+  @override
+  String get suiviForceTransitTripArrived => 'Trajet déjà marqué arrivé';
 
   @override
   String get trackingReadOnlyLabel => 'Suivi en lecture seule';

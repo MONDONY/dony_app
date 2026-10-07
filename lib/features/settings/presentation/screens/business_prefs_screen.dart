@@ -109,9 +109,14 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                               color: cs.onSurfaceVariant,
                             ),
                           ),
-                          enabled: !state.countryLocked,
-                          onTap: () =>
-                              unawaited(_openCountryPicker(context, state)),
+                          // Verrouillé, la ligne reste touchable : elle
+                          // explique pourquoi et oriente vers le support,
+                          // seul recours (FLUTTER-EE, comme la devise).
+                          onTap: () => unawaited(
+                            state.countryLocked
+                                ? _showCountryLockedSheet(context)
+                                : _openCountryPicker(context, state),
+                          ),
                         ),
                         DonyListTile(
                           iconAsset: 'euro',
@@ -285,6 +290,38 @@ Future<void> _showCurrencyLockedSheet(
       children: [
         Text(
           l.prefsCurrencyLockedSheetBody(state.currencyCode),
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Pourquoi le pays de résidence est figé (envoi en cours, portefeuille non
+/// vide, compte de paiement créé) et qui peut le changer : le support.
+Future<void> _showCountryLockedSheet(BuildContext context) {
+  final l = context.l10n;
+  final tt = Theme.of(context).textTheme;
+  final cs = Theme.of(context).colorScheme;
+  return DonyBottomSheet.show<void>(
+    context,
+    title: l.errorCountryLockedTitle,
+    stickyBottom: Builder(
+      builder: (sheetContext) => DonyButton(
+        key: const Key('prefs-country-locked-support'),
+        label: l.prefsCountryLockedSupportCta,
+        onPressed: () {
+          Navigator.of(sheetContext).pop();
+          unawaited(context.push('/support'));
+        },
+      ),
+    ),
+    child: Column(
+      key: const Key('prefs-country-locked-sheet'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.errorCountryLockedMessage,
           style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],

@@ -286,11 +286,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set your country in Settings, under Preferences, before creating your payment account. It sets your currency and can\'t be changed afterwards.';
 
   @override
-  String get errorCountryLockedTitle => 'Country locked';
+  String get errorCountryLockedTitle => 'Country of residence locked';
 
   @override
   String get errorCountryLockedMessage =>
-      'You can\'t change your country: a parcel is in progress, your wallet isn\'t empty, or your payment account is already set up.';
+      'You can\'t change your country of residence: a parcel is in progress, your wallet isn\'t empty, or your payment account is already set up. Contact support to have it changed.';
 
   @override
   String get errorCountryUnsupportedTitle => 'Country not served';
@@ -361,11 +361,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This traveler only accepts verified profiles. Verify your identity to send them a request.';
 
   @override
-  String get errorBidNotAcceptedTitle => 'Request not accepted';
+  String get errorBidNotAcceptedTitle => 'Step not possible for this parcel';
 
   @override
   String get errorBidNotAcceptedMessage =>
-      'The traveler must accept this request before this step.';
+      'This parcel isn\'t at a stage that allows this action. Its status may have changed in the meantime (trip marked as arrived, parcel delivered or cancelled).';
 
   @override
   String get errorBidNotDeliveredTitle => 'Parcel not delivered';
@@ -2827,7 +2827,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCashOnlyBannerNoConnect =>
-      'Card payment isn\'t available in your country yet. Your trips are posted in cash.';
+      'Card payment depends on the country of residence in your profile, not on the country you\'re in. Stripe doesn\'t cover it yet: your trips are posted in cash.';
+
+  @override
+  String tripPublishCashOnlyBannerNoConnectCountry(String country) {
+    return 'Card payment depends on the country of residence in your profile ($country), not on the country you\'re in. Stripe doesn\'t cover it yet: your trips are posted in cash.';
+  }
 
   @override
   String get tripPublishActivateCardPaymentsCta => 'Activate card payments';
@@ -6639,7 +6644,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get negotiationCardCapabilityUnavailableBody =>
-      'The sender only accepts card payment for this parcel, and Stripe doesn\'t yet support opening a payment account from your country. You can link parcels paid in cash.';
+      'The sender only accepts card payment for this parcel. Receiving card payments depends on the country of residence in your profile, not on the country you\'re in: Stripe doesn\'t yet support opening a payment account from that country. You can link parcels paid in cash.';
 
   @override
   String get negotiationCardCapabilityActivateButton =>
@@ -6657,12 +6662,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String negotiationCardCapabilityProfileCountry(String country) {
-    return 'Your profile country: $country';
+    return 'Your country of residence (profile): $country';
   }
 
   @override
   String get negotiationCardCapabilityChangeCountryButton =>
-      'Change my country';
+      'Change my country of residence';
 
   @override
   String get requestPublicCardOnlyWarning =>
@@ -6674,7 +6679,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestPublicCardOnlyWarningCountryUnsupported =>
-      'This parcel only accepts card payment, and Stripe doesn\'t support activating it from your country yet.';
+      'This parcel only accepts card payment. Receiving card payments depends on the country of residence in your profile, not on the country you\'re in. Stripe doesn\'t support it from that country yet.';
+
+  @override
+  String requestPublicCardOnlyWarningResidenceCountry(String country) {
+    return 'This parcel only accepts card payment. Receiving card payments depends on the country of residence in your profile ($country), not on the country you\'re in. Stripe doesn\'t support it from that country yet.';
+  }
 
   @override
   String negotiationCardRoundShortLabel(int round, String timeAgo) {
@@ -6760,7 +6770,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String bidDetailSenderEscrowedSubtitle(String amount) {
-    return '$amount on hold. Awaiting drop-off.';
+    return '$amount on hold. Waiting for the traveler\'s reply.';
   }
 
   @override
@@ -12416,11 +12426,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prefsSectionCurrency => 'CURRENCY';
 
   @override
-  String get prefsCountryLabel => 'Country';
+  String get prefsCountryLabel => 'Country of residence';
 
   @override
   String get prefsCountryLockedSubtitle =>
-      'Locked: a shipment is in progress or your payment account has been created';
+      'Locked: a shipment is in progress, your wallet isn\'t empty or your payment account has been created';
+
+  @override
+  String get prefsCountryLockedSupportCta => 'Contact support';
 
   @override
   String get prefsCountryPlaceholder => 'Choose my country';
@@ -14944,6 +14957,14 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String suiviTransitTripArrived(String parcel) {
+    return 'Trip already marked as arrived: the transit step for $parcel is no longer possible. Only the hand-over to the recipient remains.';
+  }
+
+  @override
+  String get suiviForceTransitTripArrived => 'Trip already marked as arrived';
 
   @override
   String get trackingReadOnlyLabel => 'Read-only tracking';

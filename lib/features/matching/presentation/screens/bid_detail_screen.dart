@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -100,8 +101,18 @@ class _BidDetailViewState extends State<_BidDetailView> {
 
   late BidModel _bid;
   bool _skeletonLoading = false;
+
+  /// Dernier identifiant d'utilisateur connecté vu par cet écran
+  /// (FLUTTER-E5). L'AuthBloc passe par des états transitoires sans profil
+  /// (`AuthLoading` d'un rafraîchissement, `AuthError` d'une action annexe,
+  /// `AuthOtpSent` d'un ajout d'e-mail…) pendant lesquels l'utilisateur reste
+  /// connecté : sans ce relais, l'expéditeur basculait sur la vue voyageur
+  /// avec un bouton « Accepter ». Même mécanisme que `_lastUser` de
+  /// `ProfileScreen`. Effacé seulement par un état de déconnexion franche.
+  String? _lastUserId;
   Timer? _refreshTimer;
   StreamSubscription<Map<String, dynamic>>? _pushSub;
+  StreamSubscription<String>? _arrivalSub;
 
   final _existingPaymentNotifier = ValueNotifier<PaymentModel?>(null);
   final _paymentLoadedNotifier = ValueNotifier<bool>(false);
@@ -111,6 +122,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
     super.initState();
     _bid = widget.initialBid;
     _skeletonLoading = _bid.isSkeleton;
+    _lastUserId = context.read<AuthBloc>().state.currentUserId;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
     _loadPaymentStatus();
     if (_kPollingStatuses.contains(_bid.status)) {
@@ -120,6 +132,16 @@ class _BidDetailViewState extends State<_BidDetailView> {
       _pushSub = getIt<NotificationService>().foregroundPushStream.listen(
         _onForegroundPush,
       );
+    }
+    // Trajet marqué arrivé (depuis la barre de remise ou la fiche trajet) :
+    // le colis passe en ARRIVED. Relu aussitôt, sinon la barre proposait
+    // encore le scan Transit, refusé en 422 par le serveur (FLUTTER-D6).
+    if (getIt.isRegistered<TripArrivalEventsService>()) {
+      _arrivalSub = getIt<TripArrivalEventsService>().arrivals.listen((id) {
+        if (mounted && id == _bid.announcementId) {
+          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+        }
+      });
     }
   }
 
@@ -146,6 +168,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
   void dispose() {
     _refreshTimer?.cancel();
     unawaited(_pushSub?.cancel());
+    unawaited(_arrivalSub?.cancel());
     _existingPaymentNotifier.dispose();
     _paymentLoadedNotifier.dispose();
     super.dispose();
@@ -306,6 +329,25 @@ class _BidDetailViewState extends State<_BidDetailView> {
       ),
     );
   }
+
+  /// Identifiant de l'utilisateur courant, robuste aux états transitoires de
+  /// l'AuthBloc (voir [_lastUserId]). `null` uniquement si aucun utilisateur
+  /// n'a jamais été vu ou après une déconnexion.
+  String? _resolveViewerId(AuthState authState) {
+    final id = authState.currentUserId;
+    if (id != null) {
+      return _lastUserId = id;
+    }
+    if (_isSignedOut(authState)) {
+      return _lastUserId = null;
+    }
+    return _lastUserId;
+  }
+
+  static bool _isSignedOut(AuthState state) =>
+      state is AuthInitial ||
+      state is AuthAccountDeleted ||
+      state is AuthGuestSessionReady;
 
   @override
   Widget build(BuildContext context) {
@@ -523,19 +565,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
               },
               builder: (context, state) {
                 final isLoading = state is BidLoading;
-                final authState = context.read<AuthBloc>().state;
-                // Résoudre l'utilisateur courant depuis AuthAuthenticated ET
-                // AuthProfileUpdated (émis après édition profil / upload photo) :
-                // sans ce dernier, l'expéditeur était traité comme voyageur après
-                // une mise à jour de profil → mauvais body (carte EXPÉDITEUR au lieu
-                // de VOYAGEUR), mauvaise sticky bar et menu options.
-                final currentUser = authState is AuthAuthenticated
-                    ? authState.user
-                    : authState is AuthProfileUpdated
-                    ? authState.user
-                    : null;
-                final isSender =
-                    currentUser != null && currentUser.id == _bid.senderId;
+                // Utilisateur courant résolu quel que soit l'état de
+                // l'AuthBloc (AuthProfileUpdated, puis états transitoires,
+                // FLUTTER-E5) : sinon l'expéditeur voyait la vue voyageur
+                // (mauvais body, sticky bar « Accepter », menu options).
+                final viewerId = _resolveViewerId(
+                  context.watch<AuthBloc>().state,
+                );
+                final isSender = viewerId != null && viewerId == _bid.senderId;
 
                 // Derive bid code from tracking number or id
                 final bidCode =
