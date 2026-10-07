@@ -361,11 +361,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This traveler only accepts verified profiles. Verify your identity to send them a request.';
 
   @override
-  String get errorBidNotAcceptedTitle => 'Request not accepted';
+  String get errorBidNotAcceptedTitle => 'Step not possible for this parcel';
 
   @override
   String get errorBidNotAcceptedMessage =>
-      'The traveler must accept this request before this step.';
+      'This parcel isn\'t at a stage that allows this action. Its status may have changed in the meantime (trip marked as arrived, parcel delivered or cancelled).';
 
   @override
   String get errorBidNotDeliveredTitle => 'Parcel not delivered';
@@ -14944,6 +14944,14 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String suiviTransitTripArrived(String parcel) {
+    return 'Trip already marked as arrived: the transit step for $parcel is no longer possible. Only the hand-over to the recipient remains.';
+  }
+
+  @override
+  String get suiviForceTransitTripArrived => 'Trip already marked as arrived';
 
   @override
   String get trackingReadOnlyLabel => 'Read-only tracking';

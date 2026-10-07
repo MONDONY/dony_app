@@ -695,6 +695,24 @@ void main() {
       expect(c.state.effectId, id);
     });
 
+    test(
+      'transit forcé sur un colis ARRIVED → trajet déjà arrivé (FLUTTER-D6)',
+      () {
+        final arrivedHub = _hub(
+          bidsByTrip: {
+            'trip-a': [_bid('arrived', 'ARRIVED')],
+          },
+        );
+        final c = validating()
+          ..forceStep('TRANSIT')
+          ..onQrScanned('arrived', arrivedHub);
+        final effect = c.state.effect! as SuiviStepTripArrived;
+        expect(effect.bid.id, 'arrived');
+        // Rien n'est parti au serveur : l'étape forcée reste à consommer.
+        expect(c.state.forcedStep, 'TRANSIT');
+      },
+    );
+
     test('départ forcé : départ du colis, déjà fait → message', () {
       final c = validating()
         ..forceStep('DEPART')

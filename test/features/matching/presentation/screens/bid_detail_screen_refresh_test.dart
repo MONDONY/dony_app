@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -328,6 +329,46 @@ void main() {
 
       await tester.pumpWidget(const SizedBox());
       expect(pushes.hasListener, isFalse);
+    });
+  });
+
+  group('FLUTTER-D6 — trajet marqué arrivé', () {
+    late TripArrivalEventsService arrivals;
+
+    setUp(() {
+      arrivals = TripArrivalEventsService();
+      getIt.registerSingleton<TripArrivalEventsService>(arrivals);
+    });
+
+    tearDown(() async {
+      getIt.unregister<TripArrivalEventsService>();
+      await arrivals.dispose();
+    });
+
+    testWidgets('trajet de ce colis → relecture immédiate', (tester) async {
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'REJECTED'),
+        authBloc: senderAuth(),
+      );
+      expect(detailRequests(), 1);
+
+      arrivals.notifyArrived('ann-001');
+      await tester.pump();
+      expect(detailRequests(), 1);
+    });
+
+    testWidgets('autre trajet → ignoré', (tester) async {
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'REJECTED'),
+        authBloc: senderAuth(),
+      );
+      expect(detailRequests(), 1);
+
+      arrivals.notifyArrived('ann-999');
+      await tester.pump();
+      noDetailRequest();
     });
   });
 }

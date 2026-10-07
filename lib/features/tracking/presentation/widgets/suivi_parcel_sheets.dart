@@ -337,18 +337,27 @@ class _RecapRow extends StatelessWidget {
 
 /// « Forcer une étape » : rattrapage d'un oubli. Rend l'étape choisie
 /// (`DEPART`/`TRANSIT`/`ARRIVEE`), `null` si la feuille est fermée.
-Future<String?> showSuiviForceStepSheet(BuildContext context) {
+///
+/// [transitClosed] : trajet déjà marqué arrivé ([transitClosedByArrival]).
+/// Le transit reste listé mais grisé, avec la raison, plutôt que d'aboutir
+/// à un refus du serveur (FLUTTER-D6).
+Future<String?> showSuiviForceStepSheet(
+  BuildContext context, {
+  bool transitClosed = false,
+}) {
   final l = context.l10n;
   return DonyBottomSheet.show<String>(
     context,
     title: l.suiviForceStep,
     subtitle: l.suiviStepModeHelp,
-    child: const _ForceStepChoices(),
+    child: _ForceStepChoices(transitClosed: transitClosed),
   );
 }
 
 class _ForceStepChoices extends StatelessWidget {
-  const _ForceStepChoices();
+  const _ForceStepChoices({required this.transitClosed});
+
+  final bool transitClosed;
 
   // Codes d'étape envoyés au back, jamais affichés (i18n-ignore).
   static const _steps = ['DEPART', 'TRANSIT', 'ARRIVEE'];
@@ -362,39 +371,56 @@ class _ForceStepChoices extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (final step in _steps)
-          InkWell(
-            key: Key('suivi-force-$step'),
-            borderRadius: BorderRadius.circular(DonyRadius.lg),
-            onTap: () => Navigator.of(context).pop(step),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(trackingStepLabel(l, step), style: tt.titleMedium),
-                        // Seul le transit est facultatif : départ et remise
-                        // restent obligatoires.
-                        if (step == 'TRANSIT')
-                          Text(
-                            l.trackingStepOptional,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
+          Builder(
+            builder: (context) {
+              final disabled = step == 'TRANSIT' && transitClosed;
+              return InkWell(
+                key: Key('suivi-force-$step'),
+                borderRadius: BorderRadius.circular(DonyRadius.lg),
+                onTap: disabled ? null : () => Navigator.of(context).pop(step),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              trackingStepLabel(l, step),
+                              style: tt.titleMedium?.copyWith(
+                                color: disabled ? cs.onSurfaceVariant : null,
+                              ),
                             ),
-                          ),
-                      ],
-                    ),
+                            // Seul le transit est facultatif : départ et
+                            // remise restent obligatoires. Trajet arrivé :
+                            // la raison remplace la mention.
+                            if (step == 'TRANSIT')
+                              Text(
+                                disabled
+                                    ? l.suiviForceTransitTripArrived
+                                    : l.trackingStepOptional,
+                                key: disabled
+                                    ? const Key('suivi-force-transit-closed')
+                                    : null,
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (!disabled)
+                        DonyIcon(
+                          'chevron-right',
+                          size: 18,
+                          color: cs.onSurfaceVariant,
+                        ),
+                    ],
                   ),
-                  DonyIcon(
-                    'chevron-right',
-                    size: 18,
-                    color: cs.onSurfaceVariant,
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
       ],
     );

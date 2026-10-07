@@ -364,11 +364,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce voyageur ne reçoit que des profils vérifiés. Vérifie ton identité pour lui envoyer une demande.';
 
   @override
-  String get errorBidNotAcceptedTitle => 'Demande non acceptée';
+  String get errorBidNotAcceptedTitle => 'Étape impossible pour ce colis';
 
   @override
   String get errorBidNotAcceptedMessage =>
-      'Cette demande doit être acceptée par le voyageur avant cette étape.';
+      'Ce colis n\'est pas à une étape qui permet cette action. Son statut a peut-être changé entre-temps (trajet marqué arrivé, colis livré ou annulé).';
 
   @override
   String get errorBidNotDeliveredTitle => 'Colis non livré';
@@ -15033,6 +15033,14 @@ class AppLocalizationsFr extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String suiviTransitTripArrived(String parcel) {
+    return 'Trajet déjà marqué arrivé : le transit de $parcel n\'est plus possible. Il ne reste que la remise au destinataire.';
+  }
+
+  @override
+  String get suiviForceTransitTripArrived => 'Trajet déjà marqué arrivé';
 
   @override
   String get trackingReadOnlyLabel => 'Suivi en lecture seule';

@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -1649,6 +1650,54 @@ void main() {
         isA<AnnouncementTripArrived>(),
       ],
     );
+
+    test(
+      'marquage réussi → trajet diffusé aux écrans ouverts (FLUTTER-D6)',
+      () async {
+        when(
+          () => mockRepo.markTripArrived(announcementId: 'a1'),
+        ).thenAnswer((_) async => buildAnnouncement());
+        final events = TripArrivalEventsService();
+        addTearDown(events.dispose);
+        final received = <String>[];
+        final sub = events.arrivals.listen(received.add);
+        addTearDown(sub.cancel);
+        final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
+        await analytics.onConfigured();
+        final bloc = AnnouncementBloc(
+          mockRepo,
+          analytics,
+          tripArrivalEvents: events,
+        )..add(AnnouncementTripMarkArrivedRequested(announcementId: 'a1'));
+        await expectLater(
+          bloc.stream,
+          emitsThrough(isA<AnnouncementTripArrived>()),
+        );
+        await bloc.close();
+        expect(received, ['a1']);
+      },
+    );
+
+    test('échec du marquage → rien n\'est diffusé', () async {
+      when(
+        () => mockRepo.markTripArrived(announcementId: 'a1'),
+      ).thenThrow(Exception('Server error'));
+      final events = TripArrivalEventsService();
+      addTearDown(events.dispose);
+      final received = <String>[];
+      final sub = events.arrivals.listen(received.add);
+      addTearDown(sub.cancel);
+      final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
+      await analytics.onConfigured();
+      final bloc = AnnouncementBloc(
+        mockRepo,
+        analytics,
+        tripArrivalEvents: events,
+      )..add(AnnouncementTripMarkArrivedRequested(announcementId: 'a1'));
+      await expectLater(bloc.stream, emitsThrough(isA<AnnouncementError>()));
+      await bloc.close();
+      expect(received, isEmpty);
+    });
 
     blocTest<AnnouncementBloc, AnnouncementState>(
       'marquage sans instructions → [Loading, AnnouncementTripArrived]',

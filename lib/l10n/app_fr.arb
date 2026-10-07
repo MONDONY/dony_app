@@ -114,8 +114,8 @@
   "errorBidNotFoundMessage": "Cette demande n'existe plus.",
   "errorContactKycRequiredTitle": "Profil vérifié requis",
   "errorContactKycRequiredMessage": "Ce voyageur ne reçoit que des profils vérifiés. Vérifie ton identité pour lui envoyer une demande.",
-  "errorBidNotAcceptedTitle": "Demande non acceptée",
-  "errorBidNotAcceptedMessage": "Cette demande doit être acceptée par le voyageur avant cette étape.",
+  "errorBidNotAcceptedTitle": "Étape impossible pour ce colis",
+  "errorBidNotAcceptedMessage": "Ce colis n'est pas à une étape qui permet cette action. Son statut a peut-être changé entre-temps (trajet marqué arrivé, colis livré ou annulé).",
   "errorBidNotDeliveredTitle": "Colis non livré",
   "errorBidNotDeliveredMessage": "Cette action nécessite que le colis ait été livré.",
   "errorCallInProgressTitle": "Appel déjà en cours",
@@ -17170,6 +17170,19 @@
         "type": "String"
       }
     }
+  },
+  "suiviTransitTripArrived": "Trajet déjà marqué arrivé : le transit de {parcel} n'est plus possible. Il ne reste que la remise au destinataire.",
+  "@suiviTransitTripArrived": {
+    "description": "Transit forcé sur un colis dont le trajet est déjà marqué arrivé (ARRIVED), refusé par le serveur (suivi_screen.dart, FLUTTER-D6).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviForceTransitTripArrived": "Trajet déjà marqué arrivé",
+  "@suiviForceTransitTripArrived": {
+    "description": "Raison affichée sous l'étape Transit grisée de « Forcer une étape » quand le trajet est déjà marqué arrivé (suivi_parcel_sheets.dart, FLUTTER-D6)."
   },
   "trackingReadOnlyLabel": "Suivi en lecture seule",
   "@trackingReadOnlyLabel": {

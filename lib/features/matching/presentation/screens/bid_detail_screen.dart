@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -111,6 +112,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
   String? _lastUserId;
   Timer? _refreshTimer;
   StreamSubscription<Map<String, dynamic>>? _pushSub;
+  StreamSubscription<String>? _arrivalSub;
 
   final _existingPaymentNotifier = ValueNotifier<PaymentModel?>(null);
   final _paymentLoadedNotifier = ValueNotifier<bool>(false);
@@ -130,6 +132,16 @@ class _BidDetailViewState extends State<_BidDetailView> {
       _pushSub = getIt<NotificationService>().foregroundPushStream.listen(
         _onForegroundPush,
       );
+    }
+    // Trajet marqué arrivé (depuis la barre de remise ou la fiche trajet) :
+    // le colis passe en ARRIVED. Relu aussitôt, sinon la barre proposait
+    // encore le scan Transit, refusé en 422 par le serveur (FLUTTER-D6).
+    if (getIt.isRegistered<TripArrivalEventsService>()) {
+      _arrivalSub = getIt<TripArrivalEventsService>().arrivals.listen((id) {
+        if (mounted && id == _bid.announcementId) {
+          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+        }
+      });
     }
   }
 
@@ -156,6 +168,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
   void dispose() {
     _refreshTimer?.cancel();
     unawaited(_pushSub?.cancel());
+    unawaited(_arrivalSub?.cancel());
     _existingPaymentNotifier.dispose();
     _paymentLoadedNotifier.dispose();
     super.dispose();

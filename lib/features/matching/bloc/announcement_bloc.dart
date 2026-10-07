@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -16,8 +17,16 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   final AnnouncementRepository _repository;
   final AnalyticsService _analytics;
 
-  AnnouncementBloc(this._repository, this._analytics)
-    : super(AnnouncementInitial()) {
+  /// Prévient les écrans déjà ouverts qu'un trajet vient d'être marqué
+  /// arrivé (FLUTTER-D6). Facultatif : absent dans les tests unitaires.
+  final TripArrivalEventsService? _tripArrivalEvents;
+
+  AnnouncementBloc(
+    this._repository,
+    this._analytics, {
+    TripArrivalEventsService? tripArrivalEvents,
+  }) : _tripArrivalEvents = tripArrivalEvents,
+       super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
     on<AnnouncementPublishRequested>(_onPublishRequested);
     on<AnnouncementUnpublishRequested>(_onUnpublishRequested);
@@ -405,7 +414,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       announcementId: event.announcementId,
       arrivalInstructions: event.arrivalInstructions,
     ),
-    onSuccess: AnnouncementTripArrived.new,
+    onSuccess: (announcement) {
+      _tripArrivalEvents?.notifyArrived(event.announcementId);
+      return AnnouncementTripArrived(announcement);
+    },
     analyticsEvent: AnalyticsEvents.tripMarkedArrived,
   );
 

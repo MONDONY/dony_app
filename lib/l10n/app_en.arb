@@ -102,8 +102,8 @@
   "errorBidNotFoundMessage": "This parcel request no longer exists.",
   "errorContactKycRequiredTitle": "Verified profile required",
   "errorContactKycRequiredMessage": "This traveler only accepts verified profiles. Verify your identity to send them a request.",
-  "errorBidNotAcceptedTitle": "Request not accepted",
-  "errorBidNotAcceptedMessage": "The traveler must accept this request before this step.",
+  "errorBidNotAcceptedTitle": "Step not possible for this parcel",
+  "errorBidNotAcceptedMessage": "This parcel isn't at a stage that allows this action. Its status may have changed in the meantime (trip marked as arrived, parcel delivered or cancelled).",
   "errorBidNotDeliveredTitle": "Parcel not delivered",
   "errorBidNotDeliveredMessage": "The parcel must be delivered before you can do this.",
   "errorCallInProgressTitle": "Call already in progress",
@@ -8300,6 +8300,19 @@
         "type": "String"
       }
     }
+  },
+  "suiviTransitTripArrived": "Trip already marked as arrived: the transit step for {parcel} is no longer possible. Only the hand-over to the recipient remains.",
+  "@suiviTransitTripArrived": {
+    "description": "Transit forcé sur un colis dont le trajet est déjà marqué arrivé (ARRIVED), refusé par le serveur (suivi_screen.dart, FLUTTER-D6).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviForceTransitTripArrived": "Trip already marked as arrived",
+  "@suiviForceTransitTripArrived": {
+    "description": "Raison affichée sous l'étape Transit grisée de « Forcer une étape » quand le trajet est déjà marqué arrivé (suivi_parcel_sheets.dart, FLUTTER-D6)."
   },
   "trackingReadOnlyLabel": "Read-only tracking",
   "@trackingReadOnlyLabel": {

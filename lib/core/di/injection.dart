@@ -16,6 +16,7 @@ import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
+import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
@@ -469,6 +470,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AnnouncementBloc(
       getIt<AnnouncementRepository>(),
       getIt<AnalyticsService>(),
+      tripArrivalEvents: getIt<TripArrivalEventsService>(),
     ),
   );
   getIt.registerFactory<TripsSummaryCubit>(
@@ -874,6 +876,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Singleton : c'est le canal par lequel les écrans déjà ouverts apprennent
   // qu'un blocage vient d'avoir lieu ailleurs dans l'application.
   getIt.registerLazySingleton<BlockEventsService>(() => BlockEventsService());
+  // Singleton : trajet marqué arrivé depuis un écran, relu par le hub Scan &
+  // Suivi et le détail d'un colis déjà ouverts (FLUTTER-D6).
+  getIt.registerLazySingleton<TripArrivalEventsService>(
+    TripArrivalEventsService.new,
+  );
   getIt.registerLazySingleton<BlockedUsersDatasource>(
     () => BlockedUsersDatasource(getIt<ApiClient>()),
   );
@@ -1024,6 +1031,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<BidRepository>(),
       getIt<AnalyticsService>(),
       getIt<TrackingRepository>(),
+      tripArrivalEvents: getIt<TripArrivalEventsService>(),
     ),
   );
 

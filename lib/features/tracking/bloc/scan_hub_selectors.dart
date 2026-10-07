@@ -89,3 +89,12 @@ String? nextRequiredStep(BidModel bid) {
   transit: _transitStatuses.contains(bid.status),
   arrivee: _arrivedStatuses.contains(bid.status),
 );
+
+/// Trajet déjà marqué arrivé, transit fermé : au moins un colis `ARRIVED` et
+/// plus aucun colis récupéré qui pourrait encore passer en transit
+/// (`HANDED_OVER`). Le serveur refuse le scan Transit d'un colis `ARRIVED`
+/// (422 « Ce colis n'est pas dans un état scannable », Sentry FLUTTER-D6) :
+/// « Forcer une étape » ne le propose plus.
+bool transitClosedByArrival(List<BidModel> bids) =>
+    bids.any((b) => b.status == 'ARRIVED') &&
+    !bids.any((b) => b.status == 'HANDED_OVER');

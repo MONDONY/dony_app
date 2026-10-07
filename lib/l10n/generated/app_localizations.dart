@@ -713,13 +713,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorBidNotAcceptedTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Demande non acceptée'**
+  /// **'Étape impossible pour ce colis'**
   String get errorBidNotAcceptedTitle;
 
   /// No description provided for @errorBidNotAcceptedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Cette demande doit être acceptée par le voyageur avant cette étape.'**
+  /// **'Ce colis n\'est pas à une étape qui permet cette action. Son statut a peut-être changé entre-temps (trajet marqué arrivé, colis livré ou annulé).'**
   String get errorBidNotAcceptedMessage;
 
   /// No description provided for @errorBidNotDeliveredTitle.
@@ -24769,6 +24769,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{step, select, DEPART{La récupération de {parcel} est déjà validée.} other{Le transit de {parcel} est déjà validé.}}'**
   String suiviStepAlreadyDone(String step, String parcel);
+
+  /// Transit forcé sur un colis dont le trajet est déjà marqué arrivé (ARRIVED), refusé par le serveur (suivi_screen.dart, FLUTTER-D6).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet déjà marqué arrivé : le transit de {parcel} n\'est plus possible. Il ne reste que la remise au destinataire.'**
+  String suiviTransitTripArrived(String parcel);
+
+  /// Raison affichée sous l'étape Transit grisée de « Forcer une étape » quand le trajet est déjà marqué arrivé (suivi_parcel_sheets.dart, FLUTTER-D6).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet déjà marqué arrivé'**
+  String get suiviForceTransitTripArrived;
 
   /// En-tête de la feuille du parcours d'un colis, avec l'icône œil (tracking_timeline_bottom_sheet.dart).
   ///

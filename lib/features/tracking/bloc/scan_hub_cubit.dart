@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -72,8 +73,24 @@ class ScanHubCubit extends Cubit<ScanHubState> {
     this._announcementRepo,
     this._bidRepo,
     this._analytics,
-    this._trackingRepo,
-  ) : super(const ScanHubLoading());
+    this._trackingRepo, {
+    TripArrivalEventsService? tripArrivalEvents,
+  }) : super(const ScanHubLoading()) {
+    // Trajet marqué arrivé ailleurs (fiche trajet, détail d'un colis) : ses
+    // colis sont passés en ARRIVED. Sans relecture, le hub proposait encore
+    // le transit, refusé en 422 par le serveur (FLUTTER-D6).
+    _arrivalSub = tripArrivalEvents?.arrivals.listen(
+      (_) => unawaited(load(silent: true)),
+    );
+  }
+
+  StreamSubscription<String>? _arrivalSub;
+
+  @override
+  Future<void> close() async {
+    await _arrivalSub?.cancel();
+    return super.close();
+  }
 
   final AnnouncementRepository _announcementRepo;
   final BidRepository _bidRepo;

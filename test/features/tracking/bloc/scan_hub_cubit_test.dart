@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -919,5 +920,66 @@ void main() {
       scanHistory: const [],
     );
     expect(allDone.hasParcelToValidate, isFalse);
+  });
+
+  group('trajet marqué arrivé ailleurs (FLUTTER-D6)', () {
+    test('relit les colis en silence : le transit disparaît', () async {
+      var status = 'HANDED_OVER';
+      when(() => annRepo.getMyAnnouncements()).thenAnswer(
+        (_) async =>
+            (announcements: [_trip('a', 'IN_PROGRESS')], totalElements: 1),
+      );
+      when(
+        () => bidRepo.getBidsForAnnouncement('a'),
+      ).thenAnswer((_) async => [_bid('b1', status)]);
+      when(
+        () => trackingRepo.getTripScanHistory('a'),
+      ).thenAnswer((_) async => []);
+      final events = TripArrivalEventsService();
+      addTearDown(events.dispose);
+      final cubit = ScanHubCubit(
+        annRepo,
+        bidRepo,
+        analytics,
+        trackingRepo,
+        tripArrivalEvents: events,
+      );
+      addTearDown(cubit.close);
+      await cubit.load();
+      expect(
+        (cubit.state as ScanHubLoaded).selectedTripBids.single.status,
+        'HANDED_OVER',
+      );
+
+      status = 'ARRIVED';
+      final states = <ScanHubState>[];
+      final sub = cubit.stream.listen(states.add);
+      addTearDown(sub.cancel);
+      events.notifyArrived('a');
+      await pumpEventQueue();
+
+      // Rechargement silencieux : pas d'état de chargement intermédiaire.
+      expect(states.whereType<ScanHubLoading>(), isEmpty);
+      expect(
+        (cubit.state as ScanHubLoaded).selectedTripBids.single.status,
+        'ARRIVED',
+      );
+    });
+
+    test('cubit fermé → plus abonné au signal', () async {
+      final events = TripArrivalEventsService();
+      addTearDown(events.dispose);
+      final cubit = ScanHubCubit(
+        annRepo,
+        bidRepo,
+        analytics,
+        trackingRepo,
+        tripArrivalEvents: events,
+      );
+      await cubit.close();
+      events.notifyArrived('a');
+      await pumpEventQueue();
+      verifyNever(() => annRepo.getMyAnnouncements());
+    });
   });
 }
