@@ -817,6 +817,7 @@
   "tripPublishGridPreviewLabel": "Your grid",
   "tripPublishGridPreviewSeeAll": "See all {count} items",
   "tripPublishGridPreviewNote": "These prices come from your profile. Editing them changes them on all your trips.",
+  "tripPublishGridPreviewConvertedNote": "Converted from {currency} at today's rate",
   "tripPublishGridSheetTitle": "Your price grid",
   "tripPublishGridSheetSubtitle": "Valid on all your trips",
   "tripPublishGridSheetEditCta": "Edit my grid",

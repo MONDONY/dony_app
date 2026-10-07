@@ -31,6 +31,11 @@ import 'package:go_router/go_router.dart';
 /// Le cycle de vie (create / dispose) reste entièrement dans le state parent.
 class PrixConditionsStep extends StatelessWidget {
   final SupportedCurrency? currency;
+
+  /// Devise de la grille de prix du profil (devise ACTIVE du voyageur),
+  /// `null` si inconnue. Quand elle diffère de [currency], l'aperçu de grille
+  /// montre les prix convertis comme le fera le backend à la publication.
+  final SupportedCurrency? gridCurrency;
   final ValueNotifier<int> priceOptionNotifier;
   final ValueNotifier<double> customPriceNotifier;
   final ValueNotifier<double> availableKgNotifier;
@@ -101,6 +106,7 @@ class PrixConditionsStep extends StatelessWidget {
   const PrixConditionsStep({
     super.key,
     this.currency,
+    this.gridCurrency,
     required this.priceOptionNotifier,
     required this.customPriceNotifier,
     required this.availableKgNotifier,
@@ -478,6 +484,7 @@ class PrixConditionsStep extends StatelessWidget {
                   GridPreviewCard(
                     items: formState.gridPreviewItems,
                     currency: currency,
+                    gridCurrency: gridCurrency,
                   ),
                   const SizedBox(height: DonySpacing.sm),
                   Container(

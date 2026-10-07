@@ -1037,6 +1037,7 @@ void main() {
               child: SingleChildScrollView(
                 child: PrixConditionsStep(
                   currency: SupportedCurrency.eur,
+                  gridCurrency: SupportedCurrency.eur,
                   priceOptionNotifier: priceOpt,
                   customPriceNotifier: customPrice,
                   availableKgNotifier: availKg,

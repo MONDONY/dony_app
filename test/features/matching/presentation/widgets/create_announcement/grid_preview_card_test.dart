@@ -1,4 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/active_rates.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
@@ -26,14 +29,24 @@ const _items = [
 
 /// Monte la carte derrière un GoRouter réel : « Modifier » pousse la route de
 /// la grille, et le retour doit provoquer un rechargement.
-Widget _wrap(List<GridPreviewItem> items, {AnnouncementFormBloc? bloc}) {
+Widget _wrap(
+  List<GridPreviewItem> items, {
+  AnnouncementFormBloc? bloc,
+  SupportedCurrency? currency,
+  SupportedCurrency? gridCurrency,
+}) {
   final router = GoRouter(
     initialLocation: '/',
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) =>
-            Scaffold(body: GridPreviewCard(items: items)),
+        builder: (context, state) => Scaffold(
+          body: GridPreviewCard(
+            items: items,
+            currency: currency,
+            gridCurrency: gridCurrency,
+          ),
+        ),
       ),
       GoRoute(
         path: '/profile/price-grid',
@@ -204,6 +217,132 @@ void main() {
       verify(
         () => bloc.add(any(that: isA<AnnouncementGridPreviewLoadRequested>())),
       ).called(1);
+    });
+  });
+
+  group('GridPreviewCard — devise du trajet ≠ devise de la grille', () {
+    const eurItems = [
+      GridPreviewItem(id: 'b1', label: 'Téléphone', unitPriceDisplay: 10),
+      GridPreviewItem(id: 'b2', label: 'Vêtement', unitPriceDisplay: 12),
+    ];
+    String xof(num v) => CurrencyFormatter.format(v, SupportedCurrency.xof);
+    String eur(num v) => CurrencyFormatter.format(v, SupportedCurrency.eur);
+
+    tearDown(ActiveRates.resetForTest);
+
+    testWidgets('EUR → XOF : prix convertis et mention affichée', (
+      tester,
+    ) async {
+      ActiveRates.setServerRates({'XOF': 655.957});
+      await tester.pumpWidget(
+        _wrap(
+          eurItems,
+          currency: SupportedCurrency.xof,
+          gridCurrency: SupportedCurrency.eur,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(xof(6560)), findsOneWidget);
+      expect(find.text(xof(7871)), findsOneWidget);
+      // Jamais le prix brut sous le symbole du trajet (FLUTTER-ER).
+      expect(find.text(xof(10)), findsNothing);
+      expect(find.text('Converti depuis EUR au taux du jour'), findsOneWidget);
+    });
+
+    testWidgets('la feuille complète affiche aussi les prix convertis', (
+      tester,
+    ) async {
+      ActiveRates.setServerRates({'XOF': 655.957});
+      await tester.pumpWidget(
+        _wrap(
+          [
+            ...eurItems,
+            const GridPreviewItem(
+              id: 'b3',
+              label: 'Livre',
+              unitPriceDisplay: 5,
+            ),
+            const GridPreviewItem(id: 'b4', label: 'Sac', unitPriceDisplay: 20),
+          ],
+          currency: SupportedCurrency.xof,
+          gridCurrency: SupportedCurrency.eur,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('grid-preview-see-all')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(xof(13119)), findsOneWidget); // 20 € × 655,957
+      expect(
+        find.byKey(const Key('grid-preview-converted-note')),
+        findsNWidgets(2),
+      );
+    });
+
+    testWidgets('même devise : prix inchangés, pas de mention', (tester) async {
+      ActiveRates.setServerRates({'XOF': 655.957});
+      await tester.pumpWidget(
+        _wrap(
+          eurItems,
+          currency: SupportedCurrency.eur,
+          gridCurrency: SupportedCurrency.eur,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(eur(10)), findsOneWidget);
+      expect(find.text(eur(12)), findsOneWidget);
+      expect(
+        find.byKey(const Key('grid-preview-converted-note')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('taux indisponibles : symbole de la grille, pas de mention', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          eurItems,
+          currency: SupportedCurrency.xof,
+          gridCurrency: SupportedCurrency.eur,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(eur(10)), findsOneWidget);
+      expect(find.text(eur(12)), findsOneWidget);
+      expect(find.text(xof(10)), findsNothing);
+      expect(
+        find.byKey(const Key('grid-preview-converted-note')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('devise de la grille inconnue : montant sans symbole', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(eurItems, currency: SupportedCurrency.xof));
+      await tester.pumpAndSettle();
+
+      expect(find.text('10'), findsOneWidget);
+      expect(find.text(xof(10)), findsNothing);
+    });
+
+    testWidgets('mention traduite en anglais', (tester) async {
+      useEnglish();
+      ActiveRates.setServerRates({'XOF': 655.957});
+      await tester.pumpWidget(
+        _wrap(
+          eurItems,
+          currency: SupportedCurrency.xof,
+          gridCurrency: SupportedCurrency.eur,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text("Converted from EUR at today's rate"), findsOneWidget);
     });
   });
 

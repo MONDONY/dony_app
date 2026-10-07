@@ -2910,6 +2910,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.';
 
   @override
+  String tripPublishGridPreviewConvertedNote(String currency) {
+    return 'Converti depuis $currency au taux du jour';
+  }
+
+  @override
   String get tripPublishGridSheetTitle => 'Votre grille de prix';
 
   @override
