@@ -293,7 +293,7 @@ extension AnnouncementSenderPricing on AnnouncementModel {
 /// proposées au formulaire, médiane de marché indicative et fourchette hors de
 /// laquelle le formulaire alerte (« prix bas », « prix élevé »).
 ///
-/// Les repères historiques sont en euros : 5 à 8 €/kg proposés, 8 de médiane,
+/// Les repères historiques sont en euros : 7 à 10 €/kg proposés, 8 de médiane,
 /// alerte sous 5 et au-dessus de 15. Servis tels quels quelle que soit la
 /// devise, ils donnaient des chips « 5 F CFA » et une médiane « 8 F CFA/kg »
 /// sur un trajet en franc CFA, et signalaient tout prix CFA comme « élevé ».
@@ -326,11 +326,17 @@ class KgPriceReference {
   });
 
   static const eur = KgPriceReference._(
-    presets: [5, 6, 7, 8],
+    presets: [7, 8, 9, 10],
     marketMedian: 8,
     minReasonable: 5,
     maxReasonable: 15,
   );
+
+  /// Base euro des chips des devises mises à l'échelle (USD, CAD, GBP…).
+  /// Les chips EUR sont passées à 7-10 €/kg (FLUTTER-CW, retours testeurs :
+  /// 5-6 €/kg jugés trop bas) ; les autres devises gardent volontairement
+  /// leur échelle historique, d'où cette base distincte de [eur].presets.
+  static const List<double> _scaledPresetsEurBase = [5, 6, 7, 8];
 
   static const cfa = KgPriceReference._(
     presets: [1000, 1500, 2000, 3000],
@@ -347,7 +353,7 @@ class KgPriceReference {
     final rate = ActiveRates.unitsPerEurFor(currency);
     double half(double eurValue) => (eurValue * rate * 2).round() / 2;
     return KgPriceReference._(
-      presets: eur.presets.map(half).toList(growable: false),
+      presets: _scaledPresetsEurBase.map(half).toList(growable: false),
       marketMedian: half(eur.marketMedian),
       minReasonable: half(eur.minReasonable),
       maxReasonable: half(eur.maxReasonable),

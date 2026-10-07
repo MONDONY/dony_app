@@ -253,7 +253,7 @@ void main() {
 
     testWidgets('les 4 chips de prix prédéfinis sont affichés', (tester) async {
       await _pump(tester);
-      // Repères euro : 5, 6, 7, 8 €/kg.
+      // Repères euro : 7, 8, 9, 10 €/kg.
       for (final price in KgPriceReference.eur.presets) {
         expect(
           find.text(CurrencyFormatter.format(price, SupportedCurrency.eur)),
@@ -984,8 +984,8 @@ void main() {
       const mixedWithItemsState = AnnouncementFormState(
         pricingMode: PricingMode.mixed,
         gridPreviewItems: [
-          // 5.5 (et non 5.0) pour éviter toute collision avec kPriceOptions
-          // ([5, 6, 7, 8] €/kg), affichés en parallèle dans le même écran en
+          // 5.5 et 10.5 pour éviter toute collision avec les chips
+          // ([7, 8, 9, 10] €/kg), affichés en parallèle dans le même écran en
           // mode MIXED.
           GridPreviewItem(
             id: 'a1',
@@ -995,7 +995,7 @@ void main() {
           GridPreviewItem(
             id: 'a2',
             label: 'Grand colis',
-            unitPriceDisplay: 10.0,
+            unitPriceDisplay: 10.5,
           ),
         ],
       );
@@ -1072,7 +1072,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text(CurrencyFormatter.format(10, SupportedCurrency.eur)),
+        find.text(CurrencyFormatter.format(10.5, SupportedCurrency.eur)),
         findsOneWidget,
       );
     });

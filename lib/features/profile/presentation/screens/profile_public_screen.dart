@@ -703,8 +703,9 @@ class _HeroPill extends StatelessWidget {
   }
 }
 
-/// « Vu aujourd'hui / hier / il y a 3 jours / il y a plus d'un mois » :
-/// au jour près, pas plus précis (FLUTTER-4H partie 2).
+/// « Actif aujourd'hui / hier / il y a 3 jours / il y a plus d'un mois » :
+/// au jour près, pas plus précis (FLUTTER-4H partie 2 ; « Actif » plutôt que
+/// « Vu », FLUTTER-EV).
 @visibleForTesting
 String lastSeenLabel(AppLocalizations l, int daysAgo) {
   if (daysAgo <= 0) return l.profilePublicLastSeenToday;

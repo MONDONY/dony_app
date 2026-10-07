@@ -15,7 +15,7 @@ void main() {
     expect(f.negotiable.value, isFalse);
     // Rien de coché d'office (FLUTTER-1Y) : liste vide = tout accepté.
     expect(f.selectedContent.value, isEmpty);
-    expect(f.presets, [5, 6, 7, 8]);
+    expect(f.presets, [7, 8, 9, 10]);
     f.dispose();
   });
 
@@ -23,16 +23,16 @@ void main() {
     final f = TripFormFields(initialCurrency: SupportedCurrency.xof);
     expect(f.presets, [1000, 1500, 2000, 3000]);
     f.currency.value = SupportedCurrency.eur;
-    expect(f.presets, [5, 6, 7, 8]);
+    expect(f.presets, [7, 8, 9, 10]);
     f.dispose();
   });
 
   test('selectPrice : chip exacte, sinon Autre prix, null efface', () {
     final f = TripFormFields();
-    f.selectPrice(7);
+    f.selectPrice(9);
     expect(f.priceOption.value, 2);
     expect(f.isCustomPrice, isFalse);
-    expect(f.pricePerKg, 7);
+    expect(f.pricePerKg, 9);
 
     f.selectPrice(9.5);
     expect(f.isCustomPrice, isTrue);

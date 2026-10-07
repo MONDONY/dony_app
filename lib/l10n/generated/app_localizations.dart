@@ -3227,7 +3227,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeCorridorAll.
   ///
   /// In fr, this message translates to:
-  /// **'Tous les corridors'**
+  /// **'Tous les trajets'**
   String get homeCorridorAll;
 
   /// No description provided for @homePullToList.
@@ -3467,7 +3467,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeEmptyTravelersRoute.
   ///
   /// In fr, this message translates to:
-  /// **'Aucun voyageur sur ce corridor'**
+  /// **'Aucun voyageur sur ce trajet'**
   String get homeEmptyTravelersRoute;
 
   /// No description provided for @homeEmptyNearbyHint.
@@ -4409,7 +4409,7 @@ abstract class AppLocalizations {
   /// Texte du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée
   ///
   /// In fr, this message translates to:
-  /// **'Corridor, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l\'expéditeur.'**
+  /// **'Trajet, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l\'expéditeur.'**
   String get tripPublishLockedBannerSubtitle;
 
   /// Snackbar au tap sur une ville verrouillée (édition ou trajet dédié à une demande).
@@ -9623,6 +9623,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'En attente de la réponse de {name}.'**
   String negotiationThreadWaitingForReply(String name);
+
+  /// Bouton secondaire de l'état « en attente de l'autre » : clôt tout le fil de prix d'un trajet, pour les deux parties (POST /bids/{id}/negotiation/cancel, bid_negotiation_thread_screen.dart, FLUTTER-EQ)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la négociation'**
+  String get negotiationThreadCancelButton;
+
+  /// Titre de la feuille de confirmation d'annulation du fil (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la négociation ?'**
+  String get negotiationThreadCancelSheetTitle;
+
+  /// Explication de la feuille de confirmation d'annulation du fil (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La discussion de prix sera close pour vous deux. Votre proposition en cours ne pourra plus être acceptée.'**
+  String get negotiationThreadCancelSheetBody;
+
+  /// Note réservée à l'expéditeur : après annulation, le serveur accepte une nouvelle offre sur le même trajet tant qu'il est actif et pas parti (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez refaire une offre sur ce trajet tant qu\'il est ouvert.'**
+  String get negotiationThreadCancelSheetReofferNote;
+
+  /// Bouton destructif de confirmation, stickyBottom de la feuille (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la négociation'**
+  String get negotiationThreadCancelSheetConfirm;
+
+  /// Bouton discret qui referme la feuille sans rien annuler (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer à négocier'**
+  String get negotiationThreadCancelSheetKeep;
 
   /// Repli quand l'interlocuteur n'a pas de nom (bid_negotiation_thread_screen.dart)
   ///
@@ -20653,7 +20689,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la tuile push_corridor_alerts (notification_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Alertes corridor et voyageurs suivis'**
+  /// **'Alertes de trajet et voyageurs suivis'**
   String get notificationSettingsCorridorSubtitle;
 
   /// Libellé de la tuile push_activity_negotiations (notification_settings_screen.dart)
@@ -22003,25 +22039,25 @@ abstract class AppLocalizations {
   /// Description de l'état vide, direction colis (corridor_alert_list_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.'**
+  /// **'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton trajet.'**
   String get corridorAlertEmptyDescriptionPackages;
 
   /// Description de l'état vide, direction trajets (corridor_alert_list_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.'**
+  /// **'Crée une alerte pour être prévenu dès qu\'un voyageur propose ton trajet.'**
   String get corridorAlertEmptyDescriptionTrips;
 
   /// Description de l'état vide, hub sans direction (corridor_alert_list_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Crée une alerte pour être prévenu dès qu\'un trajet ou un colis apparaît sur ton corridor.'**
+  /// **'Crée une alerte pour être prévenu dès qu\'un voyageur ou un colis apparaît sur ton trajet.'**
   String get corridorAlertEmptyDescriptionAll;
 
   /// Titre de l'état vide de la liste des alertes (corridor_alert_list_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Aucune alerte corridor'**
+  /// **'Aucune alerte de trajet'**
   String get corridorAlertEmptyTitle;
 
   /// CTA de l'état vide et titre de la feuille de création (corridor_alert_list_screen.dart, corridor_alert_form_sheet.dart).
@@ -22045,7 +22081,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'action « Modifier » du menu d'une alerte (corridor_alert_actions_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Corridor, dates et filtres'**
+  /// **'Trajet, dates et filtres'**
   String get corridorAlertActionEditSubtitle;
 
   /// Action « Dupliquer » du menu d'une alerte (corridor_alert_actions_sheet.dart).
@@ -23389,8 +23425,14 @@ abstract class AppLocalizations {
   /// Libellé du champ nom complet (recipient_edit_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Nom complet'**
+  /// **'Prénom et nom'**
   String get recipientFullNameFieldLabel;
+
+  /// Aide sous le champ prénom et nom : le nom est montré au voyageur, aucune vérification bloquante (recipient_edit_screen.dart, FLUTTER-EG).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur verra ce nom.'**
+  String get recipientFullNameFieldHelper;
 
   /// Libellé du champ téléphone (recipient_edit_screen.dart).
   ///
@@ -25409,25 +25451,25 @@ abstract class AppLocalizations {
   /// Profil public : dernière connexion (profile_public_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Vu aujourd\'hui'**
+  /// **'Actif aujourd\'hui'**
   String get profilePublicLastSeenToday;
 
   /// Profil public : dernière connexion
   ///
   /// In fr, this message translates to:
-  /// **'Vu hier'**
+  /// **'Actif hier'**
   String get profilePublicLastSeenYesterday;
 
   /// Profil public : dernière connexion, entre 2 et 30 jours
   ///
   /// In fr, this message translates to:
-  /// **'Vu il y a {days} jours'**
+  /// **'Actif il y a {days} jours'**
   String profilePublicLastSeenDaysAgo(int days);
 
   /// Profil public : dernière connexion au-delà de 30 jours
   ///
   /// In fr, this message translates to:
-  /// **'Vu il y a plus d\'un mois'**
+  /// **'Actif il y a plus d\'un mois'**
   String get profilePublicLastSeenLongAgo;
 
   /// Profil public : libellé du temps de réponse mesuré

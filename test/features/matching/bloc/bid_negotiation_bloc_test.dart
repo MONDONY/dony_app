@@ -443,6 +443,28 @@ void main() {
         ),
       ],
     );
+
+    // FLUTTER-EQ : l'annulation depuis l'état d'attente peut croiser une
+    // réponse de l'autre partie (fil déjà clos côté serveur) : l'erreur doit
+    // remonter telle quelle à l'écran, sans fil marqué annulé.
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'cancel refuse par le serveur emet Error, jamais Loaded cancelled',
+      build: () {
+        when(() => repo.cancel('bid1')).thenThrow(
+          const ConflictException('Fil clos', code: 'negotiation-closed'),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationCancelRequested('bid1')),
+      expect: () => [
+        isA<BidNegotiationLoading>(),
+        isA<BidNegotiationError>().having(
+          (s) => s.error.code,
+          'code',
+          'negotiation-closed',
+        ),
+      ],
+    );
   });
 
   group('read', () {

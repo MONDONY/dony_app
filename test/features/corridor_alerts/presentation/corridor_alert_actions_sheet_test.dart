@@ -51,7 +51,7 @@ void main() {
       await _open(tester);
 
       expect(find.text('Modifier'), findsOneWidget);
-      expect(find.text('Corridor, dates et filtres'), findsOneWidget);
+      expect(find.text('Trajet, dates et filtres'), findsOneWidget);
       expect(find.text('Dupliquer'), findsOneWidget);
       expect(
         find.text('Repartir de cette alerte pour en créer une autre'),

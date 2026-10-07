@@ -19,6 +19,7 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
+import 'package:dony/features/messaging/data/chat_draft_store.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
@@ -36,6 +37,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/map_backed_box.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
@@ -1093,6 +1095,164 @@ void main() {
         verify(() => auth.add(const AuthProfileRefreshRequested())).called(1);
         await tester.pump(const Duration(seconds: 5));
       });
+    });
+  });
+
+  // ── Brouillon par conversation (FLUTTER-CY) ──────────────────────────────
+  group('brouillon de message', () {
+    final stored = <String, dynamic>{};
+    late ChatDraftStore drafts;
+
+    const otherConversation = ConversationModel(
+      id: 'conv-2',
+      bidId: 'bid-2',
+      firestoreConversationId: 'conv_bid-2',
+      otherParticipant: _participant,
+    );
+
+    setUp(() {
+      stored.clear();
+      drafts = ChatDraftStore(mapBackedBox(stored));
+      getIt.registerSingleton<ChatDraftStore>(drafts);
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+    });
+
+    tearDown(() => getIt.unregister<ChatDraftStore>());
+
+    Future<void> open(
+      WidgetTester tester, [
+      ConversationModel conversation = _conversation,
+    ]) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider<ChatBloc>.value(
+            value: bloc,
+            child: ChatScreen(conversation: conversation),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    /// Quitte le chat : l'écran est démonté, comme au retour arrière.
+    Future<void> leave(WidgetTester tester) async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    }
+
+    String fieldText(WidgetTester tester) =>
+        tester.widget<TextField>(find.byType(TextField)).controller!.text;
+
+    testWidgets('le texte non envoyé est gardé à la sortie du chat', (
+      tester,
+    ) async {
+      await open(tester);
+      await tester.enterText(find.byType(TextField), 'Je passe demain');
+      await leave(tester);
+
+      expect(drafts.read('conv-1'), 'Je passe demain');
+    });
+
+    testWidgets('le brouillon revient à la réouverture', (tester) async {
+      await drafts.save('conv-1', 'Je passe demain');
+      await open(tester);
+
+      expect(fieldText(tester), 'Je passe demain');
+    });
+
+    testWidgets('envoyer efface le brouillon', (tester) async {
+      await drafts.save('conv-1', 'Bonjour Kadi');
+      await open(tester);
+
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'),
+      );
+      await tester.pump();
+
+      verify(() => bloc.add(any(that: isA<ChatTextSendRequested>()))).called(1);
+      expect(drafts.read('conv-1'), '');
+      await leave(tester);
+      expect(drafts.read('conv-1'), '');
+    });
+
+    testWidgets('chaque conversation garde son propre brouillon', (
+      tester,
+    ) async {
+      await open(tester);
+      await tester.enterText(find.byType(TextField), 'pour la conv 1');
+      await leave(tester);
+
+      await open(tester, otherConversation);
+      expect(fieldText(tester), isEmpty);
+      await tester.enterText(find.byType(TextField), 'pour la conv 2');
+      await leave(tester);
+
+      await open(tester);
+      expect(fieldText(tester), 'pour la conv 1');
+      expect(drafts.read('conv-2'), 'pour la conv 2');
+    });
+
+    testWidgets('un envoi bloqué par le filtre garde le brouillon', (
+      tester,
+    ) async {
+      await open(tester);
+      await tester.enterText(
+        find.byType(TextField),
+        'appelle moi au 06 12 34 56 78',
+      );
+      await tester.pump();
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      verifyNever(() => bloc.add(any(that: isA<ChatTextSendRequested>())));
+      await leave(tester);
+
+      expect(drafts.read('conv-1'), 'appelle moi au 06 12 34 56 78');
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('vider le champ puis sortir supprime le brouillon', (
+      tester,
+    ) async {
+      await drafts.save('conv-1', 'ancien texte');
+      await open(tester);
+      await tester.enterText(find.byType(TextField), '');
+      await leave(tester);
+
+      expect(drafts.read('conv-1'), '');
+    });
+
+    testWidgets('fil en lecture seule : ni restauré ni enregistré', (
+      tester,
+    ) async {
+      const readOnly = ConversationModel(
+        id: 'conv-ro',
+        bidId: 'bid-ro',
+        firestoreConversationId: 'conv_bid-ro',
+        otherParticipant: _participant,
+        readOnly: true,
+      );
+      await drafts.save('conv-ro', 'vieux brouillon');
+      await open(tester, readOnly);
+      expect(fieldText(tester), isEmpty);
+      await leave(tester);
+      expect(drafts.read('conv-ro'), 'vieux brouillon');
+    });
+
+    testWidgets('app passée en arrière-plan : brouillon écrit sans sortir', (
+      tester,
+    ) async {
+      await open(tester);
+      await tester.enterText(find.byType(TextField), 'en cours');
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      await tester.pump();
+
+      expect(drafts.read('conv-1'), 'en cours');
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     });
   });
 }

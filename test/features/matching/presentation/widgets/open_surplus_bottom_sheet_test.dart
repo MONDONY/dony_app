@@ -154,7 +154,7 @@ void main() {
 
       await tester.enterText(find.byKey(const Key('surplus-kg-field')), '8');
       await tester.pumpAndSettle();
-      // Sélectionne explicitement le chip 7€ (index 2).
+      // Sélectionne explicitement le chip 9 € (index 2 de la grille 7-10 €/kg).
       await tester.tap(find.byKey(const Key('surplus-price-chip-2')));
       await tester.pumpAndSettle();
 
@@ -167,7 +167,7 @@ void main() {
           .single;
       expect(event.announcementId, 'ann-1');
       expect(event.surplusKg, 8.0);
-      expect(event.pricePerKg, 7.0);
+      expect(event.pricePerKg, 9.0);
     },
   );
 

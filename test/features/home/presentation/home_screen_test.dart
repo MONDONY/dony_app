@@ -804,7 +804,7 @@ void main() {
       await tester.pumpWidget(_buildHome());
       await tester.pump(const Duration(milliseconds: 1000));
 
-      expect(find.text('Tous les corridors'), findsWidgets);
+      expect(find.text('Tous les trajets'), findsWidgets);
     });
 
     testWidgets(
@@ -1006,7 +1006,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 1000));
 
-      expect(find.text('Aucun voyageur sur ce corridor'), findsOneWidget);
+      expect(find.text('Aucun voyageur sur ce trajet'), findsOneWidget);
     });
 
     testWidgets('état vide et en-tête de liste traduits en anglais', (
@@ -1020,7 +1020,7 @@ void main() {
 
       expect(find.text('No travelers on this route'), findsOneWidget);
       expect(find.text('0 travelers · All routes'), findsOneWidget);
-      expect(find.text('Aucun voyageur sur ce corridor'), findsNothing);
+      expect(find.text('Aucun voyageur sur ce trajet'), findsNothing);
     });
 
     testWidgets(
@@ -2478,7 +2478,7 @@ void main() {
         expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
         expect(labelTuile(tester), '5 colis cherchent un voyageur');
         expect(labelTuile(tester), isNot(contains('→')));
-        expect(labelTuile(tester), isNot(contains('Tous les corridors')));
+        expect(labelTuile(tester), isNot(contains('Tous les trajets')));
       },
     );
 

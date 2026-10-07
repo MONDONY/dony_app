@@ -470,9 +470,15 @@ void main() {
         await tester.tap(find.byType(PopupMenuButton<String>));
         await tester.pumpAndSettle();
 
-        expect(find.text('Mettre fin à la négociation'), findsOneWidget);
+        // L'item du menu, distinct du bouton visible de l'état d'attente
+        // (FLUTTER-EQ) qui porte le même libellé.
+        final menuItem = find.descendant(
+          of: find.byType(PopupMenuItem<String>),
+          matching: find.text('Mettre fin à la négociation'),
+        );
+        expect(menuItem, findsOneWidget);
 
-        await tester.tap(find.text('Mettre fin à la négociation'));
+        await tester.tap(menuItem);
         await tester.pumpAndSettle();
 
         expect(find.text('Mettre fin à cette négociation ?'), findsOneWidget);
@@ -502,7 +508,40 @@ void main() {
         expect(find.byType(PopupMenuButton<String>), findsOneWidget);
         await tester.tap(find.byType(PopupMenuButton<String>));
         await tester.pumpAndSettle();
-        expect(find.text('Mettre fin à la négociation'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(PopupMenuItem<String>),
+            matching: find.text('Mettre fin à la négociation'),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'en attente du voyageur (awaitingTrip, expéditeur) : la sortie est aussi '
+      'un bouton visible, qui passe par la même confirmation (FLUTTER-EQ)',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          NegotiationLoaded(
+            _thread(status: NegotiationThreadStatus.awaitingTrip),
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+
+        final button = find.byKey(const Key('thread-end-negotiation-btn'));
+        expect(button, findsOneWidget);
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Mettre fin à cette négociation ?'), findsOneWidget);
+        await tester.tap(find.text('Mettre fin'));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => bloc.add(const NegotiationCancelRequested(threadId: 't-1')),
+        ).called(1);
       },
     );
 
@@ -652,9 +691,13 @@ void main() {
 
       await tester.tap(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
-      expect(find.text('End the negotiation'), findsOneWidget);
+      final menuItem = find.descendant(
+        of: find.byType(PopupMenuItem<String>),
+        matching: find.text('End the negotiation'),
+      );
+      expect(menuItem, findsOneWidget);
 
-      await tester.tap(find.text('End the negotiation'));
+      await tester.tap(menuItem);
       await tester.pumpAndSettle();
 
       expect(find.text('End this negotiation?'), findsOneWidget);

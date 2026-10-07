@@ -2570,7 +2570,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishLockedBannerSubtitle =>
-      'Corridor, capacity and price are locked. The date must stay within the sender\'s tolerance window.';
+      'Route, capacity and price are locked. The date must stay within the sender\'s tolerance window.';
 
   @override
   String get tripPublishFieldLockedCorridorMessage =>
@@ -5798,6 +5798,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String negotiationThreadWaitingForReply(String name) {
     return 'Waiting for $name\'s reply.';
   }
+
+  @override
+  String get negotiationThreadCancelButton => 'Cancel the negotiation';
+
+  @override
+  String get negotiationThreadCancelSheetTitle => 'Cancel the negotiation?';
+
+  @override
+  String get negotiationThreadCancelSheetBody =>
+      'The price discussion will be closed for both of you. Your pending offer can no longer be accepted.';
+
+  @override
+  String get negotiationThreadCancelSheetReofferNote =>
+      'You can make a new offer on this trip as long as it stays open.';
+
+  @override
+  String get negotiationThreadCancelSheetConfirm => 'Cancel the negotiation';
+
+  @override
+  String get negotiationThreadCancelSheetKeep => 'Keep negotiating';
 
   @override
   String get negotiationThreadCounterpartyFallback => 'the other party';
@@ -14018,7 +14038,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipientCreateTitle => 'New recipient';
 
   @override
-  String get recipientFullNameFieldLabel => 'Full name';
+  String get recipientFullNameFieldLabel => 'First and last name';
+
+  @override
+  String get recipientFullNameFieldHelper => 'The traveler will see this name.';
 
   @override
   String get recipientPhoneFieldLabel => 'Phone (E.164)';
@@ -15359,18 +15382,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Already rescheduled twice: cancel and post a new trip';
 
   @override
-  String get profilePublicLastSeenToday => 'Seen today';
+  String get profilePublicLastSeenToday => 'Active today';
 
   @override
-  String get profilePublicLastSeenYesterday => 'Seen yesterday';
+  String get profilePublicLastSeenYesterday => 'Active yesterday';
 
   @override
   String profilePublicLastSeenDaysAgo(int days) {
-    return 'Seen $days days ago';
+    return 'Active $days days ago';
   }
 
   @override
-  String get profilePublicLastSeenLongAgo => 'Seen over a month ago';
+  String get profilePublicLastSeenLongAgo => 'Active over a month ago';
 
   @override
   String get profilePublicStatResponseLabel => 'Reply time';

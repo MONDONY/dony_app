@@ -1707,7 +1707,7 @@ void main() {
 
     testWidgets(
       'changer de devise resynchronise le prix du bloc : le même chip vaut '
-      '1 500 F CFA en XOF puis 6 € en EUR (_onCurrencyChanged)',
+      '1 500 F CFA en XOF puis 8 € en EUR (_onCurrencyChanged)',
       (tester) async {
         await navigateToStep2(
           tester,
@@ -1729,14 +1729,14 @@ void main() {
         expect(formBloc.state.pricePerKg, 1500);
         expect(formBloc.state.priceWarning, isNull);
 
-        // Même index de chip, autre devise : le bloc doit recevoir 6 €.
+        // Même index de chip, autre devise : le bloc doit recevoir 8 €.
         tester.widget<PrixConditionsStep>(stepFinder).currencyNotifier.value =
             SupportedCurrency.eur;
         await tester.pump(const Duration(milliseconds: 600));
 
-        expect(formBloc.state.pricePerKg, 6);
+        expect(formBloc.state.pricePerKg, 8);
         expect(
-          find.text(CurrencyFormatter.format(6, SupportedCurrency.eur)),
+          find.text(CurrencyFormatter.format(8, SupportedCurrency.eur)),
           findsOneWidget,
         );
       },

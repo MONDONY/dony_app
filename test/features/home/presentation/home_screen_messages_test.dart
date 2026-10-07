@@ -26,7 +26,7 @@ void main() {
 
   group('homeCorridorLabel (fr)', () {
     const expected = {
-      'aucun': 'Tous les corridors',
+      'aucun': 'Tous les trajets',
       'départ': 'Départ de Lyon',
       'arrivée': 'Vers Bamako',
       'les deux': 'Lyon → Bamako',
@@ -122,10 +122,10 @@ void main() {
   group('homeListTitle (fr)', () {
     // Clé : '<variante>|<corridor>|<n>'.
     const expected = {
-      'trips|aucun|0': '0 voyageur · Tous les corridors',
-      'trips|aucun|1': '1 voyageur · Tous les corridors',
-      'trips|aucun|2': '2 voyageurs · Tous les corridors',
-      'trips|aucun|12': '12 voyageurs · Tous les corridors',
+      'trips|aucun|0': '0 voyageur · Tous les trajets',
+      'trips|aucun|1': '1 voyageur · Tous les trajets',
+      'trips|aucun|2': '2 voyageurs · Tous les trajets',
+      'trips|aucun|12': '12 voyageurs · Tous les trajets',
       'trips|départ|0': '0 voyageur · Départ de Lyon',
       'trips|départ|1': '1 voyageur · Départ de Lyon',
       'trips|départ|2': '2 voyageurs · Départ de Lyon',
@@ -138,10 +138,10 @@ void main() {
       'trips|les deux|1': '1 voyageur pour Lyon → Bamako',
       'trips|les deux|2': '2 voyageurs pour Lyon → Bamako',
       'trips|les deux|12': '12 voyageurs pour Lyon → Bamako',
-      'parcels|aucun|0': '0 colis à transporter · Tous les corridors',
-      'parcels|aucun|1': '1 colis à transporter · Tous les corridors',
-      'parcels|aucun|2': '2 colis à transporter · Tous les corridors',
-      'parcels|aucun|12': '12 colis à transporter · Tous les corridors',
+      'parcels|aucun|0': '0 colis à transporter · Tous les trajets',
+      'parcels|aucun|1': '1 colis à transporter · Tous les trajets',
+      'parcels|aucun|2': '2 colis à transporter · Tous les trajets',
+      'parcels|aucun|12': '12 colis à transporter · Tous les trajets',
       'parcels|départ|0': '0 colis à transporter · Départ de Lyon',
       'parcels|départ|1': '1 colis à transporter · Départ de Lyon',
       'parcels|départ|2': '2 colis à transporter · Départ de Lyon',
@@ -214,7 +214,7 @@ void main() {
       }
     }
 
-    test('3 colis à transporter · Tous les corridors', () {
+    test('3 colis à transporter · Tous les trajets', () {
       expect(
         homeListTitle(
           fr,
@@ -224,7 +224,7 @@ void main() {
           parcels: 3,
           matching: false,
         ),
-        '3 colis à transporter · Tous les corridors',
+        '3 colis à transporter · Tous les trajets',
       );
     });
 

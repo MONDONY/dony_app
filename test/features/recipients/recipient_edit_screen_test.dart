@@ -243,7 +243,7 @@ void main() {
       expect(find.text('Parent'), findsNothing);
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nom complet').first,
+        find.widgetWithText(TextFormField, 'Prénom et nom').first,
         'Fatou Sow',
       );
       await tester.enterText(
@@ -278,7 +278,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nom complet').first,
+        find.widgetWithText(TextFormField, 'Prénom et nom').first,
         'Fatou Sow',
       );
       await tester.enterText(
@@ -313,7 +313,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nom complet').first,
+        find.widgetWithText(TextFormField, 'Prénom et nom').first,
         'Fatou Sow',
       );
       await tester.enterText(
@@ -343,7 +343,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Nom complet').first,
+        find.widgetWithText(TextFormField, 'Prénom et nom').first,
         'Kouassi Yao',
       );
       await tester.enterText(
@@ -470,9 +470,9 @@ void main() {
       await tester.tap(find.text('Choisir dans mes contacts'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nom complet'), findsOneWidget);
+      expect(find.text('Prénom et nom'), findsOneWidget);
       final nameField = tester.widget<TextFormField>(
-        find.widgetWithText(TextFormField, 'Nom complet').first,
+        find.widgetWithText(TextFormField, 'Prénom et nom').first,
       );
       expect(nameField.controller!.text, isEmpty);
     },
@@ -509,7 +509,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('New recipient'), findsOneWidget);
-    expect(find.text('Full name'), findsOneWidget);
+    expect(find.text('First and last name'), findsOneWidget);
     expect(find.text('Phone (E.164)'), findsOneWidget);
     expect(find.text('Choose from my contacts'), findsOneWidget);
 
@@ -547,4 +547,56 @@ void main() {
       expect(find.text('raw technical detail'), findsNothing);
     },
   );
+
+  // ── FLUTTER-EG : libellé « Prénom et nom » + aide, sans blocage ──────────
+
+  testWidgets('affiche l\'aide sous le champ prénom et nom', (tester) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(const RecipientState(status: RecipientStatus.success));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Prénom et nom'), findsOneWidget);
+    expect(find.text('Le voyageur verra ce nom.'), findsOneWidget);
+  });
+
+  testWidgets('un nom d\'un seul mot reste accepté (aucune règle bloquante)', (
+    tester,
+  ) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(const RecipientState(status: RecipientStatus.success));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Prénom et nom').first,
+      'Fatou',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Téléphone (E.164)').first,
+      '+221771234567',
+    );
+    await tester.pump();
+    await tester.tap(find.text('Enregistrer'));
+    await tester.pump();
+
+    final captured = verify(
+      () => bloc.add(captureAny(that: isA<RecipientCreated>())),
+    ).captured.cast<RecipientCreated>();
+    expect(captured.single.fullName, 'Fatou');
+  });
+
+  testWidgets('en anglais : libellé et aide traduits', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(const RecipientState(status: RecipientStatus.success));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('First and last name'), findsOneWidget);
+    expect(find.text('The traveler will see this name.'), findsOneWidget);
+  });
 }

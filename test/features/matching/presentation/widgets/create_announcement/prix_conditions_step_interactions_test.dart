@@ -172,15 +172,15 @@ Future<void> _pump(
 
 void main() {
   group('PrixConditionsStep — interactions prix', () {
-    testWidgets('tap sur chip 7 EUR change le notifier priceOption', (
+    testWidgets('tap sur chip 9 EUR change le notifier priceOption', (
       tester,
     ) async {
       final priceOption = ValueNotifier<int>(0);
       await _pump(tester, priceOption: priceOption);
 
-      // Chip 7 EUR est le 3ème chip (index 2).
+      // Chip 9 EUR est le 3ème chip (index 2) de la grille 7-10 €/kg.
       await tester.tap(
-        find.text(CurrencyFormatter.format(7, SupportedCurrency.eur)),
+        find.text(CurrencyFormatter.format(9, SupportedCurrency.eur)),
       );
       await tester.pump();
 
