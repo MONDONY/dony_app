@@ -6760,7 +6760,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String bidDetailSenderEscrowedSubtitle(String amount) {
-    return '$amount on hold. Awaiting drop-off.';
+    return '$amount on hold. Waiting for the traveler\'s reply.';
   }
 
   @override

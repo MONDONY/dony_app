@@ -3299,9 +3299,9 @@
   "@bidDetailSenderEscrowedTitle": {
     "description": "PAYMENT_ESCROWED, titre (sender_hero_card.dart)"
   },
-  "bidDetailSenderEscrowedSubtitle": "{amount} on hold. Awaiting drop-off.",
+  "bidDetailSenderEscrowedSubtitle": "{amount} on hold. Waiting for the traveler's reply.",
   "@bidDetailSenderEscrowedSubtitle": {
-    "description": "PAYMENT_ESCROWED, sous-titre (sender_hero_card.dart)",
+    "description": "PAYMENT_ESCROWED (payé, le voyageur n'a pas encore accepté), sous-titre (sender_hero_card.dart)",
     "placeholders": {
       "amount": {
         "type": "String"

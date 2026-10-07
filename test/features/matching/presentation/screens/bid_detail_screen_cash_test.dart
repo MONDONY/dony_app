@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -20,6 +21,8 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -1046,5 +1049,115 @@ void main() {
 
       verifyNever(() => bidBloc.add(any(that: isA<BidDetailRequested>())));
     });
+  });
+
+  // ── FLUTTER-E5 : vue expéditeur stable pendant les états transitoires ──────
+  // L'AuthBloc passe par AuthLoading / AuthError pendant une action annexe
+  // (rafraîchissement du profil, ajout d'e-mail…) : l'expéditeur ne doit pas
+  // basculer sur la vue voyageur, ni voir le bouton « Accepter ».
+
+  group('Résolution de l\'utilisateur courant (FLUTTER-E5)', () {
+    BidModel escrowed() => _makeBid(
+      paymentMethod: BidPaymentMethod.stripe,
+      status: 'PAYMENT_ESCROWED',
+    );
+
+    /// AuthBloc piloté à la main : les états sont poussés après le montage,
+    /// une fois l'écran abonné (un flux émis d'avance serait perdu).
+    _MockAuthBloc controlled(
+      AuthState initial,
+      StreamController<AuthState> controller,
+    ) {
+      final authBloc = _MockAuthBloc();
+      var current = initial;
+      when(() => authBloc.state).thenAnswer((_) => current);
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => controller.stream.map((s) => current = s));
+      return authBloc;
+    }
+
+    for (final transient in <AuthState>[
+      const AuthLoading(),
+      const AuthError(NetworkException('boom')),
+    ]) {
+      testWidgets(
+        'expéditeur puis ${transient.runtimeType} → reste en vue expéditeur',
+        (tester) async {
+          final controller = StreamController<AuthState>.broadcast();
+          addTearDown(controller.close);
+          final authBloc = controlled(
+            AuthAuthenticated(_user(_kSenderId)),
+            controller,
+          );
+
+          // Relecture du colis (relevé périodique) pendant l'état
+          // transitoire : c'est elle qui reconstruisait l'écran en vue
+          // voyageur.
+          final bidController = StreamController<BidState>.broadcast();
+          addTearDown(bidController.close);
+          when(() => bidBloc.stream).thenAnswer((_) => bidController.stream);
+
+          await _pump(tester, bid: escrowed(), authBloc: authBloc);
+          expect(find.byType(SenderDetailBody), findsOneWidget);
+
+          controller.add(transient);
+          await tester.pump();
+          bidController.add(BidDetailLoaded(escrowed()));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+
+          expect(authBloc.state, transient);
+
+          expect(find.byType(SenderDetailBody), findsOneWidget);
+          expect(find.byType(TravelerDetailBody), findsNothing);
+          expect(find.text('Accepter'), findsNothing);
+        },
+      );
+    }
+
+    testWidgets(
+      'écran ouvert pendant un état transitoire puis profil reçu → vue expéditeur',
+      (tester) async {
+        final controller = StreamController<AuthState>.broadcast();
+        addTearDown(controller.close);
+        final authBloc = controlled(const AuthLoading(), controller);
+
+        await _pump(tester, bid: escrowed(), authBloc: authBloc);
+        expect(find.byType(SenderDetailBody), findsNothing);
+
+        controller.add(AuthProfileUpdated(_user(_kSenderId)));
+        await tester.pump();
+        // Laisse finir les animations d'entrée (flutter_animate, 300 ms).
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byType(SenderDetailBody), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'déconnexion (AuthInitial) → le dernier utilisateur est oublié',
+      (tester) async {
+        final controller = StreamController<AuthState>.broadcast();
+        addTearDown(controller.close);
+        final authBloc = controlled(
+          AuthAuthenticated(_user(_kSenderId)),
+          controller,
+        );
+
+        await _pump(tester, bid: escrowed(), authBloc: authBloc);
+        expect(find.byType(SenderDetailBody), findsOneWidget);
+
+        controller.add(const AuthInitial());
+        await tester.pump();
+        controller.add(const AuthLoading());
+        await tester.pump();
+        // Laisse finir les animations d'entrée de la vue voyageur.
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byType(SenderDetailBody), findsNothing);
+      },
+    );
   });
 }

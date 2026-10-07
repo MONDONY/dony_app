@@ -11249,10 +11249,10 @@ abstract class AppLocalizations {
   /// **'🔒 Paiement sécurisé'**
   String get bidDetailSenderEscrowedTitle;
 
-  /// PAYMENT_ESCROWED, sous-titre (sender_hero_card.dart)
+  /// PAYMENT_ESCROWED (payé, le voyageur n'a pas encore accepté), sous-titre (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'{amount} séquestrés. En attente de remise.'**
+  /// **'{amount} séquestrés. En attente de la réponse du voyageur.'**
   String bidDetailSenderEscrowedSubtitle(String amount);
 
   /// ACCEPTED, titre (sender_hero_card.dart)

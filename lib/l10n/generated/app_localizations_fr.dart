@@ -6795,7 +6795,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String bidDetailSenderEscrowedSubtitle(String amount) {
-    return '$amount séquestrés. En attente de remise.';
+    return '$amount séquestrés. En attente de la réponse du voyageur.';
   }
 
   @override

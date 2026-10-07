@@ -6678,9 +6678,9 @@
   "@bidDetailSenderEscrowedTitle": {
     "description": "PAYMENT_ESCROWED, titre (sender_hero_card.dart)"
   },
-  "bidDetailSenderEscrowedSubtitle": "{amount} séquestrés. En attente de remise.",
+  "bidDetailSenderEscrowedSubtitle": "{amount} séquestrés. En attente de la réponse du voyageur.",
   "@bidDetailSenderEscrowedSubtitle": {
-    "description": "PAYMENT_ESCROWED, sous-titre (sender_hero_card.dart)",
+    "description": "PAYMENT_ESCROWED (payé, le voyageur n'a pas encore accepté), sous-titre (sender_hero_card.dart)",
     "placeholders": {
       "amount": {
         "type": "String"
