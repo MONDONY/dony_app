@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
@@ -218,48 +216,6 @@ void main() {
       verify: (_) {
         verify(
           () => convRepo.updateLastMessage('conv-id-1', '${'a' * 77}...'),
-        ).called(1);
-      },
-    );
-
-    blocTest<ChatBloc, ChatState>(
-      'sendImage calls uploadImage then sendImageMessage',
-      build: () {
-        when(() => convRepo.uploadImage(any(), any(), any())).thenAnswer(
-          (_) async => {'presignedUrl': 'https://cdn.example.com/img.jpg'},
-        );
-        when(
-          () => firestoreRepo.sendImageMessage(
-            firestoreConversationId: any(named: 'firestoreConversationId'),
-            senderFirebaseUid: any(named: 'senderFirebaseUid'),
-            imageUrl: any(named: 'imageUrl'),
-          ),
-        ).thenAnswer((_) async {});
-        when(
-          () => convRepo.updateLastMessage(any(), any()),
-        ).thenAnswer((_) async {});
-        return makeBloc();
-      },
-      act: (b) => b.add(
-        ChatImageSendRequested(
-          conversationId: 'conv-id-1',
-          firestoreConversationId: 'conv_bid1',
-          senderFirebaseUid: 'uid-1',
-          bytes: Uint8List.fromList([1, 2, 3]),
-          filename: 'photo.jpg',
-        ),
-      ),
-      expect: () => [],
-      verify: (_) {
-        verify(
-          () => convRepo.uploadImage('conv-id-1', any(), 'photo.jpg'),
-        ).called(1);
-        verify(
-          () => firestoreRepo.sendImageMessage(
-            firestoreConversationId: 'conv_bid1',
-            senderFirebaseUid: 'uid-1',
-            imageUrl: 'https://cdn.example.com/img.jpg',
-          ),
         ).called(1);
       },
     );

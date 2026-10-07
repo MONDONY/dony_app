@@ -77,6 +77,52 @@ void main() {
     });
   });
 
+  group('createReport — message du chat (FLUTTER-B4)', () {
+    test('envoie messageId avec la conversation en targetId', () async {
+      when(
+        () => mockDio.post('/reports', data: any(named: 'data')),
+      ).thenAnswer((_) async => _created({'id': 'r-m'}, '/reports'));
+
+      await datasource.createReport(
+        targetType: 'MESSAGE',
+        targetId: 'conv-uuid',
+        reason: 'Contenu inapproprié',
+        description: '',
+        photoKeys: const [],
+        messageId: 'Msg123',
+      );
+
+      final captured =
+          verify(
+                () => mockDio.post('/reports', data: captureAny(named: 'data')),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured['targetType'], 'MESSAGE');
+      expect(captured['targetId'], 'conv-uuid');
+      expect(captured['messageId'], 'Msg123');
+    });
+
+    test('omet messageId quand absent', () async {
+      when(
+        () => mockDio.post('/reports', data: any(named: 'data')),
+      ).thenAnswer((_) async => _created({'id': 'r-n'}, '/reports'));
+
+      await datasource.createReport(
+        targetType: 'APP',
+        reason: 'Bug',
+        description: '',
+        photoKeys: const [],
+      );
+
+      final captured =
+          verify(
+                () => mockDio.post('/reports', data: captureAny(named: 'data')),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured.containsKey('messageId'), isFalse);
+    });
+  });
+
   group('createReport — screenRoute (rapport du scarabée)', () {
     test('envoie screenRoute quand fourni', () async {
       when(

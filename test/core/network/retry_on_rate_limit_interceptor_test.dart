@@ -86,4 +86,25 @@ void main() {
     );
     expect(adapter.callCount, 1);
   });
+
+  test('429 sur un envoi multipart → jamais rejoué (FLUTTER-B4)', () async {
+    final d = buildDio([429, 200]);
+
+    await expectLater(
+      () => d.post<Map<String, dynamic>>(
+        '/conversations/c/images',
+        data: FormData.fromMap({
+          'file': MultipartFile.fromBytes([1, 2, 3], filename: 'p.jpg'),
+        }),
+      ),
+      throwsA(
+        isA<DioException>().having(
+          (e) => e.response?.statusCode,
+          'statusCode',
+          429,
+        ),
+      ),
+    );
+    expect(adapter.callCount, 1);
+  });
 }

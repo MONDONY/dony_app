@@ -33,6 +33,10 @@ class IncidentReportRemoteDatasource {
   ///
   /// [screenRoute] : route de l'écran d'origine pour un rapport du scarabée
   /// (cible APP), ignorée par un backend antérieur à yadony-back #317.
+  ///
+  /// [messageId] : message Firestore signalé, pour la cible MESSAGE dont
+  /// [targetId] est la conversation (`conversations.id`) ; le back vérifie
+  /// que le signalant participe à la conversation (FLUTTER-B4).
   Future<String> createReport({
     required String targetType,
     String? targetId,
@@ -40,6 +44,7 @@ class IncidentReportRemoteDatasource {
     String? description,
     required List<String> photoKeys,
     String? screenRoute,
+    String? messageId,
   }) async {
     final response = await _apiClient.dio.post(
       '/reports',
@@ -51,6 +56,7 @@ class IncidentReportRemoteDatasource {
           'description': description,
         'photoKeys': photoKeys,
         'screenRoute': ?screenRoute,
+        'messageId': ?messageId,
       },
     );
     return (response.data as Map<String, dynamic>)['id'] as String;

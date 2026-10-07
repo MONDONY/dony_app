@@ -27487,6 +27487,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Proposez vos kilos disponibles'**
   String get homePublishTripSubtitle;
+
+  /// Trombone de la saisie du chat et titre de la feuille de choix galerie / appareil photo (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer une photo'**
+  String get chatAttachPhotoTooltip;
+
+  /// Titre de la feuille ouverte par le trombone grisé : photos pas encore permises (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photos bientôt disponibles'**
+  String get chatPhotoLockedTitle;
+
+  /// Explication du trombone grisé (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les photos seront disponibles une fois la demande acceptée et payée.'**
+  String get chatPhotoLockedMessage;
+
+  /// Nom accessible du trombone grisé (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi de photos indisponible pour le moment'**
+  String get chatPhotoLockedSemantics;
+
+  /// Nom accessible de l'aperçu plein écran avant envoi d'une photo (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aperçu de la photo'**
+  String get chatPhotoPreviewTitle;
+
+  /// Bulle locale d'une photo en cours d'envoi (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi…'**
+  String get chatPhotoSending;
+
+  /// Bulle locale d'une photo dont l'envoi a échoué (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non envoyée'**
+  String get chatPhotoNotSent;
+
+  /// Photo purgée ou supprimée : le message reste, l'image n'est plus disponible (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo expirée'**
+  String get chatPhotoExpired;
+
+  /// Chargement d'une photo échoué (réseau) : un tap relance (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Touchez pour réessayer'**
+  String get chatPhotoTapToRetry;
+
+  /// Nom accessible d'une photo du chat, ouverte en plein écran au tap (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir la photo'**
+  String get chatPhotoOpenSemantics;
+
+  /// Snackbar : le serveur a refusé une photo (403 media-not-allowed, FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'envoi de photos n\'est plus possible dans cette conversation.'**
+  String get chatPhotoNotAllowed;
+
+  /// Snackbar : trop de photos envoyées (429 media-rate-limited, FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez envoyé beaucoup de photos. Réessayez dans quelques minutes.'**
+  String get chatPhotoRateLimited;
+
+  /// Snackbar : échec d'envoi d'une photo, réessayable depuis la bulle (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'La photo n\'a pas pu être envoyée.'**
+  String get chatPhotoSendFailed;
+
+  /// Entrée de l'appui long sur un message reçu : signaler ce message (FLUTTER-B4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler'**
+  String get chatReportMessageAction;
 }
 
 class _AppLocalizationsDelegate

@@ -39,6 +39,7 @@ class IncidentReportCubit extends Cubit<IncidentReportState> {
     required String reason,
     String? description,
     List<String> photoKeys = const [],
+    String? messageId,
   }) async {
     if (state is IncidentReportSubmitting) {
       return;
@@ -51,6 +52,7 @@ class IncidentReportCubit extends Cubit<IncidentReportState> {
         reason: reason,
         description: description,
         photoKeys: photoKeys,
+        messageId: messageId,
       );
       unawaited(
         _analytics.logEvent(

@@ -16630,4 +16630,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homePublishTripSubtitle => 'Offer your available kilos';
+
+  @override
+  String get chatAttachPhotoTooltip => 'Send a photo';
+
+  @override
+  String get chatPhotoLockedTitle => 'Photos coming soon';
+
+  @override
+  String get chatPhotoLockedMessage =>
+      'Photos will be available once the request has been accepted and paid.';
+
+  @override
+  String get chatPhotoLockedSemantics => 'Sending photos isn\'t available yet';
+
+  @override
+  String get chatPhotoPreviewTitle => 'Photo preview';
+
+  @override
+  String get chatPhotoSending => 'Sending…';
+
+  @override
+  String get chatPhotoNotSent => 'Not sent';
+
+  @override
+  String get chatPhotoExpired => 'Photo expired';
+
+  @override
+  String get chatPhotoTapToRetry => 'Tap to retry';
+
+  @override
+  String get chatPhotoOpenSemantics => 'Open photo';
+
+  @override
+  String get chatPhotoNotAllowed =>
+      'Photos can no longer be sent in this conversation.';
+
+  @override
+  String get chatPhotoRateLimited =>
+      'You\'ve sent a lot of photos. Please try again in a few minutes.';
+
+  @override
+  String get chatPhotoSendFailed => 'The photo couldn\'t be sent.';
+
+  @override
+  String get chatReportMessageAction => 'Report';
 }

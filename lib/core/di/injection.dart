@@ -126,6 +126,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/conversation_notifications/conversation_notifications_cubit.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/chat_draft_store.dart';
+import 'package:dony/features/messaging/data/chat_image_cache.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
@@ -707,6 +708,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Messaging
   getIt.registerLazySingleton<ConversationRepository>(
     () => ConversationRepository(getIt<ApiClient>()),
+  );
+  // Photos du chat en mémoire (FLUTTER-B4), partagées par les bulles et la
+  // visionneuse.
+  getIt.registerLazySingleton<ChatImageCache>(
+    () => ChatImageCache(getIt<ConversationRepository>()),
   );
   getIt.registerLazySingleton<FirestoreChatRepository>(
     () => FirestoreChatRepository(FirebaseFirestore.instance),

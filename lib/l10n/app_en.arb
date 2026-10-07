@@ -9193,5 +9193,19 @@
   "homePublishSendParcel": "Send a parcel",
   "homePublishSendParcelSubtitle": "Find a traveler for your parcel",
   "homePublishTrip": "Publish a trip",
-  "homePublishTripSubtitle": "Offer your available kilos"
+  "homePublishTripSubtitle": "Offer your available kilos",
+  "chatAttachPhotoTooltip": "Send a photo",
+  "chatPhotoLockedTitle": "Photos coming soon",
+  "chatPhotoLockedMessage": "Photos will be available once the request has been accepted and paid.",
+  "chatPhotoLockedSemantics": "Sending photos isn't available yet",
+  "chatPhotoPreviewTitle": "Photo preview",
+  "chatPhotoSending": "Sending…",
+  "chatPhotoNotSent": "Not sent",
+  "chatPhotoExpired": "Photo expired",
+  "chatPhotoTapToRetry": "Tap to retry",
+  "chatPhotoOpenSemantics": "Open photo",
+  "chatPhotoNotAllowed": "Photos can no longer be sent in this conversation.",
+  "chatPhotoRateLimited": "You've sent a lot of photos. Please try again in a few minutes.",
+  "chatPhotoSendFailed": "The photo couldn't be sent.",
+  "chatReportMessageAction": "Report"
 }

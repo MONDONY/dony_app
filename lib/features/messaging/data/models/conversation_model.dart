@@ -97,6 +97,13 @@ class ConversationModel {
   /// back : faux.
   final bool notificationsMuted;
 
+  /// Photos permises maintenant dans ce fil (FLUTTER-B4) : demande acceptée
+  /// et payée, jusqu'à J+3 après la livraison, conversation ouverte, aucun
+  /// blocage ni coupure de messagerie. Calculé par le back à chaque lecture.
+  /// Absent sur un ancien back : faux, le trombone reste grisé — repli sûr,
+  /// l'ancien back n'a pas l'endpoint d'envoi.
+  final bool mediaAllowed;
+
   const ConversationModel({
     required this.id,
     required this.bidId,
@@ -117,6 +124,7 @@ class ConversationModel {
     this.viewerRole,
     this.callAvailable = false,
     this.notificationsMuted = false,
+    this.mediaAllowed = false,
   });
 
   /// Conversation séparée voyageur ↔ destinataire : l'expéditeur n'y est pas,
@@ -157,6 +165,7 @@ class ConversationModel {
     DateTime? lastMessageAt,
     bool? readOnly,
     bool? notificationsMuted,
+    bool? mediaAllowed,
   }) => ConversationModel(
     id: id,
     bidId: bidId,
@@ -177,6 +186,7 @@ class ConversationModel {
     viewerRole: viewerRole,
     callAvailable: callAvailable,
     notificationsMuted: notificationsMuted ?? this.notificationsMuted,
+    mediaAllowed: mediaAllowed ?? this.mediaAllowed,
   );
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
@@ -213,5 +223,6 @@ class ConversationModel {
         },
         callAvailable: json['callAvailable'] == true,
         notificationsMuted: json['notificationsMuted'] == true,
+        mediaAllowed: json['mediaAllowed'] == true,
       );
 }

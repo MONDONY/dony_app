@@ -29,6 +29,7 @@ class IncidentReportRepository {
     String? description,
     List<String> photoKeys = const [],
     String? screenRoute,
+    String? messageId,
   }) => _datasource.createReport(
     targetType: targetType.apiValue,
     targetId: targetId,
@@ -36,5 +37,6 @@ class IncidentReportRepository {
     description: description,
     photoKeys: photoKeys,
     screenRoute: screenRoute,
+    messageId: messageId,
   );
 }
