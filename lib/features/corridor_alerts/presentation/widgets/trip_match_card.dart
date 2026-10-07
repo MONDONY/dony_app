@@ -13,6 +13,10 @@ import 'package:intl/intl.dart';
 /// senderWantsTrips. Mirror visuel de MatchingRequestCard (layout B) mais
 /// adapté aux champs voyageur : avatar/initiales, corridor, date, kg dispo,
 /// prix/kg, note.
+///
+/// Un trajet complet (0 kg restant ou statut `FULL`) reste affiché — l'alerte
+/// le garde tant que la date n'est pas passée — mais grisé, marqué
+/// « Complet » et non sélectionnable, comme `TravelerAnnouncementCard`.
 class TripMatchCard extends StatelessWidget {
   const TripMatchCard({
     super.key,
@@ -25,6 +29,10 @@ class TripMatchCard extends StatelessWidget {
   final int index;
   final VoidCallback? onTap;
 
+  /// Opacité d'un trajet complet : assez lisible pour être reconnu, assez
+  /// atténuée pour ne pas concurrencer les trajets encore réservables.
+  static const double fullOpacity = 0.55;
+
   static String _priceStr(TripMatchModel match) =>
       '${formatPriceIn(match.pricePerKg!, match.currency)}/kg';
 
@@ -33,220 +41,233 @@ class TripMatchCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final accent = cs.primary;
+    final isFull = match.isFull;
+    // Un trajet complet perd la couleur d'identité « trajet » : la bande et
+    // le micro-label passent au gris, rien n'invite plus à toucher.
+    final accent = isFull ? cs.onSurfaceVariant : cs.primary;
 
     final dateStr = DateFormat.MMMd(l.localeName).format(match.departureDate);
 
-    return Material(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: cs.outlineVariant),
-                borderRadius: BorderRadius.circular(DonyRadius.card),
-              ),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Bande latérale bleue — identité « trajet »
-                    Container(
-                      width: 6,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [accent, accent.withValues(alpha: 0.55)],
-                        ),
-                      ),
+    final card = Material(
+      color: cs.surface,
+      borderRadius: BorderRadius.circular(DonyRadius.card),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: isFull ? null : onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: cs.outlineVariant),
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Bande latérale bleue — identité « trajet »
+                Container(
+                  width: 6,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [accent, accent.withValues(alpha: 0.55)],
                     ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(DonySpacing.md),
-                        child: Column(
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(DonySpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Micro-label Trajet ─────────────────────────────
+                        Row(
+                          children: [
+                            DonyIcon('plane', size: 13, color: accent),
+                            const SizedBox(width: DonySpacing.xxs),
+                            Expanded(
+                              child: Text(
+                                isFull
+                                    ? l.listingStatusFull
+                                    : l.corridorAlertTripAvailable,
+                                overflow: TextOverflow.ellipsis,
+                                style: tt.labelSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                  color: accent,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+
+                        // ── Thumbnail + infos corridor ─────────────────────
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // ── Micro-label Trajet ─────────────────────────────
-                            Row(
-                              children: [
-                                DonyIcon('plane', size: 13, color: accent),
-                                const SizedBox(width: DonySpacing.xxs),
-                                Expanded(
-                                  child: Text(
-                                    l.corridorAlertTripAvailable,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: tt.labelSmall?.copyWith(
+                            _TripThumbnail(match: match, cs: cs),
+                            const SizedBox(width: DonySpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Corridor + date
+                                  Text(
+                                    '${match.departureCity} → ${match.arrivalCity}',
+                                    style: tt.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.4,
-                                      color: accent,
+                                      letterSpacing: -0.3,
+                                      color: cs.onSurface,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: DonySpacing.sm),
-
-                            // ── Thumbnail + infos corridor ─────────────────────
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _TripThumbnail(match: match, cs: cs),
-                                const SizedBox(width: DonySpacing.md),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  const SizedBox(height: DonySpacing.xs),
+                                  Row(
                                     children: [
-                                      // Corridor + date
-                                      Text(
-                                        '${match.departureCity} → ${match.arrivalCity}',
-                                        style: tt.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: -0.3,
-                                          color: cs.onSurface,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                      Icon(
+                                        Icons.flight_rounded,
+                                        size: 13,
+                                        color: cs.onSurfaceVariant,
                                       ),
-                                      const SizedBox(height: DonySpacing.xs),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.flight_rounded,
-                                            size: 13,
-                                            color: cs.onSurfaceVariant,
-                                          ),
-                                          const SizedBox(
-                                            width: DonySpacing.xxs,
-                                          ),
-                                          Text(
-                                            dateStr,
-                                            style: tt.bodySmall?.copyWith(
-                                              color: cs.onSurfaceVariant,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: DonySpacing.xs),
-                                      // Kg dispo
+                                      const SizedBox(width: DonySpacing.xxs),
                                       Text(
-                                        l.corridorAlertAvailableKg(
-                                          match.availableKg.toStringAsFixed(0),
-                                        ),
+                                        dateStr,
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.onSurfaceVariant,
                                           fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  // Kg dispo — masqué pour un trajet
+                                  // complet : « 0 kg dispo » ne dit rien
+                                  // de plus que le badge « Complet ».
+                                  if (!isFull) ...[
+                                    const SizedBox(height: DonySpacing.xs),
+                                    Text(
+                                      l.corridorAlertAvailableKg(
+                                        match.availableKg.toStringAsFixed(0),
+                                      ),
+                                      style: tt.bodySmall?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                        fontWeight: FontWeight.w600,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: DonySpacing.xs),
+                                  // Prix/kg
+                                  match.pricePerKg != null
+                                      ? Text.rich(
+                                          TextSpan(
+                                            style: tt.bodySmall?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
+                                            children: emphasizedSpans(
+                                              l.corridorAlertMatchPrice(
+                                                _priceStr(match),
+                                              ),
+                                              _priceStr(match),
+                                              style: tt.titleMedium?.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                                color: cs.primary,
+                                                letterSpacing: -0.3,
+                                                fontFeatures: const [
+                                                  FontFeature.tabularFigures(),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : Text(
+                                          l.corridorAlertOpenPrice,
+                                          style: tt.bodySmall?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        Divider(height: 1, color: cs.outlineVariant),
+                        const SizedBox(height: DonySpacing.xs),
+                        // ── Voyageur row ────────────────────────────────────
+                        Row(
+                          children: [
+                            DonyAvatar(
+                              name: match.travelerName,
+                              size: DonyAvatarSize.sm,
+                            ),
+                            const SizedBox(width: DonySpacing.sm),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    match.travelerName,
+                                    style: tt.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Row(
+                                    children: [
+                                      DonyIcon(
+                                        'star',
+                                        size: 12,
+                                        color: cs.warning,
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        match.travelerRating.toStringAsFixed(1),
+                                        style: tt.bodySmall?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: cs.onSurface,
                                           fontFeatures: const [
                                             FontFeature.tabularFigures(),
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(height: DonySpacing.xs),
-                                      // Prix/kg
-                                      match.pricePerKg != null
-                                          ? Text.rich(
-                                              TextSpan(
-                                                style: tt.bodySmall?.copyWith(
-                                                  color: cs.onSurfaceVariant,
-                                                ),
-                                                children: emphasizedSpans(
-                                                  l.corridorAlertMatchPrice(
-                                                    _priceStr(match),
-                                                  ),
-                                                  _priceStr(match),
-                                                  style: tt.titleMedium?.copyWith(
-                                                    fontWeight: FontWeight.w800,
-                                                    color: cs.primary,
-                                                    letterSpacing: -0.3,
-                                                    fontFeatures: const [
-                                                      FontFeature.tabularFigures(),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : Text(
-                                              l.corridorAlertOpenPrice,
-                                              style: tt.bodySmall?.copyWith(
-                                                color: cs.onSurfaceVariant,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
                                     ],
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: DonySpacing.sm),
-                            Divider(height: 1, color: cs.outlineVariant),
-                            const SizedBox(height: DonySpacing.xs),
-                            // ── Voyageur row ────────────────────────────────────
-                            Row(
-                              children: [
-                                DonyAvatar(
-                                  name: match.travelerName,
-                                  size: DonyAvatarSize.sm,
+                            if (!isFull)
+                              DonyIcon(
+                                'chevron-right',
+                                size: 16,
+                                color: cs.onSurfaceVariant.withValues(
+                                  alpha: 0.5,
                                 ),
-                                const SizedBox(width: DonySpacing.sm),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        match.travelerName,
-                                        style: tt.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Row(
-                                        children: [
-                                          DonyIcon(
-                                            'star',
-                                            size: 12,
-                                            color: cs.warning,
-                                          ),
-                                          const SizedBox(width: 2),
-                                          Text(
-                                            match.travelerRating
-                                                .toStringAsFixed(1),
-                                            style: tt.bodySmall?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: cs.onSurface,
-                                              fontFeatures: const [
-                                                FontFeature.tabularFigures(),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                DonyIcon(
-                                  'chevron-right',
-                                  size: 16,
-                                  color: cs.onSurfaceVariant.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-        )
+        ),
+      ),
+    );
+
+    return (isFull
+            ? Semantics(
+                container: true,
+                label: l.corridorAlertTripFullSemantics,
+                child: Opacity(opacity: fullOpacity, child: card),
+              )
+            : card)
         .animate()
         .fadeIn(
           delay: Duration(milliseconds: 60 * index),

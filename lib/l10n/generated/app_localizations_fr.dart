@@ -13388,6 +13388,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get corridorAlertTripFullSemantics => 'Trajet complet';
+
+  @override
   String corridorAlertMatchPrice(String price) {
     return 'Prix $price';
   }

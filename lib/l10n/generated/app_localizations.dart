@@ -22210,6 +22210,12 @@ abstract class AppLocalizations {
   /// **'{kg} kg dispo'**
   String corridorAlertAvailableKg(String kg);
 
+  /// Libellé d'accessibilité de la carte de correspondance d'un trajet complet, 0 kg restant ou statut FULL (trip_match_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet complet'**
+  String get corridorAlertTripFullSemantics;
+
   /// Prix au kilo d'un trajet, {price} déjà formaté (montant + devise + « /kg ») et mis en gras via emphasizedSpans (trip_match_card.dart).
   ///
   /// In fr, this message translates to:

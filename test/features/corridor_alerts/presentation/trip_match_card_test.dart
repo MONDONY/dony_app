@@ -7,18 +7,46 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 
-TripMatchModel _trip() => TripMatchModel(
-  announcementId: 'ann-1',
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 7, 10),
-  travelerId: 't-1',
-  travelerName: 'Awa S.',
-  travelerInitials: 'AS',
-  travelerRating: 4.7,
-  availableKg: 12.0,
-  pricePerKg: 9.5,
-);
+TripMatchModel _trip({double availableKg = 12.0, String? status}) =>
+    TripMatchModel(
+      announcementId: 'ann-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 7, 10),
+      travelerId: 't-1',
+      travelerName: 'Awa S.',
+      travelerInitials: 'AS',
+      travelerRating: 4.7,
+      availableKg: availableKg,
+      pricePerKg: 9.5,
+      status: status,
+    );
+
+Future<void> _pump(
+  WidgetTester tester,
+  TripMatchModel match, {
+  VoidCallback? onTap,
+}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: TripMatchCard(match: match, index: 0, onTap: onTap),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+double _cardOpacity(WidgetTester tester) {
+  final opacities = tester.widgetList<Opacity>(
+    find.descendant(
+      of: find.byType(TripMatchCard),
+      matching: find.byType(Opacity),
+    ),
+  );
+  return opacities.fold(1.0, (acc, o) => acc * o.opacity);
+}
 
 void main() {
   setUpAll(() async {
@@ -150,5 +178,95 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.textContaining('4.7'), findsWidgets);
+  });
+
+  group('trajet complet (FLUTTER-EW)', () {
+    testWidgets('0 kg : « Complet », pas de « 0 kg dispo », grisée, tap sans '
+        'effet', (tester) async {
+      var tapped = false;
+      await _pump(tester, _trip(availableKg: 0), onTap: () => tapped = true);
+
+      expect(find.text('Complet'), findsOneWidget);
+      expect(find.text('Trajet disponible'), findsNothing);
+      expect(find.textContaining('kg dispo'), findsNothing);
+      // La carte reste affichée avec ses informations.
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+      expect(find.text('Awa S.'), findsOneWidget);
+      expect(_cardOpacity(tester), closeTo(TripMatchCard.fullOpacity, 0.001));
+
+      await tester.tap(find.byType(TripMatchCard), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(tapped, isFalse);
+      final inkWell = tester.widget<InkWell>(
+        find.descendant(
+          of: find.byType(TripMatchCard),
+          matching: find.byType(InkWell),
+        ),
+      );
+      expect(inkWell.onTap, isNull);
+    });
+
+    testWidgets('kg négatif traité comme complet', (tester) async {
+      await _pump(tester, _trip(availableKg: -1));
+      expect(find.text('Complet'), findsOneWidget);
+    });
+
+    testWidgets('kg > 0 : inchangé (disponible, opaque, tapable)', (
+      tester,
+    ) async {
+      var tapped = false;
+      await _pump(tester, _trip(), onTap: () => tapped = true);
+
+      expect(find.text('Trajet disponible'), findsOneWidget);
+      expect(find.text('12 kg dispo'), findsOneWidget);
+      expect(find.text('Complet'), findsNothing);
+      expect(_cardOpacity(tester), 1.0);
+      expect(find.bySemanticsLabel(RegExp('Trajet complet')), findsNothing);
+
+      await tester.tap(find.byType(TripMatchCard));
+      expect(tapped, isTrue);
+    });
+
+    testWidgets('statut FULL avec kg restants : complet quand même', (
+      tester,
+    ) async {
+      var tapped = false;
+      await _pump(
+        tester,
+        _trip(availableKg: 5, status: 'FULL'),
+        onTap: () => tapped = true,
+      );
+
+      expect(find.text('Complet'), findsOneWidget);
+      expect(find.textContaining('kg dispo'), findsNothing);
+      expect(_cardOpacity(tester), closeTo(TripMatchCard.fullOpacity, 0.001));
+      await tester.tap(find.byType(TripMatchCard), warnIfMissed: false);
+      expect(tapped, isFalse);
+    });
+
+    testWidgets('statut OPEN avec kg restants : disponible', (tester) async {
+      await _pump(tester, _trip(status: 'OPEN'));
+      expect(find.text('Trajet disponible'), findsOneWidget);
+      expect(find.text('Complet'), findsNothing);
+    });
+
+    testWidgets('accessibilité : libellé « Trajet complet »', (tester) async {
+      final handle = tester.ensureSemantics();
+      await _pump(tester, _trip(availableKg: 0));
+      expect(find.bySemanticsLabel(RegExp('Trajet complet')), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('anglais : « Full » et libellé « Trip full »', (tester) async {
+      useEnglish();
+      final handle = tester.ensureSemantics();
+      await _pump(tester, _trip(availableKg: 0));
+
+      expect(find.text('Full'), findsOneWidget);
+      expect(find.text('Trip available'), findsNothing);
+      expect(find.textContaining('kg available'), findsNothing);
+      expect(find.bySemanticsLabel(RegExp('Trip full')), findsOneWidget);
+      handle.dispose();
+    });
   });
 }
