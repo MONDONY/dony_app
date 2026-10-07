@@ -21922,6 +21922,18 @@ abstract class AppLocalizations {
   /// **'La fenêtre de dates est passée'**
   String get corridorAlertBannerExpiredSubtitle;
 
+  /// Écran des correspondances d'une alerte active (trajets) : explique que la liste montre l'existant et que les prochains seront notifiés (FLUTTER-ES, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les trajets déjà publiés sont listés ici. Vous serez notifié des prochains.'**
+  String get corridorAlertMatchesNotifyNoteTrips;
+
+  /// Écran des correspondances d'une alerte active (colis) : explique que la liste montre l'existant et que les prochains seront notifiés (FLUTTER-ES, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les colis déjà publiés sont listés ici. Vous serez notifié des prochains.'**
+  String get corridorAlertMatchesNotifyNoteParcels;
+
   /// Titre du bandeau résumé d'une alerte active (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
   ///
   /// In fr, this message translates to:
@@ -26293,6 +26305,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.'**
   String get bidCreateWeightRequiredHint;
+
+  /// Formulaire de demande sur un trajet mixte (kilo + grille) : aide au-dessus du bouton quand un poids est saisi mais ni catégorie ni article (FLUTTER-ET, create_bid_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisez le contenu du colis : choisissez une catégorie ou des articles.'**
+  String get bidCreateContentRequiredHint;
+
+  /// Bouton de la sheet résumé du profil expéditeur, ouvre le profil public complet (abonnement, avis) (FLUTTER-EB, sender_public_profile_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le profil'**
+  String get requestSenderViewProfileButton;
 
   /// No description provided for @callNotificationTitle.
   ///

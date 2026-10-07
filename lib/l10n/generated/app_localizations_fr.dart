@@ -13209,6 +13209,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'La fenêtre de dates est passée';
 
   @override
+  String get corridorAlertMatchesNotifyNoteTrips =>
+      'Les trajets déjà publiés sont listés ici. Vous serez notifié des prochains.';
+
+  @override
+  String get corridorAlertMatchesNotifyNoteParcels =>
+      'Les colis déjà publiés sont listés ici. Vous serez notifié des prochains.';
+
+  @override
   String get corridorAlertBannerActiveTitle => 'Alerte active';
 
   @override
@@ -15997,6 +16005,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidCreateWeightRequiredHint =>
       'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.';
+
+  @override
+  String get bidCreateContentRequiredHint =>
+      'Précisez le contenu du colis : choisissez une catégorie ou des articles.';
+
+  @override
+  String get requestSenderViewProfileButton => 'Voir le profil';
 
   @override
   String get callNotificationTitle => 'Appel Yadony en cours';

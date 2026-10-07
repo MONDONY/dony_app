@@ -99,12 +99,19 @@ class _CorridorAlertMatchesView extends StatelessWidget {
             IconButton(
               tooltip: l.corridorAlertEditTitle,
               icon: DonyIcon('square-pen', size: 22, color: cs.primary),
-              onPressed: () => CorridorAlertFormSheet.show(
-                context,
-                alert: alert,
-                isTraveler: isTraveler,
-                isSender: isSender,
-              ),
+              onPressed: () async {
+                final saved = await CorridorAlertFormSheet.show(
+                  context,
+                  alert: alert,
+                  isTraveler: isTraveler,
+                  isSender: isSender,
+                );
+                // Filtres changés : l'alerte et ses correspondances se
+                // relisent depuis le serveur (FLUTTER-EP).
+                if (saved && context.mounted) {
+                  await context.read<CorridorAlertMatchesCubit>().reload();
+                }
+              },
             ),
           const DonyFeedbackButton(),
         ],
@@ -292,6 +299,19 @@ class _AlertSummaryBanner extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.md),
           CorridorAlertFilterChips(alert: alert),
+          // La liste montre l'existant ; les prochains arrivent en
+          // notification. Pas pour une alerte en pause ou expirée, qui ne
+          // notifie plus (FLUTTER-ES).
+          if (alert.active && !alert.isExpired) ...[
+            const SizedBox(height: DonySpacing.md),
+            Text(
+              isTrips
+                  ? l.corridorAlertMatchesNotifyNoteTrips
+                  : l.corridorAlertMatchesNotifyNoteParcels,
+              key: const Key('alert-matches-notify-note'),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
         ],
       ),
     );

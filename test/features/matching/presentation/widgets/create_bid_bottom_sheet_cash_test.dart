@@ -1159,5 +1159,110 @@ void main() {
         expect(btn.onPressed, isNotNull);
       },
     );
+
+    // FLUTTER-ET : en mixte, saisir un poids grisait le bouton alors que des
+    // articles de grille étaient cochés : ils ne comptaient pas comme contenu.
+    group('poids + articles de grille (FLUTTER-ET)', () {
+      DonyButton submitButton(WidgetTester tester) => tester.widget<DonyButton>(
+        find
+            .ancestor(
+              of: find.text('Envoyer'),
+              matching: find.byType(DonyButton),
+            )
+            .first,
+      );
+
+      Future<void> pickGridItem(WidgetTester tester) async {
+        await tester.tap(find.text('Choisir mes articles'));
+        await tester.pump();
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('grid-item-add-item-1')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('grid-sheet-confirm')));
+        await tester.pumpAndSettle();
+      }
+
+      const contentHint =
+          'Précisez le contenu du colis : choisissez une catégorie ou des '
+          'articles.';
+
+      testWidgets('poids + article coché, sans catégorie → bouton actif', (
+        tester,
+      ) async {
+        await _openSheet(tester, _mixedAnnouncement());
+        await pickGridItem(tester);
+        tester.widget<Slider>(find.byType(Slider)).onChanged!(5);
+        await tester.pump();
+        await tester.tap(find.byType(Checkbox).first);
+        await tester.pump();
+
+        expect(submitButton(tester).onPressed, isNotNull);
+        expect(find.text(contentHint), findsNothing);
+        // La description reprend les articles : elle devient facultative.
+        expect(find.text('DESCRIPTION (OPTIONNELLE)'), findsOneWidget);
+        await tester.pumpAndSettle();
+      });
+
+      testWidgets('envoi sans description → articles en description et '
+          'contenu', (tester) async {
+        await _openSheet(tester, _mixedAnnouncement());
+        await pickGridItem(tester);
+        tester.widget<Slider>(find.byType(Slider)).onChanged!(5);
+        await tester.pump();
+        await tester.tap(find.byType(Checkbox).first);
+        await tester.pump();
+        // at(0) = input contenu, at(1) = description (laissée vide).
+        await tester.enterText(find.byType(TextField).at(2), 'Amadou Diallo');
+        await tester.pump();
+        await tester.enterText(
+          find.byType(TextField).at(3),
+          '+221 77 000 00 00',
+        );
+        await tester.pump();
+
+        await tester.tap(find.text('Envoyer'));
+        await tester.pump();
+
+        final event =
+            verify(
+                  () => _currentBidBloc.add(
+                    captureAny(that: isA<BidCheckoutRequested>()),
+                  ),
+                ).captured.single
+                as BidCheckoutRequested;
+        expect(event.description, '1 × Téléphone');
+        expect(event.contentCategory, 'Téléphone');
+        expect(event.weightKg, 5);
+      });
+
+      testWidgets('poids seul, ni catégorie ni article → aide visible, '
+          'bouton grisé', (tester) async {
+        await _openSheet(tester, _mixedAnnouncement());
+        tester.widget<Slider>(find.byType(Slider)).onChanged!(5);
+        await tester.pump();
+        await tester.tap(find.byType(Checkbox).first);
+        await tester.pump();
+
+        expect(submitButton(tester).onPressed, isNull);
+        expect(find.byKey(const Key('bid-submit-hint')), findsOneWidget);
+        expect(find.text(contentHint), findsOneWidget);
+      });
+
+      testWidgets('poids + catégorie → aide retirée', (tester) async {
+        await _openSheet(tester, _mixedAnnouncement());
+        await _enableSubmitButton(tester);
+
+        expect(find.text(contentHint), findsNothing);
+        expect(submitButton(tester).onPressed, isNotNull);
+      });
+
+      testWidgets('trajet au kilo seul : pas d\'aide contenu', (tester) async {
+        await _openSheet(tester, _announcement());
+        tester.widget<Slider>(find.byType(Slider)).onChanged!(5);
+        await tester.pump();
+
+        expect(find.text(contentHint), findsNothing);
+      });
+    });
   });
 }

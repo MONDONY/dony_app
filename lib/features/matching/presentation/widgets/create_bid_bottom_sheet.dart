@@ -317,16 +317,27 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// Le contenu se déduit des articles de grille choisis.
   bool get _contentFromGrid => _isGridOnly || _onlyGridSelected;
 
+  /// Au moins un article de la grille du voyageur est coché.
+  bool get _hasGridItemsSelected =>
+      _gridQuantitiesNotifier.value.values.any((q) => q > 0);
+
+  /// Contenu déclaré. En mixte avec un poids, les articles de grille cochés
+  /// comptent comme contenu à côté des catégories choisies : ils ne
+  /// remplissaient pas « Contenu du colis » et le bouton restait grisé
+  /// (FLUTTER-ET).
   String get _contentCategoryValue =>
-      (_contentFromGrid ? _gridDerivedCategories : _categoriesNotifier.value)
+      (_contentFromGrid
+              ? _gridDerivedCategories
+              : {..._categoriesNotifier.value, ..._gridDerivedCategories})
           .join(', ');
 
-  /// Description envoyée au voyageur. Laissée vide sur une sélection de
-  /// grille seule, elle reprend les articles choisis (« 2 × Valise ») : le
-  /// back l'exige, et le voyageur lit ainsi ce que contient le colis.
+  /// Description envoyée au voyageur. Laissée vide alors que des articles de
+  /// grille sont cochés (seuls, ou avec un poids en mixte), elle reprend les
+  /// articles choisis (« 2 × Valise ») : le back l'exige (`@NotBlank`), et le
+  /// voyageur lit ainsi ce que contient le colis.
   String get _descriptionValue {
     final typed = _descCtrl.text.trim();
-    if (typed.isNotEmpty || !_onlyGridSelected) return typed;
+    if (typed.isNotEmpty || !_hasGridItemsSelected) return typed;
     final q = _gridQuantitiesNotifier.value;
     return [
       for (final item in widget.announcement.priceGridItems)
@@ -583,7 +594,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     // En grille pure, le contenu se déduit des articles choisis (gridOk le
     // couvre déjà) — pas de combobox à remplir séparément.
     final categoriesOk =
-        _contentFromGrid || _categoriesNotifier.value.isNotEmpty;
+        _contentFromGrid ||
+        _categoriesNotifier.value.isNotEmpty ||
+        _gridDerivedCategories.isNotEmpty;
     // Poids manquant sur un trajet au kilo, sans article de grille pour le
     // remplacer : le bouton reste grisé, on dit pourquoi (FLUTTER-7Q).
     final missingWeight =
@@ -591,8 +604,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         !weightOk &&
         !gridOk &&
         (widget.announcement.isKgFree || _maxKg > 0);
+    // Trajet mixte, poids saisi mais ni catégorie ni article : sans cette
+    // aide, le bouton grisé ne disait pas ce qui manque (FLUTTER-ET).
+    final missingContent =
+        hasKgPricing && hasGridPricing && weightOk && !categoriesOk;
     final weightHint = missingWeight
         ? context.l10n.bidCreateWeightRequiredHint
+        : missingContent
+        ? context.l10n.bidCreateContentRequiredHint
         : null;
     final canSubmit =
         (weightOk || gridOk) &&
@@ -1399,7 +1418,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
             // ── Description ───────────────────────────────────────────────
             _SectionLabel(
-              label: _onlyGridSelected
+              label: _hasGridItemsSelected
                   ? context.l10n.bidCreateDescriptionSectionLabelOptional
                   : context.l10n.bidCreateDescriptionSectionLabel,
             ),

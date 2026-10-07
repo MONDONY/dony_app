@@ -13127,6 +13127,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get corridorAlertBannerExpiredSubtitle => 'The date window has passed';
 
   @override
+  String get corridorAlertMatchesNotifyNoteTrips =>
+      'Trips already published are listed here. You\'ll be notified of new ones.';
+
+  @override
+  String get corridorAlertMatchesNotifyNoteParcels =>
+      'Parcels already published are listed here. You\'ll be notified of new ones.';
+
+  @override
   String get corridorAlertBannerActiveTitle => 'Alert active';
 
   @override
@@ -15906,6 +15914,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidCreateWeightRequiredHint =>
       'Enter the estimated weight, e.g. 0.5 kg for a phone.';
+
+  @override
+  String get bidCreateContentRequiredHint =>
+      'Specify what\'s in the parcel: pick a category or items.';
+
+  @override
+  String get requestSenderViewProfileButton => 'View profile';
 
   @override
   String get callNotificationTitle => 'Yadony call in progress';
