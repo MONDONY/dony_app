@@ -18,6 +18,7 @@ class TripMatchModel extends Equatable {
     this.photoUrl,
     this.currency = 'EUR',
     this.publishedAt,
+    this.status,
   });
 
   final String announcementId;
@@ -39,6 +40,14 @@ class TripMatchModel extends Equatable {
   /// backend antérieur : le trajet est alors considéré comme déjà vu.
   final DateTime? publishedAt;
 
+  /// Statut de l'annonce (`OPEN`, `FULL`…) quand le backend l'expose ;
+  /// `null` sur un backend antérieur, la capacité restante fait alors foi.
+  final String? status;
+
+  /// Trajet complet : plus aucun kilo à réserver. Il reste listé dans
+  /// l'alerte tant que sa date n'est pas passée, mais n'est plus sélectionnable.
+  bool get isFull => status == 'FULL' || availableKg <= 0;
+
   factory TripMatchModel.fromJson(Map<String, dynamic> json) => TripMatchModel(
     announcementId: json['announcementId'] as String,
     departureCity: json['departureCity'] as String,
@@ -56,6 +65,7 @@ class TripMatchModel extends Equatable {
     publishedAt: json['publishedAt'] != null
         ? DateTime.parse(json['publishedAt'] as String)
         : null,
+    status: json['status'] as String?,
   );
 
   @override
@@ -74,5 +84,6 @@ class TripMatchModel extends Equatable {
     photoUrl,
     currency,
     publishedAt,
+    status,
   ];
 }

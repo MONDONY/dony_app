@@ -67,4 +67,43 @@ void main() {
     expect(m.transportMode, isNull);
     expect(m.photoUrl, isNull);
   });
+
+  group('isFull / status', () {
+    Map<String, dynamic> json({num kg = 5, String? status}) => {
+      'announcementId': 'ann-9',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'departureDate': '2026-07-10',
+      'travelerId': 't-9',
+      'travelerName': 'Awa S.',
+      'travelerInitials': 'AS',
+      'travelerRating': 4.7,
+      'availableKg': kg,
+      'status': ?status,
+    };
+
+    test('backend antérieur sans status : repli sur availableKg', () {
+      final open = TripMatchModel.fromJson(json());
+      expect(open.status, isNull);
+      expect(open.isFull, isFalse);
+      expect(TripMatchModel.fromJson(json(kg: 0)).isFull, isTrue);
+    });
+
+    test('status FULL : complet même avec des kilos restants', () {
+      final m = TripMatchModel.fromJson(json(status: 'FULL'));
+      expect(m.status, 'FULL');
+      expect(m.isFull, isTrue);
+    });
+
+    test('status OPEN avec kilos : disponible', () {
+      expect(TripMatchModel.fromJson(json(status: 'OPEN')).isFull, isFalse);
+    });
+
+    test('status entre dans l\'égalité', () {
+      expect(
+        TripMatchModel.fromJson(json(status: 'FULL')),
+        isNot(TripMatchModel.fromJson(json(status: 'OPEN'))),
+      );
+    });
+  });
 }

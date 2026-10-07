@@ -7481,6 +7481,7 @@
   "corridorAlertRadiusLabel": "Radius",
   "corridorAlertTripAvailable": "Trip available",
   "corridorAlertAvailableKg": "{kg} kg available",
+  "corridorAlertTripFullSemantics": "Trip full",
   "corridorAlertMatchPrice": "Price {price}",
   "corridorAlertOpenPrice": "Open price",
   "favoritesTitle": "Saved",
