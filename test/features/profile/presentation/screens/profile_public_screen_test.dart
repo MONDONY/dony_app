@@ -443,7 +443,7 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Vu hier'), findsOneWidget);
+    expect(find.text('Actif hier'), findsOneWidget);
     expect(find.byKey(const Key('profile-response-time')), findsOneWidget);
     expect(find.text('3 h'), findsOneWidget);
     expect(find.text('Réponse'), findsOneWidget);
@@ -464,13 +464,23 @@ void main() {
 
   test('libellés : dernière connexion au jour près, réponse arrondie', () {
     final l = lookupAppLocalizations(const Locale('fr'));
-    expect(lastSeenLabel(l, 0), "Vu aujourd'hui");
-    expect(lastSeenLabel(l, 1), 'Vu hier');
-    expect(lastSeenLabel(l, 12), 'Vu il y a 12 jours');
-    expect(lastSeenLabel(l, 45), "Vu il y a plus d'un mois");
+    // FLUTTER-EV : « Actif », pas « Vu » (qui laissait croire que la
+    // personne avait vu le message ou le profil).
+    expect(lastSeenLabel(l, 0), "Actif aujourd'hui");
+    expect(lastSeenLabel(l, 1), 'Actif hier');
+    expect(lastSeenLabel(l, 12), 'Actif il y a 12 jours');
+    expect(lastSeenLabel(l, 45), "Actif il y a plus d'un mois");
     expect(responseTimeLabel(l, 20), '< 1 h');
     expect(responseTimeLabel(l, 61), '2 h');
     expect(responseTimeLabel(l, 60 * 30), '2 j');
+  });
+
+  test('libellés de dernière connexion en anglais', () {
+    final l = lookupAppLocalizations(const Locale('en'));
+    expect(lastSeenLabel(l, 0), 'Active today');
+    expect(lastSeenLabel(l, 1), 'Active yesterday');
+    expect(lastSeenLabel(l, 12), 'Active 12 days ago');
+    expect(lastSeenLabel(l, 45), 'Active over a month ago');
   });
 
   testWidgets('pas de pays de résidence sans consentement', (tester) async {

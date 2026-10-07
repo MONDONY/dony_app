@@ -123,6 +123,7 @@ import 'package:dony/features/matching/data/repositories/tools_completion_reposi
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/messaging/data/chat_draft_store.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/announcements_inbox_bloc.dart';
@@ -713,6 +714,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       blockEvents: getIt<BlockEventsService>(),
     ),
     dispose: (b) => b.close(),
+  );
+  // Brouillons de messages par conversation (FLUTTER-CY), dans user_prefs
+  // pour être vidés avec le reste à la déconnexion.
+  getIt.registerLazySingleton<ChatDraftStore>(
+    () => ChatDraftStore(getIt<HiveService>().userPrefs),
   );
   getIt.registerFactory<ChatBloc>(
     () => ChatBloc(

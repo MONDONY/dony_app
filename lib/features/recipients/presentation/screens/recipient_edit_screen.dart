@@ -234,6 +234,21 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                   .animate()
                   .fadeIn(delay: 40.ms, duration: 280.ms)
                   .slideY(begin: 0.03),
+              // FLUTTER-EG : simple aide, aucun blocage (pas de règle
+              // « deux mots ») ; le nom saisi est montré au voyageur.
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: DonySpacing.xs,
+                  left: DonySpacing.xs,
+                ),
+                child: Text(
+                  l.recipientFullNameFieldHelper,
+                  key: const Key('recipient-full-name-helper'),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ).animate().fadeIn(delay: 40.ms, duration: 280.ms),
               const SizedBox(height: DonySpacing.base),
               DonyTextField(
                     controller: _phoneCtrl,

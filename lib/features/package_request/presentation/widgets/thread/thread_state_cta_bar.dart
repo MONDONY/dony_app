@@ -123,11 +123,15 @@ class ThreadStateCtaBar extends StatelessWidget {
     switch (thread.status) {
       case NegotiationThreadStatus.open:
         if (_lastFromMe) {
-          return ThreadStateBanner(
-            iconAsset: 'hourglass',
-            tint: kWarning,
-            message: l.negotiationOpenAwaitingReplyTitle,
-            subtitle: l.negotiationOpenAwaitingReplySubtitle,
+          return _AwaitingOtherWithEnd(
+            threadId: thread.id,
+            disabled: actionInProgress,
+            banner: ThreadStateBanner(
+              iconAsset: 'hourglass',
+              tint: kWarning,
+              message: l.negotiationOpenAwaitingReplyTitle,
+              subtitle: l.negotiationOpenAwaitingReplySubtitle,
+            ),
           );
         }
         return _isSender
@@ -142,11 +146,15 @@ class ThreadStateCtaBar extends StatelessWidget {
 
       case NegotiationThreadStatus.awaitingTrip:
         if (_isSender) {
-          return ThreadStateBanner(
-            iconAsset: 'hourglass',
-            tint: kWarning,
-            message: l.negotiationAwaitingTripSenderTitle,
-            subtitle: l.negotiationAwaitingTripSenderSubtitle,
+          return _AwaitingOtherWithEnd(
+            threadId: thread.id,
+            disabled: actionInProgress,
+            banner: ThreadStateBanner(
+              iconAsset: 'hourglass',
+              tint: kWarning,
+              message: l.negotiationAwaitingTripSenderTitle,
+              subtitle: l.negotiationAwaitingTripSenderSubtitle,
+            ),
           );
         }
         return Column(
@@ -284,6 +292,63 @@ class ThreadStateCtaBar extends StatelessWidget {
           ),
         );
     }
+  }
+}
+
+/// Confirmation partagée de « Mettre fin à la négociation » : bouton visible
+/// de l'état d'attente et entrée du menu ⋯ de l'écran du fil.
+Future<void> confirmEndNegotiation(
+  BuildContext context, {
+  required String threadId,
+}) async {
+  final l = context.l10n;
+  final bloc = context.read<NegotiationBloc>();
+  final confirmed = await DonyDialog.show(
+    context,
+    title: l.negotiationEndDialogTitle,
+    message: l.negotiationEndDialogMessage,
+    confirmLabel: l.negotiationEndDialogConfirmButton,
+    variant: DonyDialogVariant.destructive,
+  );
+  if (confirmed == true) {
+    bloc.add(NegotiationCancelRequested(threadId: threadId));
+  }
+}
+
+/// État « en attente de l'autre » (FLUTTER-EQ) : le bandeau, puis la sortie
+/// « Mettre fin à la négociation » en bouton secondaire, jusque-là cachée
+/// dans le menu ⋯. Statuts couverts : `open` après mon dernier message,
+/// `awaitingTrip` côté expéditeur — avant tout paiement engagé.
+class _AwaitingOtherWithEnd extends StatelessWidget {
+  const _AwaitingOtherWithEnd({
+    required this.threadId,
+    required this.disabled,
+    required this.banner,
+  });
+
+  final String threadId;
+  final bool disabled;
+  final Widget banner;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        banner,
+        const SizedBox(height: DonySpacing.sm),
+        DonyButton(
+          key: const Key('thread-end-negotiation-btn'),
+          label: context.l10n.negotiationEndMenuItem,
+          variant: DonyButtonVariant.secondary,
+          onPressed: disabled
+              ? null
+              : () => unawaited(
+                  confirmEndNegotiation(context, threadId: threadId),
+                ),
+        ),
+      ],
+    );
   }
 }
 

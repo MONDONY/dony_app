@@ -1793,7 +1793,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get homeCorridorAll => 'Tous les corridors';
+  String get homeCorridorAll => 'Tous les trajets';
 
   @override
   String get homePullToList => 'Tirer pour voir la liste';
@@ -2049,7 +2049,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeEmptyTravelersFiltered => 'Aucun voyageur avec ces filtres';
 
   @override
-  String get homeEmptyTravelersRoute => 'Aucun voyageur sur ce corridor';
+  String get homeEmptyTravelersRoute => 'Aucun voyageur sur ce trajet';
 
   @override
   String get homeEmptyNearbyHint =>
@@ -2580,7 +2580,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishLockedBannerSubtitle =>
-      'Corridor, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l\'expéditeur.';
+      'Trajet, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l\'expéditeur.';
 
   @override
   String get tripPublishFieldLockedCorridorMessage =>
@@ -5824,6 +5824,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String negotiationThreadWaitingForReply(String name) {
     return 'En attente de la réponse de $name.';
   }
+
+  @override
+  String get negotiationThreadCancelButton => 'Annuler la négociation';
+
+  @override
+  String get negotiationThreadCancelSheetTitle => 'Annuler la négociation ?';
+
+  @override
+  String get negotiationThreadCancelSheetBody =>
+      'La discussion de prix sera close pour vous deux. Votre proposition en cours ne pourra plus être acceptée.';
+
+  @override
+  String get negotiationThreadCancelSheetReofferNote =>
+      'Vous pourrez refaire une offre sur ce trajet tant qu\'il est ouvert.';
+
+  @override
+  String get negotiationThreadCancelSheetConfirm => 'Annuler la négociation';
+
+  @override
+  String get negotiationThreadCancelSheetKeep => 'Continuer à négocier';
 
   @override
   String get negotiationThreadCounterpartyFallback => 'votre interlocuteur';
@@ -12426,7 +12446,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationSettingsCorridorSubtitle =>
-      'Alertes corridor et voyageurs suivis';
+      'Alertes de trajet et voyageurs suivis';
 
   @override
   String get notificationSettingsNegotiationsLabel => 'Discussions de prix';
@@ -13274,18 +13294,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get corridorAlertEmptyDescriptionPackages =>
-      'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.';
+      'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton trajet.';
 
   @override
   String get corridorAlertEmptyDescriptionTrips =>
-      'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.';
+      'Crée une alerte pour être prévenu dès qu\'un voyageur propose ton trajet.';
 
   @override
   String get corridorAlertEmptyDescriptionAll =>
-      'Crée une alerte pour être prévenu dès qu\'un trajet ou un colis apparaît sur ton corridor.';
+      'Crée une alerte pour être prévenu dès qu\'un voyageur ou un colis apparaît sur ton trajet.';
 
   @override
-  String get corridorAlertEmptyTitle => 'Aucune alerte corridor';
+  String get corridorAlertEmptyTitle => 'Aucune alerte de trajet';
 
   @override
   String get corridorAlertCreateAction => 'Créer une alerte';
@@ -13297,7 +13317,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get corridorAlertGroupPackages => 'Colis surveillés';
 
   @override
-  String get corridorAlertActionEditSubtitle => 'Corridor, dates et filtres';
+  String get corridorAlertActionEditSubtitle => 'Trajet, dates et filtres';
 
   @override
   String get corridorAlertDuplicate => 'Dupliquer';
@@ -14106,7 +14126,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recipientCreateTitle => 'Nouveau destinataire';
 
   @override
-  String get recipientFullNameFieldLabel => 'Nom complet';
+  String get recipientFullNameFieldLabel => 'Prénom et nom';
+
+  @override
+  String get recipientFullNameFieldHelper => 'Le voyageur verra ce nom.';
 
   @override
   String get recipientPhoneFieldLabel => 'Téléphone (E.164)';
@@ -15451,18 +15474,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Déjà reporté 2 fois : annulez et publiez un nouveau trajet';
 
   @override
-  String get profilePublicLastSeenToday => 'Vu aujourd\'hui';
+  String get profilePublicLastSeenToday => 'Actif aujourd\'hui';
 
   @override
-  String get profilePublicLastSeenYesterday => 'Vu hier';
+  String get profilePublicLastSeenYesterday => 'Actif hier';
 
   @override
   String profilePublicLastSeenDaysAgo(int days) {
-    return 'Vu il y a $days jours';
+    return 'Actif il y a $days jours';
   }
 
   @override
-  String get profilePublicLastSeenLongAgo => 'Vu il y a plus d\'un mois';
+  String get profilePublicLastSeenLongAgo => 'Actif il y a plus d\'un mois';
 
   @override
   String get profilePublicStatResponseLabel => 'Réponse';

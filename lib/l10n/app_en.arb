@@ -718,7 +718,7 @@
   "tripPublishHandoverDeadlineSubtitle": "Latest date senders can hand you their parcels",
   "tripPublishHandoverDeadlineChoose": "Choose",
   "tripPublishLockedBannerTitle": "Trip dedicated to the request",
-  "tripPublishLockedBannerSubtitle": "Corridor, capacity and price are locked. The date must stay within the sender's tolerance window.",
+  "tripPublishLockedBannerSubtitle": "Route, capacity and price are locked. The date must stay within the sender's tolerance window.",
   "tripPublishFieldLockedCorridorMessage": "The cities of this trip can no longer be changed.",
   "tripPublishFieldLockedDateMessage": "The departure date of this trip can no longer be changed.",
   "requestPublishIntroTitle": "Post a parcel",
@@ -2092,6 +2092,12 @@
       }
     }
   },
+  "negotiationThreadCancelButton": "Cancel the negotiation",
+  "negotiationThreadCancelSheetTitle": "Cancel the negotiation?",
+  "negotiationThreadCancelSheetBody": "The price discussion will be closed for both of you. Your pending offer can no longer be accepted.",
+  "negotiationThreadCancelSheetReofferNote": "You can make a new offer on this trip as long as it stays open.",
+  "negotiationThreadCancelSheetConfirm": "Cancel the negotiation",
+  "negotiationThreadCancelSheetKeep": "Keep negotiating",
   "negotiationThreadCounterpartyFallback": "the other party",
   "@negotiationThreadCounterpartyFallback": {
     "description": "Repli quand l'interlocuteur n'a pas de nom (bid_negotiation_thread_screen.dart)"
@@ -7677,7 +7683,8 @@
   "recipientDeleteConfirmMessage": "Are you sure you want to delete \"{name}\"? This action is irreversible.",
   "recipientEditTitle": "Edit recipient",
   "recipientCreateTitle": "New recipient",
-  "recipientFullNameFieldLabel": "Full name",
+  "recipientFullNameFieldLabel": "First and last name",
+  "recipientFullNameFieldHelper": "The traveler will see this name.",
   "recipientPhoneFieldLabel": "Phone (E.164)",
   "recipientPhoneInvalidFormat": "Invalid format ({example})",
   "recipientUpdatedMessage": "Recipient updated",
@@ -8693,9 +8700,9 @@
   },
   "tripRescheduleParcelOnTheWayMessage": "A parcel is already on its way, arrived or delivered: this trip can no longer be rescheduled.",
   "tripRescheduleLimitReachedMessage": "Already rescheduled twice: cancel and post a new trip",
-  "profilePublicLastSeenToday": "Seen today",
-  "profilePublicLastSeenYesterday": "Seen yesterday",
-  "profilePublicLastSeenDaysAgo": "Seen {days} days ago",
+  "profilePublicLastSeenToday": "Active today",
+  "profilePublicLastSeenYesterday": "Active yesterday",
+  "profilePublicLastSeenDaysAgo": "Active {days} days ago",
   "@profilePublicLastSeenDaysAgo": {
     "placeholders": {
       "days": {
@@ -8703,7 +8710,7 @@
       }
     }
   },
-  "profilePublicLastSeenLongAgo": "Seen over a month ago",
+  "profilePublicLastSeenLongAgo": "Active over a month ago",
   "profilePublicStatResponseLabel": "Reply time",
   "profilePublicResponseUnderHour": "< 1 hr",
   "profilePublicResponseHours": "{hours} hr",

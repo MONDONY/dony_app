@@ -374,6 +374,118 @@ void main() {
     expect(find.byKey(const Key('nego-waiting-hint')), findsOneWidget);
   });
 
+  // ── FLUTTER-EQ : sortie visible pendant l'attente ──────────────────────
+  group('annuler la negociation en attente de l autre', () {
+    /// Entrée ou sortie animée de la feuille : une frame pour la lancer,
+    /// une autre pour la mener à terme.
+    Future<void> settleSheet(WidgetTester tester) async {
+      await tester.pump();
+      await tester.pump(_kSettle);
+    }
+
+    List<BidNegotiationCancelRequested> cancels() => verify(
+      () => bloc.add(captureAny()),
+    ).captured.whereType<BidNegotiationCancelRequested>().toList();
+
+    testWidgets('le bouton secondaire est la pendant l attente', (
+      tester,
+    ) async {
+      await pumpScreen(tester, BidNegotiationLoaded(_thread(myTurn: false)));
+
+      final button = tester.widget<DonyButton>(
+        find.byKey(const Key('nego-cancel-btn')),
+      );
+      expect(button.label, 'Annuler la négociation');
+      expect(button.variant, DonyButtonVariant.secondary);
+    });
+
+    testWidgets('jamais quand c est mon tour ni sur un fil clos', (
+      tester,
+    ) async {
+      await pumpScreen(tester, BidNegotiationLoaded(_thread()));
+      expect(find.byKey(const Key('nego-cancel-btn')), findsNothing);
+
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(status: 'NEGOTIATION_CLOSED', myTurn: false),
+        ),
+      );
+      expect(find.byKey(const Key('nego-cancel-btn')), findsNothing);
+    });
+
+    testWidgets('expediteur : confirmation, note de nouvelle offre, puis '
+        'BidNegotiationCancelRequested', (tester) async {
+      await pumpScreen(tester, BidNegotiationLoaded(_thread(myTurn: false)));
+
+      await tester.tap(find.byKey(const Key('nego-cancel-btn')));
+      await settleSheet(tester);
+
+      expect(find.text('Annuler la négociation ?'), findsOneWidget);
+      expect(find.textContaining('close pour vous deux'), findsOneWidget);
+      expect(find.byKey(const Key('nego-cancel-reoffer-note')), findsOneWidget);
+      // Rien ne part avant la confirmation.
+      expect(cancels(), isEmpty);
+
+      final confirm = tester.widget<DonyButton>(
+        find.byKey(const Key('nego-cancel-confirm')),
+      );
+      expect(confirm.variant, DonyButtonVariant.destructive);
+      await tester.tap(find.byKey(const Key('nego-cancel-confirm')));
+      await settleSheet(tester);
+
+      final sent = cancels();
+      expect(sent, hasLength(1));
+      expect(sent.single.bidId, 'bid1');
+      expect(find.text('Annuler la négociation ?'), findsNothing);
+    });
+
+    testWidgets('voyageur : pas de promesse de nouvelle offre', (tester) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(_thread(myTurn: false, netEur: 37)),
+      );
+
+      await tester.tap(find.byKey(const Key('nego-cancel-btn')));
+      await settleSheet(tester);
+
+      expect(find.text('Annuler la négociation ?'), findsOneWidget);
+      expect(find.byKey(const Key('nego-cancel-reoffer-note')), findsNothing);
+    });
+
+    testWidgets('continuer a negocier referme la feuille sans rien envoyer', (
+      tester,
+    ) async {
+      await pumpScreen(tester, BidNegotiationLoaded(_thread(myTurn: false)));
+
+      await tester.tap(find.byKey(const Key('nego-cancel-btn')));
+      await settleSheet(tester);
+      await tester.tap(find.byKey(const Key('nego-cancel-keep')));
+      await settleSheet(tester);
+
+      expect(find.text('Annuler la négociation ?'), findsNothing);
+      expect(cancels(), isEmpty);
+    });
+
+    testWidgets('en anglais : bouton et feuille traduits', (tester) async {
+      useEnglish();
+      await pumpScreen(tester, BidNegotiationLoaded(_thread(myTurn: false)));
+
+      expect(find.text('Cancel the negotiation'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('nego-cancel-btn')));
+      await settleSheet(tester);
+
+      expect(find.text('Cancel the negotiation?'), findsOneWidget);
+      expect(find.text('Keep negotiating'), findsOneWidget);
+      expect(
+        find.text(
+          'You can make a new offer on this trip as long as it stays open.',
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
   testWidgets('au plafond de tours la contre-offre est desactivee', (
     tester,
   ) async {

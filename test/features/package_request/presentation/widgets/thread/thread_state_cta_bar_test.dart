@@ -626,6 +626,100 @@ void main() {
     });
   });
 
+  // ── FLUTTER-EQ : sortie visible pendant l'attente de l'autre ────────────
+  group('Mettre fin à la négociation (état d\'attente)', () {
+    final endButton = find.byKey(const Key('thread-end-negotiation-btn'));
+
+    testWidgets('OPEN · mon dernier message → bouton secondaire visible', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.open, lastFromViewer: true),
+          _viewerSender,
+        ),
+      );
+      expect(find.text('En attente de la réponse'), findsOneWidget);
+      final button = tester.widget<DonyButton>(endButton);
+      expect(button.label, 'Mettre fin à la négociation');
+      expect(button.variant, DonyButtonVariant.secondary);
+    });
+
+    testWidgets('AWAITING_TRIP · expéditeur → bouton visible', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.awaitingTrip),
+          _viewerSender,
+        ),
+      );
+      expect(endButton, findsOneWidget);
+    });
+
+    testWidgets('absent quand c\'est à moi d\'agir ou après accord', (
+      tester,
+    ) async {
+      for (final (status, viewer, lastFromMe) in [
+        (NegotiationThreadStatus.open, _viewerSender, false),
+        (NegotiationThreadStatus.awaitingTrip, _viewerTraveler, false),
+        (NegotiationThreadStatus.awaitingPayment, _viewerTraveler, false),
+        (NegotiationThreadStatus.accepted, _viewerSender, false),
+      ]) {
+        await tester.pumpWidget(
+          wrap(
+            _thread(status: status, viewer: viewer, lastFromViewer: lastFromMe),
+            viewer,
+          ),
+        );
+        expect(endButton, findsNothing, reason: '$status / $viewer');
+      }
+    });
+
+    testWidgets('confirmer → NegotiationCancelRequested', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.open, lastFromViewer: true),
+          _viewerSender,
+        ),
+      );
+      await tester.tap(endButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mettre fin à cette négociation ?'), findsOneWidget);
+      await tester.tap(find.text('Mettre fin'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => bloc.add(const NegotiationCancelRequested(threadId: 't1')),
+      ).called(1);
+    });
+
+    testWidgets('annuler la confirmation → aucun événement', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.open, lastFromViewer: true),
+          _viewerSender,
+        ),
+      );
+      await tester.tap(endButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => bloc.add(any()));
+    });
+
+    testWidgets('en anglais : libellé traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.open, lastFromViewer: true),
+          _viewerSender,
+        ),
+      );
+      expect(find.text('End the negotiation'), findsOneWidget);
+    });
+  });
+
   group('Bouton Relancer (nudge)', () {
     testWidgets('canNudge=false → bouton "Relancer" absent', (tester) async {
       await tester.pumpWidget(

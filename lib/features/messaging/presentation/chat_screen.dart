@@ -28,6 +28,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
+import 'package:dony/features/messaging/data/chat_draft_store.dart';
 import 'package:dony/features/messaging/data/chat_message_validator.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
@@ -78,6 +79,15 @@ class _ChatScreenState extends State<ChatScreen> {
   final _highlighted = ValueNotifier<String?>(null);
   Timer? _highlightTimer;
 
+  /// Brouillon par conversation (FLUTTER-CY) : restauré à l'ouverture,
+  /// enregistré à la sortie et au passage en arrière-plan, effacé à l'envoi.
+  /// `null` hors injection (tests d'écran sans stockage).
+  late final ChatDraftStore? _drafts = _draftStore();
+  late final AppLifecycleListener _lifecycle;
+
+  /// Un fil en lecture seule n'a pas de champ de saisie : rien à garder.
+  bool get _keepsDraft => !widget.conversation.readOnly;
+
   String get _myUid {
     try {
       return FirebaseAuth.instance.currentUser?.uid ?? '';
@@ -123,6 +133,33 @@ class _ChatScreenState extends State<ChatScreen> {
     // Abonnement côté widget (et non dans ChatBloc) : ce qu'il déclenche est une
     // navigation, qui n'appartient pas au BLoC.
     _blockSub = _blockEvents()?.changes.listen(_onBlockChange);
+    if (_keepsDraft) {
+      final draft = _drafts?.read(widget.conversation.id) ?? '';
+      if (draft.isNotEmpty) {
+        _controller.value = TextEditingValue(
+          text: draft,
+          selection: TextSelection.collapsed(offset: draft.length),
+        );
+      }
+    }
+    // Une app tuée en arrière-plan ne passe jamais par `dispose` : le
+    // brouillon est aussi écrit dès que l'écran est masqué.
+    _lifecycle = AppLifecycleListener(onHide: _persistDraft);
+  }
+
+  ChatDraftStore? _draftStore() {
+    try {
+      return getIt.isRegistered<ChatDraftStore>()
+          ? getIt<ChatDraftStore>()
+          : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _persistDraft() {
+    if (!_keepsDraft) return;
+    unawaited(_drafts?.save(widget.conversation.id, _controller.text));
   }
 
   BlockEventsService? _blockEvents() {
@@ -163,6 +200,9 @@ class _ChatScreenState extends State<ChatScreen> {
     _highlightTimer?.cancel();
     _highlighted.dispose();
     _inputFocus.dispose();
+    _lifecycle.dispose();
+    // Avant de disposer le contrôleur : son texte est le brouillon.
+    _persistDraft();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -315,6 +355,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
     setState(() => _isSending = true);
     _controller.clear();
+    // Envoyé : le brouillon n'a plus lieu d'être. Un refus Firestore rend le
+    // texte au champ (`_onSendRejected`), et la sortie le réenregistre.
+    unawaited(_drafts?.clear(widget.conversation.id));
     _recentSends.add(SentRecord(now, text));
     // Borne la liste (fenêtre la plus longue = anti-doublon 30 s).
     _recentSends.removeWhere(

@@ -221,7 +221,9 @@ class _ThreadViewState extends State<_ThreadView> {
               icon: DonyIcon('ellipsis', color: cs.onSurface, size: 22),
               onSelected: (value) {
                 if (value == 'end_negotiation') {
-                  _confirmEndNegotiation(context, thread!);
+                  unawaited(
+                    confirmEndNegotiation(context, threadId: thread!.id),
+                  );
                 }
               },
               itemBuilder: (menuContext) => [
@@ -262,25 +264,6 @@ class _ThreadViewState extends State<_ThreadView> {
       NegotiationThreadStatus.awaitingDeposit => true,
       _ => false,
     };
-  }
-
-  Future<void> _confirmEndNegotiation(
-    BuildContext context,
-    NegotiationThread thread,
-  ) async {
-    final l = context.l10n;
-    final confirmed = await DonyDialog.show(
-      context,
-      title: l.negotiationEndDialogTitle,
-      message: l.negotiationEndDialogMessage,
-      confirmLabel: l.negotiationEndDialogConfirmButton,
-      variant: DonyDialogVariant.destructive,
-    );
-    if (confirmed == true && context.mounted) {
-      context.read<NegotiationBloc>().add(
-        NegotiationCancelRequested(threadId: thread.id),
-      );
-    }
   }
 }
 

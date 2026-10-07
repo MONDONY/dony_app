@@ -338,7 +338,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1000));
 
     expect(find.byKey(const Key('corridor-bar')), findsOneWidget);
-    expect(find.text('Tous les corridors'), findsWidgets);
+    expect(find.text('Tous les trajets'), findsWidgets);
   });
 
   testWidgets(

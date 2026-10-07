@@ -10,13 +10,16 @@ void main() {
   tearDown(ActiveRates.resetForTest);
 
   group('KgPriceReference.forCurrency', () {
-    test('EUR : repères historiques inchangés', () {
-      final ref = KgPriceReference.forCurrency(SupportedCurrency.eur);
-      expect(ref.presets, [5, 6, 7, 8]);
-      expect(ref.marketMedian, 8);
-      expect(ref.minReasonable, 5);
-      expect(ref.maxReasonable, 15);
-    });
+    test(
+      'EUR : chips 7 à 10 €/kg (FLUTTER-CW), médiane et fourchette inchangées',
+      () {
+        final ref = KgPriceReference.forCurrency(SupportedCurrency.eur);
+        expect(ref.presets, [7, 8, 9, 10]);
+        expect(ref.marketMedian, 8);
+        expect(ref.minReasonable, 5);
+        expect(ref.maxReasonable, 15);
+      },
+    );
 
     test('XOF : table dédiée, pas une conversion du barème euro', () {
       // 5 €/kg convertis feraient 3 280 F CFA, hors des tarifs pratiqués.
@@ -67,8 +70,8 @@ void main() {
     });
 
     test('code absent ou inconnu → repli euro', () {
-      expect(KgPriceReference.forCode(null).presets, [5, 6, 7, 8]);
-      expect(KgPriceReference.forCode('ZZZ').presets, [5, 6, 7, 8]);
+      expect(KgPriceReference.forCode(null).presets, [7, 8, 9, 10]);
+      expect(KgPriceReference.forCode('ZZZ').presets, [7, 8, 9, 10]);
     });
   });
 

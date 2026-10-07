@@ -572,12 +572,38 @@ class _ThreadActions extends StatelessWidget {
     }
 
     if (!negotiation.myTurn) {
-      return hint(
-        l.negotiationThreadWaitingForReply(
-          negotiation.counterpartyName ??
-              l.negotiationThreadCounterpartyFallback,
-        ),
-        'nego-waiting-hint',
+      // FLUTTER-EQ : sans ce bouton, l'auteur d'une proposition restait
+      // bloqué jusqu'à la réponse ou l'expiration. L'endpoint d'annulation
+      // clôt tout le fil (pour les deux parties), d'où « Annuler la
+      // négociation » plutôt que « Retirer ma proposition ».
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          hint(
+            l.negotiationThreadWaitingForReply(
+              negotiation.counterpartyName ??
+                  l.negotiationThreadCounterpartyFallback,
+            ),
+            'nego-waiting-hint',
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          DonyButton(
+            key: const Key('nego-cancel-btn'),
+            label: l.negotiationThreadCancelButton,
+            variant: DonyButtonVariant.secondary,
+            onPressed: () => unawaited(
+              CancelNegotiationSheet.show(
+                context,
+                bloc: context.read<BidNegotiationBloc>(),
+                bidId: bidId,
+                // Seul l'expéditeur propose sur un trajet ; un fil clos ne
+                // bloque plus sa nouvelle offre côté serveur (seul un fil
+                // NEGOTIATING compte comme « demande existante »).
+                canReoffer: !negotiation.isTravelerView,
+              ),
+            ),
+          ),
+        ],
       );
     }
 
@@ -638,6 +664,71 @@ class _ThreadActions extends StatelessWidget {
               : l.negotiationThreadClosedExpired,
         _ => l.negotiationThreadClosedDefault,
       };
+}
+
+/// Confirmation de l'annulation du fil (FLUTTER-EQ). Les deux boutons vivent
+/// dans `stickyBottom` ; aucun état local, rien à disposer. Le bloc est passé
+/// explicitement : la feuille s'ouvre sur le navigateur racine, hors de portée
+/// du `BlocProvider` de l'écran.
+abstract final class CancelNegotiationSheet {
+  static Future<void> show(
+    BuildContext context, {
+    required BidNegotiationBloc bloc,
+    required String bidId,
+    required bool canReoffer,
+  }) {
+    final l = context.l10n;
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    void close(BuildContext ctx) =>
+        Navigator.of(ctx, rootNavigator: true).pop();
+
+    return DonyBottomSheet.show<void>(
+      context,
+      title: l.negotiationThreadCancelSheetTitle,
+      isDanger: true,
+      stickyBottom: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DonyButton(
+              key: const Key('nego-cancel-confirm'),
+              label: l.negotiationThreadCancelSheetConfirm,
+              variant: DonyButtonVariant.destructive,
+              onPressed: () {
+                bloc.add(BidNegotiationCancelRequested(bidId));
+                close(sheetContext);
+              },
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            DonyButton(
+              key: const Key('nego-cancel-keep'),
+              label: l.negotiationThreadCancelSheetKeep,
+              variant: DonyButtonVariant.ghost,
+              onPressed: () => close(sheetContext),
+            ),
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.negotiationThreadCancelSheetBody,
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          if (canReoffer) ...[
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              l.negotiationThreadCancelSheetReofferNote,
+              key: const Key('nego-cancel-reoffer-note'),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 /// Feuille de contre-offre. Le `DonyButton` vit dans `stickyBottom`, les
