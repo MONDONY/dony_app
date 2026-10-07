@@ -36,6 +36,7 @@ class _FakeContactRevealEvent extends Fake implements ContactRevealEvent {}
 BidModel _bid({
   String status = 'ACCEPTED',
   bool senderPhoneAvailable = true,
+  bool? contactWindowOpen,
   String? senderName = 'Mariama D.',
   String senderId = 's1',
   int? senderTotalShipments,
@@ -48,6 +49,7 @@ BidModel _bid({
   weightKg: 5,
   senderName: senderName,
   senderPhoneAvailable: senderPhoneAvailable,
+  contactWindowOpen: contactWindowOpen,
   senderTotalShipments: senderTotalShipments,
   senderKycVerified: senderKycVerified,
   createdAt: DateTime(2026, 5),
@@ -159,6 +161,46 @@ void main() {
 
   testWidgets('pas de 📞 quand statut terminal (DELIVERED)', (tester) async {
     await _pump(tester, _bid(status: 'DELIVERED'));
+    expect(_phoneIcon, findsNothing);
+  });
+
+  // ── Fenêtre de contact servie par le back (yadony-back #414, FLUTTER-DK) ──
+
+  testWidgets('COMPLETED + fenêtre ouverte (J+3) → 📞 visible', (tester) async {
+    await _pump(tester, _bid(status: 'COMPLETED', contactWindowOpen: true));
+    expect(_phoneIcon, findsOneWidget);
+  });
+
+  testWidgets('COMPLETED + fenêtre fermée → 📞 masqué', (tester) async {
+    await _pump(tester, _bid(status: 'COMPLETED', contactWindowOpen: false));
+    expect(_phoneIcon, findsNothing);
+  });
+
+  testWidgets('COMPLETED sans le champ (ancien back) → repli, 📞 masqué', (
+    tester,
+  ) async {
+    final bid = _bid(status: 'COMPLETED');
+    expect(bid.contactWindowOpen, isNull);
+    await _pump(tester, bid);
+    expect(_phoneIcon, findsNothing);
+  });
+
+  testWidgets('IN_TRANSIT + fenêtre ouverte → 📞 visible', (tester) async {
+    await _pump(tester, _bid(status: 'IN_TRANSIT', contactWindowOpen: true));
+    expect(_phoneIcon, findsOneWidget);
+  });
+
+  testWidgets('fenêtre ouverte mais expéditeur non joignable → 📞 masqué', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'IN_TRANSIT',
+        senderPhoneAvailable: false,
+        contactWindowOpen: true,
+      ),
+    );
     expect(_phoneIcon, findsNothing);
   });
 

@@ -51,6 +51,7 @@ BidModel _bid({
   String status = 'ACCEPTED',
   String? travelerName,
   bool travelerPhoneAvailable = false,
+  bool? contactWindowOpen,
   double? travelerAverageRating,
   int? travelerTotalTrips,
   bool travelerKycVerified = false,
@@ -81,6 +82,7 @@ BidModel _bid({
   updatedAt: DateTime(2026, 1, 15),
   travelerName: travelerName,
   travelerPhoneAvailable: travelerPhoneAvailable,
+  contactWindowOpen: contactWindowOpen,
   travelerAverageRating: travelerAverageRating,
   travelerTotalTrips: travelerTotalTrips,
   travelerKycVerified: travelerKycVerified,
@@ -282,6 +284,59 @@ void main() {
         find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
         findsNothing,
       );
+    });
+
+    // ── Fenêtre de contact servie par le back (yadony-back #414, FLUTTER-DK) ──
+    Finder phoneIcon() =>
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone');
+
+    testWidgets('COMPLETED + fenêtre ouverte (J+3) → 📞 visible', (
+      tester,
+    ) async {
+      final bid = _bid(
+        travelerPhoneAvailable: true,
+        status: 'COMPLETED',
+        contactWindowOpen: true,
+      );
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+      expect(phoneIcon(), findsOneWidget);
+    });
+
+    testWidgets('COMPLETED + fenêtre fermée → 📞 masqué', (tester) async {
+      final bid = _bid(
+        travelerPhoneAvailable: true,
+        status: 'COMPLETED',
+        contactWindowOpen: false,
+      );
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+      expect(phoneIcon(), findsNothing);
+    });
+
+    testWidgets('COMPLETED sans le champ (ancien back) → repli, 📞 masqué', (
+      tester,
+    ) async {
+      final bid = _bid(travelerPhoneAvailable: true, status: 'COMPLETED');
+      expect(bid.contactWindowOpen, isNull);
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+      expect(phoneIcon(), findsNothing);
+    });
+
+    testWidgets('IN_TRANSIT + fenêtre ouverte → 📞 visible', (tester) async {
+      final bid = _bid(
+        travelerPhoneAvailable: true,
+        status: 'IN_TRANSIT',
+        contactWindowOpen: true,
+      );
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+      expect(phoneIcon(), findsOneWidget);
+    });
+
+    testWidgets('fenêtre ouverte mais voyageur non joignable → 📞 masqué', (
+      tester,
+    ) async {
+      final bid = _bid(status: 'IN_TRANSIT', contactWindowOpen: true);
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+      expect(phoneIcon(), findsNothing);
     });
 
     testWidgets('tap chat button fires ConversationOpenRequested once', (

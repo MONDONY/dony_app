@@ -31,7 +31,10 @@ import 'package:go_router/go_router.dart';
 ///
 /// Le bouton téléphone est affiché uniquement si :
 ///   - `bid.travelerPhoneAvailable` est vrai (le serveur autorise la révélation),
-///   - ET le statut n'est pas COMPLETED ni DELIVERED.
+///   - ET la fenêtre de contact est ouverte : `bid.contactWindowOpen` du
+///     serveur (ACCEPTED → ARRIVED, puis COMPLETED jusqu'à J+3 après la
+///     livraison, même règle que l'appel in-app). Back antérieur sans ce
+///     champ : repli sur le statut, ni COMPLETED ni DELIVERED.
 ///
 /// Requiert un [ConversationOpenBloc] dans le contexte.
 class VoyageurContactCard extends StatelessWidget {
@@ -40,11 +43,14 @@ class VoyageurContactCard extends StatelessWidget {
   const VoyageurContactCard({super.key, required this.bid});
 
   /// Le serveur dit si le voyageur est joignable ; le numéro lui-même est
-  /// demandé au tap. On masque en plus le bouton en fin de course.
+  /// demandé au tap. La fenêtre de contact vient du serveur ; à défaut (ancien
+  /// back), on masque le bouton en fin de course.
   bool get _showPhoneButton {
     if (!bid.travelerPhoneAvailable || !smsAuthEnabledListenable.value) {
       return false;
     }
+    final open = bid.contactWindowOpen;
+    if (open != null) return open;
     final s = bid.status;
     return s != 'COMPLETED' && s != 'DELIVERED';
   }
