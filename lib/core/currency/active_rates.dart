@@ -20,6 +20,16 @@ abstract final class ActiveRates {
   static double unitsPerEurFor(SupportedCurrency currency) =>
       _serverRates[currency.code] ?? currency.unitsPerEur;
 
+  /// Taux SERVEUR seul, sans repli catalogue : `null` tant que
+  /// `/config/exchange-rates` n'a pas répondu (chargement, erreur réseau).
+  ///
+  /// Réservé aux montants qui doivent coïncider avec ceux que le backend
+  /// calculera (ex. aperçu d'une grille convertie à la publication) : un
+  /// repli figé à la compilation afficherait un montant que le serveur ne
+  /// produira pas. L'euro, pivot de la table, vaut toujours 1.
+  static double? serverUnitsPerEurFor(SupportedCurrency currency) =>
+      currency == SupportedCurrency.eur ? 1 : _serverRates[currency.code];
+
   /// Fusionne les taux reçus du backend. Ignore les valeurs non strictement
   /// positives et les codes hors catalogue : un taux corrompu ne doit jamais
   /// remplacer le repli sain.

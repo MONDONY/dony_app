@@ -2244,6 +2244,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             valueListenable: widget.currencyNotifier,
             builder: (context, currency, _) => PrixConditionsStep(
               currency: currency,
+              gridCurrency: ActiveCurrency.current,
               priceOptionNotifier: _priceOptionNotifier,
               customPriceNotifier: _customPriceNotifier,
               availableKgNotifier: _availableKgNotifier,

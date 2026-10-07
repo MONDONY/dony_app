@@ -1632,6 +1632,16 @@
   "@tripPublishGridPreviewNote": {
     "description": "Note sous l'aperçu de grille rappelant que la grille est un réglage de profil"
   },
+  "tripPublishGridPreviewConvertedNote": "Converti depuis {currency} au taux du jour",
+  "@tripPublishGridPreviewConvertedNote": {
+    "description": "Mention sous l'aperçu de grille quand les prix (exprimés dans la devise active du voyageur) sont convertis dans la devise du trajet",
+    "placeholders": {
+      "currency": {
+        "type": "String",
+        "example": "EUR"
+      }
+    }
+  },
   "tripPublishGridSheetTitle": "Votre grille de prix",
   "@tripPublishGridSheetTitle": {
     "description": "Titre de la feuille listant tous les articles de la grille"

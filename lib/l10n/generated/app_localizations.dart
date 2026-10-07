@@ -4931,6 +4931,12 @@ abstract class AppLocalizations {
   /// **'Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.'**
   String get tripPublishGridPreviewNote;
 
+  /// Mention sous l'aperçu de grille quand les prix (exprimés dans la devise active du voyageur) sont convertis dans la devise du trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Converti depuis {currency} au taux du jour'**
+  String tripPublishGridPreviewConvertedNote(String currency);
+
   /// Titre de la feuille listant tous les articles de la grille
   ///
   /// In fr, this message translates to:

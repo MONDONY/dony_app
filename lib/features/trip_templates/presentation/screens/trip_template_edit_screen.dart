@@ -664,6 +664,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
             valueListenable: _fields.currency,
             builder: (context, currency, _) => PrixConditionsStep(
               currency: currency,
+              gridCurrency: ActiveCurrency.current,
               priceOptionNotifier: _fields.priceOption,
               customPriceNotifier: _fields.customPrice,
               availableKgNotifier: _fields.availableKg,

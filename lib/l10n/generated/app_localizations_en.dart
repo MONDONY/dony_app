@@ -2897,6 +2897,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'These prices come from your profile. Editing them changes them on all your trips.';
 
   @override
+  String tripPublishGridPreviewConvertedNote(String currency) {
+    return 'Converted from $currency at today\'s rate';
+  }
+
+  @override
   String get tripPublishGridSheetTitle => 'Your price grid';
 
   @override
