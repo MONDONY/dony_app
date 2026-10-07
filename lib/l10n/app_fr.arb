@@ -10971,6 +10971,10 @@
   "@chatBidStatusTripCancelled": {
     "description": "Libellé du bandeau de statut TRIP_CANCELLED de chat_screen.dart (_BidStatusBanner)."
   },
+  "chatSystemViewTracking": "Voir le suivi",
+  "@chatSystemViewTracking": {
+    "description": "Lien sous un message système du chat qui renvoie au suivi du colis (FLUTTER-CD, chat_screen.dart)."
+  },
   "chatMessageDeleted": "Message supprimé",
   "@chatMessageDeleted": {
     "description": "Texte d'un message supprimé, dans la bulle système et dans _DeletedContent (chat_screen.dart, même texte aux deux endroits)."

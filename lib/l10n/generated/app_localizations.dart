@@ -16648,6 +16648,12 @@ abstract class AppLocalizations {
   /// **'Trajet annulé'**
   String get chatBidStatusTripCancelled;
 
+  /// Lien sous un message système du chat qui renvoie au suivi du colis (FLUTTER-CD, chat_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le suivi'**
+  String get chatSystemViewTracking;
+
   /// Texte d'un message supprimé, dans la bulle système et dans _DeletedContent (chat_screen.dart, même texte aux deux endroits).
   ///
   /// In fr, this message translates to:

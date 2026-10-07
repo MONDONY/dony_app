@@ -788,12 +788,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   disabled: isReadOnly,
                   // Le destinataire n'a pas accès au détail du bid : son
                   // bandeau mène à l'écran du colis qu'il va recevoir.
-                  onTap: () => _navigate(
-                    conversation.viewerIsRecipient
-                        ? '/receptions/${conversation.bidId}'
-                        : '/bids/${conversation.bidId}',
-                    null,
-                  ),
+                  onTap: () => _navigate(trackingPathFor(conversation), null),
                 ),
               if (isReadOnly) _ReadOnlyBanner(cs: cs, tt: tt),
               if (conversation.bidStatus != null)
@@ -929,6 +924,20 @@ class _ChatScreenState extends State<ChatScreen> {
                                             quote: quote,
                                             onReply: canReply
                                                 ? () => _startReply(message)
+                                                : null,
+                                            // FLUTTER-CD : « Consultez les
+                                            // instructions… dans le suivi » mène
+                                            // au suivi du colis de ce fil.
+                                            onOpenTracking:
+                                                systemMessageLinksToTracking(
+                                                  message,
+                                                )
+                                                ? () => _navigate(
+                                                    trackingPathFor(
+                                                      conversation,
+                                                    ),
+                                                    null,
+                                                  )
                                                 : null,
                                             onQuoteTap:
                                                 quote != null &&
@@ -1415,6 +1424,10 @@ class _MessageBubble extends StatelessWidget {
 
   /// Défile jusqu'au message cité ; `null` s'il n'est pas dans le fil chargé.
   final VoidCallback? onQuoteTap;
+
+  /// Ouvre le suivi du colis sous un message système qui y renvoie
+  /// (FLUTTER-CD) ; `null` pour tout autre message.
+  final VoidCallback? onOpenTracking;
   const _MessageBubble({
     required this.message,
     required this.isMe,
@@ -1422,6 +1435,7 @@ class _MessageBubble extends StatelessWidget {
     this.quote,
     this.onReply,
     this.onQuoteTap,
+    this.onOpenTracking,
   });
 
   /// Photo ou position : pas de texte sélectionnable, l'appui long ouvre un
@@ -1459,23 +1473,50 @@ class _MessageBubble extends StatelessWidget {
     final l = context.l10n;
 
     if (message.type == MessageType.system) {
+      final onOpenTracking = message.isDeleted ? null : this.onOpenTracking;
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
         child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.md,
-              vertical: DonySpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(DonyRadius.full),
-            ),
-            child: Text(
-              message.isDeleted ? l.chatMessageDeleted : (message.body ?? ''),
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.md,
+                  vertical: DonySpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                ),
+                child: Text(
+                  message.isDeleted
+                      ? l.chatMessageDeleted
+                      : (message.body ?? ''),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              if (onOpenTracking != null)
+                // Lien juste sous le message : le texte renvoie au suivi,
+                // le lien y mène (FLUTTER-CD).
+                TextButton.icon(
+                  key: const Key('chat-system-open-tracking'),
+                  onPressed: onOpenTracking,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(0, kDonyMinTapTarget),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.md,
+                    ),
+                    foregroundColor: cs.primary,
+                    textStyle: tt.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  icon: DonyIcon('route', size: 16, color: cs.primary),
+                  label: Text(l.chatSystemViewTracking),
+                ),
+            ],
           ),
         ),
       );
@@ -2448,3 +2489,33 @@ class _InputBar extends StatelessWidget {
     );
   }
 }
+
+/// Chemin du suivi du colis d'une conversation : le destinataire n'a pas accès
+/// au détail du bid, son suivi est l'écran du colis qu'il va recevoir.
+@visibleForTesting
+String trackingPathFor(ConversationModel conversation) =>
+    conversation.viewerIsRecipient
+    ? '/receptions/${conversation.bidId}'
+    : '/bids/${conversation.bidId}';
+
+/// Message système qui renvoie au suivi du colis (FLUTTER-CD), par exemple
+/// « Votre voyageur est arrivé à destination. Consultez les instructions de
+/// retrait dans le suivi. », posté par le backend à l'arrivée du trajet.
+///
+/// Le backend n'envoie qu'un type `SYSTEM` sans sous-type : la détection se
+/// fait sur le texte, en français (langue des messages système) et en anglais
+/// au cas où ils seraient traduits un jour.
+@visibleForTesting
+bool systemMessageLinksToTracking(MessageModel message) {
+  if (message.type != MessageType.system || message.isDeleted) return false;
+  final body = message.body?.toLowerCase();
+  if (body == null || body.isEmpty) return false;
+  return _kTrackingMentions.any(body.contains);
+}
+
+const _kTrackingMentions = [
+  'dans le suivi', // i18n-ignore
+  'instructions de retrait', // i18n-ignore
+  'in the tracking', // i18n-ignore
+  'pickup instructions', // i18n-ignore
+];

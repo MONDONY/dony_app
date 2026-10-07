@@ -10102,6 +10102,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatBidStatusTripCancelled => 'Trajet annulé';
 
   @override
+  String get chatSystemViewTracking => 'Voir le suivi';
+
+  @override
   String get chatMessageDeleted => 'Message supprimé';
 
   @override
