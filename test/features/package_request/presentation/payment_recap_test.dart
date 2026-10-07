@@ -198,7 +198,7 @@ void main() {
         // Bannière d'assurance propre au mobile money, icône téléphone.
         expect(
           find.text(
-            'Tu valides le paiement sur ton téléphone. Yadony garde l\'argent '
+            'Vous validez le paiement sur votre téléphone. Yadony garde l\'argent '
             'et ne le verse au voyageur qu\'après confirmation de la livraison.',
           ),
           findsOneWidget,

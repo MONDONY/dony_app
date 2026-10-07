@@ -42,12 +42,12 @@ void main() {
     expect(lines, hasLength(3));
     expect(lines[0], startsWith('Commission : '));
     expect(lines[0], contains('1'));
-    expect(lines[1], contains('Ton portefeuille Franc CFA Ouest en couvre'));
+    expect(lines[1], contains('Votre portefeuille Franc CFA Ouest en couvre'));
     expect(lines[1], contains('600'));
     expect(lines[2], contains('Il manque'));
     expect(lines[2], contains('450'));
     expect(lines[2], contains('0,69'));
-    expect(lines[2], contains('ton portefeuille Euro n\'a que'));
+    expect(lines[2], contains('votre portefeuille Euro n\'a que'));
     expect(lines[2], contains('1,33'));
   });
 
@@ -72,10 +72,10 @@ void main() {
     expect(lines[0], startsWith('Commission : '));
     expect(lines[0], contains('soit'));
     expect(lines[0], contains('1,60'));
-    expect(lines[1], contains('Ton portefeuille Euro n\'a que'));
+    expect(lines[1], contains('Votre portefeuille Euro n\'a que'));
     expect(
       lines[1],
-      contains('Recharge en F CFA ou en Euro, ou paie par carte.'),
+      contains('Rechargez en F CFA ou en Euro, ou payez par carte.'),
     );
   });
 

@@ -40,14 +40,14 @@ void main() {
         _t(NegotiationThreadStatus.open, myTurn: true),
         firmPrice: false,
       ),
-      (label: 'À toi de répondre', tone: OfferTagTone.info, cta: 'Répondre'),
+      (label: 'À vous de répondre', tone: OfferTagTone.info, cta: 'Répondre'),
     );
     expect(
       offerTagFor(fr, _t(NegotiationThreadStatus.open), firmPrice: false).label,
       'En attente de Awa K.',
     );
     expect(offerTagFor(fr, _t(NegotiationThreadStatus.open), firmPrice: true), (
-      label: 'Disponible pour ton colis',
+      label: 'Disponible pour votre colis',
       tone: OfferTagTone.success,
       cta: 'Choisir',
     ));

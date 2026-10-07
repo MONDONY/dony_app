@@ -131,7 +131,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyDisabledMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le paiement mobile money n\'est pas ouvert pour le moment. Choisis un autre moyen de paiement.'**
+  /// **'Le paiement mobile money n\'est pas ouvert pour le moment. Choisissez un autre moyen de paiement.'**
   String get errorMobileMoneyDisabledMessage;
 
   /// No description provided for @errorMobileMoneyPhoneRequiredTitle.
@@ -143,7 +143,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyPhoneRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Indique le numéro mobile money à utiliser pour continuer.'**
+  /// **'Indiquez le numéro mobile money à utiliser pour continuer.'**
   String get errorMobileMoneyPhoneRequiredMessage;
 
   /// No description provided for @errorMobileMoneyAccountUnsupportedTitle.
@@ -155,7 +155,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyAccountUnsupportedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ton numéro n\'est pas rattaché à un opérateur mobile money compatible, ou sa devise ne correspond pas à ta zone.'**
+  /// **'Votre numéro n\'est pas rattaché à un opérateur mobile money compatible, ou sa devise ne correspond pas à votre zone.'**
   String get errorMobileMoneyAccountUnsupportedMessage;
 
   /// No description provided for @errorMobileMoneyAccountRequiredTitle.
@@ -167,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyAccountRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Active ton versement mobile money avant d\'accepter cette offre.'**
+  /// **'Activez votre versement mobile money avant d\'accepter cette offre.'**
   String get errorMobileMoneyAccountRequiredMessage;
 
   /// No description provided for @errorMobileMoneyCurrencyMismatchTitle.
@@ -179,7 +179,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyCurrencyMismatchMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ton compte de versement mobile money n\'est pas dans la devise de ce trajet.'**
+  /// **'Votre compte de versement mobile money n\'est pas dans la devise de ce trajet.'**
   String get errorMobileMoneyCurrencyMismatchMessage;
 
   /// No description provided for @errorMobileMoneyNotAvailableTitle.
@@ -203,7 +203,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyPayerUnsupportedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie le numéro qui doit payer, ou essaie avec un autre numéro.'**
+  /// **'Vérifiez le numéro qui doit payer, ou essayez avec un autre numéro.'**
   String get errorMobileMoneyPayerUnsupportedMessage;
 
   /// No description provided for @errorMobileMoneyInvalidPhoneTitle.
@@ -215,7 +215,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyInvalidPhoneMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce numéro n\'est reconnu par aucun opérateur mobile money. Vérifie-le et réessaie.'**
+  /// **'Ce numéro n\'est reconnu par aucun opérateur mobile money. Vérifiez-le et réessayez.'**
   String get errorMobileMoneyInvalidPhoneMessage;
 
   /// No description provided for @errorMobileMoneyDepositRejectedTitle.
@@ -227,7 +227,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyDepositRejectedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'L\'opérateur a refusé la demande de paiement. Réessaie, éventuellement avec un autre numéro.'**
+  /// **'L\'opérateur a refusé la demande de paiement. Réessayez, éventuellement avec un autre numéro.'**
   String get errorMobileMoneyDepositRejectedMessage;
 
   /// No description provided for @errorMobileMoneyPaymentExpiredTitle.
@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyPaymentExpiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le délai de paiement de 30 minutes est passé. Refais une offre au voyageur.'**
+  /// **'Le délai de paiement de 30 minutes est passé. Refaites une offre au voyageur.'**
   String get errorMobileMoneyPaymentExpiredMessage;
 
   /// No description provided for @errorMobileMoneyPaymentNotPendingTitle.
@@ -263,7 +263,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyOperationInProgressMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Une opération mobile money est déjà en cours pour cet envoi. Patiente quelques instants.'**
+  /// **'Une opération mobile money est déjà en cours pour cet envoi. Patientez quelques instants.'**
   String get errorMobileMoneyOperationInProgressMessage;
 
   /// No description provided for @errorMobileMoneyProviderUnavailableTitle.
@@ -275,7 +275,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorMobileMoneyProviderUnavailableMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le service mobile money ne répond pas. Réessaie dans quelques minutes.'**
+  /// **'Le service mobile money ne répond pas. Réessayez dans quelques minutes.'**
   String get errorMobileMoneyProviderUnavailableMessage;
 
   /// No description provided for @errorInvalidPaymentMethodTitle.
@@ -287,7 +287,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorInvalidPaymentMethodMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce moyen de paiement n\'est pas reconnu. Mets l\'application à jour.'**
+  /// **'Ce moyen de paiement n\'est pas reconnu. Mettez l\'application à jour.'**
   String get errorInvalidPaymentMethodMessage;
 
   /// No description provided for @errorRequestBudgetOutOfBoundsTitle.
@@ -299,7 +299,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorRequestBudgetOutOfBoundsMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce budget dépasse le plafond autorisé pour cette devise. Réduis le montant puis réessaie.'**
+  /// **'Ce budget dépasse le plafond autorisé pour cette devise. Réduisez le montant puis réessayez.'**
   String get errorRequestBudgetOutOfBoundsMessage;
 
   /// No description provided for @errorRequestAlreadyAcceptedTitle.
@@ -311,7 +311,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorRequestAlreadyAcceptedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Un autre voyageur a réglé la commission avant toi, ce colis ne peut plus te revenir.'**
+  /// **'Un autre voyageur a réglé la commission avant vous, ce colis ne peut plus vous revenir.'**
   String get errorRequestAlreadyAcceptedMessage;
 
   /// No description provided for @errorTripNoParcelDepartedTitle.
@@ -323,19 +323,19 @@ abstract class AppLocalizations {
   /// No description provided for @errorTripNoParcelDepartedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Scanne le départ d\'au moins un colis avant de marquer ton trajet arrivé.'**
+  /// **'Scannez le départ d\'au moins un colis avant de marquer votre trajet arrivé.'**
   String get errorTripNoParcelDepartedMessage;
 
   /// No description provided for @errorDepartRequiredTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Scanne d\'abord le départ'**
+  /// **'Scannez d\'abord le départ'**
   String get errorDepartRequiredTitle;
 
   /// No description provided for @errorDepartRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le départ doit être scanné quand tu récupères le colis, avant le transit.'**
+  /// **'Le départ doit être scanné quand vous récupérez le colis, avant le transit.'**
   String get errorDepartRequiredMessage;
 
   /// No description provided for @errorParcelRefusalLockedTitle.
@@ -347,7 +347,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorParcelRefusalLockedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu ne peux plus refuser ce colis une fois le trajet parti.'**
+  /// **'Vous ne pouvez plus refuser ce colis une fois le trajet parti.'**
   String get errorParcelRefusalLockedMessage;
 
   /// No description provided for @errorThreadNotAwaitingCommissionTitle.
@@ -371,7 +371,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorUnauthorizedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Reconnecte-toi pour continuer.'**
+  /// **'Reconnectez-vous pour continuer.'**
   String get errorUnauthorizedMessage;
 
   /// No description provided for @errorReauthRequiredTitle.
@@ -383,7 +383,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorReauthRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Pour ta sécurité, identifie-toi à nouveau pour cette action.'**
+  /// **'Pour votre sécurité, identifiez-vous à nouveau pour cette action.'**
   String get errorReauthRequiredMessage;
 
   /// No description provided for @errorForbiddenTitle.
@@ -395,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorForbiddenMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu n\'as pas les droits nécessaires pour cette action.'**
+  /// **'Vous n\'avez pas les droits nécessaires pour cette action.'**
   String get errorForbiddenMessage;
 
   /// No description provided for @errorAccessDeniedTitle.
@@ -407,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorAccessDeniedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu ne peux pas accéder à cette ressource.'**
+  /// **'Vous ne pouvez pas accéder à cette ressource.'**
   String get errorAccessDeniedMessage;
 
   /// No description provided for @errorAccountBannedTitle.
@@ -419,7 +419,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorAccountBannedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ton compte a été suspendu. Contacte le support pour plus d\'informations.'**
+  /// **'Votre compte a été suspendu. Contactez le support pour plus d\'informations.'**
   String get errorAccountBannedMessage;
 
   /// No description provided for @errorAuthTokenUnavailableTitle.
@@ -431,7 +431,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorAuthTokenUnavailableMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de vérifier ton identité. Réessaie dans un instant.'**
+  /// **'Impossible de vérifier votre identité. Réessayez dans un instant.'**
   String get errorAuthTokenUnavailableMessage;
 
   /// No description provided for @errorAuthGenericErrorTitle.
@@ -443,7 +443,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorAuthGenericErrorMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Une erreur est survenue pendant la connexion. Réessaie.'**
+  /// **'Une erreur est survenue pendant la connexion. Réessayez.'**
   String get errorAuthGenericErrorMessage;
 
   /// No description provided for @errorPhoneOtpInvalidTitle.
@@ -467,7 +467,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPhoneOtpExpiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce code a expiré. Demande un nouveau code.'**
+  /// **'Ce code a expiré. Demandez un nouveau code.'**
   String get errorPhoneOtpExpiredMessage;
 
   /// No description provided for @errorPhoneOtpAttemptsExceededTitle.
@@ -479,7 +479,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPhoneOtpAttemptsExceededMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Trop de tentatives. Réessaie dans quelques minutes.'**
+  /// **'Trop de tentatives. Réessayez dans quelques minutes.'**
   String get errorPhoneOtpAttemptsExceededMessage;
 
   /// No description provided for @errorPhoneOtpRateLimitTitle.
@@ -491,7 +491,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPhoneOtpRateLimitMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Trop de codes envoyés. Réessaie dans quelques minutes.'**
+  /// **'Trop de codes envoyés. Réessayez dans quelques minutes.'**
   String get errorPhoneOtpRateLimitMessage;
 
   /// No description provided for @errorPhoneAlreadySetTitle.
@@ -539,7 +539,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorInvalidPhoneNumberMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce numéro ne peut pas recevoir de SMS. Vérifie l\'indicatif et le nombre de chiffres, puis réessaie.'**
+  /// **'Ce numéro ne peut pas recevoir de SMS. Vérifiez l\'indicatif et le nombre de chiffres, puis réessayez.'**
   String get errorInvalidPhoneNumberMessage;
 
   /// No description provided for @errorAnnouncementNotFoundTitle.
@@ -563,7 +563,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCurrencyMismatchMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce trajet n\'est plus disponible dans ta devise. Change de pays dans Réglages pour le voir.'**
+  /// **'Ce trajet n\'est plus disponible dans votre devise. Changez de pays dans Réglages pour le voir.'**
   String get errorCurrencyMismatchMessage;
 
   /// No description provided for @errorCountryRequiredTitle.
@@ -575,7 +575,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCountryRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Renseigne ton pays dans Réglages, rubrique Préférences, avant de créer ton compte de paiement. Il détermine ta devise et ne pourra plus être modifié ensuite.'**
+  /// **'Renseignez votre pays dans Réglages, rubrique Préférences, avant de créer votre compte de paiement. Il détermine votre devise et ne pourra plus être modifié ensuite.'**
   String get errorCountryRequiredMessage;
 
   /// No description provided for @errorCountryLockedTitle.
@@ -599,7 +599,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCountryUnsupportedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Yadony ne dessert pas encore ce pays. Choisis-en un autre.'**
+  /// **'Yadony ne dessert pas encore ce pays. Choisissez-en un autre.'**
   String get errorCountryUnsupportedMessage;
 
   /// No description provided for @errorDeletionImpossibleTitle.
@@ -611,7 +611,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorDeletionImpossibleMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Un colis est déjà accepté sur ce trajet. Annule le voyage à la place : l\'expéditeur sera remboursé.'**
+  /// **'Un colis est déjà accepté sur ce trajet. Annulez le voyage à la place : l\'expéditeur sera remboursé.'**
   String get errorDeletionImpossibleMessage;
 
   /// No description provided for @errorProLimitReachedTitle.
@@ -623,7 +623,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorProLimitReachedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu as atteint ta limite d\'annonces ce mois-ci. Passe en PRO pour publier sans limite.'**
+  /// **'Vous avez atteint votre limite d\'annonces ce mois-ci. Passez en PRO pour publier sans limite.'**
   String get errorProLimitReachedMessage;
 
   /// No description provided for @errorDraftLimitReachedTitle.
@@ -635,7 +635,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorDraftLimitReachedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Passe en PRO pour créer davantage de brouillons.'**
+  /// **'Passez en PRO pour créer davantage de brouillons.'**
   String get errorDraftLimitReachedMessage;
 
   /// No description provided for @errorNotADraftTitle.
@@ -659,7 +659,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPublishingSuspendedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'La publication est suspendue sur ton compte. Contacte le support.'**
+  /// **'La publication est suspendue sur votre compte. Contactez le support.'**
   String get errorPublishingSuspendedMessage;
 
   /// No description provided for @errorKycNotVerifiedTitle.
@@ -671,7 +671,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorKycNotVerifiedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie ton identité avant de publier un trajet.'**
+  /// **'Vérifiez votre identité avant de publier un trajet.'**
   String get errorKycNotVerifiedMessage;
 
   /// No description provided for @errorDepartureDatePassedTitle.
@@ -683,7 +683,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorDepartureDatePassedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Modifie la date de départ avant de publier ce trajet.'**
+  /// **'Modifiez la date de départ avant de publier ce trajet.'**
   String get errorDepartureDatePassedMessage;
 
   /// No description provided for @errorBidNotFoundTitle.
@@ -707,7 +707,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorContactKycRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce voyageur ne reçoit que des profils vérifiés. Vérifie ton identité pour lui envoyer une demande.'**
+  /// **'Ce voyageur ne reçoit que des profils vérifiés. Vérifiez votre identité pour lui envoyer une demande.'**
   String get errorContactKycRequiredMessage;
 
   /// No description provided for @errorBidNotAcceptedTitle.
@@ -767,7 +767,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCallBlockedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu ne peux pas appeler cette personne.'**
+  /// **'Vous ne pouvez pas appeler cette personne.'**
   String get errorCallBlockedMessage;
 
   /// No description provided for @errorCallCalleeUnavailableTitle.
@@ -779,7 +779,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCallCalleeUnavailableMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Cette personne ne peut pas être appelée pour le moment. Écris-lui dans la conversation.'**
+  /// **'Cette personne ne peut pas être appelée pour le moment. Écrivez-lui dans la conversation.'**
   String get errorCallCalleeUnavailableMessage;
 
   /// No description provided for @errorCallConversationClosedTitle.
@@ -797,7 +797,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCallNotParticipantMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu ne participes pas à cette conversation.'**
+  /// **'Vous ne participez pas à cette conversation.'**
   String get errorCallNotParticipantMessage;
 
   /// No description provided for @errorCallProviderUnavailableTitle.
@@ -809,7 +809,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCallProviderUnavailableMessage.
   ///
   /// In fr, this message translates to:
-  /// **'L\'appel n\'a pas pu être lancé. Réessaie dans un instant.'**
+  /// **'L\'appel n\'a pas pu être lancé. Réessayez dans un instant.'**
   String get errorCallProviderUnavailableMessage;
 
   /// No description provided for @errorCallsDisabledTitle.
@@ -839,13 +839,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorUseConfirmDeliveryTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Confirme la livraison'**
+  /// **'Confirmez la livraison'**
   String get errorUseConfirmDeliveryTitle;
 
   /// No description provided for @errorUseConfirmDeliveryMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Pour finaliser, utilise l\'écran de confirmation de livraison du destinataire.'**
+  /// **'Pour finaliser, utilisez l\'écran de confirmation de livraison du destinataire.'**
   String get errorUseConfirmDeliveryMessage;
 
   /// No description provided for @errorQrNotReadyTitle.
@@ -869,7 +869,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorDepartAlreadyScannedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le départ de ce colis est déjà enregistré. Tu peux passer à l\'étape suivante.'**
+  /// **'Le départ de ce colis est déjà enregistré. Vous pouvez passer à l\'étape suivante.'**
   String get errorDepartAlreadyScannedMessage;
 
   /// No description provided for @errorCodeNotGeneratedTitle.
@@ -893,7 +893,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCodeExpiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce code a expiré. Demande à l\'expéditeur d\'en générer un nouveau.'**
+  /// **'Ce code a expiré. Demandez à l\'expéditeur d\'en générer un nouveau.'**
   String get errorCodeExpiredMessage;
 
   /// No description provided for @errorCodeIncorrectTitle.
@@ -905,7 +905,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCodeIncorrectMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le code saisi est incorrect. Vérifie auprès de l\'expéditeur.'**
+  /// **'Le code saisi est incorrect. Vérifiez auprès de l\'expéditeur.'**
   String get errorCodeIncorrectMessage;
 
   /// No description provided for @errorTripNotDepartedTitle.
@@ -929,7 +929,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorTooManyAttemptsMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu as fait trop d\'essais. Patiente quelques minutes avant de réessayer.'**
+  /// **'Vous avez fait trop d\'essais. Patientez quelques minutes avant de réessayer.'**
   String get errorTooManyAttemptsMessage;
 
   /// No description provided for @errorTooManyRefreshesTitle.
@@ -941,7 +941,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorTooManyRefreshesMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu as déjà rafraîchi le code plusieurs fois. Attends avant de regénérer.'**
+  /// **'Vous avez déjà rafraîchi le code plusieurs fois. Attendez avant de regénérer.'**
   String get errorTooManyRefreshesMessage;
 
   /// No description provided for @errorInvalidTimestampTitle.
@@ -953,7 +953,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorInvalidTimestampMessage.
   ///
   /// In fr, this message translates to:
-  /// **'L\'horodatage de la lecture est incohérent. Réessaie une fois en ligne.'**
+  /// **'L\'horodatage de la lecture est incohérent. Réessayez une fois en ligne.'**
   String get errorInvalidTimestampMessage;
 
   /// No description provided for @errorInvalidWindowTitle.
@@ -989,7 +989,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorActiveTransactionsMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Des transactions sont en cours. Termine-les ou annule-les avant de continuer.'**
+  /// **'Des transactions sont en cours. Terminez-les ou annulez-les avant de continuer.'**
   String get errorActiveTransactionsMessage;
 
   /// No description provided for @errorInvalidStatusTitle.
@@ -1025,7 +1025,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorAlreadyRatedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu as déjà laissé une note pour cette livraison.'**
+  /// **'Vous avez déjà laissé une note pour cette livraison.'**
   String get errorAlreadyRatedMessage;
 
   /// No description provided for @errorRatingWindowExpiredTitle.
@@ -1049,7 +1049,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorNegotiationCommissionChargeFailedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'La commission n\'a pas pu être prélevée au voyageur. L\'accord n\'est pas validé. Il vient d\'être invité à recharger son portefeuille, réessaie ensuite.'**
+  /// **'La commission n\'a pas pu être prélevée au voyageur. L\'accord n\'est pas validé. Il vient d\'être invité à recharger son portefeuille, réessayez ensuite.'**
   String get errorNegotiationCommissionChargeFailedMessage;
 
   /// No description provided for @errorNegotiationNotAwaitingDepositTitle.
@@ -1073,7 +1073,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorNegotiationDepositInFlightMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ton opérateur traite encore le paiement, patiente quelques instants.'**
+  /// **'Votre opérateur traite encore le paiement, patientez quelques instants.'**
   String get errorNegotiationDepositInFlightMessage;
 
   /// No description provided for @errorNegotiationTravelerCannotReceiveMobileMoneyTitle.
@@ -1085,7 +1085,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorNegotiationTravelerCannotReceiveMobileMoneyMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le voyageur ne peut pas recevoir de versement mobile money dans cette devise. Choisis un autre moyen de paiement.'**
+  /// **'Le voyageur ne peut pas recevoir de versement mobile money dans cette devise. Choisissez un autre moyen de paiement.'**
   String get errorNegotiationTravelerCannotReceiveMobileMoneyMessage;
 
   /// No description provided for @errorBidNotNegotiatedTitle.
@@ -1157,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPaymentMethodTravelerInsufficientFundsCashMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ton portefeuille n\'a pas assez de fonds pour payer la commission Yadony en espèces. Recharge-le ou ajoute une carte.'**
+  /// **'Votre portefeuille n\'a pas assez de fonds pour payer la commission Yadony en espèces. Rechargez-le ou ajoutez une carte.'**
   String get errorPaymentMethodTravelerInsufficientFundsCashMessage;
 
   /// No description provided for @errorPaymentMethodNoCommissionCardTitle.
@@ -1169,7 +1169,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPaymentMethodNoCommissionCardMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ajoute d\'abord une carte de commission pour payer en espèces sans solde suffisant.'**
+  /// **'Ajoutez d\'abord une carte de commission pour payer en espèces sans solde suffisant.'**
   String get errorPaymentMethodNoCommissionCardMessage;
 
   /// No description provided for @errorPaymentMethodNotInAvailableSetTitle.
@@ -1181,7 +1181,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPaymentMethodNotInAvailableSetMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce moyen de paiement n\'est pas proposé pour cette offre. Choisis-en un autre.'**
+  /// **'Ce moyen de paiement n\'est pas proposé pour cette offre. Choisissez-en un autre.'**
   String get errorPaymentMethodNotInAvailableSetMessage;
 
   /// No description provided for @errorPaymentMethodMobileMoneyCapabilityRequiredTitle.
@@ -1205,7 +1205,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorWalletTopupStripeErrorMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le rechargement n\'a pas pu être préparé. Réessaie dans un instant.'**
+  /// **'Le rechargement n\'a pas pu être préparé. Réessayez dans un instant.'**
   String get errorWalletTopupStripeErrorMessage;
 
   /// No description provided for @errorTopupAmountOutOfRangeTitle.
@@ -1217,7 +1217,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorTopupAmountOutOfRangeMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce montant ne respecte pas les limites de recharge autorisées. Ajuste le montant puis réessaie.'**
+  /// **'Ce montant ne respecte pas les limites de recharge autorisées. Ajustez le montant puis réessayez.'**
   String get errorTopupAmountOutOfRangeMessage;
 
   /// No description provided for @errorTopupAlreadyPendingTitle.
@@ -1229,7 +1229,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorTopupAlreadyPendingMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Une recharge est déjà en cours. Valide-la sur ton téléphone, ou attends qu\'elle expire avant d\'en lancer une nouvelle.'**
+  /// **'Une recharge est déjà en cours. Validez-la sur votre téléphone, ou attendez qu\'elle expire avant d\'en lancer une nouvelle.'**
   String get errorTopupAlreadyPendingMessage;
 
   /// No description provided for @errorTopupPhoneRequiredTitle.
@@ -1241,7 +1241,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorTopupPhoneRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Indique le numéro qui va payer la recharge.'**
+  /// **'Indiquez le numéro qui va payer la recharge.'**
   String get errorTopupPhoneRequiredMessage;
 
   /// No description provided for @errorTopupPhoneUnsupportedTitle.
@@ -1253,7 +1253,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorTopupPhoneUnsupportedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce numéro n\'est pas exploitable pour une recharge mobile money. Vérifie-le ou essaie avec un autre numéro.'**
+  /// **'Ce numéro n\'est pas exploitable pour une recharge mobile money. Vérifiez-le ou essayez avec un autre numéro.'**
   String get errorTopupPhoneUnsupportedMessage;
 
   /// No description provided for @errorTopupNotFoundTitle.
@@ -1289,7 +1289,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorUnsupportedCurrencyMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Cette devise n\'est pas encore disponible. Vérifie la devise de ton compte dans les réglages.'**
+  /// **'Cette devise n\'est pas encore disponible. Vérifiez la devise de votre compte dans les réglages.'**
   String get errorUnsupportedCurrencyMessage;
 
   /// No description provided for @errorContactEmailRequiredTitle.
@@ -1301,7 +1301,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorContactEmailRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Pour créer ton compte de paiement, Stripe a besoin d\'une adresse e-mail. Ajoute-la à ton compte, puis reviens ici.'**
+  /// **'Pour créer votre compte de paiement, Stripe a besoin d\'une adresse e-mail. Ajoutez-la à votre compte, puis revenez ici.'**
   String get errorContactEmailRequiredMessage;
 
   /// No description provided for @errorStripeAccountRequiredTitle.
@@ -1313,7 +1313,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorStripeAccountRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ton compte de paiement n\'a pas encore été créé. Retape sur le bouton pour lancer l\'activation.'**
+  /// **'Votre compte de paiement n\'a pas encore été créé. Appuyez de nouveau sur le bouton pour lancer l\'activation.'**
   String get errorStripeAccountRequiredMessage;
 
   /// No description provided for @errorStripeAccountInvalidTitle.
@@ -1325,7 +1325,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorStripeAccountInvalidMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ton compte de paiement n\'est plus valide. Retape sur le bouton pour en créer un nouveau.'**
+  /// **'Votre compte de paiement n\'est plus valide. Appuyez de nouveau sur le bouton pour en créer un nouveau.'**
   String get errorStripeAccountInvalidMessage;
 
   /// No description provided for @errorStripeErrorTitle.
@@ -1337,7 +1337,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorStripeErrorMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le paiement n\'a pas pu être traité. Vérifie ta carte ou réessaie dans un instant.'**
+  /// **'Le paiement n\'a pas pu être traité. Vérifiez votre carte ou réessayez dans un instant.'**
   String get errorStripeErrorMessage;
 
   /// No description provided for @errorGoogleTimeoutTitle.
@@ -1349,7 +1349,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorGoogleTimeoutMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le service de localisation est lent à répondre. Réessaie dans quelques secondes.'**
+  /// **'Le service de localisation est lent à répondre. Réessayez dans quelques secondes.'**
   String get errorGoogleTimeoutMessage;
 
   /// No description provided for @errorOtpInvalidTitle.
@@ -1361,7 +1361,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorOtpInvalidMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le code saisi est incorrect ou a déjà été utilisé. Vérifie le code reçu par email.'**
+  /// **'Le code saisi est incorrect ou a déjà été utilisé. Vérifiez le code reçu par email.'**
   String get errorOtpInvalidMessage;
 
   /// No description provided for @errorOtpExpiredTitle.
@@ -1373,7 +1373,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorOtpExpiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce code a expiré. Reviens en arrière et demande un nouveau code.'**
+  /// **'Ce code a expiré. Revenez en arrière et demandez un nouveau code.'**
   String get errorOtpExpiredMessage;
 
   /// No description provided for @errorOtpAttemptsExceededTitle.
@@ -1385,7 +1385,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorOtpAttemptsExceededMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Trop d\'essais incorrects. Patiente quelques minutes, un nouveau code ne débloquera pas la saisie.'**
+  /// **'Trop d\'essais incorrects. Patientez quelques minutes, un nouveau code ne débloquera pas la saisie.'**
   String get errorOtpAttemptsExceededMessage;
 
   /// No description provided for @errorEmailAlreadyExistsTitle.
@@ -1421,7 +1421,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorRateLimitMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu as demandé plusieurs codes coup sur coup. Attends quelques minutes avant d\'en redemander un.'**
+  /// **'Vous avez demandé plusieurs codes coup sur coup. Attendez quelques minutes avant d\'en redemander un.'**
   String get errorRateLimitMessage;
 
   /// No description provided for @errorEmailServiceErrorTitle.
@@ -1433,7 +1433,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorEmailServiceErrorMessage.
   ///
   /// In fr, this message translates to:
-  /// **'L\'email n\'a pas pu être envoyé. Vérifie l\'adresse saisie et réessaie.'**
+  /// **'L\'email n\'a pas pu être envoyé. Vérifiez l\'adresse saisie et réessayez.'**
   String get errorEmailServiceErrorMessage;
 
   /// No description provided for @errorFirebaseErrorTitle.
@@ -1445,7 +1445,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorFirebaseErrorMessage.
   ///
   /// In fr, this message translates to:
-  /// **'La connexion n\'a pas pu aboutir. Réessaie dans un instant.'**
+  /// **'La connexion n\'a pas pu aboutir. Réessayez dans un instant.'**
   String get errorFirebaseErrorMessage;
 
   /// No description provided for @errorPromoNotFoundTitle.
@@ -1457,7 +1457,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPromoNotFoundMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce code promo n\'existe pas. Vérifie la saisie et réessaie. Un code parrain se saisit à l\'inscription ou dans Moi › « J\'ai un code parrain ».'**
+  /// **'Ce code promo n\'existe pas. Vérifiez la saisie et réessayez. Un code parrain se saisit à l\'inscription ou dans Moi › « J\'ai un code parrain ».'**
   String get errorPromoNotFoundMessage;
 
   /// No description provided for @errorPromoExpiredTitle.
@@ -1493,7 +1493,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPromoNotEligibleMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce code promo n\'est pas disponible pour ton profil.'**
+  /// **'Ce code promo n\'est pas disponible pour votre profil.'**
   String get errorPromoNotEligibleMessage;
 
   /// No description provided for @errorReferralCodeNotFoundTitle.
@@ -1505,7 +1505,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorReferralCodeNotFoundMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce code de parrainage n\'existe pas. Vérifie la saisie et réessaie.'**
+  /// **'Ce code de parrainage n\'existe pas. Vérifiez la saisie et réessayez.'**
   String get errorReferralCodeNotFoundMessage;
 
   /// No description provided for @errorSelfReferralTitle.
@@ -1517,7 +1517,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorSelfReferralMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu ne peux pas utiliser ton propre code de parrainage.'**
+  /// **'Vous ne pouvez pas utiliser votre propre code de parrainage.'**
   String get errorSelfReferralMessage;
 
   /// No description provided for @errorAlreadyReferredTitle.
@@ -1529,7 +1529,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorAlreadyReferredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu as déjà utilisé un code de parrainage.'**
+  /// **'Vous avez déjà utilisé un code de parrainage.'**
   String get errorAlreadyReferredMessage;
 
   /// No description provided for @errorUserNotFoundTitle.
@@ -1553,7 +1553,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorOfflineMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie ta connexion Internet puis réessaie. Tes lectures hors-ligne seront synchronisées à la reconnexion.'**
+  /// **'Vérifiez votre connexion Internet puis réessayez. Vos lectures hors-ligne seront synchronisées à la reconnexion.'**
   String get errorOfflineMessage;
 
   /// No description provided for @errorTimeoutTitle.
@@ -1565,7 +1565,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorTimeoutMessage.
   ///
   /// In fr, this message translates to:
-  /// **'La requête a pris trop de temps. Réessaie dans quelques secondes.'**
+  /// **'La requête a pris trop de temps. Réessayez dans quelques secondes.'**
   String get errorTimeoutMessage;
 
   /// No description provided for @errorRateLimitedTitle.
@@ -1577,7 +1577,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorRateLimitedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Tu as fait trop d\'appels en peu de temps. Patiente un instant avant de réessayer.'**
+  /// **'Vous avez fait trop d\'appels en peu de temps. Patientez un instant avant de réessayer.'**
   String get errorRateLimitedMessage;
 
   /// No description provided for @errorServerErrorTitle.
@@ -1589,7 +1589,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorServerErrorMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Quelque chose s\'est mal passé de notre côté. On regarde ça, réessaie dans un instant.'**
+  /// **'Quelque chose s\'est mal passé de notre côté. On regarde ça, réessayez dans un instant.'**
   String get errorServerErrorMessage;
 
   /// No description provided for @errorCancelledTitle.
@@ -1625,7 +1625,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorValidationMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie les informations saisies puis réessaie.'**
+  /// **'Vérifiez les informations saisies puis réessayez.'**
   String get errorValidationMessage;
 
   /// No description provided for @errorConflictTitle.
@@ -1649,7 +1649,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorStorageMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible d\'accéder au stockage local. Redémarre l\'application.'**
+  /// **'Impossible d\'accéder au stockage local. Redémarrez l\'application.'**
   String get errorStorageMessage;
 
   /// No description provided for @errorNetworkTitle.
@@ -1661,7 +1661,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorNetworkMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Une erreur est survenue. Vérifie ta connexion et réessaie.'**
+  /// **'Une erreur est survenue. Vérifiez votre connexion et réessayez.'**
   String get errorNetworkMessage;
 
   /// No description provided for @errorGenericTitle.
@@ -1673,7 +1673,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorGenericMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Réessaie dans un instant. Si le problème persiste, contacte le support.'**
+  /// **'Réessayez dans un instant. Si le problème persiste, contactez le support.'**
   String get errorGenericMessage;
 
   /// No description provided for @networkFallbackSessionExpired.
@@ -2069,13 +2069,13 @@ abstract class AppLocalizations {
   /// No description provided for @authMethodTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Connecte-toi en toute confiance'**
+  /// **'Connectez-vous en toute confiance'**
   String get authMethodTitle;
 
   /// No description provided for @authMethodSubtitle.
   ///
   /// In fr, this message translates to:
-  /// **'Tes échanges, ton paiement et ton suivi colis sont protégés à chaque étape.'**
+  /// **'Vos échanges, votre paiement et votre suivi colis sont protégés à chaque étape.'**
   String get authMethodSubtitle;
 
   /// No description provided for @authMethodContinueWithApple.
@@ -2129,7 +2129,7 @@ abstract class AppLocalizations {
   /// No description provided for @authLegalPrefix.
   ///
   /// In fr, this message translates to:
-  /// **'En continuant tu acceptes nos '**
+  /// **'En continuant vous acceptez nos '**
   String get authLegalPrefix;
 
   /// No description provided for @authLegalTermsLink.
@@ -2159,19 +2159,19 @@ abstract class AppLocalizations {
   /// No description provided for @authEmailTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Ton adresse email'**
+  /// **'Votre adresse email'**
   String get authEmailTitle;
 
   /// No description provided for @authEmailBody.
   ///
   /// In fr, this message translates to:
-  /// **'Saisis ton adresse email pour recevoir un code de connexion.'**
+  /// **'Saisissez votre adresse email pour recevoir un code de connexion.'**
   String get authEmailBody;
 
   /// No description provided for @authEmailFootnote.
   ///
   /// In fr, this message translates to:
-  /// **'On protège ton accès sans partager ton email avec les voyageurs.'**
+  /// **'On protège votre accès sans partager votre email avec les voyageurs.'**
   String get authEmailFootnote;
 
   /// No description provided for @authEmailHint.
@@ -2183,7 +2183,7 @@ abstract class AppLocalizations {
   /// No description provided for @authEmailSpamHint.
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie tes spams si tu ne reçois pas le code.'**
+  /// **'Vérifiez vos spams si vous ne recevez pas le code.'**
   String get authEmailSpamHint;
 
   /// No description provided for @authEmailSendCode.
@@ -2195,7 +2195,7 @@ abstract class AppLocalizations {
   /// No description provided for @authEmailPreferSms.
   ///
   /// In fr, this message translates to:
-  /// **'Préfères le SMS ?'**
+  /// **'Vous préférez le SMS ?'**
   String get authEmailPreferSms;
 
   /// No description provided for @authPhoneDialCodeTitle.
@@ -2213,19 +2213,19 @@ abstract class AppLocalizations {
   /// No description provided for @authPhoneTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Ton numéro'**
+  /// **'Votre numéro'**
   String get authPhoneTitle;
 
   /// No description provided for @authPhoneBody.
   ///
   /// In fr, this message translates to:
-  /// **'On t’envoie un code à 6 chiffres par SMS pour vérifier que c’est bien toi.'**
+  /// **'On vous envoie un code à 6 chiffres par SMS pour vérifier que c’est bien vous.'**
   String get authPhoneBody;
 
   /// No description provided for @authPhoneFootnote.
   ///
   /// In fr, this message translates to:
-  /// **'Ton numéro sert uniquement à sécuriser ton compte et tes échanges Yadony.'**
+  /// **'Votre numéro sert uniquement à sécuriser votre compte et vos échanges Yadony.'**
   String get authPhoneFootnote;
 
   /// No description provided for @authPhoneNumberLabel.
@@ -2321,7 +2321,7 @@ abstract class AppLocalizations {
   /// No description provided for @authOtpFootnote.
   ///
   /// In fr, this message translates to:
-  /// **'Le code expire rapidement pour garder ton compte Yadony protégé.'**
+  /// **'Le code expire rapidement pour garder votre compte Yadony protégé.'**
   String get authOtpFootnote;
 
   /// No description provided for @authOtpResendIn.
@@ -2399,7 +2399,7 @@ abstract class AppLocalizations {
   /// No description provided for @authRequiredFreeSearchBody.
   ///
   /// In fr, this message translates to:
-  /// **'Tu peux consulter les demandes et comparer les trajets.'**
+  /// **'Vous pouvez consulter les demandes et comparer les trajets.'**
   String get authRequiredFreeSearchBody;
 
   /// No description provided for @authRequiredProtectedTitle.
@@ -2411,7 +2411,7 @@ abstract class AppLocalizations {
   /// No description provided for @authRequiredOfferSubtitle.
   ///
   /// In fr, this message translates to:
-  /// **'Connecte-toi pour proposer ton trajet en toute sécurité.'**
+  /// **'Connectez-vous pour proposer votre trajet en toute sécurité.'**
   String get authRequiredOfferSubtitle;
 
   /// No description provided for @authRequiredOfferBody.
@@ -2423,7 +2423,7 @@ abstract class AppLocalizations {
   /// No description provided for @authRequiredReportSubtitle.
   ///
   /// In fr, this message translates to:
-  /// **'Connecte-toi pour signaler une annonce.'**
+  /// **'Connectez-vous pour signaler une annonce.'**
   String get authRequiredReportSubtitle;
 
   /// No description provided for @authRequiredReportBody.
@@ -2435,7 +2435,7 @@ abstract class AppLocalizations {
   /// No description provided for @authRequiredExploreSubtitle.
   ///
   /// In fr, this message translates to:
-  /// **'Connecte-toi pour utiliser cette action.'**
+  /// **'Connectez-vous pour utiliser cette action.'**
   String get authRequiredExploreSubtitle;
 
   /// No description provided for @authRequiredExploreBody.
@@ -2729,13 +2729,13 @@ abstract class AppLocalizations {
   /// No description provided for @authCountryTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Dans quel pays es-tu ?'**
+  /// **'Dans quel pays êtes-vous ?'**
   String get authCountryTitle;
 
   /// No description provided for @authCountrySubtitle.
   ///
   /// In fr, this message translates to:
-  /// **'Devise, trajets et disponibilité seront adaptés à ton pays.'**
+  /// **'Devise, trajets et disponibilité seront adaptés à votre pays.'**
   String get authCountrySubtitle;
 
   /// No description provided for @authCountryFieldLabel.
@@ -2753,7 +2753,7 @@ abstract class AppLocalizations {
   /// No description provided for @authCountryFieldHelper.
   ///
   /// In fr, this message translates to:
-  /// **'Tape ton pays puis choisis une suggestion.'**
+  /// **'Tapez votre pays puis choisissez une suggestion.'**
   String get authCountryFieldHelper;
 
   /// No description provided for @authCountrySaving.
@@ -2771,7 +2771,7 @@ abstract class AppLocalizations {
   /// No description provided for @authCountryDeleteDialogMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ton compte Yadony et tes données associées seront supprimés. Cette action est irréversible.'**
+  /// **'Votre compte Yadony et vos données associées seront supprimés. Cette action est irréversible.'**
   String get authCountryDeleteDialogMessage;
 
   /// No description provided for @authCountryDeleteDialogConfirm.
@@ -2789,7 +2789,7 @@ abstract class AppLocalizations {
   /// No description provided for @authCountryUnavailableBody.
   ///
   /// In fr, this message translates to:
-  /// **'Tu peux continuer pour envoyer des colis. Les trajets et la prise de colis resteront indisponibles depuis ce compte.'**
+  /// **'Vous pouvez continuer pour envoyer des colis. Les trajets et la prise de colis resteront indisponibles depuis ce compte.'**
   String get authCountryUnavailableBody;
 
   /// No description provided for @authCountryContinueAsSender.
@@ -2897,19 +2897,19 @@ abstract class AppLocalizations {
   /// No description provided for @authReferralTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Tu as été invité par un ami ?'**
+  /// **'Vous avez été invité par un ami ?'**
   String get authReferralTitle;
 
   /// No description provided for @authReferralBody.
   ///
   /// In fr, this message translates to:
-  /// **'Entre son code pour qu’il soit récompensé à ta première livraison.'**
+  /// **'Entrez son code pour qu’il soit récompensé à votre première livraison.'**
   String get authReferralBody;
 
   /// No description provided for @authReferralFootnote.
   ///
   /// In fr, this message translates to:
-  /// **'Cette étape est facultative. Tu peux entrer dans Yadony sans code.'**
+  /// **'Cette étape est facultative. Vous pouvez entrer dans Yadony sans code.'**
   String get authReferralFootnote;
 
   /// No description provided for @authReferralCodeLabel.
@@ -2939,13 +2939,13 @@ abstract class AppLocalizations {
   /// No description provided for @authReferralSuccessBody.
   ///
   /// In fr, this message translates to:
-  /// **'Ton ami sera récompensé dès que tu complètes ta première livraison.'**
+  /// **'Votre ami sera récompensé dès que vous aurez effectué votre première livraison.'**
   String get authReferralSuccessBody;
 
   /// No description provided for @authReferralSuccessFootnote.
   ///
   /// In fr, this message translates to:
-  /// **'Ton compte Yadony est prêt. Tu peux commencer à rechercher, envoyer ou suivre tes colis.'**
+  /// **'Votre compte Yadony est prêt. Vous pouvez commencer à rechercher, envoyer ou suivre vos colis.'**
   String get authReferralSuccessFootnote;
 
   /// No description provided for @authReferralContinueHome.
@@ -2969,7 +2969,7 @@ abstract class AppLocalizations {
   /// No description provided for @authConsentFootnote.
   ///
   /// In fr, this message translates to:
-  /// **'Jamais tes paiements, ton identité ou ton numéro. Tu peux changer d’avis dans Réglages.'**
+  /// **'Jamais vos paiements, votre identité ou votre numéro. Vous pouvez changer d’avis dans Réglages.'**
   String get authConsentFootnote;
 
   /// No description provided for @authConsentPointScreens.
@@ -2987,7 +2987,7 @@ abstract class AppLocalizations {
   /// No description provided for @authConsentPointNeverPersonal.
   ///
   /// In fr, this message translates to:
-  /// **'Jamais tes paiements, identité ou numéro'**
+  /// **'Jamais vos paiements, identité ou numéro'**
   String get authConsentPointNeverPersonal;
 
   /// No description provided for @authConsentPointChangeAnytime.
@@ -3317,7 +3317,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeLocateError.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de te localiser. Réessaie.'**
+  /// **'Impossible de vous localiser. Réessayez.'**
   String get homeLocateError;
 
   /// No description provided for @homeMaxWeightTitle.
@@ -3377,19 +3377,19 @@ abstract class AppLocalizations {
   /// No description provided for @homeListSubtitleTravelersCanCarry.
   ///
   /// In fr, this message translates to:
-  /// **'Ils peuvent emporter ton colis'**
+  /// **'Ils peuvent emporter votre colis'**
   String get homeListSubtitleTravelersCanCarry;
 
   /// No description provided for @homeListSubtitleActiveTripsUnknown.
   ///
   /// In fr, this message translates to:
-  /// **'Avec tes trajets actifs'**
+  /// **'Avec vos trajets actifs'**
   String get homeListSubtitleActiveTripsUnknown;
 
   /// No description provided for @homeListSubtitleActiveTrips.
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{Avec ton trajet actif} other{Avec tes {count} trajets actifs}}'**
+  /// **'{count, plural, =1{Avec votre trajet actif} other{Avec vos {count} trajets actifs}}'**
   String homeListSubtitleActiveTrips(int count);
 
   /// No description provided for @homeListSubtitleNoRequest.
@@ -3401,7 +3401,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeListSubtitleYouCanCarry.
   ///
   /// In fr, this message translates to:
-  /// **'Tu peux les emporter sur ton trajet'**
+  /// **'Vous pouvez les emporter sur votre trajet'**
   String get homeListSubtitleYouCanCarry;
 
   /// No description provided for @homeSort.
@@ -3419,7 +3419,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeRequestsLoadError.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de charger les demandes. Vérifie ta connexion puis réessaie.'**
+  /// **'Impossible de charger les demandes. Vérifiez votre connexion puis réessayez.'**
   String get homeRequestsLoadError;
 
   /// No description provided for @homeEmptyParcelsFiltered.
@@ -3437,19 +3437,19 @@ abstract class AppLocalizations {
   /// No description provided for @homeEmptyParcelsFilteredHint.
   ///
   /// In fr, this message translates to:
-  /// **'Modifie ou supprime tes filtres pour voir plus de demandes.'**
+  /// **'Modifiez ou supprimez vos filtres pour voir plus de demandes.'**
   String get homeEmptyParcelsFilteredHint;
 
   /// No description provided for @homeEmptyParcelsSoonHint.
   ///
   /// In fr, this message translates to:
-  /// **'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.'**
+  /// **'Vous pourrez bientôt consulter les demandes d\'envoi postées par les expéditeurs.'**
   String get homeEmptyParcelsSoonHint;
 
   /// No description provided for @homeTripsLoadError.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de charger les trajets. Vérifie ta connexion puis réessaie.'**
+  /// **'Impossible de charger les trajets. Vérifiez votre connexion puis réessayez.'**
   String get homeTripsLoadError;
 
   /// No description provided for @homeEmptyTravelersNearby.
@@ -3473,19 +3473,19 @@ abstract class AppLocalizations {
   /// No description provided for @homeEmptyNearbyHint.
   ///
   /// In fr, this message translates to:
-  /// **'Élargis ta zone ou désactive \"Près de moi\"'**
+  /// **'Élargissez votre zone ou désactivez \"Près de moi\"'**
   String get homeEmptyNearbyHint;
 
   /// No description provided for @homeEmptyTravelersFilteredHint.
   ///
   /// In fr, this message translates to:
-  /// **'Modifie tes filtres pour voir plus de voyageurs.'**
+  /// **'Modifiez vos filtres pour voir plus de voyageurs.'**
   String get homeEmptyTravelersFilteredHint;
 
   /// No description provided for @homeEmptyTravelersRouteHint.
   ///
   /// In fr, this message translates to:
-  /// **'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.'**
+  /// **'De nouveaux trajets sont publiés chaque jour. Revenez bientôt.'**
   String get homeEmptyTravelersRouteHint;
 
   /// Pastille flottante de l'accueil qui ouvre la vue carte
@@ -3695,7 +3695,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeComposerAlertTip.
   ///
   /// In fr, this message translates to:
-  /// **'Astuce, tu peux être prévenu des nouveaux colis compatibles depuis Réglages, Notifications.'**
+  /// **'Astuce, vous pouvez être prévenu des nouveaux colis compatibles depuis Réglages, Notifications.'**
   String get homeComposerAlertTip;
 
   /// No description provided for @homeComposerAroundMe.
@@ -3953,13 +3953,13 @@ abstract class AppLocalizations {
   /// No description provided for @homeMapEmptyNearbyHint.
   ///
   /// In fr, this message translates to:
-  /// **'Élargis ta zone ou désactive “Près de moi”'**
+  /// **'Élargissez votre zone ou désactivez “Près de moi”'**
   String get homeMapEmptyNearbyHint;
 
   /// No description provided for @homeMapEmptyHint.
   ///
   /// In fr, this message translates to:
-  /// **'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour'**
+  /// **'Revenez dans un instant, de nouvelles demandes sont publiées chaque jour'**
   String get homeMapEmptyHint;
 
   /// No description provided for @homeNoActiveTripTitle.
@@ -3971,7 +3971,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeNoActiveTripBody.
   ///
   /// In fr, this message translates to:
-  /// **'Ce filtre ne montre que les colis compatibles avec tes trajets à venir. Publie un trajet pour t\'en servir.'**
+  /// **'Ce filtre ne montre que les colis compatibles avec vos trajets à venir. Publiez un trajet pour vous en servir.'**
   String get homeNoActiveTripBody;
 
   /// No description provided for @homeNoActiveTripPublish.
@@ -4007,7 +4007,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeNearMeExplanation.
   ///
   /// In fr, this message translates to:
-  /// **'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.'**
+  /// **'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de vous.'**
   String get homeNearMeExplanation;
 
   /// No description provided for @homeLocationPermissionOpenSettings.
@@ -4031,13 +4031,13 @@ abstract class AppLocalizations {
   /// No description provided for @homeLocationPermissionServiceOffBody.
   ///
   /// In fr, this message translates to:
-  /// **'Active la localisation de ton téléphone pour voir ce qui est près de toi.'**
+  /// **'Activez la localisation de votre téléphone pour voir ce qui est près de vous.'**
   String get homeLocationPermissionServiceOffBody;
 
   /// No description provided for @homeLocationPermissionDeniedBody.
   ///
   /// In fr, this message translates to:
-  /// **'Autorise l\'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.'**
+  /// **'Autorisez l\'accès à votre position dans les réglages pour utiliser « Près de moi » et vous situer sur la carte.'**
   String get homeLocationPermissionDeniedBody;
 
   /// Titre de l'écran des conditions générales d'utilisation (/legal/terms)
@@ -4325,7 +4325,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès, avec le corridor du trajet publié
   ///
   /// In fr, this message translates to:
-  /// **'Ton trajet {departureCity} → {arrivalCity} est en ligne.'**
+  /// **'Votre trajet {departureCity} → {arrivalCity} est en ligne.'**
   String tripPublishSuccessSubtitle(String departureCity, String arrivalCity);
 
   /// CTA principal de l'écran de succès de publication d'un trajet
@@ -4361,7 +4361,7 @@ abstract class AppLocalizations {
   /// Texte d'aide sous le titre de la barre de suggestion des modèles de trajet
   ///
   /// In fr, this message translates to:
-  /// **'Applique un modèle pour pré-remplir le trajet'**
+  /// **'Appliquez un modèle pour pré-remplir le trajet'**
   String get tripPublishTemplatesHint;
 
   /// Confirmation après application d'un modèle de trajet, avec son nom
@@ -4391,7 +4391,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la ligne date limite de dépôt des colis
   ///
   /// In fr, this message translates to:
-  /// **'Jusqu\'à quand les expéditeurs peuvent te remettre leurs colis'**
+  /// **'Jusqu\'à quand les expéditeurs peuvent vous remettre leurs colis'**
   String get tripPublishHandoverDeadlineSubtitle;
 
   /// Valeur affichée sur la ligne date limite de dépôt tant qu'aucune date n'est choisie
@@ -5366,7 +5366,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Où tu récupères les colis des expéditeurs'**
+  /// **'Où vous récupérez les colis des expéditeurs'**
   String get addressSelectorDropoffSubtitle;
 
   /// Libellé de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)
@@ -5378,7 +5378,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Où tu déposes les colis à destination'**
+  /// **'Où vous déposez les colis à destination'**
   String get addressSelectorDeliverySubtitle;
 
   /// Motif intl DateFormat, pas un texte : heure de l'échéance de l'affiche du trajet (trip_poster_card.dart)
@@ -5630,7 +5630,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Crée des modèles de trajet réutilisables pour publier tes annonces en quelques secondes.'**
+  /// **'Créez des modèles de trajet réutilisables pour publier vos annonces en quelques secondes.'**
   String get tripTemplateEmptyDescription;
 
   /// Bouton d'action de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)
@@ -5654,7 +5654,7 @@ abstract class AppLocalizations {
   /// Message du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.'**
+  /// **'Êtes-vous sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.'**
   String tripTemplateDeleteDialogMessage(String label);
 
   /// Entrée du menu d'une carte modèle pour programmer sa récurrence (trip_templates_screen.dart)
@@ -5786,7 +5786,7 @@ abstract class AppLocalizations {
   /// Confirmation après activation d'une récurrence (trip_recurrence_edit_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Récurrence activée. Tes trajets seront publiés automatiquement.'**
+  /// **'Récurrence activée. Vos trajets seront publiés automatiquement.'**
   String get tripTemplateRecurrenceActivatedMessage;
 
   /// Titre de l'écran de programmation d'une récurrence (trip_recurrence_edit_screen.dart)
@@ -5960,13 +5960,13 @@ abstract class AppLocalizations {
   /// Prix net vu par le voyageur dans le fil de négociation (package_request_labels.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu reçois {amount}'**
+  /// **'Vous recevez {amount}'**
   String requestThreadYouReceive(String amount);
 
   /// Prix brut vu par l'expéditeur dans le fil de négociation (package_request_labels.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu paies {amount}'**
+  /// **'Vous payez {amount}'**
   String requestThreadYouPay(String amount);
 
   /// Fourchette de poids autorisée pour une demande d'envoi (package_request_labels.dart)
@@ -6578,7 +6578,7 @@ abstract class AppLocalizations {
   /// Titre de l'app bar de l'écran de complétion avant paiement (complete_details_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie & complète'**
+  /// **'Vérifiez & complétez'**
   String get requestCreateCompleteDetailsTitle;
 
   /// Message de succès après soumission des détails destinataire/paiement (complete_details_screen.dart)
@@ -6692,7 +6692,7 @@ abstract class AppLocalizations {
   /// Snackbar d'échec générique d'une action du détail de demande (package_request_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Une erreur est survenue. Réessaie dans un instant.'**
+  /// **'Une erreur est survenue. Réessayez dans un instant.'**
   String get requestDetailNoticeActionFailed;
 
   /// Snackbar de succès après invitation d'un voyageur (package_request_detail_screen.dart)
@@ -6722,7 +6722,7 @@ abstract class AppLocalizations {
   /// Corps du message de partage d'une demande, avant le lien (package_request_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'J\'envoie un colis de {weight} kg {departure} → {arrival} autour du {date}. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.'**
+  /// **'J\'envoie un colis de {weight} kg {departure} → {arrival} autour du {date}. Vous voyagez sur cet axe ? Répondez à ma demande sur Yadony.'**
   String requestDetailShareMessage(
     String weight,
     String departure,
@@ -6763,13 +6763,13 @@ abstract class AppLocalizations {
   /// Titre d'erreur générique de chargement (package_request_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de charger ta demande'**
+  /// **'Impossible de charger votre demande'**
   String get requestDetailErrorLoadTitle;
 
   /// Message d'erreur générique de chargement (package_request_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie ta connexion, puis réessaie. Ta demande n\'a pas été modifiée.'**
+  /// **'Vérifiez votre connexion, puis réessayez. Votre demande n\'a pas été modifiée.'**
   String get requestDetailErrorLoadMessage;
 
   /// Nom de repli du voyageur, en milieu de phrase (package_request_detail_screen.dart, request_detail_bottom_bar.dart)
@@ -6793,13 +6793,13 @@ abstract class AppLocalizations {
   /// Titre de l'état vide global de « Mes demandes » (my_package_requests_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu n\'as encore rien envoyé'**
+  /// **'Vous n\'avez encore rien envoyé'**
   String get requestListEmptyTitle;
 
   /// Description de l'état vide global de « Mes demandes » (my_package_requests_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Publie ta première demande et reçois des offres de voyageurs en quelques heures.'**
+  /// **'Publiez votre première demande et recevez des offres de voyageurs en quelques heures.'**
   String get requestListEmptyDescription;
 
   /// CTA de l'état vide global de « Mes demandes » (my_package_requests_screen.dart)
@@ -6979,7 +6979,7 @@ abstract class AppLocalizations {
   /// Pli replié « N voyageurs sur ton axe » (offres reçues / prix ferme) (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} voyageur sur ton axe} other{{count} voyageurs sur ton axe}}'**
+  /// **'{count, plural, =1{{count} voyageur sur votre axe} other{{count} voyageurs sur votre axe}}'**
   String requestDetailTravelersOnRouteCount(int count);
 
   /// Titre du bandeau brouillon (request_detail_view.dart)
@@ -6991,7 +6991,7 @@ abstract class AppLocalizations {
   /// Message du bandeau brouillon (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Publie ta demande pour que les voyageurs puissent te proposer un prix.'**
+  /// **'Publiez votre demande pour que les voyageurs puissent vous proposer un prix.'**
   String get requestDetailNotVisibleMessage;
 
   /// Titre du bandeau accord en espèces, commission en attente (request_detail_view.dart)
@@ -7003,19 +7003,19 @@ abstract class AppLocalizations {
   /// Message du bandeau accord en espèces, commission en attente (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Accord en espèces trouvé. Tant que ce n\'est pas fait, tu peux encore choisir quelqu\'un d\'autre.'**
+  /// **'Accord en espèces trouvé. Tant que ce n\'est pas fait, vous pouvez encore choisir quelqu\'un d\'autre.'**
   String get requestDetailCashCommissionMessage;
 
   /// Titre du bandeau à finaliser (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Finalise pour réserver sa place'**
+  /// **'Finalisez pour réserver sa place'**
   String get requestDetailFinalizeTitle;
 
   /// Message du bandeau à finaliser (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ton argent reste bloqué chez Yadony jusqu\'à la remise du colis.'**
+  /// **'Votre argent reste bloqué chez Yadony jusqu\'à la remise du colis.'**
   String get requestDetailFinalizeMessage;
 
   /// Titre du bandeau expirée (request_detail_view.dart)
@@ -7027,13 +7027,13 @@ abstract class AppLocalizations {
   /// Message du bandeau expirée (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Aucun voyageur n\'a été retenu à temps. Tes infos sont gardées, il suffit de choisir de nouvelles dates.'**
+  /// **'Aucun voyageur n\'a été retenu à temps. Vos infos sont gardées, il suffit de choisir de nouvelles dates.'**
   String get requestDetailExpiredMessage;
 
   /// Titre du bandeau annulée (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu as annulé cette demande'**
+  /// **'Vous avez annulé cette demande'**
   String get requestDetailCancelledTitle;
 
   /// Message du bandeau annulée (request_detail_view.dart)
@@ -7051,7 +7051,7 @@ abstract class AppLocalizations {
   /// Message du bandeau : recherche de voyageurs compatibles en échec (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Réessaie plus tard, ou partage directement ta demande en attendant.'**
+  /// **'Réessayez plus tard, ou partagez directement votre demande en attendant.'**
   String get requestDetailNoSearchMessage;
 
   /// Titre de section : offres reçues (request_detail_view.dart)
@@ -7099,13 +7099,13 @@ abstract class AppLocalizations {
   /// Message du bandeau : bid accepté mais hors des rails (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Le voyageur n\'a pas pu assurer la livraison. Publie une demande similaire pour retrouver quelqu\'un.'**
+  /// **'Le voyageur n\'a pas pu assurer la livraison. Publiez une demande similaire pour retrouver quelqu\'un.'**
   String get requestDetailTripNotCompletedMessage;
 
   /// Nom de repli du voyageur dans la frise de progression (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'ton voyageur'**
+  /// **'votre voyageur'**
   String get requestDetailYourTravelerFallback;
 
   /// Statut du talon voyageur : espèces déjà réglées (request_detail_view.dart)
@@ -7159,7 +7159,7 @@ abstract class AppLocalizations {
   /// Étiquette d'offre sur un prix ferme (request_offer_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Disponible pour ton colis'**
+  /// **'Disponible pour votre colis'**
   String get requestOfferAvailableForParcel;
 
   /// CTA de l'étiquette d'offre sur un prix ferme (request_offer_card.dart)
@@ -7171,7 +7171,7 @@ abstract class AppLocalizations {
   /// Étiquette d'offre : c'est à l'expéditeur de répondre (request_offer_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'À toi de répondre'**
+  /// **'À vous de répondre'**
   String get requestOfferYourTurn;
 
   /// CTA de l'étiquette d'offre quand c'est à l'expéditeur de répondre (request_offer_card.dart)
@@ -7189,7 +7189,7 @@ abstract class AppLocalizations {
   /// Légende sous le prix brut d'une carte d'offre (request_offer_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'tu paies'**
+  /// **'vous payez'**
   String get requestOfferYouPayCaption;
 
   /// Poids encore disponible chez un voyageur (request_offer_card.dart, compatible_traveler_card.dart)
@@ -7237,7 +7237,7 @@ abstract class AppLocalizations {
   /// Titre de la liste des voyageurs compatibles (request_travelers_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Voyageurs sur ton axe'**
+  /// **'Voyageurs sur votre axe'**
   String get requestTravelersOnRouteTitle;
 
   /// Titre de l'état vide : aucun voyageur compatible (request_travelers_section.dart)
@@ -7249,7 +7249,7 @@ abstract class AppLocalizations {
   /// Message de l'état vide : aucun voyageur compatible (request_travelers_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Les trajets arrivent souvent la semaine du départ. On te prévient dès qu\'un voyageur publie.'**
+  /// **'Les trajets arrivent souvent la semaine du départ. On vous prévient dès qu\'un voyageur publie.'**
   String get requestNoTravelersMessage;
 
   /// Action de l'état vide : créer une alerte (request_travelers_section.dart)
@@ -7439,7 +7439,7 @@ abstract class AppLocalizations {
   /// Jauge de poids : poids de la demande de l'expéditeur (compatible_traveler_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'ton colis : {weight} kg'**
+  /// **'votre colis : {weight} kg'**
   String requestYourParcelWeight(String weight);
 
   /// État du bouton d'invitation d'un voyageur compatible, déjà invité (compatible_traveler_card.dart)
@@ -7457,7 +7457,7 @@ abstract class AppLocalizations {
   /// Libellé d'accessibilité du squelette de chargement (request_detail_skeleton.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Chargement de ta demande'**
+  /// **'Chargement de votre demande'**
   String get requestDetailLoadingSemantic;
 
   /// Tolérance compacte en jours, format ±Nj, réutilisée par package_request_public_detail_screen.dart, package_request_list_card.dart, package_request_search_screen.dart et package_request_carousel_card.dart
@@ -7607,7 +7607,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la carte moyens de paiement (package_request_public_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur choisira parmi ceux-ci au moment de payer : rien à choisir de ton côté'**
+  /// **'L\'expéditeur choisira parmi ceux-ci au moment de payer : rien à choisir de votre côté'**
   String get requestPublicPaymentSubtitle;
 
   /// CTA voyageur sur une demande négociable (package_request_public_detail_screen.dart)
@@ -7667,7 +7667,7 @@ abstract class AppLocalizations {
   /// Score de compatibilité « Pour mes trajets » (package_request_list_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ton trajet du {date}'**
+  /// **'Votre trajet du {date}'**
   String requestListYourTripOn(String date);
 
   /// Budget non renseigné (package_request_list_card.dart)
@@ -7679,7 +7679,7 @@ abstract class AppLocalizations {
   /// Snackbar d'échec du cœur favori (package_request_list_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Action impossible, réessaie'**
+  /// **'Action impossible, réessayez'**
   String get requestFavoriteToggleError;
 
   /// Nombre d'envois de l'expéditeur (package_request_list_card.dart, MatchingRequestCard)
@@ -7841,25 +7841,25 @@ abstract class AppLocalizations {
   /// Erreur de chargement des trajets du voyageur (trip_picker_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de charger tes trajets'**
+  /// **'Impossible de charger vos trajets'**
   String get requestPickerLoadErrorMessage;
 
   /// Titre quand aucun trajet ne correspond (trip_picker_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Aucun de tes trajets ne correspond'**
+  /// **'Aucun de vos trajets ne correspond'**
   String get requestPickerNoMatchTitle;
 
   /// Titre quand au moins un trajet correspond (trip_picker_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tes trajets compatibles'**
+  /// **'Vos trajets compatibles'**
   String get requestPickerMatchingTitle;
 
   /// Message de l'état vide invitant à créer un trajet (trip_picker_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Crée un trajet correspondant à cette demande'**
+  /// **'Créez un trajet correspondant à cette demande'**
   String get requestPickerEmptyCreateHint;
 
   /// Bouton de création d'un nouveau trajet dédié (trip_picker_section.dart)
@@ -8609,7 +8609,7 @@ abstract class AppLocalizations {
   /// Erreur du bouton favori sur une carte de trajet (trip_card.dart, traveler_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Action impossible, réessaie'**
+  /// **'Action impossible, réessayez'**
   String get listingRetryActionMessage;
 
   /// Compteur de demandes acceptées sur une carte de trajet (trip_card.dart)
@@ -8693,7 +8693,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide du carousel « près de moi » (near_me_carousel.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Essaie d\'augmenter le rayon ou de changer de date.'**
+  /// **'Essayez d\'augmenter le rayon ou de changer de date.'**
   String get listingNoTravelersNearbyDesc;
 
   /// Bouton « voir tout » quand une seule annonce est disponible (near_me_carousel.dart)
@@ -8927,19 +8927,19 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès pour une offre en espèces (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Paiement en espèces : si le voyageur accepte, tu remets le montant en main propre à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.'**
+  /// **'Paiement en espèces : si le voyageur accepte, vous remettez le montant en main propre à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas vous rembourser immédiatement mais s\'assurera que le voyageur vous restitue votre argent.'**
   String get bidCreateCashSuccessSubtitle;
 
   /// Sous-titre de l'écran de succès pour une offre en mobile money (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Paiement mobile money : si le voyageur accepte, tu recevras une notification et auras 30 minutes pour valider le paiement sur ton téléphone. Le montant est gardé en sécurité par Yadony jusqu\'à la livraison.'**
+  /// **'Paiement mobile money : si le voyageur accepte, vous recevrez une notification et aurez 30 minutes pour valider le paiement sur votre téléphone. Le montant est gardé en sécurité par Yadony jusqu\'à la livraison.'**
   String get bidCreateMobileMoneySuccessSubtitle;
 
   /// Sous-titre de repli de l'écran de succès après une offre (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Le voyageur va examiner ta demande.'**
+  /// **'Le voyageur va examiner votre demande.'**
   String get bidCreateReviewPendingSubtitle;
 
   /// CTA de l'écran de succès vers le détail de l'envoi (create_bid_bottom_sheet.dart)
@@ -9101,13 +9101,13 @@ abstract class AppLocalizations {
   /// Titre de l'étape de choix du mode de paiement (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Comment veux-tu payer ?'**
+  /// **'Comment voulez-vous payer ?'**
   String get bidCreateHowToPayTitle;
 
   /// Sous-titre de l'étape de choix du mode de paiement (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Choisis le mode de paiement pour cette demande.'**
+  /// **'Choisissez le mode de paiement pour cette demande.'**
   String get bidCreateChoosePaymentSubtitle;
 
   /// Erreur affichée si l'authentification avant paiement échoue (create_bid_bottom_sheet.dart)
@@ -9131,7 +9131,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès après un paiement carte (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.'**
+  /// **'Votre paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de votre demande.'**
   String get bidCreateOfferPaidSubtitle;
 
   /// Libellé de la section poids, trajet kilo pur (create_bid_bottom_sheet.dart)
@@ -9215,19 +9215,19 @@ abstract class AppLocalizations {
   /// Explication du mode carte à l'étape paiement d'une proposition de prix : rien n'est débité avant l'accord (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Payé par carte une fois ton prix accepté, puis bloqué par Yadony jusqu\'à la confirmation de la livraison.'**
+  /// **'Payé par carte une fois votre prix accepté, puis bloqué par Yadony jusqu\'à la confirmation de la livraison.'**
   String get bidCreateCardModeNegotiationBody;
 
   /// Explication du mode mobile money dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Après l\'accord du voyageur, tu reçois une demande de paiement sur ton téléphone. Le montant est bloqué par Yadony jusqu\'à la livraison.'**
+  /// **'Après l\'accord du voyageur, vous recevez une demande de paiement sur votre téléphone. Le montant est bloqué par Yadony jusqu\'à la livraison.'**
   String get bidCreateMobileMoneyModeBody;
 
   /// Explication du mode espèces dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu remets la somme au voyageur le jour où tu lui confies le colis.'**
+  /// **'Vous remettez la somme au voyageur le jour où vous lui confiez le colis.'**
   String get bidCreateCashModeBody;
 
   /// Rappel de garantie sous le mode carte et mobile money (create_bid_bottom_sheet.dart)
@@ -9287,13 +9287,13 @@ abstract class AppLocalizations {
   /// Texte d'aide quand le compte a un numéro de téléphone (create_bid/payer_phone_field.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Par défaut, ton numéro Yadony. Tu recevras la demande de paiement sur ce numéro.'**
+  /// **'Par défaut, votre numéro Yadony. Vous recevrez la demande de paiement sur ce numéro.'**
   String get bidCreatePayerPhoneHintWithProfile;
 
   /// Texte d'aide quand le compte n'a pas de numéro de téléphone (create_bid/payer_phone_field.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ton compte n\'a pas de numéro : indique celui qui paiera. Tu recevras la demande de paiement dessus.'**
+  /// **'Votre compte n\'a pas de numéro : indiquez celui qui paiera. Vous recevrez la demande de paiement dessus.'**
   String get bidCreatePayerPhoneHintNoProfile;
 
   /// Titre de la section articles hors grille en négociation (custom_items_section.dart)
@@ -9855,7 +9855,7 @@ abstract class AppLocalizations {
   /// Corps du dialog de confirmation de blocage (block_user_action.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Il·elle ne pourra plus voir tes annonces ni t\'envoyer d\'offre. Tu ne verras plus les siennes non plus. Tu pourras le·la débloquer à tout moment dans Confidentialité.'**
+  /// **'Il·elle ne pourra plus voir vos annonces ni vous envoyer d\'offre. Vous ne verrez plus les siennes non plus. Vous pourrez le·la débloquer à tout moment dans Confidentialité.'**
   String get blockConfirmBody;
 
   /// Bouton de confirmation du blocage (block_user_action.dart)
@@ -10017,7 +10017,7 @@ abstract class AppLocalizations {
   /// Snackbar d'erreur de relance générique (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de relancer pour le moment, réessaie plus tard'**
+  /// **'Impossible de relancer pour le moment, réessayez plus tard'**
   String get negotiationNudgeGenericErrorMessage;
 
   /// Bandeau OPEN quand le dernier message est du viewer (thread_state_cta_bar.dart)
@@ -10029,7 +10029,7 @@ abstract class AppLocalizations {
   /// Sous-titre du bandeau « en attente de la réponse » (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu seras notifié dès que la partie adverse répondra.'**
+  /// **'Vous serez notifié dès que la partie adverse répondra.'**
   String get negotiationOpenAwaitingReplySubtitle;
 
   /// Bandeau AWAITING_TRIP côté expéditeur (thread_state_cta_bar.dart)
@@ -10041,7 +10041,7 @@ abstract class AppLocalizations {
   /// Sous-titre du bandeau AWAITING_TRIP côté expéditeur (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu seras notifié dès qu\'il l\'aura confirmé.'**
+  /// **'Vous serez notifié dès qu\'il l\'aura confirmé.'**
   String get negotiationAwaitingTripSenderSubtitle;
 
   /// Bouton AWAITING_TRIP côté voyageur (thread_state_cta_bar.dart)
@@ -10071,7 +10071,7 @@ abstract class AppLocalizations {
   /// Sous-titre du bandeau AWAITING_PAYMENT côté voyageur (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu seras notifié dès qu\'il aura réglé.'**
+  /// **'Vous serez notifié dès qu\'il aura réglé.'**
   String get negotiationAwaitingPaymentTravelerSubtitle;
 
   /// Bandeau AWAITING_DEPOSIT côté voyageur (thread_state_cta_bar.dart)
@@ -10083,7 +10083,7 @@ abstract class AppLocalizations {
   /// Sous-titre du bandeau AWAITING_DEPOSIT côté voyageur (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu seras notifié dès que le paiement sera confirmé.'**
+  /// **'Vous serez notifié dès que le paiement sera confirmé.'**
   String get negotiationAwaitingDepositTravelerSubtitle;
 
   /// Bandeau AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)
@@ -10095,7 +10095,7 @@ abstract class AppLocalizations {
   /// Sous-titre du dépôt en cours, échéance inconnue (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Valide le paiement sur ton téléphone.'**
+  /// **'Validez le paiement sur votre téléphone.'**
   String get negotiationDepositSubtitleDefault;
 
   /// Sous-titre du dépôt en cours, échéance dépassée (thread_state_cta_bar.dart)
@@ -10107,7 +10107,7 @@ abstract class AppLocalizations {
   /// Sous-titre du dépôt en cours, échéance future (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Valide le paiement sur ton téléphone. Expire dans {minutes} min.'**
+  /// **'Validez le paiement sur votre téléphone. Expire dans {minutes} min.'**
   String negotiationDepositSubtitleExpiring(int minutes);
 
   /// Bouton AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)
@@ -10131,19 +10131,19 @@ abstract class AppLocalizations {
   /// Sous-titre du bandeau AWAITING_COMMISSION côté expéditeur (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ta demande reste ouverte : tu peux continuer à recevoir et accepter d\'autres offres tant qu\'il n\'a pas réglé.'**
+  /// **'Votre demande reste ouverte : vous pouvez continuer à recevoir et accepter d\'autres offres tant qu\'il n\'a pas réglé.'**
   String get negotiationAwaitingCommissionSenderSubtitle;
 
   /// Bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Confirme ta prise en charge'**
+  /// **'Confirmez votre prise en charge'**
   String get negotiationCommissionTravelerBannerTitle;
 
   /// Sous-titre du bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur a retenu ton offre. Règle la commission Yadony ({amount}) avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut te doubler.'**
+  /// **'L\'expéditeur a retenu votre offre. Réglez la commission Yadony ({amount}) avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.'**
   String negotiationCommissionTravelerBannerSubtitle(String amount);
 
   /// Bouton de règlement de la commission (thread_state_cta_bar.dart)
@@ -10191,7 +10191,7 @@ abstract class AppLocalizations {
   /// Sous-titre du bandeau ACCEPTED payé en ligne (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu peux passer aux étapes suivantes du suivi.'**
+  /// **'Vous pouvez passer aux étapes suivantes du suivi.'**
   String get negotiationAcceptedPaidSubtitle;
 
   /// Sous-titre du bandeau ACCEPTED, paiement cash (thread_state_cta_bar.dart)
@@ -10227,7 +10227,7 @@ abstract class AppLocalizations {
   /// Bouton d'acceptation côté expéditeur, montant brut (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Accepter : Tu paies {amount}'**
+  /// **'Accepter : Vous payez {amount}'**
   String negotiationSenderAcceptButton(String amount);
 
   /// Bouton de refus, expéditeur et voyageur (thread_state_cta_bar.dart)
@@ -10239,7 +10239,7 @@ abstract class AppLocalizations {
   /// Bouton d'acceptation côté voyageur, montant net (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Accepter : Tu reçois {amount}'**
+  /// **'Accepter : Vous recevez {amount}'**
   String negotiationTravelerAcceptButton(String amount);
 
   /// Compte à rebours de la commission, échéance dépassée (thread_state_cta_bar.dart)
@@ -10251,13 +10251,13 @@ abstract class AppLocalizations {
   /// Compte à rebours de la commission, au moins une heure restante ; `minutes` déjà mis en forme sur deux chiffres (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Il te reste {hours}h {minutes}min'**
+  /// **'Il vous reste {hours}h {minutes}min'**
   String negotiationCommissionCountdownHours(int hours, String minutes);
 
   /// Compte à rebours de la commission, moins d'une heure restante ; `minutes`/`seconds` déjà mis en forme sur deux chiffres (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Il te reste {minutes}:{seconds}'**
+  /// **'Il vous reste {minutes}:{seconds}'**
   String negotiationCommissionCountdownMinutes(String minutes, String seconds);
 
   /// Bouton et titre de confirmation du refus d'un trajet lié (trip_detail_bottom_sheet.dart)
@@ -10353,7 +10353,7 @@ abstract class AppLocalizations {
   /// Snackbar de confirmation du renoncement (negotiation_thread_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu as renoncé à ce colis, il reste disponible pour un autre voyageur.'**
+  /// **'Vous avez renoncé à ce colis, il reste disponible pour un autre voyageur.'**
   String get negotiationGaveUpParcelSnackbar;
 
   /// Titre de l'AppBar tant que le fil n'est pas chargé (negotiation_thread_screen.dart)
@@ -10401,7 +10401,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide global (my_negotiations_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tes négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.'**
+  /// **'Vos négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.'**
   String get negotiationEmptyDescription;
 
   /// Action de l'état vide global des négociations : mène à la recherche (my_negotiations_screen.dart)
@@ -10587,13 +10587,13 @@ abstract class AppLocalizations {
   /// Traduction du code machine backend card-declined (settleNegotiationCommission) — Ruling R35
   ///
   /// In fr, this message translates to:
-  /// **'Ta carte a été refusée.'**
+  /// **'Votre carte a été refusée.'**
   String get errorCommissionFailedCardDeclinedMessage;
 
   /// Traduction du code machine backend stripe-error (settleNegotiationCommission) — Ruling R35
   ///
   /// In fr, this message translates to:
-  /// **'Erreur du service de paiement, réessaie.'**
+  /// **'Erreur du service de paiement, réessayez.'**
   String get errorCommissionFailedStripeErrorMessage;
 
   /// Repli générique pour tout code machine backend card-status-<statut Stripe> (settleNegotiationCommission) — Ruling R35, jamais le statut Stripe brut
@@ -10778,7 +10778,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès après paiement carte (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.'**
+  /// **'Votre argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suivez votre colis depuis le fil.'**
   String get negotiationOfferAcceptedPaidSubtitle;
 
   /// CTA des écrans de succès de négociation (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)
@@ -10790,19 +10790,19 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès (accord de prix, vu par l'expéditeur) (accept_offer_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Vous êtes d\'accord sur le prix. Le voyageur va confirmer son trajet, puis tu finaliseras les détails de l\'envoi et le règlement depuis le fil.'**
+  /// **'Vous êtes d\'accord sur le prix. Le voyageur va confirmer son trajet, puis vous finaliserez les détails de l\'envoi et le règlement depuis le fil.'**
   String get negotiationAcceptOfferAgreedSubtitleSender;
 
   /// Sous-titre de l'écran de succès (accord de prix, voyageur avec trajet déjà lié) (accept_offer_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Vous êtes d\'accord sur le prix. L\'expéditeur va finaliser les détails de l\'envoi et le règlement, tu seras notifié à chaque étape.'**
+  /// **'Vous êtes d\'accord sur le prix. L\'expéditeur va finaliser les détails de l\'envoi et le règlement, vous serez notifié à chaque étape.'**
   String get negotiationAcceptOfferAgreedSubtitleTravelerLinked;
 
   /// Sous-titre de l'écran de succès (accord de prix, voyageur sans trajet lié) (accept_offer_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Vous êtes d\'accord sur le prix. Prochaine étape : lie ou crée un trajet pour cette offre afin que l\'expéditeur puisse finaliser le règlement.'**
+  /// **'Vous êtes d\'accord sur le prix. Prochaine étape : liez ou créez un trajet pour cette offre afin que l\'expéditeur puisse finaliser le règlement.'**
   String get negotiationAcceptOfferAgreedSubtitleTravelerUnlinked;
 
   /// Titre de l'écran de succès après accord de prix ou accord cash (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart)
@@ -10832,7 +10832,7 @@ abstract class AppLocalizations {
   /// Label du total, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
   ///
   /// In fr, this message translates to:
-  /// **'Tu reçois'**
+  /// **'Vous recevez'**
   String get negotiationPriceBreakdownYouReceive;
 
   /// Label du total, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
@@ -10850,7 +10850,7 @@ abstract class AppLocalizations {
   /// Texte d'explication sous la décomposition de prix, vu voyageur (accept_offer_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'En acceptant, l\'expéditeur effectuera le paiement. Tu recevras {price} à la livraison validée, quel que soit un éventuel code promo utilisé par l\'expéditeur.'**
+  /// **'En acceptant, l\'expéditeur effectuera le paiement. Vous recevrez {price} à la livraison validée, quel que soit un éventuel code promo utilisé par l\'expéditeur.'**
   String negotiationAcceptOfferInfoTraveler(String price);
 
   /// Texte d'explication sous la décomposition de prix, vu expéditeur (accept_offer_bottom_sheet.dart)
@@ -10874,7 +10874,7 @@ abstract class AppLocalizations {
   /// Label du champ prix (counter_offer_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ton prix proposé'**
+  /// **'Votre prix proposé'**
   String get negotiationCounterOfferYourPriceLabel;
 
   /// Label du champ message (counter_offer_bottom_sheet.dart)
@@ -10886,7 +10886,7 @@ abstract class AppLocalizations {
   /// Texte d'indication du champ message (counter_offer_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Explique ta proposition…'**
+  /// **'Expliquez votre proposition…'**
   String get negotiationCounterOfferMessageHint;
 
   /// Titre de la feuille de rejet (reject_bottom_sheet.dart)
@@ -10946,7 +10946,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès en mode cash (payment_recap_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.'**
+  /// **'Paiement en espèces : vous remettez le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas vous rembourser immédiatement mais s\'assurera que le voyageur vous restitue votre argent.'**
   String get negotiationPaymentRecapCashSuccessSubtitle;
 
   /// Ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)
@@ -11012,7 +11012,7 @@ abstract class AppLocalizations {
   /// Bannière de confiance, mode mobile money (payment_recap_bottom_sheet.dart, _TrustBanner)
   ///
   /// In fr, this message translates to:
-  /// **'Tu valides le paiement sur ton téléphone. Yadony garde l\'argent et ne le verse au voyageur qu\'après confirmation de la livraison.'**
+  /// **'Vous validez le paiement sur votre téléphone. Yadony garde l\'argent et ne le verse au voyageur qu\'après confirmation de la livraison.'**
   String get negotiationPaymentRecapMobileMoneyBannerMessage;
 
   /// Bannière de confiance, mode carte (payment_recap_bottom_sheet.dart, _TrustBanner)
@@ -11030,7 +11030,7 @@ abstract class AppLocalizations {
   /// Texte d'aide de la feuille de règlement de commission (commission_settlement_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Recharge ton portefeuille ou paie la commission directement par carte.'**
+  /// **'Rechargez votre portefeuille ou payez la commission directement par carte.'**
   String get negotiationCommissionSettlementHint;
 
   /// Bouton de recharge du portefeuille (commission_settlement_sheet.dart)
@@ -11066,7 +11066,7 @@ abstract class AppLocalizations {
   /// Corps de la feuille quand Stripe Connect est disponible dans le pays (payment_capability_block_sheets.dart)
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Active les paiements par carte pour pouvoir lier ce trajet.'**
+  /// **'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Activez les paiements par carte pour pouvoir lier ce trajet.'**
   String get negotiationCardCapabilityRequiredBody;
 
   /// Corps de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)
@@ -11090,7 +11090,7 @@ abstract class AppLocalizations {
   /// Corps de la feuille quand le profil n'a pas de pays de résidence : Stripe ne peut pas être évalué (payment_capability_block_sheets.dart)
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Renseigne ton pays de résidence pour activer le paiement carte.'**
+  /// **'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Renseignez votre pays de résidence pour activer le paiement carte.'**
   String get negotiationCardCapabilityCountryMissingBody;
 
   /// Bouton vers les préférences pour saisir le pays de résidence (payment_capability_block_sheets.dart)
@@ -11114,13 +11114,13 @@ abstract class AppLocalizations {
   /// Avertissement sur la fiche d'un colis carte seule quand le voyageur n'a pas activé la carte (package_request_public_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ce colis n\'accepte que la carte : active le paiement carte pour le proposer.'**
+  /// **'Ce colis n\'accepte que la carte : activez le paiement carte pour le proposer.'**
   String get requestPublicCardOnlyWarning;
 
   /// Avertissement sur la fiche d'un colis carte seule quand le profil n'a pas de pays (package_request_public_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ce colis n\'accepte que la carte : renseigne ton pays de résidence pour activer le paiement carte.'**
+  /// **'Ce colis n\'accepte que la carte : renseignez votre pays de résidence pour activer le paiement carte.'**
   String get requestPublicCardOnlyWarningCountryMissing;
 
   /// Avertissement sur la fiche d'un colis carte seule quand Stripe ne couvre pas le pays du voyageur (package_request_public_detail_screen.dart)
@@ -11666,7 +11666,7 @@ abstract class AppLocalizations {
   /// Note, mobile money verse (statut terminal) (traveler_gain_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Versé sur ton compte mobile money.'**
+  /// **'Versé sur votre compte mobile money.'**
   String get bidDetailGainMobileMoneyPaidNote;
 
   /// Pastille, mobile money verse (traveler_gain_card.dart)
@@ -11684,7 +11684,7 @@ abstract class AppLocalizations {
   /// Note, mobile money en attente de livraison (traveler_gain_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Versé sur ton compte mobile money à la livraison.'**
+  /// **'Versé sur votre compte mobile money à la livraison.'**
   String get bidDetailGainMobileMoneyPendingNote;
 
   /// Pastille, mobile money en attente (traveler_gain_card.dart) - identique en anglais
@@ -11750,7 +11750,7 @@ abstract class AppLocalizations {
   /// Indication du sheet solde insuffisant (bid_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Recharge ton portefeuille ou paie la commission directement par carte.'**
+  /// **'Rechargez votre portefeuille ou payez la commission directement par carte.'**
   String get bidDetailInsufficientBalanceHint;
 
   /// Bouton du sheet solde insuffisant (bid_detail_screen.dart)
@@ -12656,7 +12656,7 @@ abstract class AppLocalizations {
   /// Bloc expéditeur en attente de paiement mobile money du talon (billet_talon.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Le voyageur a accepté : paie par mobile money depuis le bouton en bas pour sécuriser ton envoi.'**
+  /// **'Le voyageur a accepté : payez par mobile money depuis le bouton en bas pour sécuriser votre envoi.'**
   String get ticketSenderAwaitingMobileMoneyHint;
 
   /// Bloc voyageur en attente de paiement du talon (billet_talon.dart)
@@ -13286,7 +13286,7 @@ abstract class AppLocalizations {
   /// Message de l'état vide filtré (shipment_list_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Aucun envoi ne correspond à tes filtres'**
+  /// **'Aucun envoi ne correspond à vos filtres'**
   String get shipmentFilteredEmptyMessage;
 
   /// Titre de l'état d'erreur de chargement (shipment_list_screen.dart)
@@ -13454,7 +13454,7 @@ abstract class AppLocalizations {
   /// Indication de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Recharge ton portefeuille ou paie la commission directement par carte.'**
+  /// **'Rechargez votre portefeuille ou payez la commission directement par carte.'**
   String get bidListWalletInsufficientHint;
 
   /// Bouton de recharge de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
@@ -13568,7 +13568,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès après publication (trip_owner_detail_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ton trajet {dep} → {arr} est en ligne.'**
+  /// **'Votre trajet {dep} → {arr} est en ligne.'**
   String tripOwnerPublishedSubtitle(String dep, String arr);
 
   /// Bouton secondaire de partage de l'écran de succès (trip_owner_detail_screen.dart).
@@ -13580,7 +13580,7 @@ abstract class AppLocalizations {
   /// Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.
   ///
   /// In fr, this message translates to:
-  /// **'✈️ Je voyage {dep} → {arr} le {date} avec de la place dans mes bagages !\nRéserve tes kilos sur Yadony 📦\n{url}'**
+  /// **'✈️ Je voyage {dep} → {arr} le {date} avec de la place dans mes bagages !\nRéservez vos kilos sur Yadony 📦\n{url}'**
   String tripOwnerShareMessage(String dep, String arr, String date, String url);
 
   /// Titre du bandeau brouillon (trip_owner_detail_screen.dart).
@@ -13592,13 +13592,13 @@ abstract class AppLocalizations {
   /// Carte d'audience de l'écran propriétaire d'un trajet : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =0{Personne n\'a encore vu ton trajet} =1{{count} personne a vu ton trajet} other{{count} personnes ont vu ton trajet}}'**
+  /// **'{count, plural, =0{Personne n\'a encore vu votre trajet} =1{{count} personne a vu votre trajet} other{{count} personnes ont vu votre trajet}}'**
   String tripAudienceViewers(int count);
 
   /// Carte d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} vue de ton affiche partagée} other{{count} vues de ton affiche partagée}}'**
+  /// **'{count, plural, =1{{count} vue de votre affiche partagée} other{{count} vues de votre affiche partagée}}'**
   String tripAudiencePosterViews(int count);
 
   /// Message du bandeau brouillon (trip_owner_detail_screen.dart).
@@ -14840,13 +14840,13 @@ abstract class AppLocalizations {
   /// Libellé générique de PaymentSheetFailureReason.cardUnavailable (dony_payment_sheet.dart), affiché quand providerMessage est absent.
   ///
   /// In fr, this message translates to:
-  /// **'Le paiement par carte est indisponible pour le moment. Réessaie dans un instant.'**
+  /// **'Le paiement par carte est indisponible pour le moment. Réessayez dans un instant.'**
   String get paymentCardUnavailable;
 
   /// Libellé générique de PaymentSheetFailureReason.generic (dony_payment_sheet.dart), affiché quand providerMessage est absent.
   ///
   /// In fr, this message translates to:
-  /// **'Le paiement a échoué. Réessaie dans un instant.'**
+  /// **'Le paiement a échoué. Réessayez dans un instant.'**
   String get paymentFailedGeneric;
 
   /// Libellé générique de PaymentSheetFailureReason.declined (dony_payment_sheet.dart), affiché quand providerMessage est absent.
@@ -15080,31 +15080,31 @@ abstract class AppLocalizations {
   /// Titre du DonyEmptyState quand le compte de versement mobile money ne peut pas être chargé (mobile_money_account_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de charger ton compte'**
+  /// **'Impossible de charger votre compte'**
   String get mobileMoneyAccountLoadError;
 
   /// Explication du formulaire de versement mobile money, première activation (mobile_money_account_screen.dart _PayoutNumberForm).
   ///
   /// In fr, this message translates to:
-  /// **'Indique le numéro mobile money qui recevra tes versements. Il peut être différent de ton numéro Yadony.'**
+  /// **'Indiquez le numéro mobile money qui recevra vos versements. Il peut être différent de votre numéro Yadony.'**
   String get mobileMoneyExplanationActivate;
 
   /// Explication du formulaire de versement mobile money, réactivation sans numéro précédent connu (mobile_money_account_screen.dart _PayoutNumberForm).
   ///
   /// In fr, this message translates to:
-  /// **'Ton versement est désactivé. Indique le numéro mobile money pour le réactiver.'**
+  /// **'Votre versement est désactivé. Indiquez le numéro mobile money pour le réactiver.'**
   String get mobileMoneyExplanationReactivateNoPrevious;
 
   /// Explication du formulaire de versement mobile money, réactivation avec un numéro précédent masqué connu (mobile_money_account_screen.dart _PayoutNumberForm).
   ///
   /// In fr, this message translates to:
-  /// **'Ton versement est désactivé. Indique le numéro mobile money pour le réactiver (précédent : {masked}).'**
+  /// **'Votre versement est désactivé. Indiquez le numéro mobile money pour le réactiver (précédent : {masked}).'**
   String mobileMoneyReactivateWithPrevious(String masked);
 
   /// Explication du formulaire de versement mobile money, changement de numéro (mobile_money_account_screen.dart _PayoutNumberForm).
   ///
   /// In fr, this message translates to:
-  /// **'Indique le nouveau numéro de versement. Les réseaux seront à cocher de nouveau pour ce numéro.'**
+  /// **'Indiquez le nouveau numéro de versement. Les réseaux seront à cocher de nouveau pour ce numéro.'**
   String get mobileMoneyExplanationChangeNumber;
 
   /// Bouton du formulaire de versement mobile money, première activation (mobile_money_account_screen.dart _PayoutNumberForm).
@@ -15134,7 +15134,7 @@ abstract class AppLocalizations {
   /// Libellé du champ de confirmation du formulaire de versement mobile money (mobile_money_account_screen.dart _PayoutNumberForm).
   ///
   /// In fr, this message translates to:
-  /// **'Confirme le numéro'**
+  /// **'Confirmez le numéro'**
   String get mobileMoneyConfirmNumberLabel;
 
   /// Titre de la section réseaux du formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection).
@@ -15146,7 +15146,7 @@ abstract class AppLocalizations {
   /// Bandeau info quand l'ancien contrat backend ne fournit pas de catalogue de réseaux (mobile_money_account_screen.dart _NetworksSection et _ProvidersSheetContent).
   ///
   /// In fr, this message translates to:
-  /// **'Le choix des réseaux n\'est pas encore disponible. Ton opérateur sera détecté automatiquement.'**
+  /// **'Le choix des réseaux n\'est pas encore disponible. Votre opérateur sera détecté automatiquement.'**
   String get mobileMoneyNetworksUnavailable;
 
   /// Message quand le catalogue de réseaux mobile money est vide pour le numéro confirmé (mobile_money_account_screen.dart _NetworksSection et _ProvidersSheetContent).
@@ -15158,13 +15158,13 @@ abstract class AppLocalizations {
   /// Rappel de la règle de couplage sous la checklist du formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection).
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur paie avec l\'un des réseaux cochés. Tu reçois sur ce même réseau.'**
+  /// **'L\'expéditeur paie avec l\'un des réseaux cochés. Vous recevez sur ce même réseau.'**
   String get mobileMoneyPayerChoosesNetwork;
 
   /// Invite affichée tant qu'aucun numéro n'est confirmé dans le formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection).
   ///
   /// In fr, this message translates to:
-  /// **'Confirme ton numéro pour voir les réseaux disponibles.'**
+  /// **'Confirmez votre numéro pour voir les réseaux disponibles.'**
   String get mobileMoneyConfirmToSeeNetworks;
 
   /// Titre de la carte et de la feuille « Réseaux acceptés » de la vue active du compte de versement mobile money (mobile_money_account_screen.dart).
@@ -15206,7 +15206,7 @@ abstract class AppLocalizations {
   /// Note sous les pastilles de réseaux acceptés de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur choisit l\'un de ces réseaux pour payer. Tu reçois sur le même.'**
+  /// **'L\'expéditeur choisit l\'un de ces réseaux pour payer. Vous recevez sur le même.'**
   String get mobileMoneyPayerChoosesOneNetwork;
 
   /// Bouton de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
@@ -15242,7 +15242,7 @@ abstract class AppLocalizations {
   /// Snackbar de succès à la mise en séquestre du paiement mobile money (mobile_money_awaiting_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Paiement confirmé, ton envoi est sécurisé'**
+  /// **'Paiement confirmé, votre envoi est sécurisé'**
   String get mobileMoneyPaymentConfirmedSecured;
 
   /// Compte à rebours du paiement mobile money (mobile_money_awaiting_screen.dart _CountdownLabel). {time} déjà formaté en mm:ss.
@@ -15278,13 +15278,13 @@ abstract class AppLocalizations {
   /// Sous-titre de l'opérateur Wave dans la liste des opérateurs du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody).
   ///
   /// In fr, this message translates to:
-  /// **'Tu confirmes dans l\'application Wave'**
+  /// **'Vous confirmez dans l\'application Wave'**
   String get mobileMoneyConfirmInWaveApp;
 
   /// Note sous la liste des opérateurs de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {networks} déjà joint (joinList).
   ///
   /// In fr, this message translates to:
-  /// **'{name} accepte {networks}, et reçoit sur le réseau que tu choisis.'**
+  /// **'{name} accepte {networks}, et reçoit sur le réseau que vous choisissez.'**
   String mobileMoneyAcceptsAndReceives(String name, String networks);
 
   /// Bandeau quand le voyageur n'accepte aucun réseau pour ce paiement (mobile_money_awaiting_screen.dart _ChooseOperatorBody, garde défensive).
@@ -15296,7 +15296,7 @@ abstract class AppLocalizations {
   /// Bandeau quand aucun réseau accepté par le voyageur n'est disponible pour le numéro payeur (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {networks} déjà joint (joinList).
   ///
   /// In fr, this message translates to:
-  /// **'{name} accepte {networks}, qui n\'existent pas pour ton numéro ({country}). Change de numéro payeur ou écris-lui depuis la conversation.'**
+  /// **'{name} accepte {networks}, qui n\'existent pas pour votre numéro ({country}). Changez de numéro payeur ou écrivez-lui depuis la conversation.'**
   String mobileMoneyNoCommonNetwork(
     String name,
     String networks,
@@ -15312,7 +15312,7 @@ abstract class AppLocalizations {
   /// Texte du dépôt en cours, redirection Wave (mobile_money_awaiting_screen.dart _AwaitingBody).
   ///
   /// In fr, this message translates to:
-  /// **'Termine le paiement dans l\'application Wave'**
+  /// **'Terminez le paiement dans l\'application Wave'**
   String get mobileMoneyFinishInWaveApp;
 
   /// Bouton d'ouverture de la redirection Wave du dépôt en cours (mobile_money_awaiting_screen.dart _AwaitingBody).
@@ -15324,19 +15324,19 @@ abstract class AppLocalizations {
   /// Texte du dépôt en cours quand l'opérateur est connu, PIN opérateur (mobile_money_awaiting_screen.dart _AwaitingBody).
   ///
   /// In fr, this message translates to:
-  /// **'Valide le paiement sur ton téléphone : une demande de code PIN vient de t\'être envoyée par {provider}.'**
+  /// **'Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par {provider}.'**
   String mobileMoneyPinSent(String provider);
 
   /// Texte du dépôt en cours quand l'opérateur n'est pas connu, PIN opérateur (mobile_money_awaiting_screen.dart _AwaitingBody).
   ///
   /// In fr, this message translates to:
-  /// **'Valide le paiement sur ton téléphone : une demande de code PIN vient de t\'être envoyée par ton opérateur.'**
+  /// **'Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par votre opérateur.'**
   String get mobileMoneyPinSentUnknownProvider;
 
   /// Note de bas de l'écran d'attente du paiement mobile money d'un bid ou d'un fil de négociation (mobile_money_awaiting_screen.dart _AwaitingBody).
   ///
   /// In fr, this message translates to:
-  /// **'La confirmation est automatique, garde cet écran ouvert.'**
+  /// **'La confirmation est automatique, gardez cet écran ouvert.'**
   String get mobileMoneyConfirmationAutomatic;
 
   /// Repli du message de dépôt refusé quand le backend n'en fournit aucun (mobile_money_awaiting_screen.dart _FailedBody).
@@ -15348,13 +15348,13 @@ abstract class AppLocalizations {
   /// Explication du corps dédié quand l'expéditeur n'a aucun numéro de téléphone (mobile_money_awaiting_screen.dart _PhoneRequiredBody).
   ///
   /// In fr, this message translates to:
-  /// **'Ton compte Yadony n\'a pas de numéro de téléphone : indique le numéro mobile money qui paiera.'**
+  /// **'Votre compte Yadony n\'a pas de numéro de téléphone : indiquez le numéro mobile money qui paiera.'**
   String get mobileMoneyPhoneRequiredExplanation;
 
   /// Écran de paiement mobile money quand le numéro payeur est refusé, souvent un numéro étranger comme +33 (mobile_money_awaiting_screen.dart, Sentry FLUTTER-DE).
   ///
   /// In fr, this message translates to:
-  /// **'Ce numéro ne peut pas payer en mobile money pour ce colis. Indique le numéro mobile money qui paiera (Côte d\'Ivoire, Sénégal, Mali…).'**
+  /// **'Ce numéro ne peut pas payer en mobile money pour ce colis. Indiquez le numéro mobile money qui paiera (Côte d\'Ivoire, Sénégal, Mali…).'**
   String get mobileMoneyPayerUnsupportedExplanation;
 
   /// Libellé du champ de saisie obligatoire du corps dédié « numéro manquant » (mobile_money_awaiting_screen.dart _PhoneRequiredBody).
@@ -15366,13 +15366,13 @@ abstract class AppLocalizations {
   /// Texte de la fenêtre expirée quand la portée est un bid (mobile_money_awaiting_screen.dart _ExpiredBody).
   ///
   /// In fr, this message translates to:
-  /// **'Délai dépassé. La demande a été annulée, refais une offre au voyageur.'**
+  /// **'Délai dépassé. La demande a été annulée, refaites une offre au voyageur.'**
   String get mobileMoneyExpiredBid;
 
   /// Texte de la fenêtre expirée quand la portée est un fil de négociation (mobile_money_awaiting_screen.dart _ExpiredBody).
   ///
   /// In fr, this message translates to:
-  /// **'Délai dépassé. Le fil est revenu à « à payer » : tu peux relancer le paiement ou changer de moyen de paiement depuis le fil.'**
+  /// **'Délai dépassé. Le fil est revenu à « à payer » : vous pouvez relancer le paiement ou changer de moyen de paiement depuis le fil.'**
   String get mobileMoneyExpiredNegotiation;
 
   /// Titre de l'écran séquestré, affiché brièvement avant la fermeture automatique (mobile_money_awaiting_screen.dart _EscrowedBody).
@@ -15396,7 +15396,7 @@ abstract class AppLocalizations {
   /// Titre du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
   ///
   /// In fr, this message translates to:
-  /// **'Valide le paiement sur ton téléphone'**
+  /// **'Validez le paiement sur votre téléphone'**
   String get walletTopupMmValidateTitle;
 
   /// Sous-titre du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
@@ -15408,7 +15408,7 @@ abstract class AppLocalizations {
   /// Note de bas du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
   ///
   /// In fr, this message translates to:
-  /// **'La confirmation est automatique, garde cet écran ouvert.'**
+  /// **'La confirmation est automatique, gardez cet écran ouvert.'**
   String get walletTopupMmConfirmationAutomatic;
 
   /// Libellé de la ligne montant de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
@@ -15474,13 +15474,13 @@ abstract class AppLocalizations {
   /// Sheet « Solde insuffisant », part couverte par le portefeuille de la devise du colis (commission_shortfall_text.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ton portefeuille {currency} en couvre {amount}'**
+  /// **'Votre portefeuille {currency} en couvre {amount}'**
   String walletShortfallCovered(String currency, String amount);
 
   /// Sheet « Solde insuffisant », montant manquant après la part couverte par le portefeuille du colis (commission_shortfall_text.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Il manque {missing}, soit {converted}, et ton portefeuille {currency} n\'a que {balance}'**
+  /// **'Il manque {missing}, soit {converted}, et votre portefeuille {currency} n\'a que {balance}'**
   String walletShortfallMissing(
     String missing,
     String converted,
@@ -15497,7 +15497,7 @@ abstract class AppLocalizations {
   /// Sheet « Solde insuffisant », invite à recharger (commission_shortfall_text.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ton portefeuille {currency} n\'a que {balance}. Recharge en {symbol} ou en {currency}, ou paie par carte.'**
+  /// **'Votre portefeuille {currency} n\'a que {balance}. Rechargez en {symbol} ou en {currency}, ou payez par carte.'**
   String walletShortfallTopUpHint(
     String currency,
     String balance,
@@ -15525,13 +15525,13 @@ abstract class AppLocalizations {
   /// Bandeau de confirmation d'une recharge mobile money (wallet_screen.dart _LoadedView).
   ///
   /// In fr, this message translates to:
-  /// **'+{amount} sur ton portefeuille {currency}, confirmé par {provider}.'**
+  /// **'+{amount} sur votre portefeuille {currency}, confirmé par {provider}.'**
   String walletTopupConfirmed(String amount, String currency, String provider);
 
   /// Bandeau affiché quand le net remboursable est nul (wallet_screen.dart _LoadedView).
   ///
   /// In fr, this message translates to:
-  /// **'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour payer tes envois.'**
+  /// **'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour payer vos envois.'**
   String get walletRefundAbsorbedByFees;
 
   /// État vide de la liste des transactions (wallet_screen.dart _LoadedView).
@@ -15675,25 +15675,25 @@ abstract class AppLocalizations {
   /// Description de la ligne « Solde disponible » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:
-  /// **'Le montant qui règle les frais de service de tes trajets payés en espèces. Tu peux aussi en demander le remboursement.'**
+  /// **'Le montant qui règle les frais de service de vos trajets payés en espèces. Vous pouvez aussi en demander le remboursement.'**
   String get walletInfoBalanceDesc;
 
   /// Description de la ligne « Recharger » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:
-  /// **'Ajoute des fonds par carte bancaire ou par mobile money, selon ta devise. Le crédit apparaît dès la validation du paiement.'**
+  /// **'Ajoutez des fonds par carte bancaire ou par mobile money, selon votre devise. Le crédit apparaît dès la validation du paiement.'**
   String get walletInfoTopUpDesc;
 
   /// Description de la ligne « Rembourser » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:
-  /// **'Demande le remboursement de ton solde vers ton moyen de paiement d\'origine.'**
+  /// **'Demandez le remboursement de votre solde vers votre moyen de paiement d\'origine.'**
   String get walletInfoRefundDesc;
 
   /// Description de la ligne « Demandes » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:
-  /// **'Retrouve le suivi de tes demandes de remboursement envoyées.'**
+  /// **'Retrouvez le suivi de vos demandes de remboursement envoyées.'**
   String get walletInfoRequestsDesc;
 
   /// Titre de la ligne « Plusieurs devises » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
@@ -15705,7 +15705,7 @@ abstract class AppLocalizations {
   /// Description de la ligne « Plusieurs devises » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:
-  /// **'Ton argent reste dans la devise où il a été reçu. Le total en haut est une estimation au taux du jour, il ne convertit rien.'**
+  /// **'Votre argent reste dans la devise où il a été reçu. Le total en haut est une estimation au taux du jour, il ne convertit rien.'**
   String get walletInfoMultiCurrencyDesc;
 
   /// Titre de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
@@ -15717,7 +15717,7 @@ abstract class AppLocalizations {
   /// Description de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:
-  /// **'La devise active se change dans Préférences tant que ton solde total est à zéro. Sinon, vide d\'abord tes portefeuilles.'**
+  /// **'La devise active se change dans Préférences tant que votre solde total est à zéro. Sinon, videz d\'abord vos portefeuilles.'**
   String get walletInfoChangeCurrencyDesc;
 
   /// Libellé de la méthode carte, réutilisé par wallet_topup_method_screen.dart (wallet_topup_amount_screen.dart _methodLabel).
@@ -15741,7 +15741,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès après une recharge Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet).
   ///
   /// In fr, this message translates to:
-  /// **'Ton solde sera crédité dans un instant.'**
+  /// **'Votre solde sera crédité dans un instant.'**
   String get walletTopupSuccessSubtitle;
 
   /// Bouton de l'écran de succès après une recharge Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet).
@@ -15765,13 +15765,13 @@ abstract class AppLocalizations {
   /// Avertissement mobile money quand la devise n'a pas de sous-unité (wallet_topup_amount_screen.dart _buildMobileMoney).
   ///
   /// In fr, this message translates to:
-  /// **'Le {symbol} ne connaît pas les centimes : indique un montant entier.'**
+  /// **'Le {symbol} ne connaît pas les centimes : indiquez un montant entier.'**
   String walletTopupNoDecimalsNotice(String symbol);
 
   /// Bandeau de mismatch de devise mobile money, montant déjà saisi (wallet_topup_amount_screen.dart _buildMobileMoney).
   ///
   /// In fr, this message translates to:
-  /// **'Ton portefeuille {currency} sera crédité de {amount}. Ton portefeuille {active} ne bouge pas.'**
+  /// **'Votre portefeuille {currency} sera crédité de {amount}. Votre portefeuille {active} ne bouge pas.'**
   String walletTopupCreditedAmount(
     String currency,
     String amount,
@@ -15781,7 +15781,7 @@ abstract class AppLocalizations {
   /// Bandeau de mismatch de devise mobile money, avant toute saisie (wallet_topup_amount_screen.dart _buildMobileMoney).
   ///
   /// In fr, this message translates to:
-  /// **'Ton portefeuille {currency} sera crédité du montant que tu saisis. Ton portefeuille {active} ne bouge pas.'**
+  /// **'Votre portefeuille {currency} sera crédité du montant que vous saisissez. Votre portefeuille {active} ne bouge pas.'**
   String walletTopupCreditedPending(String currency, String active);
 
   /// Bouton sticky pendant l'envoi, carte ou mobile money (wallet_topup_amount_screen.dart _StickyButton, _MobileMoneyStickyButton).
@@ -15871,7 +15871,7 @@ abstract class AppLocalizations {
   /// Consigne sous le champ numéro tant que les opérateurs ne sont pas chargés (wallet_topup_method_screen.dart _MobileMoneySection, Sentry FLUTTER-8B).
   ///
   /// In fr, this message translates to:
-  /// **'Saisis ton numéro mobile money : tes opérateurs s\'affichent ici.'**
+  /// **'Saisissez votre numéro mobile money : vos opérateurs s\'affichent ici.'**
   String get walletTopupMethodPhoneHint;
 
   /// Avertissement quand le catalogue d'opérateurs est vide pour le numéro saisi (wallet_topup_method_screen.dart _MobileMoneySection).
@@ -15967,7 +15967,7 @@ abstract class AppLocalizations {
   /// Texte explicatif de la sheet de choix de la devise à rembourser (wallet_refund_currency_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Une demande par devise. Tu pourras en faire une autre ensuite.'**
+  /// **'Une demande par devise. Vous pourrez en faire une autre ensuite.'**
   String get walletRefundCurrencyHint;
 
   /// Sous-texte d'un choix de devise, frais nuls (wallet_refund_currency_sheet.dart _choice).
@@ -15991,7 +15991,7 @@ abstract class AppLocalizations {
   /// Sous-titre d'un choix de devise, montant net (wallet_refund_currency_sheet.dart _choice).
   ///
   /// In fr, this message translates to:
-  /// **'tu reçois {amount}'**
+  /// **'vous recevez {amount}'**
   String walletRefundCurrencyChoiceSubtitle(String amount);
 
   /// Titre de la sheet de sélection des recharges à rembourser, ancien contrat back (wallet_refund_selection_sheet.dart).
@@ -16105,7 +16105,7 @@ abstract class AppLocalizations {
   /// Snackbar d'erreur quand le navigateur système ne s'ouvre pas sur l'URL d'onboarding Stripe (payout_onboarding_screen.dart _PayoutOnboardingScreenState).
   ///
   /// In fr, this message translates to:
-  /// **'Impossible d\'ouvrir la page de configuration. Vérifie qu\'un navigateur est installé.'**
+  /// **'Impossible d\'ouvrir la page de configuration. Vérifiez qu\'un navigateur est installé.'**
   String get payoutBrowserLaunchFailed;
 
   /// Bandeau warning quand une inscription Stripe est entamée mais incomplète (payout_onboarding_screen.dart _OnboardingView).
@@ -16381,19 +16381,19 @@ abstract class AppLocalizations {
   /// Titre sur deux lignes de connect_onboarding_intro_screen.dart _IntroView ; le saut de ligne fait partie de la valeur.
   ///
   /// In fr, this message translates to:
-  /// **'Complète ton\ncompte Stripe'**
+  /// **'Complétez votre\ncompte Stripe'**
   String get connectOnboardingHeroTitle;
 
   /// Sous-titre de connect_onboarding_intro_screen.dart _IntroView.
   ///
   /// In fr, this message translates to:
-  /// **'Pour publier ton trajet et recevoir des paiements, complète ton compte Stripe. Cela prend environ 5 minutes.'**
+  /// **'Pour publier votre trajet et recevoir des paiements, complétez votre compte Stripe. Cela prend environ 5 minutes.'**
   String get connectOnboardingHeroSubtitle;
 
   /// Bandeau info de connect_onboarding_intro_screen.dart _IntroView.
   ///
   /// In fr, this message translates to:
-  /// **'Tes données sont chiffrées et gérées directement par Stripe : Yadony n\'a jamais accès à tes informations bancaires.'**
+  /// **'Vos données sont chiffrées et gérées directement par Stripe : Yadony n\'a jamais accès à vos informations bancaires.'**
   String get connectOnboardingSecurityNotice;
 
   /// Bouton principal ancré en bas de connect_onboarding_intro_screen.dart _IntroView.
@@ -16423,7 +16423,7 @@ abstract class AppLocalizations {
   /// Sous-titre du deuxième avantage de connect_onboarding_intro_screen.dart _BenefitsList.
   ///
   /// In fr, this message translates to:
-  /// **'Reçu sur ton compte après chaque livraison confirmée'**
+  /// **'Reçu sur votre compte après chaque livraison confirmée'**
   String get connectOnboardingBenefitTransferSubtitle;
 
   /// Titre du troisième avantage de connect_onboarding_intro_screen.dart _BenefitsList.
@@ -16501,19 +16501,19 @@ abstract class AppLocalizations {
   /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'duplicate' de ChatMessageValidator.
   ///
   /// In fr, this message translates to:
-  /// **'Tu viens d\'envoyer ce message.'**
+  /// **'Vous venez d\'envoyer ce message.'**
   String get chatBlockedDuplicate;
 
   /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'rate' de ChatMessageValidator.
   ///
   /// In fr, this message translates to:
-  /// **'Tu envoies trop de messages, patiente un instant.'**
+  /// **'Vous envoyez trop de messages, patientez un instant.'**
   String get chatBlockedRate;
 
   /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' de ChatMessageValidator.
   ///
   /// In fr, this message translates to:
-  /// **'Pour ta sécurité, garde les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.'**
+  /// **'Pour votre sécurité, gardez les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.'**
   String get chatBlockedContact;
 
   /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'banking' de ChatMessageValidator.
@@ -16531,7 +16531,7 @@ abstract class AppLocalizations {
   /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'profanity' de ChatMessageValidator.
   ///
   /// In fr, this message translates to:
-  /// **'Reste courtois : ce message contient des termes interdits.'**
+  /// **'Restez courtois : ce message contient des termes interdits.'**
   String get chatBlockedProfanity;
 
   /// Titre du dialogue de confirmation et libellé du menu ⋯ de chat_screen.dart (même texte aux deux endroits).
@@ -17725,7 +17725,7 @@ abstract class AppLocalizations {
   /// Titre de l'état vide de MyReviewsScreen (my_reviews_screen.dart, _EmptyView).
   ///
   /// In fr, this message translates to:
-  /// **'Tu n\'as pas encore reçu d\'avis'**
+  /// **'Vous n\'avez pas encore reçu d\'avis'**
   String get ratingEmptyTitle;
 
   /// Description de l'état vide de MyReviewsScreen (my_reviews_screen.dart, _EmptyView).
@@ -17923,7 +17923,7 @@ abstract class AppLocalizations {
   /// Corps de la feuille caméra bloquée (kyc_webview_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'La vérification d\'identité a besoin de la caméra pour photographier ta pièce et ton visage. Autorise la caméra pour Yadony dans les réglages de ton téléphone, puis reviens ici : la vérification reprendra.'**
+  /// **'La vérification d\'identité a besoin de la caméra pour photographier votre pièce et votre visage. Autorisez la caméra pour Yadony dans les réglages de votre téléphone, puis revenez ici : la vérification reprendra.'**
   String get kycCameraBlockedBody;
 
   /// Titre de l'écran/la feuille de vérification d'identité (kyc_status_bottom_sheet.dart, KycStatusBottomSheet.show ; kyc_webview_screen.dart, KycWebViewScreen).
@@ -18631,7 +18631,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la section communauté (social_community_section.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Retrouve les espaces officiels Yadony.'**
+  /// **'Retrouvez les espaces officiels Yadony.'**
   String get profileCommunityJoinSubtitle;
 
   /// Libellé d'action des réseaux « à rejoindre » (WhatsApp, Facebook) (social_community_section.dart).
@@ -18829,7 +18829,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la section tutoriels (community_screen.dart, CommunityScreen).
   ///
   /// In fr, this message translates to:
-  /// **'Apprends les parcours essentiels de Yadony.'**
+  /// **'Apprenez les parcours essentiels de Yadony.'**
   String get communityTutorialsSubtitle;
 
   /// Libellé affiché de la langue parlée « Français » (profile_labels.dart, spokenLanguageLabel).
@@ -19231,7 +19231,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide (shipments_history_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tes livraisons terminées s\'afficheront ici.'**
+  /// **'Vos livraisons terminées s\'afficheront ici.'**
   String get shipmentsHistoryEmptyDescription;
 
   /// Date relative d'une livraison (2 à 6 jours) (shipments_history_screen.dart, _DeliveryCard._relativeDate)
@@ -19261,7 +19261,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la section recherche (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Recherche une réponse ou parcours les catégories.'**
+  /// **'Recherchez une réponse ou parcourez les catégories.'**
   String get faqFindAnswerSubtitle;
 
   /// Placeholder du champ de recherche (faq_screen.dart)
@@ -19279,19 +19279,19 @@ abstract class AppLocalizations {
   /// Description de l'état vide de la recherche FAQ (faq_screen.dart, _FaqEmptyState)
   ///
   /// In fr, this message translates to:
-  /// **'Essaie avec d\'autres mots-clés ou contacte notre équipe.'**
+  /// **'Essayez avec d\'autres mots-clés ou contactez notre équipe.'**
   String get faqEmptyResultsDescription;
 
   /// Titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)
   ///
   /// In fr, this message translates to:
-  /// **'Tu n’as pas trouvé ta réponse ?'**
+  /// **'Vous n’avez pas trouvé votre réponse ?'**
   String get faqContactCardTitle;
 
   /// Sous-titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)
   ///
   /// In fr, this message translates to:
-  /// **'Notre équipe est là pour t’aider.'**
+  /// **'Notre équipe est là pour vous aider.'**
   String get faqContactCardSubtitle;
 
   /// Titre de la section FAQ « account » (faq_screen.dart)
@@ -19369,7 +19369,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ account/without_identity (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu peux explorer les annonces sans vérifier ton identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.'**
+  /// **'Vous pouvez explorer les annonces sans vérifier votre identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.'**
   String get faqAccountWithoutIdentityA;
 
   /// Question FAQ announcements/publish_trip (faq_screen.dart)
@@ -19381,7 +19381,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ announcements/publish_trip (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Depuis Accueil ou Activités, choisis \"Publier un trajet\". Renseigne la ville de départ, la destination, la date et la capacité disponible.'**
+  /// **'Depuis Accueil ou Activités, choisissez \"Publier un trajet\". Renseignez la ville de départ, la destination, la date et la capacité disponible.'**
   String get faqAnnouncementsPublishTripA;
 
   /// Question FAQ announcements/publish_request (faq_screen.dart)
@@ -19393,7 +19393,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ announcements/publish_request (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Depuis Accueil ou Activités, choisis \"Publier un colis\". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.'**
+  /// **'Depuis Accueil ou Activités, choisissez \"Publier un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.'**
   String get faqAnnouncementsPublishRequestA;
 
   /// Question FAQ announcements/edit_request (faq_screen.dart)
@@ -19405,7 +19405,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ announcements/edit_request (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu peux modifier une demande tant qu\'aucune offre n\'a été acceptée. Après acceptation, contacte le support si une information importante doit être corrigée.'**
+  /// **'Vous pouvez modifier une demande tant qu\'aucune offre n\'a été acceptée. Après acceptation, contactez le support si une information importante doit être corrigée.'**
   String get faqAnnouncementsEditRequestA;
 
   /// Question FAQ payments/payment_timing (faq_screen.dart)
@@ -19417,7 +19417,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ payments/payment_timing (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Pour un paiement par carte, les fonds sont sécurisés lors de l\'acceptation puis libérés selon l\'avancement de la livraison. Pour les espèces et le Mobile Money, suis les indications affichées au moment de choisir le moyen de paiement.'**
+  /// **'Pour un paiement par carte, les fonds sont sécurisés lors de l\'acceptation puis libérés selon l\'avancement de la livraison. Pour les espèces et le Mobile Money, suivez les indications affichées au moment de choisir le moyen de paiement.'**
   String get faqPaymentsPaymentTimingA;
 
   /// Question FAQ payments/refund (faq_screen.dart)
@@ -19453,7 +19453,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ payments/payment_security (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Les paiements en ligne sont traités par les prestataires indiqués dans l\'application. Yadony ne stocke pas les données complètes de ta carte. Un paiement en espèces n\'est pas placé sous séquestre : ne paie jamais en dehors du parcours convenu dans l\'application.'**
+  /// **'Les paiements en ligne sont traités par les prestataires indiqués dans l\'application. Yadony ne stocke pas les données complètes de votre carte. Un paiement en espèces n\'est pas placé sous séquestre : ne payez jamais en dehors du parcours convenu dans l\'application.'**
   String get faqPaymentsPaymentSecurityA;
 
   /// Question FAQ delivery/handover_qr (faq_screen.dart)
@@ -19477,7 +19477,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ delivery/parcel_missing (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ouvre un litige depuis \"Mes litiges\" dès que tu constates le problème. Ajoute les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.'**
+  /// **'Ouvrez un litige depuis \"Mes litiges\" dès que vous constatez le problème. Ajoutez les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.'**
   String get faqDeliveryParcelMissingA;
 
   /// Question FAQ delivery/delivery_delay (faq_screen.dart)
@@ -19489,7 +19489,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ delivery/delivery_delay (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifie toujours les informations du trajet avant d\'accepter une offre.'**
+  /// **'Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifiez toujours les informations du trajet avant d\'accepter une offre.'**
   String get faqDeliveryDeliveryDelayA;
 
   /// Question FAQ safety/lost_parcel (faq_screen.dart)
@@ -19513,7 +19513,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ safety/dispute (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ouvre \"Mes litiges\" depuis ton profil et fournis les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et te tient informé dans l\'application.'**
+  /// **'Ouvrez \"Mes litiges\" depuis votre profil et fournissez les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et vous tient informé dans l\'application.'**
   String get faqSafetyDisputeA;
 
   /// Question FAQ safety/personal_data (faq_screen.dart)
@@ -19525,7 +19525,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ safety/personal_data (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Yadony applique des mesures de sécurité pour protéger les données et ne vend pas tes informations personnelles. Tu peux consulter la politique de confidentialité et gérer tes préférences dans Paramètres.'**
+  /// **'Yadony applique des mesures de sécurité pour protéger les données et ne vend pas vos informations personnelles. Vous pouvez consulter la politique de confidentialité et gérer vos préférences dans Paramètres.'**
   String get faqSafetyPersonalDataA;
 
   /// Question FAQ safety/delete_account (faq_screen.dart)
@@ -19537,7 +19537,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ safety/delete_account (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Dans Paramètres → Données et compte → Supprimer mon compte, tu peux choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.'**
+  /// **'Dans Paramètres → Données et compte → Supprimer mon compte, vous pouvez choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.'**
   String get faqSafetyDeleteAccountA;
 
   /// Titre de l'écran lecteur de tutoriel, dans ses 3 états (help_tutorial_screen.dart)
@@ -19579,7 +19579,7 @@ abstract class AppLocalizations {
   /// Description de la carte d'erreur de lecture (help_tutorial_screen.dart, _PlayerErrorCard)
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie ta connexion ou ouvre la vidéo directement dans YouTube.'**
+  /// **'Vérifiez votre connexion ou ouvrez la vidéo directement dans YouTube.'**
   String get helpTutorialPlaybackErrorDescription;
 
   /// Bouton de repli vers YouTube externe (help_tutorial_screen.dart, _PlayerErrorCard)
@@ -20041,7 +20041,7 @@ abstract class AppLocalizations {
   /// Résumé du nombre d'appareils connectés (connected_devices_screen.dart). Correction d'accord déclarée : plus jamais « 2 appareil(s) ».
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{Tu es connecté sur {count} appareil} other{Tu es connecté sur {count} appareils}}'**
+  /// **'{count, plural, =1{Vous êtes connecté sur {count} appareil} other{Vous êtes connecté sur {count} appareils}}'**
   String devicesSignedInCount(int count);
 
   /// Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.load (connected_devices_bloc.dart)
@@ -20083,7 +20083,7 @@ abstract class AppLocalizations {
   /// Description de l'état d'erreur (legal_web_view_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie ta connexion et réessaie.'**
+  /// **'Vérifiez votre connexion et réessayez.'**
   String get legalPageLoadErrorHint;
 
   /// En-tête de section (diagnostics_screen.dart) ; identique en anglais.
@@ -20179,7 +20179,7 @@ abstract class AppLocalizations {
   /// Snackbar de succès après lancement de l'export RGPD (data_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Export lancé. Tu recevras un e-mail avec le lien de téléchargement sous 72h.'**
+  /// **'Export lancé. Vous recevrez un e-mail avec le lien de téléchargement sous 72h.'**
   String get dataSettingsExportStartedMessage;
 
   /// Titre de la feuille de confirmation du code PIN (pin_confirm_bottom_sheet.dart)
@@ -20209,7 +20209,7 @@ abstract class AppLocalizations {
   /// Snackbar d'échec d'enregistrement optimiste (privacy_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Réglage non enregistré, vérifie ta connexion.'**
+  /// **'Réglage non enregistré, vérifiez votre connexion.'**
   String get privacySaveFailedMessage;
 
   /// En-tête de section (privacy_settings_screen.dart)
@@ -20227,7 +20227,7 @@ abstract class AppLocalizations {
   /// Sous-titre du réglage contactKycOnly (privacy_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Seuls les utilisateurs ayant validé leur identité peuvent t\'envoyer une offre'**
+  /// **'Seuls les utilisateurs ayant validé leur identité peuvent vous envoyer une offre'**
   String get privacyKycOnlySubtitle;
 
   /// Libellé du réglage hidePhoneNumber (privacy_settings_screen.dart)
@@ -20239,7 +20239,7 @@ abstract class AppLocalizations {
   /// Sous-titre du réglage hidePhoneNumber (privacy_settings_screen.dart). Fusion de deux fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Ton numéro n\'est jamais communiqué, même après une offre acceptée. Tes échanges passent par la messagerie Yadony.'**
+  /// **'Votre numéro n\'est jamais communiqué, même après une offre acceptée. Vos échanges passent par la messagerie Yadony.'**
   String get privacyHidePhoneSubtitle;
 
   /// En-tête de section (privacy_settings_screen.dart)
@@ -20257,37 +20257,37 @@ abstract class AppLocalizations {
   /// Note de pied de page vers Données (privacy_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Pour télécharger tes données ou supprimer ton compte, va dans Paramètres › Données.'**
+  /// **'Pour télécharger vos données ou supprimer votre compte, allez dans Paramètres › Données.'**
   String get privacyDataFooterNote;
 
   /// Titre du bandeau vert quand le numéro est masqué (privacy_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ton numéro reste masqué'**
+  /// **'Votre numéro reste masqué'**
   String get privacyBannerPhoneHiddenTitle;
 
   /// Titre du bandeau vert quand le numéro n'est pas masqué (privacy_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ton numéro est protégé'**
+  /// **'Votre numéro est protégé'**
   String get privacyBannerPhoneProtectedTitle;
 
   /// Corps du bandeau vert quand le numéro est masqué (privacy_settings_screen.dart). Fusion de trois fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Ton numéro n\'est communiqué à personne, même une fois l\'accord conclu. Tes partenaires te joignent par la messagerie Yadony, et tu peux toujours appeler le leur.'**
+  /// **'Votre numéro n\'est communiqué à personne, même une fois l\'accord conclu. Vos partenaires vous joignent par la messagerie Yadony, et vous pouvez toujours appeler le leur.'**
   String get privacyBannerPhoneHiddenBody;
 
   /// Corps du bandeau vert quand le numéro n'est pas masqué (privacy_settings_screen.dart). Fusion de trois fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Personne ne voit ton numéro tant qu\'une offre n\'est pas acceptée. Une fois l\'accord conclu, toi et ton partenaire échangez vos numéros pour organiser la remise.'**
+  /// **'Personne ne voit votre numéro tant qu\'une offre n\'est pas acceptée. Une fois l\'accord conclu, vous et votre partenaire échangez vos numéros pour organiser la remise.'**
   String get privacyBannerPhoneProtectedBody;
 
   /// Rappel persistant affiché quand contactKycOnly est désactivé (privacy_settings_screen.dart). Fusion de deux fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Les profils non vérifiés peuvent te faire des demandes. Yadony n\'est pas responsable des difficultés rencontrées avec eux.'**
+  /// **'Les profils non vérifiés peuvent vous faire des demandes. Yadony n\'est pas responsable des difficultés rencontrées avec eux.'**
   String get privacyUnverifiedExposureNotice;
 
   /// Libellé du consentement analytics (privacy_settings_screen.dart)
@@ -20299,7 +20299,7 @@ abstract class AppLocalizations {
   /// Sous-titre du consentement analytics (privacy_settings_screen.dart). Fusion de deux fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Mesure anonyme de l\'usage pour améliorer l\'app. Jamais tes paiements ni ton identité.'**
+  /// **'Mesure anonyme de l\'usage pour améliorer l\'app. Jamais vos paiements ni votre identité.'**
   String get privacyAnalyticsConsentSubtitle;
 
   /// Titre de la carte blocage (privacy_settings_screen.dart) et de l'AppBar (blocked_users_screen.dart) : même texte, même écran cible (R42).
@@ -20311,13 +20311,13 @@ abstract class AppLocalizations {
   /// Sous-titre de la carte blocage (privacy_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Gérer les personnes que tu as bloquées'**
+  /// **'Gérer les personnes que vous avez bloquées'**
   String get blockedUsersCardSubtitle;
 
   /// Bandeau explicatif en tête de liste (blocked_users_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Une personne bloquée ne voit plus tes annonces et ne peut plus t\'envoyer d\'offre. Tu ne vois plus les siennes non plus.'**
+  /// **'Une personne bloquée ne voit plus vos annonces et ne peut plus vous envoyer d\'offre. Vous ne voyez plus les siennes non plus.'**
   String get blockedUsersListIntro;
 
   /// Date relative : bloqué aujourd'hui (blocked_users_screen.dart, _formatDate)
@@ -20359,13 +20359,13 @@ abstract class AppLocalizations {
   /// Titre de l'état vide (blocked_users_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Tu n\'as bloqué personne'**
+  /// **'Vous n\'avez bloqué personne'**
   String get blockedUsersEmptyTitle;
 
   /// Sous-titre de l'état vide (blocked_users_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Les personnes que tu bloques apparaîtront ici.'**
+  /// **'Les personnes que vous bloquez apparaîtront ici.'**
   String get blockedUsersEmptySubtitle;
 
   /// Message d'échec de chargement (blocked_users_bloc.dart, BlockedUsersError), rendu par blocked_users_screen.dart
@@ -20377,7 +20377,7 @@ abstract class AppLocalizations {
   /// Message d'échec du blocage (blocked_users_bloc.dart, BlockedUserBlockFailure), rendu par block_user_action.dart (dialog de confirmation)
   ///
   /// In fr, this message translates to:
-  /// **'Une erreur est survenue. Réessaie plus tard.'**
+  /// **'Une erreur est survenue. Réessayez plus tard.'**
   String get blockConfirmError;
 
   /// Message d'échec de synchro serveur, partagé par business_prefs_bloc.dart (2 sites) et notification_prefs_bloc.dart (1 site) ; rendu par business_prefs_screen.dart et notification_settings_screen.dart
@@ -20635,7 +20635,7 @@ abstract class AppLocalizations {
   /// Première conséquence listée (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Tous les utilisateurs pourront t\'envoyer une demande, qu\'ils aient vérifié leur identité ou non.'**
+  /// **'Tous les utilisateurs pourront vous envoyer une demande, qu\'ils aient vérifié leur identité ou non.'**
   String get privacyUnverifiedWarningConsequence1;
 
   /// Deuxième conséquence listée (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés.
@@ -20647,13 +20647,13 @@ abstract class AppLocalizations {
   /// Troisième conséquence listée (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Yadony n\'est pas responsable des difficultés que tu pourrais rencontrer avec un profil non vérifié.'**
+  /// **'Yadony n\'est pas responsable des difficultés que vous pourriez rencontrer avec un profil non vérifié.'**
   String get privacyUnverifiedWarningConsequence3;
 
   /// Note de réversibilité (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Tu peux réactiver ce réglage à tout moment. Les demandes déjà reçues ne sont pas affectées.'**
+  /// **'Vous pouvez réactiver ce réglage à tout moment. Les demandes déjà reçues ne sont pas affectées.'**
   String get privacyUnverifiedWarningReversible;
 
   /// Texte de la case à cocher de confirmation (unverified_contact_warning_sheet.dart)
@@ -20773,7 +20773,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la cloche colis compatibles (notification_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Quand un colis correspond à un de tes trajets'**
+  /// **'Quand un colis correspond à un de vos trajets'**
   String get notificationSettingsPackageMatchSubtitle;
 
   /// Titre de l'écran (business_prefs_screen.dart)
@@ -22081,19 +22081,19 @@ abstract class AppLocalizations {
   /// Description de l'état vide, direction colis (corridor_alert_list_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton trajet.'**
+  /// **'Créez une alerte pour être prévenu dès qu\'un colis apparaît sur votre trajet.'**
   String get corridorAlertEmptyDescriptionPackages;
 
   /// Description de l'état vide, direction trajets (corridor_alert_list_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Crée une alerte pour être prévenu dès qu\'un voyageur propose ton trajet.'**
+  /// **'Créez une alerte pour être prévenu dès qu\'un voyageur propose votre trajet.'**
   String get corridorAlertEmptyDescriptionTrips;
 
   /// Description de l'état vide, hub sans direction (corridor_alert_list_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Crée une alerte pour être prévenu dès qu\'un voyageur ou un colis apparaît sur ton trajet.'**
+  /// **'Créez une alerte pour être prévenu dès qu\'un voyageur ou un colis apparaît sur votre trajet.'**
   String get corridorAlertEmptyDescriptionAll;
 
   /// Titre de l'état vide de la liste des alertes (corridor_alert_list_screen.dart).
@@ -23107,7 +23107,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide de l'onglet Remise (pickup_addresses_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ajoute l\'adresse où tu souhaites recevoir les colis des expéditeurs.'**
+  /// **'Ajoutez l\'adresse où vous souhaitez recevoir les colis des expéditeurs.'**
   String get addressesEmptyPickupDescription;
 
   /// Titre de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart).
@@ -23119,7 +23119,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ajoute les adresses où tu déposes habituellement les colis.'**
+  /// **'Ajoutez les adresses où vous déposez habituellement les colis.'**
   String get addressesEmptyDeliveryDescription;
 
   /// Bouton d'action des deux états vides (pickup_addresses_screen.dart).
@@ -23143,7 +23143,7 @@ abstract class AppLocalizations {
   /// Message du dialogue de suppression d'une adresse, label = étiquette de l'adresse (pickup_addresses_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.'**
+  /// **'Êtes-vous sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.'**
   String addressesDeleteConfirmMessage(String label);
 
   /// Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart).
@@ -23263,7 +23263,7 @@ abstract class AppLocalizations {
   /// Sous-titre du toggle « adresse par défaut » (pickup_address_edit_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Pré-remplie lors de tes prochaines demandes'**
+  /// **'Pré-remplie lors de vos prochaines demandes'**
   String get pickupAddressDefaultSubtitle;
 
   /// Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart).
@@ -23389,7 +23389,7 @@ abstract class AppLocalizations {
   /// Sous-titre du toggle « adresse par défaut » (delivery_address_edit_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Pré-remplie lors de tes prochaines annonces'**
+  /// **'Pré-remplie lors de vos prochaines annonces'**
   String get deliveryAddressDefaultSubtitle;
 
   /// Hors catalogue CountryCatalog, proposé uniquement par la liste fermée diaspora de delivery_address_edit_screen.dart (country_names.dart).
@@ -23413,7 +23413,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide (recipients_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ajoute tes proches en Afrique pour envoyer en 1 tap.'**
+  /// **'Ajoutez vos proches en Afrique pour envoyer en 1 tap.'**
   String get recipientEmptyDescription;
 
   /// Titre/texte affiché quand la recherche ne trouve rien, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
@@ -23425,7 +23425,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide de recherche (recipients_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Aucun destinataire ne correspond à ta recherche.'**
+  /// **'Aucun destinataire ne correspond à votre recherche.'**
   String get recipientSearchNoResultsDescription;
 
   /// Placeholder du champ de recherche, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
@@ -23455,7 +23455,7 @@ abstract class AppLocalizations {
   /// Message du dialogue de suppression, name = nom complet du destinataire (recipients_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Es-tu sûr de vouloir supprimer \"{name}\" ? Cette action est irréversible.'**
+  /// **'Êtes-vous sûr de vouloir supprimer \"{name}\" ? Cette action est irréversible.'**
   String recipientDeleteConfirmMessage(String name);
 
   /// Titre de l'écran en mode édition (recipient_edit_screen.dart).
@@ -23515,7 +23515,7 @@ abstract class AppLocalizations {
   /// Sous-titre du toggle destinataire par défaut (recipient_edit_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Présélectionné lors de tes prochains envois'**
+  /// **'Présélectionné lors de vos prochains envois'**
   String get recipientDefaultToggleSubtitle;
 
   /// Bouton d'import depuis les contacts du téléphone, réutilisé entre recipient_edit_screen.dart et recipient_picker_sheet.dart (même feature, R42).
@@ -23563,7 +23563,7 @@ abstract class AppLocalizations {
   /// Sous-titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Sera ajouté à « Mes destinataires » pour tes prochains envois'**
+  /// **'Sera ajouté à « Mes destinataires » pour vos prochains envois'**
   String get recipientSectionSaveToggleSubtitle;
 
   /// Titre de l'AppBar (price_grid_screen.dart).
@@ -23737,13 +23737,13 @@ abstract class AppLocalizations {
   /// Bandeau de bons actifs, affiché seulement si activeVoucherCount >= 1 : la branche =1 peut donc écrire « un » en toutes lettres (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{🎁 Tu as un bon de -{percent}% sur ta prochaine commission} other{🎁 Tu as {count} bons de -{percent}% sur tes prochaines commissions}}'**
+  /// **'{count, plural, =1{🎁 Vous avez un bon de -{percent}% sur votre prochaine commission} other{🎁 Vous avez {count} bons de -{percent}% sur vos prochaines commissions}}'**
   String referralVouchers(int count, int percent);
 
   /// Même bandeau que referralVouchers, sans pourcentage : repli défensif quand le serveur ne renseigne pas voucherFactor (backend antérieur au lot 3). Affiché seulement si activeVoucherCount >= 1 (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{🎁 Tu as un bon de réduction sur ta prochaine commission} other{🎁 Tu as {count} bons de réduction sur tes prochaines commissions}}'**
+  /// **'{count, plural, =1{🎁 Vous avez un bon de réduction sur votre prochaine commission} other{🎁 Vous avez {count} bons de réduction sur vos prochaines commissions}}'**
   String referralVouchersUnknownPercent(int count);
 
   /// Date d'expiration du bon le plus proche, date déjà formatée (referral_screen.dart).
@@ -23755,31 +23755,31 @@ abstract class AppLocalizations {
   /// Titre de la hero card sans pourcentage connu (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Invite tes proches'**
+  /// **'Invitez vos proches'**
   String get referralHeroTitleDefault;
 
   /// Titre de la hero card avec pourcentage connu (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Invite et gagne -{percent}%'**
+  /// **'Invitez et gagnez -{percent}%'**
   String referralHeroTitlePercent(int percent);
 
   /// Sous-titre de la hero card sans pourcentage connu (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.'**
+  /// **'Vous recevez un bon de réduction sur votre prochaine commission dès la première livraison de votre invité.'**
   String get referralHeroSubtitleDefault;
 
   /// Sous-titre de la hero card avec pourcentage connu (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Tu reçois un bon de -{percent}% sur ta prochaine commission dès la première livraison de ton invité.'**
+  /// **'Vous recevez un bon de -{percent}% sur votre prochaine commission dès la première livraison de votre invité.'**
   String referralHeroSubtitlePercent(int percent);
 
   /// Libellé au-dessus du code affiché (referral_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ton code de parrainage'**
+  /// **'Votre code de parrainage'**
   String get referralCodeBoxLabel;
 
   /// Libellé d'accessibilité du bouton de copie du code (referral_screen.dart).
@@ -23803,7 +23803,7 @@ abstract class AppLocalizations {
   /// Texte réellement partagé via la feuille système, code et url non traduits (referral_screen.dart, construit par l'écran et transporté par ReferralShared jusqu'au bloc).
   ///
   /// In fr, this message translates to:
-  /// **'Salut ! Utilise mon code Yadony : {code} pour t\'inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. {url}'**
+  /// **'Bonjour ! Utilisez mon code Yadony : {code} pour vous inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. {url}'**
   String referralShareMessage(String code, String url);
 
   /// Titre de la bottom sheet de saisie d'un code parrain (redeem_code_bottom_sheet.dart).
@@ -23815,7 +23815,7 @@ abstract class AppLocalizations {
   /// Sous-titre explicatif de la bottom sheet (redeem_code_bottom_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Tu as été invité par un ami ? Entre son code pour qu\'il soit récompensé à ta première livraison.'**
+  /// **'Vous avez été invité par un ami ? Entrez son code pour qu\'il soit récompensé à votre première livraison.'**
   String get referralRedeemSubtitle;
 
   /// Libellé du champ de saisie du code (redeem_code_bottom_sheet.dart).
@@ -23851,7 +23851,7 @@ abstract class AppLocalizations {
   /// Message du refus 422 `cannot-report-self`.
   ///
   /// In fr, this message translates to:
-  /// **'Tu ne peux pas te signaler toi-même.'**
+  /// **'Vous ne pouvez pas vous signaler vous-même.'**
   String get errorReportCannotReportSelfMessage;
 
   /// Titre du refus 422 `too-many-photos` (ReportService.java : MAX_PHOTOS = 5, error_catalog.dart). En pratique hors d'atteinte : le client plafonne déjà à 4 (IncidentPhotosCubit.maxPhotos).
@@ -23875,7 +23875,7 @@ abstract class AppLocalizations {
   /// Message du refus 403 `photo-not-owned`.
   ///
   /// In fr, this message translates to:
-  /// **'Une des captures ne t\'appartient pas.'**
+  /// **'Une des captures ne vous appartient pas.'**
   String get errorReportPhotoNotOwnedMessage;
 
   /// Titre de la confirmation d'abandon d'un formulaire en cours de saisie (dony_dialog.dart, DonyDialog.confirmDiscard).
@@ -24287,7 +24287,7 @@ abstract class AppLocalizations {
   /// Statut affiché quand l'adresse n'a pas été localisée (address_location_status.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Adresse non localisée, tu peux la saisir à la main'**
+  /// **'Adresse non localisée, vous pouvez la saisir à la main'**
   String get addressNotLocatedStatus;
 
   /// Étiquette d'accessibilité par défaut de l'emoji décollage ✈️ (dony_emoji.dart).
@@ -24317,7 +24317,7 @@ abstract class AppLocalizations {
   /// Message de l'écran bloquant de mise à jour obligatoire (force_update_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Cette version de l\'application n\'est plus prise en charge. Mets-la à jour pour continuer à utiliser Yadony.'**
+  /// **'Cette version de l\'application n\'est plus prise en charge. Mettez-la à jour pour continuer à utiliser Yadony.'**
   String get appUpdateMessage;
 
   /// Bouton d'ouverture du store depuis l'écran de mise à jour obligatoire (force_update_screen.dart).
@@ -24353,7 +24353,7 @@ abstract class AppLocalizations {
   /// Libellé d'accessibilité du sélecteur de mode de l'onglet Suivi (suivi_header.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Que veux-tu faire ?'**
+  /// **'Que voulez-vous faire ?'**
   String get suiviModeTabsLabel;
 
   /// Onglet « Valider une étape » de l'onglet Suivi (suivi_header.dart).
@@ -24371,13 +24371,13 @@ abstract class AppLocalizations {
   /// Consigne sous le cadre caméra, mode Valider (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Scanne le QR d\'un colis de ton trajet.\nL\'étape suivante est validée toute seule.'**
+  /// **'Scannez le QR d\'un colis de votre trajet.\nL\'étape suivante est validée toute seule.'**
   String get suiviValidateCameraHint;
 
   /// Consigne sous le cadre caméra, mode Suivre (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Scanne un QR pour voir où en est le colis.\nRien n\'est validé dans ce mode.'**
+  /// **'Scannez un QR pour voir où en est le colis.\nRien n\'est validé dans ce mode.'**
   String get suiviTrackCameraHint;
 
   /// Bandeau affiché quand la feuille est tirée en haut (suivi_screen.dart, _PausedStrip).
@@ -24419,7 +24419,7 @@ abstract class AppLocalizations {
   /// Ligne discrète de « Choisir un trajet » quand le voyageur n'a qu'un trajet en cours ou à venir (suivi_validate_content.dart, SuiviTripPicker).
   ///
   /// In fr, this message translates to:
-  /// **'C\'est ton seul trajet en cours ou à venir.'**
+  /// **'C\'est votre seul trajet en cours ou à venir.'**
   String get suiviOnlyTrip;
 
   /// Groupe des trajets en cours dans « Choisir un trajet » (suivi_validate_content.dart).
@@ -24515,7 +24515,7 @@ abstract class AppLocalizations {
   /// Explication de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le colis de {parcel} voyage sur ton trajet du {date} :'**
+  /// **'Le colis de {parcel} voyage sur votre trajet du {date} :'**
   String suiviOtherTripBody(String parcel, String date);
 
   /// Bouton qui affiche l'autre trajet (suivi_parcel_sheets.dart).
@@ -24533,13 +24533,13 @@ abstract class AppLocalizations {
   /// Titre de la feuille d'un colis inconnu (suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ce colis n\'est pas sur tes trajets'**
+  /// **'Ce colis n\'est pas sur vos trajets'**
   String get suiviUnknownParcelTitle;
 
   /// Explication de la feuille d'un colis inconnu (suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Colis d\'un autre voyageur : impossible de valider ses étapes, tu peux seulement suivre son parcours.'**
+  /// **'Colis d\'un autre voyageur : impossible de valider ses étapes, vous pouvez seulement suivre son parcours.'**
   String get suiviUnknownParcelBody;
 
   /// Bouton qui passe en mode Suivre sur un colis inconnu (suivi_parcel_sheets.dart).
@@ -24563,7 +24563,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide du mode Valider (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Tes colis apparaîtront ici dès qu\'un expéditeur te remettra son colis.'**
+  /// **'Vos colis apparaîtront ici dès qu\'un expéditeur vous remettra son colis.'**
   String get suiviNothingToValidateBody;
 
   /// Bouton qui lance le suivi d'un numéro (suivi_track_panel.dart).
@@ -24593,7 +24593,7 @@ abstract class AppLocalizations {
   /// Échec du chargement de « Mes envois » (suivi_track_panel.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de charger tes envois.'**
+  /// **'Impossible de charger vos envois.'**
   String get suiviShipmentsError;
 
   /// Statut d'un envoi en cours (suivi_track_panel.dart, _ShipmentRow).
@@ -24605,7 +24605,7 @@ abstract class AppLocalizations {
   /// Erreur du flux caméra QR (qr_camera_view.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Caméra indisponible. Autorise l\'accès à la caméra dans les réglages du téléphone.'**
+  /// **'Caméra indisponible. Autorisez l\'accès à la caméra dans les réglages du téléphone.'**
   String get qrCameraUnavailable;
 
   /// Position relevée avant la photo, mode retour de résultat (scan_photo_screen.dart).
@@ -24671,7 +24671,7 @@ abstract class AppLocalizations {
   /// Encart de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Sans QR code, une photo du colis est obligatoire. Ta position est enregistrée avec l\'étape.'**
+  /// **'Sans QR code, une photo du colis est obligatoire. Votre position est enregistrée avec l\'étape.'**
   String get suiviNumberPhotoNotice;
 
   /// Bouton et titre de la feuille de choix d'étape (suivi_validate_content.dart, _StepModeRow ; suivi_parcel_sheets.dart).
@@ -24683,7 +24683,7 @@ abstract class AppLocalizations {
   /// Explication de l'étape automatique (suivi_validate_content.dart, _StepModeRow ; suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Chaque scan valide l\'étape suivante du colis. Force une étape seulement pour rattraper un oubli.'**
+  /// **'Chaque scan valide l\'étape suivante du colis. Forcez une étape seulement pour rattraper un oubli.'**
   String get suiviStepModeHelp;
 
   /// Début de la ligne « Étape : automatique », suivi de suiviStepModeAuto en gras (suivi_validate_content.dart, _StepModeRow).
@@ -24713,19 +24713,19 @@ abstract class AppLocalizations {
   /// Numéro saisi inconnu du back (suivi_validate_content.dart, _ValidateNumberField).
   ///
   /// In fr, this message translates to:
-  /// **'Numéro introuvable. Vérifie-le et réessaie.'**
+  /// **'Numéro introuvable. Vérifiez-le et réessayez.'**
   String get suiviNumberNotFound;
 
   /// Titre du refus 403 d'un colis ni envoyé ni transporté par l'utilisateur (parcel_not_linked_notice.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ce colis n\'est pas lié à ton compte'**
+  /// **'Ce colis n\'est pas lié à votre compte'**
   String get trackingNotLinkedTitle;
 
   /// Explication du refus 403, sans « Réessayer » (parcel_not_linked_notice.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demande le lien de suivi à l\'expéditeur.'**
+  /// **'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demandez le lien de suivi à l\'expéditeur.'**
   String get trackingNotLinkedBody;
 
   /// Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).
@@ -24791,13 +24791,13 @@ abstract class AppLocalizations {
   /// Consigne sous le cadre caméra quand une étape est forcée (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{step, select, DEPART{Départ forcé : scanne le colis à valider.} TRANSIT{Transit facultatif : scanne le colis à valider.} other{Arrivée forcée : scanne le colis à remettre.}}\nL\'étape repasse ensuite en automatique.'**
+  /// **'{step, select, DEPART{Départ forcé : scannez le colis à valider.} TRANSIT{Transit facultatif : scannez le colis à valider.} other{Arrivée forcée : scannez le colis à remettre.}}\nL\'étape repasse ensuite en automatique.'**
   String suiviForcedCameraHint(String step);
 
   /// Transit ou arrivée forcés sur un colis pas encore parti (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Valide d\'abord la récupération de {parcel}.'**
+  /// **'Validez d\'abord la récupération de {parcel}.'**
   String suiviStepNeedsDepart(String parcel);
 
   /// Départ ou transit forcés sur un colis où cette étape est déjà faite (suivi_screen.dart).
@@ -25001,7 +25001,7 @@ abstract class AppLocalizations {
   /// Sous le bouton grisé de la feuille d'offre tant qu'aucun trajet n'est choisi (make_offer_bottom_sheet.dart, FLUTTER-4W)
   ///
   /// In fr, this message translates to:
-  /// **'Choisis un de tes trajets ci-dessus pour envoyer l\'offre'**
+  /// **'Choisissez un de vos trajets ci-dessus pour envoyer l\'offre'**
   String get negotiationMakeOfferSelectTripHint;
 
   /// Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur
@@ -25013,7 +25013,7 @@ abstract class AppLocalizations {
   /// Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur accepte plusieurs modes de paiement, mais aucun n\'est prêt sur ton compte : configure ton compte de paiement par carte, ou recharge ton portefeuille pour couvrir la commission en espèces.'**
+  /// **'L\'expéditeur accepte plusieurs modes de paiement, mais aucun n\'est prêt sur votre compte : configurez votre compte de paiement par carte, ou rechargez votre portefeuille pour couvrir la commission en espèces.'**
   String get errorPaymentMethodNoneAvailableMessage;
 
   /// Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces
@@ -25025,7 +25025,7 @@ abstract class AppLocalizations {
   /// Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces
   ///
   /// In fr, this message translates to:
-  /// **'Pour accepter un paiement en espèces, ton portefeuille doit couvrir la commission. Recharge-le, puis réessaie.'**
+  /// **'Pour accepter un paiement en espèces, votre portefeuille doit couvrir la commission. Rechargez-le, puis réessayez.'**
   String get errorCashFundsRequiredMessage;
 
   /// Sous le cadre caméra de l'onglet Suivi, juste après la lecture d'un QR de colis (suivi_screen.dart, FLUTTER-20)
@@ -25103,7 +25103,7 @@ abstract class AppLocalizations {
   /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
   ///
   /// In fr, this message translates to:
-  /// **'Précise ce que tu acceptes en « Autre »'**
+  /// **'Précisez ce que vous acceptez en « Autre »'**
   String get tripPublishOtherContentPrecisionLabel;
 
   /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
@@ -25115,7 +25115,7 @@ abstract class AppLocalizations {
   /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
   ///
   /// In fr, this message translates to:
-  /// **'Tu as coché « Autre » : précise ce que tu acceptes avant de publier.'**
+  /// **'Vous avez coché « Autre » : précisez ce que vous acceptez avant de publier.'**
   String get tripPublishOtherContentPrecisionRequired;
 
   /// Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)
@@ -26375,13 +26375,13 @@ abstract class AppLocalizations {
   /// Titre de l'écran de succès affiché au voyageur quand il a réglé la commission d'un accord en espèces (negotiation_commission_settled_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ce colis est à toi !'**
+  /// **'Ce colis est à vous !'**
   String get negotiationCommissionSettledTitle;
 
   /// Sous-titre de l'écran de succès après règlement de la commission d'un accord en espèces (negotiation_commission_settled_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'La commission Yadony est réglée et l\'accord est scellé. Retrouve l\'envoi et les prochaines étapes dans la négociation.'**
+  /// **'La commission Yadony est réglée et l\'accord est scellé. Retrouvez l\'envoi et les prochaines étapes dans la négociation.'**
   String get negotiationCommissionSettledSubtitle;
 
   /// Titre de l'écran de succès affiché au voyageur quand il accepte une demande depuis « À traiter » (bid_accepted_success_screen.dart).
@@ -26393,7 +26393,7 @@ abstract class AppLocalizations {
   /// Sous-titre de l'écran de succès après acceptation d'une demande (bid_accepted_success_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le colis est réservé sur ton trajet. Ouvre la demande pour voir son détail et les prochaines étapes avec l\'expéditeur.'**
+  /// **'Le colis est réservé sur votre trajet. Ouvrez la demande pour voir son détail et les prochaines étapes avec l\'expéditeur.'**
   String get bidAcceptedSuccessSubtitle;
 
   /// CTA de l'écran de succès après acceptation d'une demande, ouvre son détail (bid_accepted_success_screen.dart).
@@ -26597,13 +26597,13 @@ abstract class AppLocalizations {
   /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' quand ChatMessageValidator connaît l'extrait repéré (mot, numéro, email).
   ///
   /// In fr, this message translates to:
-  /// **'Ton message semble contenir des coordonnées (« {term} »). Pour ta sécurité, garde les échanges et le paiement sur Yadony.'**
+  /// **'Votre message semble contenir des coordonnées (« {term} »). Pour votre sécurité, gardez les échanges et le paiement sur Yadony.'**
   String chatBlockedContactTerm(String term);
 
   /// Carnet : aide sous le titre « Invitations envoyées ». Ne révèle jamais si un numéro a un compte (FLUTTER-89).
   ///
   /// In fr, this message translates to:
-  /// **'La personne recevra l\'invitation dans Yadony si elle a un compte. Sinon, invite-la à installer l\'app.'**
+  /// **'La personne recevra l\'invitation dans Yadony si elle a un compte. Sinon, invitez-la à installer l\'app.'**
   String get recipientSentInvitationsHelp;
 
   /// Carnet : bouton d'une invitation envoyée qui partage le lien d'installation de Yadony (feuille de partage système).
@@ -26615,7 +26615,7 @@ abstract class AppLocalizations {
   /// Carnet : texte partagé par « Partager le lien de l'app » pour inviter la personne à installer Yadony.
   ///
   /// In fr, this message translates to:
-  /// **'Je t\'ai invité(e) sur Yadony pour suivre les colis que je t\'envoie. Installe l\'app ici : https://yadony.com'**
+  /// **'Je vous ai invité(e) sur Yadony pour suivre les colis que je vous envoie. Installez l\'app ici : https://yadony.com'**
   String get recipientSentInvitationShareMessage;
 
   /// Suivi en lecture seule : action d'accessibilité sur la miniature photo d'une étape, qui l'ouvre en plein écran (FLUTTER-82).
@@ -26939,7 +26939,7 @@ abstract class AppLocalizations {
   /// Explication de la feuille du numéro de suivi, {parcel} est le libellé du colis
   ///
   /// In fr, this message translates to:
-  /// **'Demande à l\'expéditeur le numéro de suivi du colis {parcel} : lui seul le connaît. Il prouve que tu récupères le bon colis, avant la photo.'**
+  /// **'Demandez à l\'expéditeur le numéro de suivi du colis {parcel} : lui seul le connaît. Il prouve que vous récupérez le bon colis, avant la photo.'**
   String suiviTrackingNumberBody(String parcel);
 
   /// Libellé du champ du numéro de suivi
@@ -26957,13 +26957,13 @@ abstract class AppLocalizations {
   /// Champ du numéro de suivi vide
   ///
   /// In fr, this message translates to:
-  /// **'Saisis le numéro de suivi.'**
+  /// **'Saisissez le numéro de suivi.'**
   String get suiviTrackingNumberRequired;
 
   /// Numéro de suivi refusé
   ///
   /// In fr, this message translates to:
-  /// **'Ce numéro ne correspond pas à ce colis. Vérifie-le avec l\'expéditeur.'**
+  /// **'Ce numéro ne correspond pas à ce colis. Vérifiez-le avec l\'expéditeur.'**
   String get suiviTrackingNumberWrong;
 
   /// Erreur tracking-number-mismatch
@@ -26975,7 +26975,7 @@ abstract class AppLocalizations {
   /// Erreur tracking-number-mismatch
   ///
   /// In fr, this message translates to:
-  /// **'Ce numéro ne correspond pas à ce colis. Demande-le à l\'expéditeur.'**
+  /// **'Ce numéro ne correspond pas à ce colis. Demandez-le à l\'expéditeur.'**
   String get errorTrackingNumberMismatchMessage;
 
   /// Erreur tracking-number-required
@@ -26987,7 +26987,7 @@ abstract class AppLocalizations {
   /// Erreur tracking-number-required
   ///
   /// In fr, this message translates to:
-  /// **'Saisis le numéro de suivi donné par l\'expéditeur pour valider la remise.'**
+  /// **'Saisissez le numéro de suivi donné par l\'expéditeur pour valider la remise.'**
   String get errorTrackingNumberRequiredMessage;
 
   /// Pied de la feuille trajet quand le trajet est complet : bouton de demande grisé, FLUTTER-BG (traveler_announcement_bottom_sheet.dart)
@@ -27077,7 +27077,7 @@ abstract class AppLocalizations {
   /// Recharge mobile money : erreur du champ « Autre montant » quand le montant saisi vaut 0 (FLUTTER-CF).
   ///
   /// In fr, this message translates to:
-  /// **'Indique un montant supérieur à 0.'**
+  /// **'Indiquez un montant supérieur à 0.'**
   String get walletTopupCustomAmountInvalid;
 
   /// Libellé d'accessibilité du voyant clignotant des « Discussions de prix » (Messages, Activités) quand c'est à l'utilisateur d'agir (FLUTTER-BY).

@@ -76,14 +76,14 @@ void main() {
       tester,
     ) async {
       await openSheet(tester);
-      // isTraveler defaults to false → sender sees gross: 50 * 1.12 = 56 → "Tu paies 56,00 €"
+      // isTraveler defaults to false → sender sees gross: 50 * 1.12 = 56 → "Vous payez 56,00 €"
       expect(find.textContaining('56'), findsWidgets);
       expect(find.textContaining('Round 2/5'), findsOneWidget);
     });
 
-    testWidgets('affiche le label "Ton prix proposé"', (tester) async {
+    testWidgets('affiche le label "Votre prix proposé"', (tester) async {
       await openSheet(tester);
-      expect(find.text('Ton prix proposé'), findsOneWidget);
+      expect(find.text('Votre prix proposé'), findsOneWidget);
     });
 
     testWidgets('affiche le label "Message (optionnel)"', (tester) async {

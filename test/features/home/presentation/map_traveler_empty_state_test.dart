@@ -27,7 +27,7 @@ void main() {
 
     expect(find.text('Aucune demande dans ce rayon'), findsOneWidget);
     expect(
-      find.text('Élargis ta zone ou désactive “Près de moi”'),
+      find.text('Élargissez votre zone ou désactivez “Près de moi”'),
       findsOneWidget,
     );
   });

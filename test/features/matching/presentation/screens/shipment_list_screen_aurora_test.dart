@@ -279,7 +279,9 @@ void main() {
       authBloc: authBloc,
     );
     expect(
-      find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+      find.text(
+        'Une erreur est survenue. Vérifiez votre connexion et réessayez.',
+      ),
       findsOneWidget,
     );
   });

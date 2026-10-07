@@ -118,7 +118,7 @@ void main() {
 
   group('ThreadHeroCard rendering', () {
     testWidgets(
-      'traveler — affiche prix net "Tu reçois X €" + label "EN COURS" + Round X/5 pour OPEN',
+      'traveler — affiche prix net "Vous recevez X €" + label "EN COURS" + Round X/5 pour OPEN',
       (tester) async {
         await tester.pumpWidget(
           wrap(
@@ -130,8 +130,8 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        // Traveler sees net: "Tu reçois 42,00 €"
-        expect(find.text('Tu reçois 42,00\u00A0€'), findsOneWidget);
+        // Traveler sees net: "Vous recevez 42,00 €"
+        expect(find.text('Vous recevez 42,00\u00A0€'), findsOneWidget);
         expect(find.text('EN COURS'), findsOneWidget);
         expect(find.text('Round 1/5'), findsOneWidget);
         expect(find.text('PRIX ACTUEL'), findsOneWidget);
@@ -143,7 +143,7 @@ void main() {
       },
     );
 
-    testWidgets('sender — affiche prix gross "Tu paies X €" pour OPEN', (
+    testWidgets('sender — affiche prix gross "Vous payez X €" pour OPEN', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -157,7 +157,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       // Sender sees gross: 42 * 1.12 = 47.04
-      expect(find.text('Tu paies 47,04\u00A0€'), findsOneWidget);
+      expect(find.text('Vous payez 47,04\u00A0€'), findsOneWidget);
     });
 
     testWidgets('affiche alerte dernier round quand roundsRemaining == 0', (

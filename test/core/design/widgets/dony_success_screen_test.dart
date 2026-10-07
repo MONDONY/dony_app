@@ -32,7 +32,7 @@ void main() {
     home: DonySuccessScreen(
       mascotteType: DonyMascotteType.securise,
       title: 'Envoi réservé !',
-      subtitle: 'Ton paiement est sécurisé.',
+      subtitle: 'Votre paiement est sécurisé.',
       ctaLabel: 'Voir mes envois',
       onCta: onCta,
       onClose: onClose,
@@ -55,7 +55,7 @@ void main() {
           builder: (context, state) => DonySuccessScreen(
             mascotteType: DonyMascotteType.securise,
             title: 'Envoi réservé !',
-            subtitle: 'Ton paiement est sécurisé.',
+            subtitle: 'Votre paiement est sécurisé.',
             ctaLabel: 'Voir mes envois',
             onCta: onCta,
           ),
@@ -86,7 +86,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Envoi réservé !'), findsOneWidget);
-    expect(find.text('Ton paiement est sécurisé.'), findsOneWidget);
+    expect(find.text('Votre paiement est sécurisé.'), findsOneWidget);
     expect(find.text('Voir mes envois'), findsOneWidget);
   });
 
@@ -174,7 +174,7 @@ void main() {
           builder: (context) => DonySuccessScreen(
             mascotteType: DonyMascotteType.securise,
             title: 'Envoi réservé !',
-            subtitle: 'Ton paiement est sécurisé.',
+            subtitle: 'Votre paiement est sécurisé.',
             ctaLabel: 'Voir mes envois',
             onCta: () {},
           ),

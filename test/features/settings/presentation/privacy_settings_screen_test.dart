@@ -125,7 +125,7 @@ void main() {
       await tester.pumpWidget(_wrap(mockBloc: mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ton numéro est protégé'), findsOneWidget);
+      expect(find.text('Votre numéro est protégé'), findsOneWidget);
     });
 
     testWidgets('affiche la section QUI PEUT ME CONTACTER', (tester) async {
@@ -312,8 +312,8 @@ void main() {
 
       // Le bandeau ne doit plus promettre un échange de numéros à quelqu'un qui
       // vient justement de le refuser.
-      expect(find.text('Ton numéro reste masqué'), findsOneWidget);
-      expect(find.text('Ton numéro est protégé'), findsNothing);
+      expect(find.text('Votre numéro reste masqué'), findsOneWidget);
+      expect(find.text('Votre numéro est protégé'), findsNothing);
     });
 
     testWidgets('le Switch de masquage est désactivé pendant le chargement', (
@@ -410,7 +410,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          find.textContaining('Les profils non vérifiés peuvent te faire'),
+          find.textContaining('Les profils non vérifiés peuvent vous faire'),
           findsOneWidget,
         );
       },
@@ -428,7 +428,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.textContaining('Les profils non vérifiés peuvent te faire'),
+        find.textContaining('Les profils non vérifiés peuvent vous faire'),
         findsNothing,
       );
     });

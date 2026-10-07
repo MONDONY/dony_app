@@ -469,7 +469,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       verifyNever(() => bloc.add(any(that: isA<ChatTextSendRequested>())));
-      expect(find.textContaining('garde les échanges'), findsOneWidget);
+      expect(find.textContaining('gardez les échanges'), findsOneWidget);
     });
 
     testWidgets('le menu ⋯ propose de signaler et de bloquer l interlocuteur', (

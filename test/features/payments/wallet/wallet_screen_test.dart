@@ -181,7 +181,9 @@ void main() {
 
       expect(find.text('Erreur réseau'), findsNothing);
       expect(
-        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        find.text(
+          'Une erreur est survenue. Vérifiez votre connexion et réessayez.',
+        ),
         findsOneWidget,
       );
     },
@@ -1405,7 +1407,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
 
         expect(
-          find.textContaining('sur ton portefeuille Franc CFA Ouest'),
+          find.textContaining('sur votre portefeuille Franc CFA Ouest'),
           findsOneWidget,
         );
         expect(find.byType(TweenAnimationBuilder<double>), findsOneWidget);

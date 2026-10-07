@@ -158,7 +158,7 @@ void main() {
     expect(harness.sessions, isEmpty);
   });
 
-  testWidgets('réessaie avec une nouvelle session et ferme l’ancienne', (
+  testWidgets('réessayez avec une nouvelle session et ferme l’ancienne', (
     tester,
   ) async {
     final harness = _TutorialHarness();

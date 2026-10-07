@@ -57,7 +57,7 @@ void main() {
       '/home',
       '/recherche/composer',
       '/package-requests/search',
-      // Consultables sans compte : la mention « En continuant tu acceptes nos
+      // Consultables sans compte : la mention « En continuant vous acceptez nos
       // CGU » de l'écran de connexion y renvoie, et les relecteurs des deux
       // boutiques les ouvrent avant de s'inscrire. Sous `/settings/legal/…`,
       // ces deux pages étaient renvoyées sur `/auth/method`.

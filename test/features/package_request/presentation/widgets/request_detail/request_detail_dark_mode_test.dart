@@ -251,7 +251,7 @@ void main() {
       ),
     );
 
-    final tagLabel = tester.widget<Text>(find.text('À toi de répondre'));
+    final tagLabel = tester.widget<Text>(find.text('À vous de répondre'));
     final card = tester.widget<Container>(
       find.byWidgetPredicate(
         (w) =>

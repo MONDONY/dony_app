@@ -20,7 +20,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/// Ouvre un DonyBottomSheet avec [stickyBottom], attend la fin des animations,
+/// Ouvrez un DonyBottomSheet avec [stickyBottom], attend la fin des animations,
 /// puis retourne la hauteur rendue du Container portant
 /// Key('donyBottomSheetFooter').
 Future<double> _footerHeight(WidgetTester tester, Widget stickyBottom) async {

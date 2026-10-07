@@ -301,7 +301,7 @@ void main() {
       expect(find.byKey(const Key('wallet-topup-phone-hint')), findsOneWidget);
       expect(
         find.text(
-          'Saisis ton numéro mobile money : tes opérateurs s\'affichent ici.',
+          'Saisissez votre numéro mobile money : vos opérateurs s\'affichent ici.',
         ),
         findsOneWidget,
       );
@@ -514,7 +514,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
 
-    expect(find.text('Valide le paiement sur ton téléphone'), findsOneWidget);
+    expect(
+      find.text('Validez le paiement sur votre téléphone'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Payer avec un autre numéro'));
     await tester.pump(const Duration(milliseconds: 350));
@@ -724,7 +727,10 @@ void main() {
       // Jamais pumpAndSettle() : l'icône pulsée tourne en boucle.
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pump();
-      expect(find.text('Valide le paiement sur ton téléphone'), findsOneWidget);
+      expect(
+        find.text('Validez le paiement sur votre téléphone'),
+        findsOneWidget,
+      );
 
       // LE geste corrigé : le bouton retour de l'AppBar, pas « Payer avec un
       // autre numéro ».

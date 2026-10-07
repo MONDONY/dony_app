@@ -47,8 +47,8 @@ void main() {
           ),
         );
         expect(find.text('PROPOSITION'), findsOneWidget);
-        // Traveler sees net: "Tu reçois 35,00 €"
-        expect(find.text('Tu reçois 35,00 €'), findsOneWidget);
+        // Traveler sees net: "Vous recevez 35,00 €"
+        expect(find.text('Vous recevez 35,00 €'), findsOneWidget);
         expect(find.text('09:51'), findsOneWidget);
       },
     );
@@ -67,7 +67,7 @@ void main() {
           ),
         );
         expect(find.text('CONTRE-OFFRE'), findsOneWidget);
-        expect(find.text('Tu paies 33,60 €'), findsOneWidget);
+        expect(find.text('Vous payez 33,60 €'), findsOneWidget);
       },
     );
 

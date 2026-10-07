@@ -587,20 +587,20 @@ void main() {
         expect(find.text('Numéro qui paiera (facultatif)'), findsOneWidget);
         expect(
           find.textContaining(
-            "Ton compte n'a pas de numéro : indique celui qui paiera. Tu "
-            'recevras la demande de paiement dessus.',
+            "Votre compte n'a pas de numéro : indiquez celui qui paiera. Vous "
+            'recevrez la demande de paiement dessus.',
           ),
           findsOneWidget,
         );
         expect(
-          find.textContaining('Par défaut, ton numéro Yadony'),
+          find.textContaining('Par défaut, votre numéro Yadony'),
           findsNothing,
         );
       },
     );
 
     testWidgets('tap sur la tuile mobile money, AuthBloc avec un numéro → aide '
-        '"Par défaut, ton numéro Yadony"', (tester) async {
+        '"Par défaut, votre numéro Yadony"', (tester) async {
       final authBloc = _MockAuthBloc();
       whenListen(
         authBloc,
@@ -631,12 +631,15 @@ void main() {
       expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
       expect(
         find.textContaining(
-          'Par défaut, ton numéro Yadony. Tu recevras la demande de '
+          'Par défaut, votre numéro Yadony. Vous recevrez la demande de '
           'paiement sur ce numéro.',
         ),
         findsOneWidget,
       );
-      expect(find.textContaining("Ton compte n'a pas de numéro"), findsNothing);
+      expect(
+        find.textContaining("Votre compte n'a pas de numéro"),
+        findsNothing,
+      );
     });
 
     testWidgets(
@@ -936,7 +939,7 @@ void main() {
   // ── 7. Second site d'appel — mode négociation ────────────────────────────
 
   group(
-    'Mode négociation — étape « Comment veux-tu payer ? » (mobile money ouvert)',
+    'Mode négociation — étape « Comment voulez-vous payer ? » (mobile money ouvert)',
     () {
       // Le back accepte le mobile money sur un fil de négociation depuis
       // yadony-back #331 : ces tests remplacent ceux de R13, qui vérifiaient

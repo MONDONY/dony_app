@@ -563,11 +563,11 @@ void main() {
       );
       await fillNegotiationForm(tester);
 
-      // « Continuer » n'envoie rien : il mène à « Comment veux-tu payer ? ».
+      // « Continuer » n'envoie rien : il mène à « Comment voulez-vous payer ? ».
       await tester.ensureVisible(find.byKey(const Key('bid-submit-btn')));
       await tester.tap(find.byKey(const Key('bid-submit-btn')));
       await tester.pump(_kSettle);
-      expect(find.text('Comment veux-tu payer ?'), findsOneWidget);
+      expect(find.text('Comment voulez-vous payer ?'), findsOneWidget);
       expect(
         find.text(
           'Si le voyageur accepte votre prix, vous réglerez de cette façon.',
@@ -604,7 +604,7 @@ void main() {
       // Rien n'est débité à cette étape : la carte le dit.
       expect(
         find.text(
-          'Payé par carte une fois ton prix accepté, puis bloqué par Yadony '
+          'Payé par carte une fois votre prix accepté, puis bloqué par Yadony '
           "jusqu'à la confirmation de la livraison.",
         ),
         findsOneWidget,

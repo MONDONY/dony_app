@@ -172,7 +172,7 @@ void main() {
       expect(find.byKey(const Key('card-only-warning')), findsOneWidget);
       expect(
         find.text(
-          'Ce colis n\'accepte que la carte : active le paiement carte pour '
+          'Ce colis n\'accepte que la carte : activez le paiement carte pour '
           'le proposer.',
         ),
         findsOneWidget,
@@ -212,7 +212,7 @@ void main() {
       await pump(tester, _req(), gap: CardCapabilityGap.countryMissing);
 
       expect(
-        find.textContaining('renseigne ton pays de résidence'),
+        find.textContaining('renseignez votre pays de résidence'),
         findsOneWidget,
       );
     });

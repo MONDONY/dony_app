@@ -349,7 +349,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // We are now on the payment-picker step.
-      expect(find.text('Comment veux-tu payer ?'), findsOneWidget);
+      expect(find.text('Comment voulez-vous payer ?'), findsOneWidget);
 
       // Despite RecipientSection being unmounted by now, the recipient was
       // already saved synchronously during _goToPicker(), before the step

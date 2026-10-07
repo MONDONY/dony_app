@@ -93,7 +93,7 @@ void main() {
       );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
-      expect(find.text('Tu n\'as encore rien envoyé'), findsOneWidget);
+      expect(find.text('Vous n\'avez encore rien envoyé'), findsOneWidget);
     });
 
     testWidgets('affiche le texte du catalogue quand status = error, jamais le '
@@ -107,7 +107,9 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pump();
       expect(
-        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        find.text(
+          'Une erreur est survenue. Vérifiez votre connexion et réessayez.',
+        ),
         findsOneWidget,
       );
       expect(find.text('Erreur réseau'), findsNothing);
@@ -218,7 +220,7 @@ void main() {
       await tester.pumpAndSettle();
       // La carte n'est pas rendue → on retombe sur l'état vide global.
       expect(find.text('ACCEPTÉE'), findsNothing);
-      expect(find.text('Tu n\'as encore rien envoyé'), findsOneWidget);
+      expect(find.text('Vous n\'avez encore rien envoyé'), findsOneWidget);
     });
 
     testWidgets('affiche le badge EXPIRÉE pour status=expired', (tester) async {

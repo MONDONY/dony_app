@@ -328,13 +328,13 @@ void main() {
 
       expect(
         find.text(
-          'Active la localisation de ton téléphone pour voir ce qui est près de toi.',
+          'Activez la localisation de votre téléphone pour voir ce qui est près de vous.',
         ),
         findsOneWidget,
       );
       expect(
         find.text(
-          "Autorise l'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.",
+          "Autorisez l'accès à votre position dans les réglages pour utiliser « Près de moi » et vous situer sur la carte.",
         ),
         findsOneWidget,
       );

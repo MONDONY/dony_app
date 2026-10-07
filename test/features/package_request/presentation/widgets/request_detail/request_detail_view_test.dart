@@ -129,7 +129,7 @@ void main() {
     expect(find.text('Inviter'), findsOneWidget);
     // Jauge de la carte voyageur : reflète bien le poids de LA demande (2 kg,
     // fixture `_req`), pas une valeur en dur.
-    expect(find.textContaining('ton colis : 2 kg'), findsOneWidget);
+    expect(find.textContaining('votre colis : 2 kg'), findsOneWidget);
     expect(find.textContaining('8 kg libres'), findsOneWidget);
   });
 
@@ -332,7 +332,7 @@ void main() {
           compatibleTrips: [_trip('x')],
         ),
       );
-      expect(find.text('Finalise pour réserver sa place'), findsOneWidget);
+      expect(find.text('Finalisez pour réserver sa place'), findsOneWidget);
       expect(find.byType(RequestOfferCard), findsOneWidget);
       expect(find.text('À finaliser'), findsOneWidget);
       // Aucune trace des voyageurs sur l'axe : une seule offre compte ici.
@@ -509,7 +509,7 @@ void main() {
         compatibleTrips: [_trip('x')],
       ),
     );
-    expect(find.text('Tu as annulé cette demande'), findsOneWidget);
+    expect(find.text('Vous avez annulé cette demande'), findsOneWidget);
     expect(find.byType(CompatibleTravelerCard), findsNothing);
   });
 

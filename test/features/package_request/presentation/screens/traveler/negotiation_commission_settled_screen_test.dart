@@ -47,7 +47,7 @@ void main() {
     await openOverThread(tester);
 
     expect(find.byType(DonySuccessScreen), findsOneWidget);
-    expect(find.text('Ce colis est à toi !'), findsOneWidget);
+    expect(find.text('Ce colis est à vous !'), findsOneWidget);
     expect(
       find.textContaining('La commission Yadony est réglée'),
       findsOneWidget,

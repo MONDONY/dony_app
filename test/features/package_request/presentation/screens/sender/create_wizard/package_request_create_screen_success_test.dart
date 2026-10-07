@@ -700,7 +700,7 @@ void main() {
     // n'est plus affiché, seulement le texte traduit du catalogue (le
     // chiffre de la limite disparaît, cf. errorDraftLimitReachedMessage).
     expect(
-      find.text('Passe en PRO pour créer davantage de brouillons.'),
+      find.text('Passez en PRO pour créer davantage de brouillons.'),
       findsOneWidget,
     );
     expect(find.text('Limite de 1 brouillon(s) atteinte.'), findsNothing);

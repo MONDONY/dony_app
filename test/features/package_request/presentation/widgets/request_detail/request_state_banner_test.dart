@@ -14,13 +14,13 @@ void main() {
               tone: tone,
               icon: 'info',
               title: 'Pas encore visible',
-              message: 'Publie ta demande.',
+              message: 'Publiez votre demande.',
             ),
           ),
         ),
       );
       expect(find.text('Pas encore visible'), findsOneWidget);
-      expect(find.text('Publie ta demande.'), findsOneWidget);
+      expect(find.text('Publiez votre demande.'), findsOneWidget);
     }
   });
 }

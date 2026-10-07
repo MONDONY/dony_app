@@ -86,7 +86,7 @@ void main() {
       //   '✈️ Je voyage $dep → $arr le '
       //   '${DateFormat('d MMMM', AppL10n.localeName).format(date)} '
       //   'avec de la place dans mes bagages !\n'
-      //   'Réserve tes kilos sur Yadony 📦\n'
+      //   'Réservez vos kilos sur Yadony 📦\n'
       //   '$url'
       // Migré vers l.tripOwnerShareMessage(dep, arr, date, url) avec
       // date formatée en DateFormat.MMMMd(locale) — ce test fige le rendu fr
@@ -108,7 +108,7 @@ void main() {
             '✈️ Je voyage $dep → $arr le '
             '$oldDate '
             'avec de la place dans mes bagages !\n'
-            'Réserve tes kilos sur Yadony 📦\n'
+            'Réservez vos kilos sur Yadony 📦\n'
             '$url';
 
         final newDate = DateFormat.MMMMd('fr').format(departureDate);
@@ -119,7 +119,7 @@ void main() {
         expect(
           newMessage,
           '✈️ Je voyage Paris → Dakar le 6 octobre avec de la place dans mes '
-          'bagages !\nRéserve tes kilos sur Yadony 📦\n'
+          'bagages !\nRéservez vos kilos sur Yadony 📦\n'
           'https://yadony.app/annonce/ann-1',
         );
       });

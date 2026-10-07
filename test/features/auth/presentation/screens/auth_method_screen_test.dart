@@ -96,7 +96,7 @@ void main() {
 
     // La mention vit sous la ligne de flottaison de la fenêtre de test.
     await tester.ensureVisible(
-      find.textContaining('En continuant tu acceptes nos'),
+      find.textContaining('En continuant vous acceptez nos'),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -117,7 +117,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     await tester.ensureVisible(
-      find.textContaining('En continuant tu acceptes nos'),
+      find.textContaining('En continuant vous acceptez nos'),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -141,10 +141,10 @@ void main() {
 
     expect(find.byType(DonyLogo), findsOneWidget);
     expect(find.text('Sécurisé'), findsOneWidget);
-    expect(find.text('Connecte-toi en toute confiance'), findsOneWidget);
+    expect(find.text('Connectez-vous en toute confiance'), findsOneWidget);
     expect(
       find.text(
-        'Tes échanges, ton paiement et ton suivi colis sont protégés à chaque étape.',
+        'Vos échanges, votre paiement et votre suivi colis sont protégés à chaque étape.',
       ),
       findsOneWidget,
     );
@@ -174,7 +174,7 @@ void main() {
     expect(scaffold.backgroundColor, theme.scaffoldBackgroundColor);
 
     final title = tester.widget<Text>(
-      find.text('Connecte-toi en toute confiance'),
+      find.text('Connectez-vous en toute confiance'),
     );
     expect(title.style?.color, theme.colorScheme.onSurface);
 
@@ -268,6 +268,10 @@ void main() {
       await tester.pumpWidget(_app(bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
+      // Titre au vouvoiement plus long (FLUTTER-CD) : le lien peut passer
+      // sous le pli à 800×600.
+      await tester.ensureVisible(find.text('Parcourir sans compte'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Parcourir sans compte'));
       await tester.pumpAndSettle();
 
@@ -440,6 +444,10 @@ void main() {
       await tester.pumpWidget(_app(bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
+      // Titre au vouvoiement plus long (FLUTTER-CD) : le lien peut passer
+      // sous le pli à 800×600.
+      await tester.ensureVisible(find.text('Parcourir sans compte'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Parcourir sans compte'));
       await emit(tester, const AuthLoading());
       expect(find.byType(CircularProgressIndicator), findsOneWidget);

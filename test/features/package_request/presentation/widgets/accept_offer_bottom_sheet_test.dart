@@ -109,11 +109,11 @@ void main() {
     expect(find.text('Payer en toute sécurité'), findsOneWidget);
   });
 
-  testWidgets('shows "Tu reçois" label for traveler', (tester) async {
+  testWidgets('shows "Vous recevez" label for traveler', (tester) async {
     await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: true));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.text('Tu reçois'), findsOneWidget);
+    expect(find.text('Vous recevez'), findsOneWidget);
   });
 
   testWidgets('shows "Total à régler" label for sender', (tester) async {
@@ -303,9 +303,9 @@ void main() {
 
         expect(find.byType(DonySuccessScreen), findsOneWidget);
         expect(find.text('Accord confirmé !'), findsOneWidget);
-        expect(find.textContaining('lie ou crée un trajet'), findsOneWidget);
+        expect(find.textContaining('liez ou créez un trajet'), findsOneWidget);
         expect(find.textContaining('espèces'), findsNothing);
-        expect(find.textContaining('tu remets le montant'), findsNothing);
+        expect(find.textContaining('vous remettez le montant'), findsNothing);
       },
     );
 
@@ -325,7 +325,7 @@ void main() {
           findsOneWidget,
         );
         expect(find.textContaining('espèces'), findsNothing);
-        expect(find.textContaining('tu remets le montant'), findsNothing);
+        expect(find.textContaining('vous remettez le montant'), findsNothing);
       },
     );
 
@@ -555,7 +555,7 @@ void main() {
         await tester.tap(find.byKey(const Key('open')));
         await tester.pumpAndSettle();
 
-        // Confirme le paiement (auth biométrique mockée en succès) → ouvre la
+        // Confirmez le paiement (auth biométrique mockée en succès) → ouvre la
         // DonyPaymentSheet Stripe. `pumpAndSettle` n'est PAS utilisable ici : le
         // bouton "Payer" de la sheet extérieure passe en `isLoading: true`
         // (spinner indéterminé) et reste monté sous la DonyPaymentSheet tant

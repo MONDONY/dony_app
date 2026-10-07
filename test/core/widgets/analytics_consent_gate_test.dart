@@ -1,4 +1,4 @@
-// Vérifie le garde-fou anonymat de AnalyticsConsentGate (correction ronde 1,
+// Vérifiez le garde-fou anonymat de AnalyticsConsentGate (correction ronde 1,
 // Task 3) : une session Firebase invitée ("Parcourir sans compte") ne doit
 // JAMAIS déclencher `identify()` (UID Firebase anonyme -> utilisateur
 // identifié fantôme dans PostHog), ni `syncFromBackend()` (appelle

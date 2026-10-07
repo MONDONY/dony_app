@@ -104,18 +104,18 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Yadony utilise Face ID pour sécuriser tes paiements.</string>
+	<string>Yadony utilise Face ID pour sécuriser vos paiements.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Yadony utilise ta position uniquement pendant que tu utilises l'application, pour te proposer les trajets depuis ta ville. Aucun suivi en arrière-plan.</string>
+	<string>Yadony utilise votre position uniquement pendant que vous utilisez l'application, pour vous proposer les trajets depuis votre ville. Aucun suivi en arrière-plan.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
+	<string>Yadony utilise votre position pour trouver les trajets depuis votre ville.</string>
 	<!-- Appels audio Yadony (Stream Video). -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Yadony utilise le micro pour vos appels audio avec l'autre partie de votre colis.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Yadony enregistre le QR code de ton colis dans tes photos pour que tu puisses le retrouver hors ligne.</string>
+	<string>Yadony enregistre le QR code de votre colis dans vos photos pour que vous puissiez le retrouver hors ligne.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Yadony accède à tes photos pour joindre des images de colis.</string>
+	<string>Yadony accède à vos photos pour joindre des images de colis.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

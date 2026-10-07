@@ -246,9 +246,9 @@ void main() {
   group('homeListSubtitle (fr)', () {
     const tripsExpected = {
       0: "Personne ne propose ce trajet pour l'instant",
-      1: 'Ils peuvent emporter ton colis',
-      2: 'Ils peuvent emporter ton colis',
-      12: 'Ils peuvent emporter ton colis',
+      1: 'Ils peuvent emporter votre colis',
+      2: 'Ils peuvent emporter votre colis',
+      12: 'Ils peuvent emporter votre colis',
     };
     for (final e in tripsExpected.entries) {
       test('trajets, ${e.key}', () {
@@ -268,9 +268,9 @@ void main() {
 
     const parcelsExpected = {
       0: "Aucune demande d'envoi pour l'instant",
-      1: 'Tu peux les emporter sur ton trajet',
-      2: 'Tu peux les emporter sur ton trajet',
-      12: 'Tu peux les emporter sur ton trajet',
+      1: 'Vous pouvez les emporter sur votre trajet',
+      2: 'Vous pouvez les emporter sur votre trajet',
+      12: 'Vous pouvez les emporter sur votre trajet',
     };
     for (final e in parcelsExpected.entries) {
       test('colis, ${e.key}', () {
@@ -289,10 +289,10 @@ void main() {
     }
 
     const activeExpected = <int?, String>{
-      null: 'Avec tes trajets actifs',
-      0: 'Avec ton trajet actif',
-      1: 'Avec ton trajet actif',
-      3: 'Avec tes 3 trajets actifs',
+      null: 'Avec vos trajets actifs',
+      0: 'Avec votre trajet actif',
+      1: 'Avec votre trajet actif',
+      3: 'Avec vos 3 trajets actifs',
     };
     for (final e in activeExpected.entries) {
       test('pour mes trajets, ${e.key} trajets actifs', () {

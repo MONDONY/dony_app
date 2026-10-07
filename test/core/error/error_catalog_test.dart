@@ -33,7 +33,7 @@ void main() {
       final p = ErrorCatalog.lookup(error);
 
       expect(p.title, 'Données invalides');
-      expect(p.message, 'Vérifie les informations saisies puis réessaie.');
+      expect(p.message, 'Vérifiez les informations saisies puis réessayez.');
     });
 
     test('violations vides → message générique', () {
@@ -41,7 +41,7 @@ void main() {
 
       final p = ErrorCatalog.lookup(error);
 
-      expect(p.message, 'Vérifie les informations saisies puis réessaie.');
+      expect(p.message, 'Vérifiez les informations saisies puis réessayez.');
     });
   });
 
@@ -54,8 +54,8 @@ void main() {
       expect(p.title, 'Devise différente');
       expect(
         p.message,
-        'Ce trajet n\'est plus disponible dans ta devise. '
-        'Change de pays dans Réglages pour le voir.',
+        'Ce trajet n\'est plus disponible dans votre devise. '
+        'Changez de pays dans Réglages pour le voir.',
       );
       expect(p.severity, ErrorSeverity.warning);
       expect(p.icon, Icons.currency_exchange_rounded);
@@ -90,7 +90,7 @@ void main() {
       'contact-email-required dit d\'ajouter un email plutôt qu\'un message générique',
       () {
         // 422 du backend pour un compte inscrit par téléphone (FLUTTER-3T) :
-        // auparavant rendu comme « Vérifie les informations saisies ».
+        // auparavant rendu comme « Vérifiez les informations saisies ».
         const error = ValidationException(
           'ignored',
           code: 'contact-email-required',
@@ -134,7 +134,7 @@ void main() {
 
       final p = ErrorCatalog.lookup(error);
 
-      expect(p.title, "Scanne d'abord le départ");
+      expect(p.title, "Scannez d'abord le départ");
       expect(p.severity, ErrorSeverity.warning);
     });
 
@@ -510,19 +510,17 @@ void main() {
       return ValidationException('detail brut backend', code: code);
     }
 
-    // code -> [titre attendu, message attendu]. Textes adaptes au
-    // tutoiement (convention dominante du catalogue et des ecrans) par
-    // rapport au brief de la tache 7, qui vouvoyait a tort : correction
-    // demandee en relecture de la tache 7.
+    // code -> [titre attendu, message attendu]. Textes au vouvoiement, ton
+    // unique de l'app depuis FLUTTER-CD.
     const attendus = <String, List<String>>{
       'mobile-money-disabled': [
         'Mobile money indisponible',
         "Le paiement mobile money n'est pas ouvert pour le moment. "
-            'Choisis un autre moyen de paiement.',
+            'Choisissez un autre moyen de paiement.',
       ],
       'mobile-money-phone-required': [
         'Numéro manquant',
-        'Indique le numéro mobile money à utiliser pour continuer.',
+        'Indiquez le numéro mobile money à utiliser pour continuer.',
       ],
       // 'mobile-money-account-unsupported' est retire de cette boucle : ce
       // code fait desormais exception (voir le groupe dedie plus bas), le
@@ -530,11 +528,11 @@ void main() {
       // exploitable, ce que cette boucle interdit explicitement.
       'mobile-money-account-required': [
         'Compte de versement requis',
-        "Active ton versement mobile money avant d'accepter cette offre.",
+        "Activez votre versement mobile money avant d'accepter cette offre.",
       ],
       'mobile-money-currency-mismatch': [
         'Devise différente',
-        "Ton compte de versement mobile money n'est pas dans la devise "
+        "Votre compte de versement mobile money n'est pas dans la devise "
             'de ce trajet.',
       ],
       'mobile-money-not-available': [
@@ -548,22 +546,22 @@ void main() {
       ],
       'mobile-money-payer-unsupported': [
         'Numéro non pris en charge',
-        'Vérifie le numéro qui doit payer, ou essaie avec un autre '
+        'Vérifiez le numéro qui doit payer, ou essayez avec un autre '
             'numéro.',
       ],
       'mobile-money-invalid-phone': [
         'Numéro non reconnu',
         "Ce numéro n'est reconnu par aucun opérateur mobile money. "
-            'Vérifie-le et réessaie.',
+            'Vérifiez-le et réessayez.',
       ],
       'mobile-money-deposit-rejected': [
         'Paiement refusé',
-        "L'opérateur a refusé la demande de paiement. Réessaie, "
+        "L'opérateur a refusé la demande de paiement. Réessayez, "
             'éventuellement avec un autre numéro.',
       ],
       'mobile-money-payment-expired': [
         'Délai dépassé',
-        'Le délai de paiement de 30 minutes est passé. Refais une offre '
+        'Le délai de paiement de 30 minutes est passé. Refaites une offre '
             'au voyageur.',
       ],
       'mobile-money-payment-not-pending': [
@@ -573,16 +571,16 @@ void main() {
       'mobile-money-operation-in-progress': [
         'Opération en cours',
         'Une opération mobile money est déjà en cours pour cet envoi. '
-            'Patiente quelques instants.',
+            'Patientez quelques instants.',
       ],
       'mobile-money-provider-unavailable': [
         'Service indisponible',
-        'Le service mobile money ne répond pas. Réessaie dans quelques '
+        'Le service mobile money ne répond pas. Réessayez dans quelques '
             'minutes.',
       ],
       'invalid-payment-method': [
         'Moyen de paiement invalide',
-        "Ce moyen de paiement n'est pas reconnu. Mets l'application à "
+        "Ce moyen de paiement n'est pas reconnu. Mettez l'application à "
             'jour.',
       ],
     };
@@ -627,8 +625,8 @@ void main() {
   group('ErrorCatalog — mobile-money-account-unsupported : detail serveur', () {
     const genericTitle = 'Numéro non pris en charge';
     const genericMessage =
-        "Ton numéro n'est pas rattaché à un opérateur mobile money "
-        'compatible, ou sa devise ne correspond pas à ta zone.';
+        "Votre numéro n'est pas rattaché à un opérateur mobile money "
+        'compatible, ou sa devise ne correspond pas à votre zone.';
 
     test('detail serveur exploitable → affiche tel quel', () {
       const error = ValidationException(
@@ -679,7 +677,7 @@ void main() {
 
       expect(
         p.message,
-        "Active ton versement mobile money avant d'accepter cette offre.",
+        "Activez votre versement mobile money avant d'accepter cette offre.",
       );
       expect(p.title, 'Compte de versement requis');
     });
@@ -688,7 +686,7 @@ void main() {
   // (WalletMobileMoneyTopupService). Principe retenu en relecture : le
   // detail serveur n'est affiche que lorsqu'il porte une information que
   // l'app ne possede pas deja (bornes de montant, operateurs couverts) ;
-  // sinon l'app ecrit son propre texte, en tutoiement.
+  // sinon l'app ecrit son propre texte (vouvoiement, FLUTTER-CD).
   group('ErrorCatalog — recharge mobile money : detail serveur reserve aux '
       'codes qui apportent une information', () {
     test('topup-amount-out-of-range : detail serveur exploitable → affiche tel '
@@ -717,7 +715,7 @@ void main() {
       expect(
         p.message,
         'Ce montant ne respecte pas les limites de recharge autorisées. '
-        'Ajuste le montant puis réessaie.',
+        'Ajustez le montant puis réessayez.',
       );
     });
 
@@ -746,12 +744,12 @@ void main() {
       expect(
         p.message,
         'Ce numéro n\'est pas exploitable pour une recharge mobile '
-        'money. Vérifie-le ou essaie avec un autre numéro.',
+        'money. Vérifiez-le ou essayez avec un autre numéro.',
       );
     });
 
-    test('topup-already-pending : texte app en tutoiement, jamais le detail '
-        'serveur (vouvoiement) meme exploitable', () {
+    test('topup-already-pending : texte app, jamais le detail serveur meme '
+        'exploitable', () {
       const error = ValidationException(
         'Une recharge est déjà en attente de validation sur votre '
         'téléphone.',
@@ -762,17 +760,17 @@ void main() {
 
       expect(
         p.message,
-        'Une recharge est déjà en cours. Valide-la sur ton téléphone, ou '
-        'attends qu\'elle expire avant d\'en lancer une nouvelle.',
+        'Une recharge est déjà en cours. Validez-la sur votre téléphone, ou '
+        'attendez qu\'elle expire avant d\'en lancer une nouvelle.',
       );
-      expect(p.message, isNot(contains('votre')));
+      expect(p.message, isNot(contains('en attente de validation')));
       // Aucun écran ne permet d'annuler une recharge : ne jamais le demander.
       expect(p.message, isNot(contains('annule')));
       expect(p.title, 'Recharge déjà en cours');
     });
 
-    test('topup-phone-required : texte app en tutoiement, jamais le detail '
-        'serveur (vouvoiement) meme exploitable', () {
+    test('topup-phone-required : texte app, jamais le detail serveur meme '
+        'exploitable', () {
       const error = ValidationException(
         'Indiquez le numéro mobile money qui paie la recharge.',
         code: 'topup-phone-required',
@@ -780,36 +778,39 @@ void main() {
 
       final p = ErrorCatalog.lookup(error);
 
-      expect(p.message, 'Indique le numéro qui va payer la recharge.');
-      expect(p.message, isNot(contains('Indiquez')));
+      expect(p.message, 'Indiquez le numéro qui va payer la recharge.');
+      expect(p.message, isNot(contains('qui paie')));
       expect(p.title, 'Numéro manquant');
     });
 
-    // Les autres codes du meme service ont deja un texte fixe, en tutoiement
-    // ou neutre (aucun pronom) : verifie ici pour ne rien laisser en
-    // vouvoiement sans le savoir.
+    // Les autres codes du meme service ont deja un texte fixe, au vouvoiement
+    // ou neutre (aucun pronom) : verifie ici pour ne rien laisser au
+    // tutoiement sans le savoir (FLUTTER-CD).
     const autresCodesEtMessages = <String, String>{
       'mobile-money-invalid-phone':
           "Ce numéro n'est reconnu par aucun opérateur mobile money. "
-          'Vérifie-le et réessaie.',
+          'Vérifiez-le et réessayez.',
       'mobile-money-disabled':
           "Le paiement mobile money n'est pas ouvert pour le moment. "
-          'Choisis un autre moyen de paiement.',
+          'Choisissez un autre moyen de paiement.',
       'topup-not-found':
           'Cette recharge n\'existe plus ou son lien a '
           'expiré.',
     };
 
     autresCodesEtMessages.forEach((code, message) {
-      test('$code : entree existante et coherente avec le tutoiement', () {
+      test('$code : entree existante et coherente avec le vouvoiement', () {
         final error = ValidationException('detail brut backend', code: code);
 
         expect(ErrorCatalog.isKnown(error), isTrue, reason: code);
 
         final p = ErrorCatalog.lookup(error);
         expect(p.message, message, reason: code);
-        expect(p.message, isNot(contains('vous')), reason: code);
-        expect(p.message, isNot(contains('votre')), reason: code);
+        expect(
+          p.message,
+          isNot(matches(RegExp(r'\b(tu|ton|ta|tes|toi)\b'))),
+          reason: code,
+        );
         expect(p.message, isNot(contains('—')), reason: code);
       });
     });
@@ -827,19 +828,19 @@ void main() {
       ),
       'negotiation/deposit-in-flight': (
         'Paiement en cours de validation',
-        'Ton opérateur traite encore le paiement, patiente quelques instants.',
+        'Votre opérateur traite encore le paiement, patientez quelques instants.',
         ErrorSeverity.warning,
       ),
       'negotiation/traveler-cannot-receive-mobile-money': (
         'Mobile money indisponible',
         'Le voyageur ne peut pas recevoir de versement mobile money dans '
-            'cette devise. Choisis un autre moyen de paiement.',
+            'cette devise. Choisissez un autre moyen de paiement.',
         ErrorSeverity.warning,
       ),
       'payment-method/not-in-available-set': (
         'Moyen de paiement non proposé',
         'Ce moyen de paiement n\'est pas proposé pour cette offre. '
-            'Choisis-en un autre.',
+            'Choisissez-en un autre.',
         ErrorSeverity.warning,
       ),
       'payment-method/mobile-money-capability-required': (
@@ -961,8 +962,8 @@ void main() {
     const attendus = <String, String>{
       'no-commission-card':
           'Aucune carte enregistrée pour régler la commission.',
-      'card-declined': 'Ta carte a été refusée.',
-      'stripe-error': 'Erreur du service de paiement, réessaie.',
+      'card-declined': 'Votre carte a été refusée.',
+      'stripe-error': 'Erreur du service de paiement, réessayez.',
       // Repli générique : tout suffixe de statut Stripe, jamais montré brut.
       'card-status-requires_payment_method':
           "Le règlement par carte n'a pas abouti.",
@@ -1187,7 +1188,7 @@ void main() {
 
       final pFr = ErrorCatalog.lookup(error);
       expect(pFr.title, 'Signalement impossible');
-      expect(pFr.message, 'Tu ne peux pas te signaler toi-même.');
+      expect(pFr.message, 'Vous ne pouvez pas vous signaler vous-même.');
 
       final pEn = ErrorCatalog.lookup(
         error,
@@ -1217,7 +1218,7 @@ void main() {
 
       final pFr = ErrorCatalog.lookup(error);
       expect(pFr.title, 'Signalement impossible');
-      expect(pFr.message, "Une des captures ne t'appartient pas.");
+      expect(pFr.message, 'Une des captures ne vous appartient pas.');
 
       final pEn = ErrorCatalog.lookup(
         error,

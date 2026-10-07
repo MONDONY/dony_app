@@ -61,7 +61,7 @@ void main() {
     expect(find.byKey(const Key('wallet-refund-currency-EUR')), findsOneWidget);
     expect(find.byKey(const Key('wallet-refund-currency-XOF')), findsOneWidget);
     expect(find.textContaining('remboursables'), findsNWidgets(2));
-    expect(find.textContaining('tu reçois'), findsNWidgets(2));
+    expect(find.textContaining('vous recevez'), findsNWidgets(2));
     expect(find.byType(DonyExpandableChoice<String?>), findsOneWidget);
     // Pas de bouton dans le contenu scrollable : le bouton « Continuer » est
     // dans stickyBottom (le bouton « Ouvrir » qui a déclenché la sheet reste

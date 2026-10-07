@@ -53,7 +53,7 @@ void main() {
     expect(find.text('Awa K.'), findsOneWidget);
     expect(find.text('26 sept. · Divo → Annemasse'), findsOneWidget);
     expect(find.text('8 kg libres'), findsOneWidget);
-    expect(find.text('ton colis : 2 kg'), findsOneWidget);
+    expect(find.text('votre colis : 2 kg'), findsOneWidget);
     await tester.tap(find.text('Inviter'));
     expect(invites, 1);
   });

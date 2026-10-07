@@ -14,7 +14,10 @@ void main() {
         home: const Scaffold(body: RequestDetailSkeleton()),
       ),
     );
-    expect(find.bySemanticsLabel('Chargement de ta demande'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Chargement de votre demande'),
+      findsOneWidget,
+    );
     semantics.dispose();
   });
 

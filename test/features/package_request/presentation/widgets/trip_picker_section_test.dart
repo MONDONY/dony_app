@@ -115,7 +115,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('trip-tile-0')), findsOneWidget);
-      expect(find.text('Tes trajets compatibles'), findsOneWidget);
+      expect(find.text('Vos trajets compatibles'), findsOneWidget);
     },
   );
 
@@ -210,10 +210,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Sans le garde-fou, l'écran vide affiche "Aucun de tes trajets ne
+      // Sans le garde-fou, l'écran vide affiche "Aucun de vos trajets ne
       // correspond" — indiscernable pour l'utilisateur d'un vrai échec réseau.
-      expect(find.text('Aucun de tes trajets ne correspond'), findsNothing);
-      expect(find.text('Impossible de charger tes trajets'), findsOneWidget);
+      expect(find.text('Aucun de vos trajets ne correspond'), findsNothing);
+      expect(find.text('Impossible de charger vos trajets'), findsOneWidget);
       expect(find.text('Réessayer'), findsOneWidget);
     },
   );
@@ -252,12 +252,12 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Impossible de charger tes trajets'), findsOneWidget);
+      expect(find.text('Impossible de charger vos trajets'), findsOneWidget);
 
       await tester.tap(find.text('Réessayer'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Impossible de charger tes trajets'), findsNothing);
+      expect(find.text('Impossible de charger vos trajets'), findsNothing);
       expect(find.byKey(const Key('trip-tile-0')), findsOneWidget);
     },
   );

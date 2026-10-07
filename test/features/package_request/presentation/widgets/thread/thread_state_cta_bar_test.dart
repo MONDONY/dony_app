@@ -167,7 +167,7 @@ void main() {
 
   group('ThreadStateCtaBar matrix', () {
     testWidgets(
-      'OPEN · sender · !lastFromMe → 3 boutons (Accepter — Tu paies / Contre / Rejeter)',
+      'OPEN · sender · !lastFromMe → 3 boutons (Accepter — Vous payez / Contre / Rejeter)',
       (tester) async {
         await tester.pumpWidget(
           wrap(
@@ -176,7 +176,7 @@ void main() {
           ),
         );
         // Sender sees gross exact: 38 * 1.12 = 42.56 → "42,56 €"
-        expect(find.text('Accepter : Tu paies 42,56 €'), findsOneWidget);
+        expect(find.text('Accepter : Vous payez 42,56 €'), findsOneWidget);
         expect(find.text('Contre-offre'), findsOneWidget);
         expect(find.text('Rejeter'), findsOneWidget);
       },
@@ -188,7 +188,7 @@ void main() {
         await tester.pumpWidget(
           wrap(_thread(status: NegotiationThreadStatus.open), _viewerTraveler),
         );
-        expect(find.textContaining('Accepter : Tu reçois'), findsNothing);
+        expect(find.textContaining('Accepter : Vous recevez'), findsNothing);
         expect(find.text('Contre-offre'), findsOneWidget);
         expect(find.text('Rejeter'), findsOneWidget);
       },
@@ -203,8 +203,11 @@ void main() {
             _viewerTraveler,
           ),
         );
-        // Traveler sees net: "Accepter — Tu reçois 38 €"
-        expect(find.textContaining('Accepter : Tu reçois 38'), findsOneWidget);
+        // Traveler sees net: "Accepter — Vous recevez 38 €"
+        expect(
+          find.textContaining('Accepter : Vous recevez 38'),
+          findsOneWidget,
+        );
         expect(find.text('Contre-offre'), findsOneWidget);
         expect(find.text('Rejeter'), findsOneWidget);
       },
@@ -223,7 +226,10 @@ void main() {
             _viewerTraveler,
           ),
         );
-        expect(find.textContaining('Accepter : Tu reçois 38'), findsOneWidget);
+        expect(
+          find.textContaining('Accepter : Vous recevez 38'),
+          findsOneWidget,
+        );
         expect(find.text('Contre-offre'), findsNothing);
         expect(find.text('Rejeter'), findsOneWidget);
       },
@@ -326,7 +332,7 @@ void main() {
         );
         expect(find.text('Demande acceptée et payée'), findsOneWidget);
         expect(
-          find.text('Tu peux passer aux étapes suivantes du suivi.'),
+          find.text('Vous pouvez passer aux étapes suivantes du suivi.'),
           findsOneWidget,
         );
       },
@@ -470,7 +476,7 @@ void main() {
           ),
         );
         expect(
-          find.text('Valide le paiement sur ton téléphone.'),
+          find.text('Validez le paiement sur votre téléphone.'),
           findsOneWidget,
         );
         expect(find.textContaining('Le délai est écoulé'), findsNothing);

@@ -466,7 +466,7 @@ Widget _buildHome({
 String titreListe(WidgetTester tester) =>
     tester.widget<Text>(find.byKey(const Key('results-header-title'))).data!;
 
-/// Sous-titre de l'en-tête de liste (« Ils peuvent emporter ton colis »).
+/// Sous-titre de l'en-tête de liste (« Ils peuvent emporter votre colis »).
 String sousTitreListe(WidgetTester tester) =>
     tester.widget<Text>(find.byKey(const Key('results-header-subtitle'))).data!;
 
@@ -1951,7 +1951,7 @@ void main() {
       // passerait trivialement sur un écran où rien ne s'est ouvert.
       expect(find.text('Aucun trajet actif'), findsOneWidget);
       expect(
-        find.textContaining('Publie un trajet pour t\'en servir.'),
+        find.textContaining('Publiez un trajet pour vous en servir.'),
         findsOneWidget,
       );
 
@@ -2083,7 +2083,7 @@ void main() {
 
       expect(titreListe(tester), '2 colis compatibles');
       expect(titreListe(tester), isNot(contains('à transporter')));
-      expect(find.text('Avec tes 3 trajets actifs'), findsOneWidget);
+      expect(find.text('Avec vos 3 trajets actifs'), findsOneWidget);
     });
 
     testWidgets('un seul résultat et un seul trajet : accord au singulier', (
@@ -2100,7 +2100,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(titreListe(tester), '1 colis compatible');
-      expect(sousTitreListe(tester), 'Avec ton trajet actif');
+      expect(sousTitreListe(tester), 'Avec votre trajet actif');
     });
 
     testWidgets('filtre inactif : l\'en-tête reste celui des demandes', (
@@ -3287,9 +3287,11 @@ void main() {
 
         expect(hauteurFeuille(tester), lessThan(0.35));
         expect(find.textContaining('Tirer pour voir'), findsOneWidget);
-        // Le bouton « Près de moi » reste joignable, feuille repliée.
-        await tester.tap(find.byKey(const Key('near-me-fab')));
-        await tester.pump();
+        // Le bouton « Près de moi » reste au-dessus de la feuille repliée.
+        expect(
+          tester.getRect(find.byKey(const Key('near-me-fab'))).bottom,
+          lessThan(tester.getTopLeft(find.byKey(const Key('home-sheet'))).dy),
+        );
       },
     );
 

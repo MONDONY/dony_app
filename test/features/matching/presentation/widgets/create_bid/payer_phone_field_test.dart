@@ -33,7 +33,7 @@ void main() {
 
       expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
       expect(
-        find.textContaining('Par défaut, ton numéro Yadony'),
+        find.textContaining('Par défaut, votre numéro Yadony'),
         findsOneWidget,
       );
     },
@@ -46,7 +46,7 @@ void main() {
 
       expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
       expect(
-        find.textContaining('Ton compte n\'a pas de numéro'),
+        find.textContaining('Votre compte n\'a pas de numéro'),
         findsOneWidget,
       );
     },

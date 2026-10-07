@@ -273,12 +273,12 @@ void main() {
       await tester.enterText(field(), '0');
       await tester.pump();
       // Pas d'erreur pendant la frappe.
-      expect(find.text('Indique un montant supérieur à 0.'), findsNothing);
+      expect(find.text('Indiquez un montant supérieur à 0.'), findsNothing);
 
       // « OK » du clavier : le champ perd le focus.
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
-      expect(find.text('Indique un montant supérieur à 0.'), findsOneWidget);
+      expect(find.text('Indiquez un montant supérieur à 0.'), findsOneWidget);
       expect(find.text('Entrez un montant'), findsOneWidget);
     });
 
@@ -354,13 +354,13 @@ void main() {
         );
         expect(
           find.textContaining(
-            'Ton portefeuille Franc CFA Ouest sera crédité du montant que tu saisis',
+            'Votre portefeuille Franc CFA Ouest sera crédité du montant que vous saisissez',
           ),
           findsOneWidget,
         );
         expect(find.textContaining('crédité de 0'), findsNothing);
         expect(
-          find.textContaining('Ton portefeuille Euro ne bouge pas'),
+          find.textContaining('Votre portefeuille Euro ne bouge pas'),
           findsOneWidget,
         );
         expect(find.textContaining('verrouillé'), findsNothing);

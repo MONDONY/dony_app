@@ -33,7 +33,7 @@ void main() {
     tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
     test('voyageur : voit son net (fr)', () {
-      expect(threadPriceLabel(fr, 35, 39.20, true), 'Tu reçois 35,00 €');
+      expect(threadPriceLabel(fr, 35, 39.20, true), 'Vous recevez 35,00 €');
     });
 
     test('voyageur : voit son net (en) — le montant EUR garde le format '
@@ -42,7 +42,7 @@ void main() {
     });
 
     test('expéditeur : voit le brut fourni (fr)', () {
-      expect(threadPriceLabel(fr, 35, 39.20, false), 'Tu paies 39,20 €');
+      expect(threadPriceLabel(fr, 35, 39.20, false), 'Vous payez 39,20 €');
     });
 
     test('expéditeur : voit le brut fourni (en)', () {
@@ -50,7 +50,7 @@ void main() {
     });
 
     test('expéditeur sans gross : calcule depuis le net (fr)', () {
-      expect(threadPriceLabel(fr, 35, null, false), 'Tu paies 39,20 €');
+      expect(threadPriceLabel(fr, 35, null, false), 'Vous payez 39,20 €');
     });
 
     test('expéditeur sans gross : calcule depuis le net (en)', () {
@@ -58,7 +58,7 @@ void main() {
     });
 
     test('le voyageur ignore le brut fourni (fr)', () {
-      expect(threadPriceLabel(fr, 50, 60.0, true), 'Tu reçois 50,00 €');
+      expect(threadPriceLabel(fr, 50, 60.0, true), 'Vous recevez 50,00 €');
     });
 
     test('le voyageur ignore le brut fourni (en)', () {
@@ -67,7 +67,7 @@ void main() {
 
     test('expéditeur sans gross : net*1.12 arrondi à 2 décimales (fr) — '
         '100 → 112,00', () {
-      expect(threadPriceLabel(fr, 100, null, false), 'Tu paies 112,00 €');
+      expect(threadPriceLabel(fr, 100, null, false), 'Vous payez 112,00 €');
     });
 
     test('expéditeur sans gross : net*1.12 arrondi à 2 décimales (en) — '

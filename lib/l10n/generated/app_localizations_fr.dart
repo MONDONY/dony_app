@@ -25,14 +25,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorMobileMoneyDisabledMessage =>
-      'Le paiement mobile money n\'est pas ouvert pour le moment. Choisis un autre moyen de paiement.';
+      'Le paiement mobile money n\'est pas ouvert pour le moment. Choisissez un autre moyen de paiement.';
 
   @override
   String get errorMobileMoneyPhoneRequiredTitle => 'Numéro manquant';
 
   @override
   String get errorMobileMoneyPhoneRequiredMessage =>
-      'Indique le numéro mobile money à utiliser pour continuer.';
+      'Indiquez le numéro mobile money à utiliser pour continuer.';
 
   @override
   String get errorMobileMoneyAccountUnsupportedTitle =>
@@ -40,7 +40,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorMobileMoneyAccountUnsupportedMessage =>
-      'Ton numéro n\'est pas rattaché à un opérateur mobile money compatible, ou sa devise ne correspond pas à ta zone.';
+      'Votre numéro n\'est pas rattaché à un opérateur mobile money compatible, ou sa devise ne correspond pas à votre zone.';
 
   @override
   String get errorMobileMoneyAccountRequiredTitle =>
@@ -48,14 +48,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorMobileMoneyAccountRequiredMessage =>
-      'Active ton versement mobile money avant d\'accepter cette offre.';
+      'Activez votre versement mobile money avant d\'accepter cette offre.';
 
   @override
   String get errorMobileMoneyCurrencyMismatchTitle => 'Devise différente';
 
   @override
   String get errorMobileMoneyCurrencyMismatchMessage =>
-      'Ton compte de versement mobile money n\'est pas dans la devise de ce trajet.';
+      'Votre compte de versement mobile money n\'est pas dans la devise de ce trajet.';
 
   @override
   String get errorMobileMoneyNotAvailableTitle => 'Mobile money non proposé';
@@ -70,28 +70,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorMobileMoneyPayerUnsupportedMessage =>
-      'Vérifie le numéro qui doit payer, ou essaie avec un autre numéro.';
+      'Vérifiez le numéro qui doit payer, ou essayez avec un autre numéro.';
 
   @override
   String get errorMobileMoneyInvalidPhoneTitle => 'Numéro non reconnu';
 
   @override
   String get errorMobileMoneyInvalidPhoneMessage =>
-      'Ce numéro n\'est reconnu par aucun opérateur mobile money. Vérifie-le et réessaie.';
+      'Ce numéro n\'est reconnu par aucun opérateur mobile money. Vérifiez-le et réessayez.';
 
   @override
   String get errorMobileMoneyDepositRejectedTitle => 'Paiement refusé';
 
   @override
   String get errorMobileMoneyDepositRejectedMessage =>
-      'L\'opérateur a refusé la demande de paiement. Réessaie, éventuellement avec un autre numéro.';
+      'L\'opérateur a refusé la demande de paiement. Réessayez, éventuellement avec un autre numéro.';
 
   @override
   String get errorMobileMoneyPaymentExpiredTitle => 'Délai dépassé';
 
   @override
   String get errorMobileMoneyPaymentExpiredMessage =>
-      'Le délai de paiement de 30 minutes est passé. Refais une offre au voyageur.';
+      'Le délai de paiement de 30 minutes est passé. Refaites une offre au voyageur.';
 
   @override
   String get errorMobileMoneyPaymentNotPendingTitle => 'Paiement déjà traité';
@@ -105,56 +105,56 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorMobileMoneyOperationInProgressMessage =>
-      'Une opération mobile money est déjà en cours pour cet envoi. Patiente quelques instants.';
+      'Une opération mobile money est déjà en cours pour cet envoi. Patientez quelques instants.';
 
   @override
   String get errorMobileMoneyProviderUnavailableTitle => 'Service indisponible';
 
   @override
   String get errorMobileMoneyProviderUnavailableMessage =>
-      'Le service mobile money ne répond pas. Réessaie dans quelques minutes.';
+      'Le service mobile money ne répond pas. Réessayez dans quelques minutes.';
 
   @override
   String get errorInvalidPaymentMethodTitle => 'Moyen de paiement invalide';
 
   @override
   String get errorInvalidPaymentMethodMessage =>
-      'Ce moyen de paiement n\'est pas reconnu. Mets l\'application à jour.';
+      'Ce moyen de paiement n\'est pas reconnu. Mettez l\'application à jour.';
 
   @override
   String get errorRequestBudgetOutOfBoundsTitle => 'Budget trop élevé';
 
   @override
   String get errorRequestBudgetOutOfBoundsMessage =>
-      'Ce budget dépasse le plafond autorisé pour cette devise. Réduis le montant puis réessaie.';
+      'Ce budget dépasse le plafond autorisé pour cette devise. Réduisez le montant puis réessayez.';
 
   @override
   String get errorRequestAlreadyAcceptedTitle => 'Ce colis est parti';
 
   @override
   String get errorRequestAlreadyAcceptedMessage =>
-      'Un autre voyageur a réglé la commission avant toi, ce colis ne peut plus te revenir.';
+      'Un autre voyageur a réglé la commission avant vous, ce colis ne peut plus vous revenir.';
 
   @override
   String get errorTripNoParcelDepartedTitle => 'Aucun colis récupéré';
 
   @override
   String get errorTripNoParcelDepartedMessage =>
-      'Scanne le départ d\'au moins un colis avant de marquer ton trajet arrivé.';
+      'Scannez le départ d\'au moins un colis avant de marquer votre trajet arrivé.';
 
   @override
-  String get errorDepartRequiredTitle => 'Scanne d\'abord le départ';
+  String get errorDepartRequiredTitle => 'Scannez d\'abord le départ';
 
   @override
   String get errorDepartRequiredMessage =>
-      'Le départ doit être scanné quand tu récupères le colis, avant le transit.';
+      'Le départ doit être scanné quand vous récupérez le colis, avant le transit.';
 
   @override
   String get errorParcelRefusalLockedTitle => 'Le trajet est parti';
 
   @override
   String get errorParcelRefusalLockedMessage =>
-      'Tu ne peux plus refuser ce colis une fois le trajet parti.';
+      'Vous ne pouvez plus refuser ce colis une fois le trajet parti.';
 
   @override
   String get errorThreadNotAwaitingCommissionTitle => 'Ce colis est parti';
@@ -167,49 +167,49 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorUnauthorizedTitle => 'Session expirée';
 
   @override
-  String get errorUnauthorizedMessage => 'Reconnecte-toi pour continuer.';
+  String get errorUnauthorizedMessage => 'Reconnectez-vous pour continuer.';
 
   @override
   String get errorReauthRequiredTitle => 'Reconnexion requise';
 
   @override
   String get errorReauthRequiredMessage =>
-      'Pour ta sécurité, identifie-toi à nouveau pour cette action.';
+      'Pour votre sécurité, identifiez-vous à nouveau pour cette action.';
 
   @override
   String get errorForbiddenTitle => 'Action non autorisée';
 
   @override
   String get errorForbiddenMessage =>
-      'Tu n\'as pas les droits nécessaires pour cette action.';
+      'Vous n\'avez pas les droits nécessaires pour cette action.';
 
   @override
   String get errorAccessDeniedTitle => 'Accès refusé';
 
   @override
   String get errorAccessDeniedMessage =>
-      'Tu ne peux pas accéder à cette ressource.';
+      'Vous ne pouvez pas accéder à cette ressource.';
 
   @override
   String get errorAccountBannedTitle => 'Compte suspendu';
 
   @override
   String get errorAccountBannedMessage =>
-      'Ton compte a été suspendu. Contacte le support pour plus d\'informations.';
+      'Votre compte a été suspendu. Contactez le support pour plus d\'informations.';
 
   @override
   String get errorAuthTokenUnavailableTitle => 'Authentification impossible';
 
   @override
   String get errorAuthTokenUnavailableMessage =>
-      'Impossible de vérifier ton identité. Réessaie dans un instant.';
+      'Impossible de vérifier votre identité. Réessayez dans un instant.';
 
   @override
   String get errorAuthGenericErrorTitle => 'Connexion impossible';
 
   @override
   String get errorAuthGenericErrorMessage =>
-      'Une erreur est survenue pendant la connexion. Réessaie.';
+      'Une erreur est survenue pendant la connexion. Réessayez.';
 
   @override
   String get errorPhoneOtpInvalidTitle => 'Code incorrect';
@@ -223,21 +223,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPhoneOtpExpiredMessage =>
-      'Ce code a expiré. Demande un nouveau code.';
+      'Ce code a expiré. Demandez un nouveau code.';
 
   @override
   String get errorPhoneOtpAttemptsExceededTitle => 'Trop de tentatives';
 
   @override
   String get errorPhoneOtpAttemptsExceededMessage =>
-      'Trop de tentatives. Réessaie dans quelques minutes.';
+      'Trop de tentatives. Réessayez dans quelques minutes.';
 
   @override
   String get errorPhoneOtpRateLimitTitle => 'Trop de demandes';
 
   @override
   String get errorPhoneOtpRateLimitMessage =>
-      'Trop de codes envoyés. Réessaie dans quelques minutes.';
+      'Trop de codes envoyés. Réessayez dans quelques minutes.';
 
   @override
   String get errorPhoneAlreadySetTitle => 'Numéro déjà défini';
@@ -265,7 +265,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorInvalidPhoneNumberMessage =>
-      'Ce numéro ne peut pas recevoir de SMS. Vérifie l\'indicatif et le nombre de chiffres, puis réessaie.';
+      'Ce numéro ne peut pas recevoir de SMS. Vérifiez l\'indicatif et le nombre de chiffres, puis réessayez.';
 
   @override
   String get errorAnnouncementNotFoundTitle => 'Trajet introuvable';
@@ -279,14 +279,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCurrencyMismatchMessage =>
-      'Ce trajet n\'est plus disponible dans ta devise. Change de pays dans Réglages pour le voir.';
+      'Ce trajet n\'est plus disponible dans votre devise. Changez de pays dans Réglages pour le voir.';
 
   @override
   String get errorCountryRequiredTitle => 'Pays manquant';
 
   @override
   String get errorCountryRequiredMessage =>
-      'Renseigne ton pays dans Réglages, rubrique Préférences, avant de créer ton compte de paiement. Il détermine ta devise et ne pourra plus être modifié ensuite.';
+      'Renseignez votre pays dans Réglages, rubrique Préférences, avant de créer votre compte de paiement. Il détermine votre devise et ne pourra plus être modifié ensuite.';
 
   @override
   String get errorCountryLockedTitle => 'Pays de résidence verrouillé';
@@ -300,28 +300,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCountryUnsupportedMessage =>
-      'Yadony ne dessert pas encore ce pays. Choisis-en un autre.';
+      'Yadony ne dessert pas encore ce pays. Choisissez-en un autre.';
 
   @override
   String get errorDeletionImpossibleTitle => 'Suppression impossible';
 
   @override
   String get errorDeletionImpossibleMessage =>
-      'Un colis est déjà accepté sur ce trajet. Annule le voyage à la place : l\'expéditeur sera remboursé.';
+      'Un colis est déjà accepté sur ce trajet. Annulez le voyage à la place : l\'expéditeur sera remboursé.';
 
   @override
   String get errorProLimitReachedTitle => 'Limite mensuelle atteinte';
 
   @override
   String get errorProLimitReachedMessage =>
-      'Tu as atteint ta limite d\'annonces ce mois-ci. Passe en PRO pour publier sans limite.';
+      'Vous avez atteint votre limite d\'annonces ce mois-ci. Passez en PRO pour publier sans limite.';
 
   @override
   String get errorDraftLimitReachedTitle => 'Limite de brouillons atteinte';
 
   @override
   String get errorDraftLimitReachedMessage =>
-      'Passe en PRO pour créer davantage de brouillons.';
+      'Passez en PRO pour créer davantage de brouillons.';
 
   @override
   String get errorNotADraftTitle => 'Déjà publié';
@@ -334,21 +334,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPublishingSuspendedMessage =>
-      'La publication est suspendue sur ton compte. Contacte le support.';
+      'La publication est suspendue sur votre compte. Contactez le support.';
 
   @override
   String get errorKycNotVerifiedTitle => 'Identité non vérifiée';
 
   @override
   String get errorKycNotVerifiedMessage =>
-      'Vérifie ton identité avant de publier un trajet.';
+      'Vérifiez votre identité avant de publier un trajet.';
 
   @override
   String get errorDepartureDatePassedTitle => 'Date de départ passée';
 
   @override
   String get errorDepartureDatePassedMessage =>
-      'Modifie la date de départ avant de publier ce trajet.';
+      'Modifiez la date de départ avant de publier ce trajet.';
 
   @override
   String get errorBidNotFoundTitle => 'Demande introuvable';
@@ -361,7 +361,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorContactKycRequiredMessage =>
-      'Ce voyageur ne reçoit que des profils vérifiés. Vérifie ton identité pour lui envoyer une demande.';
+      'Ce voyageur ne reçoit que des profils vérifiés. Vérifiez votre identité pour lui envoyer une demande.';
 
   @override
   String get errorBidNotAcceptedTitle => 'Étape impossible pour ce colis';
@@ -396,14 +396,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCallBlockedMessage =>
-      'Tu ne peux pas appeler cette personne.';
+      'Vous ne pouvez pas appeler cette personne.';
 
   @override
   String get errorCallCalleeUnavailableTitle => 'Personne injoignable';
 
   @override
   String get errorCallCalleeUnavailableMessage =>
-      'Cette personne ne peut pas être appelée pour le moment. Écris-lui dans la conversation.';
+      'Cette personne ne peut pas être appelée pour le moment. Écrivez-lui dans la conversation.';
 
   @override
   String get errorCallConversationClosedTitle => 'Conversation fermée';
@@ -414,7 +414,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCallNotParticipantMessage =>
-      'Tu ne participes pas à cette conversation.';
+      'Vous ne participez pas à cette conversation.';
 
   @override
   String get errorCallProviderUnavailableTitle =>
@@ -422,7 +422,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCallProviderUnavailableMessage =>
-      'L\'appel n\'a pas pu être lancé. Réessaie dans un instant.';
+      'L\'appel n\'a pas pu être lancé. Réessayez dans un instant.';
 
   @override
   String get errorCallsDisabledTitle => 'Appels indisponibles';
@@ -439,11 +439,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le statut actuel du colis ne permet pas cette action.';
 
   @override
-  String get errorUseConfirmDeliveryTitle => 'Confirme la livraison';
+  String get errorUseConfirmDeliveryTitle => 'Confirmez la livraison';
 
   @override
   String get errorUseConfirmDeliveryMessage =>
-      'Pour finaliser, utilise l\'écran de confirmation de livraison du destinataire.';
+      'Pour finaliser, utilisez l\'écran de confirmation de livraison du destinataire.';
 
   @override
   String get errorQrNotReadyTitle => 'QR pas encore disponible';
@@ -457,7 +457,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorDepartAlreadyScannedMessage =>
-      'Le départ de ce colis est déjà enregistré. Tu peux passer à l\'étape suivante.';
+      'Le départ de ce colis est déjà enregistré. Vous pouvez passer à l\'étape suivante.';
 
   @override
   String get errorCodeNotGeneratedTitle => 'Code non généré';
@@ -471,14 +471,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCodeExpiredMessage =>
-      'Ce code a expiré. Demande à l\'expéditeur d\'en générer un nouveau.';
+      'Ce code a expiré. Demandez à l\'expéditeur d\'en générer un nouveau.';
 
   @override
   String get errorCodeIncorrectTitle => 'Code incorrect';
 
   @override
   String get errorCodeIncorrectMessage =>
-      'Le code saisi est incorrect. Vérifie auprès de l\'expéditeur.';
+      'Le code saisi est incorrect. Vérifiez auprès de l\'expéditeur.';
 
   @override
   String get errorTripNotDepartedTitle => 'Trajet pas encore parti';
@@ -492,21 +492,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorTooManyAttemptsMessage =>
-      'Tu as fait trop d\'essais. Patiente quelques minutes avant de réessayer.';
+      'Vous avez fait trop d\'essais. Patientez quelques minutes avant de réessayer.';
 
   @override
   String get errorTooManyRefreshesTitle => 'Limite atteinte';
 
   @override
   String get errorTooManyRefreshesMessage =>
-      'Tu as déjà rafraîchi le code plusieurs fois. Attends avant de regénérer.';
+      'Vous avez déjà rafraîchi le code plusieurs fois. Attendez avant de regénérer.';
 
   @override
   String get errorInvalidTimestampTitle => 'Horodatage invalide';
 
   @override
   String get errorInvalidTimestampMessage =>
-      'L\'horodatage de la lecture est incohérent. Réessaie une fois en ligne.';
+      'L\'horodatage de la lecture est incohérent. Réessayez une fois en ligne.';
 
   @override
   String get errorInvalidWindowTitle => 'Hors créneau';
@@ -526,7 +526,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorActiveTransactionsMessage =>
-      'Des transactions sont en cours. Termine-les ou annule-les avant de continuer.';
+      'Des transactions sont en cours. Terminez-les ou annulez-les avant de continuer.';
 
   @override
   String get errorInvalidStatusTitle => 'État invalide';
@@ -547,7 +547,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorAlreadyRatedMessage =>
-      'Tu as déjà laissé une note pour cette livraison.';
+      'Vous avez déjà laissé une note pour cette livraison.';
 
   @override
   String get errorRatingWindowExpiredTitle => 'Délai dépassé';
@@ -561,7 +561,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorNegotiationCommissionChargeFailedMessage =>
-      'La commission n\'a pas pu être prélevée au voyageur. L\'accord n\'est pas validé. Il vient d\'être invité à recharger son portefeuille, réessaie ensuite.';
+      'La commission n\'a pas pu être prélevée au voyageur. L\'accord n\'est pas validé. Il vient d\'être invité à recharger son portefeuille, réessayez ensuite.';
 
   @override
   String get errorNegotiationNotAwaitingDepositTitle => 'Aucun dépôt en cours';
@@ -576,7 +576,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorNegotiationDepositInFlightMessage =>
-      'Ton opérateur traite encore le paiement, patiente quelques instants.';
+      'Votre opérateur traite encore le paiement, patientez quelques instants.';
 
   @override
   String get errorNegotiationTravelerCannotReceiveMobileMoneyTitle =>
@@ -584,7 +584,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorNegotiationTravelerCannotReceiveMobileMoneyMessage =>
-      'Le voyageur ne peut pas recevoir de versement mobile money dans cette devise. Choisis un autre moyen de paiement.';
+      'Le voyageur ne peut pas recevoir de versement mobile money dans cette devise. Choisissez un autre moyen de paiement.';
 
   @override
   String get errorBidNotNegotiatedTitle => 'Rien à payer ici';
@@ -627,14 +627,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPaymentMethodTravelerInsufficientFundsCashMessage =>
-      'Ton portefeuille n\'a pas assez de fonds pour payer la commission Yadony en espèces. Recharge-le ou ajoute une carte.';
+      'Votre portefeuille n\'a pas assez de fonds pour payer la commission Yadony en espèces. Rechargez-le ou ajoutez une carte.';
 
   @override
   String get errorPaymentMethodNoCommissionCardTitle => 'Carte requise';
 
   @override
   String get errorPaymentMethodNoCommissionCardMessage =>
-      'Ajoute d\'abord une carte de commission pour payer en espèces sans solde suffisant.';
+      'Ajoutez d\'abord une carte de commission pour payer en espèces sans solde suffisant.';
 
   @override
   String get errorPaymentMethodNotInAvailableSetTitle =>
@@ -642,7 +642,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPaymentMethodNotInAvailableSetMessage =>
-      'Ce moyen de paiement n\'est pas proposé pour cette offre. Choisis-en un autre.';
+      'Ce moyen de paiement n\'est pas proposé pour cette offre. Choisissez-en un autre.';
 
   @override
   String get errorPaymentMethodMobileMoneyCapabilityRequiredTitle =>
@@ -657,35 +657,35 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorWalletTopupStripeErrorMessage =>
-      'Le rechargement n\'a pas pu être préparé. Réessaie dans un instant.';
+      'Le rechargement n\'a pas pu être préparé. Réessayez dans un instant.';
 
   @override
   String get errorTopupAmountOutOfRangeTitle => 'Montant hors limites';
 
   @override
   String get errorTopupAmountOutOfRangeMessage =>
-      'Ce montant ne respecte pas les limites de recharge autorisées. Ajuste le montant puis réessaie.';
+      'Ce montant ne respecte pas les limites de recharge autorisées. Ajustez le montant puis réessayez.';
 
   @override
   String get errorTopupAlreadyPendingTitle => 'Recharge déjà en cours';
 
   @override
   String get errorTopupAlreadyPendingMessage =>
-      'Une recharge est déjà en cours. Valide-la sur ton téléphone, ou attends qu\'elle expire avant d\'en lancer une nouvelle.';
+      'Une recharge est déjà en cours. Validez-la sur votre téléphone, ou attendez qu\'elle expire avant d\'en lancer une nouvelle.';
 
   @override
   String get errorTopupPhoneRequiredTitle => 'Numéro manquant';
 
   @override
   String get errorTopupPhoneRequiredMessage =>
-      'Indique le numéro qui va payer la recharge.';
+      'Indiquez le numéro qui va payer la recharge.';
 
   @override
   String get errorTopupPhoneUnsupportedTitle => 'Numéro non pris en charge';
 
   @override
   String get errorTopupPhoneUnsupportedMessage =>
-      'Ce numéro n\'est pas exploitable pour une recharge mobile money. Vérifie-le ou essaie avec un autre numéro.';
+      'Ce numéro n\'est pas exploitable pour une recharge mobile money. Vérifiez-le ou essayez avec un autre numéro.';
 
   @override
   String get errorTopupNotFoundTitle => 'Recharge introuvable';
@@ -707,63 +707,63 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorUnsupportedCurrencyMessage =>
-      'Cette devise n\'est pas encore disponible. Vérifie la devise de ton compte dans les réglages.';
+      'Cette devise n\'est pas encore disponible. Vérifiez la devise de votre compte dans les réglages.';
 
   @override
   String get errorContactEmailRequiredTitle => 'Adresse e-mail requise';
 
   @override
   String get errorContactEmailRequiredMessage =>
-      'Pour créer ton compte de paiement, Stripe a besoin d\'une adresse e-mail. Ajoute-la à ton compte, puis reviens ici.';
+      'Pour créer votre compte de paiement, Stripe a besoin d\'une adresse e-mail. Ajoutez-la à votre compte, puis revenez ici.';
 
   @override
   String get errorStripeAccountRequiredTitle => 'Compte Stripe à créer';
 
   @override
   String get errorStripeAccountRequiredMessage =>
-      'Ton compte de paiement n\'a pas encore été créé. Retape sur le bouton pour lancer l\'activation.';
+      'Votre compte de paiement n\'a pas encore été créé. Appuyez de nouveau sur le bouton pour lancer l\'activation.';
 
   @override
   String get errorStripeAccountInvalidTitle => 'Compte de paiement invalide';
 
   @override
   String get errorStripeAccountInvalidMessage =>
-      'Ton compte de paiement n\'est plus valide. Retape sur le bouton pour en créer un nouveau.';
+      'Votre compte de paiement n\'est plus valide. Appuyez de nouveau sur le bouton pour en créer un nouveau.';
 
   @override
   String get errorStripeErrorTitle => 'Paiement refusé';
 
   @override
   String get errorStripeErrorMessage =>
-      'Le paiement n\'a pas pu être traité. Vérifie ta carte ou réessaie dans un instant.';
+      'Le paiement n\'a pas pu être traité. Vérifiez votre carte ou réessayez dans un instant.';
 
   @override
   String get errorGoogleTimeoutTitle => 'Service indisponible';
 
   @override
   String get errorGoogleTimeoutMessage =>
-      'Le service de localisation est lent à répondre. Réessaie dans quelques secondes.';
+      'Le service de localisation est lent à répondre. Réessayez dans quelques secondes.';
 
   @override
   String get errorOtpInvalidTitle => 'Code invalide';
 
   @override
   String get errorOtpInvalidMessage =>
-      'Le code saisi est incorrect ou a déjà été utilisé. Vérifie le code reçu par email.';
+      'Le code saisi est incorrect ou a déjà été utilisé. Vérifiez le code reçu par email.';
 
   @override
   String get errorOtpExpiredTitle => 'Code expiré';
 
   @override
   String get errorOtpExpiredMessage =>
-      'Ce code a expiré. Reviens en arrière et demande un nouveau code.';
+      'Ce code a expiré. Revenez en arrière et demandez un nouveau code.';
 
   @override
   String get errorOtpAttemptsExceededTitle => 'Trop de tentatives';
 
   @override
   String get errorOtpAttemptsExceededMessage =>
-      'Trop d\'essais incorrects. Patiente quelques minutes, un nouveau code ne débloquera pas la saisie.';
+      'Trop d\'essais incorrects. Patientez quelques minutes, un nouveau code ne débloquera pas la saisie.';
 
   @override
   String get errorEmailAlreadyExistsTitle => 'Email déjà utilisé';
@@ -784,28 +784,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorRateLimitMessage =>
-      'Tu as demandé plusieurs codes coup sur coup. Attends quelques minutes avant d\'en redemander un.';
+      'Vous avez demandé plusieurs codes coup sur coup. Attendez quelques minutes avant d\'en redemander un.';
 
   @override
   String get errorEmailServiceErrorTitle => 'Envoi impossible';
 
   @override
   String get errorEmailServiceErrorMessage =>
-      'L\'email n\'a pas pu être envoyé. Vérifie l\'adresse saisie et réessaie.';
+      'L\'email n\'a pas pu être envoyé. Vérifiez l\'adresse saisie et réessayez.';
 
   @override
   String get errorFirebaseErrorTitle => 'Connexion impossible';
 
   @override
   String get errorFirebaseErrorMessage =>
-      'La connexion n\'a pas pu aboutir. Réessaie dans un instant.';
+      'La connexion n\'a pas pu aboutir. Réessayez dans un instant.';
 
   @override
   String get errorPromoNotFoundTitle => 'Code promo introuvable';
 
   @override
   String get errorPromoNotFoundMessage =>
-      'Ce code promo n\'existe pas. Vérifie la saisie et réessaie. Un code parrain se saisit à l\'inscription ou dans Moi › « J\'ai un code parrain ».';
+      'Ce code promo n\'existe pas. Vérifiez la saisie et réessayez. Un code parrain se saisit à l\'inscription ou dans Moi › « J\'ai un code parrain ».';
 
   @override
   String get errorPromoExpiredTitle => 'Code promo expiré';
@@ -826,28 +826,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPromoNotEligibleMessage =>
-      'Ce code promo n\'est pas disponible pour ton profil.';
+      'Ce code promo n\'est pas disponible pour votre profil.';
 
   @override
   String get errorReferralCodeNotFoundTitle => 'Code introuvable';
 
   @override
   String get errorReferralCodeNotFoundMessage =>
-      'Ce code de parrainage n\'existe pas. Vérifie la saisie et réessaie.';
+      'Ce code de parrainage n\'existe pas. Vérifiez la saisie et réessayez.';
 
   @override
   String get errorSelfReferralTitle => 'Auto-parrainage interdit';
 
   @override
   String get errorSelfReferralMessage =>
-      'Tu ne peux pas utiliser ton propre code de parrainage.';
+      'Vous ne pouvez pas utiliser votre propre code de parrainage.';
 
   @override
   String get errorAlreadyReferredTitle => 'Code déjà utilisé';
 
   @override
   String get errorAlreadyReferredMessage =>
-      'Tu as déjà utilisé un code de parrainage.';
+      'Vous avez déjà utilisé un code de parrainage.';
 
   @override
   String get errorUserNotFoundTitle => 'Utilisateur introuvable';
@@ -861,28 +861,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorOfflineMessage =>
-      'Vérifie ta connexion Internet puis réessaie. Tes lectures hors-ligne seront synchronisées à la reconnexion.';
+      'Vérifiez votre connexion Internet puis réessayez. Vos lectures hors-ligne seront synchronisées à la reconnexion.';
 
   @override
   String get errorTimeoutTitle => 'Le serveur met du temps';
 
   @override
   String get errorTimeoutMessage =>
-      'La requête a pris trop de temps. Réessaie dans quelques secondes.';
+      'La requête a pris trop de temps. Réessayez dans quelques secondes.';
 
   @override
   String get errorRateLimitedTitle => 'Trop de requêtes';
 
   @override
   String get errorRateLimitedMessage =>
-      'Tu as fait trop d\'appels en peu de temps. Patiente un instant avant de réessayer.';
+      'Vous avez fait trop d\'appels en peu de temps. Patientez un instant avant de réessayer.';
 
   @override
   String get errorServerErrorTitle => 'Erreur serveur';
 
   @override
   String get errorServerErrorMessage =>
-      'Quelque chose s\'est mal passé de notre côté. On regarde ça, réessaie dans un instant.';
+      'Quelque chose s\'est mal passé de notre côté. On regarde ça, réessayez dans un instant.';
 
   @override
   String get errorCancelledTitle => 'Action annulée';
@@ -902,7 +902,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorValidationMessage =>
-      'Vérifie les informations saisies puis réessaie.';
+      'Vérifiez les informations saisies puis réessayez.';
 
   @override
   String get errorConflictTitle => 'Action impossible';
@@ -916,21 +916,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorStorageMessage =>
-      'Impossible d\'accéder au stockage local. Redémarre l\'application.';
+      'Impossible d\'accéder au stockage local. Redémarrez l\'application.';
 
   @override
   String get errorNetworkTitle => 'Erreur réseau';
 
   @override
   String get errorNetworkMessage =>
-      'Une erreur est survenue. Vérifie ta connexion et réessaie.';
+      'Une erreur est survenue. Vérifiez votre connexion et réessayez.';
 
   @override
   String get errorGenericTitle => 'Une erreur est survenue';
 
   @override
   String get errorGenericMessage =>
-      'Réessaie dans un instant. Si le problème persiste, contacte le support.';
+      'Réessayez dans un instant. Si le problème persiste, contactez le support.';
 
   @override
   String get networkFallbackSessionExpired => 'Session expirée';
@@ -1134,11 +1134,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authMethodSecureBadge => 'Sécurisé';
 
   @override
-  String get authMethodTitle => 'Connecte-toi en toute confiance';
+  String get authMethodTitle => 'Connectez-vous en toute confiance';
 
   @override
   String get authMethodSubtitle =>
-      'Tes échanges, ton paiement et ton suivi colis sont protégés à chaque étape.';
+      'Vos échanges, votre paiement et votre suivi colis sont protégés à chaque étape.';
 
   @override
   String get authMethodContinueWithApple => 'Continuer avec Apple';
@@ -1167,7 +1167,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Accès limité : recherche uniquement. Connexion requise pour publier, contacter, réserver ou payer.';
 
   @override
-  String get authLegalPrefix => 'En continuant tu acceptes nos ';
+  String get authLegalPrefix => 'En continuant vous acceptez nos ';
 
   @override
   String get authLegalTermsLink => 'CGU';
@@ -1182,28 +1182,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authEmailStepLabel => 'Email';
 
   @override
-  String get authEmailTitle => 'Ton adresse email';
+  String get authEmailTitle => 'Votre adresse email';
 
   @override
   String get authEmailBody =>
-      'Saisis ton adresse email pour recevoir un code de connexion.';
+      'Saisissez votre adresse email pour recevoir un code de connexion.';
 
   @override
   String get authEmailFootnote =>
-      'On protège ton accès sans partager ton email avec les voyageurs.';
+      'On protège votre accès sans partager votre email avec les voyageurs.';
 
   @override
   String get authEmailHint => 'exemple@email.com';
 
   @override
   String get authEmailSpamHint =>
-      'Vérifie tes spams si tu ne reçois pas le code.';
+      'Vérifiez vos spams si vous ne recevez pas le code.';
 
   @override
   String get authEmailSendCode => 'Envoyer le code';
 
   @override
-  String get authEmailPreferSms => 'Préfères le SMS ?';
+  String get authEmailPreferSms => 'Vous préférez le SMS ?';
 
   @override
   String get authPhoneDialCodeTitle => 'Indicatif pays';
@@ -1212,15 +1212,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authPhoneStepLabel => 'Téléphone';
 
   @override
-  String get authPhoneTitle => 'Ton numéro';
+  String get authPhoneTitle => 'Votre numéro';
 
   @override
   String get authPhoneBody =>
-      'On t’envoie un code à 6 chiffres par SMS pour vérifier que c’est bien toi.';
+      'On vous envoie un code à 6 chiffres par SMS pour vérifier que c’est bien vous.';
 
   @override
   String get authPhoneFootnote =>
-      'Ton numéro sert uniquement à sécuriser ton compte et tes échanges Yadony.';
+      'Votre numéro sert uniquement à sécuriser votre compte et vos échanges Yadony.';
 
   @override
   String get authPhoneNumberLabel => 'NUMÉRO DE TÉLÉPHONE';
@@ -1273,7 +1273,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authOtpFootnote =>
-      'Le code expire rapidement pour garder ton compte Yadony protégé.';
+      'Le code expire rapidement pour garder votre compte Yadony protégé.';
 
   @override
   String authOtpResendIn(int seconds) {
@@ -1315,14 +1315,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authRequiredFreeSearchBody =>
-      'Tu peux consulter les demandes et comparer les trajets.';
+      'Vous pouvez consulter les demandes et comparer les trajets.';
 
   @override
   String get authRequiredProtectedTitle => 'Actions protégées';
 
   @override
   String get authRequiredOfferSubtitle =>
-      'Connecte-toi pour proposer ton trajet en toute sécurité.';
+      'Connectez-vous pour proposer votre trajet en toute sécurité.';
 
   @override
   String get authRequiredOfferBody =>
@@ -1330,7 +1330,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authRequiredReportSubtitle =>
-      'Connecte-toi pour signaler une annonce.';
+      'Connectez-vous pour signaler une annonce.';
 
   @override
   String get authRequiredReportBody =>
@@ -1338,7 +1338,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authRequiredExploreSubtitle =>
-      'Connecte-toi pour utiliser cette action.';
+      'Connectez-vous pour utiliser cette action.';
 
   @override
   String get authRequiredExploreBody =>
@@ -1498,11 +1498,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authOnboardingLegalPrivacyLink => 'politique de confidentialité';
 
   @override
-  String get authCountryTitle => 'Dans quel pays es-tu ?';
+  String get authCountryTitle => 'Dans quel pays êtes-vous ?';
 
   @override
   String get authCountrySubtitle =>
-      'Devise, trajets et disponibilité seront adaptés à ton pays.';
+      'Devise, trajets et disponibilité seront adaptés à votre pays.';
 
   @override
   String get authCountryFieldLabel => 'Pays';
@@ -1512,7 +1512,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authCountryFieldHelper =>
-      'Tape ton pays puis choisis une suggestion.';
+      'Tapez votre pays puis choisissez une suggestion.';
 
   @override
   String get authCountrySaving => 'Enregistrement du pays...';
@@ -1523,7 +1523,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authCountryDeleteDialogMessage =>
-      'Ton compte Yadony et tes données associées seront supprimés. Cette action est irréversible.';
+      'Votre compte Yadony et vos données associées seront supprimés. Cette action est irréversible.';
 
   @override
   String get authCountryDeleteDialogConfirm => 'Confirmer la suppression';
@@ -1534,7 +1534,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authCountryUnavailableBody =>
-      'Tu peux continuer pour envoyer des colis. Les trajets et la prise de colis resteront indisponibles depuis ce compte.';
+      'Vous pouvez continuer pour envoyer des colis. Les trajets et la prise de colis resteront indisponibles depuis ce compte.';
 
   @override
   String get authCountryContinueAsSender =>
@@ -1598,15 +1598,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authReferralGaugeLabel => 'Parrainage';
 
   @override
-  String get authReferralTitle => 'Tu as été invité par un ami ?';
+  String get authReferralTitle => 'Vous avez été invité par un ami ?';
 
   @override
   String get authReferralBody =>
-      'Entre son code pour qu’il soit récompensé à ta première livraison.';
+      'Entrez son code pour qu’il soit récompensé à votre première livraison.';
 
   @override
   String get authReferralFootnote =>
-      'Cette étape est facultative. Tu peux entrer dans Yadony sans code.';
+      'Cette étape est facultative. Vous pouvez entrer dans Yadony sans code.';
 
   @override
   String get authReferralCodeLabel => 'Code parrain';
@@ -1622,11 +1622,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authReferralSuccessBody =>
-      'Ton ami sera récompensé dès que tu complètes ta première livraison.';
+      'Votre ami sera récompensé dès que vous aurez effectué votre première livraison.';
 
   @override
   String get authReferralSuccessFootnote =>
-      'Ton compte Yadony est prêt. Tu peux commencer à rechercher, envoyer ou suivre tes colis.';
+      'Votre compte Yadony est prêt. Vous pouvez commencer à rechercher, envoyer ou suivre vos colis.';
 
   @override
   String get authReferralContinueHome => 'Continuer';
@@ -1640,7 +1640,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authConsentFootnote =>
-      'Jamais tes paiements, ton identité ou ton numéro. Tu peux changer d’avis dans Réglages.';
+      'Jamais vos paiements, votre identité ou votre numéro. Vous pouvez changer d’avis dans Réglages.';
 
   @override
   String get authConsentPointScreens =>
@@ -1651,7 +1651,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authConsentPointNeverPersonal =>
-      'Jamais tes paiements, identité ou numéro';
+      'Jamais vos paiements, identité ou numéro';
 
   @override
   String get authConsentPointChangeAnytime =>
@@ -1922,7 +1922,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get homeLocateError => 'Impossible de te localiser. Réessaie.';
+  String get homeLocateError => 'Impossible de vous localiser. Réessayez.';
 
   @override
   String get homeMaxWeightTitle => 'Poids max du colis';
@@ -1990,18 +1990,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeListSubtitleTravelersCanCarry =>
-      'Ils peuvent emporter ton colis';
+      'Ils peuvent emporter votre colis';
 
   @override
-  String get homeListSubtitleActiveTripsUnknown => 'Avec tes trajets actifs';
+  String get homeListSubtitleActiveTripsUnknown => 'Avec vos trajets actifs';
 
   @override
   String homeListSubtitleActiveTrips(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Avec tes $count trajets actifs',
-      one: 'Avec ton trajet actif',
+      other: 'Avec vos $count trajets actifs',
+      one: 'Avec votre trajet actif',
     );
     return '$_temp0';
   }
@@ -2012,7 +2012,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeListSubtitleYouCanCarry =>
-      'Tu peux les emporter sur ton trajet';
+      'Vous pouvez les emporter sur votre trajet';
 
   @override
   String get homeSort => 'Trier';
@@ -2022,7 +2022,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeRequestsLoadError =>
-      'Impossible de charger les demandes. Vérifie ta connexion puis réessaie.';
+      'Impossible de charger les demandes. Vérifiez votre connexion puis réessayez.';
 
   @override
   String get homeEmptyParcelsFiltered => 'Aucun colis avec ces filtres';
@@ -2032,15 +2032,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeEmptyParcelsFilteredHint =>
-      'Modifie ou supprime tes filtres pour voir plus de demandes.';
+      'Modifiez ou supprimez vos filtres pour voir plus de demandes.';
 
   @override
   String get homeEmptyParcelsSoonHint =>
-      'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.';
+      'Vous pourrez bientôt consulter les demandes d\'envoi postées par les expéditeurs.';
 
   @override
   String get homeTripsLoadError =>
-      'Impossible de charger les trajets. Vérifie ta connexion puis réessaie.';
+      'Impossible de charger les trajets. Vérifiez votre connexion puis réessayez.';
 
   @override
   String get homeEmptyTravelersNearby => 'Aucun voyageur à proximité';
@@ -2053,15 +2053,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeEmptyNearbyHint =>
-      'Élargis ta zone ou désactive \"Près de moi\"';
+      'Élargissez votre zone ou désactivez \"Près de moi\"';
 
   @override
   String get homeEmptyTravelersFilteredHint =>
-      'Modifie tes filtres pour voir plus de voyageurs.';
+      'Modifiez vos filtres pour voir plus de voyageurs.';
 
   @override
   String get homeEmptyTravelersRouteHint =>
-      'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.';
+      'De nouveaux trajets sont publiés chaque jour. Revenez bientôt.';
 
   @override
   String get homeMapButton => 'Carte';
@@ -2174,7 +2174,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeComposerAlertTip =>
-      'Astuce, tu peux être prévenu des nouveaux colis compatibles depuis Réglages, Notifications.';
+      'Astuce, vous pouvez être prévenu des nouveaux colis compatibles depuis Réglages, Notifications.';
 
   @override
   String get homeComposerAroundMe => 'Autour de moi';
@@ -2320,18 +2320,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeMapEmptyNearbyHint =>
-      'Élargis ta zone ou désactive “Près de moi”';
+      'Élargissez votre zone ou désactivez “Près de moi”';
 
   @override
   String get homeMapEmptyHint =>
-      'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour';
+      'Revenez dans un instant, de nouvelles demandes sont publiées chaque jour';
 
   @override
   String get homeNoActiveTripTitle => 'Aucun trajet actif';
 
   @override
   String get homeNoActiveTripBody =>
-      'Ce filtre ne montre que les colis compatibles avec tes trajets à venir. Publie un trajet pour t\'en servir.';
+      'Ce filtre ne montre que les colis compatibles avec vos trajets à venir. Publiez un trajet pour vous en servir.';
 
   @override
   String get homeNoActiveTripPublish => 'Publier un trajet';
@@ -2350,7 +2350,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeNearMeExplanation =>
-      'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.';
+      'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de vous.';
 
   @override
   String get homeLocationPermissionOpenSettings => 'Ouvrir les réglages';
@@ -2363,11 +2363,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeLocationPermissionServiceOffBody =>
-      'Active la localisation de ton téléphone pour voir ce qui est près de toi.';
+      'Activez la localisation de votre téléphone pour voir ce qui est près de vous.';
 
   @override
   String get homeLocationPermissionDeniedBody =>
-      'Autorise l\'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.';
+      'Autorisez l\'accès à votre position dans les réglages pour utiliser « Près de moi » et vous situer sur la carte.';
 
   @override
   String get shellTermsTitle => 'CGU';
@@ -2530,7 +2530,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String tripPublishSuccessSubtitle(String departureCity, String arrivalCity) {
-    return 'Ton trajet $departureCity → $arrivalCity est en ligne.';
+    return 'Votre trajet $departureCity → $arrivalCity est en ligne.';
   }
 
   @override
@@ -2550,7 +2550,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishTemplatesHint =>
-      'Applique un modèle pour pré-remplir le trajet';
+      'Appliquez un modèle pour pré-remplir le trajet';
 
   @override
   String tripPublishTemplateAppliedMessage(String label) {
@@ -2570,7 +2570,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishHandoverDeadlineSubtitle =>
-      'Jusqu\'à quand les expéditeurs peuvent te remettre leurs colis';
+      'Jusqu\'à quand les expéditeurs peuvent vous remettre leurs colis';
 
   @override
   String get tripPublishHandoverDeadlineChoose => 'Choisir';
@@ -3172,14 +3172,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get addressSelectorDropoffSubtitle =>
-      'Où tu récupères les colis des expéditeurs';
+      'Où vous récupérez les colis des expéditeurs';
 
   @override
   String get addressSelectorDeliveryLabel => 'Choisir une adresse de livraison';
 
   @override
   String get addressSelectorDeliverySubtitle =>
-      'Où tu déposes les colis à destination';
+      'Où vous déposez les colis à destination';
 
   @override
   String get tripPosterTimePattern => 'HH\'h\'mm';
@@ -3329,7 +3329,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripTemplateEmptyDescription =>
-      'Crée des modèles de trajet réutilisables pour publier tes annonces en quelques secondes.';
+      'Créez des modèles de trajet réutilisables pour publier vos annonces en quelques secondes.';
 
   @override
   String get tripTemplateCreateAction => 'Créer un modèle';
@@ -3342,7 +3342,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String tripTemplateDeleteDialogMessage(String label) {
-    return 'Es-tu sûr de vouloir supprimer \"$label\" ? Cette action est irréversible.';
+    return 'Êtes-vous sûr de vouloir supprimer \"$label\" ? Cette action est irréversible.';
   }
 
   @override
@@ -3423,7 +3423,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripTemplateRecurrenceActivatedMessage =>
-      'Récurrence activée. Tes trajets seront publiés automatiquement.';
+      'Récurrence activée. Vos trajets seront publiés automatiquement.';
 
   @override
   String get tripTemplateRecurrenceTitle => 'Trajet récurrent';
@@ -3516,12 +3516,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String requestThreadYouReceive(String amount) {
-    return 'Tu reçois $amount';
+    return 'Vous recevez $amount';
   }
 
   @override
   String requestThreadYouPay(String amount) {
-    return 'Tu paies $amount';
+    return 'Vous payez $amount';
   }
 
   @override
@@ -3918,7 +3918,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestCreateRemovePhoto => 'Supprimer cette photo';
 
   @override
-  String get requestCreateCompleteDetailsTitle => 'Vérifie & complète';
+  String get requestCreateCompleteDetailsTitle => 'Vérifiez & complétez';
 
   @override
   String get requestCreateDetailsSaved => 'Détails enregistrés';
@@ -3976,7 +3976,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestDetailNoticeActionFailed =>
-      'Une erreur est survenue. Réessaie dans un instant.';
+      'Une erreur est survenue. Réessayez dans un instant.';
 
   @override
   String get requestDetailNoticeInvitationSent =>
@@ -4001,7 +4001,7 @@ class AppLocalizationsFr extends AppLocalizations {
     String arrival,
     String date,
   ) {
-    return 'J\'envoie un colis de $weight kg $departure → $arrival autour du $date. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.';
+    return 'J\'envoie un colis de $weight kg $departure → $arrival autour du $date. Vous voyagez sur cet axe ? Répondez à ma demande sur Yadony.';
   }
 
   @override
@@ -4022,11 +4022,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Elle a peut-être été annulée ou supprimée.';
 
   @override
-  String get requestDetailErrorLoadTitle => 'Impossible de charger ta demande';
+  String get requestDetailErrorLoadTitle =>
+      'Impossible de charger votre demande';
 
   @override
   String get requestDetailErrorLoadMessage =>
-      'Vérifie ta connexion, puis réessaie. Ta demande n\'a pas été modifiée.';
+      'Vérifiez votre connexion, puis réessayez. Votre demande n\'a pas été modifiée.';
 
   @override
   String get requestTravelerFallbackNameLower => 'le voyageur';
@@ -4038,11 +4039,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestListErrorFallback => 'Erreur';
 
   @override
-  String get requestListEmptyTitle => 'Tu n\'as encore rien envoyé';
+  String get requestListEmptyTitle => 'Vous n\'avez encore rien envoyé';
 
   @override
   String get requestListEmptyDescription =>
-      'Publie ta première demande et reçois des offres de voyageurs en quelques heures.';
+      'Publiez votre première demande et recevez des offres de voyageurs en quelques heures.';
 
   @override
   String get requestListEmptyCta => '+ Publier ma première demande';
@@ -4168,8 +4169,8 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count voyageurs sur ton axe',
-      one: '$count voyageur sur ton axe',
+      other: '$count voyageurs sur votre axe',
+      one: '$count voyageur sur votre axe',
     );
     return '$_temp0';
   }
@@ -4179,7 +4180,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestDetailNotVisibleMessage =>
-      'Publie ta demande pour que les voyageurs puissent te proposer un prix.';
+      'Publiez votre demande pour que les voyageurs puissent vous proposer un prix.';
 
   @override
   String requestDetailCashCommissionTitle(String name) {
@@ -4188,24 +4189,24 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestDetailCashCommissionMessage =>
-      'Accord en espèces trouvé. Tant que ce n\'est pas fait, tu peux encore choisir quelqu\'un d\'autre.';
+      'Accord en espèces trouvé. Tant que ce n\'est pas fait, vous pouvez encore choisir quelqu\'un d\'autre.';
 
   @override
-  String get requestDetailFinalizeTitle => 'Finalise pour réserver sa place';
+  String get requestDetailFinalizeTitle => 'Finalisez pour réserver sa place';
 
   @override
   String get requestDetailFinalizeMessage =>
-      'Ton argent reste bloqué chez Yadony jusqu\'à la remise du colis.';
+      'Votre argent reste bloqué chez Yadony jusqu\'à la remise du colis.';
 
   @override
   String get requestDetailExpiredTitle => 'Date dépassée sans accord';
 
   @override
   String get requestDetailExpiredMessage =>
-      'Aucun voyageur n\'a été retenu à temps. Tes infos sont gardées, il suffit de choisir de nouvelles dates.';
+      'Aucun voyageur n\'a été retenu à temps. Vos infos sont gardées, il suffit de choisir de nouvelles dates.';
 
   @override
-  String get requestDetailCancelledTitle => 'Tu as annulé cette demande';
+  String get requestDetailCancelledTitle => 'Vous avez annulé cette demande';
 
   @override
   String get requestDetailCancelledMessage =>
@@ -4217,7 +4218,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestDetailNoSearchMessage =>
-      'Réessaie plus tard, ou partage directement ta demande en attendant.';
+      'Réessayez plus tard, ou partagez directement votre demande en attendant.';
 
   @override
   String get requestDetailOffersReceivedTitle => 'Offres reçues';
@@ -4243,10 +4244,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestDetailTripNotCompletedMessage =>
-      'Le voyageur n\'a pas pu assurer la livraison. Publie une demande similaire pour retrouver quelqu\'un.';
+      'Le voyageur n\'a pas pu assurer la livraison. Publiez une demande similaire pour retrouver quelqu\'un.';
 
   @override
-  String get requestDetailYourTravelerFallback => 'ton voyageur';
+  String get requestDetailYourTravelerFallback => 'votre voyageur';
 
   @override
   String get requestDetailStubCashPaid => 'réglé en main propre';
@@ -4277,13 +4278,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Accord en espèces, commission en attente';
 
   @override
-  String get requestOfferAvailableForParcel => 'Disponible pour ton colis';
+  String get requestOfferAvailableForParcel => 'Disponible pour votre colis';
 
   @override
   String get requestOfferChooseCta => 'Choisir';
 
   @override
-  String get requestOfferYourTurn => 'À toi de répondre';
+  String get requestOfferYourTurn => 'À vous de répondre';
 
   @override
   String get requestOfferRespondCta => 'Répondre';
@@ -4294,7 +4295,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get requestOfferYouPayCaption => 'tu paies';
+  String get requestOfferYouPayCaption => 'vous payez';
 
   @override
   String requestAvailableKg(String weight) {
@@ -4322,7 +4323,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestDetailMenuCancelConsequence => 'Irréversible';
 
   @override
-  String get requestTravelersOnRouteTitle => 'Voyageurs sur ton axe';
+  String get requestTravelersOnRouteTitle => 'Voyageurs sur votre axe';
 
   @override
   String requestNoTravelersTitle(String corridor) {
@@ -4331,7 +4332,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestNoTravelersMessage =>
-      'Les trajets arrivent souvent la semaine du départ. On te prévient dès qu\'un voyageur publie.';
+      'Les trajets arrivent souvent la semaine du départ. On vous prévient dès qu\'un voyageur publie.';
 
   @override
   String get requestNoTravelersAlertCta => 'Être alerté des nouveaux trajets';
@@ -4455,7 +4456,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String requestYourParcelWeight(String weight) {
-    return 'ton colis : $weight kg';
+    return 'votre colis : $weight kg';
   }
 
   @override
@@ -4465,7 +4466,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestTravelerInviteCta => 'Inviter';
 
   @override
-  String get requestDetailLoadingSemantic => 'Chargement de ta demande';
+  String get requestDetailLoadingSemantic => 'Chargement de votre demande';
 
   @override
   String requestToleranceDays(int days) {
@@ -4554,7 +4555,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPublicPaymentSubtitle =>
-      'L\'expéditeur choisira parmi ceux-ci au moment de payer : rien à choisir de ton côté';
+      'L\'expéditeur choisira parmi ceux-ci au moment de payer : rien à choisir de votre côté';
 
   @override
   String get requestPublicProposeTripCta => 'Proposer mon trajet';
@@ -4590,14 +4591,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String requestListYourTripOn(String date) {
-    return 'Ton trajet du $date';
+    return 'Votre trajet du $date';
   }
 
   @override
   String get requestBudgetFreeLabel => 'Budget libre';
 
   @override
-  String get requestFavoriteToggleError => 'Action impossible, réessaie';
+  String get requestFavoriteToggleError => 'Action impossible, réessayez';
 
   @override
   String requestSenderShipmentCount(int count) {
@@ -4711,17 +4712,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPickerLoadErrorMessage =>
-      'Impossible de charger tes trajets';
+      'Impossible de charger vos trajets';
 
   @override
-  String get requestPickerNoMatchTitle => 'Aucun de tes trajets ne correspond';
+  String get requestPickerNoMatchTitle => 'Aucun de vos trajets ne correspond';
 
   @override
-  String get requestPickerMatchingTitle => 'Tes trajets compatibles';
+  String get requestPickerMatchingTitle => 'Vos trajets compatibles';
 
   @override
   String get requestPickerEmptyCreateHint =>
-      'Crée un trajet correspondant à cette demande';
+      'Créez un trajet correspondant à cette demande';
 
   @override
   String get requestPickerCreateTripCta => 'Créer un nouveau trajet';
@@ -5170,7 +5171,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get listingRetryActionMessage => 'Action impossible, réessaie';
+  String get listingRetryActionMessage => 'Action impossible, réessayez';
 
   @override
   String listingAcceptedBidsCount(int count) {
@@ -5231,7 +5232,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get listingNoTravelersNearbyDesc =>
-      'Essaie d\'augmenter le rayon ou de changer de date.';
+      'Essayez d\'augmenter le rayon ou de changer de date.';
 
   @override
   String get listingSeeAnnouncementButton => 'Voir l\'annonce';
@@ -5396,15 +5397,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidCreateCashSuccessSubtitle =>
-      'Paiement en espèces : si le voyageur accepte, tu remets le montant en main propre à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.';
+      'Paiement en espèces : si le voyageur accepte, vous remettez le montant en main propre à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas vous rembourser immédiatement mais s\'assurera que le voyageur vous restitue votre argent.';
 
   @override
   String get bidCreateMobileMoneySuccessSubtitle =>
-      'Paiement mobile money : si le voyageur accepte, tu recevras une notification et auras 30 minutes pour valider le paiement sur ton téléphone. Le montant est gardé en sécurité par Yadony jusqu\'à la livraison.';
+      'Paiement mobile money : si le voyageur accepte, vous recevrez une notification et aurez 30 minutes pour valider le paiement sur votre téléphone. Le montant est gardé en sécurité par Yadony jusqu\'à la livraison.';
 
   @override
   String get bidCreateReviewPendingSubtitle =>
-      'Le voyageur va examiner ta demande.';
+      'Le voyageur va examiner votre demande.';
 
   @override
   String get bidCreateSeeMyShipmentButton => 'Voir mon envoi';
@@ -5503,11 +5504,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidCreateRefusedByTravelerSectionLabel => 'REFUSÉ PAR LE VOYAGEUR';
 
   @override
-  String get bidCreateHowToPayTitle => 'Comment veux-tu payer ?';
+  String get bidCreateHowToPayTitle => 'Comment voulez-vous payer ?';
 
   @override
   String get bidCreateChoosePaymentSubtitle =>
-      'Choisis le mode de paiement pour cette demande.';
+      'Choisissez le mode de paiement pour cette demande.';
 
   @override
   String get bidCreatePaymentNotConfirmedError =>
@@ -5523,7 +5524,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidCreateOfferPaidSubtitle =>
-      'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.';
+      'Votre paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de votre demande.';
 
   @override
   String get bidCreateWeightLabel => 'Poids du colis';
@@ -5568,15 +5569,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidCreateCardModeNegotiationBody =>
-      'Payé par carte une fois ton prix accepté, puis bloqué par Yadony jusqu\'à la confirmation de la livraison.';
+      'Payé par carte une fois votre prix accepté, puis bloqué par Yadony jusqu\'à la confirmation de la livraison.';
 
   @override
   String get bidCreateMobileMoneyModeBody =>
-      'Après l\'accord du voyageur, tu reçois une demande de paiement sur ton téléphone. Le montant est bloqué par Yadony jusqu\'à la livraison.';
+      'Après l\'accord du voyageur, vous recevez une demande de paiement sur votre téléphone. Le montant est bloqué par Yadony jusqu\'à la livraison.';
 
   @override
   String get bidCreateCashModeBody =>
-      'Tu remets la somme au voyageur le jour où tu lui confies le colis.';
+      'Vous remettez la somme au voyageur le jour où vous lui confiez le colis.';
 
   @override
   String get bidCreateRefundAssurance => 'Remboursé si le colis n\'arrive pas';
@@ -5609,11 +5610,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidCreatePayerPhoneHintWithProfile =>
-      'Par défaut, ton numéro Yadony. Tu recevras la demande de paiement sur ce numéro.';
+      'Par défaut, votre numéro Yadony. Vous recevrez la demande de paiement sur ce numéro.';
 
   @override
   String get bidCreatePayerPhoneHintNoProfile =>
-      'Ton compte n\'a pas de numéro : indique celui qui paiera. Tu recevras la demande de paiement dessus.';
+      'Votre compte n\'a pas de numéro : indiquez celui qui paiera. Vous recevrez la demande de paiement dessus.';
 
   @override
   String get bidCreateCustomItemsSectionTitle => 'Articles hors grille';
@@ -5963,7 +5964,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get blockConfirmBody =>
-      'Il·elle ne pourra plus voir tes annonces ni t\'envoyer d\'offre. Tu ne verras plus les siennes non plus. Tu pourras le·la débloquer à tout moment dans Confidentialité.';
+      'Il·elle ne pourra plus voir vos annonces ni vous envoyer d\'offre. Vous ne verrez plus les siennes non plus. Vous pourrez le·la débloquer à tout moment dans Confidentialité.';
 
   @override
   String get blockConfirmButton => 'Bloquer';
@@ -6048,14 +6049,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationNudgeGenericErrorMessage =>
-      'Impossible de relancer pour le moment, réessaie plus tard';
+      'Impossible de relancer pour le moment, réessayez plus tard';
 
   @override
   String get negotiationOpenAwaitingReplyTitle => 'En attente de la réponse';
 
   @override
   String get negotiationOpenAwaitingReplySubtitle =>
-      'Tu seras notifié dès que la partie adverse répondra.';
+      'Vous serez notifié dès que la partie adverse répondra.';
 
   @override
   String get negotiationAwaitingTripSenderTitle =>
@@ -6063,7 +6064,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationAwaitingTripSenderSubtitle =>
-      'Tu seras notifié dès qu\'il l\'aura confirmé.';
+      'Vous serez notifié dès qu\'il l\'aura confirmé.';
 
   @override
   String get negotiationLinkTripButton => 'Lier un trajet à cette offre';
@@ -6082,7 +6083,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationAwaitingPaymentTravelerSubtitle =>
-      'Tu seras notifié dès qu\'il aura réglé.';
+      'Vous serez notifié dès qu\'il aura réglé.';
 
   @override
   String get negotiationAwaitingDepositTravelerTitle =>
@@ -6090,14 +6091,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationAwaitingDepositTravelerSubtitle =>
-      'Tu seras notifié dès que le paiement sera confirmé.';
+      'Vous serez notifié dès que le paiement sera confirmé.';
 
   @override
   String get negotiationDepositInProgressTitle => 'Dépôt mobile money en cours';
 
   @override
   String get negotiationDepositSubtitleDefault =>
-      'Valide le paiement sur ton téléphone.';
+      'Validez le paiement sur votre téléphone.';
 
   @override
   String get negotiationDepositSubtitleExpired =>
@@ -6105,7 +6106,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String negotiationDepositSubtitleExpiring(int minutes) {
-    return 'Valide le paiement sur ton téléphone. Expire dans $minutes min.';
+    return 'Validez le paiement sur votre téléphone. Expire dans $minutes min.';
   }
 
   @override
@@ -6121,15 +6122,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationAwaitingCommissionSenderSubtitle =>
-      'Ta demande reste ouverte : tu peux continuer à recevoir et accepter d\'autres offres tant qu\'il n\'a pas réglé.';
+      'Votre demande reste ouverte : vous pouvez continuer à recevoir et accepter d\'autres offres tant qu\'il n\'a pas réglé.';
 
   @override
   String get negotiationCommissionTravelerBannerTitle =>
-      'Confirme ta prise en charge';
+      'Confirmez votre prise en charge';
 
   @override
   String negotiationCommissionTravelerBannerSubtitle(String amount) {
-    return 'L\'expéditeur a retenu ton offre. Règle la commission Yadony ($amount) avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut te doubler.';
+    return 'L\'expéditeur a retenu votre offre. Réglez la commission Yadony ($amount) avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.';
   }
 
   @override
@@ -6156,7 +6157,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationAcceptedPaidSubtitle =>
-      'Tu peux passer aux étapes suivantes du suivi.';
+      'Vous pouvez passer aux étapes suivantes du suivi.';
 
   @override
   String get negotiationAcceptedCashSubtitle =>
@@ -6177,7 +6178,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String negotiationSenderAcceptButton(String amount) {
-    return 'Accepter : Tu paies $amount';
+    return 'Accepter : Vous payez $amount';
   }
 
   @override
@@ -6185,7 +6186,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String negotiationTravelerAcceptButton(String amount) {
-    return 'Accepter : Tu reçois $amount';
+    return 'Accepter : Vous recevez $amount';
   }
 
   @override
@@ -6193,12 +6194,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String negotiationCommissionCountdownHours(int hours, String minutes) {
-    return 'Il te reste ${hours}h ${minutes}min';
+    return 'Il vous reste ${hours}h ${minutes}min';
   }
 
   @override
   String negotiationCommissionCountdownMinutes(String minutes, String seconds) {
-    return 'Il te reste $minutes:$seconds';
+    return 'Il vous reste $minutes:$seconds';
   }
 
   @override
@@ -6250,7 +6251,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationGaveUpParcelSnackbar =>
-      'Tu as renoncé à ce colis, il reste disponible pour un autre voyageur.';
+      'Vous avez renoncé à ce colis, il reste disponible pour un autre voyageur.';
 
   @override
   String get negotiationFallbackTitle => 'Négociation';
@@ -6275,7 +6276,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationEmptyDescription =>
-      'Tes négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.';
+      'Vos négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.';
 
   @override
   String get negotiationEmptySearchTripAction => 'Rechercher un trajet';
@@ -6390,11 +6391,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCommissionFailedCardDeclinedMessage =>
-      'Ta carte a été refusée.';
+      'Votre carte a été refusée.';
 
   @override
   String get errorCommissionFailedStripeErrorMessage =>
-      'Erreur du service de paiement, réessaie.';
+      'Erreur du service de paiement, réessayez.';
 
   @override
   String get errorCommissionFailedCardStatusMessage =>
@@ -6507,22 +6508,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationOfferAcceptedPaidSubtitle =>
-      'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.';
+      'Votre argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suivez votre colis depuis le fil.';
 
   @override
   String get negotiationTrackShipmentCta => 'Voir le suivi';
 
   @override
   String get negotiationAcceptOfferAgreedSubtitleSender =>
-      'Vous êtes d\'accord sur le prix. Le voyageur va confirmer son trajet, puis tu finaliseras les détails de l\'envoi et le règlement depuis le fil.';
+      'Vous êtes d\'accord sur le prix. Le voyageur va confirmer son trajet, puis vous finaliserez les détails de l\'envoi et le règlement depuis le fil.';
 
   @override
   String get negotiationAcceptOfferAgreedSubtitleTravelerLinked =>
-      'Vous êtes d\'accord sur le prix. L\'expéditeur va finaliser les détails de l\'envoi et le règlement, tu seras notifié à chaque étape.';
+      'Vous êtes d\'accord sur le prix. L\'expéditeur va finaliser les détails de l\'envoi et le règlement, vous serez notifié à chaque étape.';
 
   @override
   String get negotiationAcceptOfferAgreedSubtitleTravelerUnlinked =>
-      'Vous êtes d\'accord sur le prix. Prochaine étape : lie ou crée un trajet pour cette offre afin que l\'expéditeur puisse finaliser le règlement.';
+      'Vous êtes d\'accord sur le prix. Prochaine étape : liez ou créez un trajet pour cette offre afin que l\'expéditeur puisse finaliser le règlement.';
 
   @override
   String get negotiationAgreementConfirmedTitle => 'Accord confirmé !';
@@ -6539,7 +6540,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get negotiationPriceBreakdownNetTraveler => 'Net voyageur';
 
   @override
-  String get negotiationPriceBreakdownYouReceive => 'Tu reçois';
+  String get negotiationPriceBreakdownYouReceive => 'Vous recevez';
 
   @override
   String get negotiationPriceBreakdownTotalToSettle => 'Total à régler';
@@ -6549,7 +6550,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String negotiationAcceptOfferInfoTraveler(String price) {
-    return 'En acceptant, l\'expéditeur effectuera le paiement. Tu recevras $price à la livraison validée, quel que soit un éventuel code promo utilisé par l\'expéditeur.';
+    return 'En acceptant, l\'expéditeur effectuera le paiement. Vous recevrez $price à la livraison validée, quel que soit un éventuel code promo utilisé par l\'expéditeur.';
   }
 
   @override
@@ -6565,13 +6566,14 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get negotiationCounterOfferYourPriceLabel => 'Ton prix proposé';
+  String get negotiationCounterOfferYourPriceLabel => 'Votre prix proposé';
 
   @override
   String get negotiationCounterOfferMessageLabel => 'Message (optionnel)';
 
   @override
-  String get negotiationCounterOfferMessageHint => 'Explique ta proposition…';
+  String get negotiationCounterOfferMessageHint =>
+      'Expliquez votre proposition…';
 
   @override
   String get negotiationRejectTitle => 'Rejeter la négociation';
@@ -6609,7 +6611,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationPaymentRecapCashSuccessSubtitle =>
-      'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.';
+      'Paiement en espèces : vous remettez le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas vous rembourser immédiatement mais s\'assurera que le voyageur vous restitue votre argent.';
 
   @override
   String get negotiationPaymentRecapCashHandoverLabel =>
@@ -6651,7 +6653,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationPaymentRecapMobileMoneyBannerMessage =>
-      'Tu valides le paiement sur ton téléphone. Yadony garde l\'argent et ne le verse au voyageur qu\'après confirmation de la livraison.';
+      'Vous validez le paiement sur votre téléphone. Yadony garde l\'argent et ne le verse au voyageur qu\'après confirmation de la livraison.';
 
   @override
   String get negotiationPaymentRecapSecureBannerMessage =>
@@ -6662,7 +6664,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationCommissionSettlementHint =>
-      'Recharge ton portefeuille ou paie la commission directement par carte.';
+      'Rechargez votre portefeuille ou payez la commission directement par carte.';
 
   @override
   String get negotiationCommissionSettlementTopupButton =>
@@ -6683,7 +6685,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationCardCapabilityRequiredBody =>
-      'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Active les paiements par carte pour pouvoir lier ce trajet.';
+      'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Activez les paiements par carte pour pouvoir lier ce trajet.';
 
   @override
   String get negotiationCardCapabilityUnavailableBody =>
@@ -6698,7 +6700,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationCardCapabilityCountryMissingBody =>
-      'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Renseigne ton pays de résidence pour activer le paiement carte.';
+      'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Renseignez votre pays de résidence pour activer le paiement carte.';
 
   @override
   String get negotiationCardCapabilitySetCountryButton => 'Renseigner mon pays';
@@ -6714,11 +6716,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPublicCardOnlyWarning =>
-      'Ce colis n\'accepte que la carte : active le paiement carte pour le proposer.';
+      'Ce colis n\'accepte que la carte : activez le paiement carte pour le proposer.';
 
   @override
   String get requestPublicCardOnlyWarningCountryMissing =>
-      'Ce colis n\'accepte que la carte : renseigne ton pays de résidence pour activer le paiement carte.';
+      'Ce colis n\'accepte que la carte : renseignez votre pays de résidence pour activer le paiement carte.';
 
   @override
   String get requestPublicCardOnlyWarningCountryUnsupported =>
@@ -7062,7 +7064,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailGainMobileMoneyPaidNote =>
-      'Versé sur ton compte mobile money.';
+      'Versé sur votre compte mobile money.';
 
   @override
   String get bidDetailGainPaidPill => '● Versé';
@@ -7072,7 +7074,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailGainMobileMoneyPendingNote =>
-      'Versé sur ton compte mobile money à la livraison.';
+      'Versé sur votre compte mobile money à la livraison.';
 
   @override
   String get bidDetailGainMobileMoneyPill => '📱 mobile money';
@@ -7107,7 +7109,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailInsufficientBalanceHint =>
-      'Recharge ton portefeuille ou paie la commission directement par carte.';
+      'Rechargez votre portefeuille ou payez la commission directement par carte.';
 
   @override
   String get bidDetailTopupWallet => 'Recharger mon portefeuille';
@@ -7642,7 +7644,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ticketSenderAwaitingMobileMoneyHint =>
-      'Le voyageur a accepté : paie par mobile money depuis le bouton en bas pour sécuriser ton envoi.';
+      'Le voyageur a accepté : payez par mobile money depuis le bouton en bas pour sécuriser votre envoi.';
 
   @override
   String get ticketTravelerAwaitingPayment =>
@@ -7999,7 +8001,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get shipmentFilteredEmptyMessage =>
-      'Aucun envoi ne correspond à tes filtres';
+      'Aucun envoi ne correspond à vos filtres';
 
   @override
   String get shipmentLoadErrorTitle => 'Erreur de chargement';
@@ -8112,7 +8114,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidListWalletInsufficientHint =>
-      'Recharge ton portefeuille ou paie la commission directement par carte.';
+      'Rechargez votre portefeuille ou payez la commission directement par carte.';
 
   @override
   String get bidListWalletTopupButton => 'Recharger mon portefeuille';
@@ -8178,7 +8180,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String tripOwnerPublishedSubtitle(String dep, String arr) {
-    return 'Ton trajet $dep → $arr est en ligne.';
+    return 'Votre trajet $dep → $arr est en ligne.';
   }
 
   @override
@@ -8191,7 +8193,7 @@ class AppLocalizationsFr extends AppLocalizations {
     String date,
     String url,
   ) {
-    return '✈️ Je voyage $dep → $arr le $date avec de la place dans mes bagages !\nRéserve tes kilos sur Yadony 📦\n$url';
+    return '✈️ Je voyage $dep → $arr le $date avec de la place dans mes bagages !\nRéservez vos kilos sur Yadony 📦\n$url';
   }
 
   @override
@@ -8202,9 +8204,9 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count personnes ont vu ton trajet',
-      one: '$count personne a vu ton trajet',
-      zero: 'Personne n\'a encore vu ton trajet',
+      other: '$count personnes ont vu votre trajet',
+      one: '$count personne a vu votre trajet',
+      zero: 'Personne n\'a encore vu votre trajet',
     );
     return '$_temp0';
   }
@@ -8214,8 +8216,8 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count vues de ton affiche partagée',
-      one: '$count vue de ton affiche partagée',
+      other: '$count vues de votre affiche partagée',
+      one: '$count vue de votre affiche partagée',
     );
     return '$_temp0';
   }
@@ -8984,11 +8986,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paymentCardUnavailable =>
-      'Le paiement par carte est indisponible pour le moment. Réessaie dans un instant.';
+      'Le paiement par carte est indisponible pour le moment. Réessayez dans un instant.';
 
   @override
   String get paymentFailedGeneric =>
-      'Le paiement a échoué. Réessaie dans un instant.';
+      'Le paiement a échoué. Réessayez dans un instant.';
 
   @override
   String get paymentDeclined => 'Paiement refusé';
@@ -9130,24 +9132,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mobileMoneyAccountTitle => 'Versement mobile money';
 
   @override
-  String get mobileMoneyAccountLoadError => 'Impossible de charger ton compte';
+  String get mobileMoneyAccountLoadError =>
+      'Impossible de charger votre compte';
 
   @override
   String get mobileMoneyExplanationActivate =>
-      'Indique le numéro mobile money qui recevra tes versements. Il peut être différent de ton numéro Yadony.';
+      'Indiquez le numéro mobile money qui recevra vos versements. Il peut être différent de votre numéro Yadony.';
 
   @override
   String get mobileMoneyExplanationReactivateNoPrevious =>
-      'Ton versement est désactivé. Indique le numéro mobile money pour le réactiver.';
+      'Votre versement est désactivé. Indiquez le numéro mobile money pour le réactiver.';
 
   @override
   String mobileMoneyReactivateWithPrevious(String masked) {
-    return 'Ton versement est désactivé. Indique le numéro mobile money pour le réactiver (précédent : $masked).';
+    return 'Votre versement est désactivé. Indiquez le numéro mobile money pour le réactiver (précédent : $masked).';
   }
 
   @override
   String get mobileMoneyExplanationChangeNumber =>
-      'Indique le nouveau numéro de versement. Les réseaux seront à cocher de nouveau pour ce numéro.';
+      'Indiquez le nouveau numéro de versement. Les réseaux seront à cocher de nouveau pour ce numéro.';
 
   @override
   String get mobileMoneyButtonActivate => 'Activer le versement mobile money';
@@ -9162,14 +9165,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mobileMoneyPayoutNumberLabel => 'Numéro de versement';
 
   @override
-  String get mobileMoneyConfirmNumberLabel => 'Confirme le numéro';
+  String get mobileMoneyConfirmNumberLabel => 'Confirmez le numéro';
 
   @override
   String get mobileMoneyNetworksSectionTitle => 'Réseaux sur ce numéro';
 
   @override
   String get mobileMoneyNetworksUnavailable =>
-      'Le choix des réseaux n\'est pas encore disponible. Ton opérateur sera détecté automatiquement.';
+      'Le choix des réseaux n\'est pas encore disponible. Votre opérateur sera détecté automatiquement.';
 
   @override
   String get mobileMoneyNoNetworksAvailable =>
@@ -9177,11 +9180,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mobileMoneyPayerChoosesNetwork =>
-      'L\'expéditeur paie avec l\'un des réseaux cochés. Tu reçois sur ce même réseau.';
+      'L\'expéditeur paie avec l\'un des réseaux cochés. Vous recevez sur ce même réseau.';
 
   @override
   String get mobileMoneyConfirmToSeeNetworks =>
-      'Confirme ton numéro pour voir les réseaux disponibles.';
+      'Confirmez votre numéro pour voir les réseaux disponibles.';
 
   @override
   String get mobileMoneyAcceptedNetworksTitle => 'Réseaux acceptés';
@@ -9203,7 +9206,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mobileMoneyPayerChoosesOneNetwork =>
-      'L\'expéditeur choisit l\'un de ces réseaux pour payer. Tu reçois sur le même.';
+      'L\'expéditeur choisit l\'un de ces réseaux pour payer. Vous recevez sur le même.';
 
   @override
   String get mobileMoneyChangeNumberButton => 'Changer de numéro';
@@ -9222,7 +9225,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mobileMoneyPaymentConfirmedSecured =>
-      'Paiement confirmé, ton envoi est sécurisé';
+      'Paiement confirmé, votre envoi est sécurisé';
 
   @override
   String mobileMoneyTimeLeft(String time) {
@@ -9244,11 +9247,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mobileMoneyConfirmInWaveApp =>
-      'Tu confirmes dans l\'application Wave';
+      'Vous confirmez dans l\'application Wave';
 
   @override
   String mobileMoneyAcceptsAndReceives(String name, String networks) {
-    return '$name accepte $networks, et reçoit sur le réseau que tu choisis.';
+    return '$name accepte $networks, et reçoit sur le réseau que vous choisissez.';
   }
 
   @override
@@ -9261,7 +9264,7 @@ class AppLocalizationsFr extends AppLocalizations {
     String networks,
     String country,
   ) {
-    return '$name accepte $networks, qui n\'existent pas pour ton numéro ($country). Change de numéro payeur ou écris-lui depuis la conversation.';
+    return '$name accepte $networks, qui n\'existent pas pour votre numéro ($country). Changez de numéro payeur ou écrivez-lui depuis la conversation.';
   }
 
   @override
@@ -9271,23 +9274,23 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mobileMoneyFinishInWaveApp =>
-      'Termine le paiement dans l\'application Wave';
+      'Terminez le paiement dans l\'application Wave';
 
   @override
   String get mobileMoneyOpenWave => 'Ouvrir Wave';
 
   @override
   String mobileMoneyPinSent(String provider) {
-    return 'Valide le paiement sur ton téléphone : une demande de code PIN vient de t\'être envoyée par $provider.';
+    return 'Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par $provider.';
   }
 
   @override
   String get mobileMoneyPinSentUnknownProvider =>
-      'Valide le paiement sur ton téléphone : une demande de code PIN vient de t\'être envoyée par ton opérateur.';
+      'Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par votre opérateur.';
 
   @override
   String get mobileMoneyConfirmationAutomatic =>
-      'La confirmation est automatique, garde cet écran ouvert.';
+      'La confirmation est automatique, gardez cet écran ouvert.';
 
   @override
   String get mobileMoneyDepositRefusedFallback =>
@@ -9295,22 +9298,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mobileMoneyPhoneRequiredExplanation =>
-      'Ton compte Yadony n\'a pas de numéro de téléphone : indique le numéro mobile money qui paiera.';
+      'Votre compte Yadony n\'a pas de numéro de téléphone : indiquez le numéro mobile money qui paiera.';
 
   @override
   String get mobileMoneyPayerUnsupportedExplanation =>
-      'Ce numéro ne peut pas payer en mobile money pour ce colis. Indique le numéro mobile money qui paiera (Côte d\'Ivoire, Sénégal, Mali…).';
+      'Ce numéro ne peut pas payer en mobile money pour ce colis. Indiquez le numéro mobile money qui paiera (Côte d\'Ivoire, Sénégal, Mali…).';
 
   @override
   String get mobileMoneyPhoneThatWillPayLabel => 'Numéro qui paiera';
 
   @override
   String get mobileMoneyExpiredBid =>
-      'Délai dépassé. La demande a été annulée, refais une offre au voyageur.';
+      'Délai dépassé. La demande a été annulée, refaites une offre au voyageur.';
 
   @override
   String get mobileMoneyExpiredNegotiation =>
-      'Délai dépassé. Le fil est revenu à « à payer » : tu peux relancer le paiement ou changer de moyen de paiement depuis le fil.';
+      'Délai dépassé. Le fil est revenu à « à payer » : vous pouvez relancer le paiement ou changer de moyen de paiement depuis le fil.';
 
   @override
   String get mobileMoneyPaymentConfirmedTitle => 'Paiement confirmé';
@@ -9323,7 +9326,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletTopupMmValidateTitle =>
-      'Valide le paiement sur ton téléphone';
+      'Validez le paiement sur votre téléphone';
 
   @override
   String walletTopupMmRequestSent(String number, String provider) {
@@ -9332,7 +9335,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletTopupMmConfirmationAutomatic =>
-      'La confirmation est automatique, garde cet écran ouvert.';
+      'La confirmation est automatique, gardez cet écran ouvert.';
 
   @override
   String get walletTopupMmAmountLabel => 'Montant';
@@ -9377,7 +9380,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String walletShortfallCovered(String currency, String amount) {
-    return 'Ton portefeuille $currency en couvre $amount';
+    return 'Votre portefeuille $currency en couvre $amount';
   }
 
   @override
@@ -9387,7 +9390,7 @@ class AppLocalizationsFr extends AppLocalizations {
     String currency,
     String balance,
   ) {
-    return 'Il manque $missing, soit $converted, et ton portefeuille $currency n\'a que $balance';
+    return 'Il manque $missing, soit $converted, et votre portefeuille $currency n\'a que $balance';
   }
 
   @override
@@ -9401,7 +9404,7 @@ class AppLocalizationsFr extends AppLocalizations {
     String balance,
     String symbol,
   ) {
-    return 'Ton portefeuille $currency n\'a que $balance. Recharge en $symbol ou en $currency, ou paie par carte.';
+    return 'Votre portefeuille $currency n\'a que $balance. Rechargez en $symbol ou en $currency, ou payez par carte.';
   }
 
   @override
@@ -9415,12 +9418,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String walletTopupConfirmed(String amount, String currency, String provider) {
-    return '+$amount sur ton portefeuille $currency, confirmé par $provider.';
+    return '+$amount sur votre portefeuille $currency, confirmé par $provider.';
   }
 
   @override
   String get walletRefundAbsorbedByFees =>
-      'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour payer tes envois.';
+      'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour payer vos envois.';
 
   @override
   String get walletEmptyTransactions => 'Aucune transaction pour l\'instant';
@@ -9502,33 +9505,33 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletInfoBalanceDesc =>
-      'Le montant qui règle les frais de service de tes trajets payés en espèces. Tu peux aussi en demander le remboursement.';
+      'Le montant qui règle les frais de service de vos trajets payés en espèces. Vous pouvez aussi en demander le remboursement.';
 
   @override
   String get walletInfoTopUpDesc =>
-      'Ajoute des fonds par carte bancaire ou par mobile money, selon ta devise. Le crédit apparaît dès la validation du paiement.';
+      'Ajoutez des fonds par carte bancaire ou par mobile money, selon votre devise. Le crédit apparaît dès la validation du paiement.';
 
   @override
   String get walletInfoRefundDesc =>
-      'Demande le remboursement de ton solde vers ton moyen de paiement d\'origine.';
+      'Demandez le remboursement de votre solde vers votre moyen de paiement d\'origine.';
 
   @override
   String get walletInfoRequestsDesc =>
-      'Retrouve le suivi de tes demandes de remboursement envoyées.';
+      'Retrouvez le suivi de vos demandes de remboursement envoyées.';
 
   @override
   String get walletInfoMultiCurrencyTitle => 'Plusieurs devises';
 
   @override
   String get walletInfoMultiCurrencyDesc =>
-      'Ton argent reste dans la devise où il a été reçu. Le total en haut est une estimation au taux du jour, il ne convertit rien.';
+      'Votre argent reste dans la devise où il a été reçu. Le total en haut est une estimation au taux du jour, il ne convertit rien.';
 
   @override
   String get walletInfoChangeCurrencyTitle => 'Changer de devise';
 
   @override
   String get walletInfoChangeCurrencyDesc =>
-      'La devise active se change dans Préférences tant que ton solde total est à zéro. Sinon, vide d\'abord tes portefeuilles.';
+      'La devise active se change dans Préférences tant que votre solde total est à zéro. Sinon, videz d\'abord vos portefeuilles.';
 
   @override
   String get walletTopupMethodCard => 'Carte bancaire';
@@ -9541,7 +9544,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletTopupSuccessSubtitle =>
-      'Ton solde sera crédité dans un instant.';
+      'Votre solde sera crédité dans un instant.';
 
   @override
   String get walletTopupSuccessCta => 'Voir mon solde';
@@ -9556,7 +9559,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String walletTopupNoDecimalsNotice(String symbol) {
-    return 'Le $symbol ne connaît pas les centimes : indique un montant entier.';
+    return 'Le $symbol ne connaît pas les centimes : indiquez un montant entier.';
   }
 
   @override
@@ -9565,12 +9568,12 @@ class AppLocalizationsFr extends AppLocalizations {
     String amount,
     String active,
   ) {
-    return 'Ton portefeuille $currency sera crédité de $amount. Ton portefeuille $active ne bouge pas.';
+    return 'Votre portefeuille $currency sera crédité de $amount. Votre portefeuille $active ne bouge pas.';
   }
 
   @override
   String walletTopupCreditedPending(String currency, String active) {
-    return 'Ton portefeuille $currency sera crédité du montant que tu saisis. Ton portefeuille $active ne bouge pas.';
+    return 'Votre portefeuille $currency sera crédité du montant que vous saisissez. Votre portefeuille $active ne bouge pas.';
   }
 
   @override
@@ -9628,7 +9631,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletTopupMethodPhoneHint =>
-      'Saisis ton numéro mobile money : tes opérateurs s\'affichent ici.';
+      'Saisissez votre numéro mobile money : vos opérateurs s\'affichent ici.';
 
   @override
   String get walletTopupMethodNoNetworks =>
@@ -9694,7 +9697,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletRefundCurrencyHint =>
-      'Une demande par devise. Tu pourras en faire une autre ensuite.';
+      'Une demande par devise. Vous pourrez en faire une autre ensuite.';
 
   @override
   String get walletRefundFeeFree => 'Frais de remboursement : Offerts';
@@ -9711,7 +9714,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String walletRefundCurrencyChoiceSubtitle(String amount) {
-    return 'tu reçois $amount';
+    return 'vous recevez $amount';
   }
 
   @override
@@ -9780,7 +9783,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get payoutBrowserLaunchFailed =>
-      'Impossible d\'ouvrir la page de configuration. Vérifie qu\'un navigateur est installé.';
+      'Impossible d\'ouvrir la page de configuration. Vérifiez qu\'un navigateur est installé.';
 
   @override
   String get payoutPendingBanner =>
@@ -9943,15 +9946,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get connectOnboardingTitle => 'Compte Stripe Connect';
 
   @override
-  String get connectOnboardingHeroTitle => 'Complète ton\ncompte Stripe';
+  String get connectOnboardingHeroTitle => 'Complétez votre\ncompte Stripe';
 
   @override
   String get connectOnboardingHeroSubtitle =>
-      'Pour publier ton trajet et recevoir des paiements, complète ton compte Stripe. Cela prend environ 5 minutes.';
+      'Pour publier votre trajet et recevoir des paiements, complétez votre compte Stripe. Cela prend environ 5 minutes.';
 
   @override
   String get connectOnboardingSecurityNotice =>
-      'Tes données sont chiffrées et gérées directement par Stripe : Yadony n\'a jamais accès à tes informations bancaires.';
+      'Vos données sont chiffrées et gérées directement par Stripe : Yadony n\'a jamais accès à vos informations bancaires.';
 
   @override
   String get connectOnboardingCta => 'Compléter mon compte';
@@ -9968,7 +9971,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get connectOnboardingBenefitTransferSubtitle =>
-      'Reçu sur ton compte après chaque livraison confirmée';
+      'Reçu sur votre compte après chaque livraison confirmée';
 
   @override
   String get connectOnboardingBenefitSecureTitle => 'Sécurisé par Stripe';
@@ -10012,15 +10015,15 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get chatBlockedDuplicate => 'Tu viens d\'envoyer ce message.';
+  String get chatBlockedDuplicate => 'Vous venez d\'envoyer ce message.';
 
   @override
   String get chatBlockedRate =>
-      'Tu envoies trop de messages, patiente un instant.';
+      'Vous envoyez trop de messages, patientez un instant.';
 
   @override
   String get chatBlockedContact =>
-      'Pour ta sécurité, garde les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.';
+      'Pour votre sécurité, gardez les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.';
 
   @override
   String get chatBlockedBanking =>
@@ -10032,7 +10035,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatBlockedProfanity =>
-      'Reste courtois : ce message contient des termes interdits.';
+      'Restez courtois : ce message contient des termes interdits.';
 
   @override
   String get chatDeleteConversationTitle => 'Supprimer la conversation';
@@ -10738,7 +10741,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ratingAuthorFallbackName => 'Utilisateur Yadony';
 
   @override
-  String get ratingEmptyTitle => 'Tu n\'as pas encore reçu d\'avis';
+  String get ratingEmptyTitle => 'Vous n\'avez pas encore reçu d\'avis';
 
   @override
   String get ratingEmptyDescription =>
@@ -10859,7 +10862,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get kycCameraBlockedBody =>
-      'La vérification d\'identité a besoin de la caméra pour photographier ta pièce et ton visage. Autorise la caméra pour Yadony dans les réglages de ton téléphone, puis reviens ici : la vérification reprendra.';
+      'La vérification d\'identité a besoin de la caméra pour photographier votre pièce et votre visage. Autorisez la caméra pour Yadony dans les réglages de votre téléphone, puis revenez ici : la vérification reprendra.';
 
   @override
   String get kycVerificationTitle => 'Vérification d\'identité';
@@ -11246,7 +11249,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profileCommunityJoinSubtitle =>
-      'Retrouve les espaces officiels Yadony.';
+      'Retrouvez les espaces officiels Yadony.';
 
   @override
   String get profileCommunityActionJoin => 'Rejoindre';
@@ -11352,7 +11355,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get communityTutorialsSubtitle =>
-      'Apprends les parcours essentiels de Yadony.';
+      'Apprenez les parcours essentiels de Yadony.';
 
   @override
   String get profileLanguageFrench => 'Français';
@@ -11575,7 +11578,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get shipmentsHistoryEmptyDescription =>
-      'Tes livraisons terminées s\'afficheront ici.';
+      'Vos livraisons terminées s\'afficheront ici.';
 
   @override
   String shipmentsHistoryDaysAgo(int count) {
@@ -11599,7 +11602,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqFindAnswerSubtitle =>
-      'Recherche une réponse ou parcours les catégories.';
+      'Recherchez une réponse ou parcourez les catégories.';
 
   @override
   String get faqSearchHint => 'Rechercher dans l’aide';
@@ -11609,13 +11612,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqEmptyResultsDescription =>
-      'Essaie avec d\'autres mots-clés ou contacte notre équipe.';
+      'Essayez avec d\'autres mots-clés ou contactez notre équipe.';
 
   @override
-  String get faqContactCardTitle => 'Tu n’as pas trouvé ta réponse ?';
+  String get faqContactCardTitle => 'Vous n’avez pas trouvé votre réponse ?';
 
   @override
-  String get faqContactCardSubtitle => 'Notre équipe est là pour t’aider.';
+  String get faqContactCardSubtitle => 'Notre équipe est là pour vous aider.';
 
   @override
   String get faqAccountTitle => 'Compte & identité';
@@ -11661,7 +11664,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqAccountWithoutIdentityA =>
-      'Tu peux explorer les annonces sans vérifier ton identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.';
+      'Vous pouvez explorer les annonces sans vérifier votre identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.';
 
   @override
   String get faqAnnouncementsPublishTripQ =>
@@ -11669,7 +11672,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqAnnouncementsPublishTripA =>
-      'Depuis Accueil ou Activités, choisis \"Publier un trajet\". Renseigne la ville de départ, la destination, la date et la capacité disponible.';
+      'Depuis Accueil ou Activités, choisissez \"Publier un trajet\". Renseignez la ville de départ, la destination, la date et la capacité disponible.';
 
   @override
   String get faqAnnouncementsPublishRequestQ =>
@@ -11677,7 +11680,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqAnnouncementsPublishRequestA =>
-      'Depuis Accueil ou Activités, choisis \"Publier un colis\". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.';
+      'Depuis Accueil ou Activités, choisissez \"Publier un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.';
 
   @override
   String get faqAnnouncementsEditRequestQ =>
@@ -11685,14 +11688,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqAnnouncementsEditRequestA =>
-      'Tu peux modifier une demande tant qu\'aucune offre n\'a été acceptée. Après acceptation, contacte le support si une information importante doit être corrigée.';
+      'Vous pouvez modifier une demande tant qu\'aucune offre n\'a été acceptée. Après acceptation, contactez le support si une information importante doit être corrigée.';
 
   @override
   String get faqPaymentsPaymentTimingQ => 'Quand suis-je débité ?';
 
   @override
   String get faqPaymentsPaymentTimingA =>
-      'Pour un paiement par carte, les fonds sont sécurisés lors de l\'acceptation puis libérés selon l\'avancement de la livraison. Pour les espèces et le Mobile Money, suis les indications affichées au moment de choisir le moyen de paiement.';
+      'Pour un paiement par carte, les fonds sont sécurisés lors de l\'acceptation puis libérés selon l\'avancement de la livraison. Pour les espèces et le Mobile Money, suivez les indications affichées au moment de choisir le moyen de paiement.';
 
   @override
   String get faqPaymentsRefundQ =>
@@ -11717,7 +11720,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqPaymentsPaymentSecurityA =>
-      'Les paiements en ligne sont traités par les prestataires indiqués dans l\'application. Yadony ne stocke pas les données complètes de ta carte. Un paiement en espèces n\'est pas placé sous séquestre : ne paie jamais en dehors du parcours convenu dans l\'application.';
+      'Les paiements en ligne sont traités par les prestataires indiqués dans l\'application. Yadony ne stocke pas les données complètes de votre carte. Un paiement en espèces n\'est pas placé sous séquestre : ne payez jamais en dehors du parcours convenu dans l\'application.';
 
   @override
   String get faqDeliveryHandoverQrQ => 'Comment fonctionne le QR de remise ?';
@@ -11732,7 +11735,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqDeliveryParcelMissingA =>
-      'Ouvre un litige depuis \"Mes litiges\" dès que tu constates le problème. Ajoute les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.';
+      'Ouvrez un litige depuis \"Mes litiges\" dès que vous constatez le problème. Ajoutez les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.';
 
   @override
   String get faqDeliveryDeliveryDelayQ =>
@@ -11740,7 +11743,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqDeliveryDeliveryDelayA =>
-      'Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifie toujours les informations du trajet avant d\'accepter une offre.';
+      'Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifiez toujours les informations du trajet avant d\'accepter une offre.';
 
   @override
   String get faqSafetyLostParcelQ =>
@@ -11757,7 +11760,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqSafetyDisputeA =>
-      'Ouvre \"Mes litiges\" depuis ton profil et fournis les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et te tient informé dans l\'application.';
+      'Ouvrez \"Mes litiges\" depuis votre profil et fournissez les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et vous tient informé dans l\'application.';
 
   @override
   String get faqSafetyPersonalDataQ =>
@@ -11765,14 +11768,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqSafetyPersonalDataA =>
-      'Yadony applique des mesures de sécurité pour protéger les données et ne vend pas tes informations personnelles. Tu peux consulter la politique de confidentialité et gérer tes préférences dans Paramètres.';
+      'Yadony applique des mesures de sécurité pour protéger les données et ne vend pas vos informations personnelles. Vous pouvez consulter la politique de confidentialité et gérer vos préférences dans Paramètres.';
 
   @override
   String get faqSafetyDeleteAccountQ => 'Comment supprimer mon compte ?';
 
   @override
   String get faqSafetyDeleteAccountA =>
-      'Dans Paramètres → Données et compte → Supprimer mon compte, tu peux choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.';
+      'Dans Paramètres → Données et compte → Supprimer mon compte, vous pouvez choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.';
 
   @override
   String get helpTutorialScreenTitle => 'Tutoriel vidéo';
@@ -11797,7 +11800,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get helpTutorialPlaybackErrorDescription =>
-      'Vérifie ta connexion ou ouvre la vidéo directement dans YouTube.';
+      'Vérifiez votre connexion ou ouvrez la vidéo directement dans YouTube.';
 
   @override
   String get helpTutorialOpenInYoutubeButton => 'Ouvrir dans YouTube';
@@ -12059,8 +12062,8 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Tu es connecté sur $count appareils',
-      one: 'Tu es connecté sur $count appareil',
+      other: 'Vous êtes connecté sur $count appareils',
+      one: 'Vous êtes connecté sur $count appareil',
     );
     return '$_temp0';
   }
@@ -12084,7 +12087,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get legalPageLoadError => 'Impossible de charger la page';
 
   @override
-  String get legalPageLoadErrorHint => 'Vérifie ta connexion et réessaie.';
+  String get legalPageLoadErrorHint => 'Vérifiez votre connexion et réessayez.';
 
   @override
   String get diagnosticsSectionApplication => 'APPLICATION';
@@ -12133,7 +12136,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dataSettingsExportStartedMessage =>
-      'Export lancé. Tu recevras un e-mail avec le lien de téléchargement sous 72h.';
+      'Export lancé. Vous recevrez un e-mail avec le lien de téléchargement sous 72h.';
 
   @override
   String get pinConfirmSheetTitle => 'Confirmez votre code PIN';
@@ -12157,7 +12160,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacySaveFailedMessage =>
-      'Réglage non enregistré, vérifie ta connexion.';
+      'Réglage non enregistré, vérifiez votre connexion.';
 
   @override
   String get privacySectionWhoCanContact => 'QUI PEUT ME CONTACTER';
@@ -12167,14 +12170,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyKycOnlySubtitle =>
-      'Seuls les utilisateurs ayant validé leur identité peuvent t\'envoyer une offre';
+      'Seuls les utilisateurs ayant validé leur identité peuvent vous envoyer une offre';
 
   @override
   String get privacyHidePhoneLabel => 'Masquer mon numéro';
 
   @override
   String get privacyHidePhoneSubtitle =>
-      'Ton numéro n\'est jamais communiqué, même après une offre acceptée. Tes échanges passent par la messagerie Yadony.';
+      'Votre numéro n\'est jamais communiqué, même après une offre acceptée. Vos échanges passent par la messagerie Yadony.';
 
   @override
   String get privacySectionBlocking => 'BLOCAGE';
@@ -12184,43 +12187,43 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyDataFooterNote =>
-      'Pour télécharger tes données ou supprimer ton compte, va dans Paramètres › Données.';
+      'Pour télécharger vos données ou supprimer votre compte, allez dans Paramètres › Données.';
 
   @override
-  String get privacyBannerPhoneHiddenTitle => 'Ton numéro reste masqué';
+  String get privacyBannerPhoneHiddenTitle => 'Votre numéro reste masqué';
 
   @override
-  String get privacyBannerPhoneProtectedTitle => 'Ton numéro est protégé';
+  String get privacyBannerPhoneProtectedTitle => 'Votre numéro est protégé';
 
   @override
   String get privacyBannerPhoneHiddenBody =>
-      'Ton numéro n\'est communiqué à personne, même une fois l\'accord conclu. Tes partenaires te joignent par la messagerie Yadony, et tu peux toujours appeler le leur.';
+      'Votre numéro n\'est communiqué à personne, même une fois l\'accord conclu. Vos partenaires vous joignent par la messagerie Yadony, et vous pouvez toujours appeler le leur.';
 
   @override
   String get privacyBannerPhoneProtectedBody =>
-      'Personne ne voit ton numéro tant qu\'une offre n\'est pas acceptée. Une fois l\'accord conclu, toi et ton partenaire échangez vos numéros pour organiser la remise.';
+      'Personne ne voit votre numéro tant qu\'une offre n\'est pas acceptée. Une fois l\'accord conclu, vous et votre partenaire échangez vos numéros pour organiser la remise.';
 
   @override
   String get privacyUnverifiedExposureNotice =>
-      'Les profils non vérifiés peuvent te faire des demandes. Yadony n\'est pas responsable des difficultés rencontrées avec eux.';
+      'Les profils non vérifiés peuvent vous faire des demandes. Yadony n\'est pas responsable des difficultés rencontrées avec eux.';
 
   @override
   String get privacyAnalyticsConsentLabel => 'Statistiques d\'utilisation';
 
   @override
   String get privacyAnalyticsConsentSubtitle =>
-      'Mesure anonyme de l\'usage pour améliorer l\'app. Jamais tes paiements ni ton identité.';
+      'Mesure anonyme de l\'usage pour améliorer l\'app. Jamais vos paiements ni votre identité.';
 
   @override
   String get blockedUsersTitle => 'Utilisateurs bloqués';
 
   @override
   String get blockedUsersCardSubtitle =>
-      'Gérer les personnes que tu as bloquées';
+      'Gérer les personnes que vous avez bloquées';
 
   @override
   String get blockedUsersListIntro =>
-      'Une personne bloquée ne voit plus tes annonces et ne peut plus t\'envoyer d\'offre. Tu ne vois plus les siennes non plus.';
+      'Une personne bloquée ne voit plus vos annonces et ne peut plus vous envoyer d\'offre. Vous ne voyez plus les siennes non plus.';
 
   @override
   String get blockedUsersToday => 'Bloqué aujourd\'hui';
@@ -12259,11 +12262,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get blockedUsersUnblock => 'Débloquer';
 
   @override
-  String get blockedUsersEmptyTitle => 'Tu n\'as bloqué personne';
+  String get blockedUsersEmptyTitle => 'Vous n\'avez bloqué personne';
 
   @override
   String get blockedUsersEmptySubtitle =>
-      'Les personnes que tu bloques apparaîtront ici.';
+      'Les personnes que vous bloquez apparaîtront ici.';
 
   @override
   String get blockedUsersLoadError =>
@@ -12271,7 +12274,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get blockConfirmError =>
-      'Une erreur est survenue. Réessaie plus tard.';
+      'Une erreur est survenue. Réessayez plus tard.';
 
   @override
   String get settingsSyncFailed => 'Impossible de synchroniser. Réessayez.';
@@ -12418,7 +12421,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyUnverifiedWarningConsequence1 =>
-      'Tous les utilisateurs pourront t\'envoyer une demande, qu\'ils aient vérifié leur identité ou non.';
+      'Tous les utilisateurs pourront vous envoyer une demande, qu\'ils aient vérifié leur identité ou non.';
 
   @override
   String get privacyUnverifiedWarningConsequence2 =>
@@ -12426,11 +12429,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyUnverifiedWarningConsequence3 =>
-      'Yadony n\'est pas responsable des difficultés que tu pourrais rencontrer avec un profil non vérifié.';
+      'Yadony n\'est pas responsable des difficultés que vous pourriez rencontrer avec un profil non vérifié.';
 
   @override
   String get privacyUnverifiedWarningReversible =>
-      'Tu peux réactiver ce réglage à tout moment. Les demandes déjà reçues ne sont pas affectées.';
+      'Vous pouvez réactiver ce réglage à tout moment. Les demandes déjà reçues ne sont pas affectées.';
 
   @override
   String get privacyUnverifiedWarningCheckbox =>
@@ -12499,7 +12502,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationSettingsPackageMatchSubtitle =>
-      'Quand un colis correspond à un de tes trajets';
+      'Quand un colis correspond à un de vos trajets';
 
   @override
   String get prefsTitle => 'Préférences';
@@ -13322,15 +13325,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get corridorAlertEmptyDescriptionPackages =>
-      'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton trajet.';
+      'Créez une alerte pour être prévenu dès qu\'un colis apparaît sur votre trajet.';
 
   @override
   String get corridorAlertEmptyDescriptionTrips =>
-      'Crée une alerte pour être prévenu dès qu\'un voyageur propose ton trajet.';
+      'Créez une alerte pour être prévenu dès qu\'un voyageur propose votre trajet.';
 
   @override
   String get corridorAlertEmptyDescriptionAll =>
-      'Crée une alerte pour être prévenu dès qu\'un voyageur ou un colis apparaît sur ton trajet.';
+      'Créez une alerte pour être prévenu dès qu\'un voyageur ou un colis apparaît sur votre trajet.';
 
   @override
   String get corridorAlertEmptyTitle => 'Aucune alerte de trajet';
@@ -13962,14 +13965,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get addressesEmptyPickupDescription =>
-      'Ajoute l\'adresse où tu souhaites recevoir les colis des expéditeurs.';
+      'Ajoutez l\'adresse où vous souhaitez recevoir les colis des expéditeurs.';
 
   @override
   String get addressesEmptyDeliveryTitle => 'Aucune adresse de livraison';
 
   @override
   String get addressesEmptyDeliveryDescription =>
-      'Ajoute les adresses où tu déposes habituellement les colis.';
+      'Ajoutez les adresses où vous déposez habituellement les colis.';
 
   @override
   String get addressesAddButtonLabel => 'Ajouter une adresse';
@@ -13982,7 +13985,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String addressesDeleteConfirmMessage(String label) {
-    return 'Es-tu sûr de vouloir supprimer \"$label\" ? Cette action est irréversible.';
+    return 'Êtes-vous sûr de vouloir supprimer \"$label\" ? Cette action est irréversible.';
   }
 
   @override
@@ -14045,7 +14048,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pickupAddressDefaultSubtitle =>
-      'Pré-remplie lors de tes prochaines demandes';
+      'Pré-remplie lors de vos prochaines demandes';
 
   @override
   String get deliveryAddressChipFamily => 'Famille';
@@ -14111,7 +14114,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deliveryAddressDefaultSubtitle =>
-      'Pré-remplie lors de tes prochaines annonces';
+      'Pré-remplie lors de vos prochaines annonces';
 
   @override
   String get countryNameGn => 'Guinée';
@@ -14124,14 +14127,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recipientEmptyDescription =>
-      'Ajoute tes proches en Afrique pour envoyer en 1 tap.';
+      'Ajoutez vos proches en Afrique pour envoyer en 1 tap.';
 
   @override
   String get recipientNoResultsLabel => 'Aucun résultat';
 
   @override
   String get recipientSearchNoResultsDescription =>
-      'Aucun destinataire ne correspond à ta recherche.';
+      'Aucun destinataire ne correspond à votre recherche.';
 
   @override
   String get recipientSearchHint => 'Rechercher un destinataire…';
@@ -14147,7 +14150,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String recipientDeleteConfirmMessage(String name) {
-    return 'Es-tu sûr de vouloir supprimer \"$name\" ? Cette action est irréversible.';
+    return 'Êtes-vous sûr de vouloir supprimer \"$name\" ? Cette action est irréversible.';
   }
 
   @override
@@ -14181,7 +14184,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recipientDefaultToggleSubtitle =>
-      'Présélectionné lors de tes prochains envois';
+      'Présélectionné lors de vos prochains envois';
 
   @override
   String get recipientImportContactsAction => 'Choisir dans mes contacts';
@@ -14206,7 +14209,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recipientSectionSaveToggleSubtitle =>
-      'Sera ajouté à « Mes destinataires » pour tes prochains envois';
+      'Sera ajouté à « Mes destinataires » pour vos prochains envois';
 
   @override
   String get priceGridScreenTitle => 'Ma grille de prix';
@@ -14317,8 +14320,8 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '🎁 Tu as $count bons de -$percent% sur tes prochaines commissions',
-      one: '🎁 Tu as un bon de -$percent% sur ta prochaine commission',
+          '🎁 Vous avez $count bons de -$percent% sur vos prochaines commissions',
+      one: '🎁 Vous avez un bon de -$percent% sur votre prochaine commission',
     );
     return '$_temp0';
   }
@@ -14328,8 +14331,9 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '🎁 Tu as $count bons de réduction sur tes prochaines commissions',
-      one: '🎁 Tu as un bon de réduction sur ta prochaine commission',
+      other:
+          '🎁 Vous avez $count bons de réduction sur vos prochaines commissions',
+      one: '🎁 Vous avez un bon de réduction sur votre prochaine commission',
     );
     return '$_temp0';
   }
@@ -14340,24 +14344,24 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get referralHeroTitleDefault => 'Invite tes proches';
+  String get referralHeroTitleDefault => 'Invitez vos proches';
 
   @override
   String referralHeroTitlePercent(int percent) {
-    return 'Invite et gagne -$percent%';
+    return 'Invitez et gagnez -$percent%';
   }
 
   @override
   String get referralHeroSubtitleDefault =>
-      'Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.';
+      'Vous recevez un bon de réduction sur votre prochaine commission dès la première livraison de votre invité.';
 
   @override
   String referralHeroSubtitlePercent(int percent) {
-    return 'Tu reçois un bon de -$percent% sur ta prochaine commission dès la première livraison de ton invité.';
+    return 'Vous recevez un bon de -$percent% sur votre prochaine commission dès la première livraison de votre invité.';
   }
 
   @override
-  String get referralCodeBoxLabel => 'Ton code de parrainage';
+  String get referralCodeBoxLabel => 'Votre code de parrainage';
 
   @override
   String get referralCopyCodeSemantics => 'Copier le code de parrainage';
@@ -14370,7 +14374,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String referralShareMessage(String code, String url) {
-    return 'Salut ! Utilise mon code Yadony : $code pour t\'inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. $url';
+    return 'Bonjour ! Utilisez mon code Yadony : $code pour vous inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. $url';
   }
 
   @override
@@ -14378,7 +14382,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get referralRedeemSubtitle =>
-      'Tu as été invité par un ami ? Entre son code pour qu\'il soit récompensé à ta première livraison.';
+      'Vous avez été invité par un ami ? Entrez son code pour qu\'il soit récompensé à votre première livraison.';
 
   @override
   String get referralRedeemCodeFieldLabel => 'Code parrain';
@@ -14400,7 +14404,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorReportCannotReportSelfMessage =>
-      'Tu ne peux pas te signaler toi-même.';
+      'Vous ne pouvez pas vous signaler vous-même.';
 
   @override
   String get errorReportTooManyPhotosTitle => 'Trop de captures';
@@ -14414,7 +14418,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorReportPhotoNotOwnedMessage =>
-      'Une des captures ne t\'appartient pas.';
+      'Une des captures ne vous appartient pas.';
 
   @override
   String get dsDiscardTitle => 'Quitter sans enregistrer ?';
@@ -14663,7 +14667,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get addressNotLocatedStatus =>
-      'Adresse non localisée, tu peux la saisir à la main';
+      'Adresse non localisée, vous pouvez la saisir à la main';
 
   @override
   String get dsEmojiTakeoff => 'Décollage';
@@ -14679,7 +14683,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appUpdateMessage =>
-      'Cette version de l\'application n\'est plus prise en charge. Mets-la à jour pour continuer à utiliser Yadony.';
+      'Cette version de l\'application n\'est plus prise en charge. Mettez-la à jour pour continuer à utiliser Yadony.';
 
   @override
   String get appUpdateButton => 'Mettre à jour maintenant';
@@ -14697,7 +14701,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviTitle => 'Suivi';
 
   @override
-  String get suiviModeTabsLabel => 'Que veux-tu faire ?';
+  String get suiviModeTabsLabel => 'Que voulez-vous faire ?';
 
   @override
   String get suiviModeValidate => 'Valider une étape';
@@ -14707,11 +14711,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviValidateCameraHint =>
-      'Scanne le QR d\'un colis de ton trajet.\nL\'étape suivante est validée toute seule.';
+      'Scannez le QR d\'un colis de votre trajet.\nL\'étape suivante est validée toute seule.';
 
   @override
   String get suiviTrackCameraHint =>
-      'Scanne un QR pour voir où en est le colis.\nRien n\'est validé dans ce mode.';
+      'Scannez un QR pour voir où en est le colis.\nRien n\'est validé dans ce mode.';
 
   @override
   String get suiviCameraPaused => 'Caméra en pause';
@@ -14743,7 +14747,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviChangeTripSemantics => 'Changer de trajet';
 
   @override
-  String get suiviOnlyTrip => 'C\'est ton seul trajet en cours ou à venir.';
+  String get suiviOnlyTrip => 'C\'est votre seul trajet en cours ou à venir.';
 
   @override
   String get suiviTripsInProgress => 'En cours';
@@ -14827,7 +14831,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String suiviOtherTripBody(String parcel, String date) {
-    return 'Le colis de $parcel voyage sur ton trajet du $date :';
+    return 'Le colis de $parcel voyage sur votre trajet du $date :';
   }
 
   @override
@@ -14837,11 +14841,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviScanAnother => 'Scanner un autre colis';
 
   @override
-  String get suiviUnknownParcelTitle => 'Ce colis n\'est pas sur tes trajets';
+  String get suiviUnknownParcelTitle => 'Ce colis n\'est pas sur vos trajets';
 
   @override
   String get suiviUnknownParcelBody =>
-      'Colis d\'un autre voyageur : impossible de valider ses étapes, tu peux seulement suivre son parcours.';
+      'Colis d\'un autre voyageur : impossible de valider ses étapes, vous pouvez seulement suivre son parcours.';
 
   @override
   String get suiviFollowParcel => 'Suivre ce colis';
@@ -14856,7 +14860,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviNothingToValidateBody =>
-      'Tes colis apparaîtront ici dès qu\'un expéditeur te remettra son colis.';
+      'Vos colis apparaîtront ici dès qu\'un expéditeur vous remettra son colis.';
 
   @override
   String get suiviTrackSubmit => 'Suivre';
@@ -14871,7 +14875,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviNoShipments => 'Aucun envoi en cours.';
 
   @override
-  String get suiviShipmentsError => 'Impossible de charger tes envois.';
+  String get suiviShipmentsError => 'Impossible de charger vos envois.';
 
   @override
   String suiviShipmentStatus(String status) {
@@ -14886,7 +14890,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get qrCameraUnavailable =>
-      'Caméra indisponible. Autorise l\'accès à la caméra dans les réglages du téléphone.';
+      'Caméra indisponible. Autorisez l\'accès à la caméra dans les réglages du téléphone.';
 
   @override
   String suiviPositionSaved(String label) {
@@ -14940,14 +14944,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviNumberPhotoNotice =>
-      'Sans QR code, une photo du colis est obligatoire. Ta position est enregistrée avec l\'étape.';
+      'Sans QR code, une photo du colis est obligatoire. Votre position est enregistrée avec l\'étape.';
 
   @override
   String get suiviForceStep => 'Forcer une étape';
 
   @override
   String get suiviStepModeHelp =>
-      'Chaque scan valide l\'étape suivante du colis. Force une étape seulement pour rattraper un oubli.';
+      'Chaque scan valide l\'étape suivante du colis. Forcez une étape seulement pour rattraper un oubli.';
 
   @override
   String get suiviStepModeLabel => 'Étape : ';
@@ -14963,14 +14967,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviNumberNotFound =>
-      'Numéro introuvable. Vérifie-le et réessaie.';
+      'Numéro introuvable. Vérifiez-le et réessayez.';
 
   @override
-  String get trackingNotLinkedTitle => 'Ce colis n\'est pas lié à ton compte';
+  String get trackingNotLinkedTitle => 'Ce colis n\'est pas lié à votre compte';
 
   @override
   String get trackingNotLinkedBody =>
-      'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demande le lien de suivi à l\'expéditeur.';
+      'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demandez le lien de suivi à l\'expéditeur.';
 
   @override
   String suiviStepValidatedToast(String step, String parcel) {
@@ -15037,16 +15041,16 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String suiviForcedCameraHint(String step) {
     String _temp0 = intl.Intl.selectLogic(step, {
-      'DEPART': 'Départ forcé : scanne le colis à valider.',
-      'TRANSIT': 'Transit facultatif : scanne le colis à valider.',
-      'other': 'Arrivée forcée : scanne le colis à remettre.',
+      'DEPART': 'Départ forcé : scannez le colis à valider.',
+      'TRANSIT': 'Transit facultatif : scannez le colis à valider.',
+      'other': 'Arrivée forcée : scannez le colis à remettre.',
     });
     return '$_temp0\nL\'étape repasse ensuite en automatique.';
   }
 
   @override
   String suiviStepNeedsDepart(String parcel) {
-    return 'Valide d\'abord la récupération de $parcel.';
+    return 'Validez d\'abord la récupération de $parcel.';
   }
 
   @override
@@ -15179,7 +15183,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationMakeOfferSelectTripHint =>
-      'Choisis un de tes trajets ci-dessus pour envoyer l\'offre';
+      'Choisissez un de vos trajets ci-dessus pour envoyer l\'offre';
 
   @override
   String get errorPaymentMethodNoneAvailableTitle =>
@@ -15187,7 +15191,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPaymentMethodNoneAvailableMessage =>
-      'L\'expéditeur accepte plusieurs modes de paiement, mais aucun n\'est prêt sur ton compte : configure ton compte de paiement par carte, ou recharge ton portefeuille pour couvrir la commission en espèces.';
+      'L\'expéditeur accepte plusieurs modes de paiement, mais aucun n\'est prêt sur votre compte : configurez votre compte de paiement par carte, ou rechargez votre portefeuille pour couvrir la commission en espèces.';
 
   @override
   String get errorCashFundsRequiredTitle =>
@@ -15195,7 +15199,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCashFundsRequiredMessage =>
-      'Pour accepter un paiement en espèces, ton portefeuille doit couvrir la commission. Recharge-le, puis réessaie.';
+      'Pour accepter un paiement en espèces, votre portefeuille doit couvrir la commission. Rechargez-le, puis réessayez.';
 
   @override
   String suiviQrRecognized(String parcel) {
@@ -15247,7 +15251,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishOtherContentPrecisionLabel =>
-      'Précise ce que tu acceptes en « Autre »';
+      'Précisez ce que vous acceptez en « Autre »';
 
   @override
   String get tripPublishOtherContentPrecisionHint =>
@@ -15255,7 +15259,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishOtherContentPrecisionRequired =>
-      'Tu as coché « Autre » : précise ce que tu acceptes avant de publier.';
+      'Vous avez coché « Autre » : précisez ce que vous acceptez avant de publier.';
 
   @override
   String get profilePublicVerificationsSectionLabel => 'VÉRIFICATIONS';
@@ -16049,18 +16053,18 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get negotiationCommissionSettledTitle => 'Ce colis est à toi !';
+  String get negotiationCommissionSettledTitle => 'Ce colis est à vous !';
 
   @override
   String get negotiationCommissionSettledSubtitle =>
-      'La commission Yadony est réglée et l\'accord est scellé. Retrouve l\'envoi et les prochaines étapes dans la négociation.';
+      'La commission Yadony est réglée et l\'accord est scellé. Retrouvez l\'envoi et les prochaines étapes dans la négociation.';
 
   @override
   String get bidAcceptedSuccessTitle => 'Demande acceptée !';
 
   @override
   String get bidAcceptedSuccessSubtitle =>
-      'Le colis est réservé sur ton trajet. Ouvre la demande pour voir son détail et les prochaines étapes avec l\'expéditeur.';
+      'Le colis est réservé sur votre trajet. Ouvrez la demande pour voir son détail et les prochaines étapes avec l\'expéditeur.';
 
   @override
   String get bidAcceptedSuccessCta => 'Voir la demande';
@@ -16174,19 +16178,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String chatBlockedContactTerm(String term) {
-    return 'Ton message semble contenir des coordonnées (« $term »). Pour ta sécurité, garde les échanges et le paiement sur Yadony.';
+    return 'Votre message semble contenir des coordonnées (« $term »). Pour votre sécurité, gardez les échanges et le paiement sur Yadony.';
   }
 
   @override
   String get recipientSentInvitationsHelp =>
-      'La personne recevra l\'invitation dans Yadony si elle a un compte. Sinon, invite-la à installer l\'app.';
+      'La personne recevra l\'invitation dans Yadony si elle a un compte. Sinon, invitez-la à installer l\'app.';
 
   @override
   String get recipientSentInvitationShareAction => 'Partager le lien de l\'app';
 
   @override
   String get recipientSentInvitationShareMessage =>
-      'Je t\'ai invité(e) sur Yadony pour suivre les colis que je t\'envoie. Installe l\'app ici : https://yadony.com';
+      'Je vous ai invité(e) sur Yadony pour suivre les colis que je vous envoie. Installez l\'app ici : https://yadony.com';
 
   @override
   String get trackingStepPhotoOpen => 'Agrandir la photo';
@@ -16405,7 +16409,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String suiviTrackingNumberBody(String parcel) {
-    return 'Demande à l\'expéditeur le numéro de suivi du colis $parcel : lui seul le connaît. Il prouve que tu récupères le bon colis, avant la photo.';
+    return 'Demandez à l\'expéditeur le numéro de suivi du colis $parcel : lui seul le connaît. Il prouve que vous récupérez le bon colis, avant la photo.';
   }
 
   @override
@@ -16415,25 +16419,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviTrackingNumberContinue => 'Continuer vers la photo';
 
   @override
-  String get suiviTrackingNumberRequired => 'Saisis le numéro de suivi.';
+  String get suiviTrackingNumberRequired => 'Saisissez le numéro de suivi.';
 
   @override
   String get suiviTrackingNumberWrong =>
-      'Ce numéro ne correspond pas à ce colis. Vérifie-le avec l\'expéditeur.';
+      'Ce numéro ne correspond pas à ce colis. Vérifiez-le avec l\'expéditeur.';
 
   @override
   String get errorTrackingNumberMismatchTitle => 'Numéro de suivi incorrect';
 
   @override
   String get errorTrackingNumberMismatchMessage =>
-      'Ce numéro ne correspond pas à ce colis. Demande-le à l\'expéditeur.';
+      'Ce numéro ne correspond pas à ce colis. Demandez-le à l\'expéditeur.';
 
   @override
   String get errorTrackingNumberRequiredTitle => 'Numéro de suivi requis';
 
   @override
   String get errorTrackingNumberRequiredMessage =>
-      'Saisis le numéro de suivi donné par l\'expéditeur pour valider la remise.';
+      'Saisissez le numéro de suivi donné par l\'expéditeur pour valider la remise.';
 
   @override
   String get listingTripFullMessage =>
@@ -16489,7 +16493,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletTopupCustomAmountInvalid =>
-      'Indique un montant supérieur à 0.';
+      'Indiquez un montant supérieur à 0.';
 
   @override
   String get negotiationsActionRequired => 'Action requise';

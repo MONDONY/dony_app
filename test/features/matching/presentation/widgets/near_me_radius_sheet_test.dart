@@ -90,7 +90,7 @@ void main() {
     expect(find.text('Près de moi'), findsOneWidget);
     expect(
       find.text(
-        'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.',
+        'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de vous.',
       ),
       findsOneWidget,
     );

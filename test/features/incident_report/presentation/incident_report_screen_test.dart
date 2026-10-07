@@ -184,7 +184,7 @@ void main() {
       // via ErrorCatalog un message générique de validation.
       expect(find.text('Le motif est obligatoire'), findsNothing);
       expect(
-        find.text('Vérifie les informations saisies puis réessaie.'),
+        find.text('Vérifiez les informations saisies puis réessayez.'),
         findsOneWidget,
       );
     },

@@ -56,8 +56,8 @@ void main() {
 
       expect(lines, [
         'Commission : $commissionBid',
-        'Ton portefeuille $bidName en couvre $coveredBid',
-        'Il manque $remainingBid, soit $remainingActive, et ton '
+        'Votre portefeuille $bidName en couvre $coveredBid',
+        'Il manque $remainingBid, soit $remainingActive, et votre '
             'portefeuille $activeName n\'a que $activeBalance',
       ]);
     });
@@ -79,8 +79,8 @@ void main() {
 
       expect(lines, [
         'Commission : $commissionBid, soit $remainingActive',
-        'Ton portefeuille $activeName n\'a que $activeBalance. Recharge en '
-            '$bidSymbol ou en $activeName, ou paie par carte.',
+        'Votre portefeuille $activeName n\'a que $activeBalance. Rechargez en '
+            '$bidSymbol ou en $activeName, ou payez par carte.',
       ]);
     });
 
