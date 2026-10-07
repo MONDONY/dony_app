@@ -16597,4 +16597,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get negotiationEmptyArchivedFilter =>
       'Discussions you archive will appear here.';
+
+  @override
+  String get homePublishButtonSemantics =>
+      'Publish: send a parcel or publish a trip';
+
+  @override
+  String get homePublishButtonTooltip => 'Publish';
+
+  @override
+  String get homePublishSheetTitle => 'What would you like to publish?';
+
+  @override
+  String get homePublishSendParcel => 'Send a parcel';
+
+  @override
+  String get homePublishSendParcelSubtitle => 'Find a traveler for your parcel';
+
+  @override
+  String get homePublishTrip => 'Publish a trip';
+
+  @override
+  String get homePublishTripSubtitle => 'Offer your available kilos';
 }

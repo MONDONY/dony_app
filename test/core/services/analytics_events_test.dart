@@ -15,6 +15,8 @@ void main() {
       AnalyticsEvents.kycStarted,
       AnalyticsEvents.kycCompleted,
       AnalyticsEvents.firstStepsChoice,
+      AnalyticsEvents.homePublishSheetOpened,
+      AnalyticsEvents.homePublishTapped,
       AnalyticsEvents.kycFailed,
       AnalyticsEvents.announcementCreated,
       AnalyticsEvents.announcementViewed,

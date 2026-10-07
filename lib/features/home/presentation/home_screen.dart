@@ -27,6 +27,7 @@ import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
+import 'package:dony/features/home/presentation/widgets/home_publish_button.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -102,6 +103,16 @@ class HomeScreen extends StatelessWidget {
 /// Marge basse réservée sous les listes pour que le dernier item dépasse la
 /// bottom nav flottante (île ~62 + marge ~28) au lieu d'être caché dessous.
 const double _kFloatingNavClearance = 96;
+
+/// Largeur de la rangée du haut de l'accueil sous laquelle ses boutons ronds
+/// se resserrent (44 dp, écarts de 4) : quatre éléments y tiennent depuis
+/// l'ajout du bouton « + Publier » (FLUTTER-B8). 380 dp de rangée, soit un
+/// écran de moins de 404 dp (iPhone SE, mini, 14/15 standard).
+const double kHomeTopRowCompactWidth = 380;
+
+/// Largeur de rangée sous laquelle la barre de recherche perd sa loupe
+/// (écran de 320 dp, iPhone SE 1re génération).
+const double kHomeTopRowTinyWidth = 320;
 
 // ── Libellés reconstruits ────────────────────────────────────────────────────
 //
@@ -1380,22 +1391,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    const _FavoritesButton(),
-                                    const SizedBox(width: DonySpacing.sm),
-                                    Expanded(
-                                      child: _CorridorBar(
-                                        key: const Key('corridor-bar'),
-                                        label: _corridorLabel,
-                                        activeFilterCount: _activeFilterCount,
-                                        onTap: () => _openComposer(context),
-                                      ),
-                                    ),
-                                    const SizedBox(width: DonySpacing.sm),
-                                    const _NotificationBell(),
-                                  ],
-                                ),
+                                _topRow(context),
                                 const SizedBox(height: DonySpacing.sm),
                                 _modeSelector(),
                                 const SizedBox(height: DonySpacing.sm),
@@ -1737,6 +1733,43 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// présence du compteur, sinon l'arrivée du nombre démonte le sélecteur et
   /// emporte l'animation de 200 ms du segment actif. La clé du compteur vit
   /// dans `SearchModeSelector`, sur le compteur lui-même.
+  /// Rangée du haut : favoris, recherche, « + Publier » (FLUTTER-B8), cloche.
+  ///
+  /// Quatre éléments sur une ligne : sous [kHomeTopRowCompactWidth] les
+  /// boutons ronds passent à 44 et les écarts à 4, et sous
+  /// [kHomeTopRowTinyWidth] (iPhone SE 1re génération, 320 dp) la barre
+  /// laisse tomber sa loupe pour garder de la place au trajet recherché.
+  Widget _topRow(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final compact = width < kHomeTopRowCompactWidth;
+        final buttonSize = compact ? 44.0 : 48.0;
+        final gap = compact ? DonySpacing.xs : DonySpacing.sm;
+        return Row(
+          children: [
+            _FavoritesButton(size: buttonSize),
+            SizedBox(width: gap),
+            Expanded(
+              child: _CorridorBar(
+                key: const Key('corridor-bar'),
+                label: _corridorLabel,
+                activeFilterCount: _activeFilterCount,
+                onTap: () => _openComposer(context),
+                compact: compact,
+                showSearchIcon: width >= kHomeTopRowTinyWidth,
+              ),
+            ),
+            SizedBox(width: gap),
+            HomePublishButton(size: buttonSize),
+            SizedBox(width: gap),
+            _NotificationBell(size: buttonSize),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _modeSelector() {
     return SearchModeSelector(
       key: const Key('search-mode-selector'),
@@ -2367,11 +2400,19 @@ class _CorridorBar extends StatelessWidget {
     required this.label,
     required this.activeFilterCount,
     required this.onTap,
+    this.compact = false,
+    this.showSearchIcon = true,
   });
 
   final String label;
   final int activeFilterCount;
   final VoidCallback onTap;
+
+  /// Rangée du haut serrée (petit écran) : marges intérieures réduites.
+  final bool compact;
+
+  /// Loupe en tête de barre, retirée sur les écrans les plus étroits.
+  final bool showSearchIcon;
 
   bool get _hasActive => activeFilterCount > 0;
 
@@ -2394,11 +2435,18 @@ class _CorridorBar extends StatelessWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+        padding: EdgeInsets.only(
+          left: compact ? DonySpacing.md : DonySpacing.base,
+          // Compact : 6 = (48 - 36) / 2, la pastille des filtres devient
+          // concentrique à la pilule au lieu de flotter à 16 du bord.
+          right: compact ? 6 : DonySpacing.base,
+        ),
         child: Row(
           children: [
-            DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
-            const SizedBox(width: DonySpacing.sm),
+            if (showSearchIcon) ...[
+              DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.sm),
+            ],
             Expanded(
               child: Text(
                 label,
@@ -3250,7 +3298,9 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
 /// Pastille de comptage rouge conservée (convention de badge).
 /// Navigue vers `/favoris` au tap via GoRouter.
 class _FavoritesButton extends StatelessWidget {
-  const _FavoritesButton();
+  const _FavoritesButton({this.size = 48});
+
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -3270,8 +3320,8 @@ class _FavoritesButton extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: size,
+                height: size,
                 decoration: BoxDecoration(
                   color: cs.surface,
                   shape: BoxShape.circle,
@@ -3327,7 +3377,9 @@ class _FavoritesButton extends StatelessWidget {
 // ── _NotificationBell ─────────────────────────────────────────────────────────
 
 class _NotificationBell extends StatelessWidget {
-  const _NotificationBell();
+  const _NotificationBell({this.size = 48});
+
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -3356,8 +3408,8 @@ class _NotificationBell extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: size,
+                height: size,
                 decoration: BoxDecoration(
                   color: cs.surface,
                   shape: BoxShape.circle,

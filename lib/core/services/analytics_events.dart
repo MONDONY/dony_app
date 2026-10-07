@@ -337,6 +337,15 @@ abstract final class AnalyticsEvents {
   static const homeMatchingTripsFilterToggled =
       'home_matching_trips_filter_toggled';
 
+  /// Bouton rond « + Publier » de la rangée du haut de l'accueil (FLUTTER-B8),
+  /// utilisateur connecté : ouvre la feuille de choix. Propriété
+  /// `active_role` : `sender` / `traveler`.
+  static const homePublishSheetOpened = 'home_publish_sheet_opened';
+
+  /// Choix retenu dans la feuille « + Publier » de l'accueil. Propriétés
+  /// `choice` : `parcel` / `trip`, et `active_role`.
+  static const homePublishTapped = 'home_publish_tapped';
+
   /// SettingsScreen._resetGuidanceCards — tuile « Réafficher les
   /// suggestions », réaffiche les `ContextualTutorialCard` fermées.
   static const settingsGuidanceCardsReset = 'settings_guidance_cards_reset';

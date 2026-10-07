@@ -2997,6 +2997,102 @@ void main() {
     });
   });
 
+  // ── FLUTTER-B8 : bouton rond « + Publier » de la rangée du haut ─────────
+  group('HomeScreen — bouton « + Publier »', () {
+    Future<void> pumpAt(WidgetTester tester, Size size) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    final publish = find.byKey(const Key('home-publish-button'));
+    final corridor = find.byKey(const Key('corridor-bar'));
+    final bell = find.byWidgetPredicate(
+      (w) => w is DonyIcon && w.name == 'bell',
+    );
+
+    testWidgets('posé entre la barre de recherche et la cloche, une seule '
+        'fois, jamais sur la carte ni la feuille', (tester) async {
+      await pumpAt(tester, const Size(430, 932));
+
+      expect(publish, findsOneWidget);
+      final publishCenter = tester.getCenter(publish);
+      expect(publishCenter.dx, greaterThan(tester.getCenter(corridor).dx));
+      expect(publishCenter.dx, lessThan(tester.getCenter(bell).dx));
+      // Même ligne que la cloche : la rangée flottante du haut.
+      expect((publishCenter.dy - tester.getCenter(bell).dy).abs(), lessThan(1));
+      // L'ancien bouton flottant de #440 ne revient pas.
+      expect(find.byKey(const Key('home-publish-parcel')), findsNothing);
+      expect(tester.getSize(publish), const Size(48, 48));
+    });
+
+    testWidgets('ouvre la feuille aux deux choix', (tester) async {
+      await pumpAt(tester, const Size(430, 932));
+
+      await tester.tap(publish);
+      await tester.pumpAndSettle();
+      expect(find.text('Que voulez-vous publier ?'), findsOneWidget);
+      expect(find.text('Envoyer un colis'), findsOneWidget);
+      expect(find.text('Publier un trajet'), findsOneWidget);
+    });
+
+    testWidgets('invité : « Connexion requise », comme la cloche', (
+      tester,
+    ) async {
+      getIt.unregister<FirebaseSessionProbe>();
+      getIt.registerSingleton<FirebaseSessionProbe>(
+        const _StubSessionProbe.guest(),
+      );
+      await pumpAt(tester, const Size(430, 932));
+
+      await tester.tap(publish);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Connexion requise'), findsOneWidget);
+      expect(find.text('Que voulez-vous publier ?'), findsNothing);
+    });
+
+    for (final width in [320.0, 375.0]) {
+      testWidgets('petit écran ($width dp) : rangée resserrée, sans '
+          'débordement, barre de recherche lisible', (tester) async {
+        await pumpAt(tester, Size(width, 667));
+
+        expect(tester.takeException(), isNull);
+        expect(publish, findsOneWidget);
+        expect(tester.getSize(publish), const Size(44, 44));
+        // Le trajet recherché garde une vraie place à côté de 3 boutons.
+        expect(tester.getSize(corridor).width, greaterThanOrEqualTo(150));
+        expect(tester.getRect(bell).right, lessThanOrEqualTo(width));
+        // La loupe ne tombe que sur l'écran le plus étroit.
+        expect(
+          find.descendant(
+            of: corridor,
+            matching: find.byWidgetPredicate(
+              (w) => w is DonyIcon && w.name == 'search',
+            ),
+          ),
+          width < 330 ? findsNothing : findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('320 dp, texte à 130 % : toujours sans débordement', (
+      tester,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pumpAt(tester, const Size(320, 667));
+
+      expect(tester.takeException(), isNull);
+      expect(publish, findsOneWidget);
+    });
+  });
+
   // ── Réaction aux blocages ────────────────────────────────────────────────
   group('HomeScreen — blocages', () {
     late BlockEventsService blockEvents;

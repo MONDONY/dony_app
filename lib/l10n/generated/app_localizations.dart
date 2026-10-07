@@ -27427,6 +27427,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les discussions que vous archivez apparaîtront ici.'**
   String get negotiationEmptyArchivedFilter;
+
+  /// Libellé d'accessibilité du bouton rond « + Publier » de la rangée du haut de l'accueil, à côté de la cloche (FLUTTER-B8).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier : envoyer un colis ou publier un trajet'**
+  String get homePublishButtonSemantics;
+
+  /// Info-bulle (appui long) du bouton rond « + Publier » de l'accueil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier'**
+  String get homePublishButtonTooltip;
+
+  /// Titre de la feuille ouverte par le bouton « + Publier » de l'accueil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Que voulez-vous publier ?'**
+  String get homePublishSheetTitle;
+
+  /// Choix de la feuille « + Publier » : ouvre l'intro d'envoi de colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer un colis'**
+  String get homePublishSendParcel;
+
+  /// Sous-titre du choix « Envoyer un colis » de la feuille « + Publier ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Trouvez un voyageur pour votre colis'**
+  String get homePublishSendParcelSubtitle;
+
+  /// Choix de la feuille « + Publier » : ouvre l'intro de publication de trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier un trajet'**
+  String get homePublishTrip;
+
+  /// Sous-titre du choix « Publier un trajet » de la feuille « + Publier ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposez vos kilos disponibles'**
+  String get homePublishTripSubtitle;
 }
 
 class _AppLocalizationsDelegate

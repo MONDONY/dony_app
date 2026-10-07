@@ -9180,5 +9180,12 @@
   "negotiationDeleteConfirmMessage": "This discussion will disappear from your list. The other participant keeps it.",
   "negotiationStillOpenSnackbar": "This discussion is still in progress",
   "negotiationArchiveUnavailableSnackbar": "This action isn't available yet. Please try again later.",
-  "negotiationEmptyArchivedFilter": "Discussions you archive will appear here."
+  "negotiationEmptyArchivedFilter": "Discussions you archive will appear here.",
+  "homePublishButtonSemantics": "Publish: send a parcel or publish a trip",
+  "homePublishButtonTooltip": "Publish",
+  "homePublishSheetTitle": "What would you like to publish?",
+  "homePublishSendParcel": "Send a parcel",
+  "homePublishSendParcelSubtitle": "Find a traveler for your parcel",
+  "homePublishTrip": "Publish a trip",
+  "homePublishTripSubtitle": "Offer your available kilos"
 }
