@@ -181,6 +181,7 @@ const _sameInBothLanguages = <String>{
   'archivedConversationsTitle', // « Archives » se dit pareil (tâche F1)
   'trackingStepTransit', // « Transit » se dit pareil (tâche F2)
   'scanPhotoWordLabel', // « Photo » se dit pareil (tâche F2)
+  'chatQuotePhoto', // « Photo » se dit pareil (citation d'une photo, FLUTTER-86)
   'scanOfflineEventTransitLabel', // « transit » se dit pareil (tâche F2)
   'receptionConfirmTitle', // « Confirmation » se dit pareil (tâche F3)
   'receptionCodeOptionLabel', // « OPTION »/« CODE » se disent pareil (tâche F3)
