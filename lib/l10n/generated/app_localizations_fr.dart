@@ -5286,6 +5286,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingNearMeActivateTooltip => 'Voir les voyageurs près de moi';
 
   @override
+  String get listingMapUnavailable =>
+      'La carte ne se charge pas pour le moment. Les annonces restent disponibles dans la liste.';
+
+  @override
+  String get listingMapLocationOff =>
+      'Position non partagée : la carte montre toutes les annonces.';
+
+  @override
   String get listingFilterTripsTitle => 'Filtrer les trajets';
 
   @override

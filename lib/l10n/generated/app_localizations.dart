@@ -8756,6 +8756,18 @@ abstract class AppLocalizations {
   /// **'Voir les voyageurs près de moi'**
   String get listingNearMeActivateTooltip;
 
+  /// Message discret sur la carte de recherche quand la carte ne s'affiche pas (FLUTTER-CD, announcement_map_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La carte ne se charge pas pour le moment. Les annonces restent disponibles dans la liste.'**
+  String get listingMapUnavailable;
+
+  /// Message discret sur la carte de recherche quand la localisation est refusée ou désactivée (FLUTTER-CD, announcement_map_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Position non partagée : la carte montre toutes les annonces.'**
+  String get listingMapLocationOff;
+
   /// Titre de la feuille de filtres de recherche de trajets (search_form_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:

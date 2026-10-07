@@ -1460,6 +1460,8 @@
   "listingAddressFallback": "Address",
   "listingNearMeDeactivateTooltip": "Turn off \"Near me\"",
   "listingNearMeActivateTooltip": "See travelers near me",
+  "listingMapUnavailable": "The map can't load right now. Listings are still available in the list.",
+  "listingMapLocationOff": "Location not shared: the map shows all listings.",
   "listingFilterTripsTitle": "Filter trips",
   "listingResetFiltersButton": "Reset",
   "listingSearchButton": "{count, plural, =0{Search} =1{Search · {count} filter} other{Search · {count} filters}}",

@@ -4723,6 +4723,14 @@
   "@listingNearMeActivateTooltip": {
     "description": "Infobulle du bouton « Près de moi » inactif (announcement_map_view.dart)"
   },
+  "listingMapUnavailable": "La carte ne se charge pas pour le moment. Les annonces restent disponibles dans la liste.",
+  "@listingMapUnavailable": {
+    "description": "Message discret sur la carte de recherche quand la carte ne s'affiche pas (FLUTTER-CD, announcement_map_view.dart)"
+  },
+  "listingMapLocationOff": "Position non partagée : la carte montre toutes les annonces.",
+  "@listingMapLocationOff": {
+    "description": "Message discret sur la carte de recherche quand la localisation est refusée ou désactivée (FLUTTER-CD, announcement_map_view.dart)"
+  },
   "listingFilterTripsTitle": "Filtrer les trajets",
   "@listingFilterTripsTitle": {
     "description": "Titre de la feuille de filtres de recherche de trajets (search_form_bottom_sheet.dart)"
