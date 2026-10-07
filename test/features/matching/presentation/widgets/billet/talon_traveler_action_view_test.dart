@@ -1,5 +1,7 @@
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_traveler_action_view.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +12,7 @@ Future<GoRouter> _pump(
   WidgetTester tester,
   TalonTravelerAction action, {
   String? travelerName,
+  DeliveryWindow? deliveryWindow,
 }) async {
   final router = GoRouter(
     routes: [
@@ -20,6 +23,7 @@ Future<GoRouter> _pump(
             bidId: 'bid-1',
             action: action,
             travelerName: travelerName,
+            deliveryWindow: deliveryWindow,
           ),
         ),
       ),
@@ -106,5 +110,40 @@ void main() {
         );
       },
     );
+  });
+
+  group('confirmDelivery avant le départ (FLUTTER-CB)', () {
+    final future = DeliveryWindow(
+      departure: DateTime.now().add(const Duration(days: 1)),
+      hasTime: true,
+    );
+
+    testWidgets('départ à venir : bouton désactivé et explication', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        TalonTravelerAction.confirmDelivery,
+        travelerName: 'Abou D.',
+        deliveryWindow: future,
+      );
+      expect(
+        tester.widget<DonyButton>(find.byType(DonyButton)).onPressed,
+        isNull,
+      );
+      expect(find.byType(DeliveryLockedHint), findsOneWidget);
+      await tester.tap(find.text('Confirmer la livraison'));
+      await tester.pumpAndSettle();
+      expect(find.text('RECEPTION'), findsNothing);
+    });
+
+    testWidgets('mode scan : jamais verrouillé par le départ', (tester) async {
+      await _pump(tester, TalonTravelerAction.scan, deliveryWindow: future);
+      expect(
+        tester.widget<DonyButton>(find.byType(DonyButton)).onPressed,
+        isNotNull,
+      );
+      expect(find.byType(DeliveryLockedHint), findsNothing);
+    });
   });
 }

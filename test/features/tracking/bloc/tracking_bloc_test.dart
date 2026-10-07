@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -396,6 +397,57 @@ void main() {
           'Code invalide',
         ),
       ],
+    );
+  });
+
+  // FLUTTER-CB (yadony-back #419) : 422 trip-not-departed avant le départ.
+  group('ConfirmDeliveryRequested — trajet pas encore parti', () {
+    const tripNotDeparted = ValidationException(
+      'Trip has not departed yet',
+      code: 'trip-not-departed',
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      '422 → DeliveryConfirmError du catalogue, sans nouvel essai',
+      build: buildBloc,
+      setUp: () {
+        when(
+          () => mockRepo.confirmDelivery(
+            bidId: any(named: 'bidId'),
+            code: any(named: 'code'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(
+              path: '/tracking/bid-1/confirm-delivery',
+            ),
+            error: tripNotDeparted,
+          ),
+        );
+      },
+      act: (b) =>
+          b.add(ConfirmDeliveryRequested(bidId: 'bid-1', code: '123456')),
+      expect: () => [
+        isA<DeliveryConfirmLoading>(),
+        isA<DeliveryConfirmError>().having(
+          (s) => s.error.code,
+          'code',
+          'trip-not-departed',
+        ),
+      ],
+      verify: (bloc) {
+        final error = (bloc.state as DeliveryConfirmError).error;
+        final p = ErrorCatalog.lookup(error);
+        expect(p.title, 'Trajet pas encore parti');
+        expect(
+          p.message,
+          "La livraison ne peut être confirmée qu'après le départ du trajet. "
+          'Réessayez après le trajet.',
+        );
+        verify(
+          () => mockRepo.confirmDelivery(bidId: 'bid-1', code: '123456'),
+        ).called(1);
+      },
     );
   });
 

@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -15,6 +18,7 @@ import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -57,6 +61,7 @@ Widget _wrap(
   double? gpsLon,
   String? gpsLabel,
   ScanMethod? scanMethod,
+  DeliveryWindow? deliveryWindow,
 }) {
   // Vraie route de l'écran : la fin du scan referme les étapes du flux
   // (`leaveScanFlow`), puis retombe sur l'onglet Suivi s'il n'y a rien dessous.
@@ -80,6 +85,7 @@ Widget _wrap(
             gpsLon: gpsLon,
             gpsLabel: gpsLabel,
             scanMethod: scanMethod,
+            deliveryWindow: deliveryWindow,
           ),
         ),
       ),
@@ -523,4 +529,124 @@ void main() {
       expect(find.text('hub'), findsOneWidget);
     },
   );
+
+  // ─── Livraison avant le départ du trajet (FLUTTER-CB, back #419) ─────────
+  group('ARRIVEE — verrou avant le départ', () {
+    DonyButton submit(WidgetTester tester) =>
+        tester.widget<DonyButton>(find.byKey(const Key('scan-confirm-submit')));
+
+    MockTrackingBloc idleBloc() {
+      final bloc = MockTrackingBloc();
+      when(() => bloc.state).thenReturn(TrackingInitial());
+      whenListen(bloc, const Stream<TrackingState>.empty());
+      return bloc;
+    }
+
+    testWidgets('départ à venir : bouton désactivé, explication affichée', (
+      tester,
+    ) async {
+      final bloc = idleBloc();
+      await tester.pumpWidget(
+        _wrap(
+          'ARRIVEE',
+          bloc,
+          deliveryWindow: DeliveryWindow(
+            departure: DateTime.now().add(const Duration(days: 2)),
+            hasTime: true,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(submit(tester).onPressed, isNull);
+      expect(
+        find.textContaining('Disponible après le départ du trajet (le'),
+        findsOneWidget,
+      );
+      await tester.enterText(find.byType(TextField), '654321');
+      await tester.tap(find.byKey(const Key('scan-confirm-submit')));
+      await tester.pump();
+      verifyNever(() => bloc.add(any(that: isA<ConfirmDeliveryRequested>())));
+    });
+
+    testWidgets('départ passé : bouton actif, aucune explication', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          'ARRIVEE',
+          idleBloc(),
+          deliveryWindow: DeliveryWindow(
+            departure: DateTime.now().subtract(const Duration(hours: 1)),
+            hasTime: true,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(submit(tester).onPressed, isNotNull);
+      expect(find.byKey(const Key('delivery-locked-hint')), findsNothing);
+    });
+
+    testWidgets('départ inconnu : bouton actif (le serveur tranche)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap('ARRIVEE', idleBloc()));
+      await tester.pump();
+
+      expect(submit(tester).onPressed, isNotNull);
+      expect(find.byKey(const Key('delivery-locked-hint')), findsNothing);
+    });
+
+    testWidgets('DEPART : jamais verrouillé par le départ', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          'DEPART',
+          idleBloc(),
+          deliveryWindow: DeliveryWindow(
+            departure: DateTime.now().add(const Duration(days: 2)),
+            hasTime: true,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(submit(tester).onPressed, isNotNull);
+    });
+
+    testWidgets(
+      '422 trip-not-departed : message du catalogue, code saisi conservé',
+      (tester) async {
+        final bloc = MockTrackingBloc();
+        when(() => bloc.state).thenReturn(TrackingInitial());
+        final states = StreamController<TrackingState>();
+        addTearDown(states.close);
+        whenListen(bloc, states.stream);
+        await tester.pumpWidget(_wrap('ARRIVEE', bloc));
+        await tester.pump();
+        await tester.enterText(find.byType(TextField), '654321');
+        await tester.pump();
+
+        const err = ValidationException(
+          'Trip has not departed yet',
+          code: 'trip-not-departed',
+        );
+        when(() => bloc.state).thenReturn(DeliveryConfirmError(err));
+        states.add(DeliveryConfirmError(err));
+        await tester.pump();
+
+        expect(
+          find.text(
+            "La livraison ne peut être confirmée qu'après le départ du "
+            'trajet. Réessayez après le trajet.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Trip has not departed'), findsNothing);
+        final field = tester.widget<TextField>(find.byType(TextField));
+        expect(field.controller!.text, '654321');
+        expect(submit(tester).onPressed, isNotNull);
+      },
+    );
+  });
 }

@@ -554,6 +554,15 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.password_rounded,
     ),
+    // Code de livraison saisi avant le départ du trajet : le back (#419,
+    // FLUTTER-CB) répond 422 au lieu de terminer le colis et de libérer le
+    // séquestre. Rien à corriger dans le code, il suffit d'attendre.
+    'trip-not-departed': _Entry(
+      title: (l) => l.errorTripNotDepartedTitle,
+      message: (l) => l.errorTripNotDepartedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.schedule_rounded,
+    ),
     'tracking-number-mismatch': _Entry(
       title: (l) => l.errorTrackingNumberMismatchTitle,
       message: (l) => l.errorTrackingNumberMismatchMessage,

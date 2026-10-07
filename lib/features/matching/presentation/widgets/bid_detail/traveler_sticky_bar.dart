@@ -5,6 +5,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_validate_content.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -227,6 +228,7 @@ class _DeliverBar extends StatelessWidget {
         'bidId': bid.id,
         'etape': 'ARRIVEE',
         'packageLabel': suiviParcelLabel(bid),
+        'deliveryWindow': DeliveryWindow.fromBid(bid),
       },
     );
   }
@@ -249,11 +251,30 @@ class _DeliverBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyButton(
-            label: context.l10n.bidDetailConfirmHandover,
-            iconAsset: 'badge-check',
-            variant: DonyButtonVariant.success,
-            onPressed: () => _deliver(context),
+          // Pas de remise avant le départ du trajet : le back la refuse
+          // (422 trip-not-departed, FLUTTER-CB). Le bouton s'active seul à
+          // l'heure du départ.
+          DeliveryDepartureGate(
+            window: DeliveryWindow.fromBid(bid),
+            builder: (context, lockedHint) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DonyButton(
+                  key: const Key('traveler-deliver-btn'),
+                  label: context.l10n.bidDetailConfirmHandover,
+                  iconAsset: 'badge-check',
+                  variant: DonyButtonVariant.success,
+                  onPressed: lockedHint == null
+                      ? () => _deliver(context)
+                      : null,
+                ),
+                if (lockedHint != null) ...[
+                  const SizedBox(height: DonySpacing.xs),
+                  DeliveryLockedHint(lockedHint),
+                ],
+              ],
+            ),
           ),
           if (offerOptionalTransit) ...[
             const SizedBox(height: DonySpacing.sm),

@@ -222,6 +222,7 @@ import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.
 import 'package:dony/features/tracking/presentation/screens/scan_identify_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
@@ -759,6 +760,7 @@ final appRouter = GoRouter(
           packageLabel: extra['packageLabel'] as String? ?? '',
           returnResult: extra['returnResult'] as bool? ?? false,
           scanMethod: _scanMethodExtra(extra),
+          deliveryWindow: extra['deliveryWindow'] as DeliveryWindow?,
         );
       },
     ),
@@ -780,6 +782,7 @@ final appRouter = GoRouter(
             gpsLabel: extra['gpsLabel'] as String?,
             packageLabel: extra['packageLabel'] as String? ?? '',
             scanMethod: _scanMethodExtra(extra),
+            deliveryWindow: extra['deliveryWindow'] as DeliveryWindow?,
           ),
         );
       },

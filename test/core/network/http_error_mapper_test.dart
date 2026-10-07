@@ -46,6 +46,23 @@ void main() {
       expect(e.code, 'depart-already-scanned');
     });
 
+    // FLUTTER-CB (yadony-back #419) : remise tentée avant le départ.
+    test('422 trip-not-departed → ValidationException, jamais rejouée', () {
+      final e = mapHttpError(
+        _http(
+          422,
+          body: {
+            'detail': 'Trip has not departed yet',
+            'code': 'trip-not-departed',
+          },
+        ),
+      );
+
+      expect(e, isA<ValidationException>());
+      expect(e.code, 'trip-not-departed');
+      expect(OfflineSyncService.isDefinitiveRejection(e), isTrue);
+    });
+
     test('422 → ValidationException avec les violations par champ', () {
       final e = mapHttpError(
         _http(

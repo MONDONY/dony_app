@@ -8,6 +8,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -40,6 +41,7 @@ class ScanPhotoScreen extends StatefulWidget {
     required this.packageLabel,
     this.returnResult = false,
     this.scanMethod,
+    this.deliveryWindow,
     this.locator = const ScanLocator(),
   });
 
@@ -53,6 +55,10 @@ class ScanPhotoScreen extends StatefulWidget {
 
   /// Provenance transmise à la confirmation ; `null` : rien n'est envoyé.
   final ScanMethod? scanMethod;
+
+  /// Départ du trajet, transmis à la confirmation de livraison (ARRIVEE)
+  /// pour y verrouiller le bouton avant le départ ; `null` : inconnu.
+  final DeliveryWindow? deliveryWindow;
 
   final ScanLocator locator;
 
@@ -181,6 +187,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
         'gpsLon': _position.value?.lon,
         'gpsLabel': _position.value?.label,
         'scanMethod': widget.scanMethod,
+        'deliveryWindow': widget.deliveryWindow,
       },
     );
   }

@@ -135,6 +135,8 @@
   "errorCodeExpiredMessage": "This code has expired. Ask the sender to generate a new one.",
   "errorCodeIncorrectTitle": "Incorrect code",
   "errorCodeIncorrectMessage": "The code you entered is incorrect. Check with the sender.",
+  "errorTripNotDepartedTitle": "Trip not departed yet",
+  "errorTripNotDepartedMessage": "Delivery can only be confirmed once the trip has departed. Please try again after the trip.",
   "errorTooManyAttemptsTitle": "Too many attempts",
   "errorTooManyAttemptsMessage": "You've made too many attempts. Wait a few minutes before trying again.",
   "errorTooManyRefreshesTitle": "Limit reached",
@@ -9094,5 +9096,7 @@
   "recipientReplacementRequestedSender": "The traveler is asking you to choose another one.",
   "receptionLeaveWarning": "You will no longer see this parcel or its pickup code. Confirm?",
   "receptionDeclineSheetNote": "The sender will be asked to check the recipient's number.",
-  "receptionWithdrawSheetNote": "The sender and the traveler will be notified."
+  "receptionWithdrawSheetNote": "The sender and the traveler will be notified.",
+  "deliveryLockedUntilDeparture": "Available after the trip departs (on {date} at {time})",
+  "deliveryLockedUntilDepartureDay": "Available after the trip departs (on {date})"
 }

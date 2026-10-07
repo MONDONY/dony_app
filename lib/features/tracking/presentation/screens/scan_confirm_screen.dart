@@ -12,6 +12,7 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,6 +38,7 @@ class ScanConfirmScreen extends StatefulWidget {
     this.gpsLon,
     this.gpsLabel,
     this.scanMethod,
+    this.deliveryWindow,
   });
 
   final String bidId;
@@ -49,6 +51,11 @@ class ScanConfirmScreen extends StatefulWidget {
 
   /// Provenance envoyée au back ; `null` : rien n'est envoyé.
   final ScanMethod? scanMethod;
+
+  /// Départ du trajet (ARRIVEE) : le bouton reste désactivé tant qu'il n'est
+  /// pas atteint (422 `trip-not-departed`, FLUTTER-CB). `null` : inconnu, le
+  /// serveur tranche.
+  final DeliveryWindow? deliveryWindow;
 
   @override
   State<ScanConfirmScreen> createState() => _ScanConfirmScreenState();
@@ -162,14 +169,31 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Bouton principal
-                  DonyButton(
-                    label: _isArrivee
-                        ? l.scanConfirmDeliveryButton
-                        : l.scanValidateReadingButton,
-                    iconAsset: _isArrivee ? 'badge-check' : 'check',
-                    onPressed: isSubmitting ? null : () => _submit(context),
-                    isLoading: isSubmitting,
+                  // Bouton principal, verrouillé avant le départ du trajet
+                  // pour une remise (ARRIVEE).
+                  DeliveryDepartureGate(
+                    window: _isArrivee ? widget.deliveryWindow : null,
+                    builder: (context, lockedHint) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        DonyButton(
+                          key: const Key('scan-confirm-submit'),
+                          label: _isArrivee
+                              ? l.scanConfirmDeliveryButton
+                              : l.scanValidateReadingButton,
+                          iconAsset: _isArrivee ? 'badge-check' : 'check',
+                          onPressed: isSubmitting || lockedHint != null
+                              ? null
+                              : () => _submit(context),
+                          isLoading: isSubmitting,
+                        ),
+                        if (lockedHint != null) ...[
+                          const SizedBox(height: DonySpacing.xs),
+                          DeliveryLockedHint(lockedHint),
+                        ],
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: DonySpacing.sm),

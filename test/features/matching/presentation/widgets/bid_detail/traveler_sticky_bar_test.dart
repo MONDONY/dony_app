@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -11,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
+import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +36,7 @@ BidModel _bid({
   DateTime? windowEnd,
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   String? arrivalCity,
+  DateTime? departureAt,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -44,6 +47,7 @@ BidModel _bid({
   handoverDeadline: windowEnd,
   paymentMethod: paymentMethod,
   arrivalCity: arrivalCity,
+  departureAt: departureAt,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -338,8 +342,10 @@ void main() {
   Future<List<String>> pumpDeliver(
     WidgetTester tester,
     String status,
-    AnnouncementBloc announcementBloc,
-  ) async {
+    AnnouncementBloc announcementBloc, {
+    DateTime? departureAt,
+    List<Object?>? windows,
+  }) async {
     final bidBloc = _MockBidBloc();
     final acceptBloc = _MockAcceptBloc();
     when(() => bidBloc.state).thenReturn(BidInitial());
@@ -357,7 +363,11 @@ void main() {
                 BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
               ],
               child: TravelerStickyBar(
-                bid: _bid(status: status, arrivalCity: 'Dakar'),
+                bid: _bid(
+                  status: status,
+                  arrivalCity: 'Dakar',
+                  departureAt: departureAt,
+                ),
                 isLoading: false,
               ),
             ),
@@ -372,6 +382,7 @@ void main() {
             pushedRoutes.add(
               '/tracking/scan/photo:${extra['bidId']}:${extra['etape']}',
             );
+            windows?.add(extra['deliveryWindow']);
             return const Scaffold();
           },
         ),
@@ -442,6 +453,65 @@ void main() {
 
       verifyNever(() => announcementBloc.add(any()));
       expect(pushed, contains('/tracking/scan/photo:b1:ARRIVEE'));
+    });
+
+    // FLUTTER-CB : le back refuse la remise avant le départ (422
+    // trip-not-departed). Le bouton reste éteint, avec l'explication.
+    testWidgets('trajet pas encore parti : bouton désactivé, explication', (
+      tester,
+    ) async {
+      final pushed = await pumpDeliver(
+        tester,
+        'ARRIVED',
+        announcementBloc,
+        departureAt: DateTime.now().add(const Duration(days: 1)),
+      );
+
+      final button = tester.widget<DonyButton>(
+        find.byKey(const Key('traveler-deliver-btn')),
+      );
+      expect(button.onPressed, isNull);
+      expect(
+        find.textContaining('Disponible après le départ du trajet (le'),
+        findsOneWidget,
+      );
+      expect(pushed, isEmpty);
+    });
+
+    testWidgets('trajet parti : remise ouverte, départ transmis au flux', (
+      tester,
+    ) async {
+      final windows = <Object?>[];
+      final departure = DateTime.now().subtract(const Duration(hours: 2));
+      final pushed = await pumpDeliver(
+        tester,
+        'ARRIVED',
+        announcementBloc,
+        departureAt: departure,
+        windows: windows,
+      );
+
+      expect(find.byType(DeliveryLockedHint), findsNothing);
+      expect(pushed, contains('/tracking/scan/photo:b1:ARRIVEE'));
+      expect(
+        windows.single,
+        isA<DeliveryWindow>().having((w) => w.opensAt, 'opensAt', departure),
+      );
+    });
+
+    testWidgets('départ inconnu : remise ouverte (le serveur tranche)', (
+      tester,
+    ) async {
+      final windows = <Object?>[];
+      final pushed = await pumpDeliver(
+        tester,
+        'ARRIVED',
+        announcementBloc,
+        windows: windows,
+      );
+
+      expect(pushed, contains('/tracking/scan/photo:b1:ARRIVEE'));
+      expect(windows.single, isNull);
     });
   });
 

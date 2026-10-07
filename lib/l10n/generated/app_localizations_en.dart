@@ -476,6 +476,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'The code you entered is incorrect. Check with the sender.';
 
   @override
+  String get errorTripNotDepartedTitle => 'Trip not departed yet';
+
+  @override
+  String get errorTripNotDepartedMessage =>
+      'Delivery can only be confirmed once the trip has departed. Please try again after the trip.';
+
+  @override
   String get errorTooManyAttemptsTitle => 'Too many attempts';
 
   @override
@@ -16438,4 +16445,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get receptionWithdrawSheetNote =>
       'The sender and the traveler will be notified.';
+
+  @override
+  String deliveryLockedUntilDeparture(String date, String time) {
+    return 'Available after the trip departs (on $date at $time)';
+  }
+
+  @override
+  String deliveryLockedUntilDepartureDay(String date) {
+    return 'Available after the trip departs (on $date)';
+  }
 }
