@@ -337,7 +337,10 @@ void main() {
 
     test('myNegotiations mappe la liste', () async {
       when(
-        () => dio.get('/bids/negotiations/me'),
+        () => dio.get(
+          '/bids/negotiations/me',
+          queryParameters: {'archived': false},
+        ),
       ).thenAnswer((_) async => _ok([_summaryJson], '/bids/negotiations/me'));
 
       final list = await datasource.myNegotiations();
@@ -348,7 +351,10 @@ void main() {
 
     test('myNegotiations renvoie une liste vide sur un corps vide', () async {
       when(
-        () => dio.get('/bids/negotiations/me'),
+        () => dio.get(
+          '/bids/negotiations/me',
+          queryParameters: {'archived': false},
+        ),
       ).thenAnswer((_) async => _ok(<dynamic>[], '/bids/negotiations/me'));
 
       expect(await datasource.myNegotiations(), isEmpty);
@@ -446,7 +452,10 @@ void main() {
         (_) async => _ok(null, '/bids/bid-1/negotiation/read', status: 204),
       );
       when(
-        () => dio.get('/bids/negotiations/me'),
+        () => dio.get(
+          '/bids/negotiations/me',
+          queryParameters: {'archived': false},
+        ),
       ).thenAnswer((_) async => _ok([_summaryJson], '/bids/negotiations/me'));
 
       expect(
@@ -470,6 +479,60 @@ void main() {
 
       expect(checkout.clientSecret, 'pi_123_secret_456');
       verify(() => dio.post('/bids/bid-1/negotiation/checkout')).called(1);
+    });
+  });
+
+  // Archiver / supprimer une discussion terminée (FLUTTER-EJ, yadony-back
+  // #423).
+  group('archivage', () {
+    test('myNegotiations(archived: true) passe le filtre au serveur', () async {
+      when(
+        () => dio.get(
+          '/bids/negotiations/me',
+          queryParameters: {'archived': true},
+        ),
+      ).thenAnswer(
+        (_) async => _ok([
+          {..._summaryJson, 'archived': true},
+        ], '/bids/negotiations/me'),
+      );
+
+      final list = await datasource.myNegotiations(archived: true);
+      expect(list.single.archived, isTrue);
+    });
+
+    test('archive / unarchive postent, delete supprime', () async {
+      when(() => dio.post(any())).thenAnswer(
+        (_) async => _ok(null, '/bids/bid-1/negotiation/archive', status: 204),
+      );
+      when(() => dio.delete(any())).thenAnswer(
+        (_) async => _ok(null, '/bids/bid-1/negotiation', status: 204),
+      );
+
+      final repository = BidNegotiationRepository(datasource);
+      await repository.archive('bid-1');
+      await repository.unarchive('bid-1');
+      await repository.delete('bid-1');
+
+      verify(() => dio.post('/bids/bid-1/negotiation/archive')).called(1);
+      verify(() => dio.post('/bids/bid-1/negotiation/unarchive')).called(1);
+      verify(() => dio.delete('/bids/bid-1/negotiation')).called(1);
+    });
+
+    test('repository.myNegotiations transmet archived', () async {
+      when(
+        () => dio.get(
+          '/bids/negotiations/me',
+          queryParameters: {'archived': true},
+        ),
+      ).thenAnswer((_) async => _ok(<dynamic>[], '/bids/negotiations/me'));
+
+      expect(
+        await BidNegotiationRepository(
+          datasource,
+        ).myNegotiations(archived: true),
+        isEmpty,
+      );
     });
   });
 }

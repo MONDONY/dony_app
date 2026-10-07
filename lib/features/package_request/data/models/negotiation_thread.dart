@@ -80,6 +80,7 @@ class NegotiationThread extends Equatable {
     this.commissionStatus,
     this.commissionDeadline,
     this.depositExpiresAt,
+    this.archived = false,
   });
 
   final String id;
@@ -167,6 +168,10 @@ class NegotiationThread extends Equatable {
   /// fuseau du téléphone.
   final DateTime? depositExpiresAt;
 
+  /// Fil rangé dans les archives de l'appelant (yadony-back #423). Absent
+  /// d'un backend antérieur : `false`, aucun fil n'y est alors archivé.
+  final bool archived;
+
   /// Vrai quand un règlement est resté suspendu à une authentification forte
   /// 3DS. Le voyageur a basculé vers son application bancaire et l'OS a pu tuer
   /// yadony entre-temps : à sa prochaine tentative il faut confirmer le
@@ -241,6 +246,7 @@ class NegotiationThread extends Equatable {
         ? null
         : DateTime.parse(json['commissionDeadline'] as String),
     depositExpiresAt: _parseUtc(json['depositExpiresAt'] as String?),
+    archived: json['archived'] as bool? ?? false,
   );
 
   /// Force l'UTC sur un `LocalDateTime` back sans suffixe de zone (ex.
@@ -295,5 +301,6 @@ class NegotiationThread extends Equatable {
     commissionStatus,
     commissionDeadline,
     depositExpiresAt,
+    archived,
   ];
 }

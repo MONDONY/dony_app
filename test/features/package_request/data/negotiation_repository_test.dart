@@ -125,7 +125,12 @@ void main() {
 
   group('findMine', () {
     test('GETs /negotiations/me and returns list of threads', () async {
-      when(() => mockDio.get<List<dynamic>>('/negotiations/me')).thenAnswer(
+      when(
+        () => mockDio.get<List<dynamic>>(
+          '/negotiations/me',
+          queryParameters: {'archived': false},
+        ),
+      ).thenAnswer(
         (_) async => Response<List<dynamic>>(
           data: [_threadJson],
           statusCode: 200,
@@ -899,6 +904,45 @@ void main() {
           '/negotiations/th-1/mobile-money/cancel-deposit',
         ),
       ).called(1);
+    });
+  });
+
+  // Archiver / supprimer une discussion terminée (FLUTTER-EJ, yadony-back
+  // #423).
+  group('archivage', () {
+    test('findMine(archived: true) passe le filtre au serveur', () async {
+      when(
+        () => mockDio.get<List<dynamic>>(
+          '/negotiations/me',
+          queryParameters: {'archived': true},
+        ),
+      ).thenAnswer(
+        (_) async => _ok<List<dynamic>>([
+          {..._threadJson, 'status': 'EXPIRED', 'archived': true},
+        ], '/negotiations/me'),
+      );
+
+      final threads = await repo.findMine(archived: true);
+      expect(threads.single.archived, isTrue);
+    });
+
+    test('archive / unarchive postent, delete supprime', () async {
+      when(
+        () => mockDio.post<void>(any()),
+      ).thenAnswer((_) async => _ok<void>(null, '/negotiations/th-1/archive'));
+      when(
+        () => mockDio.delete<void>(any()),
+      ).thenAnswer((_) async => _ok<void>(null, '/negotiations/th-1'));
+
+      await repo.archive('th-1');
+      await repo.unarchive('th-1');
+      await repo.delete('th-1');
+
+      verify(() => mockDio.post<void>('/negotiations/th-1/archive')).called(1);
+      verify(
+        () => mockDio.post<void>('/negotiations/th-1/unarchive'),
+      ).called(1);
+      verify(() => mockDio.delete<void>('/negotiations/th-1')).called(1);
     });
   });
 }

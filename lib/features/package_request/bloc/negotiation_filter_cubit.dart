@@ -3,7 +3,9 @@ import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-enum NegoQuickFilter { all, active, terminal }
+/// [archived] change de source : l'écran affiche alors les listes archivées
+/// (`?archived=true`) au lieu des listes courantes.
+enum NegoQuickFilter { all, active, terminal, archived }
 
 class NegotiationFilterState extends Equatable {
   final String query;
@@ -48,6 +50,8 @@ bool negoMatchesPreset(NegoEntry entry, NegoQuickFilter preset) =>
       NegoQuickFilter.all => true,
       NegoQuickFilter.active => entry.isActive,
       NegoQuickFilter.terminal => !entry.isActive,
+      // La source est déjà la liste archivée : tout y est terminé.
+      NegoQuickFilter.archived => true,
     };
 
 /// Filtre ET trie : les deux sources n'arrivent pas entrelacées, seule une

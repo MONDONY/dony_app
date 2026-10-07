@@ -16633,4 +16633,40 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get conversationNotificationsMutedSemantics => 'Notifications coupées';
+
+  @override
+  String get negotiationFilterArchivedLabel => 'Archivées';
+
+  @override
+  String get negotiationArchiveAction => 'Archiver';
+
+  @override
+  String get negotiationUnarchiveAction => 'Désarchiver';
+
+  @override
+  String get negotiationArchivedSnackbar => 'Discussion archivée';
+
+  @override
+  String get negotiationUnarchivedSnackbar => 'Discussion désarchivée';
+
+  @override
+  String get negotiationDeletedSnackbar => 'Discussion supprimée';
+
+  @override
+  String get negotiationDeleteConfirmTitle => 'Supprimer la discussion ?';
+
+  @override
+  String get negotiationDeleteConfirmMessage =>
+      'Cette discussion disparaîtra de votre liste. L\'autre participant la conserve.';
+
+  @override
+  String get negotiationStillOpenSnackbar => 'Discussion encore en cours';
+
+  @override
+  String get negotiationArchiveUnavailableSnackbar =>
+      'Cette action n\'est pas encore disponible. Réessayez plus tard.';
+
+  @override
+  String get negotiationEmptyArchivedFilter =>
+      'Les discussions que vous archivez apparaîtront ici.';
 }

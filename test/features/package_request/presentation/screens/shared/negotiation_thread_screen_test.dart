@@ -554,8 +554,12 @@ void main() {
         await tester.pumpWidget(wrap());
         await tester.pumpAndSettle();
 
-        expect(find.byType(PopupMenuButton<String>), findsNothing);
+        // Le seul menu ⋯ est celui d'archivage (fil terminé, FLUTTER-EJ).
+        expect(find.byKey(const Key('nego-archive-menu')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('nego-archive-menu')));
+        await tester.pumpAndSettle();
         expect(find.text('Mettre fin à la négociation'), findsNothing);
+        expect(find.text('Archiver'), findsOneWidget);
       },
     );
   });

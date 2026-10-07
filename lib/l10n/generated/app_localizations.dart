@@ -27319,6 +27319,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Notifications coupées'**
   String get conversationNotificationsMutedSemantics;
+
+  /// Puce du filtre « Archivées » de my_negotiations_screen.dart (FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Archivées'**
+  String get negotiationFilterArchivedLabel;
+
+  /// Action d'archivage d'une discussion de prix terminée : balayage de tuile (my_negotiations_screen.dart) et menu ⋯ du détail (FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Archiver'**
+  String get negotiationArchiveAction;
+
+  /// Action de désarchivage d'une discussion de prix, filtre « Archivées » et menu ⋯ du détail (FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Désarchiver'**
+  String get negotiationUnarchiveAction;
+
+  /// Snackbar après archivage d'une discussion de prix (FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussion archivée'**
+  String get negotiationArchivedSnackbar;
+
+  /// Snackbar après désarchivage d'une discussion de prix (FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussion désarchivée'**
+  String get negotiationUnarchivedSnackbar;
+
+  /// Snackbar après suppression d'une discussion de prix depuis son détail (FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussion supprimée'**
+  String get negotiationDeletedSnackbar;
+
+  /// Titre de la feuille de confirmation de suppression d'une discussion de prix (nego_archive_actions.dart, FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la discussion ?'**
+  String get negotiationDeleteConfirmTitle;
+
+  /// Corps de la feuille de confirmation de suppression d'une discussion de prix (nego_archive_actions.dart, FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette discussion disparaîtra de votre liste. L\'autre participant la conserve.'**
+  String get negotiationDeleteConfirmMessage;
+
+  /// Snackbar quand le serveur refuse d'archiver ou de supprimer une discussion encore ouverte (409 negotiation-still-open, FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussion encore en cours'**
+  String get negotiationStillOpenSnackbar;
+
+  /// Snackbar quand le serveur ne connaît pas encore l'archivage / la suppression d'une discussion (404/405 d'un backend antérieur, FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action n\'est pas encore disponible. Réessayez plus tard.'**
+  String get negotiationArchiveUnavailableSnackbar;
+
+  /// État vide du filtre « Archivées » (my_negotiations_screen.dart, FLUTTER-EJ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les discussions que vous archivez apparaîtront ici.'**
+  String get negotiationEmptyArchivedFilter;
 }
 
 class _AppLocalizationsDelegate

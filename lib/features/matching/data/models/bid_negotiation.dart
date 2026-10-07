@@ -155,6 +155,10 @@ class BidNegotiation {
   /// statut seul).
   final BidPaymentMethod? paymentMethod;
 
+  /// Fil rangé dans les archives de l'appelant (yadony-back #423). Le détail
+  /// ne le porte pas toujours : `false` par défaut.
+  final bool archived;
+
   const BidNegotiation({
     required this.bidId,
     required this.announcementId,
@@ -182,6 +186,7 @@ class BidNegotiation {
     this.expiresAt,
     this.messages = const [],
     this.paymentMethod,
+    this.archived = false,
   });
 
   factory BidNegotiation.fromJson(Map<String, dynamic> json) => BidNegotiation(
@@ -221,10 +226,17 @@ class BidNegotiation {
     paymentMethod: BidPaymentMethodApi.fromApi(
       json['paymentMethod'] as String?,
     ),
+    archived: json['archived'] as bool? ?? false,
   );
 
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
   bool get isClosed => status != 'NEGOTIATING';
+
+  /// Plus rien n'est attendu de personne : le fil peut être archivé ou
+  /// supprimé de sa liste. Même règle que le serveur (yadony-back #423) et que
+  /// [BidNegotiationSummary.isClosed] — un accord encore à payer ou à régler
+  /// n'est pas terminé.
+  bool get isFinished => !kBidNegotiationOpenStatuses.contains(status);
 
   /// Le serveur dit le rôle, le client ne le devine plus.
   ///
@@ -262,6 +274,15 @@ class BidNegotiation {
 }
 
 /// Ligne de la liste « Discussions de prix » côté trajet.
+/// Statuts d'un fil de trajet encore en cours : en discussion, ou accord
+/// conclu mais pas encore réglé (carte : l'expéditeur doit payer ; espèces : le
+/// voyageur doit régler la commission). Tout autre statut est terminal.
+const kBidNegotiationOpenStatuses = {
+  'NEGOTIATING',
+  'AWAITING_PAYMENT',
+  'PENDING',
+};
+
 class BidNegotiationSummary {
   final String bidId;
   final String announcementId;
@@ -280,6 +301,10 @@ class BidNegotiationSummary {
   /// Point de vue du demandeur : `SENDER` ou `TRAVELER`.
   final String? role;
 
+  /// Fil rangé dans les archives de l'appelant (yadony-back #423). Absent
+  /// d'un backend antérieur : `false`.
+  final bool archived;
+
   const BidNegotiationSummary({
     required this.bidId,
     required this.announcementId,
@@ -295,6 +320,7 @@ class BidNegotiationSummary {
     this.departureDate,
     this.updatedAt,
     this.role,
+    this.archived = false,
   });
 
   factory BidNegotiationSummary.fromJson(Map<String, dynamic> json) =>
@@ -313,13 +339,13 @@ class BidNegotiationSummary {
         departureDate: _asDate(json['departureDate']),
         updatedAt: _asDate(json['updatedAt']),
         role: json['role'] as String?,
+        archived: json['archived'] as bool? ?? false,
       );
 
   /// Statuts sous lesquels le back liste encore le fil : en discussion, ou
   /// accord conclu mais pas encore réglé (carte : l'expéditeur doit payer ;
   /// espèces : le voyageur doit régler la commission). Une fois payé, le
   /// colis vit dans « Mes colis » et le fil quitte la liste.
-  static const _openStatuses = {'NEGOTIATING', 'AWAITING_PAYMENT', 'PENDING'};
 
   /// La discussion attend encore quelque chose de quelqu'un.
   ///
@@ -327,7 +353,7 @@ class BidNegotiationSummary {
   /// (« seul NEGOTIATING reste ouvert ») faisait disparaître le fil de
   /// « Discussions de prix » dès l'acceptation, sans laisser à l'expéditeur
   /// de chemin vers le paiement.
-  bool get isClosed => !_openStatuses.contains(status);
+  bool get isClosed => !kBidNegotiationOpenStatuses.contains(status);
 
   bool get isAwaitingCardPayment => status == 'AWAITING_PAYMENT';
 

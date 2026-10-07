@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/package_request/data/models/nego_archive.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -29,6 +32,27 @@ class NegotiationListRefreshRequested extends NegotiationListEvent {
   const NegotiationListRefreshRequested();
 }
 
+/// Filtre « Archivées » : charge les fils rangés par l'appelant.
+class NegotiationListArchivedFetchRequested extends NegotiationListEvent {
+  const NegotiationListArchivedFetchRequested();
+}
+
+/// Archiver / désarchiver / supprimer un fil terminé, pour soi seulement.
+class NegotiationArchiveActionRequested extends NegotiationListEvent {
+  const NegotiationArchiveActionRequested(
+    this.threadId,
+    this.action, {
+    this.fromDetail = false,
+  });
+
+  final String threadId;
+  final NegoArchiveAction action;
+  final bool fromDetail;
+
+  @override
+  List<Object?> get props => [threadId, action, fromDetail];
+}
+
 enum NegotiationListStatus { initial, loading, loaded, error }
 
 class NegotiationListState extends Equatable {
@@ -37,11 +61,24 @@ class NegotiationListState extends Equatable {
     this.threads = const [],
     this.errorMessage,
     DateTime? fetchedAt,
+    this.archivedStatus = NegotiationListStatus.initial,
+    this.archivedThreads = const [],
+    this.lastAction,
   }) : fetchedAt = fetchedAt ?? DateTime(2000);
 
   final NegotiationListStatus status;
+
+  /// Fils courants (non archivés). Seule source des compteurs et pastilles :
+  /// un fil archivé est terminé, il n'y a jamais compté.
   final List<NegotiationThread> threads;
   final Object? errorMessage;
+
+  /// Filtre « Archivées », chargé à la demande.
+  final NegotiationListStatus archivedStatus;
+  final List<NegotiationThread> archivedThreads;
+
+  /// Dernière action d'archivage / suppression, pour le `listener` de l'écran.
+  final NegoArchiveResult? lastAction;
 
   /// Horodatage du dernier chargement réussi.
   final DateTime fetchedAt;
@@ -68,15 +105,29 @@ class NegotiationListState extends Equatable {
     List<NegotiationThread>? threads,
     Object? errorMessage,
     DateTime? fetchedAt,
+    NegotiationListStatus? archivedStatus,
+    List<NegotiationThread>? archivedThreads,
+    NegoArchiveResult? lastAction,
   }) => NegotiationListState(
     status: status ?? this.status,
     threads: threads ?? this.threads,
     errorMessage: errorMessage ?? this.errorMessage,
     fetchedAt: fetchedAt ?? this.fetchedAt,
+    archivedStatus: archivedStatus ?? this.archivedStatus,
+    archivedThreads: archivedThreads ?? this.archivedThreads,
+    lastAction: lastAction ?? this.lastAction,
   );
 
   @override
-  List<Object?> get props => [status, threads, errorMessage, fetchedAt];
+  List<Object?> get props => [
+    status,
+    threads,
+    errorMessage,
+    fetchedAt,
+    archivedStatus,
+    archivedThreads,
+    lastAction,
+  ];
 }
 
 class NegotiationListBloc
@@ -84,9 +135,16 @@ class NegotiationListBloc
   NegotiationListBloc(this._repository) : super(NegotiationListState()) {
     on<NegotiationListFetchRequested>(_onFetch);
     on<NegotiationListRefreshRequested>(_onRefresh);
+    on<NegotiationListArchivedFetchRequested>(_onArchivedFetch);
+    on<NegotiationArchiveActionRequested>(_onArchiveAction);
   }
 
   final NegotiationRepository _repository;
+
+  /// Les actions partent l'une après l'autre : « Annuler » juste après
+  /// « Archiver » ne doit pas atteindre le serveur avant l'archivage.
+  Future<void> _actionQueue = Future<void>.value();
+  int _actionSeq = 0;
 
   Future<void> _onFetch(
     NegotiationListFetchRequested event,
@@ -94,7 +152,7 @@ class NegotiationListBloc
   ) async {
     emit(state.copyWith(status: NegotiationListStatus.loading));
     try {
-      final threads = await _repository.findMine();
+      final threads = _current(await _repository.findMine());
       emit(
         state.copyWith(
           status: NegotiationListStatus.loaded,
@@ -118,7 +176,7 @@ class NegotiationListBloc
     Emitter<NegotiationListState> emit,
   ) async {
     try {
-      final threads = await _repository.findMine();
+      final threads = _current(await _repository.findMine());
       emit(
         state.copyWith(
           status: NegotiationListStatus.loaded,
@@ -133,6 +191,109 @@ class NegotiationListBloc
           errorMessage: unwrapDioError(err),
         ),
       );
+    }
+  }
+
+  /// Un backend ancien ignore `archived` : on n'affiche jamais un fil archivé
+  /// dans la liste courante, ni un fil courant sous « Archivées ».
+  static List<NegotiationThread> _current(List<NegotiationThread> all) =>
+      all.where((t) => !t.archived).toList();
+
+  Future<void> _onArchivedFetch(
+    NegotiationListArchivedFetchRequested event,
+    Emitter<NegotiationListState> emit,
+  ) async {
+    emit(state.copyWith(archivedStatus: NegotiationListStatus.loading));
+    await _loadArchived(emit);
+  }
+
+  Future<void> _loadArchived(Emitter<NegotiationListState> emit) async {
+    try {
+      final all = await _repository.findMine(archived: true);
+      emit(
+        state.copyWith(
+          archivedStatus: NegotiationListStatus.loaded,
+          archivedThreads: all.where((t) => t.archived).toList(),
+        ),
+      );
+    } catch (err) {
+      emit(
+        state.copyWith(
+          archivedStatus: NegotiationListStatus.error,
+          errorMessage: unwrapDioError(err),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onArchiveAction(
+    NegotiationArchiveActionRequested event,
+    Emitter<NegotiationListState> emit,
+  ) async {
+    final previous = _actionQueue;
+    final done = Completer<void>();
+    _actionQueue = done.future;
+    try {
+      await previous;
+      await _runAction(event, emit);
+    } finally {
+      done.complete();
+    }
+  }
+
+  Future<void> _runAction(
+    NegotiationArchiveActionRequested event,
+    Emitter<NegotiationListState> emit,
+  ) async {
+    final id = event.threadId;
+    final before = state;
+    // Optimiste : la tuile quitte aussitôt la liste où elle est affichée.
+    emit(
+      state.copyWith(
+        threads: before.threads.where((t) => t.id != id).toList(),
+        archivedThreads: before.archivedThreads
+            .where((t) => t.id != id)
+            .toList(),
+      ),
+    );
+    NegoArchiveOutcome outcome;
+    Object? error;
+    try {
+      await switch (event.action) {
+        NegoArchiveAction.archive => _repository.archive(id),
+        NegoArchiveAction.unarchive => _repository.unarchive(id),
+        NegoArchiveAction.delete => _repository.delete(id),
+      };
+      outcome = NegoArchiveOutcome.success;
+    } catch (err) {
+      outcome = classifyNegoArchiveError(err);
+      error = unwrapDioError(err);
+    }
+    final rollback =
+        outcome == NegoArchiveOutcome.unsupported ||
+        outcome == NegoArchiveOutcome.failed;
+    emit(
+      state.copyWith(
+        threads: rollback ? before.threads : null,
+        archivedThreads: rollback ? before.archivedThreads : null,
+        lastAction: NegoArchiveResult(
+          id: id,
+          action: event.action,
+          outcome: outcome,
+          seq: ++_actionSeq,
+          fromDetail: event.fromDetail,
+          error: error,
+        ),
+      ),
+    );
+    if (outcome == NegoArchiveOutcome.unsupported) {
+      return;
+    }
+    // Rechargement silencieux : la vérité reste au serveur (fil rouvert,
+    // retiré, ou passé d'une liste à l'autre).
+    add(const NegotiationListRefreshRequested());
+    if (state.archivedStatus != NegotiationListStatus.initial) {
+      await _loadArchived(emit);
     }
   }
 }

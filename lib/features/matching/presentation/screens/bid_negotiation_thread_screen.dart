@@ -13,6 +13,8 @@ import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/presentation/activity_refresh.dart';
+import 'package:dony/features/package_request/data/models/nego_entry.dart';
+import 'package:dony/features/package_request/presentation/widgets/nego_archive_actions.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -29,9 +31,17 @@ import 'package:go_router/go_router.dart';
 /// qu'il expose, et non la présence de ce montant — un fil sans proposition tait
 /// les deux montants, ce qui faisait passer un voyageur pour un expéditeur.
 class BidNegotiationThreadScreen extends StatefulWidget {
-  const BidNegotiationThreadScreen({super.key, required this.bidId});
+  const BidNegotiationThreadScreen({
+    super.key,
+    required this.bidId,
+    this.archived = false,
+  });
 
   final String bidId;
+
+  /// Ouvert depuis le filtre « Archivées » : le détail de trajet ne porte pas
+  /// toujours `archived`, la route le transmet pour proposer « Désarchiver ».
+  final bool archived;
 
   @override
   State<BidNegotiationThreadScreen> createState() =>
@@ -184,48 +194,63 @@ class _BidNegotiationThreadScreenState
   Widget build(BuildContext context) {
     return BlocProvider<PaymentBloc>.value(
       value: _paymentBloc,
-      child: BlocListener<PaymentBloc, PaymentState>(
-        listener: (ctx, state) => unawaited(_onPaymentState(ctx, state)),
-        // Le `BlocConsumer` est AU-DESSUS du scaffold : la barre d'actions
-        // change avec l'état du fil, et `stickyBottom` doit pouvoir en changer
-        // avec lui.
-        child: BlocConsumer<BidNegotiationBloc, BidNegotiationState>(
-          listener: _onState,
-          builder: (context, state) {
-            final negotiation = _threadOf(state);
-            return DonyPageScaffold(
-              title: context.l10n.negotiationThreadTitle,
-              onBack: () => context.pop(),
-              // Le fil défile et garde l'inset clavier ; un chargement ou une
-              // erreur, eux, doivent occuper toute la hauteur pour rester
-              // centrés.
-              scrollable: negotiation != null,
-              stickyBottom: negotiation == null
-                  ? null
-                  : _ThreadActions(
-                      negotiation: negotiation,
-                      bidId: widget.bidId,
-                    ),
-              body: negotiation != null
-                  ? _ThreadBody(negotiation: negotiation)
-                  : switch (state) {
-                      BidNegotiationError(:final error) => DonyEmptyState(
-                        key: const Key('nego-error'),
-                        title: context.l10n.negotiationThreadErrorTitle,
-                        description: ErrorPresenter.resolve(
-                          error,
-                          l10n: context.l10n,
-                        ).message,
-                        type: DonyEmptyStateType.error,
-                        actionLabel: context.l10n.commonRetry,
-                        onAction: () => context.read<BidNegotiationBloc>().add(
-                          BidNegotiationFetchRequested(widget.bidId),
+      child: NegoArchiveDetailListener(
+        kind: NegoEntryKind.trip,
+        id: widget.bidId,
+        child: BlocListener<PaymentBloc, PaymentState>(
+          listener: (ctx, state) => unawaited(_onPaymentState(ctx, state)),
+          // Le `BlocConsumer` est AU-DESSUS du scaffold : la barre d'actions
+          // change avec l'état du fil, et `stickyBottom` doit pouvoir en changer
+          // avec lui.
+          child: BlocConsumer<BidNegotiationBloc, BidNegotiationState>(
+            listener: _onState,
+            builder: (context, state) {
+              final negotiation = _threadOf(state);
+              return DonyPageScaffold(
+                title: context.l10n.negotiationThreadTitle,
+                onBack: () => context.pop(),
+                // Fil terminé (FLUTTER-EJ) : on peut le ranger ou le retirer de
+                // sa liste, pour soi seulement.
+                appBarActions: negotiation != null && negotiation.isFinished
+                    ? [
+                        NegoArchiveMenuButton(
+                          kind: NegoEntryKind.trip,
+                          id: widget.bidId,
+                          archived: widget.archived || negotiation.archived,
                         ),
+                      ]
+                    : null,
+                // Le fil défile et garde l'inset clavier ; un chargement ou une
+                // erreur, eux, doivent occuper toute la hauteur pour rester
+                // centrés.
+                scrollable: negotiation != null,
+                stickyBottom: negotiation == null
+                    ? null
+                    : _ThreadActions(
+                        negotiation: negotiation,
+                        bidId: widget.bidId,
                       ),
-                      _ => const DonyChatSkeleton(key: Key('nego-loading')),
-                    },
-            );
-          },
+                body: negotiation != null
+                    ? _ThreadBody(negotiation: negotiation)
+                    : switch (state) {
+                        BidNegotiationError(:final error) => DonyEmptyState(
+                          key: const Key('nego-error'),
+                          title: context.l10n.negotiationThreadErrorTitle,
+                          description: ErrorPresenter.resolve(
+                            error,
+                            l10n: context.l10n,
+                          ).message,
+                          type: DonyEmptyStateType.error,
+                          actionLabel: context.l10n.commonRetry,
+                          onAction: () => context
+                              .read<BidNegotiationBloc>()
+                              .add(BidNegotiationFetchRequested(widget.bidId)),
+                        ),
+                        _ => const DonyChatSkeleton(key: Key('nego-loading')),
+                      },
+              );
+            },
+          ),
         ),
       ),
     );
