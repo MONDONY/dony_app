@@ -22,7 +22,11 @@ import 'package:intl/intl.dart';
 abstract final class CorridorAlertFormSheet {
   /// [alert] ouvre l'édition ; [prefill] ouvre une création déjà remplie
   /// (dupliquer une alerte, « m'alerter pour cette recherche »).
-  static Future<void> show(
+  ///
+  /// Se résout à `true` quand l'alerte a été enregistrée, `false` si la
+  /// feuille a été fermée sans enregistrer : l'appelant sait s'il doit
+  /// recharger (FLUTTER-EP).
+  static Future<bool> show(
     BuildContext context, {
     CorridorAlertModel? alert,
     CorridorAlertDraft? prefill,
@@ -42,7 +46,7 @@ abstract final class CorridorAlertFormSheet {
     final canSubmitNotifier = ValueNotifier<bool>(cubit.state.isValid);
     final l = context.l10n;
 
-    return DonyBottomSheet.show<void>(
+    return DonyBottomSheet.show<bool>(
       context,
       title: alert == null
           ? l.corridorAlertCreateAction
@@ -55,7 +59,7 @@ abstract final class CorridorAlertFormSheet {
                 state.isValid &&
                 state.status != CorridorAlertFormStatus.submitting;
             if (state.status == CorridorAlertFormStatus.success) {
-              ctx.pop();
+              ctx.pop(true);
             } else if (state.status == CorridorAlertFormStatus.error) {
               unawaited(ErrorPresenter.show(ctx, state.errorMessage));
             }
@@ -87,7 +91,7 @@ abstract final class CorridorAlertFormSheet {
         bothRoles: bothRoles,
         isEditing: alert != null,
       ),
-    ).whenComplete(canSubmitNotifier.dispose);
+    ).whenComplete(canSubmitNotifier.dispose).then((saved) => saved ?? false);
   }
 }
 

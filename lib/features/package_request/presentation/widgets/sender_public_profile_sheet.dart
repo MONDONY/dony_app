@@ -5,17 +5,49 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+/// Identifiant du compte connecté, ou `null` si personne n'est connecté ou si
+/// l'`AuthBloc` n'est pas dans l'arbre.
+String? _currentUserId(BuildContext context) {
+  try {
+    // currentUserId couvre AuthAuthenticated ET AuthProfileUpdated : tester
+    // le seul AuthAuthenticated raterait l'état émis après une maj de profil.
+    return context.read<AuthBloc>().state.currentUserId;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Résumé du profil d'un expéditeur. « Voir le profil » mène au profil public
+/// complet, qui porte « S'abonner » et les avis (FLUTTER-EB) ; masqué pour un
+/// invité (pas d'identifiant) et pour son propre profil.
 void showSenderPublicProfileSheet(
   BuildContext context,
   SenderPublicProfile sender,
 ) {
+  final canOpenProfile =
+      sender.id.isNotEmpty && sender.id != _currentUserId(context);
   DonyBottomSheet.show<void>(
     context,
     title: context.l10n.requestSenderProfileTitle,
+    stickyBottom: canOpenProfile
+        ? DonyButton(
+            key: const Key('sender-profile-open-full'),
+            label: context.l10n.requestSenderViewProfileButton,
+            onPressed: () {
+              context.pop();
+              context.push(
+                '/profile/public',
+                extra: ProfilePublicArgs(userId: sender.id),
+              );
+            },
+          )
+        : null,
     child: _SenderPublicProfileContent(sender: sender),
   );
 }
@@ -24,18 +56,6 @@ class _SenderPublicProfileContent extends StatelessWidget {
   const _SenderPublicProfileContent({required this.sender});
 
   final SenderPublicProfile sender;
-
-  /// Identifiant du compte connecté, ou `null` si personne n'est connecté ou si
-  /// l'`AuthBloc` n'est pas dans l'arbre.
-  String? _currentUserId(BuildContext context) {
-    try {
-      // currentUserId couvre AuthAuthenticated ET AuthProfileUpdated : tester
-      // le seul AuthAuthenticated raterait l'état émis après une maj de profil.
-      return context.read<AuthBloc>().state.currentUserId;
-    } catch (_) {
-      return null;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

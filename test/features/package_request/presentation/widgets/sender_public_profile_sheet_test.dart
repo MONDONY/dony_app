@@ -6,9 +6,11 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -178,6 +180,88 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
       expect(find.text('Yadony user'), findsWidgets);
+    });
+  });
+
+  // FLUTTER-EB : le résumé n'avait ni « S'abonner » ni avis. « Voir le
+  // profil » mène au profil public complet qui les porte.
+  group('SenderPublicProfileSheet — voir le profil (FLUTTER-EB)', () {
+    const button = Key('sender-profile-open-full');
+
+    testWidgets('bouton visible pour le profil d\'un autre', (tester) async {
+      await tester.pumpWidget(_buildApp(_sender(), authUserId: 'traveler-99'));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(button), findsOneWidget);
+      expect(find.text('Voir le profil'), findsOneWidget);
+    });
+
+    testWidgets('bouton absent sur mon propre profil', (tester) async {
+      await tester.pumpWidget(_buildApp(_sender(), authUserId: 'sender-1'));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(button), findsNothing);
+    });
+
+    testWidgets('bouton absent pour un invité sans identifiant', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildApp(SenderPublicProfile.guest('Fatou Diallo')),
+      );
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(button), findsNothing);
+    });
+
+    testWidgets('anglais : « View profile »', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp(_sender(), authUserId: 'traveler-99'));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('View profile'), findsOneWidget);
+    });
+
+    testWidgets('ferme la feuille et ouvre /profile/public sur l\'expéditeur', (
+      tester,
+    ) async {
+      Object? pushedExtra;
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => Scaffold(
+              body: Builder(
+                builder: (ctx) => ElevatedButton(
+                  key: const Key('open'),
+                  onPressed: () => showSenderPublicProfileSheet(ctx, _sender()),
+                  child: const Text('Ouvrir'),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/profile/public',
+            builder: (_, state) {
+              pushedExtra = state.extra;
+              return const Scaffold(body: Text('profil public'));
+            },
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      );
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(button));
+      await tester.pumpAndSettle();
+
+      expect(find.text('profil public'), findsOneWidget);
+      expect(find.text('Profil expéditeur'), findsNothing);
+      expect(pushedExtra, isA<ProfilePublicArgs>());
+      expect((pushedExtra! as ProfilePublicArgs).userId, 'sender-1');
     });
   });
 }

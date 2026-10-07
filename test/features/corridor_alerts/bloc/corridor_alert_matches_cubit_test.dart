@@ -315,4 +315,98 @@ void main() {
     ],
     verify: (_) => verifyNever(() => repo.markSeen(any())),
   );
+
+  // FLUTTER-EP : après modification depuis l'écran, l'alerte en mémoire
+  // portait les anciens filtres. reload() relit l'alerte et ses
+  // correspondances, sans toucher au seuil « nouveau » déjà figé.
+  group('reload (FLUTTER-EP)', () {
+    final firstSeen = DateTime(2026, 6);
+    final edited = CorridorAlertModel(
+      id: 'alert-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Bamako',
+      active: true,
+      createdAt: DateTime(2026, 6, 20),
+      lastSeenAt: DateTime(2026, 6, 30),
+    );
+
+    blocTest<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(
+      'relit alerte + correspondances depuis le serveur, garde le seuil',
+      build: () => build(
+        alert: CorridorAlertModel(
+          id: 'alert-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          active: true,
+          createdAt: DateTime(2026, 6, 20),
+          lastSeenAt: firstSeen,
+        ),
+      ),
+      setUp: () {
+        when(() => repo.getById('alert-1')).thenAnswer((_) async => edited);
+        when(
+          () =>
+              repo.getMatches('alert-1', AlertDirection.travelerWantsPackages),
+        ).thenAnswer(
+          (_) async => CorridorAlertMatches(
+            direction: AlertDirection.travelerWantsPackages,
+            packages: [_fakeMatch('m1'), _fakeMatch('m2')],
+          ),
+        );
+        // « Vu » en échec (silencieux) : seuls load/reload émettent.
+        when(() => repo.markSeen('alert-1')).thenThrow(Exception('réseau'));
+      },
+      act: (c) async {
+        await c.load();
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await c.reload();
+      },
+      wait: const Duration(milliseconds: 20),
+      skip: 2,
+      expect: () => [
+        isA<CorridorAlertMatchesState>().having(
+          (s) => s.status,
+          'status',
+          CorridorAlertMatchesStatus.loading,
+        ),
+        isA<CorridorAlertMatchesState>()
+            .having(
+              (s) => s.status,
+              'status',
+              CorridorAlertMatchesStatus.loaded,
+            )
+            .having((s) => s.alert?.arrivalCity, 'arrivalCity', 'Bamako')
+            .having((s) => s.result?.packages.length, 'packages', 2)
+            .having((s) => s.seenThreshold, 'seenThreshold', firstSeen)
+            .having((s) => s.thresholdKnown, 'thresholdKnown', isTrue),
+      ],
+      verify: (_) {
+        verify(() => repo.getById('alert-1')).called(1);
+        verify(
+          () =>
+              repo.getMatches('alert-1', AlertDirection.travelerWantsPackages),
+        ).called(2);
+      },
+    );
+
+    blocTest<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(
+      'échec du rechargement → erreur',
+      build: () => build(alert: _alert(AlertDirection.travelerWantsPackages)),
+      setUp: () =>
+          when(() => repo.getById('alert-1')).thenThrow(Exception('réseau')),
+      act: (c) => c.reload(),
+      expect: () => [
+        isA<CorridorAlertMatchesState>().having(
+          (s) => s.status,
+          'status',
+          CorridorAlertMatchesStatus.loading,
+        ),
+        isA<CorridorAlertMatchesState>().having(
+          (s) => s.status,
+          'status',
+          CorridorAlertMatchesStatus.error,
+        ),
+      ],
+    );
+  });
 }

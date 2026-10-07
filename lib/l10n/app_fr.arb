@@ -14830,6 +14830,10 @@
   "@corridorAlertBannerExpiredSubtitle": {
     "description": "Sous-titre du bandeau résumé d'une alerte expirée (corridor_alert_matches_screen.dart, _AlertSummaryBanner)."
   },
+  "corridorAlertMatchesNotifyNoteTrips": "Les trajets déjà publiés sont listés ici. Vous serez notifié des prochains.",
+  "@corridorAlertMatchesNotifyNoteTrips": {"description": "Écran des correspondances d'une alerte active (trajets) : explique que la liste montre l'existant et que les prochains seront notifiés (FLUTTER-ES, corridor_alert_matches_screen.dart)."},
+  "corridorAlertMatchesNotifyNoteParcels": "Les colis déjà publiés sont listés ici. Vous serez notifié des prochains.",
+  "@corridorAlertMatchesNotifyNoteParcels": {"description": "Écran des correspondances d'une alerte active (colis) : explique que la liste montre l'existant et que les prochains seront notifiés (FLUTTER-ES, corridor_alert_matches_screen.dart)."},
   "corridorAlertBannerActiveTitle": "Alerte active",
   "@corridorAlertBannerActiveTitle": {
     "description": "Titre du bandeau résumé d'une alerte active (corridor_alert_matches_screen.dart, _AlertSummaryBanner)."
@@ -18367,6 +18371,10 @@
   "@chatCopyMessageAction": {"description": "Entrée ajoutée au menu de sélection d'une bulle de texte, et action du lecteur d'écran, qui copie le message entier (chat_screen.dart _TextContent)."},
   "bidCreateWeightRequiredHint": "Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.",
   "@bidCreateWeightRequiredHint": {"description": "Formulaire de demande sur un trajet au kilo : aide affichée au-dessus du bouton tant qu'aucun poids n'est saisi (create_bid_bottom_sheet.dart)."},
+  "bidCreateContentRequiredHint": "Précisez le contenu du colis : choisissez une catégorie ou des articles.",
+  "@bidCreateContentRequiredHint": {"description": "Formulaire de demande sur un trajet mixte (kilo + grille) : aide au-dessus du bouton quand un poids est saisi mais ni catégorie ni article (FLUTTER-ET, create_bid_bottom_sheet.dart)."},
+  "requestSenderViewProfileButton": "Voir le profil",
+  "@requestSenderViewProfileButton": {"description": "Bouton de la sheet résumé du profil expéditeur, ouvre le profil public complet (abonnement, avis) (FLUTTER-EB, sender_public_profile_sheet.dart)."},
   "callNotificationTitle": "Appel Yadony en cours",
   "callStatusConnecting": "Connexion…",
   "@callStatusConnecting": {

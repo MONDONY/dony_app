@@ -86,10 +86,21 @@ class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
   final AnalyticsService _analytics;
   final String alertId;
 
-  Future<void> load() async {
+  Future<void> load() => _fetch(refreshAlert: false);
+
+  /// Relit l'alerte ET ses correspondances depuis le serveur, après une
+  /// modification depuis cet écran : l'alerte gardée en mémoire portait les
+  /// anciens filtres (FLUTTER-EP). Le seuil « nouveau » déjà figé est
+  /// conservé, les badges ne disparaissent pas.
+  Future<void> reload() => _fetch(refreshAlert: true);
+
+  Future<void> _fetch({required bool refreshAlert}) async {
     emit(state.copyWith(status: CorridorAlertMatchesStatus.loading));
     try {
-      final alert = state.alert ?? await _repository.getById(alertId);
+      final known = state.alert;
+      final alert = (refreshAlert || known == null)
+          ? await _repository.getById(alertId)
+          : known;
       final direction = alert.direction;
       // Le seuil se lit une seule fois : un rechargement (Réessayer) après
       // « vu » ne doit pas faire disparaître les nouveautés.

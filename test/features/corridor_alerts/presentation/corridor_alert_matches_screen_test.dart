@@ -1,9 +1,17 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/bloc/city_search_event.dart';
+import 'package:dony/features/city/bloc/city_search_state.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_matches.dart';
@@ -22,11 +30,23 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/mock_recent_city_store.dart';
 
 class MockMatchesCubit extends MockCubit<CorridorAlertMatchesState>
     implements CorridorAlertMatchesCubit {}
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+class MockFormCubit extends MockCubit<CorridorAlertFormState>
+    implements CorridorAlertFormCubit {}
+
+class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
+    implements CitySearchBloc {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 CorridorAlertModel _alert(AlertDirection direction) => CorridorAlertModel(
   id: 'alert-1',
@@ -427,4 +447,189 @@ void main() {
       expect(find.text('raw technical detail'), findsNothing);
     },
   );
+
+  // FLUTTER-ES : la liste montre l'existant, les prochains sont notifiés.
+  group('note « vous serez notifié » (FLUTTER-ES)', () {
+    CorridorAlertMatchesState loaded(CorridorAlertModel alert) =>
+        CorridorAlertMatchesState(
+          status: CorridorAlertMatchesStatus.loaded,
+          alert: alert,
+          result: CorridorAlertMatches(
+            direction: alert.direction,
+            trips: [_fakeTrip()],
+            packages: [_fakePackage()],
+          ),
+        );
+
+    testWidgets('alerte trajets active → note trajets', (tester) async {
+      when(
+        () => cubit.state,
+      ).thenReturn(loaded(_alert(AlertDirection.senderWantsTrips)));
+      await tester.pumpWidget(pump(AlertDirection.senderWantsTrips));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        find.text(
+          'Les trajets déjà publiés sont listés ici. '
+          'Vous serez notifié des prochains.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('alerte colis vide → note colis', (tester) async {
+      when(() => cubit.state).thenReturn(
+        CorridorAlertMatchesState(
+          status: CorridorAlertMatchesStatus.empty,
+          alert: _alert(AlertDirection.travelerWantsPackages),
+          result: const CorridorAlertMatches(
+            direction: AlertDirection.travelerWantsPackages,
+          ),
+        ),
+      );
+      await tester.pumpWidget(pump(AlertDirection.travelerWantsPackages));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        find.text(
+          'Les colis déjà publiés sont listés ici. '
+          'Vous serez notifié des prochains.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('alerte en pause → pas de note', (tester) async {
+      when(() => cubit.state).thenReturn(
+        loaded(
+          CorridorAlertModel(
+            id: 'alert-1',
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            active: false,
+            direction: AlertDirection.senderWantsTrips,
+            createdAt: DateTime(2026, 6, 20),
+          ),
+        ),
+      );
+      await tester.pumpWidget(pump(AlertDirection.senderWantsTrips));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byKey(const Key('alert-matches-notify-note')), findsNothing);
+    });
+
+    testWidgets('anglais', (tester) async {
+      useEnglish();
+      when(
+        () => cubit.state,
+      ).thenReturn(loaded(_alert(AlertDirection.senderWantsTrips)));
+      await tester.pumpWidget(pump(AlertDirection.senderWantsTrips));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        find.text(
+          "Trips already published are listed here. You'll be notified of "
+          'new ones.',
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
+  // FLUTTER-EP : modifier l'alerte depuis cet écran recharge alerte et
+  // correspondances une fois la feuille fermée sur un enregistrement.
+  group('modification de l\'alerte (FLUTTER-EP)', () {
+    late StreamController<CorridorAlertFormState> formStates;
+    const formInitial = CorridorAlertFormState(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      direction: AlertDirection.senderWantsTrips,
+    );
+
+    setUpAll(registerCityFallbackValues);
+
+    setUp(() {
+      when(() => cubit.reload()).thenAnswer((_) async {});
+      when(() => cubit.state).thenReturn(
+        CorridorAlertMatchesState(
+          status: CorridorAlertMatchesStatus.loaded,
+          alert: _alert(AlertDirection.senderWantsTrips),
+          result: CorridorAlertMatches(
+            direction: AlertDirection.senderWantsTrips,
+            trips: [_fakeTrip()],
+          ),
+        ),
+      );
+      final formCubit = MockFormCubit();
+      when(() => formCubit.isEditing).thenReturn(true);
+      formStates = StreamController<CorridorAlertFormState>();
+      whenListen<CorridorAlertFormState>(
+        formCubit,
+        formStates.stream,
+        initialState: formInitial,
+      );
+      GetIt.I.registerFactoryParam<
+        CorridorAlertFormCubit,
+        ({
+          CorridorAlertModel? editing,
+          AlertDirection direction,
+          CorridorAlertDraft? prefill,
+        }),
+        void
+      >((_, _) => formCubit);
+      final cityBloc = MockCitySearchBloc();
+      when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+      GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+      GetIt.I.registerFactory<IContentCategoryRepository>(
+        () => _FakeContentCategoryRepository(),
+      );
+      registerFakeRecentCityStore();
+    });
+
+    tearDown(() => formStates.close());
+
+    Widget routed() => MultiBlocProvider(
+      providers: [BlocProvider<AuthBloc>.value(value: authBloc)],
+      child: MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => CorridorAlertMatchesScreen(
+                alert: _alert(AlertDirection.senderWantsTrips),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    testWidgets('enregistrement → rechargement depuis le serveur', (
+      tester,
+    ) async {
+      await tester.pumpWidget(routed());
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.byTooltip("Modifier l'alerte"));
+      await tester.pumpAndSettle();
+      verifyNever(() => cubit.reload());
+
+      formStates.add(
+        formInitial.copyWith(status: CorridorAlertFormStatus.success),
+      );
+      await tester.pumpAndSettle();
+
+      verify(() => cubit.reload()).called(1);
+    });
+
+    testWidgets('fermée sans enregistrer → pas de rechargement', (
+      tester,
+    ) async {
+      await tester.pumpWidget(routed());
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.byTooltip("Modifier l'alerte"));
+      await tester.pumpAndSettle();
+
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => cubit.reload());
+    });
+  });
 }
