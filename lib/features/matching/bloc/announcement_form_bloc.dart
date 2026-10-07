@@ -48,7 +48,9 @@ class AnnouncementFormBloc
     emit(
       state.copyWith(
         departureCity: event.city,
-        departureCountryCode: event.countryCode,
+        // Le code suit toujours la ville courante, y compris quand il est nul :
+        // un `??` gardait celui de la ville précédente (interversion, modèle).
+        departureCountryCodeGetter: () => event.countryCode,
       ),
     );
   }
@@ -60,7 +62,7 @@ class AnnouncementFormBloc
     emit(
       state.copyWith(
         arrivalCity: event.city,
-        arrivalCountryCode: event.countryCode,
+        arrivalCountryCodeGetter: () => event.countryCode,
       ),
     );
   }

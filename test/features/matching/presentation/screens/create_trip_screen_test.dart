@@ -1369,6 +1369,40 @@ void main() {
     });
 
     testWidgets(
+      'FLUTTER-EH — appliquer un modèle porte ses codes pays jusqu\'au form bloc',
+      (tester) async {
+        registerCurrencyPreference('EUR');
+        setupViewport(tester);
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+        await tapFullTemplateChip(tester);
+
+        final formBloc = BlocProvider.of<AnnouncementFormBloc>(
+          tester.element(find.byType(TrajetStep)),
+        );
+        // Lu à la soumission : avant correctif, les villes étaient posées
+        // avant les codes et le bloc restait sur null (trajet publié sans pays).
+        expect(formBloc.state.departureCity, 'Abidjan');
+        expect(formBloc.state.departureCountryCode, 'CI');
+        expect(formBloc.state.arrivalCountryCode, 'FR');
+
+        // Interversion : les codes suivent leur ville (avant correctif, le
+        // bloc gardait CI au départ pour Paris).
+        await tester.ensureVisible(
+          find.byKey(const Key('swap-corridor-cities')),
+        );
+        await tester.tap(find.byKey(const Key('swap-corridor-cities')));
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(formBloc.state.departureCity, 'Paris');
+        expect(formBloc.state.departureCountryCode, 'FR');
+        expect(formBloc.state.arrivalCity, 'Abidjan');
+        expect(formBloc.state.arrivalCountryCode, 'CI');
+
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+
+    testWidgets(
       'appliquer un modèle complet copie devise, conditions, adresses et heures',
       (tester) async {
         registerCurrencyPreference('EUR');

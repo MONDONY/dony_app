@@ -137,6 +137,8 @@ class AnnouncementFormState extends Equatable {
     String? arrivalCity,
     String? departureCountryCode,
     String? arrivalCountryCode,
+    String? Function()? departureCountryCodeGetter,
+    String? Function()? arrivalCountryCodeGetter,
     DateTime? departureDate,
     double? pricePerKg,
     double? Function()? pricePerKgGetter,
@@ -159,8 +161,12 @@ class AnnouncementFormState extends Equatable {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
       arrivalCity: arrivalCity ?? this.arrivalCity,
-      departureCountryCode: departureCountryCode ?? this.departureCountryCode,
-      arrivalCountryCode: arrivalCountryCode ?? this.arrivalCountryCode,
+      departureCountryCode: departureCountryCodeGetter != null
+          ? departureCountryCodeGetter()
+          : (departureCountryCode ?? this.departureCountryCode),
+      arrivalCountryCode: arrivalCountryCodeGetter != null
+          ? arrivalCountryCodeGetter()
+          : (arrivalCountryCode ?? this.arrivalCountryCode),
       departureDate: departureDate ?? this.departureDate,
       pricePerKg: pricePerKgGetter != null
           ? pricePerKgGetter()
