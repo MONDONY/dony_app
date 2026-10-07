@@ -131,4 +131,22 @@ void main() {
       expect(model.deliveryAddress, isNull);
     });
   });
+
+  group('BidModel.contactWindowOpen (FLUTTER-DK, yadony-back #414)', () {
+    test('fromJson lit true et le renvoie en toJson', () {
+      final json = _minimalBid()..['contactWindowOpen'] = true;
+      final model = BidModel.fromJson(json);
+      expect(model.contactWindowOpen, isTrue);
+      expect(model.toJson()['contactWindowOpen'], isTrue);
+    });
+
+    test('fromJson lit false', () {
+      final json = _minimalBid()..['contactWindowOpen'] = false;
+      expect(BidModel.fromJson(json).contactWindowOpen, isFalse);
+    });
+
+    test('ancien back sans le champ → null (repli sur le statut)', () {
+      expect(BidModel.fromJson(_minimalBid()).contactWindowOpen, isNull);
+    });
+  });
 }

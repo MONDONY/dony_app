@@ -108,6 +108,12 @@ class BidModel {
   /// lui-même s'obtient au tap via `GET /bids/{id}/contact` — il ne transite plus
   /// dans les réponses de liste.
   final bool senderPhoneAvailable;
+
+  /// Fenêtre de contact téléphonique ouverte (yadony-back #414, FLUTTER-DK) :
+  /// de ACCEPTED à ARRIVED, puis en COMPLETED jusqu'à J+3 après la livraison,
+  /// même règle que l'appel in-app. Nul pour un back antérieur : l'UI retombe
+  /// alors sur la règle de statut locale.
+  final bool? contactWindowOpen;
   final int? senderTotalShipments;
   final bool senderKycVerified;
   final bool senderIsProAccount;
@@ -278,6 +284,7 @@ class BidModel {
     required this.senderId,
     this.senderName,
     this.senderPhoneAvailable = false,
+    this.contactWindowOpen,
     this.senderTotalShipments,
     this.senderKycVerified = false,
     this.senderIsProAccount = false,

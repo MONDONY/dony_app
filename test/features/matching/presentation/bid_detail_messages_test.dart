@@ -90,8 +90,9 @@ void main() {
     registerFallbackValue(_FakeCancellationEvent());
   });
 
-  // Date fixe déjà vérifiée dans common-context (mar. 6 oct. / 14:05).
-  final fixedDate = DateTime(2026, 10, 6, 14, 5);
+  // Date fixe lointaine (mar. 7 oct. 2036 / 14:05) : une date passée change le
+  // message affiché (départ dépassé) et cassait ces tests le lendemain.
+  final fixedDate = DateTime(2036, 10, 7, 14, 5);
 
   group('Formats de date (bidDetailUntil, commonDateAtTime)', () {
     testWidgets(
@@ -102,7 +103,7 @@ void main() {
           _bid(status: 'ACCEPTED', handoverDeadline: fixedDate),
         );
 
-        expect(find.textContaining("jusqu'au mar. 6 oct."), findsOneWidget);
+        expect(find.textContaining("jusqu'au mar. 7 oct."), findsOneWidget);
       },
     );
 
@@ -113,7 +114,7 @@ void main() {
         // (isolat de test) : impossible à déclencher depuis un widget test
         // normal (déjà vrai avant cette tâche). On protège directement
         // l'équivalence du squelette utilisé dans le catch.
-        expect(DateFormat.Md('fr').format(fixedDate), '06/10');
+        expect(DateFormat.Md('fr').format(fixedDate), '07/10');
       },
     );
 
@@ -130,7 +131,7 @@ void main() {
         );
 
         expect(
-          find.textContaining('Embarquement prévu le mar. 6 oct. à 14:05.'),
+          find.textContaining('Embarquement prévu le mar. 7 oct. à 14:05.'),
           findsOneWidget,
         );
       },
