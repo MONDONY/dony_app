@@ -97,6 +97,7 @@ import 'package:dony/features/matching/presentation/screens/trip_poster_screen.d
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
+import 'package:dony/features/messaging/bloc/conversation_notifications/conversation_notifications_cubit.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
@@ -1205,6 +1206,10 @@ final appRouter = GoRouter(
               BlocProvider(create: (_) => getIt<ChatBloc>()),
               // Le numéro n'est plus dans la conversation : il est demandé au tap.
               BlocProvider(create: (_) => getIt<ContactRevealBloc>()),
+              BlocProvider(
+                create: (_) =>
+                    getIt<ConversationNotificationsCubit>(param1: conversation),
+              ),
             ],
             child: ChatScreen(conversation: conversation),
           );

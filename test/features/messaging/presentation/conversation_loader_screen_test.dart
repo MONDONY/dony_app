@@ -11,6 +11,7 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
+import 'package:dony/features/messaging/bloc/conversation_notifications/conversation_notifications_cubit.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/conversation_loader_screen.dart';
@@ -74,12 +75,24 @@ void main() {
       when(() => bloc.state).thenReturn(const ContactRevealInitial());
       return bloc;
     });
+    getIt.registerFactoryParam<
+      ConversationNotificationsCubit,
+      ConversationModel,
+      void
+    >(
+      (conversation, _) => ConversationNotificationsCubit(
+        repository,
+        getIt<AnalyticsService>(),
+        conversation: conversation,
+      ),
+    );
   });
 
   tearDown(() async {
     await getIt.unregister<ConversationRepository>();
     await getIt.unregister<ChatBloc>();
     await getIt.unregister<ContactRevealBloc>();
+    await getIt.unregister<ConversationNotificationsCubit>();
   });
 
   tearDownAll(() => GetIt.instance.reset());
@@ -107,6 +120,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Modibo Coulibaly'), findsOneWidget);
+
+      // La sourdine (FLUTTER-CM) est branchée sur ce chemin aussi.
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.text('Mettre en sourdine'), findsOneWidget);
     });
 
     testWidgets('shows a retry error state when the fetch fails', (

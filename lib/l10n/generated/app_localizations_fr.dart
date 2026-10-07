@@ -16611,4 +16611,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatQuoteShowSemantics => 'Afficher le message cité';
+
+  @override
+  String get chatMuteNotifications => 'Mettre en sourdine';
+
+  @override
+  String get chatUnmuteNotifications => 'Réactiver les notifications';
+
+  @override
+  String get chatNotificationsMutedSnackbar =>
+      'Notifications coupées pour cette conversation';
+
+  @override
+  String get chatNotificationsUnmutedSnackbar => 'Notifications réactivées';
+
+  @override
+  String get conversationMuteAction => 'Sourdine';
+
+  @override
+  String get conversationUnmuteAction => 'Réactiver';
+
+  @override
+  String get conversationNotificationsMutedSemantics => 'Notifications coupées';
 }

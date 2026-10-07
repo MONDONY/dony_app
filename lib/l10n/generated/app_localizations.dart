@@ -27277,6 +27277,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Afficher le message cité'**
   String get chatQuoteShowSemantics;
+
+  /// Entrée du menu ⋯ de chat_screen.dart : coupe les notifications push de cette conversation (FLUTTER-CM). Sans rapport avec la coupure de messagerie par un administrateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre en sourdine'**
+  String get chatMuteNotifications;
+
+  /// Entrée du menu ⋯ de chat_screen.dart quand la conversation est en sourdine (FLUTTER-CM).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réactiver les notifications'**
+  String get chatUnmuteNotifications;
+
+  /// Snackbar de confirmation après la mise en sourdine d'une conversation (chat_screen.dart, conversation_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications coupées pour cette conversation'**
+  String get chatNotificationsMutedSnackbar;
+
+  /// Snackbar de confirmation après la réactivation des notifications d'une conversation (chat_screen.dart, conversation_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications réactivées'**
+  String get chatNotificationsUnmutedSnackbar;
+
+  /// Libellé court du SlidableAction de mise en sourdine de conversation_list_screen.dart (FLUTTER-CM).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sourdine'**
+  String get conversationMuteAction;
+
+  /// Libellé court du SlidableAction de réactivation des notifications de conversation_list_screen.dart (FLUTTER-CM).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réactiver'**
+  String get conversationUnmuteAction;
+
+  /// Libellé d'accessibilité de la cloche barrée d'une conversation en sourdine (conversation_tile.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications coupées'**
+  String get conversationNotificationsMutedSemantics;
 }
 
 class _AppLocalizationsDelegate

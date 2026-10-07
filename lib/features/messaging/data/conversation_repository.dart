@@ -114,6 +114,19 @@ class ConversationRepository {
     await _api.dio.post('/conversations/$id/unarchive');
   }
 
+  /// Coupe les notifications push des nouveaux messages de ce fil pour
+  /// l'utilisateur courant (204, idempotent ; 403 hors participant). Un back
+  /// antérieur, sans la route, répond 404 ou 405 : l'appelant annule alors sa
+  /// mise à jour optimiste.
+  Future<void> muteConversationNotifications(String id) async {
+    await _api.dio.post('/conversations/$id/mute');
+  }
+
+  /// Réactive les notifications push de ce fil (204, idempotent).
+  Future<void> unmuteConversationNotifications(String id) async {
+    await _api.dio.post('/conversations/$id/unmute');
+  }
+
   Future<Map<String, String>> uploadImage(
     String conversationId,
     List<int> bytes,

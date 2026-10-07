@@ -205,4 +205,48 @@ void main() {
       );
     });
   });
+
+  group('sourdine des notifications (FLUTTER-CM)', () {
+    Response<dynamic> noContent(String path) =>
+        Response(statusCode: 204, requestOptions: RequestOptions(path: path));
+
+    test('mute appelle POST /conversations/{id}/mute', () async {
+      when(
+        () => dio.post('/conversations/c1/mute'),
+      ).thenAnswer((_) async => noContent('/conversations/c1/mute'));
+
+      await repository.muteConversationNotifications('c1');
+
+      verify(() => dio.post('/conversations/c1/mute')).called(1);
+      verifyNever(() => dio.post('/conversations/c1/unmute'));
+    });
+
+    test('unmute appelle POST /conversations/{id}/unmute', () async {
+      when(
+        () => dio.post('/conversations/c1/unmute'),
+      ).thenAnswer((_) async => noContent('/conversations/c1/unmute'));
+
+      await repository.unmuteConversationNotifications('c1');
+
+      verify(() => dio.post('/conversations/c1/unmute')).called(1);
+    });
+
+    test('propage l erreur d un ancien back (405)', () async {
+      when(() => dio.post('/conversations/c1/mute')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/conversations/c1/mute'),
+          response: Response(
+            statusCode: 405,
+            requestOptions: RequestOptions(path: '/conversations/c1/mute'),
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
+
+      expect(
+        () => repository.muteConversationNotifications('c1'),
+        throwsA(isA<DioException>()),
+      );
+    });
+  });
 }

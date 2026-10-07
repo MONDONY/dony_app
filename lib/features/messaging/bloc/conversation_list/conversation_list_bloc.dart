@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
@@ -14,6 +16,7 @@ class ConversationListBloc
     extends Bloc<ConversationListEvent, ConversationListState> {
   final ConversationRepository _repository;
   final FirestoreChatRepository _firestoreRepo;
+  final AnalyticsService? _analytics;
 
   StreamSubscription<Map<String, int>>? _unreadSub;
   StreamSubscription<User?>? _authSub;
@@ -35,7 +38,9 @@ class ConversationListBloc
     this._firestoreRepo, {
     BlockEventsService? blockEvents,
     String Function()? currentUid,
-  }) : _currentUid =
+    AnalyticsService? analytics,
+  }) : _analytics = analytics,
+       _currentUid =
            currentUid ?? (() => FirebaseAuth.instance.currentUser?.uid ?? ''),
        super(const ConversationListInitial()) {
     on<ConversationsLoadRequested>(_onLoad);
@@ -45,6 +50,8 @@ class ConversationListBloc
     on<ConversationFilterChanged>(_onFilterChanged);
     on<ConversationArchiveRequested>(_onArchive);
     on<ConversationUnarchiveRequested>(_onUnarchive);
+    on<ConversationNotificationsMuteToggled>(_onMuteToggled);
+    on<ConversationNotificationsMuteSynced>(_onMuteSynced);
 
     // Ce Bloc est un singleton GetIt (jamais fermé via BlocProvider.value) :
     // sans ce listener, _unreadSub survit à un signOut() et Firestore renvoie
@@ -258,6 +265,92 @@ class ConversationListBloc
     } catch (_) {
       add(const ConversationsLoadRequested());
     }
+  }
+
+  /// Statut de sourdine actuel du fil, actif ou archivé, `null` s'il n'est
+  /// pas en mémoire.
+  bool? _mutedOf(String id) {
+    for (final c in [...?_loaded, ..._archived]) {
+      if (c.id == id) return c.notificationsMuted;
+    }
+    return null;
+  }
+
+  /// Pose [muted] sur le fil [id] dans les deux listes et émet l'état.
+  void _applyMuted(
+    String id,
+    bool muted,
+    Emitter<ConversationListState> emit, {
+    ConversationMuteFeedback? feedback,
+  }) {
+    List<ConversationModel> patch(List<ConversationModel> list) => [
+      for (final c in list)
+        c.id == id ? c.copyWith(notificationsMuted: muted) : c,
+    ];
+    if (_loaded != null) _loaded = patch(_loaded!);
+    _archived = patch(_archived);
+    if (_loaded == null) return;
+    emit(
+      ConversationListLoaded(
+        _loaded!,
+        archivedConversations: _archived,
+        filter: _currentFilter,
+        searchQuery: _currentSearchQuery,
+        muteFeedback: feedback,
+      ),
+    );
+  }
+
+  Future<void> _onMuteToggled(
+    ConversationNotificationsMuteToggled event,
+    Emitter<ConversationListState> emit,
+  ) async {
+    final current = _mutedOf(event.conversationId);
+    if (current == null) return;
+    final target = !current;
+    _applyMuted(event.conversationId, target, emit);
+    try {
+      if (target) {
+        await _repository.muteConversationNotifications(event.conversationId);
+      } else {
+        await _repository.unmuteConversationNotifications(event.conversationId);
+      }
+    } catch (e) {
+      // Ancien back (404/405), 403 ou réseau : on remet l'état d'avant.
+      _applyMuted(
+        event.conversationId,
+        current,
+        emit,
+        feedback: ConversationMuteFeedback(
+          muted: target,
+          error: unwrapDioError(e),
+        ),
+      );
+      return;
+    }
+    unawaited(
+      _analytics?.logEvent(
+        target
+            ? AnalyticsEvents.conversationNotificationsMuted
+            : AnalyticsEvents.conversationNotificationsUnmuted,
+        properties: const {'source': 'list'},
+      ),
+    );
+    _applyMuted(
+      event.conversationId,
+      target,
+      emit,
+      feedback: ConversationMuteFeedback(muted: target),
+    );
+  }
+
+  void _onMuteSynced(
+    ConversationNotificationsMuteSynced event,
+    Emitter<ConversationListState> emit,
+  ) {
+    final current = _mutedOf(event.conversationId);
+    if (current == null || current == event.muted) return;
+    _applyMuted(event.conversationId, event.muted, emit);
   }
 
   void _removeFromLoaded(String id, Emitter<ConversationListState> emit) {

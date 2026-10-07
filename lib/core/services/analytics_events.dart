@@ -204,6 +204,13 @@ abstract final class AnalyticsEvents {
       'call_lock_screen_settings_opened';
   static const messageBlocked = 'message_blocked';
 
+  /// Notifications d'une conversation coupées / réactivées, confirmé par le
+  /// serveur. Propriété `source` : `chat` (menu ⋯) / `list` (volet glissant).
+  static const conversationNotificationsMuted =
+      'conversation_notifications_muted';
+  static const conversationNotificationsUnmuted =
+      'conversation_notifications_unmuted';
+
   // Wallet
   static const walletTopupStarted = 'wallet_topup_started';
   static const walletTopupCompleted = 'wallet_topup_completed';

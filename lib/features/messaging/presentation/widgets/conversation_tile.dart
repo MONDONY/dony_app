@@ -73,6 +73,18 @@ class ConversationTile extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (conversation.notificationsMuted) ...[
+                          const SizedBox(width: DonySpacing.xs),
+                          Semantics(
+                            label: l.conversationNotificationsMutedSemantics,
+                            child: Icon(
+                              Icons.notifications_off_outlined,
+                              key: const Key('conversation-tile-muted'),
+                              size: 14,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                         if (conversation.lastMessageAt != null) ...[
                           const SizedBox(width: DonySpacing.xs),
                           Text(

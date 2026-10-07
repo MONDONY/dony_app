@@ -19067,5 +19067,19 @@
   "chatQuoteLoading": "Chargement…",
   "@chatQuoteLoading": {"description": "Extrait d'une citation pendant la lecture du message cité, hors des messages chargés (FLUTTER-86)."},
   "chatQuoteShowSemantics": "Afficher le message cité",
-  "@chatQuoteShowSemantics": {"description": "Indication du lecteur d'écran sur une citation : un tap fait défiler jusqu'au message cité (FLUTTER-86)."}
+  "@chatQuoteShowSemantics": {"description": "Indication du lecteur d'écran sur une citation : un tap fait défiler jusqu'au message cité (FLUTTER-86)."},
+  "chatMuteNotifications": "Mettre en sourdine",
+  "@chatMuteNotifications": {"description": "Entrée du menu ⋯ de chat_screen.dart : coupe les notifications push de cette conversation (FLUTTER-CM). Sans rapport avec la coupure de messagerie par un administrateur."},
+  "chatUnmuteNotifications": "Réactiver les notifications",
+  "@chatUnmuteNotifications": {"description": "Entrée du menu ⋯ de chat_screen.dart quand la conversation est en sourdine (FLUTTER-CM)."},
+  "chatNotificationsMutedSnackbar": "Notifications coupées pour cette conversation",
+  "@chatNotificationsMutedSnackbar": {"description": "Snackbar de confirmation après la mise en sourdine d'une conversation (chat_screen.dart, conversation_list_screen.dart)."},
+  "chatNotificationsUnmutedSnackbar": "Notifications réactivées",
+  "@chatNotificationsUnmutedSnackbar": {"description": "Snackbar de confirmation après la réactivation des notifications d'une conversation (chat_screen.dart, conversation_list_screen.dart)."},
+  "conversationMuteAction": "Sourdine",
+  "@conversationMuteAction": {"description": "Libellé court du SlidableAction de mise en sourdine de conversation_list_screen.dart (FLUTTER-CM)."},
+  "conversationUnmuteAction": "Réactiver",
+  "@conversationUnmuteAction": {"description": "Libellé court du SlidableAction de réactivation des notifications de conversation_list_screen.dart (FLUTTER-CM)."},
+  "conversationNotificationsMutedSemantics": "Notifications coupées",
+  "@conversationNotificationsMutedSemantics": {"description": "Libellé d'accessibilité de la cloche barrée d'une conversation en sourdine (conversation_tile.dart)."}
 }

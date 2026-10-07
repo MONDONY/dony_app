@@ -226,4 +226,53 @@ void main() {
       expect(find.text('Paris → Dakar'), findsOneWidget);
     });
   });
+
+  group('sourdine (FLUTTER-CM)', () {
+    const muted = ConversationModel(
+      id: 'conv-2',
+      bidId: 'bid-2',
+      firestoreConversationId: 'conv_bid-2',
+      otherParticipant: ParticipantModel(id: 'uid-2', name: 'Awa'),
+      notificationsMuted: true,
+    );
+
+    testWidgets('cloche barrée discrète quand le fil est en sourdine', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(_wrap(muted));
+
+      final bell = find.byKey(const Key('conversation-tile-muted'));
+      expect(bell, findsOneWidget);
+      final icon = tester.widget<Icon>(bell);
+      expect(icon.icon, Icons.notifications_off_outlined);
+      expect(icon.size, 14);
+      final context = tester.element(bell);
+      expect(icon.color, Theme.of(context).colorScheme.onSurfaceVariant);
+      expect(
+        find.bySemanticsLabel(RegExp('Notifications coupées')),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+
+    testWidgets('libellé d accessibilité anglais', (tester) async {
+      useEnglish();
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(_wrap(muted));
+
+      expect(
+        find.bySemanticsLabel(RegExp('Notifications muted')),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+
+    testWidgets('pas de cloche sans sourdine', (tester) async {
+      await tester.pumpWidget(_wrap(_conversation(participantName: 'Awa')));
+
+      expect(find.byKey(const Key('conversation-tile-muted')), findsNothing);
+      expect(find.byIcon(Icons.notifications_off_outlined), findsNothing);
+    });
+  });
 }

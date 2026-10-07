@@ -122,10 +122,12 @@ import 'package:dony/features/matching/data/repositories/mobile_money_repository
 import 'package:dony/features/matching/data/repositories/tools_completion_repository.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
+import 'package:dony/features/messaging/bloc/conversation_notifications/conversation_notifications_cubit.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/chat_draft_store.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/notifications/bloc/announcements_inbox_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_detail_cubit.dart';
@@ -712,6 +714,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<ConversationRepository>(),
       getIt<FirestoreChatRepository>(),
       blockEvents: getIt<BlockEventsService>(),
+      analytics: getIt<AnalyticsService>(),
     ),
     dispose: (b) => b.close(),
   );
@@ -725,6 +728,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<FirestoreChatRepository>(),
       getIt<ConversationRepository>(),
       getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactoryParam<
+    ConversationNotificationsCubit,
+    ConversationModel,
+    void
+  >(
+    (conversation, _) => ConversationNotificationsCubit(
+      getIt<ConversationRepository>(),
+      getIt<AnalyticsService>(),
+      conversation: conversation,
     ),
   );
   getIt.registerFactory<ConversationOpenBloc>(

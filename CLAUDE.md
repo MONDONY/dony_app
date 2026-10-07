@@ -402,6 +402,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `messages_negotiations_shortcut_opened` | NegotiationsShortcutSection — ligne « Discussions de prix » épinglée sous « Support Yadony » en tête de Messages, visible dès qu'une négociation (demande d'envoi ou prix d'un trajet) est ouverte, raccourci vers `/negotiations` (FLUTTER-44). Propriétés `open_count`, `awaiting_me_count` (c'est à l'utilisateur de répondre ou de payer) |
 | `conversation_opened` | ChatScreen.initState |
 | `message_sent` | ChatBloc._onSendText() |
+| `conversation_notifications_muted` / `conversation_notifications_unmuted` | ConversationNotificationsCubit.toggle() (menu ⋯ du chat, `source: chat`) · ConversationListBloc._onMuteToggled() (volet glissant de la liste, `source: list`) — sourdine d'une conversation confirmée par le serveur (`POST /conversations/{id}/mute`/`unmute`, FLUTTER-CM). Non émis en cas d'échec (bascule annulée) |
 | `conversation_call_initiated` | ChatScreen._call() — tap 📞 dans le header chat (numéro révélé) |
 | `call_mode_chosen` | ChatScreen — choix dans la feuille d'appel quand les deux modes existent (propriété `mode` : `yadony`/`phone`). Non émis quand un seul mode est possible (un tap direct) |
 | `call_started` | CallBloc._onStart — appel Yadony créé par le back (`POST /conversations/{id}/calls` accepté), avant la sonnerie |

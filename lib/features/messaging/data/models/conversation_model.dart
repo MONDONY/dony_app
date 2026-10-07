@@ -89,6 +89,14 @@ class ConversationModel {
   /// faux, et aucun bouton d'appel n'est proposé.
   final bool callAvailable;
 
+  /// Notifications push de ce fil coupées par l'utilisateur courant
+  /// (`POST /conversations/{id}/mute`). Préférence personnelle, invisible
+  /// pour l'autre participant : les non-lus restent comptés et les appels
+  /// sonnent toujours. Sans rapport avec la coupure de messagerie posée par
+  /// un administrateur (`UserModel.isMessagingMuted`). Absent sur un ancien
+  /// back : faux.
+  final bool notificationsMuted;
+
   const ConversationModel({
     required this.id,
     required this.bidId,
@@ -108,6 +116,7 @@ class ConversationModel {
     this.kind = kindSenderTraveler,
     this.viewerRole,
     this.callAvailable = false,
+    this.notificationsMuted = false,
   });
 
   /// Conversation séparée voyageur ↔ destinataire : l'expéditeur n'y est pas,
@@ -147,6 +156,7 @@ class ConversationModel {
     String? lastMessagePreview,
     DateTime? lastMessageAt,
     bool? readOnly,
+    bool? notificationsMuted,
   }) => ConversationModel(
     id: id,
     bidId: bidId,
@@ -162,9 +172,11 @@ class ConversationModel {
     tripWeightKg: tripWeightKg,
     bidStatus: bidStatus,
     readOnly: readOnly ?? this.readOnly,
+    deletedBySelf: deletedBySelf,
     kind: kind,
     viewerRole: viewerRole,
     callAvailable: callAvailable,
+    notificationsMuted: notificationsMuted ?? this.notificationsMuted,
   );
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
@@ -200,5 +212,6 @@ class ConversationModel {
           _ => null,
         },
         callAvailable: json['callAvailable'] == true,
+        notificationsMuted: json['notificationsMuted'] == true,
       );
 }

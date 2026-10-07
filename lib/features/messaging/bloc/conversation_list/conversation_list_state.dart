@@ -20,17 +20,31 @@ class ConversationListLoading extends ConversationListState {
 /// `BID_ACCEPTED` était retenu : le fil sortait du filtre dès la remise.
 const activeBidStatuses = {'BID_ACCEPTED', 'IN_TRANSIT', 'TRIP_ARRIVED'};
 
+/// Retour ponctuel d'une bascule de sourdine lancée depuis la liste :
+/// confirmation ([error] `null`) ou échec, la bascule étant alors annulée.
+class ConversationMuteFeedback {
+  /// État demandé par l'utilisateur (`true` = sourdine).
+  final bool muted;
+  final AppException? error;
+  const ConversationMuteFeedback({required this.muted, this.error});
+}
+
 class ConversationListLoaded extends ConversationListState {
   final List<ConversationModel> conversations;
   final List<ConversationModel> archivedConversations;
   final ConversationFilter filter;
   final String searchQuery;
 
+  /// Porté par la seule émission qui suit la réponse du serveur, `null`
+  /// ensuite : l'écran l'affiche une fois en snackbar.
+  final ConversationMuteFeedback? muteFeedback;
+
   const ConversationListLoaded(
     this.conversations, {
     this.archivedConversations = const [],
     this.filter = ConversationFilter.all,
     this.searchQuery = '',
+    this.muteFeedback,
   });
 
   /// Liste filtrée + recherche — calculée à chaque build, sans duplication.
