@@ -74,6 +74,11 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // Appelé à chaque activité qui s'attache au moteur partagé : on
+        // n'ajoute le plugin de rattachement Stripe qu'une fois par moteur.
+        if (!flutterEngine.plugins.has(StripeActivityReattachPlugin::class.java)) {
+            flutterEngine.plugins.add(StripeActivityReattachPlugin(flutterEngine))
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {

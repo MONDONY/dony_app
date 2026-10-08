@@ -340,6 +340,57 @@ void main() {
     });
 
     testWidgets(
+      'sheetUnavailable → libellé « n\'a pas pu s\'ouvrir », pas « refusé » (FLUTTER-CJ)',
+      (tester) async {
+        const ready = PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: false,
+        );
+        whenListen<PaymentSheetState>(
+          bloc,
+          Stream.fromIterable([
+            const PaymentSheetFailure(
+              reason: PaymentSheetFailureReason.sheetUnavailable,
+              ready: ready,
+            ),
+          ]),
+          initialState: ready,
+        );
+
+        // pumpAndSettle avancerait le temps virtuel jusqu'à la disparition de la
+        // snackbar (durée par défaut 4s) — on pompe image par image à la place.
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) => TextButton(
+                  onPressed: () => DonyPaymentSheet.show(
+                    ctx,
+                    config: _config,
+                    contextLabel: 'Envoi vers Dakar',
+                    onSuccess: () {},
+                    bloc: bloc,
+                  ),
+                  child: const Text('Ouvrir'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump();
+
+        expect(
+          find.text("Le paiement n'a pas pu s'ouvrir. Réessayez."),
+          findsOneWidget,
+        );
+        expect(find.text('Paiement refusé'), findsNothing);
+      },
+    );
+
+    testWidgets(
       'providerMessage du gateway affiché tel quel, avant le libellé générique',
       (tester) async {
         const ready = PaymentSheetResolved(

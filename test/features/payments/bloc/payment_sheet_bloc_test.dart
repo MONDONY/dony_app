@@ -688,6 +688,165 @@ void main() {
     );
   });
 
+  // FLUTTER-CJ : toute erreur d'initPaymentSheet était classée « carte
+  // refusée » et son texte technique affiché tel quel.
+  group('classement des échecs Stripe (FLUTTER-CJ)', () {
+    const ready = PaymentSheetResolved(
+      walletAvailable: false,
+      paypalAvailable: true,
+    );
+    late _RecordingSink sink;
+
+    setUp(() => sink = _RecordingSink());
+
+    PaymentSheetBloc buildReportingBloc() => PaymentSheetBloc(
+      gateway: gateway,
+      repository: repository,
+      config: config,
+      errorReporter: ErrorReportingService(sink),
+    );
+
+    const fragmentDestroyed = PaymentConfirmationException.fromStripe(
+      null,
+      stripeCode: 'Failed',
+      stripeMessage: 'FragmentManager has been destroyed',
+    );
+
+    void stubCardFlow({Object? initError, Object? presentError}) {
+      when(
+        () => repository.createEphemeralKey(),
+      ).thenAnswer((_) async => _ephemeralKey);
+      final init = when(
+        () => gateway.initPaymentSheet(
+          clientSecret: any(named: 'clientSecret'),
+          customerId: any(named: 'customerId'),
+          customerEphemeralKeySecret: any(named: 'customerEphemeralKeySecret'),
+        ),
+      );
+      if (initError != null) {
+        init.thenThrow(initError);
+      } else {
+        init.thenAnswer((_) async {});
+      }
+      final present = when(() => gateway.presentPaymentSheet());
+      if (presentError != null) {
+        present.thenThrow(presentError);
+      } else {
+        present.thenAnswer((_) async {});
+      }
+    }
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'échec d\'initPaymentSheet → sheetUnavailable, sans message du SDK, '
+      'jamais presentPaymentSheet, remonté en payment.stripe_init',
+      build: () {
+        stubCardFlow(initError: fragmentDestroyed);
+        return buildReportingBloc();
+      },
+      seed: () => ready,
+      act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
+      expect: () => [
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
+        const PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.sheetUnavailable,
+          ready: ready,
+        ),
+        ready,
+      ],
+      verify: (_) {
+        verifyNever(() => gateway.presentPaymentSheet());
+        expect(sink.contexts.single['operation'], 'payment.stripe_init');
+        expect(
+          sink.contexts.single['stripe_message'],
+          'FragmentManager has been destroyed',
+        );
+      },
+    );
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'PayPal : erreur locale du SDK (sans type) → sheetUnavailable',
+      build: () {
+        when(() => gateway.confirmPayPal(any())).thenThrow(fragmentDestroyed);
+        return buildReportingBloc();
+      },
+      seed: () => ready,
+      act: (bloc) => bloc.add(const PaymentSheetPayPalPressed()),
+      expect: () => [
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.paypal,
+        ),
+        const PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.sheetUnavailable,
+          ready: ready,
+        ),
+        ready,
+      ],
+      verify: (_) =>
+          expect(sink.contexts.single['operation'], 'payment.stripe_confirm'),
+    );
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'erreur Stripe typée hors carte (api_error) après ouverture → generic',
+      build: () {
+        stubCardFlow(
+          presentError: const PaymentConfirmationException.fromStripe(
+            null,
+            stripeCode: 'Failed',
+            stripeErrorType: 'api_error',
+            stripeMessage: 'An error occurred with our API.',
+          ),
+        );
+        return buildReportingBloc();
+      },
+      seed: () => ready,
+      act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
+      expect: () => [
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
+        const PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.generic,
+          ready: ready,
+        ),
+        ready,
+      ],
+    );
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'vrai refus carte (card_error) → declined avec le message du fournisseur',
+      build: () {
+        stubCardFlow(
+          presentError: const PaymentConfirmationException.fromStripe(
+            'Votre carte a été refusée.',
+            stripeCode: 'Failed',
+            stripeErrorType: 'card_error',
+            declineCode: 'insufficient_funds',
+          ),
+        );
+        return buildReportingBloc();
+      },
+      seed: () => ready,
+      act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
+      expect: () => [
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
+        const PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.declined,
+          providerMessage: 'Votre carte a été refusée.',
+          ready: ready,
+        ),
+        ready,
+      ],
+    );
+  });
+
   group('mapStripeException', () {
     test('annulation → PaymentCancelledException', () {
       final mapped = mapStripeException(
@@ -725,6 +884,50 @@ void main() {
               'stripeMessage',
               'Your card was declined.',
             ),
+      );
+    });
+
+    test('erreur locale du SDK (pas card_error) → aucun message montrable, '
+        'texte brut gardé pour Sentry (FLUTTER-CJ)', () {
+      final mapped = mapStripeException(
+        const StripeException(
+          error: LocalizedErrorMessage(
+            code: FailureCode.Failed,
+            localizedMessage: 'FragmentManager has been destroyed',
+            message: 'FragmentManager has been destroyed',
+          ),
+        ),
+      );
+      expect(
+        mapped,
+        isA<PaymentConfirmationException>()
+            .having((e) => e.message, 'message', isNull)
+            .having((e) => e.isCardError, 'isCardError', isFalse)
+            .having(
+              (e) => e.stripeMessage,
+              'stripeMessage',
+              'FragmentManager has been destroyed',
+            ),
+      );
+    });
+
+    test('card_error sans message localisé → message brut', () {
+      final mapped = mapStripeException(
+        const StripeException(
+          error: LocalizedErrorMessage(
+            code: FailureCode.Failed,
+            message: 'Your card was declined.',
+            type: 'card_error',
+          ),
+        ),
+      );
+      expect(
+        mapped,
+        isA<PaymentConfirmationException>().having(
+          (e) => e.message,
+          'message',
+          'Your card was declined.',
+        ),
       );
     });
 

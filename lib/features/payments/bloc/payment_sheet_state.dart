@@ -45,14 +45,25 @@ class PaymentSheetSuccess extends PaymentSheetState {
 
 /// Raison d'un [PaymentSheetFailure], pour l'affichage d'un libellé générique
 /// quand aucun [PaymentSheetFailure.providerMessage] n'est disponible.
-enum PaymentSheetFailureReason { cardUnavailable, declined, generic }
+///
+/// - [declined] : vrai refus carte (`card_error`), seul cas avec message du
+///   fournisseur ;
+/// - [sheetUnavailable] : la feuille Stripe/PayPal n'a pas pu s'ouvrir (erreur
+///   locale du SDK, FLUTTER-CJ) — ce n'est pas un refus de la carte ;
+/// - [generic] : tout autre échec.
+enum PaymentSheetFailureReason {
+  cardUnavailable,
+  declined,
+  sheetUnavailable,
+  generic,
+}
 
 /// Échec transitoire (snackbar) — immédiatement suivi d'un retour à [ready].
 ///
-/// Ne porte plus de texte : [providerMessage], quand présent, est le message
-/// déjà localisé par le SDK Stripe (`localizedMessage`) dans la langue du
-/// téléphone — affiché tel quel. Sans lui, l'UI affiche le libellé générique
-/// associé à [reason].
+/// Ne porte plus de texte : [providerMessage], quand présent (vrai refus
+/// carte seulement), est le message déjà localisé par le SDK Stripe
+/// (`localizedMessage`) dans la langue du téléphone — affiché tel quel. Sans
+/// lui, l'UI affiche le libellé générique associé à [reason].
 class PaymentSheetFailure extends PaymentSheetState {
   final String? providerMessage;
   final PaymentSheetFailureReason reason;

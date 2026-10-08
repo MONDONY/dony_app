@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Small abstraction used to test error reporting without booting Sentry.
@@ -21,11 +22,44 @@ class SentryErrorReportingSink implements ErrorReportingSink {
     StackTrace? stackTrace,
     required Map<String, Object> context,
   }) async {
+    // Le contexte passe par le scope de l'événement : un `Hint` n'est lu que
+    // par les callbacks locaux (beforeSend) et n'est jamais envoyé, si bien
+    // que stripe_code / decline_code / stripe_message n'atteignaient jamais
+    // Sentry (FLUTTER-CJ). Le scope cloné par `withScope` n'est pas
+    // synchronisé vers le natif : rien ne fuit vers les événements suivants.
     await Sentry.captureException(
       error,
       stackTrace: stackTrace,
-      hint: Hint.withMap(context),
+      withScope: (scope) => applyReportContext(scope, context),
     );
+  }
+
+  /// Clés du contexte promues en tags, pour filtrer et regrouper dans Sentry.
+  /// Toutes sont des codes fermés ; `stripe_message` reste dans le contexte.
+  static const taggedKeys = {
+    'operation',
+    'error_type',
+    'status_code',
+    'stripe_code',
+    'stripe_error_code',
+    'decline_code',
+    'stripe_error_type',
+  };
+
+  /// Nom du bloc de contexte visible dans l'événement Sentry.
+  static const contextKey = 'yadony';
+
+  @visibleForTesting
+  static Future<void> applyReportContext(
+    Scope scope,
+    Map<String, Object> context,
+  ) async {
+    await scope.setContexts(contextKey, Map<String, Object>.of(context));
+    for (final entry in context.entries) {
+      if (taggedKeys.contains(entry.key)) {
+        await scope.setTag(entry.key, entry.value.toString());
+      }
+    }
   }
 }
 

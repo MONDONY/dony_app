@@ -12653,6 +12653,12 @@ abstract class AppLocalizations {
   /// **'En attente de confirmation du voyageur'**
   String get ticketAwaitingTravelerConfirmation;
 
+  /// Placeholder sender / PENDING carte du talon : colis créé mais pas encore payé (billet_talon.dart, FLUTTER-G7)
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de votre paiement'**
+  String get ticketAwaitingSenderCardPayment;
+
   /// Bloc expéditeur en attente de paiement mobile money du talon (billet_talon.dart)
   ///
   /// In fr, this message translates to:
@@ -14860,6 +14866,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Paiement refusé'**
   String get paymentDeclined;
+
+  /// Libellé de PaymentSheetFailureReason.sheetUnavailable (dony_payment_sheet.dart) : la feuille Stripe/PayPal n'a pas pu s'ouvrir (erreur locale du SDK, FLUTTER-CJ), distinct d'un refus de carte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement n\'a pas pu s\'ouvrir. Réessayez.'**
+  String get paymentSheetOpenFailed;
 
   /// Semantics regroupée des moyens de paiement (payment_method_names.dart, mode compact). {wallet} = Apple Pay ou Google Pay, nom de marque non traduit.
   ///
