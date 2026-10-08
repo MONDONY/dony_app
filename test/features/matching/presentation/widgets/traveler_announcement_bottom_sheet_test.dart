@@ -33,6 +33,7 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -116,13 +117,15 @@ AnnouncementModel _buildAnnouncement({
     BidPaymentMethod.stripe,
   },
   String status = 'ACTIVE',
+  String departureCity = 'Paris',
+  String arrivalCity = 'Dakar',
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
     id: 'a1',
     travelerId: 't1',
-    departureCity: 'Paris',
-    arrivalCity: 'Dakar',
+    departureCity: departureCity,
+    arrivalCity: arrivalCity,
     departureDate: departureDate ?? DateTime(now.year, now.month + 1, 15),
     departureTime: departureTime,
     arrivalTime: arrivalTime,
@@ -1554,4 +1557,42 @@ void main() {
     expect(bug.dx, lessThan(croix.dx));
     expect(bug.dx, greaterThan(titre.dx));
   });
+
+  // ── FLUTTER-EY : ville de départ tronquée dans « Détail du trajet » ────────
+
+  testWidgets(
+    'FLUTTER-EY : villes longues empilées, jamais tronquées (écran 414 px)',
+    (tester) async {
+      tester.view.physicalSize = const Size(414, 896);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        departureCity: 'Fontenay-le-Fleury-sous-Bois',
+        arrivalCity: 'Abobo',
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      final dep = find.byKey(const Key('trip_hero_departure_city'));
+      final arr = find.byKey(const Key('trip_hero_arrival_city'));
+      expect(tester.widget<Text>(dep).data, 'Fontenay-le-Fleury-sous-Bois');
+      for (final f in [dep, arr]) {
+        final text = tester.widget<Text>(f);
+        expect(text.overflow, isNot(TextOverflow.ellipsis));
+        expect(text.maxLines, isNull);
+        expect(
+          tester.renderObject<RenderParagraph>(f).didExceedMaxLines,
+          isFalse,
+        );
+      }
+      // Départ au-dessus de l'arrivée (empilées, plus sur une même ligne).
+      expect(
+        tester.getRect(arr).top,
+        greaterThanOrEqualTo(tester.getRect(dep).bottom),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
