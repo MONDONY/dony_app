@@ -15,6 +15,7 @@ export 'package:dony/core/design/tokens/typography_tokens.dart';
 export 'package:dony/core/design/utils/dony_layout.dart';
 // Navigation & layout
 export 'package:dony/core/design/widgets/dony_app_bar.dart';
+export 'package:dony/core/design/widgets/dony_archived_row.dart';
 // Glassmorphism
 export 'package:dony/core/design/widgets/dony_aurora_background.dart';
 export 'package:dony/core/design/widgets/dony_avatar.dart';
@@ -64,6 +65,7 @@ export 'package:dony/core/design/widgets/dony_status_banner.dart';
 export 'package:dony/core/design/widgets/dony_step_indicator.dart';
 export 'package:dony/core/design/widgets/dony_step_pill.dart';
 export 'package:dony/core/design/widgets/dony_success_screen.dart';
+export 'package:dony/core/design/widgets/dony_swipe_action.dart';
 export 'package:dony/core/design/widgets/dony_text_field.dart';
 // Domain cards
 export 'package:dony/core/design/widgets/dony_trip_card.dart';

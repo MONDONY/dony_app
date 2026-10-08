@@ -11020,6 +11020,12 @@
   "@conversationListArchivedTooltip": {
     "description": "Tooltip du bouton d'accès aux archives de conversation_list_screen.dart."
   },
+  "archivedRowLabel": "Archivées",
+  "@archivedRowLabel": {"description": "Ligne « Archivées » en tête des listes Messages et Discussions de prix, façon WhatsApp (DonyArchivedRow, FLUTTER-FR)"},
+  "archivedRowSemantics": "Archivées ({count})",
+  "@archivedRowSemantics": {"description": "Annonce lecteur d'écran de la ligne « Archivées » avec son nombre (DonyArchivedRow, FLUTTER-FR)", "placeholders": {"count": {"type": "int"}}},
+  "archivedNegotiationsTitle": "Discussions archivées",
+  "@archivedNegotiationsTitle": {"description": "Titre de l'écran des discussions de prix archivées, ouvert par la ligne « Archivées » (FLUTTER-FR)"},
   "conversationListSearchHint": "Rechercher une conversation…",
   "@conversationListSearchHint": {
     "description": "Texte indicatif de la barre de recherche de conversation_list_screen.dart."

@@ -10143,6 +10143,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Voir les conversations archivées';
 
   @override
+  String get archivedRowLabel => 'Archivées';
+
+  @override
+  String archivedRowSemantics(int count) {
+    return 'Archivées ($count)';
+  }
+
+  @override
+  String get archivedNegotiationsTitle => 'Discussions archivées';
+
+  @override
   String get conversationListSearchHint => 'Rechercher une conversation…';
 
   @override

@@ -1941,6 +1941,11 @@ final appRouter = GoRouter(
       path: '/negotiations',
       builder: (_, _) => const MyNegotiationsScreen(),
     ),
+    // Avant `/negotiations/:id`, qui capterait sinon « archives » comme un id.
+    GoRoute(
+      path: '/negotiations/archives',
+      builder: (_, _) => const ArchivedNegotiationsScreen(),
+    ),
     GoRoute(
       path: '/negotiations/:id',
       builder: (context, state) {

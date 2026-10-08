@@ -16714,6 +16714,24 @@ abstract class AppLocalizations {
   /// **'Voir les conversations archivées'**
   String get conversationListArchivedTooltip;
 
+  /// Ligne « Archivées » en tête des listes Messages et Discussions de prix, façon WhatsApp (DonyArchivedRow, FLUTTER-FR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Archivées'**
+  String get archivedRowLabel;
+
+  /// Annonce lecteur d'écran de la ligne « Archivées » avec son nombre (DonyArchivedRow, FLUTTER-FR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Archivées ({count})'**
+  String archivedRowSemantics(int count);
+
+  /// Titre de l'écran des discussions de prix archivées, ouvert par la ligne « Archivées » (FLUTTER-FR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussions archivées'**
+  String get archivedNegotiationsTitle;
+
   /// Texte indicatif de la barre de recherche de conversation_list_screen.dart.
   ///
   /// In fr, this message translates to:

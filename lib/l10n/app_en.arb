@@ -5692,6 +5692,9 @@
   "@conversationListArchivedTooltip": {
     "description": "Tooltip du bouton d'accès aux archives de conversation_list_screen.dart."
   },
+  "archivedRowLabel": "Archived",
+  "archivedRowSemantics": "Archived ({count})",
+  "archivedNegotiationsTitle": "Archived discussions",
   "conversationListSearchHint": "Search conversations…",
   "@conversationListSearchHint": {
     "description": "Texte indicatif de la barre de recherche de conversation_list_screen.dart."

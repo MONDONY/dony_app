@@ -90,6 +90,10 @@ GoRouter _buildRouter(ConversationListBloc bloc) => GoRouter(
       builder: (_, _) => const Scaffold(body: Text('ecran-support')),
     ),
     GoRoute(
+      path: '/messages/archives',
+      builder: (_, _) => const Scaffold(body: Text('ecran-archives')),
+    ),
+    GoRoute(
       path: '/support/tickets/:id',
       builder: (_, state) =>
           Scaffold(body: Text('fil-${state.pathParameters['id']}')),
@@ -708,6 +712,99 @@ void main() {
       await tester.pump();
       expect(find.byType(SnackBar), findsWidgets);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('ligne « Archivées (n) » (FLUTTER-FR)', () {
+    testWidgets('en tête de liste avec le nombre, ouvre les archives', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        ConversationListLoaded(
+          [_conv],
+          archivedConversations: [_convDaysAgo, _convWeeksAgo],
+        ),
+      );
+      await _pump(tester, bloc);
+
+      final row = find.byKey(const Key('messages-archived-row'));
+      expect(row, findsOneWidget);
+      expect(
+        find.descendant(of: row, matching: find.text('Archivées')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.text('2')),
+        findsOneWidget,
+      );
+      expect(find.bySemanticsLabel('Archivées (2)'), findsOneWidget);
+      // Au-dessus de la ligne Support épinglée, comme dans WhatsApp.
+      expect(
+        tester.getTopLeft(row).dy,
+        lessThan(tester.getTopLeft(find.byType(SupportConversationTile)).dy),
+      );
+      // L'ancienne icône d'en-tête a disparu au profit de la ligne.
+      expect(find.byTooltip('Voir les conversations archivées'), findsNothing);
+
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+      expect(find.text('ecran-archives'), findsOneWidget);
+    });
+
+    testWidgets('visible aussi quand la liste courante est vide', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        ConversationListLoaded(const [], archivedConversations: [_convDaysAgo]),
+      );
+      await _pump(tester, bloc);
+      expect(find.byKey(const Key('messages-archived-row')), findsOneWidget);
+    });
+
+    testWidgets('masquée sans archive', (tester) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await _pump(tester, bloc);
+      expect(find.byKey(const Key('messages-archived-row')), findsNothing);
+    });
+
+    testWidgets('masquée pendant une recherche', (tester) async {
+      when(() => bloc.state).thenReturn(
+        ConversationListLoaded(
+          [_conv],
+          archivedConversations: [_convDaysAgo],
+          searchQuery: 'Aï',
+        ),
+      );
+      await _pump(tester, bloc);
+      expect(find.byKey(const Key('messages-archived-row')), findsNothing);
+    });
+
+    testWidgets('volet : « Archiver » et « Supprimer » entiers, icônes de 28', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await _pump(tester, bloc);
+
+      await tester.drag(find.text('Aïcha Bah'), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+
+      for (final key in [
+        'conversation-swipe-archive',
+        'conversation-swipe-delete',
+      ]) {
+        final action = find.byKey(Key(key));
+        expect(action, findsOneWidget);
+        final text = tester.widget<Text>(
+          find.descendant(of: action, matching: find.byType(Text)),
+        );
+        expect(text.maxLines, 1);
+        final icon = tester.widget<Icon>(
+          find.descendant(of: action, matching: find.byType(Icon)),
+        );
+        expect(icon.size, 28);
+      }
+      expect(find.text('Archiver'), findsOneWidget);
+      expect(find.text('Supprimer'), findsOneWidget);
     });
   });
 }

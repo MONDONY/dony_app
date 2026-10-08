@@ -62,7 +62,8 @@ class _ArchivedTile extends StatelessWidget {
         motion: const DrawerMotion(),
         extentRatio: 0.35,
         children: [
-          SlidableAction(
+          DonySwipeAction(
+            key: const Key('conversation-swipe-unarchive'),
             onPressed: (ctx) {
               ctx.read<ConversationListBloc>().add(
                 ConversationUnarchiveRequested(conversation.id),

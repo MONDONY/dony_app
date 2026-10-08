@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -120,7 +121,19 @@ void main() {
     }
   });
 
-  Future<void> pump(WidgetTester tester) async {
+  Widget withBlocs(Widget child) => MultiBlocProvider(
+    providers: [
+      BlocProvider<NegotiationListBloc>.value(value: listBloc),
+      BlocProvider<BidNegotiationListBloc>.value(value: tripBloc),
+      BlocProvider<AuthBloc>.value(value: authBloc),
+    ],
+    child: child,
+  );
+
+  /// [archivedOnly] : l'écran d'archives. Sinon la liste courante, montée
+  /// dans un GoRouter pour que la ligne « Archivées » puisse ouvrir
+  /// `/negotiations/archives`.
+  Future<void> pump(WidgetTester tester, {bool archivedOnly = false}) async {
     tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -131,18 +144,27 @@ void main() {
     addTearDown(tripBloc.close);
     listBloc.add(const NegotiationListFetchRequested());
     tripBloc.add(const BidNegotiationListFetchRequested());
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: MultiBlocProvider(
-          providers: [
-            BlocProvider<NegotiationListBloc>.value(value: listBloc),
-            BlocProvider<BidNegotiationListBloc>.value(value: tripBloc),
-            BlocProvider<AuthBloc>.value(value: authBloc),
-          ],
-          child: const Scaffold(body: MyNegotiationsBody()),
+    final router = GoRouter(
+      initialLocation: archivedOnly
+          ? '/negotiations/archives'
+          : '/negotiations',
+      routes: [
+        GoRoute(
+          path: '/negotiations',
+          builder: (_, _) =>
+              withBlocs(const Scaffold(body: MyNegotiationsBody())),
         ),
-      ),
+        GoRoute(
+          path: '/negotiations/archives',
+          builder: (_, _) => withBlocs(
+            const Scaffold(body: MyNegotiationsBody(archivedOnly: true)),
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
     );
     await tester.pumpAndSettle();
   }
@@ -295,8 +317,39 @@ void main() {
     expect(find.text('Paris → Abidjan'), findsOneWidget);
   });
 
-  group('filtre « Archivées »', () {
-    testWidgets('charge archived=true des deux types et propose Désarchiver', (
+  group('ligne « Archivées (n) » (FLUTTER-FR)', () {
+    testWidgets('compte les archives des deux types et remplace la puce', (
+      tester,
+    ) async {
+      when(() => bidRepo.myNegotiations(archived: true)).thenAnswer(
+        (_) async => [_trip('b-arch', arrival: 'Lomé', archived: true)],
+      );
+      await pump(tester);
+
+      verify(() => repo.findMine(archived: true)).called(1);
+      verify(() => bidRepo.myNegotiations(archived: true)).called(1);
+      final row = find.byKey(const Key('nego-archived-row'));
+      expect(row, findsOneWidget);
+      expect(
+        find.descendant(of: row, matching: find.text('Archivées')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: row, matching: find.text('2')),
+        findsOneWidget,
+      );
+      expect(find.bySemanticsLabel('Archivées (2)'), findsOneWidget);
+      expect(find.byKey(const Key('nego-filter-archived')), findsNothing);
+    });
+
+    testWidgets('masquée quand rien n\'est archivé', (tester) async {
+      when(() => repo.findMine(archived: true)).thenAnswer((_) async => []);
+      await pump(tester);
+
+      expect(find.byKey(const Key('nego-archived-row')), findsNothing);
+    });
+
+    testWidgets('ouvre les archives : seules elles, avec Désarchiver', (
       tester,
     ) async {
       when(() => bidRepo.myNegotiations(archived: true)).thenAnswer(
@@ -305,15 +358,16 @@ void main() {
       when(() => repo.unarchive('t-arch')).thenAnswer((_) async {});
       await pump(tester);
 
-      await tester.tap(find.byKey(const Key('nego-filter-archived')));
+      await tester.tap(find.byKey(const Key('nego-archived-row')));
       await tester.pumpAndSettle();
 
-      verify(() => repo.findMine(archived: true)).called(1);
-      verify(() => bidRepo.myNegotiations(archived: true)).called(1);
       // Les fils courants ne sont plus affichés, seulement les archives.
       expect(find.text('Paris → Abidjan'), findsNothing);
       expect(find.text('Paris → Dakar'), findsOneWidget);
       expect(find.text('Lyon → Lomé'), findsOneWidget);
+      // Ni puces ni ligne « Archivées » sur l'écran d'archives.
+      expect(find.byKey(const Key('nego-filter-all')), findsNothing);
+      expect(find.byKey(const Key('nego-archived-row')), findsNothing);
 
       await swipe(tester, 't-arch');
       expect(find.text('Désarchiver'), findsOneWidget);
@@ -324,14 +378,25 @@ void main() {
       expect(find.text('Discussion désarchivée'), findsOneWidget);
       verify(() => repo.unarchive('t-arch')).called(1);
       await tester.pumpAndSettle();
+      // Le fil désarchivé doit revenir dans la liste courante.
+      verify(() => repo.findMine()).called(greaterThanOrEqualTo(2));
     });
 
-    testWidgets('état vide dédié', (tester) async {
-      when(() => repo.findMine(archived: true)).thenAnswer((_) async => []);
+    testWidgets('archiver recharge le compteur', (tester) async {
+      when(() => repo.archive('t-done')).thenAnswer((_) async {});
       await pump(tester);
+      verify(() => repo.findMine(archived: true)).called(1);
 
-      await tester.tap(find.byKey(const Key('nego-filter-archived')));
+      await swipe(tester, 't-done');
+      await tester.tap(find.byKey(const Key('nego-slide-archive')));
       await tester.pumpAndSettle();
+
+      verify(() => repo.findMine(archived: true)).called(1);
+    });
+
+    testWidgets('écran d\'archives : état vide dédié', (tester) async {
+      when(() => repo.findMine(archived: true)).thenAnswer((_) async => []);
+      await pump(tester, archivedOnly: true);
 
       expect(
         find.text('Les discussions que vous archivez apparaîtront ici.'),
@@ -339,7 +404,7 @@ void main() {
       );
     });
 
-    testWidgets('erreur de chargement : réessayer recharge les archives', (
+    testWidgets('écran d\'archives : réessayer recharge les archives', (
       tester,
     ) async {
       when(
@@ -348,10 +413,7 @@ void main() {
       when(
         () => bidRepo.myNegotiations(archived: true),
       ).thenThrow(const OfflineException());
-      await pump(tester);
-
-      await tester.tap(find.byKey(const Key('nego-filter-archived')));
-      await tester.pumpAndSettle();
+      await pump(tester, archivedOnly: true);
 
       expect(find.text('Réessayer'), findsOneWidget);
       await tester.tap(find.text('Réessayer'));
@@ -366,11 +428,36 @@ void main() {
       await pump(tester);
 
       expect(find.text('Rechercher un trajet'), findsOneWidget);
-      expect(find.byKey(const Key('nego-filter-archived')), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('nego-filter-archived')));
+      await tester.tap(find.byKey(const Key('nego-archived-row')));
       await tester.pumpAndSettle();
       expect(find.text('Paris → Dakar'), findsOneWidget);
     });
+  });
+
+  /// FLUTTER-FR : « Archi… », « Supp… » à 0.55. Les libellés tiennent en
+  /// entier, sur une ligne, avec une icône de 28.
+  testWidgets('volet : libellés entiers, icônes de 28', (tester) async {
+    await pump(tester);
+    await swipe(tester, 't-done');
+
+    for (final label in ['Archiver', 'Supprimer']) {
+      final text = tester.widget<Text>(find.text(label));
+      expect(text.maxLines, 1);
+      expect(text.overflow, isNot(TextOverflow.ellipsis));
+      final box = tester.getSize(find.text(label));
+      final fitted = find.ancestor(
+        of: find.text(label),
+        matching: find.byType(FittedBox),
+      );
+      // Rendu à sa taille naturelle : aucune réduction n'a été nécessaire.
+      expect(tester.getSize(fitted).width, greaterThanOrEqualTo(box.width));
+    }
+    final icons = tester.widgetList<Icon>(
+      find.descendant(
+        of: find.byKey(const Key('nego-slide-archive')),
+        matching: find.byType(Icon),
+      ),
+    );
+    expect(icons.single.size, 28);
   });
 }

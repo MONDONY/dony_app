@@ -10077,6 +10077,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get conversationListArchivedTooltip => 'View archived conversations';
 
   @override
+  String get archivedRowLabel => 'Archived';
+
+  @override
+  String archivedRowSemantics(int count) {
+    return 'Archived ($count)';
+  }
+
+  @override
+  String get archivedNegotiationsTitle => 'Archived discussions';
+
+  @override
   String get conversationListSearchHint => 'Search conversations…';
 
   @override
