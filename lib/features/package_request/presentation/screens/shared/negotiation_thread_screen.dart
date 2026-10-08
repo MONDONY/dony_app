@@ -234,17 +234,46 @@ class _ThreadViewState extends State<_ThreadView> {
                   );
                 }
               },
-              itemBuilder: (menuContext) => [
-                PopupMenuItem(
-                  value: 'end_negotiation',
-                  child: Text(
-                    context.l10n.negotiationEndMenuItem,
-                    style: TextStyle(
-                      color: Theme.of(menuContext).colorScheme.error,
-                    ),
+              itemBuilder: (menuContext) {
+                final locked = _travelerWithdrawLocked(thread!);
+                final menuCs = Theme.of(menuContext).colorScheme;
+                return [
+                  PopupMenuItem(
+                    key: const Key('thread-menu-end-negotiation'),
+                    value: 'end_negotiation',
+                    // FLUTTER-F9 : offre acceptée, l'expéditeur paie. L'entrée
+                    // reste lisible mais inactive, avec la raison.
+                    enabled: !locked,
+                    child: locked
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                context.l10n.negotiationEndMenuItem,
+                                style: TextStyle(
+                                  color: menuCs.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: DonySpacing.xs),
+                              Text(
+                                context
+                                    .l10n
+                                    .negotiationWithdrawOfferLockedExplanation,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: menuCs.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Text(
+                            context.l10n.negotiationEndMenuItem,
+                            style: TextStyle(color: menuCs.error),
+                          ),
                   ),
-                ),
-              ],
+                ];
+              },
             ),
           ),
         // Fil terminé (FLUTTER-EJ) : on peut le ranger ou le retirer de sa
@@ -272,6 +301,13 @@ class _ThreadViewState extends State<_ThreadView> {
   // en cours est annulé côté serveur) — statuts terminaux ou déjà acceptés
   // (accepted, rejected, autoRejected, expired, cancelled) : item absent, on
   // masque alors l'ellipsis entier (menu vide sinon).
+  /// Voyageur dont l'offre est acceptée et dont l'expéditeur paie (ou dont le
+  /// dépôt mobile money est en vol) : il ne peut plus la retirer (FLUTTER-F9).
+  bool _travelerWithdrawLocked(NegotiationThread thread) =>
+      thread.travelerId == viewerUserId &&
+      (thread.status == NegotiationThreadStatus.awaitingPayment ||
+          thread.status == NegotiationThreadStatus.awaitingDeposit);
+
   bool _canEndNegotiation(NegotiationThread? thread) {
     if (thread == null) {
       return false;

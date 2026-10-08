@@ -28081,6 +28081,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les étapes d\'un voyage sont publiées ensemble, ou toutes enregistrées en brouillon.'**
   String get errorTripLegsDraftMismatchMessage;
+
+  /// Erreur offer-accepted-awaiting-payment : le voyageur tente de retirer une offre acceptée (FLUTTER-F9).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en cours'**
+  String get errorOfferAcceptedAwaitingPaymentTitle;
+
+  /// Erreur offer-accepted-awaiting-payment (FLUTTER-F9).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur a accepté votre offre et procède au paiement. Vous ne pouvez plus la retirer pendant le délai de paiement.'**
+  String get errorOfferAcceptedAwaitingPaymentMessage;
+
+  /// Paiement d'une offre qui n'attend plus de paiement : thread/not-awaiting-payment, request/not-yet-accepted (FLUTTER-F9).
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre retirée'**
+  String get errorOfferNoLongerPayableTitle;
+
+  /// Paiement d'une offre qui n'attend plus de paiement (FLUTTER-F9).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur a retiré son offre ou le délai de paiement est écoulé. La discussion a été mise à jour.'**
+  String get errorOfferNoLongerPayableMessage;
+
+  /// Bouton désactivé côté voyageur pendant l'attente du paiement de l'expéditeur (FLUTTER-F9).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer mon offre'**
+  String get negotiationWithdrawOfferLockedButton;
+
+  /// Explication sous le bouton « Retirer mon offre » désactivé (FLUTTER-F9).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.'**
+  String get negotiationWithdrawOfferLockedExplanation;
 }
 
 class _AppLocalizationsDelegate

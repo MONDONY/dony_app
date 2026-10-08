@@ -17013,4 +17013,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorTripLegsDraftMismatchMessage =>
       'A trip\'s stops are published together, or all saved as drafts.';
+
+  @override
+  String get errorOfferAcceptedAwaitingPaymentTitle => 'Payment in progress';
+
+  @override
+  String get errorOfferAcceptedAwaitingPaymentMessage =>
+      'The sender has accepted your offer and is paying. You can no longer withdraw it during the payment window.';
+
+  @override
+  String get errorOfferNoLongerPayableTitle => 'Offer withdrawn';
+
+  @override
+  String get errorOfferNoLongerPayableMessage =>
+      'The traveler withdrew their offer or the payment window has ended. The negotiation has been updated.';
+
+  @override
+  String get negotiationWithdrawOfferLockedButton => 'Withdraw my offer';
+
+  @override
+  String get negotiationWithdrawOfferLockedExplanation =>
+      'The sender has accepted your offer: you can no longer withdraw it during their payment window.';
 }

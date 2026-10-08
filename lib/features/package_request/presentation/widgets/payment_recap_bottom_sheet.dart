@@ -14,6 +14,7 @@ import 'package:dony/features/package_request/data/models/payment_method.dart'
     as dony;
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
+import 'package:dony/features/package_request/presentation/widgets/payment_conflict.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/return_to_thread.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -181,8 +182,19 @@ class PaymentRecapBottomSheet {
                           );
                           // Sheet fermée sans paiement (swipe) → réarmer le bouton.
                           processing.value = false;
-                        } catch (_) {
+                        } catch (err) {
                           processing.value = false;
+                          if (ctx.mounted &&
+                              context.mounted &&
+                              handleNegotiationPaymentConflict(
+                                sheetContext: ctx,
+                                callerContext: context,
+                                bloc: bloc,
+                                threadId: thread.id,
+                                error: err,
+                              )) {
+                            return;
+                          }
                           if (ctx.mounted) {
                             DonySnackbar.show(
                               ctx,

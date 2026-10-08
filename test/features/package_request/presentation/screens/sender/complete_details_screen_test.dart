@@ -341,6 +341,56 @@ void main() {
     },
   );
 
+  testWidgets(
+    'FLUTTER-F9 — 409 request/not-yet-accepted (offre retirée) : message '
+    'clair et retour au fil',
+    (tester) async {
+      final loadedState = CompleteDetailsState(
+        loaded: true,
+        request: _fakeRequest(),
+      );
+      final errorState = loadedState.copyWith(
+        status: CompleteDetailsStatus.error,
+        errorMessage: const ConflictException(
+          'request/not-yet-accepted',
+          code: 'request/not-yet-accepted',
+        ),
+      );
+      final stateController = StreamController<CompleteDetailsState>();
+      addTearDown(stateController.close);
+
+      when(() => completeDetailsBloc.state).thenReturn(loadedState);
+      whenListen(
+        completeDetailsBloc,
+        stateController.stream,
+        initialState: loadedState,
+      );
+
+      await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
+      final homeContext = tester.element(find.text('HOME'));
+      unawaited(GoRouter.of(homeContext).push('/complete/pr-1'));
+      await tester.pumpAndSettle();
+
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), 'Fatou Ndiaye');
+      await tester.enterText(fields.at(1), '+221771112233');
+      await tester.pump();
+      await tester.tap(find.text('Continuer vers le paiement'));
+      await tester.pump();
+
+      stateController.add(errorState);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Continuer vers le paiement'), findsNothing);
+      expect(find.text('HOME'), findsOneWidget);
+      expect(
+        find.textContaining('Le voyageur a retiré son offre'),
+        findsOneWidget,
+      );
+    },
+  );
+
   group('payment method picker constrained to the SET (Task 8)', () {
     Future<void> pumpLoadedWithThread(
       WidgetTester tester, {

@@ -17124,4 +17124,25 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorTripLegsDraftMismatchMessage =>
       'Les étapes d\'un voyage sont publiées ensemble, ou toutes enregistrées en brouillon.';
+
+  @override
+  String get errorOfferAcceptedAwaitingPaymentTitle => 'Paiement en cours';
+
+  @override
+  String get errorOfferAcceptedAwaitingPaymentMessage =>
+      'L\'expéditeur a accepté votre offre et procède au paiement. Vous ne pouvez plus la retirer pendant le délai de paiement.';
+
+  @override
+  String get errorOfferNoLongerPayableTitle => 'Offre retirée';
+
+  @override
+  String get errorOfferNoLongerPayableMessage =>
+      'Le voyageur a retiré son offre ou le délai de paiement est écoulé. La discussion a été mise à jour.';
+
+  @override
+  String get negotiationWithdrawOfferLockedButton => 'Retirer mon offre';
+
+  @override
+  String get negotiationWithdrawOfferLockedExplanation =>
+      'L\'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.';
 }
