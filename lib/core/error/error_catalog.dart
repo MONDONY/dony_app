@@ -215,6 +215,29 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.inventory_2_outlined,
     ),
+    // FLUTTER-F9 : le voyageur tente de retirer une offre que l'expéditeur a
+    // acceptée et paie (back : NegotiationService#cancelNegotiation).
+    'offer-accepted-awaiting-payment': _Entry(
+      title: (l) => l.errorOfferAcceptedAwaitingPaymentTitle,
+      message: (l) => l.errorOfferAcceptedAwaitingPaymentMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    // FLUTTER-F9 : l'expéditeur paie une offre qui n'attend plus de paiement
+    // (retirée, expirée). `request/not-yet-accepted` est la même situation vue
+    // depuis l'étape « compléter les détails » qui précède le paiement.
+    'thread/not-awaiting-payment': _Entry(
+      title: (l) => l.errorOfferNoLongerPayableTitle,
+      message: (l) => l.errorOfferNoLongerPayableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.undo_rounded,
+    ),
+    'request/not-yet-accepted': _Entry(
+      title: (l) => l.errorOfferNoLongerPayableTitle,
+      message: (l) => l.errorOfferNoLongerPayableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.undo_rounded,
+    ),
     'thread/not-awaiting-commission': _Entry(
       title: (l) => l.errorThreadNotAwaitingCommissionTitle,
       message: (l) => l.errorThreadNotAwaitingCommissionMessage,

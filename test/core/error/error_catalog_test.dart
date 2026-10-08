@@ -175,6 +175,36 @@ void main() {
     });
   });
 
+  // FLUTTER-F9 : retrait d'une offre acceptée et paiement d'une offre retirée
+  // ne retombent plus sur le générique « Action impossible ».
+  group('ErrorCatalog — offre acceptée / retirée (FLUTTER-F9)', () {
+    test('offer-accepted-awaiting-payment explique le paiement en cours', () {
+      const error = ConflictException(
+        'détail serveur',
+        code: 'offer-accepted-awaiting-payment',
+      );
+      final p = ErrorCatalog.lookup(error);
+      expect(ErrorCatalog.isKnown(error), isTrue);
+      expect(p.title, 'Paiement en cours');
+      expect(p.message, contains('ne pouvez plus la retirer'));
+      expect(p.severity, ErrorSeverity.info);
+    });
+
+    for (final code in const [
+      'thread/not-awaiting-payment',
+      'request/not-yet-accepted',
+    ]) {
+      test('$code annonce l\'offre retirée', () {
+        final error = ConflictException(code, code: code);
+        final p = ErrorCatalog.lookup(error);
+        expect(ErrorCatalog.isKnown(error), isTrue);
+        expect(p.title, 'Offre retirée');
+        expect(p.message, contains('Le voyageur a retiré son offre'));
+        expect(p.title, isNot('Action impossible'));
+      });
+    }
+  });
+
   group('ErrorCatalog — pro-limit-reached', () {
     // RÉGRESSION : sans entrée dédiée, une ForbiddenException(pro-limit-reached)
     // retombait sur le type-fallback `forbidden` (« Action non autorisée »), donc

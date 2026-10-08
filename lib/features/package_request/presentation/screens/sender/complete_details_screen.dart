@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -154,6 +155,12 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
           context.pop(method);
         } else if (state.status == CompleteDetailsStatus.error) {
           unawaited(ErrorPresenter.show(context, state.errorMessage));
+          // FLUTTER-F9 : l'offre n'attend plus de paiement (retirée par le
+          // voyageur, délai écoulé). Rester sur ce formulaire n'a plus de sens :
+          // retour au fil, que l'appelant recharge.
+          if (state.errorMessage is ConflictException && context.canPop()) {
+            context.pop();
+          }
         }
       },
       builder: (context, state) {

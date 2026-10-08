@@ -545,6 +545,68 @@ void main() {
       },
     );
 
+    for (final status in const [
+      NegotiationThreadStatus.awaitingPayment,
+      NegotiationThreadStatus.awaitingDeposit,
+    ]) {
+      testWidgets(
+        'FLUTTER-F9 — voyageur, $status : l\'item est désactivé et expliqué, '
+        'aucun retrait possible',
+        (tester) async {
+          when(
+            () => bloc.state,
+          ).thenReturn(NegotiationLoaded(_thread(status: status)));
+          await tester.pumpWidget(wrap(viewerUserId: 'tr-1'));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.byType(PopupMenuButton<String>));
+          await tester.pumpAndSettle();
+
+          final item = tester.widget<PopupMenuItem<String>>(
+            find.byKey(const Key('thread-menu-end-negotiation')),
+          );
+          expect(item.enabled, isFalse);
+          expect(
+            find.descendant(
+              of: find.byType(PopupMenuItem<String>),
+              matching: find.textContaining('ne pouvez plus la retirer'),
+            ),
+            findsOneWidget,
+          );
+
+          await tester.tap(
+            find.byKey(const Key('thread-menu-end-negotiation')),
+            warnIfMissed: false,
+          );
+          await tester.pumpAndSettle();
+          expect(find.text('Mettre fin à cette négociation ?'), findsNothing);
+          verifyNever(
+            () => bloc.add(any(that: isA<NegotiationCancelRequested>())),
+          );
+        },
+      );
+    }
+
+    testWidgets(
+      'FLUTTER-F9 — expéditeur, awaitingPayment : l\'item reste actif',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          NegotiationLoaded(
+            _thread(status: NegotiationThreadStatus.awaitingPayment),
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(PopupMenuButton<String>));
+        await tester.pumpAndSettle();
+        final item = tester.widget<PopupMenuItem<String>>(
+          find.byKey(const Key('thread-menu-end-negotiation')),
+        );
+        expect(item.enabled, isTrue);
+      },
+    );
+
     testWidgets(
       'statut ACCEPTED : l\'item « Mettre fin à la négociation » est absent',
       (tester) async {

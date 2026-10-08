@@ -305,6 +305,55 @@ void main() {
           find.text('En attente du paiement de l\'expéditeur'),
           findsOneWidget,
         );
+        // FLUTTER-F9 : « Retirer mon offre » visible mais désactivé, raison
+        // affichée.
+        final withdraw = tester.widget<DonyButton>(
+          find.byKey(const Key('thread-withdraw-offer-locked-btn')),
+        );
+        expect(withdraw.onPressed, isNull);
+        expect(
+          find.text(
+            'L\'expéditeur a accepté votre offre : vous ne pouvez plus la '
+            'retirer pendant son délai de paiement.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'FLUTTER-F9 — AWAITING_DEPOSIT · traveler → retrait désactivé expliqué',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(status: NegotiationThreadStatus.awaitingDeposit),
+            _viewerTraveler,
+          ),
+        );
+        final withdraw = tester.widget<DonyButton>(
+          find.byKey(const Key('thread-withdraw-offer-locked-btn')),
+        );
+        expect(withdraw.onPressed, isNull);
+        expect(
+          find.byKey(const Key('thread-withdraw-offer-locked-explanation')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'FLUTTER-F9 — AWAITING_PAYMENT · sender → pas de bouton de retrait verrouillé',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(status: NegotiationThreadStatus.awaitingPayment),
+            _viewerSender,
+          ),
+        );
+        expect(
+          find.byKey(const Key('thread-withdraw-offer-locked-btn')),
+          findsNothing,
+        );
       },
     );
 
@@ -612,24 +661,34 @@ void main() {
       },
     );
 
-    testWidgets('traveler → banner seul, aucun bouton', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          _thread(
-            status: NegotiationThreadStatus.awaitingDeposit,
-            depositExpiresAt: DateTime.now().toUtc().add(
-              const Duration(minutes: 20),
+    testWidgets(
+      'traveler → banner, seul bouton : retrait désactivé (FLUTTER-F9)',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.awaitingDeposit,
+              depositExpiresAt: DateTime.now().toUtc().add(
+                const Duration(minutes: 20),
+              ),
             ),
+            _viewerTraveler,
           ),
-          _viewerTraveler,
-        ),
-      );
-      expect(find.byType(ThreadStateBanner), findsOneWidget);
-      expect(find.text("L'expéditeur règle par mobile money"), findsOneWidget);
-      expect(find.byType(DonyButton), findsNothing);
-      expect(find.text('Reprendre le paiement'), findsNothing);
-      expect(find.text('Changer de moyen de paiement'), findsNothing);
-    });
+        );
+        expect(find.byType(ThreadStateBanner), findsOneWidget);
+        expect(
+          find.text("L'expéditeur règle par mobile money"),
+          findsOneWidget,
+        );
+        expect(find.byType(DonyButton), findsOneWidget);
+        expect(
+          tester.widget<DonyButton>(find.byType(DonyButton)).onPressed,
+          isNull,
+        );
+        expect(find.text('Reprendre le paiement'), findsNothing);
+        expect(find.text('Changer de moyen de paiement'), findsNothing);
+      },
+    );
   });
 
   // ── FLUTTER-EQ : sortie visible pendant l'attente de l'autre ────────────

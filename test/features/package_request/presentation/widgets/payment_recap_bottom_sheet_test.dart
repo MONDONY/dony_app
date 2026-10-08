@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -304,6 +305,39 @@ void main() {
 
       expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
     });
+
+    testWidgets(
+      'FLUTTER-F9 — initiatePayment 409 (offre retirée) : sheet fermée, '
+      'message clair, fil rechargé',
+      (tester) async {
+        when(
+          () => negotiationRepository.initiatePayment('thread-recap-1'),
+        ).thenThrow(
+          const ConflictException(
+            'thread/not-awaiting-payment',
+            code: 'thread/not-awaiting-payment',
+          ),
+        );
+        await tester.pumpWidget(buildRoutedApp());
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Payer 39,20 €'));
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 60));
+        }
+
+        expect(find.text('Payer 39,20 €'), findsNothing);
+        expect(
+          find.textContaining('Le voyageur a retiré son offre'),
+          findsOneWidget,
+        );
+        expect(find.text('Une erreur est survenue'), findsNothing);
+        verify(
+          () => bloc.add(const NegotiationFetchRequested('thread-recap-1')),
+        ).called(1);
+      },
+    );
   });
 
   // ── Confirmation cash → DonySuccessScreen ──────────────────────────────

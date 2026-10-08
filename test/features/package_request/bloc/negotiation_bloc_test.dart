@@ -334,6 +334,57 @@ void main() {
     expect: () => [isA<NegotiationActionInProgress>(), isA<NegotiationError>()],
   );
 
+  // FLUTTER-F9 : retrait refusé par le back pendant l'attente de paiement.
+  blocTest<NegotiationBloc, NegotiationState>(
+    'cancel 409 offer-accepted-awaiting-payment → Error puis fil rechargé',
+    build: () {
+      when(() => repo.cancel(any(), reason: any(named: 'reason'))).thenThrow(
+        const ConflictException(
+          'Paiement en cours',
+          code: kOfferAcceptedAwaitingPaymentCode,
+        ),
+      );
+      when(() => repo.getById('t-1')).thenAnswer(
+        (_) async =>
+            _fakeThread(status: NegotiationThreadStatus.awaitingPayment),
+      );
+      return _makeBloc(repo);
+    },
+    seed: () => NegotiationLoaded(_fakeThread()),
+    act: (bloc) => bloc.add(const NegotiationCancelRequested(threadId: 't-1')),
+    expect: () => [
+      isA<NegotiationActionInProgress>(),
+      isA<NegotiationError>().having(
+        (s) => s.error.code,
+        'code',
+        kOfferAcceptedAwaitingPaymentCode,
+      ),
+      isA<NegotiationLoaded>().having(
+        (s) => s.thread.status,
+        'status',
+        NegotiationThreadStatus.awaitingPayment,
+      ),
+    ],
+    verify: (_) => verify(() => repo.getById('t-1')).called(1),
+  );
+
+  blocTest<NegotiationBloc, NegotiationState>(
+    'cancel 409 offer-accepted-awaiting-payment, rechargement en échec → Error seule',
+    build: () {
+      when(() => repo.cancel(any(), reason: any(named: 'reason'))).thenThrow(
+        const ConflictException(
+          'Paiement en cours',
+          code: kOfferAcceptedAwaitingPaymentCode,
+        ),
+      );
+      when(() => repo.getById('t-1')).thenThrow(Exception('offline'));
+      return _makeBloc(repo);
+    },
+    seed: () => NegotiationLoaded(_fakeThread()),
+    act: (bloc) => bloc.add(const NegotiationCancelRequested(threadId: 't-1')),
+    expect: () => [isA<NegotiationActionInProgress>(), isA<NegotiationError>()],
+  );
+
   blocTest<NegotiationBloc, NegotiationState>(
     'counter throws emits Error',
     build: () {
@@ -668,6 +719,49 @@ void main() {
   });
 
   group('checkout — course avec le webhook Stripe', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'FLUTTER-F9 — checkout 409, fil retiré (CANCELLED) → Error puis fil à '
+      'jour, jamais un succès',
+      build: () {
+        when(
+          () => repo.checkout(
+            't-1',
+            paymentIntentId: 'pi_1',
+            paymentMethod: PaymentMethod.stripe,
+          ),
+        ).thenThrow(
+          const ConflictException(
+            'thread/not-awaiting-payment',
+            code: 'thread/not-awaiting-payment',
+          ),
+        );
+        when(() => repo.getById('t-1')).thenAnswer(
+          (_) async => _fakeThread(status: NegotiationThreadStatus.cancelled),
+        );
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(
+        const NegotiationCheckoutRequested(
+          threadId: 't-1',
+          paymentIntentId: 'pi_1',
+          paymentMethod: PaymentMethod.stripe,
+        ),
+      ),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationError>().having(
+          (s) => s.error.code,
+          'code',
+          'thread/not-awaiting-payment',
+        ),
+        isA<NegotiationLoaded>().having(
+          (s) => s.thread.status,
+          'status',
+          NegotiationThreadStatus.cancelled,
+        ),
+      ],
+    );
+
     blocTest<NegotiationBloc, NegotiationState>(
       'checkout 409 thread/not-awaiting-payment → recharge le thread et émet '
       'Loaded (paiement déjà finalisé par le webhook, pas d\'erreur)',

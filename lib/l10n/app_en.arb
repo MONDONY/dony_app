@@ -9325,5 +9325,11 @@
   "errorTripLegsCountTitle": "Invalid number of stops",
   "errorTripLegsCountMessage": "A trip has 2 to 5 stops.",
   "errorTripLegsDraftMismatchTitle": "Inconsistent stops",
-  "errorTripLegsDraftMismatchMessage": "A trip's stops are published together, or all saved as drafts."
+  "errorTripLegsDraftMismatchMessage": "A trip's stops are published together, or all saved as drafts.",
+  "errorOfferAcceptedAwaitingPaymentTitle": "Payment in progress",
+  "errorOfferAcceptedAwaitingPaymentMessage": "The sender has accepted your offer and is paying. You can no longer withdraw it during the payment window.",
+  "errorOfferNoLongerPayableTitle": "Offer withdrawn",
+  "errorOfferNoLongerPayableMessage": "The traveler withdrew their offer or the payment window has ended. The negotiation has been updated.",
+  "negotiationWithdrawOfferLockedButton": "Withdraw my offer",
+  "negotiationWithdrawOfferLockedExplanation": "The sender has accepted your offer: you can no longer withdraw it during their payment window."
 }

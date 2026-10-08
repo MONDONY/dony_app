@@ -19374,5 +19374,17 @@
   "errorTripLegsDraftMismatchTitle": "Étapes incohérentes",
   "@errorTripLegsDraftMismatchTitle": {"description": "Erreur trip-legs-draft-mismatch (FLUTTER-4D)."},
   "errorTripLegsDraftMismatchMessage": "Les étapes d'un voyage sont publiées ensemble, ou toutes enregistrées en brouillon.",
-  "@errorTripLegsDraftMismatchMessage": {"description": "Erreur trip-legs-draft-mismatch (FLUTTER-4D)."}
+  "@errorTripLegsDraftMismatchMessage": {"description": "Erreur trip-legs-draft-mismatch (FLUTTER-4D)."},
+  "errorOfferAcceptedAwaitingPaymentTitle": "Paiement en cours",
+  "@errorOfferAcceptedAwaitingPaymentTitle": {"description": "Erreur offer-accepted-awaiting-payment : le voyageur tente de retirer une offre acceptée (FLUTTER-F9)."},
+  "errorOfferAcceptedAwaitingPaymentMessage": "L'expéditeur a accepté votre offre et procède au paiement. Vous ne pouvez plus la retirer pendant le délai de paiement.",
+  "@errorOfferAcceptedAwaitingPaymentMessage": {"description": "Erreur offer-accepted-awaiting-payment (FLUTTER-F9)."},
+  "errorOfferNoLongerPayableTitle": "Offre retirée",
+  "@errorOfferNoLongerPayableTitle": {"description": "Paiement d'une offre qui n'attend plus de paiement : thread/not-awaiting-payment, request/not-yet-accepted (FLUTTER-F9)."},
+  "errorOfferNoLongerPayableMessage": "Le voyageur a retiré son offre ou le délai de paiement est écoulé. La discussion a été mise à jour.",
+  "@errorOfferNoLongerPayableMessage": {"description": "Paiement d'une offre qui n'attend plus de paiement (FLUTTER-F9)."},
+  "negotiationWithdrawOfferLockedButton": "Retirer mon offre",
+  "@negotiationWithdrawOfferLockedButton": {"description": "Bouton désactivé côté voyageur pendant l'attente du paiement de l'expéditeur (FLUTTER-F9)."},
+  "negotiationWithdrawOfferLockedExplanation": "L'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.",
+  "@negotiationWithdrawOfferLockedExplanation": {"description": "Explication sous le bouton « Retirer mon offre » désactivé (FLUTTER-F9)."}
 }

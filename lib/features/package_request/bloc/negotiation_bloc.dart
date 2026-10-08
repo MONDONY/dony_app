@@ -17,6 +17,10 @@ import 'package:equatable/equatable.dart';
 // above — hide it, this bloc only needs `Stripe`/`StripeException` from here.
 import 'package:flutter_stripe/flutter_stripe.dart' hide PaymentMethod;
 
+/// Code RFC 7807 renvoyé quand le voyageur tente de retirer une offre que
+/// l'expéditeur a acceptée et paie (back : `NegotiationService`, FLUTTER-F9).
+const kOfferAcceptedAwaitingPaymentCode = 'offer-accepted-awaiting-payment';
+
 sealed class NegotiationEvent extends Equatable {
   const NegotiationEvent();
   @override
@@ -806,7 +810,33 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       unawaited(_analytics.logEvent(AnalyticsEvents.negotiationCancelled));
       emit(NegotiationRejected(e.threadId, cancelled: true));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      // FLUTTER-F9 : l'expéditeur a accepté l'offre et paie, le voyageur ne
+      // peut plus la retirer. On explique pourquoi, puis on recharge le fil :
+      // l'écran affiché datait d'avant l'acceptation.
+      if (appErr is ConflictException &&
+          appErr.code == kOfferAcceptedAwaitingPaymentCode) {
+        await _emitErrorThenReload(e.threadId, appErr, emit);
+        return;
+      }
+      emit(NegotiationError(appErr));
+    }
+  }
+
+  /// Erreur affichée, puis fil rechargé : après une 409 de ce flux, l'état
+  /// local du fil est périmé (offre retirée, expirée, ou acceptée entre-temps).
+  Future<void> _emitErrorThenReload(
+    String threadId,
+    AppException error,
+    Emitter<NegotiationState> emit,
+  ) async {
+    emit(NegotiationError(error));
+    try {
+      final thread = await _repository.getById(threadId);
+      emit(NegotiationLoaded(thread));
+    } catch (_) {
+      // Rechargement impossible : l'erreur reste affichée, l'écran garde le
+      // dernier fil connu.
     }
   }
 
@@ -936,9 +966,17 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
           appErr.message == 'thread/not-awaiting-payment') {
         try {
           final thread = await _repository.getById(e.threadId);
+          if (thread.status == NegotiationThreadStatus.accepted ||
+              thread.status == NegotiationThreadStatus.awaitingCommission) {
+            emit(NegotiationLoaded(thread));
+            _logCheckoutPaymentMethodSelected(e.paymentMethod);
+            _logCheckoutPaymentSucceeded(e, thread);
+            return;
+          }
+          // FLUTTER-F9 : le fil n'attend plus de paiement sans avoir été payé
+          // (offre retirée, délai écoulé). Message clair, puis fil à jour.
+          emit(NegotiationError(appErr));
           emit(NegotiationLoaded(thread));
-          _logCheckoutPaymentMethodSelected(e.paymentMethod);
-          _logCheckoutPaymentSucceeded(e, thread);
           return;
         } catch (_) {
           // Re-fetch échoué → on retombe sur l'erreur d'origine ci-dessous.

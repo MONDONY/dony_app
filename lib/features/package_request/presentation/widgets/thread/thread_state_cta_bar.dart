@@ -54,7 +54,13 @@ class ThreadStateCtaBar extends StatelessWidget {
       '/package-requests/${thread.packageRequestId}/complete-details',
       extra: thread,
     );
-    if (method == null || !context.mounted) return;
+    if (!context.mounted) return;
+    if (method == null) {
+      // Retour sans détails validés : abandon, ou offre qui n'attend plus de
+      // paiement (FLUTTER-F9). Le fil est rechargé pour refléter son état réel.
+      bloc.add(NegotiationFetchRequested(thread.id));
+      return;
+    }
     await PaymentRecapBottomSheet.show(
       context,
       bloc: bloc,
@@ -197,11 +203,13 @@ class ThreadStateCtaBar extends StatelessWidget {
                     ? null
                     : () => _completeDetailsThenPay(context, thread),
               )
-            : ThreadStateBanner(
-                iconAsset: 'banknote',
-                tint: kGreenPrimary,
-                message: l.negotiationAwaitingPaymentTravelerTitle,
-                subtitle: l.negotiationAwaitingPaymentTravelerSubtitle,
+            : _TravelerAwaitingPayment(
+                banner: ThreadStateBanner(
+                  iconAsset: 'banknote',
+                  tint: kGreenPrimary,
+                  message: l.negotiationAwaitingPaymentTravelerTitle,
+                  subtitle: l.negotiationAwaitingPaymentTravelerSubtitle,
+                ),
               );
 
       case NegotiationThreadStatus.awaitingDeposit:
@@ -210,11 +218,13 @@ class ThreadStateCtaBar extends StatelessWidget {
         // voyageur n'a rien à faire ; l'expéditeur peut rouvrir l'écran
         // d'attente ou renoncer pour changer de moyen de paiement.
         if (!_isSender) {
-          return ThreadStateBanner(
-            iconAsset: 'smartphone',
-            tint: kGreenPrimary,
-            message: l.negotiationAwaitingDepositTravelerTitle,
-            subtitle: l.negotiationAwaitingDepositTravelerSubtitle,
+          return _TravelerAwaitingPayment(
+            banner: ThreadStateBanner(
+              iconAsset: 'smartphone',
+              tint: kGreenPrimary,
+              message: l.negotiationAwaitingDepositTravelerTitle,
+              subtitle: l.negotiationAwaitingDepositTravelerSubtitle,
+            ),
           );
         }
         return _SenderDepositActions(
@@ -346,6 +356,46 @@ class _AwaitingOtherWithEnd extends StatelessWidget {
               : () => unawaited(
                   confirmEndNegotiation(context, threadId: threadId),
                 ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Voyageur dont l'offre est acceptée, paiement de l'expéditeur attendu ou en
+/// cours (FLUTTER-F9) : « Retirer mon offre » reste visible mais désactivé,
+/// avec la raison, plutôt que de disparaître sans explication. Le back refuse
+/// de toute façon ce retrait (409 `offer-accepted-awaiting-payment`).
+class _TravelerAwaitingPayment extends StatelessWidget {
+  const _TravelerAwaitingPayment({required this.banner});
+
+  final Widget banner;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        banner,
+        const SizedBox(height: DonySpacing.sm),
+        DonyButton(
+          key: const Key('thread-withdraw-offer-locked-btn'),
+          label: l.negotiationWithdrawOfferLockedButton,
+          variant: DonyButtonVariant.secondary,
+          onPressed: null,
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          l.negotiationWithdrawOfferLockedExplanation,
+          key: const Key('thread-withdraw-offer-locked-explanation'),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 12,
+            height: 1.35,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
