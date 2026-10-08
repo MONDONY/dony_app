@@ -1,6 +1,7 @@
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -334,5 +335,82 @@ void main() {
         findsOneWidget,
       );
     });
+    // ── FLUTTER-FJ : petit écran + clavier ────────────────────────────────
+
+    testWidgets(
+      'FLUTTER-FJ : bouton rouge sur une ligne, centré, pleine largeur',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 568);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final result = ValueNotifier<String?>(null);
+        await _pumpAndOpenDialog(
+          tester,
+          kind: CancellationKind.afterHandover,
+          result: result,
+        );
+
+        final label = find.descendant(
+          of: find.byKey(const Key('cancellation_dialog_confirm')),
+          matching: find.text('Annuler la demande'),
+        );
+        final text = tester.widget<Text>(label);
+        expect(text.maxLines, 1);
+        expect(text.softWrap, isFalse);
+        // Une seule ligne : hauteur du libellé = une ligne de labelLarge.
+        final paragraph = tester.renderObject<RenderParagraph>(label);
+        expect(paragraph.didExceedMaxLines, isFalse);
+
+        // Bouton pleine largeur, libellé centré horizontalement.
+        final button = tester.getRect(
+          find.byKey(const Key('cancellation_dialog_confirm')),
+        );
+        final keep = tester.getRect(
+          find.byKey(const Key('cancellation_dialog_keep')),
+        );
+        expect(button.width, keep.width);
+        expect(
+          (tester.getCenter(label).dx - button.center.dx).abs(),
+          lessThan(1),
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'FLUTTER-FJ : clavier ouvert, les boutons restent visibles et actifs',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 568);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final result = ValueNotifier<String?>(null);
+        await _pumpAndOpenDialog(
+          tester,
+          kind: CancellationKind.afterHandover,
+          result: result,
+        );
+
+        await tester.enterText(find.byType(TextField), 'Vol annulé');
+        // Clavier ouvert : 300 px en bas de l'écran.
+        tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+        addTearDown(tester.view.resetViewInsets);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+
+        final confirm = find.byKey(const Key('cancellation_dialog_confirm'));
+        const keyboardTop = 568.0 - 300;
+        expect(tester.getRect(confirm).bottom, lessThanOrEqualTo(keyboardTop));
+        expect(
+          tester
+              .getRect(find.byKey(const Key('cancellation_dialog_keep')))
+              .bottom,
+          lessThanOrEqualTo(keyboardTop),
+        );
+
+        await tester.tap(confirm);
+        await tester.pumpAndSettle();
+        expect(result.value, 'Vol annulé');
+      },
+    );
   });
 }

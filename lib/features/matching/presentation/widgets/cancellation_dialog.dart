@@ -84,161 +84,220 @@ class _CancellationDialogState extends State<CancellationDialog> {
         horizontal: DonySpacing.xl,
         vertical: DonySpacing.huge,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(DonySpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Titre ──────────────────────────────────────────────
-            Text(l.bidCancelDialogTitle, style: tt.headlineSmall),
-            const SizedBox(height: DonySpacing.sm),
-
-            // ── Sous-titre (cas accepted) ──────────────────────────
-            if (!widget._isAfterHandover) ...[
-              Text(
-                l.bidCancelAcceptedSubtitle,
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+      // Le contenu défile et les boutons restent épinglés en bas : clavier
+      // ouvert sur un petit écran, le Dialog rétrécit (il soustrait déjà
+      // viewInsets) et seule la zone texte se replie (Sentry FLUTTER-FJ).
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              key: const Key('cancellation_dialog_scroll'),
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.xl,
+                DonySpacing.xl,
+                DonySpacing.xl,
+                DonySpacing.base,
               ),
-              const SizedBox(height: DonySpacing.base),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── Titre ──────────────────────────────────────────────
+                  Text(l.bidCancelDialogTitle, style: tt.headlineSmall),
+                  const SizedBox(height: DonySpacing.sm),
 
-            // ── Warning box (cas afterHandover) ────────────────────
-            if (widget._isAfterHandover) ...[
-              Container(
-                padding: const EdgeInsets.all(DonySpacing.md),
-                decoration: BoxDecoration(
-                  color: cs.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  border: Border.all(color: cs.error.withValues(alpha: 0.35)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DonyIcon('triangle-alert', color: cs.error, size: 18),
-                    const SizedBox(width: DonySpacing.sm),
-                    Expanded(
-                      child: Column(
+                  // ── Sous-titre (cas accepted) ──────────────────────────
+                  if (!widget._isAfterHandover) ...[
+                    Text(
+                      l.bidCancelAcceptedSubtitle,
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.base),
+                  ],
+
+                  // ── Warning box (cas afterHandover) ────────────────────
+                  if (widget._isAfterHandover) ...[
+                    Container(
+                      padding: const EdgeInsets.all(DonySpacing.md),
+                      decoration: BoxDecoration(
+                        color: cs.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        border: Border.all(
+                          color: cs.error.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            l.bidCancelWarningMessage,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.error,
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: DonySpacing.sm),
-                          Text(
-                            l.bidCancelWarningRefundNote,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                              height: 1.4,
+                          DonyIcon('triangle-alert', color: cs.error, size: 18),
+                          const SizedBox(width: DonySpacing.sm),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l.bidCancelWarningMessage,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: cs.error,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const SizedBox(height: DonySpacing.sm),
+                                Text(
+                                  l.bidCancelWarningRefundNote,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: DonySpacing.base),
                   ],
-                ),
-              ),
-              const SizedBox(height: DonySpacing.base),
-            ],
 
-            // ── Champ motif ────────────────────────────────────────
-            TextField(
-              controller: _reasonCtrl,
-              maxLines: 3,
-              textInputAction: TextInputAction.done,
-              onChanged: (_) {
-                if (_showReasonError) {
-                  setState(() => _showReasonError = false);
-                }
-              },
-              decoration: InputDecoration(
-                hintText: widget._isAfterHandover
-                    ? l.bidCancelReasonRequiredHint
-                    : l.bidCancelReasonOptionalHint,
-                hintStyle: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  borderSide: BorderSide(color: cs.outline),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  borderSide: BorderSide(
-                    color: _showReasonError ? cs.error : cs.outline,
+                  // ── Champ motif ────────────────────────────────────────
+                  TextField(
+                    controller: _reasonCtrl,
+                    maxLines: 3,
+                    textInputAction: TextInputAction.done,
+                    onChanged: (_) {
+                      if (_showReasonError) {
+                        setState(() => _showReasonError = false);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      hintText: widget._isAfterHandover
+                          ? l.bidCancelReasonRequiredHint
+                          : l.bidCancelReasonOptionalHint,
+                      hintStyle: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        borderSide: BorderSide(color: cs.outline),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        borderSide: BorderSide(
+                          color: _showReasonError ? cs.error : cs.outline,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        borderSide: BorderSide(
+                          color: _showReasonError ? cs.error : cs.primary,
+                          width: 1.5,
+                        ),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        borderSide: BorderSide(color: cs.error),
+                      ),
+                      errorText: _showReasonError
+                          ? l.bidCancelReasonRequiredError
+                          : null,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.md,
+                      ),
+                    ),
                   ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  borderSide: BorderSide(
-                    color: _showReasonError ? cs.error : cs.primary,
-                    width: 1.5,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  borderSide: BorderSide(color: cs.error),
-                ),
-                errorText: _showReasonError
-                    ? l.bidCancelReasonRequiredError
-                    : null,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.base,
-                  vertical: DonySpacing.md,
-                ),
+                ],
               ),
             ),
+          ),
 
-            const SizedBox(height: DonySpacing.xl),
-
-            // ── Boutons ────────────────────────────────────────────
-            Row(
+          // ── Boutons (pleine largeur, libellé centré sur une ligne) ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.xl,
+              0,
+              DonySpacing.xl,
+              DonySpacing.xl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // "Garder" — dismiss
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => context.pop(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: cs.onSurface,
-                      side: BorderSide(color: cs.outline),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: DonySpacing.md,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.lg),
-                      ),
+                // "Annuler la demande" — confirm, destructive
+                FilledButton(
+                  key: const Key('cancellation_dialog_confirm'),
+                  onPressed: _onConfirm,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: cs.error,
+                    foregroundColor: cs.onError,
+                    elevation: 0,
+                    minimumSize: const Size.fromHeight(48),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base,
+                      vertical: DonySpacing.md,
                     ),
-                    child: Text(l.bidCancelKeepButton, style: tt.labelLarge),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(DonyRadius.lg),
+                    ),
+                  ),
+                  child: _OneLineLabel(
+                    l.bidCancelConfirmButton,
+                    style: tt.labelLarge?.copyWith(color: cs.onError),
                   ),
                 ),
-                const SizedBox(width: DonySpacing.sm),
-                // "Annuler la demande" — confirm, destructive
-                Expanded(
-                  child: FilledButton(
-                    onPressed: _onConfirm,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: cs.error,
-                      foregroundColor: cs.onError,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: DonySpacing.md,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.lg),
-                      ),
+                const SizedBox(height: DonySpacing.sm),
+                // "Garder" — dismiss
+                OutlinedButton(
+                  key: const Key('cancellation_dialog_keep'),
+                  onPressed: () => context.pop(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: cs.onSurface,
+                    side: BorderSide(color: cs.outline),
+                    minimumSize: const Size.fromHeight(48),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base,
+                      vertical: DonySpacing.md,
                     ),
-                    child: Text(
-                      l.bidCancelConfirmButton,
-                      style: tt.labelLarge?.copyWith(color: cs.onError),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(DonyRadius.lg),
                     ),
+                  ),
+                  child: _OneLineLabel(
+                    l.bidCancelKeepButton,
+                    style: tt.labelLarge,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Libellé de bouton tenu sur une ligne et centré : réduit plutôt que de
+/// passer à la ligne quand la police système est agrandie.
+class _OneLineLabel extends StatelessWidget {
+  const _OneLineLabel(this.text, {this.style});
+
+  final String text;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        text,
+        style: style,
+        maxLines: 1,
+        softWrap: false,
+        textAlign: TextAlign.center,
       ),
     );
   }
