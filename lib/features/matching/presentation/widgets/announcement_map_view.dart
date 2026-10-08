@@ -105,6 +105,40 @@ const Duration kMapRecreateAfterPause = Duration(seconds: 3);
 bool shouldRecreateNativeMap(Duration pausedFor) =>
     pausedFor >= kMapRecreateAfterPause;
 
+/// Intervalle minimal entre deux recréations dues à la pression mémoire : iOS
+/// peut répéter l'alerte, recréer la carte à chaque fois l'aggraverait.
+const Duration kMapMemoryRecreateCooldown = Duration(seconds: 30);
+
+/// Faut-il recréer tout de suite la carte native sur une alerte mémoire
+/// (FLUTTER-FF) ? Sous pression mémoire ou thermique, iOS libère la surface de
+/// rendu de la carte, qui reste noire alors que les tuiles se chargent. Seule
+/// une carte déjà créée et visible (app au premier plan) est concernée ; en
+/// arrière-plan, la recréation attend le retour ([shouldRecreateOnResume]).
+@visibleForTesting
+bool shouldRecreateOnMemoryPressure({
+  required bool mapCreated,
+  required bool inForeground,
+  required DateTime now,
+  DateTime? lastRecreatedAt,
+}) {
+  if (!mapCreated || !inForeground) return false;
+  if (lastRecreatedAt == null) return true;
+  return now.difference(lastRecreatedAt) >= kMapMemoryRecreateCooldown;
+}
+
+/// Faut-il recréer la carte native au retour au premier plan ? Après une vraie
+/// pause (FLUTTER-BK), ou dès qu'une alerte mémoire est arrivée pendant
+/// l'arrière-plan sur une carte déjà créée (FLUTTER-FF), même pour une pause
+/// brève : c'est justement là que la surface a pu être libérée.
+@visibleForTesting
+bool shouldRecreateOnResume({
+  required Duration pausedFor,
+  required bool mapCreated,
+  required bool memoryPressureWhilePaused,
+}) =>
+    shouldRecreateNativeMap(pausedFor) ||
+    (mapCreated && memoryPressureWhilePaused);
+
 /// Délai au-delà duquel une carte native toujours pas créée est annoncée
 /// comme indisponible (FLUTTER-CD) : sans message, une carte vide laisse
 /// croire que la recherche ne charge pas.
@@ -133,6 +167,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
   /// premier plan après une vraie pause, ce qui recrée la vue native (FLUTTER-BK).
   int _mapGeneration = 0;
   DateTime? _pausedAt;
+
+  /// Alerte mémoire reçue pendant que l'app était en arrière-plan (FLUTTER-FF).
+  bool _memoryPressureWhilePaused = false;
+  DateTime? _lastRecreatedAt;
 
   /// Dernière position de la caméra, pour recréer la carte au même endroit.
   CameraPosition? _lastCamera;
@@ -207,16 +245,53 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
     }
     if (state != AppLifecycleState.resumed) return;
     final pausedAt = _pausedAt;
+    final memoryPressure = _memoryPressureWhilePaused;
     _pausedAt = null;
+    _memoryPressureWhilePaused = false;
     if (pausedAt == null || !mounted) return;
-    if (shouldRecreateNativeMap(DateTime.now().difference(pausedAt))) {
-      setState(() {
-        _mapGeneration++;
-        _mapController = null;
-        _lastMarkerSignature = null;
-      });
-      _startMapWatchdog();
+    if (shouldRecreateOnResume(
+      pausedFor: DateTime.now().difference(pausedAt),
+      mapCreated: _mapController != null,
+      memoryPressureWhilePaused: memoryPressure,
+    )) {
+      _recreateNativeMap();
     }
+  }
+
+  /// Carte noire sur iPhone sous pression mémoire ou thermique (FLUTTER-FF,
+  /// breadcrumb LOW_MEMORY, tuiles pourtant chargées) : la surface native a
+  /// été libérée. Au premier plan on la recrée tout de suite, en arrière-plan
+  /// au retour.
+  @override
+  void didHaveMemoryPressure() {
+    if (!mounted) return;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    final inForeground =
+        lifecycle == null || lifecycle == AppLifecycleState.resumed;
+    if (!inForeground) {
+      if (_mapController != null) _memoryPressureWhilePaused = true;
+      return;
+    }
+    if (shouldRecreateOnMemoryPressure(
+      mapCreated: _mapController != null,
+      inForeground: inForeground,
+      now: DateTime.now(),
+      lastRecreatedAt: _lastRecreatedAt,
+    )) {
+      _recreateNativeMap();
+    }
+  }
+
+  /// Recrée la vue native au même endroit (la caméra est gardée dans
+  /// [_lastCamera]) ; les marqueurs sont reconstruits dans `onMapCreated`.
+  void _recreateNativeMap() {
+    _lastRecreatedAt = DateTime.now();
+    setState(() {
+      _mapGeneration++;
+      _mapController = null;
+      _lastMarkerSignature = null;
+    });
+    _startMapWatchdog();
   }
 
   @override

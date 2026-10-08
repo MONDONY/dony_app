@@ -168,6 +168,18 @@ class PrevenirDestinataireCard extends StatelessWidget {
                 : l.recipientNotifyBodyLink(name),
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
+          // FLUTTER-G1 : code bloqué, le message ne partirait qu'avec le lien.
+          if (bid.needsNewPickupCode) ...[
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              l.recipientNotifyCodeBlockedHint,
+              key: const Key('recipient-notify-code-blocked'),
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
           const SizedBox(height: DonySpacing.md),
           DonyButton(
             label: hasCode

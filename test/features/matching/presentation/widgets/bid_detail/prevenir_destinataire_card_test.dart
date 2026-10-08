@@ -214,6 +214,32 @@ void main() {
       expect(uri.queryParameters['text'], contains('482913'));
     });
 
+    // FLUTTER-G1 : code bloqué → le message ne part qu'avec le lien, on le dit.
+    testWidgets(
+      'code bloqué : message avec le lien et invitation à régénérer',
+      (tester) async {
+        when(() => launcher.open(any())).thenAnswer((_) async => true);
+        await pump(tester, _bid(status: 'IN_TRANSIT'));
+
+        expect(
+          find.byKey(const Key('recipient-notify-code-blocked')),
+          findsOneWidget,
+        );
+        expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
+      },
+    );
+
+    testWidgets('code présent : aucune invitation à régénérer', (tester) async {
+      await pump(
+        tester,
+        _bid(status: 'IN_TRANSIT', confirmationCode: '482913'),
+      );
+      expect(
+        find.byKey(const Key('recipient-notify-code-blocked')),
+        findsNothing,
+      );
+    });
+
     testWidgets('WhatsApp ne s\'ouvre pas : repli sur le partage', (
       tester,
     ) async {

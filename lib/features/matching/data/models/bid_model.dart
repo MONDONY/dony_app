@@ -404,6 +404,13 @@ class BidModel {
 
   bool get isSkeleton => senderId.isEmpty;
 
+  /// Colis remis au voyageur mais sans code de retrait : le serveur l'a effacé
+  /// après trois essais faux ou à l'expiration (FLUTTER-G1). Seul l'expéditeur
+  /// peut en générer un nouveau (`POST /tracking/{bidId}/refresh-code`).
+  bool get needsNewPickupCode =>
+      (confirmationCode == null || confirmationCode!.isEmpty) &&
+      const {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'}.contains(status);
+
   /// Colis carte créé mais pas encore payé : c'est l'expéditeur qui doit agir.
   /// Le paiement le fait passer en PAYMENT_ESCROWED, et le voyageur ne peut
   /// l'accepter qu'après (BidService.doAcceptBid). Source unique pour le

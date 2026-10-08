@@ -164,4 +164,57 @@ void main() {
       predicate<FavoriteIdsState>((s) => !s.tripIds.contains('t1')), // rollback
     ],
   );
+
+  // ---------------------------------------------------------------------------
+  // Concordance avec les listes chargées (FLUTTER-FG)
+  // ---------------------------------------------------------------------------
+  group('syncTripsFromList / syncRequestsFromList', () {
+    blocTest<FavoriteIdsCubit, FavoriteIdsState>(
+      'la liste de trajets affichée remplace les ids de trajets (pastille = liste)',
+      build: () =>
+          FavoriteIdsCubit(repo)..emitSeed(trips: {'old'}, requests: {'r1'}),
+      act: (c) => c.syncTripsFromList(['t1', 't2']),
+      expect: () => [
+        predicate<FavoriteIdsState>(
+          (s) =>
+              s.tripIds.length == 2 &&
+              s.tripIds.containsAll({'t1', 't2'}) &&
+              s.requestIds.length == 1 &&
+              s.requestIds.contains('r1') &&
+              s.count == 3,
+        ),
+      ],
+    );
+
+    blocTest<FavoriteIdsCubit, FavoriteIdsState>(
+      'liste vide : plus aucun trajet compté',
+      build: () =>
+          FavoriteIdsCubit(repo)..emitSeed(trips: {'t1'}, requests: {}),
+      act: (c) => c.syncTripsFromList(const []),
+      expect: () => [predicate<FavoriteIdsState>((s) => s.count == 0)],
+    );
+
+    blocTest<FavoriteIdsCubit, FavoriteIdsState>(
+      'mêmes ids : aucune émission',
+      build: () =>
+          FavoriteIdsCubit(repo)..emitSeed(trips: {'t1'}, requests: {}),
+      act: (c) => c.syncTripsFromList(['t1']),
+      expect: () => <FavoriteIdsState>[],
+    );
+
+    blocTest<FavoriteIdsCubit, FavoriteIdsState>(
+      'demandes : la liste affichée remplace les ids de demandes',
+      build: () =>
+          FavoriteIdsCubit(repo)..emitSeed(trips: {'t1'}, requests: {}),
+      act: (c) => c.syncRequestsFromList(['r1']),
+      expect: () => [
+        predicate<FavoriteIdsState>(
+          (s) =>
+              s.requestIds.length == 1 &&
+              s.requestIds.contains('r1') &&
+              s.tripIds.contains('t1'),
+        ),
+      ],
+    );
+  });
 }

@@ -17333,4 +17333,42 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get negotiationWithdrawOfferLockedExplanation =>
       'L\'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.';
+
+  @override
+  String get ticketBlockedCodeTitle => 'Code de retrait bloqué';
+
+  @override
+  String get ticketBlockedCodeMessage =>
+      'Le code précédent a été bloqué après trop d\'essais incorrects du voyageur. Générez-en un nouveau, puis transmettez-le à votre destinataire.';
+
+  @override
+  String get ticketGenerateNewCodeButton => 'Générer un nouveau code';
+
+  @override
+  String get bidDetailSenderCodeBlockedNote =>
+      'Le code de retrait a été bloqué : générez-en un nouveau sur votre billet.';
+
+  @override
+  String get recipientNotifyCodeBlockedHint =>
+      'Générez d\'abord un nouveau code de retrait pour l\'ajouter au message.';
+
+  @override
+  String get errorCodeBlockedTitle => 'Code bloqué';
+
+  @override
+  String get errorCodeBlockedMessage =>
+      'Ce code n\'est plus valide après trop d\'essais. Demandez à l\'expéditeur d\'en générer un nouveau dans l\'app.';
+
+  @override
+  String get tripDraftSavedTitle => 'Brouillon enregistré';
+
+  @override
+  String get tripDraftSavedSubtitle =>
+      'Votre trajet n\'est pas encore en ligne. Publiez-le depuis vos brouillons quand vous êtes prêt.';
+
+  @override
+  String get tripDraftSavedViewDraftsCta => 'Voir mes brouillons';
+
+  @override
+  String get tripDraftSavedViewDraftCta => 'Voir ce brouillon';
 }

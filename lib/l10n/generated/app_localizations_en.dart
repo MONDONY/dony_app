@@ -17220,4 +17220,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get negotiationWithdrawOfferLockedExplanation =>
       'The sender has accepted your offer: you can no longer withdraw it during their payment window.';
+
+  @override
+  String get ticketBlockedCodeTitle => 'Pickup code blocked';
+
+  @override
+  String get ticketBlockedCodeMessage =>
+      'The previous code was blocked after too many wrong tries by the traveler. Generate a new one, then share it with your recipient.';
+
+  @override
+  String get ticketGenerateNewCodeButton => 'Generate a new code';
+
+  @override
+  String get bidDetailSenderCodeBlockedNote =>
+      'The pickup code was blocked: generate a new one on your ticket.';
+
+  @override
+  String get recipientNotifyCodeBlockedHint =>
+      'Generate a new pickup code first to add it to the message.';
+
+  @override
+  String get errorCodeBlockedTitle => 'Code blocked';
+
+  @override
+  String get errorCodeBlockedMessage =>
+      'This code is no longer valid after too many tries. Ask the sender to generate a new one in the app.';
+
+  @override
+  String get tripDraftSavedTitle => 'Draft saved';
+
+  @override
+  String get tripDraftSavedSubtitle =>
+      'Your trip is not online yet. Publish it from your drafts when you\'re ready.';
+
+  @override
+  String get tripDraftSavedViewDraftsCta => 'View my drafts';
+
+  @override
+  String get tripDraftSavedViewDraftCta => 'View this draft';
 }

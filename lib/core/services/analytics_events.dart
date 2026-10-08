@@ -445,6 +445,10 @@ abstract final class AnalyticsEvents {
   static const bidQrSheetOpened = 'bid_qr_sheet_opened';
   static const bidQrDownloaded = 'bid_qr_downloaded';
   static const bidRetraitCodeOpened = 'bid_retrait_code_opened';
+
+  /// Code de retrait régénéré par l'expéditeur (propriété `after_block` :
+  /// depuis le talon « Code de retrait bloqué », FLUTTER-G1).
+  static const pickupCodeRegenerated = 'pickup_code_regenerated';
   static const travelerCallInitiated = 'traveler_call_initiated';
   static const senderCallInitiated = 'sender_call_initiated';
   static const trackingLinkShared = 'tracking_link_shared';

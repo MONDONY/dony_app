@@ -46,6 +46,29 @@ class FavoriteIdsCubit extends Cubit<FavoriteIdsState> {
     }
   }
 
+  // ---- Concordance avec les listes (FLUTTER-FG) -----------------------
+
+  /// Aligne les trajets favoris sur la liste `/favorites/trips` que l'écran
+  /// Favoris vient de charger. Les deux réponses passent par le même filtre
+  /// serveur, mais `/favorites/ids` peut avoir échoué (état gardé) ou être
+  /// plus ancien : signets éteints sur des cartes de la liste, pastille qui
+  /// ne correspond pas au nombre affiché. La liste affichée fait foi.
+  void syncTripsFromList(Iterable<String> ids) {
+    final next = Set<String>.from(ids);
+    if (_sameSet(next, state.tripIds)) return;
+    emit(state.copyWith(tripIds: next));
+  }
+
+  /// Même chose pour les demandes d'envoi (`/favorites/package-requests`).
+  void syncRequestsFromList(Iterable<String> ids) {
+    final next = Set<String>.from(ids);
+    if (_sameSet(next, state.requestIds)) return;
+    emit(state.copyWith(requestIds: next));
+  }
+
+  static bool _sameSet(Set<String> a, Set<String> b) =>
+      a.length == b.length && a.containsAll(b);
+
   // ---- Toggle --------------------------------------------------------
 
   /// Optimistically toggles a trip favorite.
