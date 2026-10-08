@@ -38,6 +38,7 @@ import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -470,6 +471,12 @@ void _tripRegisterDependencies() {
   if (!getIt.isRegistered<PriceGridRepository>()) {
     getIt.registerSingleton<PriceGridRepository>(
       _TripMockPriceGridRepository(),
+    );
+  }
+  // TripLegsCubit — étapes d'un voyage (FLUTTER-4D), fourni par getIt.
+  if (!getIt.isRegistered<TripLegsCubit>()) {
+    getIt.registerFactory<TripLegsCubit>(
+      () => TripLegsCubit(getIt<AnalyticsService>()),
     );
   }
   if (!getIt.isRegistered<AnnouncementFormBloc>()) {

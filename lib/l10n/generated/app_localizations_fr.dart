@@ -16956,4 +16956,172 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dnpLoadError => 'Impossible de charger le suivi de l\'absence';
+
+  @override
+  String get tripLegsSectionTitle => 'Voyage à plusieurs étapes';
+
+  @override
+  String get tripLegsSectionSubtitle =>
+      'Vous continuez vers une autre ville ? Ajoutez une étape : chacune est publiée comme un trajet, avec ses kilos, son prix et ses colis.';
+
+  @override
+  String get tripLegsAddButton => 'Ajouter une étape';
+
+  @override
+  String get tripLegsNeedFirstLeg =>
+      'Indiquez d\'abord la ville d\'arrivée et la date du premier trajet.';
+
+  @override
+  String tripLegsMaxReached(int max) {
+    return '$max étapes au maximum par voyage.';
+  }
+
+  @override
+  String tripLegsLegLabel(int index) {
+    return 'Étape $index';
+  }
+
+  @override
+  String tripLegsLegSummary(String date, String kg) {
+    return '$date · $kg kg';
+  }
+
+  @override
+  String get tripLegsDateInvalid =>
+      'Cette étape part avant l\'arrivée de la précédente : modifiez sa date.';
+
+  @override
+  String get tripLegsEditTooltip => 'Modifier l\'étape';
+
+  @override
+  String get tripLegsRemoveTooltip => 'Retirer l\'étape';
+
+  @override
+  String tripLegSheetSubtitle(String city) {
+    return 'Départ de $city';
+  }
+
+  @override
+  String get tripLegSheetArrivalCity => 'Ville d\'arrivée';
+
+  @override
+  String get tripLegSheetDate => 'Date de départ';
+
+  @override
+  String get tripLegSheetTime => 'Heure de départ';
+
+  @override
+  String get tripLegSheetKg => 'Kilos disponibles';
+
+  @override
+  String get tripLegSheetPrice => 'Prix par kilo';
+
+  @override
+  String get tripLegSheetSubmit => 'Ajouter l\'étape';
+
+  @override
+  String get tripLegSheetSave => 'Enregistrer l\'étape';
+
+  @override
+  String get tripLegSheetSameCity =>
+      'Choisissez une autre ville que celle du départ.';
+
+  @override
+  String tripLegSheetDateTooEarly(String date) {
+    return 'Le départ ne peut pas précéder le $date, jour d\'arrivée de l\'étape précédente.';
+  }
+
+  @override
+  String tripLegsSuccessSubtitle(int count, String route) {
+    return 'Votre voyage en $count étapes est en ligne : $route.';
+  }
+
+  @override
+  String get tripLegsUnsupported =>
+      'Les voyages à plusieurs étapes ne sont pas encore disponibles. Publiez la première étape, puis les suivantes une par une.';
+
+  @override
+  String tripLegBadge(int index, int count) {
+    return 'Étape $index/$count';
+  }
+
+  @override
+  String tripGroupHeader(String route) {
+    return 'Voyage · $route';
+  }
+
+  @override
+  String tripLegsDetailTitle(int index, int count) {
+    return 'Étape $index/$count du voyage';
+  }
+
+  @override
+  String get tripLegsDetailCurrent => 'Cette étape';
+
+  @override
+  String tripLegsDetailOpenSemantics(String from, String to) {
+    return 'Voir l\'étape $from → $to';
+  }
+
+  @override
+  String get tripLegsCancelFollowingTitle =>
+      'Annuler aussi les étapes suivantes ?';
+
+  @override
+  String tripLegsCancelFollowingMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Les $count étapes suivantes restent publiées si vous ne les annulez pas.',
+      one: 'L\'étape suivante reste publiée si vous ne l\'annulez pas.',
+    );
+    return 'Ce trajet fait partie d\'un voyage. $_temp0';
+  }
+
+  @override
+  String get tripLegsCancelFollowingConfirm => 'Annuler les suivantes';
+
+  @override
+  String get tripLegsCancelFollowingKeep => 'Les garder';
+
+  @override
+  String tripLegsFollowingFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count étapes suivantes n\'ont pas pu être annulées : ouvrez-les depuis Mes trajets.',
+      one:
+          'Une étape suivante n\'a pas pu être annulée : ouvrez-la depuis Mes trajets.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get errorTripLegCityMismatchTitle => 'Étapes non reliées';
+
+  @override
+  String get errorTripLegCityMismatchMessage =>
+      'Chaque étape doit partir de la ville d\'arrivée de la précédente.';
+
+  @override
+  String get errorTripLegDateTitle => 'Date d\'étape trop tôt';
+
+  @override
+  String get errorTripLegDateMessage =>
+      'Une étape ne peut pas partir avant l\'arrivée de la précédente.';
+
+  @override
+  String get errorTripLegsCountTitle => 'Nombre d\'étapes invalide';
+
+  @override
+  String get errorTripLegsCountMessage => 'Un voyage compte de 2 à 5 étapes.';
+
+  @override
+  String get errorTripLegsDraftMismatchTitle => 'Étapes incohérentes';
+
+  @override
+  String get errorTripLegsDraftMismatchMessage =>
+      'Les étapes d\'un voyage sont publiées ensemble, ou toutes enregistrées en brouillon.';
 }

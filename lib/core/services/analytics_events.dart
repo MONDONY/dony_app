@@ -45,6 +45,12 @@ abstract final class AnalyticsEvents {
   static const surplusOpened = 'surplus_opened';
   static const tripCreateStarted = 'trip_create_started';
 
+  /// Voyage à plusieurs étapes (FLUTTER-4D) : étape ajoutée au formulaire.
+  static const tripLegAdded = 'trip_leg_added';
+
+  /// Voyage à plusieurs étapes publié (toutes les étapes en une fois).
+  static const tripGroupCreated = 'trip_group_created';
+
   // Bids
   static const bidSubmitted = 'bid_submitted';
   static const bidAccepted = 'bid_accepted';

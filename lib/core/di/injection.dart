@@ -112,6 +112,8 @@ import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_datasource.dart';
@@ -493,6 +495,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<ToolsCompletionRepository>(),
       getIt<AnalyticsService>(),
     ),
+  );
+  getIt.registerFactory<TripLegsCubit>(
+    () => TripLegsCubit(getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<TripGroupCubit>(
+    () => TripGroupCubit(getIt<AnnouncementRepository>()),
   );
   getIt.registerFactory<TripFilterCubit>(
     () => TripFilterCubit(getIt<AnalyticsService>()),

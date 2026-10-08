@@ -18,6 +18,7 @@ import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.d
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -30,6 +31,7 @@ import 'package:dony/features/matching/presentation/trip_view_recording.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -404,6 +406,19 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             convertedCurrency: announcement.convertedCurrency,
           ),
         ],
+        // Voyage à plusieurs étapes (FLUTTER-4D) : « Étape 1/2 du voyage »
+        // et accès aux autres étapes, chacune ouverte comme un trajet.
+        // Garde : un point d'ouverture sans DI complète (tests, aperçus)
+        // garde la fiche ordinaire.
+        if (getIt.isRegistered<TripGroupCubit>())
+          BlocProvider<TripGroupCubit>(
+            create: (_) => getIt<TripGroupCubit>()..load(announcement.id),
+            child: TripLegsCard(
+              announcementId: announcement.id,
+              padding: const EdgeInsets.only(top: DonySpacing.md),
+              onOpenLeg: (leg) => context.push('/traveler/${leg.id}'),
+            ),
+          ),
         const SizedBox(height: DonySpacing.md),
         _TravelerCard(announcement: announcement),
         if (announcement.pickupAddress != null ||

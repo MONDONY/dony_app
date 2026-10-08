@@ -22,15 +22,18 @@ import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_legs_section.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart'
@@ -215,6 +218,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       BlocProvider<AnnouncementFormBloc>(
         create: (_) => getIt<AnnouncementFormBloc>(),
       ),
+      // Étapes supplémentaires d'un voyage (FLUTTER-4D), en création seulement.
+      BlocProvider<TripLegsCubit>(create: (_) => getIt<TripLegsCubit>()),
       BlocProvider<TripTemplateBloc>(
         create: (_) =>
             getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
@@ -1559,32 +1564,41 @@ class _TripFormContentState extends State<_TripFormContent> {
         ),
       );
     } else {
+      final createEvent = AnnouncementCreateRequested(
+        departureCity: departureCity,
+        arrivalCity: arrivalCity,
+        departureCountryCode: formBlocState.departureCountryCode,
+        arrivalCountryCode: formBlocState.arrivalCountryCode,
+        departureDate: departureDate,
+        departureTime: departureTime,
+        arrivalTime: arrivalTime,
+        arrivalDate: arrivalDate,
+        pickupAddress: _pickupAddress!,
+        deliveryAddress: _deliveryAddress!,
+        availableKg: _availableKgNotifier.value,
+        pricePerKg: pricePerKgToSubmit,
+        transportMode: transportMode,
+        description: description,
+        acceptedContentTypes: allAccepted,
+        refusedTypes: refused,
+        acceptedPaymentMethods: paymentMethods,
+        capacityUnit: capacityUnitWire,
+        pricingMode: pricingModeWire,
+        handoverDeadline: handoverDeadline,
+        negotiable: _negotiableNotifier.value,
+        saveAsDraft: saveAsDraft,
+        currency: _currency.code,
+      );
+      // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
+      // ensemble, en une transaction côté serveur.
+      final extraLegs = context.read<TripLegsCubit>().state.legs;
       context.read<AnnouncementBloc>().add(
-        AnnouncementCreateRequested(
-          departureCity: departureCity,
-          arrivalCity: arrivalCity,
-          departureCountryCode: formBlocState.departureCountryCode,
-          arrivalCountryCode: formBlocState.arrivalCountryCode,
-          departureDate: departureDate,
-          departureTime: departureTime,
-          arrivalTime: arrivalTime,
-          arrivalDate: arrivalDate,
-          pickupAddress: _pickupAddress!,
-          deliveryAddress: _deliveryAddress!,
-          availableKg: _availableKgNotifier.value,
-          pricePerKg: pricePerKgToSubmit,
-          transportMode: transportMode,
-          description: description,
-          acceptedContentTypes: allAccepted,
-          refusedTypes: refused,
-          acceptedPaymentMethods: paymentMethods,
-          capacityUnit: capacityUnitWire,
-          pricingMode: pricingModeWire,
-          handoverDeadline: handoverDeadline,
-          negotiable: _negotiableNotifier.value,
-          saveAsDraft: saveAsDraft,
-          currency: _currency.code,
-        ),
+        extraLegs.isEmpty
+            ? createEvent
+            : AnnouncementTripCreateRequested(
+                first: createEvent,
+                legs: extraLegs,
+              ),
       );
     }
   }
@@ -1791,10 +1805,18 @@ class _TripFormContentState extends State<_TripFormContent> {
                     title: isEdit
                         ? routeContext.l10n.tripPublishSuccessTitleEdit
                         : routeContext.l10n.tripPublishSuccessTitleCreate,
-                    subtitle: routeContext.l10n.tripPublishSuccessSubtitle(
-                      announcement.departureCity,
-                      announcement.arrivalCity,
-                    ),
+                    subtitle: state is AnnouncementTripCreated
+                        ? routeContext.l10n.tripLegsSuccessSubtitle(
+                            state.legs.length,
+                            [
+                              state.legs.first.departureCity,
+                              ...state.legs.map((leg) => leg.arrivalCity),
+                            ].join(' → '),
+                          )
+                        : routeContext.l10n.tripPublishSuccessSubtitle(
+                            announcement.departureCity,
+                            announcement.arrivalCity,
+                          ),
                     ctaLabel: routeContext.l10n.tripPublishSuccessCta,
                     ctaVariant: DonyButtonVariant.accent,
                     onCta: () {
@@ -1883,6 +1905,12 @@ class _TripFormContentState extends State<_TripFormContent> {
                 unawaited(context.push('/profile/upgrade-to-pro'));
               }
             }
+          } else if (state is AnnouncementTripUnsupported) {
+            DonySnackbar.show(
+              context,
+              message: context.l10n.tripLegsUnsupported,
+              type: DonySnackbarType.warning,
+            );
           } else if (state is AnnouncementError) {
             unawaited(ErrorPresenter.show(context, state.error));
           }
@@ -2287,7 +2315,44 @@ class _TripFormContentState extends State<_TripFormContent> {
           );
         },
       ),
+      // Voyage à plusieurs étapes (FLUTTER-4D) : création seulement. Une
+      // modification touche une seule étape, un trajet dédié reste unique.
+      if (!_isEdit && !_isLocked)
+        ListenableBuilder(
+          listenable: Listenable.merge([
+            _arrivalCityNotifier,
+            _arrivalCountryCodeNotifier,
+            _departureDateNotifier,
+            _arrivalTimeNotifier,
+            _arrivalDayOffsetNotifier,
+            _deliveryAddressNotifier,
+            _kgPriceEnabledNotifier,
+          ]),
+          builder: (context, _) => TripLegsSection(
+            origin: _firstLegOrigin(),
+            showPrice: _kgPriceEnabledNotifier.value,
+            defaultKg: _availableKgNotifier.value,
+            defaultPrice: context.read<AnnouncementFormBloc>().state.pricePerKg,
+          ),
+        ),
     ];
+  }
+
+  /// Arrivée du trajet saisi, d'où part la première étape ajoutée
+  /// (FLUTTER-4D). `null` tant que la ville ou la date manque.
+  TripLegOrigin? _firstLegOrigin() {
+    final city = _arrivalCityNotifier.value;
+    final date = _departureDateNotifier.value;
+    if (city == null || city.isEmpty || date == null) return null;
+    final offset = _arrivalTimeNotifier.value != null
+        ? _arrivalDayOffsetNotifier.value
+        : 0;
+    return TripLegOrigin(
+      city: city,
+      countryCode: _arrivalCountryCodeNotifier.value,
+      arrivalDay: DateUtils.dateOnly(date).add(Duration(days: offset)),
+      address: _deliveryAddress,
+    );
   }
 
   Widget _buildForm(BuildContext context) {

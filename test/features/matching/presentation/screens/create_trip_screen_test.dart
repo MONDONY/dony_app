@@ -24,6 +24,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart'
@@ -440,6 +441,13 @@ void main() {
     // PriceGridRepository — passed when constructing AnnouncementFormBloc
     if (!getIt.isRegistered<PriceGridRepository>()) {
       getIt.registerSingleton<PriceGridRepository>(_MockPriceGridRepository());
+    }
+
+    // TripLegsCubit — étapes d'un voyage (FLUTTER-4D), fourni par getIt.
+    if (!getIt.isRegistered<TripLegsCubit>()) {
+      getIt.registerFactory<TripLegsCubit>(
+        () => TripLegsCubit(getIt<AnalyticsService>()),
+      );
     }
 
     // AnnouncementFormBloc — fourni par getIt depuis CreateTripScreen
@@ -2033,6 +2041,165 @@ void main() {
     );
 
     testWidgets(
+      'voyage à étapes publié : succès avec l\'itinéraire complet (FLUTTER-4D)',
+      (tester) async {
+        setupViewport(tester);
+        var didPop = false;
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => Scaffold(
+                body: Builder(
+                  builder: (ctx) => ElevatedButton(
+                    onPressed: () => ctx.push('/trips/create'),
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/trips/create',
+              builder: (_, _) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<StripeAccountBloc>.value(
+                    value: _makeStripeBloc(),
+                  ),
+                  BlocProvider<HelpCenterBloc>(
+                    create: (_) => HelpCenterBloc(
+                      HelpCenterRepository(
+                        const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                        fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                      ),
+                      makeDisabledAnalytics(MockAnalyticsBackend()),
+                    )..add(const HelpCenterLoadRequested()),
+                  ),
+                ],
+                child: const CreateTripScreen(),
+              ),
+            ),
+          ],
+          observers: [_PopObserver(onPop: () => didPop = true)],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+        );
+        await tester.pump();
+
+        // Navigate to CreateTripScreen
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CreateTripScreen), findsOneWidget);
+
+        // Emit AnnouncementCreated → listener pousse DonySuccessScreen
+        // (le pop(true) n'intervient plus qu'après le tap CTA — voir le test
+        // dédié au double-pop ci-dessous)
+        annStreamCtrl.add(
+          AnnouncementTripCreated([
+            _makeAnnouncement(),
+            AnnouncementModel(
+              id: 'leg-2',
+              travelerId: 'trav-1',
+              departureCity: 'Dakar',
+              arrivalCity: 'Bamako',
+              departureDate: DateTime(2026, 8, 5),
+              availableKg: 10,
+              totalKg: 10,
+              status: 'ACTIVE',
+              createdAt: DateTime(2026),
+              updatedAt: DateTime(2026),
+            ),
+          ]),
+        );
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(
+          find.textContaining('Votre voyage en 2 étapes est en ligne'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Dakar → Bamako'), findsOneWidget);
+        expect(didPop, isFalse);
+      },
+    );
+
+    testWidgets(
+      'backend sans voyages à étapes : avertissement, on reste sur le formulaire (FLUTTER-4D)',
+      (tester) async {
+        setupViewport(tester);
+        var didPop = false;
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => Scaffold(
+                body: Builder(
+                  builder: (ctx) => ElevatedButton(
+                    onPressed: () => ctx.push('/trips/create'),
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/trips/create',
+              builder: (_, _) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<StripeAccountBloc>.value(
+                    value: _makeStripeBloc(),
+                  ),
+                  BlocProvider<HelpCenterBloc>(
+                    create: (_) => HelpCenterBloc(
+                      HelpCenterRepository(
+                        const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                        fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                      ),
+                      makeDisabledAnalytics(MockAnalyticsBackend()),
+                    )..add(const HelpCenterLoadRequested()),
+                  ),
+                ],
+                child: const CreateTripScreen(),
+              ),
+            ),
+          ],
+          observers: [_PopObserver(onPop: () => didPop = true)],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+        );
+        await tester.pump();
+
+        // Navigate to CreateTripScreen
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CreateTripScreen), findsOneWidget);
+
+        annStreamCtrl.add(AnnouncementTripUnsupported());
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DonySuccessScreen), findsNothing);
+        expect(find.byType(CreateTripScreen), findsOneWidget);
+        expect(
+          find.textContaining(
+            'voyages à plusieurs étapes ne sont pas encore disponibles',
+          ),
+          findsOneWidget,
+        );
+        expect(didPop, isFalse);
+      },
+    );
+
+    testWidgets(
       'AnnouncementUpdated affiche DonySuccessScreen (mode édition)',
       (tester) async {
         setupViewport(tester);
@@ -2661,6 +2828,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.text('Date limite de dépôt obligatoire'), findsNothing);
+      // Une modification ne touche qu'une étape : pas de section « étapes ».
+      expect(find.byKey(const Key('trip-legs-section')), findsNothing);
       verify(
         () => announcementBloc.add(
           any(

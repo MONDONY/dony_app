@@ -16848,4 +16848,169 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dnpLoadError => 'Could not load the absence follow-up';
+
+  @override
+  String get tripLegsSectionTitle => 'Multi-stop trip';
+
+  @override
+  String get tripLegsSectionSubtitle =>
+      'Travelling on to another city? Add a stop: each one is published as its own trip, with its own kilos, price and parcels.';
+
+  @override
+  String get tripLegsAddButton => 'Add a stop';
+
+  @override
+  String get tripLegsNeedFirstLeg =>
+      'First enter the arrival city and the date of the first trip.';
+
+  @override
+  String tripLegsMaxReached(int max) {
+    return '$max stops at most per trip.';
+  }
+
+  @override
+  String tripLegsLegLabel(int index) {
+    return 'Stop $index';
+  }
+
+  @override
+  String tripLegsLegSummary(String date, String kg) {
+    return '$date, $kg kg available';
+  }
+
+  @override
+  String get tripLegsDateInvalid =>
+      'This stop leaves before the previous one arrives: change its date.';
+
+  @override
+  String get tripLegsEditTooltip => 'Edit stop';
+
+  @override
+  String get tripLegsRemoveTooltip => 'Remove stop';
+
+  @override
+  String tripLegSheetSubtitle(String city) {
+    return 'Leaving from $city';
+  }
+
+  @override
+  String get tripLegSheetArrivalCity => 'Arrival city';
+
+  @override
+  String get tripLegSheetDate => 'Departure date';
+
+  @override
+  String get tripLegSheetTime => 'Departure time';
+
+  @override
+  String get tripLegSheetKg => 'Available kilos';
+
+  @override
+  String get tripLegSheetPrice => 'Price per kilo';
+
+  @override
+  String get tripLegSheetSubmit => 'Add stop';
+
+  @override
+  String get tripLegSheetSave => 'Save stop';
+
+  @override
+  String get tripLegSheetSameCity =>
+      'Choose a city other than the departure city.';
+
+  @override
+  String tripLegSheetDateTooEarly(String date) {
+    return 'The departure can\'t be before $date, the day the previous stop arrives.';
+  }
+
+  @override
+  String tripLegsSuccessSubtitle(int count, String route) {
+    return 'Your $count-stop trip is live: $route.';
+  }
+
+  @override
+  String get tripLegsUnsupported =>
+      'Multi-stop trips aren\'t available yet. Publish the first stop, then the next ones one by one.';
+
+  @override
+  String tripLegBadge(int index, int count) {
+    return 'Stop $index/$count';
+  }
+
+  @override
+  String tripGroupHeader(String route) {
+    return 'Trip · $route';
+  }
+
+  @override
+  String tripLegsDetailTitle(int index, int count) {
+    return 'Stop $index/$count of the trip';
+  }
+
+  @override
+  String get tripLegsDetailCurrent => 'This stop';
+
+  @override
+  String tripLegsDetailOpenSemantics(String from, String to) {
+    return 'View stop $from → $to';
+  }
+
+  @override
+  String get tripLegsCancelFollowingTitle => 'Also cancel the following stops?';
+
+  @override
+  String tripLegsCancelFollowingMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The next $count stops stay published unless you cancel them.',
+      one: 'The next stop stays published unless you cancel it.',
+    );
+    return 'This trip is part of a multi-stop trip. $_temp0';
+  }
+
+  @override
+  String get tripLegsCancelFollowingConfirm => 'Cancel the next ones';
+
+  @override
+  String get tripLegsCancelFollowingKeep => 'Keep them';
+
+  @override
+  String tripLegsFollowingFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count following stops couldn\'t be cancelled: open them from My trips.',
+      one: 'One following stop couldn\'t be cancelled: open it from My trips.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get errorTripLegCityMismatchTitle => 'Stops not linked';
+
+  @override
+  String get errorTripLegCityMismatchMessage =>
+      'Each stop must leave from the arrival city of the previous one.';
+
+  @override
+  String get errorTripLegDateTitle => 'Stop date too early';
+
+  @override
+  String get errorTripLegDateMessage =>
+      'A stop can\'t leave before the previous one arrives.';
+
+  @override
+  String get errorTripLegsCountTitle => 'Invalid number of stops';
+
+  @override
+  String get errorTripLegsCountMessage => 'A trip has 2 to 5 stops.';
+
+  @override
+  String get errorTripLegsDraftMismatchTitle => 'Inconsistent stops';
+
+  @override
+  String get errorTripLegsDraftMismatchMessage =>
+      'A trip\'s stops are published together, or all saved as drafts.';
 }

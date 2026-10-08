@@ -184,6 +184,75 @@ void main() {
       },
     );
 
+    testWidgets(
+      'voyage à étapes : étapes regroupées sous un en-tête (FLUTTER-4D)',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        AnnouncementModel leg(
+          String id,
+          String from,
+          String to,
+          int index,
+          int days,
+        ) {
+          final base = _makeAnnouncement(
+            id: id,
+            departureCity: from,
+            arrivalCity: to,
+            departureDate: DateTime.now().add(Duration(days: days)),
+          );
+          return AnnouncementModel(
+            id: base.id,
+            travelerId: base.travelerId,
+            departureCity: base.departureCity,
+            arrivalCity: base.arrivalCity,
+            departureDate: base.departureDate,
+            availableKg: base.availableKg,
+            totalKg: base.totalKg,
+            pricePerKg: base.pricePerKg,
+            status: base.status,
+            createdAt: base.createdAt,
+            updatedAt: base.updatedAt,
+            tripGroupId: 'g1',
+            tripLegIndex: index,
+            tripLegCount: 2,
+          );
+        }
+
+        final solo = _makeAnnouncement(
+          id: 'solo',
+          departureCity: 'Lyon',
+          departureDate: DateTime.now().add(const Duration(days: 12)),
+        );
+        when(() => bloc.state).thenReturn(
+          AnnouncementListLoaded([
+            leg('l2', 'Abidjan', 'Douala', 2, 20),
+            solo,
+            leg('l1', 'Paris', 'Abidjan', 1, 10),
+          ]),
+        );
+        when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+        await _pump(tester, bloc);
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byType(TripCard), findsNWidgets(3));
+        expect(find.text('Voyage · Paris → Abidjan → Douala'), findsOneWidget);
+        expect(find.text('Étape 1/2'), findsOneWidget);
+        expect(find.text('Étape 2/2'), findsOneWidget);
+        // Étape 2 rendue juste après l'étape 1, avant le trajet isolé.
+        final y1 = tester.getTopLeft(find.text('Étape 1/2')).dy;
+        final y2 = tester.getTopLeft(find.text('Étape 2/2')).dy;
+        final ySolo = tester
+            .getTopLeft(find.byKey(const ValueKey('solo')).first)
+            .dy;
+        expect(y1 < y2, isTrue);
+        expect(y2 < ySolo, isTrue);
+      },
+    );
+
     testWidgets('"Terminés" chip filters the list to 1 TripCard', (
       tester,
     ) async {

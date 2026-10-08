@@ -27841,6 +27841,246 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Impossible de charger le suivi de l\'absence'**
   String get dnpLoadError;
+
+  /// Titre de la section « étapes » en fin de formulaire de publication (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyage à plusieurs étapes'**
+  String get tripLegsSectionTitle;
+
+  /// Explication de la section « étapes » (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous continuez vers une autre ville ? Ajoutez une étape : chacune est publiée comme un trajet, avec ses kilos, son prix et ses colis.'**
+  String get tripLegsSectionSubtitle;
+
+  /// Bouton d'ajout d'une étape au voyage (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une étape'**
+  String get tripLegsAddButton;
+
+  /// Aide quand l'ajout d'étape est impossible faute de premier trajet complet (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez d\'abord la ville d\'arrivée et la date du premier trajet.'**
+  String get tripLegsNeedFirstLeg;
+
+  /// Limite du nombre d'étapes atteinte (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'{max} étapes au maximum par voyage.'**
+  String tripLegsMaxReached(int max);
+
+  /// Libellé d'une étape du voyage (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {index}'**
+  String tripLegsLegLabel(int index);
+
+  /// Résumé d'une étape ajoutée : date de départ et kilos (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · {kg} kg'**
+  String tripLegsLegSummary(String date, String kg);
+
+  /// Étape dont la date ne suit plus la précédente (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette étape part avant l\'arrivée de la précédente : modifiez sa date.'**
+  String get tripLegsDateInvalid;
+
+  /// Infobulle du bouton de modification d'une étape (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'étape'**
+  String get tripLegsEditTooltip;
+
+  /// Infobulle du bouton de retrait d'une étape ; retire aussi les suivantes (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer l\'étape'**
+  String get tripLegsRemoveTooltip;
+
+  /// Sous-titre de la feuille d'une étape : sa ville de départ, imposée (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ de {city}'**
+  String tripLegSheetSubtitle(String city);
+
+  /// Champ ville d'arrivée de la feuille d'une étape (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville d\'arrivée'**
+  String get tripLegSheetArrivalCity;
+
+  /// Champ date de départ de la feuille d'une étape (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ'**
+  String get tripLegSheetDate;
+
+  /// Champ heure de départ de la feuille d'une étape (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ'**
+  String get tripLegSheetTime;
+
+  /// Champ kilos de la feuille d'une étape (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Kilos disponibles'**
+  String get tripLegSheetKg;
+
+  /// Champ prix au kilo de la feuille d'une étape (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix par kilo'**
+  String get tripLegSheetPrice;
+
+  /// Bouton de validation d'une nouvelle étape (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter l\'étape'**
+  String get tripLegSheetSubmit;
+
+  /// Bouton de validation d'une étape modifiée (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer l\'étape'**
+  String get tripLegSheetSave;
+
+  /// Erreur : ville d'arrivée identique au départ de l'étape (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une autre ville que celle du départ.'**
+  String get tripLegSheetSameCity;
+
+  /// Erreur : date de l'étape avant l'arrivée de la précédente (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le départ ne peut pas précéder le {date}, jour d\'arrivée de l\'étape précédente.'**
+  String tripLegSheetDateTooEarly(String date);
+
+  /// Sous-titre de l'écran de succès d'un voyage à plusieurs étapes (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre voyage en {count} étapes est en ligne : {route}.'**
+  String tripLegsSuccessSubtitle(int count, String route);
+
+  /// Backend sans l'endpoint des voyages à étapes (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyages à plusieurs étapes ne sont pas encore disponibles. Publiez la première étape, puis les suivantes une par une.'**
+  String get tripLegsUnsupported;
+
+  /// Badge d'une étape dans « Mes trajets » (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {index}/{count}'**
+  String tripLegBadge(int index, int count);
+
+  /// En-tête regroupant les étapes d'un même voyage dans « Mes trajets » (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyage · {route}'**
+  String tripGroupHeader(String route);
+
+  /// Titre de la carte des étapes sur la fiche d'une étape (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {index}/{count} du voyage'**
+  String tripLegsDetailTitle(int index, int count);
+
+  /// Marque l'étape affichée dans la liste des étapes du voyage (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette étape'**
+  String get tripLegsDetailCurrent;
+
+  /// Nom accessible d'une autre étape du voyage, ouverte au tap (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir l\'étape {from} → {to}'**
+  String tripLegsDetailOpenSemantics(String from, String to);
+
+  /// Titre de la proposition d'annuler les étapes suivantes (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler aussi les étapes suivantes ?'**
+  String get tripLegsCancelFollowingTitle;
+
+  /// Proposition d'annuler les étapes suivantes (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet fait partie d\'un voyage. {count, plural, =1{L\'étape suivante reste publiée si vous ne l\'annulez pas.} other{Les {count} étapes suivantes restent publiées si vous ne les annulez pas.}}'**
+  String tripLegsCancelFollowingMessage(int count);
+
+  /// Bouton : annuler aussi les étapes suivantes (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler les suivantes'**
+  String get tripLegsCancelFollowingConfirm;
+
+  /// Bouton : garder les étapes suivantes (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les garder'**
+  String get tripLegsCancelFollowingKeep;
+
+  /// Échec d'annulation de certaines étapes suivantes (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une étape suivante n\'a pas pu être annulée : ouvrez-la depuis Mes trajets.} other{{count} étapes suivantes n\'ont pas pu être annulées : ouvrez-les depuis Mes trajets.}}'**
+  String tripLegsFollowingFailed(int count);
+
+  /// Erreur trip-leg-city-mismatch (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étapes non reliées'**
+  String get errorTripLegCityMismatchTitle;
+
+  /// Erreur trip-leg-city-mismatch (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque étape doit partir de la ville d\'arrivée de la précédente.'**
+  String get errorTripLegCityMismatchMessage;
+
+  /// Erreur trip-leg-date-before-previous (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Date d\'étape trop tôt'**
+  String get errorTripLegDateTitle;
+
+  /// Erreur trip-leg-date-before-previous (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une étape ne peut pas partir avant l\'arrivée de la précédente.'**
+  String get errorTripLegDateMessage;
+
+  /// Erreur trip-legs-count (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nombre d\'étapes invalide'**
+  String get errorTripLegsCountTitle;
+
+  /// Erreur trip-legs-count (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un voyage compte de 2 à 5 étapes.'**
+  String get errorTripLegsCountMessage;
+
+  /// Erreur trip-legs-draft-mismatch (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étapes incohérentes'**
+  String get errorTripLegsDraftMismatchTitle;
+
+  /// Erreur trip-legs-draft-mismatch (FLUTTER-4D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les étapes d\'un voyage sont publiées ensemble, ou toutes enregistrées en brouillon.'**
+  String get errorTripLegsDraftMismatchMessage;
 }
 
 class _AppLocalizationsDelegate
