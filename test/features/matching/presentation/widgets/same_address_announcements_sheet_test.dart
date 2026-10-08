@@ -11,6 +11,7 @@ import 'package:dony/features/matching/presentation/widgets/same_address_announc
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -172,5 +173,112 @@ void main() {
 
     expect(find.text('2 travelers available at this address'), findsOneWidget);
     expect(find.text('2 voyageurs disponibles à cette adresse'), findsNothing);
+  });
+
+  // ── FLUTTER-FE / FLUTTER-FD : /home branche de StatefulShellRoute ────────
+
+  group('showSameAddressAnnouncementsSheet (FLUTTER-FE/FD)', () {
+    Future<GoRouter> pumpShell(
+      WidgetTester tester, {
+      required ValueChanged<AnnouncementModel> onSelected,
+    }) async {
+      final bidBloc = _MockBidBloc();
+      when(() => bidBloc.state).thenReturn(BidInitial());
+      when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+      final rootKey = GlobalKey<NavigatorState>();
+      final router = GoRouter(
+        navigatorKey: rootKey,
+        initialLocation: '/home',
+        routes: [
+          StatefulShellRoute.indexedStack(
+            builder: (_, _, shell) => Scaffold(body: shell),
+            branches: [
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: '/home',
+                    builder: (_, _) => Scaffold(
+                      body: Builder(
+                        builder: (ctx) => Column(
+                          children: [
+                            const Text('HOME_PAGE'),
+                            ElevatedButton(
+                              onPressed: () =>
+                                  showSameAddressAnnouncementsSheet(
+                                    ctx,
+                                    addressLabel: '12 rue Hugo, Paris',
+                                    announcements: [
+                                      _ann('a1', 'Paris', 'Dakar'),
+                                      _ann('a2', 'Paris', 'Dakar'),
+                                    ],
+                                    currentUserId: 'other-user',
+                                    onSelected: onSelected,
+                                  ),
+                              child: const Text('open'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: '/other',
+                    builder: (_, _) => const Text('OTHER_PAGE'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        BlocProvider<BidBloc>.value(
+          value: bidBloc,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      return router;
+    }
+
+    testWidgets(
+      'tap sur une carte : la feuille se ferme, /home reste affichée',
+      (tester) async {
+        AnnouncementModel? selected;
+        final router = await pumpShell(tester, onSelected: (a) => selected = a);
+        expect(find.text('12 rue Hugo, Paris'), findsOneWidget);
+
+        await tester.tap(find.text('Sékou Ba').last);
+        await tester.pumpAndSettle();
+
+        // Feuille fermée, page /home toujours là (pas d'écran noir).
+        expect(find.text('12 rue Hugo, Paris'), findsNothing);
+        expect(find.text('HOME_PAGE'), findsOneWidget);
+        expect(selected?.id, 'a2');
+        expect(router.routerDelegate.currentConfiguration.uri.path, '/home');
+        expect(tester.takeException(), isNull);
+
+        // Le retour ne fait plus planter GoRouterDelegate (StateError).
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('fermeture sans choix : onSelected non appelé', (tester) async {
+      var called = false;
+      await pumpShell(tester, onSelected: (_) => called = true);
+      await tester.tapAt(const Offset(10, 10)); // barrière
+      await tester.pumpAndSettle();
+      expect(find.text('HOME_PAGE'), findsOneWidget);
+      expect(called, isFalse);
+    });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -383,5 +385,214 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: SizedBox()));
     await tester.pump();
     // Pas d'exception = dispose appelé avec succès
+  });
+
+  // ── FLUTTER-F0 : texte tapé sans toucher la suggestion ─────────────────────
+
+  group('FLUTTER-F0 : correspondance exacte du texte tapé', () {
+    const abidjan = CityModel(
+      name: 'Abidjan',
+      countryCode: 'CI',
+      countryName: 'Côte d\'Ivoire',
+      lat: 5.35,
+      lng: -4.01,
+    );
+    const sedhiou = CityModel(
+      name: 'Sédhiou',
+      countryCode: 'SN',
+      countryName: 'Sénégal',
+      lat: 12.7,
+      lng: -15.55,
+    );
+    late StreamController<CitySearchState> states;
+
+    setUp(() {
+      states = StreamController<CitySearchState>();
+      whenListen(
+        mockBloc,
+        states.stream,
+        initialState: const CitySearchInitial(),
+      );
+    });
+
+    tearDown(() => states.close());
+
+    Widget field({
+      ValueChanged<CityModel>? onSelected,
+      VoidCallback? onCleared,
+      ValueChanged<String?>? onSelectionErrorChanged,
+      bool requireSelection = true,
+    }) => MaterialApp(
+      home: Scaffold(
+        body: BlocProvider<CitySearchBloc>.value(
+          value: mockBloc,
+          child: CityAutocompleteField(
+            label: 'Ville de départ',
+            onSelected: onSelected ?? (_) {},
+            onCleared: onCleared,
+            requireSelection: requireSelection,
+            onSelectionErrorChanged: onSelectionErrorChanged,
+          ),
+        ),
+      ),
+    );
+
+    Future<void> blur(WidgetTester tester) async {
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
+    }
+
+    String fieldText(WidgetTester tester) =>
+        tester.widget<TextField>(find.byType(TextField)).controller!.text;
+
+    testWidgets(
+      'perte de focus avant les résultats : la ville est choisie à leur arrivée',
+      (tester) async {
+        CityModel? selected;
+        await tester.pumpWidget(field(onSelected: (c) => selected = c));
+        await tester.enterText(find.byType(TextField), 'Abidjan');
+        await blur(tester);
+        expect(selected, isNull);
+
+        states.add(const CitySearchLoading());
+        await tester.pump();
+        states.add(const CitySearchLoaded([abidjan]));
+        await tester.pump();
+
+        expect(selected?.name, 'Abidjan');
+        expect(fieldText(tester), 'Abidjan');
+        expect(find.text('Choisissez une ville dans la liste'), findsNothing);
+        await tester.pump(const Duration(seconds: 1));
+      },
+    );
+
+    testWidgets(
+      'casse et accents ignorés, et le nom officiel remplace la saisie',
+      (tester) async {
+        CityModel? selected;
+        await tester.pumpWidget(field(onSelected: (c) => selected = c));
+        await tester.enterText(find.byType(TextField), 'SEDHIOU');
+        states.add(const CitySearchLoaded([sedhiou]));
+        await tester.pump();
+        // Correspondance pendant la saisie : remontée sans fermer le champ.
+        expect(selected?.name, 'Sédhiou');
+
+        await blur(tester);
+        expect(fieldText(tester), 'SEDHIOU');
+        await tester.pump(const Duration(seconds: 1));
+      },
+    );
+
+    testWidgets('résultats déjà là : la perte de focus sélectionne la ville', (
+      tester,
+    ) async {
+      when(() => mockBloc.state).thenReturn(const CitySearchLoaded([abidjan]));
+      CityModel? selected;
+      await tester.pumpWidget(field(onSelected: (c) => selected = c));
+      await tester.enterText(find.byType(TextField), 'abidjan');
+      // Résultats déjà reçus, aucune nouvelle requête en attente.
+      states.add(const CitySearchLoaded([abidjan]));
+      await tester.pump();
+      selected = null;
+      await blur(tester);
+      // Déjà confirmée pendant la saisie : pas de double appel.
+      expect(selected, isNull);
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets('validation clavier : la ville correspondante est choisie', (
+      tester,
+    ) async {
+      CityModel? selected;
+      await tester.pumpWidget(field(onSelected: (c) => selected = c));
+      await tester.enterText(find.byType(TextField), 'Abidjan');
+      when(() => mockBloc.state).thenReturn(const CitySearchLoaded([abidjan]));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      expect(selected?.name, 'Abidjan');
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets(
+      'aucune correspondance : champ vidé, message, onCleared appelé',
+      (tester) async {
+        var cleared = 0;
+        String? notified;
+        await tester.pumpWidget(
+          field(
+            onCleared: () => cleared++,
+            onSelectionErrorChanged: (m) => notified = m,
+          ),
+        );
+        await tester.enterText(find.byType(TextField), 'Abidj');
+        states.add(const CitySearchLoaded([abidjan]));
+        await tester.pump();
+        await blur(tester);
+
+        expect(fieldText(tester), isEmpty);
+        expect(find.text('Choisissez une ville dans la liste'), findsOneWidget);
+        expect(notified, 'Choisissez une ville dans la liste');
+        expect(cleared, 1);
+        verify(() => mockBloc.add(any(that: isA<CitySearchCleared>())));
+
+        // Retaper efface le message.
+        await tester.enterText(find.byType(TextField), 'A');
+        await tester.pump();
+        expect(find.text('Choisissez une ville dans la liste'), findsNothing);
+        expect(notified, isNull);
+        await tester.pump(const Duration(seconds: 1));
+      },
+    );
+
+    testWidgets('en anglais : message traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(field());
+      await tester.enterText(find.byType(TextField), 'Zz');
+      states.add(const CitySearchLoaded([abidjan]));
+      await tester.pump();
+      await blur(tester);
+      expect(find.text('Choose a city from the list'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets(
+      'sans requireSelection : le texte reste (comportement historique)',
+      (tester) async {
+        await tester.pumpWidget(field(requireSelection: false));
+        await tester.enterText(find.byType(TextField), 'Abidj');
+        states.add(const CitySearchLoaded([abidjan]));
+        await tester.pump();
+        await blur(tester);
+        expect(fieldText(tester), 'Abidj');
+        expect(find.text('Choisissez une ville dans la liste'), findsNothing);
+        await tester.pump(const Duration(seconds: 1));
+      },
+    );
+
+    testWidgets('erreur réseau : le texte est conservé', (tester) async {
+      await tester.pumpWidget(field());
+      await tester.enterText(find.byType(TextField), 'Abidjan');
+      await blur(tester);
+      states.add(const CitySearchError(NetworkException('network error')));
+      await tester.pump();
+      expect(fieldText(tester), 'Abidjan');
+      expect(find.text('Choisissez une ville dans la liste'), findsNothing);
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets(
+      'texte qui s\'écarte de la ville retenue : le parent l\'oublie',
+      (tester) async {
+        var cleared = 0;
+        await tester.pumpWidget(field(onCleared: () => cleared++));
+        await tester.enterText(find.byType(TextField), 'Abidjan');
+        states.add(const CitySearchLoaded([abidjan]));
+        await tester.pump();
+        await tester.enterText(find.byType(TextField), 'Abidjan-S');
+        await tester.pump();
+        expect(cleared, 1);
+        await tester.pump(const Duration(seconds: 1));
+      },
+    );
   });
 }

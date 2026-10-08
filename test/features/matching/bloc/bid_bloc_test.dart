@@ -526,6 +526,89 @@ void main() {
     );
   });
 
+  // ─── BidDetailExternalChangeDetected (FLUTTER-FN) ────────────────────────────
+
+  group('BidDetailExternalChangeDetected', () {
+    BidModel returnedBid() => BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: 'sender-001',
+      weightKg: 5.0,
+      status: 'CANCELLED',
+      createdAt: DateTime(2026, 10),
+      updatedAt: DateTime(2026, 10),
+      returnDeadline: DateTime(2026, 10, 9),
+      returnedAt: DateTime(2026, 10, 8, 14),
+    );
+
+    blocTest<BidBloc, BidState>(
+      'reprise de l\'app (sans push) → relit le colis',
+      build: () {
+        when(
+          () => mockRepo.getBidById('bid-001'),
+        ).thenAnswer((_) async => returnedBid());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidDetailExternalChangeDetected('bid-001')),
+      expect: () => [
+        predicate<BidState>(
+          (s) => s is BidDetailLoaded && s.bid.isParcelReturned,
+        ),
+      ],
+      verify: (_) => verify(() => mockRepo.getBidById('bid-001')).called(1),
+    );
+
+    blocTest<BidBloc, BidState>(
+      'push PARCEL_RETURNED de ce colis → fiche relue, returnedAt posé',
+      build: () {
+        when(
+          () => mockRepo.getBidById('bid-001'),
+        ).thenAnswer((_) async => returnedBid());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        BidDetailExternalChangeDetected(
+          'bid-001',
+          push: const {'type': 'PARCEL_RETURNED', 'bidId': 'bid-001'},
+        ),
+      ),
+      expect: () => [
+        predicate<BidState>(
+          (s) =>
+              s is BidDetailLoaded &&
+              s.bid.isParcelReturned &&
+              !s.bid.isAwaitingReturn,
+        ),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'push d\'un autre colis → ignorée, aucun appel réseau',
+      build: buildBloc,
+      act: (bloc) => bloc.add(
+        BidDetailExternalChangeDetected(
+          'bid-001',
+          push: const {'type': 'PARCEL_RETURNED', 'bidId': 'bid-999'},
+        ),
+      ),
+      expect: () => [],
+      verify: (_) => verifyNever(() => mockRepo.getBidById(any())),
+    );
+
+    blocTest<BidBloc, BidState>(
+      'push sans bidId (message, support…) → ignorée',
+      build: buildBloc,
+      act: (bloc) => bloc.add(
+        BidDetailExternalChangeDetected(
+          'bid-001',
+          push: const {'type': 'NEW_MESSAGE'},
+        ),
+      ),
+      expect: () => [],
+      verify: (_) => verifyNever(() => mockRepo.getBidById(any())),
+    );
+  });
+
   // ─── BidAcceptRequested ──────────────────────────────────────────────────────
 
   group('BidAcceptRequested', () {

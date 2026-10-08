@@ -693,31 +693,50 @@ class _HeroCorridorCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: DonySpacing.sm),
-          Row(
-            children: [
-              Flexible(
-                child: Text(
+          // Villes empilées, jamais tronquées : deux Flexible sur une ligne
+          // coupaient « Fontenay-le-Fleury » en « Fontenay-le-… » (Sentry
+          // FLUTTER-EY). Le départ occupe toute la largeur, l'arrivée suit
+          // sous la flèche ; un nom très long passe à la ligne.
+          Semantics(
+            label:
+                '${announcement.departureCity} → ${announcement.arrivalCity}',
+            excludeSemantics: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   announcement.departureCity,
+                  key: const Key('trip_hero_departure_city'),
                   style: cityStyle,
-                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: DonySpacing.sm),
-                child: DonyIcon(
-                  'arrow-right',
-                  size: 18,
-                  color: DonyColors.blue300,
+                const SizedBox(height: DonySpacing.xxs),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(
+                        top: DonySpacing.xs + 2,
+                        right: DonySpacing.sm,
+                      ),
+                      child: DonyIcon(
+                        'arrow-right',
+                        size: 18,
+                        color: DonyColors.blue300,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        announcement.arrivalCity,
+                        key: const Key('trip_hero_arrival_city'),
+                        style: cityStyle,
+                        softWrap: true,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Flexible(
-                child: Text(
-                  announcement.arrivalCity,
-                  style: cityStyle,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: DonySpacing.sm + DonySpacing.xxs),
           Wrap(

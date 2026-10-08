@@ -8,6 +8,8 @@
 // s'ouvre (sinon il recouvre la liste et vole le tap), et les messages
 // d'erreur doivent sortir de la carte (sinon la rangée fautive devient plus
 // haute que l'autre et décale le bouton de la couture).
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -246,6 +248,85 @@ void main() {
 
       expect(find.byType(CitySwapButton), findsOneWidget);
       expect(find.text('Dakar'), findsNothing);
+    });
+  });
+
+  group('FLUTTER-F0 : ville tapée sans choisir de suggestion', () {
+    testWidgets(
+      'requiredLabels : texte sans correspondance → « Choisissez une ville '
+      'dans la liste » remplace « obligatoire » sous la carte',
+      (tester) async {
+        final states = StreamController<CitySearchState>();
+        addTearDown(states.close);
+        whenListen(
+          departureBloc,
+          states.stream,
+          initialState: const CitySearchInitial(),
+        );
+        await tester.pumpWidget(
+          build(
+            requiredLabels: true,
+            departureError: 'Ville de départ obligatoire',
+          ),
+        );
+        await tester.enterText(find.byKey(const Key('dep')), 'Dak');
+        states.add(const CitySearchLoaded([_dakar]));
+        await tester.pumpAndSettle();
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+
+        expect(find.text('Choisissez une ville dans la liste'), findsOneWidget);
+        expect(find.text('Ville de départ obligatoire'), findsNothing);
+        final tf = tester.widget<TextField>(find.byKey(const Key('dep')));
+        expect(tf.controller!.text, isEmpty);
+      },
+    );
+
+    testWidgets('requiredLabels : texte exact → la ville est retenue', (
+      tester,
+    ) async {
+      CityModel? selected;
+      final states = StreamController<CitySearchState>();
+      addTearDown(states.close);
+      whenListen(
+        departureBloc,
+        states.stream,
+        initialState: const CitySearchInitial(),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: CityCorridorFields(
+              departureValue: null,
+              arrivalValue: null,
+              departureFieldKey: const Key('dep'),
+              arrivalFieldKey: const Key('arr'),
+              requiredLabels: true,
+              departureCityBloc: departureBloc,
+              arrivalCityBloc: arrivalBloc,
+              onDepartureSelected: (c) => selected = c,
+              onArrivalSelected: (_) {},
+              onDepartureCleared: () {},
+              onArrivalCleared: () {},
+              onSwap: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.enterText(find.byKey(const Key('dep')), 'dakar');
+      await tester.pumpAndSettle();
+      // Blur avant les résultats : la décision attend leur arrivée.
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
+      expect(selected, isNull);
+      states.add(const CitySearchLoaded([_dakar]));
+      await tester.pumpAndSettle();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+
+      expect(selected?.name, 'Dakar');
+      expect(find.text('Choisissez une ville dans la liste'), findsNothing);
     });
   });
 }

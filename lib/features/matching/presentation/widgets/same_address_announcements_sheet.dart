@@ -9,6 +9,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Ouvre la feuille « N voyageurs disponibles à cette adresse » sur le
+/// navigateur racine, puis appelle [onSelected] avec l'annonce choisie une
+/// fois la feuille fermée.
+///
+/// La feuille se ferme avec SON propre context : un `Navigator.pop` fait avec
+/// le context de l'hôte (page /home, branche d'un StatefulShellRoute) visait
+/// le navigateur de branche et retirait la page /home → écran noir, puis
+/// `StateError: No element` dans GoRouterDelegate au retour (Sentry
+/// FLUTTER-FE / FLUTTER-FD). [onSelected] n'est appelé que si [context] est
+/// encore monté.
+Future<void> showSameAddressAnnouncementsSheet(
+  BuildContext context, {
+  required String addressLabel,
+  required List<AnnouncementModel> announcements,
+  required ValueChanged<AnnouncementModel> onSelected,
+  String? currentUserId,
+}) async {
+  final selected = await showModalBottomSheet<AnnouncementModel>(
+    context: context,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) => SameAddressAnnouncementsSheet(
+      addressLabel: addressLabel,
+      announcements: announcements,
+      currentUserId: currentUserId,
+      onTap: (a) => Navigator.of(sheetContext).pop(a),
+    ),
+  );
+  if (selected == null || !context.mounted) return;
+  onSelected(selected);
+}
+
 class SameAddressAnnouncementsSheet extends StatelessWidget {
   const SameAddressAnnouncementsSheet({
     super.key,

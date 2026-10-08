@@ -81,7 +81,8 @@ class _BidDetailView extends StatefulWidget {
   State<_BidDetailView> createState() => _BidDetailViewState();
 }
 
-class _BidDetailViewState extends State<_BidDetailView> {
+class _BidDetailViewState extends State<_BidDetailView>
+    with WidgetsBindingObserver {
   // Statuts vivants : le colis peut encore transitionner vers COMPLETED
   // à tout moment → le polling doit rester actif. PENDING et
   // PAYMENT_ESCROWED attendent la réponse du voyageur : sans relevé,
@@ -120,6 +121,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _bid = widget.initialBid;
     _skeletonLoading = _bid.isSkeleton;
     _lastUserId = context.read<AuthBloc>().state.currentUserId;
@@ -146,11 +148,23 @@ class _BidDetailViewState extends State<_BidDetailView> {
   }
 
   /// Une push reçue application ouverte qui concerne ce colis (acceptation,
-  /// refus, remise…) le relit aussitôt, sans attendre le prochain relevé.
+  /// refus, remise, restitution…) le relit aussitôt, sans attendre le
+  /// prochain relevé. Le filtre sur le `bidId` vit dans le BidBloc.
   void _onForegroundPush(Map<String, dynamic> data) {
     if (!mounted) return;
-    if (data['bidId']?.toString() != _bid.id) return;
-    context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+    context.read<BidBloc>().add(
+      BidDetailExternalChangeDetected(_bid.id, push: data),
+    );
+  }
+
+  /// Retour au premier plan : une push reçue en arrière-plan (ex.
+  /// `PARCEL_RETURNED`) n'atteint pas [_onForegroundPush], et le relevé
+  /// périodique ne couvre pas un colis annulé en attente de retour — sans
+  /// cette relecture, la fiche restait figée (Sentry FLUTTER-FN).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !mounted) return;
+    context.read<BidBloc>().add(BidDetailExternalChangeDetected(_bid.id));
   }
 
   /// Relit le colis, sauf si personne ne le regarde : un autre écran ouvert
@@ -166,6 +180,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _refreshTimer?.cancel();
     unawaited(_pushSub?.cancel());
     unawaited(_arrivalSub?.cancel());

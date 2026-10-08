@@ -20,6 +20,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidCreateRequested>(_onCreateRequested);
     on<BidListRequested>(_onListRequested);
     on<BidDetailRequested>(_onDetailRequested);
+    on<BidDetailExternalChangeDetected>(_onExternalChangeDetected);
     on<BidAcceptRequested>(_onAcceptRequested);
     on<BidAcceptMobileMoneyRequested>(_onAcceptMobileMoneyRequested);
     on<BidRejectRequested>(_onRejectRequested);
@@ -130,6 +131,15 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       }
       // Autres erreurs réseau : silence intentionnel
     }
+  }
+
+  Future<void> _onExternalChangeDetected(
+    BidDetailExternalChangeDetected event,
+    Emitter<BidState> emit,
+  ) async {
+    final push = event.push;
+    if (push != null && push['bidId']?.toString() != event.bidId) return;
+    await _onDetailRequested(BidDetailRequested(event.bidId), emit);
   }
 
   Future<void> _onAcceptRequested(
