@@ -34,7 +34,25 @@ extension MyActiveBidsLookup on BidState {
     }
     return result;
   }
+
+  /// Ce que la carte d'un trajet doit rappeler à l'expéditeur : son colis en
+  /// cours, sinon son offre de prix encore ouverte (`NEGOTIATING`, FLUTTER-GC).
+  /// Le colis prime : une offre acceptée devient un colis.
+  Map<String, BidModel> existingTripBidsByAnnouncement() {
+    final state = this;
+    if (state is! BidListLoaded) return const {};
+    return {
+      for (final n in state.openNegotiations) n.announcementId: n,
+      ...activeBidsByAnnouncement(),
+    };
+  }
 }
+
+/// Écran à ouvrir depuis la carte d'un trajet déjà sollicité : le fil de
+/// négociation pour une offre ouverte, le billet du colis sinon.
+String existingTripBidRoute(BidModel bid) => bid.status == kNegotiatingBidStatus
+    ? '/bids/${bid.id}/negotiation'
+    : '/bids/${bid.id}';
 
 class BidInitial extends BidState {}
 
@@ -55,8 +73,17 @@ class BidListLoaded extends BidState {
   final DateTime fetchedAt;
   final bool isRefreshing;
 
-  BidListLoaded(this.bids, {DateTime? fetchedAt, this.isRefreshing = false})
-    : fetchedAt = fetchedAt ?? DateTime.now();
+  /// Offres de prix encore ouvertes de l'expéditeur, tenues À PART de [bids] :
+  /// ce ne sont pas des colis, et aucune liste, aucun compteur ne doit les voir.
+  /// Seule l'instance globale les charge ([BidBloc.includeOpenNegotiations]).
+  final List<BidModel> openNegotiations;
+
+  BidListLoaded(
+    this.bids, {
+    DateTime? fetchedAt,
+    this.isRefreshing = false,
+    this.openNegotiations = const [],
+  }) : fetchedAt = fetchedAt ?? DateTime.now();
 }
 
 class BidDetailLoaded extends BidState {

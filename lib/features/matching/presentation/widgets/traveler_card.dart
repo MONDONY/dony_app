@@ -8,6 +8,7 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -35,9 +36,9 @@ class TravelerCard extends StatelessWidget {
   final String? distanceBadge;
 
   /// Statut d'un bid actif (PENDING ou ACCEPTED) déjà déposé par l'expéditeur
-  /// courant sur cette annonce. Si non null, la carte affiche un chip de
-  /// statut + une bordure colorée pour rappeler à l'expéditeur qu'il a déjà
-  /// une demande en cours sur ce trajet.
+  /// courant sur cette annonce, ou `NEGOTIATING` pour une offre de prix encore
+  /// ouverte. Si non null, la carte affiche un chip de statut + une bordure
+  /// colorée pour rappeler à l'expéditeur qu'il a déjà sollicité ce trajet.
   final String? existingBidStatus;
 
   /// When true, renders a heart button in the top-right of the card header.
@@ -96,6 +97,15 @@ class TravelerCard extends StatelessWidget {
           chipBg: cs.infoLight,
           chipFg: cs.info,
           label: l.listingBidStatusArrived,
+        );
+      // Offre de prix envoyée, discussion encore ouverte (FLUTTER-GC) : pas
+      // encore une demande, mais l'expéditeur a déjà sollicité ce voyageur.
+      case kNegotiatingBidStatus:
+        return (
+          border: cs.info,
+          chipBg: cs.infoLight,
+          chipFg: cs.info,
+          label: l.listingBidStatusOfferSent,
         );
       case 'PENDING':
       case 'AWAITING_PAYMENT':

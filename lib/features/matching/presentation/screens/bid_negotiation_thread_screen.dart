@@ -14,6 +14,7 @@ import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/presentation/activity_refresh.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_negotiation_parcel_sheet.dart';
 import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:dony/features/package_request/presentation/widgets/nego_archive_actions.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
@@ -21,6 +22,7 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -392,7 +394,7 @@ class _TripContextCard extends StatelessWidget {
         : l.requestCreateRecapTrip;
     final date = negotiation.departureDate;
 
-    return _Surface(
+    final card = _Surface(
       key: const Key('nego-trip-context'),
       child: Row(
         children: [
@@ -433,6 +435,27 @@ class _TripContextCard extends StatelessWidget {
             child: DonyIcon('plane', color: cs.primary, size: 18),
           ),
         ],
+      ),
+    );
+
+    // FLUTTER-G8 : la carte ouvre le profil public de l'autre partie, comme
+    // l'en-tête des autres fils. Le blocage et le masquage restent tranchés
+    // par ProfilePublicBloc. Sans identifiant (serveur antérieur), rien à
+    // ouvrir : la carte reste inerte.
+    final counterpartyId = negotiation.counterpartyId;
+    if (counterpartyId == null || counterpartyId.isEmpty) return card;
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      label: l.negotiationOpenPartnerProfileSemantics(name),
+      child: DonyPressable(
+        key: const Key('nego-trip-context-open-profile'),
+        onTap: () => context.push(
+          '/profile/public',
+          extra: ProfilePublicArgs(userId: counterpartyId),
+        ),
+        child: card,
       ),
     );
   }
@@ -535,46 +558,69 @@ class _ParcelSummary extends StatelessWidget {
             ),
           if (negotiation.photoUrls.isNotEmpty) ...[
             const SizedBox(height: DonySpacing.sm),
-            SizedBox(
-              height: 72,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: negotiation.photoUrls.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(width: DonySpacing.sm),
-                itemBuilder: (context, i) => Container(
-                  key: Key('nego-photo-$i'),
-                  foregroundDecoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    // Liseré neutre : la photo garde un bord net sur
-                    // n'importe quel fond (noir en clair, blanc en sombre).
-                    border: Border.all(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.black.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    child: DonyImage(
-                      url: negotiation.photoUrls[i],
-                      width: 72,
-                      height: 72,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            // FLUTTER-G9 : chaque vignette s'ouvre en plein écran.
+            NegotiationParcelPhotoStrip(urls: negotiation.photoUrls),
           ],
           if (negotiation.description != null &&
               negotiation.description!.isNotEmpty) ...[
             const SizedBox(height: DonySpacing.md),
             Text(
               negotiation.description!,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
+          const SizedBox(height: DonySpacing.sm),
+          _ViewParcelRow(negotiation: negotiation),
         ],
+      ),
+    );
+  }
+}
+
+/// « Voir le colis » : ouvre la fiche détaillée (FLUTTER-G9). Le récapitulatif
+/// reste court ; la fiche montre tout, photos en grand comprises.
+class _ViewParcelRow extends StatelessWidget {
+  const _ViewParcelRow({required this.negotiation});
+
+  final BidNegotiation negotiation;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      child: DonyPressable(
+        key: const Key('nego-view-parcel'),
+        onTap: () =>
+            BidNegotiationParcelSheet.show(context, negotiation: negotiation),
+        child: Container(
+          // Cible tactile ≥ 44 pt (HIG), sur toute la largeur de la carte.
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+          decoration: BoxDecoration(
+            color: cs.primary.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+          ),
+          child: Row(
+            children: [
+              DonyIcon('package', color: cs.primary, size: 18),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  context.l10n.negotiationThreadViewParcel,
+                  style: tt.labelLarge?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              DonyIcon('chevron-right', color: cs.primary, size: 18),
+            ],
+          ),
+        ),
       ),
     );
   }

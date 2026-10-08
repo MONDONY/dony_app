@@ -5261,6 +5261,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingBidStatusPending => 'Demande en attente';
 
   @override
+  String get listingBidStatusOfferSent => 'Offre envoyée';
+
+  @override
   String get listingYourTripPill => 'Votre trajet';
 
   @override
@@ -5825,6 +5828,29 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationThreadParcelSectionTitle => 'Le colis';
+
+  @override
+  String get negotiationThreadViewParcel => 'Voir le colis';
+
+  @override
+  String get negotiationParcelSheetCategory => 'Catégorie';
+
+  @override
+  String get negotiationParcelSheetWeight => 'Poids';
+
+  @override
+  String get negotiationParcelSheetItems => 'Articles';
+
+  @override
+  String get negotiationParcelSheetPhotos => 'Photos';
+
+  @override
+  String get negotiationParcelSheetDescription => 'Description';
+
+  @override
+  String negotiationParcelPhotoSemantics(int index) {
+    return 'Agrandir la photo $index du colis';
+  }
 
   @override
   String get negotiationThreadExchangesTitle => 'Échanges';
@@ -7700,6 +7726,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ticketRequestClosedMessage => 'Cette demande est terminée.';
+
+  @override
+  String get ticketHandoverDeadlineExpiredTitle =>
+      'Date limite de dépôt passée';
+
+  @override
+  String get ticketHandoverDeadlineExpiredSender =>
+      'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.';
+
+  @override
+  String get ticketHandoverDeadlineExpiredTraveler =>
+      'La date limite de dépôt est passée : demande annulée.';
 
   @override
   String get ticketMiniStatWeightLabel => 'POIDS';
@@ -15288,7 +15326,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorHandoverDeadlinePassedMessage =>
-      'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.';
+      'La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.';
 
   @override
   String get bidDetailSectionRequest => 'DEMANDE';

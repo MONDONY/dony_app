@@ -142,6 +142,11 @@ class BidNegotiation {
   final List<BidCustomItem> customItems;
   final List<String> photoUrls;
   final String? counterpartyName;
+
+  /// Identifiant de l'autre partie, pour ouvrir son profil public depuis le
+  /// fil (FLUTTER-G8, yadony-back #455). Nul avec un serveur antérieur : la
+  /// carte du fil n'est alors pas cliquable.
+  final String? counterpartyId;
   final String? departureCity;
   final String? arrivalCity;
 
@@ -180,6 +185,7 @@ class BidNegotiation {
     this.customItems = const [],
     this.photoUrls = const [],
     this.counterpartyName,
+    this.counterpartyId,
     this.departureCity,
     this.arrivalCity,
     this.departureDate,
@@ -216,6 +222,7 @@ class BidNegotiation {
         .map((e) => e as String)
         .toList(),
     counterpartyName: json['counterpartyName'] as String?,
+    counterpartyId: json['counterpartyId'] as String?,
     departureCity: json['departureCity'] as String?,
     arrivalCity: json['arrivalCity'] as String?,
     departureDate: _asDate(json['departureDate']),

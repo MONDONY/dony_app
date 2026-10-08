@@ -97,6 +97,10 @@ enum BidPricingMode {
   mixed,
 }
 
+/// Statut d'une offre de prix encore ouverte : ce n'est pas un colis, elle ne
+/// revient de `GET /bids/me` que sur demande (`includeNegotiating`, FLUTTER-GC).
+const kNegotiatingBidStatus = 'NEGOTIATING';
+
 @JsonSerializable()
 class BidModel {
   final String id;
@@ -409,6 +413,11 @@ class BidModel {
 
   /// Le colis a été restitué (le voyageur a saisi le code de retour).
   bool get isParcelReturned => returnedAt != null;
+
+  /// Demande annulée automatiquement à la date limite de dépôt du trajet
+  /// (FLUTTER-GA, `rejectionReason == HANDOVER_DEADLINE_PASSED`).
+  bool get isExpiredAtHandoverDeadline =>
+      status == 'EXPIRED' && rejectionReason == 'HANDOVER_DEADLINE_PASSED';
 
   /// Annulation après remise en attente de restitution : un délai de retour existe
   /// et le colis n'a pas encore été rendu.

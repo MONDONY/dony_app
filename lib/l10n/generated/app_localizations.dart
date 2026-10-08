@@ -8744,6 +8744,12 @@ abstract class AppLocalizations {
   /// **'Demande en attente'**
   String get listingBidStatusPending;
 
+  /// Chip d'une offre de prix encore ouverte (NEGOTIATING) sur une carte voyageur (traveler_card.dart, FLUTTER-GC)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre envoyée'**
+  String get listingBidStatusOfferSent;
+
   /// Pill signalant que l'annonce appartient au voyageur courant (traveler_card.dart)
   ///
   /// In fr, this message translates to:
@@ -9623,6 +9629,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le colis'**
   String get negotiationThreadParcelSectionTitle;
+
+  /// Ligne du récapitulatif du fil de négociation qui ouvre la fiche détaillée du colis (bid_negotiation_thread_screen.dart, FLUTTER-G9)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le colis'**
+  String get negotiationThreadViewParcel;
+
+  /// Libellé de la catégorie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie'**
+  String get negotiationParcelSheetCategory;
+
+  /// Libellé du poids dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get negotiationParcelSheetWeight;
+
+  /// Titre de la liste des articles (grille et articles libres) dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Articles'**
+  String get negotiationParcelSheetItems;
+
+  /// Titre de la galerie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Photos'**
+  String get negotiationParcelSheetPhotos;
+
+  /// Titre de la description dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get negotiationParcelSheetDescription;
+
+  /// Nom accessible d'une vignette photo du colis qui l'ouvre en plein écran (bid_negotiation_thread_screen.dart, bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Agrandir la photo {index} du colis'**
+  String negotiationParcelPhotoSemantics(int index);
 
   /// Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)
   ///
@@ -12754,6 +12802,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cette demande est terminée.'**
   String get ticketRequestClosedMessage;
+
+  /// Titre du bloc talon d'une demande EXPIRED pour date limite de dépôt passée (billet_talon.dart, FLUTTER-GA)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date limite de dépôt passée'**
+  String get ticketHandoverDeadlineExpiredTitle;
+
+  /// Message expéditeur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.'**
+  String get ticketHandoverDeadlineExpiredSender;
+
+  /// Message voyageur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt est passée : demande annulée.'**
+  String get ticketHandoverDeadlineExpiredTraveler;
 
   /// Libellé de la mini-stat poids du talon voyageur, casse conservée telle quelle dans le code source (billet_talon.dart)
   ///
@@ -25139,7 +25205,7 @@ abstract class AppLocalizations {
   /// Message de l'erreur handover-deadline-passed (409)
   ///
   /// In fr, this message translates to:
-  /// **'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.'**
+  /// **'La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.'**
   String get errorHandoverDeadlinePassedMessage;
 
   /// Plus de détails d'une demande (details_accordion.dart)

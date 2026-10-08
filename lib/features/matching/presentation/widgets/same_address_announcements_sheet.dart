@@ -118,7 +118,7 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
               buildWhen: (prev, curr) =>
                   curr is BidListLoaded || prev is BidListLoaded,
               builder: (context, bidState) {
-                final activeBids = bidState.activeBidsByAnnouncement();
+                final activeBids = bidState.existingTripBidsByAnnouncement();
                 return ListView.separated(
                   shrinkWrap: true,
                   itemCount: announcements.length,
@@ -141,7 +141,7 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
                           ? () {
                               Navigator.of(context, rootNavigator: true).pop();
                               context.push(
-                                '/bids/${existingBid.id}',
+                                existingTripBidRoute(existingBid),
                                 extra: existingBid,
                               );
                             }

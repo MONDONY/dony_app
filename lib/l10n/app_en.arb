@@ -1458,6 +1458,7 @@
   "listingBidStatusOnTrip": "Parcel on this trip",
   "listingBidStatusArrived": "Arrived",
   "listingBidStatusPending": "Request pending",
+  "listingBidStatusOfferSent": "Offer sent",
   "listingYourTripPill": "Your trip",
   "listingProBadge": "PRO",
   "listingNoTravelersNearbyTitle": "No travelers nearby",
@@ -2050,6 +2051,13 @@
   "@negotiationThreadParcelSectionTitle": {
     "description": "Titre de la section récapitulatif du colis (bid_negotiation_thread_screen.dart)"
   },
+  "negotiationThreadViewParcel": "View the parcel",
+  "negotiationParcelSheetCategory": "Category",
+  "negotiationParcelSheetWeight": "Weight",
+  "negotiationParcelSheetItems": "Items",
+  "negotiationParcelSheetPhotos": "Photos",
+  "negotiationParcelSheetDescription": "Description",
+  "negotiationParcelPhotoSemantics": "Enlarge parcel photo {index}",
   "negotiationThreadExchangesTitle": "Exchanges",
   "@negotiationThreadExchangesTitle": {
     "description": "Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)"
@@ -4010,6 +4018,9 @@
   "ticketTravelerAwaitingPayment": "Waiting for the sender's payment",
   "ticketParcelDeliveredLabel": "Parcel delivered",
   "ticketRequestClosedMessage": "This request is closed.",
+  "ticketHandoverDeadlineExpiredTitle": "Drop-off deadline passed",
+  "ticketHandoverDeadlineExpiredSender": "The drop-off deadline has passed: request cancelled. Any payment is refunded to you in full.",
+  "ticketHandoverDeadlineExpiredTraveler": "The drop-off deadline has passed: request cancelled.",
   "ticketMiniStatWeightLabel": "WEIGHT",
   "ticketMiniStatCategoryLabel": "TYPE",
   "ticketPickupCodeSectionLabel": "PICKUP CODE",
@@ -8465,7 +8476,7 @@
   "@errorHandoverDeadlinePassedTitle": {
     "description": "Titre de l'erreur handover-deadline-passed (409) : trajet parti ou date limite de remise atteinte"
   },
-  "errorHandoverDeadlinePassedMessage": "The drop-off deadline for this trip has passed. It no longer takes new parcels.",
+  "errorHandoverDeadlinePassedMessage": "The drop-off deadline for this trip has passed. The request can no longer be accepted, paid or renegotiated.",
   "@errorHandoverDeadlinePassedMessage": {
     "description": "Message de l'erreur handover-deadline-passed (409)"
   },

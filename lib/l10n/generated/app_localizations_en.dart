@@ -5234,6 +5234,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingBidStatusPending => 'Request pending';
 
   @override
+  String get listingBidStatusOfferSent => 'Offer sent';
+
+  @override
   String get listingYourTripPill => 'Your trip';
 
   @override
@@ -5797,6 +5800,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get negotiationThreadParcelSectionTitle => 'The parcel';
+
+  @override
+  String get negotiationThreadViewParcel => 'View the parcel';
+
+  @override
+  String get negotiationParcelSheetCategory => 'Category';
+
+  @override
+  String get negotiationParcelSheetWeight => 'Weight';
+
+  @override
+  String get negotiationParcelSheetItems => 'Items';
+
+  @override
+  String get negotiationParcelSheetPhotos => 'Photos';
+
+  @override
+  String get negotiationParcelSheetDescription => 'Description';
+
+  @override
+  String negotiationParcelPhotoSemantics(int index) {
+    return 'Enlarge parcel photo $index';
+  }
 
   @override
   String get negotiationThreadExchangesTitle => 'Exchanges';
@@ -7654,6 +7680,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ticketRequestClosedMessage => 'This request is closed.';
+
+  @override
+  String get ticketHandoverDeadlineExpiredTitle => 'Drop-off deadline passed';
+
+  @override
+  String get ticketHandoverDeadlineExpiredSender =>
+      'The drop-off deadline has passed: request cancelled. Any payment is refunded to you in full.';
+
+  @override
+  String get ticketHandoverDeadlineExpiredTraveler =>
+      'The drop-off deadline has passed: request cancelled.';
 
   @override
   String get ticketMiniStatWeightLabel => 'WEIGHT';
@@ -15194,7 +15231,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorHandoverDeadlinePassedMessage =>
-      'The drop-off deadline for this trip has passed. It no longer takes new parcels.';
+      'The drop-off deadline for this trip has passed. The request can no longer be accepted, paid or renegotiated.';
 
   @override
   String get bidDetailSectionRequest => 'REQUEST';
