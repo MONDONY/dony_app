@@ -9564,6 +9564,48 @@ abstract class AppLocalizations {
   /// **'Le colis'**
   String get negotiationThreadParcelSectionTitle;
 
+  /// Ligne du récapitulatif du fil de négociation qui ouvre la fiche détaillée du colis (bid_negotiation_thread_screen.dart, FLUTTER-G9)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le colis'**
+  String get negotiationThreadViewParcel;
+
+  /// Libellé de la catégorie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie'**
+  String get negotiationParcelSheetCategory;
+
+  /// Libellé du poids dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get negotiationParcelSheetWeight;
+
+  /// Titre de la liste des articles (grille et articles libres) dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Articles'**
+  String get negotiationParcelSheetItems;
+
+  /// Titre de la galerie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Photos'**
+  String get negotiationParcelSheetPhotos;
+
+  /// Titre de la description dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get negotiationParcelSheetDescription;
+
+  /// Nom accessible d'une vignette photo du colis qui l'ouvre en plein écran (bid_negotiation_thread_screen.dart, bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Agrandir la photo {index} du colis'**
+  String negotiationParcelPhotoSemantics(int index);
+
   /// Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)
   ///
   /// In fr, this message translates to:

@@ -5767,6 +5767,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negotiationThreadParcelSectionTitle => 'The parcel';
 
   @override
+  String get negotiationThreadViewParcel => 'View the parcel';
+
+  @override
+  String get negotiationParcelSheetCategory => 'Category';
+
+  @override
+  String get negotiationParcelSheetWeight => 'Weight';
+
+  @override
+  String get negotiationParcelSheetItems => 'Items';
+
+  @override
+  String get negotiationParcelSheetPhotos => 'Photos';
+
+  @override
+  String get negotiationParcelSheetDescription => 'Description';
+
+  @override
+  String negotiationParcelPhotoSemantics(int index) {
+    return 'Enlarge parcel photo $index';
+  }
+
+  @override
   String get negotiationThreadExchangesTitle => 'Exchanges';
 
   @override

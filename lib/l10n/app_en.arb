@@ -2040,6 +2040,13 @@
   "@negotiationThreadParcelSectionTitle": {
     "description": "Titre de la section récapitulatif du colis (bid_negotiation_thread_screen.dart)"
   },
+  "negotiationThreadViewParcel": "View the parcel",
+  "negotiationParcelSheetCategory": "Category",
+  "negotiationParcelSheetWeight": "Weight",
+  "negotiationParcelSheetItems": "Items",
+  "negotiationParcelSheetPhotos": "Photos",
+  "negotiationParcelSheetDescription": "Description",
+  "negotiationParcelPhotoSemantics": "Enlarge parcel photo {index}",
   "negotiationThreadExchangesTitle": "Exchanges",
   "@negotiationThreadExchangesTitle": {
     "description": "Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)"

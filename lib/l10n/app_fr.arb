@@ -5373,6 +5373,35 @@
   "@negotiationThreadParcelSectionTitle": {
     "description": "Titre de la section récapitulatif du colis (bid_negotiation_thread_screen.dart)"
   },
+  "negotiationThreadViewParcel": "Voir le colis",
+  "@negotiationThreadViewParcel": {
+    "description": "Ligne du récapitulatif du fil de négociation qui ouvre la fiche détaillée du colis (bid_negotiation_thread_screen.dart, FLUTTER-G9)"
+  },
+  "negotiationParcelSheetCategory": "Catégorie",
+  "@negotiationParcelSheetCategory": {
+    "description": "Libellé de la catégorie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelSheetWeight": "Poids",
+  "@negotiationParcelSheetWeight": {
+    "description": "Libellé du poids dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelSheetItems": "Articles",
+  "@negotiationParcelSheetItems": {
+    "description": "Titre de la liste des articles (grille et articles libres) dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelSheetPhotos": "Photos",
+  "@negotiationParcelSheetPhotos": {
+    "description": "Titre de la galerie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelSheetDescription": "Description",
+  "@negotiationParcelSheetDescription": {
+    "description": "Titre de la description dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelPhotoSemantics": "Agrandir la photo {index} du colis",
+  "@negotiationParcelPhotoSemantics": {
+    "description": "Nom accessible d'une vignette photo du colis qui l'ouvre en plein écran (bid_negotiation_thread_screen.dart, bid_negotiation_parcel_sheet.dart)",
+    "placeholders": {"index": {"type": "int"}}
+  },
   "negotiationThreadExchangesTitle": "Échanges",
   "@negotiationThreadExchangesTitle": {
     "description": "Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)"

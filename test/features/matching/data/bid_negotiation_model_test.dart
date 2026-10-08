@@ -45,6 +45,7 @@ Map<String, dynamic> _threadJson({
   ],
   'photoUrls': ['https://cdn.example/1.jpg'],
   'counterpartyName': 'Fatou S.',
+  'counterpartyId': 'user-fatou',
   'departureCity': 'Paris',
   'arrivalCity': 'Dakar',
   'departureDate': '2026-09-12',
@@ -110,6 +111,8 @@ void main() {
       expect(thread.contentCategory, 'Vêtements');
       expect(thread.photoUrls, ['https://cdn.example/1.jpg']);
       expect(thread.counterpartyName, 'Fatou S.');
+      // FLUTTER-G8 : identifiant de l'autre partie, pour son profil public.
+      expect(thread.counterpartyId, 'user-fatou');
       expect(thread.departureCity, 'Paris');
       expect(thread.arrivalCity, 'Dakar');
       expect(thread.departureDate, DateTime(2026, 9, 12));
@@ -189,6 +192,7 @@ void main() {
       expect(thread.departureDate, isNull);
       expect(thread.expiresAt, isNull);
       expect(thread.paymentMethod, isNull);
+      expect(thread.counterpartyId, isNull);
     });
 
     test(

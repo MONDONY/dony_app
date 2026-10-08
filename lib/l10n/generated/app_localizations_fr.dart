@@ -5794,6 +5794,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get negotiationThreadParcelSectionTitle => 'Le colis';
 
   @override
+  String get negotiationThreadViewParcel => 'Voir le colis';
+
+  @override
+  String get negotiationParcelSheetCategory => 'Catégorie';
+
+  @override
+  String get negotiationParcelSheetWeight => 'Poids';
+
+  @override
+  String get negotiationParcelSheetItems => 'Articles';
+
+  @override
+  String get negotiationParcelSheetPhotos => 'Photos';
+
+  @override
+  String get negotiationParcelSheetDescription => 'Description';
+
+  @override
+  String negotiationParcelPhotoSemantics(int index) {
+    return 'Agrandir la photo $index du colis';
+  }
+
+  @override
   String get negotiationThreadExchangesTitle => 'Échanges';
 
   @override
