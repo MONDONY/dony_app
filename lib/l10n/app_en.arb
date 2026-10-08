@@ -4046,6 +4046,7 @@
   "shipmentBadgeNoShow": "NO-SHOW",
   "shipmentBadgeExpired": "EXPIRED",
   "shipmentBadgeParcelRefused": "PARCEL REFUSED",
+  "shipmentBadgeReturnPending": "RETURN PENDING",
   "shipmentStepAcceptedLabel": "Drop-off with the traveler coming up",
   "shipmentStepHandedOverLabel": "Parcel handed over to the traveler",
   "shipmentStepInTransitLabel": "On the way to {city}",

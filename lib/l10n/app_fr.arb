@@ -8044,6 +8044,10 @@
   "@shipmentBadgeParcelRefused": {
     "description": "Badge pill de statut PARCEL_REFUSED (shipment_card.dart)"
   },
+  "shipmentBadgeReturnPending": "RETOUR EN COURS",
+  "@shipmentBadgeReturnPending": {
+    "description": "Badge d'état : colis annulé après remise, en attente de restitution à l'expéditeur (parcel_status_pill.dart, liste des conversations, FLUTTER-EZ)"
+  },
   "shipmentStepAcceptedLabel": "Remise au voyageur à venir",
   "@shipmentStepAcceptedLabel": {
     "description": "Libellé d'étape ACCEPTED sous le stepper (shipment_card.dart)"

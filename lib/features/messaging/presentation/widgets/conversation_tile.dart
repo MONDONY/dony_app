@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/presentation/widgets/parcel_status_pill.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
@@ -21,6 +22,16 @@ class ConversationTile extends StatelessWidget {
     final l = context.l10n;
     final participant = conversation.otherParticipant;
     final unread = conversation.hasUnread;
+    // État du colis (FLUTTER-EZ) : aucun badge sans statut servi (ancien back,
+    // conversation sans colis) ni pour un statut sans libellé.
+    final parcelBadge = conversation.parcelStatus == null
+        ? null
+        : parcelStatusBadge(
+            cs,
+            l,
+            conversation.parcelStatus,
+            returnPending: conversation.returnPending,
+          );
 
     return Material(
       // Surlignage non-lu : teinte primary légère par-dessus la surface,
@@ -102,15 +113,31 @@ class ConversationTile extends StatelessWidget {
                         ],
                       ],
                     ),
-                    if (_contextLabel(l, conversation) case final label?) ...[
+                    if (_contextLabel(l, conversation) != null ||
+                        parcelBadge != null) ...[
                       const SizedBox(height: 3),
-                      _TripLabel(
-                        label: label,
-                        iconAsset: conversation.isRecipientConversation
-                            ? 'package'
-                            : 'plane',
-                        cs: cs,
-                        tt: tt,
+                      Row(
+                        children: [
+                          if (_contextLabel(l, conversation) case final label?)
+                            Flexible(
+                              child: _TripLabel(
+                                label: label,
+                                iconAsset: conversation.isRecipientConversation
+                                    ? 'package'
+                                    : 'plane',
+                                cs: cs,
+                                tt: tt,
+                              ),
+                            ),
+                          if (parcelBadge != null) ...[
+                            const SizedBox(width: DonySpacing.sm),
+                            ParcelStatusPill(
+                              key: const Key('conversation-tile-parcel-status'),
+                              badge: parcelBadge,
+                              compact: true,
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                     const SizedBox(height: 3),

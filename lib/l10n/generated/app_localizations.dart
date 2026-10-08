@@ -12971,6 +12971,12 @@ abstract class AppLocalizations {
   /// **'COLIS REFUSÉ'**
   String get shipmentBadgeParcelRefused;
 
+  /// Badge d'état : colis annulé après remise, en attente de restitution à l'expéditeur (parcel_status_pill.dart, liste des conversations, FLUTTER-EZ)
+  ///
+  /// In fr, this message translates to:
+  /// **'RETOUR EN COURS'**
+  String get shipmentBadgeReturnPending;
+
   /// Libellé d'étape ACCEPTED sous le stepper (shipment_card.dart)
   ///
   /// In fr, this message translates to:
