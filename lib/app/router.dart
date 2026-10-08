@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
@@ -100,6 +102,8 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/conversation_notifications/conversation_notifications_cubit.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
+import 'package:dony/features/messaging/presentation/chat_photo_preview_screen.dart';
+import 'package:dony/features/messaging/presentation/chat_photo_viewer_screen.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
 import 'package:dony/features/messaging/presentation/conversation_loader_screen.dart';
 import 'package:dony/features/notifications/presentation/announcements_inbox_screen.dart';
@@ -1205,6 +1209,33 @@ final appRouter = GoRouter(
         );
       },
     ),
+    // Photos du chat (FLUTTER-B4) : aperçu avant envoi (rend `true` sur
+    // « Envoyer ») et visionneuse plein écran. Sans extra (lien restauré),
+    // retour à la messagerie.
+    GoRoute(
+      path: '/chat/photo-preview',
+      redirect: (context, state) =>
+          state.extra is Uint8List ? null : '/messages',
+      pageBuilder: (context, state) => CustomTransitionPage<bool>(
+        key: state.pageKey,
+        name: '/chat/photo-preview',
+        child: ChatPhotoPreviewScreen(bytes: state.extra! as Uint8List),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            FadeTransition(opacity: animation, child: child),
+      ),
+    ),
+    GoRoute(
+      path: '/chat/photo',
+      redirect: (context, state) =>
+          state.extra is ChatPhotoViewerArgs ? null : '/messages',
+      pageBuilder: (context, state) => CustomTransitionPage<void>(
+        key: state.pageKey,
+        name: '/chat/photo',
+        child: ChatPhotoViewerScreen(args: state.extra! as ChatPhotoViewerArgs),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            FadeTransition(opacity: animation, child: child),
+      ),
+    ),
     GoRoute(
       path: '/conversations/:id',
       builder: (context, state) {
@@ -1694,6 +1725,9 @@ final appRouter = GoRouter(
                 extra?['targetType'] as IncidentTargetType? ??
                 IncidentTargetType.app;
             final targetId = extra?['targetId'] as String?;
+            // Signalement d'un message du chat (FLUTTER-B4) : targetId est la
+            // conversation, messageId le message Firestore.
+            final messageId = extra?['messageId'] as String?;
             return MultiBlocProvider(
               providers: [
                 BlocProvider(create: (_) => getIt<IncidentReportCubit>()),
@@ -1702,6 +1736,7 @@ final appRouter = GoRouter(
               child: IncidentReportScreen(
                 targetType: targetType,
                 targetId: targetId,
+                messageId: messageId,
               ),
             );
           },

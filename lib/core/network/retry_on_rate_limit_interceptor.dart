@@ -34,7 +34,12 @@ class RetryOnRateLimitInterceptor extends Interceptor {
     final statusCode = err.response?.statusCode;
     final attempt = (err.requestOptions.extra[_attemptKey] as int?) ?? 0;
 
-    if (statusCode != 429 || attempt >= maxRetries) {
+    // Un corps multipart (photo du chat, pièce jointe) ne se rejoue pas : Dio
+    // refuse un FormData déjà finalisé, et rejouer un envoi refusé pour débit
+    // le compterait une seconde fois. Le 429 remonte tel quel à l'appelant.
+    if (statusCode != 429 ||
+        attempt >= maxRetries ||
+        err.requestOptions.data is FormData) {
       handler.next(err);
       return;
     }

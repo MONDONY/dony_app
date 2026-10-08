@@ -39,11 +39,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final Map<String, MessageModel?> _quoted = {};
   final Set<String> _pendingQuotes = {};
 
+  // Photos (FLUTTER-B4).
+  String _conversationId = '';
+  bool _mediaAllowed = false;
+  List<PendingChatImage> _pendingImages = const [];
+  int _localImageSeq = 0;
+
   ChatBloc(this._firestoreRepo, this._conversationRepo, this._analytics)
     : super(const ChatInitial()) {
     on<ChatSubscribeRequested>(_onSubscribe);
     on<ChatTextSendRequested>(_onSendText);
     on<ChatImageSendRequested>(_onSendImage);
+    on<ChatImageRetryRequested>(_onRetryImage);
+    on<ChatImageDiscardRequested>(_onDiscardImage);
     on<ChatLocationSendRequested>(_onSendLocation);
     on<ChatConversationDeleteRequested>(_onDeleteConversation);
     on<_DeletedByOtherParty>(_onDeletedByOtherParty);
@@ -60,6 +68,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             _messages,
             replyingTo: _replyingTo,
             quotedMessages: quoted,
+            pendingImages: List.unmodifiable(_pendingImages),
+            mediaAllowed: _mediaAllowed,
           );
   }
 
@@ -67,10 +77,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   /// du fil affiché ; `false` si aucun fil n'est affiché.
   bool _syncWithThread() {
     switch (state) {
-      case ChatLoaded(:final messages, :final replyingTo):
+      case ChatLoaded(
+        :final messages,
+        :final replyingTo,
+        :final pendingImages,
+        :final mediaAllowed,
+      ):
         _messages = messages;
         _readOnly = false;
         _replyingTo = replyingTo;
+        _pendingImages = pendingImages;
+        _mediaAllowed = mediaAllowed;
         return true;
       case ChatReadOnly(:final messages):
         _messages = messages;
@@ -145,6 +162,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _readOnly = event.isReadOnly;
     _messages = const [];
     _replyingTo = null;
+    _conversationId = event.conversationId;
+    _mediaAllowed = event.mediaAllowed;
+    _pendingImages = const [];
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
 
@@ -185,6 +205,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _firestoreRepo.messagesStream(event.firestoreConversationId),
       onData: (messages) {
         _messages = messages;
+        _dropArrivedImages();
         _resolveMissingQuotes();
         return _snapshot();
       },
@@ -220,30 +241,135 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     unawaited(_analytics.logEvent(AnalyticsEvents.messageSent));
   }
 
+  /// Retire les bulles locales dont le vrai message est arrivé dans le fil.
+  void _dropArrivedImages() {
+    if (_pendingImages.isEmpty) return;
+    final ids = {for (final m in _messages) m.id};
+    _pendingImages = [
+      for (final p in _pendingImages)
+        if (p.messageId == null || !ids.contains(p.messageId)) p,
+    ];
+  }
+
+  void _replacePending(String localId, PendingChatImage? next) {
+    _pendingImages = [
+      for (final p in _pendingImages)
+        if (p.localId != localId) p else ?next,
+    ];
+  }
+
   Future<void> _onSendImage(
     ChatImageSendRequested event,
     Emitter<ChatState> emit,
   ) async {
-    final result = await _conversationRepo.uploadImage(
-      event.conversationId,
-      event.bytes,
-      event.filename,
+    if (!_syncWithThread() || _readOnly) return;
+    if (event.conversationId.isNotEmpty) _conversationId = event.conversationId;
+    final pending = PendingChatImage(
+      localId: 'local-${++_localImageSeq}',
+      bytes: event.bytes,
+      replyToId: event.replyToId,
     );
-    final sent = await _rejectable(
-      emit,
-      () => _firestoreRepo.sendImageMessage(
-        firestoreConversationId: event.firestoreConversationId,
-        senderFirebaseUid: event.senderFirebaseUid,
-        imageUrl: result['presignedUrl']!,
-        replyToId: event.replyToId,
-      ),
-    );
-    if (!sent) return;
-    _clearReplyAfterSend(event.replyToId, emit);
-    await _conversationRepo.updateLastMessage(
-      event.conversationId,
-      kChatPreviewPhoto,
-    );
+    _pendingImages = [pending, ..._pendingImages];
+    emit(_snapshot());
+    await _upload(pending, emit);
+  }
+
+  Future<void> _onRetryImage(
+    ChatImageRetryRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    if (!_syncWithThread() || _readOnly) return;
+    final failed = _pendingImages
+        .where((p) => p.localId == event.localId && p.isFailed)
+        .firstOrNull;
+    if (failed == null) return;
+    final retry = failed.copyWith(status: PendingChatImageStatus.sending);
+    _replacePending(failed.localId, retry);
+    emit(_snapshot());
+    await _upload(retry, emit);
+  }
+
+  void _onDiscardImage(
+    ChatImageDiscardRequested event,
+    Emitter<ChatState> emit,
+  ) {
+    if (!_syncWithThread()) return;
+    _replacePending(event.localId, null);
+    emit(_snapshot());
+  }
+
+  /// POST de la photo. Le back écrit le message dans Firestore : la bulle
+  /// locale reste jusqu'à son arrivée dans le fil (cf. [_dropArrivedImages]).
+  Future<void> _upload(
+    PendingChatImage pending,
+    Emitter<ChatState> emit,
+  ) async {
+    try {
+      final messageId = await _conversationRepo.sendImage(
+        _conversationId,
+        pending.bytes,
+        replyToId: pending.replyToId,
+      );
+      final arrived =
+          messageId.isEmpty || _messages.any((m) => m.id == messageId);
+      _syncWithThread();
+      _replacePending(
+        pending.localId,
+        arrived ? null : pending.copyWith(messageId: messageId),
+      );
+      emit(_snapshot());
+      unawaited(_analytics.logEvent(AnalyticsEvents.chatPhotoSent));
+      _clearReplyAfterSend(pending.replyToId, emit);
+    } catch (e) {
+      final failure = _classify(unwrapDioError(e));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.chatPhotoFailed,
+          properties: {'reason': failure.name},
+        ),
+      );
+      _syncWithThread();
+      final retryable =
+          failure == ChatImageFailure.other ||
+          failure == ChatImageFailure.rateLimited;
+      _replacePending(
+        pending.localId,
+        retryable
+            ? pending.copyWith(status: PendingChatImageStatus.failed)
+            : null,
+      );
+      if (failure == ChatImageFailure.notAllowed) _mediaAllowed = false;
+      emit(ChatImageSendFailed(failure));
+      emit(_snapshot());
+      if (failure == ChatImageFailure.notAllowed) {
+        await _reloadMediaAllowed(emit);
+      }
+    }
+  }
+
+  static ChatImageFailure _classify(AppException error) => switch (error) {
+    ForbiddenException(code: 'media-not-allowed') =>
+      ChatImageFailure.notAllowed,
+    RateLimitException() => ChatImageFailure.rateLimited,
+    ValidationException() => ChatImageFailure.invalid,
+    _ => ChatImageFailure.other,
+  };
+
+  /// Après un refus, la conversation est relue : le back dit si les photos
+  /// sont permises (fenêtre close, bid annulé, blocage…). Un échec de lecture
+  /// laisse le trombone grisé, repli sûr.
+  Future<void> _reloadMediaAllowed(Emitter<ChatState> emit) async {
+    if (_conversationId.isEmpty) return;
+    try {
+      final conversation = await _conversationRepo.getConversation(
+        _conversationId,
+      );
+      if (!_syncWithThread() || _readOnly) return;
+      _mediaAllowed = conversation.mediaAllowed;
+      emit(_snapshot());
+    } catch (_) {
+      // Repli : photos refusées jusqu'à la prochaine ouverture.
+    }
   }
 
   Future<void> _onSendLocation(

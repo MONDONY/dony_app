@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
@@ -127,27 +129,63 @@ class ConversationRepository {
     await _api.dio.post('/conversations/$id/unmute');
   }
 
-  Future<Map<String, String>> uploadImage(
+  /// Envoie une photo dans le fil (FLUTTER-B4). Le back la redimensionne,
+  /// retire ses métadonnées, la stocke puis écrit lui-même le message IMAGE
+  /// dans Firestore : le client n'écrit plus jamais de message image. Rend
+  /// l'id du message Firestore créé (201 `{messageId}`), qui permet de
+  /// retirer la bulle locale à l'arrivée du vrai message.
+  ///
+  /// Erreurs : 403 `media-not-allowed` (photos pas ou plus permises), 422
+  /// (format), 429 `media-rate-limited`. Une requête multipart ne se rejoue
+  /// pas : aucun retry automatique ne la renvoie (cf.
+  /// `RetryOnRateLimitInterceptor`).
+  Future<String> sendImage(
     String conversationId,
-    List<int> bytes,
-    String filename,
-  ) async {
+    Uint8List bytes, {
+    String? replyToId,
+  }) async {
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(
         bytes,
-        filename: filename,
+        filename: 'photo.jpg',
         contentType: DioMediaType('image', 'jpeg'),
       ),
+      'replyToId': ?replyToId,
     });
     final response = await _api.dio.post(
-      '/conversations/$conversationId/upload',
+      '/conversations/$conversationId/images',
       data: formData,
     );
-    return {
-      'presignedUrl': response.data['presignedUrl'] as String,
-      's3Key': response.data['s3Key'] as String,
-    };
+    final data = response.data;
+    final id = data is Map ? data['messageId'] : null;
+    return id is String ? id : '';
   }
+
+  /// Octets d'une photo du fil, variante `thumb` (miniature carrée) ou
+  /// `full`. Passe par le Dio d'[ApiClient] : le jeton Firebase est injecté
+  /// et rafraîchi par l'intercepteur. 410 = photo supprimée ou purgée.
+  Future<Uint8List> fetchImage(
+    String conversationId,
+    String messageId, {
+    required ChatImageVariant variant,
+  }) async {
+    final response = await _api.dio.get<List<int>>(
+      '/conversations/$conversationId/messages/$messageId/image',
+      queryParameters: {'variant': variant.apiValue},
+      options: Options(responseType: ResponseType.bytes),
+    );
+    final data = response.data ?? const <int>[];
+    return data is Uint8List ? data : Uint8List.fromList(data);
+  }
+}
+
+/// Variante d'une photo du chat servie par le back.
+enum ChatImageVariant {
+  thumb('thumb'),
+  full('full');
+
+  const ChatImageVariant(this.apiValue);
+  final String apiValue;
 }
 
 /// Liste active telle que rendue par le serveur.

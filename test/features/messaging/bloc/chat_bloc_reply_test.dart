@@ -26,6 +26,8 @@ void main() {
   late _MockFirestoreChatRepository firestoreRepo;
   late _MockConversationRepository convRepo;
 
+  setUpAll(() => registerFallbackValue(Uint8List(0)));
+
   setUp(() {
     firestoreRepo = _MockFirestoreChatRepository();
     convRepo = _MockConversationRepository();
@@ -224,43 +226,43 @@ void main() {
     );
 
     blocTest<ChatBloc, ChatState>(
-      'photo en réponse : replyToId transmis, réponse remise à null',
+      'photo en réponse : replyToId transmis au back, réponse remise à null',
       build: () {
         when(
-          () => convRepo.uploadImage(any(), any(), any()),
-        ).thenAnswer((_) async => {'presignedUrl': 'https://cdn/x.jpg'});
-        when(
-          () => firestoreRepo.sendImageMessage(
-            firestoreConversationId: any(named: 'firestoreConversationId'),
-            senderFirebaseUid: any(named: 'senderFirebaseUid'),
-            imageUrl: any(named: 'imageUrl'),
+          () => convRepo.sendImage(
+            any(),
+            any(),
             replyToId: any(named: 'replyToId'),
           ),
-        ).thenAnswer((_) async {});
+        ).thenAnswer((_) async => 'srv1');
         return makeBloc();
       },
-      seed: () => ChatLoaded([m1], replyingTo: m1),
+      seed: () => ChatLoaded([m1], replyingTo: m1, mediaAllowed: true),
       act: (b) => b.add(
         ChatImageSendRequested(
           conversationId: 'conv-1',
-          firestoreConversationId: 'conv_bid1',
-          senderFirebaseUid: 'uid-me',
           bytes: Uint8List.fromList([1]),
-          filename: 'p.jpg',
           replyToId: 'm1',
         ),
       ),
       expect: () => [
+        isA<ChatLoaded>().having(
+          (s) => s.pendingImages,
+          'pending',
+          hasLength(1),
+        ),
+        isA<ChatLoaded>()
+            .having(
+              (s) => s.pendingImages.single.messageId,
+              'messageId',
+              'srv1',
+            )
+            .having((s) => s.replyingTo, 'replyingTo', m1),
         isA<ChatLoaded>().having((s) => s.replyingTo, 'replyingTo', isNull),
       ],
       verify: (_) {
         verify(
-          () => firestoreRepo.sendImageMessage(
-            firestoreConversationId: 'conv_bid1',
-            senderFirebaseUid: 'uid-me',
-            imageUrl: 'https://cdn/x.jpg',
-            replyToId: 'm1',
-          ),
+          () => convRepo.sendImage('conv-1', any(), replyToId: 'm1'),
         ).called(1);
       },
     );

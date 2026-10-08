@@ -10,10 +10,19 @@ class ChatSubscribeRequested extends ChatEvent {
   final String firestoreConversationId;
   final String currentUserUid;
   final bool isReadOnly;
+
+  /// Id API de la conversation (`conversations.id`), nécessaire à l'envoi
+  /// d'une photo et à la relecture de la conversation après un refus.
+  final String conversationId;
+
+  /// Photos permises à l'ouverture (`ConversationModel.mediaAllowed`).
+  final bool mediaAllowed;
   const ChatSubscribeRequested(
     this.firestoreConversationId, {
     this.currentUserUid = '',
     this.isReadOnly = false,
+    this.conversationId = '',
+    this.mediaAllowed = false,
   });
 }
 
@@ -34,21 +43,30 @@ class ChatTextSendRequested extends ChatEvent {
   });
 }
 
+/// Envoi d'une photo validée dans l'aperçu (FLUTTER-B4) : le back la stocke
+/// et écrit lui-même le message dans Firestore. Une bulle locale « Envoi… »
+/// s'affiche jusqu'à l'arrivée du vrai message.
 class ChatImageSendRequested extends ChatEvent {
   final String conversationId;
-  final String firestoreConversationId;
-  final String senderFirebaseUid;
   final Uint8List bytes;
-  final String filename;
   final String? replyToId;
   const ChatImageSendRequested({
     required this.conversationId,
-    required this.firestoreConversationId,
-    required this.senderFirebaseUid,
     required this.bytes,
-    required this.filename,
     this.replyToId,
   });
+}
+
+/// « Réessayer » sur une bulle photo non envoyée.
+class ChatImageRetryRequested extends ChatEvent {
+  final String localId;
+  const ChatImageRetryRequested(this.localId);
+}
+
+/// « Supprimer » sur une bulle photo non envoyée : elle disparaît du fil.
+class ChatImageDiscardRequested extends ChatEvent {
+  final String localId;
+  const ChatImageDiscardRequested(this.localId);
 }
 
 class ChatLocationSendRequested extends ChatEvent {

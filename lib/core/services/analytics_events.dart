@@ -184,6 +184,13 @@ abstract final class AnalyticsEvents {
   // Messaging
   static const conversationOpened = 'conversation_opened';
   static const messageSent = 'message_sent';
+
+  /// Photo envoyée dans le chat, acceptée par le back (FLUTTER-B4).
+  static const chatPhotoSent = 'chat_photo_sent';
+
+  /// Envoi de photo refusé ou échoué (propriété `reason` : `notAllowed` /
+  /// `rateLimited` / `invalid` / `other`).
+  static const chatPhotoFailed = 'chat_photo_failed';
   static const conversationCallInitiated = 'conversation_call_initiated';
   // Appels audio Yadony (Stream Video).
   static const callModeChosen = 'call_mode_chosen';

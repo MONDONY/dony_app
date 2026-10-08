@@ -41,27 +41,6 @@ class FirestoreChatRepository {
         });
   }
 
-  Future<void> sendImageMessage({
-    required String firestoreConversationId,
-    required String senderFirebaseUid,
-    required String imageUrl,
-    String? replyToId,
-  }) async {
-    await _firestore
-        .collection('conversations')
-        .doc(firestoreConversationId)
-        .collection('messages')
-        .add({
-          'senderId': senderFirebaseUid,
-          'body': null,
-          'imageUrl': imageUrl,
-          'type': 'IMAGE',
-          'sentAt': DateTime.now().toUtc().toIso8601String(),
-          'readAt': null,
-          ..._replyTo(replyToId),
-        });
-  }
-
   Future<void> sendLocationMessage({
     required String firestoreConversationId,
     required String senderFirebaseUid,

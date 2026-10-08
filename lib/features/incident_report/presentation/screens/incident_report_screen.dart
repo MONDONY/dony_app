@@ -19,12 +19,16 @@ class IncidentReportScreen extends StatefulWidget {
     super.key,
     this.targetType = IncidentTargetType.app,
     this.targetId,
+    this.messageId,
   });
 
   /// Cible du signalement — APP par défaut (entrée réglages) ; les points
   /// d'entrée contextuels (profil utilisateur, colis…) passent leur cible.
   final IncidentTargetType targetType;
   final String? targetId;
+
+  /// Message Firestore signalé (cible MESSAGE, [targetId] = conversation).
+  final String? messageId;
 
   @override
   State<IncidentReportScreen> createState() => _IncidentReportScreenState();
@@ -48,6 +52,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
       reason: _reason!.apiValue,
       description: _descriptionController.text.trim(),
       photoKeys: photos.readyKeys,
+      messageId: widget.messageId,
     );
   }
 

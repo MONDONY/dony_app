@@ -218,26 +218,6 @@ void main() {
     expect(snap.docs.first.data()['senderId'], 'uid-sender');
   });
 
-  test('sendImageMessage adds an IMAGE message document', () async {
-    await repo.sendImageMessage(
-      firestoreConversationId: 'conv-send-img',
-      senderFirebaseUid: 'uid-sender',
-      imageUrl: 'https://s3.example.com/photo.jpg',
-    );
-    final snap = await fakeFirestore
-        .collection('conversations')
-        .doc('conv-send-img')
-        .collection('messages')
-        .get();
-    expect(snap.docs, hasLength(1));
-    expect(snap.docs.first.data()['type'], 'IMAGE');
-    expect(
-      snap.docs.first.data()['imageUrl'],
-      'https://s3.example.com/photo.jpg',
-    );
-    expect(snap.docs.first.data()['body'], isNull);
-  });
-
   group('réponse à un message (FLUTTER-86)', () {
     Future<Map<String, dynamic>> onlyMessage(String conv) async {
       final snap = await fakeFirestore
@@ -255,18 +235,13 @@ void main() {
         senderFirebaseUid: 'uid',
         body: 'Salut',
       );
-      await repo.sendImageMessage(
-        firestoreConversationId: 'c-plain-img',
-        senderFirebaseUid: 'uid',
-        imageUrl: 'https://s3/x.jpg',
-      );
       await repo.sendLocationMessage(
         firestoreConversationId: 'c-plain-loc',
         senderFirebaseUid: 'uid',
         latitude: 1,
         longitude: 2,
       );
-      for (final conv in ['c-plain', 'c-plain-img', 'c-plain-loc']) {
+      for (final conv in ['c-plain', 'c-plain-loc']) {
         final data = await onlyMessage(conv);
         expect(data.containsKey('replyToId'), isFalse, reason: conv);
       }
@@ -289,12 +264,6 @@ void main() {
           body: 'Oui',
           replyToId: 'abc123',
         );
-        await repo.sendImageMessage(
-          firestoreConversationId: 'c-reply-img',
-          senderFirebaseUid: 'uid',
-          imageUrl: 'https://s3/x.jpg',
-          replyToId: 'abc123',
-        );
         await repo.sendLocationMessage(
           firestoreConversationId: 'c-reply-loc',
           senderFirebaseUid: 'uid',
@@ -313,7 +282,6 @@ void main() {
           'readAt',
           'replyToId',
         });
-        expect((await onlyMessage('c-reply-img'))['replyToId'], 'abc123');
         expect((await onlyMessage('c-reply-loc'))['replyToId'], 'abc123');
       },
     );

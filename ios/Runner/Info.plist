@@ -102,7 +102,7 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
+	<string>Yadony utilise l'appareil photo pour scanner les QR codes, photographier les colis et envoyer des photos dans la messagerie.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Yadony utilise Face ID pour sécuriser vos paiements.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -115,7 +115,7 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Yadony enregistre le QR code de votre colis dans vos photos pour que vous puissiez le retrouver hors ligne.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Yadony accède à vos photos pour joindre des images de colis.</string>
+	<string>Yadony accède à vos photos pour joindre des images de colis et envoyer des photos dans la messagerie.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

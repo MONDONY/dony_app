@@ -9,6 +9,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -34,6 +35,8 @@ import 'package:dony/features/messaging/data/chat_message_validator.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
+import 'package:dony/features/messaging/presentation/chat_photo_viewer_screen.dart';
+import 'package:dony/features/messaging/presentation/widgets/chat_photo.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,6 +47,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -55,7 +59,21 @@ class ChatScreen extends StatefulWidget {
   @visibleForTesting
   final void Function(String path, Object? extra)? onNavigate;
 
-  const ChatScreen({super.key, required this.conversation, this.onNavigate});
+  /// Remplace la sélection d'une photo (galerie / appareil photo) en test.
+  @visibleForTesting
+  final Future<Uint8List?> Function(ImageSource source)? pickPhotoOverride;
+
+  /// Remplace l'aperçu avant envoi en test : rend `true` pour envoyer.
+  @visibleForTesting
+  final Future<bool?> Function(Uint8List bytes)? previewPhotoOverride;
+
+  const ChatScreen({
+    super.key,
+    required this.conversation,
+    this.onNavigate,
+    this.pickPhotoOverride,
+    this.previewPhotoOverride,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -105,6 +123,8 @@ class _ChatScreenState extends State<ChatScreen> {
         widget.conversation.firestoreConversationId,
         currentUserUid: _myUid,
         isReadOnly: widget.conversation.readOnly,
+        conversationId: widget.conversation.id,
+        mediaAllowed: widget.conversation.mediaAllowed,
       ),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -460,6 +480,142 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  // ── Photos (FLUTTER-B4) ──────────────────────────────────────────────────
+
+  /// Trombone actif : galerie ou appareil photo, aperçu, puis envoi.
+  Future<void> _onAttachTapped() async {
+    final l = context.l10n;
+    final source = await DonyBottomSheet.show<ImageSource>(
+      context,
+      title: l.chatAttachPhotoTooltip,
+      child: Builder(
+        builder: (sheetContext) {
+          final cs = Theme.of(sheetContext).colorScheme;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                key: const Key('chat-photo-source-camera'),
+                leading: Icon(Icons.photo_camera_rounded, color: cs.primary),
+                title: Text(l.commonTakePhoto),
+                onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
+              ),
+              ListTile(
+                key: const Key('chat-photo-source-gallery'),
+                leading: Icon(Icons.photo_library_rounded, color: cs.primary),
+                title: Text(l.commonPickFromGallery),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(ImageSource.gallery),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    if (!mounted || source == null) return;
+
+    final Uint8List? bytes;
+    try {
+      bytes = await _pickPhoto(source);
+    } catch (_) {
+      if (mounted) {
+        DonySnackbar.show(
+          context,
+          message: context.l10n.commonImageUnsupported,
+          type: DonySnackbarType.error,
+        );
+      }
+      return;
+    }
+    if (!mounted || bytes == null || bytes.isEmpty) return;
+
+    final send = await _previewPhoto(bytes);
+    if (!mounted || send != true) return;
+
+    final bloc = context.read<ChatBloc>();
+    final current = bloc.state;
+    bloc.add(
+      ChatImageSendRequested(
+        conversationId: widget.conversation.id,
+        bytes: bytes,
+        replyToId: current is ChatLoaded ? current.replyingTo?.id : null,
+      ),
+    );
+  }
+
+  Future<Uint8List?> _pickPhoto(ImageSource source) async {
+    final override = widget.pickPhotoOverride;
+    if (override != null) return override(source);
+    final file = await getIt<DonyMediaService>().pick(source: source);
+    return file?.readAsBytes();
+  }
+
+  Future<bool?> _previewPhoto(Uint8List bytes) {
+    final override = widget.previewPhotoOverride;
+    if (override != null) return override(bytes);
+    return context.push<bool>('/chat/photo-preview', extra: bytes);
+  }
+
+  /// Trombone grisé : la demande n'est pas encore acceptée et payée.
+  void _onAttachLocked() {
+    final l = context.l10n;
+    unawaited(
+      DonyBottomSheet.show<void>(
+        context,
+        title: l.chatPhotoLockedTitle,
+        stickyBottom: Builder(
+          builder: (sheetContext) => DonyButton(
+            key: const Key('chat-photo-locked-ok'),
+            label: l.commonOk,
+            onPressed: () => Navigator.of(sheetContext).pop(),
+          ),
+        ),
+        child: Text(
+          l.chatPhotoLockedMessage,
+          key: const Key('chat-photo-locked-message'),
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    );
+  }
+
+  void _openPhoto(MessageModel message) {
+    _navigate(
+      '/chat/photo',
+      ChatPhotoViewerArgs(
+        conversationId: widget.conversation.id,
+        messageId: message.id,
+      ),
+    );
+  }
+
+  /// « Signaler » à l'appui long d'un message reçu : cible MESSAGE, la
+  /// conversation en targetId et le message Firestore en messageId.
+  void _reportMessage(MessageModel message) {
+    _navigate('/settings/report-incident', {
+      'targetType': IncidentTargetType.message,
+      'targetId': widget.conversation.id,
+      'messageId': message.id,
+    });
+  }
+
+  void _onImageSendFailed(ChatImageSendFailed state) {
+    final l = context.l10n;
+    final message = switch (state.failure) {
+      ChatImageFailure.notAllowed => l.chatPhotoNotAllowed,
+      ChatImageFailure.rateLimited => l.chatPhotoRateLimited,
+      ChatImageFailure.invalid => l.commonImageUnsupported,
+      ChatImageFailure.other => l.chatPhotoSendFailed,
+    };
+    DonySnackbar.show(
+      context,
+      message: message,
+      type: state.failure == ChatImageFailure.rateLimited
+          ? DonySnackbarType.warning
+          : DonySnackbarType.error,
+    );
+  }
+
   /// Firestore a refusé l'envoi : le texte revient dans le champ, le profil
   /// est relu pour faire apparaître une coupure de messagerie posée entre-temps.
   void _onSendRejected(ChatSendRejected state) {
@@ -753,13 +909,17 @@ class _ChatScreenState extends State<ChatScreen> {
         listenWhen: (_, current) =>
             current is ChatConversationDeleted ||
             current is ChatError ||
-            current is ChatSendRejected,
-        // Signal ponctuel aussitôt remplacé par l'état précédent : jamais
-        // dessiné, la liste des messages reste à l'écran.
-        buildWhen: (_, current) => current is! ChatSendRejected,
+            current is ChatSendRejected ||
+            current is ChatImageSendFailed,
+        // Signaux ponctuels aussitôt remplacés par l'état du fil : jamais
+        // dessinés, la liste des messages reste à l'écran.
+        buildWhen: (_, current) =>
+            current is! ChatSendRejected && current is! ChatImageSendFailed,
         listener: (context, state) {
           if (state is ChatSendRejected) {
             _onSendRejected(state);
+          } else if (state is ChatImageSendFailed) {
+            _onImageSendFailed(state);
           } else if (state is ChatConversationDeleted) {
             getIt<ConversationListBloc>().add(
               ConversationRemovedLocally(widget.conversation.id),
@@ -778,6 +938,14 @@ class _ChatScreenState extends State<ChatScreen> {
         },
         builder: (context, state) {
           final isReadOnly = state is ChatReadOnly;
+          final pendingImages = state is ChatLoaded
+              ? state.pendingImages
+              : const <PendingChatImage>[];
+          final attachState = chatAttachStateFor(
+            conversation,
+            mediaAllowed: state is ChatLoaded && state.mediaAllowed,
+            readOnly: isReadOnly,
+          );
           return Column(
             children: [
               if (conversation.tripLabel != null)
@@ -818,6 +986,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         onAction: () => context.read<ChatBloc>().add(
                           ChatSubscribeRequested(
                             widget.conversation.firestoreConversationId,
+                            currentUserUid: _myUid,
+                            isReadOnly: widget.conversation.readOnly,
+                            conversationId: widget.conversation.id,
+                            mediaAllowed: widget.conversation.mediaAllowed,
                           ),
                         ),
                       );
@@ -842,7 +1014,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     );
 
                     if (messages != null) {
-                      if (messages.isEmpty) {
+                      if (messages.isEmpty && pendingImages.isEmpty) {
                         return Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -875,8 +1047,26 @@ class _ChatScreenState extends State<ChatScreen> {
                           DonySpacing.lg,
                           DonySpacing.md,
                         ),
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
+                        itemCount: pendingImages.length + messages.length,
+                        itemBuilder: (context, itemIndex) {
+                          // Photos en cours d'envoi en bas du fil (liste
+                          // inversée : index 0 = le plus récent).
+                          if (itemIndex < pendingImages.length) {
+                            final pending = pendingImages[itemIndex];
+                            return ChatPendingImageBubble(
+                              image: pending,
+                              onRetry: () => context.read<ChatBloc>().add(
+                                ChatImageRetryRequested(pending.localId),
+                              ),
+                              onDiscard: () => context.read<ChatBloc>().add(
+                                ChatImageDiscardRequested(pending.localId),
+                              ),
+                            ).animate().fadeIn(
+                              duration: 180.ms,
+                              curve: Curves.easeOutCubic,
+                            );
+                          }
+                          final index = itemIndex - pendingImages.length;
                           final message = messages[index];
                           final isMe = message.senderId == _myUid;
                           final quote = _quoteFor(
@@ -890,6 +1080,10 @@ class _ChatScreenState extends State<ChatScreen> {
                               !message.isDeleted &&
                               message.type != MessageType.system;
                           final quotedId = message.replyToId;
+                          final canReport =
+                              !isMe &&
+                              !message.isDeleted &&
+                              message.type != MessageType.system;
                           final showSep = _showDateSeparator(messages, index);
                           // Dernier d'un groupe (visuellement en bas du groupe) :
                           // le message plus récent (index-1) a un autre expéditeur,
@@ -922,6 +1116,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                             isMe: isMe,
                                             isLastOfGroup: isLastOfGroup,
                                             quote: quote,
+                                            conversationId: conversation.id,
                                             onReply: canReply
                                                 ? () => _startReply(message)
                                                 : null,
@@ -939,6 +1134,11 @@ class _ChatScreenState extends State<ChatScreen> {
                                                     null,
                                                   )
                                                 : null,
+                                            onReport: canReport
+                                                ? () => _reportMessage(message)
+                                                : null,
+                                            onOpenImage: () =>
+                                                _openPhoto(message),
                                             onQuoteTap:
                                                 quote != null &&
                                                     quote.inThread &&
@@ -993,6 +1193,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           isSending: _isSending,
                           disabled: isReadOnly,
                           onSendText: _sendText,
+                          attachState: attachState,
+                          onAttach: () => unawaited(_onAttachTapped()),
+                          onAttachLocked: _onAttachLocked,
                         ),
                       ),
               ),
@@ -1428,6 +1631,15 @@ class _MessageBubble extends StatelessWidget {
   /// Ouvre le suivi du colis sous un message système qui y renvoie
   /// (FLUTTER-CD) ; `null` pour tout autre message.
   final VoidCallback? onOpenTracking;
+
+  /// Conversation API (`conversations.id`), pour charger une photo du back.
+  final String conversationId;
+
+  /// « Signaler » ce message (reçu, non système, non supprimé), `null` sinon.
+  final VoidCallback? onReport;
+
+  /// Ouvre la photo en plein écran.
+  final VoidCallback? onOpenImage;
   const _MessageBubble({
     required this.message,
     required this.isMe,
@@ -1436,34 +1648,55 @@ class _MessageBubble extends StatelessWidget {
     this.onReply,
     this.onQuoteTap,
     this.onOpenTracking,
+    this.conversationId = '',
+    this.onReport,
+    this.onOpenImage,
   });
 
   /// Photo ou position : pas de texte sélectionnable, l'appui long ouvre un
-  /// menu « Répondre » à l'endroit du doigt. Le texte, lui, l'ajoute à son
-  /// menu de sélection natif (cf. [_TextContent]).
-  Future<void> _showReplyMenu(BuildContext context, Offset at) async {
+  /// menu « Répondre » / « Signaler » à l'endroit du doigt. Le texte, lui,
+  /// les ajoute à son menu de sélection natif (cf. [_TextContent]).
+  Future<void> _showActionsMenu(BuildContext context, Offset at) async {
     final onReply = this.onReply;
-    if (onReply == null) return;
+    final onReport = this.onReport;
+    if (onReply == null && onReport == null) return;
     unawaited(HapticFeedback.mediumImpact());
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
-    final chosen = await showMenu<bool>(
+    final chosen = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
       items: [
-        PopupMenuItem<bool>(
-          value: true,
-          child: Row(
-            children: [
-              Icon(Icons.reply_rounded, size: 20, color: cs.onSurfaceVariant),
-              const SizedBox(width: DonySpacing.sm),
-              Text(l.chatReplyAction),
-            ],
+        if (onReply != null)
+          PopupMenuItem<String>(
+            value: 'reply',
+            child: Row(
+              children: [
+                Icon(Icons.reply_rounded, size: 20, color: cs.onSurfaceVariant),
+                const SizedBox(width: DonySpacing.sm),
+                Text(l.chatReplyAction),
+              ],
+            ),
           ),
-        ),
+        if (onReport != null)
+          PopupMenuItem<String>(
+            value: 'report',
+            child: Row(
+              children: [
+                DonyIcon('flag', size: 20, color: cs.onSurfaceVariant),
+                const SizedBox(width: DonySpacing.sm),
+                Text(l.chatReportMessageAction),
+              ],
+            ),
+          ),
       ],
     );
-    if (chosen == true) onReply();
+    switch (chosen) {
+      case 'reply':
+        onReply?.call();
+      case 'report':
+        onReport?.call();
+    }
   }
 
   @override
@@ -1535,8 +1768,9 @@ class _MessageBubble extends StatelessWidget {
 
     final replyLabel = l.chatReplyAction;
     final onReply = this.onReply;
+    final onReport = this.onReport;
     final longPressable =
-        onReply != null &&
+        (onReply != null || onReport != null) &&
         (message.type == MessageType.image ||
             message.type == MessageType.location);
     Widget bubble = Padding(
@@ -1576,6 +1810,13 @@ class _MessageBubble extends StatelessWidget {
                     child: _withQuote(
                       message.isDeleted
                           ? _DeletedContent(isMe: isMe, cs: cs, tt: tt)
+                          : message.isServerImage
+                          ? ChatServerImage(
+                              conversationId: conversationId,
+                              messageId: message.id,
+                              expired: message.imageExpired,
+                              onOpen: onOpenImage ?? () {},
+                            )
                           : message.type == MessageType.image
                           ? _ImageContent(imageUrl: message.imageUrl)
                           : message.type == MessageType.location
@@ -1592,6 +1833,7 @@ class _MessageBubble extends StatelessWidget {
                               cs: cs,
                               tt: tt,
                               onReply: onReply,
+                              onReport: onReport,
                             ),
                     ),
                   ),
@@ -1631,19 +1873,22 @@ class _MessageBubble extends StatelessWidget {
         ],
       ),
     );
-    if (onReply == null) return bubble;
     if (longPressable) {
       bubble = GestureDetector(
         onLongPressStart: (details) =>
-            unawaited(_showReplyMenu(context, details.globalPosition)),
+            unawaited(_showActionsMenu(context, details.globalPosition)),
         child: bubble,
       );
     }
+    if (onReply == null && onReport == null) return bubble;
     return Semantics(
       customSemanticsActions: {
-        CustomSemanticsAction(label: replyLabel): onReply,
+        CustomSemanticsAction(label: replyLabel): ?onReply,
+        CustomSemanticsAction(label: l.chatReportMessageAction): ?onReport,
       },
-      child: _SwipeToReply(onReply: onReply, child: bubble),
+      child: onReply == null
+          ? bubble
+          : _SwipeToReply(onReply: onReply, child: bubble),
     );
   }
 
@@ -2100,12 +2345,16 @@ class _TextContent extends StatelessWidget {
 
   /// Ajoute « Répondre » en tête du menu de sélection (FLUTTER-86).
   final VoidCallback? onReply;
+
+  /// Ajoute « Signaler » en fin de menu (message reçu, FLUTTER-B4).
+  final VoidCallback? onReport;
   const _TextContent({
     required this.body,
     required this.isMe,
     required this.cs,
     required this.tt,
     this.onReply,
+    this.onReport,
   });
 
   // « Copier le message » recopie la bulle entière : une adresse ou un
@@ -2176,6 +2425,14 @@ class _TextContent extends StatelessWidget {
                   _copy(context);
                 },
               ),
+              if (onReport case final report?)
+                ContextMenuButtonItem(
+                  label: context.l10n.chatReportMessageAction,
+                  onPressed: () {
+                    editableTextState.hideToolbar();
+                    report();
+                  },
+                ),
             ],
           ),
     );
@@ -2334,7 +2591,7 @@ class _DeletedContent extends StatelessWidget {
   }
 }
 
-// ── Input bar (F1 — texte uniquement) ──────────────────────────────────────────
+// ── Input bar (F1 — texte + trombone photo FLUTTER-B4) ──────────────────────────────────────────
 
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
@@ -2346,6 +2603,11 @@ class _InputBar extends StatelessWidget {
   final bool showTopBorder;
   final VoidCallback onSendText;
 
+  /// Trombone photo (FLUTTER-B4) : actif, grisé ou masqué.
+  final ChatAttachState attachState;
+  final VoidCallback? onAttach;
+  final VoidCallback? onAttachLocked;
+
   const _InputBar({
     required this.controller,
     this.focusNode,
@@ -2353,6 +2615,9 @@ class _InputBar extends StatelessWidget {
     this.disabled = false,
     this.showTopBorder = true,
     required this.onSendText,
+    this.attachState = ChatAttachState.hidden,
+    this.onAttach,
+    this.onAttachLocked,
   });
 
   @override
@@ -2413,10 +2678,23 @@ class _InputBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.xl),
             border: Border.all(color: cs.outlineVariant),
           ),
-          padding: const EdgeInsets.only(left: DonySpacing.base, right: 5),
+          // Trombone présent : marges symétriques autour des deux boutons
+          // ronds, pour que la pill reste centrée optiquement.
+          padding: EdgeInsets.only(
+            left: attachState == ChatAttachState.hidden ? DonySpacing.base : 5,
+            right: 5,
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              if (attachState != ChatAttachState.hidden) ...[
+                ChatAttachButton(
+                  state: attachState,
+                  onPick: onAttach ?? () {},
+                  onLocked: onAttachLocked ?? () {},
+                ),
+                const SizedBox(width: DonySpacing.xs),
+              ],
               Expanded(
                 child: TextField(
                   controller: controller,
