@@ -118,6 +118,17 @@ String _senderAmountLabel(BidModel bid) {
 _HeroContent? _buildContent(BuildContext context, BidModel bid) {
   final l = context.l10n;
   switch (bid.status) {
+    // Colis carte pas encore payé : l'expéditeur doit payer, le voyageur ne
+    // peut encore rien faire (FLUTTER-G7, cohérent avec le talon du billet).
+    case 'PENDING' when bid.isAwaitingSenderCardPayment:
+      return _HeroContent(
+        variant: SenderHeroVariant.pay,
+        title: l.bidDetailSenderAwaitingCardPaymentTitle,
+        subtitle: l.bidDetailSenderAwaitingPaymentSubtitle(
+          _senderAmountLabel(bid),
+        ),
+      );
+
     case 'PENDING':
       return _HeroContent(
         variant: SenderHeroVariant.wait,

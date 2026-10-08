@@ -3300,6 +3300,7 @@
   "@bidDetailSenderPendingTitle": {
     "description": "PENDING, titre (sender_hero_card.dart)"
   },
+  "bidDetailSenderAwaitingCardPaymentTitle": "⏳ Waiting for your payment",
   "bidDetailSenderPendingSubtitle": "You'll be notified as soon as they reply.",
   "@bidDetailSenderPendingSubtitle": {
     "description": "PENDING, sous-titre (sender_hero_card.dart)"

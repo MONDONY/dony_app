@@ -64,6 +64,8 @@ void main() {
     // Colis carte pas encore payé : c'est l'expéditeur qui doit agir
     // (FLUTTER-G7), pas le voyageur.
     expect(find.text('En attente de votre paiement'), findsOneWidget);
+    // Tampon cohérent avec le talon : « À payer ».
+    expect(find.text('À payer'), findsOneWidget);
   });
 
   testWidgets('affiche le corridor départ → arrivée', (tester) async {

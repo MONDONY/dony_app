@@ -6763,6 +6763,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailSenderPendingTitle => '⏳ Waiting for the traveler';
 
   @override
+  String get bidDetailSenderAwaitingCardPaymentTitle =>
+      '⏳ Waiting for your payment';
+
+  @override
   String get bidDetailSenderPendingSubtitle =>
       'You\'ll be notified as soon as they reply.';
 

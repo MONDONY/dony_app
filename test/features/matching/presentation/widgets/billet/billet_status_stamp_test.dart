@@ -12,13 +12,18 @@ Future<void> _pump(
   WidgetTester tester,
   String status, {
   bool isSender = false,
+  bool awaitingMyPayment = false,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(
         body: Center(
-          child: BilletStatusStamp(status: status, isSender: isSender),
+          child: BilletStatusStamp(
+            status: status,
+            isSender: isSender,
+            awaitingMyPayment: awaitingMyPayment,
+          ),
         ),
       ),
     ),
@@ -49,6 +54,18 @@ void main() {
       expect(find.text('À décider'), findsOneWidget);
       await _pump(tester, 'PENDING', isSender: true);
       expect(find.text('En attente'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'PENDING carte non payé → « À payer » côté expéditeur, inchangé côté '
+    'voyageur (FLUTTER-G7)',
+    (tester) async {
+      await _pump(tester, 'PENDING', isSender: true, awaitingMyPayment: true);
+      expect(find.text('À payer'), findsOneWidget);
+      expect(find.text('En attente'), findsNothing);
+      await _pump(tester, 'PENDING', awaitingMyPayment: true);
+      expect(find.text('À décider'), findsOneWidget);
     },
   );
 

@@ -6685,6 +6685,10 @@
   "@bidDetailSenderPendingTitle": {
     "description": "PENDING, titre (sender_hero_card.dart)"
   },
+  "bidDetailSenderAwaitingCardPaymentTitle": "⏳ En attente de votre paiement",
+  "@bidDetailSenderAwaitingCardPaymentTitle": {
+    "description": "Titre de la carte prochaine étape (sender_hero_card.dart) pour un colis carte PENDING pas encore payé (FLUTTER-G7)"
+  },
   "bidDetailSenderPendingSubtitle": "Vous serez notifié dès sa réponse.",
   "@bidDetailSenderPendingSubtitle": {
     "description": "PENDING, sous-titre (sender_hero_card.dart)"

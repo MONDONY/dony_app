@@ -92,7 +92,11 @@ class _BilletHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: DonySpacing.sm),
-          BilletStatusStamp(status: bid.status, isSender: isSender),
+          BilletStatusStamp(
+            status: bid.status,
+            isSender: isSender,
+            awaitingMyPayment: bid.isAwaitingSenderCardPayment,
+          ),
         ],
       ),
     );

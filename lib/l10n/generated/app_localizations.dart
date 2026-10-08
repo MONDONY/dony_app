@@ -11249,6 +11249,12 @@ abstract class AppLocalizations {
   /// **'⏳ En attente du voyageur'**
   String get bidDetailSenderPendingTitle;
 
+  /// Titre de la carte prochaine étape (sender_hero_card.dart) pour un colis carte PENDING pas encore payé (FLUTTER-G7)
+  ///
+  /// In fr, this message translates to:
+  /// **'⏳ En attente de votre paiement'**
+  String get bidDetailSenderAwaitingCardPaymentTitle;
+
   /// PENDING, sous-titre (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:

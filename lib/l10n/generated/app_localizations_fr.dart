@@ -6800,6 +6800,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailSenderPendingTitle => '⏳ En attente du voyageur';
 
   @override
+  String get bidDetailSenderAwaitingCardPaymentTitle =>
+      '⏳ En attente de votre paiement';
+
+  @override
   String get bidDetailSenderPendingSubtitle =>
       'Vous serez notifié dès sa réponse.';
 
