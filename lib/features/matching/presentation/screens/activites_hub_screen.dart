@@ -109,7 +109,12 @@ class ActivitesHubScreen extends StatelessWidget {
         // TravelerBidsBloc est désormais un singleton (partagé avec l'onglet) :
         // `.value` pour ne pas le fermer quand le hub se démonte.
         BlocProvider.value(value: getIt<TravelerBidsBloc>()),
-        BlocProvider(create: (_) => getIt<BidBloc>()),
+        // Le hub ne compte que les envois actifs (voir [envoisActifs]).
+        BlocProvider(
+          create: (_) =>
+              getIt<BidBloc>()
+                ..myListStatuses = {...kEnvoisEnCours, ...kEnvoisAVenir},
+        ),
         BlocProvider(create: (_) => getIt<StatsPeriodCubit>()),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
         // Singleton partagé (volet « Envoyées » de l'écran Demandes) : sert à

@@ -136,6 +136,58 @@ class BidRemoteDatasource {
         .toList();
   }
 
+  /// Mes colis restreints à [statuses] (et à un trajet si [announcementId]),
+  /// lus page par page.
+  ///
+  /// La liste complète de `/bids/me` renvoyait tout l'historique (1,47 Mo pour
+  /// 741 colis au test de charge du 08/10/2026) alors que l'accueil, le Suivi
+  /// et le contrôle « déjà une demande » ne regardent que les colis en cours.
+  ///
+  /// Au plus [maxPages] pages de [pageSize] : au-delà, la liste est tronquée
+  /// (les plus anciens d'abord écartés, le serveur trie du plus récent).
+  ///
+  /// Un serveur antérieur à la pagination ignore `page` et renvoie le tableau
+  /// complet : il est alors filtré ici, pour un résultat identique.
+  Future<List<BidModel>> getMyBidsFiltered({
+    required Set<String> statuses,
+    String? announcementId,
+    int pageSize = 50,
+    int maxPages = 10,
+  }) async {
+    final bids = <BidModel>[];
+    for (var page = 0; page < maxPages; page++) {
+      final response = await _apiClient.dio.get(
+        '/bids/me',
+        queryParameters: {
+          'page': page,
+          'size': pageSize,
+          'status': statuses.join(','),
+          'announcementId': ?announcementId,
+        },
+      );
+      final data = response.data;
+      if (data is List) {
+        return data
+            .map((j) => BidModel.fromJson(j as Map<String, dynamic>))
+            .where(
+              (b) =>
+                  statuses.contains(b.status) &&
+                  (announcementId == null ||
+                      b.announcementId == announcementId),
+            )
+            .toList();
+      }
+      final body = data as Map<String, dynamic>;
+      bids.addAll(
+        (body['content'] as List).map(
+          (j) => BidModel.fromJson(j as Map<String, dynamic>),
+        ),
+      );
+      if (body['last'] as bool? ?? true) break;
+    }
+    return bids;
+  }
+
   /// Numéro de la contrepartie, demandé au moment où l'utilisateur veut appeler.
   ///
   /// Le numéro ne fait plus partie des réponses de colis : le serveur ne le

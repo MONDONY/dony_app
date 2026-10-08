@@ -281,7 +281,13 @@ void main() {
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
-    when(() => bidRepo.getMyBids()).thenAnswer(
+    when(
+      () => bidRepo.getMyBidsFiltered(
+        statuses: any(named: 'statuses'),
+        announcementId: any(named: 'announcementId'),
+        maxPages: any(named: 'maxPages'),
+      ),
+    ).thenAnswer(
       (_) async => [
         _bid(
           'ship-1',
@@ -814,11 +820,23 @@ void main() {
     });
 
     testWidgets('échec de Mes envois → Réessayer', (tester) async {
-      when(() => bidRepo.getMyBids()).thenThrow(Exception('offline'));
+      when(
+        () => bidRepo.getMyBidsFiltered(
+          statuses: any(named: 'statuses'),
+          announcementId: any(named: 'announcementId'),
+          maxPages: any(named: 'maxPages'),
+        ),
+      ).thenThrow(Exception('offline'));
       await pump(tester, roles: ['SENDER']);
       expect(text('Impossible de charger vos envois.'), findsOneWidget);
 
-      when(() => bidRepo.getMyBids()).thenAnswer((_) async => []);
+      when(
+        () => bidRepo.getMyBidsFiltered(
+          statuses: any(named: 'statuses'),
+          announcementId: any(named: 'announcementId'),
+          maxPages: any(named: 'maxPages'),
+        ),
+      ).thenAnswer((_) async => []);
       await tester.tap(text('Réessayer'));
       await settle(tester);
       expect(text('Aucun envoi en cours.'), findsOneWidget);

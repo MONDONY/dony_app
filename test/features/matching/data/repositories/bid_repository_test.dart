@@ -76,6 +76,23 @@ void main() {
       expect(results, hasLength(1));
     });
 
+    test('getMyBidsFiltered transmet statuts, trajet et plafond', () async {
+      when(
+        () => mockDs.getMyBidsFiltered(
+          statuses: {'ACCEPTED'},
+          announcementId: 'ann-001',
+          maxPages: 1,
+        ),
+      ).thenAnswer((_) async => [_bid()]);
+
+      final results = await repo.getMyBidsFiltered(
+        statuses: {'ACCEPTED'},
+        announcementId: 'ann-001',
+        maxPages: 1,
+      );
+      expect(results, hasLength(1));
+    });
+
     test('acceptBid delegates correctly', () async {
       when(
         () => mockDs.acceptBid('bid-001'),

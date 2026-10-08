@@ -35,6 +35,7 @@ import 'package:dony/features/favorites/data/favorites_migration.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
@@ -361,7 +362,12 @@ class _DonyAppState extends State<DonyApp> {
                 BlocProvider<AnnouncementBloc>(
                   create: (_) => getIt<AnnouncementBloc>(),
                 ),
-                BlocProvider<BidBloc>(create: (_) => getIt<BidBloc>()),
+                // Instance globale : l'accueil et les feuilles de trajet ne
+                // cherchent qu'un colis en cours par trajet, pas l'historique.
+                BlocProvider<BidBloc>(
+                  create: (_) => getIt<BidBloc>()
+                    ..myListStatuses = MyActiveBidsLookup.ongoingBidStatuses,
+                ),
                 BlocProvider<PaymentBloc>(create: (_) => getIt<PaymentBloc>()),
                 BlocProvider<NotificationBloc>(
                   create: (_) => getIt<NotificationBloc>(),

@@ -273,6 +273,7 @@ void main() {
   setUpAll(() {
     initializeDateFormatting('fr');
     registerFallbackValue(_FakeUri());
+    registerFallbackValue(<String>{});
   });
 
   // ── Tests existants (comportement inchangé) ────────────────────────────────
@@ -885,7 +886,13 @@ void main() {
       setUp(() {
         bids = _MockBidRepository();
         negos = _MockBidNegotiationRepository();
-        when(() => bids.getMyBids()).thenAnswer((_) async => const []);
+        when(
+          () => bids.getMyBidsFiltered(
+            statuses: any(named: 'statuses'),
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
+        ).thenAnswer((_) async => const []);
         when(() => negos.myNegotiations()).thenAnswer((_) async => const []);
         GetIt.I.registerSingleton<BidRepository>(bids);
         GetIt.I.registerSingleton<BidNegotiationRepository>(negos);
@@ -904,7 +911,11 @@ void main() {
       testWidgets('colis payé sur ce trajet → ouvre le colis, pas le '
           'formulaire', (tester) async {
         when(
-          () => bids.getMyBids(),
+          () => bids.getMyBidsFiltered(
+            statuses: any(named: 'statuses'),
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
         ).thenAnswer((_) async => [bidOn('a1', 'PAYMENT_ESCROWED')]);
 
         await tapMakeRequest(tester);
@@ -945,7 +956,11 @@ void main() {
         tester,
       ) async {
         when(
-          () => bids.getMyBids(),
+          () => bids.getMyBidsFiltered(
+            statuses: any(named: 'statuses'),
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
         ).thenAnswer((_) async => [bidOn('a1', 'CANCELLED')]);
         when(() => negos.myNegotiations()).thenAnswer(
           (_) async => const [
@@ -966,7 +981,11 @@ void main() {
         tester,
       ) async {
         when(
-          () => bids.getMyBids(),
+          () => bids.getMyBidsFiltered(
+            statuses: any(named: 'statuses'),
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
         ).thenAnswer((_) async => [bidOn('autre', 'ACCEPTED')]);
 
         await tapMakeRequest(tester);
@@ -976,7 +995,13 @@ void main() {
 
       testWidgets('serveur injoignable → formulaire ouvert, le back reste '
           "l'arbitre", (tester) async {
-        when(() => bids.getMyBids()).thenThrow(Exception('réseau'));
+        when(
+          () => bids.getMyBidsFiltered(
+            statuses: any(named: 'statuses'),
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
+        ).thenThrow(Exception('réseau'));
         when(() => negos.myNegotiations()).thenThrow(Exception('réseau'));
 
         await tapMakeRequest(tester);
