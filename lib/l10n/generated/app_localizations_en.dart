@@ -5199,6 +5199,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingBidStatusPending => 'Request pending';
 
   @override
+  String get listingBidStatusOfferSent => 'Offer sent';
+
+  @override
   String get listingYourTripPill => 'Your trip';
 
   @override

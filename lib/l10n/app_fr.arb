@@ -4643,6 +4643,10 @@
   "@listingBidStatusPending": {
     "description": "Chip de statut d'une demande en attente sur une carte voyageur (traveler_card.dart)"
   },
+  "listingBidStatusOfferSent": "Offre envoyée",
+  "@listingBidStatusOfferSent": {
+    "description": "Chip d'une offre de prix encore ouverte (NEGOTIATING) sur une carte voyageur (traveler_card.dart, FLUTTER-GC)"
+  },
   "listingYourTripPill": "Votre trajet",
   "@listingYourTripPill": {
     "description": "Pill signalant que l'annonce appartient au voyageur courant (traveler_card.dart)"

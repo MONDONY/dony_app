@@ -511,6 +511,74 @@ void main() {
     );
 
     blocTest<BidBloc, BidState>(
+      'offres ouvertes demandées (FLUTTER-GC) : rangées à part, jamais parmi '
+      'les colis',
+      build: () {
+        when(
+          () => mockRepo.getMyBidsFiltered(
+            statuses: {'PENDING'},
+            includeNegotiating: true,
+          ),
+        ).thenAnswer(
+          (_) async => [
+            buildBid(),
+            buildBid(id: 'bid-nego', status: 'NEGOTIATING'),
+          ],
+        );
+        return buildBloc()
+          ..myListStatuses = {'PENDING'}
+          ..includeOpenNegotiations = true;
+      },
+      act: (bloc) => bloc.add(BidMyListRequested()),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+          (s) =>
+              s is BidListLoaded &&
+              s.bids.map((b) => b.id).toList().join() == 'bid-001' &&
+              s.openNegotiations.single.id == 'bid-nego',
+        ),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'rafraîchissement en échec : les offres ouvertes déjà lues sont gardées',
+      build: () {
+        when(
+          () => mockRepo.getMyBidsFiltered(
+            statuses: {'PENDING'},
+            includeNegotiating: true,
+          ),
+        ).thenThrow(
+          DioException(requestOptions: RequestOptions(path: '/bids/me')),
+        );
+        return buildBloc()
+          ..myListStatuses = {'PENDING'}
+          ..includeOpenNegotiations = true;
+      },
+      seed: () => BidListLoaded(
+        [buildBid()],
+        fetchedAt: DateTime(2020),
+        openNegotiations: [buildBid(id: 'bid-nego', status: 'NEGOTIATING')],
+      ),
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested(force: true)),
+      expect: () => [
+        predicate<BidState>(
+          (s) =>
+              s is BidListLoaded &&
+              s.isRefreshing &&
+              s.openNegotiations.length == 1,
+        ),
+        predicate<BidState>(
+          (s) =>
+              s is BidListLoaded &&
+              !s.isRefreshing &&
+              s.openNegotiations.single.id == 'bid-nego',
+        ),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
       'statuts fixés : le rafraîchissement automatique suit le même filtre',
       build: () {
         when(

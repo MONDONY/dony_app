@@ -44,4 +44,34 @@ void main() {
       expect(BidInitial().activeBidsByAnnouncement(), isEmpty);
     });
   });
+
+  group('existingTripBidsByAnnouncement (FLUTTER-GC)', () {
+    test('une offre ouverte marque le trajet', () {
+      final offer = _bid('NEGOTIATING');
+      final state = BidListLoaded(const [], openNegotiations: [offer]);
+      expect(state.existingTripBidsByAnnouncement()['ann-1'], offer);
+      expect(state.activeBidsByAnnouncement(), isEmpty);
+    });
+
+    test('le colis en cours prime sur l’offre du même trajet', () {
+      final parcel = _bid('ACCEPTED');
+      final state = BidListLoaded(
+        [parcel],
+        openNegotiations: [_bid('NEGOTIATING')],
+      );
+      expect(state.existingTripBidsByAnnouncement()['ann-1'], parcel);
+    });
+
+    test('état hors BidListLoaded → map vide', () {
+      expect(BidInitial().existingTripBidsByAnnouncement(), isEmpty);
+    });
+
+    test('route : fil de négociation pour une offre, billet sinon', () {
+      expect(
+        existingTripBidRoute(_bid('NEGOTIATING')),
+        '/bids/bid-NEGOTIATING/negotiation',
+      );
+      expect(existingTripBidRoute(_bid('PENDING')), '/bids/bid-PENDING');
+    });
+  });
 }

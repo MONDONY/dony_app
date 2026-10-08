@@ -556,6 +556,25 @@ void main() {
       expect(find.text('Demande en attente'), findsOneWidget);
     });
 
+    testWidgets('affiche le chip "Offre envoyée" pour une offre de prix '
+        'ouverte (FLUTTER-GC)', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+            existingBidStatus: 'NEGOTIATING',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(chipKey), findsOneWidget);
+      expect(find.text('Offre envoyée'), findsOneWidget);
+      expect(find.text('Demande en attente'), findsNothing);
+    });
+
     testWidgets('affiche le chip "Demande acceptée" pour status ACCEPTED', (
       tester,
     ) async {

@@ -8678,6 +8678,12 @@ abstract class AppLocalizations {
   /// **'Demande en attente'**
   String get listingBidStatusPending;
 
+  /// Chip d'une offre de prix encore ouverte (NEGOTIATING) sur une carte voyageur (traveler_card.dart, FLUTTER-GC)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre envoyée'**
+  String get listingBidStatusOfferSent;
+
   /// Pill signalant que l'annonce appartient au voyageur courant (traveler_card.dart)
   ///
   /// In fr, this message translates to:

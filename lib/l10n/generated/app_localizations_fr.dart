@@ -5225,6 +5225,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingBidStatusPending => 'Demande en attente';
 
   @override
+  String get listingBidStatusOfferSent => 'Offre envoyée';
+
+  @override
   String get listingYourTripPill => 'Votre trajet';
 
   @override

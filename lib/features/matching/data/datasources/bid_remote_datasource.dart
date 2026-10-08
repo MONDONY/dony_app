@@ -148,12 +148,21 @@ class BidRemoteDatasource {
   ///
   /// Un serveur antérieur à la pagination ignore `page` et renvoie le tableau
   /// complet : il est alors filtré ici, pour un résultat identique.
+  ///
+  /// [includeNegotiating] ajoute les offres de prix encore ouvertes
+  /// (`NEGOTIATING`) de l'expéditeur (FLUTTER-GC, yadony-back #455). Un serveur
+  /// qui ne connaît pas le paramètre l'ignore : la liste revient alors sans
+  /// offre, comme avant.
   Future<List<BidModel>> getMyBidsFiltered({
     required Set<String> statuses,
     String? announcementId,
     int pageSize = 50,
     int maxPages = 10,
+    bool includeNegotiating = false,
   }) async {
+    bool wanted(String status) =>
+        statuses.contains(status) ||
+        (includeNegotiating && status == kNegotiatingBidStatus);
     final bids = <BidModel>[];
     for (var page = 0; page < maxPages; page++) {
       final response = await _apiClient.dio.get(
@@ -163,6 +172,7 @@ class BidRemoteDatasource {
           'size': pageSize,
           'status': statuses.join(','),
           'announcementId': ?announcementId,
+          if (includeNegotiating) 'includeNegotiating': true,
         },
       );
       final data = response.data;
@@ -171,7 +181,7 @@ class BidRemoteDatasource {
             .map((j) => BidModel.fromJson(j as Map<String, dynamic>))
             .where(
               (b) =>
-                  statuses.contains(b.status) &&
+                  wanted(b.status) &&
                   (announcementId == null ||
                       b.announcementId == announcementId),
             )

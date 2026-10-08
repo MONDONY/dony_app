@@ -1447,6 +1447,7 @@
   "listingBidStatusOnTrip": "Parcel on this trip",
   "listingBidStatusArrived": "Arrived",
   "listingBidStatusPending": "Request pending",
+  "listingBidStatusOfferSent": "Offer sent",
   "listingYourTripPill": "Your trip",
   "listingProBadge": "PRO",
   "listingNoTravelersNearbyTitle": "No travelers nearby",

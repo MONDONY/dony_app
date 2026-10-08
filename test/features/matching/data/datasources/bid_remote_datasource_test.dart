@@ -147,6 +147,57 @@ void main() {
       });
     });
 
+    test('includeNegotiating : paramètre envoyé seulement s’il est demandé '
+        '(FLUTTER-GC)', () async {
+      final sent = <Map<String, dynamic>>[];
+      when(
+        () => mockDio.get(
+          '/bids/me',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        sent.add(inv.namedArguments[#queryParameters] as Map<String, dynamic>);
+        return _ok(page([_bidJson], true), '/bids/me');
+      });
+
+      await datasource.getMyBidsFiltered(
+        statuses: {'PENDING'},
+        includeNegotiating: true,
+      );
+      await datasource.getMyBidsFiltered(statuses: {'PENDING'});
+
+      expect(sent.first['includeNegotiating'], isTrue);
+      expect(sent.last.containsKey('includeNegotiating'), isFalse);
+    });
+
+    test(
+      'serveur sans pagination : l’offre ouverte est gardée si demandée',
+      () async {
+        when(
+          () => mockDio.get(
+            '/bids/me',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer(
+          (_) async => _ok([
+            {..._bidJson, 'id': 'nego', 'status': 'NEGOTIATING'},
+            {..._bidJson, 'id': 'closed', 'status': 'CANCELLED'},
+          ], '/bids/me'),
+        );
+
+        final withOffers = await datasource.getMyBidsFiltered(
+          statuses: {'PENDING'},
+          includeNegotiating: true,
+        );
+        final without = await datasource.getMyBidsFiltered(
+          statuses: {'PENDING'},
+        );
+
+        expect(withOffers.map((b) => b.id), ['nego']);
+        expect(without, isEmpty);
+      },
+    );
+
     test('sans trajet : pas de paramètre announcementId', () async {
       Map<String, dynamic>? sent;
       when(

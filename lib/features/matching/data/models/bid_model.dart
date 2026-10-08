@@ -97,6 +97,10 @@ enum BidPricingMode {
   mixed,
 }
 
+/// Statut d'une offre de prix encore ouverte : ce n'est pas un colis, elle ne
+/// revient de `GET /bids/me` que sur demande (`includeNegotiating`, FLUTTER-GC).
+const kNegotiatingBidStatus = 'NEGOTIATING';
+
 @JsonSerializable()
 class BidModel {
   final String id;
