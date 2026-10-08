@@ -4820,6 +4820,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingSearchDestinationHint => 'Search a destination…';
 
   @override
+  String get tripPinTooltip => 'Pin to the top';
+
+  @override
+  String get tripUnpinTooltip => 'Unpin';
+
+  @override
+  String get tripPinnedSnackbar => 'Trip pinned to the top';
+
+  @override
+  String get tripUnpinnedSnackbar => 'Trip unpinned';
+
+  @override
   String get listingFilterAllChip => 'All';
 
   @override

@@ -4845,6 +4845,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingSearchDestinationHint => 'Rechercher une destination…';
 
   @override
+  String get tripPinTooltip => 'Épingler en tête de liste';
+
+  @override
+  String get tripUnpinTooltip => 'Retirer l\'épingle';
+
+  @override
+  String get tripPinnedSnackbar => 'Trajet épinglé en tête de liste';
+
+  @override
+  String get tripUnpinnedSnackbar => 'Épingle retirée';
+
+  @override
   String get listingFilterAllChip => 'Tous';
 
   @override

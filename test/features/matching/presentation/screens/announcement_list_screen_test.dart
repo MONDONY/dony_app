@@ -8,6 +8,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/pinned_trips_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -20,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -44,6 +46,15 @@ class _MockAnnouncementRepository extends Mock
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _FakeAnnouncementEvent extends Fake implements AnnouncementEvent {}
+
+class _MockBox extends Mock implements Box<dynamic> {}
+
+PinnedTripsCubit _pinCubit([List<String> pinned = const []]) {
+  final box = _MockBox();
+  when(() => box.get(any())).thenReturn(pinned);
+  when(() => box.put(any(), any())).thenAnswer((_) async {});
+  return PinnedTripsCubit(box);
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -76,6 +87,7 @@ Future<void> _pump(
   VoidCallback? onSendParcel,
   bool showBackButton = false,
   TripStatusFilter? initialFilter,
+  PinnedTripsCubit? pinCubit,
 }) async {
   tester.view.physicalSize = const Size(800, 1400);
   tester.view.devicePixelRatio = 1.0;
@@ -116,6 +128,8 @@ Future<void> _pump(
             BlocProvider<TripsSummaryCubit>.value(value: summaryCubit),
             BlocProvider<TripFilterCubit>.value(value: filterCubit),
             BlocProvider<NegotiationListBloc>.value(value: negoBloc),
+            if (pinCubit != null)
+              BlocProvider<PinnedTripsCubit>.value(value: pinCubit),
           ],
           child: AnnouncementListScreen(
             onSendParcel: onSendParcel,
@@ -882,6 +896,124 @@ void main() {
       verify(
         () => bloc.add(any(that: isA<AnnouncementDeleteRequested>())),
       ).called(greaterThanOrEqualTo(1));
+    });
+  });
+
+  group('AnnouncementListScreen — épingles (FLUTTER-FS)', () {
+    late MockAnnouncementBloc pinBloc;
+
+    setUp(() {
+      pinBloc = MockAnnouncementBloc();
+    });
+
+    List<String> order(WidgetTester tester) => tester
+        .widgetList<TripCard>(find.byType(TripCard))
+        .map((c) => c.announcement.id)
+        .toList();
+
+    testWidgets(
+      'un trajet épinglé passe en tête, avant les statuts prioritaires',
+      (tester) async {
+        final active = _makeAnnouncement(id: 'a1');
+        final inProgress = _makeAnnouncement(
+          id: 'ip1',
+          status: 'IN_PROGRESS',
+          departureCity: 'Lyon',
+          arrivalCity: 'Abidjan',
+        );
+        when(
+          () => pinBloc.state,
+        ).thenReturn(AnnouncementListLoaded([active, inProgress]));
+        when(() => pinBloc.stream).thenAnswer((_) => const Stream.empty());
+
+        await _pump(tester, pinBloc, pinCubit: _pinCubit(['a1']));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(order(tester), ['a1', 'ip1']);
+        final pinnedCard = tester.widget<TripCard>(find.byType(TripCard).first);
+        expect(pinnedCard.pinned, isTrue);
+      },
+    );
+
+    testWidgets('taper l\'épingle réordonne la liste et confirme', (
+      tester,
+    ) async {
+      final inProgress = _makeAnnouncement(
+        id: 'ip1',
+        status: 'IN_PROGRESS',
+        departureCity: 'Lyon',
+        arrivalCity: 'Abidjan',
+      );
+      final active = _makeAnnouncement(id: 'a1');
+      when(
+        () => pinBloc.state,
+      ).thenReturn(AnnouncementListLoaded([inProgress, active]));
+      when(() => pinBloc.stream).thenAnswer((_) => const Stream.empty());
+      final cubit = _pinCubit();
+
+      await _pump(tester, pinBloc, pinCubit: cubit);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(order(tester), ['ip1', 'a1']);
+
+      final pins = find.byKey(const Key('trip-pin-button'));
+      expect(pins, findsNWidgets(2));
+      // Distincte du signet des favoris.
+      expect(find.byIcon(Icons.push_pin_outlined), findsNWidgets(2));
+      expect(find.byIcon(Icons.bookmark_border), findsNothing);
+
+      await tester.tap(pins.last);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(cubit.state.isPinned('a1'), isTrue);
+      expect(order(tester), ['a1', 'ip1']);
+      expect(find.text('Trajet épinglé en tête de liste'), findsOneWidget);
+      expect(find.byIcon(Icons.push_pin), findsOneWidget);
+      // Laisse la snackbar se refermer : aucun minuteur en suspens.
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets('pas d\'épingle sur un trajet terminé', (tester) async {
+      final done = _makeAnnouncement(id: 'c1', status: 'COMPLETED');
+      when(() => pinBloc.state).thenReturn(AnnouncementListLoaded([done]));
+      when(() => pinBloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, pinBloc, pinCubit: _pinCubit());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('trip-pin-button')), findsNothing);
+    });
+
+    testWidgets('un trajet devenu terminé perd son épingle au chargement', (
+      tester,
+    ) async {
+      final controller = StreamController<AnnouncementState>.broadcast();
+      addTearDown(controller.close);
+      final active = _makeAnnouncement(id: 'a1');
+      when(() => pinBloc.state).thenReturn(AnnouncementListLoaded([active]));
+      when(() => pinBloc.stream).thenAnswer((_) => controller.stream);
+      final cubit = _pinCubit(['a1', 'gone']);
+
+      await _pump(tester, pinBloc, pinCubit: cubit);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final finished = _makeAnnouncement(id: 'a1', status: 'COMPLETED');
+      when(() => pinBloc.state).thenReturn(AnnouncementListLoaded([finished]));
+      controller.add(AnnouncementListLoaded([finished]));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(cubit.state.ids, isEmpty);
+    });
+
+    testWidgets('sans cubit : aucune épingle, ordre habituel', (tester) async {
+      final active = _makeAnnouncement(id: 'a1');
+      when(() => pinBloc.state).thenReturn(AnnouncementListLoaded([active]));
+      when(() => pinBloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, pinBloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('trip-pin-button')), findsNothing);
     });
   });
 }

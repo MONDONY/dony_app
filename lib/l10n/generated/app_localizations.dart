@@ -8084,6 +8084,30 @@ abstract class AppLocalizations {
   /// **'Rechercher une destination…'**
   String get listingSearchDestinationHint;
 
+  /// Infobulle de l'épingle d'une carte de « Mes trajets » (TripPinButton, FLUTTER-FS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Épingler en tête de liste'**
+  String get tripPinTooltip;
+
+  /// Infobulle de l'épingle active d'une carte de « Mes trajets » (TripPinButton, FLUTTER-FS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer l\'épingle'**
+  String get tripUnpinTooltip;
+
+  /// Confirmation après épinglage d'un trajet dans « Mes trajets » (FLUTTER-FS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet épinglé en tête de liste'**
+  String get tripPinnedSnackbar;
+
+  /// Confirmation après retrait de l'épingle d'un trajet dans « Mes trajets » (FLUTTER-FS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Épingle retirée'**
+  String get tripUnpinnedSnackbar;
+
   /// Chip de filtre statut « Tous » (announcement_list_screen.dart)
   ///
   /// In fr, this message translates to:

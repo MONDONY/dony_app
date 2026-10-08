@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/pinned_trips_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/trip_group_list.dart';
@@ -129,11 +130,19 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
 
   /// Returns the filtered + sorted list from _lastList.
   /// Les étapes d'un même voyage restent groupées (FLUTTER-4D).
-  List<AnnouncementModel> _filtered(TripFilterState filter) {
-    return groupTripLegs(_sortedFiltered(filter));
+  List<AnnouncementModel> _filtered(
+    TripFilterState filter,
+    PinnedTripsState? pins,
+  ) {
+    return groupTripLegs(_sortedFiltered(filter, pins));
   }
 
-  List<AnnouncementModel> _sortedFiltered(TripFilterState filter) {
+  /// Épinglés d'abord (FLUTTER-FS), puis l'ordre habituel par statut et date.
+  List<AnnouncementModel> _sortedFiltered(
+    TripFilterState filter,
+    PinnedTripsState? pins,
+  ) {
+    int pinRank(AnnouncementModel a) => (pins?.isPinned(a.id) ?? false) ? 0 : 1;
     return _lastList
         .where(
           (a) =>
@@ -142,6 +151,10 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
         )
         .toList()
       ..sort((a, b) {
+        final pinCmp = pinRank(a).compareTo(pinRank(b));
+        if (pinCmp != 0) {
+          return pinCmp;
+        }
         final pCmp = _statusPriority(
           a.status,
         ).compareTo(_statusPriority(b.status));
@@ -150,6 +163,16 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
         }
         return a.departureDate.compareTo(b.departureDate);
       });
+  }
+
+  void _togglePin(PinnedTripsCubit cubit, String id) {
+    final willPin = !cubit.state.isPinned(id);
+    cubit.toggle(id);
+    final l = context.l10n;
+    DonySnackbar.show(
+      context,
+      message: willPin ? l.tripPinnedSnackbar : l.tripUnpinnedSnackbar,
+    );
   }
 
   Future<void> _createTrip() async {
@@ -187,6 +210,10 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
       // ── Content ─────────────────────────────────────────────────────────
       body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) {
+          if (state is AnnouncementListLoaded) {
+            // Un trajet terminé, annulé ou supprimé perd son épingle.
+            context.read<PinnedTripsCubit?>()?.syncWith(state.announcements);
+          }
           if (state is AnnouncementDeleted) {
             context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           } else if (state is AnnouncementError && _lastList.isNotEmpty) {
@@ -229,9 +256,13 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
 
           final counts = _counts(_lastList);
 
+          // Facultatif : sans cubit (hôte isolé), pas d'épingle, liste intacte.
+          final pinCubit = context.watch<PinnedTripsCubit?>();
+          final pins = pinCubit?.state;
+
           return BlocBuilder<TripFilterCubit, TripFilterState>(
             builder: (context, filterState) {
-              final filtered = _filtered(filterState);
+              final filtered = _filtered(filterState, pins);
               final chips = _buildChips(
                 counts,
                 cs,
@@ -372,6 +403,14 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                                   key: ValueKey(item.id),
                                   announcement: item,
                                   index: i,
+                                  pinned:
+                                      pinCubit != null &&
+                                          PinnedTripsCubit.canPin(item)
+                                      ? pins!.isPinned(item.id)
+                                      : null,
+                                  onTogglePin: pinCubit == null
+                                      ? null
+                                      : () => _togglePin(pinCubit, item.id),
                                   onTap: () async {
                                     await context.push<bool>(
                                       '/announcements/${item.id}/trip',

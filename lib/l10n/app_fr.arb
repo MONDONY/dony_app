@@ -4132,6 +4132,14 @@
   "@listingSearchDestinationHint": {
     "description": "Placeholder du champ de recherche de « Mes trajets » (announcement_list_screen.dart)"
   },
+  "tripPinTooltip": "Épingler en tête de liste",
+  "@tripPinTooltip": {"description": "Infobulle de l'épingle d'une carte de « Mes trajets » (TripPinButton, FLUTTER-FS)"},
+  "tripUnpinTooltip": "Retirer l'épingle",
+  "@tripUnpinTooltip": {"description": "Infobulle de l'épingle active d'une carte de « Mes trajets » (TripPinButton, FLUTTER-FS)"},
+  "tripPinnedSnackbar": "Trajet épinglé en tête de liste",
+  "@tripPinnedSnackbar": {"description": "Confirmation après épinglage d'un trajet dans « Mes trajets » (FLUTTER-FS)"},
+  "tripUnpinnedSnackbar": "Épingle retirée",
+  "@tripUnpinnedSnackbar": {"description": "Confirmation après retrait de l'épingle d'un trajet dans « Mes trajets » (FLUTTER-FS)"},
   "listingFilterAllChip": "Tous",
   "@listingFilterAllChip": {
     "description": "Chip de filtre statut « Tous » (announcement_list_screen.dart)"

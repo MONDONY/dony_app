@@ -32,6 +32,8 @@ class TripCard extends StatelessWidget {
     required this.onTap,
     required this.index,
     this.showFavorite = false,
+    this.pinned,
+    this.onTogglePin,
   });
 
   final AnnouncementModel announcement;
@@ -46,6 +48,11 @@ class TripCard extends StatelessWidget {
   /// user. The in-card heart has no owner guard; the backend returns 422 on an
   /// own-trip add, but the optimistic UI would flash before the error arrives.
   final bool showFavorite;
+
+  /// Épingle de « Mes trajets » (FLUTTER-FS) : `null` = pas d'épingle (carte
+  /// d'un autre voyageur, trajet terminé). Distincte du signet des favoris.
+  final bool? pinned;
+  final VoidCallback? onTogglePin;
 
   // DRAFT n'est jamais considéré comme « passé » : un brouillon n'a pas
   // encore vécu, il attend d'être publié.
@@ -127,6 +134,13 @@ class TripCard extends StatelessWidget {
 
   String _price(double v) => formatPriceIn(v, announcement.currency);
 
+  Widget? _pinButton() {
+    final isPinned = pinned;
+    final toggle = onTogglePin;
+    if (isPinned == null || toggle == null) return null;
+    return TripPinButton(pinned: isPinned, onToggle: toggle);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -170,6 +184,7 @@ class TripCard extends StatelessWidget {
                 price: _price,
                 dateLabel: _dateLabel(l),
                 showFavorite: showFavorite,
+                pinButton: _pinButton(),
               )
             : _ActiveCardContent(
                 announcement: announcement,
@@ -184,6 +199,7 @@ class TripCard extends StatelessWidget {
                 kg: _kg,
                 price: _price,
                 showFavorite: showFavorite,
+                pinButton: _pinButton(),
               ),
       ),
     );
@@ -236,6 +252,50 @@ Widget _buildFavoriteHeart(BuildContext context, String tripId) {
   );
 }
 
+/// Épingle de « Mes trajets » (FLUTTER-FS) : punaise pleine et teintée quand
+/// le trajet est épinglé, contour sinon. Forme volontairement différente du
+/// signet des favoris, qui vit au même endroit sur les cartes des autres.
+class TripPinButton extends StatelessWidget {
+  const TripPinButton({
+    super.key,
+    required this.pinned,
+    required this.onToggle,
+  });
+
+  final bool pinned;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return IconButton(
+      key: const Key('trip-pin-button'),
+      visualDensity: VisualDensity.standard,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(
+        minWidth: kDonyMinTapTarget,
+        minHeight: kDonyMinTapTarget,
+      ),
+      tooltip: pinned ? l.tripUnpinTooltip : l.tripPinTooltip,
+      onPressed: onToggle,
+      icon: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 160),
+        transitionBuilder: (child, animation) => ScaleTransition(
+          scale: Tween<double>(begin: 0.8, end: 1).animate(animation),
+          child: FadeTransition(opacity: animation, child: child),
+        ),
+        child: Icon(
+          pinned ? Icons.push_pin : Icons.push_pin_outlined,
+          key: ValueKey(pinned),
+          size: 22,
+          color: pinned ? cs.primary : cs.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // Active card content
 // ─────────────────────────────────────────────────────────────
@@ -254,6 +314,7 @@ class _ActiveCardContent extends StatelessWidget {
     required this.kg,
     required this.price,
     required this.showFavorite,
+    this.pinButton,
   });
 
   final AnnouncementModel announcement;
@@ -268,6 +329,7 @@ class _ActiveCardContent extends StatelessWidget {
   final String Function(double) kg;
   final String Function(double) price;
   final bool showFavorite;
+  final Widget? pinButton;
 
   /// Builds the optional « demandes » stats row (acceptées / en attente).
   /// Returns an empty list when both counts are 0 so the card stays clean and
@@ -328,6 +390,10 @@ class _ActiveCardContent extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.sm),
               _StatusBadge(badge: badge),
+              if (pinButton case final pin?) ...[
+                const SizedBox(width: DonySpacing.xs),
+                pin,
+              ],
               if (showFavorite) ...[
                 const SizedBox(width: DonySpacing.xs),
                 _buildFavoriteHeart(context, announcement.id),
@@ -464,6 +530,7 @@ class _PastCardContent extends StatelessWidget {
     required this.price,
     required this.dateLabel,
     required this.showFavorite,
+    this.pinButton,
   });
 
   final AnnouncementModel announcement;
@@ -473,6 +540,7 @@ class _PastCardContent extends StatelessWidget {
   final String Function(double) price;
   final String dateLabel;
   final bool showFavorite;
+  final Widget? pinButton;
 
   @override
   Widget build(BuildContext context) {
@@ -543,6 +611,10 @@ class _PastCardContent extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.sm),
           _StatusBadge(badge: badge),
+          if (pinButton case final pin?) ...[
+            const SizedBox(width: DonySpacing.xs),
+            pin,
+          ],
           if (showFavorite) ...[
             const SizedBox(width: DonySpacing.xs),
             _buildFavoriteHeart(context, announcement.id),
