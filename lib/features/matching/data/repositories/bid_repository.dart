@@ -80,6 +80,18 @@ class BidRepository {
 
   Future<List<BidModel>> getMyBids() => _datasource.getMyBids();
 
+  /// Mes colis dans [statuses] seulement (voir
+  /// [BidRemoteDatasource.getMyBidsFiltered]).
+  Future<List<BidModel>> getMyBidsFiltered({
+    required Set<String> statuses,
+    String? announcementId,
+    int maxPages = 10,
+  }) => _datasource.getMyBidsFiltered(
+    statuses: statuses,
+    announcementId: announcementId,
+    maxPages: maxPages,
+  );
+
   /// Numéro de la contrepartie, récupéré au moment de l'appel téléphonique.
   Future<String?> getCounterpartyPhone(String bidId) =>
       _datasource.getCounterpartyPhone(bidId);

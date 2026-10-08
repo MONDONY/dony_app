@@ -38,8 +38,13 @@ class ExistingTripRequestLookup {
   /// Null si rien n'est trouvé, ou si le serveur ne répond pas : le back
   /// reste l'arbitre, on ne bloque pas un expéditeur sur une panne réseau.
   Future<ExistingTripRequest?> find(String announcementId) async {
+    // Seul ce trajet, et seuls les colis en cours : une page suffit.
     final bidsFuture = Future.sync(
-      _bids.getMyBids,
+      () => _bids.getMyBidsFiltered(
+        statuses: MyActiveBidsLookup.ongoingBidStatuses,
+        announcementId: announcementId,
+        maxPages: 1,
+      ),
     ).then<List<BidModel>>((b) => b, onError: (Object _) => const <BidModel>[]);
     final negotiationsFuture = Future.sync(_negotiations.myNegotiations)
         .then<List<BidNegotiationSummary>>(

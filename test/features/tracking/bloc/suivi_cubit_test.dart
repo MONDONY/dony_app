@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
@@ -82,6 +83,8 @@ ScanHubLoaded _hub({
 );
 
 void main() {
+  setUpAll(() => registerFallbackValue(<String>{}));
+
   late _MockBidRepo bidRepo;
   late _MockTrackingRepo trackingRepo;
   late _MockAnalytics analytics;
@@ -95,7 +98,13 @@ void main() {
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
-    when(() => bidRepo.getMyBids()).thenAnswer(
+    when(
+      () => bidRepo.getMyBidsFiltered(
+        statuses: any(named: 'statuses'),
+        announcementId: any(named: 'announcementId'),
+        maxPages: any(named: 'maxPages'),
+      ),
+    ).thenAnswer(
       (_) async => [
         _bid('ship-1', 'IN_TRANSIT', from: 'Paris', to: 'Dakar'),
         _bid('ship-old', 'COMPLETED'),
@@ -143,7 +152,13 @@ void main() {
             .having((s) => s.mode, 'mode', isNull)
             .having((s) => s.canValidate, 'canValidate', true),
       ],
-      verify: (_) => verifyNever(() => bidRepo.getMyBids()),
+      verify: (_) => verifyNever(
+        () => bidRepo.getMyBidsFiltered(
+          statuses: any(named: 'statuses'),
+          announcementId: any(named: 'announcementId'),
+          maxPages: any(named: 'maxPages'),
+        ),
+      ),
     );
 
     blocTest<SuiviCubit, SuiviState>(
@@ -152,20 +167,39 @@ void main() {
       act: (c) => c.start(canValidate: true, requested: SuiviMode.suivre),
       verify: (c) {
         expect(c.state.mode, SuiviMode.suivre);
-        verify(() => bidRepo.getMyBids()).called(1);
+        // Seuls les envois en cours sont demandés au serveur, pas l'historique.
+        verify(
+          () => bidRepo.getMyBidsFiltered(
+            statuses: kEnvoisEnCours,
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
+        ).called(1);
       },
     );
 
     blocTest<SuiviCubit, SuiviState>(
       'échec du chargement des envois → erreur, puis Réessayer',
       build: () {
-        when(() => bidRepo.getMyBids()).thenThrow(Exception('offline'));
+        when(
+          () => bidRepo.getMyBidsFiltered(
+            statuses: any(named: 'statuses'),
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
+        ).thenThrow(Exception('offline'));
         return build();
       },
       act: (c) async {
         c.start(canValidate: false);
         await Future<void>.delayed(Duration.zero);
-        when(() => bidRepo.getMyBids()).thenAnswer((_) async => []);
+        when(
+          () => bidRepo.getMyBidsFiltered(
+            statuses: any(named: 'statuses'),
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
+        ).thenAnswer((_) async => []);
         await c.loadShipments();
       },
       verify: (c) {
@@ -292,7 +326,13 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         expect(c.state.shipments.map((b) => b.id), ['ship-1']);
 
-        when(() => bidRepo.getMyBids()).thenAnswer(
+        when(
+          () => bidRepo.getMyBidsFiltered(
+            statuses: any(named: 'statuses'),
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
+        ).thenAnswer(
           (_) async => [
             _bid('ship-1', 'IN_TRANSIT'),
             _bid('ship-2', 'HANDED_OVER'),
@@ -305,7 +345,13 @@ void main() {
         expect(states.single.shipmentsStatus, SuiviLoadStatus.loaded);
         expect(c.state.shipments.map((b) => b.id), ['ship-1', 'ship-2']);
 
-        when(() => bidRepo.getMyBids()).thenThrow(Exception('offline'));
+        when(
+          () => bidRepo.getMyBidsFiltered(
+            statuses: any(named: 'statuses'),
+            announcementId: any(named: 'announcementId'),
+            maxPages: any(named: 'maxPages'),
+          ),
+        ).thenThrow(Exception('offline'));
         await c.refreshShipments();
         expect(c.state.shipments.map((b) => b.id), ['ship-1', 'ship-2']);
         expect(c.state.shipmentsStatus, SuiviLoadStatus.loaded);
@@ -316,7 +362,13 @@ void main() {
     test('sans liste chargée : rien', () async {
       final c = build()..start(canValidate: true);
       await c.refreshShipments();
-      verifyNever(() => bidRepo.getMyBids());
+      verifyNever(
+        () => bidRepo.getMyBidsFiltered(
+          statuses: any(named: 'statuses'),
+          announcementId: any(named: 'announcementId'),
+          maxPages: any(named: 'maxPages'),
+        ),
+      );
     });
 
     test('réponse arrivée après la fermeture : ignorée', () async {

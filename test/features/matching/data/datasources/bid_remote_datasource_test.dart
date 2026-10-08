@@ -107,6 +107,123 @@ void main() {
     });
   });
 
+  // ── getMyBidsFiltered ────────────────────────────────────────────────────────
+
+  group('getMyBidsFiltered', () {
+    Map<String, dynamic> page(List<Map<String, dynamic>> content, bool last) =>
+        {'content': content, 'last': last};
+
+    test('demande les statuts et le trajet, enchaîne les pages jusqu’à la '
+        'dernière', () async {
+      final calls = <Map<String, dynamic>>[];
+      when(
+        () => mockDio.get(
+          '/bids/me',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        final q = inv.namedArguments[#queryParameters] as Map<String, dynamic>;
+        calls.add(q);
+        return _ok(
+          page([
+            {..._bidJson, 'id': 'bid-${q['page']}'},
+          ], q['page'] == 1),
+          '/bids/me',
+        );
+      });
+
+      final results = await datasource.getMyBidsFiltered(
+        statuses: {'ACCEPTED', 'IN_TRANSIT'},
+        announcementId: 'ann-001',
+      );
+
+      expect(results.map((b) => b.id), ['bid-0', 'bid-1']);
+      expect(calls, hasLength(2));
+      expect(calls.first, {
+        'page': 0,
+        'size': 50,
+        'status': 'ACCEPTED,IN_TRANSIT',
+        'announcementId': 'ann-001',
+      });
+    });
+
+    test('sans trajet : pas de paramètre announcementId', () async {
+      Map<String, dynamic>? sent;
+      when(
+        () => mockDio.get(
+          '/bids/me',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        sent = inv.namedArguments[#queryParameters] as Map<String, dynamic>;
+        return _ok(page([_bidJson], true), '/bids/me');
+      });
+
+      await datasource.getMyBidsFiltered(statuses: {'PENDING'});
+
+      expect(sent!.containsKey('announcementId'), isFalse);
+    });
+
+    test(
+      's’arrête à maxPages même si le serveur en annonce d’autres',
+      () async {
+        when(
+          () => mockDio.get(
+            '/bids/me',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer((_) async => _ok(page([_bidJson], false), '/bids/me'));
+
+        final results = await datasource.getMyBidsFiltered(
+          statuses: {'PENDING'},
+          maxPages: 3,
+        );
+
+        expect(results, hasLength(3));
+        verify(
+          () => mockDio.get(
+            '/bids/me',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).called(3);
+      },
+    );
+
+    test('serveur sans pagination (tableau complet) : filtré ici, une seule '
+        'requête', () async {
+      when(
+        () => mockDio.get(
+          '/bids/me',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok([
+          {..._bidJson, 'id': 'garde', 'status': 'ACCEPTED'},
+          {..._bidJson, 'id': 'statut', 'status': 'CANCELLED'},
+          {
+            ..._bidJson,
+            'id': 'trajet',
+            'status': 'ACCEPTED',
+            'announcementId': 'ann-002',
+          },
+        ], '/bids/me'),
+      );
+
+      final results = await datasource.getMyBidsFiltered(
+        statuses: {'ACCEPTED'},
+        announcementId: 'ann-001',
+      );
+
+      expect(results.map((b) => b.id), ['garde']);
+      verify(
+        () => mockDio.get(
+          '/bids/me',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).called(1);
+    });
+  });
+
   // ── acceptBid ────────────────────────────────────────────────────────────────
 
   group('acceptBid', () {

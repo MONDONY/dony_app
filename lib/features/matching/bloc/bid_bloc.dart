@@ -5,6 +5,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,6 +15,20 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   bool _checkoutInProgress = false;
 
   static const _myBidsTtl = Duration(minutes: 3);
+
+  /// Statuts chargés par « mes colis » ([BidMyListRequested] et son
+  /// rafraîchissement). Null = la liste complète, historique compris, dont ont
+  /// besoin Mes colis et l'historique des livraisons. L'instance globale (accueil,
+  /// feuilles de trajet) et le hub Activités ne regardent que les colis en cours :
+  /// ils fixent ici leur ensemble pour ne plus recharger tout l'historique.
+  Set<String>? myListStatuses;
+
+  Future<List<BidModel>> _loadMyBids() {
+    final statuses = myListStatuses;
+    return statuses == null
+        ? _repository.getMyBids()
+        : _repository.getMyBidsFiltered(statuses: statuses);
+  }
 
   BidBloc(this._repository, this._analytics) : super(BidInitial()) {
     on<BidCheckoutRequested>(_onCheckoutRequested);
@@ -228,7 +243,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   ) async {
     emit(BidLoading());
     try {
-      final bids = await _repository.getMyBids();
+      final bids = await _loadMyBids();
       emit(BidListLoaded(bids));
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
@@ -257,7 +272,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         ),
       );
       try {
-        final bids = await _repository.getMyBids();
+        final bids = await _loadMyBids();
         emit(BidListLoaded(bids));
       } on DioException catch (_) {
         // On garde les anciennes données en cas d'erreur réseau
@@ -269,7 +284,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       // Pas encore de données → chargement initial normal
       emit(BidLoading());
       try {
-        final bids = await _repository.getMyBids();
+        final bids = await _loadMyBids();
         emit(BidListLoaded(bids));
       } catch (e) {
         emit(BidError(unwrapDioError(e)));

@@ -352,7 +352,7 @@ class SuiviCubit extends Cubit<SuiviState> {
   Future<void> loadShipments() async {
     emit(state._copy(shipmentsStatus: SuiviLoadStatus.loading));
     try {
-      final bids = await _bidRepo.getMyBids();
+      final bids = await _bidRepo.getMyBidsFiltered(statuses: kEnvoisEnCours);
       if (isClosed) return;
       emit(
         state._copy(
@@ -373,7 +373,7 @@ class SuiviCubit extends Cubit<SuiviState> {
   Future<void> refreshShipments() async {
     if (state.shipmentsStatus != SuiviLoadStatus.loaded) return;
     try {
-      final bids = await _bidRepo.getMyBids();
+      final bids = await _bidRepo.getMyBidsFiltered(statuses: kEnvoisEnCours);
       if (isClosed) return;
       emit(
         state._copy(

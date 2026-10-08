@@ -492,6 +492,36 @@ void main() {
       act: (bloc) => bloc.add(BidMyListRequested()),
       expect: () => [isA<BidLoading>(), isA<BidError>()],
     );
+
+    blocTest<BidBloc, BidState>(
+      'statuts fixés (instance globale) → seuls ces colis sont demandés, '
+      'jamais la liste complète',
+      build: () {
+        when(
+          () => mockRepo.getMyBidsFiltered(statuses: {'PENDING', 'ACCEPTED'}),
+        ).thenAnswer((_) async => [buildBid()]);
+        return buildBloc()..myListStatuses = {'PENDING', 'ACCEPTED'};
+      },
+      act: (bloc) => bloc.add(BidMyListRequested()),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>((s) => s is BidListLoaded && s.bids.length == 1),
+      ],
+      verify: (_) => verifyNever(() => mockRepo.getMyBids()),
+    );
+
+    blocTest<BidBloc, BidState>(
+      'statuts fixés : le rafraîchissement automatique suit le même filtre',
+      build: () {
+        when(
+          () => mockRepo.getMyBidsFiltered(statuses: {'PENDING'}),
+        ).thenAnswer((_) async => [buildBid()]);
+        return buildBloc()..myListStatuses = {'PENDING'};
+      },
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested(force: true)),
+      expect: () => [isA<BidLoading>(), isA<BidListLoaded>()],
+      verify: (_) => verifyNever(() => mockRepo.getMyBids()),
+    );
   });
 
   // ─── BidDetailRequested ──────────────────────────────────────────────────────
