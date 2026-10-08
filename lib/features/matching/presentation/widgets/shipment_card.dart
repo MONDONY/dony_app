@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/parcel_status_pill.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -54,55 +55,11 @@ class ShipmentCard extends StatelessWidget {
   final VoidCallback onTap;
   final int index;
 
-  /// Returns (bgColor, fgColor, label) for the status badge pill.
-  ({Color bg, Color fg, String label}) _badge(
-    ColorScheme cs,
-    AppLocalizations l,
-  ) => switch (bid.status) {
-    'IN_TRANSIT' => (
-      bg: cs.infoLight,
-      fg: cs.info,
-      label: l.shipmentBadgeInTransit,
-    ),
-    'ARRIVED' => (bg: cs.infoLight, fg: cs.info, label: l.shipmentBadgeArrived),
-    'HANDED_OVER' => (
-      bg: cs.infoLight,
-      fg: cs.info,
-      label: l.shipmentBadgeHandedOver,
-    ),
-    'ACCEPTED' => (
-      bg: cs.warningLight,
-      fg: cs.warning,
-      label: l.shipmentBadgeToHandOver,
-    ),
-    'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => (
-      bg: cs.warningLight,
-      fg: cs.warning,
-      label: l.shipmentBadgeWaiting,
-    ),
-    'COMPLETED' => (
-      bg: cs.successLight,
-      fg: cs.success,
-      label: l.shipmentBadgeDelivered,
-    ),
-    // Le motif réel plutôt qu'un « TERMINÉ » générique, qui ne disait pas
-    // ce qui s'était passé. Vocabulaire aligné sur la feuille de filtre.
-    'CANCELLED' => _closed(cs, l.shipmentBadgeCancelled),
-    'REJECTED' => _closed(cs, l.shipmentBadgeRejected),
-    'NO_SHOW' => _closed(cs, l.shipmentBadgeNoShow),
-    'EXPIRED' => _closed(cs, l.shipmentBadgeExpired),
-    'PARCEL_REFUSED' => _closed(cs, l.shipmentBadgeParcelRefused),
-    _ => (
-      bg: DonyColors.neutral100,
-      fg: cs.onSurfaceVariant,
-      label: bid.status,
-    ),
-  };
-
-  static ({Color bg, Color fg, String label}) _closed(
-    ColorScheme cs,
-    String label,
-  ) => (bg: DonyColors.neutral100, fg: cs.onSurfaceVariant, label: label);
+  /// Badge d'état partagé avec la liste des conversations ; un statut sans
+  /// badge connu affiche son code brut en neutre.
+  ParcelStatusBadge _badge(ColorScheme cs, AppLocalizations l) =>
+      parcelStatusBadge(cs, l, bid.status) ??
+      (bg: DonyColors.neutral100, fg: cs.onSurfaceVariant, label: bid.status);
 
   /// Label describing the current stepper step.
   String _stepLabel(AppLocalizations l) => switch (bid.status) {
@@ -204,7 +161,7 @@ class ShipmentCard extends StatelessWidget {
               children: [
                 Expanded(child: _RouteRow(bid: bid)),
                 const SizedBox(width: DonySpacing.sm),
-                _BadgePill(badge: badge),
+                ParcelStatusPill(badge: badge),
               ],
             ),
 
@@ -499,51 +456,6 @@ class _RouteRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// _BadgePill — status pill (dot + uppercase label)
-// Matches TripCard _StatusBadge pattern exactly.
-// ─────────────────────────────────────────────────────────────
-
-class _BadgePill extends StatelessWidget {
-  const _BadgePill({required this.badge});
-
-  final ({Color bg, Color fg, String label}) badge;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: badge.bg,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(color: badge.fg, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 5),
-          Text(
-            badge.label,
-            style: tt.labelMedium?.copyWith(
-              color: badge.fg,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -104,6 +104,16 @@ class ConversationModel {
   /// l'ancien back n'a pas l'endpoint d'envoi.
   final bool mediaAllowed;
 
+  /// Statut brut du colis (`PENDING`, `ACCEPTED`, `HANDED_OVER`,
+  /// `IN_TRANSIT`, `ARRIVED`, `COMPLETED`, `CANCELLED`…) pour le badge d'état
+  /// de la liste (FLUTTER-EZ). Distinct de [bidStatus], code dérivé qui pilote
+  /// filtres et bandeaux. Absent sur un ancien back : pas de badge.
+  final String? parcelStatus;
+
+  /// Retour du colis à l'expéditeur en cours (annulation après remise, colis
+  /// pas encore rendu). Absent sur un ancien back : faux.
+  final bool returnPending;
+
   const ConversationModel({
     required this.id,
     required this.bidId,
@@ -125,6 +135,8 @@ class ConversationModel {
     this.callAvailable = false,
     this.notificationsMuted = false,
     this.mediaAllowed = false,
+    this.parcelStatus,
+    this.returnPending = false,
   });
 
   /// Conversation séparée voyageur ↔ destinataire : l'expéditeur n'y est pas,
@@ -187,6 +199,8 @@ class ConversationModel {
     callAvailable: callAvailable,
     notificationsMuted: notificationsMuted ?? this.notificationsMuted,
     mediaAllowed: mediaAllowed ?? this.mediaAllowed,
+    parcelStatus: parcelStatus,
+    returnPending: returnPending,
   );
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
@@ -224,5 +238,11 @@ class ConversationModel {
         callAvailable: json['callAvailable'] == true,
         notificationsMuted: json['notificationsMuted'] == true,
         mediaAllowed: json['mediaAllowed'] == true,
+        parcelStatus: switch (json['parcelStatus']) {
+          final String value when value.trim().isNotEmpty =>
+            value.trim().toUpperCase(),
+          _ => null,
+        },
+        returnPending: json['returnPending'] == true,
       );
 }

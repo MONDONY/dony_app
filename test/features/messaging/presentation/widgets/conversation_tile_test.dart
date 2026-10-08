@@ -12,6 +12,10 @@ ConversationModel _conversation({
   String participantName = '',
   String? lastMessagePreview,
   DateTime? lastMessageAt,
+  String? parcelStatus,
+  bool returnPending = false,
+  String? tripOrigin,
+  String? tripDestination,
 }) => ConversationModel(
   id: 'conv-1',
   bidId: 'bid-1',
@@ -19,13 +23,97 @@ ConversationModel _conversation({
   otherParticipant: ParticipantModel(id: 'uid-1', name: participantName),
   lastMessagePreview: lastMessagePreview,
   lastMessageAt: lastMessageAt,
+  parcelStatus: parcelStatus,
+  returnPending: returnPending,
+  tripOrigin: tripOrigin,
+  tripDestination: tripDestination,
 );
 
 Widget _wrap(ConversationModel conversation) => MaterialApp(
   home: Scaffold(body: ConversationTile(conversation: conversation)),
 );
 
+const _parcelPill = Key('conversation-tile-parcel-status');
+
 void main() {
+  group('état du colis (FLUTTER-EZ)', () {
+    testWidgets('statut servi : badge à côté du trajet', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          _conversation(
+            participantName: 'Awa',
+            parcelStatus: 'IN_TRANSIT',
+            tripOrigin: 'Paris',
+            tripDestination: 'Dakar',
+          ),
+        ),
+      );
+
+      expect(find.byKey(_parcelPill), findsOneWidget);
+      expect(find.text('EN TRANSIT'), findsOneWidget);
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('sans trajet : le badge s\'affiche seul', (tester) async {
+      await tester.pumpWidget(
+        _wrap(_conversation(participantName: 'Awa', parcelStatus: 'COMPLETED')),
+      );
+
+      expect(find.text('LIVRÉ'), findsOneWidget);
+    });
+
+    testWidgets('retour en cours : prime sur « annulé »', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          _conversation(
+            participantName: 'Awa',
+            parcelStatus: 'CANCELLED',
+            returnPending: true,
+          ),
+        ),
+      );
+
+      expect(find.text('RETOUR EN COURS'), findsOneWidget);
+      expect(find.text('ANNULÉ'), findsNothing);
+    });
+
+    testWidgets('champ absent (ancien back) : aucun badge', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          _conversation(
+            participantName: 'Awa',
+            tripOrigin: 'Paris',
+            tripDestination: 'Dakar',
+          ),
+        ),
+      );
+
+      expect(find.byKey(_parcelPill), findsNothing);
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('statut sans libellé (négociation) : aucun badge', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          _conversation(participantName: 'Awa', parcelStatus: 'NEGOTIATING'),
+        ),
+      );
+
+      expect(find.byKey(_parcelPill), findsNothing);
+    });
+
+    testWidgets('anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(_conversation(participantName: 'Awa', parcelStatus: 'ACCEPTED')),
+      );
+
+      expect(find.text('DROP-OFF DUE'), findsOneWidget);
+    });
+  });
+
   group('replis fr', () {
     testWidgets('nom vide -> conversationUserFallback', (tester) async {
       await tester.pumpWidget(_wrap(_conversation()));

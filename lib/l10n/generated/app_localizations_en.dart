@@ -7777,6 +7777,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shipmentBadgeParcelRefused => 'PARCEL REFUSED';
 
   @override
+  String get shipmentBadgeReturnPending => 'RETURN PENDING';
+
+  @override
   String get shipmentStepAcceptedLabel =>
       'Drop-off with the traveler coming up';
 

@@ -7823,6 +7823,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shipmentBadgeParcelRefused => 'COLIS REFUSÉ';
 
   @override
+  String get shipmentBadgeReturnPending => 'RETOUR EN COURS';
+
+  @override
   String get shipmentStepAcceptedLabel => 'Remise au voyageur à venir';
 
   @override
