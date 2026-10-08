@@ -82,7 +82,7 @@ void main() {
       final p = ErrorCatalog.lookup(error);
 
       expect(p.title, 'Pays de résidence verrouillé');
-      expect(p.message, contains('envoi est en cours'));
+      expect(p.message, contains('compte de paiement est déjà créé'));
       expect(p.severity, ErrorSeverity.warning);
     });
 

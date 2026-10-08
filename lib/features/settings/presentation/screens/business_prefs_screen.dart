@@ -297,8 +297,8 @@ Future<void> _showCurrencyLockedSheet(
   );
 }
 
-/// Pourquoi le pays de résidence est figé (envoi en cours, portefeuille non
-/// vide, compte de paiement créé) et qui peut le changer : le support.
+/// Pourquoi le pays de résidence est figé (compte de paiement Stripe déjà
+/// créé, son pays est immuable) et qui peut le changer : le support.
 Future<void> _showCountryLockedSheet(BuildContext context) {
   final l = context.l10n;
   final tt = Theme.of(context).textTheme;
