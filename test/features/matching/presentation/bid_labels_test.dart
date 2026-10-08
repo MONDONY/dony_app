@@ -176,4 +176,83 @@ void main() {
       expect(state.displayMessage(en), 'Acceptance declined');
     });
   });
+
+  group('bidReturnInProgress / bidAllowsContactFor (FLUTTER-FM)', () {
+    final now = DateTime(2026, 10, 8, 12);
+    BidModel bid({
+      String status = 'CANCELLED',
+      DateTime? returnDeadline,
+      DateTime? returnedAt,
+      bool? contactWindowOpen,
+    }) => BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      status: status,
+      returnDeadline: returnDeadline,
+      returnedAt: returnedAt,
+      contactWindowOpen: contactWindowOpen,
+      createdAt: DateTime(2026, 10),
+      updatedAt: DateTime(2026, 10),
+    );
+
+    test('retour en cours confirmé par le serveur : contact ouvert', () {
+      final b = bid(
+        returnDeadline: now.add(const Duration(days: 2)),
+        contactWindowOpen: true,
+      );
+      expect(bidReturnInProgress(b, now: now), isTrue);
+      expect(bidAllowsContactFor(b, now: now), isTrue);
+    });
+
+    test('back antérieur (fenêtre fermée sur un colis annulé) : fermé', () {
+      final b = bid(
+        returnDeadline: now.add(const Duration(days: 2)),
+        contactWindowOpen: false,
+      );
+      expect(bidReturnInProgress(b, now: now), isFalse);
+      expect(bidAllowsContactFor(b, now: now), isFalse);
+    });
+
+    test('sans le champ : repli sur le délai de retour', () {
+      expect(
+        bidReturnInProgress(
+          bid(returnDeadline: now.add(const Duration(hours: 1))),
+          now: now,
+        ),
+        isTrue,
+      );
+      expect(
+        bidReturnInProgress(
+          bid(returnDeadline: now.subtract(const Duration(minutes: 1))),
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+
+    test('colis restitué : fermé', () {
+      final b = bid(
+        returnDeadline: now.add(const Duration(days: 2)),
+        returnedAt: now.subtract(const Duration(hours: 1)),
+        contactWindowOpen: true,
+      );
+      expect(bidReturnInProgress(b, now: now), isFalse);
+    });
+
+    test('annulé sans retour, ou statut actif : selon le statut seul', () {
+      expect(bidAllowsContactFor(bid(), now: now), isFalse);
+      expect(bidAllowsContactFor(bid(status: 'ACCEPTED'), now: now), isTrue);
+      expect(
+        bidReturnInProgress(
+          bid(
+            status: 'REJECTED',
+            returnDeadline: now.add(const Duration(days: 1)),
+          ),
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+  });
 }

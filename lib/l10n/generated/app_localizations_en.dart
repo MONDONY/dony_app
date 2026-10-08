@@ -10542,6 +10542,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancellationTripCanceledSnackbar => 'Trip canceled';
 
   @override
+  String cancellationHandedOverParcelsNotice(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count parcels were already handed to you: you\'ll need to return them to their senders within 3 days, against their return code.',
+      one:
+          'A parcel was already handed to you: you\'ll need to return it to its sender within 3 days, against its return code.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancellationConfirmDialogMessageWithReturns(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'This will cancel your trip and fully refund all affected senders. The $count parcels already handed over must be returned to their senders within 3 days.',
+      one:
+          'This will cancel your trip and fully refund all affected senders. The parcel already handed over must be returned to its sender within 3 days.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancellationTripCanceledWithReturnsSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Trip canceled. Return the $count parcels handed to you: their senders have the return code.',
+      one:
+          'Trip canceled. Return the parcel handed to you: its sender has the return code.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bidDetailReturnContactSenderHint =>
+      'Return in progress: contact the traveler to get your parcel back.';
+
+  @override
+  String get bidDetailReturnContactTravelerHint =>
+      'Return in progress: contact the sender to give their parcel back.';
+
+  @override
   String get deliveryNoShowTravelerNotDeliveringTitle =>
       'The traveler isn\'t delivering';
 

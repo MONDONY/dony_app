@@ -10611,6 +10611,53 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cancellationTripCanceledSnackbar => 'Trajet annulé';
 
   @override
+  String cancellationHandedOverParcelsNotice(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count colis vous ont déjà été remis : vous devrez les rendre à leurs expéditeurs sous 3 jours, contre leur code de retour.',
+      one:
+          'Un colis vous a déjà été remis : vous devrez le rendre à son expéditeur sous 3 jours, contre son code de retour.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancellationConfirmDialogMessageWithReturns(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Les $count colis déjà remis devront être rendus à leurs expéditeurs sous 3 jours.',
+      one:
+          'Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Le colis déjà remis devra être rendu à son expéditeur sous 3 jours.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cancellationTripCanceledWithReturnsSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Trajet annulé. Rendez les $count colis remis : leurs expéditeurs ont reçu le code de retour.',
+      one:
+          'Trajet annulé. Rendez le colis remis : son expéditeur a reçu le code de retour.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bidDetailReturnContactSenderHint =>
+      'Retour en cours : contactez le voyageur pour récupérer votre colis.';
+
+  @override
+  String get bidDetailReturnContactTravelerHint =>
+      'Retour en cours : contactez l\'expéditeur pour lui rendre son colis.';
+
+  @override
   String get deliveryNoShowTravelerNotDeliveringTitle =>
       'Le voyageur ne livre pas';
 
