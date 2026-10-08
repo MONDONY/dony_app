@@ -1915,10 +1915,16 @@ class _TripFormContentState extends State<_TripFormContent> {
     final currency = SupportedCurrency.fromCode(t.currency);
     if (currency != null) widget.currencyNotifier.value = currency;
 
-    _departureCityNotifier.value = t.departureCity;
-    _arrivalCityNotifier.value = t.arrivalCity;
+    // Codes pays AVANT les villes : le listener des villes recopie le code
+    // courant dans le form bloc, lu à la soumission. Dans l'ordre inverse,
+    // tout trajet publié depuis un modèle partait sans pays (FLUTTER-EH).
     _departureCountryCodeNotifier.value = t.departureCountryCode;
     _arrivalCountryCodeNotifier.value = t.arrivalCountryCode;
+    _departureCityNotifier.value = t.departureCity;
+    _arrivalCityNotifier.value = t.arrivalCity;
+    // Ville identique à celle déjà saisie : le notifier ne notifie pas, le
+    // bloc garderait l'ancien code. Resynchronisation explicite.
+    _syncCityToFormBloc();
     _departureTimeNotifier.value = _timeOfDay(t.departureTime);
     _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
     // Vol de nuit mémorisé dans le modèle (FLUTTER-4E) ; sans heure

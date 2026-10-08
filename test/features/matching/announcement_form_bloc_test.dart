@@ -201,6 +201,31 @@ void main() {
     );
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'FLUTTER-EH — une ville sans code efface le code de la ville précédente',
+      build: () => _makeBloc(),
+      act: (b) {
+        b.add(const DepartureCityChanged('Cotonou', countryCode: 'BJ'));
+        b.add(const ArrivalCityChanged('Abidjan', countryCode: 'CI'));
+        b.add(const DepartureCityChanged('Atlantide'));
+        b.add(const ArrivalCityChanged('Lomé', countryCode: 'TG'));
+      },
+      skip: 2,
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) =>
+              s.departureCity == 'Atlantide' &&
+              s.departureCountryCode == null &&
+              s.arrivalCountryCode == 'CI',
+          'departureCountryCode cleared, arrival kept',
+        ),
+        predicate<AnnouncementFormState>(
+          (s) => s.arrivalCity == 'Lomé' && s.arrivalCountryCode == 'TG',
+          'arrivalCountryCode follows the new city',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'DepartureCityChanged sans countryCode laisse departureCountryCode null',
       build: () => _makeBloc(),
       act: (b) => b.add(const DepartureCityChanged('Paris')),
