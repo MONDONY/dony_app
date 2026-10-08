@@ -1741,6 +1741,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cityChooseCity => 'Choisir une ville';
 
   @override
+  String get cityChooseFromList => 'Choisissez une ville dans la liste';
+
+  @override
   String get cityRecentSection => 'RÉCENTS';
 
   @override

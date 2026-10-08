@@ -579,6 +579,7 @@
   "parcelSizeLarge": "Grand",
   "cityClearCity": "Effacer la ville",
   "cityChooseCity": "Choisir une ville",
+  "cityChooseFromList": "Choisissez une ville dans la liste",
   "cityRecentSection": "RÉCENTS",
   "cityDepartureLabel": "Départ",
   "cityArrivalLabel": "Arrivée",

@@ -3128,6 +3128,12 @@ abstract class AppLocalizations {
   /// **'Choisir une ville'**
   String get cityChooseCity;
 
+  /// No description provided for @cityChooseFromList.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une ville dans la liste'**
+  String get cityChooseFromList;
+
   /// No description provided for @cityRecentSection.
   ///
   /// In fr, this message translates to:

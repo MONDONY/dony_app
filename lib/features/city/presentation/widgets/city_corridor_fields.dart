@@ -95,6 +95,12 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
   /// leurs listes) une frame sur deux pendant la saisie.
   final _showSwap = ValueNotifier<bool>(true);
 
+  /// « Choisissez une ville dans la liste » par champ, posé par le champ quand
+  /// il efface un texte sans correspondance ([CityAutocompleteField
+  /// .requireSelection]). Prioritaire sur l'erreur « obligatoire » du parent.
+  final _departureSelectionError = ValueNotifier<String?>(null);
+  final _arrivalSelectionError = ValueNotifier<String?>(null);
+
   /// Espace réservé à droite dans chaque rangée pour que la valeur et le
   /// bouton « x » ne passent jamais sous le bouton rond superposé.
   static const double _swapInset = 12;
@@ -117,6 +123,8 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
   @override
   void dispose() {
     _showSwap.dispose();
+    _departureSelectionError.dispose();
+    _arrivalSelectionError.dispose();
     super.dispose();
   }
 
@@ -157,6 +165,9 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
                               CityFieldRole.departure,
                               visible: visible,
                             ),
+                        requireSelection: widget.requiredLabels,
+                        onSelectionErrorChanged: (m) =>
+                            _departureSelectionError.value = m,
                         onSelected: widget.onDepartureSelected,
                         onCleared: widget.onDepartureCleared,
                       ),
@@ -184,6 +195,9 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
                               CityFieldRole.arrival,
                               visible: visible,
                             ),
+                        requireSelection: widget.requiredLabels,
+                        onSelectionErrorChanged: (m) =>
+                            _arrivalSelectionError.value = m,
                         onSelected: widget.onArrivalSelected,
                         onCleared: widget.onArrivalCleared,
                       ),
@@ -210,8 +224,16 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
         // Sous la carte, pas dans la rangée fautive : un message inséré dans
         // une seule des deux rangées la rendrait plus haute que l'autre et
         // décalerait le bouton d'interversion de la couture.
-        DonyFieldError(message: widget.departureError),
-        DonyFieldError(message: widget.arrivalError),
+        ValueListenableBuilder<String?>(
+          valueListenable: _departureSelectionError,
+          builder: (context, selectionError, _) =>
+              DonyFieldError(message: selectionError ?? widget.departureError),
+        ),
+        ValueListenableBuilder<String?>(
+          valueListenable: _arrivalSelectionError,
+          builder: (context, selectionError, _) =>
+              DonyFieldError(message: selectionError ?? widget.arrivalError),
+        ),
       ],
     );
   }

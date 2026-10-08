@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/utils/text_search.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
@@ -51,7 +52,26 @@ class CityAutocompleteField extends StatefulWidget {
     this.variant = CityFieldVariant.outlined,
     this.valueSuffix,
     this.onSuggestionsVisibilityChanged,
+    this.requireSelection = false,
+    this.onSelectionErrorChanged,
   });
+
+  /// Le champ n'accepte qu'une ville de la liste (formulaire à soumettre).
+  ///
+  /// Dans tous les cas, un texte tapé qui correspond exactement à une
+  /// suggestion (casse et accents ignorés) la sélectionne : à la perte de
+  /// focus, à la validation clavier, ou dès que les résultats arrivent.
+  /// Avec [requireSelection], un texte qui ne correspond à aucune suggestion
+  /// est en plus effacé à la perte de focus, avec le message
+  /// `cityChooseFromList` : le champ ne montre plus une ville que le parent
+  /// n'a pas (Sentry FLUTTER-F0, « Abidjan » affiché mais ville nulle).
+  final bool requireSelection;
+
+  /// Notifie le message « Choisissez une ville dans la liste » (ou `null`
+  /// quand il disparaît). Sert à la variante [CityFieldVariant.connected],
+  /// dont le parent affiche les erreurs sous la carte ; en variante
+  /// [CityFieldVariant.outlined] le message s'affiche aussi sous le champ.
+  final ValueChanged<String?>? onSelectionErrorChanged;
 
   /// Message d'erreur affiché sous le champ (bordure rouge incluse).
   ///
@@ -131,6 +151,46 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   /// toujours choisir une autre ville.
   bool _suppressSuggestions = false;
 
+  /// Texte correspondant à la ville que le parent détient (sélection,
+  /// correspondance exacte, ou [CityAutocompleteField.initialValue]).
+  /// `null` tant que le texte affiché ne correspond à aucune ville connue
+  /// du parent.
+  String? _confirmedText;
+
+  /// Une requête est partie (ou attend son debounce) et ses résultats ne sont
+  /// pas encore arrivés : la décision de perte de focus attend ces résultats.
+  bool _awaitingResults = false;
+
+  /// Perte de focus survenue pendant [_awaitingResults] : la résolution se
+  /// fait à l'arrivée des résultats (voir [_onSearchState]).
+  bool _resolvePending = false;
+
+  /// Message « Choisissez une ville dans la liste », hors setState.
+  final _selectionError = ValueNotifier<String?>(null);
+
+  void _setSelectionError(String? message) {
+    if (_selectionError.value == message) return;
+    _selectionError.value = message;
+    widget.onSelectionErrorChanged?.call(message);
+  }
+
+  static bool _sameCity(String a, String b) =>
+      normalizeSearch(a.trim()) == normalizeSearch(b.trim());
+
+  /// Suggestion dont le nom correspond exactement au texte saisi, ou `null`.
+  CityModel? _exactMatch(String text, CitySearchState state) {
+    if (state is! CitySearchLoaded || text.trim().isEmpty) return null;
+    for (final city in state.cities) {
+      if (_sameCity(city.name, text)) return city;
+    }
+    return null;
+  }
+
+  bool get _textConfirmed {
+    final confirmed = _confirmedText;
+    return confirmed != null && _sameCity(confirmed, _controller.text);
+  }
+
   /// Remonte le changement d'état de la liste au parent, en différé : le calcul
   /// se fait pendant le build (voir [_buildSuggestions]), et prévenir un parent
   /// qui se reconstruit en réaction déclencherait un setState pendant le build.
@@ -153,6 +213,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   void initState() {
     super.initState();
     if (widget.initialValue != null) _controller.text = widget.initialValue!;
+    _confirmedText = widget.initialValue;
     _focusNode.addListener(_onFocusChanged);
   }
 
@@ -163,46 +224,114 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
     // (ex. application d'un modèle de trajet). On ne touche pas au contrôleur
     // si la valeur n'a pas changé, pour ne pas écraser la saisie en cours.
     final value = widget.initialValue;
-    if (value != oldWidget.initialValue && value != _controller.text) {
-      _controller.text = value ?? '';
+    if (value != oldWidget.initialValue) {
+      // Comparaison casse/accents ignorés : la correspondance exacte remonte
+      // « Abidjan » pendant que l'utilisateur a tapé « abidjan » — réécrire
+      // le texte en pleine frappe ferait sauter le curseur.
+      if (value == null || !_sameCity(value, _controller.text)) {
+        _controller.text = value ?? '';
+      }
+      _confirmedText = value;
     }
   }
 
   void _onFocusChanged() {
     setState(() {});
-    if (_focusNode.hasFocus) {
-      if (_suppressSuggestions) {
-        _suppressSuggestions = false;
-        // Le résultat arrivé pendant le verrou dort peut-être encore dans le
-        // BLoC : sans ce nettoyage, revenir dans le champ rouvrirait la liste
-        // d'une recherche que l'utilisateur a déjà tranchée.
-        context.read<CitySearchBloc>().add(const CitySearchCleared());
-      }
-      // Après le frame suivant, le clavier est en cours d'ouverture et le champ
-      // peut être partiellement masqué — on le ramène dans la zone visible.
-      // Un Timer annulable est utilisé pour attendre que les viewInsets du
-      // clavier Android soient complètement stabilisés (≈ 300 ms) avant de
-      // scroller — évite un scroll à la mauvaise position.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _ensureVisibleTimer?.cancel();
-        _ensureVisibleTimer = Timer(const Duration(milliseconds: 300), () {
-          if (!mounted) {
-            return;
-          }
-          Scrollable.maybeOf(context)?.position.ensureVisible(
-            context.findRenderObject()!,
-            alignment: 0.1,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-          );
-        });
+    if (!_focusNode.hasFocus) {
+      _resolveTypedText();
+      return;
+    }
+    _resolvePending = false;
+    if (_suppressSuggestions) {
+      _suppressSuggestions = false;
+      // Le résultat arrivé pendant le verrou dort peut-être encore dans le
+      // BLoC : sans ce nettoyage, revenir dans le champ rouvrirait la liste
+      // d'une recherche que l'utilisateur a déjà tranchée.
+      context.read<CitySearchBloc>().add(const CitySearchCleared());
+    }
+    // Après le frame suivant, le clavier est en cours d'ouverture et le champ
+    // peut être partiellement masqué — on le ramène dans la zone visible.
+    // Un Timer annulable est utilisé pour attendre que les viewInsets du
+    // clavier Android soient complètement stabilisés (≈ 300 ms) avant de
+    // scroller — évite un scroll à la mauvaise position.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensureVisibleTimer?.cancel();
+      _ensureVisibleTimer = Timer(const Duration(milliseconds: 300), () {
+        if (!mounted) {
+          return;
+        }
+        Scrollable.maybeOf(context)?.position.ensureVisible(
+          context.findRenderObject()!,
+          alignment: 0.1,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+        );
       });
+    });
+  }
+
+  /// Perte de focus ou validation clavier : le texte tapé doit correspondre à
+  /// une ville, sinon le champ ment (FLUTTER-F0).
+  void _resolveTypedText() {
+    final text = _controller.text;
+    if (text.trim().isEmpty || _textConfirmed) {
+      _resolvePending = false;
+      return;
+    }
+    final match = _exactMatch(text, context.read<CitySearchBloc>().state);
+    if (match != null) {
+      _resolvePending = false;
+      _onCitySelected(match);
+      return;
+    }
+    if (_awaitingResults) {
+      _resolvePending = true;
+      return;
+    }
+    _rejectTypedText();
+  }
+
+  /// Aucun résultat ne correspond : en mode [requireSelection], on vide le
+  /// champ et on explique pourquoi. Sinon le texte reste, comme avant.
+  void _rejectTypedText() {
+    _resolvePending = false;
+    if (!widget.requireSelection) return;
+    // Une erreur réseau n'est pas la faute de la saisie : on garde le texte,
+    // le parent signale déjà la ville manquante.
+    if (context.read<CitySearchBloc>().state is CitySearchError) return;
+    _controller.clear();
+    setState(() {});
+    context.read<CitySearchBloc>().add(const CitySearchCleared());
+    _setSelectionError(context.l10n.cityChooseFromList);
+    widget.onCleared?.call();
+  }
+
+  void _onSearchState(BuildContext context, CitySearchState state) {
+    if (state is CitySearchLoading) return;
+    _awaitingResults = false;
+    final match = _exactMatch(_controller.text, state);
+    if (_resolvePending) {
+      if (match != null) {
+        _resolvePending = false;
+        _onCitySelected(match);
+      } else {
+        _rejectTypedText();
+      }
+      return;
+    }
+    // Champ encore en saisie : une correspondance exacte remonte au parent
+    // sans fermer la liste (l'utilisateur peut toujours choisir une autre
+    // suggestion homonyme) — « Continuer » se débloque sans tap obligatoire.
+    if (match != null && !_textConfirmed) {
+      _confirmedText = match.name;
+      widget.onSelected(match);
     }
   }
 
   @override
   void dispose() {
     _ensureVisibleTimer?.cancel();
+    _selectionError.dispose();
     _focusNode.removeListener(_onFocusChanged);
     _controller.dispose();
     _focusNode.dispose();
@@ -211,6 +340,10 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
 
   void _onCitySelected(CityModel city) {
     _controller.text = city.name;
+    _confirmedText = city.name;
+    _resolvePending = false;
+    _awaitingResults = false;
+    _setSelectionError(null);
     // setState explicite : le rebuild ne peut pas dépendre du seul `unfocus()`
     // ci-dessous, qui ne notifie rien si le champ n'avait pas le focus (tap
     // direct sur un récent, sélection programmée).
@@ -240,6 +373,8 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
           icon: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
           onPressed: () {
             _controller.clear();
+            _confirmedText = null;
+            _setSelectionError(null);
             _suppressSuggestions = false;
             setState(() {});
             context.read<CitySearchBloc>().add(const CitySearchCleared());
@@ -253,9 +388,21 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   void _onChanged(String value) {
     // Toute frappe rouvre le jeu : l'utilisateur cherche une autre ville.
     _suppressSuggestions = false;
+    _setSelectionError(null);
+    _awaitingResults = value.trim().length >= 2;
     setState(() {});
     context.read<CitySearchBloc>().add(CitySearchQueryChanged(value));
     if (value.isEmpty) {
+      _confirmedText = null;
+      widget.onCleared?.call();
+      return;
+    }
+    // Le texte s'écarte de la ville détenue par le parent : elle n'est plus
+    // la bonne, le parent doit l'oublier (sinon « Abidjan-S » affiché,
+    // Abidjan envoyé).
+    final confirmed = _confirmedText;
+    if (confirmed != null && !_sameCity(confirmed, value)) {
+      _confirmedText = null;
       widget.onCleared?.call();
     }
   }
@@ -263,24 +410,35 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (widget.variant == CityFieldVariant.connected)
-          _buildConnectedField(context, cs)
-        else
-          _buildOutlinedField(context, cs),
-        // ── Suggestions — dans le flux scrollable (jamais en Overlay) ─────
-        // Les suggestions poussent le contenu vers le bas : pas de masquage
-        // par le bouton sticky "Continuer".
-        _buildSuggestions(context),
-      ],
+    return BlocListener<CitySearchBloc, CitySearchState>(
+      listener: _onSearchState,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.variant == CityFieldVariant.connected)
+            _buildConnectedField(context, cs)
+          else
+            ValueListenableBuilder<String?>(
+              valueListenable: _selectionError,
+              builder: (context, selectionError, _) =>
+                  _buildOutlinedField(context, cs, selectionError),
+            ),
+          // ── Suggestions — dans le flux scrollable (jamais en Overlay) ─────
+          // Les suggestions poussent le contenu vers le bas : pas de masquage
+          // par le bouton sticky "Continuer".
+          _buildSuggestions(context),
+        ],
+      ),
     );
   }
 
   /// Rendu historique : bordure Material + label flottant sur la bordure.
-  Widget _buildOutlinedField(BuildContext context, ColorScheme cs) {
+  Widget _buildOutlinedField(
+    BuildContext context,
+    ColorScheme cs,
+    String? selectionError,
+  ) {
     final labelWidget = _buildLabel(context);
     // Pas de ClipRRect/Container ici : le thème (InputDecorationTheme)
     // fournit déjà `filled` + OutlineInputBorder arrondi. Un ClipRRect
@@ -297,11 +455,12 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
         // Si requiredLabel, label widget (RichText) ; sinon labelText.
         label: labelWidget,
         labelText: labelWidget == null ? widget.label : null,
-        errorText: widget.errorText,
+        errorText: widget.errorText ?? selectionError,
         prefixIcon: widget.prefixIcon,
         suffixIcon: _buildClearButton(context, cs),
       ),
       onChanged: _onChanged,
+      onSubmitted: (_) => _resolveTypedText(),
     );
   }
 
@@ -377,6 +536,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
               ),
             ),
             onChanged: _onChanged,
+            onSubmitted: (_) => _resolveTypedText(),
           ),
         ),
       ],

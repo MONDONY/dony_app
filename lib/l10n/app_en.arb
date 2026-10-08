@@ -505,6 +505,7 @@
   "parcelSizeLarge": "Large",
   "cityClearCity": "Clear city",
   "cityChooseCity": "Choose a city",
+  "cityChooseFromList": "Choose a city from the list",
   "cityRecentSection": "RECENT",
   "cityDepartureLabel": "Departure",
   "cityArrivalLabel": "Arrival",
