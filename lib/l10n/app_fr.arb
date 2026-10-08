@@ -13925,6 +13925,28 @@
   "@notificationSettingsPackageMatchSubtitle": {
     "description": "Sous-titre de la cloche colis compatibles (notification_settings_screen.dart)"
   },
+  "notificationSettingsHandoverReminderLabel": "Rappel de remise",
+  "@notificationSettingsHandoverReminderLabel": {"description": "Tuile verrouillée HANDOVER_REMINDER_H2, type critique du backend (notification_settings_screen.dart)"},
+  "notificationSettingsHandoverReminderSubtitle": "Deux heures avant la remise du colis, avec SMS si le push n'arrive pas",
+  "@notificationSettingsHandoverReminderSubtitle": {"description": "Sous-titre de la tuile HANDOVER_REMINDER_H2 (notification_settings_screen.dart)"},
+  "notificationSettingsTripRescheduledLabel": "Trajet reporté",
+  "@notificationSettingsTripRescheduledLabel": {"description": "Tuile verrouillée TRIP_RESCHEDULED, type critique du backend (notification_settings_screen.dart)"},
+  "notificationSettingsAccountSafetyLabel": "Argent, identité, litiges et compte",
+  "@notificationSettingsAccountSafetyLabel": {"description": "Tuile verrouillée des notifications non réglables sans SMS de repli : paiements, portefeuille, KYC, litiges, absences, modération (notification_settings_screen.dart)"},
+  "notificationSettingsAccountSafetySubtitle": "Portefeuille, vérification d'identité, litiges, messages de Yadony",
+  "@notificationSettingsAccountSafetySubtitle": {"description": "Sous-titre de la tuile verrouillée argent/identité/litiges/compte (notification_settings_screen.dart)"},
+  "notificationSettingsAutomationsLabel": "Automatisations voyageur",
+  "@notificationSettingsAutomationsLabel": {"description": "Tuile push_traveler_automations : automation_capacity_free, automation_loyal_sender, automation_last_minute (notification_settings_screen.dart)"},
+  "notificationSettingsAutomationsSubtitle": "Place libérée, expéditeurs fidèles, dernière minute",
+  "@notificationSettingsAutomationsSubtitle": {"description": "Sous-titre de la tuile push_traveler_automations (notification_settings_screen.dart)"},
+  "notificationSettingsRemindersTipsLabel": "Rappels et conseils",
+  "@notificationSettingsRemindersTipsLabel": {"description": "Tuile push_reminders_tips : FIRST_ACTION_REMINDER et TRIP_IN_PROGRESS (notification_settings_screen.dart)"},
+  "notificationSettingsRemindersTipsSubtitle": "Premiers pas, départ de votre trajet",
+  "@notificationSettingsRemindersTipsSubtitle": {"description": "Sous-titre de la tuile push_reminders_tips (notification_settings_screen.dart)"},
+  "notificationSettingsMissedCallsLabel": "Appels manqués",
+  "@notificationSettingsMissedCallsLabel": {"description": "Tuile push_missed_calls : CALL_MISSED (notification_settings_screen.dart)"},
+  "notificationSettingsMissedCallsSubtitle": "Quand vous manquez un appel Yadony",
+  "@notificationSettingsMissedCallsSubtitle": {"description": "Sous-titre de la tuile push_missed_calls (notification_settings_screen.dart)"},
   "prefsTitle": "Préférences",
   "@prefsTitle": {
     "description": "Titre de l'écran (business_prefs_screen.dart)"

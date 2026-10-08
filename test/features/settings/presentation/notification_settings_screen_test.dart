@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -87,6 +88,21 @@ void main() {
     registerFallbackValue(_FakeNotifEvent());
   });
 
+  // L'écran compte désormais trois sections complètes (FLUTTER-GB) : une
+  // fenêtre haute garde toutes les tuiles construites par la ListView.
+  setUp(() {
+    final view =
+        TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
+    view.physicalSize = const Size(1170, 6000);
+    view.devicePixelRatio = 3.0;
+  });
+  tearDown(() {
+    final view =
+        TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
+    view.resetPhysicalSize();
+    view.resetDevicePixelRatio();
+  });
+
   group('NotificationSettingsScreen', () {
     testWidgets('affiche la section PROTECTIONS CRITIQUES', (tester) async {
       await tester.pumpWidget(_wrap());
@@ -101,6 +117,65 @@ void main() {
       expect(find.text('Paiement reçu'), findsOneWidget);
       expect(find.text('Litige ouvert'), findsOneWidget);
     });
+
+    /// FLUTTER-GB (e) : le backend déclare cinq types critiques
+    /// (NotificationTypes.CRITICAL), l'écran n'en listait que trois.
+    testWidgets('liste les 5 types critiques et les non-réglables', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('Rappel de remise'), findsOneWidget);
+      expect(find.text('Trajet reporté'), findsOneWidget);
+      expect(find.text('Argent, identité, litiges et compte'), findsOneWidget);
+      expect(find.text('Toujours actif'), findsNWidgets(6));
+    });
+
+    /// FLUTTER-GB (b) : trois familles qui partaient sans réglage.
+    for (final (label, key) in [
+      ('Automatisations voyageur', 'push_traveler_automations'),
+      ('Rappels et conseils', 'push_reminders_tips'),
+      ('Appels manqués', 'push_missed_calls'),
+    ]) {
+      testWidgets('tap $label dispatche NotifPrefToggled($key)', (
+        tester,
+      ) async {
+        final mockBloc = _buildMockBloc();
+        addTearDown(mockBloc.close);
+        await tester.pumpWidget(_wrapWithBloc(mockBloc));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text(label));
+        await tester.pump();
+
+        verify(() => mockBloc.add(NotifPrefToggled(key))).called(1);
+      });
+    }
+
+    testWidgets(
+      'un réglage V305 absent du cache s\'affiche coupé, pas inventé',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            prefs: {
+              'push_activity_bids': true,
+              'push_missed_calls': false,
+              'push_traveler_automations': true,
+              'push_reminders_tips': true,
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+        final tile = find.ancestor(
+          of: find.text('Appels manqués'),
+          matching: find.byType(DonyListTile),
+        );
+        final sw = tester.widget<Switch>(
+          find.descendant(of: tile, matching: find.byType(Switch)),
+        );
+        expect(sw.value, isFalse);
+      },
+    );
 
     testWidgets('affiche le bandeau explicatif des critiques', (tester) async {
       await tester.pumpWidget(_wrap());

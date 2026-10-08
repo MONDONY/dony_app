@@ -458,7 +458,7 @@ void main() {
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'une bascule pousse les six champs au serveur',
+      'une bascule pousse les neuf champs au serveur',
       build: build,
       act: (bloc) => bloc.add(const NotifPrefToggled('push_messages')),
       verify: (_) {
@@ -466,7 +466,7 @@ void main() {
             verify(() => prefsRepo.updatePrefs(captureAny())).captured.single
                 as NotificationPrefsDto;
         final json = dto.toJson();
-        expect(json.keys, hasLength(6));
+        expect(json.keys, hasLength(9));
         expect(json['pushMessages'], isFalse);
         // Les champs non touchés partent avec leur valeur courante : le PUT est
         // un remplacement complet côté serveur, un champ omis y arriverait à
@@ -577,9 +577,13 @@ void main() {
 
   // ─── Contrat de sérialisation ──────────────────────────────────────────────
   group('NotificationPrefsDto', () {
-    test('toJson émet toujours les six champs, même sur une map vide', () {
+    test('toJson émet toujours les neuf champs, même sur une map vide', () {
       final json = const NotificationPrefsDto({}).toJson();
-      expect(json.keys, hasLength(6));
+      expect(json.keys, hasLength(9));
+      // V305 (back #452) : défaut true, comme les colonnes.
+      expect(json['pushMissedCalls'], isTrue);
+      expect(json['pushTravelerAutomations'], isTrue);
+      expect(json['pushRemindersTips'], isTrue);
       // Les défauts répliquent `NotificationPrefsDto.defaults()` du backend.
       expect(json['pushActivityBids'], isTrue);
       expect(json['pushPromo'], isFalse);
@@ -604,6 +608,9 @@ void main() {
         'pushTripReminder': false,
         'pushPromo': true,
         'pushCorridorAlerts': false,
+        'pushMissedCalls': false,
+        'pushTravelerAutomations': false,
+        'pushRemindersTips': false,
       });
       expect(dto.toJson(), {
         'pushActivityBids': false,
@@ -612,7 +619,26 @@ void main() {
         'pushTripReminder': false,
         'pushPromo': true,
         'pushCorridorAlerts': false,
+        'pushMissedCalls': false,
+        'pushTravelerAutomations': false,
+        'pushRemindersTips': false,
       });
+    });
+
+    /// Serveur antérieur à V305 : il ne renvoie pas les trois nouveaux champs,
+    /// la valeur locale ne doit pas être écrasée par un défaut.
+    test('fromJson d\'un serveur ancien ne touche pas aux réglages V305', () {
+      final dto = NotificationPrefsDto.fromJson({
+        'pushActivityBids': true,
+        'pushActivityNegotiations': true,
+        'pushMessages': true,
+        'pushTripReminder': true,
+        'pushPromo': false,
+        'pushCorridorAlerts': true,
+      });
+      expect(dto.values.containsKey('push_missed_calls'), isFalse);
+      expect(dto.values.containsKey('push_traveler_automations'), isFalse);
+      expect(dto.values.containsKey('push_reminders_tips'), isFalse);
     });
 
     test('email_promo n\'est pas un champ synchronisé', () {

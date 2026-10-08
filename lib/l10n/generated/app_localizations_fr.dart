@@ -12557,6 +12557,45 @@ class AppLocalizationsFr extends AppLocalizations {
       'Quand un colis correspond à un de vos trajets';
 
   @override
+  String get notificationSettingsHandoverReminderLabel => 'Rappel de remise';
+
+  @override
+  String get notificationSettingsHandoverReminderSubtitle =>
+      'Deux heures avant la remise du colis, avec SMS si le push n\'arrive pas';
+
+  @override
+  String get notificationSettingsTripRescheduledLabel => 'Trajet reporté';
+
+  @override
+  String get notificationSettingsAccountSafetyLabel =>
+      'Argent, identité, litiges et compte';
+
+  @override
+  String get notificationSettingsAccountSafetySubtitle =>
+      'Portefeuille, vérification d\'identité, litiges, messages de Yadony';
+
+  @override
+  String get notificationSettingsAutomationsLabel => 'Automatisations voyageur';
+
+  @override
+  String get notificationSettingsAutomationsSubtitle =>
+      'Place libérée, expéditeurs fidèles, dernière minute';
+
+  @override
+  String get notificationSettingsRemindersTipsLabel => 'Rappels et conseils';
+
+  @override
+  String get notificationSettingsRemindersTipsSubtitle =>
+      'Premiers pas, départ de votre trajet';
+
+  @override
+  String get notificationSettingsMissedCallsLabel => 'Appels manqués';
+
+  @override
+  String get notificationSettingsMissedCallsSubtitle =>
+      'Quand vous manquez un appel Yadony';
+
+  @override
   String get prefsTitle => 'Préférences';
 
   @override

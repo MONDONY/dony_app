@@ -12477,6 +12477,45 @@ class AppLocalizationsEn extends AppLocalizations {
       'When a parcel matches one of your trips';
 
   @override
+  String get notificationSettingsHandoverReminderLabel => 'Handover reminder';
+
+  @override
+  String get notificationSettingsHandoverReminderSubtitle =>
+      'Two hours before the parcel handover, with an SMS if the push doesn\'t arrive';
+
+  @override
+  String get notificationSettingsTripRescheduledLabel => 'Trip rescheduled';
+
+  @override
+  String get notificationSettingsAccountSafetyLabel =>
+      'Money, identity, disputes and account';
+
+  @override
+  String get notificationSettingsAccountSafetySubtitle =>
+      'Wallet, identity check, disputes, messages from Yadony';
+
+  @override
+  String get notificationSettingsAutomationsLabel => 'Traveler automations';
+
+  @override
+  String get notificationSettingsAutomationsSubtitle =>
+      'Space freed up, regular senders, last minute';
+
+  @override
+  String get notificationSettingsRemindersTipsLabel => 'Reminders and tips';
+
+  @override
+  String get notificationSettingsRemindersTipsSubtitle =>
+      'Getting started, your trip departure';
+
+  @override
+  String get notificationSettingsMissedCallsLabel => 'Missed calls';
+
+  @override
+  String get notificationSettingsMissedCallsSubtitle =>
+      'When you miss a Yadony call';
+
+  @override
   String get prefsTitle => 'Preferences';
 
   @override

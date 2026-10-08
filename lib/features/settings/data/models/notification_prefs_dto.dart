@@ -18,6 +18,10 @@ class NotificationPrefsDto {
     'push_trip_reminder': true,
     'push_promo': false,
     'push_corridor_alerts': true,
+    // FLUTTER-GB (back #452, V305) : trois familles qui partaient sans réglage.
+    'push_missed_calls': true,
+    'push_traveler_automations': true,
+    'push_reminders_tips': true,
   };
 
   static const Map<String, String> uiKeyToJsonKey = {
@@ -27,6 +31,9 @@ class NotificationPrefsDto {
     'push_trip_reminder': 'pushTripReminder',
     'push_promo': 'pushPromo',
     'push_corridor_alerts': 'pushCorridorAlerts',
+    'push_missed_calls': 'pushMissedCalls',
+    'push_traveler_automations': 'pushTravelerAutomations',
+    'push_reminders_tips': 'pushRemindersTips',
   };
 
   static bool isSynced(String uiKey) => uiKeyToJsonKey.containsKey(uiKey);
@@ -43,9 +50,13 @@ class NotificationPrefsDto {
           if (json[entry.value] is bool) entry.key: json[entry.value] as bool,
       });
 
-  /// Sérialise **toujours les six champs**. Le `record` Java déclare des
-  /// `boolean` primitifs : un champ omis y arrive à `false`, ce qui couperait
-  /// silencieusement une catégorie que l'utilisateur n'a jamais touchée.
+  /// Sérialise **toujours tous les champs**. Les six historiques sont des
+  /// `boolean` primitifs côté Java : un champ omis y arriverait à `false`, ce qui
+  /// couperait en silence une catégorie que l'utilisateur n'a jamais touchée.
+  ///
+  /// Les trois champs V305 sont tolérés des deux côtés : un serveur antérieur
+  /// les ignore à l'écriture et ne les renvoie pas en lecture (la valeur locale
+  /// reste alors inchangée, voir [NotificationPrefsDto.fromJson]).
   Map<String, dynamic> toJson() => {
     for (final entry in uiKeyToJsonKey.entries)
       entry.value: values[entry.key] ?? defaults[entry.key]!,

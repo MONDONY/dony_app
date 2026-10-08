@@ -20812,6 +20812,72 @@ abstract class AppLocalizations {
   /// **'Quand un colis correspond à un de vos trajets'**
   String get notificationSettingsPackageMatchSubtitle;
 
+  /// Tuile verrouillée HANDOVER_REMINDER_H2, type critique du backend (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappel de remise'**
+  String get notificationSettingsHandoverReminderLabel;
+
+  /// Sous-titre de la tuile HANDOVER_REMINDER_H2 (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Deux heures avant la remise du colis, avec SMS si le push n\'arrive pas'**
+  String get notificationSettingsHandoverReminderSubtitle;
+
+  /// Tuile verrouillée TRIP_RESCHEDULED, type critique du backend (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet reporté'**
+  String get notificationSettingsTripRescheduledLabel;
+
+  /// Tuile verrouillée des notifications non réglables sans SMS de repli : paiements, portefeuille, KYC, litiges, absences, modération (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Argent, identité, litiges et compte'**
+  String get notificationSettingsAccountSafetyLabel;
+
+  /// Sous-titre de la tuile verrouillée argent/identité/litiges/compte (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Portefeuille, vérification d\'identité, litiges, messages de Yadony'**
+  String get notificationSettingsAccountSafetySubtitle;
+
+  /// Tuile push_traveler_automations : automation_capacity_free, automation_loyal_sender, automation_last_minute (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Automatisations voyageur'**
+  String get notificationSettingsAutomationsLabel;
+
+  /// Sous-titre de la tuile push_traveler_automations (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Place libérée, expéditeurs fidèles, dernière minute'**
+  String get notificationSettingsAutomationsSubtitle;
+
+  /// Tuile push_reminders_tips : FIRST_ACTION_REMINDER et TRIP_IN_PROGRESS (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappels et conseils'**
+  String get notificationSettingsRemindersTipsLabel;
+
+  /// Sous-titre de la tuile push_reminders_tips (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Premiers pas, départ de votre trajet'**
+  String get notificationSettingsRemindersTipsSubtitle;
+
+  /// Tuile push_missed_calls : CALL_MISSED (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appels manqués'**
+  String get notificationSettingsMissedCallsLabel;
+
+  /// Sous-titre de la tuile push_missed_calls (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand vous manquez un appel Yadony'**
+  String get notificationSettingsMissedCallsSubtitle;
+
   /// Titre de l'écran (business_prefs_screen.dart)
   ///
   /// In fr, this message translates to:

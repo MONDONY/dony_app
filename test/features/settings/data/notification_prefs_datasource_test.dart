@@ -62,7 +62,7 @@ void main() {
     );
 
     test(
-      'updatePrefs appelle PUT /notifications/preferences avec les six champs',
+      'updatePrefs appelle PUT /notifications/preferences avec les neuf champs',
       () async {
         const dto = NotificationPrefsDto({'push_messages': false});
         when(
@@ -85,7 +85,7 @@ void main() {
                   ),
                 ).captured.single
                 as Map<String, dynamic>;
-        expect(data.keys, hasLength(6));
+        expect(data.keys, hasLength(9));
         expect(data['pushMessages'], isFalse);
       },
     );
