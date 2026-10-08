@@ -12677,6 +12677,24 @@ abstract class AppLocalizations {
   /// **'Cette demande est terminée.'**
   String get ticketRequestClosedMessage;
 
+  /// Titre du bloc talon d'une demande EXPIRED pour date limite de dépôt passée (billet_talon.dart, FLUTTER-GA)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date limite de dépôt passée'**
+  String get ticketHandoverDeadlineExpiredTitle;
+
+  /// Message expéditeur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.'**
+  String get ticketHandoverDeadlineExpiredSender;
+
+  /// Message voyageur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt est passée : demande annulée.'**
+  String get ticketHandoverDeadlineExpiredTraveler;
+
   /// Libellé de la mini-stat poids du talon voyageur, casse conservée telle quelle dans le code source (billet_talon.dart)
   ///
   /// In fr, this message translates to:
@@ -24971,7 +24989,7 @@ abstract class AppLocalizations {
   /// Message de l'erreur handover-deadline-passed (409)
   ///
   /// In fr, this message translates to:
-  /// **'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.'**
+  /// **'La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.'**
   String get errorHandoverDeadlinePassedMessage;
 
   /// Plus de détails d'une demande (details_accordion.dart)

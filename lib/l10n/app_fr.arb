@@ -7825,6 +7825,18 @@
   "@ticketRequestClosedMessage": {
     "description": "Message terminal REJECTED/CANCELLED du talon (billet_talon.dart)"
   },
+  "ticketHandoverDeadlineExpiredTitle": "Date limite de dépôt passée",
+  "@ticketHandoverDeadlineExpiredTitle": {
+    "description": "Titre du bloc talon d'une demande EXPIRED pour date limite de dépôt passée (billet_talon.dart, FLUTTER-GA)"
+  },
+  "ticketHandoverDeadlineExpiredSender": "La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.",
+  "@ticketHandoverDeadlineExpiredSender": {
+    "description": "Message expéditeur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)"
+  },
+  "ticketHandoverDeadlineExpiredTraveler": "La date limite de dépôt est passée : demande annulée.",
+  "@ticketHandoverDeadlineExpiredTraveler": {
+    "description": "Message voyageur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)"
+  },
   "ticketMiniStatWeightLabel": "POIDS",
   "@ticketMiniStatWeightLabel": {
     "description": "Libellé de la mini-stat poids du talon voyageur, casse conservée telle quelle dans le code source (billet_talon.dart)"
@@ -17346,7 +17358,7 @@
   "@errorHandoverDeadlinePassedTitle": {
     "description": "Titre de l'erreur handover-deadline-passed (409) : trajet parti ou date limite de remise atteinte"
   },
-  "errorHandoverDeadlinePassedMessage": "La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.",
+  "errorHandoverDeadlinePassedMessage": "La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.",
   "@errorHandoverDeadlinePassedMessage": {
     "description": "Message de l'erreur handover-deadline-passed (409)"
   },

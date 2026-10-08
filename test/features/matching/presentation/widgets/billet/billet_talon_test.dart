@@ -764,4 +764,62 @@ void main() {
       },
     );
   });
+
+  group('EXPIRED à la date limite de dépôt (FLUTTER-GA)', () {
+    testWidgets('expéditeur : annulée et remboursée intégralement', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(status: 'EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
+        true,
+      );
+      expect(
+        find.byKey(const Key('billet-handover-deadline-expired')),
+        findsOneWidget,
+      );
+      expect(find.text('Date limite de dépôt passée'), findsOneWidget);
+      expect(
+        find.text(
+          'La date limite de dépôt est passée : demande annulée. '
+          'Tout paiement vous est remboursé intégralement.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('voyageur : demande annulée, sans mention de paiement', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(status: 'EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
+        false,
+      );
+      expect(
+        find.text('La date limite de dépôt est passée : demande annulée.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('EXPIRED au départ du voyageur : talon inchangé (vide)', (
+      tester,
+    ) async {
+      await _pump(tester, _bid(status: 'EXPIRED'), true);
+      expect(
+        find.byKey(const Key('billet-handover-deadline-expired')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('en anglais : sender + date limite passée', (tester) async {
+      useEnglish();
+      await _pump(
+        tester,
+        _bid(status: 'EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
+        true,
+      );
+      expect(find.text('Drop-off deadline passed'), findsOneWidget);
+    });
+  });
 }

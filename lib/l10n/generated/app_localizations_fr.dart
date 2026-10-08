@@ -7659,6 +7659,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ticketRequestClosedMessage => 'Cette demande est terminée.';
 
   @override
+  String get ticketHandoverDeadlineExpiredTitle =>
+      'Date limite de dépôt passée';
+
+  @override
+  String get ticketHandoverDeadlineExpiredSender =>
+      'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.';
+
+  @override
+  String get ticketHandoverDeadlineExpiredTraveler =>
+      'La date limite de dépôt est passée : demande annulée.';
+
+  @override
   String get ticketMiniStatWeightLabel => 'POIDS';
 
   @override
@@ -15191,7 +15203,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorHandoverDeadlinePassedMessage =>
-      'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.';
+      'La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.';
 
   @override
   String get bidDetailSectionRequest => 'DEMANDE';
