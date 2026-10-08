@@ -9365,5 +9365,19 @@
   "errorOfferNoLongerPayableTitle": "Offer withdrawn",
   "errorOfferNoLongerPayableMessage": "The traveler withdrew their offer or the payment window has ended. The negotiation has been updated.",
   "negotiationWithdrawOfferLockedButton": "Withdraw my offer",
-  "negotiationWithdrawOfferLockedExplanation": "The sender has accepted your offer: you can no longer withdraw it during their payment window."
+  "negotiationWithdrawOfferLockedExplanation": "The sender has accepted your offer: you can no longer withdraw it during their payment window.",
+  "tripStopsLabel": "Stops (optional)",
+  "tripStopsHint": "Add it if you know it: senders will see it on your trip.",
+  "tripStopsDirect": "Direct",
+  "tripStopsOne": "1 stop",
+  "tripStopsTwoOrMore": "2+ stops",
+  "tripStopsBadgeDirect": "Direct flight",
+  "tripStopsBadgeOne": "1 stop",
+  "tripStopsBadgeTwoOrMore": "2+ stops",
+  "tripStopsDetailLabel": "Stops",
+  "homeComposerSectionStops": "STOPS",
+  "homeComposerStopsDirectOnly": "Direct only",
+  "homeComposerStopsMaxOne": "Max 1 stop",
+  "homeComposerStopsAny": "Any",
+  "homeComposerStopsHint": "“Direct only” leaves out trips whose stops are not specified."
 }

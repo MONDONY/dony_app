@@ -1,10 +1,36 @@
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('HomeSearchFilters', () {
+    // FLUTTER-GD / FLUTTER-G0.
+    test('escales : requête, clé et compteur', () {
+      const f = HomeSearchFilters(stopsFilter: StopsFilter.directOnly);
+      final q = f.toAnnouncementQuery();
+      expect(q.maxStops, 0);
+      expect(f.activeKeys, {'stops'});
+      expect(f.activeCountFor(SearchMode.trips), 1);
+      expect(f.activeCountFor(SearchMode.parcels), 0);
+
+      const none = HomeSearchFilters();
+      expect(none.toAnnouncementQuery().maxStops, isNull);
+
+      final cleared = f.copyWith(clearStopsFilter: true);
+      expect(cleared.stopsFilter, isNull);
+      expect(
+        f
+            .copyWith(stopsFilter: StopsFilter.maxOne)
+            .toAnnouncementQuery()
+            .maxStops,
+        1,
+      );
+      // L'interversion du corridor ne perd pas ces filtres.
+      expect(f.swapCorridor().stopsFilter, StopsFilter.directOnly);
+    });
+
     test('vide : aucun filtre actif dans les deux modes', () {
       const f = HomeSearchFilters();
       expect(f.activeCountFor(SearchMode.trips), 0);

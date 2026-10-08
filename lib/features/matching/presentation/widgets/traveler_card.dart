@@ -10,6 +10,7 @@ import 'package:dony/features/favorites/presentation/widgets/favorite_heart_butt
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -349,7 +350,10 @@ class TravelerCard extends StatelessWidget {
                   // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
                   // ils disposent de toute la largeur de la carte et s'alignent de
                   // façon identique dans les deux vues.
-                  if (isKiloPro || isProAccount || announcement.isUrgent) ...[
+                  if (isKiloPro ||
+                      isProAccount ||
+                      announcement.isUrgent ||
+                      announcement.stops != null) ...[
                     const SizedBox(height: DonySpacing.sm),
                     Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
@@ -359,6 +363,8 @@ class TravelerCard extends StatelessWidget {
                         if (isKiloPro) const _KycBadge(),
                         if (isProAccount) const _ProBadge(),
                         if (announcement.isUrgent) const DonyUrgentBadge(),
+                        // Escales (FLUTTER-GE) : rien si non renseignées.
+                        TripStopsBadge(stops: announcement.stops),
                       ],
                     ),
                   ],

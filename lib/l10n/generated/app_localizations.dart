@@ -28327,6 +28327,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.'**
   String get negotiationWithdrawOfferLockedExplanation;
+
+  /// Création de trajet : choix du nombre d'escales d'un vol (FLUTTER-GE)
+  ///
+  /// In fr, this message translates to:
+  /// **'Escales (facultatif)'**
+  String get tripStopsLabel;
+
+  /// Création de trajet : aide sous le choix des escales (FLUTTER-GE)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez-le si vous le savez : les expéditeurs le verront sur votre trajet.'**
+  String get tripStopsHint;
+
+  /// Option escales : vol direct (FLUTTER-GE)
+  ///
+  /// In fr, this message translates to:
+  /// **'Direct'**
+  String get tripStopsDirect;
+
+  /// Option escales : une escale (FLUTTER-GE)
+  ///
+  /// In fr, this message translates to:
+  /// **'1 escale'**
+  String get tripStopsOne;
+
+  /// Option escales : deux escales ou plus (FLUTTER-GE)
+  ///
+  /// In fr, this message translates to:
+  /// **'2 escales ou plus'**
+  String get tripStopsTwoOrMore;
+
+  /// Badge de carte et détail de trajet : vol direct (FLUTTER-GE)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vol direct'**
+  String get tripStopsBadgeDirect;
+
+  /// Badge de carte et détail de trajet : une escale (FLUTTER-GE)
+  ///
+  /// In fr, this message translates to:
+  /// **'1 escale'**
+  String get tripStopsBadgeOne;
+
+  /// Badge de carte et détail de trajet : deux escales ou plus (FLUTTER-GE)
+  ///
+  /// In fr, this message translates to:
+  /// **'2 escales et +'**
+  String get tripStopsBadgeTwoOrMore;
+
+  /// Détail de trajet : intitulé de la ligne escales (FLUTTER-GE)
+  ///
+  /// In fr, this message translates to:
+  /// **'Escales'**
+  String get tripStopsDetailLabel;
+
+  /// Filtres de recherche de trajets : section escales (FLUTTER-GD)
+  ///
+  /// In fr, this message translates to:
+  /// **'ESCALES'**
+  String get homeComposerSectionStops;
+
+  /// Filtre escales : vols directs seulement (FLUTTER-GD)
+  ///
+  /// In fr, this message translates to:
+  /// **'Direct uniquement'**
+  String get homeComposerStopsDirectOnly;
+
+  /// Filtre escales : une escale au plus (FLUTTER-GD)
+  ///
+  /// In fr, this message translates to:
+  /// **'Max 1 escale'**
+  String get homeComposerStopsMaxOne;
+
+  /// Filtre escales : pas de filtre (FLUTTER-GD)
+  ///
+  /// In fr, this message translates to:
+  /// **'Peu importe'**
+  String get homeComposerStopsAny;
+
+  /// Filtre escales : explication du traitement des trajets non renseignés (FLUTTER-GD)
+  ///
+  /// In fr, this message translates to:
+  /// **'« Direct uniquement » écarte les trajets dont les escales ne sont pas renseignées.'**
+  String get homeComposerStopsHint;
 }
 
 class _AppLocalizationsDelegate

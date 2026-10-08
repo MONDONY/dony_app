@@ -8,6 +8,7 @@ import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 
 export 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -31,6 +32,7 @@ class AnnouncementRepository {
     required double availableKg,
     required double pricePerKg,
     required TransportMode transportMode,
+    TripStops? stops,
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
@@ -56,6 +58,7 @@ class AnnouncementRepository {
       availableKg: availableKg,
       pricePerKg: pricePerKg,
       transportMode: transportMode,
+      stops: stops,
       description: description,
       acceptedContentTypes: acceptedContentTypes,
       refusedTypes: refusedTypes,
@@ -122,6 +125,7 @@ class AnnouncementRepository {
     String sortBy = 'date',
     String sortDir = 'asc',
     bool? urgent,
+    int? maxStops,
   }) {
     return _remoteDatasource.searchAnnouncements(
       departureCity: departureCity,
@@ -143,6 +147,7 @@ class AnnouncementRepository {
       sortBy: sortBy,
       sortDir: sortDir,
       urgent: urgent,
+      maxStops: maxStops,
     );
   }
 
@@ -167,6 +172,7 @@ class AnnouncementRepository {
     String sortBy = 'date',
     String sortDir = 'asc',
     bool? urgent,
+    int? maxStops,
     int page = 0,
   }) {
     return _remoteDatasource.searchAnnouncementsPage(
@@ -189,6 +195,7 @@ class AnnouncementRepository {
       sortBy: sortBy,
       sortDir: sortDir,
       urgent: urgent,
+      maxStops: maxStops,
       page: page,
     );
   }
@@ -213,6 +220,7 @@ class AnnouncementRepository {
     double? userLng,
     double? radiusKm,
     bool? urgent,
+    int? maxStops,
   }) {
     return _remoteDatasource.countAnnouncements(
       departureCity: departureCity,
@@ -232,6 +240,7 @@ class AnnouncementRepository {
       userLng: userLng,
       radiusKm: radiusKm,
       urgent: urgent,
+      maxStops: maxStops,
     );
   }
 
@@ -273,6 +282,7 @@ class AnnouncementRepository {
     required double availableKg,
     required double pricePerKg,
     required TransportMode transportMode,
+    TripStops? stops,
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
@@ -297,6 +307,7 @@ class AnnouncementRepository {
       availableKg: availableKg,
       pricePerKg: pricePerKg,
       transportMode: transportMode,
+      stops: stops,
       description: description,
       acceptedContentTypes: acceptedContentTypes,
       refusedTypes: refusedTypes,

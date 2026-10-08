@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:intl/intl.dart';
 
@@ -33,6 +34,7 @@ class AnnouncementRemoteDatasource {
     required double availableKg,
     required double pricePerKg,
     required TransportMode transportMode,
+    TripStops? stops,
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
@@ -60,6 +62,7 @@ class AnnouncementRemoteDatasource {
         availableKg: availableKg,
         pricePerKg: pricePerKg,
         transportMode: transportMode,
+        stops: stops,
         description: description,
         acceptedContentTypes: acceptedContentTypes,
         refusedTypes: refusedTypes,
@@ -219,6 +222,7 @@ class AnnouncementRemoteDatasource {
     String sortDir = 'asc',
     int page = 0,
     bool? urgent,
+    int? maxStops,
   }) async {
     final result = await searchAnnouncementsPage(
       departureCity: departureCity,
@@ -241,6 +245,7 @@ class AnnouncementRemoteDatasource {
       sortDir: sortDir,
       page: page,
       urgent: urgent,
+      maxStops: maxStops,
     );
     return result.content;
   }
@@ -266,6 +271,7 @@ class AnnouncementRemoteDatasource {
     String sortDir = 'asc',
     int page = 0,
     bool? urgent,
+    int? maxStops,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -290,6 +296,7 @@ class AnnouncementRemoteDatasource {
         userLng: userLng,
         radiusKm: radiusKm,
         urgent: urgent,
+        maxStops: maxStops,
       ),
     };
     final response = await _apiClient.dio.get(
@@ -330,6 +337,7 @@ class AnnouncementRemoteDatasource {
     double? userLng,
     double? radiusKm,
     bool? urgent,
+    int? maxStops,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/announcements',
@@ -354,6 +362,7 @@ class AnnouncementRemoteDatasource {
           userLng: userLng,
           radiusKm: radiusKm,
           urgent: urgent,
+          maxStops: maxStops,
         ),
       },
     );
@@ -385,6 +394,7 @@ class AnnouncementRemoteDatasource {
     double? userLng,
     double? radiusKm,
     bool? urgent,
+    int? maxStops,
   }) => <String, dynamic>{
     'departureCity': ?departureCity,
     'arrivalCity': ?arrivalCity,
@@ -408,6 +418,9 @@ class AnnouncementRemoteDatasource {
     // Filtre serveur « annonces urgentes » — jamais envoyer urgent=false,
     // seulement présent quand le chip est actif (cf. PR back #112).
     if (urgent == true) 'urgent': true,
+    // FLUTTER-GD : 0 = direct uniquement, 1 = au plus une escale ; absent =
+    // peu importe. Un back antérieur ignore le paramètre (liste non filtrée).
+    'maxStops': ?maxStops,
   };
 
   Future<void> deleteAnnouncement(String id) async {
@@ -457,6 +470,7 @@ class AnnouncementRemoteDatasource {
     required double availableKg,
     required double pricePerKg,
     required TransportMode transportMode,
+    TripStops? stops,
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
@@ -482,6 +496,8 @@ class AnnouncementRemoteDatasource {
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
         'transportMode': transportModeToWire(transportMode),
+        if (stops != null && supportsStops(transportMode))
+          'stopsCount': stops.wire,
         if (description != null && description.isNotEmpty)
           'description': description,
         'acceptedContentTypes': acceptedContentTypes,

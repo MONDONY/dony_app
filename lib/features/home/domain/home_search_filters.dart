@@ -1,6 +1,7 @@
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 
@@ -64,6 +65,7 @@ class AnnouncementQuery {
     this.userLng,
     this.radiusKm,
     this.urgent,
+    this.maxStops,
   });
 
   final String? departureCity;
@@ -83,6 +85,9 @@ class AnnouncementQuery {
   final double? userLng;
   final double? radiusKm;
   final bool? urgent;
+
+  /// Escales maximum (FLUTTER-GD) ; `null` = peu importe.
+  final int? maxStops;
 }
 
 /// État de recherche de l'écran Rechercher, immuable et sans dépendance Flutter.
@@ -114,6 +119,7 @@ class HomeSearchFilters {
     this.kycVerifiedOnly = false,
     this.contentType,
     this.urgencyFilter,
+    this.stopsFilter,
     // Colis
     this.maxWeight,
     this.parcelSize,
@@ -145,6 +151,9 @@ class HomeSearchFilters {
   final bool kycVerifiedOnly;
   final String? contentType;
   final UrgencyFilter? urgencyFilter;
+
+  /// Filtre « Escales » (FLUTTER-GD) ; `null` = peu importe.
+  final StopsFilter? stopsFilter;
 
   // ── Colis ──────────────────────────────────────────────────────────────────
   /// Poids maximal des demandes recherchées, en kg. Voir [weightMin].
@@ -270,6 +279,7 @@ class HomeSearchFilters {
       userLng: nearMeActive ? userLng : null,
       radiusKm: nearMeActive ? nearMeRadiusKm : null,
       urgent: urgentOnly ? true : null,
+      maxStops: stopsFilter?.maxStops,
     );
   }
 
@@ -292,6 +302,7 @@ class HomeSearchFilters {
     if (kycVerifiedOnly) 'kyc_verified',
     if (contentType != null) 'content_type',
     if (urgencyFilter != null) 'urgency',
+    if (stopsFilter != null) 'stops',
     if (maxWeight != null) 'max_weight',
     if (parcelSize != null) 'parcel_size',
     if (matchingMyTrips) 'matching_my_trips',
@@ -341,6 +352,9 @@ class HomeSearchFilters {
       n++;
     }
     if (urgencyFilter != null) {
+      n++;
+    }
+    if (stopsFilter != null) {
       n++;
     }
     return n;
@@ -409,6 +423,7 @@ class HomeSearchFilters {
     bool? kycVerifiedOnly,
     String? contentType,
     UrgencyFilter? urgencyFilter,
+    StopsFilter? stopsFilter,
     double? maxWeight,
     ParcelSize? parcelSize,
     bool? matchingMyTrips,
@@ -420,6 +435,7 @@ class HomeSearchFilters {
     bool clearTransportMode = false,
     bool clearContentType = false,
     bool clearUrgencyFilter = false,
+    bool clearStopsFilter = false,
     bool clearMaxWeight = false,
     bool clearParcelSize = false,
     bool clearNearMe = false,
@@ -454,6 +470,7 @@ class HomeSearchFilters {
       urgencyFilter: clearUrgencyFilter
           ? null
           : (urgencyFilter ?? this.urgencyFilter),
+      stopsFilter: clearStopsFilter ? null : (stopsFilter ?? this.stopsFilter),
       maxWeight: clearMaxWeight ? null : (maxWeight ?? this.maxWeight),
       parcelSize: clearParcelSize ? null : (parcelSize ?? this.parcelSize),
       matchingMyTrips: matchingMyTrips ?? this.matchingMyTrips,

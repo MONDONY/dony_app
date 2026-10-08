@@ -72,6 +72,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         availableKg: event.availableKg,
         pricePerKg: event.pricePerKg,
         transportMode: event.transportMode,
+        stops: event.stops,
         description: event.description,
         acceptedContentTypes: event.acceptedContentTypes,
         refusedTypes: event.refusedTypes,
@@ -256,6 +257,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       sortBy: event.sortBy,
       sortDir: event.sortDir,
       urgent: event.urgent,
+      maxStops: event.maxStops,
       page: page,
     );
   }
@@ -438,6 +440,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         availableKg: event.availableKg,
         pricePerKg: event.pricePerKg,
         transportMode: event.transportMode,
+        stops: event.stops,
         description: event.description,
         acceptedContentTypes: event.acceptedContentTypes,
         refusedTypes: event.refusedTypes,
@@ -575,6 +578,7 @@ List<AnnouncementPayload> buildTripPayloads(
       availableKg: first.availableKg,
       pricePerKg: first.pricePerKg,
       transportMode: first.transportMode,
+      stops: first.stops,
       description: first.description,
       acceptedContentTypes: first.acceptedContentTypes,
       refusedTypes: first.refusedTypes,
@@ -605,6 +609,7 @@ List<AnnouncementPayload> buildTripPayloads(
         // Grille seule (MIXED) : l'étape garde le prix au kilo du premier trajet.
         pricePerKg: leg.pricePerKg ?? first.pricePerKg,
         transportMode: first.transportMode,
+        stops: first.stops,
         description: first.description,
         acceptedContentTypes: first.acceptedContentTypes,
         refusedTypes: first.refusedTypes,

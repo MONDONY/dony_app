@@ -32,6 +32,7 @@ import 'package:dony/features/matching/presentation/widgets/address_location_row
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -745,6 +746,8 @@ class _HeroCorridorCard extends StatelessWidget {
             children: [
               _HeroChip(label: dateStr),
               if (transportLabel != null) _HeroChip(label: transportLabel),
+              if (announcement.stops != null)
+                _HeroChip(label: tripStopsBadgeLabel(l, announcement.stops!)),
               if (hoursLabel != null) _HeroChip(label: hoursLabel),
               _HeroChip(label: kgLabel),
             ],

@@ -17183,4 +17183,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get negotiationWithdrawOfferLockedExplanation =>
       'The sender has accepted your offer: you can no longer withdraw it during their payment window.';
+
+  @override
+  String get tripStopsLabel => 'Stops (optional)';
+
+  @override
+  String get tripStopsHint =>
+      'Add it if you know it: senders will see it on your trip.';
+
+  @override
+  String get tripStopsDirect => 'Direct';
+
+  @override
+  String get tripStopsOne => '1 stop';
+
+  @override
+  String get tripStopsTwoOrMore => '2+ stops';
+
+  @override
+  String get tripStopsBadgeDirect => 'Direct flight';
+
+  @override
+  String get tripStopsBadgeOne => '1 stop';
+
+  @override
+  String get tripStopsBadgeTwoOrMore => '2+ stops';
+
+  @override
+  String get tripStopsDetailLabel => 'Stops';
+
+  @override
+  String get homeComposerSectionStops => 'STOPS';
+
+  @override
+  String get homeComposerStopsDirectOnly => 'Direct only';
+
+  @override
+  String get homeComposerStopsMaxOne => 'Max 1 stop';
+
+  @override
+  String get homeComposerStopsAny => 'Any';
+
+  @override
+  String get homeComposerStopsHint =>
+      '“Direct only” leaves out trips whose stops are not specified.';
 }

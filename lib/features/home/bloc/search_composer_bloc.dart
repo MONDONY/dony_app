@@ -274,6 +274,7 @@ class SearchComposerBloc
           userLng: q.userLng,
           radiusKm: q.radiusKm,
           urgent: q.urgent,
+          maxStops: q.maxStops,
         );
       } else {
         final q = filters.toPackageRequestQuery();

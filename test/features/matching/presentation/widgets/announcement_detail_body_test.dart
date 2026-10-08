@@ -87,6 +87,38 @@ void main() {
     ),
   );
 
+  // FLUTTER-GE : escales affichées sur le détail, rien si non renseignées.
+  testWidgets('escales : pastille si renseignées, absente sinon', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        AnnouncementModel.fromJson({
+          'id': 'ann-3',
+          'travelerId': 'trav-1',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Dakar',
+          'departureDate': DateTime(2026, 9, 2).toIso8601String(),
+          'availableKg': 5,
+          'totalKg': 5,
+          'pricePerKg': 6,
+          'status': 'ACTIVE',
+          'transportMode': 'PLANE',
+          'stopsCount': 2,
+          'createdAt': DateTime(2026, 7).toIso8601String(),
+          'updatedAt': DateTime(2026, 7).toIso8601String(),
+        }),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('detail-stops-chip')), findsOneWidget);
+    expect(find.text('2 escales et +'), findsOneWidget);
+
+    await tester.pumpWidget(host(_minimal()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('detail-stops-chip')), findsNothing);
+  });
+
   testWidgets('modèle complet ACTIVE → corridor + badge + sections présentes', (
     tester,
   ) async {

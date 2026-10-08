@@ -225,6 +225,70 @@ void main() {
     }
   });
 
+  // FLUTTER-GD : le filtre d'escales part au serveur.
+  testWidgets('Escales alimentent la recherche', (tester) async {
+    _vueHaute(tester);
+    final repo = _MockAnnouncementRepo();
+    await tester.pumpWidget(_Harness(announcementRepo: repo));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.text('ESCALES'));
+    await tester.tap(find.byKey(const Key('chip-stops-directOnly')));
+    await _settleFilterChange(tester);
+
+    final calls = verify(
+      () => repo.countAnnouncements(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDateFrom: any(named: 'departureDateFrom'),
+        departureDateTo: any(named: 'departureDateTo'),
+        minAvailableKg: any(named: 'minAvailableKg'),
+        maxAvailableKg: any(named: 'maxAvailableKg'),
+        maxPricePerKg: any(named: 'maxPricePerKg'),
+        kiloProOnly: any(named: 'kiloProOnly'),
+        minRating: any(named: 'minRating'),
+        weekendOnly: any(named: 'weekendOnly'),
+        transportMode: any(named: 'transportMode'),
+        kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+        contentType: any(named: 'contentType'),
+        userLat: any(named: 'userLat'),
+        userLng: any(named: 'userLng'),
+        radiusKm: any(named: 'radiusKm'),
+        urgent: any(named: 'urgent'),
+        maxStops: captureAny(named: 'maxStops'),
+      ),
+    ).captured;
+    expect(calls.last, 0);
+
+    // « Peu importe » retire le filtre d'escales.
+    await _scrollTo(tester, find.byKey(const Key('chip-stops-any')));
+    await tester.tap(find.byKey(const Key('chip-stops-any')));
+    await _settleFilterChange(tester);
+    final after = verify(
+      () => repo.countAnnouncements(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDateFrom: any(named: 'departureDateFrom'),
+        departureDateTo: any(named: 'departureDateTo'),
+        minAvailableKg: any(named: 'minAvailableKg'),
+        maxAvailableKg: any(named: 'maxAvailableKg'),
+        maxPricePerKg: any(named: 'maxPricePerKg'),
+        kiloProOnly: any(named: 'kiloProOnly'),
+        minRating: any(named: 'minRating'),
+        weekendOnly: any(named: 'weekendOnly'),
+        transportMode: any(named: 'transportMode'),
+        kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+        contentType: any(named: 'contentType'),
+        userLat: any(named: 'userLat'),
+        userLng: any(named: 'userLng'),
+        radiusKm: any(named: 'radiusKm'),
+        urgent: any(named: 'urgent'),
+        maxStops: captureAny(named: 'maxStops'),
+      ),
+    ).captured;
+    expect(after.last, isNull);
+  });
+
   testWidgets('le bloc de phrase est marqué facultatif', (tester) async {
     await tester.pumpWidget(const _Harness());
     await tester.pumpAndSettle();
@@ -597,8 +661,10 @@ class _Harness extends StatelessWidget {
     this.withPriceAmbiguity = false,
     this.withRecognizedArrival = false,
     this.withParseFailure = false,
+    this.announcementRepo,
   });
 
+  final _MockAnnouncementRepo? announcementRepo;
   final SearchMode mode;
   final int? count;
   final bool withPriceAmbiguity;
@@ -608,7 +674,7 @@ class _Harness extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final parseRepo = _MockParseRepo();
-    final announcementRepo = _MockAnnouncementRepo();
+    final announcementRepo = this.announcementRepo ?? _MockAnnouncementRepo();
     final packageRepo = _MockPackageRepo();
     final analytics = _MockAnalytics();
 
@@ -631,6 +697,7 @@ class _Harness extends StatelessWidget {
         userLng: any(named: 'userLng'),
         radiusKm: any(named: 'radiusKm'),
         urgent: any(named: 'urgent'),
+        maxStops: any(named: 'maxStops'),
       ),
     ).thenAnswer((_) async => count ?? 0);
 

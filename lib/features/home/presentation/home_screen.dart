@@ -689,6 +689,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         userLng: q.userLng,
         radiusKm: q.radiusKm,
         urgent: q.urgent,
+        maxStops: q.maxStops,
       ),
     );
   }
@@ -788,6 +789,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
           userLng: q.userLng,
           radiusKm: q.radiusKm,
           urgent: q.urgent,
+          maxStops: q.maxStops,
         );
       }
       if (mounted) {

@@ -633,6 +633,9 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
   final _cashEnabledNotifier = ValueNotifier<bool>(false);
 
+  /// Escales du vol (FLUTTER-GE), facultatives, envoyées pour l'avion seul.
+  final _stopsNotifier = ValueNotifier<TripStops?>(null);
+
   /// Le voyageur accepte le paiement par mobile money (Orange Money, Wave,
   /// MTN via pawaPay). Uniquement pertinent pour un trajet en zone CFA
   /// (XOF/XAF) — remis à `false` par [_onCurrencyChanged] si la devise
@@ -745,6 +748,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _pickupAddressNotifier.value = a.pickupAddress;
       _deliveryAddressNotifier.value = a.deliveryAddress;
       _transportModeNotifier.value = a.transportMode;
+      _stopsNotifier.value = a.stops;
 
       if (a.description != null) {
         _descriptionCtrl.text = a.description!;
@@ -984,6 +988,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _refusedTypesNotifier,
     _cashEnabledNotifier,
     _mobileMoneyEnabledNotifier,
+    _stopsNotifier,
     _negotiableNotifier,
     _kgPriceEnabledNotifier,
     _descriptionCtrl,
@@ -1022,6 +1027,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _transportModeNotifier.value,
       _cashEnabledNotifier.value,
       _mobileMoneyEnabledNotifier.value,
+      _stopsNotifier.value,
       _negotiableNotifier.value,
       _kgPriceEnabledNotifier.value,
       set(_selectedContentNotifier.value),
@@ -1307,6 +1313,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     widget.currencyNotifier.removeListener(_onCurrencyChanged);
     _kgPriceEnabledNotifier.dispose();
     _cashEnabledNotifier.dispose();
+    _stopsNotifier.dispose();
     _mobileMoneyEnabledNotifier.dispose();
     _negotiableNotifier.dispose();
     _descriptionCtrl.dispose();
@@ -1509,6 +1516,8 @@ class _TripFormContentState extends State<_TripFormContent> {
       if (_cashEnabledNotifier.value || !stripeConfigured) 'CASH',
       if (_mobileMoneyEnabledNotifier.value) 'MOBILE_MONEY',
     ];
+    // Escales : avion seulement, sinon jamais envoyées.
+    final stops = supportsStops(transportMode) ? _stopsNotifier.value : null;
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();
@@ -1553,6 +1562,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           availableKg: _availableKgNotifier.value,
           pricePerKg: pricePerKgToSubmit,
           transportMode: transportMode,
+          stops: stops,
           description: description,
           acceptedContentTypes: allAccepted,
           refusedTypes: refused,
@@ -1578,6 +1588,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         availableKg: _availableKgNotifier.value,
         pricePerKg: pricePerKgToSubmit,
         transportMode: transportMode,
+        stops: stops,
         description: description,
         acceptedContentTypes: allAccepted,
         refusedTypes: refused,
@@ -2138,6 +2149,8 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureTimeNotifier: _departureTimeNotifier,
           arrivalTimeNotifier: _arrivalTimeNotifier,
           arrivalDayOffsetNotifier: _arrivalDayOffsetNotifier,
+          stopsNotifier: _stopsNotifier,
+          transportModeNotifier: _transportModeNotifier,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,

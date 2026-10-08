@@ -17295,4 +17295,48 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get negotiationWithdrawOfferLockedExplanation =>
       'L\'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.';
+
+  @override
+  String get tripStopsLabel => 'Escales (facultatif)';
+
+  @override
+  String get tripStopsHint =>
+      'Indiquez-le si vous le savez : les expéditeurs le verront sur votre trajet.';
+
+  @override
+  String get tripStopsDirect => 'Direct';
+
+  @override
+  String get tripStopsOne => '1 escale';
+
+  @override
+  String get tripStopsTwoOrMore => '2 escales ou plus';
+
+  @override
+  String get tripStopsBadgeDirect => 'Vol direct';
+
+  @override
+  String get tripStopsBadgeOne => '1 escale';
+
+  @override
+  String get tripStopsBadgeTwoOrMore => '2 escales et +';
+
+  @override
+  String get tripStopsDetailLabel => 'Escales';
+
+  @override
+  String get homeComposerSectionStops => 'ESCALES';
+
+  @override
+  String get homeComposerStopsDirectOnly => 'Direct uniquement';
+
+  @override
+  String get homeComposerStopsMaxOne => 'Max 1 escale';
+
+  @override
+  String get homeComposerStopsAny => 'Peu importe';
+
+  @override
+  String get homeComposerStopsHint =>
+      '« Direct uniquement » écarte les trajets dont les escales ne sont pas renseignées.';
 }

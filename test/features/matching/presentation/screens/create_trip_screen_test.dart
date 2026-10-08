@@ -321,6 +321,7 @@ AnnouncementModel _makeAnnouncement() => AnnouncementModel(
 /// • departureTime + arrivalTime (covers TimeOfDay parsing in initState)
 /// • acceptedContentTypes + refusedTypes (covers content-type init code)
 AnnouncementModel _makeFullAnnouncement({
+  TripStops? stops,
   String currency = 'EUR',
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
     BidPaymentMethod.stripe,
@@ -354,6 +355,7 @@ AnnouncementModel _makeFullAnnouncement({
     lng: -17.467,
   ),
   transportMode: TransportMode.plane,
+  stops: stops,
   acceptedPaymentMethods: acceptedPaymentMethods,
   acceptedContentTypes: const ['Vêtements', 'Médicaments'],
   refusedTypes: const ['Produits dangereux'],
@@ -1746,6 +1748,29 @@ void main() {
         ).called(1);
       },
     );
+
+    testWidgets('FLUTTER-GE : les escales préremplies repartent à '
+        'l\'enregistrement', (tester) async {
+      await navigateToStep2(
+        tester,
+        announcement: _makeFullAnnouncement(stops: TripStops.one),
+      );
+
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      verify(
+        () => announcementBloc.add(
+          any(
+            that: predicate<AnnouncementEvent>(
+              (e) =>
+                  e is AnnouncementUpdateRequested && e.stops == TripStops.one,
+              'AnnouncementUpdateRequested avec une escale',
+            ),
+          ),
+        ),
+      ).called(1);
+    });
 
     testWidgets(
       'changer de devise resynchronise le prix du bloc : le même chip vaut '
