@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 
 export 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -134,7 +135,24 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
 
 class AnnouncementDeleteRequested extends AnnouncementEvent {
   final String id;
-  AnnouncementDeleteRequested(this.id);
+
+  /// Étapes suivantes du même voyage que le voyageur a choisi d'annuler aussi
+  /// (FLUTTER-4D). Supprimées après [id], une par une et sans bloquer : une
+  /// étape refusée (colis déjà accepté) reste en place et est comptée.
+  final List<String> followingLegIds;
+
+  AnnouncementDeleteRequested(this.id, {this.followingLegIds = const []});
+}
+
+/// Publication d'un voyage à plusieurs étapes (FLUTTER-4D) : [first] est le
+/// trajet du formulaire, [legs] les étapes ajoutées. Chaque étape reprend du
+/// premier trajet tout ce qu'elle ne redéfinit pas (mode de transport,
+/// contenus, paiements, devise…).
+class AnnouncementTripCreateRequested extends AnnouncementEvent {
+  final AnnouncementCreateRequested first;
+  final List<TripLegDraft> legs;
+
+  AnnouncementTripCreateRequested({required this.first, required this.legs});
 }
 
 /// Ouverture de la capacité excédentaire d'un trajet dédié au public.

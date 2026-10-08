@@ -8,7 +8,9 @@ import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/announcement_payload.dart';
 import 'package:dony/features/matching/data/models/announcement_search_page.dart';
+import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,6 +30,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   }) : _tripArrivalEvents = tripArrivalEvents,
        super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
+    on<AnnouncementTripCreateRequested>(_onTripCreateRequested);
     on<AnnouncementPublishRequested>(_onPublishRequested);
     on<AnnouncementUnpublishRequested>(_onUnpublishRequested);
     on<AnnouncementListRequested>(_onListRequested);
@@ -313,12 +316,70 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     emit(AnnouncementLoading());
     try {
       await _repository.deleteAnnouncement(event.id);
-      emit(AnnouncementDeleted());
+      // Étapes suivantes du voyage (FLUTTER-4D) : au mieux, sans annuler
+      // l'étape principale déjà supprimée si l'une d'elles est refusée.
+      var followingFailed = 0;
+      for (final id in event.followingLegIds) {
+        try {
+          await _repository.deleteAnnouncement(id);
+        } catch (_) {
+          followingFailed++;
+        }
+      }
+      emit(AnnouncementDeleted(followingFailed: followingFailed));
     } catch (e) {
       if (e is DioException && e.response?.statusCode == 409) {
         emit(AnnouncementDeleteBlockedByAcceptedBid(event.id));
       } else {
         emit(AnnouncementError(unwrapDioError(e)));
+      }
+    }
+  }
+
+  Future<void> _onTripCreateRequested(
+    AnnouncementTripCreateRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    // Même garde anti double-soumission que la création simple.
+    if (state is AnnouncementLoading) return;
+    emit(AnnouncementLoading());
+    try {
+      final legs = await _repository.createTrip(
+        buildTripPayloads(event.first, event.legs),
+      );
+      if (legs.isEmpty) {
+        emit(AnnouncementTripUnsupported());
+        return;
+      }
+      emit(AnnouncementTripCreated(legs));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.tripGroupCreated,
+          properties: {
+            'leg_count': legs.length,
+            'corridor': [
+              event.first.departureCity,
+              ...legs.map((l) => l.arrivalCity),
+            ].join('→'),
+            'is_draft': event.first.saveAsDraft,
+          },
+        ),
+      );
+    } catch (e) {
+      final error = unwrapDioError(e);
+      // Backend antérieur à FLUTTER-4D : la route n'existe pas (404), ou
+      // `/announcements/{id}` capte « trips » en identifiant (405).
+      if (error is NotFoundException ||
+          (error is NetworkException && error.code == '405')) {
+        emit(AnnouncementTripUnsupported());
+      } else if (error is ForbiddenException &&
+          error.code == 'draft-limit-reached') {
+        emit(AnnouncementDraftLimitReached(error));
+      } else if (error is ForbiddenException &&
+          error.code == 'pro-limit-reached') {
+        emit(AnnouncementProLimitReached(error));
+      } else {
+        emit(AnnouncementError(error));
       }
     }
   }
@@ -482,4 +543,94 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       emit(AnnouncementError(unwrapDioError(e)));
     }
   }
+}
+
+/// Corps des étapes d'un voyage (FLUTTER-4D), dans l'ordre du voyage.
+///
+/// Chaque étape ajoutée part de la ville et de l'adresse d'arrivée de la
+/// précédente, et reprend du premier trajet ce qu'elle ne redéfinit pas. Sa
+/// date limite de dépôt garde le même délai avant le départ que celle du
+/// premier trajet.
+@visibleForTesting
+List<AnnouncementPayload> buildTripPayloads(
+  AnnouncementCreateRequested first,
+  List<TripLegDraft> legs,
+) {
+  final firstDeparture = _departureAt(first.departureDate, first.departureTime);
+  var lead = firstDeparture.difference(first.handoverDeadline);
+  if (lead.isNegative) lead = Duration.zero;
+
+  final payloads = <AnnouncementPayload>[
+    AnnouncementPayload(
+      departureCity: first.departureCity,
+      arrivalCity: first.arrivalCity,
+      departureCountryCode: first.departureCountryCode,
+      arrivalCountryCode: first.arrivalCountryCode,
+      departureDate: first.departureDate,
+      departureTime: first.departureTime,
+      arrivalTime: first.arrivalTime,
+      arrivalDate: first.arrivalDate,
+      pickupAddress: first.pickupAddress,
+      deliveryAddress: first.deliveryAddress,
+      availableKg: first.availableKg,
+      pricePerKg: first.pricePerKg,
+      transportMode: first.transportMode,
+      description: first.description,
+      acceptedContentTypes: first.acceptedContentTypes,
+      refusedTypes: first.refusedTypes,
+      acceptedPaymentMethods: first.acceptedPaymentMethods,
+      capacityUnit: first.capacityUnit,
+      pricingMode: first.pricingMode,
+      handoverDeadline: first.handoverDeadline,
+      negotiable: first.negotiable,
+      saveAsDraft: first.saveAsDraft,
+      currency: first.currency,
+    ),
+  ];
+  var fromCity = first.arrivalCity;
+  var fromCountry = first.arrivalCountryCode;
+  var fromAddress = first.deliveryAddress;
+  for (final leg in legs) {
+    payloads.add(
+      AnnouncementPayload(
+        departureCity: fromCity,
+        arrivalCity: leg.arrivalCity,
+        departureCountryCode: fromCountry,
+        arrivalCountryCode: leg.arrivalCountryCode,
+        departureDate: leg.departureDate,
+        departureTime: leg.departureTime,
+        pickupAddress: fromAddress,
+        deliveryAddress: leg.deliveryAddress,
+        availableKg: leg.availableKg,
+        // Grille seule (MIXED) : l'étape garde le prix au kilo du premier trajet.
+        pricePerKg: leg.pricePerKg ?? first.pricePerKg,
+        transportMode: first.transportMode,
+        description: first.description,
+        acceptedContentTypes: first.acceptedContentTypes,
+        refusedTypes: first.refusedTypes,
+        acceptedPaymentMethods: first.acceptedPaymentMethods,
+        capacityUnit: first.capacityUnit,
+        pricingMode: first.pricingMode,
+        handoverDeadline: leg.departureAt.subtract(lead),
+        negotiable: first.negotiable,
+        saveAsDraft: first.saveAsDraft,
+        currency: first.currency,
+      ),
+    );
+    fromCity = leg.arrivalCity;
+    fromCountry = leg.arrivalCountryCode;
+    fromAddress = leg.deliveryAddress;
+  }
+  return payloads;
+}
+
+DateTime _departureAt(DateTime date, String? time) {
+  final parts = (time ?? '00:00').split(':');
+  return DateTime(
+    date.year,
+    date.month,
+    date.day,
+    int.tryParse(parts[0]) ?? 0,
+    parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0,
+  );
 }

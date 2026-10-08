@@ -1,10 +1,12 @@
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/announcement_payload.dart';
 import 'package:dony/features/matching/data/models/announcement_search_page.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
+import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 
@@ -66,6 +68,14 @@ class AnnouncementRepository {
       currency: currency,
     );
   }
+
+  /// Voyage à plusieurs étapes (FLUTTER-4D).
+  Future<List<AnnouncementModel>> createTrip(List<AnnouncementPayload> legs) =>
+      _remoteDatasource.createTrip(legs);
+
+  /// Étapes du voyage de l'annonce [id] (FLUTTER-4D).
+  Future<TripLegsInfo> getTripLegs(String id) =>
+      _remoteDatasource.getTripLegs(id);
 
   Future<AnnouncementModel> publishAnnouncement(String id) =>
       _remoteDatasource.publishAnnouncement(id);

@@ -408,6 +408,31 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.workspace_premium_outlined,
     ),
+    // Voyage à plusieurs étapes (FLUTTER-4D), refus de POST /announcements/trips.
+    'trip-leg-city-mismatch': _Entry(
+      title: (l) => l.errorTripLegCityMismatchTitle,
+      message: (l) => l.errorTripLegCityMismatchMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.alt_route_rounded,
+    ),
+    'trip-leg-date-before-previous': _Entry(
+      title: (l) => l.errorTripLegDateTitle,
+      message: (l) => l.errorTripLegDateMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.event_busy_outlined,
+    ),
+    'trip-legs-count': _Entry(
+      title: (l) => l.errorTripLegsCountTitle,
+      message: (l) => l.errorTripLegsCountMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.alt_route_rounded,
+    ),
+    'trip-legs-draft-mismatch': _Entry(
+      title: (l) => l.errorTripLegsDraftMismatchTitle,
+      message: (l) => l.errorTripLegsDraftMismatchMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.drafts_outlined,
+    ),
     'draft-limit-reached': _Entry(
       title: (l) => l.errorDraftLimitReachedTitle,
       message: (l) => l.errorDraftLimitReachedMessage,

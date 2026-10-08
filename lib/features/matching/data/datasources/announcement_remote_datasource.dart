@@ -1,11 +1,13 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/announcement_payload.dart';
 import 'package:dony/features/matching/data/models/announcement_search_page.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
+import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:intl/intl.dart';
@@ -44,37 +46,55 @@ class AnnouncementRemoteDatasource {
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements',
-      data: {
-        'departureCity': departureCity,
-        'arrivalCity': arrivalCity,
-        'departureCountryCode': ?departureCountryCode,
-        'arrivalCountryCode': ?arrivalCountryCode,
-        'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
-        'departureTime': ?departureTime,
-        'arrivalTime': ?arrivalTime,
-        'arrivalDate': ?arrivalDate,
-        'pickupAddress': pickupAddress.toJson(),
-        'deliveryAddress': deliveryAddress.toJson(),
-        'availableKg': availableKg,
-        'pricePerKg': pricePerKg,
-        'transportMode': transportModeToWire(transportMode),
-        if (description != null && description.isNotEmpty)
-          'description': description,
-        'acceptedContentTypes': acceptedContentTypes,
-        'refusedTypes': refusedTypes,
-        'acceptedPaymentMethods': acceptedPaymentMethods,
-        'capacityUnit': ?capacityUnit,
-        'pricingMode': pricingMode,
-        'handoverDeadline': handoverDeadline.toUtc().toIso8601String(),
-        'negotiable': negotiable,
-        if (saveAsDraft) 'saveAsDraft': true,
-        // Optionnel : absente, l'API retombe sur la devise du portefeuille du
-        // créateur (cf. plan devise-par-annonce, tâche 5).
-        'currency': ?currency,
-      },
+      data: AnnouncementPayload(
+        departureCity: departureCity,
+        arrivalCity: arrivalCity,
+        departureCountryCode: departureCountryCode,
+        arrivalCountryCode: arrivalCountryCode,
+        departureDate: departureDate,
+        departureTime: departureTime,
+        arrivalTime: arrivalTime,
+        arrivalDate: arrivalDate,
+        pickupAddress: pickupAddress,
+        deliveryAddress: deliveryAddress,
+        availableKg: availableKg,
+        pricePerKg: pricePerKg,
+        transportMode: transportMode,
+        description: description,
+        acceptedContentTypes: acceptedContentTypes,
+        refusedTypes: refusedTypes,
+        acceptedPaymentMethods: acceptedPaymentMethods,
+        capacityUnit: capacityUnit,
+        pricingMode: pricingMode,
+        handoverDeadline: handoverDeadline,
+        negotiable: negotiable,
+        saveAsDraft: saveAsDraft,
+        currency: currency,
+      ).toJson(),
     );
 
     return AnnouncementModel.fromJson(response.data);
+  }
+
+  /// Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes en une
+  /// transaction côté serveur. Renvoie les étapes créées, dans l'ordre.
+  Future<List<AnnouncementModel>> createTrip(
+    List<AnnouncementPayload> legs,
+  ) async {
+    final response = await _apiClient.dio.post(
+      '/announcements/trips',
+      data: {'legs': legs.map((l) => l.toJson()).toList()},
+    );
+    final data = response.data as Map<String, dynamic>;
+    return ((data['legs'] as List?) ?? const [])
+        .map((e) => AnnouncementModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Étapes du voyage auquel appartient l'annonce [id] (FLUTTER-4D).
+  Future<TripLegsInfo> getTripLegs(String id) async {
+    final response = await _apiClient.dio.get('/announcements/$id/trip-legs');
+    return TripLegsInfo.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<AnnouncementModel> publishAnnouncement(String id) async {

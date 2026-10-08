@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_reschedule_bottom_sheet.dart';
@@ -204,8 +205,10 @@ class OwnerActionGrid extends StatelessWidget {
               iconAsset: 'trash-2',
             );
             if (confirmed == true && context.mounted) {
+              final following = await askCancelFollowingLegs(context, a.id);
+              if (!context.mounted || following == null) return;
               context.read<AnnouncementBloc>().add(
-                AnnouncementDeleteRequested(a.id),
+                AnnouncementDeleteRequested(a.id, followingLegIds: following),
               );
             }
           },
@@ -398,4 +401,37 @@ class _CountPill extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Voyage à plusieurs étapes (FLUTTER-4D) : avant d'annuler une étape,
+/// propose d'annuler aussi les suivantes encore ouvertes.
+///
+/// Rend les identifiants à annuler en plus (vide : les garder), ou `null` si
+/// le voyageur a fermé la question sans choisir. Sans [TripGroupCubit] dans
+/// l'arbre, ou pour un trajet isolé, rend une liste vide sans rien demander.
+@visibleForTesting
+Future<List<String>?> askCancelFollowingLegs(
+  BuildContext context,
+  String announcementId,
+) async {
+  TripGroupCubit? cubit;
+  try {
+    cubit = context.read<TripGroupCubit>();
+  } on ProviderNotFoundException {
+    cubit = null;
+  }
+  final following = cubit?.state.info.openLegsAfter(announcementId) ?? const [];
+  if (following.isEmpty) return const [];
+  final l = context.l10n;
+  final cancelThem = await DonyDialog.show(
+    context,
+    title: l.tripLegsCancelFollowingTitle,
+    message: l.tripLegsCancelFollowingMessage(following.length),
+    confirmLabel: l.tripLegsCancelFollowingConfirm,
+    cancelLabel: l.tripLegsCancelFollowingKeep,
+    variant: DonyDialogVariant.destructive,
+    icon: Icons.alt_route_rounded,
+  );
+  if (cancelThem == null) return null;
+  return cancelThem ? following.map((leg) => leg.id).toList() : const [];
 }

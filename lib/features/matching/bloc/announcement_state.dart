@@ -37,7 +37,25 @@ class AnnouncementUpdated extends AnnouncementState {
   AnnouncementUpdated(this.announcement);
 }
 
-class AnnouncementDeleted extends AnnouncementState {}
+class AnnouncementDeleted extends AnnouncementState {
+  /// Étapes suivantes (FLUTTER-4D) qui n'ont pas pu être annulées.
+  final int followingFailed;
+
+  AnnouncementDeleted({this.followingFailed = 0});
+}
+
+/// Voyage à plusieurs étapes publié (FLUTTER-4D). [announcement] est la
+/// première étape : les écrans qui attendent [AnnouncementCreated] restent
+/// valables.
+class AnnouncementTripCreated extends AnnouncementCreated {
+  final List<AnnouncementModel> legs;
+
+  AnnouncementTripCreated(this.legs) : super(legs.first);
+}
+
+/// Le backend ne connaît pas encore les voyages à étapes (FLUTTER-4D) : rien
+/// n'a été créé.
+class AnnouncementTripUnsupported extends AnnouncementState {}
 
 /// Émis quand le back refuse la suppression du trajet parce qu'au moins un
 /// colis est déjà ACCEPTED. Le voyageur doit passer par le flux d'annulation

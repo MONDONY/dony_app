@@ -235,6 +235,16 @@ class AnnouncementModel {
   /// ancien payload, ou trajet sans tarif au kilo exploitable).
   final double? pricePerKgDisplayConverted;
 
+  /// Voyage à plusieurs étapes (FLUTTER-4D) : identifiant commun aux étapes
+  /// d'un même voyage. `null` pour un trajet isolé ou un backend antérieur.
+  final String? tripGroupId;
+
+  /// Rang de cette étape dans son voyage, à partir de 1. `null` hors voyage.
+  final int? tripLegIndex;
+
+  /// Nombre d'étapes encore présentes dans le voyage. `null` hors voyage.
+  final int? tripLegCount;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -283,6 +293,9 @@ class AnnouncementModel {
     this.convertedPricePerKg,
     this.convertedCurrency,
     this.pricePerKgDisplayConverted,
+    this.tripGroupId,
+    this.tripLegIndex,
+    this.tripLegCount,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
@@ -307,6 +320,9 @@ class AnnouncementModel {
   /// Urgence effective : la valeur backend prime ; repli sur le calcul local
   /// depuis [departureDate] uniquement si absente (ancien backend).
   bool get isUrgent => urgent ?? isUrgentDate(departureDate);
+
+  /// Étape d'un voyage à plusieurs étapes (FLUTTER-4D).
+  bool get isTripLeg => tripGroupId != null;
 }
 
 String? _transportModeToWireOrNull(TransportMode? mode) =>

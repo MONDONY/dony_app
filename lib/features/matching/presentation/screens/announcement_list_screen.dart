@@ -6,8 +6,10 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/utils/trip_group_list.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_group_header.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -126,7 +128,12 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
   }
 
   /// Returns the filtered + sorted list from _lastList.
+  /// Les étapes d'un même voyage restent groupées (FLUTTER-4D).
   List<AnnouncementModel> _filtered(TripFilterState filter) {
+    return groupTripLegs(_sortedFiltered(filter));
+  }
+
+  List<AnnouncementModel> _sortedFiltered(TripFilterState filter) {
     return _lastList
         .where(
           (a) =>
@@ -305,8 +312,12 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                         ),
                         sliver: SliverList.separated(
                           itemCount: filtered.length,
-                          separatorBuilder: (context, idx) =>
-                              const SizedBox(height: DonySpacing.md),
+                          // Étapes d'un même voyage rapprochées (FLUTTER-4D).
+                          separatorBuilder: (context, idx) => SizedBox(
+                            height: continuesTripGroup(filtered, idx)
+                                ? DonySpacing.sm
+                                : DonySpacing.md,
+                          ),
                           itemBuilder: (context, i) {
                             final item = filtered[i];
                             final isCancelled = item.status == 'CANCELLED';
@@ -354,21 +365,25 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                                   ],
                                 ),
                               ),
-                              child: TripCard(
-                                key: ValueKey(item.id),
-                                announcement: item,
-                                index: i,
-                                onTap: () async {
-                                  await context.push<bool>(
-                                    '/announcements/${item.id}/trip',
-                                    extra: item,
-                                  );
-                                  if (context.mounted) {
-                                    context.read<AnnouncementBloc>().add(
-                                      AnnouncementListRequested(),
+                              child: _withTripGroup(
+                                filtered,
+                                i,
+                                TripCard(
+                                  key: ValueKey(item.id),
+                                  announcement: item,
+                                  index: i,
+                                  onTap: () async {
+                                    await context.push<bool>(
+                                      '/announcements/${item.id}/trip',
+                                      extra: item,
                                     );
-                                  }
-                                },
+                                    if (context.mounted) {
+                                      context.read<AnnouncementBloc>().add(
+                                        AnnouncementListRequested(),
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
                             );
                           },
@@ -601,4 +616,30 @@ class _EmptyView extends StatelessWidget {
       iconAsset: 'plane-takeoff',
     );
   }
+}
+
+/// Habille la carte d'une étape (FLUTTER-4D) : en-tête du voyage sur la
+/// première, pastille « Étape i/n » sur chacune.
+Widget _withTripGroup(List<AnnouncementModel> items, int i, Widget card) {
+  final item = items[i];
+  if (!item.isTripLeg) return card;
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      if (startsTripGroup(items, i))
+        TripGroupHeader(route: tripGroupRoute(items, item.tripGroupId!)),
+      if (item.tripLegIndex != null && item.tripLegCount != null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: DonySpacing.xs),
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TripLegBadge(
+              index: item.tripLegIndex!,
+              count: item.tripLegCount!,
+            ),
+          ),
+        ),
+      card,
+    ],
+  );
 }

@@ -76,6 +76,7 @@ import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -1318,6 +1319,9 @@ final appRouter = GoRouter(
             BlocProvider(create: (_) => getIt<CancellationBloc>()),
             // Chargé par TripAudienceSection, monté pour le seul propriétaire.
             BlocProvider(create: (_) => getIt<TripAudienceCubit>()),
+            // Étapes du voyage (FLUTTER-4D) : carte « Étape i/n » et
+            // proposition d'annuler les étapes suivantes.
+            BlocProvider(create: (_) => getIt<TripGroupCubit>()..load(id)),
           ],
           child: TripOwnerDetailScreen(announcementId: id, initial: extra),
         );

@@ -29,6 +29,7 @@ import 'package:dony/features/matching/presentation/widgets/owner_action_grid.da
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -265,8 +266,14 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
             if (state is AnnouncementDeleted) {
               DonySnackbar.show(
                 context,
-                message: context.l10n.tripOwnerDeletedSnackbar,
-                type: DonySnackbarType.success,
+                message: state.followingFailed > 0
+                    ? context.l10n.tripLegsFollowingFailed(
+                        state.followingFailed,
+                      )
+                    : context.l10n.tripOwnerDeletedSnackbar,
+                type: state.followingFailed > 0
+                    ? DonySnackbarType.warning
+                    : DonySnackbarType.success,
               );
               if (context.mounted) {
                 context.pop(true);
@@ -381,6 +388,13 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                         : null,
                   ),
                   const SizedBox(height: DonySpacing.lg),
+                  // Voyage à plusieurs étapes (FLUTTER-4D).
+                  TripLegsCard(
+                    announcementId: a.id,
+                    padding: const EdgeInsets.only(bottom: DonySpacing.lg),
+                    onOpenLeg: (leg) =>
+                        context.push('/announcements/${leg.id}/trip'),
+                  ),
                   if (isOwner) TripAudienceSection(announcementId: a.id),
                   OwnerActionGrid(a: a, isOwner: isOwner),
                   const SizedBox(height: DonySpacing.lg),

@@ -103,6 +103,9 @@ AnnouncementModel _$AnnouncementModelFromJson(
   convertedCurrency: json['convertedCurrency'] as String?,
   pricePerKgDisplayConverted: (json['pricePerKgDisplayConverted'] as num?)
       ?.toDouble(),
+  tripGroupId: json['tripGroupId'] as String?,
+  tripLegIndex: (json['tripLegIndex'] as num?)?.toInt(),
+  tripLegCount: (json['tripLegCount'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -156,6 +159,9 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'convertedPricePerKg': instance.convertedPricePerKg,
       'convertedCurrency': instance.convertedCurrency,
       'pricePerKgDisplayConverted': instance.pricePerKgDisplayConverted,
+      'tripGroupId': instance.tripGroupId,
+      'tripLegIndex': instance.tripLegIndex,
+      'tripLegCount': instance.tripLegCount,
     };
 
 const _$BidPaymentMethodEnumMap = {
