@@ -1,10 +1,20 @@
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 BidModel _bid({
   DateTime? departureAt,
@@ -209,6 +219,87 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       // Une minuterie restée active ferait échouer le test (pending timers).
       await tester.pump(const Duration(hours: 3));
+    });
+  });
+
+  // Mode recette (FLUTTER-FA) : le back laisse un testeur livrer avant le
+  // départ, le bouton ne doit pas l'en empêcher.
+  group('mode recette', () {
+    final departure = DateTime.now().add(const Duration(days: 4));
+    final window = DeliveryWindow(departure: departure, hasTime: true);
+
+    Widget withUser(UserModel? user) {
+      final bloc = _MockAuthBloc();
+      when(() => bloc.state).thenReturn(
+        user == null ? const AuthInitial() : AuthAuthenticated(user),
+      );
+      return BlocProvider<AuthBloc>.value(
+        value: bloc,
+        child: _gate(window, _Clock(DateTime.now())),
+      );
+    }
+
+    testWidgets('testeur (recetteMode servi par /auth/me) : bouton actif', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        withUser(
+          const UserModel(
+            id: 'u1',
+            roles: [],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+            recetteMode: true,
+          ),
+        ),
+      );
+
+      expect(_enabled(tester), isTrue);
+      expect(find.byKey(const Key('delivery-locked-hint')), findsNothing);
+    });
+
+    testWidgets('compte normal ou champ absent : verrou habituel', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        withUser(
+          const UserModel(
+            id: 'u1',
+            roles: [],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+          ),
+        ),
+      );
+      expect(_enabled(tester), isFalse);
+      expect(find.byKey(const Key('delivery-locked-hint')), findsOneWidget);
+
+      await tester.pumpWidget(withUser(null));
+      expect(_enabled(tester), isFalse);
+    });
+
+    test('UserModel.recetteMode : lu dans /auth/me, faux par défaut', () {
+      expect(UserModel.fromJson(const {'id': 'u1'}).recetteMode, isFalse);
+      final tester = UserModel.fromJson(const {
+        'id': 'u1',
+        'recetteMode': true,
+      });
+      expect(tester.recetteMode, isTrue);
+      expect(tester.toJson()['recetteMode'], isTrue);
+      expect(
+        UserModel.fromJson(tester.toJson()).recetteMode,
+        isTrue,
+        reason: 'aller-retour JSON (cache local)',
+      );
+      expect(tester.copyWith(firstName: 'Awa').recetteMode, isTrue);
+      expect(tester.copyWith(recetteMode: false).recetteMode, isFalse);
+      expect(
+        UserModel.fromJson(const {
+          'id': 'u1',
+          'recetteMode': 'true',
+        }).recetteMode,
+        isFalse,
+      );
     });
   });
 }
