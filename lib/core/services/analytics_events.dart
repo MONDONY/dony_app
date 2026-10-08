@@ -307,6 +307,10 @@ abstract final class AnalyticsEvents {
   /// Devise choisie dans la sheet « Quelle devise rembourser ? » quand
   /// plusieurs devises sont remboursables. Propriété `currency` uniquement.
   static const walletRefundCurrencyChosen = 'wallet_refund_currency_chosen';
+
+  /// Changement de portefeuille actif depuis l'écran Portefeuille
+  /// (FLUTTER-8F). Propriétés `from` et `to` : codes devise, aucun montant.
+  static const walletActiveCurrencySwitched = 'wallet_active_currency_switched';
   static const phoneVisibilityToggled = 'phone_visibility_toggled';
   static const userBlocked = 'user_blocked';
   static const userUnblocked = 'user_unblocked';

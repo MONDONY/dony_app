@@ -6,6 +6,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_active_currency_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
@@ -31,6 +32,22 @@ class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
 class MockWalletRefundRequestCubit extends MockCubit<WalletRefundRequestState>
     implements WalletRefundRequestCubit {}
 
+class MockWalletActiveCurrencyCubit extends MockCubit<WalletActiveCurrencyState>
+    implements WalletActiveCurrencyCubit {}
+
+/// Cubit au repos, réassigné à chaque test : `buildSubject` le fournit quand
+/// un test n'en passe pas.
+late MockWalletActiveCurrencyCubit _defaultActiveCurrencyCubit;
+
+MockWalletActiveCurrencyCubit idleActiveCurrencyCubit() {
+  final cubit = MockWalletActiveCurrencyCubit();
+  when(() => cubit.state).thenReturn(const WalletActiveCurrencyState());
+  when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
+  when(() => cubit.close()).thenAnswer((_) async {});
+  when(() => cubit.switchTo(any())).thenAnswer((_) async {});
+  return cubit;
+}
+
 class MockWalletEligibleTopupsCubit extends MockCubit<WalletEligibleTopupsState>
     implements WalletEligibleTopupsCubit {}
 
@@ -43,6 +60,7 @@ Widget buildSubject(
   BusinessPrefsBloc prefsBloc, [
   WalletRefundRequestCubit? refundCubit,
   WalletTopupStatusModel? topupConfirmed,
+  WalletActiveCurrencyCubit? activeCurrencyCubit,
 ]) => MaterialApp.router(
   routerConfig: GoRouter(
     routes: [
@@ -54,6 +72,9 @@ Widget buildSubject(
             BlocProvider<BusinessPrefsBloc>.value(value: prefsBloc),
             if (refundCubit != null)
               BlocProvider<WalletRefundRequestCubit>.value(value: refundCubit),
+            BlocProvider<WalletActiveCurrencyCubit>.value(
+              value: activeCurrencyCubit ?? _defaultActiveCurrencyCubit,
+            ),
           ],
           child: WalletScreen(topupConfirmed: topupConfirmed),
         ),
@@ -78,6 +99,7 @@ void main() {
   });
 
   setUp(() {
+    _defaultActiveCurrencyCubit = idleActiveCurrencyCubit();
     bloc = MockWalletBloc();
     prefsBloc = stubBusinessPrefsBloc();
 
@@ -1444,5 +1466,196 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  // ── FLUTTER-8F : choisir le portefeuille actif ─────────────────────────────
+
+  group('portefeuille actif', () {
+    const multi = WalletModel(
+      balance: 50,
+      currency: 'EUR',
+      transactions: [],
+      balances: [
+        WalletCurrencyBalanceModel(currency: 'EUR', balance: 50, active: true),
+        WalletCurrencyBalanceModel(currency: 'CAD', balance: 30, active: false),
+        WalletCurrencyBalanceModel(
+          currency: 'XOF',
+          balance: 10000,
+          active: false,
+        ),
+      ],
+    );
+
+    void loaded(WalletModel wallet) => whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    testWidgets('la carte affiche la devise active', (tester) async {
+      loaded(multi);
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wallet-active-currency-card')),
+        findsOneWidget,
+      );
+      expect(find.text('Portefeuille actif'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wallet-active-currency-name')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('(EUR)'), findsOneWidget);
+    });
+
+    testWidgets('la sheet liste les portefeuilles détenus et ceux à ajouter, '
+        'puis lance le changement', (tester) async {
+      final cubit = idleActiveCurrencyCubit();
+      loaded(multi);
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, null, cubit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wallet-active-currency-card')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choisir le portefeuille actif'), findsOneWidget);
+      expect(find.text('Mes portefeuilles'), findsOneWidget);
+      for (final code in ['EUR', 'CAD', 'XOF']) {
+        expect(find.byKey(Key('wallet-active-currency-$code')), findsOneWidget);
+      }
+      // Les devises sans portefeuille se proposent à l'ajout.
+      expect(find.text('Ajouter un portefeuille'), findsOneWidget);
+      for (final code in ['USD', 'GBP', 'CHF', 'XAF']) {
+        expect(
+          find.byKey(Key('wallet-active-currency-add-$code')),
+          findsOneWidget,
+        );
+      }
+
+      // Rien de choisi d'autre que l'actif : bouton inactif.
+      final confirm = find.byKey(const Key('wallet-active-currency-confirm'));
+      expect(tester.widget<DonyButton>(confirm).onPressed, isNull);
+
+      final cad = find.byKey(const Key('wallet-active-currency-CAD'));
+      await tester.ensureVisible(cad);
+      await tester.tap(cad);
+      await tester.pumpAndSettle();
+      expect(tester.widget<DonyButton>(confirm).onPressed, isNotNull);
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+
+      verify(() => cubit.switchTo('CAD')).called(1);
+    });
+
+    testWidgets('ajouter une devise sans portefeuille', (tester) async {
+      final cubit = idleActiveCurrencyCubit();
+      loaded(multi);
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, null, cubit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wallet-active-currency-card')));
+      await tester.pumpAndSettle();
+      final add = find.byKey(const Key('wallet-active-currency-add-USD'));
+      await tester.ensureVisible(add);
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wallet-active-currency-confirm')));
+      await tester.pumpAndSettle();
+
+      verify(() => cubit.switchTo('USD')).called(1);
+    });
+
+    testWidgets('ancien contrat sans lignes par devise : la sheet s’ouvre '
+        'quand même', (tester) async {
+      loaded(const WalletModel(balance: 0, currency: 'XOF', transactions: []));
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wallet-active-currency-card')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wallet-active-currency-XOF')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('wallet-active-currency-add-EUR')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('succès : snackbar, resynchro des préférences et des soldes', (
+      tester,
+    ) async {
+      final cubit = MockWalletActiveCurrencyCubit();
+      when(() => cubit.close()).thenAnswer((_) async {});
+      whenListen(
+        cubit,
+        Stream.fromIterable(const [
+          WalletActiveCurrencyState(pendingCurrency: 'CAD'),
+          WalletActiveCurrencyState(switchedTo: 'CAD', switchCount: 1),
+        ]),
+        initialState: const WalletActiveCurrencyState(),
+      );
+      loaded(multi);
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, null, cubit));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Portefeuille actif :'), findsOneWidget);
+      verify(() => prefsBloc.add(const BusinessPrefsSyncRequested())).called(1);
+      verify(
+        () => bloc.add(any(that: isA<WalletRefreshRequested>())),
+      ).called(1);
+    });
+
+    testWidgets('pendant le changement : indicateur, carte inactive', (
+      tester,
+    ) async {
+      final cubit = MockWalletActiveCurrencyCubit();
+      when(() => cubit.close()).thenAnswer((_) async {});
+      when(
+        () => cubit.state,
+      ).thenReturn(const WalletActiveCurrencyState(pendingCurrency: 'CAD'));
+      when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
+      loaded(multi);
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, null, cubit));
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      await tester.tap(find.byKey(const Key('wallet-active-currency-card')));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Choisir le portefeuille actif'), findsNothing);
+    });
+
+    testWidgets('erreur currency-locked (ancien serveur) affichée', (
+      tester,
+    ) async {
+      final cubit = MockWalletActiveCurrencyCubit();
+      when(() => cubit.close()).thenAnswer((_) async {});
+      whenListen(
+        cubit,
+        Stream.value(
+          const WalletActiveCurrencyState(
+            error: NetworkException('locked', code: 'currency-locked'),
+          ),
+        ),
+        initialState: const WalletActiveCurrencyState(),
+      );
+      loaded(multi);
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, null, cubit));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(
+          'pas encore disponible tant que votre portefeuille',
+        ),
+        findsOneWidget,
+      );
+      verifyNever(() => prefsBloc.add(const BusinessPrefsSyncRequested()));
+    });
   });
 }

@@ -9470,7 +9470,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletInfoChangeCurrencyDesc =>
-      'The active currency can be changed in Preferences as long as your total balance is zero. Otherwise, empty your wallets first.';
+      'Switch from one wallet to another with the “Active wallet” card on this screen. Nothing is converted: each balance stays in its own currency.';
 
   @override
   String get walletTopupMethodCard => 'Credit card';
@@ -16689,4 +16689,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get senderReliabilityTooltip =>
       'Parcels cancelled after a traveler accepted them, and confirmed no-shows at the handover meeting.';
+
+  @override
+  String get walletActiveCurrencyCardLabel => 'Active wallet';
+
+  @override
+  String get walletActiveCurrencyCardHint =>
+      'Card top-ups and new listings use this currency';
+
+  @override
+  String get walletActiveCurrencyChange => 'Change';
+
+  @override
+  String get walletActiveCurrencySheetTitle => 'Choose the active wallet';
+
+  @override
+  String get walletActiveCurrencySheetHint =>
+      'Each balance stays in its own currency: nothing is converted. The active wallet receives your card top-ups, and your new listings are published in its currency. Shipments already in progress don\'t change.';
+
+  @override
+  String get walletActiveCurrencyHeldSection => 'My wallets';
+
+  @override
+  String get walletActiveCurrencyAddSection => 'Add a wallet';
+
+  @override
+  String walletActiveCurrencyAddTitle(String currency) {
+    return 'New $currency wallet';
+  }
+
+  @override
+  String get walletActiveCurrencyAddDetail =>
+      'An empty wallet is created in this currency. Your other balances don\'t move.';
+
+  @override
+  String walletActiveCurrencyHeldDetail(String currency) {
+    return 'This balance stays in $currency. It becomes the wallet used for your card top-ups and new listings.';
+  }
+
+  @override
+  String get walletActiveCurrencyConfirm => 'Use this wallet';
+
+  @override
+  String walletActiveCurrencySwitchedSnackbar(String currency) {
+    return 'Active wallet: $currency';
+  }
+
+  @override
+  String get errorCurrencyLockedTitle => 'Currency change unavailable';
+
+  @override
+  String get errorCurrencyLockedMessage =>
+      'Switching the active wallet isn\'t available yet while your wallet holds money. Please try again a bit later.';
 }

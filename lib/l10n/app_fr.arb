@@ -10187,7 +10187,7 @@
   "@walletInfoChangeCurrencyTitle": {
     "description": "Titre de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
   },
-  "walletInfoChangeCurrencyDesc": "La devise active se change dans Préférences tant que votre solde total est à zéro. Sinon, videz d'abord vos portefeuilles.",
+  "walletInfoChangeCurrencyDesc": "Passez d'un portefeuille à l'autre depuis la carte « Portefeuille actif » de cet écran. Rien n'est converti : chaque solde reste dans sa devise.",
   "@walletInfoChangeCurrencyDesc": {
     "description": "Description de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
   },
@@ -19205,5 +19205,33 @@
   "senderReliabilityLabel": "{count, plural, =1{1 annulation ou absence} other{{count} annulations ou absences}}",
   "@senderReliabilityLabel": {"description": "Fiabilité d'un expéditeur vue par les voyageurs : annulations après acceptation et absences confirmées au rendez-vous de remise (sender_reliability_label.dart, FLUTTER-E0/E6).", "placeholders": {"count": {"type": "int"}}},
   "senderReliabilityTooltip": "Colis annulés après l'acceptation d'un voyageur et absences confirmées au rendez-vous de remise.",
-  "@senderReliabilityTooltip": {"description": "Infobulle du libellé de fiabilité expéditeur (FLUTTER-E0/E6)."}
+  "@senderReliabilityTooltip": {"description": "Infobulle du libellé de fiabilité expéditeur (FLUTTER-E0/E6)."},
+  "walletActiveCurrencyCardLabel": "Portefeuille actif",
+  "@walletActiveCurrencyCardLabel": {"description": "Libellé de la carte du portefeuille actif (wallet_screen.dart, FLUTTER-8F)."},
+  "walletActiveCurrencyCardHint": "Recharges par carte et nouvelles annonces dans cette devise",
+  "@walletActiveCurrencyCardHint": {"description": "Sous-titre de la carte du portefeuille actif : ce que la devise active pilote (FLUTTER-8F)."},
+  "walletActiveCurrencyChange": "Changer",
+  "@walletActiveCurrencyChange": {"description": "Action de la carte du portefeuille actif, ouvre le choix du portefeuille (FLUTTER-8F)."},
+  "walletActiveCurrencySheetTitle": "Choisir le portefeuille actif",
+  "@walletActiveCurrencySheetTitle": {"description": "Titre de la sheet de choix du portefeuille actif (FLUTTER-8F)."},
+  "walletActiveCurrencySheetHint": "Chaque solde reste dans sa devise : rien n'est converti. Le portefeuille actif reçoit vos recharges par carte, et vos nouvelles annonces sont publiées dans sa devise. Vos envois en cours ne changent pas.",
+  "@walletActiveCurrencySheetHint": {"description": "Explication en tête de la sheet de choix du portefeuille actif (FLUTTER-8F)."},
+  "walletActiveCurrencyHeldSection": "Mes portefeuilles",
+  "@walletActiveCurrencyHeldSection": {"description": "Titre de section : portefeuilles déjà détenus, avec leur solde (FLUTTER-8F)."},
+  "walletActiveCurrencyAddSection": "Ajouter un portefeuille",
+  "@walletActiveCurrencyAddSection": {"description": "Titre de section : devises sans portefeuille, à ajouter (FLUTTER-8F)."},
+  "walletActiveCurrencyAddTitle": "Nouveau portefeuille {currency}",
+  "@walletActiveCurrencyAddTitle": {"description": "Titre d'une devise à ajouter comme nouveau portefeuille (FLUTTER-8F).", "placeholders": {"currency": {"type": "String", "example": "Dollar canadien"}}},
+  "walletActiveCurrencyAddDetail": "Un portefeuille vide est créé dans cette devise. Vos autres soldes ne bougent pas.",
+  "@walletActiveCurrencyAddDetail": {"description": "Détail déplié d'une devise à ajouter (FLUTTER-8F)."},
+  "walletActiveCurrencyHeldDetail": "Ce solde reste en {currency}. Il devient le portefeuille utilisé pour vos recharges par carte et vos nouvelles annonces.",
+  "@walletActiveCurrencyHeldDetail": {"description": "Détail déplié d'un portefeuille détenu (FLUTTER-8F).", "placeholders": {"currency": {"type": "String", "example": "Franc CFA (BCEAO)"}}},
+  "walletActiveCurrencyConfirm": "Utiliser ce portefeuille",
+  "@walletActiveCurrencyConfirm": {"description": "Bouton de confirmation (stickyBottom) de la sheet de choix du portefeuille actif (FLUTTER-8F)."},
+  "walletActiveCurrencySwitchedSnackbar": "Portefeuille actif : {currency}",
+  "@walletActiveCurrencySwitchedSnackbar": {"description": "Snackbar après un changement de portefeuille actif réussi (FLUTTER-8F).", "placeholders": {"currency": {"type": "String", "example": "Dollar canadien"}}},
+  "errorCurrencyLockedTitle": "Changement de devise indisponible",
+  "@errorCurrencyLockedTitle": {"description": "Titre de l'erreur currency-locked (serveur antérieur à FLUTTER-8F, portefeuille non vide)."},
+  "errorCurrencyLockedMessage": "Le changement de portefeuille actif n'est pas encore disponible tant que votre portefeuille n'est pas vide. Réessayez un peu plus tard.",
+  "@errorCurrencyLockedMessage": {"description": "Message de l'erreur currency-locked (serveur antérieur à FLUTTER-8F)."}
 }

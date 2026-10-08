@@ -15711,7 +15711,7 @@ abstract class AppLocalizations {
   /// Description de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
   ///
   /// In fr, this message translates to:
-  /// **'La devise active se change dans Préférences tant que votre solde total est à zéro. Sinon, videz d\'abord vos portefeuilles.'**
+  /// **'Passez d\'un portefeuille à l\'autre depuis la carte « Portefeuille actif » de cet écran. Rien n\'est converti : chaque solde reste dans sa devise.'**
   String get walletInfoChangeCurrencyDesc;
 
   /// Libellé de la méthode carte, réutilisé par wallet_topup_method_screen.dart (wallet_topup_amount_screen.dart _methodLabel).
@@ -27577,6 +27577,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Colis annulés après l\'acceptation d\'un voyageur et absences confirmées au rendez-vous de remise.'**
   String get senderReliabilityTooltip;
+
+  /// Libellé de la carte du portefeuille actif (wallet_screen.dart, FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Portefeuille actif'**
+  String get walletActiveCurrencyCardLabel;
+
+  /// Sous-titre de la carte du portefeuille actif : ce que la devise active pilote (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharges par carte et nouvelles annonces dans cette devise'**
+  String get walletActiveCurrencyCardHint;
+
+  /// Action de la carte du portefeuille actif, ouvre le choix du portefeuille (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get walletActiveCurrencyChange;
+
+  /// Titre de la sheet de choix du portefeuille actif (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir le portefeuille actif'**
+  String get walletActiveCurrencySheetTitle;
+
+  /// Explication en tête de la sheet de choix du portefeuille actif (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque solde reste dans sa devise : rien n\'est converti. Le portefeuille actif reçoit vos recharges par carte, et vos nouvelles annonces sont publiées dans sa devise. Vos envois en cours ne changent pas.'**
+  String get walletActiveCurrencySheetHint;
+
+  /// Titre de section : portefeuilles déjà détenus, avec leur solde (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes portefeuilles'**
+  String get walletActiveCurrencyHeldSection;
+
+  /// Titre de section : devises sans portefeuille, à ajouter (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un portefeuille'**
+  String get walletActiveCurrencyAddSection;
+
+  /// Titre d'une devise à ajouter comme nouveau portefeuille (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau portefeuille {currency}'**
+  String walletActiveCurrencyAddTitle(String currency);
+
+  /// Détail déplié d'une devise à ajouter (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un portefeuille vide est créé dans cette devise. Vos autres soldes ne bougent pas.'**
+  String get walletActiveCurrencyAddDetail;
+
+  /// Détail déplié d'un portefeuille détenu (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce solde reste en {currency}. Il devient le portefeuille utilisé pour vos recharges par carte et vos nouvelles annonces.'**
+  String walletActiveCurrencyHeldDetail(String currency);
+
+  /// Bouton de confirmation (stickyBottom) de la sheet de choix du portefeuille actif (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Utiliser ce portefeuille'**
+  String get walletActiveCurrencyConfirm;
+
+  /// Snackbar après un changement de portefeuille actif réussi (FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Portefeuille actif : {currency}'**
+  String walletActiveCurrencySwitchedSnackbar(String currency);
+
+  /// Titre de l'erreur currency-locked (serveur antérieur à FLUTTER-8F, portefeuille non vide).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changement de devise indisponible'**
+  String get errorCurrencyLockedTitle;
+
+  /// Message de l'erreur currency-locked (serveur antérieur à FLUTTER-8F).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le changement de portefeuille actif n\'est pas encore disponible tant que votre portefeuille n\'est pas vide. Réessayez un peu plus tard.'**
+  String get errorCurrencyLockedMessage;
 }
 
 class _AppLocalizationsDelegate
