@@ -9530,7 +9530,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletInfoChangeCurrencyDesc =>
-      'La devise active se change dans Préférences tant que votre solde total est à zéro. Sinon, videz d\'abord vos portefeuilles.';
+      'Passez d\'un portefeuille à l\'autre depuis la carte « Portefeuille actif » de cet écran. Rien n\'est converti : chaque solde reste dans sa devise.';
 
   @override
   String get walletTopupMethodCard => 'Carte bancaire';
@@ -16795,4 +16795,56 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get senderReliabilityTooltip =>
       'Colis annulés après l\'acceptation d\'un voyageur et absences confirmées au rendez-vous de remise.';
+
+  @override
+  String get walletActiveCurrencyCardLabel => 'Portefeuille actif';
+
+  @override
+  String get walletActiveCurrencyCardHint =>
+      'Recharges par carte et nouvelles annonces dans cette devise';
+
+  @override
+  String get walletActiveCurrencyChange => 'Changer';
+
+  @override
+  String get walletActiveCurrencySheetTitle => 'Choisir le portefeuille actif';
+
+  @override
+  String get walletActiveCurrencySheetHint =>
+      'Chaque solde reste dans sa devise : rien n\'est converti. Le portefeuille actif reçoit vos recharges par carte, et vos nouvelles annonces sont publiées dans sa devise. Vos envois en cours ne changent pas.';
+
+  @override
+  String get walletActiveCurrencyHeldSection => 'Mes portefeuilles';
+
+  @override
+  String get walletActiveCurrencyAddSection => 'Ajouter un portefeuille';
+
+  @override
+  String walletActiveCurrencyAddTitle(String currency) {
+    return 'Nouveau portefeuille $currency';
+  }
+
+  @override
+  String get walletActiveCurrencyAddDetail =>
+      'Un portefeuille vide est créé dans cette devise. Vos autres soldes ne bougent pas.';
+
+  @override
+  String walletActiveCurrencyHeldDetail(String currency) {
+    return 'Ce solde reste en $currency. Il devient le portefeuille utilisé pour vos recharges par carte et vos nouvelles annonces.';
+  }
+
+  @override
+  String get walletActiveCurrencyConfirm => 'Utiliser ce portefeuille';
+
+  @override
+  String walletActiveCurrencySwitchedSnackbar(String currency) {
+    return 'Portefeuille actif : $currency';
+  }
+
+  @override
+  String get errorCurrencyLockedTitle => 'Changement de devise indisponible';
+
+  @override
+  String get errorCurrencyLockedMessage =>
+      'Le changement de portefeuille actif n\'est pas encore disponible tant que votre portefeuille n\'est pas vide. Réessayez un peu plus tard.';
 }

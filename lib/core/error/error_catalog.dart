@@ -370,6 +370,14 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.lock_outline_rounded,
     ),
+    // Serveur antérieur à FLUTTER-8F : la devise active restait verrouillée
+    // tant qu'un portefeuille n'était pas vide.
+    'currency-locked': _Entry(
+      title: (l) => l.errorCurrencyLockedTitle,
+      message: (l) => l.errorCurrencyLockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
+    ),
     'country-unsupported': _Entry(
       title: (l) => l.errorCountryUnsupportedTitle,
       message: (l) => l.errorCountryUnsupportedMessage,

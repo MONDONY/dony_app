@@ -9,15 +9,18 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_active_currency_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
+import 'package:dony/features/payments/wallet/presentation/widgets/wallet_active_currency_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_confirm_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_currency_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_selection_sheet.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -291,6 +294,21 @@ class _LoadedView extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
+            ),
+          ),
+
+          // ── Portefeuille actif (FLUTTER-8F) ──────────────────────────────────
+          // Passer d'un portefeuille à l'autre sans rien convertir : la devise
+          // active pilote les recharges par carte et les nouvelles annonces.
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.lg,
+                DonySpacing.lg,
+                0,
+              ),
+              child: _ActiveCurrencyCard(wallet: wallet),
             ),
           ),
 
@@ -1231,6 +1249,122 @@ class _WalletInfoRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Portefeuille actif (FLUTTER-8F) ──────────────────────────────────────────
+
+class _ActiveCurrencyCard extends StatelessWidget {
+  const _ActiveCurrencyCard({required this.wallet});
+
+  final WalletModel wallet;
+
+  Future<void> _choose(BuildContext context) async {
+    final cubit = context.read<WalletActiveCurrencyCubit>();
+    final chosen = await WalletActiveCurrencySheet.show(
+      context,
+      activeCurrency: wallet.currency,
+      balances: wallet.balances,
+    );
+    if (chosen == null || !context.mounted) return;
+    unawaited(cubit.switchTo(chosen));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final active = SupportedCurrency.fromCodeOrDefault(wallet.currency);
+
+    return BlocConsumer<WalletActiveCurrencyCubit, WalletActiveCurrencyState>(
+      listenWhen: (previous, current) =>
+          previous.switchCount != current.switchCount ||
+          (current.error != null && previous.error != current.error),
+      listener: (context, state) {
+        final error = state.error;
+        if (error != null) {
+          ErrorPresenter.show(context, error);
+          return;
+        }
+        final switched = SupportedCurrency.fromCodeOrDefault(state.switchedTo);
+        // Les préférences locales (Hive) portent la devise active lue par
+        // les recharges et les créations : on les resynchronise depuis le
+        // serveur, puis on recharge les soldes pour déplacer la pastille.
+        context.read<BusinessPrefsBloc>().add(
+          const BusinessPrefsSyncRequested(),
+        );
+        context.read<WalletBloc>().add(WalletRefreshRequested());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l.walletActiveCurrencySwitchedSnackbar(switched.name(l)),
+            ),
+          ),
+        );
+      },
+      builder: (context, state) => Semantics(
+        button: true,
+        label: '${l.walletActiveCurrencyCardLabel}, ${active.name(l)}',
+        child: DonyCard(
+          key: const Key('wallet-active-currency-card'),
+          onTap: state.isSwitching ? null : () => unawaited(_choose(context)),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                ),
+                child: DonyIcon('wallet', color: cs.primary, size: 20),
+              ),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.walletActiveCurrencyCardLabel,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${active.name(l)} (${active.code})',
+                      key: const Key('wallet-active-currency-name'),
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l.walletActiveCurrencyCardHint,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              if (state.isSwitching)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Text(
+                  l.walletActiveCurrencyChange,
+                  style: tt.labelLarge?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

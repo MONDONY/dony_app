@@ -4862,7 +4862,7 @@
   "@walletInfoChangeCurrencyTitle": {
     "description": "Titre de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
   },
-  "walletInfoChangeCurrencyDesc": "The active currency can be changed in Preferences as long as your total balance is zero. Otherwise, empty your wallets first.",
+  "walletInfoChangeCurrencyDesc": "Switch from one wallet to another with the “Active wallet” card on this screen. Nothing is converted: each balance stays in its own currency.",
   "@walletInfoChangeCurrencyDesc": {
     "description": "Description de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
   },
@@ -9210,5 +9210,19 @@
   "chatPhotoSendFailed": "The photo couldn't be sent.",
   "chatReportMessageAction": "Report",
   "senderReliabilityLabel": "{count, plural, =1{1 cancellation or no-show} other{{count} cancellations or no-shows}}",
-  "senderReliabilityTooltip": "Parcels cancelled after a traveler accepted them, and confirmed no-shows at the handover meeting."
+  "senderReliabilityTooltip": "Parcels cancelled after a traveler accepted them, and confirmed no-shows at the handover meeting.",
+  "walletActiveCurrencyCardLabel": "Active wallet",
+  "walletActiveCurrencyCardHint": "Card top-ups and new listings use this currency",
+  "walletActiveCurrencyChange": "Change",
+  "walletActiveCurrencySheetTitle": "Choose the active wallet",
+  "walletActiveCurrencySheetHint": "Each balance stays in its own currency: nothing is converted. The active wallet receives your card top-ups, and your new listings are published in its currency. Shipments already in progress don't change.",
+  "walletActiveCurrencyHeldSection": "My wallets",
+  "walletActiveCurrencyAddSection": "Add a wallet",
+  "walletActiveCurrencyAddTitle": "New {currency} wallet",
+  "walletActiveCurrencyAddDetail": "An empty wallet is created in this currency. Your other balances don't move.",
+  "walletActiveCurrencyHeldDetail": "This balance stays in {currency}. It becomes the wallet used for your card top-ups and new listings.",
+  "walletActiveCurrencyConfirm": "Use this wallet",
+  "walletActiveCurrencySwitchedSnackbar": "Active wallet: {currency}",
+  "errorCurrencyLockedTitle": "Currency change unavailable",
+  "errorCurrencyLockedMessage": "Switching the active wallet isn't available yet while your wallet holds money. Please try again a bit later."
 }

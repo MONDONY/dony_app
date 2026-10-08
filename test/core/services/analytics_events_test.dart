@@ -41,6 +41,7 @@ void main() {
       AnalyticsEvents.messageSent,
       AnalyticsEvents.walletTopupStarted,
       AnalyticsEvents.walletTopupCompleted,
+      AnalyticsEvents.walletActiveCurrencySwitched,
       AnalyticsEvents.ratingSubmitted,
       AnalyticsEvents.cancellationInitiated,
       AnalyticsEvents.rematchAccepted,
