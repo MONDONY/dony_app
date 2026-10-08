@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 /// Départ connu d'un trajet, vu de la confirmation de livraison.
@@ -147,16 +150,30 @@ class _DeliveryDepartureGateState extends State<DeliveryDepartureGate>
 
   @override
   Widget build(BuildContext context) {
+    // Mode recette (FLUTTER-FA, staging) : le back accepte la livraison avant
+    // le départ pour un compte testeur, le bouton ne doit donc pas la bloquer.
+    final recette = recetteModeOf(context);
     return ValueListenableBuilder<bool>(
       valueListenable: _locked,
       builder: (context, locked, _) {
         final window = widget.window;
         return widget.builder(
           context,
-          locked && window != null ? _hint(context, window) : null,
+          locked && !recette && window != null ? _hint(context, window) : null,
         );
       },
     );
+  }
+}
+
+/// Mode recette ouvert pour l'utilisateur connecté (`recetteMode` de
+/// `GET /auth/me`, FLUTTER-FA/FB). Faux sans session ou hors d'un arbre muni
+/// d'[AuthBloc] (écran isolé, test) : le comportement normal s'applique.
+bool recetteModeOf(BuildContext context) {
+  try {
+    return context.read<AuthBloc>().state.currentUser?.recetteMode ?? false;
+  } on ProviderNotFoundException {
+    return false;
   }
 }
 

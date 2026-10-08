@@ -51,6 +51,12 @@ class UserModel extends Equatable {
       messagingMutedUntil != null &&
       messagingMutedUntil!.isAfter(now ?? DateTime.now());
 
+  /// Mode recette ouvert pour ce compte (FLUTTER-FA/FB) : staging seulement,
+  /// compte désigné testeur par un administrateur. L'app lève alors ses
+  /// verrous d'affichage (livraison avant le départ) ; le serveur reste seul
+  /// juge. Absent sur un ancien back ou en production : faux.
+  final bool recetteMode;
+
   const UserModel({
     required this.id,
     this.username,
@@ -77,6 +83,7 @@ class UserModel extends Equatable {
     this.averageRating,
     this.preferredLanguage,
     this.messagingMutedUntil,
+    this.recetteMode = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -116,6 +123,7 @@ class UserModel extends Equatable {
     messagingMutedUntil: json['messagingMutedUntil'] == null
         ? null
         : DateTime.tryParse(json['messagingMutedUntil'] as String),
+    recetteMode: json['recetteMode'] == true,
   );
 
   Map<String, dynamic> toJson() => {
@@ -144,6 +152,7 @@ class UserModel extends Equatable {
     'averageRating': averageRating,
     'preferredLanguage': preferredLanguage,
     'messagingMutedUntil': messagingMutedUntil?.toIso8601String(),
+    'recetteMode': recetteMode,
   };
 
   UserModel copyWith({
@@ -172,6 +181,7 @@ class UserModel extends Equatable {
     double? averageRating,
     String? preferredLanguage,
     DateTime? messagingMutedUntil,
+    bool? recetteMode,
   }) => UserModel(
     id: id ?? this.id,
     username: username ?? this.username,
@@ -198,6 +208,7 @@ class UserModel extends Equatable {
     averageRating: averageRating ?? this.averageRating,
     preferredLanguage: preferredLanguage ?? this.preferredLanguage,
     messagingMutedUntil: messagingMutedUntil ?? this.messagingMutedUntil,
+    recetteMode: recetteMode ?? this.recetteMode,
   );
 
   /// Nom affiché : prénom et nom si renseignés, sinon le [username] du compte.
@@ -291,5 +302,6 @@ class UserModel extends Equatable {
     averageRating,
     preferredLanguage,
     messagingMutedUntil,
+    recetteMode,
   ];
 }
