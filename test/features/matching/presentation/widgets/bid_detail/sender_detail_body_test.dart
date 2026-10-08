@@ -4,6 +4,9 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
@@ -20,6 +23,9 @@ import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,6 +35,25 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
+
+class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
+    implements TrackingBloc {}
+
+class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+/// Comme bid_detail_screen : le talon « Code de retrait bloqué » (FLUTTER-G1)
+/// lit TrackingBloc et BidBloc au build.
+TrackingBloc _trackingBloc() {
+  final b = _MockTrackingBloc();
+  when(() => b.state).thenReturn(TrackingInitial());
+  return b;
+}
+
+BidBloc _bidBloc() {
+  final b = _MockBidBloc();
+  when(() => b.state).thenReturn(BidInitial());
+  return b;
+}
 
 class _MockCancellationBloc
     extends MockBloc<CancellationEvent, CancellationState>
@@ -105,6 +130,8 @@ Widget _host(
     home: Scaffold(
       body: MultiBlocProvider(
         providers: [
+          BlocProvider<TrackingBloc>.value(value: _trackingBloc()),
+          BlocProvider<BidBloc>.value(value: _bidBloc()),
           BlocProvider<CancellationBloc>.value(value: cancellationBloc),
           BlocProvider<ConversationOpenBloc>.value(value: conversationOpenBloc),
           // Le numéro n'est plus dans le bid : la carte de contact lit ce bloc.
