@@ -504,17 +504,16 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
           : firstItem.announcement.deliveryAddress;
       final authState = context.read<AuthBloc>().state;
       final currentUserId = authState.currentUserId;
-      showModalBottomSheet<void>(
-        context: context,
-        useRootNavigator: true,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) => SameAddressAnnouncementsSheet(
+      // La feuille se ferme elle-même (navigateur racine) avant d'ouvrir la
+      // fiche : jamais de pop avec le context de la carte (FLUTTER-FE/FD).
+      unawaited(
+        showSameAddressAnnouncementsSheet(
+          context,
           addressLabel: addr?.label ?? context.l10n.listingAddressFallback,
           announcements: cluster.items.map((it) => it.announcement).toList(),
           currentUserId: currentUserId,
-          onTap: (a) {
-            Navigator.pop(context);
+          onSelected: (a) {
+            if (!mounted) return;
             showTravelerAnnouncementSheet(context, announcement: a);
           },
         ),
