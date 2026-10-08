@@ -9379,5 +9379,10 @@
   "homeComposerStopsDirectOnly": "Direct only",
   "homeComposerStopsMaxOne": "Max 1 stop",
   "homeComposerStopsAny": "Any",
-  "homeComposerStopsHint": "“Direct only” leaves out trips whose stops are not specified."
+  "homeComposerStopsHint": "“Direct only” leaves out trips whose stops are not specified.",
+  "homeComposerSectionPaymentMethods": "PAYMENT METHODS",
+  "homeComposerPaymentMethodsHint": "Trips that accept at least one of the selected methods.",
+  "homeComposerPaymentCard": "Card",
+  "homeComposerPaymentCash": "Cash",
+  "homeComposerPaymentMobileMoney": "Mobile money"
 }

@@ -17339,4 +17339,20 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get homeComposerStopsHint =>
       '« Direct uniquement » écarte les trajets dont les escales ne sont pas renseignées.';
+
+  @override
+  String get homeComposerSectionPaymentMethods => 'MOYENS DE PAIEMENT';
+
+  @override
+  String get homeComposerPaymentMethodsHint =>
+      'Trajets qui acceptent au moins un des moyens choisis.';
+
+  @override
+  String get homeComposerPaymentCard => 'Carte bancaire';
+
+  @override
+  String get homeComposerPaymentCash => 'Espèces';
+
+  @override
+  String get homeComposerPaymentMobileMoney => 'Mobile money';
 }

@@ -168,6 +168,7 @@ void main() {
     registerFallbackValue(null as double?);
     registerFallbackValue(null as TransportMode?);
     registerFallbackValue(null as DateTime?);
+    registerFallbackValue(null as List<String>?);
     registerFallbackValue(SearchMode.trips);
   });
 
@@ -225,8 +226,10 @@ void main() {
     }
   });
 
-  // FLUTTER-GD : le filtre d'escales part au serveur.
-  testWidgets('Escales alimentent la recherche', (tester) async {
+  // FLUTTER-GD / FLUTTER-G0 : les deux filtres partent au serveur.
+  testWidgets('Escales et moyens de paiement alimentent la recherche', (
+    tester,
+  ) async {
     _vueHaute(tester);
     final repo = _MockAnnouncementRepo();
     await tester.pumpWidget(_Harness(announcementRepo: repo));
@@ -234,6 +237,12 @@ void main() {
 
     await _scrollTo(tester, find.text('ESCALES'));
     await tester.tap(find.byKey(const Key('chip-stops-directOnly')));
+    await _settleFilterChange(tester);
+
+    await _scrollTo(tester, find.byKey(const Key('chip-payment-cash')));
+    await tester.tap(find.byKey(const Key('chip-payment-cash')));
+    await _settleFilterChange(tester);
+    await tester.tap(find.byKey(const Key('chip-payment-stripe')));
     await _settleFilterChange(tester);
 
     final calls = verify(
@@ -256,9 +265,12 @@ void main() {
         radiusKm: any(named: 'radiusKm'),
         urgent: any(named: 'urgent'),
         maxStops: captureAny(named: 'maxStops'),
+        paymentMethods: captureAny(named: 'paymentMethods'),
       ),
     ).captured;
-    expect(calls.last, 0);
+    // Derniers arguments capturés : maxStops puis paymentMethods.
+    expect(calls[calls.length - 2], 0);
+    expect(calls.last, ['CASH', 'STRIPE']);
 
     // « Peu importe » retire le filtre d'escales.
     await _scrollTo(tester, find.byKey(const Key('chip-stops-any')));
@@ -284,6 +296,7 @@ void main() {
         radiusKm: any(named: 'radiusKm'),
         urgent: any(named: 'urgent'),
         maxStops: captureAny(named: 'maxStops'),
+        paymentMethods: any(named: 'paymentMethods'),
       ),
     ).captured;
     expect(after.last, isNull);
@@ -698,6 +711,7 @@ class _Harness extends StatelessWidget {
         radiusKm: any(named: 'radiusKm'),
         urgent: any(named: 'urgent'),
         maxStops: any(named: 'maxStops'),
+        paymentMethods: any(named: 'paymentMethods'),
       ),
     ).thenAnswer((_) async => count ?? 0);
 

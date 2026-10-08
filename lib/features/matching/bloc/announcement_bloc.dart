@@ -258,6 +258,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       sortDir: event.sortDir,
       urgent: event.urgent,
       maxStops: event.maxStops,
+      paymentMethods: event.paymentMethods,
       page: page,
     );
   }

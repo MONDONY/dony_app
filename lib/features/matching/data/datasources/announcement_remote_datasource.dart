@@ -223,6 +223,7 @@ class AnnouncementRemoteDatasource {
     int page = 0,
     bool? urgent,
     int? maxStops,
+    List<String>? paymentMethods,
   }) async {
     final result = await searchAnnouncementsPage(
       departureCity: departureCity,
@@ -246,6 +247,7 @@ class AnnouncementRemoteDatasource {
       page: page,
       urgent: urgent,
       maxStops: maxStops,
+      paymentMethods: paymentMethods,
     );
     return result.content;
   }
@@ -272,6 +274,7 @@ class AnnouncementRemoteDatasource {
     int page = 0,
     bool? urgent,
     int? maxStops,
+    List<String>? paymentMethods,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -297,6 +300,7 @@ class AnnouncementRemoteDatasource {
         radiusKm: radiusKm,
         urgent: urgent,
         maxStops: maxStops,
+        paymentMethods: paymentMethods,
       ),
     };
     final response = await _apiClient.dio.get(
@@ -338,6 +342,7 @@ class AnnouncementRemoteDatasource {
     double? radiusKm,
     bool? urgent,
     int? maxStops,
+    List<String>? paymentMethods,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/announcements',
@@ -363,6 +368,7 @@ class AnnouncementRemoteDatasource {
           radiusKm: radiusKm,
           urgent: urgent,
           maxStops: maxStops,
+          paymentMethods: paymentMethods,
         ),
       },
     );
@@ -395,6 +401,7 @@ class AnnouncementRemoteDatasource {
     double? radiusKm,
     bool? urgent,
     int? maxStops,
+    List<String>? paymentMethods,
   }) => <String, dynamic>{
     'departureCity': ?departureCity,
     'arrivalCity': ?arrivalCity,
@@ -421,6 +428,10 @@ class AnnouncementRemoteDatasource {
     // FLUTTER-GD : 0 = direct uniquement, 1 = au plus une escale ; absent =
     // peu importe. Un back antérieur ignore le paramètre (liste non filtrée).
     'maxStops': ?maxStops,
+    // FLUTTER-G0 : moyens de paiement offerts (STRIPE, CASH, MOBILE_MONEY),
+    // filtrés côté serveur. Jamais de liste vide.
+    if (paymentMethods != null && paymentMethods.isNotEmpty)
+      'paymentMethods': paymentMethods.join(','),
   };
 
   Future<void> deleteAnnouncement(String id) async {

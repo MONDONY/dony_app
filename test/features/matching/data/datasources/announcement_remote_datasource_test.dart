@@ -484,7 +484,7 @@ void main() {
     });
 
     // FLUTTER-GD / FLUTTER-G0.
-    test('envoie maxStops, absent = peu importe', () async {
+    test('envoie maxStops et paymentMethods, jamais une liste vide', () async {
       when(
         () => mockDio.get(
           '/announcements',
@@ -492,8 +492,11 @@ void main() {
         ),
       ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
 
-      await datasource.searchAnnouncements(maxStops: 0);
-      await datasource.searchAnnouncements();
+      await datasource.searchAnnouncements(
+        maxStops: 0,
+        paymentMethods: ['CASH', 'STRIPE'],
+      );
+      await datasource.searchAnnouncements(paymentMethods: []);
 
       final calls = verify(
         () => mockDio.get(
@@ -502,7 +505,9 @@ void main() {
         ),
       ).captured.cast<Map<String, dynamic>>();
       expect(calls.first['maxStops'], 0);
+      expect(calls.first['paymentMethods'], 'CASH,STRIPE');
       expect(calls.last.containsKey('maxStops'), isFalse);
+      expect(calls.last.containsKey('paymentMethods'), isFalse);
     });
 
     test(

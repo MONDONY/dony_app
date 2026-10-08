@@ -28411,6 +28411,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'« Direct uniquement » écarte les trajets dont les escales ne sont pas renseignées.'**
   String get homeComposerStopsHint;
+
+  /// Filtres de recherche de trajets : section moyens de paiement (FLUTTER-G0)
+  ///
+  /// In fr, this message translates to:
+  /// **'MOYENS DE PAIEMENT'**
+  String get homeComposerSectionPaymentMethods;
+
+  /// Filtre moyens de paiement : explication (FLUTTER-G0)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets qui acceptent au moins un des moyens choisis.'**
+  String get homeComposerPaymentMethodsHint;
+
+  /// Filtre moyens de paiement : carte (FLUTTER-G0)
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte bancaire'**
+  String get homeComposerPaymentCard;
+
+  /// Filtre moyens de paiement : espèces (FLUTTER-G0)
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces'**
+  String get homeComposerPaymentCash;
+
+  /// Filtre moyens de paiement : mobile money (FLUTTER-G0)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money'**
+  String get homeComposerPaymentMobileMoney;
 }
 
 class _AppLocalizationsDelegate

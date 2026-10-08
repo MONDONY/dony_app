@@ -120,6 +120,10 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   /// escale ; `null` = peu importe.
   final int? maxStops;
 
+  /// Moyens de paiement recherchés (FLUTTER-G0), valeurs API (`STRIPE`,
+  /// `CASH`, `MOBILE_MONEY`) ; `null` ou vide = tous.
+  final List<String>? paymentMethods;
+
   AnnouncementSearchRequested({
     this.departureCity,
     this.arrivalCity,
@@ -141,6 +145,7 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.sortDir = 'asc',
     this.urgent,
     this.maxStops,
+    this.paymentMethods,
   });
 }
 

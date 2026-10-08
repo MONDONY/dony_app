@@ -126,6 +126,7 @@ class AnnouncementRepository {
     String sortDir = 'asc',
     bool? urgent,
     int? maxStops,
+    List<String>? paymentMethods,
   }) {
     return _remoteDatasource.searchAnnouncements(
       departureCity: departureCity,
@@ -148,6 +149,7 @@ class AnnouncementRepository {
       sortDir: sortDir,
       urgent: urgent,
       maxStops: maxStops,
+      paymentMethods: paymentMethods,
     );
   }
 
@@ -173,6 +175,7 @@ class AnnouncementRepository {
     String sortDir = 'asc',
     bool? urgent,
     int? maxStops,
+    List<String>? paymentMethods,
     int page = 0,
   }) {
     return _remoteDatasource.searchAnnouncementsPage(
@@ -196,6 +199,7 @@ class AnnouncementRepository {
       sortDir: sortDir,
       urgent: urgent,
       maxStops: maxStops,
+      paymentMethods: paymentMethods,
       page: page,
     );
   }
@@ -221,6 +225,7 @@ class AnnouncementRepository {
     double? radiusKm,
     bool? urgent,
     int? maxStops,
+    List<String>? paymentMethods,
   }) {
     return _remoteDatasource.countAnnouncements(
       departureCity: departureCity,
@@ -241,6 +246,7 @@ class AnnouncementRepository {
       radiusKm: radiusKm,
       urgent: urgent,
       maxStops: maxStops,
+      paymentMethods: paymentMethods,
     );
   }
 

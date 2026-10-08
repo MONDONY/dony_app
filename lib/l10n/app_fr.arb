@@ -19515,5 +19515,15 @@
   "homeComposerStopsAny": "Peu importe",
   "@homeComposerStopsAny": {"description": "Filtre escales : pas de filtre (FLUTTER-GD)"},
   "homeComposerStopsHint": "« Direct uniquement » écarte les trajets dont les escales ne sont pas renseignées.",
-  "@homeComposerStopsHint": {"description": "Filtre escales : explication du traitement des trajets non renseignés (FLUTTER-GD)"}
+  "@homeComposerStopsHint": {"description": "Filtre escales : explication du traitement des trajets non renseignés (FLUTTER-GD)"},
+  "homeComposerSectionPaymentMethods": "MOYENS DE PAIEMENT",
+  "@homeComposerSectionPaymentMethods": {"description": "Filtres de recherche de trajets : section moyens de paiement (FLUTTER-G0)"},
+  "homeComposerPaymentMethodsHint": "Trajets qui acceptent au moins un des moyens choisis.",
+  "@homeComposerPaymentMethodsHint": {"description": "Filtre moyens de paiement : explication (FLUTTER-G0)"},
+  "homeComposerPaymentCard": "Carte bancaire",
+  "@homeComposerPaymentCard": {"description": "Filtre moyens de paiement : carte (FLUTTER-G0)"},
+  "homeComposerPaymentCash": "Espèces",
+  "@homeComposerPaymentCash": {"description": "Filtre moyens de paiement : espèces (FLUTTER-G0)"},
+  "homeComposerPaymentMobileMoney": "Mobile money",
+  "@homeComposerPaymentMobileMoney": {"description": "Filtre moyens de paiement : mobile money (FLUTTER-G0)"}
 }

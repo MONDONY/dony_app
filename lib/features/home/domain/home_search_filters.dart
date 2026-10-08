@@ -1,4 +1,5 @@
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
@@ -66,6 +67,7 @@ class AnnouncementQuery {
     this.radiusKm,
     this.urgent,
     this.maxStops,
+    this.paymentMethods,
   });
 
   final String? departureCity;
@@ -88,6 +90,9 @@ class AnnouncementQuery {
 
   /// Escales maximum (FLUTTER-GD) ; `null` = peu importe.
   final int? maxStops;
+
+  /// Moyens de paiement recherchés (FLUTTER-G0), valeurs API ; `null` = tous.
+  final List<String>? paymentMethods;
 }
 
 /// État de recherche de l'écran Rechercher, immuable et sans dépendance Flutter.
@@ -120,6 +125,7 @@ class HomeSearchFilters {
     this.contentType,
     this.urgencyFilter,
     this.stopsFilter,
+    this.paymentMethods = const {},
     // Colis
     this.maxWeight,
     this.parcelSize,
@@ -154,6 +160,9 @@ class HomeSearchFilters {
 
   /// Filtre « Escales » (FLUTTER-GD) ; `null` = peu importe.
   final StopsFilter? stopsFilter;
+
+  /// Moyens de paiement recherchés (FLUTTER-G0) ; vide = tous.
+  final Set<BidPaymentMethod> paymentMethods;
 
   // ── Colis ──────────────────────────────────────────────────────────────────
   /// Poids maximal des demandes recherchées, en kg. Voir [weightMin].
@@ -280,6 +289,9 @@ class HomeSearchFilters {
       radiusKm: nearMeActive ? nearMeRadiusKm : null,
       urgent: urgentOnly ? true : null,
       maxStops: stopsFilter?.maxStops,
+      paymentMethods: paymentMethods.isEmpty
+          ? null
+          : (paymentMethods.map((m) => m.apiValue).toList()..sort()),
     );
   }
 
@@ -303,6 +315,7 @@ class HomeSearchFilters {
     if (contentType != null) 'content_type',
     if (urgencyFilter != null) 'urgency',
     if (stopsFilter != null) 'stops',
+    if (paymentMethods.isNotEmpty) 'payment_methods',
     if (maxWeight != null) 'max_weight',
     if (parcelSize != null) 'parcel_size',
     if (matchingMyTrips) 'matching_my_trips',
@@ -355,6 +368,9 @@ class HomeSearchFilters {
       n++;
     }
     if (stopsFilter != null) {
+      n++;
+    }
+    if (paymentMethods.isNotEmpty) {
       n++;
     }
     return n;
@@ -424,6 +440,7 @@ class HomeSearchFilters {
     String? contentType,
     UrgencyFilter? urgencyFilter,
     StopsFilter? stopsFilter,
+    Set<BidPaymentMethod>? paymentMethods,
     double? maxWeight,
     ParcelSize? parcelSize,
     bool? matchingMyTrips,
@@ -471,6 +488,7 @@ class HomeSearchFilters {
           ? null
           : (urgencyFilter ?? this.urgencyFilter),
       stopsFilter: clearStopsFilter ? null : (stopsFilter ?? this.stopsFilter),
+      paymentMethods: paymentMethods ?? this.paymentMethods,
       maxWeight: clearMaxWeight ? null : (maxWeight ?? this.maxWeight),
       parcelSize: clearParcelSize ? null : (parcelSize ?? this.parcelSize),
       matchingMyTrips: matchingMyTrips ?? this.matchingMyTrips,

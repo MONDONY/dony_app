@@ -17227,4 +17227,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeComposerStopsHint =>
       '“Direct only” leaves out trips whose stops are not specified.';
+
+  @override
+  String get homeComposerSectionPaymentMethods => 'PAYMENT METHODS';
+
+  @override
+  String get homeComposerPaymentMethodsHint =>
+      'Trips that accept at least one of the selected methods.';
+
+  @override
+  String get homeComposerPaymentCard => 'Card';
+
+  @override
+  String get homeComposerPaymentCash => 'Cash';
+
+  @override
+  String get homeComposerPaymentMobileMoney => 'Mobile money';
 }
