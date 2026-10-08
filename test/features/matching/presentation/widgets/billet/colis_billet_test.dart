@@ -61,7 +61,9 @@ void main() {
     await _pump(tester, _bid(status: 'PENDING'), true);
     expect(find.byType(BilletStatusStamp), findsOneWidget);
     expect(find.byType(BilletTalon), findsOneWidget);
-    expect(find.textContaining('En attente de confirmation'), findsOneWidget);
+    // Colis carte pas encore payé : c'est l'expéditeur qui doit agir
+    // (FLUTTER-G7), pas le voyageur.
+    expect(find.text('En attente de votre paiement'), findsOneWidget);
   });
 
   testWidgets('affiche le corridor départ → arrivée', (tester) async {

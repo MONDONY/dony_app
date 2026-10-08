@@ -7809,6 +7809,10 @@
   "@ticketAwaitingTravelerConfirmation": {
     "description": "Placeholder sender / PENDING du talon (billet_talon.dart)"
   },
+  "ticketAwaitingSenderCardPayment": "En attente de votre paiement",
+  "@ticketAwaitingSenderCardPayment": {
+    "description": "Placeholder sender / PENDING carte du talon : colis créé mais pas encore payé (billet_talon.dart, FLUTTER-G7)"
+  },
   "ticketSenderAwaitingMobileMoneyHint": "Le voyageur a accepté : payez par mobile money depuis le bouton en bas pour sécuriser votre envoi.",
   "@ticketSenderAwaitingMobileMoneyHint": {
     "description": "Bloc expéditeur en attente de paiement mobile money du talon (billet_talon.dart)"

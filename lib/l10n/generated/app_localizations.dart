@@ -12653,6 +12653,12 @@ abstract class AppLocalizations {
   /// **'En attente de confirmation du voyageur'**
   String get ticketAwaitingTravelerConfirmation;
 
+  /// Placeholder sender / PENDING carte du talon : colis créé mais pas encore payé (billet_talon.dart, FLUTTER-G7)
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de votre paiement'**
+  String get ticketAwaitingSenderCardPayment;
+
   /// Bloc expéditeur en attente de paiement mobile money du talon (billet_talon.dart)
   ///
   /// In fr, this message translates to:

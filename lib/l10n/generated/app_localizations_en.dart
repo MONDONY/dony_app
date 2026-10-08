@@ -7600,6 +7600,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Waiting for the traveler\'s confirmation';
 
   @override
+  String get ticketAwaitingSenderCardPayment => 'Waiting for your payment';
+
+  @override
   String get ticketSenderAwaitingMobileMoneyHint =>
       'The traveler has accepted: pay by mobile money from the button below to secure your shipment.';
 

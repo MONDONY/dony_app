@@ -3993,6 +3993,7 @@
   "ticketQrButtonFull": "Parcel QR (to show or stick on the parcel)",
   "ticketScanStepsButton": "Scan the step QR codes",
   "ticketAwaitingTravelerConfirmation": "Waiting for the traveler's confirmation",
+  "ticketAwaitingSenderCardPayment": "Waiting for your payment",
   "ticketSenderAwaitingMobileMoneyHint": "The traveler has accepted: pay by mobile money from the button below to secure your shipment.",
   "ticketTravelerAwaitingPayment": "Waiting for the sender's payment",
   "ticketParcelDeliveredLabel": "Parcel delivered",
