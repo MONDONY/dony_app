@@ -426,6 +426,7 @@ void main() {
       final bid = _bid(
         status: 'ARRIVED',
         arrivalInstructions: 'Métro Châtelet',
+        confirmationCode: '482913',
       );
       await tester.pumpWidget(_host(bid, cancellationBloc));
       await tester.pump();
@@ -448,7 +449,7 @@ void main() {
   testWidgets(
     '8c · ARRIVED sans arrivalInstructions → message d\'attente générique',
     (tester) async {
-      final bid = _bid(status: 'ARRIVED');
+      final bid = _bid(status: 'ARRIVED', confirmationCode: '482913');
       await tester.pumpWidget(_host(bid, cancellationBloc));
       await tester.pump();
 
@@ -521,6 +522,18 @@ void main() {
 
     expect(find.textContaining('Colis en vol'), findsOneWidget);
     expect(find.textContaining('En route vers Dakar'), findsOneWidget);
+    // FLUTTER-G1 : colis remis sans code → le code a été bloqué.
+    expect(find.textContaining('code de retrait a été bloqué'), findsOneWidget);
+  });
+
+  testWidgets('12b · ARRIVED sans confirmationCode → code bloqué en priorité', (
+    tester,
+  ) async {
+    final bid = _bid(status: 'ARRIVED', arrivalCity: 'Dakar');
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('code de retrait a été bloqué'), findsOneWidget);
   });
 
   // ── Test 13: HANDED_OVER departureDate null → "Colis remis." ──────────────────

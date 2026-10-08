@@ -15,6 +15,7 @@ void main() {
       'PARCEL_REFUSED',
       'BID_EXPIRED',
       'CONFIRMATION_CODE_READY',
+      'CONFIRMATION_CODE_BLOCKED',
       'DELIVERY_NOSHOW_REPORTED',
     ]) {
       test('$type routes to bid detail', () {

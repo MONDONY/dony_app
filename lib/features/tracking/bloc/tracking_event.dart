@@ -73,7 +73,12 @@ class ConfirmDeliveryRequested extends TrackingEvent {
 
 class TrackingRefreshCodeRequested extends TrackingEvent {
   final String bidId;
-  TrackingRefreshCodeRequested(this.bidId);
+
+  /// Régénération depuis le talon « Code de retrait bloqué » (FLUTTER-G1) :
+  /// le code précédent a été effacé après trop d'essais ou à l'expiration.
+  final bool afterBlock;
+
+  TrackingRefreshCodeRequested(this.bidId, {this.afterBlock = false});
 }
 
 class TrackingSetCodePublicVisibilityRequested extends TrackingEvent {

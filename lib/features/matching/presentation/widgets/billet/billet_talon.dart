@@ -7,6 +7,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/talon_blocked_code_block.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -88,10 +89,18 @@ class BilletTalon extends StatelessWidget {
             Expanded(child: _RetraitTalonButton(bid: bid)),
           ],
         ),
-        // Code pas encore disponible → bouton QR seul, pleine largeur.
-        'HANDED_OVER' ||
-        'IN_TRANSIT' ||
-        'ARRIVED' => _QrTalonButton(bid: bid, compact: true),
+        // Colis remis sans code : le serveur l'a effacé après trois essais
+        // faux du voyageur, ou à l'expiration (FLUTTER-G1). Le QR seul
+        // laissait le colis inconfirmable : l'expéditeur peut en générer un
+        // nouveau ici.
+        'HANDED_OVER' || 'IN_TRANSIT' || 'ARRIVED' => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _QrTalonButton(bid: bid, compact: true),
+            const SizedBox(height: DonySpacing.sm),
+            TalonBlockedCodeBlock(bidId: bid.id),
+          ],
+        ),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
         'CANCELLED' => _CancelledBlock(bid: bid, isSender: true),
         'REJECTED' => _RejectedBlock(bid: bid, isSender: true),

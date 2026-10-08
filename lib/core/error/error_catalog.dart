@@ -612,6 +612,16 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.password_rounded,
     ),
+    // Code de retrait bloqué après trois essais faux, ou absent sur un colis
+    // déjà remis (back FLUTTER-G1). Attendre ne débloque rien, contrairement
+    // à `too-many-attempts` (OTP) : seul l'expéditeur peut générer un nouveau
+    // code, le voyageur doit le lui demander.
+    'code-blocked': _Entry(
+      title: (l) => l.errorCodeBlockedTitle,
+      message: (l) => l.errorCodeBlockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
+    ),
     // Code de livraison saisi avant le départ du trajet : le back (#419,
     // FLUTTER-CB) répond 422 au lieu de terminer le colis et de libérer le
     // séquestre. Rien à corriger dans le code, il suffit d'attendre.

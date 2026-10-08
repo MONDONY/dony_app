@@ -400,6 +400,13 @@ class BidModel {
 
   bool get isSkeleton => senderId.isEmpty;
 
+  /// Colis remis au voyageur mais sans code de retrait : le serveur l'a effacé
+  /// après trois essais faux ou à l'expiration (FLUTTER-G1). Seul l'expéditeur
+  /// peut en générer un nouveau (`POST /tracking/{bidId}/refresh-code`).
+  bool get needsNewPickupCode =>
+      (confirmationCode == null || confirmationCode!.isEmpty) &&
+      const {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'}.contains(status);
+
   /// Le colis a été restitué (le voyageur a saisi le code de retour).
   bool get isParcelReturned => returnedAt != null;
 

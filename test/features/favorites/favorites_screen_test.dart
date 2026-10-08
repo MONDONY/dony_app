@@ -53,6 +53,8 @@ Widget _buildScreen({
   required FavoriteTripsState tripsState,
   required FavoriteRequestsState requestsState,
   _MockFavoriteIdsCubit? idsCubitOverride,
+  Stream<FavoriteTripsState>? tripsStream,
+  Stream<FavoriteRequestsState>? requestsStream,
 }) {
   final favoriteIdsCubit = idsCubitOverride ?? _MockFavoriteIdsCubit();
   when(() => favoriteIdsCubit.state).thenReturn(const FavoriteIdsState({}, {}));
@@ -62,11 +64,17 @@ Widget _buildScreen({
   when(() => tripsCubit.state).thenReturn(tripsState);
   when(() => tripsCubit.load()).thenAnswer((_) async {});
   when(() => tripsCubit.refresh()).thenAnswer((_) async {});
+  if (tripsStream != null) {
+    whenListen(tripsCubit, tripsStream, initialState: tripsState);
+  }
 
   final requestsCubit = _MockFavoriteRequestsCubit();
   when(() => requestsCubit.state).thenReturn(requestsState);
   when(() => requestsCubit.load()).thenAnswer((_) async {});
   when(() => requestsCubit.refresh()).thenAnswer((_) async {});
+  if (requestsStream != null) {
+    whenListen(requestsCubit, requestsStream, initialState: requestsState);
+  }
 
   final authBloc = _MockAuthBloc();
   when(
@@ -314,6 +322,63 @@ void main() {
       await tester.pump();
 
       verify(() => idsCubit.load()).called(1);
+    });
+  });
+
+  // FLUTTER-FG : la liste chargée fait foi pour les signets et la pastille.
+  group('FavoritesScreen — concordance ids / listes', () {
+    testWidgets('liste de trajets vide → ids de trajets vidés', (tester) async {
+      final idsCubit = _MockFavoriteIdsCubit();
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: false,
+          tripsState: FavoriteTripsLoading(),
+          requestsState: FavoriteRequestsLoading(),
+          idsCubitOverride: idsCubit,
+          tripsStream: Stream.value(FavoriteTripsEmpty()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      verify(() => idsCubit.syncTripsFromList(any())).called(1);
+    });
+
+    testWidgets('liste de demandes vide → ids de demandes vidés', (
+      tester,
+    ) async {
+      final idsCubit = _MockFavoriteIdsCubit();
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: true,
+          tripsState: FavoriteTripsLoading(),
+          requestsState: FavoriteRequestsLoading(),
+          idsCubitOverride: idsCubit,
+          requestsStream: Stream.value(FavoriteRequestsEmpty()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      verify(() => idsCubit.syncRequestsFromList(any())).called(1);
+      verifyNever(() => idsCubit.syncTripsFromList(any()));
+    });
+
+    testWidgets('erreur de chargement → ids conservés', (tester) async {
+      final idsCubit = _MockFavoriteIdsCubit();
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: false,
+          tripsState: FavoriteTripsLoading(),
+          requestsState: FavoriteRequestsLoading(),
+          idsCubitOverride: idsCubit,
+          tripsStream: Stream.value(FavoriteTripsError('boom')),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      verifyNever(() => idsCubit.syncTripsFromList(any()));
     });
   });
 

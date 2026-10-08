@@ -83,6 +83,12 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     emit(TrackingRefreshCodeLoading());
     try {
       final result = await _repository.refreshCode(event.bidId);
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.pickupCodeRegenerated,
+          properties: {'after_block': event.afterBlock},
+        ),
+      );
       emit(
         TrackingConfirmCodeLoaded(
           result.code,

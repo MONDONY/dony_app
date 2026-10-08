@@ -79,6 +79,17 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  // FLUTTER-G1 : `bid.confirmationCode!` plantait quand le code venait d'être
+  // effacé (trois essais faux). Sans code, rien ne s'ouvre et rien ne plante.
+  testWidgets('sans code : aucune feuille, aucune exception', (tester) async {
+    await tester.pumpWidget(host(_bid(confirmationCode: null)));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('CODE DE RETRAIT'), findsNothing);
+  });
+
   testWidgets('anglais — titre du sheet "Pickup code" traduit', (tester) async {
     useEnglish();
     await tester.pumpWidget(host(_bid()));

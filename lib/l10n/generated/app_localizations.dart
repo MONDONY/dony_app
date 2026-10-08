@@ -28159,6 +28159,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.'**
   String get negotiationWithdrawOfferLockedExplanation;
+
+  /// Titre du talon expéditeur quand le code de retrait a été effacé après trop d'essais (talon_blocked_code_block.dart, FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de retrait bloqué'**
+  String get ticketBlockedCodeTitle;
+
+  /// Explication du talon « Code de retrait bloqué » (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code précédent a été bloqué après trop d\'essais incorrects du voyageur. Générez-en un nouveau, puis transmettez-le à votre destinataire.'**
+  String get ticketBlockedCodeMessage;
+
+  /// Bouton du talon « Code de retrait bloqué » : régénère le code (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Générer un nouveau code'**
+  String get ticketGenerateNewCodeButton;
+
+  /// Note du hero expéditeur quand le colis est remis sans code (sender_hero_card.dart, FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait a été bloqué : générez-en un nouveau sur votre billet.'**
+  String get bidDetailSenderCodeBlockedNote;
+
+  /// Encart « Prévenir le destinataire » quand le code est bloqué (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Générez d\'abord un nouveau code de retrait pour l\'ajouter au message.'**
+  String get recipientNotifyCodeBlockedHint;
+
+  /// Erreur code-blocked : code de retrait bloqué après trop d'essais (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code bloqué'**
+  String get errorCodeBlockedTitle;
+
+  /// Erreur code-blocked, côté voyageur (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code n\'est plus valide après trop d\'essais. Demandez à l\'expéditeur d\'en générer un nouveau dans l\'app.'**
+  String get errorCodeBlockedMessage;
+
+  /// Titre de l'écran succès après enregistrement d'un trajet en brouillon (create_trip_screen.dart, FLUTTER-FW).
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillon enregistré'**
+  String get tripDraftSavedTitle;
+
+  /// Sous-titre de l'écran succès brouillon de trajet (FLUTTER-FW).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre trajet n\'est pas encore en ligne. Publiez-le depuis vos brouillons quand vous êtes prêt.'**
+  String get tripDraftSavedSubtitle;
+
+  /// CTA principal : ouvre Mes trajets filtré sur les brouillons (FLUTTER-FW).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes brouillons'**
+  String get tripDraftSavedViewDraftsCta;
+
+  /// CTA secondaire : ouvre le brouillon enregistré (FLUTTER-FW).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir ce brouillon'**
+  String get tripDraftSavedViewDraftCta;
 }
 
 class _AppLocalizationsDelegate

@@ -9337,5 +9337,16 @@
   "errorOfferNoLongerPayableTitle": "Offer withdrawn",
   "errorOfferNoLongerPayableMessage": "The traveler withdrew their offer or the payment window has ended. The negotiation has been updated.",
   "negotiationWithdrawOfferLockedButton": "Withdraw my offer",
-  "negotiationWithdrawOfferLockedExplanation": "The sender has accepted your offer: you can no longer withdraw it during their payment window."
+  "negotiationWithdrawOfferLockedExplanation": "The sender has accepted your offer: you can no longer withdraw it during their payment window.",
+  "ticketBlockedCodeTitle": "Pickup code blocked",
+  "ticketBlockedCodeMessage": "The previous code was blocked after too many wrong tries by the traveler. Generate a new one, then share it with your recipient.",
+  "ticketGenerateNewCodeButton": "Generate a new code",
+  "bidDetailSenderCodeBlockedNote": "The pickup code was blocked: generate a new one on your ticket.",
+  "recipientNotifyCodeBlockedHint": "Generate a new pickup code first to add it to the message.",
+  "errorCodeBlockedTitle": "Code blocked",
+  "errorCodeBlockedMessage": "This code is no longer valid after too many tries. Ask the sender to generate a new one in the app.",
+  "tripDraftSavedTitle": "Draft saved",
+  "tripDraftSavedSubtitle": "Your trip is not online yet. Publish it from your drafts when you're ready.",
+  "tripDraftSavedViewDraftsCta": "View my drafts",
+  "tripDraftSavedViewDraftCta": "View this draft"
 }
