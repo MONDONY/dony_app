@@ -44,6 +44,9 @@ export 'package:dony/core/design/widgets/dony_list_tile.dart';
 // Foundation components
 export 'package:dony/core/design/widgets/dony_logo.dart';
 export 'package:dony/core/design/widgets/dony_mascotte.dart';
+export 'package:dony/core/design/widgets/dony_nego_bubble.dart';
+export 'package:dony/core/design/widgets/dony_nego_hero_card.dart';
+export 'package:dony/core/design/widgets/dony_nego_state_banner.dart';
 export 'package:dony/core/design/widgets/dony_onboarding_gauge.dart';
 export 'package:dony/core/design/widgets/dony_operator_tile.dart';
 export 'package:dony/core/design/widgets/dony_page_scaffold.dart';

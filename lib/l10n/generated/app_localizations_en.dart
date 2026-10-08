@@ -5764,16 +5764,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negotiationThreadExchangesTitle => 'Exchanges';
 
   @override
-  String get negotiationThreadKindProposal => 'Proposal';
-
-  @override
   String get negotiationThreadKindCounter => 'Counter-offer';
-
-  @override
-  String get negotiationThreadKindAccepted => 'Accepted';
-
-  @override
-  String get negotiationThreadKindRejected => 'Declined';
 
   @override
   String get negotiationThreadPayHint =>
@@ -5810,6 +5801,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String negotiationThreadWaitingForReply(String name) {
     return 'Waiting for $name\'s reply.';
+  }
+
+  @override
+  String get negotiationThreadYourTurn => 'Your move';
+
+  @override
+  String negotiationThreadTheirTurn(String name) {
+    return '$name\'s move';
   }
 
   @override

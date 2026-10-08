@@ -112,10 +112,9 @@ class TrajetStep extends StatelessWidget {
   /// de leurs valeurs suffit à propager le changement (déjà écoutés par le
   /// `ListenableBuilder` de [_buildWidgets]).
   void _swapCities() {
-    final city = departureCityNotifier.value;
-    departureCityNotifier.value = arrivalCityNotifier.value;
-    arrivalCityNotifier.value = city;
-
+    // Codes pays d'abord : le listener des villes (sync vers le form bloc) lit
+    // le code courant. Dans l'ordre inverse, le bloc gardait les codes d'avant
+    // l'interversion — Abidjan publié en « FR » et Paris en « CI ».
     final depCode = departureCountryCodeNotifier;
     final arrCode = arrivalCountryCodeNotifier;
     if (depCode != null && arrCode != null) {
@@ -123,6 +122,10 @@ class TrajetStep extends StatelessWidget {
       depCode.value = arrCode.value;
       arrCode.value = code;
     }
+
+    final city = departureCityNotifier.value;
+    departureCityNotifier.value = arrivalCityNotifier.value;
+    arrivalCityNotifier.value = city;
   }
 
   /// Formate la date et les heures du corridor pour l'aperçu.
