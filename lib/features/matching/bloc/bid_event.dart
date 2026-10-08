@@ -113,6 +113,17 @@ class BidDetailRequested extends BidEvent {
   BidDetailRequested(this.bidId);
 }
 
+/// La fiche d'un colis a peut-être changé hors de l'écran : application
+/// revenue au premier plan ([push] `null`), ou push reçue application
+/// ouverte ([push] = son `data`). Une push relit le colis seulement si son
+/// `bidId` est celui de [bidId] (ex. `PARCEL_RETURNED` : le voyageur a
+/// restitué le colis, Sentry FLUTTER-FN).
+class BidDetailExternalChangeDetected extends BidEvent {
+  final String bidId;
+  final Map<String, dynamic>? push;
+  BidDetailExternalChangeDetected(this.bidId, {this.push});
+}
+
 class BidAcceptRequested extends BidEvent {
   final String bidId;
   BidAcceptRequested(this.bidId);

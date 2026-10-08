@@ -292,7 +292,9 @@ void main() {
       noDetailRequest();
     });
 
-    testWidgets('push sur ce colis → relecture immédiate', (tester) async {
+    testWidgets('push → transmise au BidBloc avec ce colis et son data', (
+      tester,
+    ) async {
       await _pump(
         tester,
         bid: _makeBid(status: 'REJECTED'),
@@ -300,22 +302,21 @@ void main() {
       );
       expect(detailRequests(), 1);
 
-      pushes.add({'type': 'BID_ACCEPTED', 'bidId': 'bid-001'});
+      // Le filtre sur le bidId vit dans le BidBloc (bid_bloc_test.dart) :
+      // l'écran transmet chaque push avec l'identifiant qu'il affiche.
+      pushes.add({'type': 'PARCEL_RETURNED', 'bidId': 'bid-001'});
       await tester.pump();
-      expect(detailRequests(), 1);
-    });
-
-    testWidgets('push sur un autre colis → ignorée', (tester) async {
-      await _pump(
-        tester,
-        bid: _makeBid(status: 'REJECTED'),
-        authBloc: senderAuth(),
-      );
-      expect(detailRequests(), 1);
-
-      pushes.add({'type': 'BID_ACCEPTED', 'bidId': 'bid-999'});
-      pushes.add({'type': 'NEW_MESSAGE'});
-      await tester.pump();
+      final events = verify(
+        () => bidBloc.add(
+          captureAny(that: isA<BidDetailExternalChangeDetected>()),
+        ),
+      ).captured.cast<BidDetailExternalChangeDetected>();
+      expect(events, hasLength(1));
+      expect(events.single.bidId, 'bid-001');
+      expect(events.single.push, {
+        'type': 'PARCEL_RETURNED',
+        'bidId': 'bid-001',
+      });
       noDetailRequest();
     });
 
@@ -369,6 +370,53 @@ void main() {
       arrivals.notifyArrived('ann-999');
       await tester.pump();
       noDetailRequest();
+    });
+  });
+
+  group('FLUTTER-FN — retour au premier plan', () {
+    testWidgets('resumed → relecture du colis (push reçue en arrière-plan)', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'CANCELLED'),
+        authBloc: senderAuth(),
+      );
+      expect(detailRequests(), 1);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      verifyNever(
+        () => bidBloc.add(any(that: isA<BidDetailExternalChangeDetected>())),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      final events = verify(
+        () => bidBloc.add(
+          captureAny(that: isA<BidDetailExternalChangeDetected>()),
+        ),
+      ).captured.cast<BidDetailExternalChangeDetected>();
+      expect(events, hasLength(1));
+      expect(events.single.bidId, 'bid-001');
+      expect(events.single.push, isNull);
+    });
+
+    testWidgets('écran fermé → plus de relecture à la reprise', (tester) async {
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'CANCELLED'),
+        authBloc: senderAuth(),
+      );
+      await tester.pumpWidget(const SizedBox());
+      clearInteractions(bidBloc);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      verifyNever(
+        () => bidBloc.add(any(that: isA<BidDetailExternalChangeDetected>())),
+      );
     });
   });
 }
