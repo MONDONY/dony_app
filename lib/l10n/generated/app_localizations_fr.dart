@@ -16780,4 +16780,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatReportMessageAction => 'Signaler';
+
+  @override
+  String senderReliabilityLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count annulations ou absences',
+      one: '1 annulation ou absence',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get senderReliabilityTooltip =>
+      'Colis annulés après l\'acceptation d\'un voyageur et absences confirmées au rendez-vous de remise.';
 }

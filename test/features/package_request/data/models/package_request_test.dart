@@ -141,4 +141,34 @@ void main() {
     expect(r.createdAt.isUtc, isTrue);
     expect(r.createdAt, DateTime.utc(2026, 9, 17, 6, 25));
   });
+
+  group('PackageRequest.senderIncidentCount (FLUTTER-E0/E6)', () {
+    Map<String, dynamic> json() => {
+      'id': 'aaa-111',
+      'senderId': 'sender-1',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'desiredDate': '2026-06-15',
+      'dateToleranceDays': 2,
+      'weightKg': 5.0,
+      'parcelSize': 'SMALL',
+      'status': 'OPEN',
+      'createdAt': '2026-05-10T10:00:00Z',
+    };
+
+    test('lu quand le serveur le sert au voyageur', () {
+      final r = PackageRequest.fromJson(json()..['senderIncidentCount'] = 3);
+      expect(r.senderIncidentCount, 3);
+    });
+
+    test('nul pour le propriétaire ou un back antérieur', () {
+      expect(PackageRequest.fromJson(json()).senderIncidentCount, isNull);
+      expect(
+        PackageRequest.fromJson(
+          json()..['senderIncidentCount'] = null,
+        ).senderIncidentCount,
+        isNull,
+      );
+    });
+  });
 }

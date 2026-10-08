@@ -21,12 +21,14 @@ SenderPublicProfile _sender({
   bool kycVerified = true,
   double averageRating = 4.8,
   int totalRatings = 12,
+  int incidentCount = 0,
 }) => SenderPublicProfile(
   id: 'sender-1',
   displayName: 'Fatou Diallo',
   averageRating: averageRating,
   totalRatings: totalRatings,
   kycVerified: kycVerified,
+  incidentCount: incidentCount,
 );
 
 UserModel _fakeUser(String id) => UserModel(
@@ -65,6 +67,22 @@ Widget _buildApp(SenderPublicProfile sender, {String? authUserId}) {
 
 void main() {
   group('SenderPublicProfileSheet', () {
+    testWidgets('fiabilité de l expéditeur affichée (FLUTTER-E0/E6)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildApp(_sender(incidentCount: 1)));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('1 annulation ou absence'), findsOneWidget);
+    });
+
+    testWidgets('fiabilité masquée à zéro', (tester) async {
+      await tester.pumpWidget(_buildApp(_sender()));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
+    });
+
     testWidgets('shows "Profil expéditeur" title', (tester) async {
       await tester.pumpWidget(_buildApp(_sender()));
       await tester.tap(find.byKey(const Key('open')));

@@ -20,6 +20,7 @@ class ProfilePublicModel {
     this.residenceCountry,
     this.measuredResponseMinutes,
     this.lastSeenDaysAgo,
+    this.senderIncidentCount = 0,
   });
 
   final String userId;
@@ -55,6 +56,11 @@ class ProfilePublicModel {
   /// l'utilisateur la masque ou si elle est inconnue.
   final int? lastSeenDaysAgo;
 
+  /// Fiabilité en tant qu'expéditeur (FLUTTER-E0/E6) : annulations après
+  /// acceptation d'un voyageur et absences au rendez-vous de remise
+  /// confirmées. `0` sur un back antérieur.
+  final int senderIncidentCount;
+
   factory ProfilePublicModel.fromJson(Map<String, dynamic> json) {
     return ProfilePublicModel(
       userId: json['userId'] as String? ?? '',
@@ -86,6 +92,7 @@ class ProfilePublicModel {
       measuredResponseMinutes: (json['measuredResponseMinutes'] as num?)
           ?.toInt(),
       lastSeenDaysAgo: (json['lastSeenDaysAgo'] as num?)?.toInt(),
+      senderIncidentCount: (json['senderIncidentCount'] as num?)?.toInt() ?? 0,
     );
   }
 }
