@@ -17536,11 +17536,41 @@ abstract class AppLocalizations {
   /// **'Cette action annulera votre trajet et remboursera automatiquement tous les expéditeurs concernés.'**
   String get cancellationConfirmDialogMessage;
 
-  /// Snackbar de succès de l'annulation (cancellation_bottom_sheet.dart). Texte fixe, identique au code vivant d'avant migration — pas de compteur.
+  /// Snackbar de succès de l'annulation du trajet (trip_owner_detail_screen.dart), sans colis à restituer.
   ///
   /// In fr, this message translates to:
   /// **'Trajet annulé'**
   String get cancellationTripCanceledSnackbar;
+
+  /// Bandeau de cancellation_bottom_sheet.dart quand le trajet porte des colis déjà remis (HANDED_OVER, IN_TRANSIT, ARRIVED) : leur retour s'ouvre à l'annulation (FLUTTER-FH).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Un colis vous a déjà été remis : vous devrez le rendre à son expéditeur sous 3 jours, contre son code de retour.} other{{count} colis vous ont déjà été remis : vous devrez les rendre à leurs expéditeurs sous 3 jours, contre leur code de retour.}}'**
+  String cancellationHandedOverParcelsNotice(int count);
+
+  /// Message du dialogue de confirmation finale (cancellation_bottom_sheet.dart) quand des colis sont déjà remis (FLUTTER-FH).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Le colis déjà remis devra être rendu à son expéditeur sous 3 jours.} other{Cette action annulera votre trajet et remboursera intégralement tous les expéditeurs concernés. Les {count} colis déjà remis devront être rendus à leurs expéditeurs sous 3 jours.}}'**
+  String cancellationConfirmDialogMessageWithReturns(int count);
+
+  /// Snackbar de succès de l'annulation du trajet (trip_owner_detail_screen.dart) quand le back signale des colis à restituer (parcelsToReturnCount > 0).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Trajet annulé. Rendez le colis remis : son expéditeur a reçu le code de retour.} other{Trajet annulé. Rendez les {count} colis remis : leurs expéditeurs ont reçu le code de retour.}}'**
+  String cancellationTripCanceledWithReturnsSnackbar(int count);
+
+  /// Indication de la carte voyageur (voyageur_contact_card.dart) sur un colis annulé dont le retour est en cours (FLUTTER-FM).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour en cours : contactez le voyageur pour récupérer votre colis.'**
+  String get bidDetailReturnContactSenderHint;
+
+  /// Indication de la carte expéditeur (expediteur_contact_card.dart) sur un colis annulé dont le retour est en cours (FLUTTER-FM).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour en cours : contactez l\'expéditeur pour lui rendre son colis.'**
+  String get bidDetailReturnContactTravelerHint;
 
   /// Titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true).
   ///

@@ -12,6 +12,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -44,6 +46,9 @@ const _biddableActiveStatuses = <String>{
   'IN_TRANSIT',
   'ARRIVED',
 };
+
+/// Colis entre les mains du voyageur : à restituer si le trajet est annulé.
+const _handedOverStatuses = <String>{'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'};
 
 /// Mode du CTA d'arrivée affiché au voyageur propriétaire.
 enum TripArrivalCta {
@@ -238,6 +243,9 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
             },
           ),
           BlocListener<BidBloc, BidState>(listener: _onBidState),
+          BlocListener<CancellationBloc, CancellationState>(
+            listener: _onCancellationState,
+          ),
         ],
         child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
           listener: (context, state) {
@@ -523,6 +531,42 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     return currentUserId != null && a.travelerId == currentUserId;
   }
 
+  /// Issue de l'annulation du trajet, envoyée depuis [CancellationBottomSheet]
+  /// une fois la feuille fermée : l'écran se recharge pour montrer le trajet
+  /// et ses colis annulés. Sans cela, il restait affiché tel quel et le
+  /// voyageur croyait l'annulation ratée (FLUTTER-FH).
+  void _onCancellationState(BuildContext context, CancellationState state) {
+    if (state is CancellationSuccess) {
+      final l = context.l10n;
+      final toReturn = state.cancellation.parcelsToReturnCount;
+      DonySnackbar.show(
+        context,
+        message: toReturn > 0
+            ? l.cancellationTripCanceledWithReturnsSnackbar(toReturn)
+            : l.cancellationTripCanceledSnackbar,
+        type: DonySnackbarType.success,
+      );
+      context.read<AnnouncementBloc>().add(
+        AnnouncementDetailRequested(widget.announcementId),
+      );
+      context.read<BidBloc>().add(BidListRequested(widget.announcementId));
+    } else if (state is CancellationError) {
+      ErrorPresenter.show(context, state.error);
+    }
+  }
+
+  /// Colis du trajet déjà remis au voyageur : leur retour s'ouvre à
+  /// l'annulation, la feuille d'annulation le signale.
+  int _handedOverParcels(BuildContext context) {
+    final state = context.read<BidBloc>().state;
+    if (state is! BidListLoaded) {
+      return 0;
+    }
+    return state.bids
+        .where((b) => _handedOverStatuses.contains(b.status))
+        .length;
+  }
+
   /// Suppression bloquée par un colis déjà accepté — propose l'annulation du
   /// voyage.
   Future<void> _onDeleteBlocked(
@@ -543,6 +587,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
       await CancellationBottomSheet.show(
         context,
         announcementId: announcementId,
+        handedOverParcels: _handedOverParcels(context),
       );
     }
   }

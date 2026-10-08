@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
@@ -8,7 +7,6 @@ import 'package:dony/features/cancellation/presentation/cancellation_labels.dart
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 // Motifs envoyés au serveur et comparés tels quels (_finalReason) : valeur de
 // donnée, jamais traduite. Seul l'affichage passe par cancellationReasonLabel.
@@ -20,19 +18,31 @@ const _reasons = [
   'Autre', // i18n-ignore
 ];
 
+/// Annulation du trajet par le voyageur : motif, puis confirmation.
+///
+/// La feuille se ferme avant l'envoi de l'annulation : c'est l'écran du
+/// trajet qui écoute le [CancellationBloc] (snackbar et rechargement). Un
+/// écouteur posé ici ne recevait jamais le succès, d'où un trajet affiché
+/// inchangé après une annulation réussie (FLUTTER-FH).
 class CancellationBottomSheet extends StatefulWidget {
   const CancellationBottomSheet({
     super.key,
     required this.announcementId,
+    this.handedOverParcels = 0,
     this.onSubmitReady,
   });
 
   final String announcementId;
+
+  /// Colis déjà remis au voyageur (HANDED_OVER, IN_TRANSIT, ARRIVED) : leur
+  /// retour s'ouvre à l'annulation, la feuille et la confirmation le disent.
+  final int handedOverParcels;
   final void Function(VoidCallback)? onSubmitReady;
 
   static Future<void> show(
     BuildContext context, {
     required String announcementId,
+    int handedOverParcels = 0,
   }) {
     final cancellationBloc = context.read<CancellationBloc>();
     final l = context.l10n;
@@ -54,6 +64,7 @@ class CancellationBottomSheet extends StatefulWidget {
       ),
       child: CancellationBottomSheet(
         announcementId: announcementId,
+        handedOverParcels: handedOverParcels,
         onSubmitReady: (fn) => submit = fn,
       ),
     );
@@ -112,7 +123,11 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
     DonyDialog.show(
       context,
       title: l.cancellationConfirmAction,
-      message: l.cancellationConfirmDialogMessage,
+      message: widget.handedOverParcels > 0
+          ? l.cancellationConfirmDialogMessageWithReturns(
+              widget.handedOverParcels,
+            )
+          : l.cancellationConfirmDialogMessage,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'triangle-alert',
     ).then((confirmed) {
@@ -133,76 +148,89 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
 
-    return BlocListener<CancellationBloc, CancellationState>(
-      listener: (context, state) {
-        if (state is CancellationSuccess) {
-          DonySnackbar.show(
-            context,
-            message: l.cancellationTripCanceledSnackbar,
-            type: DonySnackbarType.success,
-          );
-          context.go('/announcements');
-        } else if (state is CancellationError) {
-          ErrorPresenter.show(context, state.error);
-        }
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Warning banner
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Warning banner
+        Container(
+          padding: const EdgeInsets.all(DonySpacing.base),
+          decoration: BoxDecoration(
+            color: cs.errorContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: Border.all(color: cs.error.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              DonyIcon('triangle-alert', color: cs.error, size: 18),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  l.cancellationAutoRefundNotice,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (widget.handedOverParcels > 0) ...[
+          const SizedBox(height: DonySpacing.sm),
           Container(
+            key: const Key('cancellation-handed-over-notice'),
             padding: const EdgeInsets.all(DonySpacing.base),
             decoration: BoxDecoration(
-              color: cs.errorContainer,
+              color: cs.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(color: cs.error.withValues(alpha: 0.3)),
+              border: Border.all(color: cs.outline),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DonyIcon('triangle-alert', color: cs.error, size: 18),
+                DonyIcon('package', color: cs.onSurfaceVariant, size: 18),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    l.cancellationAutoRefundNotice,
+                    l.cancellationHandedOverParcelsNotice(
+                      widget.handedOverParcels,
+                    ),
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: DonySpacing.base),
-
-          // Radio group label
-          Text(l.cancellationReasonFieldLabel, style: tt.titleSmall),
-          const SizedBox(height: DonySpacing.sm),
-
-          // Radio options
-          DonyRadioGroup<String>(
-            value: _selectedReason,
-            onChanged: (v) => setState(() => _selectedReason = v),
-            options: _reasons
-                .map(
-                  (r) => DonyRadioOption(
-                    value: r,
-                    label: cancellationReasonLabel(l, r),
-                  ),
-                )
-                .toList(),
-          ),
-
-          // "Autre" text field
-          if (_selectedReason == 'Autre') ...[
-            const SizedBox(height: DonySpacing.md),
-            DonyTextField(
-              controller: _otherCtrl,
-              label: l.cancellationSpecifyLabel,
-              hint: l.cancellationSpecifyHint,
-            ),
-          ],
-
-          const SizedBox(height: DonySpacing.xl),
         ],
-      ),
+        const SizedBox(height: DonySpacing.base),
+
+        // Radio group label
+        Text(l.cancellationReasonFieldLabel, style: tt.titleSmall),
+        const SizedBox(height: DonySpacing.sm),
+
+        // Radio options
+        DonyRadioGroup<String>(
+          value: _selectedReason,
+          onChanged: (v) => setState(() => _selectedReason = v),
+          options: _reasons
+              .map(
+                (r) => DonyRadioOption(
+                  value: r,
+                  label: cancellationReasonLabel(l, r),
+                ),
+              )
+              .toList(),
+        ),
+
+        // "Autre" text field
+        if (_selectedReason == 'Autre') ...[
+          const SizedBox(height: DonySpacing.md),
+          DonyTextField(
+            controller: _otherCtrl,
+            label: l.cancellationSpecifyLabel,
+            hint: l.cancellationSpecifyHint,
+          ),
+        ],
+
+        const SizedBox(height: DonySpacing.xl),
+      ],
     );
   }
 }

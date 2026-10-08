@@ -5,12 +5,18 @@ class CancellationModel {
   final List<RematchSuggestionModel> rematchSuggestions;
   final DateTime cancelledAt;
 
+  /// Colis déjà remis au voyageur, à restituer à leur expéditeur contre un
+  /// code de retour (FLUTTER-FH, back yadony-back « annulation-retour »).
+  /// 0 avec un back antérieur, qui ne sert pas le champ.
+  final int parcelsToReturnCount;
+
   const CancellationModel({
     required this.announcementId,
     required this.affectedBidsCount,
     required this.reason,
     required this.rematchSuggestions,
     required this.cancelledAt,
+    this.parcelsToReturnCount = 0,
   });
 
   factory CancellationModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +30,8 @@ class CancellationModel {
           )
           .toList(),
       cancelledAt: DateTime.parse(json['cancelledAt'] as String),
+      parcelsToReturnCount:
+          (json['parcelsToReturnCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

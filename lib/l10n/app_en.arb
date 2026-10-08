@@ -6306,8 +6306,13 @@
   },
   "cancellationTripCanceledSnackbar": "Trip canceled",
   "@cancellationTripCanceledSnackbar": {
-    "description": "Snackbar de succès de l'annulation (cancellation_bottom_sheet.dart). Texte fixe, identique au code vivant d'avant migration — pas de compteur."
+    "description": "Snackbar de succès de l'annulation du trajet (trip_owner_detail_screen.dart), sans colis à restituer."
   },
+  "cancellationHandedOverParcelsNotice": "{count, plural, =1{A parcel was already handed to you: you'll need to return it to its sender within 3 days, against its return code.} other{{count} parcels were already handed to you: you'll need to return them to their senders within 3 days, against their return code.}}",
+  "cancellationConfirmDialogMessageWithReturns": "{count, plural, =1{This will cancel your trip and fully refund all affected senders. The parcel already handed over must be returned to its sender within 3 days.} other{This will cancel your trip and fully refund all affected senders. The {count} parcels already handed over must be returned to their senders within 3 days.}}",
+  "cancellationTripCanceledWithReturnsSnackbar": "{count, plural, =1{Trip canceled. Return the parcel handed to you: its sender has the return code.} other{Trip canceled. Return the {count} parcels handed to you: their senders have the return code.}}",
+  "bidDetailReturnContactSenderHint": "Return in progress: contact the traveler to get your parcel back.",
+  "bidDetailReturnContactTravelerHint": "Return in progress: contact the sender to give their parcel back.",
   "deliveryNoShowTravelerNotDeliveringTitle": "The traveler isn't delivering",
   "@deliveryNoShowTravelerNotDeliveringTitle": {
     "description": "Titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true)."

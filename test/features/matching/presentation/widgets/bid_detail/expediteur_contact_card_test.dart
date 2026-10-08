@@ -37,6 +37,8 @@ BidModel _bid({
   String status = 'ACCEPTED',
   bool senderPhoneAvailable = true,
   bool? contactWindowOpen,
+  DateTime? returnDeadline,
+  DateTime? returnedAt,
   String? senderName = 'Mariama D.',
   String senderId = 's1',
   int? senderTotalShipments,
@@ -50,6 +52,8 @@ BidModel _bid({
   senderName: senderName,
   senderPhoneAvailable: senderPhoneAvailable,
   contactWindowOpen: contactWindowOpen,
+  returnDeadline: returnDeadline,
+  returnedAt: returnedAt,
   senderTotalShipments: senderTotalShipments,
   senderKycVerified: senderKycVerified,
   createdAt: DateTime(2026, 5),
@@ -394,5 +398,52 @@ void main() {
       find.textContaining('You don\'t have permission to do this.'),
       findsOneWidget,
     );
+  });
+
+  // ── Retour d'un colis annulé après remise (FLUTTER-FM) ──────────────────
+
+  testWidgets('colis annulé, retour en cours : 💬 + 📞 et indication', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'CANCELLED',
+        contactWindowOpen: true,
+        returnDeadline: DateTime.now().add(const Duration(days: 2)),
+      ),
+    );
+    expect(_chatIcon, findsOneWidget);
+    expect(_phoneIcon, findsOneWidget);
+    expect(
+      find.text(
+        "Retour en cours : contactez l'expéditeur pour lui rendre son colis.",
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('colis annulé et restitué : plus aucun bouton', (tester) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'CANCELLED',
+        contactWindowOpen: false,
+        returnDeadline: DateTime.now().add(const Duration(days: 2)),
+        returnedAt: DateTime.now(),
+      ),
+    );
+    expect(_chatIcon, findsNothing);
+    expect(_phoneIcon, findsNothing);
+    expect(
+      find.byKey(const Key('contact-return-in-progress-hint')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('colis annulé sans retour : plus aucun bouton', (tester) async {
+    await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: false));
+    expect(_chatIcon, findsNothing);
+    expect(_phoneIcon, findsNothing);
   });
 }

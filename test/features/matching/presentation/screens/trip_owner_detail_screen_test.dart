@@ -17,6 +17,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -1200,5 +1201,151 @@ void main() {
       expect(tripArrivalCtaFor([_makeBid(status: 'COMPLETED')]), isNull);
       expect(tripArrivalCtaFor(const []), isNull);
     });
+  });
+
+  // ── Annulation du trajet (FLUTTER-FH) ─────────────────────────────────────
+  //
+  // La feuille d'annulation se ferme avant l'envoi : l'écran écoute le succès,
+  // prévient le voyageur et se recharge. Avant, il restait affiché inchangé et
+  // le testeur a cru à un échec.
+  group('annulation du trajet', () {
+    CancellationModel cancellation({int parcelsToReturn = 0}) =>
+        CancellationModel(
+          announcementId: 'ann-trip-001',
+          affectedBidsCount: 1,
+          reason: 'Vol annulé',
+          rematchSuggestions: const [],
+          cancelledAt: DateTime(2026, 10, 8),
+          parcelsToReturnCount: parcelsToReturn,
+        );
+
+    late StreamController<CancellationState> ctrl;
+
+    setUp(() => ctrl = StreamController<CancellationState>.broadcast());
+    tearDown(() => ctrl.close());
+
+    Future<void> pumpWithCancellation(WidgetTester tester) async {
+      whenListen(cancelBloc, ctrl.stream, initialState: CancellationInitial());
+      await pumpOwnerWith(
+        tester,
+        announcement: _makeAnnouncement(),
+        auth: const AuthAuthenticated(_owner),
+      );
+      registerFallbackValue(AnnouncementDetailRequested('fallback'));
+      clearInteractions(annBloc);
+      clearInteractions(bidBloc);
+    }
+
+    testWidgets('succès : snackbar et rechargement du trajet et des colis', (
+      tester,
+    ) async {
+      await pumpWithCancellation(tester);
+
+      ctrl.add(CancellationSuccess(cancellation()));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Trajet annulé'), findsOneWidget);
+      final reloads = verify(
+        () => annBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementDetailRequested>();
+      expect(reloads.single.id, 'ann-trip-001');
+      final bidReloads = verify(
+        () => bidBloc.add(captureAny()),
+      ).captured.whereType<BidListRequested>();
+      expect(bidReloads.single.announcementId, 'ann-trip-001');
+    });
+
+    testWidgets('succès avec un colis à restituer : le snackbar le dit', (
+      tester,
+    ) async {
+      await pumpWithCancellation(tester);
+
+      ctrl.add(CancellationSuccess(cancellation(parcelsToReturn: 1)));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.text(
+          'Trajet annulé. Rendez le colis remis : son expéditeur a reçu le '
+          'code de retour.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('échec : message d\'erreur, pas de rechargement', (
+      tester,
+    ) async {
+      await pumpWithCancellation(tester);
+
+      ctrl.add(
+        CancellationError(const ConflictException('Ce trajet est déjà annulé')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      verifyNever(() => annBloc.add(any()));
+      expect(find.text('Trajet annulé'), findsNothing);
+    });
+
+    testWidgets(
+      'suppression bloquée : la feuille d\'annulation annonce le colis remis',
+      (tester) async {
+        final annCtrl = StreamController<AnnouncementState>.broadcast();
+        addTearDown(annCtrl.close);
+        final announcement = _makeAnnouncement();
+        when(
+          () => annBloc.state,
+        ).thenReturn(AnnouncementDetailLoaded(announcement));
+        whenListen(
+          annBloc,
+          annCtrl.stream,
+          initialState: AnnouncementDetailLoaded(announcement),
+        );
+        when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+        whenListen(
+          authBloc,
+          const Stream<AuthState>.empty(),
+          initialState: const AuthAuthenticated(_owner),
+        );
+        final bids = [_makeBid(status: 'HANDED_OVER')];
+        when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+        whenListen(
+          bidBloc,
+          Stream<BidState>.value(BidListLoaded(bids)),
+          initialState: BidListLoaded(bids),
+        );
+        await _pump(
+          tester,
+          annBloc: annBloc,
+          bidBloc: bidBloc,
+          cancelBloc: cancelBloc,
+          authBloc: authBloc,
+        );
+        await tester.pumpAndSettle();
+
+        // L'état « suppression bloquée » remplace le détail (squelette animé) :
+        // pas de pumpAndSettle tant que le dialogue puis la feuille s'ouvrent.
+        annCtrl.add(AnnouncementDeleteBlockedByAcceptedBid('ann-trip-001'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.tap(find.text('Annuler le voyage'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 800));
+
+        expect(
+          find.byKey(const Key('cancellation-handed-over-notice')),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'Un colis vous a déjà été remis : vous devrez le rendre à son '
+            'expéditeur sous 3 jours, contre son code de retour.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

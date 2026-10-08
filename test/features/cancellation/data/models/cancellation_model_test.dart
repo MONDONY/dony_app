@@ -88,5 +88,30 @@ void main() {
       expect(model.rematchSuggestions, hasLength(1));
       expect(model.rematchSuggestions.single.travelerFirstName, 'Awa');
     });
+
+    test('parcelsToReturnCount lu quand le back le sert (FLUTTER-FH)', () {
+      final model = CancellationModel.fromJson({
+        'announcementId': 'ann-1',
+        'affectedBidsCount': 2,
+        'reason': 'Vol annulé',
+        'cancelledAt': '2026-10-08T10:00:00',
+        'rematchSuggestions': <dynamic>[],
+        'parcelsToReturnCount': 1,
+      });
+
+      expect(model.parcelsToReturnCount, 1);
+    });
+
+    test('parcelsToReturnCount vaut 0 avec un back antérieur', () {
+      final model = CancellationModel.fromJson({
+        'announcementId': 'ann-1',
+        'affectedBidsCount': 2,
+        'reason': 'Vol annulé',
+        'cancelledAt': '2026-10-08T10:00:00',
+        'rematchSuggestions': <dynamic>[],
+      });
+
+      expect(model.parcelsToReturnCount, 0);
+    });
   });
 }

@@ -304,6 +304,31 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — PARCEL_RETURN_REQUIRED (FLUTTER-FK)', () {
+    test('avec un bidId, ouvre la fiche du colis (code de retour)', () {
+      expect(
+        resolveNotificationRoute('PARCEL_RETURN_REQUIRED', {'bidId': bidId}),
+        '/bids/$bidId',
+      );
+    });
+
+    test('sans bidId, repli sur l\'historique des envois', () {
+      expect(
+        resolveNotificationRoute('PARCEL_RETURN_REQUIRED', {}),
+        '/profile/shipments/history',
+      );
+    });
+
+    test('bidId invalide : jamais intégré à la route', () {
+      expect(
+        resolveNotificationRoute('PARCEL_RETURN_REQUIRED', {
+          'bidId': '../admin',
+        }),
+        '/profile/shipments/history',
+      );
+    });
+  });
+
   group('resolveNotificationRoute — sans ressource dédiée', () {
     test('ACCOUNT_SUSPENDED routes to the suspended-account screen', () {
       expect(

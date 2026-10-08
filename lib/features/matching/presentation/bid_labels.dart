@@ -85,6 +85,26 @@ const bidContactStatuses = <String>{
 
 bool bidAllowsContact(String status) => bidContactStatuses.contains(status);
 
+/// Retour en cours d'un colis annulé alors que le voyageur l'avait déjà
+/// (FLUTTER-FM) : expéditeur et voyageur doivent pouvoir s'écrire et
+/// s'appeler pour organiser la restitution, jusqu'à ce qu'elle soit confirmée
+/// ou que le délai de retour soit écoulé.
+///
+/// La fenêtre vient du serveur (`contactWindowOpen`, qui couvre le retour
+/// depuis yadony-back « annulation-retour ») ; un back antérieur la sert à
+/// `false` sur un colis annulé, le contact reste alors fermé comme avant.
+/// Sans le champ, repli sur le délai de retour lu par l'app.
+bool bidReturnInProgress(BidModel bid, {DateTime? now}) {
+  if (bid.status != 'CANCELLED' || !bid.isAwaitingReturn) return false;
+  final open = bid.contactWindowOpen;
+  if (open != null) return open;
+  return (now ?? DateTime.now()).isBefore(bid.returnDeadline!);
+}
+
+/// [bidAllowsContact], retour d'un colis annulé compris ([bidReturnInProgress]).
+bool bidAllowsContactFor(BidModel bid, {DateTime? now}) =>
+    bidAllowsContact(bid.status) || bidReturnInProgress(bid, now: now);
+
 /// Statuts d'une demande pas encore acceptée : les cartes de profil y
 /// expliquent quand le contact deviendra possible (FLUTTER-4T).
 const bidContactPendingStatuses = <String>{

@@ -71,7 +71,9 @@ class VoyageurContactCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
     final name = bid.travelerName ?? l.tripTravelerFallbackName;
-    final contactAllowed = bidAllowsContact(bid.status);
+    // Retour en cours d'un colis annulé : contact rouvert (FLUTTER-FM).
+    final returnInProgress = bidReturnInProgress(bid);
+    final contactAllowed = bidAllowsContact(bid.status) || returnInProgress;
     final canOpenProfile = bid.travelerId != null;
 
     final ratingLabel = bid.travelerAverageRating != null
@@ -213,6 +215,23 @@ class VoyageurContactCard extends StatelessWidget {
                 ],
               ],
             ),
+            if (returnInProgress) ...[
+              const SizedBox(height: DonySpacing.sm),
+              Row(
+                key: const Key('contact-return-in-progress-hint'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DonyIcon('package', size: 14, color: cs.onSurfaceVariant),
+                  const SizedBox(width: DonySpacing.xs),
+                  Expanded(
+                    child: Text(
+                      l.bidDetailReturnContactSenderHint,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (!contactAllowed &&
                 bidContactPendingStatuses.contains(bid.status)) ...[
               const SizedBox(height: DonySpacing.sm),

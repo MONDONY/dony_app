@@ -62,6 +62,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'HANDOVER_REMINDER_H2' when _isUuid(bidId) => '/bids/$bidId',
     'MOBILE_MONEY_PAYMENT_CONFIRMED' when _isUuid(bidId) => '/bids/$bidId',
     'PARCEL_RETURNED' when _isUuid(bidId) => '/bids/$bidId',
+    // Trajet annulé alors que le voyageur avait déjà le colis : la fiche du
+    // colis porte le code de retour (FLUTTER-FK). Sans bidId, l'historique.
+    'PARCEL_RETURN_REQUIRED' when _isUuid(bidId) => '/bids/$bidId',
+    'PARCEL_RETURN_REQUIRED' => '/profile/shipments/history',
     'RETURN_DEADLINE_WARNING' when _isUuid(bidId) => '/bids/$bidId',
     'RETURN_DEADLINE_EXPIRED' when _isUuid(bidId) => '/bids/$bidId',
     // Trajet arrivé : le détail du colis porte les instructions de retrait.
@@ -117,8 +121,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
       '/cancellations/$cancellationId/rematch',
     'BID_REJECTED' when _isUuid(bidId) => '/bids/$bidId',
 
-    // Trajet annulé → rematch si dispo, sinon le bid concerné, sinon (pur
-    // remboursement, aucun id) l'historique des envois
+    // Trajet annulé → rematch si dispo, sinon le bid concerné (le back le
+    // joint désormais à chaque colis, FLUTTER-F7), sinon (back antérieur,
+    // aucun id) l'historique des envois
     'TRIP_CANCELLED' when _isUuid(cancellationId) =>
       '/cancellations/$cancellationId/rematch',
     'TRIP_CANCELLED' when _isUuid(bidId) => '/bids/$bidId',
