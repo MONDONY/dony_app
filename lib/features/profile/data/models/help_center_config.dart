@@ -95,6 +95,15 @@ final class HelpCenterConfig extends Equatable {
   List<SocialLink> get socialLinks => UnmodifiableListView(_socialLinks);
   List<HelpTutorial> get tutorials => UnmodifiableListView(_tutorials);
 
+  /// Groupe Facebook Yadony : le lien Facebook actif de la configuration, ou
+  /// `null` (l'affiche masque alors son bouton « Publier dans le groupe »).
+  SocialLink? get facebookGroup {
+    for (final link in _socialLinks) {
+      if (link.network == SocialNetwork.facebook && link.active) return link;
+    }
+    return null;
+  }
+
   factory HelpCenterConfig.fromJson(Map<String, dynamic> json) {
     if (json['schemaVersion'] != 1) {
       throw const FormatException('unsupported_schema');

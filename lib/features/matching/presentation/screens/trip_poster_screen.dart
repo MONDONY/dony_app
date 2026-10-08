@@ -13,6 +13,8 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -37,7 +39,10 @@ enum PosterShareChannel {
   caption('post'),
 
   /// Lien copié seul.
-  link('lien');
+  link('lien'),
+
+  /// Légende copiée pour le groupe Facebook Yadony (FLUTTER-G4).
+  group('groupe');
 
   const PosterShareChannel(this.code);
 
@@ -109,12 +114,17 @@ class TripPosterScreen extends StatefulWidget {
     super.key,
     required this.announcement,
     this.shareBaseUrl = posterShareBaseUrl,
+    @visibleForTesting this.captureOverride,
   });
 
   final AnnouncementModel announcement;
 
   /// Injectable pour les tests. En production, [posterShareBaseUrl].
   final String shareBaseUrl;
+
+  /// Remplace la rastérisation de l'affiche dans les tests de widget, où
+  /// `toImage` ne rend pas la main sans `runAsync`.
+  final Future<Uint8List?> Function()? captureOverride;
 
   @override
   State<TripPosterScreen> createState() => _TripPosterScreenState();
@@ -245,6 +255,10 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   /// capture d'un `RepaintBoundary` rend un écran noir ou gèle. Valider sur un
   /// appareil réel, pas sur l'AVD.
   Future<Uint8List?> _capture() async {
+    final override = widget.captureOverride;
+    if (override != null) {
+      return override();
+    }
     final cached = _posterBytes;
     if (cached != null) {
       return cached;
@@ -360,6 +374,60 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     });
   }
 
+  /// « Publier dans le groupe Yadony » (FLUTTER-G4) : sur Facebook, un post
+  /// de groupe ne se prépare pas depuis une autre application. On fait donc
+  /// tout ce qui peut l'être avant de quitter l'app (légende avec le lien
+  /// copiée, affiche enregistrée), on explique les deux gestes restants, puis
+  /// on ouvre le groupe : l'application Facebook si elle est installée, le
+  /// navigateur sinon.
+  Future<void> _publishToGroup(SocialLink group) async {
+    final l = context.l10n;
+    final failureMessage = l.tripPosterGroupError;
+    final helpCenter = context.read<HelpCenterBloc>();
+    var prepared = false;
+    await _withPoster(failureMessage, (bytes) async {
+      await Clipboard.setData(
+        ClipboardData(text: _captionFor(PosterShareChannel.group)),
+      );
+      // Même garde que [_saveToGallery] : gal n'appelle jamais requestAccess
+      // lui-même avant d'écrire.
+      if (!await Gal.requestAccess()) {
+        _notify(failureMessage, DonySnackbarType.error);
+        return;
+      }
+      await Gal.putImageBytes(
+        bytes,
+        name: 'yadony_affiche_${widget.announcement.id}.png',
+      );
+      prepared = true;
+    });
+    // La feuille s'ouvre une fois les boutons rendus à leur état normal : le
+    // « Partager » ne doit pas tourner derrière elle.
+    if (!prepared || !mounted) return;
+    unawaited(
+      getItSafe<AnalyticsService>()?.logEvent(
+        AnalyticsEvents.tripPosterShared,
+        properties: {'action': 'group'},
+      ),
+    );
+    final open = await DonyBottomSheet.show<bool>(
+      context,
+      title: l.tripPosterGroupSheetTitle,
+      stickyBottom: Builder(
+        builder: (sheetContext) => DonyButton(
+          key: const Key('trip-poster-group-open'),
+          label: l.tripPosterGroupOpenButton,
+          icon: Icons.open_in_new_rounded,
+          onPressed: () => Navigator.of(sheetContext).pop(true),
+        ),
+      ),
+      child: const _GroupInstructions(),
+    );
+    if (open == true) {
+      helpCenter.add(HelpExternalOpenRequested.posterGroup(link: group));
+    }
+  }
+
   Future<void> _copy({
     required String value,
     required String confirmation,
@@ -436,6 +504,12 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
                     isLoading: busy,
                     onPressed: busy ? null : _sharePoster,
                   ),
+                  // Masqué tant que la configuration distante ne fournit pas
+                  // de groupe Facebook actif (ou hors HelpCenterBloc).
+                  _GroupButton(
+                    busy: busy,
+                    onPressed: (group) => _publishToGroup(group),
+                  ),
                   const SizedBox(height: DonySpacing.sm),
                   DonyButton(
                     label: l.tripPosterCopyCaptionButton,
@@ -473,6 +547,99 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Bouton « Publier dans le groupe Yadony », présent seulement si la
+/// configuration du centre d'aide (Remote Config, repli
+/// `help_center_config.default.json`) déclare un groupe Facebook actif.
+class _GroupButton extends StatelessWidget {
+  const _GroupButton({required this.busy, required this.onPressed});
+
+  final bool busy;
+  final ValueChanged<SocialLink> onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    // Fourni globalement par l'app ; absent dans un hôte isolé (tests,
+    // aperçu), où le bouton n'a simplement rien à ouvrir.
+    final bloc = context.read<HelpCenterBloc?>();
+    if (bloc == null) return const SizedBox.shrink();
+    return BlocSelector<HelpCenterBloc, HelpCenterState, SocialLink?>(
+      bloc: bloc,
+      selector: (state) => switch (state) {
+        HelpCenterSuccess(:final config) => config.facebookGroup,
+        HelpCenterError(:final config) => config.facebookGroup,
+        _ => null,
+      },
+      builder: (context, group) {
+        if (group == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: DonySpacing.sm),
+          child: DonyButton(
+            key: const Key('trip-poster-group'),
+            label: context.l10n.tripPosterGroupButton,
+            icon: Icons.groups_rounded,
+            variant: DonyButtonVariant.secondary,
+            onPressed: busy ? null : () => onPressed(group),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Les trois temps de la publication : deux déjà faits, un à faire dans le
+/// groupe.
+class _GroupInstructions extends StatelessWidget {
+  const _GroupInstructions();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _GroupStep(done: true, text: l.tripPosterGroupStepCaption),
+        const SizedBox(height: DonySpacing.md),
+        _GroupStep(done: true, text: l.tripPosterGroupStepImage),
+        const SizedBox(height: DonySpacing.md),
+        _GroupStep(done: false, text: l.tripPosterGroupStepPaste),
+      ],
+    );
+  }
+}
+
+class _GroupStep extends StatelessWidget {
+  const _GroupStep({required this.done, required this.text});
+
+  final bool done;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          done ? Icons.check_circle_rounded : Icons.arrow_circle_right_outlined,
+          size: 22,
+          color: done ? cs.primary : cs.onSurfaceVariant,
+        ),
+        const SizedBox(width: DonySpacing.md),
+        Expanded(
+          child: Text(
+            text,
+            style: tt.bodyMedium?.copyWith(
+              color: cs.onSurface,
+              fontWeight: done ? FontWeight.w400 : FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

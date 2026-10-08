@@ -46,7 +46,7 @@ final class HelpTutorialPlaybackRequested extends HelpCenterEvent {
   List<Object?> get props => [tutorialId, action];
 }
 
-enum HelpExternalTarget { tutorial, social, youtubeSubscription }
+enum HelpExternalTarget { tutorial, social, youtubeSubscription, posterGroup }
 
 final class HelpExternalOpenRequested extends HelpCenterEvent {
   const HelpExternalOpenRequested._({
@@ -72,6 +72,16 @@ final class HelpExternalOpenRequested extends HelpCenterEvent {
     return HelpExternalOpenRequested._(
       uri: link.url,
       target: HelpExternalTarget.social,
+      network: link.network,
+    );
+  }
+
+  /// Groupe Facebook ouvert depuis l'affiche d'un trajet (FLUTTER-G4) :
+  /// l'application Facebook d'abord, le navigateur si elle est absente.
+  factory HelpExternalOpenRequested.posterGroup({required SocialLink link}) {
+    return HelpExternalOpenRequested._(
+      uri: link.url,
+      target: HelpExternalTarget.posterGroup,
       network: link.network,
     );
   }

@@ -2,12 +2,19 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:url_launcher_platform_interface/link.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import '../../helpers/l10n_test_helpers.dart';
+import '../../helpers/mock_analytics_backend.dart';
 
 AnnouncementModel _announcement({
   double pricePerKg = 6.0,
@@ -67,6 +74,68 @@ Future<void> _tapAction(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
   await tester.tap(finder);
   await tester.pumpAndSettle();
+}
+
+const _groupUrl = 'https://www.facebook.com/groups/1051558350756867';
+
+String _configJson({required bool groupActive}) =>
+    '{"schemaVersion": 1, "socialLinks": [{"network": "facebook", '
+    '"url": "$_groupUrl", "active": $groupActive}], "tutorials": []}';
+
+final class _StaticSource implements HelpCenterConfigSource {
+  const _StaticSource(this.activatedJson);
+
+  @override
+  final String activatedJson;
+
+  @override
+  Future<String?> fetchAndActivate() async => activatedJson;
+}
+
+/// Note les ouvertures et leur mode : l'application Facebook est ici absente,
+/// la tentative applicative échoue et le navigateur prend le relais.
+final class _RecordingLauncher extends UrlLauncherPlatform {
+  final opened = <(String, PreferredLaunchMode)>[];
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    opened.add((url, options.mode));
+    return options.mode != PreferredLaunchMode.externalNonBrowserApplication;
+  }
+}
+
+/// Affiche montée sous un vrai HelpCenterBloc, global dans l'app.
+Future<_RecordingLauncher> _pumpWithHelpCenter(
+  WidgetTester tester, {
+  bool groupActive = true,
+}) async {
+  final launcher = _RecordingLauncher();
+  final json = _configJson(groupActive: groupActive);
+  final repository = HelpCenterRepository(
+    _StaticSource(json),
+    fallbackJsonLoader: () async => json,
+    urlLauncher: launcher,
+  );
+  await tester.pumpWidget(
+    BlocProvider(
+      create: (_) => HelpCenterBloc(
+        repository,
+        makeDisabledAnalytics(MockAnalyticsBackend()),
+      )..add(const HelpCenterLoadRequested()),
+      child: MaterialApp(
+        home: TripPosterScreen(
+          announcement: _announcement(),
+          shareBaseUrl: 'https://api.yadony.test/api/v1',
+          captureOverride: () async => Uint8List.fromList([1, 2, 3]),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return launcher;
 }
 
 void main() {
@@ -228,5 +297,105 @@ void main() {
     expect(caption, contains('Paris to Dakar'));
     expect(caption, contains('Last drop-off'));
     expect(caption, contains(formatPriceIn(8, 'EUR')));
+  });
+
+  group('« Publier dans le groupe Yadony » (FLUTTER-G4)', () {
+    late List<MethodCall> galCalls;
+    late bool galAccess;
+
+    setUp(() {
+      galCalls = <MethodCall>[];
+      galAccess = true;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('gal'), (call) async {
+            galCalls.add(call);
+            if (call.method == 'requestAccess') return galAccess;
+            return null;
+          });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('gal'), null);
+    });
+
+    testWidgets('masqué sans HelpCenterBloc', (tester) async {
+      await _pump(tester);
+      expect(find.text('Publier dans le groupe Yadony'), findsNothing);
+    });
+
+    testWidgets('masqué quand la configuration n\'a pas de groupe actif', (
+      tester,
+    ) async {
+      await _pumpWithHelpCenter(tester, groupActive: false);
+      expect(find.byKey(const Key('trip-poster-group')), findsNothing);
+    });
+
+    testWidgets(
+      'copie la légende, enregistre l\'affiche, explique puis ouvre',
+      (tester) async {
+        final launcher = await _pumpWithHelpCenter(tester);
+
+        await _tapAction(tester, 'Publier dans le groupe Yadony');
+
+        expect(copied, hasLength(1));
+        expect(
+          copied.single,
+          contains('https://api.yadony.test/api/v1/annonce/a1?c=groupe'),
+        );
+        expect(galCalls.map((c) => c.method), contains('putImageBytes'));
+        expect(find.text('Votre publication est prête'), findsOneWidget);
+        expect(find.text('Légende et lien copiés'), findsOneWidget);
+        expect(
+          find.text('Affiche enregistrée dans votre galerie'),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'Dans le groupe, créez une publication : collez la légende, '
+            "puis ajoutez l'affiche depuis votre galerie.",
+          ),
+          findsOneWidget,
+        );
+        expect(launcher.opened, isEmpty);
+
+        await tester.tap(find.byKey(const Key('trip-poster-group-open')));
+        await tester.pumpAndSettle();
+
+        // Application Facebook d'abord, navigateur en repli.
+        expect(launcher.opened, [
+          (_groupUrl, PreferredLaunchMode.externalNonBrowserApplication),
+          (_groupUrl, PreferredLaunchMode.externalApplication),
+        ]);
+        expect(find.text('Votre publication est prête'), findsNothing);
+      },
+    );
+
+    testWidgets('fermer la feuille n\'ouvre pas le groupe', (tester) async {
+      final launcher = await _pumpWithHelpCenter(tester);
+      await _tapAction(tester, 'Publier dans le groupe Yadony');
+      expect(find.text('Votre publication est prête'), findsOneWidget);
+
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(launcher.opened, isEmpty);
+    });
+
+    testWidgets('galerie refusée : message d\'erreur, pas de feuille', (
+      tester,
+    ) async {
+      galAccess = false;
+      final launcher = await _pumpWithHelpCenter(tester);
+
+      await _tapAction(tester, 'Publier dans le groupe Yadony');
+
+      expect(
+        find.text('Impossible de préparer la publication. Réessayez.'),
+        findsOneWidget,
+      );
+      expect(find.text('Votre publication est prête'), findsNothing);
+      expect(launcher.opened, isEmpty);
+    });
   });
 }

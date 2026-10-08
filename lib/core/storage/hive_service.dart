@@ -30,6 +30,10 @@ class HiveService {
   static const String kFavDestinations =
       'fav_destinations'; // List<String> ex: ['SN','CI']
 
+  // Trajets épinglés en tête de « Mes trajets » (FLUTTER-FS), propres à
+  // l'appareil. List<String> d'identifiants d'annonce.
+  static const String kPinnedTripIds = 'pinned_trip_ids';
+
   // 3 dernières villes sélectionnées par champ, affichées au focus avant
   // frappe (voir RecentCityStore). List<Map> sérialisation CityModel.toJson().
   static const String kRecentDepartureCities = 'recent_departure_cities';

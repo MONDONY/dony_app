@@ -81,6 +81,31 @@ class _NotificationSettingsScreenState
                         label: l.notificationSettingsDisputeOpenedLabel,
                         subtitle: l.notificationSettingsSmsFallbackSubtitle,
                       ),
+                      // Les deux autres types critiques du backend
+                      // (NotificationTypes.CRITICAL) : ils ignorent les réglages
+                      // et déclenchent un SMS de repli, comme les trois au-dessus.
+                      _buildLockedTile(
+                        context,
+                        iconAsset: 'clock',
+                        label: l.notificationSettingsHandoverReminderLabel,
+                        subtitle:
+                            l.notificationSettingsHandoverReminderSubtitle,
+                      ),
+                      _buildLockedTile(
+                        context,
+                        iconAsset: 'calendar-sync',
+                        label: l.notificationSettingsTripRescheduledLabel,
+                        subtitle: l.notificationSettingsSmsFallbackSubtitle,
+                      ),
+                      // Non réglables sans être critiques (ALWAYS_ON côté
+                      // serveur) : pas de SMS, mais aucun interrupteur ne les
+                      // coupe. Les nommer évite de chercher un réglage absent.
+                      _buildLockedTile(
+                        context,
+                        iconAsset: 'shield-check',
+                        label: l.notificationSettingsAccountSafetyLabel,
+                        subtitle: l.notificationSettingsAccountSafetySubtitle,
+                      ),
                     ],
                   ),
                   const SizedBox(height: DonySpacing.sm),
@@ -130,6 +155,24 @@ class _NotificationSettingsScreenState
                         prefs: state.prefs,
                         onToggle: (key) => _toggle(context, key),
                       ),
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsAutomationsLabel,
+                        subtitle: l.notificationSettingsAutomationsSubtitle,
+                        key: 'push_traveler_automations',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      // Porte aussi « Bon voyage ! » (TRIP_IN_PROGRESS), que
+                      // gouvernait l'ancien « Rappel trajet » retiré de l'écran.
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsRemindersTipsLabel,
+                        subtitle: l.notificationSettingsRemindersTipsSubtitle,
+                        key: 'push_reminders_tips',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
                       // Trois lignes retirées ici, toutes sans effet possible :
                       //
                       // « Rappel trajet J-1 » ne gouvernait rien. Aucun scheduler J-1 n'existe
@@ -145,11 +188,24 @@ class _NotificationSettingsScreenState
                   ),
                   // Appels Yadony écran verrouillé (FLUTTER-92) : réglage
                   // système propre à Android, sans objet sur iOS (CallKit).
-                  if (CallLockScreenTile.isAvailable) ...[
-                    const SizedBox(height: DonySpacing.xl),
-                    SettingsSectionHeader(l.notificationSettingsSectionCalls),
-                    const SettingsFlatGroup(children: [CallLockScreenTile()]),
-                  ],
+                  // La section existe partout pour les appels manqués ; la
+                  // tuile écran verrouillé n'y apparaît que sur Android.
+                  const SizedBox(height: DonySpacing.xl),
+                  SettingsSectionHeader(l.notificationSettingsSectionCalls),
+                  SettingsFlatGroup(
+                    children: [
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsMissedCallsLabel,
+                        subtitle: l.notificationSettingsMissedCallsSubtitle,
+                        key: 'push_missed_calls',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      if (CallLockScreenTile.isAvailable)
+                        const CallLockScreenTile(),
+                    ],
+                  ),
                 ],
               )
               .animate()
