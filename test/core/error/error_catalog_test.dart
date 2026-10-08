@@ -186,7 +186,10 @@ void main() {
       final p = ErrorCatalog.lookup(error);
       expect(ErrorCatalog.isKnown(error), isTrue);
       expect(p.title, 'Paiement en cours');
-      expect(p.message, contains('ne pouvez plus la retirer'));
+      expect(
+        p.message,
+        contains('ni la retirer, ni annuler ou supprimer ce trajet'),
+      );
       expect(p.severity, ErrorSeverity.info);
     });
 

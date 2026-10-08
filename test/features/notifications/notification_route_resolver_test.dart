@@ -329,6 +329,25 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — PARCEL_RETURN_TO_SENDER', () {
+    test('avec un bidId, ouvre la fiche du colis à rendre', () {
+      expect(
+        resolveNotificationRoute('PARCEL_RETURN_TO_SENDER', {'bidId': bidId}),
+        '/bids/$bidId',
+      );
+    });
+
+    test('sans bidId valide, aucune route', () {
+      expect(resolveNotificationRoute('PARCEL_RETURN_TO_SENDER', {}), isNull);
+      expect(
+        resolveNotificationRoute('PARCEL_RETURN_TO_SENDER', {
+          'bidId': '../admin',
+        }),
+        isNull,
+      );
+    });
+  });
+
   group('resolveNotificationRoute — sans ressource dédiée', () {
     test('ACCOUNT_SUSPENDED routes to the suspended-account screen', () {
       expect(

@@ -17072,7 +17072,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorOfferAcceptedAwaitingPaymentMessage =>
-      'The sender has accepted your offer and is paying. You can no longer withdraw it during the payment window.';
+      'A sender has accepted your offer and is paying. During the payment window, you can\'t withdraw it, or cancel or delete this trip.';
 
   @override
   String get errorOfferNoLongerPayableTitle => 'Offer withdrawn';
