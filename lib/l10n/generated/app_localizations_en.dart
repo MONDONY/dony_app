@@ -3293,6 +3293,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPosterSaveButton => 'Save to gallery';
 
   @override
+  String get tripPosterGroupButton => 'Post in the Yadony group';
+
+  @override
+  String get tripPosterGroupSheetTitle => 'Your post is ready';
+
+  @override
+  String get tripPosterGroupStepCaption => 'Caption and link copied';
+
+  @override
+  String get tripPosterGroupStepImage => 'Poster saved to your gallery';
+
+  @override
+  String get tripPosterGroupStepPaste =>
+      'In the group, create a post: paste the caption, then add the poster from your gallery.';
+
+  @override
+  String get tripPosterGroupOpenButton => 'Open the group';
+
+  @override
+  String get tripPosterGroupError =>
+      'Couldn\'t prepare the post. Please try again.';
+
+  @override
   String get errorAnnouncementUpdateBlockedTitle => 'Can\'t edit this trip';
 
   @override

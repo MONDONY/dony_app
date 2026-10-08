@@ -35,4 +35,26 @@ class ExternalUrlLauncher {
       return false;
     }
   }
+
+  /// Comme [open], mais tente d'abord l'application qui revendique le lien
+  /// (Facebook pour un lien de groupe), sans passer par le navigateur. Si
+  /// aucune application ne le prend en charge, ou si la tentative échoue, on
+  /// retombe sur [open] : le navigateur s'ouvre (FLUTTER-G4).
+  Future<bool> openPreferringApp(Uri uri) async {
+    if (uri.scheme != 'https' || uri.host.isEmpty) {
+      return false;
+    }
+    try {
+      final inApp = await _launcher.launchUrl(
+        uri.toString(),
+        const LaunchOptions(
+          mode: PreferredLaunchMode.externalNonBrowserApplication,
+        ),
+      );
+      if (inApp) return true;
+    } catch (_) {
+      // Application absente : repli navigateur ci-dessous.
+    }
+    return open(uri);
+  }
 }

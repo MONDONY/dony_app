@@ -5591,6 +5591,48 @@ abstract class AppLocalizations {
   /// **'Enregistrer dans la galerie'**
   String get tripPosterSaveButton;
 
+  /// Bouton de l'affiche : copie la légende, enregistre l'image puis ouvre le groupe Facebook Yadony (trip_poster_screen.dart, FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier dans le groupe Yadony'**
+  String get tripPosterGroupButton;
+
+  /// Titre de la feuille d'explication avant l'ouverture du groupe Facebook (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre publication est prête'**
+  String get tripPosterGroupSheetTitle;
+
+  /// Étape 1 de la feuille « Publier dans le groupe » (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Légende et lien copiés'**
+  String get tripPosterGroupStepCaption;
+
+  /// Étape 2 de la feuille « Publier dans le groupe » (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiche enregistrée dans votre galerie'**
+  String get tripPosterGroupStepImage;
+
+  /// Étape 3 de la feuille « Publier dans le groupe » : il suffit de coller la légende et d'ajouter l'image (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans le groupe, créez une publication : collez la légende, puis ajoutez l\'affiche depuis votre galerie.'**
+  String get tripPosterGroupStepPaste;
+
+  /// Bouton stickyBottom de la feuille « Publier dans le groupe » : ouvre Facebook, ou le navigateur (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir le groupe'**
+  String get tripPosterGroupOpenButton;
+
+  /// Erreur quand l'image de l'affiche n'a pas pu être enregistrée avant l'ouverture du groupe (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de préparer la publication. Réessayez.'**
+  String get tripPosterGroupError;
+
   /// Titre du catalogue d'erreurs pour le code announcement-update-blocked : modification refusée car des colis sont déjà acceptés (error_catalog.dart, announcement_bloc.dart)
   ///
   /// In fr, this message translates to:

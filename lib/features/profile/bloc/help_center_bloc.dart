@@ -112,7 +112,9 @@ final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
     Emitter<HelpCenterState> emit,
   ) async {
     final stableConfig = _stableConfig;
-    final opened = await _repository.openExternal(event.uri);
+    final opened = event.target == HelpExternalTarget.posterGroup
+        ? await _repository.openExternalPreferringApp(event.uri)
+        : await _repository.openExternal(event.uri);
     if (!opened) {
       _emitFailure('launch', stableConfig, emit);
       return;
@@ -126,6 +128,13 @@ final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
       HelpExternalTarget.social => (
         AnalyticsEvents.helpSocialLinkOpened,
         <String, Object>{'network': event.network!.name},
+      ),
+      HelpExternalTarget.posterGroup => (
+        AnalyticsEvents.helpSocialLinkOpened,
+        <String, Object>{
+          'network': event.network!.name,
+          'source': 'trip_poster',
+        },
       ),
       HelpExternalTarget.youtubeSubscription => (
         AnalyticsEvents.helpYoutubeSubscribeTapped,

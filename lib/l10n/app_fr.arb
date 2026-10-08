@@ -2163,6 +2163,20 @@
   "@tripPosterSaveButton": {
     "description": "Bouton d'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
   },
+  "tripPosterGroupButton": "Publier dans le groupe Yadony",
+  "@tripPosterGroupButton": {"description": "Bouton de l'affiche : copie la légende, enregistre l'image puis ouvre le groupe Facebook Yadony (trip_poster_screen.dart, FLUTTER-G4)"},
+  "tripPosterGroupSheetTitle": "Votre publication est prête",
+  "@tripPosterGroupSheetTitle": {"description": "Titre de la feuille d'explication avant l'ouverture du groupe Facebook (FLUTTER-G4)"},
+  "tripPosterGroupStepCaption": "Légende et lien copiés",
+  "@tripPosterGroupStepCaption": {"description": "Étape 1 de la feuille « Publier dans le groupe » (FLUTTER-G4)"},
+  "tripPosterGroupStepImage": "Affiche enregistrée dans votre galerie",
+  "@tripPosterGroupStepImage": {"description": "Étape 2 de la feuille « Publier dans le groupe » (FLUTTER-G4)"},
+  "tripPosterGroupStepPaste": "Dans le groupe, créez une publication : collez la légende, puis ajoutez l'affiche depuis votre galerie.",
+  "@tripPosterGroupStepPaste": {"description": "Étape 3 de la feuille « Publier dans le groupe » : il suffit de coller la légende et d'ajouter l'image (FLUTTER-G4)"},
+  "tripPosterGroupOpenButton": "Ouvrir le groupe",
+  "@tripPosterGroupOpenButton": {"description": "Bouton stickyBottom de la feuille « Publier dans le groupe » : ouvre Facebook, ou le navigateur (FLUTTER-G4)"},
+  "tripPosterGroupError": "Impossible de préparer la publication. Réessayez.",
+  "@tripPosterGroupError": {"description": "Erreur quand l'image de l'affiche n'a pas pu être enregistrée avant l'ouverture du groupe (FLUTTER-G4)"},
   "errorAnnouncementUpdateBlockedTitle": "Modification impossible",
   "@errorAnnouncementUpdateBlockedTitle": {
     "description": "Titre du catalogue d'erreurs pour le code announcement-update-blocked : modification refusée car des colis sont déjà acceptés (error_catalog.dart, announcement_bloc.dart)"
