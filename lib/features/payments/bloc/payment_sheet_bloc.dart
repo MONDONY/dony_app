@@ -228,17 +228,24 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     PaymentSheetResolved ready, {
     bool opening = false,
   }) {
-    if (!e.isFromStripe || e.isCardError) {
-      return PaymentSheetFailure(
+    final kind = e.isFromStripe
+        ? classifyStripeFailure(e, opening: opening)
+        : StripeFailureKind.cardDeclined;
+    return switch (kind) {
+      StripeFailureKind.cardDeclined => PaymentSheetFailure(
         reason: PaymentSheetFailureReason.declined,
         providerMessage: e.message,
         ready: ready,
-      );
-    }
-    final reason = opening || e.stripeErrorType == null
-        ? PaymentSheetFailureReason.sheetUnavailable
-        : PaymentSheetFailureReason.generic;
-    return PaymentSheetFailure(reason: reason, ready: ready);
+      ),
+      StripeFailureKind.sheetUnavailable => PaymentSheetFailure(
+        reason: PaymentSheetFailureReason.sheetUnavailable,
+        ready: ready,
+      ),
+      StripeFailureKind.generic => PaymentSheetFailure(
+        reason: PaymentSheetFailureReason.generic,
+        ready: ready,
+      ),
+    };
   }
 
   /// Remonte à Sentry un échec Stripe (hors annulation, déjà mappée en
@@ -252,7 +259,6 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     String operation = 'payment.stripe_confirm',
   }) {
     if (!e.isFromStripe) return;
-    final message = e.stripeMessage;
     unawaited(
       _errorReporter?.report(
         e,
@@ -261,13 +267,7 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         context: {
           'feature': 'payments',
           'method': method.name,
-          'stripe_code': ?e.stripeCode,
-          'stripe_error_code': ?e.stripeErrorCode,
-          'decline_code': ?e.declineCode,
-          'stripe_error_type': ?e.stripeErrorType,
-          'stripe_message': ?(message == null || message.length <= 200
-              ? message
-              : message.substring(0, 200)),
+          ...stripeFailureContext(e),
         },
       ),
     );

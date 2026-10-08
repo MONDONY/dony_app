@@ -65,11 +65,8 @@ class BilletTalon extends StatelessWidget {
     // ── Sender dispatch ───────────────────────────────────────────────────────
     if (isSender) {
       return switch (status) {
-        // Carte : PENDING = colis créé mais pas encore payé (le paiement
-        // le fait passer en PAYMENT_ESCROWED). Le voyageur ne peut l'accepter
-        // qu'une fois payé (BidService.doAcceptBid) : c'est à l'expéditeur
-        // d'agir, « en attente du voyageur » était faux (FLUTTER-G7).
-        'PENDING' when bid.paymentMethod == BidPaymentMethod.stripe =>
+        // Carte pas encore payée : c'est à l'expéditeur d'agir (FLUTTER-G7).
+        'PENDING' when bid.isAwaitingSenderCardPayment =>
           const _PendingPlaceholder(awaitingMyPayment: true),
         'PENDING' || 'PAYMENT_ESCROWED' => const _PendingPlaceholder(),
         // Offre mobile money acceptée par le voyageur : c'est à l'expéditeur

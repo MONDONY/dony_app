@@ -13,10 +13,15 @@ class BilletStatusStamp extends StatelessWidget {
   /// sens (régression staging).
   final bool isSender;
 
+  /// Colis carte pas encore payé ([BidModel.isAwaitingSenderCardPayment]) :
+  /// côté expéditeur, PENDING s'affiche « À payer » et non « En attente ».
+  final bool awaitingMyPayment;
+
   const BilletStatusStamp({
     super.key,
     required this.status,
     required this.isSender,
+    this.awaitingMyPayment = false,
   });
 
   @override
@@ -34,6 +39,10 @@ class BilletStatusStamp extends StatelessWidget {
       ),
       // Côté voyageur, c'est à lui d'agir : « En attente » laissait croire
       // qu'on attendait quelqu'un d'autre (FLUTTER-4T).
+      'PENDING' when isSender && awaitingMyPayment => (
+        cs.warning,
+        l.ticketStatusAwaitingPaymentSenderLabel,
+      ),
       'PENDING' || 'PAYMENT_ESCROWED' => (
         cs.warning,
         isSender

@@ -400,6 +400,13 @@ class BidModel {
 
   bool get isSkeleton => senderId.isEmpty;
 
+  /// Colis carte créé mais pas encore payé : c'est l'expéditeur qui doit agir.
+  /// Le paiement le fait passer en PAYMENT_ESCROWED, et le voyageur ne peut
+  /// l'accepter qu'après (BidService.doAcceptBid). Source unique pour le
+  /// talon, le tampon et la carte « prochaine étape » (FLUTTER-G7).
+  bool get isAwaitingSenderCardPayment =>
+      status == 'PENDING' && paymentMethod == BidPaymentMethod.stripe;
+
   /// Le colis a été restitué (le voyageur a saisi le code de retour).
   bool get isParcelReturned => returnedAt != null;
 

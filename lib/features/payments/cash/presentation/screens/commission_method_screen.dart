@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -169,12 +172,14 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
       return;
     }
 
+    var opening = true;
     try {
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: yadonyPaymentSheetParameters(
           setupIntentClientSecret: clientSecret,
         ),
       );
+      opening = false;
       await Stripe.instance.presentPaymentSheet();
       if (context.mounted) {
         // L'ID du SetupIntent est le préfixe du clientSecret avant "_secret_"
@@ -183,16 +188,39 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
           CommissionMethodSetupCompleted(siId),
         );
       }
-    } on StripeException catch (e) {
+    } on StripeException catch (e, stackTrace) {
+      final mapped = mapStripeException(e);
+      if (mapped is PaymentConfirmationException) {
+        // Même traitement que la feuille de paiement (FLUTTER-CJ) : codes
+        // Stripe vers Sentry, jamais le texte technique du SDK à l'écran.
+        if (getIt.isRegistered<ErrorReportingService>()) {
+          unawaited(
+            getIt<ErrorReportingService>().report(
+              mapped,
+              operation: opening
+                  ? 'commission.stripe_init'
+                  : 'commission.stripe_setup',
+              stackTrace: stackTrace,
+              context: {
+                'feature': 'payments',
+                'method': 'commission_card',
+                ...stripeFailureContext(mapped),
+              },
+            ),
+          );
+        }
+      }
       if (!context.mounted) {
         return;
       }
-      if (e.error.code != FailureCode.Canceled) {
+      if (mapped is PaymentConfirmationException) {
         DonySnackbar.show(
           context,
-          message:
-              e.error.localizedMessage ??
-              context.l10n.commissionCardAddErrorMessage,
+          message: commissionSetupErrorMessage(
+            context.l10n,
+            mapped,
+            opening: opening,
+          ),
           type: DonySnackbarType.error,
         );
       }
@@ -237,3 +265,18 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
     );
   }
 }
+
+/// Texte de l'échec d'enregistrement de la carte de commission : le message
+/// du fournisseur seulement pour un vrai refus carte, sinon un libellé
+/// traduit — jamais le texte technique du SDK (FLUTTER-CJ).
+@visibleForTesting
+String commissionSetupErrorMessage(
+  AppLocalizations l,
+  PaymentConfirmationException e, {
+  required bool opening,
+}) => switch (classifyStripeFailure(e, opening: opening)) {
+  StripeFailureKind.cardDeclined =>
+    e.message ?? l.commissionCardAddErrorMessage,
+  StripeFailureKind.sheetUnavailable => l.paymentSheetOpenFailed,
+  StripeFailureKind.generic => l.commissionCardAddErrorMessage,
+};

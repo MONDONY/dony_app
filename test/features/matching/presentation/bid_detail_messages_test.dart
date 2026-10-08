@@ -34,7 +34,9 @@ BidModel _bid({
   String? travelerName,
   DateTime? departureDate,
   bool voyageurConfirmed = false,
+  BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
 }) => BidModel(
+  paymentMethod: paymentMethod,
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
@@ -139,9 +141,23 @@ void main() {
   });
 
   group('Anglais — un test par carte migrée', () {
+    testWidgets(
+      'sender_hero_card.dart — PENDING carte non payé en anglais (FLUTTER-G7)',
+      (tester) async {
+        useEnglish();
+        await _pumpSender(tester, _bid(status: 'PENDING'));
+
+        expect(find.textContaining('Waiting for your payment'), findsOneWidget);
+        expect(find.textContaining('Waiting for the traveler'), findsNothing);
+      },
+    );
+
     testWidgets('sender_hero_card.dart — PENDING en anglais', (tester) async {
       useEnglish();
-      await _pumpSender(tester, _bid(status: 'PENDING'));
+      await _pumpSender(
+        tester,
+        _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash),
+      );
 
       expect(find.textContaining('Waiting for the traveler'), findsOneWidget);
       expect(
