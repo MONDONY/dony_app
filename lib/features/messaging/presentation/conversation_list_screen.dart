@@ -157,6 +157,24 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     );
   }
 
+  /// Ligne « Archivées (n) » en tête de liste, comme WhatsApp (FLUTTER-FR).
+  /// Absente sans archive, et pendant une recherche, qui ne porte que sur les
+  /// conversations courantes.
+  Widget _archivedRow(BuildContext context, ConversationListLoaded state) {
+    final count = state.archivedConversations.length;
+    if (count == 0 || state.searchQuery.isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+    final l = context.l10n;
+    return DonyArchivedRow(
+      key: const Key('messages-archived-row'),
+      label: l.archivedRowLabel,
+      semanticLabel: l.archivedRowSemantics(count),
+      count: count,
+      onTap: () => context.push('/messages/archives'),
+    );
+  }
+
   Widget _errorState(BuildContext context, ConversationListError state) {
     final l = context.l10n;
     return DonyEmptyState(
@@ -207,6 +225,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         return CustomScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
+            SliverToBoxAdapter(child: _archivedRow(context, state)),
             SliverToBoxAdapter(child: _pinnedRows()),
             SliverFillRemaining(
               hasScrollBody: false,
@@ -237,6 +256,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         // sortent de l'écran : un ListView les détruirait au défilement.
         child: CustomScrollView(
           slivers: [
+            SliverToBoxAdapter(child: _archivedRow(context, state)),
             SliverToBoxAdapter(child: _pinnedRows()),
             SliverPadding(
               // Padding bas = hauteur de la nav flottante (~100) + safe area,
@@ -366,13 +386,9 @@ class _MessagesHeader extends StatelessWidget {
               children: [
                 Text(l.conversationListTitle, style: tt.headlineLarge),
                 const Spacer(),
+                // L'accès aux archives est la ligne « Archivées » en tête de
+                // liste (FLUTTER-FR), plus une icône d'en-tête.
                 const DonyFeedbackButton(),
-                IconButton(
-                  tooltip: l.conversationListArchivedTooltip,
-                  onPressed: () => context.push('/messages/archives'),
-                  icon: DonyIcon('archive', color: cs.onSurfaceVariant),
-                  color: cs.onSurfaceVariant,
-                ),
               ],
             ),
           ),
@@ -601,9 +617,9 @@ class _SlidableTile extends StatelessWidget {
       // l'écran), pas au tap : un échec annule la bascule.
       startActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.25,
+        extentRatio: 0.3,
         children: [
-          SlidableAction(
+          DonySwipeAction(
             key: const Key('conversation-swipe-notifications'),
             onPressed: (ctx) => ctx.read<ConversationListBloc>().add(
               ConversationNotificationsMuteToggled(conversation.id),
@@ -619,11 +635,14 @@ class _SlidableTile extends StatelessWidget {
           ),
         ],
       ),
+      // Largeur prévue pour « Archiver » et « Supprimer » en entier, en
+      // français comme en anglais (FLUTTER-FR : 0.45 les tronquait).
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.45,
+        extentRatio: 0.6,
         children: [
-          SlidableAction(
+          DonySwipeAction(
+            key: const Key('conversation-swipe-archive'),
             onPressed: (ctx) {
               ctx.read<ConversationListBloc>().add(
                 ConversationArchiveRequested(conversation.id),
@@ -642,7 +661,8 @@ class _SlidableTile extends StatelessWidget {
             icon: Icons.archive_outlined,
             label: l.conversationArchiveAction,
           ),
-          SlidableAction(
+          DonySwipeAction(
+            key: const Key('conversation-swipe-delete'),
             onPressed: (ctx) {
               // Capturer le bloc avant le dialog : le volet Slidable se
               // referme au tap (autoClose) et démonte ctx pendant que le

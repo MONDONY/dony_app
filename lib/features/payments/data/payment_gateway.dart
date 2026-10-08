@@ -238,7 +238,8 @@ class StripePaymentGateway implements PaymentGateway {
 /// (« FragmentManager has been destroyed », FLUTTER-CJ) qui ne doit jamais
 /// atteindre l'écran : il reste dans `stripeMessage`, pour Sentry seulement,
 /// et l'UI affiche le libellé traduit de la raison.
-@visibleForTesting
+///
+/// Partagé par la feuille de paiement et l'écran de carte de commission.
 Exception mapStripeException(StripeException e) {
   if (e.error.code == FailureCode.Canceled) {
     return const PaymentCancelledException();
@@ -253,4 +254,48 @@ Exception mapStripeException(StripeException e) {
     stripeErrorType: e.error.type,
     stripeMessage: e.error.message,
   );
+}
+
+/// Catégorie d'un échec Stripe pour l'utilisateur, commune à la feuille de
+/// paiement et à l'enregistrement de la carte de commission (FLUTTER-CJ).
+enum StripeFailureKind {
+  /// Vrai refus carte (`card_error`) : seul cas où le message du fournisseur
+  /// est montré.
+  cardDeclined,
+
+  /// La feuille n'a pas pu s'ouvrir : échec à l'ouverture ou erreur locale du
+  /// SDK, sans type Stripe (« FragmentManager has been destroyed »).
+  sheetUnavailable,
+
+  /// Toute autre erreur Stripe typée (api_error, invalid_request_error…).
+  generic,
+}
+
+/// Classe un échec issu du SDK. [opening] : l'échec vient de
+/// `initPaymentSheet`, avant tout affichage.
+StripeFailureKind classifyStripeFailure(
+  PaymentConfirmationException e, {
+  bool opening = false,
+}) {
+  if (e.isCardError) return StripeFailureKind.cardDeclined;
+  if (opening || e.stripeErrorType == null) {
+    return StripeFailureKind.sheetUnavailable;
+  }
+  return StripeFailureKind.generic;
+}
+
+/// Contexte Sentry d'un échec Stripe : codes fermés du SDK et message brut
+/// tronqué à 200 caractères (générique, sans donnée de carte ni d'identité).
+/// Clés autorisées par `ErrorReportingService` (FLUTTER-7S, FLUTTER-CJ).
+Map<String, Object> stripeFailureContext(PaymentConfirmationException e) {
+  final message = e.stripeMessage;
+  return {
+    'stripe_code': ?e.stripeCode,
+    'stripe_error_code': ?e.stripeErrorCode,
+    'decline_code': ?e.declineCode,
+    'stripe_error_type': ?e.stripeErrorType,
+    'stripe_message': ?(message == null || message.length <= 200
+        ? message
+        : message.substring(0, 200)),
+  };
 }

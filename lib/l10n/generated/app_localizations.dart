@@ -5591,6 +5591,48 @@ abstract class AppLocalizations {
   /// **'Enregistrer dans la galerie'**
   String get tripPosterSaveButton;
 
+  /// Bouton de l'affiche : copie la légende, enregistre l'image puis ouvre le groupe Facebook Yadony (trip_poster_screen.dart, FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier dans le groupe Yadony'**
+  String get tripPosterGroupButton;
+
+  /// Titre de la feuille d'explication avant l'ouverture du groupe Facebook (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre publication est prête'**
+  String get tripPosterGroupSheetTitle;
+
+  /// Étape 1 de la feuille « Publier dans le groupe » (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Légende et lien copiés'**
+  String get tripPosterGroupStepCaption;
+
+  /// Étape 2 de la feuille « Publier dans le groupe » (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiche enregistrée dans votre galerie'**
+  String get tripPosterGroupStepImage;
+
+  /// Étape 3 de la feuille « Publier dans le groupe » : il suffit de coller la légende et d'ajouter l'image (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans le groupe, créez une publication : collez la légende, puis ajoutez l\'affiche depuis votre galerie.'**
+  String get tripPosterGroupStepPaste;
+
+  /// Bouton stickyBottom de la feuille « Publier dans le groupe » : ouvre Facebook, ou le navigateur (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir le groupe'**
+  String get tripPosterGroupOpenButton;
+
+  /// Erreur quand l'image de l'affiche n'a pas pu être enregistrée avant l'ouverture du groupe (FLUTTER-G4)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de préparer la publication. Réessayez.'**
+  String get tripPosterGroupError;
+
   /// Titre du catalogue d'erreurs pour le code announcement-update-blocked : modification refusée car des colis sont déjà acceptés (error_catalog.dart, announcement_bloc.dart)
   ///
   /// In fr, this message translates to:
@@ -8041,6 +8083,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Rechercher une destination…'**
   String get listingSearchDestinationHint;
+
+  /// Infobulle de l'épingle d'une carte de « Mes trajets » (TripPinButton, FLUTTER-FS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Épingler en tête de liste'**
+  String get tripPinTooltip;
+
+  /// Infobulle de l'épingle active d'une carte de « Mes trajets » (TripPinButton, FLUTTER-FS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer l\'épingle'**
+  String get tripUnpinTooltip;
+
+  /// Confirmation après épinglage d'un trajet dans « Mes trajets » (FLUTTER-FS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet épinglé en tête de liste'**
+  String get tripPinnedSnackbar;
+
+  /// Confirmation après retrait de l'épingle d'un trajet dans « Mes trajets » (FLUTTER-FS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Épingle retirée'**
+  String get tripUnpinnedSnackbar;
 
   /// Chip de filtre statut « Tous » (announcement_list_screen.dart)
   ///
@@ -11248,6 +11314,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'⏳ En attente du voyageur'**
   String get bidDetailSenderPendingTitle;
+
+  /// Titre de la carte prochaine étape (sender_hero_card.dart) pour un colis carte PENDING pas encore payé (FLUTTER-G7)
+  ///
+  /// In fr, this message translates to:
+  /// **'⏳ En attente de votre paiement'**
+  String get bidDetailSenderAwaitingCardPaymentTitle;
 
   /// PENDING, sous-titre (sender_hero_card.dart)
   ///
@@ -16726,6 +16798,24 @@ abstract class AppLocalizations {
   /// **'Voir les conversations archivées'**
   String get conversationListArchivedTooltip;
 
+  /// Ligne « Archivées » en tête des listes Messages et Discussions de prix, façon WhatsApp (DonyArchivedRow, FLUTTER-FR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Archivées'**
+  String get archivedRowLabel;
+
+  /// Annonce lecteur d'écran de la ligne « Archivées » avec son nombre (DonyArchivedRow, FLUTTER-FR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Archivées ({count})'**
+  String archivedRowSemantics(int count);
+
+  /// Titre de l'écran des discussions de prix archivées, ouvert par la ligne « Archivées » (FLUTTER-FR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussions archivées'**
+  String get archivedNegotiationsTitle;
+
   /// Texte indicatif de la barre de recherche de conversation_list_screen.dart.
   ///
   /// In fr, this message translates to:
@@ -20823,6 +20913,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Quand un colis correspond à un de vos trajets'**
   String get notificationSettingsPackageMatchSubtitle;
+
+  /// Tuile verrouillée HANDOVER_REMINDER_H2, type critique du backend (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappel de remise'**
+  String get notificationSettingsHandoverReminderLabel;
+
+  /// Sous-titre de la tuile HANDOVER_REMINDER_H2 (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Deux heures avant la remise du colis, avec SMS si le push n\'arrive pas'**
+  String get notificationSettingsHandoverReminderSubtitle;
+
+  /// Tuile verrouillée TRIP_RESCHEDULED, type critique du backend (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet reporté'**
+  String get notificationSettingsTripRescheduledLabel;
+
+  /// Tuile verrouillée des notifications non réglables sans SMS de repli : paiements, portefeuille, KYC, litiges, absences, modération (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Argent, identité, litiges et compte'**
+  String get notificationSettingsAccountSafetyLabel;
+
+  /// Sous-titre de la tuile verrouillée argent/identité/litiges/compte (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Portefeuille, vérification d\'identité, litiges, messages de Yadony'**
+  String get notificationSettingsAccountSafetySubtitle;
+
+  /// Tuile push_traveler_automations : automation_capacity_free, automation_loyal_sender, automation_last_minute (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Automatisations voyageur'**
+  String get notificationSettingsAutomationsLabel;
+
+  /// Sous-titre de la tuile push_traveler_automations (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Place libérée, expéditeurs fidèles, dernière minute'**
+  String get notificationSettingsAutomationsSubtitle;
+
+  /// Tuile push_reminders_tips : FIRST_ACTION_REMINDER et TRIP_IN_PROGRESS (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rappels et conseils'**
+  String get notificationSettingsRemindersTipsLabel;
+
+  /// Sous-titre de la tuile push_reminders_tips (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Premiers pas, départ de votre trajet'**
+  String get notificationSettingsRemindersTipsSubtitle;
+
+  /// Tuile push_missed_calls : CALL_MISSED (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appels manqués'**
+  String get notificationSettingsMissedCallsLabel;
+
+  /// Sous-titre de la tuile push_missed_calls (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand vous manquez un appel Yadony'**
+  String get notificationSettingsMissedCallsSubtitle;
 
   /// Titre de l'écran (business_prefs_screen.dart)
   ///

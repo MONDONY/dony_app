@@ -3309,6 +3309,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPosterSaveButton => 'Enregistrer dans la galerie';
 
   @override
+  String get tripPosterGroupButton => 'Publier dans le groupe Yadony';
+
+  @override
+  String get tripPosterGroupSheetTitle => 'Votre publication est prête';
+
+  @override
+  String get tripPosterGroupStepCaption => 'Légende et lien copiés';
+
+  @override
+  String get tripPosterGroupStepImage =>
+      'Affiche enregistrée dans votre galerie';
+
+  @override
+  String get tripPosterGroupStepPaste =>
+      'Dans le groupe, créez une publication : collez la légende, puis ajoutez l\'affiche depuis votre galerie.';
+
+  @override
+  String get tripPosterGroupOpenButton => 'Ouvrir le groupe';
+
+  @override
+  String get tripPosterGroupError =>
+      'Impossible de préparer la publication. Réessayez.';
+
+  @override
   String get errorAnnouncementUpdateBlockedTitle => 'Modification impossible';
 
   @override
@@ -4819,6 +4843,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get listingSearchDestinationHint => 'Rechercher une destination…';
+
+  @override
+  String get tripPinTooltip => 'Épingler en tête de liste';
+
+  @override
+  String get tripUnpinTooltip => 'Retirer l\'épingle';
+
+  @override
+  String get tripPinnedSnackbar => 'Trajet épinglé en tête de liste';
+
+  @override
+  String get tripUnpinnedSnackbar => 'Épingle retirée';
 
   @override
   String get listingFilterAllChip => 'Tous';
@@ -6798,6 +6834,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailSenderPendingTitle => '⏳ En attente du voyageur';
+
+  @override
+  String get bidDetailSenderAwaitingCardPaymentTitle =>
+      '⏳ En attente de votre paiement';
 
   @override
   String get bidDetailSenderPendingSubtitle =>
@@ -10150,6 +10190,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Voir les conversations archivées';
 
   @override
+  String get archivedRowLabel => 'Archivées';
+
+  @override
+  String archivedRowSemantics(int count) {
+    return 'Archivées ($count)';
+  }
+
+  @override
+  String get archivedNegotiationsTitle => 'Discussions archivées';
+
+  @override
   String get conversationListSearchHint => 'Rechercher une conversation…';
 
   @override
@@ -12562,6 +12613,45 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notificationSettingsPackageMatchSubtitle =>
       'Quand un colis correspond à un de vos trajets';
+
+  @override
+  String get notificationSettingsHandoverReminderLabel => 'Rappel de remise';
+
+  @override
+  String get notificationSettingsHandoverReminderSubtitle =>
+      'Deux heures avant la remise du colis, avec SMS si le push n\'arrive pas';
+
+  @override
+  String get notificationSettingsTripRescheduledLabel => 'Trajet reporté';
+
+  @override
+  String get notificationSettingsAccountSafetyLabel =>
+      'Argent, identité, litiges et compte';
+
+  @override
+  String get notificationSettingsAccountSafetySubtitle =>
+      'Portefeuille, vérification d\'identité, litiges, messages de Yadony';
+
+  @override
+  String get notificationSettingsAutomationsLabel => 'Automatisations voyageur';
+
+  @override
+  String get notificationSettingsAutomationsSubtitle =>
+      'Place libérée, expéditeurs fidèles, dernière minute';
+
+  @override
+  String get notificationSettingsRemindersTipsLabel => 'Rappels et conseils';
+
+  @override
+  String get notificationSettingsRemindersTipsSubtitle =>
+      'Premiers pas, départ de votre trajet';
+
+  @override
+  String get notificationSettingsMissedCallsLabel => 'Appels manqués';
+
+  @override
+  String get notificationSettingsMissedCallsSubtitle =>
+      'Quand vous manquez un appel Yadony';
 
   @override
   String get prefsTitle => 'Préférences';

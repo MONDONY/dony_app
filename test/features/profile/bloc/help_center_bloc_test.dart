@@ -305,6 +305,107 @@ void main() {
     await bloc.close();
   });
 
+  group('groupe Facebook depuis l’affiche (FLUTTER-G4)', () {
+    final group = SocialLink(
+      network: SocialNetwork.facebook,
+      url: Uri.parse('https://www.facebook.com/groups/1051558350756867'),
+      active: true,
+    );
+
+    test('ouvre l’application Facebook quand elle prend le lien', () async {
+      final launcher = _ModeLauncher(appInstalled: true);
+      final bloc = HelpCenterBloc(_repository(launcher: launcher), analytics);
+
+      bloc.add(HelpExternalOpenRequested.posterGroup(link: group));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(launcher.modes, [
+        PreferredLaunchMode.externalNonBrowserApplication,
+      ]);
+      verify(
+        () => backend.capture(AnalyticsEvents.helpSocialLinkOpened, {
+          'network': 'facebook',
+          'source': 'trip_poster',
+        }),
+      ).called(1);
+      await bloc.close();
+    });
+
+    test('repli navigateur quand l’application est absente', () async {
+      final launcher = _ModeLauncher(appInstalled: false);
+      final bloc = HelpCenterBloc(_repository(launcher: launcher), analytics);
+
+      bloc.add(HelpExternalOpenRequested.posterGroup(link: group));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(launcher.modes, [
+        PreferredLaunchMode.externalNonBrowserApplication,
+        PreferredLaunchMode.externalApplication,
+      ]);
+      await bloc.close();
+    });
+
+    test('repli navigateur quand la tentative applicative lève', () async {
+      final launcher = _ModeLauncher(appInstalled: false, throwInApp: true);
+      final bloc = HelpCenterBloc(_repository(launcher: launcher), analytics);
+
+      bloc.add(HelpExternalOpenRequested.posterGroup(link: group));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(launcher.modes.last, PreferredLaunchMode.externalApplication);
+      await bloc.close();
+    });
+
+    test(
+      'les liens sociaux classiques restent en navigateur externe',
+      () async {
+        final launcher = _ModeLauncher(appInstalled: true);
+        final bloc = HelpCenterBloc(_repository(launcher: launcher), analytics);
+
+        bloc.add(HelpExternalOpenRequested.social(link: group));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+
+        expect(launcher.modes, [PreferredLaunchMode.externalApplication]);
+        await bloc.close();
+      },
+    );
+  });
+
+  test('facebookGroup : lien Facebook actif seulement', () {
+    final config = HelpCenterConfig.fromJson(const {
+      'schemaVersion': 1,
+      'socialLinks': [
+        {
+          'network': 'facebook',
+          'url': 'https://www.facebook.com/groups/1',
+          'active': false,
+        },
+        {
+          'network': 'whatsapp',
+          'url': 'https://whatsapp.com/channel/x',
+          'active': true,
+        },
+      ],
+      'tutorials': <Object>[],
+    });
+    expect(config.facebookGroup, isNull);
+    final active = HelpCenterConfig.fromJson(const {
+      'schemaVersion': 1,
+      'socialLinks': [
+        {
+          'network': 'facebook',
+          'url': 'https://www.facebook.com/groups/1',
+          'active': true,
+        },
+      ],
+      'tutorials': <Object>[],
+    });
+    expect(
+      active.facebookGroup?.url.toString(),
+      'https://www.facebook.com/groups/1',
+    );
+  });
+
   test('trace l’ouverture externe d’un tutoriel après lancement', () async {
     final bloc = HelpCenterBloc(
       _repository(launcher: _FakeLauncher()),
@@ -476,7 +577,7 @@ void main() {
 
 HelpCenterRepository _repository({
   HelpCenterConfigSource? source,
-  _FakeLauncher? launcher,
+  UrlLauncherPlatform? launcher,
   Future<String> Function()? fallbackJsonLoader,
 }) {
   return HelpCenterRepository(
@@ -535,5 +636,28 @@ final class _FakeLauncher extends UrlLauncherPlatform {
   Future<bool> launchUrl(String url, LaunchOptions options) async {
     launchedUrls.add(url);
     return result;
+  }
+}
+
+/// Lanceur qui note le mode demandé : « application » réussit seulement si
+/// [appInstalled], le navigateur réussit toujours.
+final class _ModeLauncher extends UrlLauncherPlatform {
+  _ModeLauncher({required this.appInstalled, this.throwInApp = false});
+
+  final bool appInstalled;
+  final bool throwInApp;
+  final modes = <PreferredLaunchMode>[];
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    modes.add(options.mode);
+    if (options.mode == PreferredLaunchMode.externalNonBrowserApplication) {
+      if (throwInApp) throw StateError('no app');
+      return appInstalled;
+    }
+    return true;
   }
 }

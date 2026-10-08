@@ -45,7 +45,9 @@ BidModel _bid({
   String? deliveryNoShowStatus,
   bool? deliveryNoShowReportedByTraveler,
   String? arrivalInstructions,
+  BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
 }) => BidModel(
+  paymentMethod: paymentMethod,
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
@@ -106,16 +108,33 @@ void main() {
 
   // ── Test 1: PENDING ──────────────────────────────────────────────────────────
 
-  testWidgets('1 · PENDING → "En attente du voyageur" + "notifié"', (
+  testWidgets('1 · PENDING cash → "En attente du voyageur" + "notifié"', (
     tester,
   ) async {
-    final bid = _bid();
+    final bid = _bid(paymentMethod: BidPaymentMethod.cash);
     await tester.pumpWidget(_host(bid, cancellationBloc));
     await tester.pump();
 
     expect(find.textContaining('En attente du voyageur'), findsOneWidget);
     expect(find.textContaining('notifié'), findsOneWidget);
   });
+
+  testWidgets(
+    '1b · PENDING carte non payé → "En attente de votre paiement", pas du '
+    'voyageur (FLUTTER-G7)',
+    (tester) async {
+      final bid = _bid(totalAmountEur: 45.0);
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      expect(
+        find.textContaining('En attente de votre paiement'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('séquestré'), findsOneWidget);
+      expect(find.textContaining('En attente du voyageur'), findsNothing);
+    },
+  );
 
   // ── Test 2: PAYMENT_ESCROWED ─────────────────────────────────────────────────
 

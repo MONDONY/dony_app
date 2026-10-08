@@ -83,10 +83,42 @@ class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
   }
 }
 
+// ── Écran des archives ────────────────────────────────────────────────────────
+
+/// Discussions de prix archivées, ouvertes par la ligne « Archivées (n) » en
+/// tête de « Discussions de prix » (FLUTTER-FR), comme l'écran d'archives de
+/// Messages. Même corps que la liste courante, limité aux archives.
+class ArchivedNegotiationsScreen extends StatelessWidget {
+  const ArchivedNegotiationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: DonyAppBar(title: context.l10n.archivedNegotiationsTitle),
+      body: MultiBlocProvider(
+        providers: [
+          BlocProvider<NegotiationListBloc>.value(
+            value: getIt<NegotiationListBloc>(),
+          ),
+          BlocProvider<BidNegotiationListBloc>.value(
+            value: getIt<BidNegotiationListBloc>(),
+          ),
+        ],
+        child: const MyNegotiationsBody(archivedOnly: true),
+      ),
+    );
+  }
+}
+
 // ── Body avec filtre ──────────────────────────────────────────────────────────
 
 class MyNegotiationsBody extends StatefulWidget {
-  const MyNegotiationsBody({super.key});
+  const MyNegotiationsBody({super.key, this.archivedOnly = false});
+
+  /// Écran des archives : seules les discussions archivées, sans puces.
+  /// Sinon, la liste courante, surmontée de la ligne « Archivées (n) ».
+  final bool archivedOnly;
   @override
   State<MyNegotiationsBody> createState() => _MyNegotiationsBodyState();
 }
@@ -100,6 +132,17 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
   void initState() {
     super.initState();
     _filterCubit = getIt<NegotiationFilterCubit>();
+    if (widget.archivedOnly) {
+      _filterCubit.setPreset(NegoQuickFilter.archived);
+    }
+    // Les archives sont lues dès l'ouverture : l'écran courant en affiche le
+    // nombre, l'écran d'archives leur contenu. Rechargées à chaque visite, un
+    // fil archivé depuis le détail doit y apparaître. Une fois lues, les BLoCs
+    // les rechargent eux-mêmes après chaque archivage ou désarchivage, ce qui
+    // tient le compteur à jour.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _fetchArchived(context);
+    });
   }
 
   void _onQuery(String q) {
@@ -136,14 +179,7 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
     );
   }
 
-  void _selectPreset(BuildContext context, NegoQuickFilter preset) {
-    _filterCubit.setPreset(preset);
-    // Les archives se chargent à la demande, et se rechargent à chaque visite
-    // du filtre : un fil archivé depuis le détail doit y apparaître.
-    if (preset == NegoQuickFilter.archived) {
-      _fetchArchived(context);
-    }
-  }
+  void _selectPreset(NegoQuickFilter preset) => _filterCubit.setPreset(preset);
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +265,7 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
     } else if (bothEmpty) {
       // Sans action, un compte neuf restait devant un écran inerte : 6 rage
       // clicks PostHog en 13 min le 27/09, juste après une inscription. La
-      // puce « Archivées » reste au-dessus : un fil rangé doit rester
+      // ligne « Archivées » reste au-dessus : un fil rangé doit rester
       // atteignable même quand plus rien n'est en cours.
       list = DonyEmptyState(
         title: context.l10n.negotiationEmptyTitle,
@@ -264,15 +300,45 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
               onClear: () => _filterCubit.setQuery(''),
             ),
           ),
-        _FilterChips(
-          preset: filter.preset,
-          allCount: all.length,
-          activeCount: activeCount,
-          terminalCount: terminalCount,
-          onSelected: (preset) => _selectPreset(context, preset),
-        ),
+        if (!widget.archivedOnly) ...[
+          _FilterChips(
+            preset: filter.preset,
+            allCount: all.length,
+            activeCount: activeCount,
+            terminalCount: terminalCount,
+            onSelected: _selectPreset,
+          ),
+          _archivedRow(context, state, tripState),
+        ],
         Expanded(child: list),
       ],
+    );
+  }
+
+  /// Ligne « Archivées (n) » (FLUTTER-FR), à la place de l'ancienne puce de
+  /// filtre. Absente tant qu'il n'y a rien d'archivé.
+  Widget _archivedRow(
+    BuildContext context,
+    NegotiationListState state,
+    BidNegotiationListState tripState,
+  ) {
+    final count =
+        state.archivedThreads.length + tripState.archivedSummaries.length;
+    if (count == 0) return const SizedBox.shrink();
+    final l = context.l10n;
+    return DonyArchivedRow(
+      key: const Key('nego-archived-row'),
+      label: l.archivedRowLabel,
+      semanticLabel: l.archivedRowSemantics(count),
+      count: count,
+      leadingWidth: 24,
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.base,
+        DonySpacing.sm,
+        DonySpacing.base,
+        0,
+      ),
+      onTap: () => context.push('/negotiations/archives'),
     );
   }
 
@@ -428,10 +494,10 @@ class _FilterChips extends StatelessWidget {
         NegoQuickFilter.terminal,
         l.negotiationFilterTerminalCountLabel(terminalCount),
       ),
-      (NegoQuickFilter.archived, l.negotiationFilterArchivedLabel),
     ];
-    // Quatre puces ne tiennent plus à parts égales sur un petit écran : la
-    // rangée défile plutôt que de tronquer un libellé.
+    // Les archives ont quitté les puces pour la ligne « Archivées (n) »
+    // (FLUTTER-FR). La rangée défile toujours plutôt que de tronquer un
+    // libellé sur un petit écran.
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.fromLTRB(
@@ -501,7 +567,7 @@ class _ArchivableTile extends StatelessWidget {
 
     final actions = archived
         ? [
-            SlidableAction(
+            DonySwipeAction(
               key: const Key('nego-slide-unarchive'),
               onPressed: (ctx) {
                 _dispatch(ctx, NegoArchiveAction.unarchive);
@@ -518,7 +584,7 @@ class _ArchivableTile extends StatelessWidget {
             ),
           ]
         : [
-            SlidableAction(
+            DonySwipeAction(
               key: const Key('nego-slide-archive'),
               onPressed: (ctx) {
                 // Capturer les BLoCs avant tout : le volet se referme au tap
@@ -553,7 +619,7 @@ class _ArchivableTile extends StatelessWidget {
                 left: Radius.circular(DonyRadius.card),
               ),
             ),
-            SlidableAction(
+            DonySwipeAction(
               key: const Key('nego-slide-delete'),
               onPressed: (ctx) {
                 // Capturer les BLoCs avant la feuille : le volet Slidable se
@@ -594,7 +660,9 @@ class _ArchivableTile extends StatelessWidget {
       key: ValueKey('slidable-$id'),
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: archived ? 0.35 : 0.55,
+        // 0.55 tronquait « Archiver » et « Supprimer » (FLUTTER-FR) : la
+        // largeur couvre les deux libellés en entier, en français et en anglais.
+        extentRatio: archived ? 0.35 : 0.62,
         children: actions,
       ),
       child: child,

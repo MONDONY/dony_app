@@ -89,6 +89,10 @@ final class HelpCenterRepository {
 
   Future<bool> openExternal(Uri uri) => _urlLauncher.open(uri);
 
+  /// Application d'abord (Facebook), navigateur en repli.
+  Future<bool> openExternalPreferringApp(Uri uri) =>
+      _urlLauncher.openPreferringApp(uri);
+
   /// Catalogue embarqué, lu une fois : il complète le catalogue distant pour
   /// les écrans que celui-ci ne couvre pas (voir
   /// [HelpCenterConfig.completedWith]).
