@@ -28130,10 +28130,10 @@ abstract class AppLocalizations {
   /// **'Paiement en cours'**
   String get errorOfferAcceptedAwaitingPaymentTitle;
 
-  /// Erreur offer-accepted-awaiting-payment (FLUTTER-F9).
+  /// Erreur offer-accepted-awaiting-payment (FLUTTER-F9) : retrait de l'offre, annulation ou suppression du trajet refusés pendant le paiement.
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur a accepté votre offre et procède au paiement. Vous ne pouvez plus la retirer pendant le délai de paiement.'**
+  /// **'Un expéditeur a accepté votre offre et procède au paiement. Pendant le délai de paiement, vous ne pouvez ni la retirer, ni annuler ou supprimer ce trajet.'**
   String get errorOfferAcceptedAwaitingPaymentMessage;
 
   /// Paiement d'une offre qui n'attend plus de paiement : thread/not-awaiting-payment, request/not-yet-accepted (FLUTTER-F9).

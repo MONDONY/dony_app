@@ -17183,7 +17183,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorOfferAcceptedAwaitingPaymentMessage =>
-      'L\'expéditeur a accepté votre offre et procède au paiement. Vous ne pouvez plus la retirer pendant le délai de paiement.';
+      'Un expéditeur a accepté votre offre et procède au paiement. Pendant le délai de paiement, vous ne pouvez ni la retirer, ni annuler ou supprimer ce trajet.';
 
   @override
   String get errorOfferNoLongerPayableTitle => 'Offre retirée';

@@ -9333,7 +9333,7 @@
   "errorTripLegsDraftMismatchTitle": "Inconsistent stops",
   "errorTripLegsDraftMismatchMessage": "A trip's stops are published together, or all saved as drafts.",
   "errorOfferAcceptedAwaitingPaymentTitle": "Payment in progress",
-  "errorOfferAcceptedAwaitingPaymentMessage": "The sender has accepted your offer and is paying. You can no longer withdraw it during the payment window.",
+  "errorOfferAcceptedAwaitingPaymentMessage": "A sender has accepted your offer and is paying. During the payment window, you can't withdraw it, or cancel or delete this trip.",
   "errorOfferNoLongerPayableTitle": "Offer withdrawn",
   "errorOfferNoLongerPayableMessage": "The traveler withdrew their offer or the payment window has ended. The negotiation has been updated.",
   "negotiationWithdrawOfferLockedButton": "Withdraw my offer",

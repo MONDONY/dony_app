@@ -216,7 +216,9 @@ abstract final class ErrorCatalog {
       icon: Icons.inventory_2_outlined,
     ),
     // FLUTTER-F9 : le voyageur tente de retirer une offre que l'expéditeur a
-    // acceptée et paie (back : NegotiationService#cancelNegotiation).
+    // acceptée et paie, ou d'annuler ou supprimer le trajet qui la porte (back :
+    // NegotiationService#cancelNegotiation, AnnouncementService#deleteAnnouncement,
+    // CancellationService#cancelTrip).
     'offer-accepted-awaiting-payment': _Entry(
       title: (l) => l.errorOfferAcceptedAwaitingPaymentTitle,
       message: (l) => l.errorOfferAcceptedAwaitingPaymentMessage,

@@ -66,6 +66,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // colis porte le code de retour (FLUTTER-FK). Sans bidId, l'historique.
     'PARCEL_RETURN_REQUIRED' when _isUuid(bidId) => '/bids/$bidId',
     'PARCEL_RETURN_REQUIRED' => '/profile/shipments/history',
+    // L'expéditeur a annulé un colis déjà remis : le voyageur ouvre la fiche
+    // du colis pour le rendre et saisir le code de retour (back #447 et suivante).
+    // Un back qui ne l'émet pas encore ne change rien ; sans bidId, pas de route.
+    'PARCEL_RETURN_TO_SENDER' when _isUuid(bidId) => '/bids/$bidId',
     'RETURN_DEADLINE_WARNING' when _isUuid(bidId) => '/bids/$bidId',
     'RETURN_DEADLINE_EXPIRED' when _isUuid(bidId) => '/bids/$bidId',
     // Trajet arrivé : le détail du colis porte les instructions de retrait.
