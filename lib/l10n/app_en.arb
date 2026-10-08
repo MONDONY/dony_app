@@ -9384,5 +9384,7 @@
   "homeComposerPaymentMethodsHint": "Trips that accept at least one of the selected methods.",
   "homeComposerPaymentCard": "Card",
   "homeComposerPaymentCash": "Cash",
-  "homeComposerPaymentMobileMoney": "Mobile money"
+  "homeComposerPaymentMobileMoney": "Mobile money",
+  "tripPublishCardOffHelp": "Without card payment, this trip has no protected online payment: the money is no longer held until delivery.",
+  "tripPublishPaymentMethodRequired": "Cash is now on: at least one payment method must stay on."
 }

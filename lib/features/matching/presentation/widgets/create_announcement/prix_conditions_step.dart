@@ -47,6 +47,12 @@ class PrixConditionsStep extends StatelessWidget {
   final ValueNotifier<bool> cashEnabledNotifier;
   final ValueNotifier<bool> kgPriceEnabledNotifier; // ← NOUVEAU
 
+  /// Le voyageur garde la carte sur ce trajet (FLUTTER-FT). Coché par défaut,
+  /// décochable seulement quand la carte est disponible (Stripe Connect prêt,
+  /// devise éligible). Null : la carte suit le seul statut Stripe, comme
+  /// avant FLUTTER-FT.
+  final ValueNotifier<bool>? cardEnabledNotifier;
+
   /// Le voyageur accepte le paiement par mobile money (Orange Money, Wave,
   /// MTN via pawaPay). Bascule visible même hors zone CFA, mais désactivée
   /// (cf. [currencyNotifier] et [mobileMoneyAccountActive]).
@@ -117,6 +123,7 @@ class PrixConditionsStep extends StatelessWidget {
     required this.availableKgNotifier,
     required this.cashEnabledNotifier,
     required this.kgPriceEnabledNotifier, // ← NOUVEAU
+    this.cardEnabledNotifier,
     required this.mobileMoneyEnabledNotifier,
     required this.currencyNotifier,
     this.mobileMoneyAccountActive = false,
@@ -552,14 +559,36 @@ class PrixConditionsStep extends StatelessWidget {
             builder: (ctx, stripeState) =>
                 ValueListenableBuilder<SupportedCurrency>(
                   valueListenable: currencyNotifier,
-                  builder: (ctx, currencyValue, _) => _buildPaymentMethodsCard(
-                    tt,
-                    cs,
-                    ctx,
-                    l,
-                    cardStatus: _cardStatusFor(stripeState, currencyValue),
-                    currency: currencyValue,
-                  ),
+                  builder: (ctx, currencyValue, _) {
+                    final cardStatus = _cardStatusFor(
+                      stripeState,
+                      currencyValue,
+                    );
+                    final cardNotifier = cardEnabledNotifier;
+                    if (cardNotifier == null) {
+                      return _buildPaymentMethodsCard(
+                        tt,
+                        cs,
+                        ctx,
+                        l,
+                        cardStatus: cardStatus,
+                        currency: currencyValue,
+                        cardOn: cardStatus == _CardStatus.active,
+                      );
+                    }
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: cardNotifier,
+                      builder: (ctx, cardWanted, _) => _buildPaymentMethodsCard(
+                        tt,
+                        cs,
+                        ctx,
+                        l,
+                        cardStatus: cardStatus,
+                        currency: currencyValue,
+                        cardOn: cardStatus == _CardStatus.active && cardWanted,
+                      ),
+                    );
+                  },
                 ),
           ).animate().fadeIn(delay: 180.ms),
           const SizedBox(height: DonySpacing.xxl),
@@ -769,8 +798,12 @@ class PrixConditionsStep extends StatelessWidget {
     AppLocalizations l, {
     required _CardStatus cardStatus,
     required SupportedCurrency currency,
+    required bool cardOn,
   }) {
+    // Disponible (Stripe prêt, devise éligible) n'est plus synonyme de
+    // cochée : le voyageur peut refuser la carte sur ce trajet (FLUTTER-FT).
     final cardActive = cardStatus == _CardStatus.active;
+    final cardNotifier = cardEnabledNotifier;
     // Carte indisponible dans le pays : c'est le pays de résidence du profil
     // qui décide, pas le pays où se trouve le voyageur. On le nomme et on
     // mène à son réglage (FLUTTER-EE). Lecture tolérante : le wizard peut
@@ -787,7 +820,7 @@ class PrixConditionsStep extends StatelessWidget {
     // ajoute d'office, l'écran les montre donc activées et verrouillées. Au
     // moins un mode de paiement est requis pour publier. Post-frame pour ne
     // pas muter d'état pendant le build.
-    final cashLocked = !cardActive;
+    final cashLocked = !cardOn;
     if (cashLocked && !cashEnabledNotifier.value) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         cashEnabledNotifier.value = true;
@@ -804,9 +837,20 @@ class PrixConditionsStep extends StatelessWidget {
           // ne faisait rien, sans un mot (Sentry FLUTTER-CS/D2).
           SwitchListTile(
             key: const Key('payment-method-stripe'),
-            value: cardActive,
+            value: cardOn,
             onChanged: switch (cardStatus) {
               _CardStatus.checking => null,
+              // Décochable (FLUTTER-FT). Les espèces prennent alors le relais,
+              // verrouillées : un trajet garde toujours un moyen de paiement.
+              _CardStatus.active when cardNotifier != null => (wanted) {
+                cardNotifier.value = wanted;
+                if (!wanted && !cashEnabledNotifier.value) {
+                  DonySnackbar.show(
+                    ctx,
+                    message: l.tripPublishPaymentMethodRequired,
+                  );
+                }
+              },
               _CardStatus.active => (_) => DonySnackbar.show(
                 ctx,
                 message: l.tripPublishCardActiveExplanation,
@@ -872,6 +916,25 @@ class PrixConditionsStep extends StatelessWidget {
               vertical: DonySpacing.xs,
             ),
           ),
+          // Carte disponible mais décochée (FLUTTER-FT) : dire ce que le
+          // voyageur perd, sans le culpabiliser.
+          if (cardActive && cardNotifier != null)
+            AnimatedSize(
+              duration: 200.ms,
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: cardOn
+                  ? const SizedBox(width: double.infinity)
+                  : _noticePadding(
+                      Text(
+                        l.tripPublishCardOffHelp,
+                        key: const Key('card-off-help'),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ).animate().fadeIn(duration: 200.ms),
+                    ),
+            ),
           if (!cardActive && cardStatus != _CardStatus.checking)
             _noticePadding(switch (cardStatus) {
               _CardStatus.notConfigured => PaymentSetupNotice(

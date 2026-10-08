@@ -28441,6 +28441,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Mobile money'**
   String get homeComposerPaymentMobileMoney;
+
+  /// Création de trajet : aide sous l'interrupteur Carte quand il est décoché (FLUTTER-FT)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans carte, ce trajet n\'aura pas de paiement protégé en ligne : l\'argent n\'est plus séquestré jusqu\'à la livraison.'**
+  String get tripPublishCardOffHelp;
+
+  /// Création de trajet : carte décochée alors que les espèces l'étaient aussi (FLUTTER-FT)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les espèces sont activées : au moins un moyen de paiement doit rester actif.'**
+  String get tripPublishPaymentMethodRequired;
 }
 
 class _AppLocalizationsDelegate

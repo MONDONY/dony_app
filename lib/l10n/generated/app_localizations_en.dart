@@ -17243,4 +17243,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeComposerPaymentMobileMoney => 'Mobile money';
+
+  @override
+  String get tripPublishCardOffHelp =>
+      'Without card payment, this trip has no protected online payment: the money is no longer held until delivery.';
+
+  @override
+  String get tripPublishPaymentMethodRequired =>
+      'Cash is now on: at least one payment method must stay on.';
 }

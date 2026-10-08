@@ -19525,5 +19525,9 @@
   "homeComposerPaymentCash": "Espèces",
   "@homeComposerPaymentCash": {"description": "Filtre moyens de paiement : espèces (FLUTTER-G0)"},
   "homeComposerPaymentMobileMoney": "Mobile money",
-  "@homeComposerPaymentMobileMoney": {"description": "Filtre moyens de paiement : mobile money (FLUTTER-G0)"}
+  "@homeComposerPaymentMobileMoney": {"description": "Filtre moyens de paiement : mobile money (FLUTTER-G0)"},
+  "tripPublishCardOffHelp": "Sans carte, ce trajet n'aura pas de paiement protégé en ligne : l'argent n'est plus séquestré jusqu'à la livraison.",
+  "@tripPublishCardOffHelp": {"description": "Création de trajet : aide sous l'interrupteur Carte quand il est décoché (FLUTTER-FT)"},
+  "tripPublishPaymentMethodRequired": "Les espèces sont activées : au moins un moyen de paiement doit rester actif.",
+  "@tripPublishPaymentMethodRequired": {"description": "Création de trajet : carte décochée alors que les espèces l'étaient aussi (FLUTTER-FT)"}
 }

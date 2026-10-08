@@ -17355,4 +17355,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeComposerPaymentMobileMoney => 'Mobile money';
+
+  @override
+  String get tripPublishCardOffHelp =>
+      'Sans carte, ce trajet n\'aura pas de paiement protégé en ligne : l\'argent n\'est plus séquestré jusqu\'à la livraison.';
+
+  @override
+  String get tripPublishPaymentMethodRequired =>
+      'Les espèces sont activées : au moins un moyen de paiement doit rester actif.';
 }
