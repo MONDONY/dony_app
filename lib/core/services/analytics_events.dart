@@ -248,6 +248,9 @@ abstract final class AnalyticsEvents {
   static const deliveryNoShowReportedBySender =
       'delivery_no_show_reported_by_sender';
   static const deliveryNoShowContested = 'delivery_no_show_contested';
+
+  /// FLUTTER-E2 : l'expéditeur fixe un nouveau rendez-vous pendant la garde.
+  static const deliveryRetryAppointmentSet = 'delivery_retry_appointment_set';
   // Annulation après remise (D5/D6/D7)
   static const cancelAfterHandoverInitiated = 'cancel_after_handover_initiated';
   static const returnCodeViewed = 'return_code_viewed';

@@ -94,24 +94,89 @@ void main() {
 
   group('reportDeliveryNoShow', () {
     test(
-      'calls POST /cancellations/bids/{bidId}/report-delivery-noshow',
+      'calls POST /cancellations/bids/{bidId}/report-delivery-noshow avec la confirmation',
       () async {
         when(
-          () =>
-              mockDio.post('/cancellations/bids/bid-4/report-delivery-noshow'),
+          () => mockDio.post(
+            '/cancellations/bids/bid-4/report-delivery-noshow',
+            data: any(named: 'data'),
+          ),
         ).thenAnswer(
           (_) async =>
               _ok(null, '/cancellations/bids/bid-4/report-delivery-noshow'),
         );
 
-        await datasource.reportDeliveryNoShow('bid-4');
+        await datasource.reportDeliveryNoShow('bid-4', contactConfirmed: true);
 
         verify(
-          () =>
-              mockDio.post('/cancellations/bids/bid-4/report-delivery-noshow'),
+          () => mockDio.post(
+            '/cancellations/bids/bid-4/report-delivery-noshow',
+            data: {'contactConfirmed': true},
+          ),
         ).called(1);
       },
     );
+  });
+
+  group('procédure destinataire absent (FLUTTER-E2)', () {
+    test('GET /cancellations/bids/{id}/delivery-noshow', () async {
+      when(
+        () => mockDio.get('/cancellations/bids/bid-4/delivery-noshow'),
+      ).thenAnswer(
+        (_) async => _ok({
+          'bidId': 'bid-4',
+          'role': 'TRAVELER',
+          'bidStatus': 'ARRIVED',
+          'reportAvailableAt': '2026-10-08T12:00:00Z',
+          'waitElapsed': false,
+          'contactProof': 'CALL',
+          'canReport': false,
+          'reported': false,
+          'minWaitMinutes': 120,
+          'holdDays': 7,
+        }, '/x'),
+      );
+
+      final p = await datasource.getDeliveryNoShowProcedure('bid-4');
+
+      expect(p.bidStatus, 'ARRIVED');
+      expect(p.hasContactProof, isTrue);
+      expect(p.reportAvailableAt, isNotNull);
+      expect(p.isSender, isFalse);
+    });
+
+    test('POST retry-appointment envoie la date UTC et la note', () async {
+      when(
+        () => mockDio.post(
+          '/cancellations/bids/bid-4/delivery-noshow/retry-appointment',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'bidId': 'bid-4',
+          'role': 'SENDER',
+          'bidStatus': 'ARRIVED',
+          'reported': true,
+          'holdUntil': '2026-10-15T12:00:00Z',
+          'retryAppointmentAt': '2026-10-10T09:00:00Z',
+        }, '/x'),
+      );
+
+      final at = DateTime.utc(2026, 10, 10, 9);
+      final p = await datasource.setRetryAppointment(
+        'bid-4',
+        appointmentAt: at,
+        note: '  Gare  ',
+      );
+
+      expect(p.isHolding, isTrue);
+      verify(
+        () => mockDio.post(
+          '/cancellations/bids/bid-4/delivery-noshow/retry-appointment',
+          data: {'appointmentAt': '2026-10-10T09:00:00.000Z', 'note': 'Gare'},
+        ),
+      ).called(1);
+    });
   });
 
   group('reportTravelerDeliveryNoShow', () {

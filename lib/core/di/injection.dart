@@ -47,6 +47,7 @@ import 'package:dony/features/calls/data/ringback_tone.dart';
 import 'package:dony/features/calls/data/stream_call_gateway.dart';
 import 'package:dony/features/calls/data/stream_video_push.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delivery_noshow_procedure_cubit.dart';
 import 'package:dony/features/cancellation/data/datasources/cancellation_remote_datasource.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -682,6 +683,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<CancellationBloc>(
     () => CancellationBloc(
+      getIt<CancellationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<DeliveryNoShowProcedureCubit>(
+    () => DeliveryNoShowProcedureCubit(
       getIt<CancellationRepository>(),
       getIt<AnalyticsService>(),
     ),

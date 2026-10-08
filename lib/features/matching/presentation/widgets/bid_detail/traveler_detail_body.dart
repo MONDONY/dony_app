@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
+import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
@@ -88,7 +88,9 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       TravelerHeroCard(bid: widget.bid),
       if (TripRescheduleCard.shouldShow(widget.bid))
         TripRescheduleCard(bid: widget.bid, isSender: false),
-      DeliveryNoShowCtaCell(bid: widget.bid, isSender: false),
+      // Procédure « destinataire absent » (FLUTTER-E2) ; elle retombe sur
+      // l'ancien signalement si le serveur ne la connaît pas encore.
+      DeliveryNoShowProcedureCard(bid: widget.bid, isSender: false),
       // Profil de l'expéditeur à tous les statuts ; les boutons de contact
       // n'apparaissent qu'une fois la demande acceptée.
       ExpediteurContactCard(bid: widget.bid),
