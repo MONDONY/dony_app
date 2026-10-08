@@ -1,5 +1,6 @@
 import 'package:dony/features/cancellation/data/datasources/cancellation_remote_datasource.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
+import 'package:dony/features/cancellation/data/models/delivery_noshow_procedure_model.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -71,6 +72,37 @@ void main() {
 
     verify(() => mockDs.reportDeliveryNoShow('bid-4')).called(1);
   });
+
+  test(
+    'procédure destinataire absent : délègue lecture et nouveau RDV',
+    () async {
+      const model = DeliveryNoShowProcedureModel(
+        bidId: 'bid-4',
+        role: 'SENDER',
+        bidStatus: 'ARRIVED',
+      );
+      final at = DateTime.utc(2026, 10, 10);
+      when(
+        () => mockDs.getDeliveryNoShowProcedure('bid-4'),
+      ).thenAnswer((_) async => model);
+      when(
+        () => mockDs.setRetryAppointment('bid-4', appointmentAt: at, note: 'n'),
+      ).thenAnswer((_) async => model);
+      when(
+        () => mockDs.reportDeliveryNoShow('bid-4', contactConfirmed: true),
+      ).thenAnswer((_) async {});
+
+      expect(await repo.getDeliveryNoShowProcedure('bid-4'), same(model));
+      expect(
+        await repo.setRetryAppointment('bid-4', appointmentAt: at, note: 'n'),
+        same(model),
+      );
+      await repo.reportDeliveryNoShow('bid-4', contactConfirmed: true);
+      verify(
+        () => mockDs.reportDeliveryNoShow('bid-4', contactConfirmed: true),
+      ).called(1);
+    },
+  );
 
   test('reportTravelerDeliveryNoShow delegates to datasource', () async {
     when(

@@ -1,5 +1,6 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
+import 'package:dony/features/cancellation/data/models/delivery_noshow_procedure_model.dart';
 
 class CancellationRemoteDatasource {
   final ApiClient _apiClient;
@@ -42,9 +43,46 @@ class CancellationRemoteDatasource {
     await _apiClient.dio.post('/cancellations/bids/$bidId/contest-noshow');
   }
 
-  Future<void> reportDeliveryNoShow(String bidId) async {
+  /// Signalement « destinataire absent » (FLUTTER-E2). `contactConfirmed` :
+  /// le voyageur confirme avoir attendu et tenté de joindre le destinataire.
+  /// Un back antérieur ignore le corps.
+  Future<void> reportDeliveryNoShow(
+    String bidId, {
+    bool contactConfirmed = false,
+  }) async {
     await _apiClient.dio.post(
       '/cancellations/bids/$bidId/report-delivery-noshow',
+      data: {'contactConfirmed': contactConfirmed},
+    );
+  }
+
+  /// État de la procédure « destinataire absent » du colis (FLUTTER-E2).
+  Future<DeliveryNoShowProcedureModel> getDeliveryNoShowProcedure(
+    String bidId,
+  ) async {
+    final response = await _apiClient.dio.get(
+      '/cancellations/bids/$bidId/delivery-noshow',
+    );
+    return DeliveryNoShowProcedureModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  /// L'expéditeur fixe un nouveau rendez-vous de livraison pendant la garde.
+  Future<DeliveryNoShowProcedureModel> setRetryAppointment(
+    String bidId, {
+    required DateTime appointmentAt,
+    String? note,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/cancellations/bids/$bidId/delivery-noshow/retry-appointment',
+      data: {
+        'appointmentAt': appointmentAt.toUtc().toIso8601String(),
+        if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+      },
+    );
+    return DeliveryNoShowProcedureModel.fromJson(
+      response.data as Map<String, dynamic>,
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:dony/features/cancellation/data/datasources/cancellation_remote_datasource.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
+import 'package:dony/features/cancellation/data/models/delivery_noshow_procedure_model.dart';
 
 class CancellationRepository {
   final CancellationRemoteDatasource _datasource;
@@ -25,8 +26,27 @@ class CancellationRepository {
   Future<void> decideReschedule(String bidId, {required bool keep}) =>
       _datasource.decideReschedule(bidId, keep: keep);
 
-  Future<void> reportDeliveryNoShow(String bidId) =>
-      _datasource.reportDeliveryNoShow(bidId);
+  Future<void> reportDeliveryNoShow(
+    String bidId, {
+    bool contactConfirmed = false,
+  }) => _datasource.reportDeliveryNoShow(
+    bidId,
+    contactConfirmed: contactConfirmed,
+  );
+
+  Future<DeliveryNoShowProcedureModel> getDeliveryNoShowProcedure(
+    String bidId,
+  ) => _datasource.getDeliveryNoShowProcedure(bidId);
+
+  Future<DeliveryNoShowProcedureModel> setRetryAppointment(
+    String bidId, {
+    required DateTime appointmentAt,
+    String? note,
+  }) => _datasource.setRetryAppointment(
+    bidId,
+    appointmentAt: appointmentAt,
+    note: note,
+  );
 
   Future<void> reportTravelerDeliveryNoShow(String bidId) =>
       _datasource.reportTravelerDeliveryNoShow(bidId);

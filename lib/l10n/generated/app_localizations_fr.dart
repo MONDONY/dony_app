@@ -16847,4 +16847,113 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorCurrencyLockedMessage =>
       'Le changement de portefeuille actif n\'est pas encore disponible tant que votre portefeuille n\'est pas vide. Réessayez un peu plus tard.';
+
+  @override
+  String get dnpTravelerTitle => 'Destinataire absent ?';
+
+  @override
+  String get dnpStepArrivalDone => 'Arrivée déclarée';
+
+  @override
+  String get dnpStepArrivalTodo =>
+      'Déclarez d\'abord votre arrivée à destination';
+
+  @override
+  String get dnpStepWaitDone => 'Délai d\'attente écoulé';
+
+  @override
+  String dnpStepWaitPending(String minutes, String time) {
+    return 'Attendez encore $minutes min, jusqu\'à $time';
+  }
+
+  @override
+  String get dnpStepContactDone => 'Tentative de contact enregistrée';
+
+  @override
+  String get dnpStepContactTodo =>
+      'Appelez ou écrivez au destinataire ou à l\'expéditeur depuis l\'app';
+
+  @override
+  String get dnpReportAction => 'Signaler le destinataire absent';
+
+  @override
+  String dnpSheetBody(String days) {
+    return 'Vous gardez le colis $days jours. L\'expéditeur peut fixer un nouveau rendez-vous ou changer de destinataire, et il peut contester sous 24 h. Sans livraison ni contestation à la fin de la garde, le colis passe non réclamé et votre paiement est libéré.';
+  }
+
+  @override
+  String get dnpConfirmCheckbox =>
+      'J\'ai attendu sur place et tenté de joindre le destinataire';
+
+  @override
+  String get dnpHoldTravelerTitle => 'Colis en garde';
+
+  @override
+  String dnpHoldTraveler(String date) {
+    return 'Gardez le colis jusqu\'au $date. Sans livraison d\'ici là, votre paiement sera libéré.';
+  }
+
+  @override
+  String dnpRetryAppointment(String date) {
+    return 'Nouveau rendez-vous : $date';
+  }
+
+  @override
+  String get dnpUnclaimedTitle => 'Colis non réclamé';
+
+  @override
+  String get dnpUnclaimedTraveler =>
+      'La garde est terminée et votre paiement est libéré. Gardez le colis : une personne mandatée par l\'expéditeur peut encore le retirer.';
+
+  @override
+  String get dnpUnclaimedSender =>
+      'La garde est terminée et le voyageur a été payé. Une personne que vous mandatez peut encore retirer le colis : désignez-la comme destinataire.';
+
+  @override
+  String get dnpSenderTitle => 'Votre destinataire était absent';
+
+  @override
+  String dnpSenderHold(String date) {
+    return 'Le voyageur garde le colis jusqu\'au $date. Fixez un nouveau rendez-vous ou changez de destinataire.';
+  }
+
+  @override
+  String get dnpSetAppointmentAction => 'Fixer un nouveau rendez-vous';
+
+  @override
+  String get dnpChangeRecipientAction => 'Changer de destinataire';
+
+  @override
+  String get dnpAppointmentSheetTitle => 'Nouveau rendez-vous';
+
+  @override
+  String dnpAppointmentSheetSubtitle(String date) {
+    return 'À fixer avant la fin de la garde, le $date';
+  }
+
+  @override
+  String get dnpAppointmentDateLabel => 'Jour';
+
+  @override
+  String get dnpAppointmentTimeLabel => 'Heure';
+
+  @override
+  String get dnpAppointmentPick => 'Choisir';
+
+  @override
+  String get dnpAppointmentNoteLabel =>
+      'Précisions pour le voyageur (facultatif)';
+
+  @override
+  String get dnpAppointmentSubmit => 'Envoyer le rendez-vous';
+
+  @override
+  String get dnpAppointmentSaved => 'Rendez-vous envoyé au voyageur';
+
+  @override
+  String get dnpAppointmentOutOfHold =>
+      'Choisissez un moment à venir, avant la fin de la garde';
+
+  @override
+  String get dnpLoadError => 'Impossible de charger le suivi de l\'absence';
 }

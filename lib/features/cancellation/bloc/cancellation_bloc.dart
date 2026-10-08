@@ -113,7 +113,10 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
   ) async {
     emit(CancellationLoading());
     try {
-      await _repository.reportDeliveryNoShow(event.bidId);
+      await _repository.reportDeliveryNoShow(
+        event.bidId,
+        contactConfirmed: event.contactConfirmed,
+      );
       emit(DeliveryNoShowReported());
       unawaited(
         _analytics.logEvent(AnalyticsEvents.deliveryNoShowReportedByTraveler),

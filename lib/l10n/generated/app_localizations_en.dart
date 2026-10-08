@@ -16741,4 +16741,111 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorCurrencyLockedMessage =>
       'Switching the active wallet isn\'t available yet while your wallet holds money. Please try again a bit later.';
+
+  @override
+  String get dnpTravelerTitle => 'Recipient not there?';
+
+  @override
+  String get dnpStepArrivalDone => 'Arrival declared';
+
+  @override
+  String get dnpStepArrivalTodo => 'First declare your arrival at destination';
+
+  @override
+  String get dnpStepWaitDone => 'Waiting time over';
+
+  @override
+  String dnpStepWaitPending(String minutes, String time) {
+    return 'Wait $minutes more min, until $time';
+  }
+
+  @override
+  String get dnpStepContactDone => 'Contact attempt recorded';
+
+  @override
+  String get dnpStepContactTodo =>
+      'Call or message the recipient or the sender in the app';
+
+  @override
+  String get dnpReportAction => 'Report the recipient as absent';
+
+  @override
+  String dnpSheetBody(String days) {
+    return 'You keep the parcel for $days days. The sender can set a new appointment or change the recipient, and can contest within 24 h. With no delivery or contest by the end of the hold, the parcel becomes unclaimed and your payout is released.';
+  }
+
+  @override
+  String get dnpConfirmCheckbox =>
+      'I waited on site and tried to reach the recipient';
+
+  @override
+  String get dnpHoldTravelerTitle => 'Parcel on hold';
+
+  @override
+  String dnpHoldTraveler(String date) {
+    return 'Keep the parcel until $date. With no delivery by then, your payout will be released.';
+  }
+
+  @override
+  String dnpRetryAppointment(String date) {
+    return 'New appointment: $date';
+  }
+
+  @override
+  String get dnpUnclaimedTitle => 'Unclaimed parcel';
+
+  @override
+  String get dnpUnclaimedTraveler =>
+      'The hold is over and your payout is released. Keep the parcel: someone the sender authorizes can still collect it.';
+
+  @override
+  String get dnpUnclaimedSender =>
+      'The hold is over and the traveler has been paid. Someone you authorize can still collect the parcel: set them as the recipient.';
+
+  @override
+  String get dnpSenderTitle => 'Your recipient was not there';
+
+  @override
+  String dnpSenderHold(String date) {
+    return 'The traveler keeps the parcel until $date. Set a new appointment or change the recipient.';
+  }
+
+  @override
+  String get dnpSetAppointmentAction => 'Set a new appointment';
+
+  @override
+  String get dnpChangeRecipientAction => 'Change the recipient';
+
+  @override
+  String get dnpAppointmentSheetTitle => 'New appointment';
+
+  @override
+  String dnpAppointmentSheetSubtitle(String date) {
+    return 'To set before the hold ends on $date';
+  }
+
+  @override
+  String get dnpAppointmentDateLabel => 'Day';
+
+  @override
+  String get dnpAppointmentTimeLabel => 'Time';
+
+  @override
+  String get dnpAppointmentPick => 'Choose';
+
+  @override
+  String get dnpAppointmentNoteLabel => 'Details for the traveler (optional)';
+
+  @override
+  String get dnpAppointmentSubmit => 'Send the appointment';
+
+  @override
+  String get dnpAppointmentSaved => 'Appointment sent to the traveler';
+
+  @override
+  String get dnpAppointmentOutOfHold =>
+      'Choose a future time, before the hold ends';
+
+  @override
+  String get dnpLoadError => 'Could not load the absence follow-up';
 }

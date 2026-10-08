@@ -27661,6 +27661,186 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le changement de portefeuille actif n\'est pas encore disponible tant que votre portefeuille n\'est pas vide. Réessayez un peu plus tard.'**
   String get errorCurrencyLockedMessage;
+
+  /// Titre de la carte procédure destinataire absent, vue voyageur (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire absent ?'**
+  String get dnpTravelerTitle;
+
+  /// Étape 1 de la procédure : arrivée déclarée (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée déclarée'**
+  String get dnpStepArrivalDone;
+
+  /// Étape 1 à faire : déclarer l'arrivée (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Déclarez d\'abord votre arrivée à destination'**
+  String get dnpStepArrivalTodo;
+
+  /// Étape 2 faite : délai minimal d'attente écoulé (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai d\'attente écoulé'**
+  String get dnpStepWaitDone;
+
+  /// Étape 2 en cours : compteur avant de pouvoir signaler (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Attendez encore {minutes} min, jusqu\'à {time}'**
+  String dnpStepWaitPending(String minutes, String time);
+
+  /// Étape 3 faite : appel ou message du voyageur vu par le serveur (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tentative de contact enregistrée'**
+  String get dnpStepContactDone;
+
+  /// Étape 3 à faire : preuve de contact in-app (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Appelez ou écrivez au destinataire ou à l\'expéditeur depuis l\'app'**
+  String get dnpStepContactTodo;
+
+  /// Bouton qui ouvre la feuille de signalement (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler le destinataire absent'**
+  String get dnpReportAction;
+
+  /// Corps de la feuille de signalement, procédure de garde (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous gardez le colis {days} jours. L\'expéditeur peut fixer un nouveau rendez-vous ou changer de destinataire, et il peut contester sous 24 h. Sans livraison ni contestation à la fin de la garde, le colis passe non réclamé et votre paiement est libéré.'**
+  String dnpSheetBody(String days);
+
+  /// Case de confirmation obligatoire avant le signalement (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai attendu sur place et tenté de joindre le destinataire'**
+  String get dnpConfirmCheckbox;
+
+  /// Titre de la carte pendant la garde, vue voyageur (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis en garde'**
+  String get dnpHoldTravelerTitle;
+
+  /// Carte voyageur pendant la garde (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Gardez le colis jusqu\'au {date}. Sans livraison d\'ici là, votre paiement sera libéré.'**
+  String dnpHoldTraveler(String date);
+
+  /// Rendez-vous fixé par l'expéditeur pendant la garde (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau rendez-vous : {date}'**
+  String dnpRetryAppointment(String date);
+
+  /// Titre de la carte une fois la garde échue (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis non réclamé'**
+  String get dnpUnclaimedTitle;
+
+  /// Carte voyageur, colis non réclamé (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'La garde est terminée et votre paiement est libéré. Gardez le colis : une personne mandatée par l\'expéditeur peut encore le retirer.'**
+  String get dnpUnclaimedTraveler;
+
+  /// Carte expéditeur, colis non réclamé (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'La garde est terminée et le voyageur a été payé. Une personne que vous mandatez peut encore retirer le colis : désignez-la comme destinataire.'**
+  String get dnpUnclaimedSender;
+
+  /// Titre de la carte expéditeur après le signalement (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre destinataire était absent'**
+  String get dnpSenderTitle;
+
+  /// Carte expéditeur pendant la garde (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur garde le colis jusqu\'au {date}. Fixez un nouveau rendez-vous ou changez de destinataire.'**
+  String dnpSenderHold(String date);
+
+  /// Bouton expéditeur : nouveau rendez-vous (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fixer un nouveau rendez-vous'**
+  String get dnpSetAppointmentAction;
+
+  /// Bouton expéditeur : changer de destinataire (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de destinataire'**
+  String get dnpChangeRecipientAction;
+
+  /// Titre de la feuille de nouveau rendez-vous (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau rendez-vous'**
+  String get dnpAppointmentSheetTitle;
+
+  /// Sous-titre de la feuille de nouveau rendez-vous (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'À fixer avant la fin de la garde, le {date}'**
+  String dnpAppointmentSheetSubtitle(String date);
+
+  /// Champ date du nouveau rendez-vous (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Jour'**
+  String get dnpAppointmentDateLabel;
+
+  /// Champ heure du nouveau rendez-vous (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure'**
+  String get dnpAppointmentTimeLabel;
+
+  /// Valeur affichée tant que la date ou l'heure n'est pas choisie (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get dnpAppointmentPick;
+
+  /// Champ note du nouveau rendez-vous (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisions pour le voyageur (facultatif)'**
+  String get dnpAppointmentNoteLabel;
+
+  /// Bouton d'envoi du nouveau rendez-vous (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le rendez-vous'**
+  String get dnpAppointmentSubmit;
+
+  /// Snackbar après l'envoi du nouveau rendez-vous (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous envoyé au voyageur'**
+  String get dnpAppointmentSaved;
+
+  /// Erreur : rendez-vous hors de la garde (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un moment à venir, avant la fin de la garde'**
+  String get dnpAppointmentOutOfHold;
+
+  /// Erreur de chargement de la procédure (FLUTTER-E2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le suivi de l\'absence'**
+  String get dnpLoadError;
 }
 
 class _AppLocalizationsDelegate

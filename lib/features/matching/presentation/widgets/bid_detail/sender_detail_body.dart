@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
+import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_procedure_card.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
@@ -113,6 +114,9 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
           ArrivalInstructionsCard.hasText(widget.bid.arrivalInstructions))
         ArrivalInstructionsCard(instructions: widget.bid.arrivalInstructions!),
       DeliveryNoShowCtaCell(bid: widget.bid, isSender: true),
+      // Destinataire absent signalé par le voyageur (FLUTTER-E2) : nouveau
+      // rendez-vous, changement de destinataire, garde, colis non réclamé.
+      DeliveryNoShowProcedureCard(bid: widget.bid, isSender: true),
       // Le destinataire ne reçoit rien de Yadony : l'expéditeur le prévient
       // lui-même sur WhatsApp, au moment où le lien puis le code existent.
       if (PrevenirDestinataireCard.shouldShow(widget.bid))

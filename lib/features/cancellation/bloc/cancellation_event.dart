@@ -31,9 +31,12 @@ class NoShowContestRequested extends CancellationEvent {
 }
 
 /// Le voyageur signale que le destinataire n'est pas venu à la remise (arrivée).
+/// `contactConfirmed` : case cochée « j'ai attendu et tenté de le joindre »
+/// (procédure FLUTTER-E2, exigée par le serveur).
 class DeliveryNoShowReportRequested extends CancellationEvent {
   final String bidId;
-  DeliveryNoShowReportRequested(this.bidId);
+  final bool contactConfirmed;
+  DeliveryNoShowReportRequested(this.bidId, {this.contactConfirmed = false});
 }
 
 /// L'expéditeur signale que le voyageur ne livre pas / est injoignable (arrivée).
