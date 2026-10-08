@@ -2042,21 +2042,9 @@
   "@negotiationThreadExchangesTitle": {
     "description": "Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)"
   },
-  "negotiationThreadKindProposal": "Proposal",
-  "@negotiationThreadKindProposal": {
-    "description": "Libellé d'un message de type proposition initiale (bid_negotiation_thread_screen.dart)"
-  },
   "negotiationThreadKindCounter": "Counter-offer",
   "@negotiationThreadKindCounter": {
     "description": "Libellé d'un message de type contre-offre (bid_negotiation_thread_screen.dart)"
-  },
-  "negotiationThreadKindAccepted": "Accepted",
-  "@negotiationThreadKindAccepted": {
-    "description": "Libellé d'un message d'acceptation (bid_negotiation_thread_screen.dart)"
-  },
-  "negotiationThreadKindRejected": "Declined",
-  "@negotiationThreadKindRejected": {
-    "description": "Libellé d'un message de refus (bid_negotiation_thread_screen.dart)"
   },
   "negotiationThreadPayHint": "Price accepted. Pay now to secure your spot, the amount stays on hold until delivery.",
   "@negotiationThreadPayHint": {
@@ -2097,6 +2085,19 @@
   "negotiationThreadWaitingForReply": "Waiting for {name}'s reply.",
   "@negotiationThreadWaitingForReply": {
     "description": "Attente du tour de l'interlocuteur, nom ou repli traduit (bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadYourTurn": "Your move",
+  "@negotiationThreadYourTurn": {
+    "description": "Pastille « qui doit jouer » quand la main est à l'utilisateur (fil de prix d'un trajet et sa carte dans la liste, FLUTTER-BM)"
+  },
+  "negotiationThreadTheirTurn": "{name}'s move",
+  "@negotiationThreadTheirTurn": {
+    "description": "Pastille « qui doit jouer » quand la main est à l'interlocuteur, nom ou repli traduit (FLUTTER-BM)",
     "placeholders": {
       "name": {
         "type": "String"

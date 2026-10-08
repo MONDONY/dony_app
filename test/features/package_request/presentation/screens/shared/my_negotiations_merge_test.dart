@@ -57,10 +57,16 @@ BidNegotiationSummary _summary({
   String status = 'NEGOTIATING',
   String? counterparty = 'Awa Diop',
   DateTime? updatedAt,
+  bool myTurn = false,
+  bool hasUnread = false,
+  String? role,
 }) => BidNegotiationSummary(
   bidId: bidId,
   announcementId: 'ann-1',
   status: status,
+  myTurn: myTurn,
+  hasUnread: hasUnread,
+  role: role,
   round: 2,
   proposedGrossEur: 42,
   counterpartyName: counterparty,
@@ -267,5 +273,79 @@ void main() {
     final tripY = tester.getTopLeft(find.text('Awa Diop')).dy;
     final requestY = tester.getTopLeft(find.text('Mamadou Diallo')).dy;
     expect(tripY, lessThan(requestY));
+  });
+
+  // FLUTTER-BM : la carte de trajet se lit comme celle d'une demande.
+  group('carte de trajet enrichie', () {
+    testWidgets('en cours, à moi de jouer : pastilles, montant accentué', (
+      tester,
+    ) async {
+      loadBoth(summaries: [_summary(myTurn: true)]);
+      await pumpBody(tester);
+
+      expect(find.text('EN COURS'), findsOneWidget);
+      expect(find.text('À vous de jouer'), findsOneWidget);
+      final amount = tester.widget<Text>(
+        find.byKey(const Key('trip-nego-amount-bid-1')),
+      );
+      expect(amount.style?.color, AppTheme.light().colorScheme.primary);
+      expect(find.byType(DonyAvatar), findsWidgets);
+    });
+
+    testWidgets('en cours, tour de l autre : nom de l interlocuteur', (
+      tester,
+    ) async {
+      loadBoth(summaries: [_summary()]);
+      await pumpBody(tester);
+
+      expect(find.text('Au tour de Awa Diop'), findsOneWidget);
+      expect(find.text('À vous de jouer'), findsNothing);
+    });
+
+    testWidgets('non lu : pastille NOUVEAU', (tester) async {
+      loadBoth(summaries: [_summary(hasUnread: true)]);
+      await pumpBody(tester);
+
+      expect(find.byKey(const Key('trip-nego-new-bid-1')), findsOneWidget);
+    });
+
+    testWidgets('accord à payer : pastille PAIEMENT, plus de tour à jouer', (
+      tester,
+    ) async {
+      loadBoth(summaries: [_summary(status: 'AWAITING_PAYMENT')]);
+      await pumpBody(tester);
+
+      expect(find.text('PAIEMENT'), findsOneWidget);
+      expect(find.text('Au tour de Awa Diop'), findsNothing);
+    });
+
+    testWidgets('espèces : pastille COMMISSION', (tester) async {
+      loadBoth(summaries: [_summary(status: 'PENDING')]);
+      await pumpBody(tester);
+
+      expect(find.text('COMMISSION'), findsOneWidget);
+    });
+
+    testWidgets('accepté : pastille ACCEPTÉE', (tester) async {
+      loadBoth(summaries: [_summary(status: 'ACCEPTED')]);
+      await pumpBody(tester);
+
+      expect(find.text('ACCEPTÉE'), findsOneWidget);
+    });
+
+    testWidgets('terminé : pastille TERMINÉ', (tester) async {
+      loadBoth(summaries: [_summary(status: 'NEGOTIATION_CLOSED')]);
+      await pumpBody(tester);
+
+      expect(find.text('TERMINÉ'), findsOneWidget);
+    });
+
+    testWidgets('voyageur : aucun montant brut sur la carte', (tester) async {
+      loadBoth(summaries: [_summary(role: 'TRAVELER', myTurn: true)]);
+      await pumpBody(tester);
+
+      expect(find.byKey(const Key('trip-nego-amount-bid-1')), findsNothing);
+      expect(find.text('À vous de jouer'), findsOneWidget);
+    });
   });
 }

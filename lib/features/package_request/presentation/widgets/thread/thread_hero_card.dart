@@ -1,10 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 /// Variante visuelle du hero card selon le statut négociation.
 enum ThreadStatusVariant {
@@ -120,6 +118,9 @@ extension ThreadStatusVariantL10n on ThreadStatusVariant {
 }
 
 /// Hero card du thread de négociation — gradient status, prix, badge, progress.
+///
+/// Adaptateur du fil « demande de colis » sur [DonyNegoHeroCard], partagé avec
+/// le fil de prix d'un trajet.
 class ThreadHeroCard extends StatelessWidget {
   const ThreadHeroCard({
     super.key,
@@ -136,206 +137,35 @@ class ThreadHeroCard extends StatelessWidget {
   /// - Sender sees "Tu paies X €" (gross = grossPriceEur or computed)
   final bool isTraveler;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        DonySpacing.base,
-        DonySpacing.md,
-        DonySpacing.base,
-        DonySpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        gradient: statusVariant.gradient,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        boxShadow: [
-          BoxShadow(
-            color: statusVariant.shadowColor.withValues(alpha: 0.30),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.antiAlias,
-        children: [
-          // Glow circle décoration top-right
-          Positioned(
-            top: -24,
-            right: -24,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.07),
-              ),
-            ),
-          ),
-          // Contenu
-          Padding(
-            padding: const EdgeInsets.all(DonySpacing.base),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(DonySpacing.sm),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: DonyIcon(
-                        statusVariant.iconAsset,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: DonySpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            statusVariant.priceLabel(context.l10n),
-                            style: Theme.of(context).textTheme.bodyMedium!
-                                .copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white.withValues(alpha: 0.70),
-                                  letterSpacing: 0.8,
-                                ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            threadPriceLabel(
-                              context.l10n,
-                              thread.currentPriceEur,
-                              thread.grossPriceEur,
-                              isTraveler,
-                              thread.currency,
-                            ),
-                            style: Theme.of(context).textTheme.bodyMedium!
-                                .copyWith(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: -0.5,
-                                  height: 1.1,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _StatusBadge(label: statusVariant.badge(context.l10n)),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                _RoundProgress(roundsCount: thread.roundsCount, max: 5),
-                if (thread.roundsRemaining == 0 &&
-                    thread.status == NegotiationThreadStatus.open) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.20),
-                      // Concentric with parent card (DonyRadius.card - padding)
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      context.l10n.negotiationLastRoundWarning,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.amber.shade200,
-                        // Tabular numbers for any numeric context
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ).animate().fadeIn(duration: 200.ms),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label});
-  final String label;
+  static const _maxRounds = 5;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.20),
-        borderRadius: BorderRadius.circular(DonyRadius.xl),
+    final l = context.l10n;
+    return DonyNegoHeroCard(
+      gradient: statusVariant.gradient,
+      shadowColor: statusVariant.shadowColor,
+      iconAsset: statusVariant.iconAsset,
+      caption: statusVariant.priceLabel(l),
+      amount: threadPriceLabel(
+        l,
+        thread.currentPriceEur,
+        thread.grossPriceEur,
+        isTraveler,
+        thread.currency,
       ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-          letterSpacing: 0.8,
-        ),
+      badgeLabel: statusVariant.badge(l),
+      roundLabel: l.negotiationRoundCounter(
+        thread.roundsCount.clamp(0, _maxRounds),
+        _maxRounds,
       ),
-    );
-  }
-}
-
-class _RoundProgress extends StatelessWidget {
-  const _RoundProgress({required this.roundsCount, required this.max});
-  final int roundsCount;
-  final int max;
-
-  @override
-  Widget build(BuildContext context) {
-    final n = roundsCount.clamp(0, max);
-    return Row(
-      children: [
-        Text(
-          context.l10n.negotiationRoundCounter(n, max),
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.white.withValues(alpha: 0.85),
-          ),
-        ),
-        const SizedBox(width: DonySpacing.md),
-        Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              for (int i = 0; i < max; i++) ...[
-                if (i > 0) const SizedBox(width: 4),
-                Expanded(
-                  child: Container(
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: i < n
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
+      roundsCount: thread.roundsCount,
+      maxRounds: _maxRounds,
+      warning:
+          thread.roundsRemaining == 0 &&
+              thread.status == NegotiationThreadStatus.open
+          ? l.negotiationLastRoundWarning
+          : null,
     );
   }
 }
