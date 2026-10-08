@@ -52,9 +52,10 @@ class PaymentCancelledException implements Exception {
 /// Échec de confirmation Stripe (carte refusée, PayPal en échec…).
 ///
 /// [message] est nullable : le SDK Stripe ne garantit ni `localizedMessage`
-/// ni `message` sur son erreur. Quand présent, c'est déjà le message localisé
-/// par Stripe dans la langue du téléphone (`localizedMessage`) — affiché tel
-/// quel. `null` retombe sur le libellé générique de la raison côté UI.
+/// ni `message` sur son erreur. Venant du SDK, il n'est renseigné que pour un
+/// vrai refus carte (`card_error`) : c'est alors le message localisé par
+/// Stripe (`localizedMessage`), affiché tel quel. `null` retombe sur le
+/// libellé générique de la raison côté UI.
 ///
 /// Les champs `stripe*` décrivent l'erreur brute du SDK quand l'échec vient
 /// de lui ([PaymentConfirmationException.fromStripe]) : ils ne s'affichent
@@ -97,6 +98,12 @@ class PaymentConfirmationException implements Exception {
 
   /// Vrai quand l'échec vient du SDK Stripe et mérite un diagnostic.
   bool get isFromStripe => stripeCode != null;
+
+  /// Vrai refus de la carte par l'émetteur (type Stripe `card_error`) : le
+  /// seul cas où le message du fournisseur est montré à l'utilisateur.
+  bool get isCardError => stripeErrorType == cardErrorType;
+
+  static const cardErrorType = 'card_error';
 }
 
 /// Abstraction testable du SDK flutter_stripe pour la DonyPaymentSheet.
@@ -226,16 +233,20 @@ class StripePaymentGateway implements PaymentGateway {
 /// l'utilisateur ([PaymentCancelledException], silencieuse) ou échec
 /// ([PaymentConfirmationException] portant les codes du SDK pour Sentry).
 ///
-/// Pas de repli français ici : `message` reste `null` quand le SDK ne
-/// fournit rien, et c'est l'UI qui affiche alors le libellé générique de la
-/// raison (`PaymentSheetFailureReason.declined`).
+/// `message` (montrable) n'est renseigné que pour un vrai refus carte
+/// (`card_error`). Toute autre erreur du SDK porte un texte technique
+/// (« FragmentManager has been destroyed », FLUTTER-CJ) qui ne doit jamais
+/// atteindre l'écran : il reste dans `stripeMessage`, pour Sentry seulement,
+/// et l'UI affiche le libellé traduit de la raison.
 @visibleForTesting
 Exception mapStripeException(StripeException e) {
   if (e.error.code == FailureCode.Canceled) {
     return const PaymentCancelledException();
   }
+  final isCardError =
+      e.error.type == PaymentConfirmationException.cardErrorType;
   return PaymentConfirmationException.fromStripe(
-    e.error.localizedMessage ?? e.error.message,
+    isCardError ? e.error.localizedMessage ?? e.error.message : null,
     stripeCode: e.error.code.name,
     stripeErrorCode: e.error.stripeErrorCode,
     declineCode: e.error.declineCode,

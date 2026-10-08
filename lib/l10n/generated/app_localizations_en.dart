@@ -8947,6 +8947,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentDeclined => 'Payment declined';
 
   @override
+  String get paymentSheetOpenFailed =>
+      'The payment couldn\'t open. Please try again.';
+
+  @override
   String paymentMethodsSemantics(String wallet) {
     return 'Card, $wallet, PayPal';
   }

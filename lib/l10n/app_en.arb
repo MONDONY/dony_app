@@ -4362,6 +4362,7 @@
   "paymentCardUnavailable": "Card payment is unavailable right now. Try again in a moment.",
   "paymentFailedGeneric": "The payment failed. Try again in a moment.",
   "paymentDeclined": "Payment declined",
+  "paymentSheetOpenFailed": "The payment couldn't open. Please try again.",
   "paymentMethodsSemantics": "Card, {wallet}, PayPal",
   "@paymentMethodsSemantics": {
     "placeholders": {

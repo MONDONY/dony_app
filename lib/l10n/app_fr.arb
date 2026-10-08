@@ -9430,6 +9430,10 @@
   "@paymentDeclined": {
     "description": "Libellé générique de PaymentSheetFailureReason.declined (dony_payment_sheet.dart), affiché quand providerMessage est absent."
   },
+  "paymentSheetOpenFailed": "Le paiement n'a pas pu s'ouvrir. Réessayez.",
+  "@paymentSheetOpenFailed": {
+    "description": "Libellé de PaymentSheetFailureReason.sheetUnavailable (dony_payment_sheet.dart) : la feuille Stripe/PayPal n'a pas pu s'ouvrir (erreur locale du SDK, FLUTTER-CJ), distinct d'un refus de carte."
+  },
   "paymentMethodsSemantics": "Carte, {wallet}, PayPal",
   "@paymentMethodsSemantics": {
     "description": "Semantics regroupée des moyens de paiement (payment_method_names.dart, mode compact). {wallet} = Apple Pay ou Google Pay, nom de marque non traduit.",
