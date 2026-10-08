@@ -1,9 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delivery_noshow_procedure_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
@@ -63,7 +65,31 @@ Future<void> _pump(WidgetTester tester, BidModel bid) async {
   await tester.pump(const Duration(seconds: 1));
 }
 
+class _MockProcedureCubit extends MockCubit<DeliveryNoShowProcedureState>
+    implements DeliveryNoShowProcedureCubit {}
+
 void main() {
+  // Carte « destinataire absent » (FLUTTER-E2) d'un colis ARRIVED : procédure
+  // indisponible, l'écran garde l'ancien signalement.
+  setUp(() {
+    final cubit = _MockProcedureCubit();
+    whenListen(
+      cubit,
+      const Stream<DeliveryNoShowProcedureState>.empty(),
+      initialState: const DeliveryNoShowProcedureUnavailable(),
+    );
+    when(() => cubit.load(any())).thenAnswer((_) async {});
+    if (getIt.isRegistered<DeliveryNoShowProcedureCubit>()) {
+      getIt.unregister<DeliveryNoShowProcedureCubit>();
+    }
+    getIt.registerFactory<DeliveryNoShowProcedureCubit>(() => cubit);
+  });
+  tearDown(() {
+    if (getIt.isRegistered<DeliveryNoShowProcedureCubit>()) {
+      getIt.unregister<DeliveryNoShowProcedureCubit>();
+    }
+  });
+
   testWidgets('ACCEPTED → hero + contact + gain présents', (tester) async {
     await _pump(tester, _bid('ACCEPTED'));
     expect(find.byType(TravelerHeroCard), findsOneWidget);
