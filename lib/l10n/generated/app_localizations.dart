@@ -587,7 +587,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCountryLockedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de modifier votre pays de résidence : un envoi est en cours, votre portefeuille n\'est pas vide, ou votre compte de paiement est déjà créé. Contactez le support pour le faire modifier.'**
+  /// **'Impossible de modifier votre pays de résidence : votre compte de paiement est déjà créé dans ce pays et ne peut plus en changer. Contactez le support pour le faire modifier.'**
   String get errorCountryLockedMessage;
 
   /// No description provided for @errorCountryUnsupportedTitle.
@@ -14054,7 +14054,7 @@ abstract class AppLocalizations {
   /// Note de remboursement du cas colis déjà remis (cancellation_dialog.dart).
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, aucun mouvement d\'argent n\'a lieu.'**
+  /// **'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l\'expéditeur n\'a rien à payer et la commission Yadony est recréditée au voyageur.'**
   String get bidCancelWarningRefundNote;
 
   /// Hint du champ motif quand il est obligatoire (cancellation_dialog.dart).
@@ -20803,7 +20803,7 @@ abstract class AppLocalizations {
   /// Sous-titre quand le pays est verrouillé (business_prefs_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Verrouillé : envoi en cours, portefeuille non vide ou compte de paiement créé'**
+  /// **'Verrouillé : votre compte de paiement est déjà créé dans ce pays'**
   String get prefsCountryLockedSubtitle;
 
   /// Feuille ouverte au toucher de la ligne Pays de résidence verrouillée (business_prefs_screen.dart, FLUTTER-EE) : bouton vers le support.

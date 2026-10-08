@@ -180,8 +180,7 @@ void main() {
     expect(tile.subtitle, isNotNull);
     expect(
       find.textContaining(
-        'Verrouillé : envoi en cours, portefeuille non vide ou compte de '
-        'paiement créé',
+        'Verrouillé : votre compte de paiement est déjà créé dans ce pays',
       ),
       findsOneWidget,
     );

@@ -293,7 +293,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCountryLockedMessage =>
-      'Impossible de modifier votre pays de résidence : un envoi est en cours, votre portefeuille n\'est pas vide, ou votre compte de paiement est déjà créé. Contactez le support pour le faire modifier.';
+      'Impossible de modifier votre pays de résidence : votre compte de paiement est déjà créé dans ce pays et ne peut plus en changer. Contactez le support pour le faire modifier.';
 
   @override
   String get errorCountryUnsupportedTitle => 'Pays non desservi';
@@ -8470,7 +8470,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidCancelWarningRefundNote =>
-      'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, aucun mouvement d\'argent n\'a lieu.';
+      'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l\'expéditeur n\'a rien à payer et la commission Yadony est recréditée au voyageur.';
 
   @override
   String get bidCancelReasonRequiredHint => 'Motif de l\'annulation *';
@@ -12520,7 +12520,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get prefsCountryLockedSubtitle =>
-      'Verrouillé : envoi en cours, portefeuille non vide ou compte de paiement créé';
+      'Verrouillé : votre compte de paiement est déjà créé dans ce pays';
 
   @override
   String get prefsCountryLockedSupportCta => 'Contacter le support';

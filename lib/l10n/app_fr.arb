@@ -93,7 +93,7 @@
   "errorCountryRequiredTitle": "Pays manquant",
   "errorCountryRequiredMessage": "Renseignez votre pays dans Réglages, rubrique Préférences, avant de créer votre compte de paiement. Il détermine votre devise et ne pourra plus être modifié ensuite.",
   "errorCountryLockedTitle": "Pays de résidence verrouillé",
-  "errorCountryLockedMessage": "Impossible de modifier votre pays de résidence : un envoi est en cours, votre portefeuille n'est pas vide, ou votre compte de paiement est déjà créé. Contactez le support pour le faire modifier.",
+  "errorCountryLockedMessage": "Impossible de modifier votre pays de résidence : votre compte de paiement est déjà créé dans ce pays et ne peut plus en changer. Contactez le support pour le faire modifier.",
   "errorCountryUnsupportedTitle": "Pays non desservi",
   "errorCountryUnsupportedMessage": "Yadony ne dessert pas encore ce pays. Choisissez-en un autre.",
   "errorDeletionImpossibleTitle": "Suppression impossible",
@@ -8877,7 +8877,7 @@
   "@bidCancelWarningMessage": {
     "description": "Message d'avertissement du cas colis déjà remis (cancellation_dialog.dart)."
   },
-  "bidCancelWarningRefundNote": "L'expéditeur sera intégralement remboursé. Si le paiement était en espèces, aucun mouvement d'argent n'a lieu.",
+  "bidCancelWarningRefundNote": "L'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l'expéditeur n'a rien à payer et la commission Yadony est recréditée au voyageur.",
   "@bidCancelWarningRefundNote": {
     "description": "Note de remboursement du cas colis déjà remis (cancellation_dialog.dart)."
   },
@@ -13905,7 +13905,7 @@
   "@prefsCountryLabel": {
     "description": "Libellé de la tuile pays et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42)."
   },
-  "prefsCountryLockedSubtitle": "Verrouillé : envoi en cours, portefeuille non vide ou compte de paiement créé",
+  "prefsCountryLockedSubtitle": "Verrouillé : votre compte de paiement est déjà créé dans ce pays",
   "@prefsCountryLockedSubtitle": {
     "description": "Sous-titre quand le pays est verrouillé (business_prefs_screen.dart)"
   },

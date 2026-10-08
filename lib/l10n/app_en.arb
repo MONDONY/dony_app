@@ -81,7 +81,7 @@
   "errorCountryRequiredTitle": "Country missing",
   "errorCountryRequiredMessage": "Set your country in Settings, under Preferences, before creating your payment account. It sets your currency and can't be changed afterwards.",
   "errorCountryLockedTitle": "Country of residence locked",
-  "errorCountryLockedMessage": "You can't change your country of residence: a parcel is in progress, your wallet isn't empty, or your payment account is already set up. Contact support to have it changed.",
+  "errorCountryLockedMessage": "You can't change your country of residence: your payment account has already been created in this country and can't be moved. Contact support to have it changed.",
   "errorCountryUnsupportedTitle": "Country not served",
   "errorCountryUnsupportedMessage": "Yadony doesn't serve this country yet. Choose another one.",
   "errorDeletionImpossibleTitle": "Can't delete",
@@ -4226,7 +4226,7 @@
   "bidCancelDialogTitle": "Cancel this request?",
   "bidCancelAcceptedSubtitle": "The sender will be automatically refunded.",
   "bidCancelWarningMessage": "The parcel has already been handed over. You'll need to return it to the sender within 3 days by entering the return code they'll give you.",
-  "bidCancelWarningRefundNote": "The sender will be fully refunded. If the payment was in cash, no money changes hands.",
+  "bidCancelWarningRefundNote": "The sender will be fully refunded. If the payment was in cash, the sender owes nothing and the Yadony commission is credited back to the traveler.",
   "bidCancelReasonRequiredHint": "Reason for cancellation *",
   "bidCancelReasonOptionalHint": "Reason (optional)",
   "bidCancelReasonRequiredError": "Reason required",
@@ -7234,7 +7234,7 @@
   "prefsWeightUnitLabel": "Weight unit",
   "prefsSectionCurrency": "CURRENCY",
   "prefsCountryLabel": "Country of residence",
-  "prefsCountryLockedSubtitle": "Locked: a shipment is in progress, your wallet isn't empty or your payment account has been created",
+  "prefsCountryLockedSubtitle": "Locked: your payment account has already been created in this country",
   "prefsCountryLockedSupportCta": "Contact support",
   "@prefsCountryLockedSupportCta": {
     "description": "Feuille ouverte au toucher de la ligne Pays de résidence verrouillée (business_prefs_screen.dart, FLUTTER-EE) : bouton vers le support."
