@@ -115,6 +115,10 @@ class BidModel {
   /// alors sur la règle de statut locale.
   final bool? contactWindowOpen;
   final int? senderTotalShipments;
+
+  /// Fiabilité de l'expéditeur (FLUTTER-E0/E6) : annulations après acceptation
+  /// et absences au rendez-vous de remise confirmées. Nul sur un back antérieur.
+  final int? senderIncidentCount;
   final bool senderKycVerified;
   final bool senderIsProAccount;
   final bool senderKiloPro;
@@ -286,6 +290,7 @@ class BidModel {
     this.senderPhoneAvailable = false,
     this.contactWindowOpen,
     this.senderTotalShipments,
+    this.senderIncidentCount,
     this.senderKycVerified = false,
     this.senderIsProAccount = false,
     this.senderKiloPro = false,

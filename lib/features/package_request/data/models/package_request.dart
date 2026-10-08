@@ -51,6 +51,7 @@ class PackageRequest extends Equatable {
     this.convertedDisplayPrice,
     this.convertedCurrency,
     this.grossPriceEur,
+    this.senderIncidentCount,
   });
 
   final String id;
@@ -123,6 +124,11 @@ class PackageRequest extends Equatable {
   /// Devise cible de [convertedDisplayPrice] : celle du lecteur.
   final String? convertedCurrency;
 
+  /// Fiabilité de l'expéditeur, servie au voyageur qui consulte la demande
+  /// (FLUTTER-E0/E6) : annulations après acceptation et absences au rendez-vous
+  /// de remise confirmées. `null` pour le propriétaire ou un back antérieur.
+  final int? senderIncidentCount;
+
   /// Parse le tableau `photos` du wire en deux listes alignées (URLs
   /// présignées + clés S3) en un seul passage.
   static (List<String>, List<String>) _photosFromJson(List<dynamic>? raw) {
@@ -179,6 +185,7 @@ class PackageRequest extends Equatable {
           ?.toDouble(),
       convertedCurrency: json['convertedCurrency'] as String?,
       grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
+      senderIncidentCount: (json['senderIncidentCount'] as num?)?.toInt(),
     );
   }
 
@@ -212,5 +219,6 @@ class PackageRequest extends Equatable {
     convertedDisplayPrice,
     convertedCurrency,
     grossPriceEur,
+    senderIncidentCount,
   ];
 }

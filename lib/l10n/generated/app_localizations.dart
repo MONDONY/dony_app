@@ -27565,6 +27565,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Signaler'**
   String get chatReportMessageAction;
+
+  /// Fiabilité d'un expéditeur vue par les voyageurs : annulations après acceptation et absences confirmées au rendez-vous de remise (sender_reliability_label.dart, FLUTTER-E0/E6).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 annulation ou absence} other{{count} annulations ou absences}}'**
+  String senderReliabilityLabel(int count);
+
+  /// Infobulle du libellé de fiabilité expéditeur (FLUTTER-E0/E6).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis annulés après l\'acceptation d\'un voyageur et absences confirmées au rendez-vous de remise.'**
+  String get senderReliabilityTooltip;
 }
 
 class _AppLocalizationsDelegate

@@ -273,4 +273,20 @@ void main() {
       expect(avec, isNot(equals(sans)));
     });
   });
+
+  group('SenderPublicProfile.incidentCount (FLUTTER-E0/E6)', () {
+    test('lu quand le serveur le fournit', () {
+      final json = _baseJson();
+      (json['sender'] as Map<String, dynamic>)['incidentCount'] = 2;
+      expect(PackageRequestSearchItem.fromJson(json).sender.incidentCount, 2);
+    });
+
+    test('0 sur un back antérieur (champ absent)', () {
+      expect(
+        PackageRequestSearchItem.fromJson(_baseJson()).sender.incidentCount,
+        0,
+      );
+      expect(SenderPublicProfile.guest('Awa').incidentCount, 0);
+    });
+  });
 }

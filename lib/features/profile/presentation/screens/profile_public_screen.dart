@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/core/widgets/sender_reliability_label.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
@@ -362,7 +363,19 @@ class _LoadedView extends StatelessWidget {
         SliverToBoxAdapter(
           child: _FlatSection(
             topBorder: false,
-            child: _StatsRow(profile: profile),
+            child: Column(
+              children: [
+                _StatsRow(profile: profile),
+                // Fiabilité en tant qu'expéditeur (FLUTTER-E0/E6), sous les
+                // chiffres où le voyageur juge le profil ; rien à zéro.
+                if (SenderReliabilityLabel.isVisible(
+                  profile.senderIncidentCount,
+                )) ...[
+                  const SizedBox(height: DonySpacing.md),
+                  SenderReliabilityLabel(count: profile.senderIncidentCount),
+                ],
+              ],
+            ),
           ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
         ),
 

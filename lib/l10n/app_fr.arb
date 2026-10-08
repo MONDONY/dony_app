@@ -19201,5 +19201,9 @@
   "chatPhotoSendFailed": "La photo n'a pas pu être envoyée.",
   "@chatPhotoSendFailed": {"description": "Snackbar : échec d'envoi d'une photo, réessayable depuis la bulle (FLUTTER-B4)."},
   "chatReportMessageAction": "Signaler",
-  "@chatReportMessageAction": {"description": "Entrée de l'appui long sur un message reçu : signaler ce message (FLUTTER-B4)."}
+  "@chatReportMessageAction": {"description": "Entrée de l'appui long sur un message reçu : signaler ce message (FLUTTER-B4)."},
+  "senderReliabilityLabel": "{count, plural, =1{1 annulation ou absence} other{{count} annulations ou absences}}",
+  "@senderReliabilityLabel": {"description": "Fiabilité d'un expéditeur vue par les voyageurs : annulations après acceptation et absences confirmées au rendez-vous de remise (sender_reliability_label.dart, FLUTTER-E0/E6).", "placeholders": {"count": {"type": "int"}}},
+  "senderReliabilityTooltip": "Colis annulés après l'acceptation d'un voyageur et absences confirmées au rendez-vous de remise.",
+  "@senderReliabilityTooltip": {"description": "Infobulle du libellé de fiabilité expéditeur (FLUTTER-E0/E6)."}
 }

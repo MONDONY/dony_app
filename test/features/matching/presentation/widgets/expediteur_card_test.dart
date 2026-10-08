@@ -12,6 +12,7 @@ BidModel _bid({
   int? senderTotalShipments,
   bool senderKycVerified = false,
   bool senderKiloPro = false,
+  int? senderIncidentCount,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -21,6 +22,7 @@ BidModel _bid({
   senderTotalShipments: senderTotalShipments,
   senderKycVerified: senderKycVerified,
   senderKiloPro: senderKiloPro,
+  senderIncidentCount: senderIncidentCount,
   createdAt: DateTime(2026, 10, 6),
   updatedAt: DateTime(2026, 10, 6),
 );
@@ -88,5 +90,22 @@ void main() {
 
     expect(find.text('Sender'), findsNWidgets(2));
     expect(find.text('Submitted on 10/6/2026'), findsOneWidget);
+  });
+
+  testWidgets(
+    'fiabilité : annulations ou absences de l expediteur (FLUTTER-E0/E6)',
+    (tester) async {
+      await _pump(tester, _bid(senderName: 'Aïcha D.', senderIncidentCount: 2));
+      expect(find.text('2 annulations ou absences'), findsOneWidget);
+    },
+  );
+
+  testWidgets('fiabilité masquée à zéro et sur un back antérieur', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(senderName: 'Aïcha D.'));
+    expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
+    await _pump(tester, _bid(senderName: 'Aïcha D.', senderIncidentCount: 0));
+    expect(find.byKey(const Key('sender-reliability-label')), findsNothing);
   });
 }

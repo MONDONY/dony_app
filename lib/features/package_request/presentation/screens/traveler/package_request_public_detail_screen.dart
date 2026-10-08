@@ -11,6 +11,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/core/widgets/sender_reliability_label.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
@@ -508,6 +509,12 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                   ),
                 ],
               ),
+              // Fiabilité de l'expéditeur (FLUTTER-E0/E6) : servie aux seuls
+              // voyageurs, rien à zéro ni sur un back antérieur.
+              if (SenderReliabilityLabel.isVisible(r.senderIncidentCount)) ...[
+                const SizedBox(height: DonySpacing.xs),
+                SenderReliabilityLabel(count: r.senderIncidentCount),
+              ],
               const SizedBox(height: DonySpacing.base),
 
               // ── Poids / Taille (tuiles) ──────────────────────────────────

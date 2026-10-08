@@ -149,4 +149,18 @@ void main() {
       expect(BidModel.fromJson(_minimalBid()).contactWindowOpen, isNull);
     });
   });
+
+  group('BidModel.senderIncidentCount (FLUTTER-E0/E6)', () {
+    test('lu et renvoyé en toJson', () {
+      final model = BidModel.fromJson(
+        _minimalBid()..['senderIncidentCount'] = 2,
+      );
+      expect(model.senderIncidentCount, 2);
+      expect(model.toJson()['senderIncidentCount'], 2);
+    });
+
+    test('absent (back antérieur) → null', () {
+      expect(BidModel.fromJson(_minimalBid()).senderIncidentCount, isNull);
+    });
+  });
 }
