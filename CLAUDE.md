@@ -183,6 +183,16 @@ Avant tout paiement, passer par `requirePaymentAuth` (`features/payments/present
 
 Le verrouillage à l'ouverture suit la même règle : actif **si et seulement si** un PIN existe. Ne pas introduire de drapeau « PIN activé » séparé, le secure storage est la source de vérité.
 
+### 9 bis. Stripe Android et moteur Flutter en cache
+
+`MainActivity` garde son moteur Flutter en cache (appels audio) : il survit à la recréation de l'activité. `stripe_android` 12.x ignore `onReattachedToActivityForConfigChanges` et garde l'activité détruite, d'où « FragmentManager has been destroyed » dans `initPaymentSheet` (FLUTTER-CJ). `StripeActivityReattachPlugin` (Kotlin) refait l'attache de Stripe puis prévient Dart sur `com.yadony.yadony/activity`, et `StripeReattachListener` relance `Stripe.instance.applySettings()`. Ne pas retirer ce pont tant que le moteur reste en cache ou que le plugin n'a pas corrigé son rattachement.
+
+**Reproduction manuelle (deux chemins, à tester tous les deux) :**
+1. Détachement complet : Options développeur › « Ne pas conserver les activités », ouvrir l'app, passer en arrière-plan, revenir, puis ouvrir un paiement carte ou PayPal.
+2. Changement de configuration (celui d'HyperOS) : app ouverte, activer Paramètres › Affichage › « Texte en gras » (`fontWeightAdjustment`, absent de `android:configChanges`, donc l'activité est recréée), revenir dans l'app, ouvrir un paiement. Le thème clair/sombre ne suffit pas : `uiMode` est déclaré dans `configChanges`.
+
+Dans les deux cas la feuille Stripe doit s'ouvrir normalement.
+
 ### 10. FCM — Notifications
 
 - Au démarrage : `PUT /users/me/fcm-token`. Réémettre sur `onTokenRefresh`.

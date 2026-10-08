@@ -7600,6 +7600,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Waiting for the traveler\'s confirmation';
 
   @override
+  String get ticketAwaitingSenderCardPayment => 'Waiting for your payment';
+
+  @override
   String get ticketSenderAwaitingMobileMoneyHint =>
       'The traveler has accepted: pay by mobile money from the button below to secure your shipment.';
 
@@ -8945,6 +8948,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentDeclined => 'Payment declined';
+
+  @override
+  String get paymentSheetOpenFailed =>
+      'The payment couldn\'t open. Please try again.';
 
   @override
   String paymentMethodsSemantics(String wallet) {

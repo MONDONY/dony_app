@@ -7809,6 +7809,10 @@
   "@ticketAwaitingTravelerConfirmation": {
     "description": "Placeholder sender / PENDING du talon (billet_talon.dart)"
   },
+  "ticketAwaitingSenderCardPayment": "En attente de votre paiement",
+  "@ticketAwaitingSenderCardPayment": {
+    "description": "Placeholder sender / PENDING carte du talon : colis créé mais pas encore payé (billet_talon.dart, FLUTTER-G7)"
+  },
   "ticketSenderAwaitingMobileMoneyHint": "Le voyageur a accepté : payez par mobile money depuis le bouton en bas pour sécuriser votre envoi.",
   "@ticketSenderAwaitingMobileMoneyHint": {
     "description": "Bloc expéditeur en attente de paiement mobile money du talon (billet_talon.dart)"
@@ -9429,6 +9433,10 @@
   "paymentDeclined": "Paiement refusé",
   "@paymentDeclined": {
     "description": "Libellé générique de PaymentSheetFailureReason.declined (dony_payment_sheet.dart), affiché quand providerMessage est absent."
+  },
+  "paymentSheetOpenFailed": "Le paiement n'a pas pu s'ouvrir. Réessayez.",
+  "@paymentSheetOpenFailed": {
+    "description": "Libellé de PaymentSheetFailureReason.sheetUnavailable (dony_payment_sheet.dart) : la feuille Stripe/PayPal n'a pas pu s'ouvrir (erreur locale du SDK, FLUTTER-CJ), distinct d'un refus de carte."
   },
   "paymentMethodsSemantics": "Carte, {wallet}, PayPal",
   "@paymentMethodsSemantics": {

@@ -142,11 +142,17 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
       _ephemeralKeyFuture = null; // ne pas mémoïser un échec
       throw const _EphemeralKeyUnavailableException();
     }
-    await _gateway.initPaymentSheet(
-      clientSecret: config.clientSecret,
-      customerId: ephemeralKey.customerId,
-      customerEphemeralKeySecret: ephemeralKey.ephemeralKeySecret,
-    );
+    try {
+      await _gateway.initPaymentSheet(
+        clientSecret: config.clientSecret,
+        customerId: ephemeralKey.customerId,
+        customerEphemeralKeySecret: ephemeralKey.ephemeralKeySecret,
+      );
+    } on PaymentConfirmationException catch (e) {
+      // Rien n'a encore été montré ni saisi : ce n'est pas un refus de la
+      // carte, la feuille n'a pas pu s'ouvrir (FLUTTER-CJ).
+      throw _SheetOpenFailedException(e);
+    }
     await _gateway.presentPaymentSheet();
   });
 
@@ -177,15 +183,18 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         ),
       );
       emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
+    } on _SheetOpenFailedException catch (e, stackTrace) {
+      _reportStripeFailure(
+        e.cause,
+        stackTrace,
+        method,
+        operation: 'payment.stripe_init',
+      );
+      emit(_failureFor(e.cause, ready, opening: true));
+      emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
     } on PaymentConfirmationException catch (e, stackTrace) {
       _reportStripeFailure(e, stackTrace, method);
-      emit(
-        PaymentSheetFailure(
-          reason: PaymentSheetFailureReason.declined,
-          providerMessage: e.message,
-          ready: ready,
-        ),
-      );
+      emit(_failureFor(e, ready));
       emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
     } catch (error, stackTrace) {
       // Dernier filet : une erreur non mappée par le gateway n'a pas de
@@ -208,6 +217,30 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     }
   }
 
+  /// Classe un échec Stripe pour l'utilisateur. Seul un vrai refus carte
+  /// (`card_error`) montre le message du fournisseur ; une erreur locale du
+  /// SDK (sans type Stripe, ex. « FragmentManager has been destroyed ») ou
+  /// survenue à l'ouverture devient [PaymentSheetFailureReason.sheetUnavailable],
+  /// le reste [PaymentSheetFailureReason.generic]. Une exception construite
+  /// par l'app (hors SDK) garde son message et la raison `declined`.
+  static PaymentSheetFailure _failureFor(
+    PaymentConfirmationException e,
+    PaymentSheetResolved ready, {
+    bool opening = false,
+  }) {
+    if (!e.isFromStripe || e.isCardError) {
+      return PaymentSheetFailure(
+        reason: PaymentSheetFailureReason.declined,
+        providerMessage: e.message,
+        ready: ready,
+      );
+    }
+    final reason = opening || e.stripeErrorType == null
+        ? PaymentSheetFailureReason.sheetUnavailable
+        : PaymentSheetFailureReason.generic;
+    return PaymentSheetFailure(reason: reason, ready: ready);
+  }
+
   /// Remonte à Sentry un échec Stripe (hors annulation, déjà mappée en
   /// [PaymentCancelledException]) avec les codes du SDK : l'utilisateur ne
   /// voit qu'un message générique, et sans cette trace un refus de carte
@@ -215,14 +248,15 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   void _reportStripeFailure(
     PaymentConfirmationException e,
     StackTrace stackTrace,
-    PaymentMethodKind method,
-  ) {
+    PaymentMethodKind method, {
+    String operation = 'payment.stripe_confirm',
+  }) {
     if (!e.isFromStripe) return;
     final message = e.stripeMessage;
     unawaited(
       _errorReporter?.report(
         e,
-        operation: 'payment.stripe_confirm',
+        operation: operation,
         stackTrace: stackTrace,
         context: {
           'feature': 'payments',
@@ -253,4 +287,13 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
 /// [PaymentSheetFailureReason.cardUnavailable] plutôt que `declined`.
 class _EphemeralKeyUnavailableException implements Exception {
   const _EphemeralKeyUnavailableException();
+}
+
+/// Marqueur interne : `initPaymentSheet` a échoué, avant tout affichage.
+/// Distingue, dans [PaymentSheetBloc._confirm], une feuille qui n'a pas pu
+/// s'ouvrir d'un refus de paiement (FLUTTER-CJ).
+class _SheetOpenFailedException implements Exception {
+  const _SheetOpenFailedException(this.cause);
+
+  final PaymentConfirmationException cause;
 }

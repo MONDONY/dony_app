@@ -15,6 +15,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_bloc_observer.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/core/services/stripe_reattach_listener.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/app_update/data/services/app_update_service.dart';
@@ -110,6 +111,12 @@ Future<void> _bootstrap() async {
   // Retour de redirection PayPal vers l'app (scheme déjà déclaré natif).
   Stripe.urlScheme = 'yadony';
   await Stripe.instance.applySettings();
+  // Android : réinitialise Stripe à chaque activité recréée sur le moteur en
+  // cache (FLUTTER-CJ). Voir StripeReattachListener.
+  StripeReattachListener(
+    onError: (error, stackTrace) =>
+        Sentry.captureException(error, stackTrace: stackTrace),
+  ).start();
 
   await setupDependencies(apiBaseUrl: kApiBaseUrl);
   // Hive doit être ouvert avant runApp : AppPreferencesBloc accède à

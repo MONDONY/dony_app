@@ -83,13 +83,36 @@ Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
 void main() {
   // ── Sender dispatch ─────────────────────────────────────────────────────────
 
-  testWidgets('sender + PENDING → placeholder, pas de bande de suivi', (
+  testWidgets('sender + PENDING cash → placeholder, pas de bande de suivi', (
     tester,
   ) async {
-    await _pump(tester, _bid(status: 'PENDING'), true);
+    await _pump(
+      tester,
+      _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash),
+      true,
+    );
     expect(find.textContaining('En attente de confirmation'), findsOneWidget);
     expect(find.text('N° DE SUIVI'), findsNothing);
   });
+
+  testWidgets(
+    'sender + PENDING carte (pas encore payé) → « En attente de votre '
+    'paiement », jamais « en attente du voyageur » (FLUTTER-G7)',
+    (tester) async {
+      await _pump(tester, _bid(status: 'PENDING'), true);
+      expect(find.text('En attente de votre paiement'), findsOneWidget);
+      expect(find.textContaining('En attente de confirmation'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'sender + PAYMENT_ESCROWED carte (payé) → en attente du voyageur',
+    (tester) async {
+      await _pump(tester, _bid(status: 'PAYMENT_ESCROWED'), true);
+      expect(find.textContaining('En attente de confirmation'), findsOneWidget);
+      expect(find.text('En attente de votre paiement'), findsNothing);
+    },
+  );
 
   testWidgets('sender + HANDED_OVER sans confirmationCode → bouton QR seul', (
     tester,

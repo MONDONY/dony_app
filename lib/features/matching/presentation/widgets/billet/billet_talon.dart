@@ -65,6 +65,12 @@ class BilletTalon extends StatelessWidget {
     // ── Sender dispatch ───────────────────────────────────────────────────────
     if (isSender) {
       return switch (status) {
+        // Carte : PENDING = colis créé mais pas encore payé (le paiement
+        // le fait passer en PAYMENT_ESCROWED). Le voyageur ne peut l'accepter
+        // qu'une fois payé (BidService.doAcceptBid) : c'est à l'expéditeur
+        // d'agir, « en attente du voyageur » était faux (FLUTTER-G7).
+        'PENDING' when bid.paymentMethod == BidPaymentMethod.stripe =>
+          const _PendingPlaceholder(awaitingMyPayment: true),
         'PENDING' || 'PAYMENT_ESCROWED' => const _PendingPlaceholder(),
         // Offre mobile money acceptée par le voyageur : c'est à l'expéditeur
         // de payer (30 min), via « Payer par mobile money » dans la barre
@@ -404,9 +410,12 @@ class _TravelerScanStepsButton extends StatelessWidget {
   }
 }
 
-/// sender / PENDING — Hourglass + "En attente de confirmation du voyageur".
+/// sender / PENDING — Hourglass + "En attente de confirmation du voyageur",
+/// ou "En attente de votre paiement" pour un colis carte pas encore payé.
 class _PendingPlaceholder extends StatelessWidget {
-  const _PendingPlaceholder();
+  const _PendingPlaceholder({this.awaitingMyPayment = false});
+
+  final bool awaitingMyPayment;
 
   @override
   Widget build(BuildContext context) {
@@ -419,7 +428,9 @@ class _PendingPlaceholder extends StatelessWidget {
         DonyIcon('hourglass', size: 32, color: cs.onSurfaceVariant),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          context.l10n.ticketAwaitingTravelerConfirmation,
+          awaitingMyPayment
+              ? context.l10n.ticketAwaitingSenderCardPayment
+              : context.l10n.ticketAwaitingTravelerConfirmation,
           textAlign: TextAlign.center,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
