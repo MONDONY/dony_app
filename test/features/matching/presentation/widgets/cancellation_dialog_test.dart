@@ -94,8 +94,11 @@ void main() {
 
       expect(find.textContaining('restituer'), findsOneWidget);
       expect(find.textContaining('code de retour'), findsOneWidget);
-      // Disclaimer espèces : aucun mouvement d'argent.
-      expect(find.textContaining("aucun mouvement d'argent"), findsOneWidget);
+      // Disclaimer espèces : rien à payer, commission recréditée.
+      expect(
+        find.textContaining('commission Yadony est recréditée'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('does NOT show warning box when isInTransit is false', (

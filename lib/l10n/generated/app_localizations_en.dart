@@ -290,7 +290,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorCountryLockedMessage =>
-      'You can\'t change your country of residence: a parcel is in progress, your wallet isn\'t empty, or your payment account is already set up. Contact support to have it changed.';
+      'You can\'t change your country of residence: your payment account has already been created in this country and can\'t be moved. Contact support to have it changed.';
 
   @override
   String get errorCountryUnsupportedTitle => 'Country not served';
@@ -8424,7 +8424,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidCancelWarningRefundNote =>
-      'The sender will be fully refunded. If the payment was in cash, no money changes hands.';
+      'The sender will be fully refunded. If the payment was in cash, the sender owes nothing and the Yadony commission is credited back to the traveler.';
 
   @override
   String get bidCancelReasonRequiredHint => 'Reason for cancellation *';
@@ -12440,7 +12440,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prefsCountryLockedSubtitle =>
-      'Locked: a shipment is in progress, your wallet isn\'t empty or your payment account has been created';
+      'Locked: your payment account has already been created in this country';
 
   @override
   String get prefsCountryLockedSupportCta => 'Contact support';
