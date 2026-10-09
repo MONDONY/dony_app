@@ -113,6 +113,8 @@ const _sameInBothLanguages = <String>{
   'travelerContactInAppMessage', // « Message » se dit pareil
   'authEmailStepLabel', // « Email » se dit pareil
   'authOnboardingDestinationsEyebrow', // « Destinations » se dit pareil
+  'negotiationParcelSheetPhotos', // « Photos » se dit pareil
+  'negotiationParcelSheetDescription', // « Description » se dit pareil
   // Noms propres identiques en français et en anglais.
   'countryNameFr',
   'countryNameLu',

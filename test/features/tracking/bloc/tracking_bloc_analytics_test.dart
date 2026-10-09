@@ -1,6 +1,7 @@
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +32,39 @@ void main() {
     a.onConfigured();
     return TrackingBloc(repo, offlineSync, a);
   }
+
+  group('TrackingRefreshCodeRequested analytics (FLUTTER-G1)', () {
+    test(
+      'régénération réussie → pickup_code_regenerated avec after_block',
+      () async {
+        when(() => repo.refreshCode('bid1')).thenAnswer(
+          (_) async =>
+              (code: '123456', expiresAt: null, publicPageVisible: false),
+        );
+        final bloc = makeBloc();
+        bloc.add(TrackingRefreshCodeRequested('bid1', afterBlock: true));
+        await bloc.stream.firstWhere((s) => s is TrackingConfirmCodeLoaded);
+
+        verify(
+          () => backend.capture(
+            AnalyticsEvents.pickupCodeRegenerated,
+            any(that: containsPair('after_block', true)),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('régénération en échec → aucun événement', () async {
+      when(() => repo.refreshCode('bid1')).thenThrow(Exception('boom'));
+      final bloc = makeBloc();
+      bloc.add(TrackingRefreshCodeRequested('bid1'));
+      await bloc.stream.firstWhere((s) => s is TrackingRefreshCodeError);
+
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.pickupCodeRegenerated, any()),
+      );
+    });
+  });
 
   group('QrScanSubmitRequested analytics', () {
     // NOTE: In unit tests, Connectivity() uses a platform channel that is not

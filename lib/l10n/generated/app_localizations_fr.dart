@@ -5261,6 +5261,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingBidStatusPending => 'Demande en attente';
 
   @override
+  String get listingBidStatusOfferSent => 'Offre envoyée';
+
+  @override
   String get listingYourTripPill => 'Votre trajet';
 
   @override
@@ -5825,6 +5828,29 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationThreadParcelSectionTitle => 'Le colis';
+
+  @override
+  String get negotiationThreadViewParcel => 'Voir le colis';
+
+  @override
+  String get negotiationParcelSheetCategory => 'Catégorie';
+
+  @override
+  String get negotiationParcelSheetWeight => 'Poids';
+
+  @override
+  String get negotiationParcelSheetItems => 'Articles';
+
+  @override
+  String get negotiationParcelSheetPhotos => 'Photos';
+
+  @override
+  String get negotiationParcelSheetDescription => 'Description';
+
+  @override
+  String negotiationParcelPhotoSemantics(int index) {
+    return 'Agrandir la photo $index du colis';
+  }
 
   @override
   String get negotiationThreadExchangesTitle => 'Échanges';
@@ -7700,6 +7726,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ticketRequestClosedMessage => 'Cette demande est terminée.';
+
+  @override
+  String get ticketHandoverDeadlineExpiredTitle =>
+      'Date limite de dépôt passée';
+
+  @override
+  String get ticketHandoverDeadlineExpiredSender =>
+      'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.';
+
+  @override
+  String get ticketHandoverDeadlineExpiredTraveler =>
+      'La date limite de dépôt est passée : demande annulée.';
 
   @override
   String get ticketMiniStatWeightLabel => 'POIDS';
@@ -15288,7 +15326,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorHandoverDeadlinePassedMessage =>
-      'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.';
+      'La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.';
 
   @override
   String get bidDetailSectionRequest => 'DEMANDE';
@@ -17295,6 +17333,44 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get negotiationWithdrawOfferLockedExplanation =>
       'L\'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.';
+
+  @override
+  String get ticketBlockedCodeTitle => 'Code de retrait bloqué';
+
+  @override
+  String get ticketBlockedCodeMessage =>
+      'Le code précédent a été bloqué après trop d\'essais incorrects du voyageur. Générez-en un nouveau, puis transmettez-le à votre destinataire.';
+
+  @override
+  String get ticketGenerateNewCodeButton => 'Générer un nouveau code';
+
+  @override
+  String get bidDetailSenderCodeBlockedNote =>
+      'Le code de retrait a été bloqué : générez-en un nouveau sur votre billet.';
+
+  @override
+  String get recipientNotifyCodeBlockedHint =>
+      'Générez d\'abord un nouveau code de retrait pour l\'ajouter au message.';
+
+  @override
+  String get errorCodeBlockedTitle => 'Code bloqué';
+
+  @override
+  String get errorCodeBlockedMessage =>
+      'Ce code n\'est plus valide après trop d\'essais. Demandez à l\'expéditeur d\'en générer un nouveau dans l\'app.';
+
+  @override
+  String get tripDraftSavedTitle => 'Brouillon enregistré';
+
+  @override
+  String get tripDraftSavedSubtitle =>
+      'Votre trajet n\'est pas encore en ligne. Publiez-le depuis vos brouillons quand vous êtes prêt.';
+
+  @override
+  String get tripDraftSavedViewDraftsCta => 'Voir mes brouillons';
+
+  @override
+  String get tripDraftSavedViewDraftCta => 'Voir ce brouillon';
 
   @override
   String get tripStopsLabel => 'Escales (facultatif)';

@@ -136,7 +136,8 @@ class RouteBottomSheet extends StatelessWidget {
                       buildWhen: (prev, curr) =>
                           curr is BidListLoaded || prev is BidListLoaded,
                       builder: (context, bidState) {
-                        final activeBids = bidState.activeBidsByAnnouncement();
+                        final activeBids = bidState
+                            .existingTripBidsByAnnouncement();
                         return ListView.separated(
                           // Le SDK annonce `scrollCacheExtent` en remplacement,
                           // mais le type ScrollCacheExtent n'est pas encore
@@ -172,7 +173,7 @@ class RouteBottomSheet extends StatelessWidget {
                                   ? () {
                                       ctx.pop();
                                       context.push(
-                                        '/bids/${existingBid.id}',
+                                        existingTripBidRoute(existingBid),
                                         extra: existingBid,
                                       );
                                     }

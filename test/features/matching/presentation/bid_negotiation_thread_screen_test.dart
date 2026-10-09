@@ -20,6 +20,7 @@ import 'package:dony/features/matching/presentation/screens/bid_negotiation_thre
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -80,6 +81,7 @@ BidNegotiation _thread({
   String status = 'NEGOTIATING',
   BidPaymentMethod? paymentMethod,
   int round = 1,
+  String? counterpartyId,
   List<BidNegotiationMessage> messages = const [
     BidNegotiationMessage(
       id: 'm1',
@@ -117,6 +119,7 @@ BidNegotiation _thread({
   ],
   photoUrls: const ['https://example.test/photo-1.jpg'],
   counterpartyName: 'Mamadou Diallo',
+  counterpartyId: counterpartyId,
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   messages: messages,
@@ -352,6 +355,125 @@ void main() {
     expect(find.text('Deux paires de chaussures'), findsOneWidget);
     expect(find.byKey(const Key('nego-photo-0')), findsOneWidget);
     expect(find.text('Je propose 42 euros pour le tout.'), findsOneWidget);
+  });
+
+  // ── FLUTTER-G8 / G9 ───────────────────────────────────────────────────────
+
+  /// Écran sur un routeur qui connaît le profil public : on vérifie la route
+  /// ouverte et l'utilisateur transmis.
+  Future<Object?> pumpWithProfileRoute(
+    WidgetTester tester,
+    BidNegotiation thread,
+  ) async {
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    whenListen(
+      bloc,
+      const Stream<BidNegotiationState>.empty(),
+      initialState: BidNegotiationLoaded(thread),
+    );
+    await tester.pumpWidget(
+      BlocProvider<BidNegotiationBloc>.value(
+        value: bloc,
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
+          routerConfig: GoRouter(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (_, _) =>
+                    const BidNegotiationThreadScreen(bidId: 'bid1'),
+              ),
+              GoRoute(
+                path: '/profile/public',
+                builder: (_, state) => Scaffold(
+                  key: const Key('profile-public-route'),
+                  body: Text(
+                    (state.extra as ProfilePublicArgs?)?.userId ?? 'aucun',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump(_kSettle);
+    return null;
+  }
+
+  testWidgets('G8 : la carte du trajet ouvre le profil public de l autre '
+      'partie', (tester) async {
+    await pumpWithProfileRoute(
+      tester,
+      _thread(netEur: 37, counterpartyId: 'user-42'),
+    );
+
+    await tester.tap(find.byKey(const Key('nego-trip-context-open-profile')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('profile-public-route')), findsOneWidget);
+    expect(find.text('user-42'), findsOneWidget);
+  });
+
+  testWidgets('G8 : sans identifiant (ancien serveur), la carte reste inerte', (
+    tester,
+  ) async {
+    await pumpWithProfileRoute(tester, _thread(netEur: 37));
+
+    expect(find.byKey(const Key('nego-trip-context')), findsOneWidget);
+    expect(
+      find.byKey(const Key('nego-trip-context-open-profile')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('G9 : une photo du colis s ouvre en plein ecran', (tester) async {
+    await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
+
+    await tester.tap(find.byKey(const Key('nego-photo-0')));
+    await tester.pump(_kSettle);
+
+    expect(find.byType(InteractiveViewer), findsOneWidget);
+  });
+
+  testWidgets('G9 : « Voir le colis » ouvre la fiche detaillee', (
+    tester,
+  ) async {
+    await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
+
+    await tester.tap(find.byKey(const Key('nego-view-parcel')));
+    await tester.pump(_kSettle);
+
+    final sheet = find.byKey(const Key('nego-parcel-sheet'));
+    expect(sheet, findsOneWidget);
+    expect(
+      find.descendant(of: sheet, matching: find.text('Catégorie')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('3 kg')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('Carton moyen')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: sheet,
+        matching: find.text('Deux paires de chaussures'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('nego-sheet-photo-0')), findsOneWidget);
   });
 
   testWidgets('les trois actions sont la quand c est mon tour', (tester) async {

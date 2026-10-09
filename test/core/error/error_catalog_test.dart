@@ -1312,6 +1312,7 @@ void main() {
       'code-not-generated',
       'code-expired',
       'code-incorrect',
+      'code-blocked',
       'trip-not-departed',
     ];
 
@@ -1349,6 +1350,23 @@ void main() {
         'Delivery can only be confirmed once the trip has departed. '
         'Please try again after the trip.',
       );
+    });
+
+    // FLUTTER-G1 : le voyageur doit savoir que seul l'expéditeur débloque,
+    // et non « patienter » comme pour too-many-attempts (OTP).
+    test('code-blocked : demander un nouveau code à l\'expéditeur (FR/EN)', () {
+      final fr = ErrorCatalog.lookup(
+        const ValidationException('x', code: 'code-blocked'),
+      );
+      expect(fr.title, 'Code bloqué');
+      expect(fr.message, contains("l'expéditeur"));
+      expect(fr.message, isNot(contains('Patientez')));
+      final en = ErrorCatalog.lookup(
+        const ValidationException('x', code: 'code-blocked'),
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.title, 'Code blocked');
+      expect(en.message, contains('sender'));
     });
 
     test('distinct de code-incorrect (rien à corriger dans le code)', () {

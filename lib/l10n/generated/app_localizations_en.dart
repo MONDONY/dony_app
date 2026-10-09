@@ -5234,6 +5234,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingBidStatusPending => 'Request pending';
 
   @override
+  String get listingBidStatusOfferSent => 'Offer sent';
+
+  @override
   String get listingYourTripPill => 'Your trip';
 
   @override
@@ -5797,6 +5800,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get negotiationThreadParcelSectionTitle => 'The parcel';
+
+  @override
+  String get negotiationThreadViewParcel => 'View the parcel';
+
+  @override
+  String get negotiationParcelSheetCategory => 'Category';
+
+  @override
+  String get negotiationParcelSheetWeight => 'Weight';
+
+  @override
+  String get negotiationParcelSheetItems => 'Items';
+
+  @override
+  String get negotiationParcelSheetPhotos => 'Photos';
+
+  @override
+  String get negotiationParcelSheetDescription => 'Description';
+
+  @override
+  String negotiationParcelPhotoSemantics(int index) {
+    return 'Enlarge parcel photo $index';
+  }
 
   @override
   String get negotiationThreadExchangesTitle => 'Exchanges';
@@ -7654,6 +7680,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ticketRequestClosedMessage => 'This request is closed.';
+
+  @override
+  String get ticketHandoverDeadlineExpiredTitle => 'Drop-off deadline passed';
+
+  @override
+  String get ticketHandoverDeadlineExpiredSender =>
+      'The drop-off deadline has passed: request cancelled. Any payment is refunded to you in full.';
+
+  @override
+  String get ticketHandoverDeadlineExpiredTraveler =>
+      'The drop-off deadline has passed: request cancelled.';
 
   @override
   String get ticketMiniStatWeightLabel => 'WEIGHT';
@@ -15194,7 +15231,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorHandoverDeadlinePassedMessage =>
-      'The drop-off deadline for this trip has passed. It no longer takes new parcels.';
+      'The drop-off deadline for this trip has passed. The request can no longer be accepted, paid or renegotiated.';
 
   @override
   String get bidDetailSectionRequest => 'REQUEST';
@@ -17183,6 +17220,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get negotiationWithdrawOfferLockedExplanation =>
       'The sender has accepted your offer: you can no longer withdraw it during their payment window.';
+
+  @override
+  String get ticketBlockedCodeTitle => 'Pickup code blocked';
+
+  @override
+  String get ticketBlockedCodeMessage =>
+      'The previous code was blocked after too many wrong tries by the traveler. Generate a new one, then share it with your recipient.';
+
+  @override
+  String get ticketGenerateNewCodeButton => 'Generate a new code';
+
+  @override
+  String get bidDetailSenderCodeBlockedNote =>
+      'The pickup code was blocked: generate a new one on your ticket.';
+
+  @override
+  String get recipientNotifyCodeBlockedHint =>
+      'Generate a new pickup code first to add it to the message.';
+
+  @override
+  String get errorCodeBlockedTitle => 'Code blocked';
+
+  @override
+  String get errorCodeBlockedMessage =>
+      'This code is no longer valid after too many tries. Ask the sender to generate a new one in the app.';
+
+  @override
+  String get tripDraftSavedTitle => 'Draft saved';
+
+  @override
+  String get tripDraftSavedSubtitle =>
+      'Your trip is not online yet. Publish it from your drafts when you\'re ready.';
+
+  @override
+  String get tripDraftSavedViewDraftsCta => 'View my drafts';
+
+  @override
+  String get tripDraftSavedViewDraftCta => 'View this draft';
 
   @override
   String get tripStopsLabel => 'Stops (optional)';

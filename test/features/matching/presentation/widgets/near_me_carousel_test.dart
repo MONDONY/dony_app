@@ -99,6 +99,10 @@ Widget _wrap(
         path: '/bids/:id',
         builder: (_, _) => const Scaffold(key: Key('bids-route')),
       ),
+      GoRoute(
+        path: '/bids/:id/negotiation',
+        builder: (_, _) => const Scaffold(key: Key('negotiation-route')),
+      ),
     ],
   );
 
@@ -378,4 +382,31 @@ void main() {
     expect(find.text('See the 2 listings'), findsOneWidget);
     expect(find.text('Voir les 2 annonces'), findsNothing);
   });
+
+  testWidgets(
+    'FLUTTER-GC — offre de prix ouverte : chip « Offre envoyée » et tap vers le fil',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          NearMeCarousel(
+            announcements: [_ann('a1')],
+            userPosition: null,
+            onSeeAll: () {},
+          ),
+          bidState: BidListLoaded(
+            const [],
+            openNegotiations: [
+              _bid(id: 'nego-1', announcementId: 'a1', status: 'NEGOTIATING'),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Offre envoyée'), findsOneWidget);
+      await tester.tap(find.byType(TravelerCard));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('negotiation-route')), findsOneWidget);
+    },
+  );
 }

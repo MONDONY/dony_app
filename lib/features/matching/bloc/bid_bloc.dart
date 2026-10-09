@@ -23,12 +23,34 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   /// ils fixent ici leur ensemble pour ne plus recharger tout l'historique.
   Set<String>? myListStatuses;
 
+  /// Charge aussi les offres de prix ouvertes, rangées dans
+  /// [BidListLoaded.openNegotiations] et jamais dans les colis : l'instance
+  /// globale (accueil, feuilles de trajet) marque « Offre envoyée » sur la carte
+  /// du trajet (FLUTTER-GC). N'a d'effet qu'avec [myListStatuses].
+  bool includeOpenNegotiations = false;
+
   Future<List<BidModel>> _loadMyBids() {
     final statuses = myListStatuses;
     return statuses == null
         ? _repository.getMyBids()
-        : _repository.getMyBidsFiltered(statuses: statuses);
+        : _repository.getMyBidsFiltered(
+            statuses: statuses,
+            includeNegotiating: includeOpenNegotiations,
+          );
   }
+
+  /// Sépare les offres ouvertes des colis : un écran qui lit [BidListLoaded.bids]
+  /// ne voit jamais une discussion de prix.
+  BidListLoaded _myList(List<BidModel> all) => BidListLoaded(
+    [
+      for (final b in all)
+        if (b.status != kNegotiatingBidStatus) b,
+    ],
+    openNegotiations: [
+      for (final b in all)
+        if (b.status == kNegotiatingBidStatus) b,
+    ],
+  );
 
   BidBloc(this._repository, this._analytics) : super(BidInitial()) {
     on<BidCheckoutRequested>(_onCheckoutRequested);
@@ -244,7 +266,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     emit(BidLoading());
     try {
       final bids = await _loadMyBids();
-      emit(BidListLoaded(bids));
+      emit(_myList(bids));
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }
@@ -269,23 +291,36 @@ class BidBloc extends Bloc<BidEvent, BidState> {
           current.bids,
           fetchedAt: current.fetchedAt,
           isRefreshing: true,
+          openNegotiations: current.openNegotiations,
         ),
       );
       try {
         final bids = await _loadMyBids();
-        emit(BidListLoaded(bids));
+        emit(_myList(bids));
       } on DioException catch (_) {
         // On garde les anciennes données en cas d'erreur réseau
-        emit(BidListLoaded(current.bids, fetchedAt: current.fetchedAt));
+        emit(
+          BidListLoaded(
+            current.bids,
+            fetchedAt: current.fetchedAt,
+            openNegotiations: current.openNegotiations,
+          ),
+        );
       } catch (_) {
-        emit(BidListLoaded(current.bids, fetchedAt: current.fetchedAt));
+        emit(
+          BidListLoaded(
+            current.bids,
+            fetchedAt: current.fetchedAt,
+            openNegotiations: current.openNegotiations,
+          ),
+        );
       }
     } else {
       // Pas encore de données → chargement initial normal
       emit(BidLoading());
       try {
         final bids = await _loadMyBids();
-        emit(BidListLoaded(bids));
+        emit(_myList(bids));
       } catch (e) {
         emit(BidError(unwrapDioError(e)));
       }

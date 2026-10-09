@@ -363,10 +363,12 @@ class _DonyAppState extends State<DonyApp> {
                   create: (_) => getIt<AnnouncementBloc>(),
                 ),
                 // Instance globale : l'accueil et les feuilles de trajet ne
-                // cherchent qu'un colis en cours par trajet, pas l'historique.
+                // cherchent qu'un colis en cours par trajet, pas l'historique,
+                // et l'offre de prix déjà envoyée (« Offre envoyée »).
                 BlocProvider<BidBloc>(
                   create: (_) => getIt<BidBloc>()
-                    ..myListStatuses = MyActiveBidsLookup.ongoingBidStatuses,
+                    ..myListStatuses = MyActiveBidsLookup.ongoingBidStatuses
+                    ..includeOpenNegotiations = true,
                 ),
                 BlocProvider<PaymentBloc>(create: (_) => getIt<PaymentBloc>()),
                 BlocProvider<NotificationBloc>(

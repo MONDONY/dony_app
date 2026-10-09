@@ -1458,6 +1458,7 @@
   "listingBidStatusOnTrip": "Parcel on this trip",
   "listingBidStatusArrived": "Arrived",
   "listingBidStatusPending": "Request pending",
+  "listingBidStatusOfferSent": "Offer sent",
   "listingYourTripPill": "Your trip",
   "listingProBadge": "PRO",
   "listingNoTravelersNearbyTitle": "No travelers nearby",
@@ -2050,6 +2051,13 @@
   "@negotiationThreadParcelSectionTitle": {
     "description": "Titre de la section récapitulatif du colis (bid_negotiation_thread_screen.dart)"
   },
+  "negotiationThreadViewParcel": "View the parcel",
+  "negotiationParcelSheetCategory": "Category",
+  "negotiationParcelSheetWeight": "Weight",
+  "negotiationParcelSheetItems": "Items",
+  "negotiationParcelSheetPhotos": "Photos",
+  "negotiationParcelSheetDescription": "Description",
+  "negotiationParcelPhotoSemantics": "Enlarge parcel photo {index}",
   "negotiationThreadExchangesTitle": "Exchanges",
   "@negotiationThreadExchangesTitle": {
     "description": "Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)"
@@ -4010,6 +4018,9 @@
   "ticketTravelerAwaitingPayment": "Waiting for the sender's payment",
   "ticketParcelDeliveredLabel": "Parcel delivered",
   "ticketRequestClosedMessage": "This request is closed.",
+  "ticketHandoverDeadlineExpiredTitle": "Drop-off deadline passed",
+  "ticketHandoverDeadlineExpiredSender": "The drop-off deadline has passed: request cancelled. Any payment is refunded to you in full.",
+  "ticketHandoverDeadlineExpiredTraveler": "The drop-off deadline has passed: request cancelled.",
   "ticketMiniStatWeightLabel": "WEIGHT",
   "ticketMiniStatCategoryLabel": "TYPE",
   "ticketPickupCodeSectionLabel": "PICKUP CODE",
@@ -8465,7 +8476,7 @@
   "@errorHandoverDeadlinePassedTitle": {
     "description": "Titre de l'erreur handover-deadline-passed (409) : trajet parti ou date limite de remise atteinte"
   },
-  "errorHandoverDeadlinePassedMessage": "The drop-off deadline for this trip has passed. It no longer takes new parcels.",
+  "errorHandoverDeadlinePassedMessage": "The drop-off deadline for this trip has passed. The request can no longer be accepted, paid or renegotiated.",
   "@errorHandoverDeadlinePassedMessage": {
     "description": "Message de l'erreur handover-deadline-passed (409)"
   },
@@ -9366,6 +9377,17 @@
   "errorOfferNoLongerPayableMessage": "The traveler withdrew their offer or the payment window has ended. The negotiation has been updated.",
   "negotiationWithdrawOfferLockedButton": "Withdraw my offer",
   "negotiationWithdrawOfferLockedExplanation": "The sender has accepted your offer: you can no longer withdraw it during their payment window.",
+  "ticketBlockedCodeTitle": "Pickup code blocked",
+  "ticketBlockedCodeMessage": "The previous code was blocked after too many wrong tries by the traveler. Generate a new one, then share it with your recipient.",
+  "ticketGenerateNewCodeButton": "Generate a new code",
+  "bidDetailSenderCodeBlockedNote": "The pickup code was blocked: generate a new one on your ticket.",
+  "recipientNotifyCodeBlockedHint": "Generate a new pickup code first to add it to the message.",
+  "errorCodeBlockedTitle": "Code blocked",
+  "errorCodeBlockedMessage": "This code is no longer valid after too many tries. Ask the sender to generate a new one in the app.",
+  "tripDraftSavedTitle": "Draft saved",
+  "tripDraftSavedSubtitle": "Your trip is not online yet. Publish it from your drafts when you're ready.",
+  "tripDraftSavedViewDraftsCta": "View my drafts",
+  "tripDraftSavedViewDraftCta": "View this draft",
   "tripStopsLabel": "Stops (optional)",
   "tripStopsHint": "Add it if you know it: senders will see it on your trip.",
   "tripStopsDirect": "Direct",

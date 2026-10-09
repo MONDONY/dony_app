@@ -189,7 +189,11 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
         title: l.bidDetailSenderArrivedTitle,
         // Le texte lui-même vit dans ArrivalInstructionsCard, juste dessous :
         // le répéter ici le dédoublait.
-        subtitle: hasInstructions
+        subtitle: bid.needsNewPickupCode
+            // FLUTTER-G1 : sans code, le destinataire ne peut pas retirer le
+            // colis ; c'est l'information qui prime à l'arrivée.
+            ? l.bidDetailSenderCodeBlockedNote
+            : hasInstructions
             ? l.bidDetailSenderArrivedSubtitleSeeInstructions
             : l.bidDetailSenderArrivedSubtitleDefault,
       );
@@ -281,6 +285,10 @@ String _buildInTransitSubtitle(BuildContext context, BidModel bid) {
     // Pas de mention « à qui » ici : l'instruction de transmission fait
     // autorité sur le talon (carte « CODE DE RETRAIT »), juste au-dessus.
     return '$timePart ${l.bidDetailSenderInTransitTicketNote}';
+  }
+  if (bid.needsNewPickupCode) {
+    // FLUTTER-G1 : le code a été bloqué, le talon propose d'en générer un.
+    return '$timePart ${l.bidDetailSenderCodeBlockedNote}';
   }
   return timePart;
 }

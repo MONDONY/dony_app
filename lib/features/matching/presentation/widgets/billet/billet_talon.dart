@@ -7,6 +7,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/talon_blocked_code_block.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -91,13 +92,23 @@ class BilletTalon extends StatelessWidget {
             Expanded(child: _RetraitTalonButton(bid: bid)),
           ],
         ),
-        // Code pas encore disponible → bouton QR seul, pleine largeur.
-        'HANDED_OVER' ||
-        'IN_TRANSIT' ||
-        'ARRIVED' => _QrTalonButton(bid: bid, compact: true),
+        // Colis remis sans code : le serveur l'a effacé après trois essais
+        // faux du voyageur, ou à l'expiration (FLUTTER-G1). Le QR seul
+        // laissait le colis inconfirmable : l'expéditeur peut en générer un
+        // nouveau ici.
+        'HANDED_OVER' || 'IN_TRANSIT' || 'ARRIVED' => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _QrTalonButton(bid: bid, compact: true),
+            const SizedBox(height: DonySpacing.sm),
+            TalonBlockedCodeBlock(bidId: bid.id),
+          ],
+        ),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
         'CANCELLED' => _CancelledBlock(bid: bid, isSender: true),
         'REJECTED' => _RejectedBlock(bid: bid, isSender: true),
+        'EXPIRED' when bid.isExpiredAtHandoverDeadline =>
+          const _HandoverDeadlineExpiredBlock(isSender: true),
         _ => const SizedBox.shrink(),
       };
     }
@@ -123,6 +134,8 @@ class BilletTalon extends StatelessWidget {
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
       'CANCELLED' => _CancelledBlock(bid: bid, isSender: false),
       'REJECTED' => _RejectedBlock(bid: bid, isSender: false),
+      'EXPIRED' when bid.isExpiredAtHandoverDeadline =>
+        const _HandoverDeadlineExpiredBlock(isSender: false),
       _ => const SizedBox.shrink(),
     };
   }
@@ -534,6 +547,48 @@ class _TerminalBlock extends StatelessWidget {
         context.l10n.ticketRequestClosedMessage,
         textAlign: TextAlign.center,
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+      ),
+    );
+  }
+}
+
+/// any / EXPIRED à la date limite de dépôt (FLUTTER-GA) : la demande, jamais
+/// acceptée, a été annulée automatiquement par le serveur. L'expéditeur lit
+/// qu'il est remboursé intégralement (Yadony ne retient jamais rien).
+class _HandoverDeadlineExpiredBlock extends StatelessWidget {
+  final bool isSender;
+
+  const _HandoverDeadlineExpiredBlock({required this.isSender});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return Padding(
+      key: const Key('billet-handover-deadline-expired'),
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+      child: Column(
+        children: [
+          DonyIcon('calendar-x', size: 22, color: cs.onSurfaceVariant),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            l.ticketHandoverDeadlineExpiredTitle,
+            textAlign: TextAlign.center,
+            style: tt.titleSmall?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            isSender
+                ? l.ticketHandoverDeadlineExpiredSender
+                : l.ticketHandoverDeadlineExpiredTraveler,
+            textAlign: TextAlign.center,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
       ),
     );
   }

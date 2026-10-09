@@ -63,6 +63,36 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // FLUTTER-FG : signets, pastille et liste doivent dire la même chose. Les
+    // ids affichés comme favoris dérivent aussi des listes chargées ici.
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<FavoriteTripsCubit, FavoriteTripsState>(
+          listenWhen: (_, c) =>
+              c is FavoriteTripsLoaded || c is FavoriteTripsEmpty,
+          listener: (context, state) =>
+              context.read<FavoriteIdsCubit>().syncTripsFromList(
+                state is FavoriteTripsLoaded
+                    ? state.trips.map((t) => t.id)
+                    : const <String>[],
+              ),
+        ),
+        BlocListener<FavoriteRequestsCubit, FavoriteRequestsState>(
+          listenWhen: (_, c) =>
+              c is FavoriteRequestsLoaded || c is FavoriteRequestsEmpty,
+          listener: (context, state) =>
+              context.read<FavoriteIdsCubit>().syncRequestsFromList(
+                state is FavoriteRequestsLoaded
+                    ? state.requests.map((r) => r.id)
+                    : const <String>[],
+              ),
+        ),
+      ],
+      child: _buildScaffold(context),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
         final isTraveler = _isTravelerCapable(authState);

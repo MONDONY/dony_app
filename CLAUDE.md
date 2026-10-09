@@ -477,6 +477,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `bid_qr_sheet_opened` | QrSheet ouverte depuis le détail d'envoi (propriété `status`) |
 | `bid_qr_downloaded` | Tap « Enregistrer » ou « Partager » dans la QrSheet |
 | `bid_retrait_code_opened` | RetraitCodeSheet ouverte depuis le talon (propriété `status`) |
+| `pickup_code_regenerated` | TrackingBloc._onRefreshCodeRequested() réussi (propriété `after_block` : depuis le talon « Code de retrait bloqué », FLUTTER-G1) |
 | `bid_photo_added` | BidPhotosCubit.add() — photo de colis uploadée à la création de l'offre |
 | `bid_photo_removed` | BidPhotosCubit.remove() — photo retirée avant soumission |
 | `bid_photos_viewed` | BidPhotoViewerModal.initState — ouverture de la visionneuse (propriété `photo_count`) |

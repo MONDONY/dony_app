@@ -86,10 +86,12 @@ class BidRepository {
     required Set<String> statuses,
     String? announcementId,
     int maxPages = 10,
+    bool includeNegotiating = false,
   }) => _datasource.getMyBidsFiltered(
     statuses: statuses,
     announcementId: announcementId,
     maxPages: maxPages,
+    includeNegotiating: includeNegotiating,
   );
 
   /// Numéro de la contrepartie, récupéré au moment de l'appel téléphonique.

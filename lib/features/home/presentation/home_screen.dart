@@ -1205,9 +1205,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
       return;
     }
     final bidState = context.read<BidBloc>().state;
-    final existingBid = bidState.activeBidsByAnnouncement()[a.id];
+    final existingBid = bidState.existingTripBidsByAnnouncement()[a.id];
     if (existingBid != null) {
-      context.push('/bids/${existingBid.id}', extra: existingBid);
+      context.push(existingTripBidRoute(existingBid), extra: existingBid);
     } else {
       showTravelerAnnouncementSheet(context, announcement: a);
     }
@@ -2425,7 +2425,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 curr is BidListLoaded || prev is BidListLoaded,
                             builder: (context, bidState) {
                               final myActiveBidsByAnnouncement = bidState
-                                  .activeBidsByAnnouncement();
+                                  .existingTripBidsByAnnouncement();
                               return SliverList.separated(
                                 itemCount: count,
                                 separatorBuilder: (_, _) =>
@@ -2474,7 +2474,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         : existingBid != null
                                         ? () async {
                                             await context.push(
-                                              '/bids/${existingBid.id}',
+                                              existingTripBidRoute(existingBid),
                                               extra: existingBid,
                                             );
                                             if (!context.mounted) {

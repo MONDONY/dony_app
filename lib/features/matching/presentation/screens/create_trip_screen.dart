@@ -1632,6 +1632,42 @@ class _TripFormContentState extends State<_TripFormContent> {
     DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
   }
 
+  /// Écran de succès d'un trajet enregistré en brouillon (FLUTTER-FW).
+  ///
+  /// Même mécanique de pops que l'écran « Trajet publié » : le GoRouter est
+  /// capturé AVANT de fermer l'écran de succès puis le formulaire (contrat
+  /// `pop(true)` intact pour les appelants).
+  Future<void> _showDraftSaved(
+    BuildContext context,
+    AnnouncementModel announcement,
+  ) {
+    return Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (routeContext) => DonySuccessScreen(
+          key: const Key('trip-draft-saved'),
+          mascotteType: DonyMascotteType.succes,
+          title: routeContext.l10n.tripDraftSavedTitle,
+          subtitle: routeContext.l10n.tripDraftSavedSubtitle,
+          ctaLabel: routeContext.l10n.tripDraftSavedViewDraftsCta,
+          onCta: () {
+            final router = GoRouter.of(routeContext);
+            Navigator.of(routeContext).pop();
+            Navigator.of(context).pop(true);
+            router.push('/announcements/trips?filter=draft');
+          },
+          analyticsContext: 'trip_draft_saved',
+          secondaryLabel: routeContext.l10n.tripDraftSavedViewDraftCta,
+          onSecondary: () {
+            final router = GoRouter.of(routeContext);
+            Navigator.of(routeContext).pop();
+            Navigator.of(context).pop(true);
+            router.push('/announcements/${announcement.id}/trip');
+          },
+        ),
+      ),
+    );
+  }
+
   Future<void> _selectDate() async {
     final cs = Theme.of(context).colorScheme;
     final today = DateTime.now();
@@ -1816,6 +1852,13 @@ class _TripFormContentState extends State<_TripFormContent> {
                 ? state.announcement
                 : (state as AnnouncementUpdated).announcement;
             final isEdit = state is AnnouncementUpdated;
+            // Brouillon (FLUTTER-FW) : « Trajet publié ! … est en ligne » était
+            // faux, le trajet n'est visible de personne. Le statut renvoyé par
+            // le serveur fait foi, pas l'intention du bouton.
+            if (!isEdit && announcement.status == 'DRAFT') {
+              unawaited(_showDraftSaved(context, announcement));
+              return;
+            }
             final stripe = context.read<StripeAccountBloc>().state;
             final needsPayouts =
                 !isEdit &&

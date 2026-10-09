@@ -175,7 +175,8 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                 buildWhen: (prev, curr) =>
                     curr is BidListLoaded || prev is BidListLoaded,
                 builder: (context, bidState) {
-                  final existingBid = bidState.activeBidsByAnnouncement()[a.id];
+                  final existingBid = bidState
+                      .existingTripBidsByAnnouncement()[a.id];
                   return Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: DonySpacing.sm,
@@ -193,7 +194,7 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                             ? null
                             : existingBid != null
                             ? () => context.push(
-                                '/bids/${existingBid.id}',
+                                existingTripBidRoute(existingBid),
                                 extra: existingBid,
                               )
                             : () {

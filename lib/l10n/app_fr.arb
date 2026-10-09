@@ -4665,6 +4665,10 @@
   "@listingBidStatusPending": {
     "description": "Chip de statut d'une demande en attente sur une carte voyageur (traveler_card.dart)"
   },
+  "listingBidStatusOfferSent": "Offre envoyée",
+  "@listingBidStatusOfferSent": {
+    "description": "Chip d'une offre de prix encore ouverte (NEGOTIATING) sur une carte voyageur (traveler_card.dart, FLUTTER-GC)"
+  },
   "listingYourTripPill": "Votre trajet",
   "@listingYourTripPill": {
     "description": "Pill signalant que l'annonce appartient au voyageur courant (traveler_card.dart)"
@@ -5390,6 +5394,35 @@
   "negotiationThreadParcelSectionTitle": "Le colis",
   "@negotiationThreadParcelSectionTitle": {
     "description": "Titre de la section récapitulatif du colis (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadViewParcel": "Voir le colis",
+  "@negotiationThreadViewParcel": {
+    "description": "Ligne du récapitulatif du fil de négociation qui ouvre la fiche détaillée du colis (bid_negotiation_thread_screen.dart, FLUTTER-G9)"
+  },
+  "negotiationParcelSheetCategory": "Catégorie",
+  "@negotiationParcelSheetCategory": {
+    "description": "Libellé de la catégorie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelSheetWeight": "Poids",
+  "@negotiationParcelSheetWeight": {
+    "description": "Libellé du poids dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelSheetItems": "Articles",
+  "@negotiationParcelSheetItems": {
+    "description": "Titre de la liste des articles (grille et articles libres) dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelSheetPhotos": "Photos",
+  "@negotiationParcelSheetPhotos": {
+    "description": "Titre de la galerie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelSheetDescription": "Description",
+  "@negotiationParcelSheetDescription": {
+    "description": "Titre de la description dans la fiche du colis (bid_negotiation_parcel_sheet.dart)"
+  },
+  "negotiationParcelPhotoSemantics": "Agrandir la photo {index} du colis",
+  "@negotiationParcelPhotoSemantics": {
+    "description": "Nom accessible d'une vignette photo du colis qui l'ouvre en plein écran (bid_negotiation_thread_screen.dart, bid_negotiation_parcel_sheet.dart)",
+    "placeholders": {"index": {"type": "int"}}
   },
   "negotiationThreadExchangesTitle": "Échanges",
   "@negotiationThreadExchangesTitle": {
@@ -7854,6 +7887,18 @@
   "ticketRequestClosedMessage": "Cette demande est terminée.",
   "@ticketRequestClosedMessage": {
     "description": "Message terminal REJECTED/CANCELLED du talon (billet_talon.dart)"
+  },
+  "ticketHandoverDeadlineExpiredTitle": "Date limite de dépôt passée",
+  "@ticketHandoverDeadlineExpiredTitle": {
+    "description": "Titre du bloc talon d'une demande EXPIRED pour date limite de dépôt passée (billet_talon.dart, FLUTTER-GA)"
+  },
+  "ticketHandoverDeadlineExpiredSender": "La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.",
+  "@ticketHandoverDeadlineExpiredSender": {
+    "description": "Message expéditeur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)"
+  },
+  "ticketHandoverDeadlineExpiredTraveler": "La date limite de dépôt est passée : demande annulée.",
+  "@ticketHandoverDeadlineExpiredTraveler": {
+    "description": "Message voyageur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)"
   },
   "ticketMiniStatWeightLabel": "POIDS",
   "@ticketMiniStatWeightLabel": {
@@ -17408,7 +17453,7 @@
   "@errorHandoverDeadlinePassedTitle": {
     "description": "Titre de l'erreur handover-deadline-passed (409) : trajet parti ou date limite de remise atteinte"
   },
-  "errorHandoverDeadlinePassedMessage": "La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.",
+  "errorHandoverDeadlinePassedMessage": "La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.",
   "@errorHandoverDeadlinePassedMessage": {
     "description": "Message de l'erreur handover-deadline-passed (409)"
   },
@@ -19488,6 +19533,28 @@
   "@negotiationWithdrawOfferLockedButton": {"description": "Bouton désactivé côté voyageur pendant l'attente du paiement de l'expéditeur (FLUTTER-F9)."},
   "negotiationWithdrawOfferLockedExplanation": "L'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.",
   "@negotiationWithdrawOfferLockedExplanation": {"description": "Explication sous le bouton « Retirer mon offre » désactivé (FLUTTER-F9)."},
+  "ticketBlockedCodeTitle": "Code de retrait bloqué",
+  "@ticketBlockedCodeTitle": {"description": "Titre du talon expéditeur quand le code de retrait a été effacé après trop d'essais (talon_blocked_code_block.dart, FLUTTER-G1)."},
+  "ticketBlockedCodeMessage": "Le code précédent a été bloqué après trop d'essais incorrects du voyageur. Générez-en un nouveau, puis transmettez-le à votre destinataire.",
+  "@ticketBlockedCodeMessage": {"description": "Explication du talon « Code de retrait bloqué » (FLUTTER-G1)."},
+  "ticketGenerateNewCodeButton": "Générer un nouveau code",
+  "@ticketGenerateNewCodeButton": {"description": "Bouton du talon « Code de retrait bloqué » : régénère le code (FLUTTER-G1)."},
+  "bidDetailSenderCodeBlockedNote": "Le code de retrait a été bloqué : générez-en un nouveau sur votre billet.",
+  "@bidDetailSenderCodeBlockedNote": {"description": "Note du hero expéditeur quand le colis est remis sans code (sender_hero_card.dart, FLUTTER-G1)."},
+  "recipientNotifyCodeBlockedHint": "Générez d'abord un nouveau code de retrait pour l'ajouter au message.",
+  "@recipientNotifyCodeBlockedHint": {"description": "Encart « Prévenir le destinataire » quand le code est bloqué (FLUTTER-G1)."},
+  "errorCodeBlockedTitle": "Code bloqué",
+  "@errorCodeBlockedTitle": {"description": "Erreur code-blocked : code de retrait bloqué après trop d'essais (FLUTTER-G1)."},
+  "errorCodeBlockedMessage": "Ce code n'est plus valide après trop d'essais. Demandez à l'expéditeur d'en générer un nouveau dans l'app.",
+  "@errorCodeBlockedMessage": {"description": "Erreur code-blocked, côté voyageur (FLUTTER-G1)."},
+  "tripDraftSavedTitle": "Brouillon enregistré",
+  "@tripDraftSavedTitle": {"description": "Titre de l'écran succès après enregistrement d'un trajet en brouillon (create_trip_screen.dart, FLUTTER-FW)."},
+  "tripDraftSavedSubtitle": "Votre trajet n'est pas encore en ligne. Publiez-le depuis vos brouillons quand vous êtes prêt.",
+  "@tripDraftSavedSubtitle": {"description": "Sous-titre de l'écran succès brouillon de trajet (FLUTTER-FW)."},
+  "tripDraftSavedViewDraftsCta": "Voir mes brouillons",
+  "@tripDraftSavedViewDraftsCta": {"description": "CTA principal : ouvre Mes trajets filtré sur les brouillons (FLUTTER-FW)."},
+  "tripDraftSavedViewDraftCta": "Voir ce brouillon",
+  "@tripDraftSavedViewDraftCta": {"description": "CTA secondaire : ouvre le brouillon enregistré (FLUTTER-FW)."},
   "tripStopsLabel": "Escales (facultatif)",
   "@tripStopsLabel": {"description": "Création de trajet : choix du nombre d'escales d'un vol (FLUTTER-GE)"},
   "tripStopsHint": "Indiquez-le si vous le savez : les expéditeurs le verront sur votre trajet.",

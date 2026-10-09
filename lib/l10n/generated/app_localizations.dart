@@ -8744,6 +8744,12 @@ abstract class AppLocalizations {
   /// **'Demande en attente'**
   String get listingBidStatusPending;
 
+  /// Chip d'une offre de prix encore ouverte (NEGOTIATING) sur une carte voyageur (traveler_card.dart, FLUTTER-GC)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre envoyée'**
+  String get listingBidStatusOfferSent;
+
   /// Pill signalant que l'annonce appartient au voyageur courant (traveler_card.dart)
   ///
   /// In fr, this message translates to:
@@ -9623,6 +9629,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le colis'**
   String get negotiationThreadParcelSectionTitle;
+
+  /// Ligne du récapitulatif du fil de négociation qui ouvre la fiche détaillée du colis (bid_negotiation_thread_screen.dart, FLUTTER-G9)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le colis'**
+  String get negotiationThreadViewParcel;
+
+  /// Libellé de la catégorie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie'**
+  String get negotiationParcelSheetCategory;
+
+  /// Libellé du poids dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get negotiationParcelSheetWeight;
+
+  /// Titre de la liste des articles (grille et articles libres) dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Articles'**
+  String get negotiationParcelSheetItems;
+
+  /// Titre de la galerie dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Photos'**
+  String get negotiationParcelSheetPhotos;
+
+  /// Titre de la description dans la fiche du colis (bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get negotiationParcelSheetDescription;
+
+  /// Nom accessible d'une vignette photo du colis qui l'ouvre en plein écran (bid_negotiation_thread_screen.dart, bid_negotiation_parcel_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Agrandir la photo {index} du colis'**
+  String negotiationParcelPhotoSemantics(int index);
 
   /// Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)
   ///
@@ -12754,6 +12802,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cette demande est terminée.'**
   String get ticketRequestClosedMessage;
+
+  /// Titre du bloc talon d'une demande EXPIRED pour date limite de dépôt passée (billet_talon.dart, FLUTTER-GA)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date limite de dépôt passée'**
+  String get ticketHandoverDeadlineExpiredTitle;
+
+  /// Message expéditeur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt est passée : demande annulée. Tout paiement vous est remboursé intégralement.'**
+  String get ticketHandoverDeadlineExpiredSender;
+
+  /// Message voyageur du talon, demande annulée à la date limite de dépôt (billet_talon.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt est passée : demande annulée.'**
+  String get ticketHandoverDeadlineExpiredTraveler;
 
   /// Libellé de la mini-stat poids du talon voyageur, casse conservée telle quelle dans le code source (billet_talon.dart)
   ///
@@ -25139,7 +25205,7 @@ abstract class AppLocalizations {
   /// Message de l'erreur handover-deadline-passed (409)
   ///
   /// In fr, this message translates to:
-  /// **'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.'**
+  /// **'La date limite de remise des colis de ce trajet est passée. La demande ne peut plus être acceptée, payée ni renégociée.'**
   String get errorHandoverDeadlinePassedMessage;
 
   /// Plus de détails d'une demande (details_accordion.dart)
@@ -28327,6 +28393,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'expéditeur a accepté votre offre : vous ne pouvez plus la retirer pendant son délai de paiement.'**
   String get negotiationWithdrawOfferLockedExplanation;
+
+  /// Titre du talon expéditeur quand le code de retrait a été effacé après trop d'essais (talon_blocked_code_block.dart, FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de retrait bloqué'**
+  String get ticketBlockedCodeTitle;
+
+  /// Explication du talon « Code de retrait bloqué » (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code précédent a été bloqué après trop d\'essais incorrects du voyageur. Générez-en un nouveau, puis transmettez-le à votre destinataire.'**
+  String get ticketBlockedCodeMessage;
+
+  /// Bouton du talon « Code de retrait bloqué » : régénère le code (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Générer un nouveau code'**
+  String get ticketGenerateNewCodeButton;
+
+  /// Note du hero expéditeur quand le colis est remis sans code (sender_hero_card.dart, FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait a été bloqué : générez-en un nouveau sur votre billet.'**
+  String get bidDetailSenderCodeBlockedNote;
+
+  /// Encart « Prévenir le destinataire » quand le code est bloqué (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Générez d\'abord un nouveau code de retrait pour l\'ajouter au message.'**
+  String get recipientNotifyCodeBlockedHint;
+
+  /// Erreur code-blocked : code de retrait bloqué après trop d'essais (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code bloqué'**
+  String get errorCodeBlockedTitle;
+
+  /// Erreur code-blocked, côté voyageur (FLUTTER-G1).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code n\'est plus valide après trop d\'essais. Demandez à l\'expéditeur d\'en générer un nouveau dans l\'app.'**
+  String get errorCodeBlockedMessage;
+
+  /// Titre de l'écran succès après enregistrement d'un trajet en brouillon (create_trip_screen.dart, FLUTTER-FW).
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillon enregistré'**
+  String get tripDraftSavedTitle;
+
+  /// Sous-titre de l'écran succès brouillon de trajet (FLUTTER-FW).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre trajet n\'est pas encore en ligne. Publiez-le depuis vos brouillons quand vous êtes prêt.'**
+  String get tripDraftSavedSubtitle;
+
+  /// CTA principal : ouvre Mes trajets filtré sur les brouillons (FLUTTER-FW).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes brouillons'**
+  String get tripDraftSavedViewDraftsCta;
+
+  /// CTA secondaire : ouvre le brouillon enregistré (FLUTTER-FW).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir ce brouillon'**
+  String get tripDraftSavedViewDraftCta;
 
   /// Création de trajet : choix du nombre d'escales d'un vol (FLUTTER-GE)
   ///

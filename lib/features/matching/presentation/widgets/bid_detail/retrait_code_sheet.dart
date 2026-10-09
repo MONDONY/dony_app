@@ -27,6 +27,15 @@ abstract final class RetraitCodeSheet {
     TrackingBloc? trackingBloc,
     BidBloc? bidBloc,
   }) async {
+    // Sans code (effacé après trois essais faux du voyageur ou à
+    // l'expiration), le `!` faisait planter la feuille (FLUTTER-G1). Rien à
+    // afficher : c'est le talon « Code de retrait bloqué » qui propose d'en
+    // générer un nouveau.
+    final code = bid.confirmationCode;
+    if (code == null || code.isEmpty) {
+      return;
+    }
+
     // Haptic feedback best-effort (non-blocking)
     unawaited(HapticFeedback.lightImpact().catchError((_) {}));
 
@@ -56,7 +65,7 @@ abstract final class RetraitCodeSheet {
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
         child: TalonRetraitCodeView(
           bidId: bid.id,
-          initialCode: bid.confirmationCode!,
+          initialCode: code,
           initialPublicPageVisible: bid.confirmationCodePublicEnabled,
           refreshCount: bid.confirmationCodeRefreshCount,
           refreshWindowStart: bid.confirmationCodeRefreshWindowStart,

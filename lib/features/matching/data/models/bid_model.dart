@@ -97,6 +97,10 @@ enum BidPricingMode {
   mixed,
 }
 
+/// Statut d'une offre de prix encore ouverte : ce n'est pas un colis, elle ne
+/// revient de `GET /bids/me` que sur demande (`includeNegotiating`, FLUTTER-GC).
+const kNegotiatingBidStatus = 'NEGOTIATING';
+
 @JsonSerializable()
 class BidModel {
   final String id;
@@ -400,6 +404,13 @@ class BidModel {
 
   bool get isSkeleton => senderId.isEmpty;
 
+  /// Colis remis au voyageur mais sans code de retrait : le serveur l'a effacé
+  /// après trois essais faux ou à l'expiration (FLUTTER-G1). Seul l'expéditeur
+  /// peut en générer un nouveau (`POST /tracking/{bidId}/refresh-code`).
+  bool get needsNewPickupCode =>
+      (confirmationCode == null || confirmationCode!.isEmpty) &&
+      const {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'}.contains(status);
+
   /// Colis carte créé mais pas encore payé : c'est l'expéditeur qui doit agir.
   /// Le paiement le fait passer en PAYMENT_ESCROWED, et le voyageur ne peut
   /// l'accepter qu'après (BidService.doAcceptBid). Source unique pour le
@@ -409,6 +420,11 @@ class BidModel {
 
   /// Le colis a été restitué (le voyageur a saisi le code de retour).
   bool get isParcelReturned => returnedAt != null;
+
+  /// Demande annulée automatiquement à la date limite de dépôt du trajet
+  /// (FLUTTER-GA, `rejectionReason == HANDOVER_DEADLINE_PASSED`).
+  bool get isExpiredAtHandoverDeadline =>
+      status == 'EXPIRED' && rejectionReason == 'HANDOVER_DEADLINE_PASSED';
 
   /// Annulation après remise en attente de restitution : un délai de retour existe
   /// et le colis n'a pas encore été rendu.

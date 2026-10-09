@@ -323,6 +323,7 @@ AnnouncementModel _makeAnnouncement() => AnnouncementModel(
 AnnouncementModel _makeFullAnnouncement({
   TripStops? stops,
   String currency = 'EUR',
+  String status = 'ACTIVE',
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
     BidPaymentMethod.stripe,
     BidPaymentMethod.cash,
@@ -339,7 +340,7 @@ AnnouncementModel _makeFullAnnouncement({
   availableKg: 10.0,
   totalKg: 23.0,
   pricePerKg: 8.0,
-  status: 'ACTIVE',
+  status: status,
   bidsCount: 0,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
@@ -1625,8 +1626,9 @@ void main() {
     /// configurer les paiements quand le compte Stripe reste à faire.
     Future<void> emitCreated(
       WidgetTester tester,
-      ConnectAccountStatus stripeStatus,
-    ) async {
+      ConnectAccountStatus stripeStatus, {
+      String status = 'ACTIVE',
+    }) async {
       final stripe = _MockStripeAccountBloc();
       when(() => stripe.state).thenReturn(StripeAccountReady(stripeStatus));
       when(() => stripe.stream).thenAnswer((_) => const Stream.empty());
@@ -1642,10 +1644,38 @@ void main() {
       when(() => announcementBloc.stream).thenAnswer((_) => states.stream);
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-      states.add(AnnouncementCreated(_makeFullAnnouncement()));
+      states.add(AnnouncementCreated(_makeFullAnnouncement(status: status)));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
     }
+
+    // FLUTTER-FW : un brouillon n'est visible de personne, « Trajet publié !
+    // … est en ligne » était faux.
+    testWidgets('brouillon : « Brouillon enregistré » + « Voir mes '
+        'brouillons », jamais « publié »', (tester) async {
+      await emitCreated(
+        tester,
+        const ConnectAccountStatus(status: 'NOT_CREATED'),
+        status: 'DRAFT',
+      );
+      expect(find.byKey(const Key('trip-draft-saved')), findsOneWidget);
+      expect(find.text('Brouillon enregistré'), findsOneWidget);
+      expect(find.text('Voir mes brouillons'), findsOneWidget);
+      expect(find.text('Voir ce brouillon'), findsOneWidget);
+      expect(find.textContaining('publié'), findsNothing);
+      expect(find.textContaining('en ligne !'), findsNothing);
+      // Ni partage ni configuration des paiements pour un brouillon.
+      expect(find.byKey(const Key('success-screen-tertiary')), findsNothing);
+    });
+
+    testWidgets('trajet publié : écran « publié » inchangé', (tester) async {
+      await emitCreated(
+        tester,
+        const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+      );
+      expect(find.byKey(const Key('trip-draft-saved')), findsNothing);
+      expect(find.text('Brouillon enregistré'), findsNothing);
+    });
 
     testWidgets('création avec paiements à configurer : bouton « Configurer '
         'mes paiements » sur l\'écran de succès', (tester) async {

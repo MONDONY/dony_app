@@ -114,18 +114,22 @@ void main() {
     },
   );
 
-  testWidgets('sender + HANDED_OVER sans confirmationCode → bouton QR seul', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(status: 'HANDED_OVER'), true);
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
-      findsOneWidget,
-    );
-    expect(find.textContaining('QR du colis'), findsOneWidget);
-    // Pas de bouton code de retrait tant que le code n'existe pas.
-    expect(find.text('Code de retrait'), findsNothing);
-  });
+  testWidgets(
+    'sender + HANDED_OVER sans confirmationCode → QR + « Générer un nouveau code »',
+    (tester) async {
+      await _pump(tester, _bid(status: 'HANDED_OVER'), true);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('QR du colis'), findsOneWidget);
+      // Pas de bouton « Code de retrait » sans code : le talon propose d'en
+      // générer un nouveau (code bloqué après trois essais, FLUTTER-G1).
+      expect(find.text('Code de retrait'), findsNothing);
+      expect(find.text('Code de retrait bloqué'), findsOneWidget);
+      expect(find.text('Générer un nouveau code'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'sender + HANDED_OVER avec confirmationCode → boutons QR + Code de retrait',
@@ -149,16 +153,18 @@ void main() {
     },
   );
 
-  testWidgets('sender + IN_TRANSIT sans confirmationCode → bouton QR seul', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
-      findsOneWidget,
-    );
-    expect(find.text('Code de retrait'), findsNothing);
-  });
+  testWidgets(
+    'sender + IN_TRANSIT sans confirmationCode → QR + « Générer un nouveau code »',
+    (tester) async {
+      await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
+        findsOneWidget,
+      );
+      expect(find.text('Code de retrait'), findsNothing);
+      expect(find.byKey(const Key('talon-generate-new-code')), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'sender + IN_TRANSIT avec confirmationCode → boutons QR + Code de retrait',
@@ -211,12 +217,118 @@ void main() {
     },
   );
 
-  testWidgets('sender + ARRIVED sans confirmationCode → bouton QR seul', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(status: 'ARRIVED'), true);
-    expect(find.textContaining('QR du colis'), findsOneWidget);
-    expect(find.text('Code de retrait'), findsNothing);
+  testWidgets(
+    'sender + ARRIVED sans confirmationCode → QR + « Générer un nouveau code »',
+    (tester) async {
+      await _pump(tester, _bid(status: 'ARRIVED'), true);
+      expect(find.textContaining('QR du colis'), findsOneWidget);
+      expect(find.text('Code de retrait'), findsNothing);
+      expect(find.byKey(const Key('talon-generate-new-code')), findsOneWidget);
+    },
+  );
+
+  // ── Code de retrait bloqué (FLUTTER-G1) ────────────────────────────────────
+
+  group('code bloqué', () {
+    late _MockTrackingBloc tracking;
+    late _MockBidBloc bidBloc;
+
+    setUpAll(() {
+      registerFallbackValue(TrackingRefreshCodeRequested('x'));
+      registerFallbackValue(BidDetailRequested('x'));
+    });
+
+    Future<void> pumpBlocked(
+      WidgetTester tester, {
+      TrackingState? initial,
+      Stream<TrackingState>? stream,
+      bool isSender = true,
+      String? code,
+    }) async {
+      tracking = _MockTrackingBloc();
+      bidBloc = _MockBidBloc();
+      when(() => bidBloc.state).thenReturn(BidInitial());
+      if (stream != null) {
+        whenListen(
+          tracking,
+          stream,
+          initialState: initial ?? TrackingInitial(),
+        );
+      } else {
+        when(() => tracking.state).thenReturn(initial ?? TrackingInitial());
+      }
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: MultiBlocProvider(
+              providers: [
+                BlocProvider<TrackingBloc>.value(value: tracking),
+                BlocProvider<BidBloc>.value(value: bidBloc),
+              ],
+              child: BilletTalon(
+                bid: _bid(status: 'IN_TRANSIT', confirmationCode: code),
+                isSender: isSender,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('le bouton régénère le code, marqué « après blocage »', (
+      tester,
+    ) async {
+      await pumpBlocked(tester);
+      expect(find.textContaining("trop d'essais incorrects"), findsOneWidget);
+      await tester.tap(find.byKey(const Key('talon-generate-new-code')));
+      await tester.pump();
+
+      final captured =
+          verify(() => tracking.add(captureAny())).captured.single
+              as TrackingRefreshCodeRequested;
+      expect(captured.bidId, 'bid-1');
+      expect(captured.afterBlock, isTrue);
+    });
+
+    testWidgets('nouveau code reçu → recharge le colis', (tester) async {
+      await pumpBlocked(
+        tester,
+        stream: Stream.value(TrackingConfirmCodeLoaded('123456')),
+      );
+      await tester.pump();
+
+      final captured =
+          verify(() => bidBloc.add(captureAny())).captured.single
+              as BidDetailRequested;
+      expect(captured.bidId, 'bid-1');
+    });
+
+    testWidgets('pendant la régénération, le bouton ne relance rien', (
+      tester,
+    ) async {
+      await pumpBlocked(tester, initial: TrackingRefreshCodeLoading());
+      await tester.tap(
+        find.byKey(const Key('talon-generate-new-code')),
+        warnIfMissed: false,
+      );
+      await tester.pump();
+      verifyNever(() => tracking.add(any()));
+    });
+
+    testWidgets('le voyageur ne voit jamais le bouton de régénération', (
+      tester,
+    ) async {
+      await pumpBlocked(tester, isSender: false);
+      expect(find.byKey(const Key('talon-generate-new-code')), findsNothing);
+    });
+
+    testWidgets('avec un code, pas de bloc « code bloqué »', (tester) async {
+      await pumpBlocked(tester, code: '4729');
+      expect(find.byKey(const Key('talon-blocked-code')), findsNothing);
+      expect(find.text('Code de retrait'), findsOneWidget);
+    });
   });
 
   testWidgets('sender + COMPLETED → bloc vert "Colis livré"', (tester) async {
@@ -786,5 +898,63 @@ void main() {
         expect(find.text('TRACKING NUMBER'), findsOneWidget);
       },
     );
+  });
+
+  group('EXPIRED à la date limite de dépôt (FLUTTER-GA)', () {
+    testWidgets('expéditeur : annulée et remboursée intégralement', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(status: 'EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
+        true,
+      );
+      expect(
+        find.byKey(const Key('billet-handover-deadline-expired')),
+        findsOneWidget,
+      );
+      expect(find.text('Date limite de dépôt passée'), findsOneWidget);
+      expect(
+        find.text(
+          'La date limite de dépôt est passée : demande annulée. '
+          'Tout paiement vous est remboursé intégralement.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('voyageur : demande annulée, sans mention de paiement', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(status: 'EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
+        false,
+      );
+      expect(
+        find.text('La date limite de dépôt est passée : demande annulée.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('EXPIRED au départ du voyageur : talon inchangé (vide)', (
+      tester,
+    ) async {
+      await _pump(tester, _bid(status: 'EXPIRED'), true);
+      expect(
+        find.byKey(const Key('billet-handover-deadline-expired')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('en anglais : sender + date limite passée', (tester) async {
+      useEnglish();
+      await _pump(
+        tester,
+        _bid(status: 'EXPIRED', rejectionReason: 'HANDOVER_DEADLINE_PASSED'),
+        true,
+      );
+      expect(find.text('Drop-off deadline passed'), findsOneWidget);
+    });
   });
 }
