@@ -98,11 +98,28 @@ class _AnnouncementSheetHostState extends State<_AnnouncementSheetHost> {
     // une seconde feuille s'empilerait sur la première.
     if (_ouverte || !mounted) return;
     _ouverte = true;
-    await showTravelerAnnouncementSheet(
+    // Capturé avant la fermeture : survit au retrait de cette page.
+    final rootCtx = Navigator.of(context, rootNavigator: true).context;
+    final exit = await showTravelerAnnouncementSheet(
       context,
       announcement: widget.announcement,
+      returnsNavigation: true,
     );
-    if (mounted) context.pop();
+    if (!mounted) return;
+    switch (exit) {
+      // « Voir mon colis », « Signaler ce trajet » : la destination prend la
+      // place de cette page. Naviguer depuis la feuille puis se refermer
+      // annulait la navigation (FLUTTER-HR).
+      case TravelerSheetRoute(:final location, :final extra):
+        context.pushReplacement(location, extra: extra);
+      // Parcours en feuilles (demande, KYC, connexion) : la page se retire
+      // d'abord, sinon son `pop` fermerait la feuille suivante.
+      case TravelerSheetFollowUp(:final run):
+        context.pop();
+        if (rootCtx.mounted) await run(rootCtx);
+      case null:
+        context.pop();
+    }
   }
 
   @override

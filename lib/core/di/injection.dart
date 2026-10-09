@@ -15,6 +15,7 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/services/media_service.dart';
+import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -1008,8 +1009,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<RatingRepository>(
     () => RatingRepository(getIt<ApiClient>()),
   );
+  // Singleton : une note envoyée depuis n'importe quelle instance de
+  // RatingBloc (invite racine, détail d'un colis, scan) rafraîchit le détail
+  // du colis déjà ouvert (FLUTTER-HQ).
+  getIt.registerLazySingleton<RatingEventsService>(RatingEventsService.new);
   getIt.registerFactory<RatingBloc>(
-    () => RatingBloc(getIt<RatingRepository>(), getIt<AnalyticsService>()),
+    () => RatingBloc(
+      getIt<RatingRepository>(),
+      getIt<AnalyticsService>(),
+      ratingEvents: getIt<RatingEventsService>(),
+    ),
   );
   getIt.registerLazySingleton<MyReviewsBloc>(
     () => MyReviewsBloc(getIt<RatingRepository>(), getIt<AnalyticsService>()),

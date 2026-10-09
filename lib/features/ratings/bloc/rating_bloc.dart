@@ -3,13 +3,19 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RatingBloc extends Bloc<RatingEvent, RatingState> {
-  RatingBloc(this._repository, this._analytics) : super(const RatingInitial()) {
+  RatingBloc(
+    this._repository,
+    this._analytics, {
+    RatingEventsService? ratingEvents,
+  }) : _ratingEvents = ratingEvents,
+       super(const RatingInitial()) {
     on<RatingSubmitRequested>(_onSubmit);
     on<TravelerRatingSubmitRequested>(_onTravelerSubmit);
     on<PendingRatingChecked>(_onPendingChecked);
@@ -18,6 +24,21 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
 
   final RatingRepository _repository;
   final AnalyticsService _analytics;
+
+  /// Signal global « note envoyée (bidId) » : le détail d'un colis ouvert
+  /// avec sa propre instance se relit (FLUTTER-HQ).
+  final RatingEventsService? _ratingEvents;
+
+  /// Échec d'un envoi de note. Un 409 `already-rated` signifie que la note
+  /// existe déjà côté serveur : l'écran du colis doit se relire pour retirer
+  /// le bouton « Noter », l'erreur reste affichée (« Déjà noté »).
+  void _emitSubmitError(String bidId, Object e, Emitter<RatingState> emit) {
+    final error = unwrapDioError(e);
+    if (error is ConflictException && error.code == 'already-rated') {
+      _ratingEvents?.notifyRated(bidId);
+    }
+    emit(RatingError(error));
+  }
 
   Future<void> _onSubmit(
     RatingSubmitRequested event,
@@ -31,6 +52,7 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
         comment: event.comment,
       );
       emit(const RatingSuccess());
+      _ratingEvents?.notifyRated(event.bidId);
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.ratingSubmitted,
@@ -38,7 +60,7 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
         ),
       );
     } catch (e) {
-      emit(RatingError(unwrapDioError(e)));
+      _emitSubmitError(event.bidId, e, emit);
     }
   }
 
@@ -54,6 +76,7 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
         comment: event.comment,
       );
       emit(const RatingSuccess());
+      _ratingEvents?.notifyRated(event.bidId);
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.ratingSubmitted,
@@ -61,7 +84,7 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
         ),
       );
     } catch (e) {
-      emit(RatingError(unwrapDioError(e)));
+      _emitSubmitError(event.bidId, e, emit);
     }
   }
 

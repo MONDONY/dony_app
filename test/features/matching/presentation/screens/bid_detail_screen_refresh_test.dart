@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -19,6 +21,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -27,6 +30,7 @@ import 'package:dony/features/payments/data/repositories/payment_repository.dart
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -36,6 +40,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/mock_analytics_backend.dart';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
@@ -59,6 +65,8 @@ class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
 class _MockPaymentRepository extends Mock implements PaymentRepository {}
+
+class _MockRatingRepository extends Mock implements RatingRepository {}
 
 class _MockNotificationService extends Mock implements NotificationService {}
 
@@ -536,6 +544,160 @@ void main() {
       await _pump(tester, bid: bid, authBloc: senderAuth());
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text(sheetTitle), findsNothing);
+    });
+  });
+
+  group('FLUTTER-HQ — note envoyée depuis une autre instance de RatingBloc', () {
+    const travelerId = 'traveler-001';
+    late RatingEventsService ratingEvents;
+    late _MockRatingRepository ratingRepository;
+    late StreamController<BidState> bidStates;
+    RatingBloc? rootBloc;
+
+    // Instance racine (app.dart), distincte de celle de l'écran : c'est
+    // elle que l'invite automatique de main_shell.dart utilise. Créée dans
+    // le corps du test, pour vivre dans la zone du temps simulé.
+    RatingBloc root() => rootBloc ??= RatingBloc(
+      ratingRepository,
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+      ratingEvents: ratingEvents,
+    );
+
+    BidModel completedBid({
+      bool senderHasRated = false,
+      bool travelerHasRated = false,
+    }) => BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: _kSenderId,
+      travelerId: travelerId,
+      travelerName: 'Moussa',
+      weightKg: 3,
+      status: 'COMPLETED',
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
+      paymentMethod: BidPaymentMethod.cash,
+      senderHasRated: senderHasRated,
+      travelerHasRated: travelerHasRated,
+    );
+
+    /// Le serveur renvoie [fresh] à chaque relecture demandée par l'écran.
+    void serverReturns(BidModel fresh) {
+      when(
+        () => bidBloc.add(any(that: isA<BidDetailRequested>())),
+      ).thenAnswer((_) => bidStates.add(BidDetailLoaded(fresh)));
+    }
+
+    setUp(() {
+      ratingEvents = RatingEventsService();
+      getIt.registerSingleton<RatingEventsService>(ratingEvents);
+      ratingRepository = _MockRatingRepository();
+      bidStates = StreamController<BidState>.broadcast();
+      when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
+      rootBloc = null;
+    });
+
+    tearDown(() async {
+      getIt.unregister<RatingEventsService>();
+      await rootBloc?.close();
+      await bidStates.close();
+      await ratingEvents.dispose();
+    });
+
+    _MockAuthBloc travelerAuth() {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(travelerId)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+      return authBloc;
+    }
+
+    testWidgets(
+      'expéditeur : note via l\'invite racine → « Noter le voyageur » disparaît',
+      (tester) async {
+        serverReturns(completedBid());
+        await _pump(tester, bid: completedBid(), authBloc: senderAuth());
+        await tester.pump();
+        expect(find.text('Noter le voyageur'), findsOneWidget);
+
+        when(
+          () => ratingRepository.submitRating(bidId: 'bid-001', stars: 5),
+        ).thenAnswer((_) async {});
+        serverReturns(completedBid(senderHasRated: true));
+        root().add(const RatingSubmitRequested(bidId: 'bid-001', stars: 5));
+        await tester.pump();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('Noter le voyageur'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'expéditeur : 409 « Déjà noté » → colis relu, le bouton disparaît',
+      (tester) async {
+        serverReturns(completedBid());
+        await _pump(tester, bid: completedBid(), authBloc: senderAuth());
+        await tester.pump();
+        expect(find.text('Noter le voyageur'), findsOneWidget);
+        final before = detailRequests();
+        expect(before, greaterThanOrEqualTo(1));
+
+        when(
+          () => ratingRepository.submitRating(bidId: 'bid-001', stars: 4),
+        ).thenThrow(const ConflictException('Conflict', code: 'already-rated'));
+        serverReturns(completedBid(senderHasRated: true));
+        root().add(const RatingSubmitRequested(bidId: 'bid-001', stars: 4));
+        await tester.pump();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(detailRequests(), 1);
+        expect(find.text('Noter le voyageur'), findsNothing);
+      },
+    );
+
+    testWidgets('voyageur : note de l\'expéditeur via l\'invite racine → '
+        'badge « Évaluation envoyée » affiché', (tester) async {
+      serverReturns(completedBid());
+      await _pump(tester, bid: completedBid(), authBloc: travelerAuth());
+      await tester.pump();
+      expect(find.byType(RatingDoneBadge), findsNothing);
+
+      when(
+        () => ratingRepository.submitTravelerRating(bidId: 'bid-001', stars: 5),
+      ).thenAnswer((_) async {});
+      serverReturns(completedBid(travelerHasRated: true));
+      root().add(
+        const TravelerRatingSubmitRequested(bidId: 'bid-001', stars: 5),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(RatingDoneBadge), findsOneWidget);
+    });
+
+    testWidgets('note d\'un autre colis → aucune relecture', (tester) async {
+      serverReturns(completedBid());
+      await _pump(tester, bid: completedBid(), authBloc: senderAuth());
+      await tester.pump();
+      expect(detailRequests(), greaterThanOrEqualTo(1));
+
+      ratingEvents.notifyRated('bid-999');
+      await tester.pump();
+      noDetailRequest();
+    });
+
+    testWidgets('écran fermé → abonnement au signal annulé', (tester) async {
+      serverReturns(completedBid());
+      await _pump(tester, bid: completedBid(), authBloc: senderAuth());
+      await tester.pumpWidget(const SizedBox());
+      expect(() => ratingEvents.notifyRated('bid-001'), returnsNormally);
+      await tester.pump();
     });
   });
 }
