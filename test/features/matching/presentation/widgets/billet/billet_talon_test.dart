@@ -1,14 +1,18 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
+import 'package:dony/features/tracking/bloc/pickup_code_request_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +25,10 @@ class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+class _MockTrackingRepository extends Mock implements TrackingRepository {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 BidModel _bid({
   required String status,
@@ -35,6 +43,7 @@ BidModel _bid({
   String? tripCancellationId,
   String? tripCancellationRematchStatus,
   String? rejectionReason,
+  bool pickupCodeRenewalNeeded = false,
 }) => BidModel(
   paymentMethod: paymentMethod,
   id: 'bid-1',
@@ -53,6 +62,7 @@ BidModel _bid({
   tripCancellationId: tripCancellationId,
   tripCancellationRematchStatus: tripCancellationRematchStatus,
   rejectionReason: rejectionReason,
+  pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
 );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
@@ -955,6 +965,84 @@ void main() {
         true,
       );
       expect(find.text('Drop-off deadline passed'), findsOneWidget);
+    });
+  });
+
+  // FLUTTER-G2 (back #461) : code de retrait bloqué ou expiré.
+  group('code à renouveler (pickupCodeRenewalNeeded)', () {
+    late _MockTrackingRepository repository;
+
+    setUp(() {
+      repository = _MockTrackingRepository();
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<PickupCodeRequestCubit>(
+        () => PickupCodeRequestCubit(repository, analytics),
+      );
+    });
+
+    tearDown(() => getIt.unregister<PickupCodeRequestCubit>());
+
+    for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('voyageur + $status : bouton « Demander un nouveau code »', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _bid(status: status, pickupCodeRenewalNeeded: true),
+          false,
+        );
+        expect(
+          find.byKey(const Key('talon-code-renewal-request')),
+          findsOneWidget,
+        );
+        expect(find.text('Demander un nouveau code'), findsOneWidget);
+      });
+    }
+
+    testWidgets('voyageur : l\'appui envoie la demande', (tester) async {
+      when(() => repository.requestNewCode('bid-1')).thenAnswer(
+        (_) async => (requestedAt: null, nextRequestAllowedAt: null),
+      );
+      await _pump(
+        tester,
+        _bid(status: 'ARRIVED', pickupCodeRenewalNeeded: true),
+        false,
+      );
+      await tester.ensureVisible(
+        find.byKey(const Key('pickup-code-request-button')),
+      );
+      await tester.tap(find.byKey(const Key('pickup-code-request-button')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      verify(() => repository.requestNewCode('bid-1')).called(1);
+      expect(find.byKey(const Key('pickup-code-request-sent')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('voyageur sans drapeau (back antérieur) : talon inchangé', (
+      tester,
+    ) async {
+      await _pump(tester, _bid(status: 'IN_TRANSIT'), false);
+      expect(find.byKey(const Key('talon-code-renewal-request')), findsNothing);
+    });
+
+    testWidgets('expéditeur, code expiré encore présent : régénération', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'IN_TRANSIT',
+          confirmationCode: '123456',
+          pickupCodeRenewalNeeded: true,
+        ),
+        true,
+      );
+      expect(find.byKey(const Key('talon-blocked-code')), findsOneWidget);
+      expect(find.byKey(const Key('talon-code-renewal-request')), findsNothing);
     });
   });
 }

@@ -17446,4 +17446,59 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripPublishPaymentMethodRequired =>
       'Les espèces sont activées : au moins un moyen de paiement doit rester actif.';
+
+  @override
+  String get pickupCodeRequestButton => 'Demander un nouveau code';
+
+  @override
+  String get pickupCodeRequestSent => 'Demande envoyée à l\'expéditeur';
+
+  @override
+  String get pickupCodeRequestSentHint =>
+      'Il est prévenu par une notification. Vous recevrez le nouveau code par l\'expéditeur ou le destinataire.';
+
+  @override
+  String pickupCodeRequestTooSoon(int minutes) {
+    return 'Demande déjà envoyée, réessayez dans $minutes min';
+  }
+
+  @override
+  String get pickupCodeRequestTooSoonNoDelay =>
+      'Demande déjà envoyée, réessayez dans quelques minutes';
+
+  @override
+  String get travelerPickupCodeRenewalTitle => 'Code de retrait à renouveler';
+
+  @override
+  String get travelerPickupCodeRenewalMessage =>
+      'Le code de retrait a été bloqué ou a expiré. Seul l\'expéditeur peut en générer un nouveau : demandez-le-lui ici.';
+
+  @override
+  String get pickupCodeRenewalSheetTitle =>
+      'Le voyageur demande un nouveau code';
+
+  @override
+  String get pickupCodeRenewalSheetMessage =>
+      'Le code de retrait n\'est plus valide. Générez-en un nouveau, puis transmettez-le à votre destinataire.';
+
+  @override
+  String get errorCodeStillValidTitle => 'Code encore valide';
+
+  @override
+  String get errorCodeStillValidMessage =>
+      'Le code de retrait actuel est encore valide. Demandez-le à l\'expéditeur ou au destinataire.';
+
+  @override
+  String get errorCodeRequestNotAllowedTitle => 'Demande impossible';
+
+  @override
+  String get errorCodeRequestNotAllowedMessage =>
+      'Ce colis n\'attend pas de code de retrait pour le moment.';
+
+  @override
+  String get errorCodeRequestTooSoonTitle => 'Demande déjà envoyée';
+
+  @override
+  String get errorCodeRequestTooSoonMessage =>
+      'L\'expéditeur a déjà été prévenu. Réessayez dans quelques minutes.';
 }

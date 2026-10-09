@@ -244,6 +244,7 @@ import 'package:dony/features/support/bloc/support_summary_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_live_events.dart';
 import 'package:dony/features/support/data/support_repository.dart';
+import 'package:dony/features/tracking/bloc/pickup_code_request_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
@@ -1040,6 +1041,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => TrackingBloc(
       getIt<TrackingRepository>(),
       getIt<OfflineSyncService>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<PickupCodeRequestCubit>(
+    () => PickupCodeRequestCubit(
+      getIt<TrackingRepository>(),
       getIt<AnalyticsService>(),
     ),
   );

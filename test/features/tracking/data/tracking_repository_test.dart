@@ -43,4 +43,47 @@ void main() {
       expect(result.first.eventType, 'DEPART');
     });
   });
+
+  group('requestNewCode', () {
+    test('poste la demande et lit les dates UTC', () async {
+      when(() => dio.post('/tracking/bid-1/request-code')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(),
+          data: {
+            'requestedAt': '2026-10-09T10:00:00Z',
+            'nextRequestAllowedAt': '2026-10-09T10:15:00Z',
+          },
+        ),
+      );
+
+      final result = await repository.requestNewCode('bid-1');
+
+      expect(result.requestedAt, DateTime.utc(2026, 10, 9, 10));
+      expect(result.nextRequestAllowedAt, DateTime.utc(2026, 10, 9, 10, 15));
+    });
+
+    test('dates absentes ou illisibles : null', () async {
+      when(() => dio.post('/tracking/bid-1/request-code')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(),
+          data: {'requestedAt': 'n/a', 'nextRequestAllowedAt': ' '},
+        ),
+      );
+
+      final result = await repository.requestNewCode('bid-1');
+
+      expect(result.requestedAt, isNull);
+      expect(result.nextRequestAllowedAt, isNull);
+    });
+
+    test('corps vide : null', () async {
+      when(
+        () => dio.post('/tracking/bid-1/request-code'),
+      ).thenAnswer((_) async => Response(requestOptions: RequestOptions()));
+
+      final result = await repository.requestNewCode('bid-1');
+
+      expect(result.requestedAt, isNull);
+    });
+  });
 }

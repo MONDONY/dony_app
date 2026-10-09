@@ -163,4 +163,50 @@ void main() {
       expect(BidModel.fromJson(_minimalBid()).senderIncidentCount, isNull);
     });
   });
+
+  group('BidModel.pickupCodeRenewalNeeded (FLUTTER-G2, yadony-back #461)', () {
+    test('absent (back antérieur) : faux', () {
+      expect(BidModel.fromJson(_minimalBid()).pickupCodeRenewalNeeded, isFalse);
+    });
+
+    test('lu et réécrit', () {
+      final model = BidModel.fromJson(
+        _minimalBid()
+          ..['status'] = 'IN_TRANSIT'
+          ..['pickupCodeRenewalNeeded'] = true,
+      );
+      expect(model.pickupCodeRenewalNeeded, isTrue);
+      expect(model.toJson()['pickupCodeRenewalNeeded'], isTrue);
+    });
+
+    test('needsNewPickupCode : drapeau serveur, même avec un code expiré', () {
+      final model = BidModel.fromJson(
+        _minimalBid()
+          ..['status'] = 'IN_TRANSIT'
+          ..['confirmationCode'] = '123456'
+          ..['pickupCodeRenewalNeeded'] = true,
+      );
+      expect(model.needsNewPickupCode, isTrue);
+    });
+
+    test(
+      'needsNewPickupCode : repli sur l\'absence du code (back antérieur)',
+      () {
+        final blocked = BidModel.fromJson(
+          _minimalBid()..['status'] = 'ARRIVED',
+        );
+        final valid = BidModel.fromJson(
+          _minimalBid()
+            ..['status'] = 'ARRIVED'
+            ..['confirmationCode'] = '123456',
+        );
+        final accepted = BidModel.fromJson(
+          _minimalBid()..['status'] = 'ACCEPTED',
+        );
+        expect(blocked.needsNewPickupCode, isTrue);
+        expect(valid.needsNewPickupCode, isFalse);
+        expect(accepted.needsNewPickupCode, isFalse);
+      },
+    );
+  });
 }

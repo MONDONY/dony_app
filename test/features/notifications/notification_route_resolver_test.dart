@@ -630,4 +630,20 @@ void main() {
       expect(resolveNotificationRoute('CALL_MISSED', {}), '/messages');
     });
   });
+
+  // FLUTTER-G2 (back #461) : la demande du voyageur ouvre la fiche du colis
+  // directement sur la régénération du code.
+  test('CONFIRMATION_CODE_REQUESTED ouvre la régénération du code', () {
+    const bidId = '123e4567-e89b-12d3-a456-426614174000';
+    expect(
+      resolveNotificationRoute('CONFIRMATION_CODE_REQUESTED', {'bidId': bidId}),
+      '/bids/$bidId?action=new-code',
+    );
+    expect(
+      resolveNotificationRoute('CONFIRMATION_CODE_REQUESTED', {
+        'bidId': '../admin',
+      }),
+      isNot(contains('admin')),
+    );
+  });
 }

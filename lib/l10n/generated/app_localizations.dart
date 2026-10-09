@@ -28597,6 +28597,96 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les espèces sont activées : au moins un moyen de paiement doit rester actif.'**
   String get tripPublishPaymentMethodRequired;
+
+  /// Bouton voyageur : demande à l'expéditeur un nouveau code de retrait, bloqué ou expiré (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander un nouveau code'**
+  String get pickupCodeRequestButton;
+
+  /// Confirmation après la demande de nouveau code de retrait (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée à l\'expéditeur'**
+  String get pickupCodeRequestSent;
+
+  /// Sous la confirmation « Demande envoyée à l'expéditeur » (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Il est prévenu par une notification. Vous recevrez le nouveau code par l\'expéditeur ou le destinataire.'**
+  String get pickupCodeRequestSentHint;
+
+  /// 429 code-request-too-soon : une demande de nouveau code a déjà été faite il y a moins de 15 min (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande déjà envoyée, réessayez dans {minutes} min'**
+  String pickupCodeRequestTooSoon(int minutes);
+
+  /// Idem pickupCodeRequestTooSoon, sans échéance lisible dans la réponse serveur (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande déjà envoyée, réessayez dans quelques minutes'**
+  String get pickupCodeRequestTooSoonNoDelay;
+
+  /// Fiche colis voyageur : le code de retrait a été bloqué ou a expiré (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de retrait à renouveler'**
+  String get travelerPickupCodeRenewalTitle;
+
+  /// Fiche colis voyageur : explication au-dessus du bouton « Demander un nouveau code » (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait a été bloqué ou a expiré. Seul l\'expéditeur peut en générer un nouveau : demandez-le-lui ici.'**
+  String get travelerPickupCodeRenewalMessage;
+
+  /// Feuille ouverte par la notification CONFIRMATION_CODE_REQUESTED, côté expéditeur (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur demande un nouveau code'**
+  String get pickupCodeRenewalSheetTitle;
+
+  /// Explication de la feuille « Le voyageur demande un nouveau code » (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait n\'est plus valide. Générez-en un nouveau, puis transmettez-le à votre destinataire.'**
+  String get pickupCodeRenewalSheetMessage;
+
+  /// Erreur code-still-valid : le voyageur demande un nouveau code alors que l'actuel est valide (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code encore valide'**
+  String get errorCodeStillValidTitle;
+
+  /// Erreur code-still-valid (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait actuel est encore valide. Demandez-le à l\'expéditeur ou au destinataire.'**
+  String get errorCodeStillValidMessage;
+
+  /// Erreur code-request-not-allowed : le colis n'est pas chez le voyageur (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande impossible'**
+  String get errorCodeRequestNotAllowedTitle;
+
+  /// Erreur code-request-not-allowed (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'attend pas de code de retrait pour le moment.'**
+  String get errorCodeRequestNotAllowedMessage;
+
+  /// Erreur code-request-too-soon (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande déjà envoyée'**
+  String get errorCodeRequestTooSoonTitle;
+
+  /// Erreur code-request-too-soon, repli du catalogue (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur a déjà été prévenu. Réessayez dans quelques minutes.'**
+  String get errorCodeRequestTooSoonMessage;
 }
 
 class _AppLocalizationsDelegate

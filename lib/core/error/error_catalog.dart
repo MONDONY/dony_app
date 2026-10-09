@@ -622,6 +622,28 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.lock_outline_rounded,
     ),
+    // Demande de nouveau code de retrait par le voyageur (back #461,
+    // FLUTTER-G2). Le délai de 15 min est d'abord traité par
+    // PickupCodeRequestCubit, qui affiche les minutes restantes : ces entrées
+    // sont le repli d'un écran qui passerait par ErrorPresenter.
+    'code-still-valid': _Entry(
+      title: (l) => l.errorCodeStillValidTitle,
+      message: (l) => l.errorCodeStillValidMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.password_rounded,
+    ),
+    'code-request-not-allowed': _Entry(
+      title: (l) => l.errorCodeRequestNotAllowedTitle,
+      message: (l) => l.errorCodeRequestNotAllowedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.inventory_2_outlined,
+    ),
+    'code-request-too-soon': _Entry(
+      title: (l) => l.errorCodeRequestTooSoonTitle,
+      message: (l) => l.errorCodeRequestTooSoonMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.hourglass_top_rounded,
+    ),
     // Code de livraison saisi avant le départ du trajet : le back (#419,
     // FLUTTER-CB) répond 422 au lieu de terminer le colis et de libérer le
     // séquestre. Rien à corriger dans le code, il suffit d'attendre.

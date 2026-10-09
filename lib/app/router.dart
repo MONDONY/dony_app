@@ -640,7 +640,15 @@ final appRouter = GoRouter(
             ? state.extra as BidModel
             : BidModel.skeleton(state.pathParameters['bidId']!);
         final fromPayment = state.uri.queryParameters['from'] == 'payment';
-        return BidDetailScreen(bid: bid, fromPayment: fromPayment);
+        // Notification CONFIRMATION_CODE_REQUESTED (FLUTTER-G2) : le voyageur
+        // demande un nouveau code, la fiche ouvre directement la régénération.
+        final openCodeRenewal =
+            state.uri.queryParameters['action'] == 'new-code';
+        return BidDetailScreen(
+          bid: bid,
+          fromPayment: fromPayment,
+          openCodeRenewal: openCodeRenewal,
+        );
       },
     ),
 

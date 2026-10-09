@@ -9410,5 +9410,20 @@
   "homeComposerPaymentCash": "Cash",
   "homeComposerPaymentMobileMoney": "Mobile money",
   "tripPublishCardOffHelp": "Without card payment, this trip has no protected online payment: the money is no longer held until delivery.",
-  "tripPublishPaymentMethodRequired": "Cash is now on: at least one payment method must stay on."
+  "tripPublishPaymentMethodRequired": "Cash is now on: at least one payment method must stay on.",
+  "pickupCodeRequestButton": "Request a new code",
+  "pickupCodeRequestSent": "Request sent to the sender",
+  "pickupCodeRequestSentHint": "They have been notified. You will get the new code from the sender or the recipient.",
+  "pickupCodeRequestTooSoon": "Request already sent, try again in {minutes} min",
+  "pickupCodeRequestTooSoonNoDelay": "Request already sent, try again in a few minutes",
+  "travelerPickupCodeRenewalTitle": "Pickup code needs renewing",
+  "travelerPickupCodeRenewalMessage": "The pickup code was blocked or has expired. Only the sender can generate a new one: ask them here.",
+  "pickupCodeRenewalSheetTitle": "The traveler is asking for a new code",
+  "pickupCodeRenewalSheetMessage": "The pickup code is no longer valid. Generate a new one, then share it with your recipient.",
+  "errorCodeStillValidTitle": "Code still valid",
+  "errorCodeStillValidMessage": "The current pickup code is still valid. Ask the sender or the recipient for it.",
+  "errorCodeRequestNotAllowedTitle": "Request not possible",
+  "errorCodeRequestNotAllowedMessage": "This parcel is not waiting for a pickup code right now.",
+  "errorCodeRequestTooSoonTitle": "Request already sent",
+  "errorCodeRequestTooSoonMessage": "The sender has already been notified. Try again in a few minutes."
 }

@@ -4,7 +4,9 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_success_screen.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -12,11 +14,13 @@ import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
+import 'package:dony/features/tracking/bloc/pickup_code_request_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
+import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:flutter/material.dart';
@@ -43,6 +47,10 @@ class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {
     when(() => state).thenReturn(const AuthInitial());
   }
 }
+
+class _MockTrackingRepository extends Mock implements TrackingRepository {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 TrackingEventModel _fakeEvent({String eventType = 'DEPART'}) =>
     TrackingEventModel(
@@ -648,5 +656,70 @@ void main() {
         expect(submit(tester).onPressed, isNotNull);
       },
     );
+  });
+
+  // FLUTTER-G2 (back #461) : code bloqué ou expiré, le voyageur demande un
+  // nouveau code à l'expéditeur sans quitter l'écran.
+  group('demande de nouveau code', () {
+    late _MockTrackingRepository repository;
+
+    setUp(() {
+      repository = _MockTrackingRepository();
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<PickupCodeRequestCubit>(
+        () => PickupCodeRequestCubit(repository, analytics),
+      );
+    });
+
+    tearDown(() => getIt.unregister<PickupCodeRequestCubit>());
+
+    for (final code in ['code-blocked', 'code-expired']) {
+      testWidgets('$code : bouton affiché, l\'appui prévient l\'expéditeur', (
+        tester,
+      ) async {
+        when(() => repository.requestNewCode('bid-123')).thenAnswer(
+          (_) async => (requestedAt: null, nextRequestAllowedAt: null),
+        );
+        final bloc = MockTrackingBloc();
+        when(() => bloc.state).thenReturn(
+          DeliveryConfirmError(ValidationException('x', code: code)),
+        );
+        whenListen(bloc, const Stream<TrackingState>.empty());
+        await tester.pumpWidget(_wrap('ARRIVEE', bloc));
+        await tester.pump();
+
+        expect(
+          find.byKey(const Key('scan-confirm-code-request')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const Key('pickup-code-request-button')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        verify(() => repository.requestNewCode('bid-123')).called(1);
+        expect(
+          find.byKey(const Key('pickup-code-request-sent')),
+          findsOneWidget,
+        );
+        await tester.pump(const Duration(seconds: 5));
+      });
+    }
+
+    testWidgets('code incorrect : pas de bouton de demande', (tester) async {
+      final bloc = MockTrackingBloc();
+      when(() => bloc.state).thenReturn(
+        DeliveryConfirmError(
+          const ValidationException('x', code: 'code-incorrect'),
+        ),
+      );
+      whenListen(bloc, const Stream<TrackingState>.empty());
+      await tester.pumpWidget(_wrap('ARRIVEE', bloc));
+      await tester.pump();
+
+      expect(find.byKey(const Key('scan-confirm-code-request')), findsNothing);
+    });
   });
 }

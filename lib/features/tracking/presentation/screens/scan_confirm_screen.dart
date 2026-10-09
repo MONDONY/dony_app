@@ -13,6 +13,7 @@ import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
+import 'package:dony/features/tracking/presentation/widgets/pickup_code_request_panel.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -232,6 +233,19 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                       textAlign: TextAlign.center,
+                    ),
+                  ],
+
+                  // Code bloqué ou expiré (FLUTTER-G2) : seul l'expéditeur
+                  // peut en générer un nouveau, le voyageur le lui demande
+                  // d'ici au lieu de quitter l'écran pour le joindre.
+                  if (state is DeliveryConfirmError &&
+                      needsPickupCodeRequest(state.error.code)) ...[
+                    const SizedBox(height: DonySpacing.sm),
+                    PickupCodeRequestPanel(
+                      key: const Key('scan-confirm-code-request'),
+                      bidId: widget.bidId,
+                      source: 'scan_confirm',
                     ),
                   ],
                 ],
