@@ -168,20 +168,36 @@ class _CancelledBlock extends StatelessWidget {
 
   const _CancelledBlock({required this.bid, required this.isSender});
 
+  /// Trajets proposés à l'expéditeur (jamais au voyageur) : annulation du
+  /// trajet ou du transport, et depuis la décision du propriétaire, colis
+  /// annulé après remise (pendant et après son retour).
+  bool get _showRematch =>
+      isSender &&
+      bid.tripCancellationId != null &&
+      bid.tripCancellationRematchStatus == 'SUGGESTED';
+
   @override
   Widget build(BuildContext context) {
     if (bid.isParcelReturned) {
-      return const _ReturnedBlock();
+      if (!_showRematch) return const _ReturnedBlock();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _ReturnedBlock(),
+          _RematchCta(
+            tripCancellationId: bid.tripCancellationId!,
+            parcelReturn: true,
+          ),
+        ],
+      );
     }
     final l = context.l10n;
     if (!bid.isAwaitingReturn) {
       // Annulation classique (pré-remise) : cas terminal simple. Le voyageur a
-      // annulé son trajet (jamais no-show ni après-remise, cf.
-      // BidResponse.tripCancellationId côté backend) et des trajets
-      // alternatifs sont disponibles → propose le rematch à l'expéditeur.
-      if (isSender &&
-          bid.tripCancellationId != null &&
-          bid.tripCancellationRematchStatus == 'SUGGESTED') {
+      // annulé son trajet (jamais no-show, cf. BidResponse.tripCancellationId
+      // côté backend) et des trajets alternatifs sont disponibles → propose le
+      // rematch à l'expéditeur.
+      if (_showRematch) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -194,7 +210,7 @@ class _CancelledBlock extends StatelessWidget {
       return const _TerminalBlock();
     }
     final cs = Theme.of(context).colorScheme;
-    return OutlinedButton.icon(
+    final returnButton = OutlinedButton.icon(
       onPressed: () => isSender
           ? ReturnCodeSheet.show(context, bid: bid)
           : ReturnEntrySheet.show(context, bid: bid),
@@ -215,6 +231,20 @@ class _CancelledBlock extends StatelessWidget {
           borderRadius: BorderRadius.circular(DonyRadius.md),
         ),
       ),
+    );
+    if (!_showRematch) return returnButton;
+    // Retour en attente : le code d'abord, puis les trajets pour renvoyer le
+    // colis une fois récupéré.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        returnButton,
+        const SizedBox(height: DonySpacing.sm),
+        _RematchCta(
+          tripCancellationId: bid.tripCancellationId!,
+          parcelReturn: true,
+        ),
+      ],
     );
   }
 }
@@ -288,14 +318,24 @@ class _RejectionReasonLine extends StatelessWidget {
 class _RematchCta extends StatelessWidget {
   final String tripCancellationId;
 
-  const _RematchCta({required this.tripCancellationId});
+  /// Colis remis puis annulé : l'écran l'annonce « à récupérer ».
+  final bool parcelReturn;
+
+  const _RematchCta({
+    required this.tripCancellationId,
+    this.parcelReturn = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return OutlinedButton.icon(
-      onPressed: () =>
-          context.push('/cancellations/$tripCancellationId/rematch'),
+      key: const Key('billet-rematch-cta'),
+      onPressed: () => context.push(
+        parcelReturn
+            ? '/cancellations/$tripCancellationId/rematch?retour=1'
+            : '/cancellations/$tripCancellationId/rematch',
+      ),
       icon: DonyIcon('route', size: 20, color: cs.primary),
       label: Text(
         context.l10n.ticketViewAlternativeTripsButton,

@@ -434,7 +434,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `rating_submitted` | RatingBloc._onSubmit()/_onTravelerSubmit() |
 | `cancellation_initiated` | CancellationBloc._onTripCancellationRequested() |
 | `rematch_accepted` | RematchSearchScreen — tap « Envoyer une demande » sur une alternative (propriété `count`) |
-| `rematch_alternatives_opened` | RematchSearchScreen.initState — ouverture de l'écran alternatives (propriété `source`: `in_app`/`deep_link`) |
+| `rematch_alternatives_opened` | RematchSearchScreen.initState — ouverture de l'écran alternatives (propriétés `source`: `in_app`/`deep_link`, `parcel_return`: colis remis puis annulé) |
 | `no_show_reported_by_sender` | CancellationBloc._onTravelerNoShowReport() — expéditeur signale le voyageur absent |
 | `no_show_reported_by_traveler` | CancellationBloc._onNoShowReport() — voyageur signale l'expéditeur absent |
 | `delivery_no_show_reported_by_traveler` | CancellationBloc._onDeliveryNoShowReport — voyageur signale l'absence du destinataire à la livraison (procédure FLUTTER-E2 : attente, preuve de contact et case de confirmation) |

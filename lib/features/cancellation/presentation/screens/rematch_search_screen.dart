@@ -30,14 +30,20 @@ import 'package:go_router/go_router.dart';
 /// - [cancellation] absent (ex : ouverture depuis la notification FCM
 ///   `TRIP_CANCELLED`) → fetch self-contained via [CancellationBloc] avec
 ///   [cancellationId].
+///
+/// [parcelReturn] : colis déjà remis au voyageur, annulé (après remise, trajet
+/// annulé ou retrait après report). Le bandeau rappelle que l'envoi se refait
+/// une fois le colis récupéré, au lieu de « Trajet annulé ».
 class RematchSearchScreen extends StatefulWidget {
   final String cancellationId;
   final CancellationModel? cancellation;
+  final bool parcelReturn;
 
   const RematchSearchScreen({
     super.key,
     required this.cancellationId,
     this.cancellation,
+    this.parcelReturn = false,
   });
 
   @override
@@ -64,6 +70,7 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
         AnalyticsEvents.rematchAlternativesOpened,
         properties: {
           'source': widget.cancellation != null ? 'in_app' : 'deep_link',
+          'parcel_return': widget.parcelReturn,
         },
       ),
     );
@@ -138,6 +145,7 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
             ? _RematchBody(
                 suggestions: cancellation.rematchSuggestions,
                 affectedBidsCount: cancellation.affectedBidsCount,
+                parcelReturn: widget.parcelReturn,
                 loadingSuggestionId: _loadingSuggestionId,
                 onSuggestionTap: _onSuggestionTap,
               )
@@ -147,6 +155,7 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
                     return _RematchBody(
                       suggestions: state.suggestions,
                       affectedBidsCount: null,
+                      parcelReturn: widget.parcelReturn,
                       loadingSuggestionId: _loadingSuggestionId,
                       onSuggestionTap: _onSuggestionTap,
                     );
@@ -197,6 +206,9 @@ class _RematchBody extends StatelessWidget {
   /// d'annulation elle-même.
   final int? affectedBidsCount;
 
+  /// Colis à récupérer avant de le renvoyer (cf. [RematchSearchScreen]).
+  final bool parcelReturn;
+
   /// `suggestionId` de la carte dont le fetch du vrai `AnnouncementModel`
   /// est en vol, `null` si aucune. Pilote le spinner léger + désactive les
   /// autres cartes pendant la résolution (UI-only, cf. `_RematchSearchScreenState`).
@@ -208,6 +220,7 @@ class _RematchBody extends StatelessWidget {
   const _RematchBody({
     required this.suggestions,
     required this.affectedBidsCount,
+    this.parcelReturn = false,
     required this.loadingSuggestionId,
     required this.onSuggestionTap,
   });
@@ -226,11 +239,14 @@ class _RematchBody extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _ConfirmationBanner(
-              affectedCount: affectedBidsCount,
-              cs: cs,
-              tt: tt,
-            ),
+            if (parcelReturn)
+              _ParcelReturnBanner(cs: cs, tt: tt)
+            else
+              _ConfirmationBanner(
+                affectedCount: affectedBidsCount,
+                cs: cs,
+                tt: tt,
+              ),
             const SizedBox(height: DonySpacing.xl),
             if (suggestions.isEmpty)
               DonyEmptyState(
@@ -298,6 +314,50 @@ class _RematchBody extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Colis remis puis annulé : il revient d'abord à l'expéditeur, les trajets
+/// proposés serviront à le renvoyer ensuite.
+class _ParcelReturnBanner extends StatelessWidget {
+  final ColorScheme cs;
+  final TextTheme tt;
+  const _ParcelReturnBanner({required this.cs, required this.tt});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Container(
+      key: const Key('rematch-parcel-return-banner'),
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.infoLight,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.info.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              DonyIcon('package', color: cs.info, size: 20),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  l.rematchParcelReturnTitle,
+                  style: tt.titleMedium?.copyWith(color: cs.info),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            l.rematchParcelReturnDescription,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
       ),
     );
   }

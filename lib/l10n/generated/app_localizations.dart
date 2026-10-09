@@ -17866,6 +17866,18 @@ abstract class AppLocalizations {
   /// **'Votre remboursement est en cours.'**
   String get rematchRefundInProgress;
 
+  /// Titre du bandeau de RematchSearchScreen quand le colis, déjà remis au voyageur, a été annulé : il revient d'abord à l'expéditeur (rematch_search_screen.dart, _ParcelReturnBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis à récupérer'**
+  String get rematchParcelReturnTitle;
+
+  /// Sous-texte du bandeau colis à récupérer : les trajets proposés serviront à renvoyer le colis (rematch_search_screen.dart, _ParcelReturnBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une fois votre colis récupéré, ces trajets correspondent à votre envoi.'**
+  String get rematchParcelReturnDescription;
+
   /// Bouton fantôme en bas de RematchSearchScreen (rematch_search_screen.dart, _RematchBody).
   ///
   /// In fr, this message translates to:

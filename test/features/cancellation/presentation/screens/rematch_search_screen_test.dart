@@ -125,6 +125,7 @@ Widget _wrap(
   CancellationBloc bloc, {
   required String cancellationId,
   AnnouncementBloc? announcementBloc,
+  bool parcelReturn = false,
 }) => MaterialApp(
   home: MultiBlocProvider(
     providers: [
@@ -133,7 +134,10 @@ Widget _wrap(
         value: announcementBloc ?? _idleAnnouncementBloc(),
       ),
     ],
-    child: RematchSearchScreen(cancellationId: cancellationId),
+    child: RematchSearchScreen(
+      cancellationId: cancellationId,
+      parcelReturn: parcelReturn,
+    ),
   ),
 );
 
@@ -224,10 +228,42 @@ void main() {
       verify(
         () => analytics.logEvent(
           AnalyticsEvents.rematchAlternativesOpened,
-          properties: {'source': 'deep_link'},
+          properties: {'source': 'deep_link', 'parcel_return': false},
         ),
       ).called(1);
       expect(find.byType(DonyFeedbackButton), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'colis remis puis annulé : bandeau « à récupérer » au lieu de « Trajet annulé »',
+    (tester) async {
+      when(() => bloc.state).thenReturn(RematchSuggestionsLoaded(_suggestions));
+
+      await tester.pumpWidget(
+        _wrap(bloc, cancellationId: 'canc-1', parcelReturn: true),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(
+        find.byKey(const Key('rematch-parcel-return-banner')),
+        findsOneWidget,
+      );
+      expect(find.text('Colis à récupérer'), findsOneWidget);
+      expect(
+        find.text(
+          'Une fois votre colis récupéré, ces trajets correspondent à votre envoi.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Trajet annulé'), findsNothing);
+      expect(find.byType(TravelerCard), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.rematchAlternativesOpened,
+          properties: {'source': 'deep_link', 'parcel_return': true},
+        ),
+      ).called(1);
     },
   );
 

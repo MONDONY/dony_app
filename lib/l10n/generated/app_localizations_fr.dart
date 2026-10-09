@@ -10848,6 +10848,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rematchRefundInProgress => 'Votre remboursement est en cours.';
 
   @override
+  String get rematchParcelReturnTitle => 'Colis à récupérer';
+
+  @override
+  String get rematchParcelReturnDescription =>
+      'Une fois votre colis récupéré, ces trajets correspondent à votre envoi.';
+
+  @override
   String get rematchBackHomeAction => 'Retour à l\'accueil';
 
   @override

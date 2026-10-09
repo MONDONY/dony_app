@@ -225,8 +225,8 @@ class BidModel {
   final String? cancellationNoShowStatus;
   final DateTime? contestationDeadline;
 
-  // Rematch automatique (annulation par le voyageur AVANT remise uniquement —
-  // jamais pour no-show ou après-remise). `tripCancellationId` pointe vers
+  // Rematch automatique (trajet ou transport annulé, retrait après report,
+  // annulation après remise — jamais pour un no-show). `tripCancellationId` pointe vers
   // l'annulation source, `tripCancellationRematchStatus` vaut 'SUGGESTED'
   // quand des trajets alternatifs sont proposés à l'expéditeur.
   final String? tripCancellationId;

@@ -6426,6 +6426,14 @@
   "@rematchRefundInProgress": {
     "description": "Sous-texte du bandeau de confirmation quand affectedBidsCount est null, chemin self-fetching (rematch_search_screen.dart, _ConfirmationBanner)."
   },
+  "rematchParcelReturnTitle": "Parcel to collect",
+  "@rematchParcelReturnTitle": {
+    "description": "Titre du bandeau de RematchSearchScreen quand le colis, déjà remis au voyageur, a été annulé : il revient d'abord à l'expéditeur (rematch_search_screen.dart, _ParcelReturnBanner)."
+  },
+  "rematchParcelReturnDescription": "Once you get your parcel back, these trips match your shipment.",
+  "@rematchParcelReturnDescription": {
+    "description": "Sous-texte du bandeau colis à récupérer : les trajets proposés serviront à renvoyer le colis (rematch_search_screen.dart, _ParcelReturnBanner)."
+  },
   "rematchBackHomeAction": "Back to home",
   "@rematchBackHomeAction": {
     "description": "Bouton fantôme en bas de RematchSearchScreen (rematch_search_screen.dart, _RematchBody)."
