@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Photos du colis en plein écran, balayables.
@@ -12,45 +12,49 @@ abstract final class RequestPhotoViewer {
   }) {
     return showDialog<void>(
       context: context,
-      barrierColor: Colors.black87,
-      builder: (ctx) => Stack(
-        children: [
-          PageView.builder(
-            controller: PageController(initialPage: initialIndex),
-            itemCount: urls.length,
-            itemBuilder: (_, i) => InteractiveViewer(
-              child: Center(
-                child: CachedNetworkImage(
-                  imageUrl: urls[i],
-                  fit: BoxFit.contain,
-                  // Fond du visionneur figé en noir (barrierColor) quel que soit
-                  // le thème : couleurs fixes claires, pas cs.X (illisibles sur
-                  // ce fond sombre en thème clair).
-                  placeholder: (_, _) => const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                  errorWidget: (_, _, _) => const Center(
-                    child: DonyIcon(
-                      'image-off',
-                      key: Key('request-photo-viewer-error'),
-                      size: 40,
-                      color: Colors.white70,
+      // Fond porté par DonyPhotoDismiss : il s'estompe pendant le glissement
+      // vers le bas (FLUTTER-GR).
+      barrierColor: Colors.transparent,
+      builder: (ctx) => DonyPhotoDismiss(
+        background: Colors.black87,
+        onDismiss: () => Navigator.of(ctx).pop(),
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: PageController(initialPage: initialIndex),
+              itemCount: urls.length,
+              itemBuilder: (_, i) => DonyZoomablePhoto(
+                child: Center(
+                  child: CachedNetworkImage(
+                    imageUrl: urls[i],
+                    fit: BoxFit.contain,
+                    // Fond du visionneur figé en noir quel que soit le thème :
+                    // couleurs fixes claires, pas cs.X (illisibles sur ce fond
+                    // sombre en thème clair).
+                    placeholder: (_, _) => const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                    errorWidget: (_, _, _) => const Center(
+                      child: DonyIcon(
+                        'image-off',
+                        key: Key('request-photo-viewer-error'),
+                        size: 40,
+                        color: Colors.white70,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            top: MediaQuery.of(ctx).padding.top + 8,
-            right: 8,
-            child: IconButton(
-              tooltip: ctx.l10n.commonClose,
-              onPressed: () => Navigator.of(ctx).pop(),
-              icon: const DonyIcon('x', color: Colors.white),
+            Positioned(
+              top: MediaQuery.of(ctx).padding.top + DonySpacing.xs,
+              right: DonySpacing.sm,
+              child: DonyPhotoCloseButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

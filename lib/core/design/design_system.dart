@@ -51,6 +51,7 @@ export 'package:dony/core/design/widgets/dony_nego_state_banner.dart';
 export 'package:dony/core/design/widgets/dony_onboarding_gauge.dart';
 export 'package:dony/core/design/widgets/dony_operator_tile.dart';
 export 'package:dony/core/design/widgets/dony_page_scaffold.dart';
+export 'package:dony/core/design/widgets/dony_photo_viewer.dart';
 export 'package:dony/core/design/widgets/dony_pressable.dart';
 export 'package:dony/core/design/widgets/dony_price_tag.dart';
 export 'package:dony/core/design/widgets/dony_pulsing_dot.dart';
