@@ -84,8 +84,9 @@ class DonyFeedbackButton extends StatelessWidget {
     this.color,
   });
 
-  /// Teinte de l'icône. `null` garde celle du SVG ; à fournir sur un en-tête
-  /// sombre (flux caméra de l'onglet Suivi), où l'icône resterait invisible.
+  /// Teinte de l'icône. `null` reprend la couleur d'icône du contexte (avant-plan
+  /// de l'AppBar, suit le thème clair ou sombre) ; à fournir sur un en-tête
+  /// au fond imposé (flux caméra de l'onglet Suivi).
   final Color? color;
 
   /// Nombre maximal de captures jointes par le testeur.
@@ -347,7 +348,18 @@ class DonyFeedbackButton extends StatelessWidget {
     // qui existait ici en créait un second, avec le même message.
     return IconButton(
       tooltip: context.l10n.feedbackButtonTooltip,
-      icon: DonyIcon('bug', color: color),
+      // bug.svg trace en `currentColor` : sans teinte, `DonyIcon` le rend noir,
+      // invisible en thème sombre (Sentry FLUTTER-H6). Le Builder lit la teinte
+      // résolue par l'IconButton (avant-plan de l'AppBar, thème des icônes).
+      icon: Builder(
+        builder: (iconContext) => DonyIcon(
+          'bug',
+          color:
+              color ??
+              IconTheme.of(iconContext).color ??
+              Theme.of(iconContext).colorScheme.onSurfaceVariant,
+        ),
+      ),
       onPressed: () => _openSheet(context),
     );
   }
