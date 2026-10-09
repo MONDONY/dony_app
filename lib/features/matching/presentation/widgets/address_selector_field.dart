@@ -14,11 +14,21 @@ class AddressSelectorField extends StatelessWidget {
     required this.type,
     required this.onChanged,
     this.value,
+    this.dense = false,
+    this.caption,
   });
 
   final AddressSelectorType type;
   final ValueChanged<AddressData?> onChanged;
   final AddressData? value;
+
+  /// Carte compacte, chaque texte sur une ligne (feuille d'une étape,
+  /// FLUTTER-HN) : sur 360 dp l'adresse et l'aide passaient sur deux lignes.
+  final bool dense;
+
+  /// Légende au-dessus de l'adresse choisie, pour dire ce qu'elle désigne
+  /// quand aucun titre de section ne le fait.
+  final String? caption;
 
   bool get _isRemise => type == AddressSelectorType.remise;
 
@@ -34,6 +44,8 @@ class AddressSelectorField extends StatelessWidget {
     if (value != null) {
       return _FilledCard(
         value: value!,
+        dense: dense,
+        caption: caption,
         color: color,
         containerColor: containerColor,
         tt: tt,
@@ -52,6 +64,7 @@ class AddressSelectorField extends StatelessWidget {
           : l10n.addressSelectorDeliverySubtitle,
       color: color,
       containerColor: containerColor,
+      dense: dense,
       onTap: () => _openSheet(context),
     );
   }
@@ -76,6 +89,7 @@ class _EmptyCard extends StatelessWidget {
     required this.color,
     required this.containerColor,
     required this.onTap,
+    this.dense = false,
   });
 
   final String label;
@@ -83,6 +97,7 @@ class _EmptyCard extends StatelessWidget {
   final Color color;
   final Color containerColor;
   final VoidCallback onTap;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +107,7 @@ class _EmptyCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(DonySpacing.base),
+        padding: EdgeInsets.all(dense ? DonySpacing.md : DonySpacing.base),
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -115,6 +130,8 @@ class _EmptyCard extends StatelessWidget {
                 children: [
                   Text(
                     label,
+                    maxLines: dense ? 1 : null,
+                    overflow: dense ? TextOverflow.ellipsis : null,
                     style: tt.bodyMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
@@ -123,6 +140,8 @@ class _EmptyCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
+                    maxLines: dense ? 1 : null,
+                    overflow: dense ? TextOverflow.ellipsis : null,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
@@ -144,9 +163,13 @@ class _FilledCard extends StatelessWidget {
     required this.tt,
     required this.cs,
     required this.onTap,
+    this.dense = false,
+    this.caption,
   });
 
   final AddressData value;
+  final bool dense;
+  final String? caption;
   final Color color;
   final Color containerColor;
   final TextTheme tt;
@@ -158,7 +181,7 @@ class _FilledCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(DonySpacing.base),
+        padding: EdgeInsets.all(dense ? DonySpacing.md : DonySpacing.base),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -176,11 +199,26 @@ class _FilledCard extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.md),
             Expanded(
-              child: Text(
-                value.label,
-                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (caption != null)
+                    Text(
+                      caption!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  Text(
+                    value.label,
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                    maxLines: dense ? 1 : 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
             Container(

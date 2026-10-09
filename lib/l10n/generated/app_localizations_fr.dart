@@ -17553,7 +17553,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String tripLegSheetPriceTooHigh(String max) {
-    return 'Maximum $max par kilo dans la devise du voyage.';
+    return 'Maximum $max par kilo.';
   }
 
   @override
@@ -17567,9 +17567,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String tripLegsCurrencyNote(String currency) {
-    return 'Prix des étapes en $currency, la devise du voyage.';
-  }
+  String get tripLegsCurrencyNote =>
+      'Chaque étape a sa devise : celle de son pays de départ par défaut, modifiable dans l\'étape.';
 
   @override
   String get listingRowLabelCurrency => 'Devise';
@@ -17668,4 +17667,78 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorPriceOutOfBoundsMessage =>
       'Ce prix au kilo est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.';
+
+  @override
+  String get tripLegSheetCurrency => 'Devise de l\'étape';
+
+  @override
+  String get tripLegSheetCurrencyHint =>
+      'Par défaut, celle du pays de départ. Le prix n\'est pas converti si vous en changez.';
+
+  @override
+  String tripLegSheetCurrencyOption(String name, String symbol) {
+    return '$name ($symbol)';
+  }
+
+  @override
+  String tripLegSheetCurrencyMenuSemantics(String currency) {
+    return 'Changer la devise de l\'étape, actuellement $currency';
+  }
+
+  @override
+  String get tripLegSheetKgSuffix => 'kg';
+
+  @override
+  String tripLegSheetPriceSuffix(String currency) {
+    return '$currency/kg';
+  }
+
+  @override
+  String get tripStopsTwoOrMoreShort => '2 ou +';
+
+  @override
+  String tripLegsLegCurrency(String currency) {
+    return 'en $currency';
+  }
+
+  @override
+  String get tripLegsPriceMissing =>
+      'Indiquez le prix au kilo de chaque étape.';
+
+  @override
+  String tripSwitchCurrencyConfirmMessageLegs(
+    String currency,
+    String legCurrencies,
+  ) {
+    return 'Le premier trajet passe en $currency. Les étapes suivantes gardent leur devise ($legCurrencies).';
+  }
+
+  @override
+  String tripSwitchCurrencyConfirmMessageLegsNoCard(
+    String currency,
+    String legCurrencies,
+  ) {
+    return 'Le premier trajet passe en $currency et le paiement par carte n\'y sera plus proposé. Les étapes suivantes gardent leur devise ($legCurrencies).';
+  }
+
+  @override
+  String get tripCurrenciesConfirmTitle => 'Publier en plusieurs devises ?';
+
+  @override
+  String get tripCurrenciesConfirmMessage =>
+      'Chaque étape est publiée dans sa devise, sans conversion des prix.';
+
+  @override
+  String tripCurrenciesConfirmLeg(int index, String route) {
+    return 'Étape $index · $route';
+  }
+
+  @override
+  String get tripCurrenciesConfirmCta => 'Publier le voyage';
+
+  @override
+  String get tripCurrenciesConfirmEdit => 'Revoir les étapes';
+
+  @override
+  String get tripLegSheetAddressCaption => 'Adresse de livraison';
 }

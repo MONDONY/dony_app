@@ -9,14 +9,22 @@ import 'package:flutter/material.dart';
 /// Les montants saisis ne sont pas convertis : 8 €/kg devient 8 F CFA/kg. Le
 /// voyageur doit donc le savoir avant, ainsi que la perte de la carte quand la
 /// devise cible ne la propose pas (zone CFA).
+///
+/// Voyage à plusieurs étapes (FLUTTER-HP) : seul le premier trajet change de
+/// devise, chaque étape ajoutée garde la sienne ([legCurrencies]) ; le message
+/// le dit au lieu d'annoncer « tous les prix du voyage ».
 abstract final class CurrencySwitchConfirmSheet {
   /// Rend `true` si le voyageur confirme, `false` sinon (annulation,
   /// fermeture par geste).
   static Future<bool> show(
     BuildContext context, {
     required SupportedCurrency target,
+    List<SupportedCurrency> legCurrencies = const [],
   }) async {
     final l = context.l10n;
+    final legs = {
+      for (final c in legCurrencies) c.code: c.symbol,
+    }.values.join(', ');
     final confirmed = await DonyBottomSheet.show<bool>(
       context,
       title: l.tripSwitchCurrencyConfirmTitle(target.symbol),
@@ -46,9 +54,22 @@ abstract final class CurrencySwitchConfirmSheet {
           return Padding(
             padding: const EdgeInsets.only(bottom: DonySpacing.base),
             child: Text(
-              target.isStripeEligible
-                  ? l.tripSwitchCurrencyConfirmMessage(target.symbol)
-                  : l.tripSwitchCurrencyConfirmMessageNoCard(target.symbol),
+              switch ((legs.isEmpty, target.isStripeEligible)) {
+                (true, true) => l.tripSwitchCurrencyConfirmMessage(
+                  target.symbol,
+                ),
+                (true, false) => l.tripSwitchCurrencyConfirmMessageNoCard(
+                  target.symbol,
+                ),
+                (false, true) => l.tripSwitchCurrencyConfirmMessageLegs(
+                  target.symbol,
+                  legs,
+                ),
+                (false, false) => l.tripSwitchCurrencyConfirmMessageLegsNoCard(
+                  target.symbol,
+                  legs,
+                ),
+              },
               key: const Key('currency-switch-message'),
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),

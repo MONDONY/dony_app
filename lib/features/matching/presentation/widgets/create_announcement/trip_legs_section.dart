@@ -20,29 +20,46 @@ import 'package:intl/intl.dart';
 /// [origin] est l'arrivée du premier trajet, `null` tant qu'elle n'est pas
 /// connue (ville ou date manquante) : l'ajout est alors désactivé.
 class TripLegsSection extends StatelessWidget {
-  /// Étapes dont le prix dépasse le plafond de [currency] (FLUTTER-GK) : le
-  /// voyage ne part pas tant qu'elles ne sont pas corrigées, le serveur les
-  /// refuserait (422 `price-out-of-bounds`).
+  /// Étapes dont le prix dépasse le plafond de leur devise (FLUTTER-GK,
+  /// FLUTTER-HP) : le voyage ne part pas tant qu'elles ne sont pas corrigées,
+  /// le serveur les refuserait (422 `price-out-of-bounds`). [tripCurrency] est
+  /// la devise d'une étape qui n'en porte pas.
   static Set<int> priceAboveMaxIndexes(
     List<TripLegDraft> legs,
-    SupportedCurrency currency,
-  ) {
-    final max = maxUnitPriceFor(currency);
-    return {
-      for (var i = 0; i < legs.length; i++)
-        if ((legs[i].pricePerKg ?? 0) > max) i,
-    };
-  }
-
-  /// Étapes dont le prix est sous le plancher de [currency] (1 €/kg converti,
-  /// FLUTTER-GK) : refusées par le serveur comme celles au-dessus du plafond.
-  static Set<int> priceBelowMinIndexes(
-    List<TripLegDraft> legs,
-    SupportedCurrency currency,
+    SupportedCurrency tripCurrency,
   ) => {
     for (var i = 0; i < legs.length; i++)
-      if (unitPriceOutOfBounds(legs[i].pricePerKg, currency) ==
+      if ((legs[i].pricePerKg ?? 0) >
+          maxUnitPriceFor(TripLegCurrency.of(legs[i], tripCurrency)))
+        i,
+  };
+
+  /// Étapes dont le prix est sous le plancher de leur devise (1 €/kg
+  /// converti, FLUTTER-GK) : refusées par le serveur comme celles au-dessus du
+  /// plafond.
+  static Set<int> priceBelowMinIndexes(
+    List<TripLegDraft> legs,
+    SupportedCurrency tripCurrency,
+  ) => {
+    for (var i = 0; i < legs.length; i++)
+      if (unitPriceOutOfBounds(
+            legs[i].pricePerKg,
+            TripLegCurrency.of(legs[i], tripCurrency),
+          ) ==
           UnitPriceBound.tooLow)
+        i,
+  };
+
+  /// Étapes sans prix au kilo dans une autre devise que le premier trajet :
+  /// son prix ne leur est jamais recopié (FLUTTER-HP), et une tarification
+  /// au kilo l'exige (422 `invalid-price`).
+  static Set<int> priceMissingIndexes(
+    List<TripLegDraft> legs,
+    SupportedCurrency tripCurrency,
+  ) => {
+    for (var i = 0; i < legs.length; i++)
+      if (legs[i].pricePerKg == null &&
+          TripLegCurrency.of(legs[i], tripCurrency) != tripCurrency)
         i,
   };
 
@@ -50,7 +67,7 @@ class TripLegsSection extends StatelessWidget {
     super.key,
     required this.origin,
     required this.showPrice,
-    required this.currency,
+    required this.tripCurrency,
     this.defaultKg,
     this.defaultPrice,
     this.showStops = false,
@@ -60,9 +77,10 @@ class TripLegsSection extends StatelessWidget {
   final TripLegOrigin? origin;
   final bool showPrice;
 
-  /// Devise du voyage, rappelée sur chaque étape et bornant leur prix
-  /// (FLUTTER-GK).
-  final SupportedCurrency currency;
+  /// Devise du premier trajet. Chaque étape a la sienne (FLUTTER-HP) :
+  /// celle-ci ne sert qu'à défaut de pays de départ connu, et pour juger si
+  /// le prix du premier trajet peut être prérempli.
+  final SupportedCurrency tripCurrency;
   final double? defaultKg;
   final double? defaultPrice;
 
@@ -84,15 +102,31 @@ class TripLegsSection extends StatelessWidget {
     final index = editIndex ?? state.legs.length;
     final legOrigin = TripLegChain.originOf(first, state.legs, index);
     final previous = index > 0 ? state.legs[index - 1] : null;
+    final initial = editIndex != null ? state.legs[editIndex] : null;
+    // Devise de l'étape précédente (ou du premier trajet) : celle du prix
+    // prérempli, et la devise par défaut si le pays de départ est inconnu.
+    final previousCurrency = previous != null
+        ? TripLegCurrency.of(previous, tripCurrency)
+        : tripCurrency;
+    final previousPrice = previous != null ? previous.pricePerKg : defaultPrice;
     final draft = await TripLegSheet.show(
       context,
       legNumber: index + 2,
       origin: legOrigin,
-      initial: editIndex != null ? state.legs[editIndex] : null,
+      initial: initial,
       showPrice: showPrice,
-      currency: currency,
+      // Étape modifiée : sa devise ; ancienne étape sans devise : celle du
+      // premier trajet ; nouvelle étape : celle du pays de départ
+      // (FLUTTER-HP, Bouaké → XOF).
+      defaultCurrency: initial != null
+          ? tripCurrency
+          : TripLegCurrency.defaultFor(
+              legOrigin.countryCode,
+              fallback: previousCurrency,
+            ),
       defaultKg: previous?.availableKg ?? defaultKg,
-      defaultPrice: previous?.pricePerKg ?? defaultPrice,
+      defaultPrice: previousPrice,
+      defaultPriceCurrency: previousCurrency,
       showStops: showStops,
       defaultStops: previous != null ? previous.stops : defaultStops,
     );
@@ -141,10 +175,10 @@ class TripLegsSection extends StatelessWidget {
                 l.tripLegsSectionSubtitle,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
-              if (showPrice && state.legs.isNotEmpty) ...[
+              if (state.legs.isNotEmpty) ...[
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
-                  l.tripLegsCurrencyNote(currency.symbol),
+                  l.tripLegsCurrencyNote,
                   key: const Key('trip-legs-currency-note'),
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
@@ -159,7 +193,8 @@ class TripLegsSection extends StatelessWidget {
                           : TripLegChain.originOf(first, state.legs, i).city,
                       leg: state.legs[i],
                       showStops: showStops,
-                      currency: showPrice ? currency : null,
+                      showPrice: showPrice,
+                      currency: TripLegCurrency.of(state.legs[i], tripCurrency),
                       invalid: invalid.contains(i),
                       onEdit: () => _openSheet(context, state, editIndex: i),
                       onRemove: () =>
@@ -209,6 +244,7 @@ class _LegTile extends StatelessWidget {
     required this.from,
     required this.leg,
     required this.showStops,
+    required this.showPrice,
     required this.currency,
     required this.invalid,
     required this.onEdit,
@@ -220,8 +256,11 @@ class _LegTile extends StatelessWidget {
   final TripLegDraft leg;
   final bool showStops;
 
-  /// Devise du prix affiché ; `null` en grille seule (pas de prix d'étape).
-  final SupportedCurrency? currency;
+  /// Prix au kilo affiché ; en grille seule, seule la devise l'est.
+  final bool showPrice;
+
+  /// Devise de l'étape (FLUTTER-HP).
+  final SupportedCurrency currency;
   final bool invalid;
   final VoidCallback onEdit;
   final VoidCallback onRemove;
@@ -236,12 +275,10 @@ class _LegTile extends StatelessWidget {
         ? leg.availableKg.toInt().toString()
         : leg.availableKg.toString();
     final stops = leg.stops;
-    final currency = this.currency;
-    final price = leg.pricePerKg;
-    final priceAboveMax =
-        currency != null && price != null && price > maxUnitPriceFor(currency);
+    final price = showPrice ? leg.pricePerKg : null;
+    final priceAboveMax = price != null && price > maxUnitPriceFor(currency);
     final priceBelowMin =
-        currency != null &&
+        showPrice &&
         unitPriceOutOfBounds(price, currency) == UnitPriceBound.tooLow;
     final hasError = invalid || priceAboveMax || priceBelowMin;
     return Container(
@@ -293,14 +330,16 @@ class _LegTile extends StatelessWidget {
                       '${DateFormat.MMMEd(locale).format(leg.departureDate)} ${leg.departureTime}',
                       kg,
                     ),
-                    if (currency != null && price != null)
+                    if (price != null)
                       l.tripLegsLegPrice(
                         CurrencyFormatter.format(
                           price,
                           currency,
                           compact: true,
                         ),
-                      ),
+                      )
+                    else
+                      l.tripLegsLegCurrency(currency.symbol),
                     if (showStops && stops != null)
                       StopsChips.optionLabel(l, stops),
                   ].join(' · '),

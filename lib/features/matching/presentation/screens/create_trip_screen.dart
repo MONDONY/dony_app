@@ -33,6 +33,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_currencies_confirm_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_legs_section.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
@@ -1408,6 +1409,30 @@ class _TripFormContentState extends State<_TripFormContent> {
     ];
   }
 
+  /// Moyens de paiement d'une étape ajoutée, dans sa devise (FLUTTER-HP) :
+  /// règle dans [TripLegCurrency.paymentMethodsFor].
+  List<String> _paymentMethodsForLeg(SupportedCurrency currency) {
+    final mobileMoneyState = context.read<MobileMoneyAccountBloc>().state;
+    return TripLegCurrency.paymentMethodsFor(
+      currency,
+      firstCurrency: _currency,
+      stripeConfigured: _isStripeConfigured(),
+      cardEnabled: _cardEnabledNotifier.value,
+      cashEnabled: _cashEnabledNotifier.value,
+      mobileMoneyEnabled: _mobileMoneyEnabledNotifier.value,
+      mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(mobileMoneyState),
+      mobileMoneyAccountCurrency: SupportedCurrency.fromCode(
+        mobileMoneyAccountCurrencyFrom(mobileMoneyState),
+      ),
+    );
+  }
+
+  /// Devises des étapes ajoutées, dans l'ordre du voyage (FLUTTER-HP).
+  List<SupportedCurrency> _extraLegCurrencies() => [
+    for (final leg in context.read<TripLegsCubit>().state.legs)
+      TripLegCurrency.of(leg, _currency),
+  ];
+
   void _submit({bool saveAsDraft = false}) {
     // Gate KYC — inchangé pour le reste du flux, nouveau uniquement ici :
     // publier/modifier un trajet nécessite une identité vérifiée. Si ce n'est
@@ -1637,14 +1662,24 @@ class _TripFormContentState extends State<_TripFormContent> {
       // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
       // ensemble, en une transaction côté serveur.
       final extraLegs = context.read<TripLegsCubit>().state.legs;
-      // Une étape au-dessus du plafond de la devise (devise changée après
-      // sa saisie) serait refusée par le serveur (FLUTTER-GK).
+      if (extraLegs.isEmpty) {
+        context.read<AnnouncementBloc>().add(createEvent);
+        return;
+      }
+      SupportedCurrency legCurrency(int i) =>
+          TripLegCurrency.of(extraLegs[i], _currency);
+      // Une étape au-dessus du plafond de sa devise serait refusée par le
+      // serveur (FLUTTER-GK) ; chaque étape a sa devise (FLUTTER-HP).
       final aboveMax = TripLegsSection.priceAboveMaxIndexes(
         extraLegs,
         _currency,
       );
       if (aboveMax.isNotEmpty) {
-        _showError(context.l10n.tripLegsPriceAboveMax(_currency.symbol));
+        _showError(
+          context.l10n.tripLegsPriceAboveMax(
+            legCurrency(aboveMax.first).symbol,
+          ),
+        );
         return;
       }
       // Même règle pour le plancher : une étape à 8 XOF/kg est partie ainsi.
@@ -1653,18 +1688,66 @@ class _TripFormContentState extends State<_TripFormContent> {
         _currency,
       );
       if (belowMin.isNotEmpty) {
-        _showError(context.l10n.tripLegsPriceBelowMin(_currency.symbol));
+        _showError(
+          context.l10n.tripLegsPriceBelowMin(
+            legCurrency(belowMin.first).symbol,
+          ),
+        );
         return;
       }
-      context.read<AnnouncementBloc>().add(
-        extraLegs.isEmpty
-            ? createEvent
-            : AnnouncementTripCreateRequested(
-                first: createEvent,
-                legs: extraLegs,
-              ),
+      // Tarification au kilo : une étape sans prix dans une autre devise que
+      // le premier trajet n'en reçoit pas de copie (FLUTTER-HP).
+      if (pricingModeWire == 'KG' &&
+          TripLegsSection.priceMissingIndexes(
+            extraLegs,
+            _currency,
+          ).isNotEmpty) {
+        _showError(context.l10n.tripLegsPriceMissing);
+        return;
+      }
+      final legs = [
+        for (var i = 0; i < extraLegs.length; i++)
+          extraLegs[i].withPaymentMethods(
+            _paymentMethodsForLeg(legCurrency(i)),
+          ),
+      ];
+      final event = AnnouncementTripCreateRequested(
+        first: createEvent,
+        legs: legs,
       );
+      final lines = <TripCurrencyLine>[
+        TripCurrencyLine(
+          route: '$departureCity → $arrivalCity',
+          currency: _currency,
+        ),
+        for (var i = 0; i < legs.length; i++)
+          TripCurrencyLine(
+            route:
+                '${i == 0 ? arrivalCity : legs[i - 1].arrivalCity} → ${legs[i].arrivalCity}',
+            currency: legCurrency(i),
+          ),
+      ];
+      // Plusieurs devises : le voyageur confirme avant la publication, les
+      // prix ne sont pas convertis (FLUTTER-HP). Un brouillon se corrige
+      // encore : pas de confirmation.
+      if (!saveAsDraft && TripCurrenciesConfirmSheet.needed(lines)) {
+        unawaited(_confirmCurrenciesThenCreate(lines, event));
+        return;
+      }
+      context.read<AnnouncementBloc>().add(event);
     }
+  }
+
+  Future<void> _confirmCurrenciesThenCreate(
+    List<TripCurrencyLine> lines,
+    AnnouncementTripCreateRequested event,
+  ) async {
+    final confirmed = await TripCurrenciesConfirmSheet.show(
+      context,
+      lines: lines,
+    );
+    if (!confirmed || !mounted) return;
+    context.read<AnnouncementBloc>().add(event);
   }
 
   void _showError(String message) {
@@ -2401,6 +2484,9 @@ class _TripFormContentState extends State<_TripFormContent> {
               mobileMoneyCurrency: SupportedCurrency.fromCode(
                 mobileMoneyAccountCurrencyFrom(mobileMoneyState),
               ),
+              // Changer la devise du premier trajet ne touche pas celle des
+              // étapes ajoutées (FLUTTER-HP) : la confirmation les cite.
+              legCurrencies: _isEdit || _isLocked ? null : _extraLegCurrencies,
               onMobileMoneySetupReturned: () => context
                   .read<MobileMoneyAccountBloc>()
                   .add(const MobileMoneyAccountRequested()),
@@ -2445,7 +2531,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           builder: (context, _) => TripLegsSection(
             origin: _firstLegOrigin(),
             showPrice: _kgPriceEnabledNotifier.value,
-            currency: _currency,
+            tripCurrency: _currency,
             defaultKg: _availableKgNotifier.value,
             defaultPrice: context.read<AnnouncementFormBloc>().state.pricePerKg,
             // Escales par étape (FLUTTER-GE), préremplies avec celles du

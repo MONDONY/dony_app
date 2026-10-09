@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/country_catalog.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:equatable/equatable.dart';
@@ -19,6 +21,8 @@ class TripLegDraft extends Equatable {
     required this.availableKg,
     this.pricePerKg,
     this.stops,
+    this.currency,
+    this.acceptedPaymentMethods,
   });
 
   final String arrivalCity;
@@ -40,6 +44,30 @@ class TripLegDraft extends Equatable {
   /// Escales propres à l'étape (FLUTTER-GE), en avion seulement. `null` = non
   /// renseigné. Préremplies avec celles de l'étape précédente, modifiables.
   final TripStops? stops;
+
+  /// Devise propre à l'étape (code ISO, FLUTTER-HP) : par défaut celle du pays
+  /// de départ de l'étape, modifiable dans sa feuille. `null` (étape saisie par
+  /// un ancien écran) = devise du premier trajet.
+  final String? currency;
+
+  /// Moyens de paiement de l'étape, posés à la publication selon sa devise
+  /// (pas de carte en zone CFA, pas de mobile money ailleurs). `null` = ceux du
+  /// premier trajet, filtrés par la devise de l'étape.
+  final List<String>? acceptedPaymentMethods;
+
+  /// Copie avec les moyens de paiement résolus pour la devise de l'étape.
+  TripLegDraft withPaymentMethods(List<String> methods) => TripLegDraft(
+    arrivalCity: arrivalCity,
+    arrivalCountryCode: arrivalCountryCode,
+    departureDate: departureDate,
+    departureTime: departureTime,
+    deliveryAddress: deliveryAddress,
+    availableKg: availableKg,
+    pricePerKg: pricePerKg,
+    stops: stops,
+    currency: currency,
+    acceptedPaymentMethods: methods,
+  );
 
   /// Instant du départ, en heure locale.
   DateTime get departureAt {
@@ -63,7 +91,77 @@ class TripLegDraft extends Equatable {
     availableKg,
     pricePerKg,
     stops,
+    currency,
+    acceptedPaymentMethods,
   ];
+}
+
+/// Devise d'une étape (FLUTTER-HP). Le serveur n'impose aucune devise commune
+/// aux étapes d'un voyage : chacune est une annonce avec sa propre devise.
+abstract final class TripLegCurrency {
+  /// Devise par défaut d'une étape partant de [countryCode] : celle du pays
+  /// (miroir de `CountryCatalog`), sinon [fallback] (pays inconnu ou hors
+  /// catalogue).
+  static SupportedCurrency defaultFor(
+    String? countryCode, {
+    required SupportedCurrency fallback,
+  }) => CountryCatalog.byCode(countryCode)?.currency ?? fallback;
+
+  /// Devise de [leg], [fallback] (devise du premier trajet) si elle n'en porte
+  /// pas.
+  static SupportedCurrency of(TripLegDraft leg, SupportedCurrency fallback) =>
+      SupportedCurrency.fromCode(leg.currency) ?? fallback;
+
+  /// Retire de [methods] les moyens que [currency] n'autorise pas, miroir de
+  /// `AnnouncementPaymentRails.restrictToCurrency` : jamais vide, les espèces
+  /// restent toujours possibles.
+  static List<String> restrictPaymentMethods(
+    List<String> methods,
+    SupportedCurrency currency,
+  ) {
+    final kept = [
+      for (final m in methods)
+        if (m == 'CASH' ||
+            (m == 'STRIPE' && currency.isStripeEligible) ||
+            (m == 'MOBILE_MONEY' && currency.isMobileMoneyEligible))
+          m,
+    ];
+    return kept.isEmpty ? const ['CASH'] : kept;
+  }
+
+  /// Moyens de paiement d'une étape dans [currency], d'après les choix faits
+  /// sur le premier trajet (dans [firstCurrency]).
+  ///
+  /// Mêmes choix, bornés par la devise de l'étape : la carte seulement hors
+  /// zone CFA (et Stripe Connect prêt), le mobile money seulement en zone CFA.
+  /// Les espèces partent dès que la carte ne part pas, comme pour le premier
+  /// trajet. Quand la devise du premier trajet ne permettait pas le mobile
+  /// money (bascule grisée, le voyageur n'a pas pu le refuser), une étape en
+  /// franc CFA l'accepte si le compte de versement est actif dans sa devise.
+  /// Le serveur refiltre par devise (`AnnouncementPaymentRails`).
+  static List<String> paymentMethodsFor(
+    SupportedCurrency currency, {
+    required SupportedCurrency firstCurrency,
+    required bool stripeConfigured,
+    required bool cardEnabled,
+    required bool cashEnabled,
+    required bool mobileMoneyEnabled,
+    required bool mobileMoneyAccountActive,
+    SupportedCurrency? mobileMoneyAccountCurrency,
+  }) {
+    final cardOn = stripeConfigured && currency.isStripeEligible && cardEnabled;
+    final mobileMoneyOn =
+        currency.isMobileMoneyEligible &&
+        (firstCurrency.isMobileMoneyEligible
+            ? mobileMoneyEnabled
+            : mobileMoneyAccountActive &&
+                  mobileMoneyAccountCurrency == currency);
+    return [
+      if (cardOn) 'STRIPE',
+      if (cashEnabled || !cardOn) 'CASH',
+      if (mobileMoneyOn) 'MOBILE_MONEY',
+    ];
+  }
 }
 
 /// Point d'arrivée d'une étape, d'où part la suivante.

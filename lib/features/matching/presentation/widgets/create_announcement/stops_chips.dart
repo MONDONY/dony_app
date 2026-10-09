@@ -8,10 +8,24 @@ import 'package:flutter/material.dart';
 ///
 /// Facultatif : un second toucher sur l'option choisie la retire et le trajet
 /// redevient « non renseigné ».
+///
+/// [segmented] : bascule segmentée aux libellés courts, sur une seule ligne
+/// quelle que soit la largeur (feuille d'une étape, FLUTTER-HN) ; sinon des
+/// puces (formulaire du premier trajet).
 class StopsChips extends StatelessWidget {
-  const StopsChips({super.key, required this.notifier});
+  const StopsChips({super.key, required this.notifier, this.segmented = false});
 
   final ValueNotifier<TripStops?> notifier;
+  final bool segmented;
+
+  /// Libellé court d'une option, pour la bascule segmentée : « 2 escales ou
+  /// plus » ne tient pas dans un tiers de 320 dp.
+  static String shortLabel(AppLocalizations l, TripStops stops) =>
+      switch (stops) {
+        TripStops.direct => l.tripStopsDirect,
+        TripStops.one => l.tripStopsOne,
+        TripStops.twoOrMore => l.tripStopsTwoOrMoreShort,
+      };
 
   static String optionLabel(AppLocalizations l, TripStops stops) =>
       switch (stops) {
@@ -36,20 +50,38 @@ class StopsChips extends StatelessWidget {
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.xs),
-          Wrap(
-            spacing: DonySpacing.sm,
-            runSpacing: DonySpacing.xs,
-            children: [
-              for (final stops in TripStops.values)
-                ChoiceChip(
-                  key: Key('stops-${stops.name}'),
-                  label: Text(optionLabel(l, stops)),
-                  selected: selected == stops,
-                  onSelected: (_) =>
-                      notifier.value = selected == stops ? null : stops,
-                ),
-            ],
-          ),
+          if (segmented)
+            DonySegmentedControl<TripStops?>(
+              key: const Key('stops-segmented'),
+              selected: selected,
+              // Second toucher sur l'option choisie : retour à « non
+              // renseigné », comme les puces.
+              onSelect: (stops) =>
+                  notifier.value = selected == stops ? null : stops,
+              segments: [
+                for (final stops in TripStops.values)
+                  DonySegment<TripStops?>(
+                    key: Key('stops-${stops.name}'),
+                    value: stops,
+                    label: shortLabel(l, stops),
+                  ),
+              ],
+            )
+          else
+            Wrap(
+              spacing: DonySpacing.sm,
+              runSpacing: DonySpacing.xs,
+              children: [
+                for (final stops in TripStops.values)
+                  ChoiceChip(
+                    key: Key('stops-${stops.name}'),
+                    label: Text(optionLabel(l, stops)),
+                    selected: selected == stops,
+                    onSelected: (_) =>
+                        notifier.value = selected == stops ? null : stops,
+                  ),
+              ],
+            ),
           const SizedBox(height: DonySpacing.xs),
           Text(
             l.tripStopsHint,

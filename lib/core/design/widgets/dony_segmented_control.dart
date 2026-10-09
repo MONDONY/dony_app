@@ -54,9 +54,11 @@ class DonySegmentedControl<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final n = segments.length;
-    final index = segments
-        .indexWhere((s) => s.value == selected)
-        .clamp(0, n - 1);
+    final found = segments.indexWhere((s) => s.value == selected);
+    // Aucun segment choisi (choix facultatif, ex. escales d'une étape) : la
+    // capsule s'efface au lieu de se poser sur le premier segment.
+    final hasSelection = found >= 0;
+    final index = found.clamp(0, n - 1);
 
     return Container(
       height: 46,
@@ -77,13 +79,18 @@ class DonySegmentedControl<T> extends StatelessWidget {
                 duration: DonyDuration.base,
                 curve: DonyCurve.easeOut,
                 alignment: Alignment(-1 + 2 * index / (n - 1), 0),
-                child: Container(
-                  width: segWidth,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    boxShadow: DonyShadows.card,
+                child: AnimatedOpacity(
+                  duration: DonyDuration.base,
+                  curve: DonyCurve.easeOut,
+                  opacity: hasSelection ? 1 : 0,
+                  child: Container(
+                    width: segWidth,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                      boxShadow: DonyShadows.card,
+                    ),
                   ),
                 ),
               ),

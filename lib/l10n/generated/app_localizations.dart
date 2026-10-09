@@ -28742,10 +28742,10 @@ abstract class AppLocalizations {
   /// **'Le code de retrait a expiré : générez-en un nouveau pour l\'ajouter au message.'**
   String get recipientNotifyCodeExpiredHint;
 
-  /// Prix d'étape au-dessus du plafond de la devise du voyage (FLUTTER-GK).
+  /// Prix d'étape au-dessus du plafond de la devise de l'étape (FLUTTER-GK, FLUTTER-HP).
   ///
   /// In fr, this message translates to:
-  /// **'Maximum {max} par kilo dans la devise du voyage.'**
+  /// **'Maximum {max} par kilo.'**
   String tripLegSheetPriceTooHigh(String max);
 
   /// Prix au kilo d'une étape, devise comprise, dans la liste des étapes (FLUTTER-GK).
@@ -28754,17 +28754,17 @@ abstract class AppLocalizations {
   /// **'{price} par kg'**
   String tripLegsLegPrice(String price);
 
-  /// Étape dont le prix dépasse le plafond de la devise du voyage (FLUTTER-GK).
+  /// Étape dont le prix dépasse le plafond de sa devise (FLUTTER-GK, FLUTTER-HP).
   ///
   /// In fr, this message translates to:
   /// **'Prix au-dessus du plafond en {currency} : modifiez cette étape.'**
   String tripLegsPriceAboveMax(String currency);
 
-  /// Rappel de la devise du voyage dans la section des étapes (FLUTTER-GK).
+  /// Rappel dans la section des étapes : chaque étape a sa propre devise (FLUTTER-HP).
   ///
   /// In fr, this message translates to:
-  /// **'Prix des étapes en {currency}, la devise du voyage.'**
-  String tripLegsCurrencyNote(String currency);
+  /// **'Chaque étape a sa devise : celle de son pays de départ par défaut, modifiable dans l\'étape.'**
+  String get tripLegsCurrencyNote;
 
   /// Ligne « Devise » de l'aperçu d'un trajet (FLUTTER-GK).
   ///
@@ -28850,7 +28850,7 @@ abstract class AppLocalizations {
   /// **'Prix trop élevé : maximum {max}/kg'**
   String pricePerKgTooHigh(String max);
 
-  /// Étape dont le prix est sous le plancher de la devise du voyage (FLUTTER-GK).
+  /// Étape dont le prix est sous le plancher de sa devise (FLUTTER-GK, FLUTTER-HP).
   ///
   /// In fr, this message translates to:
   /// **'Prix sous le minimum en {currency} : modifiez cette étape.'**
@@ -28867,6 +28867,114 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce prix au kilo est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.'**
   String get errorPriceOutOfBoundsMessage;
+
+  /// Champ devise de la feuille d'une étape : chaque étape a sa devise (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise de l\'étape'**
+  String get tripLegSheetCurrency;
+
+  /// Aide sous le champ devise d'une étape (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Par défaut, celle du pays de départ. Le prix n\'est pas converti si vous en changez.'**
+  String get tripLegSheetCurrencyHint;
+
+  /// Option du sélecteur de devise d'une étape : nom et symbole (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} ({symbol})'**
+  String tripLegSheetCurrencyOption(String name, String symbol);
+
+  /// Nom accessible du champ devise d'une étape (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer la devise de l\'étape, actuellement {currency}'**
+  String tripLegSheetCurrencyMenuSemantics(String currency);
+
+  /// Unité affichée dans le champ kilos d'une étape (FLUTTER-HN).
+  ///
+  /// In fr, this message translates to:
+  /// **'kg'**
+  String get tripLegSheetKgSuffix;
+
+  /// Unité affichée dans le champ prix d'une étape : devise de l'étape par kilo (FLUTTER-HN).
+  ///
+  /// In fr, this message translates to:
+  /// **'{currency}/kg'**
+  String tripLegSheetPriceSuffix(String currency);
+
+  /// Option courte « 2 escales ou plus » de la bascule d'escales de la feuille d'étape (FLUTTER-HN).
+  ///
+  /// In fr, this message translates to:
+  /// **'2 ou +'**
+  String get tripStopsTwoOrMoreShort;
+
+  /// Devise d'une étape en grille seule (sans prix au kilo) dans la liste des étapes (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'en {currency}'**
+  String tripLegsLegCurrency(String currency);
+
+  /// Étape sans prix au kilo, dans une autre devise que le premier trajet, au moment de publier (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez le prix au kilo de chaque étape.'**
+  String get tripLegsPriceMissing;
+
+  /// Confirmation du changement de devise du premier trajet quand le voyage a d'autres étapes (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le premier trajet passe en {currency}. Les étapes suivantes gardent leur devise ({legCurrencies}).'**
+  String tripSwitchCurrencyConfirmMessageLegs(
+    String currency,
+    String legCurrencies,
+  );
+
+  /// Confirmation du changement de devise du premier trajet, carte perdue, quand le voyage a d'autres étapes (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le premier trajet passe en {currency} et le paiement par carte n\'y sera plus proposé. Les étapes suivantes gardent leur devise ({legCurrencies}).'**
+  String tripSwitchCurrencyConfirmMessageLegsNoCard(
+    String currency,
+    String legCurrencies,
+  );
+
+  /// Titre de la confirmation avant de publier un voyage dont les étapes ont des devises différentes (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier en plusieurs devises ?'**
+  String get tripCurrenciesConfirmTitle;
+
+  /// Explication de la confirmation d'un voyage en plusieurs devises (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque étape est publiée dans sa devise, sans conversion des prix.'**
+  String get tripCurrenciesConfirmMessage;
+
+  /// Ligne d'une étape dans la confirmation d'un voyage en plusieurs devises (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {index} · {route}'**
+  String tripCurrenciesConfirmLeg(int index, String route);
+
+  /// Bouton de confirmation d'un voyage en plusieurs devises (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier le voyage'**
+  String get tripCurrenciesConfirmCta;
+
+  /// Bouton pour revenir au formulaire avant de publier un voyage en plusieurs devises (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Revoir les étapes'**
+  String get tripCurrenciesConfirmEdit;
+
+  /// Légende de l'adresse de livraison des colis dans la feuille d'une étape (FLUTTER-HN).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse de livraison'**
+  String get tripLegSheetAddressCaption;
 }
 
 class _AppLocalizationsDelegate

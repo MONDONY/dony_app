@@ -1,4 +1,5 @@
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -18,24 +19,31 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 /// Feuille d'une étape d'un voyage (FLUTTER-4D) : ville d'arrivée, date et
-/// heure de départ, point de récupération, kilos et prix de l'étape.
+/// heure de départ, point de récupération, kilos, devise et prix de l'étape.
 ///
 /// La ville de départ est imposée ([origin]) : c'est l'arrivée de l'étape
-/// précédente. Le reste du trajet (mode de transport, contenus, paiements,
-/// devise) est repris du premier trajet à la publication. Les escales sont
-/// propres à chaque étape en avion (FLUTTER-GE).
+/// précédente. Le reste du trajet (mode de transport, contenus) est repris du
+/// premier trajet à la publication. Les escales sont propres à chaque étape en
+/// avion (FLUTTER-GE).
 ///
-/// Le prix s'affiche et se borne dans la devise du voyage ([currency]) : sans
-/// suffixe ni plafond, une étape est partie à 8 XOF/kg (FLUTTER-GK).
+/// Chaque étape a sa devise (FLUTTER-HP) : par défaut celle du pays de départ
+/// ([defaultCurrency]), modifiable. Le suffixe du prix, son plancher et son
+/// plafond la suivent : sans suffixe ni plafond, une étape est partie à
+/// 8 XOF/kg (FLUTTER-GK).
+///
+/// Mise en page (FLUTTER-HN) : kilos, devise et prix empilés sur toute la
+/// largeur, sans icône de préfixe, pour qu'aucun libellé ne se replie à
+/// 320 dp ni en texte agrandi.
 class TripLegSheet extends StatefulWidget {
   const TripLegSheet({
     super.key,
     required this.origin,
     this.initial,
     required this.showPrice,
-    required this.currency,
+    required this.defaultCurrency,
     this.defaultKg,
     this.defaultPrice,
+    this.defaultPriceCurrency,
     this.showStops = false,
     this.defaultStops,
     this.onSubmitReady,
@@ -46,14 +54,20 @@ class TripLegSheet extends StatefulWidget {
   final TripLegDraft? initial;
 
   /// Prix au kilo propre à l'étape (mode « au kilo »). En grille seule, il est
-  /// masqué et l'étape reprend le prix du premier trajet.
+  /// masqué et l'étape reprend la grille du voyageur, convertie par le serveur
+  /// dans la devise de l'étape.
   final bool showPrice;
 
-  /// Devise du voyage : suffixe du prix, plancher [minUnitPriceFor] et
-  /// plafond [maxUnitPriceFor].
-  final SupportedCurrency currency;
+  /// Devise proposée à l'ouverture d'une nouvelle étape (pays de départ),
+  /// ou à défaut de devise sur [initial].
+  final SupportedCurrency defaultCurrency;
   final double? defaultKg;
+
+  /// Prix prérempli (étape précédente ou premier trajet), dans
+  /// [defaultPriceCurrency]. Ignoré si l'étape s'ouvre dans une autre
+  /// devise : jamais de conversion silencieuse (FLUTTER-HP).
   final double? defaultPrice;
+  final SupportedCurrency? defaultPriceCurrency;
 
   /// Trajet en avion : l'étape a son propre choix d'escales (FLUTTER-GE),
   /// prérempli avec [defaultStops] (celui de l'étape précédente).
@@ -69,9 +83,10 @@ class TripLegSheet extends StatefulWidget {
     required TripLegOrigin origin,
     TripLegDraft? initial,
     required bool showPrice,
-    required SupportedCurrency currency,
+    required SupportedCurrency defaultCurrency,
     double? defaultKg,
     double? defaultPrice,
+    SupportedCurrency? defaultPriceCurrency,
     bool showStops = false,
     TripStops? defaultStops,
   }) {
@@ -101,9 +116,10 @@ class TripLegSheet extends StatefulWidget {
         origin: origin,
         initial: initial,
         showPrice: showPrice,
-        currency: currency,
+        defaultCurrency: defaultCurrency,
         defaultKg: defaultKg,
         defaultPrice: defaultPrice,
+        defaultPriceCurrency: defaultPriceCurrency,
         showStops: showStops,
         defaultStops: defaultStops,
         onSubmitReady: (fn) => submit = fn,
@@ -124,6 +140,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
   late final ValueNotifier<TimeOfDay?> _time;
   late final ValueNotifier<AddressData?> _address;
   late final ValueNotifier<TripStops?> _stops;
+  late final ValueNotifier<SupportedCurrency> _currency;
   late final TextEditingController _kgCtrl;
   late final TextEditingController _priceCtrl;
 
@@ -145,35 +162,41 @@ class _TripLegSheetState extends State<TripLegSheet> {
     _stops = ValueNotifier<TripStops?>(
       i != null ? i.stops : widget.defaultStops,
     );
+    _currency = ValueNotifier<SupportedCurrency>(
+      SupportedCurrency.fromCode(i?.currency) ?? widget.defaultCurrency,
+    );
     _kgCtrl = TextEditingController(
       text: _formatNumber(i?.availableKg ?? widget.defaultKg),
     );
+    // Prix prérempli seulement dans sa devise : 8 €/kg ne deviennent pas
+    // 8 F CFA/kg (FLUTTER-HP).
+    final priceCurrency = widget.defaultPriceCurrency;
+    final defaultPrice =
+        priceCurrency == null || priceCurrency == _currency.value
+        ? widget.defaultPrice
+        : null;
     _priceCtrl = TextEditingController(
-      text: _formatNumber(i?.pricePerKg ?? widget.defaultPrice),
+      text: _formatNumber(i?.pricePerKg ?? defaultPrice),
     );
-    for (final n in <Listenable>[
-      _cityName,
-      _date,
-      _time,
-      _address,
-      _kgCtrl,
-      _priceCtrl,
-    ]) {
+    for (final n in _watched) {
       n.addListener(_notifyValidity);
     }
     widget.onSubmitReady?.call(_submit);
   }
 
+  List<Listenable> get _watched => [
+    _cityName,
+    _date,
+    _time,
+    _address,
+    _currency,
+    _kgCtrl,
+    _priceCtrl,
+  ];
+
   @override
   void dispose() {
-    for (final n in <Listenable>[
-      _cityName,
-      _date,
-      _time,
-      _address,
-      _kgCtrl,
-      _priceCtrl,
-    ]) {
+    for (final n in _watched) {
       n.removeListener(_notifyValidity);
     }
     _city.dispose();
@@ -183,6 +206,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
     _time.dispose();
     _address.dispose();
     _stops.dispose();
+    _currency.dispose();
     _kgCtrl.dispose();
     _priceCtrl.dispose();
     super.dispose();
@@ -208,20 +232,20 @@ class _TripLegSheetState extends State<TripLegSheet> {
   bool get _sameCityAsOrigin =>
       TripLegChain.sameCity(_cityName.value, widget.origin.city);
 
-  /// Prix saisi au-delà du plafond de la devise du voyage (FLUTTER-GK).
+  /// Prix saisi au-delà du plafond de la devise de l'étape (FLUTTER-GK).
   bool get _priceTooHigh {
     if (!widget.showPrice) return false;
     final price = _parseNumber(_priceCtrl.text);
-    return price != null && price > maxUnitPriceFor(widget.currency);
+    return price != null && price > maxUnitPriceFor(_currency.value);
   }
 
-  /// Prix saisi sous le plancher de la devise du voyage (1 €/kg converti) :
+  /// Prix saisi sous le plancher de la devise de l'étape (1 €/kg converti) :
   /// 8 XOF/kg tapés en croyant saisir des euros (FLUTTER-GK).
   bool get _priceTooLow {
     if (!widget.showPrice) return false;
     return unitPriceOutOfBounds(
           _parseNumber(_priceCtrl.text),
-          widget.currency,
+          _currency.value,
         ) ==
         UnitPriceBound.tooLow;
   }
@@ -255,6 +279,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
       availableKg: kg,
       pricePerKg: price,
       stops: widget.showStops ? _stops.value : null,
+      currency: _currency.value.code,
     );
   }
 
@@ -319,6 +344,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context).toLanguageTag();
+    const gap = SizedBox(height: DonySpacing.md);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -336,7 +362,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
             onCleared: _onCityCleared,
           ),
         ),
-        const SizedBox(height: DonySpacing.md),
+        gap,
         ValueListenableBuilder<DateTime?>(
           valueListenable: _date,
           builder: (context, date, _) => DonyTextField.tappable(
@@ -354,7 +380,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
             onTap: _pickDate,
           ),
         ),
-        const SizedBox(height: DonySpacing.md),
+        gap,
         ValueListenableBuilder<TimeOfDay?>(
           valueListenable: _time,
           builder: (context, time, _) => DonyTextField.tappable(
@@ -368,91 +394,183 @@ class _TripLegSheetState extends State<TripLegSheet> {
           ),
         ),
         if (widget.showStops) ...[
-          const SizedBox(height: DonySpacing.md),
-          StopsChips(notifier: _stops),
+          const SizedBox(height: DonySpacing.base),
+          // Bascule segmentée : les puces passaient à la ligne à 360 dp
+          // (FLUTTER-HN).
+          StopsChips(notifier: _stops, segmented: true),
         ],
-        const SizedBox(height: DonySpacing.md),
+        const SizedBox(height: DonySpacing.base),
         ValueListenableBuilder<AddressData?>(
           valueListenable: _address,
           builder: (context, address, _) => AddressSelectorField(
             type: AddressSelectorType.livraison,
             value: address,
+            dense: true,
+            caption: l.tripLegSheetAddressCaption,
             onChanged: (a) => _address.value = a,
           ),
         ),
-        const SizedBox(height: DonySpacing.md),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: DonyTextField(
-                key: const Key('trip-leg-kg'),
-                controller: _kgCtrl,
-                label: l.tripLegSheetKg,
+        const SizedBox(height: DonySpacing.base),
+        // Kilos, devise et prix empilés (FLUTTER-HN) : côte à côte, chaque
+        // champ faisait ~150 dp et son libellé se repliait sur 2 ou 3 lignes
+        // entre l'icône de préfixe et le suffixe.
+        DonyTextField(
+          key: const Key('trip-leg-kg'),
+          controller: _kgCtrl,
+          label: l.tripLegSheetKg,
+          requiredLabel: true,
+          suffixIcon: _UnitSuffix(
+            key: const Key('trip-leg-kg-unit'),
+            text: l.tripLegSheetKgSuffix,
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: widget.showPrice
+              ? TextInputAction.next
+              : TextInputAction.done,
+        ),
+        gap,
+        _CurrencyField(notifier: _currency),
+        if (widget.showPrice) ...[
+          gap,
+          ListenableBuilder(
+            listenable: Listenable.merge([_priceCtrl, _currency]),
+            builder: (context, _) {
+              final currency = _currency.value;
+              return DonyTextField(
+                key: const Key('trip-leg-price'),
+                controller: _priceCtrl,
+                label: l.tripLegSheetPrice,
                 requiredLabel: true,
-                prefixIcon: DonyIcons.suitcase,
+                // Devise de l'étape rappelée dans le champ (FLUTTER-GK).
+                suffixIcon: _UnitSuffix(
+                  key: const Key('trip-leg-price-currency'),
+                  text: l.tripLegSheetPriceSuffix(currency.symbol),
+                ),
+                errorText: _priceTooLow
+                    ? l.pricePerKgTooLow(
+                        CurrencyFormatter.format(
+                          minUnitPriceFor(currency),
+                          currency,
+                          compact: true,
+                        ),
+                      )
+                    : _priceTooHigh
+                    ? l.tripLegSheetPriceTooHigh(
+                        CurrencyFormatter.format(
+                          maxUnitPriceFor(currency),
+                          currency,
+                          compact: true,
+                        ),
+                      )
+                    : null,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                textInputAction: widget.showPrice
-                    ? TextInputAction.next
-                    : TextInputAction.done,
-              ),
-            ),
-            if (widget.showPrice) ...[
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _priceCtrl,
-                  builder: (context, _, _) => DonyTextField(
-                    key: const Key('trip-leg-price'),
-                    controller: _priceCtrl,
-                    label: l.tripLegSheetPrice,
-                    requiredLabel: true,
-                    prefixIcon: DonyIcons.editPrice,
-                    // Devise du voyage rappelée dans le champ (FLUTTER-GK),
-                    // comme le prix personnalisé du premier trajet.
-                    suffixIcon: Padding(
-                      key: const Key('trip-leg-price-currency'),
-                      padding: const EdgeInsetsDirectional.only(
-                        end: DonySpacing.md,
-                      ),
-                      child: Text(
-                        '${widget.currency.symbol}/kg',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    errorText: _priceTooLow
-                        ? l.pricePerKgTooLow(
-                            CurrencyFormatter.format(
-                              minUnitPriceFor(widget.currency),
-                              widget.currency,
-                              compact: true,
-                            ),
-                          )
-                        : _priceTooHigh
-                        ? l.tripLegSheetPriceTooHigh(
-                            CurrencyFormatter.format(
-                              maxUnitPriceFor(widget.currency),
-                              widget.currency,
-                              compact: true,
-                            ),
-                          )
-                        : null,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    textInputAction: TextInputAction.done,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+                textInputAction: TextInputAction.done,
+              );
+            },
+          ),
+        ],
         const SizedBox(height: DonySpacing.xl),
       ],
+    );
+  }
+}
+
+/// Unité courte en fin de champ (« kg », « F CFA/kg »), sur une ligne.
+class _UnitSuffix extends StatelessWidget {
+  const _UnitSuffix({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: DonySpacing.base),
+      child: Text(
+        text,
+        maxLines: 1,
+        softWrap: false,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: cs.onSurfaceVariant,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    );
+  }
+}
+
+/// Choix de la devise de l'étape (FLUTTER-HP), parmi les devises de l'app.
+/// Un menu ancré plutôt qu'une seconde feuille par-dessus celle de l'étape.
+class _CurrencyField extends StatelessWidget {
+  const _CurrencyField({required this.notifier});
+
+  final ValueNotifier<SupportedCurrency> notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return ValueListenableBuilder<SupportedCurrency>(
+      valueListenable: notifier,
+      builder: (context, current, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MenuAnchor(
+            alignmentOffset: const Offset(0, DonySpacing.xs),
+            menuChildren: [
+              for (final c in SupportedCurrency.values)
+                MenuItemButton(
+                  key: Key('trip-leg-currency-${c.code}'),
+                  leadingIcon: Icon(
+                    Icons.check_rounded,
+                    size: 20,
+                    color: c == current ? cs.primary : Colors.transparent,
+                  ),
+                  onPressed: () => notifier.value = c,
+                  child: Text(
+                    l.tripLegSheetCurrencyOption(c.name(l), c.symbol),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+            builder: (context, controller, _) {
+              void toggle() =>
+                  controller.isOpen ? controller.close() : controller.open();
+              return Semantics(
+                button: true,
+                label: l.tripLegSheetCurrencyMenuSemantics(current.name(l)),
+                onTap: toggle,
+                excludeSemantics: true,
+                child: DonyTextField.tappable(
+                  key: const Key('trip-leg-currency'),
+                  label: l.tripLegSheetCurrency,
+                  value: l.tripLegSheetCurrencyOption(
+                    current.name(l),
+                    current.symbol,
+                  ),
+                  trailing: Icon(
+                    Icons.expand_more_rounded,
+                    color: cs.onSurfaceVariant,
+                  ),
+                  onTap: toggle,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+            child: Text(
+              l.tripLegSheetCurrencyHint,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -365,6 +366,13 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
               ...legs.map((l) => l.arrivalCity),
             ].join('→'),
             'is_draft': event.first.saveAsDraft,
+            // Voyage publié dans plusieurs devises (FLUTTER-HP).
+            'currency_count': {
+              event.first.currency ?? '',
+              ...event.legs.map(
+                (l) => l.currency ?? event.first.currency ?? '',
+              ),
+            }.length,
           },
         ),
       );
@@ -595,7 +603,9 @@ List<AnnouncementPayload> buildTripPayloads(
   var fromCity = first.arrivalCity;
   var fromCountry = first.arrivalCountryCode;
   var fromAddress = first.deliveryAddress;
+  final firstCurrency = SupportedCurrency.fromCodeOrDefault(first.currency);
   for (final leg in legs) {
+    final legCurrency = TripLegCurrency.of(leg, firstCurrency);
     payloads.add(
       AnnouncementPayload(
         departureCity: fromCity,
@@ -607,8 +617,12 @@ List<AnnouncementPayload> buildTripPayloads(
         pickupAddress: fromAddress,
         deliveryAddress: leg.deliveryAddress,
         availableKg: leg.availableKg,
-        // Grille seule (MIXED) : l'étape garde le prix au kilo du premier trajet.
-        pricePerKg: leg.pricePerKg ?? first.pricePerKg,
+        // Grille seule (MIXED) : l'étape garde le prix au kilo du premier
+        // trajet, seulement dans la même devise. Jamais de conversion
+        // silencieuse : 8 €/kg ne deviennent pas 8 F CFA/kg (FLUTTER-HP).
+        pricePerKg:
+            leg.pricePerKg ??
+            (legCurrency.code == firstCurrency.code ? first.pricePerKg : 0),
         transportMode: first.transportMode,
         // Escales propres à chaque étape (FLUTTER-GE) : une correspondance
         // directe peut suivre un vol avec escale.
@@ -616,13 +630,22 @@ List<AnnouncementPayload> buildTripPayloads(
         description: first.description,
         acceptedContentTypes: first.acceptedContentTypes,
         refusedTypes: first.refusedTypes,
-        acceptedPaymentMethods: first.acceptedPaymentMethods,
+        // Moyens de paiement cohérents avec la devise de l'étape : pas de
+        // carte en zone CFA, pas de mobile money ailleurs (FLUTTER-HP).
+        acceptedPaymentMethods:
+            leg.acceptedPaymentMethods ??
+            TripLegCurrency.restrictPaymentMethods(
+              first.acceptedPaymentMethods,
+              legCurrency,
+            ),
         capacityUnit: first.capacityUnit,
         pricingMode: first.pricingMode,
         handoverDeadline: leg.departureAt.subtract(lead),
         negotiable: first.negotiable,
         saveAsDraft: first.saveAsDraft,
-        currency: first.currency,
+        // Devise propre à l'étape (FLUTTER-HP), celle du premier trajet à
+        // défaut.
+        currency: leg.currency ?? first.currency,
       ),
     );
     fromCity = leg.arrivalCity;

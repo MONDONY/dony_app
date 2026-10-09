@@ -17440,7 +17440,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tripLegSheetPriceTooHigh(String max) {
-    return 'Maximum $max per kg in the trip currency.';
+    return 'Maximum $max per kg.';
   }
 
   @override
@@ -17454,9 +17454,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String tripLegsCurrencyNote(String currency) {
-    return 'Leg prices are in $currency, the trip currency.';
-  }
+  String get tripLegsCurrencyNote =>
+      'Each leg has its own currency: its departure country\'s by default, editable in the leg.';
 
   @override
   String get listingRowLabelCurrency => 'Currency';
@@ -17555,4 +17554,77 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorPriceOutOfBoundsMessage =>
       'This price per kg is outside the allowed range for the trip currency. Check the amount and the selected currency.';
+
+  @override
+  String get tripLegSheetCurrency => 'Leg currency';
+
+  @override
+  String get tripLegSheetCurrencyHint =>
+      'Defaults to the departure country\'s currency. The price is not converted if you change it.';
+
+  @override
+  String tripLegSheetCurrencyOption(String name, String symbol) {
+    return '$name ($symbol)';
+  }
+
+  @override
+  String tripLegSheetCurrencyMenuSemantics(String currency) {
+    return 'Change the leg currency, currently $currency';
+  }
+
+  @override
+  String get tripLegSheetKgSuffix => 'kg';
+
+  @override
+  String tripLegSheetPriceSuffix(String currency) {
+    return '$currency/kg';
+  }
+
+  @override
+  String get tripStopsTwoOrMoreShort => '2+';
+
+  @override
+  String tripLegsLegCurrency(String currency) {
+    return 'in $currency';
+  }
+
+  @override
+  String get tripLegsPriceMissing => 'Enter the price per kg for each leg.';
+
+  @override
+  String tripSwitchCurrencyConfirmMessageLegs(
+    String currency,
+    String legCurrencies,
+  ) {
+    return 'The first trip switches to $currency. The following legs keep their currency ($legCurrencies).';
+  }
+
+  @override
+  String tripSwitchCurrencyConfirmMessageLegsNoCard(
+    String currency,
+    String legCurrencies,
+  ) {
+    return 'The first trip switches to $currency and card payment will no longer be offered on it. The following legs keep their currency ($legCurrencies).';
+  }
+
+  @override
+  String get tripCurrenciesConfirmTitle => 'Publish in several currencies?';
+
+  @override
+  String get tripCurrenciesConfirmMessage =>
+      'Each leg is published in its own currency, with no price conversion.';
+
+  @override
+  String tripCurrenciesConfirmLeg(int index, String route) {
+    return 'Leg $index · $route';
+  }
+
+  @override
+  String get tripCurrenciesConfirmCta => 'Publish the trip';
+
+  @override
+  String get tripCurrenciesConfirmEdit => 'Review the legs';
+
+  @override
+  String get tripLegSheetAddressCaption => 'Delivery address';
 }
