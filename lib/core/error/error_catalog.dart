@@ -433,6 +433,23 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.workspace_premium_outlined,
     ),
+    // Prix au kilo hors des bornes de la devise (FLUTTER-GK) : plancher de
+    // 1 €/kg et plafond de 500 €/kg convertis. Trajet simple, étape (avec
+    // `legIndex`), modification, récurrence (`price-out-of-bounds`) et modèle
+    // (`trip-template/price-out-of-bounds`). Les formulaires bornent déjà la
+    // saisie : ce message ne sort que si l'écran et le serveur divergent.
+    'price-out-of-bounds': _Entry(
+      title: (l) => l.errorPriceOutOfBoundsTitle,
+      message: (l) => l.errorPriceOutOfBoundsMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_outlined,
+    ),
+    'trip-template/price-out-of-bounds': _Entry(
+      title: (l) => l.errorPriceOutOfBoundsTitle,
+      message: (l) => l.errorPriceOutOfBoundsMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_outlined,
+    ),
     // Voyage à plusieurs étapes (FLUTTER-4D), refus de POST /announcements/trips.
     'trip-leg-city-mismatch': _Entry(
       title: (l) => l.errorTripLegCityMismatchTitle,

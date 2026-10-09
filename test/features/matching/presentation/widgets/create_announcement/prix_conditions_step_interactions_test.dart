@@ -9,6 +9,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
@@ -241,6 +242,64 @@ void main() {
         expect(customPrice.value, 12.0);
       },
     );
+  });
+
+  // FLUTTER-GK : bornes du prix libre dans la devise de l'annonce.
+  group('PrixConditionsStep — bornes du prix libre', () {
+    Future<void> pumpCustom(
+      WidgetTester tester,
+      SupportedCurrency currency,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          currency: currency,
+          priceOption: ValueNotifier<int>(
+            KgPriceReference.forCurrency(currency).presets.length,
+          ),
+          customPriceCtrl: TextEditingController(),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+    }
+
+    Future<void> type(WidgetTester tester, String text) async {
+      await tester.enterText(
+        find.descendant(
+          of: find.byKey(const Key('trip-custom-price')),
+          matching: find.byType(TextField),
+        ),
+        text,
+      );
+      await tester.pump();
+    }
+
+    testWidgets('EUR : 0,99 trop bas, 1 admis, 501 trop élevé', (tester) async {
+      await pumpCustom(tester, SupportedCurrency.eur);
+
+      await type(tester, '0,99');
+      expect(find.textContaining('Prix trop bas : minimum'), findsOneWidget);
+
+      await type(tester, '1');
+      expect(find.textContaining('Prix trop bas'), findsNothing);
+      expect(find.textContaining('Prix trop élevé'), findsNothing);
+
+      await type(tester, '501');
+      expect(find.textContaining('Prix trop élevé : maximum'), findsOneWidget);
+    });
+
+    testWidgets('XOF : 8 trop bas (minimum 656), 656 admis', (tester) async {
+      await pumpCustom(tester, SupportedCurrency.xof);
+
+      await type(tester, '8');
+      expect(
+        find.textContaining('Prix trop bas : minimum 656'),
+        findsOneWidget,
+      );
+
+      await type(tester, '656');
+      expect(find.textContaining('Prix trop bas'), findsNothing);
+    });
   });
 
   group('PrixConditionsStep — combobox "Ce que j\'accepte"', () {

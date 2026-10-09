@@ -17506,4 +17506,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suiviNoReceptions => 'No parcels to receive right now.';
+
+  @override
+  String pricePerKgTooLow(String min) {
+    return 'Price too low: minimum $min/kg';
+  }
+
+  @override
+  String pricePerKgTooHigh(String max) {
+    return 'Price too high: maximum $max/kg';
+  }
+
+  @override
+  String tripLegsPriceBelowMin(String currency) {
+    return 'Price below the $currency minimum: edit this leg.';
+  }
+
+  @override
+  String get errorPriceOutOfBoundsTitle => 'Price out of range';
+
+  @override
+  String get errorPriceOutOfBoundsMessage =>
+      'This price per kg is outside the allowed range for the trip currency. Check the amount and the selected currency.';
 }

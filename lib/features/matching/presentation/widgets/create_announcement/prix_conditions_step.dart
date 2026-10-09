@@ -392,33 +392,45 @@ class PrixConditionsStep extends StatelessWidget {
                               // ── Champ prix custom ─────────────────────
                               if (isCustom) ...[
                                 const SizedBox(height: DonySpacing.sm),
-                                DonyTextField(
-                                  label: l.tripPublishPricePerKgSectionLabel,
-                                  hint: l.tripPublishCustomPriceFieldHint,
-                                  controller: customPriceCtrl,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  suffixIcon: Padding(
-                                    padding: const EdgeInsets.only(
-                                      right: DonySpacing.md,
+                                ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: customPriceCtrl,
+                                  builder: (context, value, _) => DonyTextField(
+                                    label: l.tripPublishPricePerKgSectionLabel,
+                                    hint: l.tripPublishCustomPriceFieldHint,
+                                    controller: customPriceCtrl,
+                                    key: const Key('trip-custom-price'),
+                                    // Bornes de la devise de l'annonce
+                                    // (FLUTTER-GK) : le CTA reste grisé tant
+                                    // que le prix est hors bornes.
+                                    errorText: unitPriceBoundsError(
+                                      l,
+                                      parsePriceInput(value.text),
+                                      currency ?? SupportedCurrency.eur,
                                     ),
-                                    child: Text(
-                                      '${currency?.symbol ?? ''}/kg',
-                                      style: tt.bodyMedium?.copyWith(
-                                        color: cs.onSurfaceVariant,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
+                                    suffixIcon: Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: DonySpacing.md,
+                                      ),
+                                      child: Text(
+                                        '${currency?.symbol ?? ''}/kg',
+                                        style: tt.bodyMedium?.copyWith(
+                                          color: cs.onSurfaceVariant,
+                                        ),
                                       ),
                                     ),
+                                    onChanged: (v) {
+                                      final parsed = double.tryParse(
+                                        v.replaceAll(',', '.'),
+                                      );
+                                      if (parsed != null && parsed > 0) {
+                                        customPriceNotifier.value = parsed;
+                                      }
+                                    },
                                   ),
-                                  onChanged: (v) {
-                                    final parsed = double.tryParse(
-                                      v.replaceAll(',', '.'),
-                                    );
-                                    if (parsed != null && parsed > 0) {
-                                      customPriceNotifier.value = parsed;
-                                    }
-                                  },
                                 ),
                               ],
                               const SizedBox(height: DonySpacing.sm),

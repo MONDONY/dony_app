@@ -9453,5 +9453,10 @@
   "tripParcelsSummaryDelivered": "{count, plural, =1{delivered} other{delivered}}",
   "suiviSegmentShipments": "Sending",
   "suiviSegmentReceptions": "Receiving",
-  "suiviNoReceptions": "No parcels to receive right now."
+  "suiviNoReceptions": "No parcels to receive right now.",
+  "pricePerKgTooLow": "Price too low: minimum {min}/kg",
+  "pricePerKgTooHigh": "Price too high: maximum {max}/kg",
+  "tripLegsPriceBelowMin": "Price below the {currency} minimum: edit this leg.",
+  "errorPriceOutOfBoundsTitle": "Price out of range",
+  "errorPriceOutOfBoundsMessage": "This price per kg is outside the allowed range for the trip currency. Check the amount and the selected currency."
 }

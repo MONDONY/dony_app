@@ -19682,5 +19682,15 @@
   "suiviSegmentReceptions": "Réceptions",
   "@suiviSegmentReceptions": {"description": "Segment « Réceptions » du mode Suivre de l'onglet Suivi : colis que l'utilisateur doit recevoir (suivi_track_panel.dart, FLUTTER-GQ)."},
   "suiviNoReceptions": "Aucun colis à recevoir pour le moment.",
-  "@suiviNoReceptions": {"description": "Segment « Réceptions » vide dans le mode Suivre de l'onglet Suivi (suivi_track_panel.dart, FLUTTER-GQ)."}
+  "@suiviNoReceptions": {"description": "Segment « Réceptions » vide dans le mode Suivre de l'onglet Suivi (suivi_track_panel.dart, FLUTTER-GQ)."},
+  "pricePerKgTooLow": "Prix trop bas : minimum {min}/kg",
+  "@pricePerKgTooLow": {"description": "Prix au kilo sous le plancher de la devise, 1 €/kg converti (FLUTTER-GK).", "placeholders": {"min": {"type": "String"}}},
+  "pricePerKgTooHigh": "Prix trop élevé : maximum {max}/kg",
+  "@pricePerKgTooHigh": {"description": "Prix au kilo au-dessus du plafond de la devise, 500 €/kg converti (FLUTTER-GK).", "placeholders": {"max": {"type": "String"}}},
+  "tripLegsPriceBelowMin": "Prix sous le minimum en {currency} : modifiez cette étape.",
+  "@tripLegsPriceBelowMin": {"description": "Étape dont le prix est sous le plancher de la devise du voyage (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},
+  "errorPriceOutOfBoundsTitle": "Prix hors limites",
+  "@errorPriceOutOfBoundsTitle": {"description": "Erreur price-out-of-bounds : prix au kilo hors des bornes de la devise (FLUTTER-GK)."},
+  "errorPriceOutOfBoundsMessage": "Ce prix au kilo est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.",
+  "@errorPriceOutOfBoundsMessage": {"description": "Erreur price-out-of-bounds : prix au kilo hors des bornes de la devise (FLUTTER-GK)."}
 }

@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
@@ -81,8 +82,16 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
   /// (constat #3).
   bool get _hasPricePerKg => widget.template.pricePerKg != null;
 
+  /// Prix du modèle hors des bornes de la devise de la récurrence (plancher
+  /// 1 €/kg converti, plafond 500 €/kg converti) : le serveur refuserait la
+  /// récurrence (422 `price-out-of-bounds`, FLUTTER-GK). Le prix n'est pas
+  /// éditable ici, il se corrige dans le modèle.
+  bool get _priceOutOfBounds =>
+      unitPriceOutOfBounds(widget.template.pricePerKg, _currency) != null;
+
   bool get _isValid =>
       _hasPricePerKg &&
+      !_priceOutOfBounds &&
       _days.contains(true) &&
       _pickup != null &&
       _delivery != null;
@@ -230,6 +239,28 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                     Expanded(
                       child: Text(
                         l.tripTemplateNoPricePerKgWarning,
+                        style: tt.bodySmall?.copyWith(color: cs.error),
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 20.ms, duration: 280.ms),
+              ],
+              if (_priceOutOfBounds) ...[
+                const SizedBox(height: DonySpacing.sm),
+                Row(
+                  key: const Key('recurrence-price-out-of-bounds'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DonyIcon('triangle-alert', size: 16, color: cs.error),
+                    const SizedBox(width: DonySpacing.xs),
+                    Expanded(
+                      child: Text(
+                        unitPriceBoundsError(
+                              l,
+                              widget.template.pricePerKg,
+                              _currency,
+                            ) ??
+                            '',
                         style: tt.bodySmall?.copyWith(color: cs.error),
                       ),
                     ),

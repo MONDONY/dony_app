@@ -34,6 +34,18 @@ class TripLegsSection extends StatelessWidget {
     };
   }
 
+  /// Étapes dont le prix est sous le plancher de [currency] (1 €/kg converti,
+  /// FLUTTER-GK) : refusées par le serveur comme celles au-dessus du plafond.
+  static Set<int> priceBelowMinIndexes(
+    List<TripLegDraft> legs,
+    SupportedCurrency currency,
+  ) => {
+    for (var i = 0; i < legs.length; i++)
+      if (unitPriceOutOfBounds(legs[i].pricePerKg, currency) ==
+          UnitPriceBound.tooLow)
+        i,
+  };
+
   const TripLegsSection({
     super.key,
     required this.origin,
@@ -228,7 +240,10 @@ class _LegTile extends StatelessWidget {
     final price = leg.pricePerKg;
     final priceAboveMax =
         currency != null && price != null && price > maxUnitPriceFor(currency);
-    final hasError = invalid || priceAboveMax;
+    final priceBelowMin =
+        currency != null &&
+        unitPriceOutOfBounds(price, currency) == UnitPriceBound.tooLow;
+    final hasError = invalid || priceAboveMax || priceBelowMin;
     return Container(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.md,
@@ -306,6 +321,14 @@ class _LegTile extends StatelessWidget {
                   Text(
                     l.tripLegsPriceAboveMax(currency.symbol),
                     key: Key('trip-leg-price-above-max-${number - 2}'),
+                    style: tt.bodySmall?.copyWith(color: cs.error),
+                  ),
+                ],
+                if (priceBelowMin) ...[
+                  const SizedBox(height: DonySpacing.xxs),
+                  Text(
+                    l.tripLegsPriceBelowMin(currency.symbol),
+                    key: Key('trip-leg-price-below-min-${number - 2}'),
                     style: tt.bodySmall?.copyWith(color: cs.error),
                   ),
                 ],

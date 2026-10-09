@@ -45,6 +45,22 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — price-out-of-bounds (FLUTTER-GK)', () {
+    for (final code in [
+      'price-out-of-bounds',
+      'trip-template/price-out-of-bounds',
+    ]) {
+      test('$code : prix hors limites, pas le message générique', () {
+        final p = ErrorCatalog.lookup(NetworkException('ignored', code: code));
+
+        expect(p.title, 'Prix hors limites');
+        expect(p.message, contains('devise du trajet'));
+        expect(p.severity, ErrorSeverity.warning);
+        expect(p.icon, Icons.price_change_outlined);
+      });
+    }
+  });
+
   group('ErrorCatalog — currency-mismatch', () {
     test('code dédié → message, sévérité et icône dédiés', () {
       const error = NetworkException('ignored', code: 'currency-mismatch');

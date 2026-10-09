@@ -324,6 +324,7 @@ AnnouncementModel _makeFullAnnouncement({
   TripStops? stops,
   String currency = 'EUR',
   String status = 'ACTIVE',
+  double pricePerKg = 8.0,
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
     BidPaymentMethod.stripe,
     BidPaymentMethod.cash,
@@ -339,7 +340,7 @@ AnnouncementModel _makeFullAnnouncement({
   arrivalTime: '10:30',
   availableKg: 10.0,
   totalKg: 23.0,
-  pricePerKg: 8.0,
+  pricePerKg: pricePerKg,
   status: status,
   bidsCount: 0,
   createdAt: DateTime(2026),
@@ -1757,6 +1758,8 @@ void main() {
           tester,
           announcement: _makeFullAnnouncement(
             currency: 'XOF',
+            // 8 F CFA/kg passerait sous le plancher de 656 (FLUTTER-GK).
+            pricePerKg: 3000,
             acceptedPaymentMethods: {BidPaymentMethod.mobileMoney},
           ),
         );
@@ -1917,6 +1920,8 @@ void main() {
           tester,
           announcement: _makeFullAnnouncement(
             currency: 'XOF',
+            // 8 F CFA/kg passerait sous le plancher de 656 (FLUTTER-GK).
+            pricePerKg: 3000,
             acceptedPaymentMethods: {BidPaymentMethod.mobileMoney},
           ),
         );

@@ -164,6 +164,52 @@ void main() {
     expect(find.text("Ce modèle n'a pas de prix au kilo"), findsNothing);
   });
 
+  // FLUTTER-GK : une récurrence à 8 F CFA/kg régénérerait le prix mal saisi.
+  for (final (price, currency) in [(8.0, 'XOF'), (0.99, 'EUR')]) {
+    testWidgets('modèle à $price $currency/kg : prix trop bas, CTA désactivé', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          TripRecurrenceEditScreen(
+            template: _template(pricePerKg: price, currency: currency),
+          ),
+          bloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.byKey(const Key('recurrence-price-out-of-bounds')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Prix trop bas : minimum'), findsOneWidget);
+      final button = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Activer la récurrence'),
+      );
+      expect(button.onPressed, isNull);
+    });
+  }
+
+  testWidgets('modèle à 656 XOF/kg : au plancher, pas d\'avertissement', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripRecurrenceEditScreen(
+          template: _template(pricePerKg: 656, currency: 'XOF'),
+        ),
+        bloc,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+      find.byKey(const Key('recurrence-price-out-of-bounds')),
+      findsNothing,
+    );
+  });
+
   testWidgets('anglais : titre et avertissement traduits', (tester) async {
     useEnglish();
     await tester.pumpWidget(

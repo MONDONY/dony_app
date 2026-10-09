@@ -49,7 +49,8 @@ class TripLegSheet extends StatefulWidget {
   /// masqué et l'étape reprend le prix du premier trajet.
   final bool showPrice;
 
-  /// Devise du voyage : suffixe du prix et plafond [maxUnitPriceFor].
+  /// Devise du voyage : suffixe du prix, plancher [minUnitPriceFor] et
+  /// plafond [maxUnitPriceFor].
   final SupportedCurrency currency;
   final double? defaultKg;
   final double? defaultPrice;
@@ -214,6 +215,17 @@ class _TripLegSheetState extends State<TripLegSheet> {
     return price != null && price > maxUnitPriceFor(widget.currency);
   }
 
+  /// Prix saisi sous le plancher de la devise du voyage (1 €/kg converti) :
+  /// 8 XOF/kg tapés en croyant saisir des euros (FLUTTER-GK).
+  bool get _priceTooLow {
+    if (!widget.showPrice) return false;
+    return unitPriceOutOfBounds(
+          _parseNumber(_priceCtrl.text),
+          widget.currency,
+        ) ==
+        UnitPriceBound.tooLow;
+  }
+
   bool get _dateTooEarly =>
       _date.value != null && _date.value!.isBefore(_minDay);
 
@@ -229,7 +241,8 @@ class _TripLegSheetState extends State<TripLegSheet> {
       return null;
     }
     if (kg == null || kg < 1) return null;
-    if (widget.showPrice && (price == null || price <= 0 || _priceTooHigh)) {
+    if (widget.showPrice &&
+        (price == null || price <= 0 || _priceTooHigh || _priceTooLow)) {
       return null;
     }
     return TripLegDraft(
@@ -411,7 +424,15 @@ class _TripLegSheetState extends State<TripLegSheet> {
                         ),
                       ),
                     ),
-                    errorText: _priceTooHigh
+                    errorText: _priceTooLow
+                        ? l.pricePerKgTooLow(
+                            CurrencyFormatter.format(
+                              minUnitPriceFor(widget.currency),
+                              widget.currency,
+                              compact: true,
+                            ),
+                          )
+                        : _priceTooHigh
                         ? l.tripLegSheetPriceTooHigh(
                             CurrencyFormatter.format(
                               maxUnitPriceFor(widget.currency),

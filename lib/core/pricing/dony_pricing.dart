@@ -185,6 +185,41 @@ double maxUnitPriceFor(SupportedCurrency currency) {
   return currency.minorUnit == 0 ? scaled.floorToDouble() : scaled;
 }
 
+/// Plancher de référence, en euros, d'un prix au kilo. Aligné sur
+/// `CurrencyBounds.MIN_PRICE_PER_KG_EUR` côté backend (FLUTTER-GK : une étape
+/// est partie à 8 XOF/kg, saisis en croyant taper des euros).
+const double kMinUnitPriceEur = 1;
+
+/// Plancher d'un prix au kilo dans [currency] : 1 €/kg, arrondi vers le HAUT à
+/// la précision de la devise (656 F CFA, 1,08 USD), comme `CurrencyBounds`.
+///
+/// Calculé sur le taux du catalogue ([SupportedCurrency.unitsPerEur]), celui
+/// que le serveur utilise pour ses bornes : avec le taux du jour, un prix
+/// accepté ici pourrait être refusé là-bas. La petite marge évite qu'un
+/// produit flottant (1,08 × 100 = 108,000…01) ne monte d'un centime.
+double minUnitPriceFor(SupportedCurrency currency) {
+  final factor = math.pow(10, currency.minorUnit).toDouble();
+  final scaled = kMinUnitPriceEur * currency.unitsPerEur * factor;
+  return (scaled - 1e-9).ceilToDouble() / factor;
+}
+
+/// Borne franchie par un prix au kilo.
+enum UnitPriceBound { tooLow, tooHigh }
+
+/// Borne que [price] franchit dans [currency], `null` s'il les respecte.
+///
+/// Un prix absent ou nul n'est pas jugé ici : c'est un prix manquant, que
+/// chaque formulaire traite déjà comme tel.
+UnitPriceBound? unitPriceOutOfBounds(
+  double? price,
+  SupportedCurrency currency,
+) {
+  if (price == null || price <= 0) return null;
+  if (price < minUnitPriceFor(currency)) return UnitPriceBound.tooLow;
+  if (price > maxUnitPriceFor(currency)) return UnitPriceBound.tooHigh;
+  return null;
+}
+
 /// Plafond de remboursement Yadony en cas de perte de colis (€), source unique
 /// backend `dony.reimbursement.max-amount-eur`. Chargé une fois au démarrage
 /// via `GET /config/reimbursement-cap` → [setDonyReimbursementCap], repli sur

@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
@@ -33,3 +35,28 @@ String reimbursementCapLabel(AppLocalizations l) {
   ).symbols.DECIMAL_SEP;
   return '$integerPart$separator$decimalPart';
 }
+
+/// Message d'un prix au kilo hors des bornes de [currency] (FLUTTER-GK),
+/// montant formaté dans cette devise, ou `null` si [price] les respecte ou
+/// n'est pas saisi.
+String? unitPriceBoundsError(
+  AppLocalizations l,
+  double? price,
+  SupportedCurrency currency,
+) => switch (unitPriceOutOfBounds(price, currency)) {
+  UnitPriceBound.tooLow => l.pricePerKgTooLow(
+    CurrencyFormatter.format(
+      minUnitPriceFor(currency),
+      currency,
+      compact: true,
+    ),
+  ),
+  UnitPriceBound.tooHigh => l.pricePerKgTooHigh(
+    CurrencyFormatter.format(
+      maxUnitPriceFor(currency),
+      currency,
+      compact: true,
+    ),
+  ),
+  null => null,
+};
