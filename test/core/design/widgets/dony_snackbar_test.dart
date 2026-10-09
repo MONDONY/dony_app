@@ -248,4 +248,85 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.byKey(const Key('dony-snackbar-above-modal')), findsNothing);
   });
+
+  // FLUTTER-GP : depuis Flutter 3.44, `SnackBar.persist` vaut `action != null`
+  // par défaut — un message avec action ne disparaissait jamais.
+  group('FLUTTER-GP : durée des messages avec action', () {
+    Widget host({bool persistent = false}) => MaterialApp(
+      theme: AppTheme.light(),
+      home: AccessibilityScope(
+        underlineLinks: false,
+        reinforceLabels: false,
+        persistentMessages: persistent,
+        confirmImportantActions: false,
+        child: Builder(
+          builder: (context) => Scaffold(
+            body: Column(
+              children: [
+                ElevatedButton(
+                  onPressed: () => DonySnackbar.show(
+                    context,
+                    message: 'Avec action',
+                    actionLabel: 'Voir',
+                    onAction: () {},
+                  ),
+                  child: const Text('action'),
+                ),
+                ElevatedButton(
+                  onPressed: () => DonySnackbar.show(
+                    context,
+                    message: 'Archivé',
+                    actionLabel: 'Annuler',
+                    onAction: () {},
+                  ),
+                  child: const Text('undo'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    testWidgets('message avec action : disparaît après 4 s', (tester) async {
+      await tester.pumpWidget(host());
+      await tester.tap(find.text('action'));
+      await tester.pump();
+      expect(tester.widget<SnackBar>(find.byType(SnackBar)).persist, isFalse);
+      // Fin de l'animation d'entrée : le minuteur démarre là.
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+
+      await tester.pump(const Duration(milliseconds: 3200));
+      expect(find.text('Avec action'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.text('Avec action'), findsNothing);
+    });
+
+    testWidgets('« Annuler » : reste 6 s puis disparaît', (tester) async {
+      await tester.pumpWidget(host());
+      await tester.tap(find.text('undo'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+
+      await tester.pump(const Duration(seconds: 5));
+      expect(find.text('Archivé'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 1500));
+      await tester.pumpAndSettle();
+      expect(find.text('Archivé'), findsNothing);
+    });
+
+    testWidgets('option « messages persistants » : le message reste', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(persistent: true));
+      await tester.tap(find.text('action'));
+      await tester.pump();
+      expect(tester.widget<SnackBar>(find.byType(SnackBar)).persist, isTrue);
+      await tester.pump(const Duration(seconds: 30));
+      expect(find.text('Avec action'), findsOneWidget);
+    });
+  });
 }
