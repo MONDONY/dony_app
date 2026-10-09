@@ -8264,6 +8264,18 @@ abstract class AppLocalizations {
   /// **'en attente'**
   String get listingPendingParcelsLabel;
 
+  /// Libellé d'accessibilité de la tuile tappable des colis acceptés, ouvre la liste des colis du trajet (announcement_detail_body.dart, FLUTTER-HK)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Voir le colis accepté} other{Voir les {count} colis acceptés}}'**
+  String listingAcceptedParcelsSemantics(int count);
+
+  /// Libellé d'accessibilité de la tuile tappable des demandes en attente, ouvre l'écran des demandes à traiter (announcement_detail_body.dart, FLUTTER-HK)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Voir la demande en attente} other{Voir les {count} demandes en attente}}'**
+  String listingPendingParcelsSemantics(int count);
+
   /// Titre de la section moyens de paiement acceptés (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:

@@ -1378,6 +1378,8 @@
   "listingPricingSuffixPrix": "price",
   "listingAcceptedParcels": "{count, plural, =1{parcel accepted} other{parcels accepted}}",
   "listingPendingParcelsLabel": "pending",
+  "listingAcceptedParcelsSemantics": "{count, plural, =1{View the accepted parcel} other{View the {count} accepted parcels}}",
+  "listingPendingParcelsSemantics": "{count, plural, =1{View the pending request} other{View the {count} pending requests}}",
   "listingPaymentsAcceptedTitle": "Accepted payment methods",
   "listingCashOnlyNudgeMessage": "Cash-only trip. Many senders prefer to pay by card, so enabling this option increases your chances of receiving parcels.",
   "listingActivateCardPaymentsButton": "Activate card payments",

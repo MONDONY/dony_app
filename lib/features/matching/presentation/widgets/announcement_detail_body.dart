@@ -176,6 +176,7 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Colis : acceptés vs en attente ───────────────────────────────────
         _ParcelStatsRow(
+          announcementId: a.id,
           accepted: a.confirmedParcelCount,
           pending: a.bidsCount ?? 0,
         ).animate().fadeIn(delay: 80.ms),
@@ -521,10 +522,21 @@ class _InfoPill extends StatelessWidget {
 
 /// Deux compteurs côte à côte : colis acceptés (vert) vs demandes en attente
 /// (ambre). Affiché sous les pills de capacité/prix dans le détail du trajet.
+///
+/// FLUTTER-HK : chaque tuile ouvre le détail correspondant, avec la même
+/// navigation que la grille d'actions du propriétaire (`owner_action_grid`) :
+/// acceptés → liste des colis du trajet, en attente → demandes à traiter.
+/// Un compteur à 0 laisse la tuile inerte, sans affordance. Ce corps n'est
+/// rendu que sur l'écran du propriétaire (TripOwnerDetailScreen).
 class _ParcelStatsRow extends StatelessWidget {
+  final String announcementId;
   final int accepted;
   final int pending;
-  const _ParcelStatsRow({required this.accepted, required this.pending});
+  const _ParcelStatsRow({
+    required this.announcementId,
+    required this.accepted,
+    required this.pending,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -534,21 +546,36 @@ class _ParcelStatsRow extends StatelessWidget {
         children: [
           Expanded(
             child: _ParcelStatCell(
+              key: const Key('parcel-stat-accepted'),
               iconAsset: 'circle-check',
               value: accepted,
               label: l.listingAcceptedParcels(accepted),
+              semanticsLabel: l.listingAcceptedParcelsSemantics(accepted),
               tint: const Color(0xFFE7F6EC),
               accent: const Color(0xFF16A34A),
+              onTap: accepted > 0
+                  ? () => context.push(
+                      '/announcements/$announcementId/bids',
+                      extra: <String, dynamic>{'title': l.tripOwnerParcelsTile},
+                    )
+                  : null,
             ),
           ),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: _ParcelStatCell(
+              key: const Key('parcel-stat-pending'),
               iconAsset: 'hourglass',
               value: pending,
               label: l.listingPendingParcelsLabel,
+              semanticsLabel: l.listingPendingParcelsSemantics(pending),
               tint: const Color(0xFFFEF9C3),
               accent: const Color(0xFFB45309),
+              onTap: pending > 0
+                  ? () => context.push(
+                      '/announcements/$announcementId/bids/pending',
+                    )
+                  : null,
             ),
           ),
         ],
@@ -561,28 +588,35 @@ class _ParcelStatCell extends StatelessWidget {
   final String iconAsset;
   final int value;
   final String label;
+  final String semanticsLabel;
   final Color tint;
   final Color accent;
 
+  /// Ouvre le détail des colis concernés, avec le retour de pression standard
+  /// des tuiles ([DonyPressable]). `null` → tuile inerte : pas de chevron,
+  /// pas de retour de pression, pas de rôle bouton.
+  final VoidCallback? onTap;
+
   const _ParcelStatCell({
+    super.key,
     required this.iconAsset,
     required this.value,
     required this.label,
+    required this.semanticsLabel,
     required this.tint,
     required this.accent,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return Container(
+    final tappable = onTap != null;
+    final radius = BorderRadius.circular(DonyRadius.card);
+
+    final content = Padding(
       padding: const EdgeInsets.all(DonySpacing.sm),
-      decoration: BoxDecoration(
-        color: tint,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: accent.withValues(alpha: 0.18)),
-      ),
       child: Row(
         children: [
           Container(
@@ -620,8 +654,34 @@ class _ParcelStatCell extends StatelessWidget {
               ],
             ),
           ),
+          if (tappable)
+            DonyIcon(
+              'chevron-right',
+              size: 16,
+              color: accent.withValues(alpha: 0.7),
+            ),
         ],
       ),
+    );
+
+    final tile = Container(
+      decoration: BoxDecoration(
+        color: tint,
+        borderRadius: radius,
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: content,
+    );
+
+    if (!tappable) return tile;
+
+    // Le libellé d'accessibilité remplace le « 3 colis acceptés » lu en vrac.
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: DonyPressable(onTap: onTap!, child: tile),
     );
   }
 }

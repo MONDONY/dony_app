@@ -4949,6 +4949,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingPendingParcelsLabel => 'en attente';
 
   @override
+  String listingAcceptedParcelsSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Voir les $count colis acceptés',
+      one: 'Voir le colis accepté',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listingPendingParcelsSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Voir les $count demandes en attente',
+      one: 'Voir la demande en attente',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get listingPaymentsAcceptedTitle => 'Paiements acceptés';
 
   @override

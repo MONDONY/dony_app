@@ -4249,6 +4249,24 @@
   "@listingPendingParcelsLabel": {
     "description": "Libellé secondaire du compteur de demandes en attente (announcement_detail_body.dart)"
   },
+  "listingAcceptedParcelsSemantics": "{count, plural, =1{Voir le colis accepté} other{Voir les {count} colis acceptés}}",
+  "@listingAcceptedParcelsSemantics": {
+    "description": "Libellé d'accessibilité de la tuile tappable des colis acceptés, ouvre la liste des colis du trajet (announcement_detail_body.dart, FLUTTER-HK)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPendingParcelsSemantics": "{count, plural, =1{Voir la demande en attente} other{Voir les {count} demandes en attente}}",
+  "@listingPendingParcelsSemantics": {
+    "description": "Libellé d'accessibilité de la tuile tappable des demandes en attente, ouvre l'écran des demandes à traiter (announcement_detail_body.dart, FLUTTER-HK)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "listingPaymentsAcceptedTitle": "Paiements acceptés",
   "@listingPaymentsAcceptedTitle": {
     "description": "Titre de la section moyens de paiement acceptés (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)"
