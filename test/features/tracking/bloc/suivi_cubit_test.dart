@@ -957,4 +957,115 @@ void main() {
       expect(c.state.effectId, id);
     });
   });
+
+  // ── Segment Envois / Réceptions du mode Suivre (FLUTTER-GQ) ───────────────
+  group('segment Envois / Réceptions', () {
+    void stubShipments(List<BidModel> bids) => when(
+      () => bidRepo.getMyBidsFiltered(
+        statuses: any(named: 'statuses'),
+        announcementId: any(named: 'announcementId'),
+        maxPages: any(named: 'maxPages'),
+      ),
+    ).thenAnswer((_) async => bids);
+
+    test('par défaut : Envois affiché, segment non tranché', () {
+      final c = build();
+      expect(c.state.trackSegment, isNull);
+      expect(c.state.visibleSegment, SuiviTrackSegment.envois);
+      expect(c.state.receptionsCount, isNull);
+    });
+
+    test('attend les deux listes avant de trancher', () async {
+      final c = build();
+      c.updateReceptionsCount(2);
+      expect(c.state.trackSegment, isNull);
+      expect(c.state.receptionsCount, 2);
+      await c.loadShipments();
+      expect(c.state.trackSegment, SuiviTrackSegment.envois);
+    });
+
+    test('envois et réceptions → Envois', () async {
+      final c = build();
+      await c.loadShipments();
+      c.updateReceptionsCount(3);
+      expect(c.state.trackSegment, SuiviTrackSegment.envois);
+    });
+
+    test('réceptions seules → Réceptions', () async {
+      stubShipments([_bid('old', 'COMPLETED')]);
+      final c = build();
+      await c.loadShipments();
+      expect(c.state.shipments, isEmpty);
+      c.updateReceptionsCount(1);
+      expect(c.state.trackSegment, SuiviTrackSegment.receptions);
+    });
+
+    test('ni l\'un ni l\'autre → Envois', () async {
+      stubShipments(const []);
+      final c = build();
+      c.updateReceptionsCount(0);
+      await c.loadShipments();
+      expect(c.state.trackSegment, SuiviTrackSegment.envois);
+    });
+
+    test('échec des envois + réceptions → Réceptions', () async {
+      when(
+        () => bidRepo.getMyBidsFiltered(
+          statuses: any(named: 'statuses'),
+          announcementId: any(named: 'announcementId'),
+          maxPages: any(named: 'maxPages'),
+        ),
+      ).thenThrow(Exception('offline'));
+      final c = build();
+      c.updateReceptionsCount(2);
+      await c.loadShipments();
+      expect(c.state.shipmentsStatus, SuiviLoadStatus.error);
+      expect(c.state.trackSegment, SuiviTrackSegment.receptions);
+    });
+
+    test('défaut tranché : ne saute plus quand les listes changent', () async {
+      final c = build();
+      await c.loadShipments();
+      c.updateReceptionsCount(0);
+      expect(c.state.trackSegment, SuiviTrackSegment.envois);
+
+      stubShipments(const []);
+      await c.refreshShipments();
+      c.updateReceptionsCount(4);
+      expect(c.state.shipments, isEmpty);
+      expect(c.state.trackSegment, SuiviTrackSegment.envois);
+      expect(c.state.receptionsCount, 4);
+    });
+
+    test('choix de l\'utilisateur : gardé, analytics émis une fois', () async {
+      final c = build();
+      c.selectSegment(SuiviTrackSegment.receptions);
+      expect(c.state.trackSegment, SuiviTrackSegment.receptions);
+
+      // Les listes arrivent ensuite : le défaut ne réécrit pas le choix.
+      await c.loadShipments();
+      c.updateReceptionsCount(0);
+      expect(c.state.trackSegment, SuiviTrackSegment.receptions);
+
+      c.selectSegment(SuiviTrackSegment.receptions);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.suiviSegmentChanged,
+          properties: {'segment': 'receptions'},
+        ),
+      ).called(1);
+    });
+
+    test('segment par défaut : aucun événement analytics', () async {
+      final c = build();
+      await c.loadShipments();
+      c.updateReceptionsCount(1);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.suiviSegmentChanged,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+  });
 }

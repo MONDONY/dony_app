@@ -4,6 +4,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
+import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/receptions/presentation/widgets/receptions_section.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_invitations_banner.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
@@ -65,12 +66,55 @@ class SuiviTrackPanel extends StatelessWidget {
               ),
             ],
             const SizedBox(height: DonySpacing.xl),
-            // Colis à recevoir : masquée tant qu'elle est vide.
-            // Demandes d'expéditeurs en attente (lot 4), en tête de la
-            // section.
+            // Demandes d'expéditeurs en attente (lot 4), au-dessus des deux
+            // listes : elles concernent les réceptions à venir.
             const RecipientInvitationsBanner(),
-            const ReceptionsSection(),
-            _MyShipments(state: state),
+            const _ReceptionsCountSync(),
+            // Envois / Réceptions (FLUTTER-GQ) : segment porté par le cubit.
+            DonySegmentedControl<SuiviTrackSegment>(
+              key: const Key('suivi-track-segments'),
+              selected: state.visibleSegment,
+              onSelect: context.read<SuiviCubit>().selectSegment,
+              segments: [
+                DonySegment(
+                  key: const Key('suivi-segment-envois'),
+                  value: SuiviTrackSegment.envois,
+                  label: l.suiviSegmentShipments,
+                  count: state.shipmentsStatus == SuiviLoadStatus.loaded
+                      ? state.shipments.length
+                      : null,
+                  countStyle: DonySegmentCountStyle.neutral,
+                ),
+                DonySegment(
+                  key: const Key('suivi-segment-receptions'),
+                  value: SuiviTrackSegment.receptions,
+                  label: l.suiviSegmentReceptions,
+                  count: state.receptionsCount,
+                  countStyle: DonySegmentCountStyle.neutral,
+                ),
+              ],
+            ),
+            const SizedBox(height: DonySpacing.md),
+            AnimatedSwitcher(
+              duration: DonyDuration.base,
+              switchInCurve: DonyCurve.enter,
+              switchOutCurve: DonyCurve.exit,
+              // Liste suivante calée en haut : pas de saut vertical pendant
+              // le fondu entre deux listes de hauteurs différentes.
+              layoutBuilder: (current, previous) => Stack(
+                alignment: Alignment.topCenter,
+                children: [...previous, ?current],
+              ),
+              child: switch (state.visibleSegment) {
+                SuiviTrackSegment.envois => _MyShipments(
+                  key: const Key('suivi-envois-list'),
+                  state: state,
+                ),
+                SuiviTrackSegment.receptions => const _ReceptionsList(
+                  key: Key('suivi-receptions-list'),
+                ),
+              },
+            ),
           ],
         );
       },
@@ -183,8 +227,74 @@ class _TrackNumberFieldState extends State<_TrackNumberField> {
   }
 }
 
+/// Reporte le nombre de colis à recevoir dans [SuiviCubit], qui en déduit
+/// le segment par défaut et le compteur du segment « Réceptions ».
+class _ReceptionsCountSync extends StatefulWidget {
+  const _ReceptionsCountSync();
+
+  @override
+  State<_ReceptionsCountSync> createState() => _ReceptionsCountSyncState();
+}
+
+class _ReceptionsCountSyncState extends State<_ReceptionsCountSync> {
+  @override
+  void initState() {
+    super.initState();
+    // Liste déjà chargée avant l'ouverture du mode Suivre : le listener ne
+    // verrait aucun changement. Après la frame : émettre pendant le build
+    // reconstruirait un ancêtre en cours de construction.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _sync(context.read<ReceptionsCubit>().state);
+    });
+  }
+
+  void _sync(ReceptionsState receptions) {
+    final count = switch (receptions) {
+      ReceptionsLoading() => null,
+      ReceptionsLoaded(:final receptions) => receptions.length,
+      // Back antérieur (404) ou échec : la section ne montre jamais d'erreur.
+      ReceptionsError() => 0,
+    };
+    if (count != null) context.read<SuiviCubit>().updateReceptionsCount(count);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<ReceptionsCubit, ReceptionsState>(
+      listener: (context, receptions) => _sync(receptions),
+      child: const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Segment « Réceptions » : la liste, ou une phrase quand il n'y a rien.
+class _ReceptionsList extends StatelessWidget {
+  const _ReceptionsList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return BlocBuilder<ReceptionsCubit, ReceptionsState>(
+      builder: (context, state) => switch (state) {
+        ReceptionsLoading() => Padding(
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
+          child: Center(child: CircularProgressIndicator(color: cs.primary)),
+        ),
+        ReceptionsLoaded(:final receptions) when receptions.isNotEmpty =>
+          const ReceptionsSection(showTitle: false),
+        _ => Text(
+          context.l10n.suiviNoReceptions,
+          key: const Key('suivi-no-receptions'),
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      },
+    );
+  }
+}
+
 class _MyShipments extends StatelessWidget {
-  const _MyShipments({required this.state});
+  const _MyShipments({super.key, required this.state});
 
   final SuiviState state;
 
@@ -193,28 +303,11 @@ class _MyShipments extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final loaded = state.shipmentsStatus == SuiviLoadStatus.loaded;
 
+    // Libellé et compteur sont portés par le segment « Envois ».
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text.rich(
-          TextSpan(
-            text: l.suiviMyShipments,
-            children: [
-              if (loaded && state.shipments.isNotEmpty)
-                TextSpan(
-                  text: '  ${state.shipments.length}',
-                  style: TextStyle(
-                    color: cs.onSurfaceVariant,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-            ],
-          ),
-          style: tt.headlineMedium,
-        ),
-        const SizedBox(height: DonySpacing.sm),
         switch (state.shipmentsStatus) {
           SuiviLoadStatus.idle || SuiviLoadStatus.loading => Padding(
             padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),

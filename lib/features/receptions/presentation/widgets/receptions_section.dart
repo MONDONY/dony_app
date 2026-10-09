@@ -19,7 +19,12 @@ String receptionRoute(String bidId) => '/receptions/$bidId';
 /// utilisateurs ne reçoivent jamais de colis, la section ne doit pas leur
 /// coûter de place.
 class ReceptionsSection extends StatelessWidget {
-  const ReceptionsSection({super.key});
+  const ReceptionsSection({super.key, this.showTitle = true});
+
+  /// Titre « Colis à recevoir » et son compteur. Masqué sous le segment
+  /// « Réceptions » du mode Suivre, qui porte déjà libellé et compteur
+  /// (FLUTTER-GQ).
+  final bool showTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -37,22 +42,24 @@ class ReceptionsSection extends StatelessWidget {
           key: const Key('receptions-section'),
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text.rich(
-              TextSpan(
-                text: l.receptionsSectionTitle,
-                children: [
-                  TextSpan(
-                    text: '  ${receptions.length}',
-                    style: TextStyle(
-                      color: cs.onSurfaceVariant,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+            if (showTitle) ...[
+              Text.rich(
+                TextSpan(
+                  text: l.receptionsSectionTitle,
+                  children: [
+                    TextSpan(
+                      text: '  ${receptions.length}',
+                      style: TextStyle(
+                        color: cs.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                style: tt.headlineMedium,
               ),
-              style: tt.headlineMedium,
-            ),
-            const SizedBox(height: DonySpacing.sm),
+              const SizedBox(height: DonySpacing.sm),
+            ],
             for (final reception in receptions)
               Padding(
                 padding: const EdgeInsets.only(bottom: DonySpacing.sm),

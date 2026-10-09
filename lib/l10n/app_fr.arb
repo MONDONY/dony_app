@@ -19660,5 +19660,11 @@
   "tripParcelsSummaryArrived": "{count, plural, =1{arrivé} other{arrivés}}",
   "@tripParcelsSummaryArrived": {"description": "Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis arrivés à destination, en attente de retrait (ARRIVED). Le chiffre est affiché à part.", "placeholders": {"count": {"type": "int"}}},
   "tripParcelsSummaryDelivered": "{count, plural, =1{livré} other{livrés}}",
-  "@tripParcelsSummaryDelivered": {"description": "Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis remis au destinataire (COMPLETED). Le chiffre est affiché à part.", "placeholders": {"count": {"type": "int"}}}
+  "@tripParcelsSummaryDelivered": {"description": "Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis remis au destinataire (COMPLETED). Le chiffre est affiché à part.", "placeholders": {"count": {"type": "int"}}},
+  "suiviSegmentShipments": "Envois",
+  "@suiviSegmentShipments": {"description": "Segment « Envois » du mode Suivre de l'onglet Suivi : colis envoyés par l'utilisateur, en cours (suivi_track_panel.dart, FLUTTER-GQ)."},
+  "suiviSegmentReceptions": "Réceptions",
+  "@suiviSegmentReceptions": {"description": "Segment « Réceptions » du mode Suivre de l'onglet Suivi : colis que l'utilisateur doit recevoir (suivi_track_panel.dart, FLUTTER-GQ)."},
+  "suiviNoReceptions": "Aucun colis à recevoir pour le moment.",
+  "@suiviNoReceptions": {"description": "Segment « Réceptions » vide dans le mode Suivre de l'onglet Suivi (suivi_track_panel.dart, FLUTTER-GQ)."}
 }

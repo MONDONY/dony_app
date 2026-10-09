@@ -28753,6 +28753,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{count, plural, =1{livré} other{livrés}}'**
   String tripParcelsSummaryDelivered(int count);
+
+  /// Segment « Envois » du mode Suivre de l'onglet Suivi : colis envoyés par l'utilisateur, en cours (suivi_track_panel.dart, FLUTTER-GQ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envois'**
+  String get suiviSegmentShipments;
+
+  /// Segment « Réceptions » du mode Suivre de l'onglet Suivi : colis que l'utilisateur doit recevoir (suivi_track_panel.dart, FLUTTER-GQ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réceptions'**
+  String get suiviSegmentReceptions;
+
+  /// Segment « Réceptions » vide dans le mode Suivre de l'onglet Suivi (suivi_track_panel.dart, FLUTTER-GQ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis à recevoir pour le moment.'**
+  String get suiviNoReceptions;
 }
 
 class _AppLocalizationsDelegate

@@ -9442,5 +9442,8 @@
   "tripParcelsSummaryInTransit": "{count, plural, =1{parcel in transit} other{parcels in transit}}",
   "tripParcelsSummaryToCollect": "{count, plural, =1{to pick up} other{to pick up}}",
   "tripParcelsSummaryArrived": "{count, plural, =1{arrived} other{arrived}}",
-  "tripParcelsSummaryDelivered": "{count, plural, =1{delivered} other{delivered}}"
+  "tripParcelsSummaryDelivered": "{count, plural, =1{delivered} other{delivered}}",
+  "suiviSegmentShipments": "Sending",
+  "suiviSegmentReceptions": "Receiving",
+  "suiviNoReceptions": "No parcels to receive right now."
 }

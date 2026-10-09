@@ -27,6 +27,11 @@ SuiviMode? suiviModeFromQuery(String? raw) => switch (raw) {
 
 enum SuiviLoadStatus { idle, loading, loaded, error }
 
+/// Les deux listes du mode « Suivre » (FLUTTER-GQ) : les envois de
+/// l'utilisateur et les colis qu'il doit recevoir. Le nom sert de propriété
+/// analytics.
+enum SuiviTrackSegment { envois, receptions }
+
 /// Verdict sur le numéro de suivi saisi à la remise d'un colis (DEPART).
 /// [unverified] : le serveur n'a pas pu répondre (hors ligne) ; la saisie est
 /// gardée et il la vérifiera à la réception de l'étape.
@@ -180,6 +185,8 @@ class SuiviState {
     this.forcedStep,
     this.effect,
     this.effectId = 0,
+    this.trackSegment,
+    this.receptionsCount,
   });
 
   /// Voyageur : peut valider des étapes et choisir son mode.
@@ -211,6 +218,18 @@ class SuiviState {
   final SuiviEffect? effect;
   final int effectId;
 
+  /// Segment du mode « Suivre ». `null` tant que le segment par défaut
+  /// attend les deux listes : l'écran montre alors les envois.
+  final SuiviTrackSegment? trackSegment;
+
+  /// Nombre de colis à recevoir, `null` tant qu'il est inconnu. Un échec de
+  /// la liste compte zéro : la section ne montre jamais d'erreur.
+  final int? receptionsCount;
+
+  /// Segment affiché.
+  SuiviTrackSegment get visibleSegment =>
+      trackSegment ?? SuiviTrackSegment.envois;
+
   SuiviState _copy({
     bool? canValidate,
     SuiviMode? mode,
@@ -224,6 +243,8 @@ class SuiviState {
     String? forcedStep,
     bool clearForcedStep = false,
     SuiviEffect? effect,
+    SuiviTrackSegment? trackSegment,
+    int? receptionsCount,
   }) => SuiviState(
     canValidate: canValidate ?? this.canValidate,
     mode: mode ?? this.mode,
@@ -238,6 +259,8 @@ class SuiviState {
     forcedStep: clearForcedStep ? null : forcedStep ?? this.forcedStep,
     effect: effect ?? this.effect,
     effectId: effect != null ? effectId + 1 : effectId,
+    trackSegment: trackSegment ?? this.trackSegment,
+    receptionsCount: receptionsCount ?? this.receptionsCount,
   );
 }
 
@@ -362,10 +385,57 @@ class SuiviCubit extends Cubit<SuiviState> {
               .toList(growable: false),
         ),
       );
+      _resolveDefaultSegment();
     } catch (_) {
       if (isClosed) return;
       emit(state._copy(shipmentsStatus: SuiviLoadStatus.error));
+      _resolveDefaultSegment();
     }
+  }
+
+  /// Le segment est fixé : par l'utilisateur, ou une fois le défaut tranché.
+  /// Il ne bouge plus ensuite, pour que la liste ne saute pas sous le doigt
+  /// (dernier envoi livré, réception confirmée).
+  bool _segmentSettled = false;
+
+  /// Segment choisi par l'utilisateur.
+  void selectSegment(SuiviTrackSegment segment) {
+    _segmentSettled = true;
+    if (segment == state.visibleSegment && state.trackSegment != null) return;
+    emit(state._copy(trackSegment: segment));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.suiviSegmentChanged,
+        properties: {'segment': segment.name},
+      ),
+    );
+  }
+
+  /// Nombre de colis à recevoir, lu par l'écran sur `ReceptionsCubit`.
+  void updateReceptionsCount(int count) {
+    if (count == state.receptionsCount) return;
+    emit(state._copy(receptionsCount: count));
+    _resolveDefaultSegment();
+  }
+
+  /// Segment par défaut, une fois les deux listes connues : celui qui a des
+  /// éléments, « Envois » si les deux en ont (ou aucune).
+  void _resolveDefaultSegment() {
+    if (_segmentSettled) return;
+    final receptions = state.receptionsCount;
+    final shipmentsKnown =
+        state.shipmentsStatus == SuiviLoadStatus.loaded ||
+        state.shipmentsStatus == SuiviLoadStatus.error;
+    if (!shipmentsKnown || receptions == null) return;
+    _segmentSettled = true;
+    final hasShipments = state.shipments.isNotEmpty;
+    emit(
+      state._copy(
+        trackSegment: !hasShipments && receptions > 0
+            ? SuiviTrackSegment.receptions
+            : SuiviTrackSegment.envois,
+      ),
+    );
   }
 
   /// Retour sur l'onglet : « Mes envois » déjà affichés sont rafraîchis sans

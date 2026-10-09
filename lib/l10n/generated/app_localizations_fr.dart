@@ -17572,4 +17572,13 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get suiviSegmentShipments => 'Envois';
+
+  @override
+  String get suiviSegmentReceptions => 'Réceptions';
+
+  @override
+  String get suiviNoReceptions => 'Aucun colis à recevoir pour le moment.';
 }

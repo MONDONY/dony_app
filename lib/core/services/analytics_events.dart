@@ -97,6 +97,9 @@ abstract final class AnalyticsEvents {
   /// Mode choisi par l'utilisateur (propriété `mode` : `valider`/`suivre`).
   static const suiviModeChanged = 'suivi_mode_changed';
 
+  /// Segment « Envois / Réceptions » choisi en mode Suivre (FLUTTER-GQ).
+  static const suiviSegmentChanged = 'suivi_segment_changed';
+
   /// Trajet affiché changé (propriété `source` : `picker`/`other_trip`).
   static const suiviTripChanged = 'suivi_trip_changed';
 
