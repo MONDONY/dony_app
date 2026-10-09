@@ -13232,18 +13232,6 @@
   "@settingsSectionLanguage": {
     "description": "En-tête de section (settings_screen.dart)"
   },
-  "settingsSectionDestinations": "DESTINATIONS FAVORITES",
-  "@settingsSectionDestinations": {
-    "description": "En-tête de section (settings_screen.dart)"
-  },
-  "settingsDestinationsLabel": "Destinations",
-  "@settingsDestinationsLabel": {
-    "description": "Libellé de la tuile de sélection des destinations favorites (settings_screen.dart)"
-  },
-  "settingsNoDestination": "Aucune",
-  "@settingsNoDestination": {
-    "description": "Résumé affiché quand aucune destination favorite n'est sélectionnée (settings_screen.dart, _destinationsSummary)"
-  },
   "settingsSectionSecurityData": "SÉCURITÉ & DONNÉES",
   "@settingsSectionSecurityData": {
     "description": "En-tête de section (settings_screen.dart)"

@@ -67,38 +67,44 @@ void main() {
           verify(() => mockBox.put(HiveService.kThemeMode, 'dark')).called(1),
     );
 
-    blocTest<AppPreferencesBloc, AppPreferencesState>(
-      'DestinationToggled ajoute SN si absent',
-      build: () => AppPreferencesBloc(mockBox),
-      act: (bloc) => bloc.add(const DestinationToggled('SN')),
-      expect: () => [
-        isA<AppPreferencesState>().having(
-          (s) => s.preferences.favDestinations,
-          'destinations',
-          contains('SN'),
-        ),
-      ],
-    );
-
-    blocTest<AppPreferencesBloc, AppPreferencesState>(
-      'DestinationToggled retire SN si déjà présent',
-      build: () {
+    test(
+      'FLUTTER-H5 : une ancienne clé fav_destinations stockée ne gêne pas la '
+      'lecture, et n\'est plus jamais réécrite',
+      () async {
         when(
           () => mockBox.get(
-            HiveService.kFavDestinations,
+            'fav_destinations',
             defaultValue: any(named: 'defaultValue'),
           ),
-        ).thenReturn(['SN', 'CI']);
-        return AppPreferencesBloc(mockBox);
+        ).thenReturn(<String>['SN', 'CI']);
+        when(
+          () => mockBox.get(
+            HiveService.kThemeMode,
+            defaultValue: any(named: 'defaultValue'),
+          ),
+        ).thenReturn('dark');
+        final bloc = AppPreferencesBloc(mockBox);
+        expect(bloc.state.preferences.themeMode, 'dark');
+        bloc.add(const ThemeChanged('light'));
+        await expectLater(
+          bloc.stream,
+          emits(
+            isA<AppPreferencesState>().having(
+              (s) => s.preferences.themeMode,
+              'themeMode',
+              'light',
+            ),
+          ),
+        );
+        verifyNever(() => mockBox.put('fav_destinations', any()));
+        verifyNever(
+          () => mockBox.get(
+            'fav_destinations',
+            defaultValue: any(named: 'defaultValue'),
+          ),
+        );
+        await bloc.close();
       },
-      act: (bloc) => bloc.add(const DestinationToggled('SN')),
-      expect: () => [
-        isA<AppPreferencesState>().having(
-          (s) => s.preferences.favDestinations,
-          'destinations',
-          isNot(contains('SN')),
-        ),
-      ],
     );
 
     blocTest<AppPreferencesBloc, AppPreferencesState>(
@@ -149,19 +155,6 @@ void main() {
     );
 
     blocTest<AppPreferencesBloc, AppPreferencesState>(
-      'DestinationToggled ajoute CI si absent',
-      build: () => AppPreferencesBloc(mockBox),
-      act: (bloc) => bloc.add(const DestinationToggled('CI')),
-      expect: () => [
-        isA<AppPreferencesState>().having(
-          (s) => s.preferences.favDestinations,
-          'destinations',
-          contains('CI'),
-        ),
-      ],
-    );
-
-    blocTest<AppPreferencesBloc, AppPreferencesState>(
       'BiometricToggled active biometricEnabled quand désactivé',
       build: () => AppPreferencesBloc(mockBox),
       act: (bloc) => bloc.add(const BiometricToggled()),
@@ -204,9 +197,6 @@ void main() {
 
       const langEvent = LanguageChanged('en');
       expect(langEvent.props, equals(['en']));
-
-      const destEvent = DestinationToggled('SN');
-      expect(destEvent.props, equals(['SN']));
 
       const bioEvent = BiometricToggled();
       expect(bioEvent.props, equals([]));

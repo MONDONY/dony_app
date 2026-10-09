@@ -9,7 +9,7 @@ enum CityFieldRole { departure, arrival }
 /// Mémorise les 3 dernières villes sélectionnées par champ (départ/arrivée),
 /// affichées au focus avant toute frappe — évite un aller-retour réseau pour
 /// les trajets récurrents. Persisté en Hive (`userPrefsBox`), même pattern que
-/// `HiveService.kFavDestinations`.
+/// `HiveService.kPinnedTripIds`.
 class RecentCityStore {
   RecentCityStore(this._hive);
 

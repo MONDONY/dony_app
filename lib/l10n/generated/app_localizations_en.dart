@@ -11936,15 +11936,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionLanguage => 'LANGUAGE & COMMUNICATION';
 
   @override
-  String get settingsSectionDestinations => 'FAVORITE DESTINATIONS';
-
-  @override
-  String get settingsDestinationsLabel => 'Destinations';
-
-  @override
-  String get settingsNoDestination => 'None';
-
-  @override
   String get settingsSectionSecurityData => 'SECURITY & DATA';
 
   @override

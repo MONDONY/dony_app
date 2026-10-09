@@ -194,25 +194,22 @@ void main() {
     });
 
     testWidgets(
-      'DESTINATIONS FAVORITES : ligne disclosure (pas de chips inline)',
+      'FLUTTER-H5 : plus de section DESTINATIONS FAVORITES (sans effet)',
       (tester) async {
         await tester.pumpWidget(_wrap());
         await tester.pumpAndSettle();
 
-        expect(find.text('DESTINATIONS FAVORITES'), findsOneWidget);
-        expect(find.text('Destinations'), findsOneWidget);
-        // villes absentes de la liste principale (uniquement dans le picker)
-        expect(find.textContaining('Abidjan'), findsNothing);
+        expect(find.text('DESTINATIONS FAVORITES'), findsNothing);
+        expect(find.text('Destinations'), findsNothing);
+        await tester.scrollUntilVisible(
+          find.text('INFORMATIONS'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.text('DESTINATIONS FAVORITES'), findsNothing);
+        expect(find.text('Destinations'), findsNothing);
       },
     );
-
-    testWidgets('ligne Destinations résume la sélection', (tester) async {
-      await tester.pumpWidget(
-        _wrap(prefs: const UserPreferencesModel(favDestinations: ['SN'])),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Dakar'), findsOneWidget);
-    });
 
     testWidgets('shows SÉCURITÉ & DONNÉES section', (tester) async {
       await tester.pumpWidget(_wrap());
@@ -418,32 +415,6 @@ void main() {
       expect(find.byType(ListTile), findsWidgets);
       expect(find.text('Français'), findsOneWidget);
     });
-
-    testWidgets(
-      'tap ligne Destinations → picker → Dakar dispatch DestinationToggled',
-      (tester) async {
-        final mockBloc = MockAppPreferencesBloc();
-        const state = AppPreferencesState(preferences: UserPreferencesModel());
-        when(() => mockBloc.state).thenReturn(state);
-        whenListen<AppPreferencesState>(
-          mockBloc,
-          const Stream.empty(),
-          initialState: state,
-        );
-
-        await tester.pumpWidget(_wrapWithBloc(mockBloc));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Destinations'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.textContaining('Dakar'));
-        await tester.pump();
-
-        verify(
-          () => mockBloc.add(any(that: isA<DestinationToggled>())),
-        ).called(1);
-      },
-    );
 
     testWidgets('tap Sécurité tile navigates to /settings/security', (
       tester,
@@ -735,12 +706,15 @@ void main() {
       expect(find.text('Paramètres'), findsNothing);
     });
 
-    testWidgets('anglais : Aucune destination → None', (tester) async {
+    testWidgets('anglais : plus de section FAVORITE DESTINATIONS', (
+      tester,
+    ) async {
       useEnglish();
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      expect(find.text('None'), findsOneWidget);
+      expect(find.text('FAVORITE DESTINATIONS'), findsNothing);
+      expect(find.text('None'), findsNothing);
     });
 
     testWidgets(

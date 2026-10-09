@@ -19891,24 +19891,6 @@ abstract class AppLocalizations {
   /// En-tête de section (settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'DESTINATIONS FAVORITES'**
-  String get settingsSectionDestinations;
-
-  /// Libellé de la tuile de sélection des destinations favorites (settings_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Destinations'**
-  String get settingsDestinationsLabel;
-
-  /// Résumé affiché quand aucune destination favorite n'est sélectionnée (settings_screen.dart, _destinationsSummary)
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucune'**
-  String get settingsNoDestination;
-
-  /// En-tête de section (settings_screen.dart)
-  ///
-  /// In fr, this message translates to:
   /// **'SÉCURITÉ & DONNÉES'**
   String get settingsSectionSecurityData;
 
