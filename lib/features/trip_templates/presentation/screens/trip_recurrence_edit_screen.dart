@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -8,10 +9,12 @@ import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/features/trip_templates/presentation/widgets/recurrence_payment_methods.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -46,6 +49,26 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
   bool _active = true;
   bool _submitted = false;
 
+  /// Carte proposée sur chaque trajet publié (FLUTTER-FT) : cochée par défaut,
+  /// décochable comme sur un trajet simple.
+  final ValueNotifier<bool> _cardWanted = ValueNotifier<bool>(true);
+
+  /// Espèces, reprises du modèle. Imposées dès que la carte est décochée.
+  late final ValueNotifier<bool> _cashWanted = ValueNotifier<bool>(
+    widget.template.cashAccepted,
+  );
+
+  /// Devise de la récurrence : l'écran n'en envoie pas, le serveur retient
+  /// donc l'euro. La disponibilité de la carte se juge sur cette devise.
+  static const SupportedCurrency _currency = SupportedCurrency.eur;
+
+  @override
+  void dispose() {
+    _cardWanted.dispose();
+    _cashWanted.dispose();
+    super.dispose();
+  }
+
   /// Le modèle n'a pas de prix au kilo (grille seule) : cet écran n'a pas de
   /// champ prix éditable, une récurrence ne doit donc jamais envoyer 0
   /// (constat #3).
@@ -75,6 +98,15 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
     if (!_isValid) return;
     _submitted = true;
     final t = widget.template;
+    // Carte refusée seulement si elle était disponible et décochée : sans elle,
+    // les espèces sont imposées (au moins un moyen de paiement). Indisponible,
+    // le choix n'est pas envoyé et la récurrence suit l'ancien contrat
+    // (la carte s'ajoutera aux trajets dès l'onboarding Stripe terminé).
+    final cardAvailable = recurrenceCardAvailable(
+      context.read<StripeAccountBloc?>()?.state,
+      _currency,
+    );
+    final cardOn = cardAvailable && _cardWanted.value;
     final data = <String, dynamic>{
       'sourceTemplateId': t.id,
       'departureCity': t.departureCity,
@@ -100,7 +132,8 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       'arrivalTime': t.arrivalTime,
       // Vol de nuit du modèle : chaque occurrence publiée arrive le lendemain.
       'arrivalDayOffset': t.arrivalTime == null ? 0 : t.arrivalDayOffset,
-      'cashAccepted': t.cashAccepted,
+      'cashAccepted': !cardOn || _cashWanted.value,
+      if (cardAvailable) 'cardAccepted': cardOn,
       'weekdays': _weekdaysString,
       'horizonDays': 14,
       'active': _active,
@@ -303,6 +336,18 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                 autocompleteService: getIt<AddressAutocompleteService>(),
                 onChanged: (addr) => setState(() => _delivery = addr),
               ).animate().fadeIn(delay: 140.ms, duration: 280.ms),
+              const SizedBox(height: DonySpacing.xxl),
+
+              _SectionLabel(
+                label: l.tripPublishPaymentMethodsSectionLabel,
+                iconAsset: 'banknote',
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              RecurrencePaymentMethods(
+                currency: _currency,
+                cardWanted: _cardWanted,
+                cashWanted: _cashWanted,
+              ).animate().fadeIn(delay: 160.ms, duration: 280.ms),
               const SizedBox(height: DonySpacing.xxl),
 
               GestureDetector(
