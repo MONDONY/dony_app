@@ -27,8 +27,8 @@ class HiveService {
   // ── Préférences app ──────────────────────────────────────────────────────
   static const String kThemeMode = 'theme_mode'; // 'system' | 'light' | 'dark'
   static const String kLanguageCode = 'language_code'; // 'system' | 'fr' | 'en'
-  static const String kFavDestinations =
-      'fav_destinations'; // List<String> ex: ['SN','CI']
+  // 'fav_destinations' (destinations favorites) n'est plus lue ni écrite
+  // (FLUTTER-H5) : la clé peut subsister sur d'anciens appareils, sans effet.
 
   // Trajets épinglés en tête de « Mes trajets » (FLUTTER-FS), propres à
   // l'appareil. List<String> d'identifiants d'annonce.

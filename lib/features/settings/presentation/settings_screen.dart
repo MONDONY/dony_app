@@ -21,13 +21,6 @@ import 'package:go_router/go_router.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  static const _destinations = [
-    ('SN', '🇸🇳', 'Dakar'), // i18n-ignore: nom de ville (donnée)
-    ('CI', '🇨🇮', 'Abidjan'), // i18n-ignore: nom de ville (donnée)
-    ('ML', '🇲🇱', 'Bamako'), // i18n-ignore: nom de ville (donnée)
-    ('CM', '🇨🇲', 'Douala'), // i18n-ignore: nom de ville (donnée)
-  ];
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -82,25 +75,6 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     onTap: () =>
                         _showLanguagePicker(context, prefs.languageCode),
-                  ),
-                ],
-              ),
-
-              // ── DESTINATIONS FAVORITES ─────────────────────────────────
-              SettingsSectionHeader(l.settingsSectionDestinations),
-              SettingsFlatGroup(
-                children: [
-                  DonyListTile(
-                    iconAsset: 'map-pin',
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: l.settingsDestinationsLabel,
-                    showDivider: false,
-                    trailing: _disclosure(
-                      context,
-                      _destinationsSummary(l, prefs.favDestinations),
-                    ),
-                    onTap: () => _showDestinationsPicker(context),
                   ),
                 ],
               ),
@@ -275,7 +249,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // ── Helpers thème / destinations ──────────────────────────────────────────
+  // ── Helpers thème / langue ──────────────────────────────────────────
   String _themeIcon(String mode) => switch (mode) {
     'light' => 'sun',
     'dark' => 'moon',
@@ -296,20 +270,6 @@ class SettingsScreen extends StatelessWidget {
     'en' => 'English', // i18n-ignore: nom de la langue dans sa propre langue
     _ => context.l10n.settingsLanguagePhone,
   };
-
-  String _destinationsSummary(AppLocalizations l, List<String> codes) {
-    if (codes.isEmpty) {
-      return l.settingsNoDestination;
-    }
-    final names = _destinations
-        .where((d) => codes.contains(d.$1))
-        .map((d) => d.$3)
-        .toList();
-    if (names.length <= 1) {
-      return names.join();
-    }
-    return '${names.first} +${names.length - 1}';
-  }
 
   Widget _disclosure(BuildContext context, String value) {
     final cs = Theme.of(context).colorScheme;
@@ -356,40 +316,6 @@ class SettingsScreen extends StatelessWidget {
                 },
               ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showDestinationsPicker(BuildContext context) {
-    final bloc = context.read<AppPreferencesBloc>();
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      builder: (sheetCtx) => BlocProvider<AppPreferencesBloc>.value(
-        value: bloc,
-        child: SafeArea(
-          child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
-            builder: (ctx, state) {
-              final selected = state.preferences.favDestinations;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final dest in _destinations)
-                    ListTile(
-                      title: Text('${dest.$2} ${dest.$3}'),
-                      trailing: selected.contains(dest.$1)
-                          ? DonyIcon(
-                              'check',
-                              color: Theme.of(ctx).colorScheme.primary,
-                            )
-                          : null,
-                      onTap: () => bloc.add(DestinationToggled(dest.$1)),
-                    ),
-                ],
-              );
-            },
-          ),
         ),
       ),
     );

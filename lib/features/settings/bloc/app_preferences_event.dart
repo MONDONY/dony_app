@@ -23,14 +23,6 @@ class LanguageChanged extends AppPreferencesEvent {
   List<Object?> get props => [languageCode];
 }
 
-class DestinationToggled extends AppPreferencesEvent {
-  final String countryCode; // 'SN' | 'CI' | 'ML' | 'CM'
-  const DestinationToggled(this.countryCode);
-
-  @override
-  List<Object?> get props => [countryCode];
-}
-
 class BiometricToggled extends AppPreferencesEvent {
   const BiometricToggled();
 }

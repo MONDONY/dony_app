@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/phone/phone_country.dart';
+import 'package:dony/core/utils/text_search.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/l10n/country_names.dart';
@@ -7,8 +8,40 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Destinations proposées d'emblée (corridors de lancement) ; « Autre » en plus.
-const List<String> kIntentDestinations = ['SN', 'CI', 'ML', 'CM'];
+/// Corridors de lancement, toujours affichés en tête dans cet ordre.
+const List<String> kIntentLeadDestinations = ['SN', 'CI', 'ML', 'CM'];
+
+/// Les 14 pays UEMOA + CEMAC acceptés par le serveur comme destination
+/// principale (`ActivationService.declareIntent` → `CountryCatalog`) ;
+/// « Autre » en plus.
+const List<String> kIntentDestinations = [
+  ...kIntentLeadDestinations,
+  'BJ',
+  'BF',
+  'GW',
+  'NE',
+  'TG',
+  'CF',
+  'TD',
+  'CG',
+  'GQ',
+  'GA',
+];
+
+/// Ordre d'affichage : [kIntentLeadDestinations] puis les autres pays par
+/// ordre alphabétique de leur nom dans la langue de [l] (accents ignorés).
+List<String> orderedIntentDestinations(AppLocalizations l) {
+  final others =
+      kIntentDestinations
+          .where((code) => !kIntentLeadDestinations.contains(code))
+          .toList()
+        ..sort(
+          (a, b) => normalizeSearch(
+            countryName(l, a),
+          ).compareTo(normalizeSearch(countryName(l, b))),
+        );
+  return [...kIntentLeadDestinations, ...others];
+}
 
 /// « Vous utilisez Yadony pour… » + « Votre destination principale », lu et écrit dans [IntentCubit].
 class IntentForm extends StatelessWidget {
@@ -62,7 +95,7 @@ class IntentForm extends StatelessWidget {
           spacing: DonySpacing.sm,
           runSpacing: DonySpacing.sm,
           children: [
-            for (final code in kIntentDestinations)
+            for (final code in orderedIntentDestinations(l))
               DonyChip(
                 key: Key('intent-destination-$code'),
                 label:

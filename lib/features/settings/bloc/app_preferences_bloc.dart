@@ -16,7 +16,6 @@ class AppPreferencesBloc
       ) {
     on<ThemeChanged>(_onThemeChanged);
     on<LanguageChanged>(_onLanguageChanged);
-    on<DestinationToggled>(_onDestinationToggled);
     on<BiometricToggled>(_onBiometricToggled);
     on<AppLockBiometricToggled>(_onAppLockBiometricToggled);
   }
@@ -34,21 +33,6 @@ class AppPreferencesBloc
     final updated = state.preferences.copyWith(
       languageCode: event.languageCode,
     );
-    updated.writeToHive(_box);
-    emit(AppPreferencesState(preferences: updated));
-  }
-
-  void _onDestinationToggled(
-    DestinationToggled event,
-    Emitter<AppPreferencesState> emit,
-  ) {
-    final current = List<String>.from(state.preferences.favDestinations);
-    if (current.contains(event.countryCode)) {
-      current.remove(event.countryCode);
-    } else {
-      current.add(event.countryCode);
-    }
-    final updated = state.preferences.copyWith(favDestinations: current);
     updated.writeToHive(_box);
     emit(AppPreferencesState(preferences: updated));
   }

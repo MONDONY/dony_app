@@ -1,6 +1,11 @@
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+/// Préférences locales (Hive, clé/valeur, sans adaptateur ni typeId).
+///
+/// L'ancienne clé `fav_destinations` (section « Destinations favorites »,
+/// retirée : FLUTTER-H5) peut rester dans la boîte des appareils existants ;
+/// elle n'est plus ni lue ni écrite, ce qui ne gêne pas la lecture des autres.
 class UserPreferencesModel {
   /// Langue de l'app : `'system'` suit le téléphone, `'fr'`/`'en'` forcent.
   static const String kLanguageSystem = 'system';
@@ -8,7 +13,6 @@ class UserPreferencesModel {
 
   final String themeMode;
   final String languageCode;
-  final List<String> favDestinations;
   final String weightUnit;
   final String currencyCode;
   final int pickupRadiusKm;
@@ -22,7 +26,6 @@ class UserPreferencesModel {
     // explicitement dans Réglages (« Système » y compris).
     this.themeMode = 'light',
     this.languageCode = kLanguageSystem,
-    this.favDestinations = const [],
     this.weightUnit = 'kg',
     this.currencyCode = 'EUR',
     this.pickupRadiusKm = 10,
@@ -35,7 +38,6 @@ class UserPreferencesModel {
   UserPreferencesModel copyWith({
     String? themeMode,
     String? languageCode,
-    List<String>? favDestinations,
     String? weightUnit,
     String? currencyCode,
     int? pickupRadiusKm,
@@ -46,7 +48,6 @@ class UserPreferencesModel {
   }) => UserPreferencesModel(
     themeMode: themeMode ?? this.themeMode,
     languageCode: languageCode ?? this.languageCode,
-    favDestinations: favDestinations ?? this.favDestinations,
     weightUnit: weightUnit ?? this.weightUnit,
     currencyCode: currencyCode ?? this.currencyCode,
     pickupRadiusKm: pickupRadiusKm ?? this.pickupRadiusKm,
@@ -60,9 +61,6 @@ class UserPreferencesModel {
   factory UserPreferencesModel.fromHive(Box box) => UserPreferencesModel(
     themeMode: box.get(HiveService.kThemeMode, defaultValue: 'light') as String,
     languageCode: _readLanguageCode(box),
-    favDestinations: List<String>.from(
-      box.get(HiveService.kFavDestinations, defaultValue: <String>[]) as List,
-    ),
     weightUnit: box.get(HiveService.kWeightUnit, defaultValue: 'kg') as String,
     currencyCode:
         box.get(HiveService.kCurrencyCode, defaultValue: 'EUR') as String,
@@ -82,7 +80,6 @@ class UserPreferencesModel {
   void writeToHive(Box box) {
     box.put(HiveService.kThemeMode, themeMode);
     box.put(HiveService.kLanguageCode, languageCode);
-    box.put(HiveService.kFavDestinations, favDestinations);
     box.put(HiveService.kWeightUnit, weightUnit);
     box.put(HiveService.kCurrencyCode, currencyCode);
     box.put(HiveService.kPickupRadiusKm, pickupRadiusKm);

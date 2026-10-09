@@ -204,7 +204,6 @@ const _sameInBothLanguages = <String>{
   'profileLanguageSwahili', // « Swahili » se dit pareil (FLUTTER-9Z)
   'profilePublicBadgesSectionLabel', // « BADGES » se dit pareil (tâche G3)
   'settingsThemeAuto', // « Auto » se dit pareil (tâche H1)
-  'settingsDestinationsLabel', // « Destinations » se dit pareil (tâche H1)
   'settingsNotificationsLabel', // « Notifications » se dit pareil (tâche H1)
   'diagnosticsTitle', // « Diagnostics » se dit pareil (tâche H1)
   'securitySectionApplication', // « APPLICATION » se dit pareil (tâche H1)
