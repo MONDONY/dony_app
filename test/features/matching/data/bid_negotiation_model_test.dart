@@ -454,4 +454,55 @@ void main() {
       );
     });
   });
+
+  group('accord en especes : commission du voyageur (FLUTTER-H7)', () {
+    test('commissionDueBy est lu en UTC, absent avec un serveur ancien', () {
+      final withDue = BidNegotiation.fromJson({
+        ..._threadJson(status: 'PENDING'),
+        'commissionDueBy': '2026-10-10T08:30:00Z',
+      });
+      expect(withDue.commissionDueBy, DateTime.utc(2026, 10, 10, 8, 30));
+      expect(withDue.commissionDueBy!.isUtc, isTrue);
+
+      expect(
+        BidNegotiation.fromJson(_threadJson(status: 'PENDING')).commissionDueBy,
+        isNull,
+      );
+    });
+
+    test('le voyageur en attente de reglement doit regler la commission', () {
+      final traveler = BidNegotiation.fromJson(_threadJson(status: 'PENDING'));
+      expect(traveler.needsMyCommissionSettlement, isTrue);
+      // Brut 48,5 − net 42 : ce que le serveur prélève.
+      expect(traveler.travelerCommission, closeTo(6.5, 1e-9));
+
+      final sender = BidNegotiation.fromJson(
+        _threadJson(status: 'PENDING', withNet: false),
+      );
+      expect(sender.needsMyCommissionSettlement, isFalse);
+      expect(sender.travelerCommission, isNull);
+
+      expect(
+        BidNegotiation.fromJson(_threadJson()).needsMyCommissionSettlement,
+        isFalse,
+      );
+    });
+
+    test('commission nulle ou sans brut : rien a afficher', () {
+      expect(
+        BidNegotiation.fromJson({
+          ..._threadJson(status: 'PENDING'),
+          'proposedGrossEur': 0,
+        }).travelerCommission,
+        isNull,
+      );
+      expect(
+        BidNegotiation.fromJson({
+          ..._threadJson(status: 'PENDING'),
+          'netEur': 48.5,
+        }).travelerCommission,
+        isNull,
+      );
+    });
+  });
 }

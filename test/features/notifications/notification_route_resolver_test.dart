@@ -169,6 +169,35 @@ void main() {
     }
   });
 
+  group('resolveNotificationRoute — commission d un accord en especes', () {
+    // FLUTTER-H7 : le fil porte le bouton « Régler la commission ».
+    test('BID_NEGOTIATION_COMMISSION_DUE routes to the trip thread', () {
+      expect(
+        resolveNotificationRoute('BID_NEGOTIATION_COMMISSION_DUE', {
+          'bidId': bidId,
+          'announcementId': announcementId,
+        }),
+        '/bids/$bidId/negotiation',
+      );
+    });
+
+    test('BID_NEGOTIATION_COMMISSION_DUE without a valid bidId is inert', () {
+      expect(
+        resolveNotificationRoute('BID_NEGOTIATION_COMMISSION_DUE', {
+          'bidId': '../x',
+        }),
+        isNull,
+      );
+    });
+
+    test('ancien back : BID_CREATED garde la demande', () {
+      expect(
+        resolveNotificationRoute('BID_CREATED', {'bidId': bidId}),
+        '/demandes?bid=$bidId',
+      );
+    });
+  });
+
   group('resolveNotificationRoute — négociation', () {
     test('negotiation (relance/annulation) routes to thread page', () {
       expect(

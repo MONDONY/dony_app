@@ -5452,6 +5452,19 @@
   "@negotiationThreadCashSenderHint": {
     "description": "Accord en espèces, vue expéditeur (bid_negotiation_thread_screen.dart)"
   },
+  "negotiationThreadCashCommissionAmount": "Commission Yadony : {amount}",
+  "@negotiationThreadCashCommissionAmount": {
+    "description": "Montant de la commission à régler, accord en espèces vue voyageur (bid_negotiation_thread_screen.dart, FLUTTER-H7)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadDeclineParcelButton": "Refuser le colis",
+  "@negotiationThreadDeclineParcelButton": {
+    "description": "Lien secondaire pour refuser le colis d'un accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart, FLUTTER-H7)"
+  },
   "negotiationThreadClosedAccepted": "Prix accepté. Rendez-vous sur votre colis pour la suite.",
   "@negotiationThreadClosedAccepted": {
     "description": "Fil clos, statut ACCEPTED (bid_negotiation_thread_screen.dart)"

@@ -67,6 +67,7 @@ import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
@@ -611,10 +612,22 @@ final appRouter = GoRouter(
             : authState is AuthProfileUpdated
             ? authState.user.id
             : null;
-        return BlocProvider<BidNegotiationBloc>(
-          create: (_) =>
-              getIt<BidNegotiationBloc>()
-                ..add(BidNegotiationFetchRequested(bidId)),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider<BidNegotiationBloc>(
+              create: (_) =>
+                  getIt<BidNegotiationBloc>()
+                    ..add(BidNegotiationFetchRequested(bidId)),
+            ),
+            // Accord en espèces côté voyageur (FLUTTER-H7) : le fil règle la
+            // commission par le même flux que le détail du colis. Pas de
+            // BidBloc ici : il masquerait le BidBloc global que
+            // refreshActivityAfterBidChange rafraîchit ; le refus du colis
+            // crée le sien sous la barre d'actions.
+            BlocProvider<BidAcceptanceBloc>(
+              create: (_) => getIt<BidAcceptanceBloc>(),
+            ),
+          ],
           child: BidNegotiationThreadScreen(
             bidId: bidId,
             viewerUserId: userId,
