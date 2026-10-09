@@ -705,6 +705,8 @@ final appRouter = GoRouter(
           child: RematchSearchScreen(
             cancellationId: cancellationId,
             cancellation: cancellation,
+            // Colis remis puis annulé : bandeau « à récupérer » (billet_talon).
+            parcelReturn: state.uri.queryParameters['retour'] == '1',
           ),
         );
       },

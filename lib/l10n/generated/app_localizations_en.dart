@@ -10777,6 +10777,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rematchRefundInProgress => 'Your refund is in progress.';
 
   @override
+  String get rematchParcelReturnTitle => 'Parcel to collect';
+
+  @override
+  String get rematchParcelReturnDescription =>
+      'Once you get your parcel back, these trips match your shipment.';
+
+  @override
   String get rematchBackHomeAction => 'Back to home';
 
   @override

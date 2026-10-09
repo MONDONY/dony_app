@@ -488,8 +488,10 @@ void main() {
     },
   );
 
+  // Décision du propriétaire : un colis annulé après remise reçoit aussi les
+  // trajets proposés, pendant le retour comme après.
   testWidgets(
-    'sender + CANCELLED + flux retour en attente (isAwaitingReturn) → pas de CTA même avec SUGGESTED',
+    'sender + CANCELLED + retour en attente + SUGGESTED → code de retour puis CTA',
     (tester) async {
       await _pump(
         tester,
@@ -502,13 +504,56 @@ void main() {
         ),
         true,
       );
-      expect(find.text('Voir les trajets alternatifs'), findsNothing);
       expect(find.text('Code de retour'), findsOneWidget);
+      expect(find.text('Voir les trajets alternatifs'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Code de retour')).dy,
+        lessThan(
+          tester.getTopLeft(find.text('Voir les trajets alternatifs')).dy,
+        ),
+      );
     },
   );
 
   testWidgets(
-    'sender + CANCELLED + colis restitué → pas de CTA même avec SUGGESTED',
+    'voyageur + CANCELLED + retour en attente + SUGGESTED → pas de CTA',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'SUGGESTED',
+          returnCode: '123456',
+          returnDeadline: DateTime.now().add(const Duration(days: 2)),
+        ),
+        false,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'sender + CANCELLED + retour en attente sans suggestion → code de retour seul',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'NONE',
+          returnCode: '123456',
+          returnDeadline: DateTime.now().add(const Duration(days: 2)),
+        ),
+        true,
+      );
+      expect(find.text('Code de retour'), findsOneWidget);
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'sender + CANCELLED + colis restitué + SUGGESTED → "Colis restitué" et CTA',
     (tester) async {
       await _pump(
         tester,
@@ -521,10 +566,116 @@ void main() {
         ),
         true,
       );
-      expect(find.text('Voir les trajets alternatifs'), findsNothing);
       expect(find.text('Colis restitué'), findsOneWidget);
+      expect(find.text('Voir les trajets alternatifs'), findsOneWidget);
     },
   );
+
+  for (final returned in [false, true]) {
+    testWidgets(
+      'CTA d\'un colis remis puis annulé (restitué: $returned) → écran rematch en mode retour',
+      (tester) async {
+        final t = _MockTrackingBloc();
+        final b = _MockBidBloc();
+        when(() => t.state).thenReturn(TrackingInitial());
+        when(() => b.state).thenReturn(BidInitial());
+        final visited = <String>[];
+        final router = GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => Scaffold(
+                body: MultiBlocProvider(
+                  providers: [
+                    BlocProvider<TrackingBloc>.value(value: t),
+                    BlocProvider<BidBloc>.value(value: b),
+                  ],
+                  child: BilletTalon(
+                    bid: _bid(
+                      status: 'CANCELLED',
+                      tripCancellationId: 'cancel-001',
+                      tripCancellationRematchStatus: 'SUGGESTED',
+                      returnCode: returned ? null : '123456',
+                      returnDeadline: DateTime.now().add(
+                        const Duration(days: 2),
+                      ),
+                      returnedAt: returned ? DateTime.now() : null,
+                    ),
+                    isSender: true,
+                  ),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/cancellations/:id/rematch',
+              builder: (_, state) {
+                visited.add(state.uri.toString());
+                return const Scaffold(body: Text('alternatives'));
+              },
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+        await tester.pumpWidget(
+          MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+        );
+        await tester.pump(const Duration(milliseconds: 400));
+
+        await tester.tap(find.text('Voir les trajets alternatifs'));
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(visited, ['/cancellations/cancel-001/rematch?retour=1']);
+      },
+    );
+  }
+
+  testWidgets('CTA d\'une annulation avant remise → écran rematch classique', (
+    tester,
+  ) async {
+    final t = _MockTrackingBloc();
+    final b = _MockBidBloc();
+    when(() => t.state).thenReturn(TrackingInitial());
+    when(() => b.state).thenReturn(BidInitial());
+    final visited = <String>[];
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => Scaffold(
+            body: MultiBlocProvider(
+              providers: [
+                BlocProvider<TrackingBloc>.value(value: t),
+                BlocProvider<BidBloc>.value(value: b),
+              ],
+              child: BilletTalon(
+                bid: _bid(
+                  status: 'CANCELLED',
+                  tripCancellationId: 'cancel-001',
+                  tripCancellationRematchStatus: 'SUGGESTED',
+                ),
+                isSender: true,
+              ),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/cancellations/:id/rematch',
+          builder: (_, state) {
+            visited.add(state.uri.toString());
+            return const Scaffold(body: Text('alternatives'));
+          },
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(find.text('Voir les trajets alternatifs'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(visited, ['/cancellations/cancel-001/rematch']);
+  });
 
   // ── CTA rematch (bid refusé par le voyageur, trajet non annulé) ─────────────
 
