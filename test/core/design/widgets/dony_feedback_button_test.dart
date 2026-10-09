@@ -939,4 +939,65 @@ void _englishTests() {
       expect(find.text('Unsupported or too large image'), findsOneWidget);
     });
   });
+  group('FLUTTER-H6 : teinte de l\'icône selon le thème', () {
+    Color? bugColor(WidgetTester tester) => tester
+        .widget<DonyIcon>(
+          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+        )
+        .color;
+
+    Widget themed(ThemeData theme, {Color? color, bool inAppBar = true}) {
+      final button = DonyFeedbackButton(color: color);
+      return MaterialApp(
+        theme: theme,
+        home: Scaffold(
+          appBar: inAppBar ? AppBar(actions: [button]) : null,
+          body: inAppBar ? const SizedBox() : Center(child: button),
+        ),
+      );
+    }
+
+    testWidgets('thème sombre : avant-plan clair de l\'AppBar, jamais noir', (
+      tester,
+    ) async {
+      final theme = AppTheme.dark();
+      await tester.pumpWidget(themed(theme));
+
+      final color = bugColor(tester);
+      expect(color, theme.colorScheme.onSurface);
+      expect(color, isNot(Colors.black));
+      expect(color!.computeLuminance(), greaterThan(0.5));
+    });
+
+    testWidgets('thème sombre hors AppBar : teinte claire du thème', (
+      tester,
+    ) async {
+      final theme = AppTheme.dark();
+      await tester.pumpWidget(themed(theme, inAppBar: false));
+
+      // Hors AppBar, l'IconButton M3 prend `onSurfaceVariant` : un gris clair,
+      // nettement plus lumineux que la surface sombre.
+      final color = bugColor(tester);
+      expect(color, theme.colorScheme.onSurfaceVariant);
+      expect(
+        color!.computeLuminance(),
+        greaterThan(theme.colorScheme.surface.computeLuminance() + 0.3),
+      );
+    });
+
+    testWidgets('thème clair : avant-plan foncé de l\'AppBar', (tester) async {
+      final theme = AppTheme.light();
+      await tester.pumpWidget(themed(theme));
+
+      final color = bugColor(tester);
+      expect(color, theme.colorScheme.onSurface);
+      expect(color!.computeLuminance(), lessThan(0.5));
+    });
+
+    testWidgets('couleur fournie : prioritaire sur le thème', (tester) async {
+      await tester.pumpWidget(themed(AppTheme.dark(), color: Colors.white));
+
+      expect(bugColor(tester), Colors.white);
+    });
+  });
 }

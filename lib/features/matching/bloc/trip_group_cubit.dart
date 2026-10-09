@@ -28,10 +28,15 @@ class TripGroupCubit extends Cubit<TripGroupState> {
 
   final AnnouncementRepository _repository;
 
+  // La fiche trajet et la sheet voyageur ferment le cubit quand on les quitte :
+  // la réponse arrivait après le `close()` et l'`emit` levait un StateError
+  // (Sentry FLUTTER-H3 / FLUTTER-H2). D'où un `isClosed` après chaque attente.
   Future<void> load(String announcementId) async {
+    if (isClosed) return;
     emit(TripGroupState(status: TripGroupStatus.loading, info: state.info));
     try {
       final info = await _repository.getTripLegs(announcementId);
+      if (isClosed) return;
       emit(
         TripGroupState(
           status: info.isTrip ? TripGroupStatus.loaded : TripGroupStatus.hidden,
@@ -39,6 +44,7 @@ class TripGroupCubit extends Cubit<TripGroupState> {
         ),
       );
     } catch (_) {
+      if (isClosed) return;
       emit(const TripGroupState(status: TripGroupStatus.hidden));
     }
   }

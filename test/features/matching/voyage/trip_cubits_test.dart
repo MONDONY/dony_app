@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
@@ -122,5 +124,47 @@ void main() {
         const TripGroupState(status: TripGroupStatus.hidden),
       ],
     );
+    group('FLUTTER-H3 / H2 : cubit fermé pendant le chargement', () {
+      Future<void> closeWhilePending({required bool fail}) async {
+        final completer = Completer<TripLegsInfo>();
+        when(() => repo.getTripLegs('a')).thenAnswer((_) => completer.future);
+        final cubit = TripGroupCubit(repo);
+        final emitted = <TripGroupState>[];
+        final sub = cubit.stream.listen(emitted.add);
+
+        final pending = cubit.load('a');
+        await Future<void>.delayed(Duration.zero);
+        expect(emitted, [
+          const TripGroupState(status: TripGroupStatus.loading),
+        ]);
+        emitted.clear();
+
+        await cubit.close();
+        if (fail) {
+          completer.completeError(Exception('réseau'));
+        } else {
+          completer.complete(info);
+        }
+
+        await expectLater(pending, completes);
+        expect(emitted, isEmpty);
+        await sub.cancel();
+      }
+
+      test('réponse reçue après close : aucune erreur, aucun état', () async {
+        await closeWhilePending(fail: false);
+      });
+
+      test('échec reçu après close : aucune erreur, aucun état', () async {
+        await closeWhilePending(fail: true);
+      });
+
+      test('load sur un cubit déjà fermé : ignoré', () async {
+        final cubit = TripGroupCubit(repo);
+        await cubit.close();
+        await expectLater(cubit.load('a'), completes);
+        verifyNever(() => repo.getTripLegs(any()));
+      });
+    });
   });
 }
