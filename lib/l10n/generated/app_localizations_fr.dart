@@ -17508,4 +17508,19 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorCodeRequestTooSoonMessage =>
       'L\'expéditeur a déjà été prévenu. Réessayez dans quelques minutes.';
+
+  @override
+  String get ticketExpiredCodeTitle => 'Code de retrait expiré';
+
+  @override
+  String get ticketExpiredCodeMessage =>
+      'Le code de retrait a expiré. Générez-en un nouveau.';
+
+  @override
+  String get bidDetailSenderCodeExpiredNote =>
+      'Le code de retrait a expiré : générez-en un nouveau sur votre billet.';
+
+  @override
+  String get recipientNotifyCodeExpiredHint =>
+      'Le code de retrait a expiré : générez-en un nouveau pour l\'ajouter au message.';
 }

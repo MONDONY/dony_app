@@ -104,7 +104,10 @@ class BilletTalon extends StatelessWidget {
           children: [
             _QrTalonButton(bid: bid, compact: true),
             const SizedBox(height: DonySpacing.sm),
-            TalonBlockedCodeBlock(bidId: bid.id),
+            TalonBlockedCodeBlock(
+              bidId: bid.id,
+              expired: bid.isPickupCodeExpired,
+            ),
           ],
         ),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),

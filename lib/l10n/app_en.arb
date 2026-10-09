@@ -9433,5 +9433,9 @@
   "errorCodeRequestNotAllowedTitle": "Request not possible",
   "errorCodeRequestNotAllowedMessage": "This parcel is not waiting for a pickup code right now.",
   "errorCodeRequestTooSoonTitle": "Request already sent",
-  "errorCodeRequestTooSoonMessage": "The sender has already been notified. Try again in a few minutes."
+  "errorCodeRequestTooSoonMessage": "The sender has already been notified. Try again in a few minutes.",
+  "ticketExpiredCodeTitle": "Pickup code expired",
+  "ticketExpiredCodeMessage": "The pickup code has expired. Generate a new one.",
+  "bidDetailSenderCodeExpiredNote": "The pickup code has expired: generate a new one on your ticket.",
+  "recipientNotifyCodeExpiredHint": "The pickup code has expired: generate a new one to add it to the message."
 }

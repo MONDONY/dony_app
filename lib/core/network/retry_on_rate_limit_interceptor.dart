@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
@@ -14,6 +15,13 @@ import 'package:dio/dio.dart';
 /// qu'il recharge manuellement l'app, ce qui ne fait que retenter la même
 /// rafale un peu plus tard. Le jitter évite que toutes les requêtes 429
 /// retentent au même instant et ne reproduisent la rafale initiale.
+///
+/// Un 429 métier du back (ProblemDetail portant un `code`, comme
+/// `code-request-too-soon` ou `recipient-replacement-too-soon`, ou un
+/// `retryAfterSeconds`) n'est jamais rejoué : la réponse serait identique
+/// quelques centaines de millisecondes plus tard, et l'écran attendait
+/// ~1,5 s de relances inutiles avant d'afficher le délai à respecter. Seuls
+/// les 429 de limitation (Nginx, corps HTML ou vide) sont relancés.
 class RetryOnRateLimitInterceptor extends Interceptor {
   RetryOnRateLimitInterceptor(this._dio, {Random? random})
     : _random = random ?? Random();
@@ -39,7 +47,8 @@ class RetryOnRateLimitInterceptor extends Interceptor {
     // le compterait une seconde fois. Le 429 remonte tel quel à l'appelant.
     if (statusCode != 429 ||
         attempt >= maxRetries ||
-        err.requestOptions.data is FormData) {
+        err.requestOptions.data is FormData ||
+        isBusinessRateLimit(err.response?.data)) {
       handler.next(err);
       return;
     }
@@ -56,5 +65,25 @@ class RetryOnRateLimitInterceptor extends Interceptor {
     } on DioException catch (retryError) {
       handler.next(retryError);
     }
+  }
+
+  /// `true` pour un 429 métier du back : corps problem+json portant un
+  /// `code` non vide ou un `retryAfterSeconds`. Un corps texte est décodé
+  /// s'il est du JSON ; tout autre corps (HTML Nginx, vide) est générique.
+  static bool isBusinessRateLimit(Object? body) {
+    Object? data = body;
+    if (data is String) {
+      final trimmed = data.trim();
+      if (!trimmed.startsWith('{')) return false;
+      try {
+        data = jsonDecode(trimmed);
+      } on FormatException {
+        return false;
+      }
+    }
+    if (data is! Map) return false;
+    final code = data['code'];
+    if (code is String && code.trim().isNotEmpty) return true;
+    return data.containsKey('retryAfterSeconds');
   }
 }

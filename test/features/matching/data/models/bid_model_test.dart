@@ -209,4 +209,26 @@ void main() {
       },
     );
   });
+
+  group('BidModel.isPickupCodeExpired (FLUTTER-G2)', () {
+    BidModel model({String? code, bool flag = true}) => BidModel.fromJson(
+      _minimalBid()
+        ..['status'] = 'IN_TRANSIT'
+        ..['confirmationCode'] = code
+        ..['pickupCodeRenewalNeeded'] = flag,
+    );
+
+    test('code présent + drapeau serveur : expiré', () {
+      expect(model(code: '123456').isPickupCodeExpired, isTrue);
+    });
+
+    test('code effacé : bloqué, pas expiré', () {
+      expect(model().isPickupCodeExpired, isFalse);
+      expect(model(code: '').isPickupCodeExpired, isFalse);
+    });
+
+    test('code valide (pas de drapeau) : pas expiré', () {
+      expect(model(code: '123456', flag: false).isPickupCodeExpired, isFalse);
+    });
+  });
 }

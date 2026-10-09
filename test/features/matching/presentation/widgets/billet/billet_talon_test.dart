@@ -1194,6 +1194,26 @@ void main() {
       );
       expect(find.byKey(const Key('talon-blocked-code')), findsOneWidget);
       expect(find.byKey(const Key('talon-code-renewal-request')), findsNothing);
+      // Le texte parle d'expiration, pas des essais faux du voyageur.
+      expect(find.text('Code de retrait expiré'), findsOneWidget);
+      expect(
+        find.text('Le code de retrait a expiré. Générez-en un nouveau.'),
+        findsOneWidget,
+      );
+      expect(find.text('Code de retrait bloqué'), findsNothing);
+    });
+
+    testWidgets('expéditeur, code effacé : « bloqué après trop d\'essais »', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _bid(status: 'IN_TRANSIT', pickupCodeRenewalNeeded: true),
+        true,
+      );
+      expect(find.text('Code de retrait bloqué'), findsOneWidget);
+      expect(find.textContaining("trop d'essais"), findsOneWidget);
+      expect(find.text('Code de retrait expiré'), findsNothing);
     });
   });
 }

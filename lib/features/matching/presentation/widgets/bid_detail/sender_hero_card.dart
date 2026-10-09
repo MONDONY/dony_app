@@ -192,7 +192,9 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
         subtitle: bid.needsNewPickupCode
             // FLUTTER-G1 : sans code, le destinataire ne peut pas retirer le
             // colis ; c'est l'information qui prime à l'arrivée.
-            ? l.bidDetailSenderCodeBlockedNote
+            ? (bid.isPickupCodeExpired
+                  ? l.bidDetailSenderCodeExpiredNote
+                  : l.bidDetailSenderCodeBlockedNote)
             : hasInstructions
             ? l.bidDetailSenderArrivedSubtitleSeeInstructions
             : l.bidDetailSenderArrivedSubtitleDefault,
@@ -281,14 +283,19 @@ String _buildInTransitSubtitle(BuildContext context, BidModel bid) {
       ? l.bidDetailSenderInTransitEta(arrivalTime, arrivalCity)
       : l.bidDetailSenderInTransitEnRoute(arrivalCity);
 
+  // Avant le code présent : un code expiré est encore là mais inutilisable.
+  if (bid.needsNewPickupCode) {
+    // FLUTTER-G1 : le code a été bloqué, le talon propose d'en générer un.
+    // FLUTTER-G2 : expiré, même action, autre explication.
+    final note = bid.isPickupCodeExpired
+        ? l.bidDetailSenderCodeExpiredNote
+        : l.bidDetailSenderCodeBlockedNote;
+    return '$timePart $note';
+  }
   if (bid.confirmationCode != null) {
     // Pas de mention « à qui » ici : l'instruction de transmission fait
     // autorité sur le talon (carte « CODE DE RETRAIT »), juste au-dessus.
     return '$timePart ${l.bidDetailSenderInTransitTicketNote}';
-  }
-  if (bid.needsNewPickupCode) {
-    // FLUTTER-G1 : le code a été bloqué, le talon propose d'en générer un.
-    return '$timePart ${l.bidDetailSenderCodeBlockedNote}';
   }
   return timePart;
 }
