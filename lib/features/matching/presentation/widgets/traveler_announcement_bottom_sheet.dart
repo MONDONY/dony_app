@@ -44,16 +44,51 @@ import 'package:intl/intl.dart';
 /// Statuts d'un trajet qui n'accepte plus de nouvelle demande.
 const _kClosedTripStatuses = {'IN_PROGRESS', 'COMPLETED', 'CANCELLED'};
 
+/// Navigation demandée par la feuille trajet en se fermant, quand elle est
+/// ouverte par la route `/traveler/:announcementId` (`returnsNavigation`).
+///
+/// Cette route n'est qu'une page d'accueil vide sous la feuille : elle se
+/// referme dès que la feuille se ferme. Une action qui fermait la feuille puis
+/// naviguait elle-même (« Voir mon colis », « Signaler ce trajet »…) voyait sa
+/// navigation annulée par ce `pop`, et l'utilisateur revenait à l'écran
+/// précédent, les notifications typiquement (Sentry FLUTTER-HR). La feuille
+/// rend donc la suite à donner, et la page d'accueil l'exécute en se
+/// retirant.
+sealed class TravelerSheetExit {
+  const TravelerSheetExit();
+}
+
+/// Ouvrir [location] à la place de la page d'accueil (`pushReplacement`).
+final class TravelerSheetRoute extends TravelerSheetExit {
+  const TravelerSheetRoute(this.location, {this.extra});
+
+  final String location;
+  final Object? extra;
+}
+
+/// Poursuivre un parcours en feuilles (demande de transport, vérification
+/// d'identité, connexion) une fois la page d'accueil retirée. [run] reçoit le
+/// contexte du navigateur racine, qui survit à cette page.
+final class TravelerSheetFollowUp extends TravelerSheetExit {
+  const TravelerSheetFollowUp(this.run);
+
+  final Future<void> Function(BuildContext rootContext) run;
+}
+
 /// Rend la feuille et se termine à sa fermeture.
 ///
 /// Le `Future` sert à la route `/traveler/:announcementId`, qui doit se refermer
-/// derrière la feuille pour ne pas laisser une page vide dans la pile. Les
-/// autres appelants l'ignorent sans conséquence.
-Future<void> showTravelerAnnouncementSheet(
+/// derrière la feuille pour ne pas laisser une page vide dans la pile. Avec
+/// [returnsNavigation], les actions qui quittent la feuille ne naviguent pas
+/// elles-mêmes : elles la ferment avec un [TravelerSheetExit] que la route
+/// exécute (FLUTTER-HR). Les autres appelants (carte, liste, recherche…)
+/// laissent [returnsNavigation] à faux et ignorent le résultat, toujours nul.
+Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
   BuildContext context, {
   required AnnouncementModel announcement,
   String? existingBidStatus,
   BidModel? existingBid,
+  bool returnsNavigation = false,
 }) {
   // Captured before DonyBottomSheet.show() — context may be invalid inside
   // onPressed since useRootNavigator: true places the sheet outside BlocProvider.
@@ -122,7 +157,7 @@ Future<void> showTravelerAnnouncementSheet(
     /* Absent de ce contexte (tests, points d'entrée isolés) : pas de cœur. */
   }
 
-  return DonyBottomSheet.show<void>(
+  return DonyBottomSheet.show<TravelerSheetExit>(
     context,
     title: context.l10n.listingTripDetailTitle,
     // Scarabée de signalement dans l'en-tête, comme sur les écrans
@@ -171,12 +206,20 @@ Future<void> showTravelerAnnouncementSheet(
                 onPressed: resolvedBid == null
                     ? null
                     : () {
-                        Navigator.of(innerCtx, rootNavigator: true).pop();
-                        if (context.mounted) {
-                          context.push(
-                            '/bids/${resolvedBid!.id}',
-                            extra: resolvedBid,
+                        final navigator = Navigator.of(
+                          innerCtx,
+                          rootNavigator: true,
+                        );
+                        final location = '/bids/${resolvedBid!.id}';
+                        if (returnsNavigation) {
+                          navigator.pop(
+                            TravelerSheetRoute(location, extra: resolvedBid),
                           );
+                          return;
+                        }
+                        navigator.pop();
+                        if (context.mounted) {
+                          context.push(location, extra: resolvedBid);
                         }
                       },
               ),
@@ -208,10 +251,10 @@ Future<void> showTravelerAnnouncementSheet(
             ),
           );
         }
-        Future<void> openCreateBid({required bool negotiation}) async {
-          final navigator = Navigator.of(innerCtx, rootNavigator: true);
-          final rootCtx = navigator.context;
-          navigator.pop();
+        Future<void> continueCreateBid(
+          BuildContext rootCtx, {
+          required bool negotiation,
+        }) async {
           // Session Firebase, pas AuthBloc (FLUTTER-7X).
           if (!getIt<FirebaseSessionProbe>().hasRealSession) {
             await AuthRequiredSheet.show(
@@ -249,6 +292,24 @@ Future<void> showTravelerAnnouncementSheet(
           } else {
             await KycStatusBottomSheet.show(rootCtx);
           }
+        }
+
+        Future<void> openCreateBid({required bool negotiation}) async {
+          final navigator = Navigator.of(innerCtx, rootNavigator: true);
+          if (returnsNavigation) {
+            // Depuis `/traveler/:id`, la suite attend que la page d'accueil
+            // se soit retirée : son `pop` fermerait sinon la feuille suivante.
+            navigator.pop(
+              TravelerSheetFollowUp(
+                (rootCtx) =>
+                    continueCreateBid(rootCtx, negotiation: negotiation),
+              ),
+            );
+            return;
+          }
+          final rootCtx = navigator.context;
+          navigator.pop();
+          await continueCreateBid(rootCtx, negotiation: negotiation);
         }
 
         final tt = Theme.of(innerCtx).textTheme;
@@ -321,6 +382,7 @@ Future<void> showTravelerAnnouncementSheet(
       announcement: announcement,
       avecFavori: favoris != null,
       lecteurId: lecteurId,
+      returnsNavigation: returnsNavigation,
     ),
   );
 }
@@ -358,7 +420,12 @@ class _TravelerAnnouncementContent extends StatelessWidget {
     required this.announcement,
     this.avecFavori = false,
     this.lecteurId,
+    this.returnsNavigation = false,
   });
+
+  /// Ouverte par `/traveler/:id` : « Signaler ce trajet » rend sa route au
+  /// lieu de naviguer (voir [TravelerSheetExit]).
+  final bool returnsNavigation;
 
   /// Identifiant du lecteur, pour ne pas lui proposer de se bloquer lui-même.
   final String? lecteurId;
@@ -508,14 +575,18 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             key: const Key('report-announcement-link'),
             borderRadius: BorderRadius.circular(DonyRadius.sm),
             onTap: () {
-              Navigator.of(context, rootNavigator: true).pop();
-              context.push(
-                '/settings/report-incident',
-                extra: {
-                  'targetType': IncidentTargetType.announcement,
-                  'targetId': announcement.id,
-                },
-              );
+              const location = '/settings/report-incident';
+              final extra = {
+                'targetType': IncidentTargetType.announcement,
+                'targetId': announcement.id,
+              };
+              final navigator = Navigator.of(context, rootNavigator: true);
+              if (returnsNavigation) {
+                navigator.pop(TravelerSheetRoute(location, extra: extra));
+                return;
+              }
+              navigator.pop();
+              context.push(location, extra: extra);
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -137,6 +138,7 @@ class _BidDetailViewState extends State<_BidDetailView>
   Timer? _refreshTimer;
   StreamSubscription<Map<String, dynamic>>? _pushSub;
   StreamSubscription<String>? _arrivalSub;
+  StreamSubscription<String>? _ratedSub;
 
   /// La feuille de régénération (`?action=new-code`) ne s'ouvre qu'une fois,
   /// au premier chargement où l'expéditeur a un code à renouveler.
@@ -168,6 +170,18 @@ class _BidDetailViewState extends State<_BidDetailView>
     if (getIt.isRegistered<TripArrivalEventsService>()) {
       _arrivalSub = getIt<TripArrivalEventsService>().arrivals.listen((id) {
         if (mounted && id == _bid.announcementId) {
+          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+        }
+      });
+    }
+    // Note envoyée pour ce colis, quelle que soit l'instance de RatingBloc
+    // (invite automatique racine, feuille de cet écran, scan) — ou 409
+    // « Déjà noté » : relu pour retirer « Noter le voyageur » côté
+    // expéditeur et afficher le badge « Évaluation envoyée » côté voyageur
+    // (FLUTTER-HQ).
+    if (getIt.isRegistered<RatingEventsService>()) {
+      _ratedSub = getIt<RatingEventsService>().rated.listen((id) {
+        if (mounted && id == _bid.id) {
           context.read<BidBloc>().add(BidDetailRequested(_bid.id));
         }
       });
@@ -211,6 +225,7 @@ class _BidDetailViewState extends State<_BidDetailView>
     _refreshTimer?.cancel();
     unawaited(_pushSub?.cancel());
     unawaited(_arrivalSub?.cancel());
+    unawaited(_ratedSub?.cancel());
     _existingPaymentNotifier.dispose();
     _paymentLoadedNotifier.dispose();
     super.dispose();
@@ -505,6 +520,10 @@ class _BidDetailViewState extends State<_BidDetailView>
           }
         },
         child: BlocListener<RatingBloc, RatingState>(
+          // Repli si le signal global n'est pas enregistré : en production,
+          // la note de cette instance passe aussi par RatingEventsService
+          // (voir initState), qui suffit à relire le colis.
+          listenWhen: (_, _) => !getIt.isRegistered<RatingEventsService>(),
           listener: (context, state) {
             if (state is RatingSuccess) {
               context.read<BidBloc>().add(BidDetailRequested(_bid.id));
