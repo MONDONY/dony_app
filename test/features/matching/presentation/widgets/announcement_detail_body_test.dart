@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
@@ -274,5 +275,144 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  // FLUTTER-HK : les tuiles « colis acceptés » / « en attente » ouvrent le
+  // détail des colis, avec la même navigation que la grille du propriétaire.
+  group('tuiles colis tappables (FLUTTER-HK)', () {
+    late List<({String location, Object? extra})> pushed;
+
+    Widget routerHost(AnnouncementModel a) {
+      pushed = [];
+      Widget stub(BuildContext context, GoRouterState state) {
+        pushed.add((location: state.uri.toString(), extra: state.extra));
+        return const Scaffold(body: Text('destination'));
+      }
+
+      final router = GoRouter(
+        initialLocation: '/detail',
+        routes: [
+          GoRoute(
+            path: '/detail',
+            builder: (_, _) => BlocProvider<StripeAccountBloc>.value(
+              value: stubStripeAccountBloc(),
+              child: Scaffold(
+                body: SingleChildScrollView(
+                  child: AnnouncementDetailBody(a: a),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(path: '/announcements/:id/bids', builder: stub),
+          GoRoute(path: '/announcements/:id/bids/pending', builder: stub),
+        ],
+      );
+      return MaterialApp.router(
+        theme: AppTheme.light(),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
+        routerConfig: router,
+      );
+    }
+
+    AnnouncementModel withCounts({required int accepted, int? pending}) =>
+        AnnouncementModel(
+          id: 'ann-hk',
+          travelerId: 'trav-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 8, 12),
+          availableKg: 10,
+          totalKg: 10,
+          pricePerKg: 7,
+          status: 'ACTIVE',
+          bidsCount: pending,
+          confirmedParcelCount: accepted,
+          createdAt: DateTime(2026, 7),
+          updatedAt: DateTime(2026, 7),
+          acceptedPaymentMethods: const <BidPaymentMethod>{},
+        );
+
+    testWidgets('tap acceptés → liste des colis avec le titre de la grille', (
+      tester,
+    ) async {
+      await tester.pumpWidget(routerHost(withCounts(accepted: 3, pending: 2)));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('parcel-stat-accepted')));
+      await tester.pumpAndSettle();
+
+      expect(pushed, hasLength(1));
+      expect(pushed.single.location, '/announcements/ann-hk/bids');
+      expect(pushed.single.extra, <String, dynamic>{'title': 'Colis'});
+      expect(find.text('destination'), findsOneWidget);
+    });
+
+    testWidgets('tap en attente → demandes à traiter', (tester) async {
+      await tester.pumpWidget(routerHost(withCounts(accepted: 3, pending: 2)));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('parcel-stat-pending')));
+      await tester.pumpAndSettle();
+
+      expect(pushed, hasLength(1));
+      expect(pushed.single.location, '/announcements/ann-hk/bids/pending');
+      expect(find.text('destination'), findsOneWidget);
+    });
+
+    testWidgets('compteurs à 0 → tuiles inertes, sans chevron ni bouton', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(routerHost(withCounts(accepted: 0)));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('parcel-stat-accepted')));
+      await tester.tap(find.byKey(const Key('parcel-stat-pending')));
+      await tester.pumpAndSettle();
+
+      expect(pushed, isEmpty);
+      expect(find.text('destination'), findsNothing);
+      for (final key in ['parcel-stat-accepted', 'parcel-stat-pending']) {
+        expect(
+          find.descendant(
+            of: find.byKey(Key(key)),
+            matching: find.byType(DonyPressable),
+          ),
+          findsNothing,
+        );
+      }
+      semantics.dispose();
+    });
+
+    testWidgets('tuiles actives → rôle bouton et libellé localisé', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(routerHost(withCounts(accepted: 3, pending: 1)));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.getSemantics(find.byKey(const Key('parcel-stat-accepted'))),
+        matchesSemantics(
+          label: 'Voir les 3 colis acceptés',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+      expect(
+        tester.getSemantics(find.byKey(const Key('parcel-stat-pending'))),
+        matchesSemantics(
+          label: 'Voir la demande en attente',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+      semantics.dispose();
+    });
   });
 }

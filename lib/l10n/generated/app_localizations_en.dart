@@ -4923,6 +4923,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingPendingParcelsLabel => 'pending';
 
   @override
+  String listingAcceptedParcelsSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'View the $count accepted parcels',
+      one: 'View the accepted parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listingPendingParcelsSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'View the $count pending requests',
+      one: 'View the pending request',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get listingPaymentsAcceptedTitle => 'Accepted payment methods';
 
   @override
