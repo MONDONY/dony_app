@@ -26984,6 +26984,18 @@ abstract class AppLocalizations {
   /// **'Autre'**
   String get intentDestinationOther;
 
+  /// Titre de la feuille ouverte par la puce « Autre » de « Votre destination principale » (intent_other_country_sheet.dart, FLUTTER-H9)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez votre pays'**
+  String get intentOtherCountrySheetTitle;
+
+  /// Dernière ligne du sélecteur « Autre » : garde « Autre » sans pays précis (FLUTTER-H9)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon pays n\'est pas dans la liste'**
+  String get intentOtherCountryNotListed;
+
   /// Bouton de validation de l'intention
   ///
   /// In fr, this message translates to:

@@ -16434,6 +16434,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get intentDestinationOther => 'Autre';
 
   @override
+  String get intentOtherCountrySheetTitle => 'Choisissez votre pays';
+
+  @override
+  String get intentOtherCountryNotListed => 'Mon pays n\'est pas dans la liste';
+
+  @override
   String get intentContinue => 'Continuer';
 
   @override
