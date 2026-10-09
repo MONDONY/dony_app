@@ -99,6 +99,7 @@ Widget _wrap(Widget child, TripRecurrenceBloc bloc) => MaterialApp(
 TripTemplate _template({
   required double? pricePerKg,
   bool cashAccepted = false,
+  String? currency,
 }) => TripTemplate(
   id: 't1',
   label: 'Paris → Dakar',
@@ -110,6 +111,7 @@ TripTemplate _template({
   pricePerKg: pricePerKg,
   acceptedCategories: const ['Vêtements'],
   cashAccepted: cashAccepted,
+  currency: currency,
 );
 
 void main() {
@@ -268,6 +270,63 @@ void main() {
       expect(find.text('raw technical detail'), findsNothing);
     },
   );
+
+  // Le bug : l'écran n'envoyait aucune devise, le serveur retenait l'euro même
+  // pour un modèle en franc CFA.
+  group('devise du modèle', () {
+    testWidgets('modèle XOF : devise envoyée, prix affiché en F CFA, carte '
+        'indisponible donc non envoyée', (tester) async {
+      await tester.pumpWidget(
+        _wrapWithStripe(
+          TripRecurrenceEditScreen(
+            template: _template(pricePerKg: 5000, currency: 'XOF'),
+          ),
+          bloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.textContaining('F CFA'), findsOneWidget);
+      expect(find.textContaining('€'), findsNothing);
+
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data['currency'], 'XOF');
+      expect(data['pricePerKg'], 5000);
+      expect(data.containsKey('cardAccepted'), isFalse);
+      expect(data['cashAccepted'], isTrue);
+    });
+
+    testWidgets('modèle XAF en minuscules : code normalisé', (tester) async {
+      await tester.pumpWidget(
+        _wrapWithStripe(
+          TripRecurrenceEditScreen(
+            template: _template(pricePerKg: 4000, currency: 'xaf'),
+          ),
+          bloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data['currency'], 'XAF');
+    });
+
+    testWidgets('modèle sans devise : devise active, sinon euro', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapWithStripe(
+          TripRecurrenceEditScreen(template: _template(pricePerKg: 8.0)),
+          bloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final data = await _fillAndSubmit(tester, bloc);
+      expect(data['currency'], 'EUR');
+      expect(data['cardAccepted'], isTrue);
+    });
+  });
 
   group('FLUTTER-FT : carte décochable', () {
     testWidgets('Stripe prêt : carte cochée par défaut, envoyée acceptée', (

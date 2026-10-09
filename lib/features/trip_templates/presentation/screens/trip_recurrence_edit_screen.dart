@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -58,9 +59,15 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
     widget.template.cashAccepted,
   );
 
-  /// Devise de la récurrence : l'écran n'en envoie pas, le serveur retient
-  /// donc l'euro. La disponibilité de la carte se juge sur cette devise.
-  static const SupportedCurrency _currency = SupportedCurrency.eur;
+  /// Devise de la récurrence : celle du modèle, sinon la devise active, comme
+  /// à l'ouverture du formulaire du modèle et d'un trajet simple. Envoyée au
+  /// serveur : sans elle, un modèle en XOF/XAF partait en euros (prix, carte
+  /// et mobile money des trajets générés jugés sur l'euro). La disponibilité de
+  /// la carte se juge sur cette devise.
+  late final SupportedCurrency _currency =
+      SupportedCurrency.fromCode(widget.template.currency) ??
+      ActiveCurrency.current ??
+      SupportedCurrency.eur;
 
   @override
   void dispose() {
@@ -132,6 +139,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       'arrivalTime': t.arrivalTime,
       // Vol de nuit du modèle : chaque occurrence publiée arrive le lendemain.
       'arrivalDayOffset': t.arrivalTime == null ? 0 : t.arrivalDayOffset,
+      'currency': _currency.code,
       'cashAccepted': !cardOn || _cashWanted.value,
       if (cardAvailable) 'cardAccepted': cardOn,
       'weekdays': _weekdaysString,
@@ -201,7 +209,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                             ),
                           ),
                           Text(
-                            '${t.departureCity} → ${t.arrivalCity} · ${t.pricePerKg == null ? l.tripTemplateGridPriceLabel : '${formatPriceActive(t.pricePerKg!)}/kg'}',
+                            '${t.departureCity} → ${t.arrivalCity} · ${t.pricePerKg == null ? l.tripTemplateGridPriceLabel : '${formatPriceIn(t.pricePerKg!, _currency.code)}/kg'}',
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
