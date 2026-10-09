@@ -644,16 +644,18 @@ class _SlidableTile extends StatelessWidget {
           DonySwipeAction(
             key: const Key('conversation-swipe-archive'),
             onPressed: (ctx) {
-              ctx.read<ConversationListBloc>().add(
-                ConversationArchiveRequested(conversation.id),
-              );
+              // Capturer le bloc avant l'archivage (FLUTTER-GN) : la
+              // conversation quitte la liste et démonte la tuile, donc ctx,
+              // avant que le testeur ne tape « Annuler » — un ctx.read dans
+              // onAction plantait dans Provider._inheritedElementOf.
+              final bloc = ctx.read<ConversationListBloc>()
+                ..add(ConversationArchiveRequested(conversation.id));
               DonySnackbar.show(
                 ctx,
                 message: l.conversationArchivedSnackbar,
                 actionLabel: l.commonCancel,
-                onAction: () => ctx.read<ConversationListBloc>().add(
-                  ConversationUnarchiveRequested(conversation.id),
-                ),
+                onAction: () =>
+                    bloc.add(ConversationUnarchiveRequested(conversation.id)),
               );
             },
             backgroundColor: cs.warning,

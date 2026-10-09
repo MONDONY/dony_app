@@ -157,7 +157,11 @@ abstract final class DonySnackbar {
       return;
     }
 
-    ScaffoldMessenger.of(context)
+    // Messenger capturé à l'affichage : l'action « Fermer » est tapée plus
+    // tard, quand le contexte appelant (tuile, volet) peut être démonté
+    // (même classe de crash que FLUTTER-GN).
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
@@ -186,11 +190,7 @@ abstract final class DonySnackbar {
                   textColor: fg,
                   onPressed:
                       onAction ??
-                      (persistent
-                          ? () => ScaffoldMessenger.of(
-                              context,
-                            ).hideCurrentSnackBar()
-                          : () {}),
+                      (persistent ? messenger.hideCurrentSnackBar : () {}),
                 )
               : null,
         ),
