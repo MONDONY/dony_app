@@ -250,7 +250,8 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   /// Étape 0 : nom, villes et transport. Étape 1 (Lieux & capacité) :
   /// adresses optionnelles dans un modèle, toujours valide. Étape 2 (Prix &
   /// conditions) : prix requis si le tarif au kilo est actif, borné par
-  /// [maxUnitPriceFor] si c'est un prix libre.
+  /// [minUnitPriceFor] et [maxUnitPriceFor] si c'est un prix libre
+  /// (FLUTTER-GK).
   void _recomputeCanContinue() {
     final step0Ok =
         _labelCtrl.text.trim().isNotEmpty &&
@@ -262,7 +263,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       step2Ok =
           parsed != null &&
           parsed > 0 &&
-          parsed <= maxUnitPriceFor(_fields.currency.value);
+          unitPriceOutOfBounds(parsed, _fields.currency.value) == null;
     }
     _canContinue.value = switch (_step.value) {
       0 => step0Ok,

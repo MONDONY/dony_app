@@ -39,6 +39,63 @@ void main() {
     });
   });
 
+  group(
+    'minUnitPriceFor — plancher 1 €/kg arrondi vers le haut (FLUTTER-GK)',
+    () {
+      test('EUR : 1, XOF/XAF : 656 (655,957 arrondi vers le haut)', () {
+        expect(minUnitPriceFor(SupportedCurrency.eur), 1);
+        expect(minUnitPriceFor(SupportedCurrency.xof), 656);
+        expect(minUnitPriceFor(SupportedCurrency.xaf), 656);
+      });
+
+      test('devises à centimes : pas de centime de trop dû au flottant', () {
+        // 1,08 × 100 vaut 108,000…01 en flottant : sans marge, 1,09.
+        expect(minUnitPriceFor(SupportedCurrency.usd), 1.08);
+        expect(minUnitPriceFor(SupportedCurrency.cad), 1.47);
+        expect(minUnitPriceFor(SupportedCurrency.gbp), 0.86);
+        expect(minUnitPriceFor(SupportedCurrency.chf), 0.95);
+      });
+
+      test('toujours sous le plafond de la devise', () {
+        for (final c in SupportedCurrency.values) {
+          expect(minUnitPriceFor(c), lessThan(maxUnitPriceFor(c)));
+        }
+      });
+    },
+  );
+
+  group('unitPriceOutOfBounds — borne franchie', () {
+    test('8 XOF et 655 XOF trop bas, 656 XOF admis', () {
+      expect(
+        unitPriceOutOfBounds(8, SupportedCurrency.xof),
+        UnitPriceBound.tooLow,
+      );
+      expect(
+        unitPriceOutOfBounds(655, SupportedCurrency.xof),
+        UnitPriceBound.tooLow,
+      );
+      expect(unitPriceOutOfBounds(656, SupportedCurrency.xof), isNull);
+    });
+
+    test('0,99 € trop bas, 1 € et 500 € admis, 501 € trop haut', () {
+      expect(
+        unitPriceOutOfBounds(0.99, SupportedCurrency.eur),
+        UnitPriceBound.tooLow,
+      );
+      expect(unitPriceOutOfBounds(1, SupportedCurrency.eur), isNull);
+      expect(unitPriceOutOfBounds(500, SupportedCurrency.eur), isNull);
+      expect(
+        unitPriceOutOfBounds(501, SupportedCurrency.eur),
+        UnitPriceBound.tooHigh,
+      );
+    });
+
+    test('prix absent ou nul : pas jugé ici (prix manquant)', () {
+      expect(unitPriceOutOfBounds(null, SupportedCurrency.eur), isNull);
+      expect(unitPriceOutOfBounds(0, SupportedCurrency.xof), isNull);
+    });
+  });
+
   group('quickPriceFilterOptionsFor — réponses rapides scalées', () {
     test('EUR : 6 et 9, comme les anciennes options figées', () {
       expect(quickPriceFilterOptionsFor(SupportedCurrency.eur), [6, 9]);

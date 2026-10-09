@@ -17619,4 +17619,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviNoReceptions => 'Aucun colis à recevoir pour le moment.';
+
+  @override
+  String pricePerKgTooLow(String min) {
+    return 'Prix trop bas : minimum $min/kg';
+  }
+
+  @override
+  String pricePerKgTooHigh(String max) {
+    return 'Prix trop élevé : maximum $max/kg';
+  }
+
+  @override
+  String tripLegsPriceBelowMin(String currency) {
+    return 'Prix sous le minimum en $currency : modifiez cette étape.';
+  }
+
+  @override
+  String get errorPriceOutOfBoundsTitle => 'Prix hors limites';
+
+  @override
+  String get errorPriceOutOfBoundsMessage =>
+      'Ce prix au kilo est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.';
 }

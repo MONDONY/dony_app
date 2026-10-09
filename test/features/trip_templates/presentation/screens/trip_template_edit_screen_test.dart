@@ -873,6 +873,48 @@ void main() {
       );
       expect(button.onPressed, isNull);
     });
+
+    // FLUTTER-GK : plancher de 1 €/kg converti dans la devise du modèle.
+    testWidgets('prix libre sous le plancher désactive Enregistrer le modèle', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await goToStep(tester, 2);
+      final fields =
+          (tester.state<State<TripTemplateEditScreen>>(
+                        find.byType(TripTemplateEditScreen),
+                      )
+                      as dynamic)
+                  .fieldsForTest
+              as TripFormFields;
+
+      await tester.ensureVisible(find.text('Autre prix'));
+      await tester.tap(find.text('Autre prix'));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final priceField = find.byWidgetPredicate(
+        (w) => w is DonyTextField && w.controller == fields.customPriceCtrl,
+      );
+      await tester.ensureVisible(priceField);
+      DonyButton save() => tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Enregistrer le modèle'),
+      );
+
+      await tester.enterText(priceField, '0,99');
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining('Prix trop bas : minimum'), findsOneWidget);
+      expect(save().onPressed, isNull);
+
+      await tester.enterText(priceField, '1');
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining('Prix trop bas'), findsNothing);
+      expect(save().onPressed, isNotNull);
+    });
   });
 
   group('anglais', () {

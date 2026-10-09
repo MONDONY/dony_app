@@ -687,12 +687,13 @@ class _TripFormContentState extends State<_TripFormContent> {
   // — kg toggle OFF (mode grille) → tarification via la grille, toujours valide
   // — aucun choix effectué (idx == -1) → invalide
   // — chip preset sélectionnée → valide
-  // — "Autre prix" sélectionné → le champ doit contenir un nombre > 0, et ne
-  //   pas dépasser le plafond de la devise DE L'ANNONCE (pas celle du
-  //   profil) : changer de devise dans le sélecteur fait donc suivre cette
-  //   borne, sans quoi un montant valide en XOF resterait bloqué au plafond
+  // — "Autre prix" sélectionné → le champ doit contenir un nombre compris
+  //   entre le plancher et le plafond de la devise DE L'ANNONCE (pas celle du
+  //   profil) : changer de devise dans le sélecteur fait donc suivre ces
+  //   bornes, sans quoi un montant valide en XOF resterait bloqué au plafond
   //   (bien plus bas) de l'euro, ou l'inverse laisserait passer un montant
-  //   que le serveur refuserait.
+  //   que le serveur refuserait. Le plancher (1 €/kg converti) arrête les
+  //   8 XOF/kg saisis en croyant taper des euros (FLUTTER-GK).
   bool get _isPriceValid {
     if (_isLocked) return true;
     if (!_kgPriceEnabledNotifier.value) return true;
@@ -700,7 +701,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (idx == -1) return false;
     if (!_isCustomPrice) return true;
     final parsed = double.tryParse(_customPriceCtrl.text.replaceAll(',', '.'));
-    return parsed != null && parsed > 0 && parsed <= maxUnitPriceFor(_currency);
+    return parsed != null &&
+        parsed > 0 &&
+        unitPriceOutOfBounds(parsed, _currency) == null;
   }
 
   Future<void> _loadCatalog() async {
@@ -1642,6 +1645,15 @@ class _TripFormContentState extends State<_TripFormContent> {
       );
       if (aboveMax.isNotEmpty) {
         _showError(context.l10n.tripLegsPriceAboveMax(_currency.symbol));
+        return;
+      }
+      // Même règle pour le plancher : une étape à 8 XOF/kg est partie ainsi.
+      final belowMin = TripLegsSection.priceBelowMinIndexes(
+        extraLegs,
+        _currency,
+      );
+      if (belowMin.isNotEmpty) {
+        _showError(context.l10n.tripLegsPriceBelowMin(_currency.symbol));
         return;
       }
       context.read<AnnouncementBloc>().add(

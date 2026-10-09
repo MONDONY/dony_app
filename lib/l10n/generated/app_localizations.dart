@@ -28819,6 +28819,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Aucun colis à recevoir pour le moment.'**
   String get suiviNoReceptions;
+
+  /// Prix au kilo sous le plancher de la devise, 1 €/kg converti (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix trop bas : minimum {min}/kg'**
+  String pricePerKgTooLow(String min);
+
+  /// Prix au kilo au-dessus du plafond de la devise, 500 €/kg converti (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix trop élevé : maximum {max}/kg'**
+  String pricePerKgTooHigh(String max);
+
+  /// Étape dont le prix est sous le plancher de la devise du voyage (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix sous le minimum en {currency} : modifiez cette étape.'**
+  String tripLegsPriceBelowMin(String currency);
+
+  /// Erreur price-out-of-bounds : prix au kilo hors des bornes de la devise (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix hors limites'**
+  String get errorPriceOutOfBoundsTitle;
+
+  /// Erreur price-out-of-bounds : prix au kilo hors des bornes de la devise (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce prix au kilo est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.'**
+  String get errorPriceOutOfBoundsMessage;
 }
 
 class _AppLocalizationsDelegate

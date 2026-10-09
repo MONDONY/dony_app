@@ -418,6 +418,106 @@ void main() {
       );
     });
 
+    // FLUTTER-GK : 8 F CFA/kg saisis en croyant taper des euros.
+    testWidgets('prix sous le plancher XOF : refusé jusqu\'à 656', (t) async {
+      final cubit = _legsCubit()
+        ..add(
+          doualaLeg(
+            date: _origin.arrivalDay.add(const Duration(days: 4)),
+            price: 3000,
+          ),
+        );
+      await t.pumpWidget(
+        section(cubit, origin: _origin, currency: SupportedCurrency.xof),
+      );
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-edit-0')));
+      await t.pumpAndSettle();
+
+      DonyButton submit() =>
+          t.widget<DonyButton>(find.byKey(const Key('trip-leg-submit')));
+
+      for (final tooLow in ['8', '655']) {
+        await t.enterText(find.byKey(const Key('trip-leg-price')), tooLow);
+        await t.pump();
+        expect(
+          find.textContaining('Prix trop bas : minimum 656'),
+          findsOneWidget,
+        );
+        expect(submit().onPressed, isNull);
+      }
+
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '656');
+      await t.pump();
+      expect(find.textContaining('Prix trop bas'), findsNothing);
+      expect(submit().onPressed, isNotNull);
+      await t.tap(find.byKey(const Key('trip-leg-submit')));
+      await t.pumpAndSettle();
+      expect(cubit.state.legs.single.pricePerKg, 656);
+    });
+
+    testWidgets('prix sous le plancher EUR : 0,99 refusé, 1 admis', (t) async {
+      final cubit = _legsCubit()
+        ..add(doualaLeg(date: _origin.arrivalDay.add(const Duration(days: 4))));
+      await t.pumpWidget(section(cubit, origin: _origin));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-edit-0')));
+      await t.pumpAndSettle();
+
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '0,99');
+      await t.pump();
+      expect(find.textContaining('Prix trop bas : minimum'), findsOneWidget);
+      expect(
+        t
+            .widget<DonyButton>(find.byKey(const Key('trip-leg-submit')))
+            .onPressed,
+        isNull,
+      );
+
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '1');
+      await t.pump();
+      expect(find.textContaining('Prix trop bas'), findsNothing);
+      expect(
+        t
+            .widget<DonyButton>(find.byKey(const Key('trip-leg-submit')))
+            .onPressed,
+        isNotNull,
+      );
+    });
+
+    testWidgets('étape sous le plancher après changement de devise', (t) async {
+      // 8 €/kg valides deviennent 8 F CFA/kg si le voyage passe en XOF.
+      final cubit = _legsCubit()
+        ..add(
+          doualaLeg(
+            date: _origin.arrivalDay.add(const Duration(days: 4)),
+            price: 8,
+          ),
+        );
+      await t.pumpWidget(
+        section(cubit, origin: _origin, currency: SupportedCurrency.xof),
+      );
+      await t.pumpAndSettle();
+      expect(
+        find.byKey(const Key('trip-leg-price-below-min-0')),
+        findsOneWidget,
+      );
+      expect(
+        TripLegsSection.priceBelowMinIndexes(
+          cubit.state.legs,
+          SupportedCurrency.xof,
+        ),
+        {0},
+      );
+      expect(
+        TripLegsSection.priceBelowMinIndexes(
+          cubit.state.legs,
+          SupportedCurrency.eur,
+        ),
+        isEmpty,
+      );
+    });
+
     testWidgets('plafond atteint : plus de bouton d\'ajout', (t) async {
       final cubit = _legsCubit();
       for (var i = 0; i < 4; i++) {
