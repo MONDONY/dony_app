@@ -9438,5 +9438,9 @@
   "ticketExpiredCodeMessage": "The pickup code has expired. Generate a new one.",
   "bidDetailSenderCodeExpiredNote": "The pickup code has expired: generate a new one on your ticket.",
   "recipientNotifyCodeExpiredHint": "The pickup code has expired: generate a new one to add it to the message.",
-  "requestPublicSenderRowSemantics": "Sender: {name}. View their profile"
+  "requestPublicSenderRowSemantics": "Sender: {name}. View their profile",
+  "tripParcelsSummaryInTransit": "{count, plural, =1{parcel in transit} other{parcels in transit}}",
+  "tripParcelsSummaryToCollect": "{count, plural, =1{to pick up} other{to pick up}}",
+  "tripParcelsSummaryArrived": "{count, plural, =1{arrived} other{arrived}}",
+  "tripParcelsSummaryDelivered": "{count, plural, =1{delivered} other{delivered}}"
 }

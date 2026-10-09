@@ -28729,6 +28729,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Expéditeur : {name}. Voir son profil'**
   String requestPublicSenderRowSemantics(String name);
+
+  /// Segment du résumé de la section Colis du trajet (trip_parcels_section.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{colis en route} other{colis en route}}'**
+  String tripParcelsSummaryInTransit(int count);
+
+  /// Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis acceptés pas encore remis au voyageur (ACCEPTED). Le chiffre est affiché à part.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{à récupérer} other{à récupérer}}'**
+  String tripParcelsSummaryToCollect(int count);
+
+  /// Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis arrivés à destination, en attente de retrait (ARRIVED). Le chiffre est affiché à part.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{arrivé} other{arrivés}}'**
+  String tripParcelsSummaryArrived(int count);
+
+  /// Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis remis au destinataire (COMPLETED). Le chiffre est affiché à part.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{livré} other{livrés}}'**
+  String tripParcelsSummaryDelivered(int count);
 }
 
 class _AppLocalizationsDelegate
