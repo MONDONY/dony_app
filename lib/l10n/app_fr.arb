@@ -19634,5 +19634,9 @@
   "errorCodeRequestTooSoonTitle": "Demande déjà envoyée",
   "@errorCodeRequestTooSoonTitle": {"description": "Erreur code-request-too-soon (FLUTTER-G2)."},
   "errorCodeRequestTooSoonMessage": "L'expéditeur a déjà été prévenu. Réessayez dans quelques minutes.",
-  "@errorCodeRequestTooSoonMessage": {"description": "Erreur code-request-too-soon, repli du catalogue (FLUTTER-G2)."}
+  "@errorCodeRequestTooSoonMessage": {"description": "Erreur code-request-too-soon, repli du catalogue (FLUTTER-G2)."},
+  "ticketExpiredCodeTitle": "Code de retrait expiré",
+  "@ticketExpiredCodeTitle": {"description": "Titre du talon expéditeur quand le code de retrait est encore présent mais a expiré (talon_blocked_code_block.dart, FLUTTER-G2)."},
+  "ticketExpiredCodeMessage": "Le code de retrait a expiré. Générez-en un nouveau.",
+  "@ticketExpiredCodeMessage": {"description": "Explication du talon « Code de retrait expiré » (FLUTTER-G2)."}
 }

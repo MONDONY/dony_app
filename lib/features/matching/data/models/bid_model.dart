@@ -425,6 +425,16 @@ class BidModel {
       ((confirmationCode == null || confirmationCode!.isEmpty) &&
           const {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'}.contains(status));
 
+  /// Vue expéditeur : le code de retrait est encore là mais a expiré (le
+  /// serveur le signale par [pickupCodeRenewalNeeded] sans l'avoir effacé).
+  /// Un code effacé (trois essais faux, ou expiré puis effacé par un essai du
+  /// voyageur) reste « bloqué ». Toujours `false` côté voyageur, qui ne
+  /// reçoit jamais le code.
+  bool get isPickupCodeExpired =>
+      pickupCodeRenewalNeeded &&
+      confirmationCode != null &&
+      confirmationCode!.isNotEmpty;
+
   /// Colis carte créé mais pas encore payé : c'est l'expéditeur qui doit agir.
   /// Le paiement le fait passer en PAYMENT_ESCROWED, et le voyageur ne peut
   /// l'accepter qu'après (BidService.doAcceptBid). Source unique pour le

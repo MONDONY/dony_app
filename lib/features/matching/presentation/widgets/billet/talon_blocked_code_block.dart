@@ -21,9 +21,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// du colis est rechargé et le talon repasse aux boutons QR + « Code de
 /// retrait ». Consomme [TrackingBloc] et [BidBloc] fournis par l'écran.
 class TalonBlockedCodeBlock extends StatelessWidget {
-  const TalonBlockedCodeBlock({super.key, required this.bidId});
+  const TalonBlockedCodeBlock({
+    super.key,
+    required this.bidId,
+    this.expired = false,
+  });
 
   final String bidId;
+
+  /// Code encore présent mais expiré : le texte parle d'expiration, pas des
+  /// essais faux du voyageur (FLUTTER-G2).
+  final bool expired;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +78,9 @@ class TalonBlockedCodeBlock extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l.ticketBlockedCodeTitle,
+                          expired
+                              ? l.ticketExpiredCodeTitle
+                              : l.ticketBlockedCodeTitle,
                           style: tt.titleSmall?.copyWith(
                             color: cs.onSurface,
                             fontWeight: FontWeight.w700,
@@ -78,7 +88,9 @@ class TalonBlockedCodeBlock extends StatelessWidget {
                         ),
                         const SizedBox(height: DonySpacing.xs),
                         Text(
-                          l.ticketBlockedCodeMessage,
+                          expired
+                              ? l.ticketExpiredCodeMessage
+                              : l.ticketBlockedCodeMessage,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                             height: 1.4,

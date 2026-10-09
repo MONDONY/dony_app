@@ -28687,6 +28687,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'expéditeur a déjà été prévenu. Réessayez dans quelques minutes.'**
   String get errorCodeRequestTooSoonMessage;
+
+  /// Titre du talon expéditeur quand le code de retrait est encore présent mais a expiré (talon_blocked_code_block.dart, FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de retrait expiré'**
+  String get ticketExpiredCodeTitle;
+
+  /// Explication du talon « Code de retrait expiré » (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait a expiré. Générez-en un nouveau.'**
+  String get ticketExpiredCodeMessage;
 }
 
 class _AppLocalizationsDelegate

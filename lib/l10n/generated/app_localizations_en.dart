@@ -17388,4 +17388,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorCodeRequestTooSoonMessage =>
       'The sender has already been notified. Try again in a few minutes.';
+
+  @override
+  String get ticketExpiredCodeTitle => 'Pickup code expired';
+
+  @override
+  String get ticketExpiredCodeMessage =>
+      'The pickup code has expired. Generate a new one.';
 }
