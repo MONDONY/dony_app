@@ -1379,4 +1379,34 @@ void main() {
       expect(departed.title, isNot(incorrect.title));
     });
   });
+
+  // FLUTTER-G2 (back #461) : demande de nouveau code de retrait.
+  group('demande de nouveau code de retrait', () {
+    test('chaque code a une entrée dédiée, jamais le générique', () {
+      for (final code in [
+        'code-still-valid',
+        'code-request-not-allowed',
+        'code-request-too-soon',
+      ]) {
+        final error = ValidationException('detail brut backend', code: code);
+        expect(ErrorCatalog.isKnown(error), isTrue, reason: code);
+        expect(
+          ErrorCatalog.lookup(error).message,
+          isNot(contains('brut')),
+          reason: code,
+        );
+      }
+    });
+
+    test(
+      'code-still-valid : renvoie vers l\'expéditeur ou le destinataire',
+      () {
+        final p = ErrorCatalog.lookup(
+          const ConflictException('x', code: 'code-still-valid'),
+        );
+        expect(p.title, 'Code encore valide');
+        expect(p.message, contains("l'expéditeur"));
+      },
+    );
+  });
 }

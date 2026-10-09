@@ -75,6 +75,8 @@ BidModel _makeBid({
   String status = 'ACCEPTED',
   DateTime? handoverDeadline,
   String? cancellationNoShowStatus,
+  String? confirmationCode,
+  bool pickupCodeRenewalNeeded = false,
 }) => BidModel(
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -86,6 +88,8 @@ BidModel _makeBid({
   paymentMethod: paymentMethod,
   handoverDeadline: handoverDeadline,
   cancellationNoShowStatus: cancellationNoShowStatus,
+  confirmationCode: confirmationCode,
+  pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
 );
 
 UserModel _user(String id) => UserModel(
@@ -101,6 +105,7 @@ Future<GoRouter> _pump(
   WidgetTester tester, {
   required BidModel bid,
   required _MockAuthBloc authBloc,
+  bool openCodeRenewal = false,
 }) async {
   await initializeDateFormatting('fr_FR');
   tester.view.physicalSize = const Size(800, 3000);
@@ -114,7 +119,7 @@ Future<GoRouter> _pump(
         path: '/',
         builder: (ctx, _) => BlocProvider<AuthBloc>.value(
           value: authBloc,
-          child: BidDetailScreen(bid: bid),
+          child: BidDetailScreen(bid: bid, openCodeRenewal: openCodeRenewal),
         ),
       ),
       GoRoute(
@@ -468,6 +473,69 @@ void main() {
 
       await tester.pump(const Duration(seconds: 31));
       noDetailRequest();
+    });
+  });
+
+  // FLUTTER-G2 (back #461) : la notification CONFIRMATION_CODE_REQUESTED
+  // ouvre la fiche avec `?action=new-code`, qui propose aussitôt la
+  // régénération du code à l'expéditeur.
+  group('?action=new-code', () {
+    const sheetTitle = 'Le voyageur demande un nouveau code';
+
+    void detailLoads(BidModel bid) => when(
+      () => bidBloc.stream,
+    ).thenAnswer((_) => Stream<BidState>.value(BidDetailLoaded(bid)));
+
+    testWidgets('expéditeur, code à renouveler : la feuille s\'ouvre', (
+      tester,
+    ) async {
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        status: 'IN_TRANSIT',
+        pickupCodeRenewalNeeded: true,
+      );
+      detailLoads(bid);
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: senderAuth(),
+        openCodeRenewal: true,
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text(sheetTitle), findsOneWidget);
+      expect(
+        find.byKey(const Key('pickup-code-renewal-generate')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('code encore valide : pas de feuille', (tester) async {
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        status: 'IN_TRANSIT',
+        confirmationCode: '123456',
+      );
+      detailLoads(bid);
+      await _pump(
+        tester,
+        bid: bid,
+        authBloc: senderAuth(),
+        openCodeRenewal: true,
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text(sheetTitle), findsNothing);
+    });
+
+    testWidgets('sans le paramètre : pas de feuille', (tester) async {
+      final bid = _makeBid(
+        paymentMethod: BidPaymentMethod.stripe,
+        status: 'IN_TRANSIT',
+        pickupCodeRenewalNeeded: true,
+      );
+      detailLoads(bid);
+      await _pump(tester, bid: bid, authBloc: senderAuth());
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text(sheetTitle), findsNothing);
     });
   });
 }
