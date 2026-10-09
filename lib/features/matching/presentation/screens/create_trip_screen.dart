@@ -1634,6 +1634,16 @@ class _TripFormContentState extends State<_TripFormContent> {
       // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
       // ensemble, en une transaction côté serveur.
       final extraLegs = context.read<TripLegsCubit>().state.legs;
+      // Une étape au-dessus du plafond de la devise (devise changée après
+      // sa saisie) serait refusée par le serveur (FLUTTER-GK).
+      final aboveMax = TripLegsSection.priceAboveMaxIndexes(
+        extraLegs,
+        _currency,
+      );
+      if (aboveMax.isNotEmpty) {
+        _showError(context.l10n.tripLegsPriceAboveMax(_currency.symbol));
+        return;
+      }
       context.read<AnnouncementBloc>().add(
         extraLegs.isEmpty
             ? createEvent
@@ -2418,10 +2428,12 @@ class _TripFormContentState extends State<_TripFormContent> {
             _kgPriceEnabledNotifier,
             _transportModeNotifier,
             _stopsNotifier,
+            widget.currencyNotifier,
           ]),
           builder: (context, _) => TripLegsSection(
             origin: _firstLegOrigin(),
             showPrice: _kgPriceEnabledNotifier.value,
+            currency: _currency,
             defaultKg: _availableKgNotifier.value,
             defaultPrice: context.read<AnnouncementFormBloc>().state.pricePerKg,
             // Escales par étape (FLUTTER-GE), préremplies avec celles du

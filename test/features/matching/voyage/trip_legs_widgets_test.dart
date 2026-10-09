@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -82,6 +83,7 @@ void main() {
     TripLegOrigin? origin,
     bool showStops = false,
     TripStops? defaultStops,
+    SupportedCurrency currency = SupportedCurrency.eur,
   }) => localizedApp(
     Scaffold(
       body: SingleChildScrollView(
@@ -90,6 +92,7 @@ void main() {
           child: TripLegsSection(
             origin: origin,
             showPrice: true,
+            currency: currency,
             defaultKg: 15,
             defaultPrice: 7,
             showStops: showStops,
@@ -309,6 +312,112 @@ void main() {
       );
     });
 
+    // FLUTTER-GK : une étape à 8 XOF/kg, saisie sans voir la devise.
+    testWidgets('devise du voyage rappelée dans la feuille et la liste', (
+      t,
+    ) async {
+      final cubit = _legsCubit()
+        ..add(doualaLeg(date: _origin.arrivalDay.add(const Duration(days: 4))));
+      await t.pumpWidget(
+        section(cubit, origin: _origin, currency: SupportedCurrency.xof),
+      );
+      await t.pumpAndSettle();
+
+      expect(find.textContaining('F CFA/kg'), findsOneWidget);
+      expect(
+        find.text('Prix des étapes en F CFA, la devise du voyage.'),
+        findsOneWidget,
+      );
+
+      await t.tap(find.byKey(const Key('trip-leg-edit-0')));
+      await t.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('trip-leg-price-currency')),
+          matching: find.text('F CFA/kg'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('prix au-dessus du plafond de la devise : refusé', (t) async {
+      final cubit = _legsCubit()
+        ..add(doualaLeg(date: _origin.arrivalDay.add(const Duration(days: 4))));
+      await t.pumpWidget(section(cubit, origin: _origin));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-edit-0')));
+      await t.pumpAndSettle();
+
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '501');
+      await t.pump();
+      expect(find.textContaining('Maximum 500'), findsOneWidget);
+      expect(
+        t
+            .widget<DonyButton>(find.byKey(const Key('trip-leg-submit')))
+            .onPressed,
+        isNull,
+      );
+
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '500');
+      await t.pump();
+      expect(find.textContaining('Maximum 500'), findsNothing);
+      expect(
+        t
+            .widget<DonyButton>(find.byKey(const Key('trip-leg-submit')))
+            .onPressed,
+        isNotNull,
+      );
+    });
+
+    testWidgets('même prix admis en XOF (plafond de la devise)', (t) async {
+      final cubit = _legsCubit()
+        ..add(doualaLeg(date: _origin.arrivalDay.add(const Duration(days: 4))));
+      await t.pumpWidget(
+        section(cubit, origin: _origin, currency: SupportedCurrency.xof),
+      );
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-edit-0')));
+      await t.pumpAndSettle();
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '3000');
+      await t.pump();
+      expect(find.textContaining('Maximum'), findsNothing);
+      await t.tap(find.byKey(const Key('trip-leg-submit')));
+      await t.pumpAndSettle();
+      expect(cubit.state.legs.single.pricePerKg, 3000);
+    });
+
+    testWidgets('étape au-dessus du plafond après changement de devise', (
+      t,
+    ) async {
+      final cubit = _legsCubit()
+        ..add(
+          doualaLeg(
+            date: _origin.arrivalDay.add(const Duration(days: 4)),
+            price: 3000,
+          ),
+        );
+      await t.pumpWidget(section(cubit, origin: _origin));
+      await t.pumpAndSettle();
+      expect(
+        find.byKey(const Key('trip-leg-price-above-max-0')),
+        findsOneWidget,
+      );
+      expect(
+        TripLegsSection.priceAboveMaxIndexes(
+          cubit.state.legs,
+          SupportedCurrency.eur,
+        ),
+        {0},
+      );
+      expect(
+        TripLegsSection.priceAboveMaxIndexes(
+          cubit.state.legs,
+          SupportedCurrency.xof,
+        ),
+        isEmpty,
+      );
+    });
+
     testWidgets('plafond atteint : plus de bouton d\'ajout', (t) async {
       final cubit = _legsCubit();
       for (var i = 0; i < 4; i++) {
@@ -336,6 +445,7 @@ void main() {
                     arrivalDay: DateTime.now(),
                   ),
                   showPrice: false,
+                  currency: SupportedCurrency.eur,
                 ),
                 child: const Text('ouvrir'),
               ),

@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -87,5 +88,29 @@ void main() {
     useEnglish();
     await pump(tester, methods: const ['CASH', 'MOBILE_MONEY']);
     expect(find.text('Cash + Mobile money'), findsOneWidget);
+  });
+
+  testWidgets('FLUTTER-GK : devise du voyage rappelée dans l\'aperçu', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: AnnouncementPreviewSheet(
+              formState: const AnnouncementFormState(
+                pricePerKg: 3000,
+                availableKg: 10,
+              ),
+              onConfirm: () {},
+              currency: SupportedCurrency.xof,
+              paymentMethods: const ['CASH'],
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.byKey(const Key('preview-currency-row')), findsOneWidget);
+    expect(find.text('F CFA (XOF)'), findsOneWidget);
   });
 }

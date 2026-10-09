@@ -17410,4 +17410,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recipientNotifyCodeExpiredHint =>
       'The pickup code has expired: generate a new one to add it to the message.';
+
+  @override
+  String tripLegSheetPriceTooHigh(String max) {
+    return 'Maximum $max per kg in the trip currency.';
+  }
+
+  @override
+  String tripLegsLegPrice(String price) {
+    return '$price/kg';
+  }
+
+  @override
+  String tripLegsPriceAboveMax(String currency) {
+    return 'Price above the $currency ceiling: edit this leg.';
+  }
+
+  @override
+  String tripLegsCurrencyNote(String currency) {
+    return 'Leg prices are in $currency, the trip currency.';
+  }
+
+  @override
+  String get listingRowLabelCurrency => 'Currency';
+
+  @override
+  String tripSwitchCurrencyConfirmTitle(String currency) {
+    return 'Publish in $currency?';
+  }
+
+  @override
+  String tripSwitchCurrencyConfirmMessageNoCard(String currency) {
+    return 'All prices on this trip switch to $currency and card payment will no longer be offered.';
+  }
+
+  @override
+  String tripSwitchCurrencyConfirmMessage(String currency) {
+    return 'All prices on this trip switch to $currency.';
+  }
 }

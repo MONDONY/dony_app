@@ -16,6 +16,7 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_switch_confirm_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/payment_setup_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
@@ -1111,7 +1112,11 @@ class PrixConditionsStep extends StatelessWidget {
         // ne disait pas pourquoi (FLUTTER-55). On l'explique et on propose de
         // publier dans la devise du compte, comme le sélecteur de devise.
         if (!eligible && mobileMoneyAccountActive)
-          _noticePadding(_mobileMoneyCurrencyNotice(l, tripCurrency: currency)),
+          Builder(
+            builder: (context) => _noticePadding(
+              _mobileMoneyCurrencyNotice(context, l, tripCurrency: currency),
+            ),
+          ),
         // Hors zone CFA sans compte, rien à activer : le sous-titre suffit.
         if (eligible && !mobileMoneyAccountActive)
           Builder(
@@ -1136,6 +1141,7 @@ class PrixConditionsStep extends StatelessWidget {
   }
 
   Widget _mobileMoneyCurrencyNotice(
+    BuildContext context,
     AppLocalizations l, {
     required SupportedCurrency tripCurrency,
   }) {
@@ -1156,7 +1162,15 @@ class PrixConditionsStep extends StatelessWidget {
       ),
       ctaLabel: l.tripPublishSwitchCurrencyCta(target.code),
       ctaKey: const Key('switch-to-mobile-money-currency-cta'),
-      onCtaTap: () => currencyNotifier.value = target,
+      // Confirmation explicite (FLUTTER-GK) : les prix ne sont pas convertis
+      // et la carte disparaît hors de sa zone.
+      onCtaTap: () async {
+        final confirmed = await CurrencySwitchConfirmSheet.show(
+          context,
+          target: target,
+        );
+        if (confirmed) currencyNotifier.value = target;
+      },
     );
   }
 }

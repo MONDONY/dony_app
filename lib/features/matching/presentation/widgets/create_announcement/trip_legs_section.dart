@@ -1,4 +1,7 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
@@ -17,10 +20,25 @@ import 'package:intl/intl.dart';
 /// [origin] est l'arrivée du premier trajet, `null` tant qu'elle n'est pas
 /// connue (ville ou date manquante) : l'ajout est alors désactivé.
 class TripLegsSection extends StatelessWidget {
+  /// Étapes dont le prix dépasse le plafond de [currency] (FLUTTER-GK) : le
+  /// voyage ne part pas tant qu'elles ne sont pas corrigées, le serveur les
+  /// refuserait (422 `price-out-of-bounds`).
+  static Set<int> priceAboveMaxIndexes(
+    List<TripLegDraft> legs,
+    SupportedCurrency currency,
+  ) {
+    final max = maxUnitPriceFor(currency);
+    return {
+      for (var i = 0; i < legs.length; i++)
+        if ((legs[i].pricePerKg ?? 0) > max) i,
+    };
+  }
+
   const TripLegsSection({
     super.key,
     required this.origin,
     required this.showPrice,
+    required this.currency,
     this.defaultKg,
     this.defaultPrice,
     this.showStops = false,
@@ -29,6 +47,10 @@ class TripLegsSection extends StatelessWidget {
 
   final TripLegOrigin? origin;
   final bool showPrice;
+
+  /// Devise du voyage, rappelée sur chaque étape et bornant leur prix
+  /// (FLUTTER-GK).
+  final SupportedCurrency currency;
   final double? defaultKg;
   final double? defaultPrice;
 
@@ -56,6 +78,7 @@ class TripLegsSection extends StatelessWidget {
       origin: legOrigin,
       initial: editIndex != null ? state.legs[editIndex] : null,
       showPrice: showPrice,
+      currency: currency,
       defaultKg: previous?.availableKg ?? defaultKg,
       defaultPrice: previous?.pricePerKg ?? defaultPrice,
       showStops: showStops,
@@ -106,6 +129,14 @@ class TripLegsSection extends StatelessWidget {
                 l.tripLegsSectionSubtitle,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
+              if (showPrice && state.legs.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.xxs),
+                Text(
+                  l.tripLegsCurrencyNote(currency.symbol),
+                  key: const Key('trip-legs-currency-note'),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
               for (var i = 0; i < state.legs.length; i++) ...[
                 const SizedBox(height: DonySpacing.md),
                 _LegTile(
@@ -116,6 +147,7 @@ class TripLegsSection extends StatelessWidget {
                           : TripLegChain.originOf(first, state.legs, i).city,
                       leg: state.legs[i],
                       showStops: showStops,
+                      currency: showPrice ? currency : null,
                       invalid: invalid.contains(i),
                       onEdit: () => _openSheet(context, state, editIndex: i),
                       onRemove: () =>
@@ -165,6 +197,7 @@ class _LegTile extends StatelessWidget {
     required this.from,
     required this.leg,
     required this.showStops,
+    required this.currency,
     required this.invalid,
     required this.onEdit,
     required this.onRemove,
@@ -174,6 +207,9 @@ class _LegTile extends StatelessWidget {
   final String from;
   final TripLegDraft leg;
   final bool showStops;
+
+  /// Devise du prix affiché ; `null` en grille seule (pas de prix d'étape).
+  final SupportedCurrency? currency;
   final bool invalid;
   final VoidCallback onEdit;
   final VoidCallback onRemove;
@@ -188,6 +224,11 @@ class _LegTile extends StatelessWidget {
         ? leg.availableKg.toInt().toString()
         : leg.availableKg.toString();
     final stops = leg.stops;
+    final currency = this.currency;
+    final price = leg.pricePerKg;
+    final priceAboveMax =
+        currency != null && price != null && price > maxUnitPriceFor(currency);
+    final hasError = invalid || priceAboveMax;
     return Container(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.md,
@@ -199,7 +240,7 @@ class _LegTile extends StatelessWidget {
         color: cs.surface,
         // Concentrique : rayon de la carte parente moins son padding.
         borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: invalid ? cs.error : cs.outlineVariant),
+        border: Border.all(color: hasError ? cs.error : cs.outlineVariant),
       ),
       child: Row(
         children: [
@@ -237,6 +278,14 @@ class _LegTile extends StatelessWidget {
                       '${DateFormat.MMMEd(locale).format(leg.departureDate)} ${leg.departureTime}',
                       kg,
                     ),
+                    if (currency != null && price != null)
+                      l.tripLegsLegPrice(
+                        CurrencyFormatter.format(
+                          price,
+                          currency,
+                          compact: true,
+                        ),
+                      ),
                     if (showStops && stops != null)
                       StopsChips.optionLabel(l, stops),
                   ].join(' · '),
@@ -249,6 +298,14 @@ class _LegTile extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xxs),
                   Text(
                     l.tripLegsDateInvalid,
+                    style: tt.bodySmall?.copyWith(color: cs.error),
+                  ),
+                ],
+                if (priceAboveMax) ...[
+                  const SizedBox(height: DonySpacing.xxs),
+                  Text(
+                    l.tripLegsPriceAboveMax(currency.symbol),
+                    key: Key('trip-leg-price-above-max-${number - 2}'),
                     style: tt.bodySmall?.copyWith(color: cs.error),
                   ),
                 ],

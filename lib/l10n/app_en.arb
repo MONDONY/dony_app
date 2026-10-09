@@ -9437,5 +9437,13 @@
   "ticketExpiredCodeTitle": "Pickup code expired",
   "ticketExpiredCodeMessage": "The pickup code has expired. Generate a new one.",
   "bidDetailSenderCodeExpiredNote": "The pickup code has expired: generate a new one on your ticket.",
-  "recipientNotifyCodeExpiredHint": "The pickup code has expired: generate a new one to add it to the message."
+  "recipientNotifyCodeExpiredHint": "The pickup code has expired: generate a new one to add it to the message.",
+  "tripLegSheetPriceTooHigh": "Maximum {max} per kg in the trip currency.",
+  "tripLegsLegPrice": "{price}/kg",
+  "tripLegsPriceAboveMax": "Price above the {currency} ceiling: edit this leg.",
+  "tripLegsCurrencyNote": "Leg prices are in {currency}, the trip currency.",
+  "listingRowLabelCurrency": "Currency",
+  "tripSwitchCurrencyConfirmTitle": "Publish in {currency}?",
+  "tripSwitchCurrencyConfirmMessageNoCard": "All prices on this trip switch to {currency} and card payment will no longer be offered.",
+  "tripSwitchCurrencyConfirmMessage": "All prices on this trip switch to {currency}."
 }
