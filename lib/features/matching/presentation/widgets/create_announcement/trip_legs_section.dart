@@ -72,6 +72,7 @@ class TripLegsSection extends StatelessWidget {
     this.defaultPrice,
     this.showStops = false,
     this.defaultStops,
+    this.paymentRails,
   });
 
   final TripLegOrigin? origin;
@@ -90,6 +91,11 @@ class TripLegsSection extends StatelessWidget {
   /// Escales du premier trajet, préremplies sur la première étape ajoutée ;
   /// les suivantes reprennent celles de l'étape précédente.
   final TripStops? defaultStops;
+
+  /// Moyens de paiement possibles (Stripe, compte de versement), lus à
+  /// l'ouverture de chaque feuille d'étape (FLUTTER-HP). `null` : aucun
+  /// compte connu, seules les espèces sont possibles.
+  final TripLegPaymentRails Function()? paymentRails;
 
   Future<void> _openSheet(
     BuildContext context,
@@ -129,6 +135,7 @@ class TripLegsSection extends StatelessWidget {
       defaultPriceCurrency: previousCurrency,
       showStops: showStops,
       defaultStops: previous != null ? previous.stops : defaultStops,
+      paymentRails: paymentRails?.call() ?? const TripLegPaymentRails(),
     );
     if (draft == null) return;
     if (editIndex != null) {
@@ -348,6 +355,26 @@ class _LegTile extends StatelessWidget {
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
+                if (leg.acceptedPaymentMethods case final methods?
+                    when methods.isNotEmpty) ...[
+                  const SizedBox(height: DonySpacing.xxs),
+                  Text(
+                    l.tripLegsPaymentSummary(
+                      methods
+                          .map(
+                            (m) => switch (m) {
+                              TripLegPaymentRails.card => l.tripLegsPaymentCard,
+                              TripLegPaymentRails.mobileMoney =>
+                                l.homeComposerPaymentMobileMoney,
+                              _ => l.tripLegsPaymentCash,
+                            },
+                          )
+                          .join(', '),
+                    ),
+                    key: Key('trip-leg-payment-summary-${number - 2}'),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
                 if (invalid) ...[
                   const SizedBox(height: DonySpacing.xxs),
                   Text(

@@ -1409,17 +1409,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     ];
   }
 
-  /// Moyens de paiement d'une étape ajoutée, dans sa devise (FLUTTER-HP) :
-  /// règle dans [TripLegCurrency.paymentMethodsFor].
-  List<String> _paymentMethodsForLeg(SupportedCurrency currency) {
+  /// Moyens de paiement possibles pour une étape ajoutée (FLUTTER-HP), lus à
+  /// l'ouverture de sa feuille : le voyageur y coche lui-même les siens.
+  TripLegPaymentRails _legPaymentRails() {
     final mobileMoneyState = context.read<MobileMoneyAccountBloc>().state;
-    return TripLegCurrency.paymentMethodsFor(
-      currency,
-      firstCurrency: _currency,
+    return TripLegPaymentRails(
       stripeConfigured: _isStripeConfigured(),
-      cardEnabled: _cardEnabledNotifier.value,
-      cashEnabled: _cashEnabledNotifier.value,
-      mobileMoneyEnabled: _mobileMoneyEnabledNotifier.value,
       mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(mobileMoneyState),
       mobileMoneyAccountCurrency: SupportedCurrency.fromCode(
         mobileMoneyAccountCurrencyFrom(mobileMoneyState),
@@ -1705,12 +1700,9 @@ class _TripFormContentState extends State<_TripFormContent> {
         _showError(context.l10n.tripLegsPriceMissing);
         return;
       }
-      final legs = [
-        for (var i = 0; i < extraLegs.length; i++)
-          extraLegs[i].withPaymentMethods(
-            _paymentMethodsForLeg(legCurrency(i)),
-          ),
-      ];
+      // Chaque étape part avec les moyens de paiement cochés dans sa feuille
+      // (FLUTTER-HP).
+      final legs = extraLegs;
       final event = AnnouncementTripCreateRequested(
         first: createEvent,
         legs: legs,
@@ -2532,6 +2524,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             origin: _firstLegOrigin(),
             showPrice: _kgPriceEnabledNotifier.value,
             tripCurrency: _currency,
+            paymentRails: _legPaymentRails,
             defaultKg: _availableKgNotifier.value,
             defaultPrice: context.read<AnnouncementFormBloc>().state.pricePerKg,
             // Escales par étape (FLUTTER-GE), préremplies avec celles du

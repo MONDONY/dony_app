@@ -153,16 +153,6 @@ void main() {
       expect(TripLegCurrency.of(xaf, SupportedCurrency.eur).code, 'XAF');
     });
 
-    test('withPaymentMethods garde l\'étape et pose ses moyens', () {
-      final leg = doualaLeg(stops: TripStops.one);
-      final copy = leg.withPaymentMethods(const ['CASH']);
-      expect(copy.acceptedPaymentMethods, ['CASH']);
-      expect(copy.arrivalCity, leg.arrivalCity);
-      expect(copy.stops, TripStops.one);
-      expect(copy.pricePerKg, leg.pricePerKg);
-      expect(copy, isNot(leg));
-    });
-
     test('moyens filtrés par devise, jamais vides', () {
       expect(
         TripLegCurrency.restrictPaymentMethods([
@@ -193,80 +183,65 @@ void main() {
       );
     });
 
-    List<String> methods(
-      SupportedCurrency leg, {
-      SupportedCurrency first = SupportedCurrency.eur,
-      bool stripe = true,
-      bool card = true,
-      bool cash = false,
-      bool mobileMoney = false,
-      bool accountActive = false,
-      SupportedCurrency? accountCurrency,
-    }) => TripLegCurrency.paymentMethodsFor(
-      leg,
-      firstCurrency: first,
-      stripeConfigured: stripe,
-      cardEnabled: card,
-      cashEnabled: cash,
-      mobileMoneyEnabled: mobileMoney,
-      mobileMoneyAccountActive: accountActive,
-      mobileMoneyAccountCurrency: accountCurrency,
-    );
+    const eur = SupportedCurrency.eur;
+    const xof = SupportedCurrency.xof;
+    const xaf = SupportedCurrency.xaf;
 
-    test('étape en euros : carte gardée', () {
-      expect(methods(SupportedCurrency.eur), ['STRIPE']);
-      expect(methods(SupportedCurrency.eur, cash: true), ['STRIPE', 'CASH']);
-      expect(methods(SupportedCurrency.eur, stripe: false), ['CASH']);
-    });
-
-    test('étape en F CFA après un trajet en euros : pas de carte', () {
-      expect(methods(SupportedCurrency.xof), ['CASH']);
-      // Bascule grisée sur le trajet en euros : le compte actif en XOF suffit.
-      expect(
-        methods(
-          SupportedCurrency.xof,
-          accountActive: true,
-          accountCurrency: SupportedCurrency.xof,
-        ),
-        ['CASH', 'MOBILE_MONEY'],
+    test('valeurs par défaut selon la devise de l\'étape', () {
+      const ready = TripLegPaymentRails(
+        stripeConfigured: true,
+        mobileMoneyAccountActive: true,
+        mobileMoneyAccountCurrency: xof,
       );
-      // Compte dans l'autre franc CFA : pas de mobile money.
+      expect(ready.defaultsFor(eur), ['STRIPE']);
+      expect(ready.defaultsFor(xof), ['MOBILE_MONEY']);
+      // Compte de versement en XOF : rien d'électronique en XAF.
+      expect(ready.defaultsFor(xaf), ['CASH']);
+      // Aucun compte : espèces seules.
+      expect(const TripLegPaymentRails().defaultsFor(eur), ['CASH']);
+      expect(const TripLegPaymentRails().defaultsFor(xof), ['CASH']);
+      // Compte actif de devise inconnue : accepté en zone CFA.
       expect(
-        methods(
-          SupportedCurrency.xaf,
-          accountActive: true,
-          accountCurrency: SupportedCurrency.xof,
-        ),
-        ['CASH'],
+        const TripLegPaymentRails(
+          mobileMoneyAccountActive: true,
+        ).defaultsFor(xaf),
+        ['MOBILE_MONEY'],
       );
     });
 
-    test('trajet en F CFA : le choix du voyageur fait foi', () {
-      expect(
-        methods(
-          SupportedCurrency.xof,
-          first: SupportedCurrency.xof,
-          accountActive: true,
-          accountCurrency: SupportedCurrency.xof,
-        ),
-        ['CASH'],
+    test('disponibilité par moyen', () {
+      const rails = TripLegPaymentRails(stripeConfigured: true);
+      expect(rails.isAvailable('STRIPE', eur), isTrue);
+      expect(rails.isAvailable('STRIPE', xof), isFalse);
+      expect(rails.isAvailable('MOBILE_MONEY', xof), isFalse);
+      expect(rails.isAvailable('CASH', xof), isTrue);
+      expect(rails.isAvailable('WAVE', eur), isFalse);
+    });
+
+    test('devise changée : choix valides gardés, les autres décochés', () {
+      const rails = TripLegPaymentRails(
+        stripeConfigured: true,
+        mobileMoneyAccountActive: true,
+        mobileMoneyAccountCurrency: xof,
       );
+      expect(rails.reconcile(['STRIPE', 'CASH'], xof), ['CASH']);
+      expect(rails.reconcile(['CASH', 'MOBILE_MONEY'], eur), ['CASH']);
+      // Plus rien de possible : valeurs par défaut de la nouvelle devise.
+      expect(rails.reconcile(['STRIPE'], xof), ['MOBILE_MONEY']);
+      expect(rails.reconcile(['MOBILE_MONEY', 'STRIPE'], xof), [
+        'MOBILE_MONEY',
+      ]);
+      expect(TripLegPaymentRails.ordered(['MOBILE_MONEY', 'CASH', 'CASH']), [
+        'CASH',
+        'MOBILE_MONEY',
+      ]);
       expect(
-        methods(
-          SupportedCurrency.xof,
-          first: SupportedCurrency.xof,
-          mobileMoney: true,
+        rails,
+        const TripLegPaymentRails(
+          stripeConfigured: true,
+          mobileMoneyAccountActive: true,
+          mobileMoneyAccountCurrency: xof,
         ),
-        ['CASH', 'MOBILE_MONEY'],
-      );
-      // Étape en euros : jamais de mobile money.
-      expect(
-        methods(
-          SupportedCurrency.eur,
-          first: SupportedCurrency.xof,
-          mobileMoney: true,
-        ),
-        ['STRIPE'],
       );
     });
   });
@@ -557,7 +532,15 @@ void main() {
       currency: 'XOF',
     );
 
-    Future<void> open(WidgetTester t, {TripLegDraft? initial}) async {
+    Future<void> open(
+      WidgetTester t, {
+      TripLegDraft? initial,
+      TripLegPaymentRails rails = const TripLegPaymentRails(
+        stripeConfigured: true,
+        mobileMoneyAccountActive: true,
+        mobileMoneyAccountCurrency: SupportedCurrency.xof,
+      ),
+    }) async {
       await t.pumpWidget(
         _app(
           Builder(
@@ -571,6 +554,7 @@ void main() {
                   showPrice: true,
                   defaultCurrency: SupportedCurrency.xof,
                   showStops: true,
+                  paymentRails: rails,
                 ),
                 child: const Text('ouvrir'),
               ),
@@ -616,6 +600,13 @@ void main() {
         ];
         expect(segments.map((r) => r.top).toSet(), hasLength(1));
 
+        // Moyens de paiement, raisons comprises, sans débordement.
+        expect(
+          find.byKey(const Key('trip-leg-payment-methods')),
+          findsOneWidget,
+        );
+        expect(find.text('Carte indisponible en F CFA'), findsOneWidget);
+
         // Ouvrir le menu des devises ne déborde pas non plus.
         await t.ensureVisible(find.byKey(const Key('trip-leg-currency')));
         await t.pumpAndSettle();
@@ -630,6 +621,207 @@ void main() {
       await open(t);
       expect(t.takeException(), isNull);
       expect(find.text('Prix par kilo'), findsNothing);
+    });
+  });
+
+  group('TripLegSheet : moyens de paiement (FLUTTER-HP)', () {
+    const rails = TripLegPaymentRails(
+      stripeConfigured: true,
+      mobileMoneyAccountActive: true,
+      mobileMoneyAccountCurrency: SupportedCurrency.xof,
+    );
+
+    DonyCheckbox box(WidgetTester t, String method) =>
+        t.widget<DonyCheckbox>(find.byKey(Key('trip-leg-payment-$method')));
+
+    Future<void> openSection(WidgetTester t, TripLegsCubit cubit) async {
+      await t.pumpWidget(
+        _app(
+          Scaffold(
+            body: SingleChildScrollView(
+              child: BlocProvider.value(
+                value: cubit,
+                child: TripLegsSection(
+                  origin: _bouake,
+                  showPrice: true,
+                  tripCurrency: SupportedCurrency.eur,
+                  defaultKg: 15,
+                  paymentRails: () => rails,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.byKey(const Key('trip-legs-add')));
+      await t.pumpAndSettle();
+    }
+
+    Future<void> chooseCurrency(WidgetTester t, String code) async {
+      await t.ensureVisible(find.byKey(const Key('trip-leg-currency')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-currency')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(Key('trip-leg-currency-$code')));
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('F CFA : mobile money coché, carte grisée avec sa raison', (
+      t,
+    ) async {
+      await openSection(t, _legsCubit());
+      expect(box(t, 'MOBILE_MONEY').value, isTrue);
+      expect(box(t, 'MOBILE_MONEY').enabled, isTrue);
+      expect(box(t, 'STRIPE').value, isFalse);
+      expect(box(t, 'STRIPE').enabled, isFalse);
+      expect(box(t, 'STRIPE').subtitle, 'Carte indisponible en F CFA');
+      expect(box(t, 'CASH').enabled, isTrue);
+      expect(box(t, 'CASH').value, isFalse);
+    });
+
+    testWidgets('devise changée : choix valides gardés, autres décochés', (
+      t,
+    ) async {
+      await openSection(t, _legsCubit());
+      await t.ensureVisible(find.byKey(const Key('trip-leg-payment-CASH')));
+      await t.tap(find.byKey(const Key('trip-leg-payment-CASH')));
+      await t.pump();
+      expect(box(t, 'CASH').value, isTrue);
+
+      await chooseCurrency(t, 'EUR');
+      // Mobile money impossible en euros : décoché ; espèces gardées.
+      expect(box(t, 'MOBILE_MONEY').value, isFalse);
+      expect(box(t, 'MOBILE_MONEY').enabled, isFalse);
+      expect(box(t, 'MOBILE_MONEY').subtitle, 'Mobile money indisponible en €');
+      expect(box(t, 'CASH').value, isTrue);
+      expect(box(t, 'STRIPE').value, isFalse);
+      expect(box(t, 'STRIPE').enabled, isTrue);
+
+      // XAF : compte de versement en XOF, raison affichée.
+      await chooseCurrency(t, 'XAF');
+      expect(
+        box(t, 'MOBILE_MONEY').subtitle,
+        'Votre compte de versement reçoit des F CFA',
+      );
+      expect(box(t, 'CASH').value, isTrue);
+    });
+
+    testWidgets('impossible de tout décocher : erreur et bouton désactivé', (
+      t,
+    ) async {
+      await openSection(t, _legsCubit());
+      await t.enterText(find.byKey(const Key('trip-leg-arrival-city')), 'Bam');
+      await t.pumpAndSettle();
+      await t.tap(find.textContaining('Bamako').last);
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-date')));
+      await t.pumpAndSettle();
+      await t.tap(find.text('OK'));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-time')));
+      await t.pumpAndSettle();
+      await t.tap(find.text('OK'));
+      await t.pumpAndSettle();
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '2500');
+      await t.pump();
+      DonyButton submit() =>
+          t.widget<DonyButton>(find.byKey(const Key('trip-leg-submit')));
+      expect(submit().onPressed, isNotNull);
+
+      await t.ensureVisible(
+        find.byKey(const Key('trip-leg-payment-MOBILE_MONEY')),
+      );
+      await t.tap(find.byKey(const Key('trip-leg-payment-MOBILE_MONEY')));
+      await t.pump();
+      expect(
+        find.byKey(const Key('trip-leg-payment-required')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Cochez au moins un moyen de paiement.'),
+        findsOneWidget,
+      );
+      expect(submit().onPressed, isNull);
+
+      // Espèces cochées : publication possible, le choix part dans l'étape.
+      await t.tap(find.byKey(const Key('trip-leg-payment-CASH')));
+      await t.pump();
+      expect(find.byKey(const Key('trip-leg-payment-required')), findsNothing);
+      expect(submit().onPressed, isNotNull);
+    });
+
+    testWidgets('choix du voyageur gardé dans l\'étape et son récapitulatif', (
+      t,
+    ) async {
+      final cubit = _legsCubit();
+      await openSection(t, cubit);
+      await t.enterText(find.byKey(const Key('trip-leg-arrival-city')), 'Bam');
+      await t.pumpAndSettle();
+      await t.tap(find.textContaining('Bamako').last);
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-date')));
+      await t.pumpAndSettle();
+      await t.tap(find.text('OK'));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-time')));
+      await t.pumpAndSettle();
+      await t.tap(find.text('OK'));
+      await t.pumpAndSettle();
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '2500');
+      await t.pump();
+      await t.ensureVisible(find.byKey(const Key('trip-leg-payment-CASH')));
+      await t.tap(find.byKey(const Key('trip-leg-payment-CASH')));
+      await t.pump();
+      await t.ensureVisible(find.byKey(const Key('trip-leg-submit')));
+      await t.tap(find.byKey(const Key('trip-leg-submit')));
+      await t.pumpAndSettle();
+
+      final leg = cubit.state.legs.single;
+      expect(leg.acceptedPaymentMethods, ['CASH', 'MOBILE_MONEY']);
+      expect(find.text('Paiement : Espèces, Mobile money'), findsOneWidget);
+      // Le payload envoie ce choix tel quel.
+      final payloads = buildTripPayloads(firstLeg(), [leg]);
+      expect(payloads[1].acceptedPaymentMethods, ['CASH', 'MOBILE_MONEY']);
+
+      // Rouverte, l'étape garde ses cases.
+      await t.tap(find.byKey(const Key('trip-leg-edit-0')));
+      await t.pumpAndSettle();
+      expect(box(t, 'CASH').value, isTrue);
+      expect(box(t, 'MOBILE_MONEY').value, isTrue);
+    });
+
+    testWidgets('sans compte : espèces seules, raisons affichées', (t) async {
+      await t.pumpWidget(
+        _app(
+          Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => TripLegSheet.show(
+                  context,
+                  legNumber: 2,
+                  origin: _bouake,
+                  showPrice: false,
+                  defaultCurrency: SupportedCurrency.eur,
+                ),
+                child: const Text('ouvrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('ouvrir'));
+      await t.pumpAndSettle();
+      expect(box(t, 'CASH').value, isTrue);
+      expect(
+        box(t, 'STRIPE').subtitle,
+        'Configurez d\'abord vos paiements par carte depuis votre profil',
+      );
+      expect(box(t, 'STRIPE').enabled, isFalse);
+      await chooseCurrency(t, 'XOF');
+      expect(
+        box(t, 'MOBILE_MONEY').subtitle,
+        'Configurez votre compte de versement mobile money pour l\'accepter',
+      );
     });
   });
 

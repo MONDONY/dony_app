@@ -50,24 +50,10 @@ class TripLegDraft extends Equatable {
   /// un ancien écran) = devise du premier trajet.
   final String? currency;
 
-  /// Moyens de paiement de l'étape, posés à la publication selon sa devise
-  /// (pas de carte en zone CFA, pas de mobile money ailleurs). `null` = ceux du
-  /// premier trajet, filtrés par la devise de l'étape.
+  /// Moyens de paiement de l'étape, cochés par le voyageur dans sa feuille
+  /// (`STRIPE`, `CASH`, `MOBILE_MONEY`). `null` (étape saisie par un ancien
+  /// écran) = ceux du premier trajet, filtrés par la devise de l'étape.
   final List<String>? acceptedPaymentMethods;
-
-  /// Copie avec les moyens de paiement résolus pour la devise de l'étape.
-  TripLegDraft withPaymentMethods(List<String> methods) => TripLegDraft(
-    arrivalCity: arrivalCity,
-    arrivalCountryCode: arrivalCountryCode,
-    departureDate: departureDate,
-    departureTime: departureTime,
-    deliveryAddress: deliveryAddress,
-    availableKg: availableKg,
-    pricePerKg: pricePerKg,
-    stops: stops,
-    currency: currency,
-    acceptedPaymentMethods: methods,
-  );
 
   /// Instant du départ, en heure locale.
   DateTime get departureAt {
@@ -128,40 +114,87 @@ abstract final class TripLegCurrency {
     ];
     return kept.isEmpty ? const ['CASH'] : kept;
   }
+}
 
-  /// Moyens de paiement d'une étape dans [currency], d'après les choix faits
-  /// sur le premier trajet (dans [firstCurrency]).
-  ///
-  /// Mêmes choix, bornés par la devise de l'étape : la carte seulement hors
-  /// zone CFA (et Stripe Connect prêt), le mobile money seulement en zone CFA.
-  /// Les espèces partent dès que la carte ne part pas, comme pour le premier
-  /// trajet. Quand la devise du premier trajet ne permettait pas le mobile
-  /// money (bascule grisée, le voyageur n'a pas pu le refuser), une étape en
-  /// franc CFA l'accepte si le compte de versement est actif dans sa devise.
-  /// Le serveur refiltre par devise (`AnnouncementPaymentRails`).
-  static List<String> paymentMethodsFor(
-    SupportedCurrency currency, {
-    required SupportedCurrency firstCurrency,
-    required bool stripeConfigured,
-    required bool cardEnabled,
-    required bool cashEnabled,
-    required bool mobileMoneyEnabled,
-    required bool mobileMoneyAccountActive,
-    SupportedCurrency? mobileMoneyAccountCurrency,
-  }) {
-    final cardOn = stripeConfigured && currency.isStripeEligible && cardEnabled;
-    final mobileMoneyOn =
-        currency.isMobileMoneyEligible &&
-        (firstCurrency.isMobileMoneyEligible
-            ? mobileMoneyEnabled
-            : mobileMoneyAccountActive &&
-                  mobileMoneyAccountCurrency == currency);
+/// Moyens de paiement qu'une étape peut proposer, selon la devise de l'étape
+/// et les comptes du voyageur (FLUTTER-HP). Le voyageur coche lui-même ceux de
+/// chaque étape ; cette classe ne fait que dire ce qui est possible et ce qui
+/// est coché par défaut.
+class TripLegPaymentRails extends Equatable {
+  const TripLegPaymentRails({
+    this.stripeConfigured = false,
+    this.mobileMoneyAccountActive = false,
+    this.mobileMoneyAccountCurrency,
+  });
+
+  static const card = 'STRIPE';
+  static const cash = 'CASH';
+  static const mobileMoney = 'MOBILE_MONEY';
+
+  /// Ordre d'affichage et d'envoi.
+  static const all = [card, cash, mobileMoney];
+
+  /// Compte Stripe Connect prêt.
+  final bool stripeConfigured;
+
+  /// Compte de versement mobile money actif, et sa devise (`null` = inconnue).
+  final bool mobileMoneyAccountActive;
+  final SupportedCurrency? mobileMoneyAccountCurrency;
+
+  /// Carte : hors zone CFA, Stripe Connect prêt.
+  bool cardAvailable(SupportedCurrency currency) =>
+      stripeConfigured && currency.isStripeEligible;
+
+  /// Mobile money : zone CFA, compte de versement actif dans cette devise.
+  bool mobileMoneyAvailable(SupportedCurrency currency) =>
+      currency.isMobileMoneyEligible &&
+      mobileMoneyAccountActive &&
+      (mobileMoneyAccountCurrency == null ||
+          mobileMoneyAccountCurrency == currency);
+
+  bool isAvailable(String method, SupportedCurrency currency) =>
+      switch (method) {
+        card => cardAvailable(currency),
+        mobileMoney => mobileMoneyAvailable(currency),
+        cash => true,
+        _ => false,
+      };
+
+  /// Cochés à l'ouverture d'une étape dans [currency] : les moyens
+  /// électroniques disponibles, les espèces quand il n'y en a aucun.
+  List<String> defaultsFor(SupportedCurrency currency) {
+    final electronic = [
+      if (cardAvailable(currency)) card,
+      if (mobileMoneyAvailable(currency)) mobileMoney,
+    ];
+    return ordered(electronic.isEmpty ? const [cash] : electronic);
+  }
+
+  /// Devise changée : garde les choix encore possibles, décoche les autres ;
+  /// s'il n'en reste aucun, les valeurs par défaut de la nouvelle devise.
+  List<String> reconcile(
+    Iterable<String> selected,
+    SupportedCurrency currency,
+  ) {
+    final kept = ordered(selected.where((m) => isAvailable(m, currency)));
+    return kept.isEmpty ? defaultsFor(currency) : kept;
+  }
+
+  /// [methods] dans l'ordre d'[all], sans doublon.
+  static List<String> ordered(Iterable<String> methods) {
+    final set = methods.toSet();
     return [
-      if (cardOn) 'STRIPE',
-      if (cashEnabled || !cardOn) 'CASH',
-      if (mobileMoneyOn) 'MOBILE_MONEY',
+      for (final m in all)
+        if (set.contains(m)) m,
     ];
   }
+
+  @override
+  List<Object?> get props => [
+    stripeConfigured,
+    mobileMoneyAccountActive,
+    mobileMoneyAccountCurrency?.code,
+  ];
 }
 
 /// Point d'arrivée d'une étape, d'où part la suivante.
