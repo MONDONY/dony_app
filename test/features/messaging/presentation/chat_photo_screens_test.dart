@@ -134,6 +134,27 @@ void main() {
       expect(find.text('open'), findsOneWidget);
     });
 
+    testWidgets(
+      'FLUTTER-GR : glisser vers le bas referme, croix sur pastille',
+      (tester) async {
+        when(
+          () => repo.fetchImage(any(), any(), variant: any(named: 'variant')),
+        ).thenAnswer((_) async => _png);
+        await pumpRouter(tester, router(ChatImageCache(repo)));
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DonyPhotoCloseButton), findsOneWidget);
+        await tester.drag(
+          find.byKey(const Key('chat-photo-viewer-image')),
+          const Offset(0, 400),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('open'), findsOneWidget);
+        expect(find.byKey(const Key('chat-photo-viewer-image')), findsNothing);
+      },
+    );
+
     testWidgets('410 → « Photo expirée »', (tester) async {
       when(
         () => repo.fetchImage(any(), any(), variant: any(named: 'variant')),

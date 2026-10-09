@@ -17523,4 +17523,42 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recipientNotifyCodeExpiredHint =>
       'Le code de retrait a expiré : générez-en un nouveau pour l\'ajouter au message.';
+
+  @override
+  String tripLegSheetPriceTooHigh(String max) {
+    return 'Maximum $max par kilo dans la devise du voyage.';
+  }
+
+  @override
+  String tripLegsLegPrice(String price) {
+    return '$price par kg';
+  }
+
+  @override
+  String tripLegsPriceAboveMax(String currency) {
+    return 'Prix au-dessus du plafond en $currency : modifiez cette étape.';
+  }
+
+  @override
+  String tripLegsCurrencyNote(String currency) {
+    return 'Prix des étapes en $currency, la devise du voyage.';
+  }
+
+  @override
+  String get listingRowLabelCurrency => 'Devise';
+
+  @override
+  String tripSwitchCurrencyConfirmTitle(String currency) {
+    return 'Publier en $currency ?';
+  }
+
+  @override
+  String tripSwitchCurrencyConfirmMessageNoCard(String currency) {
+    return 'Tous les prix du voyage passent en $currency et le paiement par carte ne sera plus proposé.';
+  }
+
+  @override
+  String tripSwitchCurrencyConfirmMessage(String currency) {
+    return 'Tous les prix du voyage passent en $currency.';
+  }
 }

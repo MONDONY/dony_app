@@ -9,6 +9,12 @@ enum DonySnackbarType { info, success, warning, error }
 abstract final class DonySnackbar {
   static final Map<String, DateTime> _lastShown = {};
 
+  /// Durée d'affichage par défaut.
+  static const Duration defaultDuration = Duration(seconds: 4);
+
+  /// Durée d'un message dont l'action est « Annuler » (FLUTTER-GP).
+  static const Duration undoDuration = Duration(seconds: 6);
+
   /// Vide le cache de déduplication. À utiliser dans les tests uniquement.
   @visibleForTesting
   static void clearDedup() => _lastShown.clear();
@@ -19,7 +25,7 @@ abstract final class DonySnackbar {
     String? title,
     IconData? icon,
     DonySnackbarType type = DonySnackbarType.info,
-    Duration duration = const Duration(seconds: 4),
+    Duration? duration,
     String? actionLabel,
     VoidCallback? onAction,
   }) {
@@ -41,9 +47,13 @@ abstract final class DonySnackbar {
     // navigue au lecteur d'écran (WCAG 2.2.1). Une action de fermeture
     // explicite remplace la disparition automatique.
     final persistent = context.a11y.persistentMessages;
+    // FLUTTER-GP : 4 s par défaut, 6 s pour un « Annuler » (le temps de
+    // revenir sur son geste).
+    final undo =
+        actionLabel != null && actionLabel == context.l10n.commonCancel;
     final effectiveDuration = persistent
         ? const Duration(minutes: 10)
-        : duration;
+        : duration ?? (undo ? undoDuration : defaultDuration);
     final effectiveActionLabel =
         actionLabel ?? (persistent ? context.l10n.commonClose : null);
 
@@ -157,13 +167,21 @@ abstract final class DonySnackbar {
       return;
     }
 
-    ScaffoldMessenger.of(context)
+    // Messenger capturé à l'affichage : l'action « Fermer » est tapée plus
+    // tard, quand le contexte appelant (tuile, volet) peut être démonté
+    // (même classe de crash que FLUTTER-GN).
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: content,
           backgroundColor: bg,
           duration: effectiveDuration,
+          // FLUTTER-GP : depuis Flutter 3.44, un SnackBar avec action persiste
+          // par défaut (`persist ?? action != null`) et ne disparaissait plus.
+          // Seule l'option « garder les messages affichés » le retient.
+          persist: persistent,
           behavior: SnackBarBehavior.floating,
           elevation: 8,
           shape: RoundedRectangleBorder(
@@ -186,11 +204,7 @@ abstract final class DonySnackbar {
                   textColor: fg,
                   onPressed:
                       onAction ??
-                      (persistent
-                          ? () => ScaffoldMessenger.of(
-                              context,
-                            ).hideCurrentSnackBar()
-                          : () {}),
+                      (persistent ? messenger.hideCurrentSnackBar : () {}),
                 )
               : null,
         ),

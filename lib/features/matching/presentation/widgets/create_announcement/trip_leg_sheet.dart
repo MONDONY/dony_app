@@ -1,5 +1,8 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/data/recent_city_store.dart';
@@ -21,12 +24,16 @@ import 'package:intl/intl.dart';
 /// précédente. Le reste du trajet (mode de transport, contenus, paiements,
 /// devise) est repris du premier trajet à la publication. Les escales sont
 /// propres à chaque étape en avion (FLUTTER-GE).
+///
+/// Le prix s'affiche et se borne dans la devise du voyage ([currency]) : sans
+/// suffixe ni plafond, une étape est partie à 8 XOF/kg (FLUTTER-GK).
 class TripLegSheet extends StatefulWidget {
   const TripLegSheet({
     super.key,
     required this.origin,
     this.initial,
     required this.showPrice,
+    required this.currency,
     this.defaultKg,
     this.defaultPrice,
     this.showStops = false,
@@ -41,6 +48,9 @@ class TripLegSheet extends StatefulWidget {
   /// Prix au kilo propre à l'étape (mode « au kilo »). En grille seule, il est
   /// masqué et l'étape reprend le prix du premier trajet.
   final bool showPrice;
+
+  /// Devise du voyage : suffixe du prix et plafond [maxUnitPriceFor].
+  final SupportedCurrency currency;
   final double? defaultKg;
   final double? defaultPrice;
 
@@ -58,6 +68,7 @@ class TripLegSheet extends StatefulWidget {
     required TripLegOrigin origin,
     TripLegDraft? initial,
     required bool showPrice,
+    required SupportedCurrency currency,
     double? defaultKg,
     double? defaultPrice,
     bool showStops = false,
@@ -89,6 +100,7 @@ class TripLegSheet extends StatefulWidget {
         origin: origin,
         initial: initial,
         showPrice: showPrice,
+        currency: currency,
         defaultKg: defaultKg,
         defaultPrice: defaultPrice,
         showStops: showStops,
@@ -195,6 +207,13 @@ class _TripLegSheetState extends State<TripLegSheet> {
   bool get _sameCityAsOrigin =>
       TripLegChain.sameCity(_cityName.value, widget.origin.city);
 
+  /// Prix saisi au-delà du plafond de la devise du voyage (FLUTTER-GK).
+  bool get _priceTooHigh {
+    if (!widget.showPrice) return false;
+    final price = _parseNumber(_priceCtrl.text);
+    return price != null && price > maxUnitPriceFor(widget.currency);
+  }
+
   bool get _dateTooEarly =>
       _date.value != null && _date.value!.isBefore(_minDay);
 
@@ -210,7 +229,9 @@ class _TripLegSheetState extends State<TripLegSheet> {
       return null;
     }
     if (kg == null || kg < 1) return null;
-    if (widget.showPrice && (price == null || price <= 0)) return null;
+    if (widget.showPrice && (price == null || price <= 0 || _priceTooHigh)) {
+      return null;
+    }
     return TripLegDraft(
       arrivalCity: city,
       arrivalCountryCode: _countryCode.value,
@@ -368,16 +389,42 @@ class _TripLegSheetState extends State<TripLegSheet> {
             if (widget.showPrice) ...[
               const SizedBox(width: DonySpacing.md),
               Expanded(
-                child: DonyTextField(
-                  key: const Key('trip-leg-price'),
-                  controller: _priceCtrl,
-                  label: l.tripLegSheetPrice,
-                  requiredLabel: true,
-                  prefixIcon: DonyIcons.editPrice,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+                child: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _priceCtrl,
+                  builder: (context, _, _) => DonyTextField(
+                    key: const Key('trip-leg-price'),
+                    controller: _priceCtrl,
+                    label: l.tripLegSheetPrice,
+                    requiredLabel: true,
+                    prefixIcon: DonyIcons.editPrice,
+                    // Devise du voyage rappelée dans le champ (FLUTTER-GK),
+                    // comme le prix personnalisé du premier trajet.
+                    suffixIcon: Padding(
+                      key: const Key('trip-leg-price-currency'),
+                      padding: const EdgeInsetsDirectional.only(
+                        end: DonySpacing.md,
+                      ),
+                      child: Text(
+                        '${widget.currency.symbol}/kg',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    errorText: _priceTooHigh
+                        ? l.tripLegSheetPriceTooHigh(
+                            CurrencyFormatter.format(
+                              maxUnitPriceFor(widget.currency),
+                              widget.currency,
+                              compact: true,
+                            ),
+                          )
+                        : null,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textInputAction: TextInputAction.done,
                   ),
-                  textInputAction: TextInputAction.done,
                 ),
               ),
             ],

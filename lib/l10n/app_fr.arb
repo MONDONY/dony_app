@@ -19650,5 +19650,21 @@
   "bidDetailSenderCodeExpiredNote": "Le code de retrait a expiré : générez-en un nouveau sur votre billet.",
   "@bidDetailSenderCodeExpiredNote": {"description": "Note du hero expéditeur quand le code de retrait a expiré (sender_hero_card.dart, FLUTTER-G2)."},
   "recipientNotifyCodeExpiredHint": "Le code de retrait a expiré : générez-en un nouveau pour l'ajouter au message.",
-  "@recipientNotifyCodeExpiredHint": {"description": "Encart « Prévenir le destinataire » quand le code a expiré (FLUTTER-G2)."}
+  "@recipientNotifyCodeExpiredHint": {"description": "Encart « Prévenir le destinataire » quand le code a expiré (FLUTTER-G2)."},
+  "tripLegSheetPriceTooHigh": "Maximum {max} par kilo dans la devise du voyage.",
+  "@tripLegSheetPriceTooHigh": {"description": "Prix d'étape au-dessus du plafond de la devise du voyage (FLUTTER-GK).", "placeholders": {"max": {"type": "String"}}},
+  "tripLegsLegPrice": "{price} par kg",
+  "@tripLegsLegPrice": {"description": "Prix au kilo d'une étape, devise comprise, dans la liste des étapes (FLUTTER-GK).", "placeholders": {"price": {"type": "String"}}},
+  "tripLegsPriceAboveMax": "Prix au-dessus du plafond en {currency} : modifiez cette étape.",
+  "@tripLegsPriceAboveMax": {"description": "Étape dont le prix dépasse le plafond de la devise du voyage (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},
+  "tripLegsCurrencyNote": "Prix des étapes en {currency}, la devise du voyage.",
+  "@tripLegsCurrencyNote": {"description": "Rappel de la devise du voyage dans la section des étapes (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},
+  "listingRowLabelCurrency": "Devise",
+  "@listingRowLabelCurrency": {"description": "Ligne « Devise » de l'aperçu d'un trajet (FLUTTER-GK)."},
+  "tripSwitchCurrencyConfirmTitle": "Publier en {currency} ?",
+  "@tripSwitchCurrencyConfirmTitle": {"description": "Titre de la confirmation avant de changer la devise du voyage (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},
+  "tripSwitchCurrencyConfirmMessageNoCard": "Tous les prix du voyage passent en {currency} et le paiement par carte ne sera plus proposé.",
+  "@tripSwitchCurrencyConfirmMessageNoCard": {"description": "Confirmation du changement de devise quand la carte n'existe pas dans la devise cible (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},
+  "tripSwitchCurrencyConfirmMessage": "Tous les prix du voyage passent en {currency}.",
+  "@tripSwitchCurrencyConfirmMessage": {"description": "Confirmation du changement de devise quand la carte reste possible (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}}
 }

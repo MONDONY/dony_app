@@ -28723,6 +28723,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le code de retrait a expiré : générez-en un nouveau pour l\'ajouter au message.'**
   String get recipientNotifyCodeExpiredHint;
+
+  /// Prix d'étape au-dessus du plafond de la devise du voyage (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Maximum {max} par kilo dans la devise du voyage.'**
+  String tripLegSheetPriceTooHigh(String max);
+
+  /// Prix au kilo d'une étape, devise comprise, dans la liste des étapes (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'{price} par kg'**
+  String tripLegsLegPrice(String price);
+
+  /// Étape dont le prix dépasse le plafond de la devise du voyage (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix au-dessus du plafond en {currency} : modifiez cette étape.'**
+  String tripLegsPriceAboveMax(String currency);
+
+  /// Rappel de la devise du voyage dans la section des étapes (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix des étapes en {currency}, la devise du voyage.'**
+  String tripLegsCurrencyNote(String currency);
+
+  /// Ligne « Devise » de l'aperçu d'un trajet (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise'**
+  String get listingRowLabelCurrency;
+
+  /// Titre de la confirmation avant de changer la devise du voyage (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier en {currency} ?'**
+  String tripSwitchCurrencyConfirmTitle(String currency);
+
+  /// Confirmation du changement de devise quand la carte n'existe pas dans la devise cible (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les prix du voyage passent en {currency} et le paiement par carte ne sera plus proposé.'**
+  String tripSwitchCurrencyConfirmMessageNoCard(String currency);
+
+  /// Confirmation du changement de devise quand la carte reste possible (FLUTTER-GK).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les prix du voyage passent en {currency}.'**
+  String tripSwitchCurrencyConfirmMessage(String currency);
 }
 
 class _AppLocalizationsDelegate
