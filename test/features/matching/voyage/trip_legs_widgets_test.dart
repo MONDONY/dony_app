@@ -9,6 +9,7 @@ import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_leg_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_legs_section.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
@@ -76,7 +77,12 @@ void main() {
     }
   });
 
-  Widget section(TripLegsCubit cubit, {TripLegOrigin? origin}) => localizedApp(
+  Widget section(
+    TripLegsCubit cubit, {
+    TripLegOrigin? origin,
+    bool showStops = false,
+    TripStops? defaultStops,
+  }) => localizedApp(
     Scaffold(
       body: SingleChildScrollView(
         child: BlocProvider.value(
@@ -86,6 +92,8 @@ void main() {
             showPrice: true,
             defaultKg: 15,
             defaultPrice: 7,
+            showStops: showStops,
+            defaultStops: defaultStops,
           ),
         ),
       ),
@@ -148,6 +156,122 @@ void main() {
       expect(leg.departureTime, '10:00');
       expect(leg.deliveryAddress.city, 'Douala');
       expect(find.text('Abidjan → Douala'), findsOneWidget);
+    });
+
+    ChoiceChip chip(WidgetTester t, TripStops stops) =>
+        t.widget<ChoiceChip>(find.byKey(Key('stops-${stops.name}')));
+
+    Future<void> fillLeg(WidgetTester t) async {
+      await t.enterText(find.byKey(const Key('trip-leg-arrival-city')), 'Dou');
+      await t.pumpAndSettle();
+      await t.tap(find.textContaining('Douala').last);
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-date')));
+      await t.pumpAndSettle();
+      await t.tap(find.text('OK'));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-time')));
+      await t.pumpAndSettle();
+      await t.tap(find.text('OK'));
+      await t.pumpAndSettle();
+    }
+
+    // FLUTTER-GE : l'étape avait les escales de la première, sans choix.
+    testWidgets('avion : escales de l\'étape préremplies puis modifiables', (
+      t,
+    ) async {
+      final cubit = _legsCubit();
+      await t.pumpWidget(
+        section(
+          cubit,
+          origin: _origin,
+          showStops: true,
+          defaultStops: TripStops.one,
+        ),
+      );
+      await t.tap(find.byKey(const Key('trip-legs-add')));
+      await t.pumpAndSettle();
+
+      expect(chip(t, TripStops.one).selected, isTrue);
+      await t.tap(find.byKey(const Key('stops-direct')));
+      await t.pump();
+      expect(chip(t, TripStops.direct).selected, isTrue);
+
+      await fillLeg(t);
+      await t.tap(find.byKey(const Key('trip-leg-submit')));
+      await t.pumpAndSettle();
+
+      expect(cubit.state.legs.single.stops, TripStops.direct);
+      expect(find.textContaining('· Direct'), findsOneWidget);
+    });
+
+    testWidgets('étape suivante : escales reprises de l\'étape précédente', (
+      t,
+    ) async {
+      final cubit = _legsCubit()
+        ..add(
+          doualaLeg(
+            date: _origin.arrivalDay.add(const Duration(days: 4)),
+            stops: TripStops.twoOrMore,
+          ),
+        );
+      await t.pumpWidget(
+        section(
+          cubit,
+          origin: _origin,
+          showStops: true,
+          defaultStops: TripStops.direct,
+        ),
+      );
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-legs-add')));
+      await t.pumpAndSettle();
+
+      expect(find.text('Étape 3'), findsOneWidget);
+      expect(chip(t, TripStops.twoOrMore).selected, isTrue);
+      expect(chip(t, TripStops.direct).selected, isFalse);
+    });
+
+    testWidgets('modifier une étape garde ses escales, même non renseignées', (
+      t,
+    ) async {
+      final cubit = _legsCubit()
+        ..add(doualaLeg(date: _origin.arrivalDay.add(const Duration(days: 4))));
+      await t.pumpWidget(
+        section(
+          cubit,
+          origin: _origin,
+          showStops: true,
+          defaultStops: TripStops.one,
+        ),
+      );
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('trip-leg-edit-0')));
+      await t.pumpAndSettle();
+
+      for (final stops in TripStops.values) {
+        expect(chip(t, stops).selected, isFalse);
+      }
+      await t.tap(find.byKey(const Key('stops-one')));
+      await t.pump();
+      await t.tap(find.byKey(const Key('trip-leg-submit')));
+      await t.pumpAndSettle();
+      expect(cubit.state.legs.single.stops, TripStops.one);
+    });
+
+    testWidgets('hors avion : pas d\'escales sur l\'étape', (t) async {
+      final cubit = _legsCubit();
+      await t.pumpWidget(
+        section(cubit, origin: _origin, defaultStops: TripStops.one),
+      );
+      await t.tap(find.byKey(const Key('trip-legs-add')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('stops-chips')), findsNothing);
+
+      await fillLeg(t);
+      await t.tap(find.byKey(const Key('trip-leg-submit')));
+      await t.pumpAndSettle();
+      expect(cubit.state.legs.single.stops, isNull);
     });
 
     testWidgets('modifie puis retire une étape', (t) async {

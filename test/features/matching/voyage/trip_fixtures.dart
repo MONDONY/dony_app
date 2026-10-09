@@ -11,6 +11,7 @@ const kDouala = AddressData(label: 'Douala DLA', lat: 4.0, lng: 9.7);
 AnnouncementCreateRequested firstLeg({
   bool draft = false,
   String pricingMode = 'KG',
+  TripStops? stops,
 }) => AnnouncementCreateRequested(
   departureCity: 'Paris',
   arrivalCity: 'Abidjan',
@@ -24,6 +25,7 @@ AnnouncementCreateRequested firstLeg({
   availableKg: 20,
   pricePerKg: 8,
   transportMode: TransportMode.plane,
+  stops: stops,
   description: 'Bagage soute',
   acceptedContentTypes: const ['CLOTHES'],
   refusedTypes: const ['FOOD'],
@@ -37,15 +39,17 @@ AnnouncementCreateRequested firstLeg({
   currency: 'EUR',
 );
 
-TripLegDraft doualaLeg({DateTime? date, double? price = 6}) => TripLegDraft(
-  arrivalCity: 'Douala',
-  arrivalCountryCode: 'CM',
-  departureDate: date ?? DateTime(2026, 11, 14),
-  departureTime: '09:30',
-  deliveryAddress: kDouala,
-  availableKg: 12,
-  pricePerKg: price,
-);
+TripLegDraft doualaLeg({DateTime? date, double? price = 6, TripStops? stops}) =>
+    TripLegDraft(
+      arrivalCity: 'Douala',
+      arrivalCountryCode: 'CM',
+      departureDate: date ?? DateTime(2026, 11, 14),
+      departureTime: '09:30',
+      deliveryAddress: kDouala,
+      availableKg: 12,
+      pricePerKg: price,
+      stops: stops,
+    );
 
 AnnouncementModel legModel({
   required String id,
@@ -84,5 +88,6 @@ abstract final class TripLegDraftCopy {
         deliveryAddress: leg.deliveryAddress,
         availableKg: leg.availableKg,
         pricePerKg: leg.pricePerKg,
+        stops: leg.stops,
       );
 }

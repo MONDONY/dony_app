@@ -6,7 +6,9 @@ import 'package:dony/features/city/data/recent_city_store.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/address_selector_field.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,7 +19,8 @@ import 'package:intl/intl.dart';
 ///
 /// La ville de départ est imposée ([origin]) : c'est l'arrivée de l'étape
 /// précédente. Le reste du trajet (mode de transport, contenus, paiements,
-/// devise) est repris du premier trajet à la publication.
+/// devise) est repris du premier trajet à la publication. Les escales sont
+/// propres à chaque étape en avion (FLUTTER-GE).
 class TripLegSheet extends StatefulWidget {
   const TripLegSheet({
     super.key,
@@ -26,6 +29,8 @@ class TripLegSheet extends StatefulWidget {
     required this.showPrice,
     this.defaultKg,
     this.defaultPrice,
+    this.showStops = false,
+    this.defaultStops,
     this.onSubmitReady,
     this.onCanSubmitChanged,
   });
@@ -38,6 +43,11 @@ class TripLegSheet extends StatefulWidget {
   final bool showPrice;
   final double? defaultKg;
   final double? defaultPrice;
+
+  /// Trajet en avion : l'étape a son propre choix d'escales (FLUTTER-GE),
+  /// prérempli avec [defaultStops] (celui de l'étape précédente).
+  final bool showStops;
+  final TripStops? defaultStops;
   final void Function(VoidCallback)? onSubmitReady;
   final ValueChanged<bool>? onCanSubmitChanged;
 
@@ -50,6 +60,8 @@ class TripLegSheet extends StatefulWidget {
     required bool showPrice,
     double? defaultKg,
     double? defaultPrice,
+    bool showStops = false,
+    TripStops? defaultStops,
   }) {
     final l = context.l10n;
     VoidCallback? submit;
@@ -79,6 +91,8 @@ class TripLegSheet extends StatefulWidget {
         showPrice: showPrice,
         defaultKg: defaultKg,
         defaultPrice: defaultPrice,
+        showStops: showStops,
+        defaultStops: defaultStops,
         onSubmitReady: (fn) => submit = fn,
         onCanSubmitChanged: (v) => canSubmit.value = v,
       ),
@@ -96,6 +110,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
   late final ValueNotifier<DateTime?> _date;
   late final ValueNotifier<TimeOfDay?> _time;
   late final ValueNotifier<AddressData?> _address;
+  late final ValueNotifier<TripStops?> _stops;
   late final TextEditingController _kgCtrl;
   late final TextEditingController _priceCtrl;
 
@@ -113,6 +128,10 @@ class _TripLegSheetState extends State<TripLegSheet> {
       i != null ? _parseTime(i.departureTime) : null,
     );
     _address = ValueNotifier<AddressData?>(i?.deliveryAddress);
+    // Une étape déjà saisie garde son choix, même « non renseigné ».
+    _stops = ValueNotifier<TripStops?>(
+      i != null ? i.stops : widget.defaultStops,
+    );
     _kgCtrl = TextEditingController(
       text: _formatNumber(i?.availableKg ?? widget.defaultKg),
     );
@@ -150,6 +169,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
     _date.dispose();
     _time.dispose();
     _address.dispose();
+    _stops.dispose();
     _kgCtrl.dispose();
     _priceCtrl.dispose();
     super.dispose();
@@ -200,6 +220,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
       deliveryAddress: address,
       availableKg: kg,
       pricePerKg: price,
+      stops: widget.showStops ? _stops.value : null,
     );
   }
 
@@ -312,6 +333,10 @@ class _TripLegSheetState extends State<TripLegSheet> {
             onTap: _pickTime,
           ),
         ),
+        if (widget.showStops) ...[
+          const SizedBox(height: DonySpacing.md),
+          StopsChips(notifier: _stops),
+        ],
         const SizedBox(height: DonySpacing.md),
         ValueListenableBuilder<AddressData?>(
           valueListenable: _address,

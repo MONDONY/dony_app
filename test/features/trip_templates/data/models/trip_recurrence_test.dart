@@ -1,7 +1,7 @@
 import 'package:dony/features/trip_templates/data/models/trip_recurrence.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Map<String, dynamic> _json({int? arrivalDayOffset}) => {
+Map<String, dynamic> _json({int? arrivalDayOffset, bool? cardAccepted}) => {
   'id': 'r1',
   'departureCity': 'Paris',
   'arrivalCity': 'Dakar',
@@ -17,6 +17,7 @@ Map<String, dynamic> _json({int? arrivalDayOffset}) => {
   'horizonDays': 14,
   'active': true,
   'arrivalDayOffset': ?arrivalDayOffset,
+  'cardAccepted': ?cardAccepted,
 };
 
 void main() {
@@ -30,6 +31,17 @@ void main() {
 
     test('back antérieur à V277 : même jour', () {
       expect(TripRecurrence.fromJson(_json()).arrivalDayOffset, 0);
+    });
+
+    test('FLUTTER-FT : lit le refus de la carte', () {
+      expect(
+        TripRecurrence.fromJson(_json(cardAccepted: false)).cardAccepted,
+        isFalse,
+      );
+    });
+
+    test('back antérieur à V308 : carte acceptée', () {
+      expect(TripRecurrence.fromJson(_json()).cardAccepted, isTrue);
     });
   });
 }
