@@ -6,6 +6,9 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
@@ -41,6 +44,10 @@ class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+class _MockBidAcceptanceBloc
+    extends MockBloc<ace.BidAcceptanceEvent, acs.BidAcceptanceState>
+    implements BidAcceptanceBloc {}
 
 class _MockLocalAuthService extends Mock implements LocalAuthService {}
 
@@ -82,6 +89,7 @@ BidNegotiation _thread({
   BidPaymentMethod? paymentMethod,
   int round = 1,
   String? counterpartyId,
+  DateTime? commissionDueBy,
   List<BidNegotiationMessage> messages = const [
     BidNegotiationMessage(
       id: 'm1',
@@ -124,6 +132,7 @@ BidNegotiation _thread({
   arrivalCity: 'Dakar',
   messages: messages,
   paymentMethod: paymentMethod,
+  commissionDueBy: commissionDueBy,
 );
 
 void main() {
@@ -132,6 +141,7 @@ void main() {
   late _MockNegotiationBloc bloc;
   late _MockPaymentBloc paymentBloc;
   late _MockBidBloc bidBloc;
+  late _MockBidAcceptanceBloc acceptanceBloc;
   late _MockLocalAuthService authService;
   late _MockBox userPrefsBox;
   late _MockPaymentGateway paymentGateway;
@@ -147,6 +157,8 @@ void main() {
     registerFallbackValue(const BidNegotiationFetchRequested('fallback'));
     registerFallbackValue(const PaymentInitial());
     registerFallbackValue(BidInitial());
+    registerFallbackValue(ace.BidAcceptRequested('fallback'));
+    registerFallbackValue(BidRejectRequested('fallback'));
     registerFallbackValue(
       const BidCheckoutPaymentRequested(
         clientSecret: '',
@@ -171,6 +183,11 @@ void main() {
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => bidBloc.close()).thenAnswer((_) async {});
+
+    acceptanceBloc = _MockBidAcceptanceBloc();
+    when(() => acceptanceBloc.state).thenReturn(acs.BidAcceptanceInitial());
+    when(() => acceptanceBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(() => acceptanceBloc.close()).thenAnswer((_) async {});
 
     // Biométrie activée et réussie : `requirePaymentAuth` ne passe jamais par
     // l'écran PIN, aucune route stub n'est nécessaire.
@@ -231,8 +248,11 @@ void main() {
   /// Monte l'écran sur un bloc déjà stubé, pour les tests qui pilotent
   /// eux-mêmes le flux d'états.
   Widget wrapWithBloc() {
-    return BlocProvider<BidNegotiationBloc>.value(
-      value: bloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<BidNegotiationBloc>.value(value: bloc),
+        BlocProvider<BidAcceptanceBloc>.value(value: acceptanceBloc),
+      ],
       child: MaterialApp.router(
         theme: AppTheme.light(),
         localizationsDelegates: const [
@@ -267,8 +287,11 @@ void main() {
   /// discussions : `context.pop(true)` après un paiement réussi a alors bien
   /// quelque chose à dépiler.
   Widget wrapPushed() {
-    return BlocProvider<BidNegotiationBloc>.value(
-      value: bloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<BidNegotiationBloc>.value(value: bloc),
+        BlocProvider<BidAcceptanceBloc>.value(value: acceptanceBloc),
+      ],
       child: MaterialApp.router(
         theme: AppTheme.light(),
         localizationsDelegates: const [
@@ -295,6 +318,23 @@ void main() {
               path: '/thread',
               builder: (_, _) =>
                   const BidNegotiationThreadScreen(bidId: 'bid1'),
+            ),
+            GoRoute(
+              path: '/bids/:bidId/accepted',
+              builder: (_, state) => Scaffold(
+                body: Text('accepted:${state.pathParameters['bidId']}'),
+              ),
+            ),
+            GoRoute(
+              path: '/payments/wallet/topup/method',
+              builder: (_, _) => Scaffold(
+                body: Builder(
+                  builder: (inner) => TextButton(
+                    onPressed: () => inner.pop(true),
+                    child: const Text('Rechargé'),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -882,6 +922,370 @@ void main() {
         find.byKey(const Key('nego-awaiting-traveler-hint')),
         findsOneWidget,
       );
+    });
+  });
+
+  // ── Accord en espèces : le voyageur règle la commission (FLUTTER-H7) ──────
+
+  group('reglement de la commission d un accord en especes', () {
+    BidNegotiation cashTraveler({DateTime? commissionDueBy}) => _thread(
+      status: 'PENDING',
+      myTurn: false,
+      netEur: 37,
+      paymentMethod: BidPaymentMethod.cash,
+      commissionDueBy: commissionDueBy,
+    );
+
+    /// Écran poussé (pour que `pop(true)` ait une page à dépiler), flux
+    /// d'états de l'acceptation et du refus pilotés par le test.
+    Future<
+      (StreamController<acs.BidAcceptanceState>, StreamController<BidState>)
+    >
+    pumpPushed(WidgetTester tester, BidNegotiation thread) async {
+      final acceptance = StreamController<acs.BidAcceptanceState>.broadcast();
+      final bids = StreamController<BidState>.broadcast();
+      addTearDown(acceptance.close);
+      addTearDown(bids.close);
+      when(() => acceptanceBloc.stream).thenAnswer((_) => acceptance.stream);
+      when(() => bidBloc.stream).thenAnswer((_) => bids.stream);
+      whenListen(
+        bloc,
+        const Stream<BidNegotiationState>.empty(),
+        initialState: BidNegotiationLoaded(thread),
+      );
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(wrapPushed());
+      await tester.pump(_kSettle);
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+      return (acceptance, bids);
+    }
+
+    testWidgets('voyageur : bouton, montant et echeance de la commission', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          cashTraveler(
+            commissionDueBy: DateTime.now().toUtc().add(
+              const Duration(hours: 5),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const Key('nego-settle-commission-btn')),
+        findsOneWidget,
+      );
+      expect(find.text('Régler la commission'), findsOneWidget);
+      expect(find.byKey(const Key('nego-decline-parcel-btn')), findsOneWidget);
+      expect(find.text('Refuser le colis'), findsOneWidget);
+      // Brut 42 − net 37 : la commission que le serveur prélèvera.
+      final amount = tester.widget<Text>(
+        find.byKey(const Key('nego-cash-commission-amount')),
+      );
+      expect(amount.data, startsWith('Commission Yadony : 5'));
+      expect(
+        find.byKey(const Key('nego-cash-commission-countdown')),
+        findsOneWidget,
+      );
+      // Le bandeau garde son texte, cohérent avec le bouton.
+      expect(
+        find.text(
+          'Prix accepté. Paiement en espèces, il vous reste à régler la '
+          'commission Yadony.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('serveur ancien : pas d echeance, pas de compte a rebours', (
+      tester,
+    ) async {
+      await pumpScreen(tester, BidNegotiationLoaded(cashTraveler()));
+
+      expect(
+        find.byKey(const Key('nego-settle-commission-btn')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('nego-cash-commission-countdown')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('expediteur : aucun bouton de reglement', (tester) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(_thread(status: 'PENDING', myTurn: false)),
+      );
+
+      expect(find.byKey(const Key('nego-settle-commission-btn')), findsNothing);
+      expect(find.byKey(const Key('nego-decline-parcel-btn')), findsNothing);
+    });
+
+    testWidgets('hors attente de reglement : aucun bouton', (tester) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(status: 'ACCEPTED', myTurn: false, netEur: 37),
+        ),
+      );
+
+      expect(find.byKey(const Key('nego-settle-commission-btn')), findsNothing);
+    });
+
+    testWidgets('regler : authentification puis prelevement', (tester) async {
+      await pumpScreen(tester, BidNegotiationLoaded(cashTraveler()));
+
+      await tester.tap(find.byKey(const Key('nego-settle-commission-btn')));
+      await tester.pump(_kSettle);
+
+      verify(() => authService.authenticateWithBiometric()).called(1);
+      final sent = verify(
+        () => acceptanceBloc.add(captureAny()),
+      ).captured.whereType<ace.BidAcceptRequested>().toList();
+      expect(sent, hasLength(1));
+      expect(sent.single.bidId, 'bid1');
+      expect(sent.single.fundingCurrency, isNull);
+    });
+
+    testWidgets('authentification refusee : rien n est preleve', (
+      tester,
+    ) async {
+      when(
+        () => userPrefsBox.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(false);
+      when(() => authService.isPinSet()).thenAnswer((_) async => true);
+
+      final (acceptance, _) = await pumpPushed(tester, cashTraveler());
+      expect(acceptance.hasListener, isTrue);
+
+      // Le PIN existe : requirePaymentAuth ouvre sa saisie, absente de ce
+      // routeur de test. La page d'erreur de GoRouter se ferme sans valeur,
+      // ce qui vaut refus.
+      await tester.tap(find.byKey(const Key('nego-settle-commission-btn')));
+      await tester.pump(_kSettle);
+      final nav = tester.state<NavigatorState>(find.byType(Navigator).last);
+      nav.pop();
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      verifyNever(() => acceptanceBloc.add(any()));
+    });
+
+    testWidgets('pendant le prelevement les deux gestes sont desactives', (
+      tester,
+    ) async {
+      when(() => acceptanceBloc.state).thenReturn(acs.BidAccepting());
+      await pumpScreen(tester, BidNegotiationLoaded(cashTraveler()));
+
+      final button = tester.widget<DonyButton>(
+        find.byKey(const Key('nego-settle-commission-btn')),
+      );
+      expect(button.onPressed, isNull);
+      expect(button.isLoading, isTrue);
+      final decline = tester.widget<TextButton>(
+        find.byKey(const Key('nego-decline-parcel-btn')),
+      );
+      expect(decline.onPressed, isNull);
+    });
+
+    testWidgets('solde insuffisant : recharge puis nouvelle tentative', (
+      tester,
+    ) async {
+      final (acceptance, _) = await pumpPushed(tester, cashTraveler());
+
+      acceptance.add(
+        acs.BidWalletInsufficient(
+          availableBalance: 1,
+          requiredCommission: 5,
+          hasCard: false,
+          bidId: 'bid1',
+          currency: 'EUR',
+        ),
+      );
+      await tester.pump();
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      // Feuille partagée avec le fil de demande de colis.
+      expect(find.text('Solde insuffisant'), findsOneWidget);
+      await tester.tap(find.textContaining('Recharger'));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      await tester.tap(find.text('Rechargé'));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      final sent = verify(
+        () => acceptanceBloc.add(captureAny()),
+      ).captured.whereType<ace.BidAcceptRequested>().toList();
+      expect(sent, hasLength(1));
+      expect(sent.single.bidId, 'bid1');
+    });
+
+    testWidgets('solde insuffisant avec carte : repli carte', (tester) async {
+      final (acceptance, _) = await pumpPushed(tester, cashTraveler());
+
+      acceptance.add(
+        acs.BidWalletInsufficient(
+          availableBalance: 1,
+          requiredCommission: 5,
+          hasCard: true,
+          bidId: 'bid1',
+          currency: 'EUR',
+        ),
+      );
+      await tester.pump();
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      await tester.tap(find.text('Payer par carte'));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      final sent = verify(
+        () => acceptanceBloc.add(captureAny()),
+      ).captured.whereType<ace.BidAcceptWithCardRequested>().toList();
+      expect(sent, hasLength(1));
+      expect(sent.single.bidId, 'bid1');
+    });
+
+    testWidgets('commission reglee : fil relu et ecran de succes', (
+      tester,
+    ) async {
+      final (acceptance, _) = await pumpPushed(tester, cashTraveler());
+
+      acceptance.add(acs.BidAccepted());
+      await tester.pump();
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      expect(find.text('accepted:bid1'), findsOneWidget);
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<BidNegotiationFetchRequested>().having(
+              (e) => e.bidId,
+              'bidId',
+              'bid1',
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('echec du prelevement : message d erreur', (tester) async {
+      final (acceptance, _) = await pumpPushed(tester, cashTraveler());
+
+      acceptance.add(acs.BidFailed(reason: acs.BidFailureReason.refused));
+      await tester.pump();
+      await tester.pump(_kSettle);
+
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.text('Ouvrir'), findsNothing);
+    });
+
+    testWidgets('refuser le colis : motif, refus du bid puis fermeture', (
+      tester,
+    ) async {
+      final (_, bids) = await pumpPushed(tester, cashTraveler());
+
+      await tester.tap(find.byKey(const Key('nego-decline-parcel-btn')));
+      await tester.pump(_kSettle);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.text('Plus assez de place'));
+      await tester.pump(_kSettle);
+      await tester.tap(find.byKey(const Key('reject-reason-confirm')));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      final sent = verify(
+        () => bidBloc.add(captureAny()),
+      ).captured.whereType<BidRejectRequested>().toList();
+      expect(sent, hasLength(1));
+      expect(sent.single.bidId, 'bid1');
+      expect(sent.single.reason, 'NO_CAPACITY');
+
+      bids.add(BidRejected(_FakeBidModel()));
+      await tester.pump();
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      expect(find.text('Ouvrir'), findsOneWidget);
+    });
+
+    testWidgets('refus en erreur : le fil reste ouvert', (tester) async {
+      final (_, bids) = await pumpPushed(tester, cashTraveler());
+
+      bids.add(BidError(const NetworkException('offline')));
+      await tester.pump();
+      await tester.pump(_kSettle);
+
+      expect(find.text('Ouvrir'), findsNothing);
+      expect(
+        find.byKey(const Key('nego-settle-commission-btn')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('accepter le prix en especes garde le fil ouvert', (
+      tester,
+    ) async {
+      final states = StreamController<BidNegotiationState>.broadcast();
+      addTearDown(states.close);
+      whenListen(
+        bloc,
+        states.stream,
+        initialState: BidNegotiationLoaded(
+          _thread(netEur: 37, paymentMethod: BidPaymentMethod.cash),
+        ),
+      );
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(wrapPushed());
+      await tester.pump(_kSettle);
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      states.add(
+        BidNegotiationLoaded(
+          cashTraveler(),
+          action: BidNegotiationAction.accepted,
+        ),
+      );
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      expect(find.text('Ouvrir'), findsNothing);
+      expect(
+        find.byKey(const Key('nego-settle-commission-btn')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('en anglais : bouton et lien traduits', (tester) async {
+      useEnglish();
+      await pumpScreen(tester, BidNegotiationLoaded(cashTraveler()));
+
+      expect(find.text('Pay the service fee'), findsOneWidget);
+      expect(find.text('Decline the parcel'), findsOneWidget);
+      final amount = tester.widget<Text>(
+        find.byKey(const Key('nego-cash-commission-amount')),
+      );
+      expect(amount.data, startsWith('Yadony service fee: '));
     });
   });
 

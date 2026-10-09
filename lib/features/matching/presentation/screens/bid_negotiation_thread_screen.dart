@@ -8,15 +8,25 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/presentation/activity_refresh.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_negotiation_parcel_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/package_request/data/models/nego_entry.dart';
+import 'package:dony/features/package_request/presentation/widgets/commission_settlement_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/nego_archive_actions.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/commission_countdown.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
@@ -112,11 +122,15 @@ class _BidNegotiationThreadScreenState
     if (state is! BidNegotiationLoaded) return;
     switch (state.action) {
       // L'appelant (liste des discussions, détail du colis) doit recharger :
-      // le fil vient de changer d'état pour de bon. Seule exception, l'accord
-      // carte côté expéditeur : le fil reste ouvert, il lui reste à payer.
+      // le fil vient de changer d'état pour de bon. Deux exceptions, où le
+      // fil reste ouvert parce qu'il porte le geste suivant : l'accord carte
+      // côté expéditeur (payer) et l'accord en espèces côté voyageur (régler
+      // la commission, FLUTTER-H7). Le refermer laissait le voyageur sans
+      // aucun bouton, le règlement n'existant que sur le détail du colis.
       case BidNegotiationAction.accepted:
         if (state.negotiation.needsMyPayment) break;
         refreshActivityAfterBidChange(context);
+        if (state.negotiation.needsMyCommissionSettlement) break;
         context.pop(true);
       case BidNegotiationAction.rejected:
       case BidNegotiationAction.cancelled:
@@ -857,6 +871,13 @@ class _ThreadActions extends StatelessWidget {
       );
     }
 
+    if (negotiation.needsMyCommissionSettlement) {
+      return _TravelerCashCommissionActions(
+        negotiation: negotiation,
+        bidId: bidId,
+      );
+    }
+
     if (negotiation.isAwaitingCashSettlement) {
       return hint(
         negotiation.isTravelerView
@@ -975,6 +996,225 @@ class _ThreadActions extends StatelessWidget {
               : l.negotiationThreadClosedExpired,
         _ => l.negotiationThreadClosedDefault,
       };
+}
+
+/// Accord en espèces, vue voyageur (FLUTTER-H7) : le prix est acquis, il
+/// reste au voyageur à régler la commission Yadony avant l'échéance du
+/// serveur, faute de quoi l'accord est annulé (`BidTimeoutScheduler`).
+///
+/// Même parcours que le détail du colis (`TravelerPendingBar` →
+/// `dispatchBidAccept`, branche espèces) : `BidAcceptanceBloc`, fourni par la
+/// route, prélève le portefeuille, gère le 3DS et signale un solde
+/// insuffisant, auquel répond la feuille de recharge partagée avec le fil de
+/// demande de colis. `requirePaymentAuth` passe avant chaque prélèvement.
+///
+/// Le refus du colis reprend l'action de refus du bid (`BidRejectRequested`)
+/// sur un `BidBloc` propre à cette barre : fourni plus haut, il masquerait le
+/// `BidBloc` global que `refreshActivityAfterBidChange` rafraîchit.
+class _TravelerCashCommissionActions extends StatelessWidget {
+  const _TravelerCashCommissionActions({
+    required this.negotiation,
+    required this.bidId,
+  });
+
+  final BidNegotiation negotiation;
+  final String bidId;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider<BidBloc>(
+      create: (_) => getIt<BidBloc>(),
+      child: _TravelerCashCommissionBar(
+        negotiation: negotiation,
+        bidId: bidId,
+        screenContext: context,
+      ),
+    );
+  }
+}
+
+class _TravelerCashCommissionBar extends StatelessWidget {
+  const _TravelerCashCommissionBar({
+    required this.negotiation,
+    required this.bidId,
+    required this.screenContext,
+  });
+
+  final BidNegotiation negotiation;
+  final String bidId;
+
+  /// Contexte au-dessus du `BidBloc` local : c'est lui qui atteint le
+  /// `BidBloc` global des listes et la route du fil.
+  final BuildContext screenContext;
+
+  /// Biométrie ou PIN d'abord (règle des paiements), le prélèvement ensuite.
+  /// `useCard` force la carte de commission, `fundingCurrency` le
+  /// portefeuille d'appoint choisi après un solde insuffisant.
+  Future<void> _settle(
+    BuildContext context, {
+    bool useCard = false,
+    String? fundingCurrency,
+  }) async {
+    final acceptance = context.read<BidAcceptanceBloc>();
+    final authenticated = await requirePaymentAuth(
+      context,
+      authService: getIt<LocalAuthService>(),
+      userPrefs: getIt<HiveService>().userPrefs,
+    );
+    if (!context.mounted) return;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.negotiationThreadPaymentNotConfirmed,
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    acceptance.add(
+      useCard
+          ? ace.BidAcceptWithCardRequested(bidId)
+          : ace.BidAcceptRequested(bidId, fundingCurrency: fundingCurrency),
+    );
+  }
+
+  Future<void> _decline(BuildContext context) async {
+    final bidBloc = context.read<BidBloc>();
+    final reason = await RejectReasonSheet.show(context);
+    if (reason == null || !context.mounted) return;
+    bidBloc.add(BidRejectRequested(bidId, reason: reason.code));
+  }
+
+  void _onAcceptance(BuildContext context, acs.BidAcceptanceState state) {
+    if (state is acs.BidAccepted) {
+      // Commission réglée, colis confirmé : les listes et le fil sont relus,
+      // et l'écran de succès le dit (même écran que « À traiter »).
+      refreshActivityAfterBidChange(screenContext);
+      context.read<BidNegotiationBloc>().add(
+        BidNegotiationFetchRequested(bidId),
+      );
+      unawaited(context.push('/bids/$bidId/accepted'));
+    } else if (state is acs.BidWalletInsufficient) {
+      unawaited(
+        showCommissionSettlementSheet(
+          context,
+          requiredCommission: state.requiredCommission,
+          availableBalance: state.availableBalance,
+          hasCard: state.hasCard,
+          currency: state.currency ?? negotiation.currency,
+          breakdown: state.breakdown,
+          bidCurrency: state.bidCurrency,
+          alternatives: state.alternatives,
+          onRetry: ({required useCard, fundingCurrency}) => unawaited(
+            _settle(
+              context,
+              useCard: useCard,
+              fundingCurrency: fundingCurrency,
+            ),
+          ),
+        ),
+      );
+    } else if (state is acs.BidFailed) {
+      DonySnackbar.show(
+        context,
+        message: state.displayMessage(context.l10n),
+        type: DonySnackbarType.error,
+      );
+    }
+  }
+
+  void _onBid(BuildContext context, BidState state) {
+    if (state is BidRejected) {
+      DonySnackbar.show(context, message: context.l10n.bidListRejectedSnackbar);
+      refreshActivityAfterBidChange(screenContext);
+      screenContext.pop(true);
+    } else if (state is BidError) {
+      unawaited(ErrorPresenter.show(context, state.error));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final commission = negotiation.travelerCommission;
+    final deadline = negotiation.commissionDueBy;
+
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
+          listener: _onAcceptance,
+        ),
+        BlocListener<BidBloc, BidState>(listener: _onBid),
+      ],
+      child: BlocBuilder<BidAcceptanceBloc, acs.BidAcceptanceState>(
+        builder: (context, acceptance) => BlocBuilder<BidBloc, BidState>(
+          builder: (context, bidState) {
+            final settling = acceptance is acs.BidAccepting;
+            final busy = settling || bidState is BidLoading;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DonyNegoStateBanner(
+                  key: const Key('nego-awaiting-traveler-hint'),
+                  message: l.negotiationThreadCashTravelerHint,
+                  iconAsset: 'banknote',
+                  tint: DonyColors.threadStatusOrange,
+                ),
+                if (commission != null) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  Text(
+                    l.negotiationThreadCashCommissionAmount(
+                      formatPriceIn(commission, negotiation.currency),
+                    ),
+                    key: const Key('nego-cash-commission-amount'),
+                    textAlign: TextAlign.center,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+                if (deadline != null) ...[
+                  const SizedBox(height: DonySpacing.xs),
+                  Center(
+                    child: CommissionCountdown(
+                      key: const Key('nego-cash-commission-countdown'),
+                      deadline: deadline,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: DonySpacing.md),
+                DonyButton(
+                  key: const Key('nego-settle-commission-btn'),
+                  label: l.negotiationPayCommissionButton,
+                  iconAsset: 'wallet',
+                  isLoading: settling,
+                  onPressed: busy ? null : () => unawaited(_settle(context)),
+                ),
+                const SizedBox(height: DonySpacing.xs),
+                Center(
+                  child: TextButton(
+                    key: const Key('nego-decline-parcel-btn'),
+                    onPressed: busy ? null : () => unawaited(_decline(context)),
+                    child: Text(
+                      l.negotiationThreadDeclineParcelButton,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
 }
 
 /// Confirmation de l'annulation du fil (FLUTTER-EQ). Les deux boutons vivent

@@ -2086,6 +2086,19 @@
   "@negotiationThreadCashSenderHint": {
     "description": "Accord en espèces, vue expéditeur (bid_negotiation_thread_screen.dart)"
   },
+  "negotiationThreadCashCommissionAmount": "Yadony service fee: {amount}",
+  "@negotiationThreadCashCommissionAmount": {
+    "description": "Montant de la commission à régler, accord en espèces vue voyageur (bid_negotiation_thread_screen.dart, FLUTTER-H7)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadDeclineParcelButton": "Decline the parcel",
+  "@negotiationThreadDeclineParcelButton": {
+    "description": "Lien secondaire pour refuser le colis d'un accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart, FLUTTER-H7)"
+  },
   "negotiationThreadClosedAccepted": "Price accepted. Head to your parcel for what's next.",
   "@negotiationThreadClosedAccepted": {
     "description": "Fil clos, statut ACCEPTED (bid_negotiation_thread_screen.dart)"

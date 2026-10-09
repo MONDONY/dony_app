@@ -164,6 +164,12 @@ class BidNegotiation {
   /// ne le porte pas toujours : `false` par défaut.
   final bool archived;
 
+  /// Accord en espèces en attente du voyageur : heure (UTC) à laquelle le
+  /// serveur l'annulera si la commission n'est pas réglée (yadony-back,
+  /// FLUTTER-H7). Nulle avec un serveur antérieur ou dans tout autre état :
+  /// le fil n'affiche alors pas de compte à rebours.
+  final DateTime? commissionDueBy;
+
   const BidNegotiation({
     required this.bidId,
     required this.announcementId,
@@ -193,6 +199,7 @@ class BidNegotiation {
     this.messages = const [],
     this.paymentMethod,
     this.archived = false,
+    this.commissionDueBy,
   });
 
   factory BidNegotiation.fromJson(Map<String, dynamic> json) => BidNegotiation(
@@ -234,6 +241,7 @@ class BidNegotiation {
       json['paymentMethod'] as String?,
     ),
     archived: json['archived'] as bool? ?? false,
+    commissionDueBy: _asDate(json['commissionDueBy']),
   );
 
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
@@ -273,6 +281,21 @@ class BidNegotiation {
   /// le voyageur qui règle la commission Yadony. L'expéditeur n'a rien à payer
   /// dans l'application.
   bool get isAwaitingCashSettlement => status == 'PENDING';
+
+  /// C'est à moi de régler la commission Yadony : accord en espèces, vu par le
+  /// voyageur (FLUTTER-H7). Le fil porte alors le bouton de règlement.
+  bool get needsMyCommissionSettlement =>
+      isAwaitingCashSettlement && isTravelerView;
+
+  /// Commission Yadony d'un accord, telle que le serveur la prélèvera : la
+  /// différence brut − net (`CashCommissionService.quoteBidCommission`), jamais
+  /// un pourcentage recalculé. Nulle sans net (vue expéditeur) ou sans brut.
+  double? get travelerCommission {
+    final net = netEur;
+    if (net == null || proposedGrossEur <= 0) return null;
+    final commission = proposedGrossEur - net;
+    return commission > 0 ? commission : null;
+  }
 
   /// C'est à moi de payer : accord carte ou mobile money, vu par l'expéditeur.
   bool get needsMyPayment =>

@@ -5878,6 +5878,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Prix accepté. Paiement en espèces, en attente du voyageur, vous n\'avez rien à régler ici.';
 
   @override
+  String negotiationThreadCashCommissionAmount(String amount) {
+    return 'Commission Yadony : $amount';
+  }
+
+  @override
+  String get negotiationThreadDeclineParcelButton => 'Refuser le colis';
+
+  @override
   String get negotiationThreadClosedAccepted =>
       'Prix accepté. Rendez-vous sur votre colis pour la suite.';
 

@@ -9714,6 +9714,18 @@ abstract class AppLocalizations {
   /// **'Prix accepté. Paiement en espèces, en attente du voyageur, vous n\'avez rien à régler ici.'**
   String get negotiationThreadCashSenderHint;
 
+  /// Montant de la commission à régler, accord en espèces vue voyageur (bid_negotiation_thread_screen.dart, FLUTTER-H7)
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission Yadony : {amount}'**
+  String negotiationThreadCashCommissionAmount(String amount);
+
+  /// Lien secondaire pour refuser le colis d'un accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart, FLUTTER-H7)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser le colis'**
+  String get negotiationThreadDeclineParcelButton;
+
   /// Fil clos, statut ACCEPTED (bid_negotiation_thread_screen.dart)
   ///
   /// In fr, this message translates to:

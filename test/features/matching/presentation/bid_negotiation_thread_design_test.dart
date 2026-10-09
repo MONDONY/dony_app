@@ -1,10 +1,16 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_list_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
@@ -25,6 +31,12 @@ class _MockNegotiationBloc
 
 class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
+
+class _MockAcceptanceBloc
+    extends MockBloc<BidAcceptanceEvent, BidAcceptanceState>
+    implements BidAcceptanceBloc {}
+
+class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockRepo extends Mock implements BidNegotiationRepository {}
 
@@ -87,6 +99,7 @@ BidNegotiation _thread({
 void main() {
   late _MockNegotiationBloc bloc;
   late _MockPaymentBloc paymentBloc;
+  late _MockAcceptanceBloc acceptanceBloc;
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
@@ -101,6 +114,15 @@ void main() {
     when(() => paymentBloc.close()).thenAnswer((_) async {});
     if (getIt.isRegistered<PaymentBloc>()) getIt.unregister<PaymentBloc>();
     getIt.registerFactory<PaymentBloc>(() => paymentBloc);
+    // Barre de règlement de la commission (FLUTTER-H7) : accord en espèces
+    // vu par le voyageur.
+    acceptanceBloc = _MockAcceptanceBloc();
+    when(() => acceptanceBloc.state).thenReturn(BidAcceptanceInitial());
+    final bidBloc = _MockBidBloc();
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    when(() => bidBloc.close()).thenAnswer((_) async {});
+    if (getIt.isRegistered<BidBloc>()) getIt.unregister<BidBloc>();
+    getIt.registerFactory<BidBloc>(() => bidBloc);
     final repo = _MockRepo();
     when(() => repo.myNegotiations()).thenAnswer((_) async => []);
     if (getIt.isRegistered<BidNegotiationListBloc>()) {
@@ -113,6 +135,7 @@ void main() {
 
   tearDown(() async {
     await getIt.unregister<PaymentBloc>();
+    await getIt.unregister<BidBloc>();
     await getIt.unregister<BidNegotiationListBloc>();
   });
 
@@ -131,8 +154,11 @@ void main() {
       initialState: BidNegotiationLoaded(thread),
     );
     await tester.pumpWidget(
-      BlocProvider<BidNegotiationBloc>.value(
-        value: bloc,
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<BidNegotiationBloc>.value(value: bloc),
+          BlocProvider<BidAcceptanceBloc>.value(value: acceptanceBloc),
+        ],
         child: MaterialApp.router(
           theme: AppTheme.light(),
           routerConfig: GoRouter(
@@ -369,5 +395,6 @@ void main() {
     );
     expect(banner.iconAsset, 'banknote');
     expect(banner.tint, DonyColors.threadStatusOrange);
+    expect(find.byKey(const Key('nego-settle-commission-btn')), findsOneWidget);
   });
 }

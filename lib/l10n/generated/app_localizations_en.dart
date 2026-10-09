@@ -5850,6 +5850,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Price accepted. Cash payment, awaiting the traveler, you have nothing to pay here.';
 
   @override
+  String negotiationThreadCashCommissionAmount(String amount) {
+    return 'Yadony service fee: $amount';
+  }
+
+  @override
+  String get negotiationThreadDeclineParcelButton => 'Decline the parcel';
+
+  @override
   String get negotiationThreadClosedAccepted =>
       'Price accepted. Head to your parcel for what\'s next.';
 
