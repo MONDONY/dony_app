@@ -54,6 +54,14 @@ void main() {
     expect(c.state.destinationForApi, isNull);
   });
 
+  test('FLUTTER-H9 : un pays choisi derrière « Autre » part en ISO2', () {
+    final c = IntentCubit(repo, analytics)
+      ..selectIntent(UserIntent.sender)
+      ..selectDestination('FR');
+    expect(c.state.isValid, isTrue);
+    expect(c.state.destinationForApi, 'FR');
+  });
+
   blocTest<IntentCubit, IntentFormState>(
     'submit enregistre et trace',
     build: () {

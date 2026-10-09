@@ -9073,6 +9073,8 @@
   "intentDestinationTitle": "Your main destination",
   "intentDestinationHint": "Used to personalise your home screen. You can still send and travel to every country we serve.",
   "intentDestinationOther": "Other",
+  "intentOtherCountrySheetTitle": "Choose your country",
+  "intentOtherCountryNotListed": "My country isn't listed",
   "intentContinue": "Continue",
   "intentSaveError": "We could not save your choice right now.",
   "intentSheetTitle": "What do you do on Yadony?",

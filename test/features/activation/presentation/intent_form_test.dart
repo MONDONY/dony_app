@@ -29,6 +29,7 @@ void main() {
   setUp(() {
     cubit = _MockIntentCubit();
     when(() => cubit.state).thenReturn(const IntentFormState());
+    when(() => cubit.isClosed).thenReturn(false);
   });
 
   Future<void> pump(WidgetTester tester) => tester.pumpWidget(
@@ -205,9 +206,16 @@ void main() {
     await pump(tester);
     await tester.tap(find.byKey(const Key('intent-option-traveler')));
     await tester.tap(find.byKey(const Key('intent-destination-CI')));
-    await tester.tap(find.byKey(const Key('intent-destination-OTHER')));
     verify(() => cubit.selectIntent(UserIntent.traveler)).called(1);
     verify(() => cubit.selectDestination('CI')).called(1);
+    // « Autre » ouvre le sélecteur ; le fermer sans choisir garde « Autre »
+    // sans pays précis (comportement d'avant FLUTTER-H9).
+    await tester.tap(find.byKey(const Key('intent-destination-OTHER')));
+    await tester.pumpAndSettle();
+    expect(find.text('Choisissez votre pays'), findsOneWidget);
+    verifyNever(() => cubit.selectDestination(kIntentOtherDestination));
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
     verify(() => cubit.selectDestination(kIntentOtherDestination)).called(1);
   });
 
@@ -222,5 +230,168 @@ void main() {
       tester.getSemantics(find.byKey(const Key('intent-option-both'))),
       isSemantics(isSelected: true, isButton: true),
     );
+  });
+
+  group('FLUTTER-H9 : « Autre » ouvre un sélecteur de pays', () {
+    late _MockRepo repo;
+    late _MockAnalytics analytics;
+
+    setUp(() {
+      registerFallbackValue(UserIntent.sender);
+      registerFallbackValue(IntentSource.signup);
+      repo = _MockRepo();
+      analytics = _MockAnalytics();
+      when(
+        () => repo.declareIntent(
+          intent: any(named: 'intent'),
+          destinationCountry: any(named: 'destinationCountry'),
+          source: any(named: 'source'),
+        ),
+      ).thenAnswer((_) async {});
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+    });
+
+    Future<IntentCubit> pumpReal(
+      WidgetTester tester, {
+      UserIntent? intent,
+      String? destination,
+    }) async {
+      final real = IntentCubit(
+        repo,
+        analytics,
+        initialIntent: intent,
+        initialDestination: destination,
+      );
+      addTearDown(real.close);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('fr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: BlocProvider<IntentCubit>.value(
+              value: real,
+              child: const SingleChildScrollView(child: IntentForm()),
+            ),
+          ),
+        ),
+      );
+      return real;
+    }
+
+    Future<void> openOther(WidgetTester tester) async {
+      final other = find.byKey(const Key('intent-destination-OTHER'));
+      await tester.ensureVisible(other);
+      await tester.tap(other);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('choisir France envoie FR et la puce affiche le pays', (
+      tester,
+    ) async {
+      final real = await pumpReal(tester);
+      await tester.tap(find.byKey(const Key('intent-option-sender')));
+      await openOther(tester);
+      await tester.enterText(
+        find.byKey(const Key('intent-other-country-search')),
+        'fra',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('intent-other-country-FR')));
+      await tester.pumpAndSettle();
+
+      expect(real.state.destination, 'FR');
+      expect(real.state.destinationForApi, 'FR');
+      expect(find.text('🇫🇷 France'), findsOneWidget);
+      expect(find.text('Autre'), findsNothing);
+      expect(
+        tester.getSemantics(find.byKey(const Key('intent-destination-OTHER'))),
+        isSemantics(isSelected: true, isButton: true),
+      );
+
+      await real.submit(IntentSource.settings);
+      verify(
+        () => repo.declareIntent(
+          intent: UserIntent.sender,
+          destinationCountry: 'FR',
+          source: IntentSource.settings,
+        ),
+      ).called(1);
+    });
+
+    testWidgets('une intention FR existante se réaffiche sur « Autre »', (
+      tester,
+    ) async {
+      await pumpReal(tester, intent: UserIntent.both, destination: 'FR');
+      expect(find.text('🇫🇷 France'), findsOneWidget);
+      expect(
+        tester.getSemantics(find.byKey(const Key('intent-destination-OTHER'))),
+        isSemantics(isSelected: true, isButton: true),
+      );
+      expect(
+        tester.getSemantics(find.byKey(const Key('intent-destination-SN'))),
+        isSemantics(isSelected: false, isButton: true),
+      );
+      // Rouverte, la feuille coche le pays courant.
+      await openOther(tester);
+      final tile = tester.widget<ListTile>(
+        find.byKey(const Key('intent-other-country-FR')),
+      );
+      expect(tile.selected, isTrue);
+    });
+
+    testWidgets('fermer sans choisir garde le pays déjà choisi', (
+      tester,
+    ) async {
+      final real = await pumpReal(tester, destination: 'CH');
+      await openOther(tester);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(real.state.destination, 'CH');
+      expect(find.text('🇨🇭 Suisse'), findsOneWidget);
+    });
+
+    testWidgets('fermer sans choisir depuis un pays listé retient « Autre »', (
+      tester,
+    ) async {
+      final real = await pumpReal(tester, destination: 'SN');
+      await openOther(tester);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(real.state.destination, kIntentOtherDestination);
+      expect(real.state.destinationForApi, isNull);
+      expect(find.text('Autre'), findsOneWidget);
+    });
+
+    testWidgets('on peut rechanger puis revenir à « Autre » sans pays', (
+      tester,
+    ) async {
+      final real = await pumpReal(tester, destination: 'FR');
+      await openOther(tester);
+      await tester.enterText(
+        find.byKey(const Key('intent-other-country-search')),
+        'canada',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('intent-other-country-CA')));
+      await tester.pumpAndSettle();
+      expect(real.state.destination, 'CA');
+      expect(find.text('🇨🇦 Canada'), findsOneWidget);
+
+      await openOther(tester);
+      await tester.enterText(
+        find.byKey(const Key('intent-other-country-search')),
+        'zzz',
+      );
+      await tester.pump();
+      await tester.tap(
+        find.byKey(const Key('intent-other-country-not-listed')),
+      );
+      await tester.pumpAndSettle();
+      expect(real.state.destination, kIntentOtherDestination);
+      expect(find.text('Autre'), findsOneWidget);
+    });
   });
 }

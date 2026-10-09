@@ -3,6 +3,7 @@ import 'package:dony/core/phone/phone_country.dart';
 import 'package:dony/core/utils/text_search.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
+import 'package:dony/features/activation/presentation/widgets/intent_other_country_sheet.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -98,23 +99,49 @@ class IntentForm extends StatelessWidget {
             for (final code in orderedIntentDestinations(l))
               DonyChip(
                 key: Key('intent-destination-$code'),
-                label:
-                    '${phoneCountryForCode(code)?.flag ?? ''} ${countryName(l, code)}'
-                        .trim(),
+                label: _countryLabel(l, code),
                 selected: state.destination == code,
                 onTap: () => cubit.selectDestination(code),
               ),
             DonyChip(
               key: const Key('intent-destination-$kIntentOtherDestination'),
-              label: l.intentDestinationOther,
-              selected: state.destination == kIntentOtherDestination,
-              onTap: () => cubit.selectDestination(kIntentOtherDestination),
+              label: isIntentOtherCountry(state.destination)
+                  ? _countryLabel(l, state.destination!)
+                  : l.intentDestinationOther,
+              selected:
+                  state.destination == kIntentOtherDestination ||
+                  isIntentOtherCountry(state.destination),
+              onTap: () => _pickOtherCountry(context, cubit),
             ),
           ],
         ),
       ],
     );
   }
+}
+
+/// Drapeau + nom localisé d'un pays.
+String _countryLabel(AppLocalizations l, String code) =>
+    '${phoneCountryForCode(code)?.flag ?? ''} ${countryName(l, code)}'.trim();
+
+/// « Autre » ouvre le sélecteur des 24 autres pays du catalogue (FLUTTER-H9).
+/// Fermer sans choisir garde un pays déjà choisi derrière « Autre » ; sinon
+/// « Autre » est retenu sans pays précis (comportement d'avant).
+Future<void> _pickOtherCountry(BuildContext context, IntentCubit cubit) async {
+  final current = cubit.state.destination;
+  final picked = await IntentOtherCountrySheet.show(
+    context,
+    selectedCode:
+        isIntentOtherCountry(current) || current == kIntentOtherDestination
+        ? current
+        : null,
+  );
+  if (cubit.isClosed) return;
+  final latest = cubit.state.destination;
+  cubit.selectDestination(
+    picked ??
+        (isIntentOtherCountry(latest) ? latest! : kIntentOtherDestination),
+  );
 }
 
 class _IntentOption extends StatelessWidget {
