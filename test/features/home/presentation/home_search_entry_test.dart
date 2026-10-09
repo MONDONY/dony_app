@@ -61,6 +61,7 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/mock_recent_city_store.dart';
+import '../../../helpers/money_test_doubles.dart';
 
 const _emptyHelpConfigJson = '''
 {"schemaVersion": 1, "socialLinks": [], "tutorials": []}
@@ -300,6 +301,7 @@ void main() {
       () => _FakeContentCategoryRepository(),
     );
     registerFakeRecentCityStore();
+    registerFakeMoneyOverview();
 
     final summary = MockTripsSummaryCubit();
     const summaryState = TripsSummaryState.loaded(

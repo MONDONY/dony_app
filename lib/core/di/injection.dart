@@ -166,6 +166,9 @@ import 'package:dony/features/payments/data/datasources/payment_remote_datasourc
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/mobile_money_account_repository.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
+import 'package:dony/features/payments/money/data/datasources/money_remote_datasource.dart';
+import 'package:dony/features/payments/money/data/repositories/money_repository.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_active_currency_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
@@ -640,6 +643,25 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PaymentBloc(getIt<PaymentRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<PaymentGateway>(() => StripePaymentGateway());
+
+  // Mon argent (FLUTTER-HV)
+  getIt.registerLazySingleton<MoneyRemoteDatasource>(
+    () => MoneyRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<MoneyRepository>(
+    () => MoneyRepository(getIt<MoneyRemoteDatasource>()),
+  );
+  // param1 `true` : pastille de l'en-tête de l'accueil (pas de repli sur le
+  // portefeuille, pas d'événement de consultation). `false` : l'écran.
+  getIt.registerFactoryParam<MoneyOverviewBloc, bool, void>(
+    (header, _) => MoneyOverviewBloc(
+      getIt<MoneyRepository>(),
+      getIt<WalletRepository>(),
+      getIt<AnalyticsService>(),
+      fallbackToWallet: !header,
+      trackViews: !header,
+    ),
+  );
 
   // Wallet
   getIt.registerLazySingleton<WalletRemoteDatasource>(

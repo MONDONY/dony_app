@@ -17785,4 +17785,166 @@ class AppLocalizationsFr extends AppLocalizations {
   String tripLegsPaymentSummary(String methods) {
     return 'Paiement : $methods';
   }
+
+  @override
+  String get moneyTitle => 'Mon argent';
+
+  @override
+  String get moneyHeaderSemantics => 'Mon argent';
+
+  @override
+  String moneyHeaderSemanticsUpcoming(String amount) {
+    return 'Mon argent : $amount à venir';
+  }
+
+  @override
+  String get moneyAvailableLabel => 'Disponible';
+
+  @override
+  String get moneyBlockedLabel => 'Bloqué jusqu\'à livraison';
+
+  @override
+  String moneyBlockedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis en séquestre',
+      one: '1 colis en séquestre',
+      zero: 'Aucun colis en séquestre',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moneyWhenSection => 'Quand mon argent arrive';
+
+  @override
+  String get moneySenderSection => 'Mes envois';
+
+  @override
+  String get moneyHistoryLink => 'Historique des mouvements';
+
+  @override
+  String get moneyEmptyTitle => 'Rien en attente';
+
+  @override
+  String get moneyEmptyBody =>
+      'Quand un colis vous sera payé, vous verrez ici quand l\'argent arrive.';
+
+  @override
+  String get moneyUnavailableTitle => 'Bientôt disponible';
+
+  @override
+  String get moneyUnavailableBody =>
+      'Le suivi de l\'argent en séquestre arrive bientôt. Votre solde reste consultable ci-dessus.';
+
+  @override
+  String get moneyStepPaid => 'Payé';
+
+  @override
+  String get moneyStepHandedOver => 'Remis';
+
+  @override
+  String get moneyStepDelivered => 'Livré';
+
+  @override
+  String get moneyStepPaidOut => 'Versé';
+
+  @override
+  String moneyTimelineSemantics(int step, int total, String label) {
+    return 'Étape $step sur $total, $label';
+  }
+
+  @override
+  String moneyItemWeight(String weight) {
+    return '$weight kg';
+  }
+
+  @override
+  String moneyItemDeparture(String date) {
+    return 'départ $date';
+  }
+
+  @override
+  String get moneyOpenParcelHint => 'Ouvrir le colis';
+
+  @override
+  String get moneyReleaseOnDelivery =>
+      'Versé quand le destinataire confirme la livraison';
+
+  @override
+  String moneyReleaseAuto(String date) {
+    return 'Versé automatiquement le $date si aucun litige';
+  }
+
+  @override
+  String get moneyReleaseDispute =>
+      'En litige : l\'équipe Yadony décide avant tout versement';
+
+  @override
+  String get moneyReleaseReview =>
+      'Versement en cours de vérification par l\'équipe Yadony';
+
+  @override
+  String get moneyReleaseProcessing => 'Livré : versement en cours';
+
+  @override
+  String moneyReleased(String date) {
+    return 'Versé le $date';
+  }
+
+  @override
+  String get moneyReleasedNoDate => 'Versé';
+
+  @override
+  String get moneyRefundToSender =>
+      'Annulé : remboursement en cours à l\'expéditeur';
+
+  @override
+  String get moneyCashTraveler => 'Payé en espèces à la remise';
+
+  @override
+  String get moneyCashSender => 'À régler en espèces à la remise';
+
+  @override
+  String get moneyCashCommissionSettled => 'commission réglée';
+
+  @override
+  String get moneyCashCommissionPending => 'commission en attente';
+
+  @override
+  String get moneyCashCommissionRefunded => 'commission remboursée';
+
+  @override
+  String get moneySenderOnDelivery =>
+      'Bloqué jusqu\'à la livraison, puis versé au voyageur';
+
+  @override
+  String moneySenderAuto(String date) {
+    return 'Versé au voyageur le $date si aucun litige';
+  }
+
+  @override
+  String get moneySenderDispute => 'En litige : l\'équipe Yadony décide';
+
+  @override
+  String get moneySenderReview =>
+      'En cours de vérification par l\'équipe Yadony';
+
+  @override
+  String get moneySenderProcessing => 'Livré : versement au voyageur en cours';
+
+  @override
+  String get moneySenderRefundPending => 'Remboursement en cours';
+
+  @override
+  String moneySenderRefunded(String date) {
+    return 'Remboursé le $date';
+  }
+
+  @override
+  String get moneySenderRefundedNoDate => 'Remboursé';
+
+  @override
+  String get moneyUnknownState => 'Statut en cours de mise à jour';
 }

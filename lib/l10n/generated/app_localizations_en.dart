@@ -17671,4 +17671,165 @@ class AppLocalizationsEn extends AppLocalizations {
   String tripLegsPaymentSummary(String methods) {
     return 'Payment: $methods';
   }
+
+  @override
+  String get moneyTitle => 'My money';
+
+  @override
+  String get moneyHeaderSemantics => 'My money';
+
+  @override
+  String moneyHeaderSemanticsUpcoming(String amount) {
+    return 'My money: $amount coming';
+  }
+
+  @override
+  String get moneyAvailableLabel => 'Available';
+
+  @override
+  String get moneyBlockedLabel => 'Held until delivery';
+
+  @override
+  String moneyBlockedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels in escrow',
+      one: '1 parcel in escrow',
+      zero: 'No parcel in escrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moneyWhenSection => 'When my money arrives';
+
+  @override
+  String get moneySenderSection => 'My shipments';
+
+  @override
+  String get moneyHistoryLink => 'Transaction history';
+
+  @override
+  String get moneyEmptyTitle => 'Nothing pending';
+
+  @override
+  String get moneyEmptyBody =>
+      'When a parcel is paid to you, you\'ll see here when the money arrives.';
+
+  @override
+  String get moneyUnavailableTitle => 'Coming soon';
+
+  @override
+  String get moneyUnavailableBody =>
+      'Tracking of money in escrow is coming soon. Your balance is shown above.';
+
+  @override
+  String get moneyStepPaid => 'Paid';
+
+  @override
+  String get moneyStepHandedOver => 'Handed over';
+
+  @override
+  String get moneyStepDelivered => 'Delivered';
+
+  @override
+  String get moneyStepPaidOut => 'Paid out';
+
+  @override
+  String moneyTimelineSemantics(int step, int total, String label) {
+    return 'Step $step of $total, $label';
+  }
+
+  @override
+  String moneyItemWeight(String weight) {
+    return '$weight kg';
+  }
+
+  @override
+  String moneyItemDeparture(String date) {
+    return 'departs $date';
+  }
+
+  @override
+  String get moneyOpenParcelHint => 'Open the parcel';
+
+  @override
+  String get moneyReleaseOnDelivery =>
+      'Paid out when the recipient confirms delivery';
+
+  @override
+  String moneyReleaseAuto(String date) {
+    return 'Paid out automatically on $date if there is no dispute';
+  }
+
+  @override
+  String get moneyReleaseDispute =>
+      'In dispute: the Yadony team decides before any payout';
+
+  @override
+  String get moneyReleaseReview => 'Payout under review by the Yadony team';
+
+  @override
+  String get moneyReleaseProcessing => 'Delivered: payout in progress';
+
+  @override
+  String moneyReleased(String date) {
+    return 'Paid out on $date';
+  }
+
+  @override
+  String get moneyReleasedNoDate => 'Paid out';
+
+  @override
+  String get moneyRefundToSender =>
+      'Cancelled: refund to the sender in progress';
+
+  @override
+  String get moneyCashTraveler => 'Paid in cash at handover';
+
+  @override
+  String get moneyCashSender => 'To be paid in cash at handover';
+
+  @override
+  String get moneyCashCommissionSettled => 'commission settled';
+
+  @override
+  String get moneyCashCommissionPending => 'commission pending';
+
+  @override
+  String get moneyCashCommissionRefunded => 'commission refunded';
+
+  @override
+  String get moneySenderOnDelivery =>
+      'Held until delivery, then paid to the traveler';
+
+  @override
+  String moneySenderAuto(String date) {
+    return 'Paid to the traveler on $date if there is no dispute';
+  }
+
+  @override
+  String get moneySenderDispute => 'In dispute: the Yadony team decides';
+
+  @override
+  String get moneySenderReview => 'Under review by the Yadony team';
+
+  @override
+  String get moneySenderProcessing =>
+      'Delivered: payout to the traveler in progress';
+
+  @override
+  String get moneySenderRefundPending => 'Refund in progress';
+
+  @override
+  String moneySenderRefunded(String date) {
+    return 'Refunded on $date';
+  }
+
+  @override
+  String get moneySenderRefundedNoDate => 'Refunded';
+
+  @override
+  String get moneyUnknownState => 'Status being updated';
 }

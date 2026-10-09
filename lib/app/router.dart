@@ -136,6 +136,9 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/presentation/screens/commission_method_screen.dart';
+import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
+import 'package:dony/features/payments/money/presentation/screens/money_overview_screen.dart';
+import 'package:dony/features/payments/money/presentation/widgets/money_header_button.dart';
 import 'package:dony/features/payments/presentation/screens/mobile_money_account_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
@@ -1009,6 +1012,16 @@ final appRouter = GoRouter(
           child: PaymentScreen(bid: bid),
         );
       },
+    ),
+    // ── Mon argent (hors shell, FLUTTER-HV) ──────────────────────────────
+    GoRoute(
+      path: kMoneyOverviewRoute,
+      builder: (context, state) => BlocProvider(
+        create: (_) =>
+            getIt<MoneyOverviewBloc>(param1: false)
+              ..add(const MoneyOverviewLoadRequested()),
+        child: const MoneyOverviewScreen(),
+      ),
     ),
     // ── Wallet (hors shell) ──────────────────────────────────────────────
     GoRoute(
