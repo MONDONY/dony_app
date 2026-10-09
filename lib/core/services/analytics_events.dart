@@ -326,6 +326,11 @@ abstract final class AnalyticsEvents {
   /// Changement de portefeuille actif depuis l'écran Portefeuille
   /// (FLUTTER-8F). Propriétés `from` et `to` : codes devise, aucun montant.
   static const walletActiveCurrencySwitched = 'wallet_active_currency_switched';
+
+  /// Écran « Mon argent » chargé (FLUTTER-HV), une fois par ouverture.
+  /// Propriétés `traveler_items`, `sender_items` (nombres de colis listés) et
+  /// `legacy_backend` (back sans l'aperçu : soldes seuls). Aucun montant.
+  static const moneyOverviewViewed = 'money_overview_viewed';
   static const phoneVisibilityToggled = 'phone_visibility_toggled';
   static const userBlocked = 'user_blocked';
   static const userUnblocked = 'user_unblocked';
