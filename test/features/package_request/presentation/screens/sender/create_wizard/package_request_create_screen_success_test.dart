@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/config/pro_flag.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -12,6 +14,7 @@ import 'package:dony/features/package_request/bloc/package_request_form_event.da
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
@@ -633,6 +636,40 @@ void main() {
       expect(find.text('Aperçu de votre demande'), findsOneWidget);
       expect(find.byKey(const Key('preview-publish')), findsOneWidget);
       expect(find.byKey(const Key('preview-save-draft')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'aperçu : devise du formulaire (XOF), jamais la devise active (USD) — '
+    'FLUTTER-HB',
+    (tester) async {
+      registerCurrencyPreference('USD');
+      await driveToStep3(tester);
+
+      capturedBloc
+        ..add(const PackageRequestCurrencyChanged(SupportedCurrency.xof))
+        // Passer en CFA coche le mobile money ; sans compte actif, la CTA
+        // resterait désactivée.
+        ..add(
+          const PackageRequestPaymentMethodToggled(PaymentMethod.mobileMoney),
+        )
+        ..add(const PackageRequestTotalBudgetChanged(6500));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Aperçu'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Aperçu de votre demande'), findsOneWidget);
+      final expected = CurrencyFormatter.formatOrPlain(
+        6500,
+        SupportedCurrency.xof,
+      );
+      expect(expected, contains('F CFA'));
+      expect(
+        find.textContaining('Budget indicatif : $expected'),
+        findsOneWidget,
+      );
+      expect(find.textContaining(r'$'), findsNothing);
     },
   );
 

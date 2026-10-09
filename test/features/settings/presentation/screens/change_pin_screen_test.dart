@@ -10,21 +10,23 @@ import '../../../../helpers/l10n_test_helpers.dart';
 class MockLocalAuthService extends Mock implements LocalAuthService {}
 
 /// Router avec une route parente pour permettre context.pop() depuis /change-pin.
-GoRouter _router(MockLocalAuthService svc) => GoRouter(
-  initialLocation: '/change-pin',
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (_, _) => const Scaffold(body: Text('Parent')),
+GoRouter _router(MockLocalAuthService svc, {bool isCreation = false}) =>
+    GoRouter(
+      initialLocation: '/change-pin',
       routes: [
         GoRoute(
-          path: 'change-pin',
-          builder: (_, _) => ChangePinScreen(authService: svc),
+          path: '/',
+          builder: (_, _) => const Scaffold(body: Text('Parent')),
+          routes: [
+            GoRoute(
+              path: 'change-pin',
+              builder: (_, _) =>
+                  ChangePinScreen(authService: svc, isCreation: isCreation),
+            ),
+          ],
         ),
       ],
-    ),
-  ],
-);
+    );
 
 void main() {
   late MockLocalAuthService svc;
@@ -210,5 +212,74 @@ void main() {
     await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
     expect(find.text('Incorrect code'), findsOneWidget);
+  });
+
+  group('indicateur d\'étapes (FLUTTER-H8)', () {
+    Finder dot(int idx) => find.byKey(ValueKey('pin_step_dot_$idx'));
+
+    bool isActive(WidgetTester tester, int idx) {
+      final container = tester.widget<AnimatedContainer>(
+        find.descendant(of: dot(idx), matching: find.byType(AnimatedContainer)),
+      );
+      final color = (container.decoration! as BoxDecoration).color;
+      final primary = Theme.of(tester.element(dot(idx))).colorScheme.primary;
+      return color == primary;
+    }
+
+    Future<void> pumpScreen(
+      WidgetTester tester, {
+      required bool creation,
+    }) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: _router(svc, isCreation: creation)),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('création : deux étapes, la première active au départ', (
+      tester,
+    ) async {
+      await pumpScreen(tester, creation: true);
+
+      expect(dot(0), findsOneWidget);
+      expect(dot(1), findsOneWidget);
+      expect(dot(2), findsNothing);
+      expect(isActive(tester, 0), isTrue);
+      expect(isActive(tester, 1), isFalse);
+    });
+
+    testWidgets('création : la seconde étape s\'active après la saisie', (
+      tester,
+    ) async {
+      await pumpScreen(tester, creation: true);
+
+      for (final digit in ['9', '8', '7', '6', '5', '4']) {
+        await tester.tap(find.text(digit).last);
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+
+      expect(dot(2), findsNothing);
+      expect(isActive(tester, 0), isTrue);
+      expect(isActive(tester, 1), isTrue);
+    });
+
+    testWidgets('modification : trois étapes, seule la première active', (
+      tester,
+    ) async {
+      await pumpScreen(tester, creation: false);
+
+      expect(dot(0), findsOneWidget);
+      expect(dot(1), findsOneWidget);
+      expect(dot(2), findsOneWidget);
+      expect(isActive(tester, 0), isTrue);
+      expect(isActive(tester, 1), isFalse);
+      expect(isActive(tester, 2), isFalse);
+    });
   });
 }
