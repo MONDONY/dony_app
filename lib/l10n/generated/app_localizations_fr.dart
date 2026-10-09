@@ -17561,4 +17561,62 @@ class AppLocalizationsFr extends AppLocalizations {
   String tripSwitchCurrencyConfirmMessage(String currency) {
     return 'Tous les prix du voyage passent en $currency.';
   }
+
+  @override
+  String requestPublicSenderRowSemantics(String name) {
+    return 'Expéditeur : $name. Voir son profil';
+  }
+
+  @override
+  String tripParcelsSummaryInTransit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'colis en route',
+      one: 'colis en route',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsSummaryToCollect(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'à récupérer',
+      one: 'à récupérer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsSummaryArrived(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'arrivés',
+      one: 'arrivé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsSummaryDelivered(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'livrés',
+      one: 'livré',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviSegmentShipments => 'Envois';
+
+  @override
+  String get suiviSegmentReceptions => 'Réceptions';
+
+  @override
+  String get suiviNoReceptions => 'Aucun colis à recevoir pour le moment.';
 }

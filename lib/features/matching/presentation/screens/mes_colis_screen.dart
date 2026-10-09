@@ -151,14 +151,28 @@ class _MesColisViewState extends State<_MesColisView> {
               child: BlocBuilder<PackageRequestBloc, PackageRequestState>(
                 builder: (context, prState) =>
                     BlocBuilder<NegotiationListBloc, NegotiationListState>(
-                      builder: (context, negoState) => _VoletSegmented(
-                        selected: _tab,
-                        publiesBadge: negosNonLuesSurMesColis(
-                          prState,
-                          negoState,
-                        ),
-                        onSelect: _selectTab,
-                      ),
+                      // En route / Publiés : bascule partagée du DS.
+                      builder: (context, negoState) =>
+                          DonySegmentedControl<MesColisTab>(
+                            selected: _tab,
+                            onSelect: _selectTab,
+                            segments: [
+                              DonySegment(
+                                key: const Key('mes-colis-tab-en-route'),
+                                value: MesColisTab.enRoute,
+                                label: context.l10n.shipmentTabEnRouteLabel,
+                              ),
+                              DonySegment(
+                                key: const Key('mes-colis-tab-publies'),
+                                value: MesColisTab.publies,
+                                label: context.l10n.shipmentTabPubliesLabel,
+                                count: negosNonLuesSurMesColis(
+                                  prState,
+                                  negoState,
+                                ),
+                              ),
+                            ],
+                          ),
                     ),
               ),
             ),
@@ -273,147 +287,6 @@ class _MesColisHeader extends StatelessWidget {
             ),
           ),
           Container(height: 1, color: cs.outline),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Segmented control de volet ───────────────────────────────────────────────
-
-/// Bascule En route / Publiés : une seule surface connectée avec une capsule
-/// qui glisse, plutôt que deux pastilles séparées.
-class _VoletSegmented extends StatelessWidget {
-  const _VoletSegmented({
-    required this.selected,
-    required this.publiesBadge,
-    required this.onSelect,
-  });
-
-  final MesColisTab selected;
-  final int publiesBadge;
-  final ValueChanged<MesColisTab> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-
-    return Container(
-      height: 46,
-      padding: const EdgeInsets.all(DonySpacing.xs),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(DonyRadius.lg),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final segWidth = constraints.maxWidth / 2;
-          return Stack(
-            children: [
-              AnimatedAlign(
-                duration: DonyDuration.base,
-                curve: DonyCurve.easeOut,
-                alignment: selected == MesColisTab.enRoute
-                    ? Alignment.centerLeft
-                    : Alignment.centerRight,
-                child: Container(
-                  width: segWidth,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    boxShadow: DonyShadows.card,
-                  ),
-                ),
-              ),
-              // Positioned.fill : sans ça la rangée de labels se cale en haut
-              // à gauche du Stack et le texte n'est pas centré verticalement.
-              Positioned.fill(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _VoletSegLabel(
-                        key: const Key('mes-colis-tab-en-route'),
-                        label: l.shipmentTabEnRouteLabel,
-                        badge: 0,
-                        selected: selected == MesColisTab.enRoute,
-                        onTap: () => onSelect(MesColisTab.enRoute),
-                      ),
-                    ),
-                    Expanded(
-                      child: _VoletSegLabel(
-                        key: const Key('mes-colis-tab-publies'),
-                        label: l.shipmentTabPubliesLabel,
-                        badge: publiesBadge,
-                        selected: selected == MesColisTab.publies,
-                        onTap: () => onSelect(MesColisTab.publies),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _VoletSegLabel extends StatelessWidget {
-  const _VoletSegLabel({
-    super.key,
-    required this.label,
-    required this.badge,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final int badge;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            style: tt.labelLarge?.copyWith(
-              color: selected ? cs.onSurface : cs.onSurfaceVariant,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-          if (badge > 0) ...[
-            const SizedBox(width: DonySpacing.xs),
-            Container(
-              constraints: const BoxConstraints(minWidth: 18),
-              height: 18,
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: cs.error,
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Text(
-                badge > 99 ? '99+' : '$badge',
-                style: tt.labelSmall?.copyWith(
-                  color: cs.onError,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );

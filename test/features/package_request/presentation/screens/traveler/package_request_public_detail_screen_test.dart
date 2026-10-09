@@ -14,12 +14,15 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/bloc/request_sender_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
+import 'package:dony/features/profile/data/models/profile_public_model.dart';
+import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +54,22 @@ class _MockPriceEstimationRepository extends Mock
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
+
+class _MockProfileRepository extends Mock implements ProfileRepository {}
+
+ProfilePublicModel _profile({String displayName = 'Awa Diop'}) =>
+    ProfilePublicModel(
+      userId: _senderId,
+      displayName: displayName,
+      kycVerified: true,
+      isProAccount: false,
+      isKiloPro: false,
+      completedBidsCount: 4,
+      averageRating: 4.6,
+      ratingCount: 12,
+      memberSince: '2025-01-01',
+      badges: const [],
+    );
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -150,8 +169,22 @@ void main() {
   late _MockPackageRequestRepository repo;
   late _MockAnalyticsService analytics;
   late _MockAuthBloc authBloc;
+  late _MockProfileRepository profileRepo;
 
   setUp(() {
+    profileRepo = _MockProfileRepository();
+    // Par défaut le profil est masqué (404) : la ligne expéditeur n'interfère
+    // pas avec les autres scénarios.
+    when(
+      () => profileRepo.getProfilePublic(any()),
+    ).thenThrow(const NotFoundException());
+    if (getIt.isRegistered<RequestSenderCubit>()) {
+      getIt.unregister<RequestSenderCubit>();
+    }
+    getIt.registerFactory<RequestSenderCubit>(
+      () => RequestSenderCubit(profileRepo, getIt<AnalyticsService>()),
+    );
+
     repo = _MockPackageRequestRepository();
     analytics = _MockAnalyticsService();
     authBloc = _MockAuthBloc();
@@ -174,6 +207,9 @@ void main() {
   });
 
   tearDown(() {
+    if (getIt.isRegistered<RequestSenderCubit>()) {
+      getIt.unregister<RequestSenderCubit>();
+    }
     if (getIt.isRegistered<PackageRequestRepository>()) {
       getIt.unregister<PackageRequestRepository>();
     }
@@ -745,5 +781,123 @@ void main() {
 
     expect(find.textContaining('41'), findsNothing);
     expect(find.textContaining('46'), findsAtLeastNWidgets(2));
+  });
+
+  // ── Ligne expéditeur (FLUTTER-GF) ─────────────────────────────────────────
+  group('ligne expéditeur', () {
+    const visitor = UserModel(
+      id: 'visitor-042',
+      roles: [],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
+
+    void asVisitor() {
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(visitor));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(visitor),
+      );
+    }
+
+    testWidgets('profil chargé → avatar, nom, note et nombre d\'avis', (
+      tester,
+    ) async {
+      asVisitor();
+      when(
+        () => profileRepo.getProfilePublic(_senderId),
+      ).thenAnswer((_) async => _profile());
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('request-sender-row')), findsOneWidget);
+      expect(find.text('Awa Diop'), findsOneWidget);
+      expect(find.text('4.6'), findsOneWidget);
+      expect(find.textContaining('12 avis'), findsOneWidget);
+      verify(() => profileRepo.getProfilePublic(_senderId)).called(1);
+    });
+
+    testWidgets('tap → résumé du profil, comme la carte de liste', (
+      tester,
+    ) async {
+      asVisitor();
+      when(
+        () => profileRepo.getProfilePublic(_senderId),
+      ).thenAnswer((_) async => _profile());
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('request-sender-row')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Profil expéditeur'), findsOneWidget);
+      expect(find.byKey(const Key('sender-profile-open-full')), findsOneWidget);
+      verify(
+        () => analytics.logEvent('package_request_sender_opened'),
+      ).called(1);
+    });
+
+    testWidgets('404 (compte bloqué ou masqué) → aucune ligne', (tester) async {
+      asVisitor();
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('request-sender-row')), findsNothing);
+      expect(find.byKey(const Key('request-sender-skeleton')), findsNothing);
+      expect(find.text('Demande d\'envoi'), findsOneWidget);
+    });
+
+    testWidgets('expéditeur invité sans nom → nom de repli traduit', (
+      tester,
+    ) async {
+      asVisitor();
+      when(
+        () => profileRepo.getProfilePublic(_senderId),
+      ).thenAnswer((_) async => _profile(displayName: ''));
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Utilisateur Yadony'), findsOneWidget);
+    });
+
+    testWidgets('chargement → squelette, puis la ligne', (tester) async {
+      asVisitor();
+      final pending = Completer<ProfilePublicModel>();
+      when(
+        () => profileRepo.getProfilePublic(_senderId),
+      ).thenAnswer((_) => pending.future);
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byKey(const Key('request-sender-skeleton')), findsOneWidget);
+      expect(find.byKey(const Key('request-sender-row')), findsNothing);
+
+      pending.complete(_profile());
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('request-sender-row')), findsOneWidget);
+      expect(find.byKey(const Key('request-sender-skeleton')), findsNothing);
+    });
+
+    testWidgets('visiteur sans compte → route non appelée, aucune ligne', (
+      tester,
+    ) async {
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthGuestSessionReady(),
+      );
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('request-sender-row')), findsNothing);
+      verifyNever(() => profileRepo.getProfilePublic(any()));
+    });
   });
 }

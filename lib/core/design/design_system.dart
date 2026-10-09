@@ -59,6 +59,7 @@ export 'package:dony/core/design/widgets/dony_radio_group.dart';
 export 'package:dony/core/design/widgets/dony_search_field.dart';
 // Structural
 export 'package:dony/core/design/widgets/dony_section_header.dart';
+export 'package:dony/core/design/widgets/dony_segmented_control.dart';
 export 'package:dony/core/design/widgets/dony_select_bar.dart';
 export 'package:dony/core/design/widgets/dony_skeleton.dart';
 export 'package:dony/core/design/widgets/dony_snackbar.dart';

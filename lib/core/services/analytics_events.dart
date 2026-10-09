@@ -97,6 +97,9 @@ abstract final class AnalyticsEvents {
   /// Mode choisi par l'utilisateur (propriété `mode` : `valider`/`suivre`).
   static const suiviModeChanged = 'suivi_mode_changed';
 
+  /// Segment « Envois / Réceptions » choisi en mode Suivre (FLUTTER-GQ).
+  static const suiviSegmentChanged = 'suivi_segment_changed';
+
   /// Trajet affiché changé (propriété `source` : `picker`/`other_trip`).
   static const suiviTripChanged = 'suivi_trip_changed';
 
@@ -149,6 +152,9 @@ abstract final class AnalyticsEvents {
   static const packageRequestPhotoRemoved = 'package_request_photo_removed';
   static const packageRequestDetailOpened = 'package_request_detail_opened';
   static const packageRequestReported = 'package_request_reported';
+
+  /// Ligne expéditeur de la fiche publique d'une demande tapée (FLUTTER-GF).
+  static const packageRequestSenderOpened = 'package_request_sender_opened';
   static const packageRequestSearched = 'package_request_searched';
   static const negotiationOfferMade = 'negotiation_offer_made';
   static const negotiationOfferAccepted = 'negotiation_offer_accepted';

@@ -146,6 +146,9 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Résumé toujours visible, indépendant du filtre
+                      // (FLUTTER-GS).
+                      TripParcelsSummary(bids: embarked),
                       // Filtre rapide : seulement si ≥ 2 statuts distincts.
                       if (present.length >= 2) ...[
                         StatusChipsRow<String?>(
@@ -181,6 +184,104 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
           },
         ),
       ],
+    );
+  }
+}
+
+/// Répartition des colis embarqués par étape du cycle réel, pour le résumé
+/// de tête de section (FLUTTER-GS).
+///
+/// - en route : remis au voyageur ou en transit (`HANDED_OVER`, `IN_TRANSIT`) ;
+/// - à récupérer : acceptés, pas encore remis (`ACCEPTED`). Un
+///   `AWAITING_PAYMENT` n'y figure pas : l'expéditeur n'a pas encore payé,
+///   le voyageur n'a rien à aller chercher ;
+/// - arrivés : à destination, en attente de retrait (`ARRIVED`) ;
+/// - livrés : remis au destinataire (`COMPLETED`).
+///
+/// Les clôturés (absence, refus, annulation) ne comptent dans aucun segment.
+typedef TripParcelsCounts = ({
+  int inTransit,
+  int toCollect,
+  int arrived,
+  int delivered,
+});
+
+TripParcelsCounts tripParcelsCounts(Iterable<BidModel> bids) {
+  var inTransit = 0, toCollect = 0, arrived = 0, delivered = 0;
+  for (final b in bids) {
+    switch (b.status) {
+      case 'HANDED_OVER' || 'IN_TRANSIT':
+        inTransit++;
+      case 'ACCEPTED':
+        toCollect++;
+      case 'ARRIVED':
+        arrived++;
+      case 'COMPLETED':
+        delivered++;
+    }
+  }
+  return (
+    inTransit: inTransit,
+    toCollect: toCollect,
+    arrived: arrived,
+    delivered: delivered,
+  );
+}
+
+/// Ligne de résumé en tête de « Colis dans le trajet » : « 3 colis en route
+/// · 1 à récupérer · 2 livrés ». Segments vides omis ; rien si tous le sont.
+/// Chiffres tabulaires en gras, lue d'un seul tenant par le lecteur d'écran.
+class TripParcelsSummary extends StatelessWidget {
+  const TripParcelsSummary({super.key, required this.bids});
+
+  final List<BidModel> bids;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final c = tripParcelsCounts(bids);
+    final segments = <(int, String)>[
+      if (c.inTransit > 0)
+        (c.inTransit, l.tripParcelsSummaryInTransit(c.inTransit)),
+      if (c.toCollect > 0)
+        (c.toCollect, l.tripParcelsSummaryToCollect(c.toCollect)),
+      if (c.arrived > 0) (c.arrived, l.tripParcelsSummaryArrived(c.arrived)),
+      if (c.delivered > 0)
+        (c.delivered, l.tripParcelsSummaryDelivered(c.delivered)),
+    ];
+    if (segments.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final base = tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant);
+    final number = TextStyle(
+      fontWeight: FontWeight.w700,
+      color: cs.onSurface,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final spoken = segments.map((e) => '${e.$1} ${e.$2}').join(' · ');
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.md),
+      child: Semantics(
+        label: spoken,
+        excludeSemantics: true,
+        child: Text.rich(
+          key: const Key('trip-parcels-summary'),
+          TextSpan(
+            style: base,
+            children: [
+              for (var i = 0; i < segments.length; i++) ...[
+                if (i > 0) const TextSpan(text: '  ·  '),
+                TextSpan(text: '${segments[i].$1}', style: number),
+                TextSpan(text: ' ${segments[i].$2}'),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

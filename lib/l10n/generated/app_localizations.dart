@@ -28771,6 +28771,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Tous les prix du voyage passent en {currency}.'**
   String tripSwitchCurrencyConfirmMessage(String currency);
+
+  /// Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expéditeur : {name}. Voir son profil'**
+  String requestPublicSenderRowSemantics(String name);
+
+  /// Segment du résumé de la section Colis du trajet (trip_parcels_section.dart, FLUTTER-GS) : colis remis ou en transit (HANDED_OVER, IN_TRANSIT). Le chiffre est affiché à part, devant le libellé.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{colis en route} other{colis en route}}'**
+  String tripParcelsSummaryInTransit(int count);
+
+  /// Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis acceptés pas encore remis au voyageur (ACCEPTED). Le chiffre est affiché à part.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{à récupérer} other{à récupérer}}'**
+  String tripParcelsSummaryToCollect(int count);
+
+  /// Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis arrivés à destination, en attente de retrait (ARRIVED). Le chiffre est affiché à part.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{arrivé} other{arrivés}}'**
+  String tripParcelsSummaryArrived(int count);
+
+  /// Segment du résumé de la section Colis du trajet (FLUTTER-GS) : colis remis au destinataire (COMPLETED). Le chiffre est affiché à part.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{livré} other{livrés}}'**
+  String tripParcelsSummaryDelivered(int count);
+
+  /// Segment « Envois » du mode Suivre de l'onglet Suivi : colis envoyés par l'utilisateur, en cours (suivi_track_panel.dart, FLUTTER-GQ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envois'**
+  String get suiviSegmentShipments;
+
+  /// Segment « Réceptions » du mode Suivre de l'onglet Suivi : colis que l'utilisateur doit recevoir (suivi_track_panel.dart, FLUTTER-GQ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réceptions'**
+  String get suiviSegmentReceptions;
+
+  /// Segment « Réceptions » vide dans le mode Suivre de l'onglet Suivi (suivi_track_panel.dart, FLUTTER-GQ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis à recevoir pour le moment.'**
+  String get suiviNoReceptions;
 }
 
 class _AppLocalizationsDelegate

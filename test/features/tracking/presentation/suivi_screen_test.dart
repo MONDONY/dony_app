@@ -700,16 +700,74 @@ void main() {
       expect(find.byKey(const Key('tracking-open-parcel')), findsNothing);
     });
 
-    testWidgets('colis à recevoir : section au-dessus de Mes envois', (
+    testWidgets(
+      'Envois / Réceptions : Envois par défaut, puis les réceptions',
+      (tester) async {
+        when(() => receptionRepo.getReceptions()).thenAnswer(
+          (_) async => const [
+            Reception(
+              bidId: 'rec-1',
+              linkStatus: 'PENDING',
+              bidStatus: 'ACCEPTED',
+              senderFirstName: 'Awa',
+              departureCity: 'Lyon',
+              arrivalCity: 'Bamako',
+            ),
+          ],
+        );
+        await pump(tester, roles: ['SENDER']);
+
+        // Des envois ET des réceptions : « Envois » par défaut (FLUTTER-GQ).
+        expect(route('Paris', 'Dakar'), findsOneWidget);
+        expect(route('Lyon', 'Bamako'), findsNothing);
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('suivi-segment-receptions')),
+            matching: find.text('1'),
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('suivi-segment-receptions')));
+        await settle(tester);
+        // Le segment porte libellé et compteur : plus de titre de section.
+        expect(
+          find.textContaining('Colis à recevoir', findRichText: true),
+          findsNothing,
+        );
+        expect(route('Lyon', 'Bamako'), findsOneWidget);
+        expect(route('Paris', 'Dakar'), findsNothing);
+        expect(text('À confirmer'), findsOneWidget);
+        expect(text('De Awa'), findsOneWidget);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.suiviSegmentChanged,
+            properties: {'segment': 'receptions'},
+          ),
+        ).called(1);
+
+        await tester.tap(find.byKey(const Key('reception-row-rec-1')));
+        await settle(tester);
+        expect(visited, contains('/receptions/:bidId'));
+      },
+    );
+
+    testWidgets('réceptions seules → segment Réceptions par défaut', (
       tester,
     ) async {
+      when(
+        () => bidRepo.getMyBidsFiltered(
+          statuses: any(named: 'statuses'),
+          announcementId: any(named: 'announcementId'),
+          maxPages: any(named: 'maxPages'),
+        ),
+      ).thenAnswer((_) async => const []);
       when(() => receptionRepo.getReceptions()).thenAnswer(
         (_) async => const [
           Reception(
             bidId: 'rec-1',
-            linkStatus: 'PENDING',
-            bidStatus: 'ACCEPTED',
-            senderFirstName: 'Awa',
+            linkStatus: 'CONFIRMED',
+            bidStatus: 'IN_TRANSIT',
             departureCity: 'Lyon',
             arrivalCity: 'Bamako',
           ),
@@ -717,23 +775,39 @@ void main() {
       );
       await pump(tester, roles: ['SENDER']);
 
-      final section = find.textContaining(
-        'Colis à recevoir',
-        findRichText: true,
-      );
-      expect(section, findsOneWidget);
       expect(route('Lyon', 'Bamako'), findsOneWidget);
-      expect(text('À confirmer'), findsOneWidget);
-      expect(text('De Awa'), findsOneWidget);
-      final shipments = find.textContaining('Mes envois', findRichText: true);
+      expect(find.byKey(const Key('suivi-receptions-list')), findsOneWidget);
+      // Compteurs tabulaires sur chaque segment, zéro compris.
       expect(
-        tester.getTopLeft(section).dy,
-        lessThan(tester.getTopLeft(shipments).dy),
+        find.descendant(
+          of: find.byKey(const Key('suivi-segment-envois')),
+          matching: find.text('0'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('suivi-segment-receptions')),
+          matching: find.text('1'),
+        ),
+        findsOneWidget,
       );
 
-      await tester.tap(find.byKey(const Key('reception-row-rec-1')));
+      await tester.tap(find.byKey(const Key('suivi-segment-envois')));
       await settle(tester);
-      expect(visited, contains('/receptions/:bidId'));
+      expect(text('Aucun envoi en cours.'), findsOneWidget);
+    });
+
+    testWidgets('aucune réception → Envois, segment Réceptions vide', (
+      tester,
+    ) async {
+      await pump(tester, roles: ['SENDER']);
+      expect(find.byKey(const Key('suivi-envois-list')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('suivi-segment-receptions')));
+      await settle(tester);
+      expect(find.byKey(const Key('suivi-no-receptions')), findsOneWidget);
+      expect(text('Aucun colis à recevoir pour le moment.'), findsOneWidget);
     });
 
     testWidgets("demandes d'expéditeurs : bandeau en tête, ouvre l'écran", (
@@ -763,7 +837,7 @@ void main() {
       final banner = find.byKey(const Key('recipient-invitations-banner'));
       expect(banner, findsOneWidget);
       expect(text("2 demandes d'expéditeurs"), findsOneWidget);
-      final shipments = find.textContaining('Mes envois', findRichText: true);
+      final shipments = find.byKey(const Key('suivi-track-segments'));
       expect(
         tester.getTopLeft(banner).dy,
         lessThan(tester.getTopLeft(shipments).dy),
@@ -892,10 +966,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(
-        find.textContaining('Mes envois', findRichText: true),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('suivi-track-segments')), findsOneWidget);
     });
 
     testWidgets('?mode=suivre impose Suivre, puis bascule vers Valider', (
@@ -903,18 +974,12 @@ void main() {
     ) async {
       stubDefaultTrips();
       await pump(tester, location: '/?mode=suivre');
-      expect(
-        find.textContaining('Mes envois', findRichText: true),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('suivi-track-segments')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('suivi-mode-valider')));
       await settle(tester);
       expect(route('Bobo-Dioulasso', 'Yaoundé'), findsOneWidget);
-      expect(
-        find.textContaining('Mes envois', findRichText: true),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('suivi-track-segments')), findsNothing);
     });
 
     testWidgets('Changer de trajet : groupes En cours / À venir', (
@@ -1176,10 +1241,7 @@ void main() {
       await tester.tap(find.byKey(const Key('suivi-follow-parcel')));
       await settle(tester);
       expect(text('Suivi en lecture seule'), findsOneWidget);
-      expect(
-        find.textContaining('Mes envois', findRichText: true),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('suivi-track-segments')), findsOneWidget);
     });
 
     testWidgets('QR inconnu → scanner un autre colis', (tester) async {
@@ -2246,10 +2308,7 @@ void main() {
         expect(tester.takeException(), isNull);
         expect(find.byKey(const Key('suivi-number-field')), findsOneWidget);
         expect(find.byKey(const Key('suivi-number-submit')), findsOneWidget);
-        expect(
-          find.textContaining('Mes envois', findRichText: true),
-          findsOneWidget,
-        );
+        expect(find.byKey(const Key('suivi-track-segments')), findsOneWidget);
       });
 
       testWidgets('boutons Suivre et Valider lisibles, à hauteur du champ '
@@ -2278,10 +2337,7 @@ void main() {
         await pump(tester, roles: ['SENDER'], themeMode: mode);
         expect(tester.takeException(), isNull);
         expect(find.byKey(const Key('suivi-number-field')), findsOneWidget);
-        expect(
-          find.textContaining('Mes envois', findRichText: true),
-          findsOneWidget,
-        );
+        expect(find.byKey(const Key('suivi-track-segments')), findsOneWidget);
       });
     }
   });

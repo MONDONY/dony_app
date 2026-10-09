@@ -17448,4 +17448,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String tripSwitchCurrencyConfirmMessage(String currency) {
     return 'All prices on this trip switch to $currency.';
   }
+
+  @override
+  String requestPublicSenderRowSemantics(String name) {
+    return 'Sender: $name. View their profile';
+  }
+
+  @override
+  String tripParcelsSummaryInTransit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'parcels in transit',
+      one: 'parcel in transit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsSummaryToCollect(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'to pick up',
+      one: 'to pick up',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsSummaryArrived(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'arrived',
+      one: 'arrived',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripParcelsSummaryDelivered(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'delivered',
+      one: 'delivered',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviSegmentShipments => 'Sending';
+
+  @override
+  String get suiviSegmentReceptions => 'Receiving';
+
+  @override
+  String get suiviNoReceptions => 'No parcels to receive right now.';
 }

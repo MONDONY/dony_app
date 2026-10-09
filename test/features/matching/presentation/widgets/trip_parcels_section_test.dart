@@ -286,4 +286,129 @@ void main() {
       expect(find.text('Payment pending'), findsOneWidget);
     });
   });
+
+  // ── Résumé de tête (FLUTTER-GS) ───────────────────────────────────────────
+  group('résumé des colis', () {
+    String summaryText(WidgetTester tester) => tester
+        .widget<Text>(find.byKey(const Key('trip-parcels-summary')))
+        .textSpan!
+        .toPlainText();
+
+    test('répartition par étape du cycle réel', () {
+      final c = tripParcelsCounts([
+        _makeBid(status: 'HANDED_OVER'),
+        _makeBid(status: 'IN_TRANSIT'),
+        _makeBid(status: 'ACCEPTED'),
+        _makeBid(status: 'AWAITING_PAYMENT'),
+        _makeBid(status: 'ARRIVED'),
+        _makeBid(status: 'COMPLETED'),
+        _makeBid(status: 'COMPLETED'),
+        _makeBid(status: 'NO_SHOW'),
+      ]);
+      expect(c.inTransit, 2);
+      expect(c.toCollect, 1);
+      expect(c.arrived, 1);
+      expect(c.delivered, 2);
+    });
+
+    testWidgets('pluriels FR, ordre fixe, segments vides omis', (tester) async {
+      stub(
+        BidListLoaded([
+          _makeBid(status: 'IN_TRANSIT', id: 'b1'),
+          _makeBid(status: 'IN_TRANSIT', id: 'b2'),
+          _makeBid(status: 'HANDED_OVER', id: 'b3'),
+          _makeBid(status: 'ACCEPTED', id: 'b4'),
+          _makeBid(status: 'COMPLETED', id: 'b5'),
+          _makeBid(status: 'COMPLETED', id: 'b6'),
+        ]),
+      );
+
+      await _pump(tester, bidBloc);
+      await tester.pump();
+
+      expect(
+        summaryText(tester),
+        '3 colis en route  ·  1 à récupérer  ·  2 livrés',
+      );
+      expect(
+        find.bySemanticsLabel('3 colis en route · 1 à récupérer · 2 livrés'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('singuliers FR et colis arrivé', (tester) async {
+      stub(
+        BidListLoaded([
+          _makeBid(status: 'ARRIVED', id: 'b1'),
+          _makeBid(status: 'COMPLETED', id: 'b2'),
+        ]),
+      );
+
+      await _pump(tester, bidBloc);
+      await tester.pump();
+
+      expect(summaryText(tester), '1 arrivé  ·  1 livré');
+    });
+
+    testWidgets('anglais : pluriels ICU', (tester) async {
+      useEnglish();
+      stub(
+        BidListLoaded([
+          _makeBid(status: 'IN_TRANSIT', id: 'b1'),
+          _makeBid(status: 'ACCEPTED', id: 'b2'),
+          _makeBid(status: 'ACCEPTED', id: 'b3'),
+        ]),
+      );
+
+      await _pump(tester, bidBloc);
+      await tester.pump();
+
+      expect(summaryText(tester), '1 parcel in transit  ·  2 to pick up');
+    });
+
+    testWidgets('chiffres tabulaires', (tester) async {
+      stub(BidListLoaded([_makeBid(status: 'ACCEPTED', id: 'b1')]));
+
+      await _pump(tester, bidBloc);
+      await tester.pump();
+
+      final root =
+          tester
+                  .widget<Text>(find.byKey(const Key('trip-parcels-summary')))
+                  .textSpan!
+              as TextSpan;
+      final number = root.children!.whereType<TextSpan>().firstWhere(
+        (s) => s.text == '1',
+      );
+      expect(
+        number.style!.fontFeatures,
+        contains(const FontFeature.tabularFigures()),
+      );
+    });
+
+    testWidgets('toujours visible quand un filtre est actif', (tester) async {
+      stub(
+        BidListLoaded([
+          _makeBid(status: 'ACCEPTED', id: 'b1'),
+          _makeBid(status: 'COMPLETED', id: 'b2'),
+        ]),
+      );
+
+      await _pump(tester, bidBloc);
+      await tester.pump();
+      await tester.tap(find.text('Livré').first);
+      await tester.pump();
+
+      expect(summaryText(tester), '1 à récupérer  ·  1 livré');
+    });
+
+    testWidgets('que des clôturés → pas de résumé', (tester) async {
+      stub(BidListLoaded([_makeBid(status: 'NO_SHOW', id: 'b1')]));
+
+      await _pump(tester, bidBloc);
+      await tester.pump();
+
+      expect(find.byKey(const Key('trip-parcels-summary')), findsNothing);
+    });
+  });
 }

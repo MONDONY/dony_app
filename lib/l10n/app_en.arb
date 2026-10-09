@@ -9445,5 +9445,13 @@
   "listingRowLabelCurrency": "Currency",
   "tripSwitchCurrencyConfirmTitle": "Publish in {currency}?",
   "tripSwitchCurrencyConfirmMessageNoCard": "All prices on this trip switch to {currency} and card payment will no longer be offered.",
-  "tripSwitchCurrencyConfirmMessage": "All prices on this trip switch to {currency}."
+  "tripSwitchCurrencyConfirmMessage": "All prices on this trip switch to {currency}.",
+  "requestPublicSenderRowSemantics": "Sender: {name}. View their profile",
+  "tripParcelsSummaryInTransit": "{count, plural, =1{parcel in transit} other{parcels in transit}}",
+  "tripParcelsSummaryToCollect": "{count, plural, =1{to pick up} other{to pick up}}",
+  "tripParcelsSummaryArrived": "{count, plural, =1{arrived} other{arrived}}",
+  "tripParcelsSummaryDelivered": "{count, plural, =1{delivered} other{delivered}}",
+  "suiviSegmentShipments": "Sending",
+  "suiviSegmentReceptions": "Receiving",
+  "suiviNoReceptions": "No parcels to receive right now."
 }

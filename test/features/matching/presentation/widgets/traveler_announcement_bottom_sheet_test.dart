@@ -359,7 +359,7 @@ void main() {
   });
 
   testWidgets(
-    'date de départ (corridor héro) fr non-régression (motif EEE d MMM yyyy inchangé)',
+    'date de départ (billet, FLUTTER-GG) fr : jour, date et mois (MMMEd)',
     (tester) async {
       final departure = DateTime(2026, 10, 6, 14, 5);
       final a = _buildAnnouncement(kycVerified: true, departureDate: departure);
@@ -368,15 +368,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.textContaining(
-          DateFormat('EEE d MMM yyyy', 'fr').format(departure),
-        ),
+        find.textContaining(DateFormat.MMMEd('fr').format(departure)),
         findsOneWidget,
       );
     },
   );
 
-  testWidgets('date de départ (corridor héro) en anglais (ordre anglais)', (
+  testWidgets('date de départ (billet) en anglais (ordre anglais)', (
     tester,
   ) async {
     useEnglish();
@@ -387,7 +385,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.textContaining(DateFormat.yMMMEd('en').format(departure)),
+      find.textContaining(DateFormat.MMMEd('en').format(departure)),
       findsOneWidget,
     );
   });
@@ -1065,6 +1063,10 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
+      // Le billet est plus haut que l'ancien héro : la ligne passe sous le
+      // bouton fixe tant qu'on ne la fait pas défiler.
+      await tester.ensureVisible(find.byKey(const Key('location-pickup')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('location-pickup')));
       await tester.pump();
 
@@ -1092,7 +1094,7 @@ void main() {
   // ── Enrichissements (heures, paiements, instructions) ──────────────────────
 
   group('enrichissements', () {
-    testWidgets('heures départ→arrivée présentes → chip 08:00 → 22:00', (
+    testWidgets('heures départ et arrivée présentes → zone dates du billet', (
       tester,
     ) async {
       final a = _buildAnnouncement(
@@ -1104,16 +1106,29 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      expect(find.text('08:00 → 22:00'), findsOneWidget);
+      final depart = tester.widget<Text>(
+        find.byKey(const Key('billet-departure-value')),
+      );
+      expect(depart.data, endsWith('· 08:00'));
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-value'))).data,
+        '22:00',
+      );
     });
 
-    testWidgets('une seule heure connue → pas de chip horaire', (tester) async {
+    testWidgets('une seule heure connue → arrivée « - », pas de flèche', (
+      tester,
+    ) async {
       final a = _buildAnnouncement(kycVerified: true, departureTime: '08:00');
       await tester.pumpWidget(_harness(announcement: a));
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('→'), findsNothing);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('billet-arrival-value'))).data,
+        '-',
+      );
     });
 
     testWidgets('paiements acceptés → chips Espèces + Carte', (tester) async {
@@ -1483,7 +1498,7 @@ void main() {
     });
 
     testWidgets(
-      'FLUTTER-83 : signet blanc sur la carte bleu nuit, actif lisible',
+      'FLUTTER-GG : signet dans l\'en-tête du billet clair, actif lisible',
       (tester) async {
         final a = _buildAnnouncement();
         await ouvrir(tester, a);
@@ -1491,7 +1506,15 @@ void main() {
         final bouton = tester.widget<FavoriteHeartButton>(
           find.byType(FavoriteHeartButton),
         );
-        expect(bouton.onDark, isTrue);
+        // Billet clair : plus de pastille blanche pour fond sombre.
+        expect(bouton.onDark, isFalse);
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('trip-billet-card')),
+            matching: find.byType(FavoriteHeartButton),
+          ),
+          findsOneWidget,
+        );
         final icone = tester.widget<Icon>(
           find.descendant(
             of: find.byType(FavoriteHeartButton),
@@ -1499,7 +1522,7 @@ void main() {
           ),
         );
         expect(icone.icon, Icons.bookmark_border);
-        expect(icone.color, Colors.white);
+        expect(icone.color, isNot(Colors.white));
 
         cubit.emitSeed(trips: {a.id}, requests: {});
         await tester.pump();
@@ -1511,7 +1534,7 @@ void main() {
           ),
         );
         expect(iconeActive.icon, Icons.bookmark);
-        expect(iconeActive.color, Colors.white);
+        expect(iconeActive.color, DonyColors.primary);
       },
     );
   });
@@ -1583,41 +1606,67 @@ void main() {
     expect(bug.dx, greaterThan(titre.dx));
   });
 
-  // ── FLUTTER-EY : ville de départ tronquée dans « Détail du trajet » ────────
+  // ── FLUTTER-EY / FLUTTER-GG : billet, villes longues jamais tronquées ─────
 
-  testWidgets(
-    'FLUTTER-EY : villes longues empilées, jamais tronquées (écran 414 px)',
-    (tester) async {
-      tester.view.physicalSize = const Size(414, 896);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      final a = _buildAnnouncement(
-        kycVerified: true,
-        departureCity: 'Fontenay-le-Fleury-sous-Bois',
-        arrivalCity: 'Abobo',
-      );
-      await tester.pumpWidget(_harness(announcement: a));
-      await tester.tap(find.text('Ouvrir'));
-      await tester.pumpAndSettle();
-
-      final dep = find.byKey(const Key('trip_hero_departure_city'));
-      final arr = find.byKey(const Key('trip_hero_arrival_city'));
-      expect(tester.widget<Text>(dep).data, 'Fontenay-le-Fleury-sous-Bois');
-      for (final f in [dep, arr]) {
-        final text = tester.widget<Text>(f);
-        expect(text.overflow, isNot(TextOverflow.ellipsis));
-        expect(text.maxLines, isNull);
-        expect(
-          tester.renderObject<RenderParagraph>(f).didExceedMaxLines,
-          isFalse,
+  for (final width in [360.0, 414.0]) {
+    testWidgets(
+      'FLUTTER-EY : billet, villes longues jamais tronquées (écran ${width.toInt()} px)',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 896);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          departureCity: 'Fontenay-le-Fleury-sous-Bois',
+          arrivalCity: 'Saint-Germain-en-Laye-Centre',
         );
-      }
-      // Départ au-dessus de l'arrivée (empilées, plus sur une même ligne).
-      expect(
-        tester.getRect(arr).top,
-        greaterThanOrEqualTo(tester.getRect(dep).bottom),
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
+        await tester.pumpWidget(_harness(announcement: a));
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        final card = find.byKey(const Key('trip-billet-card'));
+        expect(card, findsOneWidget);
+        final dep = find.descendant(
+          of: card,
+          matching: find.byKey(const Key('billet_departure_city')),
+        );
+        final arr = find.descendant(
+          of: card,
+          matching: find.byKey(const Key('billet_arrival_city')),
+        );
+        expect(tester.widget<Text>(dep).data, 'Fontenay-le-Fleury-sous-Bois');
+        expect(tester.widget<Text>(arr).data, 'Saint-Germain-en-Laye-Centre');
+        for (final f in [dep, arr]) {
+          final text = tester.widget<Text>(f);
+          expect(text.overflow, isNot(TextOverflow.ellipsis));
+          expect(text.maxLines, isNull);
+          expect(
+            tester.renderObject<RenderParagraph>(f).didExceedMaxLines,
+            isFalse,
+          );
+        }
+        // Départ à gauche, arrivée à droite, dans la largeur du billet.
+        final cardRect = tester.getRect(card);
+        expect(tester.getRect(dep).left, greaterThanOrEqualTo(cardRect.left));
+        expect(tester.getRect(arr).right, lessThanOrEqualTo(cardRect.right));
+        expect(tester.getRect(dep).right, lessThan(tester.getRect(arr).left));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('FLUTTER-GG : corridor lu « départ → arrivée »', (tester) async {
+    final a = _buildAnnouncement(
+      kycVerified: true,
+      departureCity: 'Lyon',
+      arrivalCity: 'Bamako',
+    );
+    await tester.pumpWidget(_harness(announcement: a));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel('Lyon → Bamako'), findsOneWidget);
+    expect(find.text('LYS'), findsOneWidget);
+    expect(find.text('BKO'), findsOneWidget);
+  });
 }

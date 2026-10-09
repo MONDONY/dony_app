@@ -24,11 +24,11 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
-import 'package:dony/features/matching/presentation/arrival_label.dart';
 import 'package:dony/features/matching/presentation/existing_trip_request.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/trip_view_recording.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/billet_route.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
@@ -590,28 +590,20 @@ class _HeroWithFavorite extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hero = _HeroCorridorCard(announcement: announcement);
-
     // N'est monté que lorsque le cubit existe : le point d'entrée sans favoris
     // rend `_HeroCorridorCard` directement.
     return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
       builder: (context, state) {
         final estFavori = state.tripIds.contains(announcement.id);
-        return Stack(
-          children: [
-            hero,
-            Positioned(
-              top: DonySpacing.xs,
-              right: DonySpacing.xs,
-              child: FavoriteHeartButton(
-                // Carte héro bleu nuit : signet clair (FLUTTER-83).
-                onDark: true,
-                isFavorite: estFavori,
-                onToggle: () =>
-                    unawaited(_basculerFavori(context, announcement.id)),
-              ),
-            ),
-          ],
+        // Billet clair (FLUTTER-GG) : signet aux couleurs par défaut, dans
+        // l'en-tête du billet plutôt que superposé au corridor.
+        return _HeroCorridorCard(
+          announcement: announcement,
+          trailing: FavoriteHeartButton(
+            isFavorite: estFavori,
+            onToggle: () =>
+                unawaited(_basculerFavori(context, announcement.id)),
+          ),
         );
       },
     );
@@ -643,114 +635,92 @@ class _HeroWithFavorite extends StatelessWidget {
   }
 }
 
+/// Fiche trajet au format billet, comme le détail d'un colis (FLUTTER-GG) :
+/// corridor en grand, dates de départ et d'arrivée, perforation, puis les
+/// caractéristiques du trajet (transport, escales, kilos) en talon.
 class _HeroCorridorCard extends StatelessWidget {
-  const _HeroCorridorCard({required this.announcement});
+  const _HeroCorridorCard({required this.announcement, this.trailing});
 
   final AnnouncementModel announcement;
 
+  /// Action posée dans l'en-tête, à droite (signet des favoris).
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final dateStr = DateFormat.yMMMEd(
-      l.localeName,
-    ).format(announcement.departureDate);
     final kgLabel = announcement.isKgFree
         ? l.tripKgFree
         : l.listingKgAvailableLabel(
             announcement.availableKg.toStringAsFixed(0),
           );
     final transportLabel = announcement.transportMode?.label(l);
-    final depTime = announcement.departureTime;
-    final arrTime = announcement.arrivalTime;
-    final hoursLabel = (depTime != null && arrTime != null)
-        ? '$depTime → ${arrivalTimeLabel(l, arrTime, departureDate: announcement.departureDate, arrivalDate: announcement.arrivalDate)}'
-        : null;
+    final trailing = this.trailing;
 
-    final cityStyle = tt.headlineSmall?.copyWith(
-      fontWeight: FontWeight.w800,
-      fontSize: 21,
-      color: Colors.white,
-    );
-
+    // La feuille est posée sur `cs.surface` : le billet prend un ton juste
+    // au-dessus pour que les encoches de la perforation se lisent.
     return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
+      key: const Key('trip-billet-card'),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF1E3A5F), Color(0xFF0C4A6E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l.listingHeroTripLabelCaps,
-            style: tt.labelSmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.65),
-              letterSpacing: 2,
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.base,
+              trailing != null ? DonySpacing.xs : DonySpacing.base,
+              trailing != null ? DonySpacing.xs : DonySpacing.base,
+              DonySpacing.sm,
             ),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          // Villes empilées, jamais tronquées : deux Flexible sur une ligne
-          // coupaient « Fontenay-le-Fleury » en « Fontenay-le-… » (Sentry
-          // FLUTTER-EY). Le départ occupe toute la largeur, l'arrivée suit
-          // sous la flèche ; un nom très long passe à la ligne.
-          Semantics(
-            label:
-                '${announcement.departureCity} → ${announcement.arrivalCity}',
-            excludeSemantics: true,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  announcement.departureCity,
-                  key: const Key('trip_hero_departure_city'),
-                  style: cityStyle,
-                  softWrap: true,
-                ),
-                const SizedBox(height: DonySpacing.xxs),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(
-                        top: DonySpacing.xs + 2,
-                        right: DonySpacing.sm,
-                      ),
-                      child: DonyIcon(
-                        'arrow-right',
-                        size: 18,
-                        color: DonyColors.blue300,
-                      ),
+                Expanded(
+                  child: Text(
+                    l.listingHeroTripLabelCaps,
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
                     ),
-                    Expanded(
-                      child: Text(
-                        announcement.arrivalCity,
-                        key: const Key('trip_hero_arrival_city'),
-                        style: cityStyle,
-                        softWrap: true,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+                ?trailing,
               ],
             ),
           ),
-          const SizedBox(height: DonySpacing.sm + DonySpacing.xxs),
-          Wrap(
-            spacing: DonySpacing.xs + 2,
-            runSpacing: DonySpacing.xs,
-            children: [
-              _HeroChip(label: dateStr),
-              if (transportLabel != null) _HeroChip(label: transportLabel),
-              if (announcement.stops != null)
-                _HeroChip(label: tripStopsBadgeLabel(l, announcement.stops!)),
-              if (hoursLabel != null) _HeroChip(label: hoursLabel),
-              _HeroChip(label: kgLabel),
-            ],
+          BilletRoute(
+            departureCity: announcement.departureCity,
+            arrivalCity: announcement.arrivalCity,
+            departureDate: announcement.departureDate,
+            departureTime: announcement.departureTime,
+            arrivalDate: announcement.arrivalDate,
+            arrivalTime: announcement.arrivalTime,
+            showWeekday: true,
+            notchColor: cs.surface,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.base,
+              DonySpacing.sm,
+              DonySpacing.base,
+              DonySpacing.base,
+            ),
+            child: Wrap(
+              spacing: DonySpacing.xs + 2,
+              runSpacing: DonySpacing.xs,
+              children: [
+                if (transportLabel != null) _HeroChip(label: transportLabel),
+                if (announcement.stops != null)
+                  _HeroChip(label: tripStopsBadgeLabel(l, announcement.stops!)),
+                _HeroChip(label: kgLabel),
+              ],
+            ),
           ),
         ],
       ),
@@ -764,6 +734,7 @@ class _HeroChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -771,16 +742,14 @@ class _HeroChip extends StatelessWidget {
         vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.xl),
       ),
-      child: Text(label, style: tt.labelMedium?.copyWith(color: Colors.white)),
+      child: Text(label, style: tt.labelMedium?.copyWith(color: cs.onSurface)),
     );
   }
 }
 
-/// Rangée des chiffres forts : prix (ou grille) à gauche, date limite de dépôt
-/// à droite. Sans date limite, la carte prix prend toute la largeur.
 class _StatCardsRow extends StatelessWidget {
   const _StatCardsRow({required this.announcement, required this.hasGrid});
 
@@ -1486,10 +1455,15 @@ class _TravelerCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: DonySpacing.xs),
-                        Text(
-                          context.l10n.listingTravelerTrips(totalTrips),
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
+                        // Flexible : à 360 px la ligne débordait de 13 px.
+                        Flexible(
+                          child: Text(
+                            context.l10n.listingTravelerTrips(totalTrips),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],
