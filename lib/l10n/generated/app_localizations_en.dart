@@ -17627,4 +17627,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripLegSheetAddressCaption => 'Delivery address';
+
+  @override
+  String get tripLegPaymentTitle => 'Accepted payment methods';
+
+  @override
+  String get tripLegPaymentHint =>
+      'Ticked according to the leg currency, editable.';
+
+  @override
+  String tripLegPaymentCardCurrencyUnavailable(String currency) {
+    return 'Card unavailable in $currency';
+  }
+
+  @override
+  String get tripLegPaymentCardNotConfigured =>
+      'Set up card payments from your profile first';
+
+  @override
+  String tripLegPaymentMobileMoneyIneligible(String currency) {
+    return 'Mobile money unavailable in $currency';
+  }
+
+  @override
+  String get tripLegPaymentMobileMoneyInactive =>
+      'Set up your mobile money payout account to accept it';
+
+  @override
+  String tripLegPaymentMobileMoneyOtherCurrency(String currency) {
+    return 'Your payout account receives $currency';
+  }
+
+  @override
+  String get tripLegPaymentRequired => 'Tick at least one payment method.';
+
+  @override
+  String get tripLegsPaymentCard => 'Card';
+
+  @override
+  String get tripLegsPaymentCash => 'Cash';
+
+  @override
+  String tripLegsPaymentSummary(String methods) {
+    return 'Payment: $methods';
+  }
 }

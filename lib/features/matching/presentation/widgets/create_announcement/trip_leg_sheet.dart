@@ -46,6 +46,7 @@ class TripLegSheet extends StatefulWidget {
     this.defaultPriceCurrency,
     this.showStops = false,
     this.defaultStops,
+    this.paymentRails = const TripLegPaymentRails(),
     this.onSubmitReady,
     this.onCanSubmitChanged,
   });
@@ -73,6 +74,10 @@ class TripLegSheet extends StatefulWidget {
   /// prérempli avec [defaultStops] (celui de l'étape précédente).
   final bool showStops;
   final TripStops? defaultStops;
+
+  /// Moyens de paiement possibles selon la devise et les comptes du voyageur
+  /// (FLUTTER-HP) : cochés par défaut, grisés quand indisponibles.
+  final TripLegPaymentRails paymentRails;
   final void Function(VoidCallback)? onSubmitReady;
   final ValueChanged<bool>? onCanSubmitChanged;
 
@@ -89,6 +94,7 @@ class TripLegSheet extends StatefulWidget {
     SupportedCurrency? defaultPriceCurrency,
     bool showStops = false,
     TripStops? defaultStops,
+    TripLegPaymentRails paymentRails = const TripLegPaymentRails(),
   }) {
     final l = context.l10n;
     VoidCallback? submit;
@@ -122,6 +128,7 @@ class TripLegSheet extends StatefulWidget {
         defaultPriceCurrency: defaultPriceCurrency,
         showStops: showStops,
         defaultStops: defaultStops,
+        paymentRails: paymentRails,
         onSubmitReady: (fn) => submit = fn,
         onCanSubmitChanged: (v) => canSubmit.value = v,
       ),
@@ -141,6 +148,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
   late final ValueNotifier<AddressData?> _address;
   late final ValueNotifier<TripStops?> _stops;
   late final ValueNotifier<SupportedCurrency> _currency;
+  late final ValueNotifier<List<String>> _methods;
   late final TextEditingController _kgCtrl;
   late final TextEditingController _priceCtrl;
 
@@ -165,6 +173,15 @@ class _TripLegSheetState extends State<TripLegSheet> {
     _currency = ValueNotifier<SupportedCurrency>(
       SupportedCurrency.fromCode(i?.currency) ?? widget.defaultCurrency,
     );
+    final initialMethods = i?.acceptedPaymentMethods;
+    _methods = ValueNotifier<List<String>>(
+      initialMethods != null
+          ? TripLegPaymentRails.ordered(initialMethods)
+          : widget.paymentRails.defaultsFor(_currency.value),
+    );
+    // Devise changée : les choix encore possibles restent cochés, les
+    // autres sont décochés (FLUTTER-HP).
+    _currency.addListener(_onCurrencyChanged);
     _kgCtrl = TextEditingController(
       text: _formatNumber(i?.availableKg ?? widget.defaultKg),
     );
@@ -190,15 +207,25 @@ class _TripLegSheetState extends State<TripLegSheet> {
     _time,
     _address,
     _currency,
+    _methods,
     _kgCtrl,
     _priceCtrl,
   ];
+
+  void _onCurrencyChanged() {
+    _methods.value = widget.paymentRails.reconcile(
+      _methods.value,
+      _currency.value,
+    );
+  }
 
   @override
   void dispose() {
     for (final n in _watched) {
       n.removeListener(_notifyValidity);
     }
+    _currency.removeListener(_onCurrencyChanged);
+    _methods.dispose();
     _city.dispose();
     _cityName.dispose();
     _countryCode.dispose();
@@ -265,6 +292,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
       return null;
     }
     if (kg == null || kg < 1) return null;
+    if (_methods.value.isEmpty) return null;
     if (widget.showPrice &&
         (price == null || price <= 0 || _priceTooHigh || _priceTooLow)) {
       return null;
@@ -280,6 +308,7 @@ class _TripLegSheetState extends State<TripLegSheet> {
       pricePerKg: price,
       stops: widget.showStops ? _stops.value : null,
       currency: _currency.value.code,
+      acceptedPaymentMethods: _methods.value,
     );
   }
 
@@ -471,8 +500,108 @@ class _TripLegSheetState extends State<TripLegSheet> {
             },
           ),
         ],
+        const SizedBox(height: DonySpacing.lg),
+        _PaymentMethodsField(
+          methods: _methods,
+          currency: _currency,
+          rails: widget.paymentRails,
+        ),
         const SizedBox(height: DonySpacing.xl),
       ],
+    );
+  }
+}
+
+/// Moyens de paiement de l'étape (FLUTTER-HP), cochés par le voyageur. Un
+/// moyen impossible dans la devise de l'étape ou faute de compte est grisé
+/// avec sa raison. Au moins un reste coché pour publier.
+class _PaymentMethodsField extends StatelessWidget {
+  const _PaymentMethodsField({
+    required this.methods,
+    required this.currency,
+    required this.rails,
+  });
+
+  final ValueNotifier<List<String>> methods;
+  final ValueNotifier<SupportedCurrency> currency;
+  final TripLegPaymentRails rails;
+
+  String _label(AppLocalizations l, String method) => switch (method) {
+    TripLegPaymentRails.card => l.tripPublishCardPaymentTitle,
+    TripLegPaymentRails.mobileMoney => l.homeComposerPaymentMobileMoney,
+    _ => l.tripPublishCashLabel,
+  };
+
+  String _subtitle(AppLocalizations l, String method, SupportedCurrency c) {
+    switch (method) {
+      case TripLegPaymentRails.card:
+        if (!c.isStripeEligible) {
+          return l.tripLegPaymentCardCurrencyUnavailable(c.symbol);
+        }
+        return rails.cardAvailable(c)
+            ? l.tripPublishCardPaymentSubtitle
+            : l.tripLegPaymentCardNotConfigured;
+      case TripLegPaymentRails.mobileMoney:
+        if (!c.isMobileMoneyEligible) {
+          return l.tripLegPaymentMobileMoneyIneligible(c.symbol);
+        }
+        if (!rails.mobileMoneyAccountActive) {
+          return l.tripLegPaymentMobileMoneyInactive;
+        }
+        final account = rails.mobileMoneyAccountCurrency;
+        if (!rails.mobileMoneyAvailable(c) && account != null) {
+          return l.tripLegPaymentMobileMoneyOtherCurrency(account.symbol);
+        }
+        return 'Orange Money, MTN, Moov'; // i18n-ignore : noms de marques
+      default:
+        return l.tripPublishCashSubtitle;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return ListenableBuilder(
+      listenable: Listenable.merge([methods, currency]),
+      builder: (context, _) {
+        final c = currency.value;
+        final selected = methods.value;
+        return Column(
+          key: const Key('trip-leg-payment-methods'),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l.tripLegPaymentTitle, style: tt.titleSmall),
+            const SizedBox(height: DonySpacing.xxs),
+            Text(
+              l.tripLegPaymentHint,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: DonySpacing.xs),
+            for (final m in TripLegPaymentRails.all)
+              DonyCheckbox(
+                key: Key('trip-leg-payment-$m'),
+                label: _label(l, m),
+                subtitle: _subtitle(l, m, c),
+                enabled: rails.isAvailable(m, c),
+                value: selected.contains(m),
+                onChanged: (v) => methods.value = TripLegPaymentRails.ordered(
+                  v == true ? [...selected, m] : selected.where((x) => x != m),
+                ),
+              ),
+            if (selected.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: DonySpacing.xxs),
+                child: Text(
+                  l.tripLegPaymentRequired,
+                  key: const Key('trip-leg-payment-required'),
+                  style: tt.bodySmall?.copyWith(color: cs.error),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

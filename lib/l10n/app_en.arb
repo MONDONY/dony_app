@@ -9489,5 +9489,16 @@
   "tripCurrenciesConfirmLeg": "Leg {index} · {route}",
   "tripCurrenciesConfirmCta": "Publish the trip",
   "tripCurrenciesConfirmEdit": "Review the legs",
-  "tripLegSheetAddressCaption": "Delivery address"
+  "tripLegSheetAddressCaption": "Delivery address",
+  "tripLegPaymentTitle": "Accepted payment methods",
+  "tripLegPaymentHint": "Ticked according to the leg currency, editable.",
+  "tripLegPaymentCardCurrencyUnavailable": "Card unavailable in {currency}",
+  "tripLegPaymentCardNotConfigured": "Set up card payments from your profile first",
+  "tripLegPaymentMobileMoneyIneligible": "Mobile money unavailable in {currency}",
+  "tripLegPaymentMobileMoneyInactive": "Set up your mobile money payout account to accept it",
+  "tripLegPaymentMobileMoneyOtherCurrency": "Your payout account receives {currency}",
+  "tripLegPaymentRequired": "Tick at least one payment method.",
+  "tripLegsPaymentCard": "Card",
+  "tripLegsPaymentCash": "Cash",
+  "tripLegsPaymentSummary": "Payment: {methods}"
 }

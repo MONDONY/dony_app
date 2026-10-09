@@ -28975,6 +28975,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Adresse de livraison'**
   String get tripLegSheetAddressCaption;
+
+  /// Titre de la section des moyens de paiement d'une étape (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Moyens de paiement acceptés'**
+  String get tripLegPaymentTitle;
+
+  /// Aide sous le titre des moyens de paiement d'une étape (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cochés selon la devise de l\'étape, modifiables.'**
+  String get tripLegPaymentHint;
+
+  /// Carte grisée sur une étape en franc CFA (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte indisponible en {currency}'**
+  String tripLegPaymentCardCurrencyUnavailable(String currency);
+
+  /// Carte grisée : compte Stripe pas prêt (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Configurez d\'abord vos paiements par carte depuis votre profil'**
+  String get tripLegPaymentCardNotConfigured;
+
+  /// Mobile money grisé hors zone CFA (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money indisponible en {currency}'**
+  String tripLegPaymentMobileMoneyIneligible(String currency);
+
+  /// Mobile money grisé : pas de compte de versement actif (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Configurez votre compte de versement mobile money pour l\'accepter'**
+  String get tripLegPaymentMobileMoneyInactive;
+
+  /// Mobile money grisé : compte de versement dans une autre devise (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte de versement reçoit des {currency}'**
+  String tripLegPaymentMobileMoneyOtherCurrency(String currency);
+
+  /// Erreur : aucun moyen de paiement coché sur une étape (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cochez au moins un moyen de paiement.'**
+  String get tripLegPaymentRequired;
+
+  /// Moyen de paiement court dans le récapitulatif d'une étape (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte'**
+  String get tripLegsPaymentCard;
+
+  /// Moyen de paiement court dans le récapitulatif d'une étape (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces'**
+  String get tripLegsPaymentCash;
+
+  /// Moyens de paiement d'une étape dans la liste des étapes (FLUTTER-HP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement : {methods}'**
+  String tripLegsPaymentSummary(String methods);
 }
 
 class _AppLocalizationsDelegate
