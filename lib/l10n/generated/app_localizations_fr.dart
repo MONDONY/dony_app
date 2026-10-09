@@ -17531,7 +17531,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String tripLegsLegPrice(String price) {
-    return '$price/kg';
+    return '$price par kg';
   }
 
   @override

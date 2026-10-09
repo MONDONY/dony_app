@@ -28733,7 +28733,7 @@ abstract class AppLocalizations {
   /// Prix au kilo d'une étape, devise comprise, dans la liste des étapes (FLUTTER-GK).
   ///
   /// In fr, this message translates to:
-  /// **'{price}/kg'**
+  /// **'{price} par kg'**
   String tripLegsLegPrice(String price);
 
   /// Étape dont le prix dépasse le plafond de la devise du voyage (FLUTTER-GK).

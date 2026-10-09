@@ -19653,7 +19653,7 @@
   "@recipientNotifyCodeExpiredHint": {"description": "Encart « Prévenir le destinataire » quand le code a expiré (FLUTTER-G2)."},
   "tripLegSheetPriceTooHigh": "Maximum {max} par kilo dans la devise du voyage.",
   "@tripLegSheetPriceTooHigh": {"description": "Prix d'étape au-dessus du plafond de la devise du voyage (FLUTTER-GK).", "placeholders": {"max": {"type": "String"}}},
-  "tripLegsLegPrice": "{price}/kg",
+  "tripLegsLegPrice": "{price} par kg",
   "@tripLegsLegPrice": {"description": "Prix au kilo d'une étape, devise comprise, dans la liste des étapes (FLUTTER-GK).", "placeholders": {"price": {"type": "String"}}},
   "tripLegsPriceAboveMax": "Prix au-dessus du plafond en {currency} : modifiez cette étape.",
   "@tripLegsPriceAboveMax": {"description": "Étape dont le prix dépasse le plafond de la devise du voyage (FLUTTER-GK).", "placeholders": {"currency": {"type": "String"}}},

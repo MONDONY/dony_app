@@ -323,7 +323,7 @@ void main() {
       );
       await t.pumpAndSettle();
 
-      expect(find.textContaining('F CFA/kg'), findsOneWidget);
+      expect(find.textContaining('F CFA par kg'), findsOneWidget);
       expect(
         find.text('Prix des étapes en F CFA, la devise du voyage.'),
         findsOneWidget,

@@ -9439,7 +9439,7 @@
   "bidDetailSenderCodeExpiredNote": "The pickup code has expired: generate a new one on your ticket.",
   "recipientNotifyCodeExpiredHint": "The pickup code has expired: generate a new one to add it to the message.",
   "tripLegSheetPriceTooHigh": "Maximum {max} per kg in the trip currency.",
-  "tripLegsLegPrice": "{price}/kg",
+  "tripLegsLegPrice": "{price} per kg",
   "tripLegsPriceAboveMax": "Price above the {currency} ceiling: edit this leg.",
   "tripLegsCurrencyNote": "Leg prices are in {currency}, the trip currency.",
   "listingRowLabelCurrency": "Currency",
