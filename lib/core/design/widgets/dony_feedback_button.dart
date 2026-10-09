@@ -129,9 +129,25 @@ class DonyFeedbackButton extends StatelessWidget {
   /// Retourne le chemin GoRouter courant, ou `'unknown'` si le contexte n'est
   /// pas hébergé dans un GoRouter (ex : tests unitaires plain MaterialApp).
   ///
+  /// Lu sur le routeur lui-même (`currentConfiguration`) et non par
+  /// `GoRouterState.of` : depuis une bottom sheet, le contexte vit sur le
+  /// navigateur racine, hors de toute page GoRouter, et `GoRouterState.of`
+  /// échouait — les retours arrivaient avec la route « unknown ».
+  ///
   /// Extrait ici pour être testable indépendamment.
   @visibleForTesting
   static String resolveRoute(BuildContext context) {
+    try {
+      final config = GoRouter.maybeOf(
+        context,
+      )?.routerDelegate.currentConfiguration;
+      if (config != null && config.isNotEmpty) {
+        final path = config.uri.path;
+        if (path.isNotEmpty) return path;
+      }
+    } catch (_) {
+      // Repli ci-dessous.
+    }
     try {
       return GoRouterState.of(context).uri.path;
     } catch (_) {
