@@ -30,6 +30,35 @@ void main() {
   }
 
   group('buildTripPayloads', () {
+    // FLUTTER-GE : les escales des étapes suivantes reprenaient celles de la
+    // première ; chaque étape envoie maintenant les siennes.
+    test('chaque étape envoie ses propres escales', () {
+      final payloads = buildTripPayloads(firstLeg(stops: TripStops.one), [
+        doualaLeg(stops: TripStops.direct),
+        TripLegDraftCopy.withCity(
+          doualaLeg(date: DateTime(2026, 11, 20), stops: TripStops.twoOrMore),
+          'Lomé',
+          'TG',
+        ),
+      ]);
+
+      expect(payloads.map((p) => p.stops), [
+        TripStops.one,
+        TripStops.direct,
+        TripStops.twoOrMore,
+      ]);
+      expect(payloads.map((p) => p.toJson()['stopsCount']), [1, 0, 2]);
+    });
+
+    test('étape sans escales renseignées : rien envoyé pour elle', () {
+      final payloads = buildTripPayloads(firstLeg(stops: TripStops.one), [
+        doualaLeg(),
+      ]);
+
+      expect(payloads[0].toJson()['stopsCount'], 1);
+      expect(payloads[1].toJson().containsKey('stopsCount'), isFalse);
+    });
+
     test("l'étape 2 part d'Abidjan et reprend le premier trajet", () {
       final payloads = buildTripPayloads(firstLeg(), [doualaLeg()]);
       expect(payloads, hasLength(2));

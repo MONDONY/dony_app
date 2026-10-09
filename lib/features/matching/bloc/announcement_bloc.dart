@@ -610,7 +610,9 @@ List<AnnouncementPayload> buildTripPayloads(
         // Grille seule (MIXED) : l'étape garde le prix au kilo du premier trajet.
         pricePerKg: leg.pricePerKg ?? first.pricePerKg,
         transportMode: first.transportMode,
-        stops: first.stops,
+        // Escales propres à chaque étape (FLUTTER-GE) : une correspondance
+        // directe peut suivre un vol avec escale.
+        stops: leg.stops,
         description: first.description,
         acceptedContentTypes: first.acceptedContentTypes,
         refusedTypes: first.refusedTypes,

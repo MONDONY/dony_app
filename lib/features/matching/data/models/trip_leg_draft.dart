@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:equatable/equatable.dart';
 
 /// Étape ajoutée au formulaire de publication (FLUTTER-4D), au-delà de la
@@ -17,6 +18,7 @@ class TripLegDraft extends Equatable {
     required this.deliveryAddress,
     required this.availableKg,
     this.pricePerKg,
+    this.stops,
   });
 
   final String arrivalCity;
@@ -34,6 +36,10 @@ class TripLegDraft extends Equatable {
 
   /// Prix au kilo propre à l'étape. `null` en mode grille seule.
   final double? pricePerKg;
+
+  /// Escales propres à l'étape (FLUTTER-GE), en avion seulement. `null` = non
+  /// renseigné. Préremplies avec celles de l'étape précédente, modifiables.
+  final TripStops? stops;
 
   /// Instant du départ, en heure locale.
   DateTime get departureAt {
@@ -56,6 +62,7 @@ class TripLegDraft extends Equatable {
     deliveryAddress,
     availableKg,
     pricePerKg,
+    stops,
   ];
 }
 

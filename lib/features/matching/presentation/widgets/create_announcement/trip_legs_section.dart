@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_leg_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -21,12 +23,21 @@ class TripLegsSection extends StatelessWidget {
     required this.showPrice,
     this.defaultKg,
     this.defaultPrice,
+    this.showStops = false,
+    this.defaultStops,
   });
 
   final TripLegOrigin? origin;
   final bool showPrice;
   final double? defaultKg;
   final double? defaultPrice;
+
+  /// Trajet en avion : chaque étape choisit ses escales (FLUTTER-GE).
+  final bool showStops;
+
+  /// Escales du premier trajet, préremplies sur la première étape ajoutée ;
+  /// les suivantes reprennent celles de l'étape précédente.
+  final TripStops? defaultStops;
 
   Future<void> _openSheet(
     BuildContext context,
@@ -47,6 +58,8 @@ class TripLegsSection extends StatelessWidget {
       showPrice: showPrice,
       defaultKg: previous?.availableKg ?? defaultKg,
       defaultPrice: previous?.pricePerKg ?? defaultPrice,
+      showStops: showStops,
+      defaultStops: previous != null ? previous.stops : defaultStops,
     );
     if (draft == null) return;
     if (editIndex != null) {
@@ -102,6 +115,7 @@ class TripLegsSection extends StatelessWidget {
                           ? ''
                           : TripLegChain.originOf(first, state.legs, i).city,
                       leg: state.legs[i],
+                      showStops: showStops,
                       invalid: invalid.contains(i),
                       onEdit: () => _openSheet(context, state, editIndex: i),
                       onRemove: () =>
@@ -150,6 +164,7 @@ class _LegTile extends StatelessWidget {
     required this.number,
     required this.from,
     required this.leg,
+    required this.showStops,
     required this.invalid,
     required this.onEdit,
     required this.onRemove,
@@ -158,6 +173,7 @@ class _LegTile extends StatelessWidget {
   final int number;
   final String from;
   final TripLegDraft leg;
+  final bool showStops;
   final bool invalid;
   final VoidCallback onEdit;
   final VoidCallback onRemove;
@@ -171,6 +187,7 @@ class _LegTile extends StatelessWidget {
     final kg = leg.availableKg == leg.availableKg.roundToDouble()
         ? leg.availableKg.toInt().toString()
         : leg.availableKg.toString();
+    final stops = leg.stops;
     return Container(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.md,
@@ -215,10 +232,14 @@ class _LegTile extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
-                  l.tripLegsLegSummary(
-                    '${DateFormat.MMMEd(locale).format(leg.departureDate)} ${leg.departureTime}',
-                    kg,
-                  ),
+                  [
+                    l.tripLegsLegSummary(
+                      '${DateFormat.MMMEd(locale).format(leg.departureDate)} ${leg.departureTime}',
+                      kg,
+                    ),
+                    if (showStops && stops != null)
+                      StopsChips.optionLabel(l, stops),
+                  ].join(' · '),
                   style: tt.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     fontFeatures: const [FontFeature.tabularFigures()],

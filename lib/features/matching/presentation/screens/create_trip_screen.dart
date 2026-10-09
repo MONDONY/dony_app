@@ -2399,12 +2399,18 @@ class _TripFormContentState extends State<_TripFormContent> {
             _arrivalDayOffsetNotifier,
             _deliveryAddressNotifier,
             _kgPriceEnabledNotifier,
+            _transportModeNotifier,
+            _stopsNotifier,
           ]),
           builder: (context, _) => TripLegsSection(
             origin: _firstLegOrigin(),
             showPrice: _kgPriceEnabledNotifier.value,
             defaultKg: _availableKgNotifier.value,
             defaultPrice: context.read<AnnouncementFormBloc>().state.pricePerKg,
+            // Escales par étape (FLUTTER-GE), préremplies avec celles du
+            // premier trajet.
+            showStops: supportsStops(_transportModeNotifier.value),
+            defaultStops: _stopsNotifier.value,
           ),
         ),
     ];
