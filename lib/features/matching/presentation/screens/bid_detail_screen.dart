@@ -103,6 +103,13 @@ class _BidDetailViewState extends State<_BidDetailView>
   late BidModel _bid;
   bool _skeletonLoading = false;
 
+  /// Colis introuvable (404) : annulé puis supprimé, typiquement une demande
+  /// carte jamais payée ouverte depuis une ancienne notification. L'écran
+  /// affiche « Cette demande n'existe plus » et un accès à Mes envois au lieu
+  /// de se refermer sur un simple message. Posé par le listener du BidBloc,
+  /// lu par son builder (pas de setState).
+  bool _notFound = false;
+
   /// Dernier identifiant d'utilisateur connecté vu par cet écran
   /// (FLUTTER-E5). L'AuthBloc passe par des états transitoires sans profil
   /// (`AuthLoading` d'un rafraîchissement, `AuthError` d'une action annexe,
@@ -530,16 +537,9 @@ class _BidDetailViewState extends State<_BidDetailView>
                   }
                 } else if (state is BidNotFound) {
                   _refreshTimer?.cancel();
-                  DonySnackbar.show(
-                    context,
-                    message: l.bidDetailNotFoundSnackbar,
-                    type: DonySnackbarType.warning,
-                  );
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/home');
-                  }
+                  _refreshTimer = null;
+                  _notFound = true;
+                  _skeletonLoading = false;
                 } else if (state is BidDetailLoaded) {
                   final previousBidId = _bid.id;
                   _bid = state.bid;
@@ -579,6 +579,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                 }
               },
               builder: (context, state) {
+                if (_notFound) return const _BidGoneView();
                 final isLoading = state is BidLoading;
                 // Utilisateur courant résolu quel que soit l'état de
                 // l'AuthBloc (AuthProfileUpdated, puis états transitoires,
@@ -678,5 +679,41 @@ class _BidDetailViewState extends State<_BidDetailView>
         ), // BlocListener<RatingBloc>
       ), // BlocListener<CancellationBloc>
     ); // BlocListener<BidAcceptanceBloc>
+  }
+}
+
+/// Colis introuvable : un état clair plutôt qu'une erreur, avec un accès à
+/// Mes envois (onglet Suivi).
+class _BidGoneView extends StatelessWidget {
+  const _BidGoneView();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: DonyAppBar(
+        title: '',
+        onBack: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
+        },
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: DonyEmptyState(
+            key: const Key('bid-detail-gone'),
+            iconAsset: 'package',
+            title: l.bidDetailGoneTitle,
+            description: l.bidDetailGoneBody,
+            actionLabel: l.bidDetailGoneAction,
+            onAction: () => context.go('/tracking'),
+          ),
+        ),
+      ),
+    );
   }
 }

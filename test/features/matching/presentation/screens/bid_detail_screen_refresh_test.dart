@@ -125,6 +125,10 @@ Future<GoRouter> _pump(
         path: '/conversations/:id',
         builder: (_, _) => const Scaffold(body: Text('Conversation')),
       ),
+      GoRoute(
+        path: '/tracking',
+        builder: (_, _) => const Scaffold(body: Text('Tracking')),
+      ),
     ],
   );
 
@@ -417,6 +421,53 @@ void main() {
       verifyNever(
         () => bidBloc.add(any(that: isA<BidDetailExternalChangeDetected>())),
       );
+    });
+  });
+
+  group('colis introuvable (404)', () {
+    testWidgets(
+      'BidNotFound → « Cette demande n\'existe plus » et accès à Mes envois',
+      (tester) async {
+        final states = StreamController<BidState>.broadcast();
+        addTearDown(states.close);
+        when(() => bidBloc.stream).thenAnswer((_) => states.stream);
+
+        await _pump(
+          tester,
+          bid: BidModel.skeleton('bid-001'),
+          authBloc: senderAuth(),
+        );
+
+        states.add(BidNotFound());
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byKey(const Key('bid-detail-gone')), findsOneWidget);
+        expect(find.text("Cette demande n'existe plus"), findsOneWidget);
+        expect(find.text('Home'), findsNothing, reason: 'reste sur l\'écran');
+
+        await tester.tap(find.text('Voir mes envois'));
+        await tester.pumpAndSettle();
+        expect(find.text('Tracking'), findsOneWidget);
+      },
+    );
+
+    testWidgets('BidNotFound → plus de relevé périodique', (tester) async {
+      final states = StreamController<BidState>.broadcast();
+      addTearDown(states.close);
+      when(() => bidBloc.stream).thenAnswer((_) => states.stream);
+
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'PENDING'),
+        authBloc: senderAuth(),
+      );
+      states.add(BidNotFound());
+      await tester.pump(const Duration(milliseconds: 400));
+      clearInteractions(bidBloc);
+
+      await tester.pump(const Duration(seconds: 31));
+      noDetailRequest();
     });
   });
 }

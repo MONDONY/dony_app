@@ -7222,9 +7222,17 @@
   "@bidDetailDeletedSnackbar": {
     "description": "Snackbar BidDeleted (bid_detail_screen.dart)"
   },
-  "bidDetailNotFoundSnackbar": "Ce colis n'existe plus",
-  "@bidDetailNotFoundSnackbar": {
-    "description": "Snackbar BidNotFound (bid_detail_screen.dart)"
+  "bidDetailGoneTitle": "Cette demande n'existe plus",
+  "@bidDetailGoneTitle": {
+    "description": "État plein écran quand le colis ouvert (souvent depuis une notification) est introuvable, 404 (bid_detail_screen.dart)"
+  },
+  "bidDetailGoneBody": "Elle a été annulée puis retirée. Vos colis en cours sont dans Mes envois.",
+  "@bidDetailGoneBody": {
+    "description": "Explication sous bidDetailGoneTitle (bid_detail_screen.dart)"
+  },
+  "bidDetailGoneAction": "Voir mes envois",
+  "@bidDetailGoneAction": {
+    "description": "Bouton de l'état « demande introuvable » vers l'onglet Suivi, section Mes envois (bid_detail_screen.dart)"
   },
   "bidDetailShareTracking": "Partager le suivi",
   "@bidDetailShareTracking": {

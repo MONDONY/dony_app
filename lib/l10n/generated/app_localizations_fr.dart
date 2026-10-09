@@ -7237,7 +7237,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailDeletedSnackbar => 'Demande supprimée.';
 
   @override
-  String get bidDetailNotFoundSnackbar => 'Ce colis n\'existe plus';
+  String get bidDetailGoneTitle => 'Cette demande n\'existe plus';
+
+  @override
+  String get bidDetailGoneBody =>
+      'Elle a été annulée puis retirée. Vos colis en cours sont dans Mes envois.';
+
+  @override
+  String get bidDetailGoneAction => 'Voir mes envois';
 
   @override
   String get bidDetailShareTracking => 'Partager le suivi';

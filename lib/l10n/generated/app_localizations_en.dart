@@ -7197,7 +7197,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailDeletedSnackbar => 'Request deleted.';
 
   @override
-  String get bidDetailNotFoundSnackbar => 'This parcel no longer exists';
+  String get bidDetailGoneTitle => 'This request no longer exists';
+
+  @override
+  String get bidDetailGoneBody =>
+      'It was cancelled and removed. Your current parcels are in My shipments.';
+
+  @override
+  String get bidDetailGoneAction => 'View my shipments';
 
   @override
   String get bidDetailShareTracking => 'Share tracking';
