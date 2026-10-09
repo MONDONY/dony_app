@@ -17371,4 +17371,72 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripDraftSavedViewDraftCta => 'Voir ce brouillon';
+
+  @override
+  String get tripStopsLabel => 'Escales (facultatif)';
+
+  @override
+  String get tripStopsHint =>
+      'Indiquez-le si vous le savez : les expéditeurs le verront sur votre trajet.';
+
+  @override
+  String get tripStopsDirect => 'Direct';
+
+  @override
+  String get tripStopsOne => '1 escale';
+
+  @override
+  String get tripStopsTwoOrMore => '2 escales ou plus';
+
+  @override
+  String get tripStopsBadgeDirect => 'Vol direct';
+
+  @override
+  String get tripStopsBadgeOne => '1 escale';
+
+  @override
+  String get tripStopsBadgeTwoOrMore => '2 escales et +';
+
+  @override
+  String get tripStopsDetailLabel => 'Escales';
+
+  @override
+  String get homeComposerSectionStops => 'ESCALES';
+
+  @override
+  String get homeComposerStopsDirectOnly => 'Direct uniquement';
+
+  @override
+  String get homeComposerStopsMaxOne => 'Max 1 escale';
+
+  @override
+  String get homeComposerStopsAny => 'Peu importe';
+
+  @override
+  String get homeComposerStopsHint =>
+      '« Direct uniquement » écarte les trajets dont les escales ne sont pas renseignées.';
+
+  @override
+  String get homeComposerSectionPaymentMethods => 'MOYENS DE PAIEMENT';
+
+  @override
+  String get homeComposerPaymentMethodsHint =>
+      'Trajets qui acceptent au moins un des moyens choisis.';
+
+  @override
+  String get homeComposerPaymentCard => 'Carte bancaire';
+
+  @override
+  String get homeComposerPaymentCash => 'Espèces';
+
+  @override
+  String get homeComposerPaymentMobileMoney => 'Mobile money';
+
+  @override
+  String get tripPublishCardOffHelp =>
+      'Sans carte, ce trajet n\'aura pas de paiement protégé en ligne : l\'argent n\'est plus séquestré jusqu\'à la livraison.';
+
+  @override
+  String get tripPublishPaymentMethodRequired =>
+      'Les espèces sont activées : au moins un moyen de paiement doit rester actif.';
 }

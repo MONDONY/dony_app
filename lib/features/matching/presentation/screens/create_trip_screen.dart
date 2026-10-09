@@ -633,6 +633,14 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
   final _cashEnabledNotifier = ValueNotifier<bool>(false);
 
+  /// Le voyageur garde la carte sur ce trajet (FLUTTER-FT) : cochée par
+  /// défaut, elle n'est envoyée que si Stripe Connect est prêt et la devise
+  /// éligible.
+  final _cardEnabledNotifier = ValueNotifier<bool>(true);
+
+  /// Escales du vol (FLUTTER-GE), facultatives, envoyées pour l'avion seul.
+  final _stopsNotifier = ValueNotifier<TripStops?>(null);
+
   /// Le voyageur accepte le paiement par mobile money (Orange Money, Wave,
   /// MTN via pawaPay). Uniquement pertinent pour un trajet en zone CFA
   /// (XOF/XAF) — remis à `false` par [_onCurrencyChanged] si la devise
@@ -745,6 +753,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _pickupAddressNotifier.value = a.pickupAddress;
       _deliveryAddressNotifier.value = a.deliveryAddress;
       _transportModeNotifier.value = a.transportMode;
+      _stopsNotifier.value = a.stops;
 
       if (a.description != null) {
         _descriptionCtrl.text = a.description!;
@@ -768,6 +777,9 @@ class _TripFormContentState extends State<_TripFormContent> {
 
       _cashEnabledNotifier.value = a.acceptedPaymentMethods.contains(
         BidPaymentMethod.cash,
+      );
+      _cardEnabledNotifier.value = a.acceptedPaymentMethods.contains(
+        BidPaymentMethod.stripe,
       );
       _mobileMoneyEnabledNotifier.value = a.acceptedPaymentMethods.contains(
         BidPaymentMethod.mobileMoney,
@@ -983,7 +995,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier,
     _refusedTypesNotifier,
     _cashEnabledNotifier,
+    _cardEnabledNotifier,
     _mobileMoneyEnabledNotifier,
+    _stopsNotifier,
     _negotiableNotifier,
     _kgPriceEnabledNotifier,
     _descriptionCtrl,
@@ -1021,7 +1035,9 @@ class _TripFormContentState extends State<_TripFormContent> {
       _customPriceNotifier.value,
       _transportModeNotifier.value,
       _cashEnabledNotifier.value,
+      _cardEnabledNotifier.value,
       _mobileMoneyEnabledNotifier.value,
+      _stopsNotifier.value,
       _negotiableNotifier.value,
       _kgPriceEnabledNotifier.value,
       set(_selectedContentNotifier.value),
@@ -1307,6 +1323,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     widget.currencyNotifier.removeListener(_onCurrencyChanged);
     _kgPriceEnabledNotifier.dispose();
     _cashEnabledNotifier.dispose();
+    _cardEnabledNotifier.dispose();
+    _stopsNotifier.dispose();
     _mobileMoneyEnabledNotifier.dispose();
     _negotiableNotifier.dispose();
     _descriptionCtrl.dispose();
@@ -1502,13 +1520,18 @@ class _TripFormContentState extends State<_TripFormContent> {
     // La carte n'existe pas en zone CFA (pas de Stripe Connect) : elle n'est
     // envoyée que si la devise du trajet l'autorise, comme l'aperçu du
     // sélecteur de devise. Le backend la retirerait de toute façon.
+    // La carte est décochable (FLUTTER-FT) : sans elle, les espèces
+    // repartent d'office, comme quand Stripe n'est pas configuré.
     final stripeConfigured =
         _isStripeConfigured() && _currency.isStripeEligible;
+    final cardOn = stripeConfigured && _cardEnabledNotifier.value;
     final paymentMethods = [
-      if (stripeConfigured) 'STRIPE',
-      if (_cashEnabledNotifier.value || !stripeConfigured) 'CASH',
+      if (cardOn) 'STRIPE',
+      if (_cashEnabledNotifier.value || !cardOn) 'CASH',
       if (_mobileMoneyEnabledNotifier.value) 'MOBILE_MONEY',
     ];
+    // Escales : avion seulement, sinon jamais envoyées.
+    final stops = supportsStops(transportMode) ? _stopsNotifier.value : null;
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();
@@ -1553,6 +1576,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           availableKg: _availableKgNotifier.value,
           pricePerKg: pricePerKgToSubmit,
           transportMode: transportMode,
+          stops: stops,
           description: description,
           acceptedContentTypes: allAccepted,
           refusedTypes: refused,
@@ -1578,6 +1602,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         availableKg: _availableKgNotifier.value,
         pricePerKg: pricePerKgToSubmit,
         transportMode: transportMode,
+        stops: stops,
         description: description,
         acceptedContentTypes: allAccepted,
         refusedTypes: refused,
@@ -2045,6 +2070,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           context.read<MobileMoneyAccountBloc>().state,
         );
     _cashEnabledNotifier.value = t.acceptedPaymentMethods.contains('CASH');
+    _cardEnabledNotifier.value = t.acceptedPaymentMethods.contains('STRIPE');
     _mobileMoneyEnabledNotifier.value =
         mobileMoneyPossible &&
         t.acceptedPaymentMethods.contains('MOBILE_MONEY');
@@ -2181,6 +2207,8 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureTimeNotifier: _departureTimeNotifier,
           arrivalTimeNotifier: _arrivalTimeNotifier,
           arrivalDayOffsetNotifier: _arrivalDayOffsetNotifier,
+          stopsNotifier: _stopsNotifier,
+          transportModeNotifier: _transportModeNotifier,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,
@@ -2326,6 +2354,7 @@ class _TripFormContentState extends State<_TripFormContent> {
               customPriceNotifier: _customPriceNotifier,
               availableKgNotifier: _availableKgNotifier,
               cashEnabledNotifier: _cashEnabledNotifier,
+              cardEnabledNotifier: _cardEnabledNotifier,
               kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
               mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
               currencyNotifier: widget.currencyNotifier,

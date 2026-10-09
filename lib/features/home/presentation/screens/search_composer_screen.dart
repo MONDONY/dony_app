@@ -33,6 +33,8 @@ import 'package:dony/features/home/presentation/widgets/search_filter_fields.dar
 import 'package:dony/features/home/presentation/widgets/search_phrase_field.dart';
 import 'package:dony/features/home/presentation/widgets/search_section_label.dart';
 import 'package:dony/features/home/presentation/widgets/unresolved_question.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -363,6 +365,77 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
           ),
         ],
       ).animate().fadeIn(delay: 100.ms),
+
+      // ── Escales (FLUTTER-GD) ── choix unique, « Peu importe » = aucun filtre.
+      SearchSectionLabel(l.homeComposerSectionStops),
+      Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: [
+          for (final (filter, label) in <(StopsFilter?, String)>[
+            (StopsFilter.directOnly, l.homeComposerStopsDirectOnly),
+            (StopsFilter.maxOne, l.homeComposerStopsMaxOne),
+            (null, l.homeComposerStopsAny),
+          ])
+            QuickChip(
+              key: Key('chip-stops-${filter?.name ?? 'any'}'),
+              label: label,
+              iconAsset: 'plane',
+              active: f.stopsFilter == filter,
+              onChanged: (_) => _update(
+                filter == null
+                    ? f.copyWith(clearStopsFilter: true)
+                    : f.copyWith(stopsFilter: filter),
+              ),
+            ),
+        ],
+      ).animate().fadeIn(delay: 110.ms),
+      const SizedBox(height: DonySpacing.sm),
+      Text(
+        l.homeComposerStopsHint,
+        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+      ),
+
+      // ── Moyens de paiement (FLUTTER-G0) ── choix multiple, filtré serveur.
+      SearchSectionLabel(l.homeComposerSectionPaymentMethods),
+      Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: [
+          for (final (method, label, icon)
+              in <(BidPaymentMethod, String, String)>[
+                (
+                  BidPaymentMethod.stripe,
+                  l.homeComposerPaymentCard,
+                  'credit-card',
+                ),
+                (BidPaymentMethod.cash, l.homeComposerPaymentCash, 'banknote'),
+                (
+                  BidPaymentMethod.mobileMoney,
+                  l.homeComposerPaymentMobileMoney,
+                  'smartphone',
+                ),
+              ])
+            QuickChip(
+              key: Key('chip-payment-${method.name}'),
+              label: label,
+              iconAsset: icon,
+              active: f.paymentMethods.contains(method),
+              onChanged: (v) => _update(
+                f.copyWith(
+                  paymentMethods: v
+                      ? {...f.paymentMethods, method}
+                      : ({...f.paymentMethods}..remove(method)),
+                ),
+              ),
+            ),
+        ],
+      ).animate().fadeIn(delay: 115.ms),
+      const SizedBox(height: DonySpacing.sm),
+      Text(
+        l.homeComposerPaymentMethodsHint,
+        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+      ),
 
       SearchSectionLabel(l.homeComposerSectionUrgency),
       Text(

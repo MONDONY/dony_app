@@ -23,8 +23,10 @@ AnnouncementModel _announcement({
   List<Map<String, dynamic>>? priceGridItems,
   String currency = 'EUR',
   DateTime? departureDate,
+  int? stopsCount,
 }) {
   return AnnouncementModel.fromJson({
+    'stopsCount': ?stopsCount,
     'id': 'a1',
     'travelerId': 't1',
     'departureCity': departureCity,
@@ -53,6 +55,27 @@ Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
+
+  // FLUTTER-GE : badge d'escales sur la carte de « Mes trajets » et favoris.
+  testWidgets('badge d\'escales seulement si renseigné', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(stopsCount: 1),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('1 escale'), findsOneWidget);
+
+    await tester.pumpWidget(
+      _wrap(TripCard(announcement: _announcement(), onTap: () {}, index: 0)),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
+  });
 
   testWidgets('affiche route, drapeaux, progression et prix', (tester) async {
     await tester.pumpWidget(

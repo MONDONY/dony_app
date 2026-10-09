@@ -5,6 +5,7 @@ import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,6 +34,7 @@ AnnouncementModel _makeAnn({
   String? convertedCurrency,
   int? uniqueViewerCount,
   String status = 'ACTIVE',
+  TripStops? stops,
 }) => AnnouncementModel(
   id: 'a1',
   travelerId: 't1',
@@ -50,6 +52,7 @@ AnnouncementModel _makeAnn({
   convertedCurrency: convertedCurrency,
   uniqueViewerCount: uniqueViewerCount,
   status: status,
+  stops: stops,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
   acceptedContentTypes: acceptedContentTypes,
@@ -86,6 +89,36 @@ void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
   group('TravelerCard', () {
+    // FLUTTER-GE : badge d'escales, absent quand non renseigné.
+    testWidgets('badge d\'escales seulement si renseigné', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(stops: TripStops.direct),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-stops-badge')), findsOneWidget);
+      expect(find.text('Vol direct'), findsOneWidget);
+
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('trip-stops-badge')), findsNothing);
+    });
+
     testWidgets('shows traveler name and price', (tester) async {
       await tester.pumpWidget(
         _wrap(

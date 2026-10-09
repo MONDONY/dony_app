@@ -106,6 +106,8 @@ int _matchingBrace(String text, int openIndex) {
 const _sameInBothLanguages = <String>{
   'recipientNotifyRoute', // « (Paris → Dakar) » : seulement le trajet, sans mot
   'commonOk', // « OK » se dit pareil
+  'tripStopsDirect', // « Direct » (vol direct) se dit pareil (FLUTTER-GE)
+  'homeComposerPaymentMobileMoney', // « Mobile money » se dit pareil (FLUTTER-G0)
   'travelerContactWhatsApp', // « WhatsApp » : nom de l'application
   'travelerContactSms', // « SMS » se dit pareil
   'travelerContactInAppMessage', // « Message » se dit pareil

@@ -9,8 +9,11 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/stops_chips.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -41,6 +44,11 @@ class TrajetStep extends StatelessWidget {
   /// nuit ou une escale (FLUTTER-4E). Null : le choix n'est pas proposé
   /// (modèles de trajet).
   final ValueNotifier<int>? arrivalDayOffsetNotifier;
+
+  /// Escales du vol (FLUTTER-GE), facultatives. Proposées seulement quand
+  /// [transportModeNotifier] vaut l'avion. Null : le choix n'est pas proposé.
+  final ValueNotifier<TripStops?>? stopsNotifier;
+  final ValueNotifier<TransportMode?>? transportModeNotifier;
 
   /// Callbacks vers les méthodes du state parent.
   final Future<void> Function() onSelectDepartureTime;
@@ -82,6 +90,8 @@ class TrajetStep extends StatelessWidget {
     required this.departureTimeNotifier,
     required this.arrivalTimeNotifier,
     this.arrivalDayOffsetNotifier,
+    this.stopsNotifier,
+    this.transportModeNotifier,
     required this.onSelectDepartureTime,
     required this.onSelectArrivalTime,
     required this.onSelectDate,
@@ -422,6 +432,16 @@ class TrajetStep extends StatelessWidget {
           ).animate().fadeIn(delay: 60.ms);
         },
       ),
+      if (stopsNotifier != null && transportModeNotifier != null)
+        ValueListenableBuilder<TransportMode?>(
+          valueListenable: transportModeNotifier!,
+          builder: (context, mode, _) => supportsStops(mode)
+              ? Padding(
+                  padding: const EdgeInsets.only(top: DonySpacing.base),
+                  child: StopsChips(notifier: stopsNotifier!),
+                ).animate().fadeIn(delay: 80.ms)
+              : const SizedBox.shrink(),
+        ),
       // Le sélecteur « Mode de transport » a été retiré de l'écran : seul
       // l'avion était réellement proposé (les autres modes affichaient
       // « Bientôt disponible »), la question n'apportait donc rien au voyageur

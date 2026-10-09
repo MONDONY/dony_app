@@ -2,6 +2,7 @@ import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'announcement_model.g.dart';
@@ -140,6 +141,15 @@ class AnnouncementModel {
   final double? pricePerKgDisplay;
   @JsonKey(fromJson: transportModeFromWire, toJson: _transportModeToWireOrNull)
   final TransportMode? transportMode;
+
+  /// Escales d'un trajet en avion (FLUTTER-GE). `null` = non renseigné, ou
+  /// back antérieur : rien n'est affiché.
+  @JsonKey(
+    name: 'stopsCount',
+    fromJson: tripStopsFromWire,
+    toJson: tripStopsToWire,
+  )
+  final TripStops? stops;
   final String status;
   final int? bidsCount;
 
@@ -265,6 +275,7 @@ class AnnouncementModel {
     this.pricePerKg,
     this.pricePerKgDisplay,
     this.transportMode,
+    this.stops,
     required this.status,
     this.bidsCount,
     this.uniqueViewerCount,

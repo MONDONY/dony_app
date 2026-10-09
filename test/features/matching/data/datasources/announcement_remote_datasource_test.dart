@@ -3,6 +3,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -482,6 +483,33 @@ void main() {
       expect(captured['urgent'], true);
     });
 
+    // FLUTTER-GD / FLUTTER-G0.
+    test('envoie maxStops et paymentMethods, jamais une liste vide', () async {
+      when(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+
+      await datasource.searchAnnouncements(
+        maxStops: 0,
+        paymentMethods: ['CASH', 'STRIPE'],
+      );
+      await datasource.searchAnnouncements(paymentMethods: []);
+
+      final calls = verify(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: captureAny(named: 'queryParameters'),
+        ),
+      ).captured.cast<Map<String, dynamic>>();
+      expect(calls.first['maxStops'], 0);
+      expect(calls.first['paymentMethods'], 'CASH,STRIPE');
+      expect(calls.last.containsKey('maxStops'), isFalse);
+      expect(calls.last.containsKey('paymentMethods'), isFalse);
+    });
+
     test(
       'omits urgent param when urgent is false or null (never sends urgent=false)',
       () async {
@@ -685,6 +713,60 @@ void main() {
   // ── updateAnnouncement ───────────────────────────────────────────────────────
 
   group('updateAnnouncement', () {
+    // FLUTTER-GE : escales envoyées pour l'avion seulement.
+    test('envoie stopsCount pour un vol, jamais hors avion', () async {
+      final bodies = <Map<String, dynamic>>[];
+      when(
+        () => mockDio.put('/announcements/ann-001', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        bodies.add(
+          inv.namedArguments[const Symbol('data')] as Map<String, dynamic>,
+        );
+        return _ok(_announcementJson, '/announcements/ann-001');
+      });
+
+      for (final mode in [TransportMode.plane, TransportMode.car]) {
+        await datasource.updateAnnouncement(
+          id: 'ann-001',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2024, 6),
+          pickupAddress: kPickup,
+          deliveryAddress: kDelivery,
+          availableKg: 10.0,
+          pricePerKg: 12.0,
+          transportMode: mode,
+          stops: TripStops.one,
+          handoverDeadline: DateTime(2026, 6, 14, 18),
+        );
+      }
+      expect(bodies.first['stopsCount'], 1);
+      expect(bodies.last.containsKey('stopsCount'), isFalse);
+    });
+
+    test('createAnnouncement envoie stopsCount pour un vol', () async {
+      Map<String, dynamic>? body;
+      when(
+        () => mockDio.post('/announcements', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        body = inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_announcementJson, '/announcements');
+      });
+      await datasource.createAnnouncement(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 6),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
+        availableKg: 10.0,
+        pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
+        stops: TripStops.direct,
+        handoverDeadline: DateTime(2026, 6, 14, 18),
+      );
+      expect(body!['stopsCount'], 0);
+    });
+
     test('returns updated AnnouncementModel', () async {
       when(
         () => mockDio.put('/announcements/ann-001', data: any(named: 'data')),

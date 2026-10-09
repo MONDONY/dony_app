@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 
@@ -21,6 +22,7 @@ class AnnouncementPayload extends Equatable {
     required this.availableKg,
     required this.pricePerKg,
     required this.transportMode,
+    this.stops,
     this.description,
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],
@@ -46,6 +48,9 @@ class AnnouncementPayload extends Equatable {
   final double availableKg;
   final double pricePerKg;
   final TransportMode transportMode;
+
+  /// Escales (FLUTTER-GE), envoyées seulement pour un trajet en avion.
+  final TripStops? stops;
   final String? description;
   final List<String> acceptedContentTypes;
   final List<String> refusedTypes;
@@ -71,6 +76,8 @@ class AnnouncementPayload extends Equatable {
     'availableKg': availableKg,
     'pricePerKg': pricePerKg,
     'transportMode': transportModeToWire(transportMode),
+    if (stops != null && supportsStops(transportMode))
+      'stopsCount': stops!.wire,
     if (description != null && description!.isNotEmpty)
       'description': description,
     'acceptedContentTypes': acceptedContentTypes,

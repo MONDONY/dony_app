@@ -321,6 +321,7 @@ AnnouncementModel _makeAnnouncement() => AnnouncementModel(
 /// • departureTime + arrivalTime (covers TimeOfDay parsing in initState)
 /// • acceptedContentTypes + refusedTypes (covers content-type init code)
 AnnouncementModel _makeFullAnnouncement({
+  TripStops? stops,
   String currency = 'EUR',
   String status = 'ACTIVE',
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
@@ -355,6 +356,7 @@ AnnouncementModel _makeFullAnnouncement({
     lng: -17.467,
   ),
   transportMode: TransportMode.plane,
+  stops: stops,
   acceptedPaymentMethods: acceptedPaymentMethods,
   acceptedContentTypes: const ['Vêtements', 'Médicaments'],
   refusedTypes: const ['Produits dangereux'],
@@ -1776,6 +1778,99 @@ void main() {
         ).called(1);
       },
     );
+
+    /// Stripe Connect prêt : la carte devient un vrai choix (FLUTTER-FT).
+    void stripeReady() {
+      final stripe = _MockStripeAccountBloc();
+      when(() => stripe.state).thenReturn(
+        const StripeAccountReady(
+          ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+        ),
+      );
+      when(() => stripe.stream).thenAnswer((_) => const Stream.empty());
+      when(() => stripe.isClosed).thenReturn(false);
+      getIt.unregister<StripeAccountBloc>();
+      getIt.registerFactory<StripeAccountBloc>(() => stripe);
+      addTearDown(() {
+        getIt.unregister<StripeAccountBloc>();
+        getIt.registerFactory<StripeAccountBloc>(_makeStripeBloc);
+      });
+    }
+
+    testWidgets('FLUTTER-FT : Stripe prêt, carte gardée → STRIPE envoyé', (
+      tester,
+    ) async {
+      stripeReady();
+      await navigateToStep2(tester);
+
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      verify(
+        () => announcementBloc.add(
+          any(
+            that: predicate<AnnouncementEvent>(
+              (e) =>
+                  e is AnnouncementUpdateRequested &&
+                  e.acceptedPaymentMethods.contains('STRIPE'),
+              'AnnouncementUpdateRequested avec STRIPE',
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('FLUTTER-FT : Stripe prêt, trajet sans carte → refus conservé, '
+        'espèces envoyées', (tester) async {
+      stripeReady();
+      await navigateToStep2(
+        tester,
+        announcement: _makeFullAnnouncement(
+          acceptedPaymentMethods: {BidPaymentMethod.cash},
+        ),
+      );
+      expect(find.byKey(const Key('card-off-help')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      verify(
+        () => announcementBloc.add(
+          any(
+            that: predicate<AnnouncementEvent>(
+              (e) =>
+                  e is AnnouncementUpdateRequested &&
+                  !e.acceptedPaymentMethods.contains('STRIPE') &&
+                  e.acceptedPaymentMethods.contains('CASH'),
+              'AnnouncementUpdateRequested sans STRIPE',
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('FLUTTER-GE : les escales préremplies repartent à '
+        'l\'enregistrement', (tester) async {
+      await navigateToStep2(
+        tester,
+        announcement: _makeFullAnnouncement(stops: TripStops.one),
+      );
+
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      verify(
+        () => announcementBloc.add(
+          any(
+            that: predicate<AnnouncementEvent>(
+              (e) =>
+                  e is AnnouncementUpdateRequested && e.stops == TripStops.one,
+              'AnnouncementUpdateRequested avec une escale',
+            ),
+          ),
+        ),
+      ).called(1);
+    });
 
     testWidgets(
       'changer de devise resynchronise le prix du bloc : le même chip vaut '

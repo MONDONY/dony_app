@@ -7,6 +7,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/arrival_label.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -110,6 +111,11 @@ class AnnouncementDetailBody extends StatelessWidget {
                   ),
                   if (a.transportMode != null)
                     _HeroChip(label: a.transportMode!.label(context.l10n)),
+                  if (a.stops != null)
+                    _HeroChip(
+                      key: const Key('detail-stops-chip'),
+                      label: tripStopsBadgeLabel(l, a.stops!),
+                    ),
                   if (a.departureTime != null)
                     _HeroChip(
                       label:
@@ -629,7 +635,7 @@ String _handoverDeadlineLabel(AppLocalizations l, DateTime deadline) {
 
 class _HeroChip extends StatelessWidget {
   final String label;
-  const _HeroChip({required this.label});
+  const _HeroChip({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {

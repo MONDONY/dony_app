@@ -1,10 +1,44 @@
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('HomeSearchFilters', () {
+    // FLUTTER-GD / FLUTTER-G0.
+    test('escales et moyens de paiement : requête, clés et compteur', () {
+      const f = HomeSearchFilters(
+        stopsFilter: StopsFilter.directOnly,
+        paymentMethods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+      );
+      final q = f.toAnnouncementQuery();
+      expect(q.maxStops, 0);
+      expect(q.paymentMethods, ['CASH', 'STRIPE']);
+      expect(f.activeKeys, {'stops', 'payment_methods'});
+      expect(f.activeCountFor(SearchMode.trips), 2);
+      expect(f.activeCountFor(SearchMode.parcels), 0);
+
+      const none = HomeSearchFilters();
+      expect(none.toAnnouncementQuery().maxStops, isNull);
+      expect(none.toAnnouncementQuery().paymentMethods, isNull);
+
+      final cleared = f.copyWith(clearStopsFilter: true, paymentMethods: {});
+      expect(cleared.stopsFilter, isNull);
+      expect(cleared.paymentMethods, isEmpty);
+      expect(
+        f
+            .copyWith(stopsFilter: StopsFilter.maxOne)
+            .toAnnouncementQuery()
+            .maxStops,
+        1,
+      );
+      // L'interversion du corridor ne perd pas ces filtres.
+      expect(f.swapCorridor().stopsFilter, StopsFilter.directOnly);
+      expect(f.swapCorridor().paymentMethods, hasLength(2));
+    });
+
     test('vide : aucun filtre actif dans les deux modes', () {
       const f = HomeSearchFilters();
       expect(f.activeCountFor(SearchMode.trips), 0);

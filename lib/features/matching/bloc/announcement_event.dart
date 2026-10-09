@@ -2,8 +2,10 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/matching/data/models/trip_stops.dart';
 
 export 'package:dony/features/matching/data/models/transport_mode.dart';
+export 'package:dony/features/matching/data/models/trip_stops.dart';
 
 abstract class AnnouncementEvent {}
 
@@ -21,6 +23,9 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final double availableKg;
   final double pricePerKg;
   final TransportMode transportMode;
+
+  /// Escales (FLUTTER-GE), avion uniquement ; `null` = non renseigné.
+  final TripStops? stops;
   final String? description;
   final List<String> acceptedContentTypes;
   final List<String> refusedTypes;
@@ -51,6 +56,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     required this.availableKg,
     required this.pricePerKg,
     required this.transportMode,
+    this.stops,
     this.description,
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],
@@ -110,6 +116,14 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   /// envoyé explicitement, seulement présent ou absent côté datasource.
   final bool? urgent;
 
+  /// Escales maximum (FLUTTER-GD) : 0 direct uniquement, 1 au plus une
+  /// escale ; `null` = peu importe.
+  final int? maxStops;
+
+  /// Moyens de paiement recherchés (FLUTTER-G0), valeurs API (`STRIPE`,
+  /// `CASH`, `MOBILE_MONEY`) ; `null` ou vide = tous.
+  final List<String>? paymentMethods;
+
   AnnouncementSearchRequested({
     this.departureCity,
     this.arrivalCity,
@@ -130,6 +144,8 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.sortBy = 'date',
     this.sortDir = 'asc',
     this.urgent,
+    this.maxStops,
+    this.paymentMethods,
   });
 }
 
@@ -206,6 +222,9 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final double availableKg;
   final double pricePerKg;
   final TransportMode transportMode;
+
+  /// Escales (FLUTTER-GE), avion uniquement ; `null` = non renseigné.
+  final TripStops? stops;
   final String? description;
   final List<String> acceptedContentTypes;
   final List<String> refusedTypes;
@@ -232,6 +251,7 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     required this.availableKg,
     required this.pricePerKg,
     required this.transportMode,
+    this.stops,
     this.description,
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],

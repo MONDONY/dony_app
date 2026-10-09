@@ -6,6 +6,7 @@ import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -408,6 +409,12 @@ class _ActiveCardContent extends StatelessWidget {
             dateLabel,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
+
+          // ── Escales (FLUTTER-GE), seulement si renseignées ──
+          if (announcement.stops != null) ...[
+            const SizedBox(height: DonySpacing.xs),
+            TripStopsBadge(stops: announcement.stops),
+          ],
 
           // ── Demandes stats row (acceptées / en attente) ──
           // Rendered only when at least one count > 0 — keeps demand-free

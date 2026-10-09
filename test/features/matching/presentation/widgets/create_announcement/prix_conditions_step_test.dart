@@ -98,6 +98,8 @@ Widget _host({
   ValueNotifier<bool>? negotiableNotifier,
   bool withRouter = false,
   String? residenceCountry,
+  ValueNotifier<bool>? cardEnabledNotifier,
+  ValueNotifier<bool>? cashNotifier,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -116,7 +118,7 @@ Widget _host({
   final priceOptionNotifier = ValueNotifier<int>(0);
   final customPriceNotifier = ValueNotifier<double>(0);
   final availableKgNotifier = ValueNotifier<double>(initialAvailableKg);
-  final cashEnabledNotifier = ValueNotifier<bool>(false);
+  final cashEnabledNotifier = cashNotifier ?? ValueNotifier<bool>(false);
   final kgPriceEnabledNotifier = ValueNotifier<bool>(true);
   final mobileMoneyEnabledNotifier = ValueNotifier<bool>(false);
   final currencyNotifier = ValueNotifier<SupportedCurrency>(
@@ -159,6 +161,7 @@ Widget _host({
           customPriceNotifier: customPriceNotifier,
           availableKgNotifier: availableKgNotifier,
           cashEnabledNotifier: cashEnabledNotifier,
+          cardEnabledNotifier: cardEnabledNotifier,
           kgPriceEnabledNotifier: kgPriceEnabledNotifier,
           mobileMoneyEnabledNotifier: mobileMoneyEnabledNotifier,
           currencyNotifier: currencyNotifier,
@@ -204,9 +207,13 @@ Future<void> _pump(
   SupportedCurrency currency = SupportedCurrency.eur,
   bool withRouter = false,
   String? residenceCountry,
+  ValueNotifier<bool>? cardEnabledNotifier,
+  ValueNotifier<bool>? cashNotifier,
 }) async {
   await tester.pumpWidget(
     _host(
+      cardEnabledNotifier: cardEnabledNotifier,
+      cashNotifier: cashNotifier,
       stripeState: stripeState,
       commissionState: commissionState,
       negotiableNotifier: negotiableNotifier,
@@ -222,6 +229,91 @@ Future<void> _pump(
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 void main() {
+  // FLUTTER-FT : la carte devient décochable quand elle est disponible.
+  group('PrixConditionsStep — carte décochable', () {
+    testWidgets('cochée par défaut : pas de texte d\'aide, espèces libres', (
+      tester,
+    ) async {
+      final card = ValueNotifier<bool>(true);
+      await _pump(tester, cardEnabledNotifier: card);
+
+      final stripeSwitch = tester.widget<SwitchListTile>(
+        find.byKey(const Key('payment-method-stripe')),
+      );
+      expect(stripeSwitch.value, isTrue);
+      expect(find.byKey(const Key('card-off-help')), findsNothing);
+    });
+
+    testWidgets('décocher la carte : aide affichée, espèces forcées et '
+        'message « au moins un moyen »', (tester) async {
+      final card = ValueNotifier<bool>(true);
+      final cash = ValueNotifier<bool>(false);
+      await _pump(tester, cardEnabledNotifier: card, cashNotifier: cash);
+
+      final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
+      await tester.ensureVisible(stripeSwitch);
+      await tester.tap(stripeSwitch);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(card.value, isFalse);
+      expect(find.byKey(const Key('card-off-help')), findsOneWidget);
+      expect(
+        find.textContaining('pas de paiement protégé en ligne'),
+        findsOneWidget,
+      );
+      expect(cash.value, isTrue, reason: 'un moyen de paiement reste actif');
+      expect(
+        tester
+            .widget<SwitchListTile>(
+              find.byKey(const Key('payment-method-cash')),
+            )
+            .value,
+        isTrue,
+      );
+      expect(
+        find.textContaining('au moins un moyen de paiement'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('recocher la carte retire l\'aide', (tester) async {
+      final card = ValueNotifier<bool>(false);
+      await _pump(tester, cardEnabledNotifier: card);
+      expect(find.byKey(const Key('card-off-help')), findsOneWidget);
+
+      final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
+      await tester.ensureVisible(stripeSwitch);
+      await tester.tap(stripeSwitch);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(card.value, isTrue);
+      expect(find.byKey(const Key('card-off-help')), findsNothing);
+    });
+
+    testWidgets(
+      'carte indisponible (XOF) : le choix du voyageur est sans effet',
+      (tester) async {
+        final card = ValueNotifier<bool>(true);
+        await _pump(
+          tester,
+          cardEnabledNotifier: card,
+          currency: SupportedCurrency.xof,
+        );
+        expect(
+          tester
+              .widget<SwitchListTile>(
+                find.byKey(const Key('payment-method-stripe')),
+              )
+              .value,
+          isFalse,
+        );
+        expect(find.byKey(const Key('card-off-help')), findsNothing);
+      },
+    );
+  });
+
   group('PrixConditionsStep', () {
     // ── Construction ──────────────────────────────────────────────────────────
 
