@@ -75,6 +75,11 @@ class PrixConditionsStep extends StatelessWidget {
   /// dans cette devise quand celle du trajet ne permet pas le mobile money.
   final SupportedCurrency? mobileMoneyCurrency;
 
+  /// Devises des étapes ajoutées au voyage (FLUTTER-HP), lues au moment de
+  /// confirmer un changement de devise : elles ne changent pas avec le
+  /// premier trajet. `null` hors création d'un voyage.
+  final List<SupportedCurrency> Function()? legCurrencies;
+
   /// Appelé au retour de l'écran d'activation du mobile money, ouvert depuis
   /// l'encart « Activer le mobile money ». Le parent y recharge son
   /// `MobileMoneyAccountBloc`, sans quoi la bascule resterait désactivée
@@ -129,6 +134,7 @@ class PrixConditionsStep extends StatelessWidget {
     required this.currencyNotifier,
     this.mobileMoneyAccountActive = false,
     this.mobileMoneyCurrency,
+    this.legCurrencies,
     this.onMobileMoneySetupReturned,
     required this.negotiableNotifier,
     required this.selectedContentNotifier,
@@ -1180,6 +1186,7 @@ class PrixConditionsStep extends StatelessWidget {
         final confirmed = await CurrencySwitchConfirmSheet.show(
           context,
           target: target,
+          legCurrencies: legCurrencies?.call() ?? const [],
         );
         if (confirmed) currencyNotifier.value = target;
       },

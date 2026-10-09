@@ -104,4 +104,31 @@ void main() {
     );
     handle.dispose();
   });
+
+  // FLUTTER-HN : escales facultatives, aucune option choisie.
+  testWidgets('aucun segment choisi : capsule masquée', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: SizedBox(
+            width: 320,
+            child: DonySegmentedControl<_Seg?>(
+              selected: null,
+              onSelect: (_) {},
+              segments: const [
+                DonySegment(value: _Seg.a, label: 'Alpha'),
+                DonySegment(value: _Seg.b, label: 'Beta'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final opacity = tester.widget<AnimatedOpacity>(
+      find.byType(AnimatedOpacity),
+    );
+    expect(opacity.opacity, 0);
+  });
 }

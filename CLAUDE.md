@@ -358,7 +358,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `kyc_completed` | KycBloc._onStatusRefreshed() — une fois par instance, et une fois par compte et par appareil (`KycCompletionTracker`, clé Hive par UID) : rouvrir l'écran de statut d'un compte déjà vérifié ne le réémet plus |
 | `kyc_failed` | KycBloc._onSessionRequested() |
 | `announcement_created` | AnnouncementBloc._onCreateRequested() |
-| `trip_group_created` | AnnouncementBloc._onTripCreateRequested() — voyage à plusieurs étapes (FLUTTER-4D), `leg_count`, `corridor` (villes), `is_draft` |
+| `trip_group_created` | AnnouncementBloc._onTripCreateRequested() — voyage à plusieurs étapes (FLUTTER-4D), `leg_count`, `corridor` (villes), `is_draft`, `currency_count` (devises distinctes, chaque étape a la sienne, FLUTTER-HP) |
 | `trip_leg_added` | TripLegsCubit.add() — étape ajoutée au formulaire, `leg_count` |
 | `announcement_viewed` | `recordTripView` (`trip_view_recording.dart`), appelé à l'ouverture de la feuille trajet expéditeur (`showTravelerAnnouncementSheet`) par toute personne autre que le voyageur, invités compris (propriétés `announcement_id`, `corridor`). Le même appel signale la vue au back (`POST /announcements/{id}/views`) pour un compte connecté uniquement |
 | `trip_owner_detail_opened` | TripOwnerDetailScreen._evaluateViewer — émis quand le viewer est confirmé propriétaire (annonce chargée + auth résolue), une fois par écran (propriété `status`). Un visiteur non propriétaire (deep link d'affiche partagée) est basculé vers la sheet expéditeur sans émettre l'événement |

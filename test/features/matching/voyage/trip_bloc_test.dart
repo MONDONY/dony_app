@@ -5,6 +5,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_payload.dart';
+import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -162,6 +163,41 @@ void main() {
                 as List<AnnouncementPayload>;
         expect(sent, hasLength(2));
         expect(sent[1].departureCity, 'Abidjan');
+      },
+    );
+
+    // FLUTTER-HP : l'étape Bouaké → Bamako partait en EUR comme la première.
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'chaque étape part dans sa devise',
+      build: () {
+        when(() => repo.createTrip(any())).thenAnswer((_) async => legs);
+        return build();
+      },
+      act: (b) => b.add(
+        AnnouncementTripCreateRequested(
+          first: firstLeg(),
+          legs: [
+            TripLegDraft(
+              arrivalCity: 'Douala',
+              arrivalCountryCode: 'CM',
+              departureDate: DateTime(2026, 11, 14),
+              departureTime: '09:30',
+              deliveryAddress: kDouala,
+              availableKg: 12,
+              pricePerKg: 3000,
+              currency: 'XOF',
+              acceptedPaymentMethods: const ['CASH', 'MOBILE_MONEY'],
+            ),
+          ],
+        ),
+      ),
+      verify: (_) {
+        final sent =
+            verify(() => repo.createTrip(captureAny())).captured.single
+                as List<AnnouncementPayload>;
+        expect(sent.map((p) => p.toJson()['currency']), ['EUR', 'XOF']);
+        expect(sent[1].pricePerKg, 3000);
+        expect(sent[1].acceptedPaymentMethods, ['CASH', 'MOBILE_MONEY']);
       },
     );
 

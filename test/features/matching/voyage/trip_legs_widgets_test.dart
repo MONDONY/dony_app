@@ -84,6 +84,7 @@ void main() {
     bool showStops = false,
     TripStops? defaultStops,
     SupportedCurrency currency = SupportedCurrency.eur,
+    bool showPrice = true,
   }) => localizedApp(
     Scaffold(
       body: SingleChildScrollView(
@@ -91,8 +92,8 @@ void main() {
           value: cubit,
           child: TripLegsSection(
             origin: origin,
-            showPrice: true,
-            currency: currency,
+            showPrice: showPrice,
+            tripCurrency: currency,
             defaultKg: 15,
             defaultPrice: 7,
             showStops: showStops,
@@ -145,8 +146,15 @@ void main() {
       await t.tap(find.text('OK'));
       await t.pumpAndSettle();
 
+      // FLUTTER-HP : l'étape part d'Abidjan, donc en F CFA par défaut ; les
+      // 7 €/kg du premier trajet ne sont pas recopiés en 7 F CFA/kg.
+      expect(find.text('Franc CFA Ouest (F CFA)'), findsOneWidget);
       final submit = find.byKey(const Key('trip-leg-submit'));
+      expect(t.widget<DonyButton>(submit).onPressed, isNull);
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '3000');
+      await t.pump();
       expect(t.widget<DonyButton>(submit).onPressed, isNotNull);
+      await t.ensureVisible(submit);
       await t.tap(submit);
       await t.pumpAndSettle();
 
@@ -155,14 +163,19 @@ void main() {
       expect(leg.arrivalCity, 'Douala');
       expect(leg.arrivalCountryCode, 'CM');
       expect(leg.availableKg, 15);
-      expect(leg.pricePerKg, 7);
+      expect(leg.pricePerKg, 3000);
+      expect(leg.currency, 'XOF');
       expect(leg.departureTime, '10:00');
       expect(leg.deliveryAddress.city, 'Douala');
       expect(find.text('Abidjan → Douala'), findsOneWidget);
     });
 
-    ChoiceChip chip(WidgetTester t, TripStops stops) =>
-        t.widget<ChoiceChip>(find.byKey(Key('stops-${stops.name}')));
+    // FLUTTER-HN : bascule segmentée dans la feuille d'étape.
+    TripStops? selectedStops(WidgetTester t) => t
+        .widget<DonySegmentedControl<TripStops?>>(
+          find.byKey(const Key('stops-segmented')),
+        )
+        .selected;
 
     Future<void> fillLeg(WidgetTester t) async {
       await t.enterText(find.byKey(const Key('trip-leg-arrival-city')), 'Dou');
@@ -177,6 +190,10 @@ void main() {
       await t.pumpAndSettle();
       await t.tap(find.text('OK'));
       await t.pumpAndSettle();
+      // Départ d'Abidjan : étape en F CFA, prix à saisir dans cette devise.
+      await t.enterText(find.byKey(const Key('trip-leg-price')), '3000');
+      await t.pump();
+      await t.ensureVisible(find.byKey(const Key('trip-leg-submit')));
     }
 
     // FLUTTER-GE : l'étape avait les escales de la première, sans choix.
@@ -195,10 +212,10 @@ void main() {
       await t.tap(find.byKey(const Key('trip-legs-add')));
       await t.pumpAndSettle();
 
-      expect(chip(t, TripStops.one).selected, isTrue);
+      expect(selectedStops(t), TripStops.one);
       await t.tap(find.byKey(const Key('stops-direct')));
       await t.pump();
-      expect(chip(t, TripStops.direct).selected, isTrue);
+      expect(selectedStops(t), TripStops.direct);
 
       await fillLeg(t);
       await t.tap(find.byKey(const Key('trip-leg-submit')));
@@ -231,8 +248,7 @@ void main() {
       await t.pumpAndSettle();
 
       expect(find.text('Étape 3'), findsOneWidget);
-      expect(chip(t, TripStops.twoOrMore).selected, isTrue);
-      expect(chip(t, TripStops.direct).selected, isFalse);
+      expect(selectedStops(t), TripStops.twoOrMore);
     });
 
     testWidgets('modifier une étape garde ses escales, même non renseignées', (
@@ -252,9 +268,7 @@ void main() {
       await t.tap(find.byKey(const Key('trip-leg-edit-0')));
       await t.pumpAndSettle();
 
-      for (final stops in TripStops.values) {
-        expect(chip(t, stops).selected, isFalse);
-      }
+      expect(selectedStops(t), isNull);
       await t.tap(find.byKey(const Key('stops-one')));
       await t.pump();
       await t.tap(find.byKey(const Key('trip-leg-submit')));
@@ -313,7 +327,7 @@ void main() {
     });
 
     // FLUTTER-GK : une étape à 8 XOF/kg, saisie sans voir la devise.
-    testWidgets('devise du voyage rappelée dans la feuille et la liste', (
+    testWidgets('devise de l\'étape rappelée dans la feuille et la liste', (
       t,
     ) async {
       final cubit = _legsCubit()
@@ -324,10 +338,7 @@ void main() {
       await t.pumpAndSettle();
 
       expect(find.textContaining('F CFA par kg'), findsOneWidget);
-      expect(
-        find.text('Prix des étapes en F CFA, la devise du voyage.'),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('trip-legs-currency-note')), findsOneWidget);
 
       await t.tap(find.byKey(const Key('trip-leg-edit-0')));
       await t.pumpAndSettle();
@@ -545,7 +556,7 @@ void main() {
                     arrivalDay: DateTime.now(),
                   ),
                   showPrice: false,
-                  currency: SupportedCurrency.eur,
+                  defaultCurrency: SupportedCurrency.eur,
                 ),
                 child: const Text('ouvrir'),
               ),
