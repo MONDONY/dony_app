@@ -9,6 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Facteur de texte au-delà duquel la pastille affiche l'icône seule.
+const double _kMaxPillTextScale = 1.3;
+
 /// Route de l'écran « Mon argent ».
 const kMoneyOverviewRoute = '/payments/money';
 
@@ -45,7 +48,12 @@ class MoneyHeaderButton extends StatelessWidget {
                     .join(', '),
               )
             : l.moneyHeaderSemantics;
-        final pill = hasUpcoming && showAmount;
+        // Au-delà de 130 % de texte, le montant ne tient plus à côté de la
+        // barre de recherche : icône seule, montant gardé dans le libellé.
+        final largeText =
+            MediaQuery.textScalerOf(context).scale(14) >
+            14 * _kMaxPillTextScale;
+        final pill = hasUpcoming && showAmount && !largeText;
 
         Future<void> open() async {
           await context.push(kMoneyOverviewRoute);
@@ -102,6 +110,8 @@ class MoneyHeaderButton extends StatelessWidget {
                         upcoming.first.currency,
                       ),
                       key: const Key('money-header-amount'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: cs.onPrimaryContainer,
                         fontFeatures: const [FontFeature.tabularFigures()],

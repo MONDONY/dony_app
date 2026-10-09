@@ -102,6 +102,28 @@ void main() {
     expect(find.bySemanticsLabel(RegExp('à venir')), findsOneWidget);
   });
 
+  testWidgets('texte à 200 % : icône seule, montant dans le libellé', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    stub(MoneyOverviewLoaded(overviewModel()));
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('money-header-amount')), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('à venir')), findsOneWidget);
+  });
+
+  testWidgets('texte à 130 % : le montant reste affiché', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    stub(MoneyOverviewLoaded(overviewModel()));
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('money-header-amount')), findsOneWidget);
+  });
+
   testWidgets('tap → « Mon argent », rafraîchit au retour', (tester) async {
     stub(MoneyOverviewLoaded(overviewModel()));
     await tester.pumpWidget(host());
