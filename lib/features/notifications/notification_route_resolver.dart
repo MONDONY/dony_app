@@ -55,6 +55,11 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'DISPUTE_OPENED' when _isUuid(bidId) => '/bids/$bidId',
     'PARCEL_REFUSED' when _isUuid(bidId) => '/bids/$bidId',
     'BID_EXPIRED' when _isUuid(bidId) => '/bids/$bidId',
+    // Demande carte jamais payée, annulée à la date limite de dépôt puis
+    // supprimée : le back n'envoie plus de bidId (back #459) mais le trajet,
+    // ouvert sur sa fiche publique. Sans trajet, Mes envois (onglet Suivi).
+    'BID_EXPIRED' when _isUuid(announcementId) => '/traveler/$announcementId',
+    'BID_EXPIRED' => '/tracking',
     'CONFIRMATION_CODE_READY' when _isUuid(bidId) => '/bids/$bidId',
     // Code de retrait bloqué après trop d'essais (FLUTTER-G1) : la fiche du
     // colis propose « Générer un nouveau code ».
