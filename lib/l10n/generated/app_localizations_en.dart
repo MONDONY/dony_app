@@ -17333,4 +17333,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripPublishPaymentMethodRequired =>
       'Cash is now on: at least one payment method must stay on.';
+
+  @override
+  String get pickupCodeRequestButton => 'Request a new code';
+
+  @override
+  String get pickupCodeRequestSent => 'Request sent to the sender';
+
+  @override
+  String get pickupCodeRequestSentHint =>
+      'They have been notified. You will get the new code from the sender or the recipient.';
+
+  @override
+  String pickupCodeRequestTooSoon(int minutes) {
+    return 'Request already sent, try again in $minutes min';
+  }
+
+  @override
+  String get pickupCodeRequestTooSoonNoDelay =>
+      'Request already sent, try again in a few minutes';
+
+  @override
+  String get travelerPickupCodeRenewalTitle => 'Pickup code needs renewing';
+
+  @override
+  String get travelerPickupCodeRenewalMessage =>
+      'The pickup code was blocked or has expired. Only the sender can generate a new one: ask them here.';
+
+  @override
+  String get pickupCodeRenewalSheetTitle =>
+      'The traveler is asking for a new code';
+
+  @override
+  String get pickupCodeRenewalSheetMessage =>
+      'The pickup code is no longer valid. Generate a new one, then share it with your recipient.';
+
+  @override
+  String get errorCodeStillValidTitle => 'Code still valid';
+
+  @override
+  String get errorCodeStillValidMessage =>
+      'The current pickup code is still valid. Ask the sender or the recipient for it.';
+
+  @override
+  String get errorCodeRequestNotAllowedTitle => 'Request not possible';
+
+  @override
+  String get errorCodeRequestNotAllowedMessage =>
+      'This parcel is not waiting for a pickup code right now.';
+
+  @override
+  String get errorCodeRequestTooSoonTitle => 'Request already sent';
+
+  @override
+  String get errorCodeRequestTooSoonMessage =>
+      'The sender has already been notified. Try again in a few minutes.';
 }

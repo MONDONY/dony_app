@@ -8,6 +8,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_blocked_code_block.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/talon_code_renewal_request_block.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -83,9 +84,11 @@ class BilletTalon extends StatelessWidget {
         // talon, le QR restant accessible jusqu'au retrait.
         // ARRIVED (voyageur arrivé à destination) se comporte comme IN_TRANSIT :
         // c'est justement le moment où le code de retrait sert le plus.
+        // Un code expiré mais encore présent compte comme absent : le
+        // voyageur ne peut plus s'en servir (FLUTTER-G2).
         'HANDED_OVER' ||
         'IN_TRANSIT' ||
-        'ARRIVED' when bid.confirmationCode != null => Row(
+        'ARRIVED' when !bid.needsNewPickupCode => Row(
           children: [
             Expanded(child: _QrTalonButton(bid: bid, compact: true)),
             const SizedBox(width: DonySpacing.sm),
@@ -127,6 +130,19 @@ class BilletTalon extends StatelessWidget {
       // contextuel (Scanner le colis / Valider la remise).
       // ARRIVED : le trajet est arrivé mais le scan d'arrivée reste à faire →
       // le voyageur garde l'accès aux étapes de scan.
+      // Code de retrait bloqué ou expiré (FLUTTER-G2) : seul l'expéditeur
+      // peut en générer un nouveau, le voyageur le lui demande d'ici. Sur un
+      // back antérieur, le drapeau reste faux et le talon ne change pas.
+      'HANDED_OVER' ||
+      'IN_TRANSIT' ||
+      'ARRIVED' when bid.pickupCodeRenewalNeeded => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TravelerScanStepsButton(bid: bid),
+          const SizedBox(height: DonySpacing.sm),
+          TalonCodeRenewalRequestBlock(bidId: bid.id),
+        ],
+      ),
       'ACCEPTED' ||
       'HANDED_OVER' ||
       'IN_TRANSIT' ||

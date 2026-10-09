@@ -449,6 +449,10 @@ abstract final class AnalyticsEvents {
   /// Code de retrait régénéré par l'expéditeur (propriété `after_block` :
   /// depuis le talon « Code de retrait bloqué », FLUTTER-G1).
   static const pickupCodeRegenerated = 'pickup_code_regenerated';
+
+  /// Le voyageur demande un nouveau code de retrait à l'expéditeur
+  /// (FLUTTER-G2). Propriétés : `source` (écran) et `outcome` seulement.
+  static const pickupCodeRequested = 'pickup_code_requested';
   static const travelerCallInitiated = 'traveler_call_initiated';
   static const senderCallInitiated = 'sender_call_initiated';
   static const trackingLinkShared = 'tracking_link_shared';

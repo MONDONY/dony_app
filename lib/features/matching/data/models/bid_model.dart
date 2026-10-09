@@ -153,6 +153,14 @@ class BidModel {
   @JsonKey(defaultValue: false)
   final bool recipientDeclined;
 
+  /// Colis chez le voyageur dont le code de retrait a été effacé (trop
+  /// d'essais faux) ou a expiré (yadony-back #461, FLUTTER-G2). Servi aux
+  /// deux parties : l'expéditeur le régénère, le voyageur le lui demande.
+  /// `false` sur un back antérieur : [needsNewPickupCode] retombe alors sur
+  /// l'absence du code, que seul l'expéditeur reçoit.
+  @JsonKey(defaultValue: false)
+  final bool pickupCodeRenewalNeeded;
+
   /// Dernière demande de remplacement faite par le voyageur depuis le refus en
   /// cours (UTC). Une nouvelle demande est possible 12 h après. `null` sans
   /// demande, hors refus ou sur un back antérieur.
@@ -306,6 +314,7 @@ class BidModel {
     this.recipientAppStatus,
     this.recipientPhoneHidden = false,
     this.recipientDeclined = false,
+    this.pickupCodeRenewalNeeded = false,
     this.recipientReplacementRequestedAt,
     required this.status,
     this.rejectionReason,
@@ -404,12 +413,17 @@ class BidModel {
 
   bool get isSkeleton => senderId.isEmpty;
 
-  /// Colis remis au voyageur mais sans code de retrait : le serveur l'a effacé
-  /// après trois essais faux ou à l'expiration (FLUTTER-G1). Seul l'expéditeur
-  /// peut en générer un nouveau (`POST /tracking/{bidId}/refresh-code`).
+  /// Vue expéditeur : colis remis au voyageur mais sans code de retrait
+  /// utilisable. Le serveur l'a effacé après trois essais faux, ou il a
+  /// expiré (FLUTTER-G1, FLUTTER-G2). Seul l'expéditeur peut en générer un
+  /// nouveau (`POST /tracking/{bidId}/refresh-code`). Le drapeau serveur
+  /// [pickupCodeRenewalNeeded] couvre aussi le code expiré encore présent ;
+  /// l'absence du code reste le repli pour un back antérieur. Côté voyageur,
+  /// qui ne reçoit jamais le code, lire [pickupCodeRenewalNeeded].
   bool get needsNewPickupCode =>
-      (confirmationCode == null || confirmationCode!.isEmpty) &&
-      const {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'}.contains(status);
+      pickupCodeRenewalNeeded ||
+      ((confirmationCode == null || confirmationCode!.isEmpty) &&
+          const {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED'}.contains(status));
 
   /// Colis carte créé mais pas encore payé : c'est l'expéditeur qui doit agir.
   /// Le paiement le fait passer en PAYMENT_ESCROWED, et le voyageur ne peut

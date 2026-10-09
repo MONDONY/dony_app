@@ -738,6 +738,7 @@ class _NotificationIcon extends StatelessWidget {
       'DELIVERY_NOSHOW_REPORTED' => (cs.warning, 'user-x'),
       'CONFIRMATION_CODE_READY' => (cs.warning, 'qr-code'),
       'CONFIRMATION_CODE_BLOCKED' => (cs.warning, 'key-round'),
+      'CONFIRMATION_CODE_REQUESTED' => (cs.warning, 'key-round'),
       'PARCEL_RETURN_REQUIRED' => (cs.warning, 'package'),
       'PARCEL_RETURN_TO_SENDER' => (cs.warning, 'package'),
       'RECIPIENT_PARCEL_INCOMING' => (cs.warning, 'inbox'),

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/utils/server_date_time.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
@@ -10,6 +11,12 @@ typedef ConfirmationCodeResult = ({
   String? code,
   DateTime? expiresAt,
   bool publicPageVisible,
+});
+
+/// Demande de nouveau code de retrait transmise à l'expéditeur (FLUTTER-G2).
+typedef PickupCodeRequestResult = ({
+  DateTime? requestedAt,
+  DateTime? nextRequestAllowedAt,
 });
 
 class TrackingRepository {
@@ -102,6 +109,32 @@ class TrackingRepository {
       code: data['confirmationCode'] as String?,
       expiresAt: rawExpiry != null ? DateTime.parse(rawExpiry) : null,
       publicPageVisible: data['publicPageVisible'] as bool? ?? false,
+    );
+  }
+
+  /// Le voyageur demande à l'expéditeur un nouveau code de retrait, bloqué ou
+  /// expiré (`POST /tracking/{bidId}/request-code`, yadony-back #461,
+  /// FLUTTER-G2). Erreurs : 403 `forbidden`, 409 `code-request-not-allowed` /
+  /// `code-still-valid`, 429 `code-request-too-soon` avec
+  /// `nextRequestAllowedAt` et `retryAfterSeconds`.
+  Future<PickupCodeRequestResult> requestNewCode(String bidId) async {
+    final response = await _apiClient.dio.post('/tracking/$bidId/request-code');
+    final data = response.data is Map
+        ? response.data as Map<String, dynamic>
+        : const <String, dynamic>{};
+    DateTime? date(String key) {
+      final raw = data[key];
+      if (raw is! String || raw.trim().isEmpty) return null;
+      try {
+        return parseServerDateTime(raw);
+      } on FormatException {
+        return null;
+      }
+    }
+
+    return (
+      requestedAt: date('requestedAt'),
+      nextRequestAllowedAt: date('nextRequestAllowedAt'),
     );
   }
 

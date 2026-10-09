@@ -64,6 +64,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // Code de retrait bloqué après trop d'essais (FLUTTER-G1) : la fiche du
     // colis propose « Générer un nouveau code ».
     'CONFIRMATION_CODE_BLOCKED' when _isUuid(bidId) => '/bids/$bidId',
+    // Le voyageur demande un nouveau code (FLUTTER-G2, back #461) : la fiche
+    // du colis ouvre directement la régénération.
+    'CONFIRMATION_CODE_REQUESTED' when _isUuid(bidId) =>
+      '/bids/$bidId?action=new-code',
     'DELIVERY_NOSHOW_REPORTED' when _isUuid(bidId) => '/bids/$bidId',
     'MM_PAYMENT_PENDING' when _isUuid(bidId) =>
       '/bids/$bidId/mobile-money/awaiting',

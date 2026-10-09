@@ -26,6 +26,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_st
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_options_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/pickup_code_renewal_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
@@ -49,10 +50,16 @@ class BidDetailScreen extends StatelessWidget {
   /// doesn't go back to the create-bid form.
   final bool fromPayment;
 
+  /// Ouvert depuis la notification `CONFIRMATION_CODE_REQUESTED`
+  /// (`?action=new-code`, FLUTTER-G2) : si l'expéditeur doit générer un
+  /// nouveau code, la feuille de régénération s'ouvre dès le chargement.
+  final bool openCodeRenewal;
+
   const BidDetailScreen({
     super.key,
     required this.bid,
     this.fromPayment = false,
+    this.openCodeRenewal = false,
   });
 
   @override
@@ -67,7 +74,11 @@ class BidDetailScreen extends StatelessWidget {
         BlocProvider(create: (_) => getIt<RatingBloc>()),
         BlocProvider(create: (_) => getIt<CancellationBloc>()),
       ],
-      child: _BidDetailView(initialBid: bid, fromPayment: fromPayment),
+      child: _BidDetailView(
+        initialBid: bid,
+        fromPayment: fromPayment,
+        openCodeRenewal: openCodeRenewal,
+      ),
     );
   }
 }
@@ -75,7 +86,12 @@ class BidDetailScreen extends StatelessWidget {
 class _BidDetailView extends StatefulWidget {
   final BidModel initialBid;
   final bool fromPayment;
-  const _BidDetailView({required this.initialBid, this.fromPayment = false});
+  final bool openCodeRenewal;
+  const _BidDetailView({
+    required this.initialBid,
+    this.fromPayment = false,
+    this.openCodeRenewal = false,
+  });
 
   @override
   State<_BidDetailView> createState() => _BidDetailViewState();
@@ -121,6 +137,10 @@ class _BidDetailViewState extends State<_BidDetailView>
   Timer? _refreshTimer;
   StreamSubscription<Map<String, dynamic>>? _pushSub;
   StreamSubscription<String>? _arrivalSub;
+
+  /// La feuille de régénération (`?action=new-code`) ne s'ouvre qu'une fois,
+  /// au premier chargement où l'expéditeur a un code à renouveler.
+  bool _codeRenewalPrompted = false;
 
   final _existingPaymentNotifier = ValueNotifier<PaymentModel?>(null);
   final _paymentLoadedNotifier = ValueNotifier<bool>(false);
@@ -355,6 +375,21 @@ class _BidDetailViewState extends State<_BidDetailView>
   /// Identifiant de l'utilisateur courant, robuste aux états transitoires de
   /// l'AuthBloc (voir [_lastUserId]). `null` uniquement si aucun utilisateur
   /// n'a jamais été vu ou après une déconnexion.
+  /// Notification « Le voyageur demande un nouveau code » (FLUTTER-G2) :
+  /// ouvre la régénération si l'expéditeur a bien un code à renouveler. Sinon
+  /// (déjà régénéré, vue voyageur), la fiche s'affiche normalement.
+  void _maybeOpenCodeRenewal(BuildContext context, BidModel bid) {
+    if (!widget.openCodeRenewal || _codeRenewalPrompted) return;
+    final viewerId = _resolveViewerId(context.read<AuthBloc>().state);
+    if (viewerId == null || viewerId != bid.senderId) return;
+    _codeRenewalPrompted = true;
+    if (!bid.needsNewPickupCode) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showPickupCodeRenewalSheet(this.context, bidId: bid.id);
+    });
+  }
+
   String? _resolveViewerId(AuthState authState) {
     final id = authState.currentUserId;
     if (id != null) {
@@ -544,6 +579,7 @@ class _BidDetailViewState extends State<_BidDetailView>
                   final previousBidId = _bid.id;
                   _bid = state.bid;
                   _skeletonLoading = false;
+                  _maybeOpenCodeRenewal(context, state.bid);
                   if (state.bid.id != previousBidId) {
                     _existingPaymentNotifier.value = null;
                     _paymentLoadedNotifier.value = false;
