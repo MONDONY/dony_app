@@ -150,6 +150,7 @@ import 'package:dony/features/package_request/bloc/package_request_form_bloc.dar
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
+import 'package:dony/features/package_request/bloc/request_sender_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
@@ -1018,6 +1019,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ProfilePublicBloc(
       getIt<ProfileRepository>(),
       getIt<RatingRepository>(),
+    ),
+  );
+  getIt.registerFactory<RequestSenderCubit>(
+    () => RequestSenderCubit(
+      getIt<ProfileRepository>(),
+      getIt<AnalyticsService>(),
     ),
   );
   getIt.registerFactory<UserReviewsCubit>(

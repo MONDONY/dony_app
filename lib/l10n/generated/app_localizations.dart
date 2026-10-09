@@ -28723,6 +28723,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le code de retrait a expiré : générez-en un nouveau pour l\'ajouter au message.'**
   String get recipientNotifyCodeExpiredHint;
+
+  /// Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expéditeur : {name}. Voir son profil'**
+  String requestPublicSenderRowSemantics(String name);
 }
 
 class _AppLocalizationsDelegate

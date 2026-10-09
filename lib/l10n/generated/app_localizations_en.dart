@@ -17410,4 +17410,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recipientNotifyCodeExpiredHint =>
       'The pickup code has expired: generate a new one to add it to the message.';
+
+  @override
+  String requestPublicSenderRowSemantics(String name) {
+    return 'Sender: $name. View their profile';
+  }
 }

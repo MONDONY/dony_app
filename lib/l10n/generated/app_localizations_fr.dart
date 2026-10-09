@@ -17523,4 +17523,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recipientNotifyCodeExpiredHint =>
       'Le code de retrait a expiré : générez-en un nouveau pour l\'ajouter au message.';
+
+  @override
+  String requestPublicSenderRowSemantics(String name) {
+    return 'Expéditeur : $name. Voir son profil';
+  }
 }

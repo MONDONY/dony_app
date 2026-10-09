@@ -398,6 +398,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `package_request_shared` | PackageRequestDetailCubit.trackShared() — bouton « Partager » de « Ma demande » (partage texte système) |
 | `package_request_traveler_invited` | PackageRequestDetailCubit.invite() — invitation d'un voyageur sur l'axe acceptée par le serveur (propriété `outcome` : `sent` / `already_sent`) |
 | `package_request_menu_opened` | PackageRequestDetailCubit.trackMenuOpened() — ouverture du menu « … » de « Ma demande » |
+| `package_request_sender_opened` | RequestSenderCubit.trackOpened() — ligne expéditeur (avatar, nom, note) en tête de la fiche publique d'une demande, côté voyageur : ouvre le résumé du profil (FLUTTER-GF) |
 | `package_request_duplicate_started` | PackageRequestDetailCubit.trackDuplicateStarted() — formulaire de création pré-rempli ouvert depuis une demande (propriété `source` : `duplicate` / `similar` / `republish`) |
 | `package_request_photo_added` | PackageRequestPhotosCubit.add() — photo colis uploadée au wizard |
 | `package_request_photo_removed` | PackageRequestPhotosCubit.remove() — photo retirée avant publication |

@@ -19650,5 +19650,7 @@
   "bidDetailSenderCodeExpiredNote": "Le code de retrait a expiré : générez-en un nouveau sur votre billet.",
   "@bidDetailSenderCodeExpiredNote": {"description": "Note du hero expéditeur quand le code de retrait a expiré (sender_hero_card.dart, FLUTTER-G2)."},
   "recipientNotifyCodeExpiredHint": "Le code de retrait a expiré : générez-en un nouveau pour l'ajouter au message.",
-  "@recipientNotifyCodeExpiredHint": {"description": "Encart « Prévenir le destinataire » quand le code a expiré (FLUTTER-G2)."}
+  "@recipientNotifyCodeExpiredHint": {"description": "Encart « Prévenir le destinataire » quand le code a expiré (FLUTTER-G2)."},
+  "requestPublicSenderRowSemantics": "Expéditeur : {name}. Voir son profil",
+  "@requestPublicSenderRowSemantics": {"description": "Lecture d'écran de la ligne expéditeur en tête de la fiche publique d'une demande (request_sender_row.dart, FLUTTER-GF).", "placeholders": {"name": {"type": "String"}}}
 }

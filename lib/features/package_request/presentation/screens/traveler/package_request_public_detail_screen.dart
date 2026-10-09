@@ -20,6 +20,7 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/bloc/request_sender_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
@@ -31,6 +32,7 @@ import 'package:dony/features/package_request/presentation/widgets/make_offer_bo
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_sender_row.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/residence_country_settings.dart';
@@ -291,27 +293,35 @@ class _PackageRequestPublicDetailScreenState
               )
             : _request == null
             ? const SizedBox.shrink()
-            : BlocBuilder<StripeAccountBloc, StripeAccountState>(
-                builder: (context, stripeState) =>
-                    BlocSelector<
-                      BusinessPrefsBloc,
-                      BusinessPrefsState,
-                      String?
-                    >(
-                      selector: (prefs) => prefs.country,
-                      builder: (context, profileCountry) =>
-                          PackageRequestPublicDetailBody(
-                            request: _request!,
-                            announcement: announcement,
-                            currentUserId: currentUserId,
-                            onChanged: _load,
-                            cardCapabilityGap: knownCardCapabilityGap(
-                              stripeState,
+            : BlocProvider<RequestSenderCubit>(
+                // Monté une fois la demande connue ; un rechargement
+                // silencieux garde ce sous-arbre, donc le profil n'est pas
+                // redemandé.
+                create: (_) => getIt<RequestSenderCubit>()
+                  ..load(_request!.senderId, canRead: currentUserId != null),
+                child: BlocBuilder<StripeAccountBloc, StripeAccountState>(
+                  builder: (context, stripeState) =>
+                      BlocSelector<
+                        BusinessPrefsBloc,
+                        BusinessPrefsState,
+                        String?
+                      >(
+                        selector: (prefs) => prefs.country,
+                        builder: (context, profileCountry) =>
+                            PackageRequestPublicDetailBody(
+                              request: _request!,
+                              announcement: announcement,
+                              currentUserId: currentUserId,
+                              onChanged: _load,
+                              cardCapabilityGap: knownCardCapabilityGap(
+                                stripeState,
+                                profileCountry: profileCountry,
+                              ),
                               profileCountry: profileCountry,
+                              showSenderRow: true,
                             ),
-                            profileCountry: profileCountry,
-                          ),
-                    ),
+                      ),
+                ),
               ),
       ),
     );
@@ -329,7 +339,12 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     this.onChanged,
     this.cardCapabilityGap,
     this.profileCountry,
+    this.showSenderRow = false,
   });
+
+  /// Ligne expéditeur en tête (FLUTTER-GF). Exige un [RequestSenderCubit]
+  /// au-dessus : l'écran le fournit, les tests du corps seul s'en passent.
+  final bool showSenderRow;
 
   final PackageRequest request;
   final AnnouncementModel? announcement;
@@ -413,6 +428,9 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Expéditeur (FLUTTER-GF) ──────────────────────────────────
+              if (showSenderRow) const RequestSenderRow(),
+
               // ── Photos colis (carousel) ──────────────────────────────────
               if (r.photoUrls.isNotEmpty) ...[
                 _PhotoCarousel(urls: r.photoUrls),

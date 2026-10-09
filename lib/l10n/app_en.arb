@@ -9437,5 +9437,6 @@
   "ticketExpiredCodeTitle": "Pickup code expired",
   "ticketExpiredCodeMessage": "The pickup code has expired. Generate a new one.",
   "bidDetailSenderCodeExpiredNote": "The pickup code has expired: generate a new one on your ticket.",
-  "recipientNotifyCodeExpiredHint": "The pickup code has expired: generate a new one to add it to the message."
+  "recipientNotifyCodeExpiredHint": "The pickup code has expired: generate a new one to add it to the message.",
+  "requestPublicSenderRowSemantics": "Sender: {name}. View their profile"
 }
