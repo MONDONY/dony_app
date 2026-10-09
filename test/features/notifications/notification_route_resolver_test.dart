@@ -13,7 +13,6 @@ void main() {
   group('resolveNotificationRoute — types déjà routés côté bid', () {
     for (final type in [
       'PARCEL_REFUSED',
-      'BID_EXPIRED',
       'CONFIRMATION_CODE_READY',
       'CONFIRMATION_CODE_BLOCKED',
       'DELIVERY_NOSHOW_REPORTED',
@@ -29,6 +28,46 @@ void main() {
         expect(resolveNotificationRoute(type, {}), isNull);
       });
     }
+  });
+
+  group('resolveNotificationRoute — BID_EXPIRED', () {
+    test('avec bidId → la demande', () {
+      expect(
+        resolveNotificationRoute('BID_EXPIRED', {
+          'bidId': bidId,
+          'announcementId': announcementId,
+        }),
+        '/bids/$bidId',
+      );
+    });
+
+    // Back #459 : demande carte jamais payée, supprimée à la date limite de
+    // dépôt. Plus de bidId, le trajet à la place.
+    test('sans bidId, avec le trajet → fiche publique du trajet', () {
+      expect(
+        resolveNotificationRoute('BID_EXPIRED', {
+          'type': 'BID_EXPIRED',
+          'reason': 'HANDOVER_DEADLINE_PASSED',
+          'announcementId': announcementId,
+        }),
+        '/traveler/$announcementId',
+      );
+    });
+
+    test('ni demande ni trajet → Mes envois (onglet Suivi)', () {
+      expect(resolveNotificationRoute('BID_EXPIRED', {}), '/tracking');
+      expect(isShellTabRoute('/tracking'), isTrue);
+    });
+
+    test('identifiants invalides → Mes envois, jamais une route forgée', () {
+      expect(
+        resolveNotificationRoute('BID_EXPIRED', {
+          'bidId': '../admin',
+          'announcementId': '../admin',
+        }),
+        '/tracking',
+      );
+    });
   });
 
   group(

@@ -11969,11 +11969,23 @@ abstract class AppLocalizations {
   /// **'Demande supprimée.'**
   String get bidDetailDeletedSnackbar;
 
-  /// Snackbar BidNotFound (bid_detail_screen.dart)
+  /// État plein écran quand le colis ouvert (souvent depuis une notification) est introuvable, 404 (bid_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Ce colis n\'existe plus'**
-  String get bidDetailNotFoundSnackbar;
+  /// **'Cette demande n\'existe plus'**
+  String get bidDetailGoneTitle;
+
+  /// Explication sous bidDetailGoneTitle (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle a été annulée puis retirée. Vos colis en cours sont dans Mes envois.'**
+  String get bidDetailGoneBody;
+
+  /// Bouton de l'état « demande introuvable » vers l'onglet Suivi, section Mes envois (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes envois'**
+  String get bidDetailGoneAction;
 
   /// Tooltip et libellé de tuile pour partager le lien de suivi (bid_detail_screen.dart, bid_detail_action_bars.dart, quick_actions_row.dart)
   ///
