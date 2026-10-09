@@ -20,7 +20,8 @@ class ChatPhotoViewerArgs {
 
 /// Visionneuse plein écran d'une photo du chat (FLUTTER-B4), variante
 /// `full`, zoomable. Même facture que `RequestPhotoViewer` : fond noir figé,
-/// bouton de fermeture en haut. 410 → « Photo expirée ».
+/// bouton de fermeture sur pastille sombre, fermeture en glissant vers le bas
+/// (FLUTTER-GR). 410 → « Photo expirée ».
 class ChatPhotoViewerScreen extends StatelessWidget {
   const ChatPhotoViewerScreen({super.key, required this.args, this.cache});
 
@@ -38,70 +39,76 @@ class ChatPhotoViewerScreen extends StatelessWidget {
       messageId: args.messageId,
       variant: ChatImageVariant.full,
     );
+    // Fond porté par DonyPhotoDismiss : il s'estompe pendant le glissement et
+    // laisse voir la conversation (route non opaque).
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: ValueListenableBuilder<ChatImageLoad>(
-              valueListenable: listenable,
-              builder: (context, load, _) => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                switchInCurve: Curves.easeOutCubic,
-                child: switch (load) {
-                  ChatImageReady(:final bytes) => InteractiveViewer(
-                    key: const Key('chat-photo-viewer-image'),
-                    maxScale: 5,
-                    child: Center(
-                      child: Image.memory(
-                        bytes,
-                        fit: BoxFit.contain,
-                        gaplessPlayback: true,
+      backgroundColor: Colors.transparent,
+      body: DonyPhotoDismiss(
+        onDismiss: () => context.pop(),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: ValueListenableBuilder<ChatImageLoad>(
+                valueListenable: listenable,
+                builder: (context, load, _) => AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  switchInCurve: Curves.easeOutCubic,
+                  child: switch (load) {
+                    ChatImageReady(:final bytes) => DonyZoomablePhoto(
+                      key: const Key('chat-photo-viewer-image'),
+                      child: Center(
+                        child: Image.memory(
+                          bytes,
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                        ),
                       ),
                     ),
-                  ),
-                  ChatImageLoading() => const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                  ChatImageExpired() => _ViewerMessage(
-                    key: const Key('chat-photo-viewer-expired'),
-                    icon: 'image-off',
-                    text: l.chatPhotoExpired,
-                  ),
-                  ChatImageFailed() => GestureDetector(
-                    key: const Key('chat-photo-viewer-retry'),
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => store.retry(
-                      conversationId: args.conversationId,
-                      messageId: args.messageId,
-                      variant: ChatImageVariant.full,
+                    ChatImageLoading() => const DonyPhotoDragArea(
+                      child: Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      ),
                     ),
-                    child: _ViewerMessage(
-                      icon: 'refresh-cw',
-                      text: l.chatPhotoTapToRetry,
+                    ChatImageExpired() => DonyPhotoDragArea(
+                      key: const Key('chat-photo-viewer-expired'),
+                      child: _ViewerMessage(
+                        icon: 'image-off',
+                        text: l.chatPhotoExpired,
+                      ),
                     ),
-                  ),
-                },
+                    ChatImageFailed() => DonyPhotoDragArea(
+                      child: GestureDetector(
+                        key: const Key('chat-photo-viewer-retry'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => store.retry(
+                          conversationId: args.conversationId,
+                          messageId: args.messageId,
+                          variant: ChatImageVariant.full,
+                        ),
+                        child: _ViewerMessage(
+                          icon: 'refresh-cw',
+                          text: l.chatPhotoTapToRetry,
+                        ),
+                      ),
+                    ),
+                  },
+                ),
               ),
             ),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top + DonySpacing.xs,
-            right: DonySpacing.xs,
-            child: IconButton(
-              tooltip: l.commonClose,
-              onPressed: () => context.pop(),
-              icon: const DonyIcon('x', color: Colors.white),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + DonySpacing.xs,
+              right: DonySpacing.sm,
+              child: DonyPhotoCloseButton(onPressed: () => context.pop()),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _ViewerMessage extends StatelessWidget {
-  const _ViewerMessage({super.key, required this.icon, required this.text});
+  const _ViewerMessage({required this.icon, required this.text});
 
   final String icon;
   final String text;

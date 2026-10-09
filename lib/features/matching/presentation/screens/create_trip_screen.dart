@@ -90,6 +90,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   late final ValueNotifier<TimeOfDay?> _departureTimeNotifier;
   void Function({bool saveAsDraft})? _submit;
 
+  /// Moyens de paiement tels qu'ils partiront au submit (FLUTTER-GJ) : l'aperçu
+  /// les affiche au lieu de les recalculer.
+  List<String> Function()? _paymentMethods;
+
   /// Devise de l'annonce. En création, choisie par l'utilisateur (défaut :
   /// devise du portefeuille) ; en édition ou trajet dédié, figée sur la
   /// devise déjà portée par l'annonce/le verrou — elle ne se change plus une
@@ -306,6 +310,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         departureTimeNotifier: _departureTimeNotifier,
                         currencyNotifier: _currencyNotifier,
                         onSubmitReady: (fn) => _submit = fn,
+                        onPaymentMethodsReady: (fn) => _paymentMethods = fn,
                         dirtyNotifier: _isDirtyNotifier,
                       ),
                     ],
@@ -501,6 +506,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                                         .value,
                                                 currency:
                                                     _currencyNotifier.value,
+                                                paymentMethods: _paymentMethods
+                                                    ?.call(),
                                               );
                                             }
                                           : null,
@@ -547,6 +554,7 @@ class _TripFormContent extends StatefulWidget {
   /// Choisie par l'utilisateur en création, figée en édition/trajet dédié.
   final ValueNotifier<SupportedCurrency> currencyNotifier;
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
+  final void Function(List<String> Function())? onPaymentMethodsReady;
 
   const _TripFormContent({
     super.key,
@@ -561,6 +569,7 @@ class _TripFormContent extends StatefulWidget {
     this.departureTimeNotifier,
     required this.currencyNotifier,
     this.onSubmitReady,
+    this.onPaymentMethodsReady,
   });
 
   @override
@@ -839,6 +848,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       });
     }
     widget.onSubmitReady?.call(_submit);
+    widget.onPaymentMethodsReady?.call(_paymentMethods);
     _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
     _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
     _kgPriceEnabledNotifier.addListener(_syncCanSubmit);
@@ -1373,6 +1383,28 @@ class _TripFormContentState extends State<_TripFormContent> {
     return state is StripeAccountReady && state.accountStatus.isComplete;
   }
 
+  /// Moyens de paiement envoyés au submit, et affichés tels quels par l'aperçu
+  /// (FLUTTER-GJ).
+  ///
+  /// Publiable sans Stripe (cash-only) : STRIPE n'est inclus que si
+  /// configuré, et CASH est forcé quand Stripe ne l'est pas — la liste ne
+  /// peut jamais être vide (au moins une méthode de paiement est requise).
+  /// La carte n'existe pas en zone CFA (pas de Stripe Connect) : elle n'est
+  /// envoyée que si la devise du trajet l'autorise, comme l'aperçu du
+  /// sélecteur de devise. Le backend la retirerait de toute façon.
+  /// La carte est décochable (FLUTTER-FT) : sans elle, les espèces
+  /// repartent d'office, comme quand Stripe n'est pas configuré.
+  List<String> _paymentMethods() {
+    final stripeConfigured =
+        _isStripeConfigured() && _currency.isStripeEligible;
+    final cardOn = stripeConfigured && _cardEnabledNotifier.value;
+    return [
+      if (cardOn) 'STRIPE',
+      if (_cashEnabledNotifier.value || !cardOn) 'CASH',
+      if (_mobileMoneyEnabledNotifier.value) 'MOBILE_MONEY',
+    ];
+  }
+
   void _submit({bool saveAsDraft = false}) {
     // Gate KYC — inchangé pour le reste du flux, nouveau uniquement ici :
     // publier/modifier un trajet nécessite une identité vérifiée. Si ce n'est
@@ -1514,22 +1546,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       return;
     }
 
-    // Publiable sans Stripe (cash-only) : STRIPE n'est inclus que si
-    // configuré, et CASH est forcé quand Stripe ne l'est pas — la liste ne
-    // peut jamais être vide (au moins une méthode de paiement est requise).
-    // La carte n'existe pas en zone CFA (pas de Stripe Connect) : elle n'est
-    // envoyée que si la devise du trajet l'autorise, comme l'aperçu du
-    // sélecteur de devise. Le backend la retirerait de toute façon.
-    // La carte est décochable (FLUTTER-FT) : sans elle, les espèces
-    // repartent d'office, comme quand Stripe n'est pas configuré.
-    final stripeConfigured =
-        _isStripeConfigured() && _currency.isStripeEligible;
-    final cardOn = stripeConfigured && _cardEnabledNotifier.value;
-    final paymentMethods = [
-      if (cardOn) 'STRIPE',
-      if (_cashEnabledNotifier.value || !cardOn) 'CASH',
-      if (_mobileMoneyEnabledNotifier.value) 'MOBILE_MONEY',
-    ];
+    final paymentMethods = _paymentMethods();
     // Escales : avion seulement, sinon jamais envoyées.
     final stops = supportsStops(transportMode) ? _stopsNotifier.value : null;
 
@@ -1617,6 +1634,16 @@ class _TripFormContentState extends State<_TripFormContent> {
       // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
       // ensemble, en une transaction côté serveur.
       final extraLegs = context.read<TripLegsCubit>().state.legs;
+      // Une étape au-dessus du plafond de la devise (devise changée après
+      // sa saisie) serait refusée par le serveur (FLUTTER-GK).
+      final aboveMax = TripLegsSection.priceAboveMaxIndexes(
+        extraLegs,
+        _currency,
+      );
+      if (aboveMax.isNotEmpty) {
+        _showError(context.l10n.tripLegsPriceAboveMax(_currency.symbol));
+        return;
+      }
       context.read<AnnouncementBloc>().add(
         extraLegs.isEmpty
             ? createEvent
@@ -2401,10 +2428,12 @@ class _TripFormContentState extends State<_TripFormContent> {
             _kgPriceEnabledNotifier,
             _transportModeNotifier,
             _stopsNotifier,
+            widget.currencyNotifier,
           ]),
           builder: (context, _) => TripLegsSection(
             origin: _firstLegOrigin(),
             showPrice: _kgPriceEnabledNotifier.value,
+            currency: _currency,
             defaultKg: _availableKgNotifier.value,
             defaultPrice: context.read<AnnouncementFormBloc>().state.pricePerKg,
             // Escales par étape (FLUTTER-GE), préremplies avec celles du

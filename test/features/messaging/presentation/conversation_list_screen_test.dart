@@ -806,5 +806,60 @@ void main() {
       expect(find.text('Archiver'), findsOneWidget);
       expect(find.text('Supprimer'), findsOneWidget);
     });
+
+    testWidgets(
+      'FLUTTER-GN : « Annuler » après archivage, tuile sortie de la liste, '
+      'désarchive sans exception',
+      (tester) async {
+        final states = StreamController<ConversationListState>.broadcast();
+        addTearDown(states.close);
+        whenListen(
+          bloc,
+          states.stream,
+          initialState: ConversationListLoaded([_conv]),
+        );
+        await _pump(tester, bloc);
+
+        await tester.drag(find.text('Aïcha Bah'), const Offset(-500, 0));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('conversation-swipe-archive')));
+        await tester.pump();
+
+        // Le serveur confirme : la conversation quitte la liste, la tuile
+        // (et le contexte de l'action) est démontée.
+        states.add(
+          ConversationListLoaded(const [], archivedConversations: [_conv]),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Aïcha Bah'), findsNothing);
+
+        await tester.tap(find.text('Annuler'));
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+        verify(
+          () => bloc.add(
+            any(
+              that: isA<ConversationArchiveRequested>().having(
+                (e) => e.conversationId,
+                'conversationId',
+                'conv-1',
+              ),
+            ),
+          ),
+        ).called(1);
+        verify(
+          () => bloc.add(
+            any(
+              that: isA<ConversationUnarchiveRequested>().having(
+                (e) => e.conversationId,
+                'conversationId',
+                'conv-1',
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
   });
 }

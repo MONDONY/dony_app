@@ -16,6 +16,10 @@ class AnnouncementPreviewSheet extends StatelessWidget {
   final TimeOfDay? departureTime;
   final SupportedCurrency? currency;
 
+  /// Moyens de paiement tels qu'envoyés au submit (`STRIPE`, `CASH`,
+  /// `MOBILE_MONEY`). Null : repli sur `formState.cashAccepted`.
+  final List<String>? paymentMethods;
+
   const AnnouncementPreviewSheet({
     super.key,
     required this.formState,
@@ -23,6 +27,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     this.isSubmitting = false,
     this.departureTime,
     this.currency,
+    this.paymentMethods,
   });
 
   static Future<void> show(
@@ -33,6 +38,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     bool isSubmitting = false,
     TimeOfDay? departureTime,
     SupportedCurrency? currency,
+    List<String>? paymentMethods,
   }) {
     final l = context.l10n;
     return DonyBottomSheet.show<void>(
@@ -62,8 +68,20 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         isSubmitting: isSubmitting,
         departureTime: departureTime,
         currency: currency,
+        paymentMethods: paymentMethods,
       ),
     );
+  }
+
+  /// Libellé « Paiement » de l'aperçu (FLUTTER-GJ) : calculé depuis la liste
+  /// réellement envoyée, donc juste en XOF (pas de carte), carte décochée ou
+  /// mobile money activé.
+  static String paymentLabel(AppLocalizations l, List<String> methods) {
+    return [
+      if (methods.contains('STRIPE')) l.paymentMethodCard,
+      if (methods.contains('CASH')) l.paymentMethodCash,
+      if (methods.contains('MOBILE_MONEY')) l.paymentMethodMobileMoney,
+    ].join(' + ');
   }
 
   String _formatTime(TimeOfDay t) {
@@ -142,10 +160,21 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             label: l.listingRowLabelPrice,
             value: prixStr,
           ),
+          // Devise du voyage rappelée (FLUTTER-GK) : un prix d'étape saisi
+          // en pensant euros ne passe plus inaperçu en F CFA.
+          if (currency case final c?)
+            _PreviewRow(
+              key: const Key('preview-currency-row'),
+              iconAsset: 'wallet',
+              label: l.listingRowLabelCurrency,
+              value: '${c.symbol} (${c.code})',
+            ),
           _PreviewRow(
             iconAsset: 'banknote',
             label: l.listingRowLabelPayment,
-            value: formState.cashAccepted
+            value: paymentMethods != null && paymentMethods!.isNotEmpty
+                ? paymentLabel(l, paymentMethods!)
+                : formState.cashAccepted
                 ? l.listingPaymentCardCash
                 : l.listingPaymentCardOnly,
           ),
@@ -207,6 +236,7 @@ class _PreviewRow extends StatelessWidget {
   final String value;
 
   const _PreviewRow({
+    super.key,
     required this.iconAsset,
     required this.label,
     required this.value,

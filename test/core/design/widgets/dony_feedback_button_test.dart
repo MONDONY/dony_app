@@ -133,6 +133,43 @@ void main() {
 
   // ── Fallback path: resolveRoute retourne 'unknown' hors GoRouter ───────────
 
+  testWidgets(
+    'resolveRoute depuis une bottom sheet : route de la page dessous',
+    (tester) async {
+      late BuildContext sheetContext;
+      final router = GoRouter(
+        initialLocation: '/trips/new',
+        routes: [
+          GoRoute(
+            path: '/trips/new',
+            builder: (context, _) => Scaffold(
+              body: TextButton(
+                onPressed: () => DonyBottomSheet.show<void>(
+                  context,
+                  child: Builder(
+                    builder: (ctx) {
+                      sheetContext = ctx;
+                      return const SizedBox(height: 40);
+                    },
+                  ),
+                ),
+                child: const Text('ouvrir'),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(DonyFeedbackButton.resolveRoute(sheetContext), '/trips/new');
+    },
+  );
+
   testWidgets('resolveRoute retourne "unknown" dans un contexte sans GoRouter', (
     tester,
   ) async {

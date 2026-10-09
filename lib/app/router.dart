@@ -1246,6 +1246,9 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => CustomTransitionPage<void>(
         key: state.pageKey,
         name: '/chat/photo',
+        // Non opaque : en glissant la photo vers le bas, la conversation
+        // réapparaît derrière (FLUTTER-GR).
+        opaque: false,
         child: ChatPhotoViewerScreen(args: state.extra! as ChatPhotoViewerArgs),
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
             FadeTransition(opacity: animation, child: child),

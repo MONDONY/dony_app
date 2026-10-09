@@ -450,7 +450,20 @@ void main() {
       final cta = find.byKey(const Key('switch-to-mobile-money-currency-cta'));
       await tester.ensureVisible(cta);
       await tester.tap(cta);
+      await tester.pumpAndSettle();
+
+      // FLUTTER-GK : confirmation explicite avant de basculer la devise.
+      expect(currency.value.code, SupportedCurrency.eur.code);
+      expect(
+        find.text(
+          'Tous les prix du voyage passent en F CFA et le paiement par carte '
+          'ne sera plus proposé.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('currency-switch-confirm')));
       // Le changement de devise relance les animations d'apparition.
+      await tester.pump(const Duration(milliseconds: 500));
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(currency.value.code, SupportedCurrency.xof.code);
@@ -463,6 +476,32 @@ void main() {
       );
       expect(tile.onChanged, isNotNull);
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('FLUTTER-GK : « Annuler » garde la devise du voyage', (
+      tester,
+    ) async {
+      final currency = ValueNotifier<SupportedCurrency>(SupportedCurrency.eur);
+      await _pump(
+        tester,
+        _host(
+          currencyNotifier: currency,
+          mobileMoneyAccountActive: true,
+          mobileMoneyCurrency: SupportedCurrency.xof,
+        ),
+      );
+      final cta = find.byKey(const Key('switch-to-mobile-money-currency-cta'));
+      await tester.ensureVisible(cta);
+      await tester.tap(cta);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('currency-switch-cancel')));
+      await tester.pumpAndSettle();
+
+      expect(currency.value.code, SupportedCurrency.eur.code);
+      expect(
+        find.byKey(const Key('mobile-money-currency-notice')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('devise du compte inconnue : encart générique sans bouton', (
