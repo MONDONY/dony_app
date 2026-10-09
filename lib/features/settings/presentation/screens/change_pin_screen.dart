@@ -221,7 +221,12 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
   }
 
   Widget _buildStepIndicator(ColorScheme cs) {
-    final steps = [_PinStep.verifyOld, _PinStep.enterNew, _PinStep.confirmNew];
+    // En création, il n'y a pas de code actuel à vérifier : l'indicateur ne
+    // montre que les deux étapes réellement parcourues (FLUTTER-H8), sinon
+    // l'écran semblait commencer à l'étape 2.
+    final steps = widget.isCreation
+        ? const [_PinStep.enterNew, _PinStep.confirmNew]
+        : const [_PinStep.verifyOld, _PinStep.enterNew, _PinStep.confirmNew];
     final current = steps.indexOf(_step);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -236,7 +241,11 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
         }
         final idx = i ~/ 2;
         final active = idx <= current;
-        return _StepDot(active: active, label: '${idx + 1}');
+        return _StepDot(
+          key: ValueKey('pin_step_dot_$idx'),
+          active: active,
+          label: '${idx + 1}',
+        );
       }),
     );
   }
@@ -266,7 +275,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
 }
 
 class _StepDot extends StatelessWidget {
-  const _StepDot({required this.active, required this.label});
+  const _StepDot({super.key, required this.active, required this.label});
   final bool active;
   final String label;
 

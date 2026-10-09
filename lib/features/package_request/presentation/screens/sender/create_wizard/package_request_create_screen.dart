@@ -17,6 +17,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/create
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_step_indicator.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/wizard_currency.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_sheet.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
@@ -464,7 +465,11 @@ class _PackageRequestCreateScreenState
                         // `_activeCurrency` est déjà résolue une fois pour
                         // tout le formulaire ; la factory `.active()` refaisait
                         // un lookup GetIt et une lecture Hive à chaque build.
-                        CurrencyPublishBanner(currency: _activeCurrency),
+                        // La devise du formulaire prime (duplication) : c'est
+                        // elle qui part au backend, comme à l'étape 3.
+                        CurrencyPublishBanner(
+                          currency: state.currency ?? _activeCurrency,
+                        ),
                       ],
                     ],
                   ),
@@ -515,7 +520,9 @@ class _PackageRequestCreateScreenState
         PackageRequestPreviewSheet.show(
           context,
           formState: state,
-          currency: _activeCurrency,
+          // Même devise que l'étape 3 et que le payload (FLUTTER-HB) : la
+          // devise d'affichage du compte n'est qu'un repli.
+          currency: resolveWizardCurrency(state, fallback: _activeCurrency),
           photoCount: context
               .read<PackageRequestPhotosCubit>()
               .readyKeys

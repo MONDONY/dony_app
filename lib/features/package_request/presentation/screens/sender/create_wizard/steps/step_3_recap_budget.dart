@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/currency_selector.dart';
@@ -22,6 +21,7 @@ import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/wizard_currency.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -93,12 +93,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
       // déjà une. Absent en édition : la devise d'une demande déjà créée ne
       // se change pas ici (cf. PackageRequestFormBloc._onStep3, currency
       // n'est envoyée qu'à la création).
-      if (context.read<PackageRequestFormBloc>().state.currency == null &&
-          !s.isEditing) {
-        context.read<PackageRequestFormBloc>().add(
-          PackageRequestCurrencyChanged(
-            widget.currency ?? ActiveCurrency.current ?? SupportedCurrency.eur,
-          ),
+      final formBloc = context.read<PackageRequestFormBloc>();
+      if (formBloc.state.currency == null && !s.isEditing) {
+        formBloc.add(
+          PackageRequestCurrencyChanged(_resolveCurrency(formBloc.state)),
         );
       }
     });
@@ -114,10 +112,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   /// comparer un montant saisi dans N'IMPORTE QUELLE devise aux bornes
   /// euros de [PackageRequestLimits] — précisément le bug corrigé ici.
   SupportedCurrency _resolveCurrency(PackageRequestFormState s) =>
-      s.currency ??
-      widget.currency ??
-      ActiveCurrency.current ??
-      SupportedCurrency.eur;
+      resolveWizardCurrency(s, fallback: widget.currency);
 
   /// Le bouton ne doit être actif que si la publication peut réellement
   /// aboutir : il l'était dès qu'un montant était saisi, y compris hors
