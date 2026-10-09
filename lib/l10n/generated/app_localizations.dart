@@ -28699,6 +28699,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le code de retrait a expiré. Générez-en un nouveau.'**
   String get ticketExpiredCodeMessage;
+
+  /// Note du hero expéditeur quand le code de retrait a expiré (sender_hero_card.dart, FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait a expiré : générez-en un nouveau sur votre billet.'**
+  String get bidDetailSenderCodeExpiredNote;
+
+  /// Encart « Prévenir le destinataire » quand le code a expiré (FLUTTER-G2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait a expiré : générez-en un nouveau pour l\'ajouter au message.'**
+  String get recipientNotifyCodeExpiredHint;
 }
 
 class _AppLocalizationsDelegate

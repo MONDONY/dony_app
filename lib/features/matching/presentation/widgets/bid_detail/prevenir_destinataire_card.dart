@@ -92,9 +92,12 @@ class PrevenirDestinataireCard extends StatelessWidget {
   static bool _declinedActionable(BidModel bid) =>
       bid.isRecipientDeclinedForSender && bid.canChangeRecipient;
 
-  /// Le code ne part qu'une fois le colis confié au voyageur.
+  /// Le code ne part qu'une fois le colis confié au voyageur, et jamais
+  /// périmé : le destinataire ne pourrait pas s'en servir (FLUTTER-G2).
   static bool withCode(BidModel bid) =>
-      bid.confirmationCode != null && _codeStatuses.contains(bid.status);
+      bid.confirmationCode != null &&
+      !bid.isPickupCodeExpired &&
+      _codeStatuses.contains(bid.status);
 
   Future<void> _notify(BuildContext context) async {
     final l = context.l10n;
@@ -169,10 +172,13 @@ class PrevenirDestinataireCard extends StatelessWidget {
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           // FLUTTER-G1 : code bloqué, le message ne partirait qu'avec le lien.
+          // FLUTTER-G2 : code expiré, même conséquence, autre explication.
           if (bid.needsNewPickupCode) ...[
             const SizedBox(height: DonySpacing.sm),
             Text(
-              l.recipientNotifyCodeBlockedHint,
+              bid.isPickupCodeExpired
+                  ? l.recipientNotifyCodeExpiredHint
+                  : l.recipientNotifyCodeBlockedHint,
               key: const Key('recipient-notify-code-blocked'),
               style: tt.bodySmall?.copyWith(
                 color: cs.onSurface,

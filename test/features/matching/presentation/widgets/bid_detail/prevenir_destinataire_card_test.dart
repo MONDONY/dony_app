@@ -20,7 +20,9 @@ BidModel _bid({
   String? departureCity = 'Paris',
   String? arrivalCity = 'Dakar',
   String? recipientAppStatus,
+  bool pickupCodeRenewalNeeded = false,
 }) => BidModel(
+  pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
@@ -228,6 +230,42 @@ void main() {
         expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
       },
     );
+
+    // FLUTTER-G2 : code expiré → jamais dans le message, explication dédiée.
+    testWidgets('code expiré : lien seul et « a expiré »', (tester) async {
+      when(() => launcher.open(any())).thenAnswer((_) async => true);
+      await pump(
+        tester,
+        _bid(
+          status: 'IN_TRANSIT',
+          confirmationCode: '482913',
+          pickupCodeRenewalNeeded: true,
+        ),
+      );
+
+      expect(
+        find.text(
+          "Le code de retrait a expiré : générez-en un nouveau pour l'ajouter au message.",
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
+      await tester.tap(find.text('Prévenir sur WhatsApp'));
+      await tester.pumpAndSettle();
+      final uri =
+          verify(() => launcher.open(captureAny())).captured.single as Uri;
+      expect(uri.queryParameters['text'], isNot(contains('482913')));
+    });
+
+    testWidgets('code effacé : texte « bloqué » inchangé', (tester) async {
+      await pump(tester, _bid(status: 'IN_TRANSIT'));
+      expect(
+        find.text(
+          "Générez d'abord un nouveau code de retrait pour l'ajouter au message.",
+        ),
+        findsOneWidget,
+      );
+    });
 
     testWidgets('code présent : aucune invitation à régénérer', (tester) async {
       await pump(

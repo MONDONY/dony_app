@@ -19638,5 +19638,9 @@
   "ticketExpiredCodeTitle": "Code de retrait expiré",
   "@ticketExpiredCodeTitle": {"description": "Titre du talon expéditeur quand le code de retrait est encore présent mais a expiré (talon_blocked_code_block.dart, FLUTTER-G2)."},
   "ticketExpiredCodeMessage": "Le code de retrait a expiré. Générez-en un nouveau.",
-  "@ticketExpiredCodeMessage": {"description": "Explication du talon « Code de retrait expiré » (FLUTTER-G2)."}
+  "@ticketExpiredCodeMessage": {"description": "Explication du talon « Code de retrait expiré » (FLUTTER-G2)."},
+  "bidDetailSenderCodeExpiredNote": "Le code de retrait a expiré : générez-en un nouveau sur votre billet.",
+  "@bidDetailSenderCodeExpiredNote": {"description": "Note du hero expéditeur quand le code de retrait a expiré (sender_hero_card.dart, FLUTTER-G2)."},
+  "recipientNotifyCodeExpiredHint": "Le code de retrait a expiré : générez-en un nouveau pour l'ajouter au message.",
+  "@recipientNotifyCodeExpiredHint": {"description": "Encart « Prévenir le destinataire » quand le code a expiré (FLUTTER-G2)."}
 }

@@ -17395,4 +17395,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ticketExpiredCodeMessage =>
       'The pickup code has expired. Generate a new one.';
+
+  @override
+  String get bidDetailSenderCodeExpiredNote =>
+      'The pickup code has expired: generate a new one on your ticket.';
+
+  @override
+  String get recipientNotifyCodeExpiredHint =>
+      'The pickup code has expired: generate a new one to add it to the message.';
 }

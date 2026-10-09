@@ -46,7 +46,9 @@ BidModel _bid({
   bool? deliveryNoShowReportedByTraveler,
   String? arrivalInstructions,
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+  bool pickupCodeRenewalNeeded = false,
 }) => BidModel(
+  pickupCodeRenewalNeeded: pickupCodeRenewalNeeded,
   paymentMethod: paymentMethod,
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -543,6 +545,40 @@ void main() {
     expect(find.textContaining('En route vers Dakar'), findsOneWidget);
     // FLUTTER-G1 : colis remis sans code → le code a été bloqué.
     expect(find.textContaining('code de retrait a été bloqué'), findsOneWidget);
+  });
+
+  // FLUTTER-G2 : code encore présent mais expiré → on parle d'expiration.
+  testWidgets('12c · IN_TRANSIT, code expiré → « a expiré », pas le billet', (
+    tester,
+  ) async {
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      arrivalCity: 'Dakar',
+      arrivalTime: '',
+      confirmationCode: '123456',
+      pickupCodeRenewalNeeded: true,
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Le code de retrait a expiré'), findsOneWidget);
+    expect(find.textContaining('a été bloqué'), findsNothing);
+  });
+
+  testWidgets('12d · ARRIVED, code expiré → « a expiré » en priorité', (
+    tester,
+  ) async {
+    final bid = _bid(
+      status: 'ARRIVED',
+      confirmationCode: '123456',
+      pickupCodeRenewalNeeded: true,
+      arrivalInstructions: 'Gare routière',
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Le code de retrait a expiré'), findsOneWidget);
+    expect(find.textContaining('a été bloqué'), findsNothing);
   });
 
   testWidgets('12b · ARRIVED sans confirmationCode → code bloqué en priorité', (
