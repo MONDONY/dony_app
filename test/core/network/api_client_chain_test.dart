@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show HandshakeException, HttpException, SocketException;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
@@ -22,6 +23,14 @@ class _ConnError {
   const _ConnError();
 }
 
+/// Marqueur : l'adaptateur lève cette erreur `dart:io` brute, que dio range
+/// en `DioExceptionType.unknown` (socket coupée par Android en arrière-plan).
+class _RawError {
+  const _RawError(this.error);
+
+  final Object error;
+}
+
 /// Adaptateur factice : rejoue la file de résultats, une entrée par appel
 /// réseau, et note chaque appel dans le journal partagé.
 class _FakeAdapter implements HttpClientAdapter {
@@ -40,6 +49,7 @@ class _FakeAdapter implements HttpClientAdapter {
     final result = queue[requests.length];
     requests.add(options);
     log.add('fetch ${options.method}');
+    if (result is _RawError) throw result.error;
     if (result is _ConnError) {
       throw DioException(
         requestOptions: options,
@@ -321,6 +331,66 @@ void main() {
       expect(log.where((e) => e == 'report'), isEmpty);
     });
 
+    group('connexion perdue sans réponse (FLUTTER-JQ)', () {
+      for (final (label, error) in [
+        (
+          'SocketException',
+          const SocketException('Software caused connection abort'),
+        ),
+        (
+          'HttpException « Connection closed »',
+          const HttpException(
+            'Connection closed before full header was received',
+          ),
+        ),
+        (
+          'HandshakeException réseau',
+          const HandshakeException('Connection terminated during handshake'),
+        ),
+      ]) {
+        test('$label : hors ligne, jamais rapporté', () async {
+          final dio = build([_RawError(error)]);
+
+          await expectLater(
+            dio.get<dynamic>('/notifications/unread-count'),
+            throwsA(appError<OfflineException>()),
+          );
+          await flush();
+
+          expect(log.where((e) => e == 'report'), isEmpty);
+        });
+      }
+
+      test('certificat refusé : toujours rapporté (épinglage TLS)', () async {
+        final dio = build([
+          const _RawError(
+            HandshakeException('Handshake error: CERTIFICATE_VERIFY_FAILED'),
+          ),
+        ]);
+
+        await expectLater(
+          dio.get<dynamic>('/notifications/unread-count'),
+          throwsA(isA<DioException>()),
+        );
+        await flush();
+
+        expect(log.where((e) => e == 'report'), hasLength(1));
+      });
+
+      test('500 sur le compteur : toujours rapporté', () async {
+        final dio = build([500, 500, 500, 500]);
+
+        await expectLater(
+          dio.get<dynamic>('/notifications/unread-count'),
+          throwsA(appError<ServerException>()),
+        );
+        await flush();
+
+        expect(log.where((e) => e == 'report'), hasLength(1));
+        expect(sink.contexts.single['status_code'], 500);
+      });
+    });
+
     test('même panne répétée : un seul report par fenêtre', () async {
       final dio = build([502, 502, 503]);
 
@@ -490,6 +560,26 @@ void main() {
           DioException(requestOptions: options, type: DioExceptionType.cancel),
         ).code,
         'CANCELLED',
+      );
+    });
+
+    test('socket coupée sans réponse → OfflineException', () {
+      final options = RequestOptions(path: '/x');
+      expect(
+        mapHttpError(
+          DioException(
+            requestOptions: options,
+            error: const SocketException('Connection reset by peer'),
+          ),
+        ),
+        isA<OfflineException>(),
+      );
+      // Une erreur inconnue sans rapport avec le réseau garde l'ancien sort.
+      expect(
+        mapHttpError(
+          DioException(requestOptions: options, error: StateError('x')),
+        ),
+        isA<NetworkException>(),
       );
     });
 

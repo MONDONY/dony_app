@@ -13,6 +13,7 @@ import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
 import 'package:dony/core/network/retry_on_transient_error_interceptor.dart';
 import 'package:dony/core/network/retry_policy.dart';
 import 'package:dony/core/network/tls_pinned_ca.dart';
+import 'package:dony/core/network/transport_failure.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -260,6 +261,9 @@ class _SentryErrorReportingInterceptor extends Interceptor {
     final options = err.requestOptions;
     if (RetryPolicy.depthOf(options) > 0) return false;
     if (_transportTypes.contains(err.type)) return false;
+    // Connexion perdue sans réponse, levée en `unknown` (socket coupée par
+    // Android en arrière-plan) : même famille que les délais (FLUTTER-JQ).
+    if (isTransportFailure(err)) return false;
     final inner = err.error;
     // Panne transitoire (502/503/504, API injoignable) : une seule clé pour
     // toutes les routes, comme son empreinte Sentry. Un redémarrage de l'API
@@ -542,6 +546,11 @@ AppException mapHttpError(DioException err) {
           'Requête annulée', // i18n-ignore : catalogue résout 'CANCELLED'
           code: 'CANCELLED',
         );
+      case DioExceptionType.unknown when isTransportError(err.error):
+        // Socket coupée sans réponse (Android en arrière-plan, réseau perdu
+        // en route) : tombait en NetworkException sans code, rapportée sous
+        // « ReportedError(http.GET, DioException) » (FLUTTER-JQ).
+        return const OfflineException();
       default:
         break;
     }

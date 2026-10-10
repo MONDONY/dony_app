@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/network/transport_failure.dart';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -176,6 +177,14 @@ class ErrorReportingService {
 
   static bool _isExpected(Object error, int? statusCode) {
     if (statusCode != null && _expectedStatusCodes.contains(statusCode)) {
+      return true;
+    }
+    // Échec sans réponse venu du réseau de l'appareil (hors ligne, délai,
+    // socket coupée en arrière-plan) : jamais un défaut de l'app, quel que
+    // soit l'état de l'application (FLUTTER-JQ).
+    if (statusCode == null &&
+        error is DioException &&
+        isTransportFailure(error)) {
       return true;
     }
     // L'intercepteur HTTP passe la DioException : l'AppException convertie
