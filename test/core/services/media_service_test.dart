@@ -170,4 +170,108 @@ void main() {
       expect(result.path, endsWith('.jpg'));
     });
   });
+
+  group('minBounds', () {
+    test('4000x3000 et 3000x4000 -> 1200', () {
+      expect(DonyMediaService.minBounds(4000, 3000), 1200);
+      expect(DonyMediaService.minBounds(3000, 4000), 1200);
+    });
+
+    test('800x600 -> 600 (pas d\'agrandissement)', () {
+      expect(DonyMediaService.minBounds(800, 600), 600);
+    });
+
+    test(
+      'avec l\'échelle du plugin, le grand côté vaut 1600 (brut ou pivoté)',
+      () {
+        for (final dims in [(4000, 3000), (3000, 4000)]) {
+          final s = DonyMediaService.minBounds(dims.$1, dims.$2);
+          // Android : scale = max(1, min(w / s, h / s)) sur le bitmap brut.
+          for (final raw in [(dims.$1, dims.$2), (dims.$2, dims.$1)]) {
+            final scale = [
+              1.0,
+              [raw.$1 / s, raw.$2 / s].reduce((a, b) => a < b ? a : b),
+            ].reduce((a, b) => a > b ? a : b);
+            final longEdge = (raw.$1 > raw.$2 ? raw.$1 : raw.$2) / scale;
+            expect(longEdge.round(), 1600);
+          }
+        }
+      },
+    );
+  });
+
+  group('pick - _compress réel avec plugin injecté', () {
+    Future<XFile?> run({
+      required Future<({int width, int height})> Function(Uint8List) reader,
+      required List<Map<String, int>> calls,
+    }) async {
+      final photo = fakeXFile('p.jpg', 64);
+      when(
+        () => mockPicker.pickImage(
+          source: any(named: 'source'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
+      ).thenAnswer((_) async => photo);
+      final service = DonyMediaService(
+        imagePicker: mockPicker,
+        dimensionReader: reader,
+        tempDirectory: () async => tempDir,
+        bytesCompressor:
+            (
+              bytes, {
+              required minWidth,
+              required minHeight,
+              required quality,
+            }) async {
+              calls.add({'w': minWidth, 'h': minHeight, 'q': quality});
+              return Uint8List.fromList([255, 216, 255]);
+            },
+      );
+      return service.pick(source: ImageSource.gallery);
+    }
+
+    test('4000x3000 : bornes 1200/1200, qualité 80, sortie jpeg', () async {
+      final calls = <Map<String, int>>[];
+      final result = await run(
+        reader: (_) async => (width: 4000, height: 3000),
+        calls: calls,
+      );
+      expect(calls.single, {'w': 1200, 'h': 1200, 'q': 80});
+      expect(result!.mimeType, 'image/jpeg');
+      expect(result.path, endsWith('.jpg'));
+    });
+
+    test('échec du lecteur de dimensions -> UnsupportedMediaTypeException', () {
+      expect(
+        run(reader: (_) async => throw Exception('decode'), calls: []),
+        throwsA(isA<UnsupportedMediaTypeException>()),
+      );
+    });
+
+    test('sortie vide du plugin -> UnsupportedMediaTypeException', () async {
+      final photo = fakeXFile('v.jpg', 64);
+      when(
+        () => mockPicker.pickImage(
+          source: any(named: 'source'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
+      ).thenAnswer((_) async => photo);
+      final service = DonyMediaService(
+        imagePicker: mockPicker,
+        dimensionReader: (_) async => (width: 10, height: 10),
+        tempDirectory: () async => tempDir,
+        bytesCompressor:
+            (
+              b, {
+              required minWidth,
+              required minHeight,
+              required quality,
+            }) async => Uint8List(0),
+      );
+      await expectLater(
+        service.pick(source: ImageSource.gallery),
+        throwsA(isA<UnsupportedMediaTypeException>()),
+      );
+    });
+  });
 }

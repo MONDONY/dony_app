@@ -41,10 +41,10 @@ class ScreenFeedbackSender {
   /// Route transmise quand le bouton n'a pas pu la lire.
   static const String unknownRoute = 'unknown';
 
-  /// Uploade la capture automatique ([screenshot], PNG, convertie en JPEG 80) puis les captures
-  /// du testeur, et crée le signalement. Une capture qui ne s'uploade pas
-  /// est ignorée : le rapport part avec les autres. Une création qui
-  /// échoue lève, à l'appelant de décider.
+  /// Uploade la capture automatique ([screenshot], PNG, convertie en JPEG 80)
+  /// puis les captures du testeur, et crée le signalement. Une capture qui ne
+  /// s'uploade pas est ignorée : le rapport part avec les autres. Une création
+  /// qui échoue lève, à l'appelant de décider.
   Future<String> send({
     required FeedbackReport report,
     required String route,
