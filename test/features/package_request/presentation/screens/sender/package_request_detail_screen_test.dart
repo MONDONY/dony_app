@@ -26,7 +26,6 @@ import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -151,6 +150,11 @@ Widget _buildApp({required String requestId}) {
         path: '/package-requests/:id',
         builder: (ctx, state) =>
             PackageRequestDetailScreen(requestId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/package-requests/:id/affiche',
+        builder: (_, state) =>
+            Scaffold(body: Text('Affiche ${state.pathParameters['id']}')),
       ),
     ],
   );
@@ -791,18 +795,9 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('Partager : déclenche le tracking, sans erreur', (
+    testWidgets('Partager : ouvre l\'affiche et déclenche le tracking', (
       tester,
     ) async {
-      const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
-      final messenger =
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-      messenger.setMockMethodCallHandler(
-        shareChannel,
-        (call) async => 'com.some.app',
-      );
-      addTearDown(() => messenger.setMockMethodCallHandler(shareChannel, null));
-
       when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
       when(
         () => repo.listThreadsForRequest('pr-1'),
@@ -817,7 +812,7 @@ void main() {
       verify(
         () => analytics.logEvent(AnalyticsEvents.packageRequestShared),
       ).called(1);
-      expect(find.byType(SnackBar), findsNothing);
+      expect(find.text('Affiche pr-1'), findsOneWidget);
     });
   });
 

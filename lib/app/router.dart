@@ -115,6 +115,7 @@ import 'package:dony/features/notifications/presentation/notification_detail_scr
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -124,6 +125,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/envoye
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/negotiation_paid_success_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/package_request_poster_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
@@ -1986,6 +1988,22 @@ final appRouter = GoRouter(
       path: '/package-requests/:id',
       builder: (_, state) =>
           PackageRequestDetailScreen(requestId: state.pathParameters['id']!),
+    ),
+    // Affiche partageable d'une demande d'envoi (hors shell). Même contrat
+    // que `/announcements/:id/affiche` : l'identifiant suffit, `extra` n'est
+    // qu'un raccourci d'affichage pour l'appelant qui tient déjà la demande.
+    GoRoute(
+      path: '/package-requests/:id/affiche',
+      builder: (_, state) {
+        final id = state.pathParameters['id']!;
+        final extra = state.extra is PackageRequest
+            ? state.extra as PackageRequest
+            : null;
+        return BlocProvider(
+          create: (_) => getIt<PackageRequestDetailCubit>(param1: id)..load(),
+          child: PackageRequestPosterRoute(initial: extra),
+        );
+      },
     ),
     GoRoute(
       path: '/package-requests/:id/public',

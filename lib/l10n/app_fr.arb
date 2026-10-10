@@ -1982,18 +1982,6 @@
   "@tripPosterTimePattern": {
     "description": "Motif intl DateFormat, pas un texte : heure de l'échéance de l'affiche du trajet (trip_poster_card.dart)"
   },
-  "tripPosterDepartureLabel": "Départ",
-  "@tripPosterDepartureLabel": {
-    "description": "Libellé de la ligne date de départ sur l'affiche du trajet (trip_poster_card.dart)"
-  },
-  "tripPosterDeadlineLabel": "Dernier dépôt",
-  "@tripPosterDeadlineLabel": {
-    "description": "Libellé de la ligne date limite de dépôt sur l'affiche du trajet (trip_poster_card.dart)"
-  },
-  "tripPosterCapacityLabel": "Place disponible",
-  "@tripPosterCapacityLabel": {
-    "description": "Libellé de la ligne capacité disponible sur l'affiche du trajet (trip_poster_card.dart)"
-  },
   "tripPosterHandoverLabel": "Remise",
   "@tripPosterHandoverLabel": {
     "description": "Libellé du lieu de remise (pickupAddress) sur l'affiche du trajet (trip_poster_card.dart)"
@@ -2040,10 +2028,6 @@
         "type": "String"
       }
     }
-  },
-  "tripPosterTagline": "Paiement sécurisé, suivi du colis, voyageurs vérifiés",
-  "@tripPosterTagline": {
-    "description": "Accroche en pied de l'affiche du trajet (trip_poster_card.dart)"
   },
   "tripPosterTitle": "Mon affiche",
   "@tripPosterTitle": {
@@ -3063,24 +3047,6 @@
   "requestDetailNoticeInvitationLimitReached": "Limite d'invitations atteinte pour cette demande.",
   "@requestDetailNoticeInvitationLimitReached": {
     "description": "Snackbar d'échec : limite d'invitations atteinte (package_request_detail_screen.dart)"
-  },
-  "requestDetailShareMessage": "J'envoie un colis de {weight} kg {departure} → {arrival} autour du {date}. Vous voyagez sur cet axe ? Répondez à ma demande sur Yadony.",
-  "@requestDetailShareMessage": {
-    "description": "Corps du message de partage d'une demande, avant le lien (package_request_detail_screen.dart)",
-    "placeholders": {
-      "weight": {
-        "type": "String"
-      },
-      "departure": {
-        "type": "String"
-      },
-      "arrival": {
-        "type": "String"
-      },
-      "date": {
-        "type": "String"
-      }
-    }
   },
   "requestDetailMoreActionsTooltip": "Plus d'actions",
   "@requestDetailMoreActionsTooltip": {
@@ -19951,5 +19917,95 @@
   "errorTravelerNotEligibleTitle": "Paiement pas encore possible",
   "@errorTravelerNotEligibleTitle": {"description": "Titre de l'erreur 422 traveler-not-eligible : le voyageur n'a pas terminé la configuration de ses versements"},
   "errorTravelerNotEligibleMessage": "Ce voyageur n'a pas encore terminé la configuration de ses versements : le paiement par carte est impossible pour l'instant et rien ne vous a été débité. Réessayez plus tard ou choisissez une autre offre.",
-  "@errorTravelerNotEligibleMessage": {"description": "Message de l'erreur 422 traveler-not-eligible"}
+  "@errorTravelerNotEligibleMessage": {"description": "Message de l'erreur 422 traveler-not-eligible"},
+  "tripPosterBadge": "Kilos disponibles",
+  "@tripPosterBadge": {"description": "Pastille de l'en-tête de l'affiche de trajet"},
+  "tripPosterEyebrow": "Trajet",
+  "@tripPosterEyebrow": {"description": "Surtitre du bandeau de l'affiche de trajet, suivi du mode de transport"},
+  "tripPosterHeroDeparture": "Départ {day}",
+  "@tripPosterHeroDeparture": {"description": "Ligne de départ du bandeau de l'affiche de trajet", "placeholders": {"day": {"type": "String"}}},
+  "tripPosterHeroDepartureAt": "Départ {day}, {time}",
+  "@tripPosterHeroDepartureAt": {"description": "Ligne de départ avec heure du bandeau de l'affiche de trajet", "placeholders": {"day": {"type": "String"}, "time": {"type": "String"}}},
+  "tripPosterHeroArrival": "arrivée {when}",
+  "@tripPosterHeroArrival": {"description": "Fin de la ligne de départ : heure ou date d'arrivée", "placeholders": {"when": {"type": "String"}}},
+  "tripPosterTravelerTrips": "{count, plural, =1{1 trajet} other{{count} trajets}}",
+  "@tripPosterTravelerTrips": {"description": "Nombre de trajets du voyageur sur l'affiche", "placeholders": {"count": {"type": "int"}}},
+  "tripPosterVerified": "Vérifié",
+  "@tripPosterVerified": {"description": "Badge de l'affiche quand l'identité du voyageur est vérifiée"},
+  "tripPosterTileCapacity": "Place libre",
+  "@tripPosterTileCapacity": {"description": "Libellé de la tuile de capacité de l'affiche de trajet"},
+  "tripPosterCapacityOf": "sur {total}",
+  "@tripPosterCapacityOf": {"description": "Capacité totale sous la place libre (ex. sur 23 kg)", "placeholders": {"total": {"type": "String"}}},
+  "tripPosterTilePrice": "Prix",
+  "@tripPosterTilePrice": {"description": "Libellé de la tuile de prix de l'affiche de trajet"},
+  "tripPosterTileDeadline": "Dépôt avant",
+  "@tripPosterTileDeadline": {"description": "Libellé de la tuile de date limite de dépôt"},
+  "tripPosterTileDeadlineTime": "à {time}",
+  "@tripPosterTileDeadlineTime": {"description": "Heure limite de dépôt sous la date", "placeholders": {"time": {"type": "String"}}},
+  "tripPosterAccepts": "J'accepte",
+  "@tripPosterAccepts": {"description": "Libellé devant les types d'objets acceptés sur l'affiche"},
+  "tripPosterFooterTitle": "Réservez vos kilos en 1 minute",
+  "@tripPosterFooterTitle": {"description": "Appel à l'action du pied de l'affiche de trajet, à côté du QR code"},
+  "tripPosterFooterSubtitle": "Scannez · Paiement sécurisé · Suivi du colis",
+  "@tripPosterFooterSubtitle": {"description": "Sous-titre du pied de l'affiche de trajet"},
+  "tripPosterCaptionVerified": "Identité du voyageur vérifiée",
+  "@tripPosterCaptionVerified": {"description": "Ligne de la légende de l'affiche quand le voyageur est vérifié"},
+  "requestPosterBadge": "Cherche un voyageur",
+  "@requestPosterBadge": {"description": "Pastille de l'en-tête de l'affiche de demande d'envoi"},
+  "requestPosterEyebrow": "Colis à transporter",
+  "@requestPosterEyebrow": {"description": "Surtitre du bandeau de l'affiche de demande d'envoi"},
+  "requestPosterDate": "Autour du {day}",
+  "@requestPosterDate": {"description": "Date souhaitée sans tolérance, affiche de demande", "placeholders": {"day": {"type": "String"}}},
+  "requestPosterDateTolerance": "{count, plural, =1{Autour du {day}, à 1 jour près} other{Autour du {day}, à {count} jours près}}",
+  "@requestPosterDateTolerance": {"description": "Date souhaitée avec sa tolérance, affiche de demande", "placeholders": {"count": {"type": "int"}, "day": {"type": "String"}}},
+  "requestPosterTileWeight": "Poids",
+  "@requestPosterTileWeight": {"description": "Tuile de poids de l'affiche de demande"},
+  "requestPosterSize": "Format {size}",
+  "@requestPosterSize": {"description": "Taille du colis sous le poids (ex. Format moyen)", "placeholders": {"size": {"type": "String"}}},
+  "requestPosterTileBudget": "Budget",
+  "@requestPosterTileBudget": {"description": "Tuile de budget de l'affiche de demande"},
+  "requestPosterBudgetNone": "À proposer",
+  "@requestPosterBudgetNone": {"description": "Valeur du budget quand l'expéditeur n'en a pas fixé"},
+  "requestPosterNegotiable": "négociable",
+  "@requestPosterNegotiable": {"description": "Précision sous le budget quand le prix est négociable"},
+  "requestPosterFirmPrice": "prix ferme",
+  "@requestPosterFirmPrice": {"description": "Précision sous le budget quand le prix n'est pas négociable"},
+  "requestPosterTilePayment": "Paiement",
+  "@requestPosterTilePayment": {"description": "Tuile des moyens de paiement de l'affiche de demande"},
+  "requestPosterFrom": "Départ",
+  "@requestPosterFrom": {"description": "Libellé du lieu de départ sur l'affiche de demande"},
+  "requestPosterTo": "Arrivée",
+  "@requestPosterTo": {"description": "Libellé du lieu d'arrivée sur l'affiche de demande"},
+  "requestPosterContents": "Contenu",
+  "@requestPosterContents": {"description": "Libellé devant les catégories du colis sur l'affiche"},
+  "requestPosterFooterTitle": "Vous faites {departure} → {arrival} ? Proposez votre trajet",
+  "@requestPosterFooterTitle": {"description": "Appel à l'action du pied de l'affiche de demande, à côté du QR code", "placeholders": {"departure": {"type": "String"}, "arrival": {"type": "String"}}},
+  "requestPosterFooterSubtitle": "Scannez · Paiement sécurisé · Suivi du colis",
+  "@requestPosterFooterSubtitle": {"description": "Sous-titre du pied de l'affiche de demande"},
+  "requestPosterNotFoundTitle": "Demande introuvable",
+  "@requestPosterNotFoundTitle": {"description": "Titre quand la demande de l'affiche ne se charge pas"},
+  "requestPosterNotFoundDescription": "Impossible de charger cette demande pour le moment.",
+  "@requestPosterNotFoundDescription": {"description": "Description quand la demande de l'affiche ne se charge pas"},
+  "requestPosterCaptionCorridor": "Colis {departure} → {arrival}",
+  "@requestPosterCaptionCorridor": {"description": "Première ligne de la légende de l'affiche de demande", "placeholders": {"departure": {"type": "String"}, "arrival": {"type": "String"}}},
+  "requestPosterCaptionWeight": "{weight} kg, format {size}",
+  "@requestPosterCaptionWeight": {"description": "Ligne poids et taille de la légende de l'affiche de demande", "placeholders": {"weight": {"type": "String"}, "size": {"type": "String"}}},
+  "requestPosterCaptionContents": "Contenu : {items}",
+  "@requestPosterCaptionContents": {"description": "Ligne contenu de la légende de l'affiche de demande", "placeholders": {"items": {"type": "String"}}},
+  "requestPosterCaptionBudget": "Budget {price}, {terms}",
+  "@requestPosterCaptionBudget": {"description": "Ligne budget de la légende (terms = négociable ou prix ferme)", "placeholders": {"price": {"type": "String"}, "terms": {"type": "String"}}},
+  "requestPosterCaptionFrom": "Départ : {place}",
+  "@requestPosterCaptionFrom": {"description": "Ligne départ de la légende de l'affiche de demande", "placeholders": {"place": {"type": "String"}}},
+  "requestPosterCaptionTo": "Arrivée : {place}",
+  "@requestPosterCaptionTo": {"description": "Ligne arrivée de la légende de l'affiche de demande", "placeholders": {"place": {"type": "String"}}},
+  "requestPosterCaptionCta": "Vous voyagez sur cet axe ? Proposez votre trajet ici :",
+  "@requestPosterCaptionCta": {"description": "Ligne qui précède le lien dans la légende de l'affiche de demande"},
+  "requestPosterCaptionFooter": "Paiement sécurisé, suivi du colis par QR code.",
+  "@requestPosterCaptionFooter": {"description": "Dernière ligne de la légende de l'affiche de demande"},
+  "requestPosterShareSubject": "Colis {departure} vers {arrival}",
+  "@requestPosterShareSubject": {"description": "Sujet du partage de l'affiche de demande", "placeholders": {"departure": {"type": "String"}, "arrival": {"type": "String"}}},
+  "tripPosterPayment": "Paiement",
+  "@tripPosterPayment": {"description": "Libellé de la ligne des moyens de paiement acceptés sur l'affiche de trajet"},
+  "tripPosterCaptionPayment": "Paiement : {methods}",
+  "@tripPosterCaptionPayment": {"description": "Ligne des moyens de paiement dans la légende de l'affiche de trajet", "placeholders": {"methods": {"type": "String"}}}
 }

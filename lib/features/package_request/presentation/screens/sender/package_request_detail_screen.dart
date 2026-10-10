@@ -1,9 +1,7 @@
 import 'dart:async';
 
-import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
@@ -24,8 +22,6 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 
 class PackageRequestDetailScreen extends StatelessWidget {
   const PackageRequestDetailScreen({required this.requestId, super.key});
@@ -355,21 +351,14 @@ class _DetailBottomBar extends StatelessWidget {
       case RequestPrimaryAction.publish:
         await cubit.publish();
       case RequestPrimaryAction.share:
-        final r = s.request;
-        final l = context.l10n;
-        final date = DateFormat.MMMMd(l.localeName).format(r.desiredDate);
-        final message = l.requestDetailShareMessage(
-          r.weightKg.toStringAsFixed(0),
-          r.departureCity,
-          r.arrivalCity,
-          date,
-        );
+        // L'affiche (image, QR code, légende avec le lien) remplace le
+        // partage texte seul : sur les réseaux, c'est le visuel qui arrête le
+        // regard. Elle propose elle-même le partage, la copie du lien et
+        // l'enregistrement.
         cubit.trackShared();
-        unawaited(
-          Share.share(
-            '$message\n$posterShareBaseUrl/demande/${r.id}',
-            sharePositionOrigin: sharePositionOriginFor(context),
-          ),
+        await context.push(
+          '/package-requests/${s.request.id}/affiche',
+          extra: s.request,
         );
       case RequestPrimaryAction.openThread || RequestPrimaryAction.pay:
         if (threadId == null) return;

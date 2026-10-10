@@ -3195,15 +3195,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPosterTimePattern => 'HH\'h\'mm';
 
   @override
-  String get tripPosterDepartureLabel => 'Départ';
-
-  @override
-  String get tripPosterDeadlineLabel => 'Dernier dépôt';
-
-  @override
-  String get tripPosterCapacityLabel => 'Place disponible';
-
-  @override
   String get tripPosterHandoverLabel => 'Remise';
 
   @override
@@ -3232,10 +3223,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String tripPosterPriceFromItem(String price) {
     return 'dès $price l\'article';
   }
-
-  @override
-  String get tripPosterTagline =>
-      'Paiement sécurisé, suivi du colis, voyageurs vérifiés';
 
   @override
   String get tripPosterTitle => 'Mon affiche';
@@ -4027,16 +4014,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get requestDetailNoticeInvitationLimitReached =>
       'Limite d\'invitations atteinte pour cette demande.';
-
-  @override
-  String requestDetailShareMessage(
-    String weight,
-    String departure,
-    String arrival,
-    String date,
-  ) {
-    return 'J\'envoie un colis de $weight kg $departure → $arrival autour du $date. Vous voyagez sur cet axe ? Répondez à ma demande sur Yadony.';
-  }
 
   @override
   String get requestDetailMoreActionsTooltip => 'Plus d\'actions';
@@ -18161,4 +18138,192 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorTravelerNotEligibleMessage =>
       'Ce voyageur n\'a pas encore terminé la configuration de ses versements : le paiement par carte est impossible pour l\'instant et rien ne vous a été débité. Réessayez plus tard ou choisissez une autre offre.';
+
+  @override
+  String get tripPosterBadge => 'Kilos disponibles';
+
+  @override
+  String get tripPosterEyebrow => 'Trajet';
+
+  @override
+  String tripPosterHeroDeparture(String day) {
+    return 'Départ $day';
+  }
+
+  @override
+  String tripPosterHeroDepartureAt(String day, String time) {
+    return 'Départ $day, $time';
+  }
+
+  @override
+  String tripPosterHeroArrival(String when) {
+    return 'arrivée $when';
+  }
+
+  @override
+  String tripPosterTravelerTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trajets',
+      one: '1 trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripPosterVerified => 'Vérifié';
+
+  @override
+  String get tripPosterTileCapacity => 'Place libre';
+
+  @override
+  String tripPosterCapacityOf(String total) {
+    return 'sur $total';
+  }
+
+  @override
+  String get tripPosterTilePrice => 'Prix';
+
+  @override
+  String get tripPosterTileDeadline => 'Dépôt avant';
+
+  @override
+  String tripPosterTileDeadlineTime(String time) {
+    return 'à $time';
+  }
+
+  @override
+  String get tripPosterAccepts => 'J\'accepte';
+
+  @override
+  String get tripPosterFooterTitle => 'Réservez vos kilos en 1 minute';
+
+  @override
+  String get tripPosterFooterSubtitle =>
+      'Scannez · Paiement sécurisé · Suivi du colis';
+
+  @override
+  String get tripPosterCaptionVerified => 'Identité du voyageur vérifiée';
+
+  @override
+  String get requestPosterBadge => 'Cherche un voyageur';
+
+  @override
+  String get requestPosterEyebrow => 'Colis à transporter';
+
+  @override
+  String requestPosterDate(String day) {
+    return 'Autour du $day';
+  }
+
+  @override
+  String requestPosterDateTolerance(int count, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Autour du $day, à $count jours près',
+      one: 'Autour du $day, à 1 jour près',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestPosterTileWeight => 'Poids';
+
+  @override
+  String requestPosterSize(String size) {
+    return 'Format $size';
+  }
+
+  @override
+  String get requestPosterTileBudget => 'Budget';
+
+  @override
+  String get requestPosterBudgetNone => 'À proposer';
+
+  @override
+  String get requestPosterNegotiable => 'négociable';
+
+  @override
+  String get requestPosterFirmPrice => 'prix ferme';
+
+  @override
+  String get requestPosterTilePayment => 'Paiement';
+
+  @override
+  String get requestPosterFrom => 'Départ';
+
+  @override
+  String get requestPosterTo => 'Arrivée';
+
+  @override
+  String get requestPosterContents => 'Contenu';
+
+  @override
+  String requestPosterFooterTitle(String departure, String arrival) {
+    return 'Vous faites $departure → $arrival ? Proposez votre trajet';
+  }
+
+  @override
+  String get requestPosterFooterSubtitle =>
+      'Scannez · Paiement sécurisé · Suivi du colis';
+
+  @override
+  String get requestPosterNotFoundTitle => 'Demande introuvable';
+
+  @override
+  String get requestPosterNotFoundDescription =>
+      'Impossible de charger cette demande pour le moment.';
+
+  @override
+  String requestPosterCaptionCorridor(String departure, String arrival) {
+    return 'Colis $departure → $arrival';
+  }
+
+  @override
+  String requestPosterCaptionWeight(String weight, String size) {
+    return '$weight kg, format $size';
+  }
+
+  @override
+  String requestPosterCaptionContents(String items) {
+    return 'Contenu : $items';
+  }
+
+  @override
+  String requestPosterCaptionBudget(String price, String terms) {
+    return 'Budget $price, $terms';
+  }
+
+  @override
+  String requestPosterCaptionFrom(String place) {
+    return 'Départ : $place';
+  }
+
+  @override
+  String requestPosterCaptionTo(String place) {
+    return 'Arrivée : $place';
+  }
+
+  @override
+  String get requestPosterCaptionCta =>
+      'Vous voyagez sur cet axe ? Proposez votre trajet ici :';
+
+  @override
+  String get requestPosterCaptionFooter =>
+      'Paiement sécurisé, suivi du colis par QR code.';
+
+  @override
+  String requestPosterShareSubject(String departure, String arrival) {
+    return 'Colis $departure vers $arrival';
+  }
+
+  @override
+  String get tripPosterPayment => 'Paiement';
+
+  @override
+  String tripPosterCaptionPayment(String methods) {
+    return 'Paiement : $methods';
+  }
 }

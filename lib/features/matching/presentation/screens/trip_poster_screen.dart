@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/widgets/poster/poster_capture.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -17,7 +17,6 @@ import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gal/gal.dart';
@@ -42,7 +41,10 @@ enum PosterShareChannel {
   link('lien'),
 
   /// Légende copiée pour le groupe Facebook Yadony (FLUTTER-G4).
-  group('groupe');
+  group('groupe'),
+
+  /// QR code imprimé sur l'affiche, scanné depuis l'image seule.
+  qr('qr');
 
   const PosterShareChannel(this.code);
 
@@ -131,31 +133,10 @@ class TripPosterScreen extends StatefulWidget {
 }
 
 class _TripPosterScreenState extends State<TripPosterScreen> {
-  final GlobalKey _posterKey = GlobalKey();
   final ValueNotifier<bool> _busy = ValueNotifier<bool>(false);
 
-  /// PNG mémoïsé. Le trajet affiché est immuable pour la durée de l'écran, et
-  /// le texte invite explicitement à enchaîner « Partager » puis
-  /// « Enregistrer » : sans mémoïsation, chaque action refait une
-  /// rastérisation de 1080 x 1350 pour un résultat identique. Même motif que
-  /// `qr_sheet.dart`.
-  Uint8List? _posterBytes;
-
-  /// Décodage des images de l'affiche, attendu avant toute capture.
-  ///
-  /// `toImage()` fige ce qui est peint à l'instant où on l'appelle. Un
-  /// `Image.asset` se charge de façon asynchrone : sans cette attente, un
-  /// voyageur qui tape « Partager » aussitôt l'écran ouvert exporterait une
-  /// affiche amputée de son mot-logo et de ses badges, et rien dans le code ne
-  /// le signalerait. La mise en page, elle, ne bouge pas, toutes ces images
-  /// ayant une hauteur imposée.
-  Future<void>? _imagesReady;
-
-  static const List<String> _posterAssets = [
-    DonyLogo.asset,
-    TripPosterCard.appStoreBadgeAsset,
-    TripPosterCard.googlePlayBadgeAsset,
-  ];
+  /// Rastérisation mémoïsée, préchargement des images compris.
+  final PosterCapture _poster = PosterCapture();
 
   @override
   void initState() {
@@ -172,10 +153,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _imagesReady ??= Future.wait([
-      for (final asset in _posterAssets)
-        precacheImage(AssetImage(asset), context),
-    ]);
+    _poster.warmUp(context);
   }
 
   @override
@@ -205,6 +183,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     final deadline = a.handoverDeadline;
     final pickup = a.pickupAddress?.label;
     final delivery = a.deliveryAddress?.label;
+    final payment = TripPosterCard.paymentLabel(l, a);
 
     return <String>[
       '✈️ ${l.tripPosterCaptionCorridor(a.departureCity, a.arrivalCity)}',
@@ -214,6 +193,8 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
       '📦 ${TripPosterCard.capacityLabel(l, a)}, ${_priceSentence(l, a)}',
       if (pickup != null) '📍 ${l.tripPosterCaptionHandover(pickup)}',
       if (delivery != null) '🏁 ${l.tripPosterCaptionPickup(delivery)}',
+      if (payment.isNotEmpty) '💳 ${l.tripPosterCaptionPayment(payment)}',
+      if (a.traveler?.kycVerified ?? false) '✅ ${l.tripPosterCaptionVerified}',
       '',
       l.tripPosterCaptionCta,
       _urlFor(channel),
@@ -244,48 +225,14 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
         : article;
   }
 
-  /// Capture l'affiche en PNG, une seule fois par écran.
-  ///
-  /// Le `RepaintBoundary` porte la taille logique de l'affiche et non celle,
-  /// réduite, de l'aperçu : la mise à l'échelle est appliquée par le `FittedBox`
-  /// au-dessus de lui, hors du calque capturé. Avec un `pixelRatio` de 3, la
-  /// sortie fait donc 1080 x 1350, le format 4:5 du fil Facebook.
-  ///
-  /// Attention : sur l'émulateur `dony_test`, dont le GPU est logiciel, la
-  /// capture d'un `RepaintBoundary` rend un écran noir ou gèle. Valider sur un
-  /// appareil réel, pas sur l'AVD.
+  /// Capture l'affiche en PNG (1080 x 1350), une seule fois par écran.
   Future<Uint8List?> _capture() async {
     final override = widget.captureOverride;
     if (override != null) {
       return override();
     }
-    final cached = _posterBytes;
-    if (cached != null) {
-      return cached;
-    }
-    // Les images doivent être décodées ET peintes avant la capture. Le
-    // décodage seul ne suffit pas : il déclenche une reconstruction, dont il
-    // faut attendre la frame, faute de quoi on rastérise l'état précédent.
-    await _imagesReady;
-    await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) {
-      return null;
-    }
-
-    final boundary =
-        _posterKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) {
-      return null;
-    }
-    final image = await boundary.toImage(pixelRatio: 3);
-    try {
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      // ~5,8 Mo de pixels natifs : sans dispose explicite, la libération dépend
-      // d'un finalizer non déterministe.
-      return _posterBytes = byteData?.buffer.asUint8List();
-    } finally {
-      image.dispose();
-    }
+    final bytes = await _poster.capture();
+    return mounted ? bytes : null;
   }
 
   /// Coque commune aux deux actions qui produisent l'image : garde de
@@ -481,8 +428,11 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
                     TripPosterCard.logicalWidth / TripPosterCard.logicalHeight,
                 child: FittedBox(
                   child: RepaintBoundary(
-                    key: _posterKey,
-                    child: TripPosterCard(announcement: widget.announcement),
+                    key: _poster.key,
+                    child: TripPosterCard(
+                      announcement: widget.announcement,
+                      qrData: _urlFor(PosterShareChannel.qr),
+                    ),
                   ),
                 ),
               ),

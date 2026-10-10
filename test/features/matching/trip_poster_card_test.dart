@@ -21,6 +21,7 @@ AnnouncementModel _announcement({
   String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
   DateTime? departureDate,
+  Map<String, dynamic> extra = const {},
 }) => AnnouncementModel.fromJson({
   'id': 'a1',
   'travelerId': 't1',
@@ -43,6 +44,7 @@ AnnouncementModel _announcement({
   'status': 'ACTIVE',
   'createdAt': DateTime(2026, 8).toIso8601String(),
   'updatedAt': DateTime(2026, 8).toIso8601String(),
+  ...extra,
 });
 
 Map<String, dynamic> _gridItem(String label, double display) => {
@@ -52,12 +54,17 @@ Map<String, dynamic> _gridItem(String label, double display) => {
   'unitPriceDisplay': display,
 };
 
-Future<void> _pump(WidgetTester tester, AnnouncementModel a) =>
-    tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: TripPosterCard(announcement: a)),
-      ),
-    );
+Future<void> _pump(
+  WidgetTester tester,
+  AnnouncementModel a, {
+  String? qrData,
+}) => tester.pumpWidget(
+  MaterialApp(
+    home: Scaffold(
+      body: TripPosterCard(announcement: a, qrData: qrData),
+    ),
+  ),
+);
 
 void main() {
   setUpAll(() async {
@@ -107,7 +114,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Dernier dépôt'), findsOneWidget);
+    expect(find.text('DÉPÔT AVANT'), findsOneWidget);
   });
 
   testWidgets('omet la ligne de dépôt quand la date limite est absente', (
@@ -115,7 +122,7 @@ void main() {
   ) async {
     await _pump(tester, _announcement());
 
-    expect(find.text('Dernier dépôt'), findsNothing);
+    expect(find.text('DÉPÔT AVANT'), findsNothing);
   });
 
   /// Une URL ecrite dans une image n'est cliquable sur aucune plateforme, et
@@ -281,7 +288,10 @@ void main() {
     );
 
     expect(find.text('dès ${formatPriceIn(25, 'EUR')}'), findsOneWidget);
-    expect(find.text('${formatPriceIn(8, 'EUR')} le kilo'), findsOneWidget);
+    expect(
+      find.text("l'article · ${formatPriceIn(8, 'EUR')} le kilo"),
+      findsOneWidget,
+    );
   });
 
   /// KG_FREE veut dire « pas de plafond déclaré » : availableKg n'est alors
@@ -339,7 +349,7 @@ void main() {
 
   /// `tripPosterTimePattern` (fr `HH'h'mm`, en `h:mm a`) : « 14h05 » est une
   /// typographie française que le squelette intl `jm` ne produit pas.
-  testWidgets('rend l\'échéance en français : "6 octobre à 14h05"', (
+  testWidgets('rend l\'échéance en français : "6 oct." puis "à 14h05"', (
     tester,
   ) async {
     await _pump(
@@ -349,10 +359,11 @@ void main() {
       ),
     );
 
-    expect(find.text('6 octobre à 14h05'), findsOneWidget);
+    expect(find.text('6 oct.'), findsOneWidget);
+    expect(find.text('à 14h05'), findsOneWidget);
   });
 
-  testWidgets('rend l\'échéance en anglais : "October 6 at 2:05 PM"', (
+  testWidgets('rend l\'échéance en anglais : "Oct 6" puis "at 2:05 PM"', (
     tester,
   ) async {
     useEnglish();
@@ -363,23 +374,216 @@ void main() {
       ),
     );
 
-    expect(find.text('October 6 at 2:05 PM'), findsOneWidget);
+    expect(find.text('Oct 6'), findsOneWidget);
+    expect(find.text('at 2:05 PM'), findsOneWidget);
   });
 
-  testWidgets('rend le jour de départ en français : "mardi 6 octobre"', (
+  testWidgets('rend le jour de départ en français : "mar. 6 oct."', (
     tester,
   ) async {
     await _pump(tester, _announcement(departureDate: DateTime(2026, 10, 6)));
 
-    expect(find.text('mardi 6 octobre'), findsOneWidget);
+    expect(find.text('Départ mar. 6 oct.'), findsOneWidget);
   });
 
-  testWidgets('rend le jour de départ en anglais : "Tuesday, October 6"', (
+  testWidgets('rend le jour de départ en anglais : "Tue, Oct 6"', (
     tester,
   ) async {
     useEnglish();
     await _pump(tester, _announcement(departureDate: DateTime(2026, 10, 6)));
 
-    expect(find.text('Tuesday, October 6'), findsOneWidget);
+    expect(find.text('Departs Tue, Oct 6'), findsOneWidget);
+  });
+
+  group('refonte de l\'affiche', () {
+    testWidgets('porte un QR code quand le lien est fourni', (tester) async {
+      await _pump(
+        tester,
+        _announcement(),
+        qrData: 'https://yadony.com/annonce/a1?c=qr',
+      );
+
+      expect(find.byKey(const Key('poster-qr')), findsOneWidget);
+    });
+
+    testWidgets('sans lien, pas de QR code', (tester) async {
+      await _pump(tester, _announcement());
+
+      expect(find.byKey(const Key('poster-qr')), findsNothing);
+    });
+
+    testWidgets('annonce l\'heure de départ et l\'arrivée le même jour', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _announcement(
+          departureDate: DateTime(2026, 10, 6),
+          extra: {'departureTime': '14:05', 'arrivalTime': '21:40'},
+        ),
+      );
+
+      expect(
+        find.text('Départ mar. 6 oct., 14h05 · arrivée 21h40'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('date l\'arrivée quand elle tombe un autre jour', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _announcement(
+          departureDate: DateTime(2026, 10, 6),
+          extra: {
+            'departureTime': '23:10',
+            'arrivalTime': '06:30',
+            'arrivalDate': DateTime(2026, 10, 7).toIso8601String(),
+          },
+        ),
+      );
+
+      expect(
+        find.text('Départ mar. 6 oct., 23h10 · arrivée 7 oct. à 06h30'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('présente le voyageur vérifié, sa note et ses trajets', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _announcement(
+          extra: {
+            'traveler': {
+              'id': 't1',
+              'displayName': 'Moussa D.',
+              'averageRating': 4.86,
+              'totalTrips': 14,
+              'kycVerified': true,
+            },
+          },
+        ),
+      );
+
+      expect(find.text('MD'), findsOneWidget);
+      expect(
+        find.text('Moussa D. · ★ 4,9 · 14 trajets', findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.text('Vérifié'), findsOneWidget);
+    });
+
+    testWidgets('ne prétend jamais une identité non vérifiée', (tester) async {
+      await _pump(
+        tester,
+        _announcement(
+          extra: {
+            'traveler': {
+              'id': 't1',
+              'displayName': 'Awa',
+              'kycVerified': false,
+            },
+          },
+        ),
+      );
+
+      expect(find.text('Awa', findRichText: true), findsOneWidget);
+      expect(find.text('Vérifié'), findsNothing);
+    });
+
+    testWidgets('liste les moyens de paiement acceptés', (tester) async {
+      await _pump(
+        tester,
+        _announcement(
+          extra: {
+            'acceptedPaymentMethods': ['WAVE', 'STRIPE', 'CASH'],
+          },
+        ),
+      );
+
+      expect(find.text('Paiement'), findsOneWidget);
+      expect(find.text('Carte, Espèces, Wave'), findsOneWidget);
+    });
+
+    testWidgets('omet la ligne de paiement sans moyen déclaré', (tester) async {
+      await _pump(
+        tester,
+        _announcement(extra: {'acceptedPaymentMethods': <String>[]}),
+      );
+
+      expect(find.text('Paiement'), findsNothing);
+    });
+
+    testWidgets('affiche trois objets acceptés puis le reste en +N', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _announcement(
+          extra: {
+            'acceptedContentTypes': [
+              'Livres',
+              'Jouets',
+              'Bijoux',
+              'Sacs',
+              'Vins',
+            ],
+          },
+        ),
+      );
+
+      expect(find.text("J'ACCEPTE"), findsOneWidget);
+      expect(find.text('Livres'), findsOneWidget);
+      expect(find.text('Bijoux'), findsOneWidget);
+      expect(find.text('Sacs'), findsNothing);
+      expect(find.text('+2'), findsOneWidget);
+    });
+
+    testWidgets('annonce la capacité totale sous la place libre', (
+      tester,
+    ) async {
+      await _pump(tester, _announcement());
+
+      expect(find.text('sur 23 kg'), findsOneWidget);
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('une affiche remplie au maximum ne déborde pas', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _announcement(
+          departureCity: 'Marseille',
+          arrivalCity: 'Ouagadougou',
+          handoverDeadline: DateTime(2026, 8, 19, 19).toIso8601String(),
+          pickupLabel: '12 rue de la République, 13001 Marseille, France',
+          deliveryLabel: 'Quartier Ouaga 2000, avenue Kwame Nkrumah',
+          extra: {
+            'transportMode': 'PLANE',
+            'stopsCount': 1,
+            'departureTime': '06:15',
+            'arrivalTime': '18:40',
+            'acceptedContentTypes': ['Livres', 'Jouets', 'Bijoux', 'Sacs'],
+            'acceptedPaymentMethods': ['STRIPE', 'CASH', 'ORANGE_MONEY'],
+            'traveler': {
+              'id': 't1',
+              'displayName': 'Fatoumata Kouyaté-Diarra',
+              'averageRating': 5,
+              'totalTrips': 120,
+              'kycVerified': true,
+            },
+          },
+        ),
+        qrData: 'https://yadony.com/annonce/a1?c=qr',
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('MARSEILLE'), findsOneWidget);
+      expect(find.text('OUAGADOUGOU'), findsOneWidget);
+    });
   });
 }

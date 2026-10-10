@@ -248,6 +248,7 @@ class _PackageRequestCreateScreenState
       final isDraft =
           state.createdRequest!.status == PackageRequestStatus.draft;
       final requestId = state.createdRequest!.id;
+      final created = state.createdRequest!;
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (routeContext) => DonySuccessScreen(
@@ -298,6 +299,25 @@ class _PackageRequestCreateScreenState
             analyticsContext: isDraft
                 ? 'package_request_draft_saved'
                 : 'package_request_published',
+            // Comme pour un trajet : à la publication, l'expéditeur peut
+            // diffuser tout de suite son affiche (image, lien et légende) pour
+            // trouver un voyageur hors de l'application. Ni au brouillon, qui
+            // n'est pas public, ni à l'édition. Le GoRouter est capturé AVANT
+            // les pops, routeContext étant démonté ensuite.
+            secondaryLabel: isDraft || isEditing
+                ? null
+                : l10n.tripPublishSuccessShareCta,
+            onSecondary: isDraft || isEditing
+                ? null
+                : () {
+                    final router = GoRouter.of(routeContext);
+                    Navigator.of(routeContext).pop();
+                    context.pop();
+                    router.push(
+                      '/package-requests/$requestId/affiche',
+                      extra: created,
+                    );
+                  },
           ),
         ),
       );
