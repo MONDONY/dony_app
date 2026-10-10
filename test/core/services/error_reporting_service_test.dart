@@ -1,3 +1,5 @@
+import 'dart:io' show HttpException, SocketException;
+
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
@@ -244,6 +246,74 @@ void main() {
         ),
         isNull,
       );
+    });
+
+    group('connexion perdue sans réponse (FLUTTER-JQ)', () {
+      final options = RequestOptions(
+        path: '/api/v1/notifications/unread-count',
+      );
+      for (final (label, error) in [
+        (
+          'connectionError',
+          DioException(
+            requestOptions: options,
+            type: DioExceptionType.connectionError,
+          ),
+        ),
+        (
+          'connectionTimeout',
+          DioException(
+            requestOptions: options,
+            type: DioExceptionType.connectionTimeout,
+          ),
+        ),
+        (
+          'unknown + SocketException',
+          DioException(
+            requestOptions: options,
+            error: const SocketException('Software caused connection abort'),
+          ),
+        ),
+        (
+          'unknown + HttpException',
+          DioException(
+            requestOptions: options,
+            error: const HttpException('Connection closed'),
+          ),
+        ),
+      ]) {
+        test('$label : jamais rapporté', () async {
+          final sink = _RecordingSink();
+          await ErrorReportingService(
+            sink,
+          ).report(error, operation: 'http.GET');
+          expect(sink.error, isNull);
+        });
+      }
+
+      test('500 avec réponse : toujours rapporté', () async {
+        final sink = _RecordingSink();
+        await ErrorReportingService(sink).report(
+          DioException(
+            requestOptions: options,
+            type: DioExceptionType.badResponse,
+            response: Response(requestOptions: options, statusCode: 500),
+            error: const ServerException('x'),
+          ),
+          operation: 'http.GET',
+        );
+        expect(sink.error, isNotNull);
+        expect(sink.context!['status_code'], 500);
+      });
+
+      test('unknown sans erreur réseau : toujours rapporté', () async {
+        final sink = _RecordingSink();
+        await ErrorReportingService(sink).report(
+          DioException(requestOptions: options, error: StateError('x')),
+          operation: 'http.GET',
+        );
+        expect(sink.error, isNotNull);
+      });
     });
 
     test('500 : pas d\'empreinte imposée', () async {

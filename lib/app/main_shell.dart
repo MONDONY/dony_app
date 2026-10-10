@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/app/notification_badge_sync.dart';
 import 'package:dony/app/resume_refresh_policy.dart';
 import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/app/widgets/dony_nav_orb.dart';
@@ -73,6 +74,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   /// Dernier passage en arrière-plan, remis à `null` au retour (voir
   /// [isResumeRefreshDue]).
   DateTime? _hiddenAt;
+
+  /// Relecture du compteur de notifications pour l'icône : au seul retour au
+  /// premier plan, une à la fois, silencieuse en cas d'échec.
+  late final NotificationBadgeSync _badgeSync = NotificationBadgeSync(
+    fetchUnreadCount: () => getIt<NotificationRepository>().getUnreadCount(),
+    applyBadge: (unread) => getIt<AppBadgeService>().setNotifications(unread),
+  );
 
   // En dessous de ce délai, retaper un onglet ne redéclenche pas son refresh
   // réseau : un va-et-vient rapide entre Accueil/Activités/Messages tirait
@@ -232,35 +240,21 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     // lancé juste avant, et NotificationBadgeListener le reporte sur l'icône.
   }
 
-  /// Relit le nombre de notifications non lues et le reporte sur l'icône.
-  /// Silencieux en cas d'échec réseau : une pastille périmée vaut mieux qu'une
-  /// erreur affichée pour un compteur décoratif.
-  Future<void> _syncNotificationBadge() async {
-    try {
-      final unread = await getIt<NotificationRepository>().getUnreadCount();
-      await getIt<AppBadgeService>().setNotifications(unread);
-    } catch (_) {
-      // Compteur indisponible : on garde la dernière valeur écrite.
-    }
-  }
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!mounted) return;
     // Un visiteur n'a pas de compte Stripe à rafraîchir.
     if (!getIt<FirebaseSessionProbe>().hasRealSession) return;
     if (state == AppLifecycleState.hidden) {
+      // Aucune relecture du badge en partant : Android coupe les sockets de
+      // l'application en arrière-plan et la requête échouait (FLUTTER-JQ).
       _hiddenAt = DateTime.now();
-      // Départ vers l'accueil du téléphone : dernière relecture avant que
-      // l'icône ne redevienne visible. Rattrape les lectures faites hors du
-      // NotificationBloc (écran de détail, boîte des annonces).
-      unawaited(_syncNotificationBadge());
       return;
     }
     if (state != AppLifecycleState.resumed) return;
     // Retour au premier plan : c'est le seul moment où l'application peut
     // corriger une pastille laissée par une push reçue écran éteint.
-    unawaited(_syncNotificationBadge());
+    unawaited(_badgeSync.onLifecycleChanged(state));
     final hiddenAt = _hiddenAt;
     _hiddenAt = null;
     // Support et compte Stripe ne bougent pas en quelques secondes : on ne les
