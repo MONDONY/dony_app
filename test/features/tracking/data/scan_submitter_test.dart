@@ -2,6 +2,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_send_guard.dart';
 import 'package:dony/features/tracking/data/scan_submitter.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -185,4 +186,30 @@ void main() {
       ),
     );
   });
+
+  test(
+    'FLUTTER-JV : 409 « déjà enregistré » du back = étape envoyée',
+    () async {
+      when(
+        () => repo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+        ),
+      ).thenThrow(const ConflictException('x', code: 'depart-already-scanned'));
+      when(() => repo.getEvents('bid-1')).thenAnswer((_) async => [_event]);
+
+      final result = await ScanSubmitter(
+        repo,
+        offline,
+        isOnline: () async => true,
+        guard: ScanSendGuard(),
+      ).submit(bidId: 'bid-1', eventType: 'TRANSIT');
+
+      expect((result as ScanSubmitSent).event, _event);
+    },
+  );
 }

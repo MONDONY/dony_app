@@ -340,6 +340,65 @@ void main() {
       expect(log.where((e) => e == 'report'), hasLength(2));
     });
 
+    test('redémarrage de l\'API : 503 sur plusieurs routes, un seul report '
+        'sous une empreinte sans route', () async {
+      final dio = build([503, 503, 503]);
+
+      for (final path in ['/users/me', '/bids/mine', '/announcements']) {
+        await expectLater(
+          dio.post<dynamic>(path),
+          throwsA(appError<ServiceUnavailableException>()),
+        );
+      }
+      await flush();
+
+      expect(log.where((e) => e == 'report'), hasLength(1));
+      final context = sink.contexts.single;
+      expect(
+        context[SentryErrorReportingSink.fingerprintKey],
+        'http-transient-503',
+      );
+      // La route reste connue (tag), hors de l'empreinte.
+      expect(context['endpoint'], '/api/v1/users/me');
+    });
+
+    test('500 : pas une panne transitoire, un report par route', () async {
+      final dio = build([500, 500]);
+
+      for (final path in ['/users/me', '/bids/mine']) {
+        await expectLater(
+          dio.post<dynamic>(path),
+          throwsA(isA<DioException>()),
+        );
+      }
+      await flush();
+
+      expect(log.where((e) => e == 'report'), hasLength(2));
+      expect(
+        sink.contexts.every(
+          (c) => !c.containsKey(SentryErrorReportingSink.fingerprintKey),
+        ),
+        isTrue,
+      );
+    });
+
+    test(
+      'FLUTTER-JP : 400 phone-otp-invalid (code faux), aucun report',
+      () async {
+        final dio = build([
+          (400, '{"code":"phone-otp-invalid","detail":"Code invalide"}'),
+        ]);
+
+        await expectLater(
+          dio.post<dynamic>('/auth/phone/verify'),
+          throwsA(appError<ValidationException>()),
+        );
+        await flush();
+
+        expect(log, ['fetch POST', 'crumb 400']);
+      },
+    );
+
     test('aucune donnée sensible dans le report ni le breadcrumb', () async {
       final dio = build([(500, '{"detail":"+33612345678 refusé"}')]);
 

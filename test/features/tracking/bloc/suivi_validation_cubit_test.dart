@@ -12,6 +12,7 @@ import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/tracking/data/scan_send_guard.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -182,6 +183,50 @@ void main() {
         async.flushMicrotasks();
       });
     });
+
+    test('FLUTTER-JV : un colis en cours d\'envoi n\'est pas reprogrammé', () {
+      fakeAsync((async) {
+        final answer = Completer<TrackingEventModel?>();
+        stubSend((_) => answer.future);
+        final c = build();
+        scheduleTransit(c);
+        async.elapse(const Duration(seconds: 6));
+        // Plus « en attente », mais la réponse du back n'est pas arrivée.
+        expect(c.state.pending, isEmpty);
+        expect(scheduleTransit(c), isNull);
+        answer.complete(_event);
+        async.flushMicrotasks();
+        expect(c.state.outcome, isA<SuiviValidationSent>());
+        expect(scheduleTransit(c), isNotNull);
+        unawaited(c.close());
+        async.flushMicrotasks();
+      });
+    });
+
+    test(
+      'une étape que la file ou un autre écran envoie déjà est refusée',
+      () async {
+        final guard = ScanSendGuard();
+        final answer = Completer<TrackingEventModel>();
+        final elsewhere = guard.postStepOnce(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          post: () => answer.future,
+        );
+        final c = SuiviValidationCubit(
+          queue,
+          locator,
+          analytics,
+          now: () => DateTime(2026, 9, 28, 12),
+          guard: guard,
+        );
+        expect(scheduleTransit(c), isNull);
+        answer.complete(_event);
+        await elsewhere;
+        expect(scheduleTransit(c), isNotNull);
+        await c.close();
+      },
+    );
 
     test('un colis déjà en attente n\'est pas reprogrammé', () {
       final c = build();

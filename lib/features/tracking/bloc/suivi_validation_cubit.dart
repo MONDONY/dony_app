@@ -7,6 +7,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/tracking/data/scan_send_guard.dart';
 
 /// Étape validée dans l'onglet, pas encore envoyée : « Annuler » reste
 /// possible jusqu'à [deadline].
@@ -86,10 +87,12 @@ class SuiviValidationState {
 /// même si le process meurt pendant le délai ou pendant l'envoi : l'entrée
 /// restée en file est rejouée par [OfflineSyncService.syncAll] (démarrage,
 /// retour du réseau) une fois l'échéance passée. Dans un même process, elle
-/// ne part qu'une fois : l'entrée est réservée avant l'appel réseau. Seul un
-/// arrêt entre l'acceptation par le back et le retrait de l'entrée la fait
-/// rejouer : un départ en double est alors refusé (409, retiré de la file),
-/// un transit peut être enregistré deux fois. Une panne réseau, un 5xx ou
+/// ne part qu'une fois : l'entrée est réservée avant l'appel réseau, et la
+/// même étape d'un colis n'a qu'un envoi en cours toutes sources confondues
+/// ([ScanSendGuard]). Seul un arrêt entre l'acceptation
+/// par le back et le retrait de l'entrée la fait rejouer : un départ déjà
+/// enregistré est alors un succès (200 idempotent ou 409 « déjà
+/// enregistré »), un transit peut être enregistré deux fois. Une panne réseau, un 5xx ou
 /// une session expirée laissent l'entrée en file (issue « en attente »).
 class SuiviValidationCubit extends Cubit<SuiviValidationState> {
   SuiviValidationCubit(
@@ -98,13 +101,16 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     this._analytics, {
     this.delay = const Duration(seconds: 5),
     DateTime Function()? now,
+    ScanSendGuard? guard,
   }) : _now = now ?? DateTime.now,
+       _guard = guard ?? ScanSendGuard.shared,
        super(const SuiviValidationState());
 
   final OfflineSyncService _queue;
   final ScanLocator _locator;
   final AnalyticsService _analytics;
   final DateTime Function() _now;
+  final ScanSendGuard _guard;
 
   /// Délai pendant lequel « Annuler » est possible.
   final Duration delay;
@@ -124,6 +130,9 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
   final _keys = <int, Future<int>>{};
   int _lastId = 0;
 
+  /// Colis dont la validation part en ce moment (position, envoi).
+  final _sendingBids = <String>{};
+
   /// Programme l'envoi de [step] pour [bidId]. Sans [position] (validation
   /// sans photo), elle est relevée pendant le délai. Rend l'identifiant de
   /// la validation, `null` si ce colis en a déjà une en attente.
@@ -136,7 +145,16 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     ScanPosition? position,
     String? trackingNumber,
   }) {
-    if (isClosed || state.pendingBidIds.contains(bidId)) return null;
+    // Une étape en cours d'envoi (délai écoulé, réponse pas encore reçue) ne
+    // se reprogramme pas : sa ligne n'est plus « en attente » mais le back
+    // ne l'a pas encore confirmée, et un second envoi partait en parallèle
+    // (FLUTTER-JV).
+    if (isClosed ||
+        state.pendingBidIds.contains(bidId) ||
+        _sendingBids.contains(bidId) ||
+        _guard.isSending(bidId, step)) {
+      return null;
+    }
     final id = ++_lastId;
     final deadline = _now().add(delay);
     // Écrite tout de suite : un arrêt brutal du process ne la perd plus.
@@ -202,6 +220,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     _timers.remove(id)?.cancel();
     final position = _positions.remove(id)!;
     final key = _keys.remove(id)!;
+    _sendingBids.add(pending.bidId);
     if (!isClosed) emit(_copy(pending: _without(id)));
 
     SuiviValidationOutcome outcome;
@@ -225,6 +244,8 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
         pending.parcelLabel,
         unwrapDioError(e),
       );
+    } finally {
+      _sendingBids.remove(pending.bidId);
     }
     if (!isClosed) {
       emit(

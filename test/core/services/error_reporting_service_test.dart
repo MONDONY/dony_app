@@ -191,6 +191,121 @@ void main() {
     expect(sink.error, isNull);
   });
 
+  group('pannes transitoires et refus métier attendus', () {
+    test('502/503/504 : empreinte http-transient-<statut>', () async {
+      for (final status in [502, 503, 504]) {
+        final sink = _RecordingSink();
+        await ErrorReportingService(sink).report(
+          const ServiceUnavailableException(),
+          operation: 'http.GET',
+          statusCode: status,
+          context: const {'endpoint': '/api/v1/bids/1234'},
+        );
+        expect(
+          sink.context![SentryErrorReportingSink.fingerprintKey],
+          'http-transient-$status',
+        );
+        expect(sink.context!['endpoint'], '/api/v1/bids/:id');
+      }
+    });
+
+    test('FLUTTER-M : upload du jeton FCM en 502 après ses essais', () async {
+      final sink = _RecordingSink();
+      await ErrorReportingService(sink).report(
+        DioException(
+          requestOptions: RequestOptions(path: '/notifications/token'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/notifications/token'),
+            statusCode: 502,
+          ),
+          error: const ServiceUnavailableException(),
+        ),
+        operation: 'notifications.upload_fcm_token',
+        context: const {'attempts': 3},
+      );
+      expect(
+        sink.context![SentryErrorReportingSink.fingerprintKey],
+        'http-transient-502',
+      );
+    });
+
+    test('API injoignable sans statut : http-transient-network', () {
+      expect(
+        ErrorReportingService.transientFingerprint(
+          const ServiceUnavailableException(),
+          null,
+        ),
+        'http-transient-network',
+      );
+      expect(
+        ErrorReportingService.transientFingerprint(
+          const ServerException('x'),
+          500,
+        ),
+        isNull,
+      );
+    });
+
+    test('500 : pas d\'empreinte imposée', () async {
+      final sink = _RecordingSink();
+      await ErrorReportingService(sink).report(
+        const ServerException('x'),
+        operation: 'http.GET',
+        statusCode: 500,
+      );
+      expect(
+        sink.context!.containsKey(SentryErrorReportingSink.fingerprintKey),
+        isFalse,
+      );
+    });
+
+    for (final code in [
+      'phone-otp-invalid',
+      'phone-otp-expired',
+      'otp-invalid',
+      'otp-expired',
+    ]) {
+      test('400 $code : saisie de l\'utilisateur, jamais rapporté', () async {
+        final sink = _RecordingSink();
+        await ErrorReportingService(sink).report(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/phone/verify'),
+            error: ValidationException('x', code: code),
+          ),
+          operation: 'http.POST',
+          statusCode: 400,
+        );
+        expect(sink.error, isNull);
+      });
+    }
+
+    test('un autre 400 reste rapporté', () async {
+      final sink = _RecordingSink();
+      await ErrorReportingService(sink).report(
+        const ValidationException('x', code: 'validation'),
+        operation: 'http.POST',
+        statusCode: 400,
+      );
+      expect(sink.error, isNotNull);
+    });
+
+    test('applyReportContext : empreinte posée, absente du contexte', () async {
+      final scope = Scope(SentryOptions());
+      await SentryErrorReportingSink.applyReportContext(scope, {
+        'operation': 'http.GET',
+        'endpoint': '/api/v1/users/me',
+        SentryErrorReportingSink.fingerprintKey: 'http-transient-503',
+      });
+      expect(scope.fingerprint, ['http-transient-503']);
+      expect(scope.tags, containsPair('endpoint', '/api/v1/users/me'));
+      final block = scope.contexts[SentryErrorReportingSink.contextKey] as Map;
+      expect(
+        block.containsKey(SentryErrorReportingSink.fingerprintKey),
+        isFalse,
+      );
+    });
+  });
+
   group('SentryErrorReportingSink (FLUTTER-CJ)', () {
     test(
       'applyReportContext met le contexte et les codes Stripe en tags',

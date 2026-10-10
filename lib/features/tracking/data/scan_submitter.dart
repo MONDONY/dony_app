@@ -2,6 +2,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_send_guard.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 /// Issue d'un envoi d'étape : parti vers le back, ou gardé dans la file hors
@@ -31,11 +32,14 @@ class ScanSubmitter {
     this._repository,
     this._offlineSync, {
     Future<bool> Function()? isOnline,
-  }) : _isOnline = isOnline ?? _connectivityOnline;
+    ScanSendGuard? guard,
+  }) : _isOnline = isOnline ?? _connectivityOnline,
+       _guard = guard ?? ScanSendGuard.shared;
 
   final TrackingRepository _repository;
   final OfflineSyncService _offlineSync;
   final Future<bool> Function() _isOnline;
+  final ScanSendGuard _guard;
 
   static Future<bool> _connectivityOnline() async {
     final results = await Connectivity().checkConnectivity();
@@ -68,19 +72,29 @@ class ScanSubmitter {
 
     if (!await _isOnline()) return queue();
 
-    String? photoKey;
-    if (photoPath != null) {
-      photoKey = await _repository.uploadTrackingPhoto(bidId, photoPath);
-    }
-    final event = await _repository.postScan(
+    // Même verrou que la file : la même étape envoyée au même moment par la
+    // file ou l'onglet Suivi ne part qu'une fois (FLUTTER-JV), et un « déjà
+    // enregistré » du back est un succès.
+    final event = await _guard.postStepOnce(
       bidId: bidId,
       eventType: eventType,
-      gpsLat: gpsLat,
-      gpsLon: gpsLon,
-      gpsLabel: gpsLabel,
-      photoUrl: photoKey,
-      scanMethod: scanMethod,
-      trackingNumber: trackingNumber,
+      repository: _repository,
+      post: () async {
+        String? photoKey;
+        if (photoPath != null) {
+          photoKey = await _repository.uploadTrackingPhoto(bidId, photoPath);
+        }
+        return _repository.postScan(
+          bidId: bidId,
+          eventType: eventType,
+          gpsLat: gpsLat,
+          gpsLon: gpsLon,
+          gpsLabel: gpsLabel,
+          photoUrl: photoKey,
+          scanMethod: scanMethod,
+          trackingNumber: trackingNumber,
+        );
+      },
     );
     return ScanSubmitSent(event);
   }

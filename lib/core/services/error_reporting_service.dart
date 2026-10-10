@@ -40,6 +40,9 @@ class SentryErrorReportingSink implements ErrorReportingSink {
     'operation',
     'error_type',
     'status_code',
+    // Route normalisée (`/api/v1/bids/:id`) : une panne transitoire est
+    // regroupée sans elle (empreinte [fingerprintKey]), elle reste filtrable.
+    'endpoint',
     'stripe_code',
     'stripe_error_code',
     'decline_code',
@@ -49,13 +52,20 @@ class SentryErrorReportingSink implements ErrorReportingSink {
   /// Nom du bloc de contexte visible dans l'événement Sentry.
   static const contextKey = 'yadony';
 
+  /// Clé réservée du contexte : empreinte Sentry imposée à l'événement (voir
+  /// [ErrorReportingService.transientFingerprint]). Jamais envoyée en contexte.
+  static const fingerprintKey = '_fingerprint';
+
   @visibleForTesting
   static Future<void> applyReportContext(
     Scope scope,
     Map<String, Object> context,
   ) async {
-    await scope.setContexts(contextKey, Map<String, Object>.of(context));
-    for (final entry in context.entries) {
+    final fingerprint = context[fingerprintKey];
+    if (fingerprint is String) scope.fingerprint = [fingerprint];
+    final visible = Map<String, Object>.of(context)..remove(fingerprintKey);
+    await scope.setContexts(contextKey, visible);
+    for (final entry in visible.entries) {
       if (taggedKeys.contains(entry.key)) {
         await scope.setTag(entry.key, entry.value.toString());
       }
@@ -87,6 +97,34 @@ class ErrorReportingService {
     'TIMEOUT',
   };
 
+  /// Refus métier attendus d'une saisie de l'utilisateur, envoyés en 400 par
+  /// le back : l'écran les explique, ce ne sont pas des défauts de l'app
+  /// (FLUTTER-JP : code OTP faux).
+  static const _expectedBusinessCodes = {
+    'phone-otp-invalid',
+    'phone-otp-expired',
+    'otp-invalid',
+    'otp-expired',
+  };
+
+  /// Statuts d'une API momentanément indisponible (redémarrage, déploiement).
+  static const transientStatusCodes = {502, 503, 504};
+
+  /// Empreinte commune d'une panne transitoire, SANS la route : un
+  /// redémarrage de l'API staging ouvrait ~25 issues, une par route
+  /// (`ReportedError(http.GET, DioException, SERVICE_UNAVAILABLE)`). `null`
+  /// si l'erreur n'est pas transitoire.
+  static String? transientFingerprint(Object error, int? statusCode) {
+    if (statusCode != null && transientStatusCodes.contains(statusCode)) {
+      return 'http-transient-$statusCode';
+    }
+    final appError = error is DioException ? error.error : error;
+    if (appError is ServiceUnavailableException) {
+      return 'http-transient-${statusCode ?? 'network'}';
+    }
+    return null;
+  }
+
   Future<void> report(
     Object error, {
     required String operation,
@@ -104,6 +142,10 @@ class ErrorReportingService {
       'error_type': error.runtimeType.toString(),
       'status_code': ?effectiveStatusCode,
       ..._safeContext(context),
+      SentryErrorReportingSink.fingerprintKey: ?transientFingerprint(
+        error,
+        effectiveStatusCode,
+      ),
     };
 
     // Keep the original stack while replacing its potentially sensitive text.
@@ -140,7 +182,9 @@ class ErrorReportingService {
     // est dans `.error`. Sans ce dépliage, un délai dépassé (TIMEOUT) ou une
     // annulation (CANCELLED) seraient rapportés.
     final appError = error is DioException ? error.error : error;
-    return appError is AppException && _expectedCodes.contains(appError.code);
+    return appError is AppException &&
+        (_expectedCodes.contains(appError.code) ||
+            _expectedBusinessCodes.contains(appError.code));
   }
 
   static Map<String, Object> _safeContext(Map<String, Object>? context) {

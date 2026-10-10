@@ -559,6 +559,60 @@ void main() {
       ).called(1);
     });
 
+    test(
+      'FLUTTER-JV : deux entrées du même DEPART (onglet + file), un seul POST',
+      () async {
+        final answer = Completer<TrackingEventModel>();
+        stubPost((_) => answer.future);
+        final direct = await timed.queueScan(
+          bidId: 'bid-jv',
+          eventType: 'DEPART',
+          notBefore: t0.add(const Duration(seconds: 7)),
+        );
+        // Seconde entrée du même scan, due tout de suite (file hors ligne).
+        await timed.queueScan(bidId: 'bid-jv', eventType: 'DEPART');
+        final first = timed.sendScheduled(direct);
+        await Future<void>.delayed(Duration.zero);
+        final replay = timed.syncAll();
+        await Future<void>.delayed(Duration.zero);
+        answer.complete(_fakeEvent());
+        expect(await first, isNotNull);
+        await replay;
+        verify(
+          () => mockRepo.postScan(
+            bidId: 'bid-jv',
+            eventType: 'DEPART',
+            gpsLat: any(named: 'gpsLat'),
+            gpsLon: any(named: 'gpsLon'),
+            gpsLabel: any(named: 'gpsLabel'),
+            photoUrl: any(named: 'photoUrl'),
+            scanMethod: any(named: 'scanMethod'),
+            offlineTimestamp: any(named: 'offlineTimestamp'),
+          ),
+        ).called(1);
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      },
+    );
+
+    test(
+      'sendScheduled : 409 scan-already-recorded = succès, étape relue',
+      () async {
+        final recorded = _fakeEvent();
+        stubPost(
+          (_) async => throw DioException(
+            requestOptions: RequestOptions(path: '/tracking/events'),
+            error: const ConflictException('x', code: 'scan-already-recorded'),
+          ),
+        );
+        when(
+          () => mockRepo.getEvents('bid-1'),
+        ).thenAnswer((_) async => [recorded]);
+        final key = await schedule();
+        expect(await timed.sendScheduled(key), same(recorded));
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      },
+    );
+
     test('sendScheduled : entrée absente → null, rien envoyé', () async {
       expect(await timed.sendScheduled(42), isNull);
       verifyNeverPosted();

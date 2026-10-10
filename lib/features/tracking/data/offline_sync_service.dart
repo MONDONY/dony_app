@@ -8,6 +8,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/tracking/data/scan_send_guard.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -24,6 +25,7 @@ class OfflineSyncService {
   final TrackingRepository _repository;
   final ErrorReportingService? _errorReporter;
   final DateTime Function() _now;
+  final ScanSendGuard _guard;
 
   StreamSubscription<List<ConnectivityResult>>? _sub;
   bool _syncing = false;
@@ -40,7 +42,8 @@ class OfflineSyncService {
     this._repository, [
     this._errorReporter,
     this._now = DateTime.now,
-  ]);
+    ScanSendGuard? guard,
+  ]) : _guard = guard ?? ScanSendGuard.shared;
 
   void startListening() {
     // Le process a pu mourir avec des étapes en file (validation en attente
@@ -220,30 +223,38 @@ class OfflineSyncService {
     required bool deferred,
   }) async {
     final bidId = entry['bidId'] as String;
+    final eventType = entry['eventType'] as String;
     try {
-      String? photoKey;
-      final photoPath = entry['photoPath'] as String?;
-      if (photoPath != null) {
-        photoKey = await _repository.uploadTrackingPhoto(bidId, photoPath);
-      }
-      final event = await _repository.postScan(
+      final event = await _guard.postStepOnce(
         bidId: bidId,
-        eventType: entry['eventType'] as String,
-        gpsLat: (entry['gpsLat'] as num?)?.toDouble(),
-        gpsLon: (entry['gpsLon'] as num?)?.toDouble(),
-        gpsLabel: entry['gpsLabel'] as String?,
-        photoUrl: photoKey,
-        scanMethod: ScanMethod.fromWire(entry['scanMethod']),
-        trackingNumber: entry['trackingNumber'] as String?,
-        offlineTimestamp: deferred
-            ? DateTime.parse(entry['offlineTimestamp'] as String)
-            : null,
+        eventType: eventType,
+        repository: _repository,
+        post: () async {
+          String? photoKey;
+          final photoPath = entry['photoPath'] as String?;
+          if (photoPath != null) {
+            photoKey = await _repository.uploadTrackingPhoto(bidId, photoPath);
+          }
+          return _repository.postScan(
+            bidId: bidId,
+            eventType: eventType,
+            gpsLat: (entry['gpsLat'] as num?)?.toDouble(),
+            gpsLon: (entry['gpsLon'] as num?)?.toDouble(),
+            gpsLabel: entry['gpsLabel'] as String?,
+            photoUrl: photoKey,
+            scanMethod: ScanMethod.fromWire(entry['scanMethod']),
+            trackingNumber: entry['trackingNumber'] as String?,
+            offlineTimestamp: deferred
+                ? DateTime.parse(entry['offlineTimestamp'] as String)
+                : null,
+          );
+        },
       );
       await _hive.offlineQueue.delete(key);
       return event;
     } catch (error) {
       if (isDefinitiveRejection(unwrapDioError(error))) {
-        // Le serveur a tranché (409 départ déjà scanné, 422, 404, 403) :
+        // Le serveur a tranché (409, 422, 404, 403) :
         // rejouer l'entrée à chaque retour du réseau ne changera rien et
         // gonflait Sentry côté back d'un 500 par tentative
         // (YADONY-BACK-STAGING-8, deux évènements à 8 s d'écart).
