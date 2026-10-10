@@ -213,8 +213,9 @@ class ApiClient {
 ///  - les codes métier attendus (401, 403, 404, 409, 422, 429) sont écartés
 ///    par [ErrorReportingService] ;
 ///  - une même panne (méthode, chemin normalisé, statut, code) part au plus
-///    une fois par [throttleWindow] : un redémarrage de l'API produit un
-///    événement par endpoint, pas un par requête.
+///    une fois par [throttleWindow] ; une panne transitoire (502/503/504) une
+///    fois par statut, toutes routes confondues, sous l'empreinte
+///    `http-transient-<statut>` (la route reste en tag).
 /// Rien d'autre que méthode, chemin normalisé et code ne part : ni corps, ni
 /// en-têtes, ni message brut (voir [ErrorReportingService]).
 class _SentryErrorReportingInterceptor extends Interceptor {
@@ -260,11 +261,19 @@ class _SentryErrorReportingInterceptor extends Interceptor {
     if (RetryPolicy.depthOf(options) > 0) return false;
     if (_transportTypes.contains(err.type)) return false;
     final inner = err.error;
+    // Panne transitoire (502/503/504, API injoignable) : une seule clé pour
+    // toutes les routes, comme son empreinte Sentry. Un redémarrage de l'API
+    // produit un événement, pas un par route.
+    final transient = ErrorReportingService.transientFingerprint(
+      err,
+      err.response?.statusCode,
+    );
     final key =
+        transient ??
         '${options.method.toUpperCase()} '
-        '${ErrorReportingService.normalizeEndpoint(options.uri.path)} '
-        '${err.response?.statusCode ?? err.type.name} '
-        '${inner is AppException ? inner.code : ''}';
+            '${ErrorReportingService.normalizeEndpoint(options.uri.path)} '
+            '${err.response?.statusCode ?? err.type.name} '
+            '${inner is AppException ? inner.code : ''}';
     final now = DateTime.now();
     final last = _lastReported[key];
     if (last != null && now.difference(last) < throttleWindow) return false;
