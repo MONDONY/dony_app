@@ -145,6 +145,8 @@ const _sameInBothLanguages = <String>{
   'requestDetailMessageCta', // « Message » se dit pareil
   'requestDescriptionLabel', // « Description » se dit pareil
   'requestPublicBudget', // « Budget » se dit pareil
+  'requestPosterTileBudget', // « Budget » se dit pareil
+  'requestPosterCaptionBudget', // gabarit identique, seuls {price} et {terms} varient
   'requestPublicZonesLabel', // « Zones » se dit pareil
   'requestSearchBudgetLine', // gabarit identique, seul {amount} varie
   'requestMatchingBudgetPerKg', // gabarit identique, seul {amount} varie

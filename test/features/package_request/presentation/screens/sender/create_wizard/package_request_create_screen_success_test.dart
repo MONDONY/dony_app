@@ -310,6 +310,15 @@ void main() {
               Scaffold(body: Text('Détail ${state.pathParameters['id']}')),
         ),
         GoRoute(
+          path: '/package-requests/:id/affiche',
+          builder: (_, state) => Scaffold(
+            body: Text(
+              'Affiche ${state.pathParameters['id']} '
+              '${(state.extra as PackageRequest?)?.id}',
+            ),
+          ),
+        ),
+        GoRoute(
           path: '/home',
           builder: (_, _) => const Scaffold(body: Text('Accueil')),
         ),
@@ -545,6 +554,29 @@ void main() {
   );
 
   testWidgets(
+    'création : « Partager mon affiche » ferme le wizard et ouvre l\'affiche',
+    (tester) async {
+      await driveToSuccess(tester);
+      expect(find.text('Partager mon affiche'), findsOneWidget);
+
+      await tester.tap(find.text('Partager mon affiche'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsNothing);
+      expect(find.byType(PackageRequestCreateScreen), findsNothing);
+      // La demande créée voyage en extra : l'affiche s'ouvre sans attendre.
+      expect(find.text('Affiche pr-created-1 pr-created-1'), findsOneWidget);
+    },
+  );
+
+  testWidgets('édition : pas de « Partager mon affiche »', (tester) async {
+    await driveToSuccess(tester, editing: true);
+
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+    expect(find.text('Partager mon affiche'), findsNothing);
+  });
+
+  testWidgets(
     'édition : CTA « Voir ma demande » ferme le wizard SANS repousser un '
     'second écran détail (régression : le retour au caller par pop(true) '
     'doublonnait avec un router.push vers la même demande)',
@@ -708,6 +740,8 @@ void main() {
 
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Brouillon enregistré !'), findsOneWidget);
+    // Un brouillon n'est pas public : rien à diffuser.
+    expect(find.text('Partager mon affiche'), findsNothing);
   });
 
   testWidgets('limite de brouillons atteinte affiche le dialogue et propose de '

@@ -5405,24 +5405,6 @@ abstract class AppLocalizations {
   /// **'HH\'h\'mm'**
   String get tripPosterTimePattern;
 
-  /// Libellé de la ligne date de départ sur l'affiche du trajet (trip_poster_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Départ'**
-  String get tripPosterDepartureLabel;
-
-  /// Libellé de la ligne date limite de dépôt sur l'affiche du trajet (trip_poster_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Dernier dépôt'**
-  String get tripPosterDeadlineLabel;
-
-  /// Libellé de la ligne capacité disponible sur l'affiche du trajet (trip_poster_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Place disponible'**
-  String get tripPosterCapacityLabel;
-
   /// Libellé du lieu de remise (pickupAddress) sur l'affiche du trajet (trip_poster_card.dart)
   ///
   /// In fr, this message translates to:
@@ -5470,12 +5452,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'dès {price} l\'article'**
   String tripPosterPriceFromItem(String price);
-
-  /// Accroche en pied de l'affiche du trajet (trip_poster_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiement sécurisé, suivi du colis, voyageurs vérifiés'**
-  String get tripPosterTagline;
 
   /// Titre de l'écran d'aperçu de l'affiche du trajet (trip_poster_screen.dart)
   ///
@@ -6778,17 +6754,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Limite d\'invitations atteinte pour cette demande.'**
   String get requestDetailNoticeInvitationLimitReached;
-
-  /// Corps du message de partage d'une demande, avant le lien (package_request_detail_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'J\'envoie un colis de {weight} kg {departure} → {arrival} autour du {date}. Vous voyagez sur cet axe ? Répondez à ma demande sur Yadony.'**
-  String requestDetailShareMessage(
-    String weight,
-    String departure,
-    String arrival,
-    String date,
-  );
 
   /// Tooltip du bouton menu « … » du détail de demande (package_request_detail_screen.dart)
   ///
@@ -29581,6 +29546,276 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce voyageur n\'a pas encore terminé la configuration de ses versements : le paiement par carte est impossible pour l\'instant et rien ne vous a été débité. Réessayez plus tard ou choisissez une autre offre.'**
   String get errorTravelerNotEligibleMessage;
+
+  /// Pastille de l'en-tête de l'affiche de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Kilos disponibles'**
+  String get tripPosterBadge;
+
+  /// Surtitre du bandeau de l'affiche de trajet, suivi du mode de transport
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet'**
+  String get tripPosterEyebrow;
+
+  /// Ligne de départ du bandeau de l'affiche de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ {day}'**
+  String tripPosterHeroDeparture(String day);
+
+  /// Ligne de départ avec heure du bandeau de l'affiche de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ {day}, {time}'**
+  String tripPosterHeroDepartureAt(String day, String time);
+
+  /// Fin de la ligne de départ : heure ou date d'arrivée
+  ///
+  /// In fr, this message translates to:
+  /// **'arrivée {when}'**
+  String tripPosterHeroArrival(String when);
+
+  /// Nombre de trajets du voyageur sur l'affiche
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 trajet} other{{count} trajets}}'**
+  String tripPosterTravelerTrips(int count);
+
+  /// Badge de l'affiche quand l'identité du voyageur est vérifiée
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifié'**
+  String get tripPosterVerified;
+
+  /// Libellé de la tuile de capacité de l'affiche de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Place libre'**
+  String get tripPosterTileCapacity;
+
+  /// Capacité totale sous la place libre (ex. sur 23 kg)
+  ///
+  /// In fr, this message translates to:
+  /// **'sur {total}'**
+  String tripPosterCapacityOf(String total);
+
+  /// Libellé de la tuile de prix de l'affiche de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix'**
+  String get tripPosterTilePrice;
+
+  /// Libellé de la tuile de date limite de dépôt
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt avant'**
+  String get tripPosterTileDeadline;
+
+  /// Heure limite de dépôt sous la date
+  ///
+  /// In fr, this message translates to:
+  /// **'à {time}'**
+  String tripPosterTileDeadlineTime(String time);
+
+  /// Libellé devant les types d'objets acceptés sur l'affiche
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte'**
+  String get tripPosterAccepts;
+
+  /// Appel à l'action du pied de l'affiche de trajet, à côté du QR code
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservez vos kilos en 1 minute'**
+  String get tripPosterFooterTitle;
+
+  /// Sous-titre du pied de l'affiche de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Scannez · Paiement sécurisé · Suivi du colis'**
+  String get tripPosterFooterSubtitle;
+
+  /// Ligne de la légende de l'affiche quand le voyageur est vérifié
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité du voyageur vérifiée'**
+  String get tripPosterCaptionVerified;
+
+  /// Pastille de l'en-tête de l'affiche de demande d'envoi
+  ///
+  /// In fr, this message translates to:
+  /// **'Cherche un voyageur'**
+  String get requestPosterBadge;
+
+  /// Surtitre du bandeau de l'affiche de demande d'envoi
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis à transporter'**
+  String get requestPosterEyebrow;
+
+  /// Date souhaitée sans tolérance, affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Autour du {day}'**
+  String requestPosterDate(String day);
+
+  /// Date souhaitée avec sa tolérance, affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Autour du {day}, à 1 jour près} other{Autour du {day}, à {count} jours près}}'**
+  String requestPosterDateTolerance(int count, String day);
+
+  /// Tuile de poids de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get requestPosterTileWeight;
+
+  /// Taille du colis sous le poids (ex. Format moyen)
+  ///
+  /// In fr, this message translates to:
+  /// **'Format {size}'**
+  String requestPosterSize(String size);
+
+  /// Tuile de budget de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget'**
+  String get requestPosterTileBudget;
+
+  /// Valeur du budget quand l'expéditeur n'en a pas fixé
+  ///
+  /// In fr, this message translates to:
+  /// **'À proposer'**
+  String get requestPosterBudgetNone;
+
+  /// Précision sous le budget quand le prix est négociable
+  ///
+  /// In fr, this message translates to:
+  /// **'négociable'**
+  String get requestPosterNegotiable;
+
+  /// Précision sous le budget quand le prix n'est pas négociable
+  ///
+  /// In fr, this message translates to:
+  /// **'prix ferme'**
+  String get requestPosterFirmPrice;
+
+  /// Tuile des moyens de paiement de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get requestPosterTilePayment;
+
+  /// Libellé du lieu de départ sur l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get requestPosterFrom;
+
+  /// Libellé du lieu d'arrivée sur l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get requestPosterTo;
+
+  /// Libellé devant les catégories du colis sur l'affiche
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu'**
+  String get requestPosterContents;
+
+  /// Appel à l'action du pied de l'affiche de demande, à côté du QR code
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous faites {departure} → {arrival} ? Proposez votre trajet'**
+  String requestPosterFooterTitle(String departure, String arrival);
+
+  /// Sous-titre du pied de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Scannez · Paiement sécurisé · Suivi du colis'**
+  String get requestPosterFooterSubtitle;
+
+  /// Titre quand la demande de l'affiche ne se charge pas
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande introuvable'**
+  String get requestPosterNotFoundTitle;
+
+  /// Description quand la demande de l'affiche ne se charge pas
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger cette demande pour le moment.'**
+  String get requestPosterNotFoundDescription;
+
+  /// Première ligne de la légende de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis {departure} → {arrival}'**
+  String requestPosterCaptionCorridor(String departure, String arrival);
+
+  /// Ligne poids et taille de la légende de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'{weight} kg, format {size}'**
+  String requestPosterCaptionWeight(String weight, String size);
+
+  /// Ligne contenu de la légende de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu : {items}'**
+  String requestPosterCaptionContents(String items);
+
+  /// Ligne budget de la légende (terms = négociable ou prix ferme)
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget {price}, {terms}'**
+  String requestPosterCaptionBudget(String price, String terms);
+
+  /// Ligne départ de la légende de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ : {place}'**
+  String requestPosterCaptionFrom(String place);
+
+  /// Ligne arrivée de la légende de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée : {place}'**
+  String requestPosterCaptionTo(String place);
+
+  /// Ligne qui précède le lien dans la légende de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous voyagez sur cet axe ? Proposez votre trajet ici :'**
+  String get requestPosterCaptionCta;
+
+  /// Dernière ligne de la légende de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé, suivi du colis par QR code.'**
+  String get requestPosterCaptionFooter;
+
+  /// Sujet du partage de l'affiche de demande
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis {departure} vers {arrival}'**
+  String requestPosterShareSubject(String departure, String arrival);
+
+  /// Libellé de la ligne des moyens de paiement acceptés sur l'affiche de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get tripPosterPayment;
+
+  /// Ligne des moyens de paiement dans la légende de l'affiche de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement : {methods}'**
+  String tripPosterCaptionPayment(String methods);
 }
 
 class _AppLocalizationsDelegate

@@ -3179,15 +3179,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPosterTimePattern => 'h:mm a';
 
   @override
-  String get tripPosterDepartureLabel => 'Departure';
-
-  @override
-  String get tripPosterDeadlineLabel => 'Last drop-off';
-
-  @override
-  String get tripPosterCapacityLabel => 'Available space';
-
-  @override
   String get tripPosterHandoverLabel => 'Drop-off';
 
   @override
@@ -3216,10 +3207,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String tripPosterPriceFromItem(String price) {
     return 'from $price per item';
   }
-
-  @override
-  String get tripPosterTagline =>
-      'Secure payment, parcel tracking, verified travelers';
 
   @override
   String get tripPosterTitle => 'My poster';
@@ -4007,16 +3994,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get requestDetailNoticeInvitationLimitReached =>
       'Invitation limit reached for this request.';
-
-  @override
-  String requestDetailShareMessage(
-    String weight,
-    String departure,
-    String arrival,
-    String date,
-  ) {
-    return 'I\'m sending a $weight kg parcel $departure → $arrival around $date. Are you traveling this route? Reply to my request on Yadony.';
-  }
 
   @override
   String get requestDetailMoreActionsTooltip => 'More actions';
@@ -18035,4 +18012,192 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorTravelerNotEligibleMessage =>
       'This traveller has not finished setting up their payouts yet: card payment is not possible for now and you have not been charged. Try again later or choose another offer.';
+
+  @override
+  String get tripPosterBadge => 'Kilos available';
+
+  @override
+  String get tripPosterEyebrow => 'Trip';
+
+  @override
+  String tripPosterHeroDeparture(String day) {
+    return 'Departs $day';
+  }
+
+  @override
+  String tripPosterHeroDepartureAt(String day, String time) {
+    return 'Departs $day, $time';
+  }
+
+  @override
+  String tripPosterHeroArrival(String when) {
+    return 'arrives $when';
+  }
+
+  @override
+  String tripPosterTravelerTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips',
+      one: '1 trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripPosterVerified => 'Verified';
+
+  @override
+  String get tripPosterTileCapacity => 'Space left';
+
+  @override
+  String tripPosterCapacityOf(String total) {
+    return 'of $total';
+  }
+
+  @override
+  String get tripPosterTilePrice => 'Price';
+
+  @override
+  String get tripPosterTileDeadline => 'Drop-off by';
+
+  @override
+  String tripPosterTileDeadlineTime(String time) {
+    return 'at $time';
+  }
+
+  @override
+  String get tripPosterAccepts => 'I accept';
+
+  @override
+  String get tripPosterFooterTitle => 'Book your kilos in a minute';
+
+  @override
+  String get tripPosterFooterSubtitle =>
+      'Scan · Secure payment · Parcel tracking';
+
+  @override
+  String get tripPosterCaptionVerified => 'Traveler\'s identity verified';
+
+  @override
+  String get requestPosterBadge => 'Looking for a traveler';
+
+  @override
+  String get requestPosterEyebrow => 'Parcel to carry';
+
+  @override
+  String requestPosterDate(String day) {
+    return 'Around $day';
+  }
+
+  @override
+  String requestPosterDateTolerance(int count, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Around $day, give or take $count days',
+      one: 'Around $day, give or take 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestPosterTileWeight => 'Weight';
+
+  @override
+  String requestPosterSize(String size) {
+    return 'Size $size';
+  }
+
+  @override
+  String get requestPosterTileBudget => 'Budget';
+
+  @override
+  String get requestPosterBudgetNone => 'Make an offer';
+
+  @override
+  String get requestPosterNegotiable => 'negotiable';
+
+  @override
+  String get requestPosterFirmPrice => 'firm price';
+
+  @override
+  String get requestPosterTilePayment => 'Payment';
+
+  @override
+  String get requestPosterFrom => 'From';
+
+  @override
+  String get requestPosterTo => 'To';
+
+  @override
+  String get requestPosterContents => 'Contents';
+
+  @override
+  String requestPosterFooterTitle(String departure, String arrival) {
+    return 'Travelling $departure → $arrival? Offer your trip';
+  }
+
+  @override
+  String get requestPosterFooterSubtitle =>
+      'Scan · Secure payment · Parcel tracking';
+
+  @override
+  String get requestPosterNotFoundTitle => 'Request not found';
+
+  @override
+  String get requestPosterNotFoundDescription =>
+      'This request can\'t be loaded right now.';
+
+  @override
+  String requestPosterCaptionCorridor(String departure, String arrival) {
+    return 'Parcel $departure → $arrival';
+  }
+
+  @override
+  String requestPosterCaptionWeight(String weight, String size) {
+    return '$weight kg, size $size';
+  }
+
+  @override
+  String requestPosterCaptionContents(String items) {
+    return 'Contents: $items';
+  }
+
+  @override
+  String requestPosterCaptionBudget(String price, String terms) {
+    return 'Budget $price, $terms';
+  }
+
+  @override
+  String requestPosterCaptionFrom(String place) {
+    return 'From: $place';
+  }
+
+  @override
+  String requestPosterCaptionTo(String place) {
+    return 'To: $place';
+  }
+
+  @override
+  String get requestPosterCaptionCta =>
+      'Travelling this route? Offer your trip here:';
+
+  @override
+  String get requestPosterCaptionFooter =>
+      'Secure payment, parcel tracking by QR code.';
+
+  @override
+  String requestPosterShareSubject(String departure, String arrival) {
+    return 'Parcel $departure to $arrival';
+  }
+
+  @override
+  String get tripPosterPayment => 'Payment';
+
+  @override
+  String tripPosterCaptionPayment(String methods) {
+    return 'Payment: $methods';
+  }
 }

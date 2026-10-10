@@ -144,6 +144,7 @@ dependencies:
   # Tonalité de retour d'appel côté appelant (FLUTTER-9V) : Stream ne la joue
   # pas, l'appel étant créé par le back (cf. ringback_tone.dart).
   audioplayers: ^6.8.1
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

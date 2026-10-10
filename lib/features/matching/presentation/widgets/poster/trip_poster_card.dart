@@ -2,8 +2,15 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -11,89 +18,56 @@ import 'package:intl/intl.dart';
 /// Affiche partageable d'un trajet, destinée à être capturée en PNG puis
 /// postée par le voyageur sur ses propres canaux (Facebook, WhatsApp, TikTok).
 ///
-/// **Couleurs figées, pas de tokens de thème.** Le rendu part en image : il doit
-/// être identique que l'utilisateur soit en clair ou en sombre au moment de la
-/// capture. Lire `Theme.of(context).colorScheme` produirait deux affiches
-/// différentes pour le même trajet, ce qui casserait l'identité visuelle sur
-/// les canaux du voyageur. Seule la famille typographique est reprise du thème,
-/// elle ne dépend pas de la luminosité.
+/// De haut en bas : la marque, le corridor dans un bandeau bleu nuit avec
+/// l'horaire et le voyageur (note, trajets, identité vérifiée), trois tuiles
+/// chiffrées (place libre avec sa jauge, prix, dépôt limite), les lieux, les
+/// objets acceptés, puis un QR code vers la page publique du trajet.
 ///
-/// **Aucun numéro de téléphone.** Les affiches concurrentes en placardent deux à
-/// quatre ; celle-ci n'en porte aucun. C'est cohérent avec le masquage du numéro
-/// déjà en place côté profil, et c'est un argument en soi : le voyageur n'est
-/// plus appelé à toute heure, les demandes arrivent qualifiées dans
+/// **Aucun numéro de téléphone.** Les affiches concurrentes en placardent deux
+/// à quatre ; celle-ci n'en porte aucun, les demandes arrivent qualifiées dans
 /// l'application.
 ///
-/// **Aucune URL non plus.** Une adresse écrite dans une image n'est cliquable
-/// sur aucune plateforme, et personne ne recopie à la main 80 caractères
-/// portant un UUID. Le lien vit dans la légende, que le voyageur colle dans le
-/// texte de son post. L'image, elle, porte le mot-logo et les badges des deux
-/// stores : de quoi savoir quoi chercher et où, même détachée de sa légende,
-/// ce qui est le cas dès qu'elle est transférée en capture d'écran.
+/// **Aucune URL écrite.** Elle n'est cliquable sur aucune plateforme et
+/// personne ne recopie 80 caractères portant un UUID. Le lien vit dans la
+/// légende, et dans le QR code pour qui ne voit que l'image.
+///
+/// **Chaque ligne est facultative.** Une information absente (pas de dépôt
+/// limite, pas d'adresse, voyageur sans note) retire sa ligne sans laisser de
+/// trou, et une affiche très remplie se réduit légèrement plutôt que de
+/// déborder : le pied, lui, reste toujours à sa place.
 class TripPosterCard extends StatelessWidget {
-  const TripPosterCard({super.key, required this.announcement});
+  const TripPosterCard({super.key, required this.announcement, this.qrData});
 
   final AnnouncementModel announcement;
 
-  /// Largeur logique de composition. La capture applique un `pixelRatio` de 3
-  /// pour sortir 1080 x 1350, le format 4:5 du fil Facebook et Instagram.
-  static const double logicalWidth = 360;
-  static const double logicalHeight = 450;
+  /// Lien encodé dans le QR code du pied. Sans lui, pas de QR.
+  final String? qrData;
 
-  /// Formats de date partagés par toute la classe : ce sont des méthodes
-  /// statiques, sans `BuildContext`, recalculées à chaque appel pour suivre la
-  /// langue de l'app. Elles ne dépendent d'aucune donnée d'instance, et
-  /// l'écran d'aperçu les réutilise pour composer sa légende (avec
-  /// `context.l10n.localeName`), ce qui garantit que l'image et le texte du
-  /// post annoncent la même chose.
+  static const double logicalWidth = PosterLayout.width;
+  static const double logicalHeight = PosterLayout.height;
+
+  /// Publics car l'écran d'aperçu doit les précharger avant de rastériser.
+  static const String appStoreBadgeAsset = PosterAssets.appStoreBadge;
+  static const String googlePlayBadgeAsset = PosterAssets.googlePlayBadge;
+
+  /// Formats de date partagés avec la légende de l'écran d'aperçu, ce qui
+  /// garantit que l'image et le texte du post annoncent la même chose.
   static DateFormat dayFormat(String locale) => DateFormat.MMMMEEEEd(locale);
 
   /// `HH'h'mm` (fr) / `h:mm a` (en) : « 14h05 » est une typographie française
   /// que le squelette intl `jm` ne produit pas, d'où un motif stocké dans
   /// l'ARB (`tripPosterTimePattern`) plutôt qu'un squelette.
+  static String timeLabel(AppLocalizations l, String locale, DateTime t) =>
+      DateFormat(l.tripPosterTimePattern, locale).format(t);
+
   static String deadlineLabel(
     AppLocalizations l,
     String locale,
     DateTime deadline,
   ) => l.commonDateAtTime(
     DateFormat.MMMMd(locale).format(deadline),
-    DateFormat(l.tripPosterTimePattern, locale).format(deadline),
+    timeLabel(l, locale, deadline),
   );
-
-  /// Badges officiels des deux plateformes, en français.
-  ///
-  /// Téléchargés depuis les ressources marketing d'Apple et de Google et
-  /// embarqués tels quels : les deux exigent leur propre artwork, non modifié.
-  /// Publics car l'écran d'aperçu doit les précharger avant de rastériser
-  /// l'affiche.
-  static const String appStoreBadgeAsset =
-      'assets/logos/store/app-store-fr.png';
-  static const String googlePlayBadgeAsset =
-      'assets/logos/store/google-play-fr.png';
-
-  /// Réduction maximale tolérée pour garder le corridor sur une seule ligne.
-  ///
-  /// En deçà, le titre de l'affiche deviendrait plus petit que les libellés qui
-  /// le suivent, ce qui inverserait la hiérarchie de lecture. On passe alors sur
-  /// deux lignes plutôt que de continuer à rapetisser.
-  static const double _corridorMinScale = 0.8;
-  static const double _corridorIconSize = 30;
-  static const double _corridorGap = 12;
-
-  /// Hauteur de rendu du badge Apple, qui n'a pas de marge intégrée.
-  static const double _badgeHeight = 24;
-
-  /// Part utile du badge Google : son PNG officiel réserve 23 % de sa hauteur
-  /// à la zone de dégagement imposée par la charte. Sans ce facteur, rendu à
-  /// la même hauteur qu'Apple, il paraîtrait nettement plus petit.
-  static const double _googleBadgeContentRatio = 0.77;
-
-  static const Color _ink = DonyColors.ink900;
-  static const Color _blue = DonyColors.blue500;
-  static const Color _terra = DonyColors.terra500;
-  static const Color _paper = DonyColors.neutral0;
-  static const Color _muted = DonyColors.neutral500;
-  static const Color _line = DonyColors.neutral200;
 
   /// Capacité telle qu'elle doit être annoncée.
   ///
@@ -101,84 +75,164 @@ class TripPosterCard extends StatelessWidget {
   /// qu'une valeur de forme, et l'imprimer comme une limite tromperait
   /// l'expéditeur. Tout le reste de l'application dit « Kg libre » dans ce cas.
   static String capacityLabel(AppLocalizations l, AnnouncementModel a) =>
-      a.isKgFree
-      ? l.tripKgFree
-      // formatKgPrice retire les décimales superflues ; sa sémantique est celle
-      // d'un nombre, pas d'un prix. « kg » est une unité, pas un mot à
-      // traduire (formats sans mot).
-      : '${formatKgPrice(a.availableKg)} kg';
+      a.isKgFree ? l.tripKgFree : '${formatKgPrice(a.availableKg)} kg';
+
+  /// Moyens de paiement acceptés, dans l'ordre de l'énumération (carte,
+  /// espèces, puis mobile money) : « Carte, Espèces, Wave ». Vide si le
+  /// trajet n'en déclare aucun. Les libellés sont ceux de la demande d'envoi,
+  /// les deux énumérations partageant leurs valeurs d'API.
+  static String paymentLabel(AppLocalizations l, AnnouncementModel a) => [
+    for (final m in BidPaymentMethod.values)
+      if (a.acceptedPaymentMethods.contains(m))
+        PaymentMethod.tryFromWire(m.apiValue)?.label(l),
+  ].nonNulls.join(', ');
+
+  /// Heure « HH:mm » saisie par le voyageur, posée sur [day]. `null` si
+  /// absente ou illisible : la ligne se contente alors du jour.
+  static DateTime? _at(DateTime day, String? hhmm) {
+    if (hhmm == null) return null;
+    final parts = hhmm.split(':');
+    if (parts.length < 2) return null;
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    if (h == null || m == null) return null;
+    return DateTime(day.year, day.month, day.day, h, m);
+  }
+
+  /// Ligne horaire du bandeau : « Départ sam. 18 oct., 14h05 · arrivée
+  /// 21h40 ». L'arrivée porte sa date quand elle tombe un autre jour (vol de
+  /// nuit), sinon son heure seule. Jour abrégé : en toutes lettres, la ligne
+  /// ne tient pas sur la largeur de l'affiche dès qu'une arrivée s'y ajoute.
+  static String scheduleLabel(AppLocalizations l, AnnouncementModel a) {
+    final locale = l.localeName;
+    final day = DateFormat.MMMEd(locale).format(a.departureDate);
+    final departureAt = _at(a.departureDate, a.departureTime);
+    final departure = departureAt == null
+        ? l.tripPosterHeroDeparture(day)
+        : l.tripPosterHeroDepartureAt(day, timeLabel(l, locale, departureAt));
+
+    final arrivalDay = a.arrivalDate;
+    final arrivalAt = _at(arrivalDay ?? a.departureDate, a.arrivalTime);
+    final otherDay =
+        arrivalDay != null && !DateUtils.isSameDay(arrivalDay, a.departureDate);
+    final String? arrival;
+    if (otherDay) {
+      final date = DateFormat.MMMd(locale).format(arrivalDay);
+      arrival = arrivalAt == null
+          ? date
+          : l.commonDateAtTime(date, timeLabel(l, locale, arrivalAt));
+    } else {
+      arrival = arrivalAt == null ? null : timeLabel(l, locale, arrivalAt);
+    }
+    return arrival == null
+        ? departure
+        : '$departure · ${l.tripPosterHeroArrival(arrival)}';
+  }
+
+  /// Réduction maximale tolérée pour garder le corridor sur une seule ligne.
+  ///
+  /// En deçà, le titre de l'affiche deviendrait plus petit que les libellés qui
+  /// le suivent, ce qui inverserait la hiérarchie de lecture. On passe alors
+  /// sur deux lignes plutôt que de continuer à rapetisser.
+  static const double _corridorMinScale = 0.8;
+  static const double _corridorIconSize = 26;
+  static const double _corridorGap = 10;
+
+  /// Padding horizontal du bandeau, déduit de la largeur du corridor.
+  static const double _heroPadding = 28;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final l = context.l10n;
-    final locale = l.localeName;
-    final deadline = announcement.handoverDeadline;
-    final pickup = announcement.pickupAddress?.label;
-    final delivery = announcement.deliveryAddress?.label;
+    final a = announcement;
+    final pickup = a.pickupAddress?.label;
+    final delivery = a.deliveryAddress?.label;
+    final payment = paymentLabel(l, a);
+    final accepted = [
+      for (final t in a.acceptedContentTypes ?? const <String>[])
+        contentCategoryDisplayName(l, t),
+    ];
 
     return SizedBox(
       width: logicalWidth,
       height: logicalHeight,
       child: ColoredBox(
-        color: _paper,
+        color: PosterPalette.paper,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
+          padding: PosterLayout.padding,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _wordmark(),
-              const SizedBox(height: 14),
-              _corridor(text),
-              const SizedBox(height: 14),
-              _InfoRow(
-                label: l.tripPosterDepartureLabel,
-                value: dayFormat(locale).format(announcement.departureDate),
-                valueColor: _ink,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: PosterLayout.innerWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        PosterHeader(
+                          label: l.tripPosterBadge,
+                          background: PosterPalette.blueTint,
+                          foreground: PosterPalette.blue,
+                        ),
+                        const SizedBox(height: PosterLayout.gap),
+                        PosterHero(
+                          background: PosterPalette.ink,
+                          eyebrow: _eyebrow(l),
+                          corridor: _corridor(text),
+                          subtitle: scheduleLabel(l, a),
+                          footer: a.traveler == null
+                              ? null
+                              : _TravelerRow(traveler: a.traveler!),
+                        ),
+                        const SizedBox(height: PosterLayout.gap),
+                        _tiles(l),
+                        if (pickup != null || delivery != null) ...[
+                          const SizedBox(height: PosterLayout.gap),
+                          if (pickup != null)
+                            PosterPlaceRow(
+                              label: l.tripPosterHandoverLabel,
+                              value: pickup,
+                            ),
+                          if (pickup != null && delivery != null)
+                            const SizedBox(height: 4),
+                          if (delivery != null)
+                            PosterPlaceRow(
+                              label: l.tripPosterPickupLabel,
+                              value: delivery,
+                            ),
+                        ],
+                        if (payment.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          PosterPlaceRow(
+                            label: l.tripPosterPayment,
+                            value: payment,
+                          ),
+                        ],
+                        if (accepted.isNotEmpty) ...[
+                          const SizedBox(height: PosterLayout.gap),
+                          PosterChipRow(
+                            label: l.tripPosterAccepts,
+                            items: accepted,
+                            background: PosterPalette.blueTint,
+                            foreground: PosterPalette.blue,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 8),
-              // La date limite de dépôt est le vrai butoir commercial, pas la
-              // date de départ : c'est elle qui déclenche la décision de
-              // l'expéditeur. Toutes les affiches du marché la mettent en avant
-              // en rouge, on garde ce code visuel.
-              if (deadline != null) ...[
-                _InfoRow(
-                  label: l.tripPosterDeadlineLabel,
-                  value: deadlineLabel(l, locale, deadline),
-                  valueColor: _terra,
-                ),
-                const SizedBox(height: 8),
-              ],
-              _InfoRow(
-                label: l.tripPosterCapacityLabel,
-                value: capacityLabel(l, announcement),
-                valueColor: _ink,
+              const SizedBox(height: PosterLayout.gap),
+              PosterFooter(
+                title: l.tripPosterFooterTitle,
+                subtitle: l.tripPosterFooterSubtitle,
+                qrData: qrData,
               ),
-              // Lieux de remise et de récupération. Les DTO allégés ne les
-              // portent pas, d'où le test : une affiche sans adresse reste
-              // valable, elle est simplement moins précise.
-              if (pickup != null) ...[
-                const SizedBox(height: 8),
-                _InfoRow(
-                  label: l.tripPosterHandoverLabel,
-                  value: pickup,
-                  valueColor: _ink,
-                  maxLines: 2,
-                ),
-              ],
-              if (delivery != null) ...[
-                const SizedBox(height: 8),
-                _InfoRow(
-                  label: l.tripPosterPickupLabel,
-                  value: delivery,
-                  valueColor: _ink,
-                  maxLines: 2,
-                ),
-              ],
-              const Spacer(),
-              _priceBlock(text, l),
-              const SizedBox(height: 12),
-              _footer(text, l),
             ],
           ),
         ),
@@ -186,54 +240,45 @@ class TripPosterCard extends StatelessWidget {
     );
   }
 
-  /// En-tête volontairement réduit à la seule marque.
-  ///
-  /// Le mot-logo officiel, et non un texte stylé : l'affiche circule hors de
-  /// l'application, sur les canaux du voyageur, où elle est la seule
-  /// représentation de la marque que verront des gens qui ne la connaissent pas
-  /// encore. Une pastille d'accroche y a été essayée puis retirée, elle
-  /// débordait dès que la police de rendu était plus large que prévu.
-  ///
-  /// [DonyLogo] fixe la hauteur et déduit la largeur du ratio (~3,7:1), donc la
-  /// mise en page reste stable même si l'image n'est pas encore décodée. La
-  /// capture, elle, exige qu'elle le soit : cf. le préchargement dans
-  /// `TripPosterScreen`.
-  Widget _wordmark() => const DonyLogo(fontSize: 30);
+  /// « TRAJET · AVION · VOL DIRECT » : nature, mode de transport, escales.
+  String _eyebrow(AppLocalizations l) {
+    final mode = announcement.transportMode;
+    final stops = announcement.stops;
+    return [
+      l.tripPosterEyebrow,
+      if (mode != null) mode.label(l),
+      if (stops != null) tripStopsBadgeLabel(l, stops),
+    ].join(' · ');
+  }
 
   /// Corridor : départ puis arrivée, séparés par l'avion qui pointe vers la
   /// droite, dans le sens de la lecture donc du voyage.
   ///
-  /// **La disposition suit la longueur des noms.** Sur une ligne, le trajet se
-  /// lit d'un coup d'œil, et c'est la forme retenue chaque fois qu'elle tient.
-  /// Mais « MARSEILLE ✈ OUAGADOUGOU » est deux fois plus large que
-  /// « PARIS ✈ DAKAR » : tout ramener de force sur une ligne le réduirait à la
-  /// taille du corps de texte, et le corridor cesserait d'être le titre de
-  /// l'affiche. Au-delà de [_corridorMinScale], on repasse donc sur deux
-  /// lignes, où chaque ville dispose de toute la largeur.
+  /// **La disposition suit la longueur des noms.** « MARSEILLE ✈ OUAGADOUGOU »
+  /// est deux fois plus large que « PARIS ✈ DAKAR » : tout ramener de force
+  /// sur une ligne le réduirait à la taille du corps de texte. Au-delà de
+  /// [_corridorMinScale], on repasse donc sur deux lignes.
   ///
-  /// Jamais de troncature dans les deux cas : une ellipse amputerait un nom de
-  /// ville et rendrait l'affiche inutilisable. On réduit, ou on réorganise.
+  /// Jamais de troncature : une ellipse amputerait un nom de ville et rendrait
+  /// l'affiche inutilisable. On réduit, ou on réorganise.
   Widget _corridor(TextTheme text) {
     final style = (text.displayLarge ?? const TextStyle()).copyWith(
-      fontSize: 34,
+      fontSize: 30,
       height: 1.02,
       fontWeight: FontWeight.w800,
-      letterSpacing: -1.6,
-      color: _ink,
+      letterSpacing: -1.2,
+      color: PosterPalette.paper,
     );
 
     final departure = announcement.departureCity.toUpperCase();
     final arrival = announcement.arrivalCity.toUpperCase();
 
-    const available = logicalWidth - 44; // padding horizontal de la carte
+    final available = PosterLayout.innerWidth - _heroPadding;
     final oneLineWidth =
         _textWidth(departure, style) +
         _textWidth(arrival, style) +
         _corridorIconSize +
         _corridorGap * 2;
-
-    // Le FittedBox réduit dans le rapport available/oneLineWidth : au-delà du
-    // seuil, la ligne unique deviendrait illisible face au reste de l'affiche.
     final fitsOnOneLine = oneLineWidth <= available / _corridorMinScale;
 
     if (fitsOnOneLine) {
@@ -275,20 +320,16 @@ class TripPosterCard extends StatelessWidget {
     child: const Icon(
       Icons.flight_rounded,
       size: _corridorIconSize,
-      color: _blue,
+      color: PosterPalette.terra,
     ),
   );
 
   /// Largeur rendue d'un texte, pour arbitrer la disposition avant de peindre.
-  ///
-  /// Un `LayoutBuilder` ne suffirait pas : il donne la place disponible, pas la
-  /// place nécessaire. Le coût est celui d'une mise en page de quelques mots,
-  /// une fois par ouverture d'écran.
   static double _textWidth(String value, TextStyle style) {
     final painter = TextPainter(
       text: TextSpan(text: value, style: style),
-      // `intl` exporte lui aussi un TextDirection : sans le prefixe,
-      // c'est le sien qui gagne et il n'a pas de membre `ltr`.
+      // `intl` exporte lui aussi un TextDirection : sans le préfixe, c'est le
+      // sien qui gagne et il n'a pas de membre `ltr`.
       textDirection: ui.TextDirection.ltr,
       maxLines: 1,
     )..layout();
@@ -297,207 +338,190 @@ class TripPosterCard extends StatelessWidget {
     return width;
   }
 
-  /// Bloc prix, décliné selon le mode de tarification du trajet.
-  ///
-  /// Un trajet vendu à l'article n'a pas forcément de tarif au kilo : la
-  /// colonne backend étant `NOT NULL`, le formulaire y écrit `0.0`, si bien
-  /// qu'un affichage naïf annonçait « 0 € le kilo » sur l'affiche même. Le
-  /// mode commande donc ce qui est mis en avant, et les deux tarifs coexistent
-  /// quand le voyageur a réellement renseigné les deux.
-  Widget _priceBlock(TextTheme text, AppLocalizations l) {
-    final currency = announcement.currency;
-    final grid = announcement.cheapestGridPrice;
-    final senderPricePerKg = announcement.senderPricePerKg;
-    final hasKg = announcement.hasKgPrice;
-
-    final String amount;
-    final String unit;
-    String? secondary;
-
-    if (grid != null) {
-      // « dès », parce qu'un prix de grille est un point d'entrée : c'est
-      // l'article le moins cher, pas le tarif de tous les articles.
-      amount = l.tripPosterFromPrice(formatPriceIn(grid, currency));
-      unit = l.tripPosterUnitPerItem;
-      if (hasKg && senderPricePerKg != null) {
-        secondary = l.tripPosterPricePerKg(
-          formatPriceIn(senderPricePerKg, currency),
-        );
-      }
-    } else {
-      // Garde sur hasKg (valeur > 0), pas sur la seule nullité :
-      // senderPricePerKg n'est en pratique jamais null, c'est 0 la valeur
-      // trompeuse à écarter (jamais de faux « 0 € »).
-      amount = hasKg
-          ? formatPriceIn(senderPricePerKg!, currency)
-          : l.tripPosterPriceUnavailable;
-      unit = l.tripPosterUnitPerKg;
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: _blue,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
+  /// Les trois tuiles chiffrées, de même hauteur. Sans dépôt limite, il en
+  /// reste deux, plus larges, plutôt qu'une case vide.
+  Widget _tiles(AppLocalizations l) {
+    final a = announcement;
+    final deadline = a.handoverDeadline;
+    final locale = l.localeName;
+    final total = a.totalKg;
+    final tiles = <Widget>[
+      PosterTile(
+        label: l.tripPosterTileCapacity,
+        value: capacityLabel(l, a),
+        detail: a.isKgFree || total <= 0
+            ? null
+            : l.tripPosterCapacityOf('${formatKgPrice(total)} kg'),
+        gauge: a.isKgFree || total <= 0 ? null : a.availableKg / total,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      _priceTile(l),
+      if (deadline != null)
+        PosterTile(
+          label: l.tripPosterTileDeadline,
+          value: DateFormat.MMMd(locale).format(deadline),
+          // La date limite de dépôt est le vrai butoir commercial : c'est elle
+          // qui déclenche la décision de l'expéditeur. Toutes les affiches du
+          // marché la mettent en avant en couleur chaude.
+          valueColor: PosterPalette.terra,
+          detail: l.tripPosterTileDeadlineTime(timeLabel(l, locale, deadline)),
+        ),
+    ];
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Mise à l'échelle plutôt que troncature : « 6 000 F CFA » est deux
-          // fois plus large que « 8 € », et un prix coupé par une ellipse
-          // serait pire qu'un prix légèrement plus petit. Le bloc reste lisible
-          // quelle que soit la devise du corridor.
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  // Prix expéditeur, commission comprise, dans la devise du
-                  // trajet. `pricePerKg` seul est le net voyageur : l'afficher
-                  // annoncerait un tarif que personne ne paie.
-                  amount,
-                  style: text.displayLarge?.copyWith(
-                    fontSize: 36,
-                    height: 1,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1.4,
-                    color: DonyColors.neutral0,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 5),
-                  child: Text(
-                    unit,
-                    style: text.titleMedium?.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: DonyColors.blue50,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (secondary != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              secondary,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: text.titleMedium?.copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: DonyColors.blue50,
-              ),
-            ),
+          for (var i = 0; i < tiles.length; i++) ...[
+            if (i > 0) const SizedBox(width: 7),
+            Expanded(child: tiles[i]),
           ],
         ],
       ),
     );
   }
 
-  /// Pied d'affiche : la promesse, puis où trouver l'application.
+  /// Tuile prix, déclinée selon le mode de tarification du trajet.
   ///
-  /// L'URL publique n'y figure pas. Écrite dans une image elle n'est de toute
-  /// façon pas cliquable, et un lecteur ne recopie pas 80 caractères portant un
-  /// UUID. C'est la légende, elle, collable et cliquable, qui porte le lien.
-  /// Les badges prennent le relais pour qui ne voit que l'image : ils disent
-  /// quoi chercher, et où.
-  Widget _footer(TextTheme text, AppLocalizations l) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(height: 1, thickness: 1, color: _line),
-        const SizedBox(height: 8),
-        Text(
-          l.tripPosterTagline,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: text.bodySmall?.copyWith(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: _muted,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            // Artwork officiel des deux plateformes, repris tel quel : Apple et
-            // Google interdisent de le redessiner ou de le retoucher. Le badge
-            // Google embarque sa zone de dégagement obligatoire, qui occupe
-            // 23 % de sa hauteur ; il est donc rendu plus haut que celui
-            // d'Apple pour que les deux paraissent de la même taille.
-            Image.asset(appStoreBadgeAsset, height: _badgeHeight),
-            const SizedBox(width: 8),
-            Image.asset(
-              googlePlayBadgeAsset,
-              height: _badgeHeight / _googleBadgeContentRatio,
-            ),
-          ],
-        ),
-      ],
+  /// Un trajet vendu à l'article n'a pas forcément de tarif au kilo : la
+  /// colonne backend étant `NOT NULL`, le formulaire y écrit `0.0`, si bien
+  /// qu'un affichage naïf annoncerait « 0 € le kilo ». Le mode commande donc
+  /// ce qui est mis en avant. Le prix est toujours celui que paie
+  /// l'expéditeur, commission comprise : `pricePerKg` seul est le net
+  /// voyageur, un tarif que personne ne paie.
+  Widget _priceTile(AppLocalizations l) {
+    final a = announcement;
+    final currency = a.currency;
+    final grid = a.cheapestGridPrice;
+    final senderPricePerKg = a.senderPricePerKg;
+    final hasKg = a.hasKgPrice;
+
+    final String value;
+    final String detail;
+    if (grid != null) {
+      // « dès », parce qu'un prix de grille est un point d'entrée : c'est
+      // l'article le moins cher, pas le tarif de tous les articles.
+      value = l.tripPosterFromPrice(formatPriceIn(grid, currency));
+      detail = hasKg && senderPricePerKg != null
+          ? '${l.tripPosterUnitPerItem} · '
+                '${l.tripPosterPricePerKg(formatPriceIn(senderPricePerKg, currency))}'
+          : l.tripPosterUnitPerItem;
+    } else {
+      value = hasKg
+          ? formatPriceIn(senderPricePerKg!, currency)
+          : l.tripPosterPriceUnavailable;
+      detail = l.tripPosterUnitPerKg;
+    }
+    return PosterTile(
+      label: l.tripPosterTilePrice,
+      value: value,
+      detail: detail,
+      background: PosterPalette.blue,
+      valueColor: PosterPalette.paper,
+      labelColor: PosterPalette.blueOnDark,
     );
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.label,
-    required this.value,
-    required this.valueColor,
-    this.maxLines = 1,
-  });
+/// Ligne du voyageur, au pied du bandeau : initiales, nom, note et trajets,
+/// badge d'identité vérifiée quand il est vrai.
+///
+/// Les initiales et non la photo : une image réseau peut ne pas être chargée
+/// au moment de la capture, et une affiche ne doit pas changer selon la
+/// qualité de la connexion.
+class _TravelerRow extends StatelessWidget {
+  const _TravelerRow({required this.traveler});
 
-  final String label;
-  final String value;
-  final Color valueColor;
-
-  /// Les adresses saisies par le voyageur sont des adresses postales
-  /// complètes : sur une seule ligne elles seraient tronquées au milieu du nom
-  /// de rue, ce qui vaut moins que pas d'adresse du tout.
-  final int maxLines;
+  final TravelerProfile traveler;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final wraps = maxLines > 1;
+    final text = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final rating = traveler.averageRating;
+    final trips = traveler.totalTrips;
+    final stats = [
+      if (rating != null && rating > 0)
+        '★ ${NumberFormat('0.0', l.localeName).format(rating)}',
+      if (trips != null && trips > 0) l.tripPosterTravelerTrips(trips),
+    ].join(' · ');
+
     return Row(
-      // Une valeur sur deux lignes n'a pas de ligne de base commune avec son
-      // libellé : on aligne alors par le haut, sinon la première ligne de
-      // l'adresse remonte au-dessus du libellé.
-      crossAxisAlignment: wraps
-          ? CrossAxisAlignment.start
-          : CrossAxisAlignment.baseline,
-      textBaseline: wraps ? null : TextBaseline.alphabetic,
       children: [
-        Text(
-          label,
-          style: textTheme.bodyMedium?.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: TripPosterCard._muted,
+        Container(
+          width: 26,
+          height: 26,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            color: PosterPalette.blue,
+            shape: BoxShape.circle,
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
           child: Text(
-            value,
-            textAlign: TextAlign.right,
-            maxLines: maxLines,
-            overflow: TextOverflow.ellipsis,
-            style: textTheme.titleLarge?.copyWith(
-              fontSize: wraps ? 13 : 15,
-              height: wraps ? 1.25 : null,
-              fontWeight: FontWeight.w700,
-              color: valueColor,
+            traveler.resolvedInitials,
+            style: text.labelLarge?.copyWith(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              color: PosterPalette.paper,
             ),
           ),
         ),
+        const SizedBox(width: 8),
+        // Nom puis note et trajets sur une seule ligne : le bandeau porte
+        // déjà le titre de l'affiche, la place se gagne ici.
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: traveler.travelerName(l),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                if (stats.isNotEmpty)
+                  TextSpan(
+                    text: ' · $stats',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: PosterPalette.paper.withValues(alpha: 0.8),
+                      fontFeatures: const [ui.FontFeature.tabularFigures()],
+                    ),
+                  ),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: text.bodySmall?.copyWith(
+              fontSize: 12,
+              color: PosterPalette.paper,
+            ),
+          ),
+        ),
+        if (traveler.kycVerified) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: PosterPalette.paper.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(DonyRadius.full),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.verified_user_rounded,
+                  size: 12,
+                  color: PosterPalette.paper,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  l.tripPosterVerified,
+                  style: text.labelSmall?.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: PosterPalette.paper,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

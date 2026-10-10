@@ -589,6 +589,13 @@ abstract final class AnalyticsEvents {
   static const tripPosterShared = 'trip_poster_shared';
   static const tripPosterLinkCopied = 'trip_poster_link_copied';
 
+  // Affiche de demande d'envoi — jumelle de l'affiche de trajet, côté
+  // expéditeur : il la poste pour trouver un voyageur sur son axe.
+  static const packageRequestPosterOpened = 'package_request_poster_opened';
+  static const packageRequestPosterShared = 'package_request_poster_shared';
+  static const packageRequestPosterLinkCopied =
+      'package_request_poster_link_copied';
+
   // Recherche en langage naturel — écran de composition
   static const searchComposerOpened = 'search_composer_opened';
   static const searchPhraseParsed = 'search_phrase_parsed';
