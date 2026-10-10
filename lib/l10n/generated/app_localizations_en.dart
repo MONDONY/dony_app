@@ -879,6 +879,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Something went wrong on our side. We\'re looking into it. Try again in a moment.';
 
   @override
+  String get errorServiceUnavailableTitle => 'Service unavailable';
+
+  @override
+  String get errorServiceUnavailableMessage =>
+      'Service temporarily unavailable, please try again in a moment.';
+
+  @override
   String get errorCancelledTitle => 'Action canceled';
 
   @override

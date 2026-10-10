@@ -136,7 +136,11 @@ class ErrorReportingService {
     if (statusCode != null && _expectedStatusCodes.contains(statusCode)) {
       return true;
     }
-    return error is AppException && _expectedCodes.contains(error.code);
+    // L'intercepteur HTTP passe la DioException : l'AppException convertie
+    // est dans `.error`. Sans ce dépliage, un délai dépassé (TIMEOUT) ou une
+    // annulation (CANCELLED) seraient rapportés.
+    final appError = error is DioException ? error.error : error;
+    return appError is AppException && _expectedCodes.contains(appError.code);
   }
 
   static Map<String, Object> _safeContext(Map<String, Object>? context) {
@@ -176,7 +180,10 @@ class ErrorReportingService {
       .split('?')
       .first
       .replaceAll(RegExp(r'[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,}'), ':id')
-      .replaceAll(RegExp(r'/\d+'), '/:id');
+      // Segment opaque long contenant un chiffre (jeton de suivi, code) :
+      // jamais un mot de route, qui n'a pas de chiffre.
+      .replaceAll(RegExp(r'/(?=[A-Za-z_-]*\d)[A-Za-z0-9_-]{20,}'), '/:token')
+      .replaceAll(RegExp(r'/\+?\d+'), '/:id');
 }
 
 class _ReportedError implements Exception {

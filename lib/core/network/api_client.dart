@@ -11,6 +11,7 @@ import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/network/offline_fast_fail_interceptor.dart';
 import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
 import 'package:dony/core/network/retry_on_transient_error_interceptor.dart';
+import 'package:dony/core/network/retry_policy.dart';
 import 'package:dony/core/network/tls_pinned_ca.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
@@ -32,11 +33,32 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 // Toujours désactivé en debug, pour laisser passer Charles ou mitmproxy.
 const _tlsPinning = String.fromEnvironment('TLS_PINNING');
 
+/// Fournit le jeton Firebase de l'utilisateur connecté, `null` sans session.
+abstract interface class AuthTokenSource {
+  Future<String?> idToken({required bool forceRefresh});
+}
+
+class FirebaseAuthTokenSource implements AuthTokenSource {
+  const FirebaseAuthTokenSource();
+
+  @override
+  Future<String?> idToken({required bool forceRefresh}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+    return user.getIdToken(forceRefresh);
+  }
+}
+
 class ApiClient {
   ApiClient({
     required String baseUrl,
     required DeviceIdService deviceIdService,
     ErrorReportingService? errorReporter,
+    @visibleForTesting
+    AuthTokenSource tokenSource = const FirebaseAuthTokenSource(),
+    @visibleForTesting Connectivity? connectivity,
+    @visibleForTesting RetrySleep? retrySleep,
+    @visibleForTesting void Function(Breadcrumb)? breadcrumbSink,
   }) : _errorReporter = errorReporter {
     _dio = Dio(
       BaseOptions(
@@ -51,15 +73,43 @@ class ApiClient {
     );
 
     _configureCertificatePinning();
-    // Ajouté en tout premier : voir OfflineFastFailInterceptor.
-    _dio.interceptors.add(OfflineFastFailInterceptor(Connectivity()));
+
+    // ORDRE DE LA CHAÎNE (FLUTTER-J1). dio 5 appelle les onError dans l'ordre
+    // d'ajout (dio_mixin.dart : « execute in FIFO order »), et chaque onError
+    // DOIT finir par `handler.next(err)` pour passer la main : en dio 5.9,
+    // `ErrorInterceptorHandler.reject` arrête la chaîne. _AuthInterceptor
+    // rejetait ainsi toutes les erreurs depuis des mois, si bien qu'aucun
+    // breadcrumb, aucun retry et aucun report Sentry ne voyait jamais un échec.
+    //
+    //  1. OfflineFastFail : coupe sans attendre quand l'appareil n'a aucune
+    //     interface (rejet en onRequest, hors chaîne d'erreur, volontairement).
+    //  2. AcceptLanguage.
+    //  3. Breadcrumb : observe CHAQUE tentative, erreur brute (statut seul).
+    //  4. Auth : jeton en onRequest ; en onError, conversion en AppException,
+    //     une fois par tentative, et sur 401 un seul rafraîchissement du jeton.
+    //  5. Journal debug, métriques.
+    //  6. Retry 429, puis retry transitoire (5xx, timeouts, connexion) : ils
+    //     relisent `response` et `type`, conservés par la conversion, et ne
+    //     rejouent que les requêtes rejouables (RetryPolicy.isReplayable).
+    //  7. Report Sentry, en dernier : ne voit que l'échec final.
+    //
+    // Une relance refait toute la chaîne sur une copie des options marquée
+    // d'une profondeur (RetryPolicy.replayRequest) : la tentative imbriquée a
+    // son breadcrumb et sa conversion, mais son report Sentry est sauté ; seul
+    // l'échec final, rendu à la profondeur 0, est rapporté.
+    _dio.interceptors.add(
+      OfflineFastFailInterceptor(connectivity ?? Connectivity()),
+    );
     _dio.interceptors.add(AcceptLanguageInterceptor());
-    _dio.interceptors.add(_AuthInterceptor(deviceIdService));
 
     // Piste HTTP dans Sentry (breadcrumbs) — active en tout mode, mais no-op
-    // tant que SENTRY_DSN est absent. On ne pousse QUE méthode + chemin + statut :
-    // jamais les corps ni les en-têtes (tokens Firebase, secrets Stripe, KYC).
-    _dio.interceptors.add(_SentryBreadcrumbInterceptor());
+    // tant que SENTRY_DSN est absent. On ne pousse QUE méthode + chemin
+    // normalisé + statut : jamais les corps ni les en-têtes (tokens Firebase,
+    // secrets Stripe, KYC).
+    _dio.interceptors.add(
+      _SentryBreadcrumbInterceptor(breadcrumbSink ?? _addSentryBreadcrumb),
+    );
+    _dio.interceptors.add(_AuthInterceptor(deviceIdService, tokenSource, _dio));
 
     if (kDebugMode) {
       // Log only method/path/status. Bodies and headers contain Firebase
@@ -94,13 +144,13 @@ class ApiClient {
       );
     }
 
-    // dio 5 enchaîne les onError dans l'ORDRE D'AJOUT (dio_mixin.dart : « execute
-    // in FIFO order »), pas à l'envers. _AuthInterceptor, ajouté en premier,
-    // convertit donc l'erreur avant tout le monde ; les retries ci-dessous s'en
-    // accommodent parce que la conversion conserve `response` et `type`, qu'ils
-    // relisent (statusCode 429, timeouts, 5xx).
-    _dio.interceptors.add(RetryOnRateLimitInterceptor(_dio));
-    _dio.interceptors.add(RetryOnTransientErrorInterceptor(_dio));
+    // Les onError s'enchaînent dans l'ordre d'ajout : _AuthInterceptor, placé
+    // avant, a déjà converti l'erreur en AppException, en conservant
+    // `response` et `type` que les retries relisent (429, timeouts, 5xx).
+    _dio.interceptors.add(RetryOnRateLimitInterceptor(_dio, sleep: retrySleep));
+    _dio.interceptors.add(
+      RetryOnTransientErrorInterceptor(_dio, sleep: retrySleep),
+    );
 
     // Ajouté EN DERNIER : ne voit que l'échec final. Placé avant les retries, il
     // rapportait chaque tentative intermédiaire, y compris celles qu'un retry
@@ -156,27 +206,70 @@ class ApiClient {
   }
 }
 
+/// Rapporte à Sentry l'échec FINAL d'une requête, sans inonder :
+///  - une tentative imbriquée (relance en cours) n'est jamais rapportée ;
+///  - les échecs de transport (annulation, délais, connexion impossible) non
+///    plus : ils viennent du réseau de l'appareil, l'écran le dit déjà ;
+///  - les codes métier attendus (401, 403, 404, 409, 422, 429) sont écartés
+///    par [ErrorReportingService] ;
+///  - une même panne (méthode, chemin normalisé, statut, code) part au plus
+///    une fois par [throttleWindow] : un redémarrage de l'API produit un
+///    événement par endpoint, pas un par requête.
+/// Rien d'autre que méthode, chemin normalisé et code ne part : ni corps, ni
+/// en-têtes, ni message brut (voir [ErrorReportingService]).
 class _SentryErrorReportingInterceptor extends Interceptor {
-  const _SentryErrorReportingInterceptor(this._reporter);
+  _SentryErrorReportingInterceptor(this._reporter);
 
   final ErrorReportingService _reporter;
+  final Map<String, DateTime> _lastReported = {};
+
+  static const throttleWindow = Duration(minutes: 10);
+
+  static const _transportTypes = {
+    DioExceptionType.cancel,
+    DioExceptionType.connectionTimeout,
+    DioExceptionType.sendTimeout,
+    DioExceptionType.receiveTimeout,
+    DioExceptionType.connectionError,
+  };
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    unawaited(
-      _reporter.report(
-        err,
-        operation: 'http.${err.requestOptions.method.toUpperCase()}',
-        stackTrace: err.stackTrace,
-        statusCode: err.response?.statusCode,
-        context: {
-          'method': err.requestOptions.method.toUpperCase(),
-          'endpoint': err.requestOptions.uri.path,
-          'feature': _featureForPath(err.requestOptions.uri.path),
-        },
-      ),
-    );
+    if (_shouldReport(err)) {
+      final options = err.requestOptions;
+      unawaited(
+        _reporter.report(
+          err,
+          operation: 'http.${options.method.toUpperCase()}',
+          stackTrace: err.stackTrace,
+          statusCode: err.response?.statusCode,
+          context: {
+            'method': options.method.toUpperCase(),
+            'endpoint': options.uri.path,
+            'feature': _featureForPath(options.uri.path),
+            'retry_count': RetryPolicy.retryCountOf(options),
+          },
+        ),
+      );
+    }
     handler.next(err);
+  }
+
+  bool _shouldReport(DioException err) {
+    final options = err.requestOptions;
+    if (RetryPolicy.depthOf(options) > 0) return false;
+    if (_transportTypes.contains(err.type)) return false;
+    final inner = err.error;
+    final key =
+        '${options.method.toUpperCase()} '
+        '${ErrorReportingService.normalizeEndpoint(options.uri.path)} '
+        '${err.response?.statusCode ?? err.type.name} '
+        '${inner is AppException ? inner.code : ''}';
+    final now = DateTime.now();
+    final last = _lastReported[key];
+    if (last != null && now.difference(last) < throttleWindow) return false;
+    _lastReported[key] = now;
+    return true;
   }
 
   static String _featureForPath(String path) {
@@ -196,7 +289,15 @@ class _SentryErrorReportingInterceptor extends Interceptor {
 /// Émet un breadcrumb Sentry par réponse/erreur HTTP. PII-free : uniquement
 /// méthode, chemin (sans query string) et code de statut. Ces miettes forment
 /// la piste réseau attachée au prochain incident capturé.
+void _addSentryBreadcrumb(Breadcrumb crumb) {
+  unawaited(Sentry.addBreadcrumb(crumb));
+}
+
 class _SentryBreadcrumbInterceptor extends Interceptor {
+  _SentryBreadcrumbInterceptor(this._sink);
+
+  final void Function(Breadcrumb) _sink;
+
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     _crumb(response.requestOptions, response.statusCode, SentryLevel.info);
@@ -217,14 +318,14 @@ class _SentryBreadcrumbInterceptor extends Interceptor {
   }
 
   void _crumb(RequestOptions options, int? status, SentryLevel level) {
-    Sentry.addBreadcrumb(
+    _sink(
       Breadcrumb(
         category: 'http',
         type: 'http',
         level: level,
         data: {
           'method': options.method,
-          'path': options.uri.path,
+          'path': ErrorReportingService.normalizeEndpoint(options.uri.path),
           'status_code': ?status,
         },
       ),
@@ -233,8 +334,15 @@ class _SentryBreadcrumbInterceptor extends Interceptor {
 }
 
 class _AuthInterceptor extends Interceptor {
+  _AuthInterceptor(this._deviceIdService, this._tokenSource, this._dio);
+
   final DeviceIdService _deviceIdService;
-  _AuthInterceptor(this._deviceIdService);
+  final AuthTokenSource _tokenSource;
+  final Dio _dio;
+
+  /// Rafraîchissement en cours, partagé : dix requêtes en 401 au même instant
+  /// ne forcent qu'un seul aller-retour vers Firebase.
+  Future<String?>? _refreshing;
 
   @override
   Future<void> onRequest(
@@ -242,14 +350,13 @@ class _AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final isCritical =
-            options.path.contains('/payments') ||
-            options.path.contains('/kyc') ||
-            options.path.contains('/tracking/events') ||
-            options.path.contains('/bids/checkout');
-        final token = await user.getIdToken(isCritical);
+      final isCritical =
+          options.path.contains('/payments') ||
+          options.path.contains('/kyc') ||
+          options.path.contains('/tracking/events') ||
+          options.path.contains('/bids/checkout');
+      final token = await _tokenSource.idToken(forceRefresh: isCritical);
+      if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
         try {
           options.headers['X-Device-Id'] = await _deviceIdService.getDeviceId();
@@ -294,16 +401,44 @@ class _AuthInterceptor extends Interceptor {
     handler.next(options);
   }
 
+  /// Convertit l'erreur en [AppException] (une fois par tentative) et la
+  /// PASSE à l'intercepteur suivant : `handler.reject` arrêterait la chaîne
+  /// (FLUTTER-J1).
+  ///
+  /// Sur un 401 d'une requête qui portait un jeton, le jeton est rafraîchi une
+  /// seule fois (drapeau [RetryPolicy.authRefreshedKey] sur la relance, jamais
+  /// de boucle). La requête n'est rejouée que si elle est rejouable : une
+  /// écriture sans clé d'idempotence remonte son 401, la suivante partira avec
+  /// le jeton neuf.
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    handler.reject(
-      DioException(
-        requestOptions: err.requestOptions,
-        error: mapHttpError(err),
-        response: err.response,
-        type: err.type,
-      ),
-    );
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    final mapped = err.copyWith(error: mapHttpError(err));
+    final options = err.requestOptions;
+    if (err.response?.statusCode == 401 &&
+        options.extra[RetryPolicy.authRefreshedKey] != true &&
+        options.headers.containsKey('Authorization')) {
+      final fresh = await _refreshToken();
+      if (fresh != null && RetryPolicy.isReplayable(options)) {
+        await RetryPolicy.replayRequest(
+          _dio,
+          mapped,
+          handler,
+          extra: {RetryPolicy.authRefreshedKey: true},
+        );
+        return;
+      }
+    }
+    handler.next(mapped);
+  }
+
+  Future<String?> _refreshToken() {
+    return _refreshing ??= _tokenSource
+        .idToken(forceRefresh: true)
+        .then<String?>((t) => t, onError: (Object _) => null)
+        .whenComplete(() => _refreshing = null);
   }
 }
 
@@ -312,6 +447,9 @@ class _AuthInterceptor extends Interceptor {
 /// catalogue d'erreurs raisonnent ensuite sur le type, jamais sur le code HTTP.
 @visibleForTesting
 AppException mapHttpError(DioException err) {
+  final inner = err.error;
+  // Déjà convertie (rejet typé d'un intercepteur, erreur d'une relance).
+  if (inner is AppException) return inner;
   final l = AppL10n.current;
   final statusCode = err.response?.statusCode;
   final data = err.response?.data;
@@ -370,8 +508,34 @@ AppException mapHttpError(DioException err) {
   if (statusCode == 429) {
     return RateLimitException(detail ?? l.networkFallbackTooManyAttempts);
   }
+  // Passerelle ou API indisponible (redémarrage, déploiement : FLUTTER-J1).
+  if (statusCode == 502 || statusCode == 503 || statusCode == 504) {
+    return ServiceUnavailableException(
+      detail ?? l.errorServiceUnavailableMessage,
+      apiCode,
+    );
+  }
   if (statusCode != null && statusCode >= 500) {
     return ServerException(detail ?? l.networkFallbackServerError, apiCode);
+  }
+  if (statusCode == null) {
+    switch (err.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return const TimeoutException();
+      case DioExceptionType.connectionError:
+        // Une interface réseau existe (sinon OfflineFastFailInterceptor aurait
+        // coupé avant) mais l'API ne répond pas : service indisponible.
+        return ServiceUnavailableException(l.errorServiceUnavailableMessage);
+      case DioExceptionType.cancel:
+        return const NetworkException(
+          'Requête annulée', // i18n-ignore : catalogue résout 'CANCELLED'
+          code: 'CANCELLED',
+        );
+      default:
+        break;
+    }
   }
   return NetworkException(
     detail ?? err.message ?? l.networkFallbackNetworkError,

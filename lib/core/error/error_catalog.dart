@@ -1234,6 +1234,12 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.error,
       icon: Icons.cloud_off_rounded,
     ),
+    'SERVICE_UNAVAILABLE': _Entry(
+      title: (l) => l.errorServiceUnavailableTitle,
+      message: (l) => l.errorServiceUnavailableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.cloud_off_rounded,
+    ),
     'CANCELLED': _Entry(
       title: (l) => l.errorCancelledTitle,
       message: (l) => l.errorCancelledMessage,
@@ -1393,6 +1399,9 @@ abstract final class ErrorCatalog {
     if (error is TimeoutException) return _byCode['TIMEOUT']!.resolve(l);
     if (error is RateLimitException) {
       return _byCode['RATE_LIMITED']!.resolve(l);
+    }
+    if (error is ServiceUnavailableException) {
+      return _byCode['SERVICE_UNAVAILABLE']!.resolve(l);
     }
     if (error is ServerException) return _byCode['SERVER_ERROR']!.resolve(l);
     if (error is UnauthorizedException) {

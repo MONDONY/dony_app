@@ -10,6 +10,11 @@ class _ConnError {
   const _ConnError();
 }
 
+/// Marqueur : la tentative dépasse le délai de réception.
+class _Timeout {
+  const _Timeout();
+}
+
 /// Adaptateur de test : rejoue les résultats de la file dans l'ordre, un par
 /// appel — simule un serveur en cold start (timeout/erreur réseau puis 200).
 class _QueueHttpClientAdapter implements HttpClientAdapter {
@@ -26,6 +31,12 @@ class _QueueHttpClientAdapter implements HttpClientAdapter {
   ) async {
     final result = queue[callCount];
     callCount++;
+    if (result is _Timeout) {
+      throw DioException(
+        requestOptions: options,
+        type: DioExceptionType.receiveTimeout,
+      );
+    }
     if (result is _ConnError) {
       throw DioException(
         requestOptions: options,
@@ -56,7 +67,11 @@ void main() {
     dio = Dio(BaseOptions(baseUrl: 'http://test.local'))
       ..httpClientAdapter = adapter;
     dio.interceptors.add(
-      RetryOnTransientErrorInterceptor(dio, random: Random(0)),
+      RetryOnTransientErrorInterceptor(
+        dio,
+        random: Random(0),
+        sleep: (_) async {},
+      ),
     );
     return dio;
   }
@@ -139,4 +154,44 @@ void main() {
       expect(adapter.callCount, 1);
     },
   );
+
+  test('GET : délai de réception dépassé → une seule relance', () async {
+    final d = buildDio([const _Timeout(), const _Timeout(), 200]);
+
+    await expectLater(
+      () => d.get<Map<String, dynamic>>('/x'),
+      throwsA(
+        isA<DioException>().having(
+          (e) => e.type,
+          'type',
+          DioExceptionType.receiveTimeout,
+        ),
+      ),
+    );
+    expect(adapter.callCount, 2);
+  });
+
+  test('POST avec clé d\'idempotence : 503 → rejoué', () async {
+    final d = buildDio([503, 200]);
+
+    final response = await d.post<Map<String, dynamic>>(
+      '/x',
+      options: Options(headers: {'Idempotency-Key': 'k-1'}),
+    );
+
+    expect(response.statusCode, 200);
+    expect(adapter.callCount, 2);
+  });
+
+  test('échec final : profondeur de relance rétablie à 0', () async {
+    final d = buildDio([500, 500, 500, 500]);
+
+    try {
+      await d.get<Map<String, dynamic>>('/x');
+      fail('doit échouer');
+    } on DioException catch (e) {
+      expect(e.requestOptions.extra['_retryDepth'], 0);
+      expect(e.requestOptions.extra['_retryTransientAttempt'], 3);
+    }
+  });
 }

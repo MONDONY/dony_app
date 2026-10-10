@@ -885,6 +885,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Quelque chose s\'est mal passé de notre côté. On regarde ça, réessayez dans un instant.';
 
   @override
+  String get errorServiceUnavailableTitle => 'Service indisponible';
+
+  @override
+  String get errorServiceUnavailableMessage =>
+      'Service momentanément indisponible, réessayez dans un instant.';
+
+  @override
   String get errorCancelledTitle => 'Action annulée';
 
   @override

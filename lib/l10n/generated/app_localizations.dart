@@ -1592,6 +1592,18 @@ abstract class AppLocalizations {
   /// **'Quelque chose s\'est mal passé de notre côté. On regarde ça, réessayez dans un instant.'**
   String get errorServerErrorMessage;
 
+  /// No description provided for @errorServiceUnavailableTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Service indisponible'**
+  String get errorServiceUnavailableTitle;
+
+  /// No description provided for @errorServiceUnavailableMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Service momentanément indisponible, réessayez dans un instant.'**
+  String get errorServiceUnavailableMessage;
+
   /// No description provided for @errorCancelledTitle.
   ///
   /// In fr, this message translates to:

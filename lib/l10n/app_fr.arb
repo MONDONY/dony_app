@@ -261,6 +261,8 @@
   "errorRateLimitedMessage": "Vous avez fait trop d'appels en peu de temps. Patientez un instant avant de réessayer.",
   "errorServerErrorTitle": "Erreur serveur",
   "errorServerErrorMessage": "Quelque chose s'est mal passé de notre côté. On regarde ça, réessayez dans un instant.",
+  "errorServiceUnavailableTitle": "Service indisponible",
+  "errorServiceUnavailableMessage": "Service momentanément indisponible, réessayez dans un instant.",
   "errorCancelledTitle": "Action annulée",
   "errorCancelledMessage": "L'action a été annulée.",
   "errorNotFoundTitle": "Introuvable",

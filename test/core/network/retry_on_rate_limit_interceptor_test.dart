@@ -49,7 +49,9 @@ void main() {
     adapter = _QueueHttpClientAdapter(statusQueue, body: body, html: html);
     dio = Dio(BaseOptions(baseUrl: 'http://test.local'))
       ..httpClientAdapter = adapter;
-    dio.interceptors.add(RetryOnRateLimitInterceptor(dio, random: Random(0)));
+    dio.interceptors.add(
+      RetryOnRateLimitInterceptor(dio, random: Random(0), sleep: (_) async {}),
+    );
     return dio;
   }
 
@@ -147,6 +149,28 @@ void main() {
     );
 
     final response = await d.get<Map<String, dynamic>>('/x');
+
+    expect(response.statusCode, 200);
+    expect(adapter.callCount, 2);
+  });
+
+  test('429 Nginx sur POST sans clé d\'idempotence → jamais rejoué', () async {
+    final d = buildDio([429, 200], body: '<html>429</html>', html: true);
+
+    await expectLater(
+      () => d.post<Map<String, dynamic>>('/bids'),
+      throwsA(isA<DioException>()),
+    );
+    expect(adapter.callCount, 1);
+  });
+
+  test('429 Nginx sur POST avec clé d\'idempotence → rejoué', () async {
+    final d = buildDio([429, 200], body: '<html>429</html>', html: true);
+
+    final response = await d.post<Map<String, dynamic>>(
+      '/bids',
+      options: Options(headers: {'Idempotency-Key': 'k-1'}),
+    );
 
     expect(response.statusCode, 200);
     expect(adapter.callCount, 2);

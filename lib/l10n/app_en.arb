@@ -249,6 +249,8 @@
   "errorRateLimitedMessage": "You've made too many requests in a short time. Wait a moment before trying again.",
   "errorServerErrorTitle": "Server error",
   "errorServerErrorMessage": "Something went wrong on our side. We're looking into it. Try again in a moment.",
+  "errorServiceUnavailableTitle": "Service unavailable",
+  "errorServiceUnavailableMessage": "Service temporarily unavailable, please try again in a moment.",
   "errorCancelledTitle": "Action canceled",
   "errorCancelledMessage": "The action was canceled.",
   "errorNotFoundTitle": "Not found",
