@@ -160,6 +160,13 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                   letterSpacing: 0.8,
                 ),
               ),
+              // Secret, contrairement au numéro de suivi public (FLUTTER-J2).
+              const SizedBox(height: DonySpacing.xxs),
+              Text(
+                l.ticketPickupCodeSecretHint,
+                key: const Key('pickup-code-secret-hint'),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
               const SizedBox(height: DonySpacing.md),
               // Fix #1: Responsive digit-box row using LayoutBuilder.
               // Formula: boxWidth = (availableWidth / digitCount).clamp(36, 56)

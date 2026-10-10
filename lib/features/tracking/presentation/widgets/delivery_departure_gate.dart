@@ -177,7 +177,8 @@ bool recetteModeOf(BuildContext context) {
   }
 }
 
-/// Explication affichée sous un bouton de livraison verrouillé.
+/// Explication affichée sous un bouton de livraison verrouillé, suivie d'une
+/// aide sur le code à demander au destinataire à la remise (FLUTTER-J2).
 class DeliveryLockedHint extends StatelessWidget {
   const DeliveryLockedHint(this.text, {super.key});
 
@@ -186,13 +187,28 @@ class DeliveryLockedHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Text(
-      text,
-      key: const Key('delivery-locked-hint'),
-      textAlign: TextAlign.center,
-      style: theme.textTheme.bodySmall?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
+    final style = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          text,
+          key: const Key('delivery-locked-hint'),
+          textAlign: TextAlign.center,
+          style: style,
+        ),
+        // Le code à demander à la remise : celui du destinataire, pas le
+        // numéro de suivi visible sur la fiche (FLUTTER-J2).
+        Text(
+          context.l10n.deliveryLockedHelp,
+          key: const Key('delivery-locked-help'),
+          textAlign: TextAlign.center,
+          style: style,
+        ),
+      ],
     );
   }
 }

@@ -102,7 +102,7 @@ void main() {
       true,
     );
     expect(find.textContaining('En attente de confirmation'), findsOneWidget);
-    expect(find.text('N° DE SUIVI'), findsNothing);
+    expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
   });
 
   testWidgets(
@@ -805,7 +805,7 @@ void main() {
       findsOneWidget,
     );
     // La bande de suivi reste.
-    expect(find.text('N° DE SUIVI'), findsOneWidget);
+    expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
   });
 
   // Régression staging : un bid accepté en mobile money passe en
@@ -980,13 +980,13 @@ void main() {
       _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
       false,
     );
-    expect(find.text('N° DE SUIVI'), findsOneWidget);
+    expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
     expect(find.text('DON-1'), findsOneWidget);
   });
 
   testWidgets('sans trackingNumber → pas de bande de suivi', (tester) async {
     await _pump(tester, _bid(status: 'PENDING'), true);
-    expect(find.text('N° DE SUIVI'), findsNothing);
+    expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
   });
 
   group('traductions', () {

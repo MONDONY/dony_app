@@ -57,7 +57,6 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
-import 'package:dony/features/payments/money/presentation/widgets/money_header_button.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -114,11 +113,6 @@ const double kHomeTopRowCompactWidth = 380;
 /// Largeur de rangée sous laquelle la barre de recherche perd sa loupe
 /// (écran de 320 dp, iPhone SE 1re génération).
 const double kHomeTopRowTinyWidth = 320;
-
-/// Largeur de rangée sous laquelle la pastille « Mon argent » (FLUTTER-HV)
-/// quitte la rangée du haut : à 320 dp, ses 48 dp feraient tomber la barre de
-/// recherche sous 150 dp.
-const double kHomeTopRowMoneyMinWidth = 330;
 
 // ── Libellés reconstruits ────────────────────────────────────────────────────
 //
@@ -1857,8 +1851,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// présence du compteur, sinon l'arrivée du nombre démonte le sélecteur et
   /// emporte l'animation de 200 ms du segment actif. La clé du compteur vit
   /// dans `SearchModeSelector`, sur le compteur lui-même.
-  /// Rangée du haut : favoris, recherche, « + Publier » (FLUTTER-B8),
-  /// portefeuille « Mon argent » (FLUTTER-HV, compte connecté), cloche.
+  /// Rangée du haut : favoris, recherche, « + Publier » (FLUTTER-B8), cloche.
+  /// La pastille « Mon argent » vit dans l'en-tête d'Activités (FLUTTER-J3).
   ///
   /// Quatre éléments sur une ligne : sous [kHomeTopRowCompactWidth] les
   /// boutons ronds passent à 44 et les écarts à 4, et sous
@@ -1887,15 +1881,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
             SizedBox(width: gap),
             HomePublishButton(size: buttonSize),
-            // Portefeuille « Mon argent » (FLUTTER-HV) : compte connecté
-            // seulement ; montant à venir affiché hors écran étroit, et
-            // pastille retirée sur le plus étroit (320 dp), où la barre de
-            // recherche n'aurait plus la place de lire un trajet.
-            if (width >= kHomeTopRowMoneyMinWidth &&
-                getIt<FirebaseSessionProbe>().hasRealSession) ...[
-              SizedBox(width: gap),
-              MoneyHeaderEntry(size: buttonSize, showAmount: !compact),
-            ],
             SizedBox(width: gap),
             _NotificationBell(size: buttonSize),
           ],

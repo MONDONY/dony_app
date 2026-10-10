@@ -6,8 +6,33 @@ import 'package:flutter/material.dart';
 
 const _tabular = [FontFeature.tabularFigures()];
 
-/// Deux cartes en tête de « Mon argent » : « Disponible » (soldes du
-/// portefeuille par devise) et « Bloqué jusqu'à livraison » (séquestre et
+/// Soldes de la carte « Disponible » (FLUTTER-J4) : [main] en grand, [others]
+/// en petit dessous.
+typedef DisplayedBalances = ({MoneyAmount? main, List<MoneyAmount> others});
+
+/// Met en grand le solde de [activeCurrency] s'il existe, sinon le premier ;
+/// les autres soldes suivent dans leur ordre, sans ceux à zéro.
+DisplayedBalances orderBalances(
+  List<MoneyAmount> amounts,
+  String? activeCurrency,
+) {
+  if (amounts.isEmpty) return (main: null, others: const []);
+  final active = activeCurrency?.toUpperCase();
+  final index = active == null
+      ? -1
+      : amounts.indexWhere((a) => a.currency.toUpperCase() == active);
+  final mainIndex = index < 0 ? 0 : index;
+  return (
+    main: amounts[mainIndex],
+    others: [
+      for (var i = 0; i < amounts.length; i++)
+        if (i != mainIndex && amounts[i].amount != 0) amounts[i],
+    ],
+  );
+}
+
+/// Deux cartes en tête de « Mon argent » : « Disponible » (solde de la devise
+/// active en grand, autres soldes non nuls dessous, FLUTTER-J4) et « Bloqué jusqu'à livraison » (séquestre et
 /// nombre de colis). La seconde disparaît quand le back ne fournit pas encore
 /// le suivi du séquestre.
 class MoneySummaryCards extends StatelessWidget {
@@ -38,6 +63,7 @@ class MoneySummaryCards extends StatelessWidget {
       key: const Key('money-available-card'),
       label: l.moneyAvailableLabel,
       amounts: overview.wallet,
+      activeCurrency: overview.activeCurrency,
       background: cs.surface,
       border: cs.outline,
       labelColor: cs.onSurfaceVariant,
@@ -79,10 +105,14 @@ class _SummaryCard extends StatelessWidget {
     required this.labelColor,
     required this.amountColor,
     this.footer,
+    this.activeCurrency,
   });
 
   final String label;
   final List<MoneyAmount> amounts;
+
+  /// Devise mise en grand, `null` : le premier montant.
+  final String? activeCurrency;
   final String? footer;
   final Color background;
   final Color border;
@@ -92,12 +122,14 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final main = amounts.isEmpty
-        ? formatMoney(0, null)
-        : formatMoney(amounts.first.amount, amounts.first.currency);
-    final others = amounts
-        .skip(1)
-        .map((a) => formatMoney(a.amount, a.currency));
+    final balances = orderBalances(amounts, activeCurrency);
+    final first = balances.main;
+    final main = first == null
+        ? formatMoney(0, activeCurrency)
+        : formatMoney(first.amount, first.currency);
+    final others = balances.others.map(
+      (a) => formatMoney(a.amount, a.currency),
+    );
     final secondLine = [
       if (others.isNotEmpty) '+ ${others.join(' · ')}',
       ?footer,

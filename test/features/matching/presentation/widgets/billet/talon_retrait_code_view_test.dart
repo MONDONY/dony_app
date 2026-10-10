@@ -303,4 +303,22 @@ void main() {
       },
     );
   });
+
+  testWidgets('code de retrait présenté comme secret, à transmettre au '
+      'destinataire et non au voyageur (FLUTTER-J2)', (tester) async {
+    final t = _MockTrackingBloc();
+    final b = _MockBidBloc();
+    when(() => t.state).thenReturn(TrackingInitial());
+    when(() => t.stream).thenAnswer((_) => const Stream<TrackingState>.empty());
+    when(() => b.state).thenReturn(BidInitial());
+    when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
+    await _pump(tester, t, b);
+    expect(
+      find.text(
+        'Secret, à donner au voyageur seulement au moment de la remise.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Ne le donnez pas au voyageur'), findsOneWidget);
+  });
 }

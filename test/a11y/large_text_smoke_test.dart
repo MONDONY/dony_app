@@ -60,8 +60,6 @@ import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
-import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
-import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
@@ -98,7 +96,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../helpers/mock_analytics_backend.dart';
-import '../helpers/money_test_doubles.dart';
 
 // Fournit un HelpCenterBloc minimal (catalogue vide) aux 3 harnais de ce
 // fichier dont l'écran embarque désormais une ContextualTutorialCard
@@ -255,21 +252,6 @@ class _StubSessionProbe implements FirebaseSessionProbe {
 
 Widget _buildHomeHarness() {
   getIt.registerSingleton<FirebaseSessionProbe>(const _StubSessionProbe(true));
-  // Pastille « Mon argent » de l'en-tête (FLUTTER-HV), avec de l'argent à
-  // venir : c'est la variante la plus large de la rangée du haut.
-  registerFakeMoneyOverview(
-    state: const MoneyOverviewLoaded(
-      MoneyOverviewModel(
-        travelerTotals: [
-          TravelerTotalModel(
-            currency: 'XOF',
-            upcoming: 1845000,
-            releasedRecently: 0,
-          ),
-        ],
-      ),
-    ),
-  );
 
   final hive = _HomeMockHiveService();
   final box = _HomeFakeBox();

@@ -491,7 +491,7 @@ void main() {
       }
       expect(
         find.text(
-          'Donnez ce code au voyageur à la remise du colis, pas avant.',
+          'Code secret : donnez-le au voyageur seulement au moment de la remise du colis, pas avant.',
         ),
         findsOneWidget,
       );

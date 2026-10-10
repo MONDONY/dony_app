@@ -15,21 +15,30 @@ const double _kMaxPillTextScale = 1.3;
 /// Route de l'écran « Mon argent ».
 const kMoneyOverviewRoute = '/payments/money';
 
-/// Pastille portefeuille de l'en-tête de l'accueil (FLUTTER-HV, maquette
-/// « Main »). Affiche le montant à venir du voyageur quand de l'argent est
-/// en séquestre, sinon une simple icône ronde. Un tap ouvre « Mon argent »,
-/// puis rafraîchit le montant au retour.
+/// Pastille portefeuille de l'en-tête d'Activités (FLUTTER-HV, déplacée de
+/// l'accueil par FLUTTER-J3). Affiche le montant à venir du voyageur quand de
+/// l'argent est en séquestre, sinon une simple icône ronde. Un tap ouvre
+/// « Mon argent », puis rafraîchit le montant au retour.
 ///
 /// Lit le [MoneyOverviewBloc] fourni au-dessus (sans repli portefeuille : un
 /// ancien back rend simplement l'icône).
 class MoneyHeaderButton extends StatelessWidget {
-  const MoneyHeaderButton({super.key, this.size = 48, this.showAmount = true});
+  const MoneyHeaderButton({
+    super.key,
+    this.size = 48,
+    this.showAmount = true,
+    this.maxWidth,
+  });
 
   final double size;
 
-  /// `false` sur un écran étroit : l'icône seule laisse la place à la barre
-  /// de recherche.
+  /// `false` : icône seule, quel que soit le montant.
   final bool showAmount;
+
+  /// Largeur disponible pour la pastille dans l'en-tête. Un montant qui n'y
+  /// tient pas laisse place à l'icône seule (montant gardé dans le libellé
+  /// d'accessibilité) : jamais de débordement ni de montant tronqué.
+  final double? maxWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -50,10 +59,20 @@ class MoneyHeaderButton extends StatelessWidget {
             : l.moneyHeaderSemantics;
         // Au-delà de 130 % de texte, le montant ne tient plus à côté de la
         // barre de recherche : icône seule, montant gardé dans le libellé.
-        final largeText =
-            MediaQuery.textScalerOf(context).scale(14) >
-            14 * _kMaxPillTextScale;
-        final pill = hasUpcoming && showAmount && !largeText;
+        final textScaler = MediaQuery.textScalerOf(context);
+        final largeText = textScaler.scale(14) > 14 * _kMaxPillTextScale;
+        final amountStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: cs.onPrimaryContainer,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        );
+        final amountText = hasUpcoming
+            ? formatMoney(upcoming.first.amount, upcoming.first.currency)
+            : '';
+        final pill =
+            hasUpcoming &&
+            showAmount &&
+            !largeText &&
+            _amountFits(context, maxWidth, amountText, amountStyle, textScaler);
 
         Future<void> open() async {
           await context.push(kMoneyOverviewRoute);
@@ -105,17 +124,11 @@ class MoneyHeaderButton extends StatelessWidget {
                   if (pill) ...[
                     const SizedBox(width: DonySpacing.sm),
                     Text(
-                      formatMoney(
-                        upcoming.first.amount,
-                        upcoming.first.currency,
-                      ),
+                      amountText,
                       key: const Key('money-header-amount'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: cs.onPrimaryContainer,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
+                      style: amountStyle,
                     ),
                   ],
                 ],
@@ -128,13 +141,37 @@ class MoneyHeaderButton extends StatelessWidget {
   }
 }
 
-/// Pastille de l'accueil avec son propre [MoneyOverviewBloc] (variante
+/// Marges horizontales, icône et écart de la pastille avec montant.
+const double _kPillChrome = DonySpacing.md + 14 + 22 + DonySpacing.sm;
+
+/// La pastille avec [text] tient dans [maxWidth] (toujours vrai sans
+/// contrainte).
+bool _amountFits(
+  BuildContext context,
+  double? maxWidth,
+  String text,
+  TextStyle? style,
+  TextScaler textScaler,
+) {
+  if (maxWidth == null) return true;
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: Directionality.of(context),
+    textScaler: textScaler,
+    maxLines: 1,
+  )..layout();
+  final width = painter.width;
+  painter.dispose();
+  return width + _kPillChrome <= maxWidth;
+}
+
+/// Pastille d'en-tête avec son propre [MoneyOverviewBloc] (variante
 /// en-tête : sans repli sur le portefeuille ni événement de consultation).
 class MoneyHeaderEntry extends StatelessWidget {
-  const MoneyHeaderEntry({super.key, this.size = 48, this.showAmount = true});
+  const MoneyHeaderEntry({super.key, this.size = 48, this.maxWidth});
 
   final double size;
-  final bool showAmount;
+  final double? maxWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +179,7 @@ class MoneyHeaderEntry extends StatelessWidget {
       create: (_) =>
           getIt<MoneyOverviewBloc>(param1: true)
             ..add(const MoneyOverviewLoadRequested()),
-      child: MoneyHeaderButton(size: size, showAmount: showAmount),
+      child: MoneyHeaderButton(size: size, maxWidth: maxWidth),
     );
   }
 }

@@ -87,7 +87,7 @@ void main() {
   testWidgets('COMPLETED → billet livré avec bande de suivi', (tester) async {
     await _pump(tester, _bid(status: 'COMPLETED'), false);
     expect(find.text('Livré'), findsOneWidget);
-    expect(find.text('N° DE SUIVI'), findsOneWidget);
+    expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
     expect(find.text('DON-3TSTR9VH'), findsOneWidget);
   });
 

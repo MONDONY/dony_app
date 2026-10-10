@@ -182,7 +182,12 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                         _SectionLabel(label: l.bidDetailSectionRequest),
                         const SizedBox(height: DonySpacing.sm),
                         InfoRow(
-                          label: l.bidDetailReferenceLabel,
+                          // Numéro de suivi quand il est servi, jamais
+                          // « Référence » : vu des deux côtés, il passait pour
+                          // un code (FLUTTER-J2).
+                          label: bid.trackingNumber != null
+                              ? l.bidDetailTrackingNumberLabel
+                              : l.bidDetailReferenceLabel,
                           value: _reference,
                         ),
                         const SizedBox(height: DonySpacing.sm),

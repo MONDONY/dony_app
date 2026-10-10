@@ -4051,7 +4051,7 @@
   "ticketRegenerateAvailableInLabel": "Available in {remaining}",
   "ticketRegenerateCodeButton": "Regenerate the code",
   "ticketRegenerateLimitReachedMessage": "Limit of 5 regenerations reached. The button will reactivate automatically in {remaining}.",
-  "ticketShareCodeManuallyHint": "Share this code with the traveler by your own means (SMS, WhatsApp…). They will need to enter it at delivery.",
+  "ticketShareCodeManuallyHint": "Send this code to your recipient by your own means (SMS, WhatsApp…). Don't give it to the traveler: they will ask the recipient for it at handover.",
   "ticketStatusAwaitingPaymentSenderLabel": "To pay",
   "ticketStatusAwaitingPaymentTravelerLabel": "Payment pending",
   "ticketStatusPendingLabel": "Pending",
@@ -5976,11 +5976,11 @@
   "@scanEventTypeSectionLabel": {
     "description": "Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
-  "scanConfirmationCodeLabel": "Confirmation code",
+  "scanConfirmationCodeLabel": "Recipient's pickup code",
   "@scanConfirmationCodeLabel": {
     "description": "Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
-  "scanConfirmationCodeHintLong": "Ask the recipient for the 6-digit code. They received it from the sender.",
+  "scanConfirmationCodeHintLong": "Ask the recipient for their 6-digit pickup code at handover. It is not the tracking number.",
   "@scanConfirmationCodeHintLong": {
     "description": "Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
@@ -6024,7 +6024,7 @@
   "@scanConfirmStepLabel": {
     "description": "Libellé de la ligne étape du récapitulatif (scan_confirm_screen.dart, _MetaRow)."
   },
-  "scanConfirmConfirmationCodeHint": "Ask the recipient for the 6-digit code.",
+  "scanConfirmConfirmationCodeHint": "Ask the recipient for their 6-digit pickup code. It is not the DON-… tracking number.",
   "@scanConfirmConfirmationCodeHint": {
     "description": "Texte d'aide du champ code de confirmation de scan_confirm_screen.dart (version courte, distincte de scanConfirmationCodeHintLong)."
   },
@@ -8916,7 +8916,7 @@
   "receptionInstructionsTitle": "PICKUP INSTRUCTIONS",
   "receptionCodeTitle": "YOUR PICKUP CODE",
   "receptionCodeSemantics": "Pickup code: {code}",
-  "receptionCodeExplanation": "Give this code to the traveler when you receive the parcel, not before.",
+  "receptionCodeExplanation": "Secret code: give it to the traveler only when you receive the parcel, not before.",
   "receptionCodePending": "Your pickup code will appear here as soon as the traveler has the parcel.",
   "receptionViewTracking": "View tracking",
   "receptionNotFoundTitle": "This parcel is no longer available",
@@ -9543,5 +9543,9 @@
   "moneySenderRefundPending": "Refund in progress",
   "moneySenderRefunded": "Refunded on {date}",
   "moneySenderRefundedNoDate": "Refunded",
-  "moneyUnknownState": "Status being updated"
+  "moneyUnknownState": "Status being updated",
+  "ticketTrackingNumberHelp": "Public parcel ID, not a handover code.",
+  "ticketPickupCodeSecretHint": "Secret, give it to the traveler only at handover.",
+  "bidDetailTrackingNumberLabel": "Tracking number",
+  "deliveryLockedHelp": "At handover, ask the recipient for their 6-digit pickup code."
 }

@@ -7777,7 +7777,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ticketShareCodeManuallyHint =>
-      'Share this code with the traveler by your own means (SMS, WhatsApp…). They will need to enter it at delivery.';
+      'Send this code to your recipient by your own means (SMS, WhatsApp…). Don\'t give it to the traveler: they will ask the recipient for it at handover.';
 
   @override
   String get ticketStatusAwaitingPaymentSenderLabel => 'To pay';
@@ -10394,11 +10394,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanEventTypeSectionLabel => 'Step type';
 
   @override
-  String get scanConfirmationCodeLabel => 'Confirmation code';
+  String get scanConfirmationCodeLabel => 'Recipient\'s pickup code';
 
   @override
   String get scanConfirmationCodeHintLong =>
-      'Ask the recipient for the 6-digit code. They received it from the sender.';
+      'Ask the recipient for their 6-digit pickup code at handover. It is not the tracking number.';
 
   @override
   String get scanPhotoOfParcelLabel => 'Parcel photo';
@@ -10433,7 +10433,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanConfirmConfirmationCodeHint =>
-      'Ask the recipient for the 6-digit code.';
+      'Ask the recipient for their 6-digit pickup code. It is not the DON-… tracking number.';
 
   @override
   String get scanValidateReadingButton => 'Validate scan';
@@ -15835,7 +15835,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receptionCodeExplanation =>
-      'Give this code to the traveler when you receive the parcel, not before.';
+      'Secret code: give it to the traveler only when you receive the parcel, not before.';
 
   @override
   String get receptionCodePending =>
@@ -17832,4 +17832,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moneyUnknownState => 'Status being updated';
+
+  @override
+  String get ticketTrackingNumberHelp =>
+      'Public parcel ID, not a handover code.';
+
+  @override
+  String get ticketPickupCodeSecretHint =>
+      'Secret, give it to the traveler only at handover.';
+
+  @override
+  String get bidDetailTrackingNumberLabel => 'Tracking number';
+
+  @override
+  String get deliveryLockedHelp =>
+      'At handover, ask the recipient for their 6-digit pickup code.';
 }

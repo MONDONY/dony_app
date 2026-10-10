@@ -652,7 +652,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<MoneyRepository>(
     () => MoneyRepository(getIt<MoneyRemoteDatasource>()),
   );
-  // param1 `true` : pastille de l'en-tête de l'accueil (pas de repli sur le
+  // param1 `true` : pastille de l'en-tête d'Activités (pas de repli sur le
   // portefeuille, pas d'événement de consultation). `false` : l'écran.
   getIt.registerFactoryParam<MoneyOverviewBloc, bool, void>(
     (header, _) => MoneyOverviewBloc(
