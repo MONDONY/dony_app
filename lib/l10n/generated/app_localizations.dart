@@ -29459,7 +29459,7 @@ abstract class AppLocalizations {
   /// Conséquence de l'annulation d'un colis payé par carte, en attente de paiement (cancel_before_payment_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'La carte ne sera pas débitée, le voyageur sera prévenu.'**
+  /// **'La carte ne sera pas débitée. Si le voyageur avait vu votre demande, il sera prévenu.'**
   String get bidCancelBeforePaymentSheetBodyCard;
 
   /// Conséquence de l'annulation d'un colis mobile money en attente de paiement (cancel_before_payment_sheet.dart).

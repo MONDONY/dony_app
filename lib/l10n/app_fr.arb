@@ -19908,7 +19908,7 @@
   "@moneyTripNotFoundTitle": {"description": "Titre quand le trajet ciblé n'a plus d'argent dans l'aperçu (money_trips_screen.dart, FLUTTER-HV)."},
   "bidCancelBeforePaymentSheetTitle": "Annuler la demande ?",
   "@bidCancelBeforePaymentSheetTitle": {"description": "Titre de la feuille de confirmation de l'annulation avant paiement (cancel_before_payment_sheet.dart)."},
-  "bidCancelBeforePaymentSheetBodyCard": "La carte ne sera pas débitée, le voyageur sera prévenu.",
+  "bidCancelBeforePaymentSheetBodyCard": "La carte ne sera pas débitée. Si le voyageur avait vu votre demande, il sera prévenu.",
   "@bidCancelBeforePaymentSheetBodyCard": {"description": "Conséquence de l'annulation d'un colis payé par carte, en attente de paiement (cancel_before_payment_sheet.dart)."},
   "bidCancelBeforePaymentSheetBodyMobileMoney": "Aucun paiement ne sera prélevé, le voyageur sera prévenu et ses kilos libérés.",
   "@bidCancelBeforePaymentSheetBodyMobileMoney": {"description": "Conséquence de l'annulation d'un colis mobile money en attente de paiement (cancel_before_payment_sheet.dart)."},

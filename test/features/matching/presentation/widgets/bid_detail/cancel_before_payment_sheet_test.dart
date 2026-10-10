@@ -54,6 +54,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Annuler la demande ?'), findsOneWidget);
+    expect(
+      find.text(
+        'La carte ne sera pas débitée. Si le voyageur avait vu votre demande, il sera prévenu.',
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const Key('cancel-before-payment-confirm')));
     await tester.pumpAndSettle();
 

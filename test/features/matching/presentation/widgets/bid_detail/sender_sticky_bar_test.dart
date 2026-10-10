@@ -688,7 +688,9 @@ void main() {
 
       expect(find.text('Annuler la demande ?'), findsOneWidget);
       expect(
-        find.text('La carte ne sera pas débitée, le voyageur sera prévenu.'),
+        find.text(
+          'La carte ne sera pas débitée. Si le voyageur avait vu votre demande, il sera prévenu.',
+        ),
         findsOneWidget,
       );
       expect(

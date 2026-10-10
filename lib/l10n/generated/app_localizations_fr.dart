@@ -18087,7 +18087,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidCancelBeforePaymentSheetBodyCard =>
-      'La carte ne sera pas débitée, le voyageur sera prévenu.';
+      'La carte ne sera pas débitée. Si le voyageur avait vu votre demande, il sera prévenu.';
 
   @override
   String get bidCancelBeforePaymentSheetBodyMobileMoney =>

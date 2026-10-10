@@ -17961,7 +17961,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidCancelBeforePaymentSheetBodyCard =>
-      'Your card will not be charged, and the traveler will be notified.';
+      'Your card will not be charged. If the traveler had seen your request, they will be notified.';
 
   @override
   String get bidCancelBeforePaymentSheetBodyMobileMoney =>
