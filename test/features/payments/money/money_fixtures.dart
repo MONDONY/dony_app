@@ -1,6 +1,8 @@
 import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
 
-/// Réponse type de `GET /payments/me/overview` (yadony-back #481).
+/// Réponse type de `GET /payments/me/overview` (yadony-back #481, #483,
+/// #484). `wallet` reste dans la réponse (apps 111/112) mais l'app ne le lit
+/// plus : « Mon argent » ne montre jamais le solde Yadony.
 Map<String, dynamic> overviewJson() => {
   'generatedAt': '2026-10-10T12:00:00Z',
   'recentWindowDays': 30,
@@ -35,10 +37,12 @@ Map<String, dynamic> overviewJson() => {
       {
         'bidId': 'bid-escrow',
         'trackingNumber': 'DON-2A00XYZW',
+        'announcementId': 'ann-2',
         'role': 'TRAVELER',
         'departureCity': 'Paris',
         'arrivalCity': 'Abidjan',
         'departureDate': '2026-10-18',
+        'arrivalDate': '2026-10-19',
         'amount': 9450,
         'currency': 'XOF',
         'channel': 'MOBILE_MONEY',
@@ -103,6 +107,8 @@ Map<String, dynamic> overviewJson() => {
       },
     ],
   },
+  'activeCurrency': 'xof',
+  'truncated': false,
 };
 
 MoneyOverviewModel overviewModel() =>
@@ -110,6 +116,13 @@ MoneyOverviewModel overviewModel() =>
 
 /// Montant minimal d'un colis pour les tests unitaires de présentation.
 MoneyItemModel item({
+  String bidId = 'bid-1',
+  String? announcementId = 'ann-1',
+  String? trackingNumber = 'DON-TEST0001',
+  String departureCity = 'Paris',
+  String arrivalCity = 'Dakar',
+  String currency = 'EUR',
+  DateTime? arrivalDate,
   MoneyState state = MoneyState.escrowed,
   MoneyRole role = MoneyRole.traveler,
   String? bidStatus,
@@ -121,16 +134,18 @@ MoneyItemModel item({
   DateTime? departureDate,
   String? counterpartyName,
 }) => MoneyItemModel(
-  bidId: 'bid-1',
+  bidId: bidId,
+  announcementId: announcementId,
+  arrivalDate: arrivalDate,
   role: role,
   state: state,
   releaseCondition: ReleaseCondition.unknown,
   channel: MoneyChannel.card,
-  trackingNumber: 'DON-TEST0001',
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
+  trackingNumber: trackingNumber,
+  departureCity: departureCity,
+  arrivalCity: arrivalCity,
   amount: amount,
-  currency: 'EUR',
+  currency: currency,
   bidStatus: bidStatus,
   releaseAt: releaseAt,
   settledAt: settledAt,
@@ -138,4 +153,115 @@ MoneyItemModel item({
   weightKg: weightKg,
   departureDate: departureDate,
   counterpartyName: counterpartyName,
+);
+
+/// Horloge des tests d'écran : mercredi 8 octobre 2026 (semaine du 5 au 11,
+/// semaine prochaine du 12 au 18).
+final kMoneyNow = DateTime(2026, 10, 8, 15);
+
+/// Aperçu complet d'un voyageur aussi expéditeur : versement auto daté,
+/// deux trajets en séquestre (dont un en deux devises), un litige, une
+/// vérification, un versement en cours, des versés récents, un colis en
+/// espèces et un envoi.
+MoneyOverviewModel richOverview({bool truncated = false}) => MoneyOverviewModel(
+  activeCurrency: 'EUR',
+  truncated: truncated,
+  travelerItems: [
+    item(
+      bidId: 'auto',
+      announcementId: 'abj',
+      trackingNumber: 'DON-5DD4',
+      arrivalCity: 'Abidjan',
+      arrivalDate: DateTime(2026, 10, 18),
+      state: MoneyState.releaseScheduled,
+      releaseAt: DateTime(2026, 10, 11, 9),
+      amount: 31,
+      counterpartyName: 'Awa K.',
+    ),
+    for (var i = 0; i < 3; i++)
+      item(
+        bidId: 'abj-$i',
+        announcementId: 'abj',
+        trackingNumber: 'DON-A00$i',
+        arrivalCity: 'Abidjan',
+        arrivalDate: DateTime(2026, 10, 18),
+        amount: 36,
+        counterpartyName: 'Fatou S.',
+      ),
+    item(
+      bidId: 'abj-paid',
+      announcementId: 'abj',
+      trackingNumber: 'DON-PAID',
+      arrivalCity: 'Abidjan',
+      arrivalDate: DateTime(2026, 10, 18),
+      state: MoneyState.releasedRecently,
+      settledAt: DateTime(2026, 10, 6),
+      amount: 40,
+    ),
+    item(
+      bidId: 'abj-payout',
+      announcementId: 'abj',
+      trackingNumber: 'DON-PAYO',
+      arrivalCity: 'Abidjan',
+      arrivalDate: DateTime(2026, 10, 18),
+      state: MoneyState.payoutInProgress,
+      amount: 12,
+    ),
+    item(
+      bidId: 'dkr-eur',
+      announcementId: 'dkr',
+      trackingNumber: 'DON-DKR1',
+      departureCity: 'Lyon',
+      arrivalDate: DateTime(2026, 10, 24),
+      amount: 50,
+    ),
+    item(
+      bidId: 'dkr-xof',
+      announcementId: 'dkr',
+      trackingNumber: 'DON-DKR2',
+      departureCity: 'Lyon',
+      currency: 'XOF',
+      arrivalDate: DateTime(2026, 10, 24),
+      amount: 9000,
+    ),
+    item(
+      bidId: 'dkr-cash',
+      announcementId: 'dkr',
+      trackingNumber: 'DON-CASH',
+      departureCity: 'Lyon',
+      arrivalDate: DateTime(2026, 10, 24),
+      state: MoneyState.cash,
+      cashCommissionStatus: 'CHARGED',
+      amount: null,
+    ),
+    item(
+      bidId: 'bko-dispute',
+      announcementId: 'bko',
+      trackingNumber: 'DON-4HJ8',
+      departureCity: 'Marseille',
+      arrivalCity: 'Bamako',
+      arrivalDate: DateTime(2026, 11, 2),
+      state: MoneyState.inDispute,
+      amount: 32,
+    ),
+    item(
+      bidId: 'bko-hold',
+      announcementId: 'bko',
+      trackingNumber: 'DON-HOLD',
+      departureCity: 'Marseille',
+      arrivalCity: 'Bamako',
+      arrivalDate: DateTime(2026, 11, 2),
+      state: MoneyState.onHold,
+      amount: 8,
+    ),
+  ],
+  senderItems: [
+    item(
+      bidId: 'sent',
+      role: MoneyRole.sender,
+      trackingNumber: 'DON-SENT',
+      arrivalCity: 'Douala',
+      amount: 60,
+    ),
+  ],
 );

@@ -1,49 +1,44 @@
 import 'dart:async';
 
-import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/payments/money/bloc/money_schedule.dart';
 import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
 import 'package:dony/features/payments/money/data/repositories/money_repository.dart';
-import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'money_overview_event.dart';
 part 'money_overview_state.dart';
 
-/// Écran « Mon argent » et pastille de l'en-tête d'Activités (FLUTTER-HV,
-/// déplacée de l'accueil par FLUTTER-J3).
+/// Écran « Mon argent », écran « Mes trajets » et pastille d'en-tête
+/// (FLUTTER-HV). Ne suit que l'argent des colis : le solde du portefeuille
+/// Yadony n'est jamais lu ici (il reste sur `/payments/wallet`).
 ///
-/// [fallbackToWallet] : sur un back sans l'aperçu, l'écran retombe sur les
-/// soldes de `/wallet/balance` ; la pastille, elle, n'en a pas besoin et
-/// redevient une simple icône (`false`).
+/// Sur un back sans l'aperçu (antérieur à yadony-back #481), l'état chargé
+/// est vide avec `upcomingAvailable: false` : l'écran annonce une arrivée
+/// prochaine, la pastille redevient une simple icône.
 class MoneyOverviewBloc extends Bloc<MoneyOverviewEvent, MoneyOverviewState> {
   MoneyOverviewBloc(
     this._repository,
-    this._walletRepository,
     this._analytics, {
-    this.fallbackToWallet = true,
     this.trackViews = true,
-    String? Function()? cachedActiveCurrency,
-  }) : _cachedActiveCurrency =
-           cachedActiveCurrency ?? (() => ActiveCurrency.current?.code),
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now,
        super(const MoneyOverviewInitial()) {
     on<MoneyOverviewLoadRequested>(_onLoad);
     on<MoneyOverviewRefreshRequested>(_onRefresh);
   }
 
   final MoneyRepository _repository;
-  final WalletRepository _walletRepository;
   final AnalyticsService _analytics;
-  final bool fallbackToWallet;
 
-  /// `false` pour la pastille : seul l'écran compte comme une consultation.
+  /// `false` pour la pastille et « Mes trajets » : seul l'écran « Mon
+  /// argent » compte comme une consultation.
   final bool trackViews;
 
-  /// Devise active du cache local (préférence confirmée par le serveur),
-  /// dernier repli quand ni l'aperçu ni le portefeuille ne la donnent.
-  final String? Function() _cachedActiveCurrency;
+  /// Horloge des échéances (semaine en cours, prochaine, plus tard).
+  final DateTime Function() _now;
 
   bool _viewTracked = false;
 
@@ -72,43 +67,20 @@ class MoneyOverviewBloc extends Bloc<MoneyOverviewEvent, MoneyOverviewState> {
     required bool keepOnError,
   }) async {
     try {
-      final overview = await _resolveActiveCurrency(
-        await _repository.getOverview(),
-      );
+      final overview = await _repository.getOverview();
       if (emit.isDone) return;
-      emit(MoneyOverviewLoaded(overview));
-      _track(overview, legacy: false);
+      final loaded = MoneyOverviewLoaded(overview, now: _now());
+      emit(loaded);
+      _track(loaded, legacy: false);
     } on MoneyOverviewUnavailable {
-      if (!fallbackToWallet) {
-        if (!emit.isDone) {
-          emit(
-            const MoneyOverviewLoaded(
-              MoneyOverviewModel(),
-              upcomingAvailable: false,
-            ),
-          );
-        }
-        return;
-      }
-      try {
-        final wallet = await _walletRepository.getBalance();
-        if (emit.isDone) return;
-        final balances = wallet.heldBalances.isEmpty
-            ? [MoneyAmount(wallet.currency, wallet.balance)]
-            : [
-                for (final b in wallet.heldBalances)
-                  MoneyAmount(b.currency, b.balance),
-              ];
-        final overview = MoneyOverviewModel(
-          wallet: balances,
-          activeCurrency: wallet.currency.toUpperCase(),
-        );
-        emit(MoneyOverviewLoaded(overview, upcomingAvailable: false));
-        _track(overview, legacy: true);
-      } catch (e) {
-        if (emit.isDone || keepOnError) return;
-        emit(MoneyOverviewError(unwrapDioError(e)));
-      }
+      if (emit.isDone) return;
+      final loaded = MoneyOverviewLoaded(
+        const MoneyOverviewModel(),
+        upcomingAvailable: false,
+        now: _now(),
+      );
+      emit(loaded);
+      _track(loaded, legacy: true);
     } catch (e) {
       // Rafraîchissement raté : on garde ce qui est affiché.
       if (emit.isDone || keepOnError) return;
@@ -116,36 +88,17 @@ class MoneyOverviewBloc extends Bloc<MoneyOverviewEvent, MoneyOverviewState> {
     }
   }
 
-  /// Devise active à mettre en grand sur la carte « Disponible »
-  /// (FLUTTER-J4). Un back récent la donne dans l'aperçu (`activeCurrency`) ;
-  /// sinon l'écran la lit comme le portefeuille (`/wallet/balance`), puis
-  /// dans le cache local. Inutile pour la pastille, et tant qu'un seul solde
-  /// existe : aucun appel de plus dans ces cas.
-  Future<MoneyOverviewModel> _resolveActiveCurrency(
-    MoneyOverviewModel overview,
-  ) async {
-    if (overview.activeCurrency != null ||
-        !fallbackToWallet ||
-        overview.wallet.length < 2) {
-      return overview;
-    }
-    try {
-      final wallet = await _walletRepository.getBalance();
-      return overview.withActiveCurrency(wallet.currency.toUpperCase());
-    } catch (_) {
-      return overview.withActiveCurrency(_cachedActiveCurrency());
-    }
-  }
-
-  void _track(MoneyOverviewModel overview, {required bool legacy}) {
+  void _track(MoneyOverviewLoaded state, {required bool legacy}) {
     if (!trackViews || _viewTracked) return;
     _viewTracked = true;
+    final overview = state.overview;
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.moneyOverviewViewed,
         properties: {
           'traveler_items': overview.travelerItems.length,
           'sender_items': overview.senderItems.length,
+          'trip_count': state.schedule.trips.length,
           'legacy_backend': legacy,
         },
       ),

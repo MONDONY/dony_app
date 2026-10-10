@@ -8,17 +8,16 @@ class MockMoneyOverviewBloc
     implements MoneyOverviewBloc {}
 
 /// Enregistre la fabrique du [MoneyOverviewBloc] de la pastille « Mon
-/// argent » de l'en-tête d'Activités (FLUTTER-HV, FLUTTER-J3) : rien en attente par
-/// défaut, une simple icône.
-void registerFakeMoneyOverview({
-  MoneyOverviewState state = const MoneyOverviewLoaded(MoneyOverviewModel()),
-}) {
+/// argent » de l'en-tête (FLUTTER-HV) : rien en attente par défaut, une
+/// simple icône.
+void registerFakeMoneyOverview({MoneyOverviewState? state}) {
+  final initial = state ?? MoneyOverviewLoaded(const MoneyOverviewModel());
   getIt.registerFactoryParam<MoneyOverviewBloc, bool, void>((_, _) {
     final bloc = MockMoneyOverviewBloc();
     whenListen(
       bloc,
       const Stream<MoneyOverviewState>.empty(),
-      initialState: state,
+      initialState: initial,
     );
     return bloc;
   });

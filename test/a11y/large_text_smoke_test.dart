@@ -60,6 +60,10 @@ import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
+import 'package:dony/features/payments/money/bloc/money_trips_cubit.dart';
+import 'package:dony/features/payments/money/presentation/screens/money_overview_screen.dart';
+import 'package:dony/features/payments/money/presentation/screens/money_trips_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
@@ -85,6 +89,7 @@ import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -95,7 +100,9 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../features/payments/money/money_fixtures.dart';
 import '../helpers/mock_analytics_backend.dart';
+import '../helpers/money_test_doubles.dart';
 
 // Fournit un HelpCenterBloc minimal (catalogue vide) aux 3 harnais de ce
 // fichier dont l'écran embarque désormais une ContextualTutorialCard
@@ -1013,6 +1020,57 @@ Widget _wrapPersonalInfo(PersonalInfoCubit cubit) => MaterialApp.router(
   ),
 );
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Mon argent (FLUTTER-HV) — écran principal (F) et « Mes trajets » (D)
+// ═══════════════════════════════════════════════════════════════════════════
+
+Widget _moneyHarness({required bool trips}) {
+  final bloc = MockMoneyOverviewBloc();
+  whenListen(
+    bloc,
+    const Stream<MoneyOverviewState>.empty(),
+    initialState: MoneyOverviewLoaded(richOverview(), now: kMoneyNow),
+  );
+  final router = GoRouter(
+    initialLocation: trips
+        ? '$kMoneyTripsRoute?announcementId=dkr'
+        : '/payments/money',
+    routes: [
+      GoRoute(
+        path: '/payments/money',
+        builder: (_, _) => BlocProvider<MoneyOverviewBloc>.value(
+          value: bloc,
+          child: const MoneyOverviewScreen(),
+        ),
+      ),
+      GoRoute(
+        path: kMoneyTripsRoute,
+        builder: (_, s) => MultiBlocProvider(
+          providers: [
+            BlocProvider<MoneyOverviewBloc>.value(value: bloc),
+            BlocProvider(
+              create: (_) => MoneyTripsCubit(
+                makeDisabledAnalytics(MockAnalyticsBackend()),
+                focusKey: s.uri.queryParameters['announcementId'],
+              ),
+            ),
+          ],
+          child: MoneyTripsScreen(
+            announcementId: s.uri.queryParameters['announcementId'],
+          ),
+        ),
+      ),
+    ],
+  );
+  return MaterialApp.router(
+    theme: AppTheme.light(),
+    locale: AppL10n.fr,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    routerConfig: router,
+  );
+}
+
 void main() {
   setUpAll(() async {
     // Requis par MockTripsSummaryCubit.load(period: any(named: 'period'))
@@ -1208,6 +1266,20 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.byKey(const Key('suivi-number-field')), findsOneWidget);
       expect(find.byKey(const Key('suivi-number-submit')), findsOneWidget);
+    });
+
+    testWidgets('mon argent : échéances et prochains versements', (
+      tester,
+    ) async {
+      await pumpAt200(tester, _moneyHarness(trips: false));
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('money-upcoming-card')), findsOneWidget);
+    });
+
+    testWidgets('mon argent : mes trajets, carte dépliée', (tester) async {
+      await pumpAt200(tester, _moneyHarness(trips: true));
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('money-trip-dkr')), findsOneWidget);
     });
 
     testWidgets('vos informations', (tester) async {

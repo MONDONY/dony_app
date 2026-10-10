@@ -331,6 +331,7 @@ abstract final class AnalyticsEvents {
   /// Propriétés `traveler_items`, `sender_items` (nombres de colis listés) et
   /// `legacy_backend` (back sans l'aperçu : soldes seuls). Aucun montant.
   static const moneyOverviewViewed = 'money_overview_viewed';
+  static const moneyTripsViewed = 'money_trips_viewed';
   static const phoneVisibilityToggled = 'phone_visibility_toggled';
   static const userBlocked = 'user_blocked';
   static const userUnblocked = 'user_unblocked';

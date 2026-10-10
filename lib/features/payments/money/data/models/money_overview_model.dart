@@ -1,6 +1,10 @@
 /// Aperçu « Mon argent » (FLUTTER-HV) — contrat de `GET /payments/me/overview`
-/// (yadony-back #481). Les champs nuls sont omis par le back
+/// (yadony-back #481, #483, #484). Les champs nuls sont omis par le back
 /// (`default-property-inclusion: NON_NULL`) : tout est optionnel à la lecture.
+///
+/// Le champ `wallet` de la réponse (soldes du portefeuille Yadony) n'est pas
+/// lu : « Mon argent » ne suit que l'argent des colis, le solde Yadony reste
+/// sur l'écran portefeuille.
 library;
 
 /// État normalisé d'un montant, calculé par le back.
@@ -101,6 +105,7 @@ class MoneyItemModel {
     this.departureCity,
     this.arrivalCity,
     this.departureDate,
+    this.arrivalDate,
     this.amount,
     this.currency,
     this.releaseAt,
@@ -121,6 +126,14 @@ class MoneyItemModel {
   final String? departureCity;
   final String? arrivalCity;
   final DateTime? departureDate;
+
+  /// Date d'arrivée effective du trajet (yadony-back #484) ; absente d'un
+  /// back antérieur.
+  final DateTime? arrivalDate;
+
+  /// Échéance prévisible d'un séquestre versé à la livraison : l'arrivée du
+  /// trajet, sinon (ancien back) le jour du départ.
+  DateTime? get tripDate => arrivalDate ?? departureDate;
 
   /// Voyageur : net estimé. Expéditeur : payé moins déjà remboursé. `null`
   /// pour un colis en espèces.
@@ -144,7 +157,7 @@ class MoneyItemModel {
   final String? cashCommissionStatus;
 
   factory MoneyItemModel.fromJson(Map<String, dynamic> json) {
-    final departure = json['departureDate'] as String?;
+    DateTime? day(Object? v) => v is String ? DateTime.tryParse(v) : null;
     return MoneyItemModel(
       bidId: json['bidId'] as String,
       role: MoneyRole.parse(json['role'] as String?),
@@ -157,7 +170,8 @@ class MoneyItemModel {
       announcementId: json['announcementId'] as String?,
       departureCity: json['departureCity'] as String?,
       arrivalCity: json['arrivalCity'] as String?,
-      departureDate: departure == null ? null : DateTime.tryParse(departure),
+      departureDate: day(json['departureDate']),
+      arrivalDate: day(json['arrivalDate']),
       amount: _toDouble(json['amount']),
       currency: json['currency'] as String?,
       releaseAt: _toDate(json['releaseAt']),
@@ -234,37 +248,28 @@ class SenderTotalModel {
 
 class MoneyOverviewModel {
   const MoneyOverviewModel({
-    this.wallet = const [],
     this.travelerTotals = const [],
     this.travelerItems = const [],
     this.senderTotals = const [],
     this.senderItems = const [],
     this.recentWindowDays = 30,
     this.activeCurrency,
+    this.truncated = false,
   });
 
-  /// Soldes disponibles du portefeuille, par devise.
-  final List<MoneyAmount> wallet;
   final List<TravelerTotalModel> travelerTotals;
   final List<MoneyItemModel> travelerItems;
   final List<SenderTotalModel> senderTotals;
   final List<MoneyItemModel> senderItems;
   final int recentWindowDays;
 
-  /// Devise du portefeuille actif (FLUTTER-J4), mise en grand sur la carte
-  /// « Disponible ». Optionnelle : absente d'un back antérieur, l'écran la
-  /// résout lui-même (voir `MoneyOverviewBloc`).
+  /// Devise active de l'utilisateur (yadony-back #483) : mise en tête quand
+  /// un montant existe dans plusieurs devises. Optionnelle.
   final String? activeCurrency;
 
-  MoneyOverviewModel withActiveCurrency(String? currency) => MoneyOverviewModel(
-    wallet: wallet,
-    travelerTotals: travelerTotals,
-    travelerItems: travelerItems,
-    senderTotals: senderTotals,
-    senderItems: senderItems,
-    recentWindowDays: recentWindowDays,
-    activeCurrency: currency,
-  );
+  /// Le back a coupé la liste à son plafond (yadony-back #484) : les totaux
+  /// ne portent que sur les colis renvoyés.
+  final bool truncated;
 
   factory MoneyOverviewModel.fromJson(Map<String, dynamic> json) {
     List<Map<String, dynamic>> list(Object? v) =>
@@ -272,14 +277,6 @@ class MoneyOverviewModel {
     final traveler = (json['traveler'] as Map<String, dynamic>?) ?? const {};
     final sender = (json['sender'] as Map<String, dynamic>?) ?? const {};
     return MoneyOverviewModel(
-      wallet: list(json['wallet'])
-          .map(
-            (w) => MoneyAmount(
-              w['currency'] as String,
-              _toDouble(w['balance']) ?? 0,
-            ),
-          )
-          .toList(),
       travelerTotals: list(
         traveler['totals'],
       ).map(TravelerTotalModel.fromJson).toList(),
@@ -296,6 +293,7 @@ class MoneyOverviewModel {
           code.trim().toUpperCase(),
         _ => null,
       },
+      truncated: json['truncated'] == true,
     );
   }
 

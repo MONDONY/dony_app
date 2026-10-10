@@ -3,7 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
 import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
-import 'package:dony/features/payments/money/presentation/money_conditions.dart';
+import 'package:dony/features/payments/money/presentation/money_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
