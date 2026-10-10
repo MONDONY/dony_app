@@ -338,6 +338,66 @@ void main() {
         ).called(1);
       },
     );
+
+    testWidgets(
+      'initiatePayment 422 announcement/not-active (trajet terminé) : sheet '
+      'fermée, message précis, fil rechargé — plus de « Une erreur est '
+      'survenue »',
+      (tester) async {
+        when(
+          () => negotiationRepository.initiatePayment('thread-recap-1'),
+        ).thenThrow(
+          const ValidationException(
+            'announcement/not-active',
+            code: 'announcement/not-active',
+          ),
+        );
+        await tester.pumpWidget(buildRoutedApp());
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Payer 39,20 €'));
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 60));
+        }
+
+        expect(find.text('Payer 39,20 €'), findsNothing);
+        expect(
+          find.textContaining('Le trajet de ce voyageur est terminé'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('Une erreur est survenue. Veuillez réessayer.'),
+          findsNothing,
+        );
+        verify(
+          () => bloc.add(const NegotiationFetchRequested('thread-recap-1')),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'initiatePayment 422 hors refus définitif : la sheet reste ouverte avec '
+      'le message générique',
+      (tester) async {
+        when(
+          () => negotiationRepository.initiatePayment('thread-recap-1'),
+        ).thenThrow(const ValidationException('autre', code: 'autre-chose'));
+        await tester.pumpWidget(buildRoutedApp());
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Payer 39,20 €'));
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 60));
+        }
+
+        expect(find.text('Payer 39,20 €'), findsOneWidget);
+        verifyNever(
+          () => bloc.add(const NegotiationFetchRequested('thread-recap-1')),
+        );
+      },
+    );
   });
 
   // ── Confirmation cash → DonySuccessScreen ──────────────────────────────

@@ -9582,5 +9582,13 @@
   "errorPaymentAlreadyAuthorizedTitle": "Payment already confirmed",
   "errorPaymentAlreadyAuthorizedMessage": "Your payment has just been confirmed. The parcel is up to date: cancel it from its page and you will be refunded.",
   "errorPaymentInProgressTitle": "Payment in progress",
-  "errorPaymentInProgressMessage": "A payment is being confirmed. Please try again in a few minutes."
+  "errorPaymentInProgressMessage": "A payment is being confirmed. Please try again in a few minutes.",
+  "errorCapacityInsufficientTitle": "Not enough space left",
+  "errorCapacityInsufficientMessage": "The kilos still free on this trip are no longer enough for this parcel: other accepted requests have taken them. Decline this request so the sender can find another traveller.",
+  "errorAnnouncementNotAcceptingTitle": "Trip closed",
+  "errorAnnouncementNotAcceptingMessage": "This trip no longer takes parcels: it is completed, cancelled or removed. This request can no longer be accepted.",
+  "errorAnnouncementNotActiveTitle": "Trip no longer available",
+  "errorAnnouncementNotActiveMessage": "This traveller's trip is completed or cancelled: this payment can no longer go through and you have not been charged. Choose another offer or wait for one from another traveller.",
+  "errorTravelerNotEligibleTitle": "Payment not possible yet",
+  "errorTravelerNotEligibleMessage": "This traveller has not finished setting up their payouts yet: card payment is not possible for now and you have not been charged. Try again later or choose another offer."
 }

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
@@ -295,5 +296,109 @@ void main() {
           .having((s) => s.bidCurrency, 'bidCurrency', 'EUR')
           .having((s) => s.alternatives.single.currency, 'alternative', 'XOF'),
     ],
+  );
+
+  group(
+    'refus définitif du serveur (staging 10/10 : 409 capacity-insufficient en boucle)',
+    () {
+      const capacity = ConflictException(
+        'Capacité insuffisante',
+        code: 'capacity-insufficient',
+      );
+
+      blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+        '409 capacity-insufficient → BidFailed définitif portant le code ; '
+        'un second tap rejoue le refus sans rappeler le serveur',
+        build: () {
+          when(() => repo.acceptBidWithCommission('bid_x')).thenThrow(capacity);
+          return BidAcceptanceBloc(repo, stripe);
+        },
+        act: (b) async {
+          b.add(BidAcceptRequested('bid_x'));
+          await Future<void>.delayed(Duration.zero);
+          b.add(BidAcceptRequested('bid_x'));
+        },
+        expect: () => [
+          isA<BidAccepting>(),
+          isA<BidFailed>()
+              .having((s) => s.definitive, 'definitive', isTrue)
+              .having((s) => s.bidId, 'bidId', 'bid_x')
+              .having((s) => s.error?.code, 'code', 'capacity-insufficient'),
+          isA<BidFailed>().having((s) => s.definitive, 'definitive', isTrue),
+        ],
+        verify: (b) {
+          verify(() => repo.acceptBidWithCommission('bid_x')).called(1);
+          expect(b.refusals.keys, ['bid_x']);
+        },
+      );
+
+      blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+        'la carte (CARD) est aussi rejouée sans appel une fois le refus connu',
+        build: () {
+          when(() => repo.acceptBidWithCommission('bid_x')).thenThrow(capacity);
+          return BidAcceptanceBloc(repo, stripe);
+        },
+        act: (b) async {
+          b.add(BidAcceptRequested('bid_x'));
+          await Future<void>.delayed(Duration.zero);
+          b.add(BidAcceptWithCardRequested('bid_x'));
+        },
+        skip: 2,
+        expect: () => [
+          isA<BidFailed>().having((s) => s.definitive, 'definitive', isTrue),
+        ],
+        verify: (_) {
+          verifyNever(
+            () =>
+                repo.acceptBidWithCommission('bid_x', commissionSource: 'CARD'),
+          );
+        },
+      );
+
+      blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+        'après BidAcceptanceRefusalsCleared (liste rechargée), le serveur est '
+        'de nouveau interrogé',
+        build: () {
+          when(() => repo.acceptBidWithCommission('bid_x')).thenThrow(capacity);
+          return BidAcceptanceBloc(repo, stripe);
+        },
+        act: (b) async {
+          b.add(BidAcceptRequested('bid_x'));
+          await Future<void>.delayed(Duration.zero);
+          b.add(BidAcceptanceRefusalsCleared());
+          await Future<void>.delayed(Duration.zero);
+          b.add(BidAcceptRequested('bid_x'));
+        },
+        verify: (b) {
+          verify(() => repo.acceptBidWithCommission('bid_x')).called(2);
+        },
+      );
+
+      blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+        'erreur passagère (réseau) → BidFailed non définitif, nouvel essai '
+        'envoyé au serveur',
+        build: () {
+          when(
+            () => repo.acceptBidWithCommission('bid_x'),
+          ).thenThrow(const NetworkException('réseau'));
+          return BidAcceptanceBloc(repo, stripe);
+        },
+        act: (b) async {
+          b.add(BidAcceptRequested('bid_x'));
+          await Future<void>.delayed(Duration.zero);
+          b.add(BidAcceptRequested('bid_x'));
+        },
+        expect: () => [
+          isA<BidAccepting>(),
+          isA<BidFailed>().having((s) => s.definitive, 'definitive', isFalse),
+          isA<BidAccepting>(),
+          isA<BidFailed>().having((s) => s.definitive, 'definitive', isFalse),
+        ],
+        verify: (b) {
+          verify(() => repo.acceptBidWithCommission('bid_x')).called(2);
+          expect(b.refusals, isEmpty);
+        },
+      );
+    },
   );
 }

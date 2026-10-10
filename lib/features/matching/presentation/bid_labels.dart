@@ -1,3 +1,4 @@
+import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
@@ -55,6 +56,12 @@ String senderShipmentsCount(AppLocalizations l, int count) =>
 /// finale du lot K).
 extension BidFailedDisplay on BidFailed {
   String displayMessage(AppLocalizations l) {
+    // Refus métier du serveur au code connu (trajet complet, trajet fermé…) :
+    // message précis du catalogue plutôt que « Acceptation refusée ».
+    final err = error;
+    if (err != null && ErrorCatalog.isKnown(err)) {
+      return ErrorCatalog.lookup(err, l10n: l).message;
+    }
     switch (reason) {
       case BidFailureReason.confirmFailed:
         return l.bidAcceptConfirmFailed;

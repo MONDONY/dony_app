@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_chip.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
@@ -42,7 +43,13 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockBidAcceptanceBloc
     extends MockBloc<ace.BidAcceptanceEvent, acs.BidAcceptanceState>
-    implements BidAcceptanceBloc {}
+    implements BidAcceptanceBloc {
+  /// Refus définitifs simulés (trajet complet…), vides par défaut.
+  Map<String, AppException> refusalsValue = const {};
+
+  @override
+  Map<String, AppException> get refusals => refusalsValue;
+}
 
 class _MockPackageRequestBloc
     extends MockBloc<PackageRequestEvent, PackageRequestState>

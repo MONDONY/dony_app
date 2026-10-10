@@ -33,6 +33,11 @@ class BidCard extends StatelessWidget {
   /// Requête de recherche courante — pour le surlignage. Vide hors recherche.
   final String query;
 
+  /// Raison pour laquelle le serveur refuse pour de bon l'acceptation (trajet
+  /// complet, trajet fermé…). Non nulle : « Accepter » est désactivé et la
+  /// raison remplace le bandeau de paiement, « Refuser » reste possible.
+  final String? acceptBlockedMessage;
+
   const BidCard({
     super.key,
     required this.bid,
@@ -41,6 +46,7 @@ class BidCard extends StatelessWidget {
     this.onReject,
     this.onTap,
     this.query = '',
+    this.acceptBlockedMessage,
   });
 
   bool get _isPending =>
@@ -168,11 +174,14 @@ class BidCard extends StatelessWidget {
 
               // ── Bas : actions OU badge de statut ───────────────────
               if (_isPending && onAccept != null && onReject != null) ...[
-                _PaymentHint(isCash: !_isPaymentEscrowed),
+                _PaymentHint(
+                  isCash: !_isPaymentEscrowed,
+                  blockedMessage: acceptBlockedMessage,
+                ),
                 const SizedBox(height: DonySpacing.sm),
                 _PendingActions(
                   isProcessing: isProcessing,
-                  onAccept: onAccept!,
+                  onAccept: acceptBlockedMessage == null ? onAccept : null,
                   onReject: onReject!,
                 ),
               ] else
@@ -331,7 +340,9 @@ class _ContentDescriptionPill extends StatelessWidget {
 
 class _PendingActions extends StatelessWidget {
   final bool isProcessing;
-  final VoidCallback onAccept;
+
+  /// `null` : acceptation refusée pour de bon, bouton désactivé.
+  final VoidCallback? onAccept;
   final VoidCallback onReject;
 
   const _PendingActions({
@@ -372,17 +383,25 @@ class _PendingActions extends StatelessWidget {
 
 class _PaymentHint extends StatelessWidget {
   final bool isCash;
-  const _PaymentHint({required this.isCash});
+
+  /// Refus définitif de l'acceptation : affiché à la place du bandeau.
+  final String? blockedMessage;
+  const _PaymentHint({required this.isCash, this.blockedMessage});
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    final iconAsset = isCash ? 'banknote' : 'lock';
-    final label = isCash
-        ? l.bidListCashPaymentHint
-        : l.bidListEscrowPaymentHint;
+    final blocked = blockedMessage;
+    final iconAsset = blocked != null
+        ? 'circle-alert'
+        : isCash
+        ? 'banknote'
+        : 'lock';
+    final label =
+        blocked ??
+        (isCash ? l.bidListCashPaymentHint : l.bidListEscrowPaymentHint);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
@@ -17,12 +18,68 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
     : super(BidAcceptanceInitial()) {
     on<BidAcceptRequested>(_accept);
     on<BidAcceptWithCardRequested>(_acceptWithCard);
+    on<BidAcceptanceRefusalsCleared>((_, _) => _refusals.clear());
+  }
+
+  /// Codes d'un refus qui se répéterait à l'identique tant que la demande ou
+  /// le trajet ne changent pas. Staging 10/10 : sept 409
+  /// `capacity-insufficient` de suite sur la même demande, chaque tap
+  /// affichant « Acceptation refusée ».
+  static const definitiveRefusalCodes = <String>{
+    'capacity-insufficient',
+    'announcement-not-accepting',
+    'announcement-not-found',
+    'bid-not-found',
+    'invalid-payment-method-for-announcement',
+    'handover-deadline-passed',
+    'forbidden',
+  };
+
+  /// Refus définitifs par demande : un nouveau tap rejoue le message sans
+  /// rappeler le serveur.
+  final Map<String, AppException> _refusals = {};
+
+  /// Demandes dont l'acceptation est refusée pour de bon, avec l'erreur.
+  Map<String, AppException> get refusals => Map.unmodifiable(_refusals);
+
+  /// Rejoue le refus mémorisé de [bidId] ; `false` s'il n'y en a pas.
+  bool _replayRefusal(String bidId, Emitter<BidAcceptanceState> emit) {
+    final known = _refusals[bidId];
+    if (known == null) return false;
+    emit(
+      BidFailed(
+        reason: BidFailureReason.refused,
+        error: known,
+        bidId: bidId,
+        definitive: true,
+      ),
+    );
+    return true;
+  }
+
+  void _emitServerRefusal(
+    Object err,
+    String bidId,
+    Emitter<BidAcceptanceState> emit,
+  ) {
+    final appErr = unwrapDioError(err);
+    final definitive = definitiveRefusalCodes.contains(appErr.code);
+    if (definitive) _refusals[bidId] = appErr;
+    emit(
+      BidFailed(
+        reason: BidFailureReason.refused,
+        error: appErr,
+        bidId: bidId,
+        definitive: definitive,
+      ),
+    );
   }
 
   Future<void> _accept(
     BidAcceptRequested e,
     Emitter<BidAcceptanceState> emit,
   ) async {
+    if (_replayRefusal(e.bidId, emit)) return;
     emit(BidAccepting());
     final fundingCurrency = e.fundingCurrency;
     if (fundingCurrency != null) {
@@ -39,11 +96,12 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
         fundingCurrency: fundingCurrency,
       );
       await _handleResponse(r, e.bidId, emit);
-    } catch (_) {
+    } catch (err) {
       // AppException.message n'est jamais un texte affichable (voir sa doc) :
-      // serverMessage reste vide, displayMessage() rend alors la clé de
+      // serverMessage reste vide ; displayMessage() lit le message du
+      // catalogue pour le code de l'erreur, sinon la clé de
       // BidFailureReason.refused.
-      emit(BidFailed(reason: BidFailureReason.refused));
+      _emitServerRefusal(err, e.bidId, emit);
     }
   }
 
@@ -51,6 +109,7 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
     BidAcceptWithCardRequested e,
     Emitter<BidAcceptanceState> emit,
   ) async {
+    if (_replayRefusal(e.bidId, emit)) return;
     emit(BidAccepting());
     try {
       final r = await _repo.acceptBidWithCommission(
@@ -58,9 +117,9 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
         commissionSource: 'CARD',
       );
       await _handleResponse(r, e.bidId, emit);
-    } catch (_) {
+    } catch (err) {
       // Même raison qu'en haut : pas de message serveur affichable ici.
-      emit(BidFailed(reason: BidFailureReason.refused));
+      _emitServerRefusal(err, e.bidId, emit);
     }
   }
 

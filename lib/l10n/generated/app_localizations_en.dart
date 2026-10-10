@@ -18007,4 +18007,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorPaymentInProgressMessage =>
       'A payment is being confirmed. Please try again in a few minutes.';
+
+  @override
+  String get errorCapacityInsufficientTitle => 'Not enough space left';
+
+  @override
+  String get errorCapacityInsufficientMessage =>
+      'The kilos still free on this trip are no longer enough for this parcel: other accepted requests have taken them. Decline this request so the sender can find another traveller.';
+
+  @override
+  String get errorAnnouncementNotAcceptingTitle => 'Trip closed';
+
+  @override
+  String get errorAnnouncementNotAcceptingMessage =>
+      'This trip no longer takes parcels: it is completed, cancelled or removed. This request can no longer be accepted.';
+
+  @override
+  String get errorAnnouncementNotActiveTitle => 'Trip no longer available';
+
+  @override
+  String get errorAnnouncementNotActiveMessage =>
+      'This traveller\'s trip is completed or cancelled: this payment can no longer go through and you have not been charged. Choose another offer or wait for one from another traveller.';
+
+  @override
+  String get errorTravelerNotEligibleTitle => 'Payment not possible yet';
+
+  @override
+  String get errorTravelerNotEligibleMessage =>
+      'This traveller has not finished setting up their payouts yet: card payment is not possible for now and you have not been charged. Try again later or choose another offer.';
 }

@@ -35,6 +35,14 @@ class AcceptanceResponse {
     this.alternatives = const [],
   });
 
+  /// Vrai si [data] est bien une réponse d'acceptation (`status` texte :
+  /// ACCEPTED, INSUFFICIENT_WALLET…). Une 409 ou 422 peut aussi porter un
+  /// ProblemDetail RFC 7807 (`status` numérique, `code` métier : trajet
+  /// complet, trajet fermé…) : il ne doit pas être lu comme une acceptation,
+  /// sinon son code est perdu et l'écran n'affiche qu'un refus générique.
+  static bool isAcceptanceBody(Object? data) =>
+      data is Map && data['status'] is String;
+
   factory AcceptanceResponse.fromJson(Map<String, dynamic> json) {
     final status = switch (json['status'] as String? ?? '') {
       'ACCEPTED' => AcceptanceStatus.accepted,
