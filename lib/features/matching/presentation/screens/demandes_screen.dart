@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -232,6 +233,9 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
   /// Attend la réponse réelle : un délai fixe relâchait le spinner avant
   /// elle, et un échec (qui laisse la liste intacte) passait inaperçu.
   Future<void> _onRefresh() async {
+    // Liste rechargée à la main : les refus définitifs mémorisés (trajet
+    // complet…) peuvent ne plus tenir, l'acceptation repart au serveur.
+    context.read<BidAcceptanceBloc>().add(ace.BidAcceptanceRefusalsCleared());
     final error = await _reloadAndWait();
     if (error != null && mounted) {
       unawaited(ErrorPresenter.show(context, error));
@@ -336,6 +340,9 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
         message: state.displayMessage(context.l10n),
         type: DonySnackbarType.error,
       );
+      // Refus définitif (trajet complet, fermé…) : la liste est sans doute
+      // périmée, on la relit pour afficher l'état réel du trajet.
+      if (state.definitive) _reload();
     }
   }
 
@@ -482,6 +489,9 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
   Widget _buildLoaded(BuildContext context, TravelerBidsLoaded state) {
     final hp = DonyLayout.hPadding(context);
     final l = context.l10n;
+    // Refus définitifs du serveur : « Accepter » désactivé sur ces demandes,
+    // plus de 409 identiques en boucle (staging 10/10).
+    final refusals = context.watch<BidAcceptanceBloc>().refusals;
     final searching = _query.trim().isNotEmpty;
     final visible = searching
         ? state.visibleBids
@@ -543,9 +553,13 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
                       }
                       final bid = visible[i];
                       final canAct = state.filter == TravelerBidFilter.aTraiter;
+                      final refusal = refusals[bid.id];
                       return BidCard(
                         bid: bid,
                         isProcessing: _processingBidIds.contains(bid.id),
+                        acceptBlockedMessage: refusal == null
+                            ? null
+                            : ErrorCatalog.lookup(refusal, l10n: l).message,
                         onAccept: canAct ? () => _onAccept(bid) : null,
                         onReject: canAct ? () => _onReject(bid.id) : null,
                         onTap: () => _openDetail(bid),

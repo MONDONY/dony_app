@@ -19935,5 +19935,21 @@
   "errorPaymentInProgressTitle": "Paiement en cours",
   "@errorPaymentInProgressTitle": {"description": "Titre de l'erreur 409 payment-in-progress (dépôt mobile money ou paiement carte en cours de validation)."},
   "errorPaymentInProgressMessage": "Un paiement est en cours de validation. Réessayez dans quelques minutes.",
-  "@errorPaymentInProgressMessage": {"description": "Message de l'erreur 409 payment-in-progress."}
+  "@errorPaymentInProgressMessage": {"description": "Message de l'erreur 409 payment-in-progress."},
+  "errorCapacityInsufficientTitle": "Plus assez de place",
+  "@errorCapacityInsufficientTitle": {"description": "Titre de l'erreur 409 capacity-insufficient : le voyageur accepte une demande plus lourde que les kilos encore libres du trajet"},
+  "errorCapacityInsufficientMessage": "Les kilos encore libres sur ce trajet ne suffisent plus pour ce colis : d'autres demandes acceptées les ont pris. Refusez cette demande pour que l'expéditeur trouve un autre voyageur.",
+  "@errorCapacityInsufficientMessage": {"description": "Message de l'erreur 409 capacity-insufficient (acceptation d'une demande)"},
+  "errorAnnouncementNotAcceptingTitle": "Trajet fermé",
+  "@errorAnnouncementNotAcceptingTitle": {"description": "Titre de l'erreur 409 announcement-not-accepting : trajet terminé, annulé ou retiré, il n'accepte plus de colis"},
+  "errorAnnouncementNotAcceptingMessage": "Ce trajet n'accepte plus de colis : il est terminé, annulé ou retiré. Cette demande ne peut plus être acceptée.",
+  "@errorAnnouncementNotAcceptingMessage": {"description": "Message de l'erreur 409 announcement-not-accepting"},
+  "errorAnnouncementNotActiveTitle": "Trajet plus disponible",
+  "@errorAnnouncementNotActiveTitle": {"description": "Titre de l'erreur 422 announcement/not-active : l'expéditeur paie une offre dont le trajet est terminé ou annulé"},
+  "errorAnnouncementNotActiveMessage": "Le trajet de ce voyageur est terminé ou annulé : ce paiement ne peut plus aboutir et rien ne vous a été débité. Choisissez une autre offre ou attendez celle d'un autre voyageur.",
+  "@errorAnnouncementNotActiveMessage": {"description": "Message de l'erreur 422 announcement/not-active (paiement d'une négociation)"},
+  "errorTravelerNotEligibleTitle": "Paiement pas encore possible",
+  "@errorTravelerNotEligibleTitle": {"description": "Titre de l'erreur 422 traveler-not-eligible : le voyageur n'a pas terminé la configuration de ses versements"},
+  "errorTravelerNotEligibleMessage": "Ce voyageur n'a pas encore terminé la configuration de ses versements : le paiement par carte est impossible pour l'instant et rien ne vous a été débité. Réessayez plus tard ou choisissez une autre offre.",
+  "@errorTravelerNotEligibleMessage": {"description": "Message de l'erreur 422 traveler-not-eligible"}
 }

@@ -359,6 +359,38 @@ abstract final class ErrorCatalog {
     ),
 
     // ─── Annonces / trajets ──────────────────────────────────────────
+    // Acceptation d'une demande espèces (accept-with-commission, 409) : les
+    // kilos libres du trajet ne couvrent plus le colis, ou le trajet est
+    // fermé. Refus définitifs : le bouton « Accepter » est désactivé
+    // (BidAcceptanceBloc.definitiveRefusalCodes).
+    'capacity-insufficient': _Entry(
+      title: (l) => l.errorCapacityInsufficientTitle,
+      message: (l) => l.errorCapacityInsufficientMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.luggage_outlined,
+    ),
+    'announcement-not-accepting': _Entry(
+      title: (l) => l.errorAnnouncementNotAcceptingTitle,
+      message: (l) => l.errorAnnouncementNotAcceptingMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.event_busy_rounded,
+    ),
+    // Paiement d'une négociation dont le trajet est terminé ou annulé
+    // (initiate-payment / accept, 422).
+    'announcement/not-active': _Entry(
+      title: (l) => l.errorAnnouncementNotActiveTitle,
+      message: (l) => l.errorAnnouncementNotActiveMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.event_busy_rounded,
+    ),
+    // Paiement carte refusé : le voyageur n'a pas fini son compte de
+    // versement Stripe (initiate-payment, 422).
+    'traveler-not-eligible': _Entry(
+      title: (l) => l.errorTravelerNotEligibleTitle,
+      message: (l) => l.errorTravelerNotEligibleMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.account_balance_outlined,
+    ),
     'announcement-not-found': _Entry(
       title: (l) => l.errorAnnouncementNotFoundTitle,
       message: (l) => l.errorAnnouncementNotFoundMessage,

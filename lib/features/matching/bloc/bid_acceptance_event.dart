@@ -16,3 +16,7 @@ class BidAcceptWithCardRequested extends BidAcceptanceEvent {
   final String bidId;
   BidAcceptWithCardRequested(this.bidId);
 }
+
+/// Oublie les refus définitifs mémorisés (liste rechargée par le voyageur) :
+/// l'acceptation de ces demandes repart au serveur au prochain essai.
+class BidAcceptanceRefusalsCleared extends BidAcceptanceEvent {}

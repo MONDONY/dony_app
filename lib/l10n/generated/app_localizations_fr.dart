@@ -18133,4 +18133,32 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorPaymentInProgressMessage =>
       'Un paiement est en cours de validation. Réessayez dans quelques minutes.';
+
+  @override
+  String get errorCapacityInsufficientTitle => 'Plus assez de place';
+
+  @override
+  String get errorCapacityInsufficientMessage =>
+      'Les kilos encore libres sur ce trajet ne suffisent plus pour ce colis : d\'autres demandes acceptées les ont pris. Refusez cette demande pour que l\'expéditeur trouve un autre voyageur.';
+
+  @override
+  String get errorAnnouncementNotAcceptingTitle => 'Trajet fermé';
+
+  @override
+  String get errorAnnouncementNotAcceptingMessage =>
+      'Ce trajet n\'accepte plus de colis : il est terminé, annulé ou retiré. Cette demande ne peut plus être acceptée.';
+
+  @override
+  String get errorAnnouncementNotActiveTitle => 'Trajet plus disponible';
+
+  @override
+  String get errorAnnouncementNotActiveMessage =>
+      'Le trajet de ce voyageur est terminé ou annulé : ce paiement ne peut plus aboutir et rien ne vous a été débité. Choisissez une autre offre ou attendez celle d\'un autre voyageur.';
+
+  @override
+  String get errorTravelerNotEligibleTitle => 'Paiement pas encore possible';
+
+  @override
+  String get errorTravelerNotEligibleMessage =>
+      'Ce voyageur n\'a pas encore terminé la configuration de ses versements : le paiement par carte est impossible pour l\'instant et rien ne vous a été débité. Réessayez plus tard ou choisissez une autre offre.';
 }

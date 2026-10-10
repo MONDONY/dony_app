@@ -12,8 +12,22 @@ import 'package:flutter/widgets.dart';
 /// périmée, on ferme la feuille, on explique la situation (catalogue
 /// d'erreurs : `thread/not-awaiting-payment`…) et on recharge le fil.
 ///
+/// Même traitement pour les refus 422 qui se répéteraient à chaque tap
+/// ([negotiationPaymentDefinitiveCodes]) : trajet du voyageur terminé ou
+/// annulé (`announcement/not-active`, fil 594d3331 en staging le 10/10),
+/// versements du voyageur non configurés, devise sans paiement carte. Avant,
+/// la feuille restait ouverte sur « Une erreur est survenue. Veuillez
+/// réessayer. » et chaque nouvel essai échouait pareil.
+///
 /// Renvoie `false` sans rien faire pour toute autre erreur : l'appelant garde
 /// alors son traitement habituel.
+const negotiationPaymentDefinitiveCodes = <String>{
+  'announcement/not-active',
+  'handover-deadline-passed',
+  'traveler-not-eligible',
+  'payment-method-unavailable-for-currency',
+};
+
 bool handleNegotiationPaymentConflict({
   required BuildContext sheetContext,
   required BuildContext callerContext,
@@ -22,7 +36,10 @@ bool handleNegotiationPaymentConflict({
   required Object error,
 }) {
   final appErr = unwrapDioError(error);
-  if (appErr is! ConflictException) return false;
+  if (appErr is! ConflictException &&
+      !negotiationPaymentDefinitiveCodes.contains(appErr.code)) {
+    return false;
+  }
   if (sheetContext.mounted) {
     Navigator.of(sheetContext, rootNavigator: true).pop();
   }

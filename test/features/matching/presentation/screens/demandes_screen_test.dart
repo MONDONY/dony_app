@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
@@ -35,7 +36,13 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockBidAcceptanceBloc
     extends MockBloc<ace.BidAcceptanceEvent, acs.BidAcceptanceState>
-    implements BidAcceptanceBloc {}
+    implements BidAcceptanceBloc {
+  /// Refus définitifs simulés (trajet complet…), vides par défaut.
+  Map<String, AppException> refusalsValue = const {};
+
+  @override
+  Map<String, AppException> get refusals => refusalsValue;
+}
 
 class _MockPackageRequestBloc
     extends MockBloc<PackageRequestEvent, PackageRequestState>
@@ -295,6 +302,67 @@ void main() {
         () => acceptance.add(any(that: isA<ace.BidAcceptRequested>())),
       ).called(1);
       verifyNever(() => bidBloc.add(any()));
+    },
+  );
+
+  testWidgets(
+    'demande refusée pour de bon (capacity-insufficient) : raison affichée, '
+    'Accepter désactivé, aucun nouvel envoi',
+    (tester) async {
+      final acceptance = _MockBidAcceptanceBloc()
+        ..refusalsValue = {
+          'cash-1': const ConflictException('x', code: 'capacity-insufficient'),
+        };
+
+      await _pump(
+        tester,
+        travelerBidsState: loaded([
+          _bid('cash-1', 'PENDING', paymentMethod: BidPaymentMethod.cash),
+        ]),
+        acceptanceBloc: acceptance,
+      );
+
+      expect(
+        find.textContaining('ne suffisent plus pour ce colis'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Accepter'));
+      await tester.pump();
+      verifyNever(() => acceptance.add(any()));
+    },
+  );
+
+  testWidgets(
+    'refus définitif reçu : message précis en snackbar et liste rechargée',
+    (tester) async {
+      final acceptance = _MockBidAcceptanceBloc();
+      whenListen(
+        acceptance,
+        Stream<acs.BidAcceptanceState>.fromIterable([
+          acs.BidFailed(
+            reason: acs.BidFailureReason.refused,
+            error: const ConflictException('x', code: 'capacity-insufficient'),
+            bidId: 'cash-1',
+            definitive: true,
+          ),
+        ]),
+        initialState: acs.BidAcceptanceInitial(),
+      );
+
+      await _pump(
+        tester,
+        travelerBidsState: loaded([
+          _bid('cash-1', 'PENDING', paymentMethod: BidPaymentMethod.cash),
+        ]),
+        acceptanceBloc: acceptance,
+      );
+      await tester.pump();
+
+      expect(find.text('Acceptation refusée'), findsNothing);
+      expect(
+        find.textContaining('ne suffisent plus pour ce colis'),
+        findsOneWidget,
+      );
     },
   );
 

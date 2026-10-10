@@ -337,8 +337,11 @@ class BidRemoteDatasource {
     } on DioException catch (e) {
       // Le backend retourne 409 pour INSUFFICIENT_WALLET et 422 pour FAILED.
       // On parse le body comme AcceptanceResponse pour obtenir les détails (solde dispo, etc.)
+      // Une 409 ProblemDetail (trajet complet `capacity-insufficient`, trajet
+      // fermé…) remonte telle quelle : son `code` choisit le message.
       final code = e.response?.statusCode;
-      if ((code == 409 || code == 422) && e.response?.data != null) {
+      if ((code == 409 || code == 422) &&
+          AcceptanceResponse.isAcceptanceBody(e.response?.data)) {
         return AcceptanceResponse.fromJson(
           e.response!.data as Map<String, dynamic>,
         );

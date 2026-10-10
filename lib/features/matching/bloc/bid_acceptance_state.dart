@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 
@@ -18,10 +19,25 @@ class BidFailed extends BidAcceptanceState {
   final String? serverMessage;
   final BidFailureReason reason;
   final bool cardDeclined;
+
+  /// Erreur métier du serveur (ProblemDetail), quand il y en a une : son
+  /// `code` choisit le message du catalogue d'erreurs.
+  final AppException? error;
+
+  /// Demande concernée, renseignée sur un refus du serveur.
+  final String? bidId;
+
+  /// Refus qui se répéterait à l'identique (trajet complet, trajet fermé…) :
+  /// le bouton « Accepter » de cette demande est désactivé.
+  final bool definitive;
+
   BidFailed({
     this.serverMessage,
     required this.reason,
     this.cardDeclined = false,
+    this.error,
+    this.bidId,
+    this.definitive = false,
   });
 }
 

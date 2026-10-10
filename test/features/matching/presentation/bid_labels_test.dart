@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
@@ -253,6 +254,28 @@ void main() {
         ),
         isFalse,
       );
+    });
+  });
+
+  group('BidFailed.displayMessage — code serveur connu', () {
+    test('capacity-insufficient → message précis du catalogue (FR et EN)', () {
+      final failed = BidFailed(
+        reason: BidFailureReason.refused,
+        error: const ConflictException('x', code: 'capacity-insufficient'),
+        bidId: 'b1',
+        definitive: true,
+      );
+      expect(failed.displayMessage(l), l.errorCapacityInsufficientMessage);
+      expect(failed.displayMessage(en), en.errorCapacityInsufficientMessage);
+      expect(failed.displayMessage(l), isNot(l.bidAcceptRefused));
+    });
+
+    test('code inconnu → repli « Acceptation refusée »', () {
+      final failed = BidFailed(
+        reason: BidFailureReason.refused,
+        error: const ConflictException('x', code: 'inconnu'),
+      );
+      expect(failed.displayMessage(l), l.bidAcceptRefused);
     });
   });
 }

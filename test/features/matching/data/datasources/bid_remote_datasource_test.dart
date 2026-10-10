@@ -692,6 +692,72 @@ void main() {
   // ── acceptBidWithCommission ───────────────────────────────────────────────────
 
   group('acceptBidWithCommission', () {
+    test(
+      '409 ProblemDetail (capacity-insufficient) : remonte l\'erreur au lieu '
+      'de la lire comme une acceptation',
+      () async {
+        final err = DioException(
+          requestOptions: RequestOptions(
+            path: '/bids/bid-001/accept-with-commission',
+          ),
+          response: Response(
+            requestOptions: RequestOptions(
+              path: '/bids/bid-001/accept-with-commission',
+            ),
+            statusCode: 409,
+            data: {
+              'type': 'https://yadony.app/errors/capacity-insufficient',
+              'title': 'Insufficient Capacity',
+              'status': 409,
+              'detail': 'Capacité insuffisante pour accepter cette demande',
+              'code': 'capacity-insufficient',
+            },
+          ),
+          type: DioExceptionType.badResponse,
+        );
+        when(
+          () => mockDio.post(
+            '/bids/bid-001/accept-with-commission',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenThrow(err);
+
+        await expectLater(
+          datasource.acceptBidWithCommission('bid-001'),
+          throwsA(same(err)),
+        );
+      },
+    );
+
+    test('409 INSUFFICIENT_WALLET : lu comme réponse d\'acceptation', () async {
+      when(
+        () => mockDio.post(
+          '/bids/bid-001/accept-with-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/x'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/x'),
+            statusCode: 409,
+            data: {
+              'status': 'INSUFFICIENT_WALLET',
+              'availableBalance': 0.5,
+              'requiredCommission': 2.5,
+              'hasCard': false,
+              'currency': 'EUR',
+            },
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
+
+      final r = await datasource.acceptBidWithCommission('bid-001');
+      expect(r.status, AcceptanceStatus.insufficientWallet);
+      expect(r.requiredCommission, 2.5);
+    });
+
     test('returns AcceptanceResponse on success', () async {
       final acceptedJson = {'status': 'ACCEPTED', 'clientSecret': null};
       when(

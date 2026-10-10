@@ -29533,6 +29533,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Un paiement est en cours de validation. Réessayez dans quelques minutes.'**
   String get errorPaymentInProgressMessage;
+
+  /// Titre de l'erreur 409 capacity-insufficient : le voyageur accepte une demande plus lourde que les kilos encore libres du trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus assez de place'**
+  String get errorCapacityInsufficientTitle;
+
+  /// Message de l'erreur 409 capacity-insufficient (acceptation d'une demande)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les kilos encore libres sur ce trajet ne suffisent plus pour ce colis : d\'autres demandes acceptées les ont pris. Refusez cette demande pour que l\'expéditeur trouve un autre voyageur.'**
+  String get errorCapacityInsufficientMessage;
+
+  /// Titre de l'erreur 409 announcement-not-accepting : trajet terminé, annulé ou retiré, il n'accepte plus de colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet fermé'**
+  String get errorAnnouncementNotAcceptingTitle;
+
+  /// Message de l'erreur 409 announcement-not-accepting
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet n\'accepte plus de colis : il est terminé, annulé ou retiré. Cette demande ne peut plus être acceptée.'**
+  String get errorAnnouncementNotAcceptingMessage;
+
+  /// Titre de l'erreur 422 announcement/not-active : l'expéditeur paie une offre dont le trajet est terminé ou annulé
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet plus disponible'**
+  String get errorAnnouncementNotActiveTitle;
+
+  /// Message de l'erreur 422 announcement/not-active (paiement d'une négociation)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet de ce voyageur est terminé ou annulé : ce paiement ne peut plus aboutir et rien ne vous a été débité. Choisissez une autre offre ou attendez celle d\'un autre voyageur.'**
+  String get errorAnnouncementNotActiveMessage;
+
+  /// Titre de l'erreur 422 traveler-not-eligible : le voyageur n'a pas terminé la configuration de ses versements
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement pas encore possible'**
+  String get errorTravelerNotEligibleTitle;
+
+  /// Message de l'erreur 422 traveler-not-eligible
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur n\'a pas encore terminé la configuration de ses versements : le paiement par carte est impossible pour l\'instant et rien ne vous a été débité. Réessayez plus tard ou choisissez une autre offre.'**
+  String get errorTravelerNotEligibleMessage;
 }
 
 class _AppLocalizationsDelegate

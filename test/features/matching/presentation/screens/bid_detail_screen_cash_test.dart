@@ -1160,4 +1160,49 @@ void main() {
       },
     );
   });
+
+  group('Lecture du paiement (GET /payments/bid)', () {
+    testWidgets('colis espèces en attente : jamais lu (toujours 404)', (
+      tester,
+    ) async {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'PENDING'),
+        authBloc: authBloc,
+      );
+
+      verifyNever(() => paymentRepository.getPaymentForBid(any()));
+    });
+
+    testWidgets('colis carte en attente : lu une seule fois à l\'ouverture', (
+      tester,
+    ) async {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+      await _pump(
+        tester,
+        bid: _makeBid(
+          paymentMethod: BidPaymentMethod.stripe,
+          status: 'PENDING',
+        ),
+        authBloc: authBloc,
+      );
+
+      verify(() => paymentRepository.getPaymentForBid('bid-001')).called(1);
+    });
+  });
 }

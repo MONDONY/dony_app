@@ -231,10 +231,23 @@ class _BidDetailViewState extends State<_BidDetailView>
     super.dispose();
   }
 
+  /// Lecture du paiement en cours : l'ouverture de la fiche et son premier
+  /// chargement la lançaient chacun, d'où deux GET identiques à chaque fois.
+  bool _paymentRequestInFlight = false;
+
   Future<void> _loadPaymentStatus() async {
     if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') {
       return;
     }
+    // Colis en espèces : aucun paiement en ligne n'existe, la lecture rendait
+    // 404 à chaque ouverture (staging 10/10). Rien à attendre.
+    if (_bid.paymentMethod == BidPaymentMethod.cash) {
+      _existingPaymentNotifier.value = null;
+      _paymentLoadedNotifier.value = true;
+      return;
+    }
+    if (_paymentRequestInFlight) return;
+    _paymentRequestInFlight = true;
     try {
       final payment = await getIt<PaymentRepository>().getPaymentForBid(
         _bid.id,
@@ -245,6 +258,8 @@ class _BidDetailViewState extends State<_BidDetailView>
       }
     } catch (_) {
       if (mounted) _paymentLoadedNotifier.value = true;
+    } finally {
+      _paymentRequestInFlight = false;
     }
   }
 

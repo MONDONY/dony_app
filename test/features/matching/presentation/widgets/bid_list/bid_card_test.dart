@@ -311,4 +311,34 @@ void main() {
       expect(find.text('Accepté'), findsNothing);
     });
   });
+
+  testWidgets(
+    'acceptBlockedMessage → raison affichée à la place du bandeau, Accepter '
+    'désactivé, Refuser actif',
+    (tester) async {
+      var accepted = 0;
+      var rejected = 0;
+      await _pumpCard(
+        tester,
+        BidCard(
+          bid: _makeBid(
+            status: 'PENDING',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+          isProcessing: false,
+          onAccept: () => accepted++,
+          onReject: () => rejected++,
+          acceptBlockedMessage: 'Plus assez de kilos libres',
+        ),
+      );
+
+      expect(find.text('Plus assez de kilos libres'), findsOneWidget);
+      expect(find.textContaining('Paiement en espèces'), findsNothing);
+      await tester.tap(find.text('Accepter'));
+      await tester.tap(find.text('Refuser'));
+      await tester.pump();
+      expect(accepted, 0);
+      expect(rejected, 1);
+    },
+  );
 }
