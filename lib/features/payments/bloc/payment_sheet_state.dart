@@ -54,6 +54,9 @@ class PaymentSheetSuccess extends PaymentSheetState {
 enum PaymentSheetFailureReason {
   cardUnavailable,
   declined,
+
+  /// Vérification 3-D Secure de la banque non aboutie (FLUTTER-G5).
+  authenticationFailed,
   sheetUnavailable,
   generic,
 }

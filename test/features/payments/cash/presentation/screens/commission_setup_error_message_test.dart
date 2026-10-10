@@ -16,19 +16,7 @@ void main() {
     stripeMessage: 'FragmentManager has been destroyed',
   );
 
-  test('vrai refus carte → message du fournisseur', () {
-    const e = PaymentConfirmationException.fromStripe(
-      'Votre carte a été refusée.',
-      stripeCode: 'Failed',
-      stripeErrorType: 'card_error',
-    );
-    expect(
-      commissionSetupErrorMessage(fr, e, opening: false),
-      'Votre carte a été refusée.',
-    );
-  });
-
-  test('refus carte sans message → libellé d\'ajout de carte', () {
+  test('refus carte → libellé traduit du refus (FLUTTER-G5)', () {
     const e = PaymentConfirmationException.fromStripe(
       null,
       stripeCode: 'Failed',
@@ -36,7 +24,25 @@ void main() {
     );
     expect(
       commissionSetupErrorMessage(fr, e, opening: false),
-      fr.commissionCardAddErrorMessage,
+      'Votre carte a été refusée. Essayez une autre carte ou contactez votre '
+      'banque.',
+    );
+    expect(
+      commissionSetupErrorMessage(en, e, opening: false),
+      'Your card was declined. Try another card or contact your bank.',
+    );
+  });
+
+  test('échec 3-D Secure → libellé de vérification bancaire', () {
+    const e = PaymentConfirmationException.fromStripe(
+      null,
+      stripeCode: 'Failed',
+      stripeErrorCode: 'setup_intent_authentication_failure',
+      stripeErrorType: 'invalid_request_error',
+    );
+    expect(
+      commissionSetupErrorMessage(fr, e, opening: false),
+      "La vérification de votre banque n'a pas abouti. Réessayez.",
     );
   });
 
@@ -89,6 +95,7 @@ void main() {
 
     test('champs absents omis', () {
       expect(stripeFailureContext(fragmentDestroyed), {
+        'stripe_detail': 'none',
         'stripe_code': 'Failed',
         'stripe_message': 'FragmentManager has been destroyed',
       });

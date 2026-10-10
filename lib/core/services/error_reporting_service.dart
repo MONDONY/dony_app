@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/report_severity.dart';
 import 'package:dony/core/network/transport_failure.dart';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -48,6 +49,7 @@ class SentryErrorReportingSink implements ErrorReportingSink {
     'stripe_error_code',
     'decline_code',
     'stripe_error_type',
+    'stripe_detail',
   };
 
   /// Nom du bloc de contexte visible dans l'événement Sentry.
@@ -57,6 +59,11 @@ class SentryErrorReportingSink implements ErrorReportingSink {
   /// [ErrorReportingService.transientFingerprint]). Jamais envoyée en contexte.
   static const fingerprintKey = '_fingerprint';
 
+  /// Clé réservée du contexte : niveau Sentry imposé (`warning`), posé par
+  /// [ErrorReportingService] pour une [ReportSeverity.warning]. Jamais envoyée
+  /// en contexte.
+  static const levelKey = '_level';
+
   @visibleForTesting
   static Future<void> applyReportContext(
     Scope scope,
@@ -64,7 +71,12 @@ class SentryErrorReportingSink implements ErrorReportingSink {
   ) async {
     final fingerprint = context[fingerprintKey];
     if (fingerprint is String) scope.fingerprint = [fingerprint];
-    final visible = Map<String, Object>.of(context)..remove(fingerprintKey);
+    if (context[levelKey] == SentryLevel.warning.name) {
+      scope.level = SentryLevel.warning;
+    }
+    final visible = Map<String, Object>.of(context)
+      ..remove(fingerprintKey)
+      ..remove(levelKey);
     await scope.setContexts(contextKey, visible);
     for (final entry in visible.entries) {
       if (taggedKeys.contains(entry.key)) {
@@ -147,6 +159,9 @@ class ErrorReportingService {
         error,
         effectiveStatusCode,
       ),
+      if (error is SeverityAwareError &&
+          error.reportSeverity == ReportSeverity.warning)
+        SentryErrorReportingSink.levelKey: SentryLevel.warning.name,
     };
 
     // Keep the original stack while replacing its potentially sensitive text.
@@ -176,6 +191,12 @@ class ErrorReportingService {
   };
 
   static bool _isExpected(Object error, int? statusCode) {
+    // L'erreur sait elle-même qu'elle est attendue : refus de carte par la
+    // banque, échec 3-D Secure (FLUTTER-G5). L'écran l'explique déjà.
+    if (error is SeverityAwareError &&
+        error.reportSeverity == ReportSeverity.expected) {
+      return true;
+    }
     if (statusCode != null && _expectedStatusCodes.contains(statusCode)) {
       return true;
     }
@@ -215,6 +236,8 @@ class ErrorReportingService {
       'decline_code',
       'stripe_error_type',
       'stripe_message',
+      // `none` : le SDK n'a donné aucun code (FLUTTER-G5).
+      'stripe_detail',
     };
     final output = <String, Object>{};
     for (final entry in context.entries) {

@@ -9115,7 +9115,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le paiement a échoué. Réessayez dans un instant.';
 
   @override
-  String get paymentDeclined => 'Paiement refusé';
+  String get paymentCardDeclined =>
+      'Votre carte a été refusée. Essayez une autre carte ou contactez votre banque.';
+
+  @override
+  String get paymentAuthenticationFailed =>
+      'La vérification de votre banque n\'a pas abouti. Réessayez.';
 
   @override
   String get paymentSheetOpenFailed =>

@@ -266,17 +266,16 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
   }
 }
 
-/// Texte de l'échec d'enregistrement de la carte de commission : le message
-/// du fournisseur seulement pour un vrai refus carte, sinon un libellé
-/// traduit — jamais le texte technique du SDK (FLUTTER-CJ).
+/// Texte de l'échec d'enregistrement de la carte de commission : toujours un
+/// libellé traduit, jamais le texte du SDK (FLUTTER-CJ, FLUTTER-G5).
 @visibleForTesting
 String commissionSetupErrorMessage(
   AppLocalizations l,
   PaymentConfirmationException e, {
   required bool opening,
 }) => switch (classifyStripeFailure(e, opening: opening)) {
-  StripeFailureKind.cardDeclined =>
-    e.message ?? l.commissionCardAddErrorMessage,
+  StripeFailureKind.cardDeclined => e.message ?? l.paymentCardDeclined,
+  StripeFailureKind.authenticationFailed => l.paymentAuthenticationFailed,
   StripeFailureKind.sheetUnavailable => l.paymentSheetOpenFailed,
   StripeFailureKind.generic => l.commissionCardAddErrorMessage,
 };

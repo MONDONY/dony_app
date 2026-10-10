@@ -15035,11 +15035,17 @@ abstract class AppLocalizations {
   /// **'Le paiement a échoué. Réessayez dans un instant.'**
   String get paymentFailedGeneric;
 
-  /// Libellé générique de PaymentSheetFailureReason.declined (dony_payment_sheet.dart), affiché quand providerMessage est absent.
+  /// Refus de la carte par la banque (PaymentSheetFailureReason.declined, dony_payment_sheet.dart, et carte de commission) : l'utilisateur peut réessayer avec une autre carte (FLUTTER-G5).
   ///
   /// In fr, this message translates to:
-  /// **'Paiement refusé'**
-  String get paymentDeclined;
+  /// **'Votre carte a été refusée. Essayez une autre carte ou contactez votre banque.'**
+  String get paymentCardDeclined;
+
+  /// Échec de la vérification 3-D Secure de la banque (PaymentSheetFailureReason.authenticationFailed, dony_payment_sheet.dart, et carte de commission) (FLUTTER-G5).
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification de votre banque n\'a pas abouti. Réessayez.'**
+  String get paymentAuthenticationFailed;
 
   /// Libellé de PaymentSheetFailureReason.sheetUnavailable (dony_payment_sheet.dart) : la feuille Stripe/PayPal n'a pas pu s'ouvrir (erreur locale du SDK, FLUTTER-CJ), distinct d'un refus de carte.
   ///

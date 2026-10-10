@@ -4402,7 +4402,8 @@
   "currencyNameXaf": "Central African CFA franc",
   "paymentCardUnavailable": "Card payment is unavailable right now. Try again in a moment.",
   "paymentFailedGeneric": "The payment failed. Try again in a moment.",
-  "paymentDeclined": "Payment declined",
+  "paymentCardDeclined": "Your card was declined. Try another card or contact your bank.",
+  "paymentAuthenticationFailed": "Your bank's verification didn't go through. Please try again.",
   "paymentSheetOpenFailed": "The payment couldn't open. Please try again.",
   "paymentMethodsSemantics": "Card, {wallet}, PayPal",
   "@paymentMethodsSemantics": {
