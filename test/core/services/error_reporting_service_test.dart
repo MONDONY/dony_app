@@ -2,10 +2,18 @@ import 'dart:io' show HttpException, SocketException;
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/report_severity.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+
+class _Severe implements SeverityAwareError {
+  const _Severe(this.reportSeverity);
+
+  @override
+  final ReportSeverity reportSeverity;
+}
 
 class _RecordingSink implements ErrorReportingSink {
   Object? error;
@@ -25,6 +33,54 @@ class _RecordingSink implements ErrorReportingSink {
 }
 
 void main() {
+  // FLUTTER-G5 : l'erreur décide si elle est attendue.
+  group('SeverityAwareError', () {
+    test('expected → jamais remontée', () async {
+      final sink = _RecordingSink();
+      await ErrorReportingService(
+        sink,
+      ).report(const _Severe(ReportSeverity.expected), operation: 'x');
+      expect(sink.error, isNull);
+    });
+
+    test('warning → remontée avec le niveau réservé', () async {
+      final sink = _RecordingSink();
+      await ErrorReportingService(sink).report(
+        const _Severe(ReportSeverity.warning),
+        operation: 'x',
+        context: {'stripe_detail': 'none'},
+      );
+      expect(sink.context![SentryErrorReportingSink.levelKey], 'warning');
+      expect(sink.context!['stripe_detail'], 'none');
+    });
+
+    test('error → remontée sans niveau imposé', () async {
+      final sink = _RecordingSink();
+      await ErrorReportingService(
+        sink,
+      ).report(const _Severe(ReportSeverity.error), operation: 'x');
+      expect(sink.error, isNotNull);
+      expect(
+        sink.context!.containsKey(SentryErrorReportingSink.levelKey),
+        isFalse,
+      );
+    });
+
+    test('applyReportContext : niveau warning posé, absent du contexte, '
+        'stripe_detail en tag', () async {
+      final scope = Scope(SentryOptions());
+      await SentryErrorReportingSink.applyReportContext(scope, {
+        'operation': 'payment.stripe_confirm',
+        'stripe_detail': 'none',
+        SentryErrorReportingSink.levelKey: 'warning',
+      });
+      expect(scope.level, SentryLevel.warning);
+      expect(scope.tags, containsPair('stripe_detail', 'none'));
+      final block = scope.contexts[SentryErrorReportingSink.contextKey] as Map;
+      expect(block.containsKey(SentryErrorReportingSink.levelKey), isFalse);
+    });
+  });
+
   test('ignores expected API errors', () async {
     final sink = _RecordingSink();
     final reporter = ErrorReportingService(sink);

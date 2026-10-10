@@ -9059,7 +9059,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'The payment failed. Try again in a moment.';
 
   @override
-  String get paymentDeclined => 'Payment declined';
+  String get paymentCardDeclined =>
+      'Your card was declined. Try another card or contact your bank.';
+
+  @override
+  String get paymentAuthenticationFailed =>
+      'Your bank\'s verification didn\'t go through. Please try again.';
 
   @override
   String get paymentSheetOpenFailed =>

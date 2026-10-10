@@ -9534,9 +9534,13 @@
   "@paymentFailedGeneric": {
     "description": "Libellé générique de PaymentSheetFailureReason.generic (dony_payment_sheet.dart), affiché quand providerMessage est absent."
   },
-  "paymentDeclined": "Paiement refusé",
-  "@paymentDeclined": {
-    "description": "Libellé générique de PaymentSheetFailureReason.declined (dony_payment_sheet.dart), affiché quand providerMessage est absent."
+  "paymentCardDeclined": "Votre carte a été refusée. Essayez une autre carte ou contactez votre banque.",
+  "@paymentCardDeclined": {
+    "description": "Refus de la carte par la banque (PaymentSheetFailureReason.declined, dony_payment_sheet.dart, et carte de commission) : l'utilisateur peut réessayer avec une autre carte (FLUTTER-G5)."
+  },
+  "paymentAuthenticationFailed": "La vérification de votre banque n'a pas abouti. Réessayez.",
+  "@paymentAuthenticationFailed": {
+    "description": "Échec de la vérification 3-D Secure de la banque (PaymentSheetFailureReason.authenticationFailed, dony_payment_sheet.dart, et carte de commission) (FLUTTER-G5)."
   },
   "paymentSheetOpenFailed": "Le paiement n'a pas pu s'ouvrir. Réessayez.",
   "@paymentSheetOpenFailed": {

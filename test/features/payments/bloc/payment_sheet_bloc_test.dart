@@ -616,12 +616,54 @@ void main() {
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
-      'échec du SDK → Sentry reçoit codes, type et message, l\'UI garde son '
-      'message',
+      'échec du SDK hors refus carte → Sentry reçoit codes, type et message',
       build: () {
         when(() => gateway.confirmPayPal(any())).thenThrow(
           const PaymentConfirmationException.fromStripe(
-            'Votre carte a été refusée.',
+            null,
+            stripeCode: 'Failed',
+            stripeErrorCode: 'resource_missing',
+            stripeErrorType: 'invalid_request_error',
+            stripeMessage: 'No such payment_intent',
+          ),
+        );
+        return buildReportingBloc();
+      },
+      seed: () => ready,
+      act: (bloc) => bloc.add(const PaymentSheetPayPalPressed()),
+      expect: () => [
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.paypal,
+        ),
+        const PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.generic,
+          ready: ready,
+        ),
+        ready,
+      ],
+      verify: (_) {
+        expect(sink.contexts, hasLength(1));
+        expect(sink.contexts.single, {
+          'operation': 'payment.stripe_confirm',
+          'error_type': 'PaymentConfirmationException',
+          'feature': 'payments',
+          'method': 'paypal',
+          'stripe_code': 'Failed',
+          'stripe_error_code': 'resource_missing',
+          'stripe_error_type': 'invalid_request_error',
+          'stripe_message': 'No such payment_intent',
+        });
+      },
+    );
+
+    // FLUTTER-G5 : un refus de carte, attendu, remontait comme un bug.
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'refus de carte → declined, rien n\'est remonté, ready ré-armé',
+      build: () {
+        when(() => gateway.confirmPayPal(any())).thenThrow(
+          const PaymentConfirmationException.fromStripe(
+            null,
             stripeCode: 'Failed',
             stripeErrorCode: 'card_declined',
             declineCode: 'insufficient_funds',
@@ -640,25 +682,40 @@ void main() {
         ),
         const PaymentSheetFailure(
           reason: PaymentSheetFailureReason.declined,
-          providerMessage: 'Votre carte a été refusée.',
           ready: ready,
         ),
         ready,
       ],
-      verify: (_) {
-        expect(sink.contexts, hasLength(1));
-        expect(sink.contexts.single, {
-          'operation': 'payment.stripe_confirm',
-          'error_type': 'PaymentConfirmationException',
-          'feature': 'payments',
-          'method': 'paypal',
-          'stripe_code': 'Failed',
-          'stripe_error_code': 'card_declined',
-          'decline_code': 'insufficient_funds',
-          'stripe_error_type': 'card_error',
-          'stripe_message': 'Your card was declined.',
-        });
+      verify: (_) => expect(sink.contexts, isEmpty),
+    );
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'échec 3-D Secure → authenticationFailed, rien n\'est remonté',
+      build: () {
+        when(() => gateway.confirmPayPal(any())).thenThrow(
+          const PaymentConfirmationException.fromStripe(
+            null,
+            stripeCode: 'Failed',
+            stripeErrorCode: 'payment_intent_authentication_failure',
+            stripeErrorType: 'invalid_request_error',
+          ),
+        );
+        return buildReportingBloc();
       },
+      seed: () => ready,
+      act: (bloc) => bloc.add(const PaymentSheetPayPalPressed()),
+      expect: () => [
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.paypal,
+        ),
+        const PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.authenticationFailed,
+          ready: ready,
+        ),
+        ready,
+      ],
+      verify: (_) => expect(sink.contexts, isEmpty),
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
@@ -818,11 +875,11 @@ void main() {
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
-      'vrai refus carte (card_error) → declined avec le message du fournisseur',
+      'vrai refus carte (card_error) → declined sans texte du SDK, non remonté',
       build: () {
         stubCardFlow(
           presentError: const PaymentConfirmationException.fromStripe(
-            'Votre carte a été refusée.',
+            null,
             stripeCode: 'Failed',
             stripeErrorType: 'card_error',
             declineCode: 'insufficient_funds',
@@ -839,11 +896,35 @@ void main() {
         ),
         const PaymentSheetFailure(
           reason: PaymentSheetFailureReason.declined,
-          providerMessage: 'Votre carte a été refusée.',
           ready: ready,
         ),
         ready,
       ],
+      verify: (_) => expect(sink.contexts, isEmpty),
+    );
+
+    // FLUTTER-G5 : `Failed` nu à la confirmation par carte (Android).
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'Failed sans aucun code après ouverture → remonté en warning, '
+      'stripe_detail none',
+      build: () {
+        stubCardFlow(
+          presentError: const PaymentConfirmationException.fromStripe(
+            null,
+            stripeCode: 'Failed',
+            stripeMessage: 'x',
+          ),
+        );
+        return buildReportingBloc();
+      },
+      seed: () => ready,
+      act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
+      verify: (_) {
+        final context = sink.contexts.single;
+        expect(context['operation'], 'payment.stripe_confirm');
+        expect(context['stripe_detail'], 'none');
+        expect(context[SentryErrorReportingSink.levelKey], 'warning');
+      },
     );
   });
 
@@ -857,7 +938,7 @@ void main() {
       expect(mapped, isA<PaymentCancelledException>());
     });
 
-    test('échec → message localisé affiché, codes du SDK conservés', () {
+    test('échec → aucun texte du SDK montré, codes du SDK conservés', () {
       final mapped = mapStripeException(
         const StripeException(
           error: LocalizedErrorMessage(
@@ -873,7 +954,7 @@ void main() {
       expect(
         mapped,
         isA<PaymentConfirmationException>()
-            .having((e) => e.message, 'message', 'Votre carte a été refusée.')
+            .having((e) => e.message, 'message', isNull)
             .having((e) => e.isFromStripe, 'isFromStripe', isTrue)
             .having((e) => e.stripeCode, 'stripeCode', 'Failed')
             .having((e) => e.stripeErrorCode, 'code', 'card_declined')
@@ -908,26 +989,6 @@ void main() {
               'stripeMessage',
               'FragmentManager has been destroyed',
             ),
-      );
-    });
-
-    test('card_error sans message localisé → message brut', () {
-      final mapped = mapStripeException(
-        const StripeException(
-          error: LocalizedErrorMessage(
-            code: FailureCode.Failed,
-            message: 'Your card was declined.',
-            type: 'card_error',
-          ),
-        ),
-      );
-      expect(
-        mapped,
-        isA<PaymentConfirmationException>().having(
-          (e) => e.message,
-          'message',
-          'Your card was declined.',
-        ),
       );
     });
 

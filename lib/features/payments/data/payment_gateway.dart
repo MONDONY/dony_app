@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dony/core/error/report_severity.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -51,17 +52,15 @@ class PaymentCancelledException implements Exception {
 
 /// Échec de confirmation Stripe (carte refusée, PayPal en échec…).
 ///
-/// [message] est nullable : le SDK Stripe ne garantit ni `localizedMessage`
-/// ni `message` sur son erreur. Venant du SDK, il n'est renseigné que pour un
-/// vrai refus carte (`card_error`) : c'est alors le message localisé par
-/// Stripe (`localizedMessage`), affiché tel quel. `null` retombe sur le
-/// libellé générique de la raison côté UI.
+/// [message] est nullable et n'est renseigné que par une exception construite
+/// par l'app : un échec venu du SDK ([PaymentConfirmationException.fromStripe])
+/// n'en porte jamais, l'UI affiche le libellé traduit de sa catégorie
+/// ([classifyStripeFailure]).
 ///
-/// Les champs `stripe*` décrivent l'erreur brute du SDK quand l'échec vient
-/// de lui ([PaymentConfirmationException.fromStripe]) : ils ne s'affichent
-/// jamais, ils servent au diagnostic remonté à Sentry (FLUTTER-7S, un échec
-/// de carte n'y laissait aucune trace, seul le message générique s'affichait).
-class PaymentConfirmationException implements Exception {
+/// Les champs `stripe*` décrivent l'erreur brute du SDK : ils ne s'affichent
+/// jamais, ils servent au diagnostic remonté à Sentry (FLUTTER-7S) et à
+/// décider si l'échec mérite d'y remonter ([reportSeverity], FLUTTER-G5).
+class PaymentConfirmationException implements Exception, SeverityAwareError {
   final String? message;
 
   /// `FailureCode` du SDK (`Failed`, `Timeout`, `Unknown`), jamais `Canceled`
@@ -99,11 +98,74 @@ class PaymentConfirmationException implements Exception {
   /// Vrai quand l'échec vient du SDK Stripe et mérite un diagnostic.
   bool get isFromStripe => stripeCode != null;
 
-  /// Vrai refus de la carte par l'émetteur (type Stripe `card_error`) : le
-  /// seul cas où le message du fournisseur est montré à l'utilisateur.
-  bool get isCardError => stripeErrorType == cardErrorType;
+  /// Le SDK n'a donné aucun code Stripe : seul son `FailureCode` est connu
+  /// (FLUTTER-G5, `Failed` nu sur Android quand l'erreur native n'est pas une
+  /// `StripeException`).
+  bool get hasNoStripeDetail =>
+      stripeErrorCode == null && declineCode == null && stripeErrorType == null;
+
+  /// Refus de la carte par la banque (type `card_error` ou code de refus
+  /// connu) : échec normal du parcours, l'utilisateur peut réessayer.
+  bool get isCardError =>
+      stripeErrorType == cardErrorType ||
+      cardDeclineCodes.contains(stripeErrorCode) ||
+      cardDeclineCodes.contains(declineCode);
+
+  /// Vérification 3-D Secure de la banque non aboutie.
+  bool get isAuthenticationFailure =>
+      authenticationFailureCodes.contains(stripeErrorCode) ||
+      authenticationFailureCodes.contains(declineCode);
+
+  /// Refus carte et échec 3-D Secure sont attendus : jamais remontés à Sentry.
+  /// Un `Failed` sans aucun code reste remonté, en `warning`. Tout le reste
+  /// (api_error, invalid_request_error, rate_limit_error, erreur locale du
+  /// SDK typée…) est une erreur. Une exception construite par l'app n'est pas
+  /// remontée par les appelants ([isFromStripe] faux).
+  @override
+  ReportSeverity get reportSeverity {
+    if (!isFromStripe) return ReportSeverity.error;
+    if (isCardError || isAuthenticationFailure) {
+      return ReportSeverity.expected;
+    }
+    if (hasNoStripeDetail) return ReportSeverity.warning;
+    return ReportSeverity.error;
+  }
 
   static const cardErrorType = 'card_error';
+
+  /// Codes Stripe (`code` ou `decline_code`) d'un refus par la banque ou
+  /// d'une saisie de carte invalide.
+  static const cardDeclineCodes = {
+    'card_declined',
+    'insufficient_funds',
+    'expired_card',
+    'incorrect_cvc',
+    'incorrect_number',
+    'invalid_cvc',
+    'invalid_number',
+    'invalid_expiry_month',
+    'invalid_expiry_year',
+    'do_not_honor',
+    'generic_decline',
+    'lost_card',
+    'stolen_card',
+    'processing_error',
+    'card_velocity_exceeded',
+    'withdrawal_count_limit_exceeded',
+    'pickup_card',
+    'restricted_card',
+    'transaction_not_allowed',
+    'card_not_supported',
+    'currency_not_supported',
+    'fraudulent',
+  };
+
+  /// Codes Stripe d'une authentification 3-D Secure non aboutie.
+  static const authenticationFailureCodes = {
+    'payment_intent_authentication_failure',
+    'setup_intent_authentication_failure',
+    'authentication_required',
+  };
 }
 
 /// Abstraction testable du SDK flutter_stripe pour la DonyPaymentSheet.
@@ -233,21 +295,18 @@ class StripePaymentGateway implements PaymentGateway {
 /// l'utilisateur ([PaymentCancelledException], silencieuse) ou échec
 /// ([PaymentConfirmationException] portant les codes du SDK pour Sentry).
 ///
-/// `message` (montrable) n'est renseigné que pour un vrai refus carte
-/// (`card_error`). Toute autre erreur du SDK porte un texte technique
-/// (« FragmentManager has been destroyed », FLUTTER-CJ) qui ne doit jamais
-/// atteindre l'écran : il reste dans `stripeMessage`, pour Sentry seulement,
-/// et l'UI affiche le libellé traduit de la raison.
+/// Aucun texte du SDK n'atteint l'écran : un message technique
+/// (« FragmentManager has been destroyed », FLUTTER-CJ) reste dans
+/// `stripeMessage`, pour Sentry seulement, et l'UI affiche le libellé traduit
+/// de la catégorie (refus de carte, 3-D Secure… FLUTTER-G5).
 ///
 /// Partagé par la feuille de paiement et l'écran de carte de commission.
 Exception mapStripeException(StripeException e) {
   if (e.error.code == FailureCode.Canceled) {
     return const PaymentCancelledException();
   }
-  final isCardError =
-      e.error.type == PaymentConfirmationException.cardErrorType;
   return PaymentConfirmationException.fromStripe(
-    isCardError ? e.error.localizedMessage ?? e.error.message : null,
+    null,
     stripeCode: e.error.code.name,
     stripeErrorCode: e.error.stripeErrorCode,
     declineCode: e.error.declineCode,
@@ -259,9 +318,12 @@ Exception mapStripeException(StripeException e) {
 /// Catégorie d'un échec Stripe pour l'utilisateur, commune à la feuille de
 /// paiement et à l'enregistrement de la carte de commission (FLUTTER-CJ).
 enum StripeFailureKind {
-  /// Vrai refus carte (`card_error`) : seul cas où le message du fournisseur
-  /// est montré.
+  /// Refus de la carte par la banque : l'utilisateur peut essayer une autre
+  /// carte.
   cardDeclined,
+
+  /// Vérification 3-D Secure de la banque non aboutie.
+  authenticationFailed,
 
   /// La feuille n'a pas pu s'ouvrir : échec à l'ouverture ou erreur locale du
   /// SDK, sans type Stripe (« FragmentManager has been destroyed »).
@@ -277,6 +339,9 @@ StripeFailureKind classifyStripeFailure(
   PaymentConfirmationException e, {
   bool opening = false,
 }) {
+  // 3-D Secure d'abord : `authentication_required` peut arriver en
+  // `card_error`.
+  if (e.isAuthenticationFailure) return StripeFailureKind.authenticationFailed;
   if (e.isCardError) return StripeFailureKind.cardDeclined;
   if (opening || e.stripeErrorType == null) {
     return StripeFailureKind.sheetUnavailable;
@@ -286,10 +351,12 @@ StripeFailureKind classifyStripeFailure(
 
 /// Contexte Sentry d'un échec Stripe : codes fermés du SDK et message brut
 /// tronqué à 200 caractères (générique, sans donnée de carte ni d'identité).
+/// `stripe_detail: none` signale un échec sans aucun code Stripe (FLUTTER-G5).
 /// Clés autorisées par `ErrorReportingService` (FLUTTER-7S, FLUTTER-CJ).
 Map<String, Object> stripeFailureContext(PaymentConfirmationException e) {
   final message = e.stripeMessage;
   return {
+    if (e.hasNoStripeDetail) 'stripe_detail': 'none',
     'stripe_code': ?e.stripeCode,
     'stripe_error_code': ?e.stripeErrorCode,
     'decline_code': ?e.declineCode,

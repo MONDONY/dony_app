@@ -336,8 +336,68 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump();
 
-      expect(find.text('Paiement refusé'), findsOneWidget);
+      // FLUTTER-G5 : refus clair, la feuille reste ouverte pour réessayer.
+      expect(
+        find.text(
+          'Votre carte a été refusée. Essayez une autre carte ou contactez '
+          'votre banque.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Envoi vers Dakar'), findsWidgets);
     });
+
+    testWidgets(
+      'échec 3-D Secure → libellé de vérification bancaire (FLUTTER-G5)',
+      (tester) async {
+        const ready = PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: false,
+        );
+        whenListen<PaymentSheetState>(
+          bloc,
+          Stream.fromIterable([
+            const PaymentSheetFailure(
+              reason: PaymentSheetFailureReason.authenticationFailed,
+              ready: ready,
+            ),
+          ]),
+          initialState: ready,
+        );
+
+        // pumpAndSettle avancerait le temps virtuel jusqu'à la disparition de la
+        // snackbar (durée par défaut 4s) — on pompe image par image à la place.
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) => TextButton(
+                  onPressed: () => DonyPaymentSheet.show(
+                    ctx,
+                    config: _config,
+                    contextLabel: 'Envoi vers Dakar',
+                    onSuccess: () {},
+                    bloc: bloc,
+                  ),
+                  child: const Text('Ouvrir'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump();
+
+        expect(
+          find.text(
+            "La vérification de votre banque n'a pas abouti. Réessayez.",
+          ),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets(
       'sheetUnavailable → libellé « n\'a pas pu s\'ouvrir », pas « refusé » (FLUTTER-CJ)',

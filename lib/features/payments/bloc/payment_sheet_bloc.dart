@@ -217,8 +217,10 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     }
   }
 
-  /// Classe un échec Stripe pour l'utilisateur. Seul un vrai refus carte
-  /// (`card_error`) montre le message du fournisseur ; une erreur locale du
+  /// Classe un échec Stripe pour l'utilisateur : refus de la banque
+  /// ([PaymentSheetFailureReason.declined]) ou 3-D Secure non abouti
+  /// ([PaymentSheetFailureReason.authenticationFailed]), sans texte du SDK
+  /// (FLUTTER-G5) ; une erreur locale du
   /// SDK (sans type Stripe, ex. « FragmentManager has been destroyed ») ou
   /// survenue à l'ouverture devient [PaymentSheetFailureReason.sheetUnavailable],
   /// le reste [PaymentSheetFailureReason.generic]. Une exception construite
@@ -237,6 +239,10 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         providerMessage: e.message,
         ready: ready,
       ),
+      StripeFailureKind.authenticationFailed => PaymentSheetFailure(
+        reason: PaymentSheetFailureReason.authenticationFailed,
+        ready: ready,
+      ),
       StripeFailureKind.sheetUnavailable => PaymentSheetFailure(
         reason: PaymentSheetFailureReason.sheetUnavailable,
         ready: ready,
@@ -251,7 +257,9 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   /// Remonte à Sentry un échec Stripe (hors annulation, déjà mappée en
   /// [PaymentCancelledException]) avec les codes du SDK : l'utilisateur ne
   /// voit qu'un message générique, et sans cette trace un refus de carte
-  /// restait indiagnosticable (FLUTTER-7S). Le message affiché ne change pas.
+  /// restait indiagnosticable (FLUTTER-7S). Un refus de carte ou un échec
+  /// 3-D Secure est attendu et filtré par `ErrorReportingService` via
+  /// [PaymentConfirmationException.reportSeverity] (FLUTTER-G5).
   void _reportStripeFailure(
     PaymentConfirmationException e,
     StackTrace stackTrace,
