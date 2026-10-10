@@ -838,6 +838,21 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.info,
       icon: Icons.check_circle_outline_rounded,
     ),
+    // 409 de l'annulation avant paiement (POST /bids/{id}/cancel-before-payment) :
+    // le paiement vient d'être autorisé, le colis rechargé montre l'annulation
+    // avec remboursement ; ou un paiement est en cours de validation.
+    'payment-already-authorized': _Entry(
+      title: (l) => l.errorPaymentAlreadyAuthorizedTitle,
+      message: (l) => l.errorPaymentAlreadyAuthorizedMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.check_circle_outline_rounded,
+    ),
+    'payment-in-progress': _Entry(
+      title: (l) => l.errorPaymentInProgressTitle,
+      message: (l) => l.errorPaymentInProgressMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_empty_rounded,
+    ),
     'traveler-stripe-invalid': _Entry(
       title: (l) => l.errorTravelerStripeInvalidTitle,
       message: (l) => l.errorTravelerStripeInvalidMessage,

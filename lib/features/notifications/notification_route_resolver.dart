@@ -69,6 +69,8 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'CONFIRMATION_CODE_REQUESTED' when _isUuid(bidId) =>
       '/bids/$bidId?action=new-code',
     'DELIVERY_NOSHOW_REPORTED' when _isUuid(bidId) => '/bids/$bidId',
+    // Demande annulée par l'expéditeur avant paiement (yadony-back, voyageur).
+    'BID_CANCELLED_BEFORE_PAYMENT' when _isUuid(bidId) => '/bids/$bidId',
     'MM_PAYMENT_PENDING' when _isUuid(bidId) =>
       '/bids/$bidId/mobile-money/awaiting',
     'HANDOVER_REMINDER_H2' when _isUuid(bidId) => '/bids/$bidId',

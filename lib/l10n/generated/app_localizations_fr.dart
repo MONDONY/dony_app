@@ -7495,14 +7495,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailRateTraveler => 'Noter le voyageur';
 
   @override
-  String get bidDetailCancelTransportRequestTitle =>
-      'Annuler la demande de transport ?';
-
-  @override
-  String get bidDetailCancelTransportRequestBody =>
-      'Aucun paiement n\'a été effectué. La demande sera retirée.';
-
-  @override
   String get bidDetailDeleteRequestQuestionTitle => 'Supprimer cette demande ?';
 
   @override
@@ -18089,4 +18081,51 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get moneyTripNotFoundTitle => 'Plus rien à suivre sur ce trajet';
+
+  @override
+  String get bidCancelBeforePaymentSheetTitle => 'Annuler la demande ?';
+
+  @override
+  String get bidCancelBeforePaymentSheetBodyCard =>
+      'La carte ne sera pas débitée. Si le voyageur avait vu votre demande, il sera prévenu.';
+
+  @override
+  String get bidCancelBeforePaymentSheetBodyMobileMoney =>
+      'Aucun paiement ne sera prélevé, le voyageur sera prévenu et ses kilos libérés.';
+
+  @override
+  String get bidCancelBeforePaymentSheetConversationNote =>
+      'Votre conversation avec le voyageur reste disponible.';
+
+  @override
+  String get bidCancelBeforePaymentConfirm => 'Oui, annuler la demande';
+
+  @override
+  String get bidCancelBeforePaymentKeep => 'Garder la demande';
+
+  @override
+  String get bidCancelBeforePaymentSuccessSnackbar =>
+      'Demande annulée. Rien n\'a été débité.';
+
+  @override
+  String get billetCancelledBeforePaymentSender =>
+      'Vous avez annulé cette demande avant le paiement.';
+
+  @override
+  String get billetCancelledBeforePaymentTraveler =>
+      'L\'expéditeur a annulé cette demande avant le paiement.';
+
+  @override
+  String get errorPaymentAlreadyAuthorizedTitle => 'Paiement déjà validé';
+
+  @override
+  String get errorPaymentAlreadyAuthorizedMessage =>
+      'Votre paiement vient d\'être validé. Le colis est à jour : annulez-le depuis sa fiche, vous serez remboursé.';
+
+  @override
+  String get errorPaymentInProgressTitle => 'Paiement en cours';
+
+  @override
+  String get errorPaymentInProgressMessage =>
+      'Un paiement est en cours de validation. Réessayez dans quelques minutes.';
 }

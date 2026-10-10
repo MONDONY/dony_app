@@ -3847,8 +3847,6 @@
   "bidDetailShowPickupQr": "Show the drop-off QR",
   "bidDetailTrackParcel": "Track my parcel",
   "bidDetailRateTraveler": "Rate the traveler",
-  "bidDetailCancelTransportRequestTitle": "Cancel the transport request?",
-  "bidDetailCancelTransportRequestBody": "No payment has been made. The request will be withdrawn.",
   "bidDetailDeleteRequestQuestionTitle": "Delete this request?",
   "bidDetailDeleteRequestDefaultBody": "It will be permanently removed from your history.",
   "bidDetailAwaitingSenderMobileMoneyPayment": "Awaiting the sender's payment (mobile money).",
@@ -9570,5 +9568,18 @@
   "moneyTripsShowAll": "See all my trips",
   "moneyTripsEmptyTitle": "No paid trips",
   "moneyTripsEmptyBody": "Parcels paid on your trips will show up here.",
-  "moneyTripNotFoundTitle": "Nothing left to track on this trip"
+  "moneyTripNotFoundTitle": "Nothing left to track on this trip",
+  "bidCancelBeforePaymentSheetTitle": "Cancel the request?",
+  "bidCancelBeforePaymentSheetBodyCard": "Your card will not be charged. If the traveler had seen your request, they will be notified.",
+  "bidCancelBeforePaymentSheetBodyMobileMoney": "No payment will be taken. The traveler will be notified and the kilos freed up.",
+  "bidCancelBeforePaymentSheetConversationNote": "Your conversation with the traveler stays available.",
+  "bidCancelBeforePaymentConfirm": "Yes, cancel the request",
+  "bidCancelBeforePaymentKeep": "Keep the request",
+  "bidCancelBeforePaymentSuccessSnackbar": "Request canceled. Nothing was charged.",
+  "billetCancelledBeforePaymentSender": "You canceled this request before payment.",
+  "billetCancelledBeforePaymentTraveler": "The sender canceled this request before payment.",
+  "errorPaymentAlreadyAuthorizedTitle": "Payment already confirmed",
+  "errorPaymentAlreadyAuthorizedMessage": "Your payment has just been confirmed. The parcel is up to date: cancel it from its page and you will be refunded.",
+  "errorPaymentInProgressTitle": "Payment in progress",
+  "errorPaymentInProgressMessage": "A payment is being confirmed. Please try again in a few minutes."
 }

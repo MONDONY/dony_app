@@ -579,6 +579,20 @@ class _BidDetailViewState extends State<_BidDetailView>
                   } else {
                     context.go('/home');
                   }
+                } else if (state is BidCancelledBeforePayment) {
+                  // Annulée côté back (rien de débité, voyageur prévenu) :
+                  // retour à la liste, qui se recharge au retour de l'écran.
+                  _refreshTimer?.cancel();
+                  DonySnackbar.show(
+                    context,
+                    message: l.bidCancelBeforePaymentSuccessSnackbar,
+                    type: DonySnackbarType.success,
+                  );
+                  if (context.canPop()) {
+                    context.pop(true);
+                  } else {
+                    context.go('/home');
+                  }
                 } else if (state is BidDeleted) {
                   DonySnackbar.show(
                     context,

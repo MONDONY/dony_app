@@ -12389,18 +12389,6 @@ abstract class AppLocalizations {
   /// **'Noter le voyageur'**
   String get bidDetailRateTraveler;
 
-  /// Titre du dialog d'annulation AWAITING_PAYMENT (sender_sticky_bar.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Annuler la demande de transport ?'**
-  String get bidDetailCancelTransportRequestTitle;
-
-  /// Corps du dialog d'annulation AWAITING_PAYMENT (sender_sticky_bar.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun paiement n\'a été effectué. La demande sera retirée.'**
-  String get bidDetailCancelTransportRequestBody;
-
   /// Titre par défaut du dialog de suppression (sender_sticky_bar.dart)
   ///
   /// In fr, this message translates to:
@@ -29461,6 +29449,84 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Plus rien à suivre sur ce trajet'**
   String get moneyTripNotFoundTitle;
+
+  /// Titre de la feuille de confirmation de l'annulation avant paiement (cancel_before_payment_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la demande ?'**
+  String get bidCancelBeforePaymentSheetTitle;
+
+  /// Conséquence de l'annulation d'un colis payé par carte, en attente de paiement (cancel_before_payment_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La carte ne sera pas débitée. Si le voyageur avait vu votre demande, il sera prévenu.'**
+  String get bidCancelBeforePaymentSheetBodyCard;
+
+  /// Conséquence de l'annulation d'un colis mobile money en attente de paiement (cancel_before_payment_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun paiement ne sera prélevé, le voyageur sera prévenu et ses kilos libérés.'**
+  String get bidCancelBeforePaymentSheetBodyMobileMoney;
+
+  /// Précision sous la conséquence : la conversation n'est jamais retirée (cancel_before_payment_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre conversation avec le voyageur reste disponible.'**
+  String get bidCancelBeforePaymentSheetConversationNote;
+
+  /// Bouton de confirmation (stickyBottom) de la feuille d'annulation avant paiement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui, annuler la demande'**
+  String get bidCancelBeforePaymentConfirm;
+
+  /// Bouton secondaire (stickyBottom) qui referme la feuille d'annulation avant paiement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder la demande'**
+  String get bidCancelBeforePaymentKeep;
+
+  /// Snackbar après l'annulation avant paiement (bid_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée. Rien n\'a été débité.'**
+  String get bidCancelBeforePaymentSuccessSnackbar;
+
+  /// Motif affiché à l'expéditeur sur un colis annulé avant paiement (billet_talon.dart, rejectionReason SENDER_CANCELLED_BEFORE_PAYMENT).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez annulé cette demande avant le paiement.'**
+  String get billetCancelledBeforePaymentSender;
+
+  /// Motif affiché au voyageur sur un colis annulé avant paiement (billet_talon.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur a annulé cette demande avant le paiement.'**
+  String get billetCancelledBeforePaymentTraveler;
+
+  /// Titre de l'erreur 409 payment-already-authorized (annulation avant paiement refusée).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement déjà validé'**
+  String get errorPaymentAlreadyAuthorizedTitle;
+
+  /// Message de l'erreur 409 payment-already-authorized.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre paiement vient d\'être validé. Le colis est à jour : annulez-le depuis sa fiche, vous serez remboursé.'**
+  String get errorPaymentAlreadyAuthorizedMessage;
+
+  /// Titre de l'erreur 409 payment-in-progress (dépôt mobile money ou paiement carte en cours de validation).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en cours'**
+  String get errorPaymentInProgressTitle;
+
+  /// Message de l'erreur 409 payment-in-progress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un paiement est en cours de validation. Réessayez dans quelques minutes.'**
+  String get errorPaymentInProgressMessage;
 }
 
 class _AppLocalizationsDelegate

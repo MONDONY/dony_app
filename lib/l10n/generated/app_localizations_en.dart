@@ -7453,14 +7453,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailRateTraveler => 'Rate the traveler';
 
   @override
-  String get bidDetailCancelTransportRequestTitle =>
-      'Cancel the transport request?';
-
-  @override
-  String get bidDetailCancelTransportRequestBody =>
-      'No payment has been made. The request will be withdrawn.';
-
-  @override
   String get bidDetailDeleteRequestQuestionTitle => 'Delete this request?';
 
   @override
@@ -17963,4 +17955,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moneyTripNotFoundTitle => 'Nothing left to track on this trip';
+
+  @override
+  String get bidCancelBeforePaymentSheetTitle => 'Cancel the request?';
+
+  @override
+  String get bidCancelBeforePaymentSheetBodyCard =>
+      'Your card will not be charged. If the traveler had seen your request, they will be notified.';
+
+  @override
+  String get bidCancelBeforePaymentSheetBodyMobileMoney =>
+      'No payment will be taken. The traveler will be notified and the kilos freed up.';
+
+  @override
+  String get bidCancelBeforePaymentSheetConversationNote =>
+      'Your conversation with the traveler stays available.';
+
+  @override
+  String get bidCancelBeforePaymentConfirm => 'Yes, cancel the request';
+
+  @override
+  String get bidCancelBeforePaymentKeep => 'Keep the request';
+
+  @override
+  String get bidCancelBeforePaymentSuccessSnackbar =>
+      'Request canceled. Nothing was charged.';
+
+  @override
+  String get billetCancelledBeforePaymentSender =>
+      'You canceled this request before payment.';
+
+  @override
+  String get billetCancelledBeforePaymentTraveler =>
+      'The sender canceled this request before payment.';
+
+  @override
+  String get errorPaymentAlreadyAuthorizedTitle => 'Payment already confirmed';
+
+  @override
+  String get errorPaymentAlreadyAuthorizedMessage =>
+      'Your payment has just been confirmed. The parcel is up to date: cancel it from its page and you will be refunded.';
+
+  @override
+  String get errorPaymentInProgressTitle => 'Payment in progress';
+
+  @override
+  String get errorPaymentInProgressMessage =>
+      'A payment is being confirmed. Please try again in a few minutes.';
 }

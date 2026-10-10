@@ -113,6 +113,13 @@ class BidCancelled extends BidState {
 
 class BidHidden extends BidState {}
 
+/// La demande en attente de paiement est annulée côté back : rien n'a été
+/// débité, le voyageur est prévenu. [alreadyCancelled] : elle l'était déjà.
+class BidCancelledBeforePayment extends BidState {
+  final bool alreadyCancelled;
+  BidCancelledBeforePayment({this.alreadyCancelled = false});
+}
+
 class BidDeleted extends BidState {}
 
 class BidError extends BidState {

@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -92,6 +93,49 @@ void main() {
       ).called(1);
     },
   );
+
+  test(
+    'bid_cancelled_before_payment fires with rail and fallback=false',
+    () async {
+      when(
+        () => repo.cancelBeforePayment('bid1'),
+      ).thenAnswer((_) async => false);
+
+      final bloc = makeBloc();
+      bloc.add(
+        BidCancelBeforePaymentRequested('bid1', paymentMethod: 'mobile_money'),
+      );
+      await bloc.stream.firstWhere((s) => s is BidCancelledBeforePayment);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.bidCancelledBeforePayment, {
+          'payment_method': 'mobile_money',
+          'already_cancelled': false,
+          'fallback': false,
+        }),
+      ).called(1);
+    },
+  );
+
+  test('bid_cancelled_before_payment marks the legacy fallback', () async {
+    when(() => repo.cancelBeforePayment('bid1')).thenThrow(
+      const NotFoundException(message: 'No endpoint matches this path'),
+    );
+    when(() => repo.hideBid('bid1')).thenAnswer((_) async {});
+
+    final bloc = makeBloc();
+    bloc.add(BidCancelBeforePaymentRequested('bid1', paymentMethod: 'stripe'));
+    await bloc.stream.firstWhere((s) => s is BidDeleted);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(
+      () => backend.capture(AnalyticsEvents.bidCancelledBeforePayment, {
+        'payment_method': 'stripe',
+        'fallback': true,
+      }),
+    ).called(1);
+  });
 
   test('bid_accepted fires on BidAcceptRequested', () async {
     when(() => repo.acceptBid('bid1')).thenAnswer((_) async => _buildBid());

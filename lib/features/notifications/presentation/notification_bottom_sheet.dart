@@ -721,6 +721,7 @@ class _NotificationIcon extends StatelessWidget {
       'PARCEL_REFUSED' => (cs.error, 'circle-x'),
       'negotiation_commission_declined' => (cs.error, 'circle-x'),
       'TRIP_CANCELLED' => (cs.error, 'ban'),
+      'BID_CANCELLED_BEFORE_PAYMENT' => (cs.error, 'ban'),
       'RECIPIENT_PARCEL_CANCELLED' => (cs.error, 'ban'),
       'RECIPIENT_PARCEL_REASSIGNED' => (cs.error, 'user-x'),
       'RECIPIENT_INVITATION_REMOVED' => (cs.error, 'user-x'),
