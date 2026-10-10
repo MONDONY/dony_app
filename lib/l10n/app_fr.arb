@@ -7539,14 +7539,6 @@
   "@bidDetailRateTraveler": {
     "description": "Bouton statut COMPLETED/DELIVERED, pas encore noté (sender_sticky_bar.dart)"
   },
-  "bidDetailCancelTransportRequestTitle": "Annuler la demande de transport ?",
-  "@bidDetailCancelTransportRequestTitle": {
-    "description": "Titre du dialog d'annulation AWAITING_PAYMENT (sender_sticky_bar.dart)"
-  },
-  "bidDetailCancelTransportRequestBody": "Aucun paiement n'a été effectué. La demande sera retirée.",
-  "@bidDetailCancelTransportRequestBody": {
-    "description": "Corps du dialog d'annulation AWAITING_PAYMENT (sender_sticky_bar.dart)"
-  },
   "bidDetailDeleteRequestQuestionTitle": "Supprimer cette demande ?",
   "@bidDetailDeleteRequestQuestionTitle": {
     "description": "Titre par défaut du dialog de suppression (sender_sticky_bar.dart)"
@@ -19913,5 +19905,31 @@
   "moneyTripsEmptyBody": "Les colis payés sur vos trajets apparaîtront ici.",
   "@moneyTripsEmptyBody": {"description": "Description de l'état vide de « Mes trajets » (money_trips_screen.dart, FLUTTER-HV)."},
   "moneyTripNotFoundTitle": "Plus rien à suivre sur ce trajet",
-  "@moneyTripNotFoundTitle": {"description": "Titre quand le trajet ciblé n'a plus d'argent dans l'aperçu (money_trips_screen.dart, FLUTTER-HV)."}
+  "@moneyTripNotFoundTitle": {"description": "Titre quand le trajet ciblé n'a plus d'argent dans l'aperçu (money_trips_screen.dart, FLUTTER-HV)."},
+  "bidCancelBeforePaymentSheetTitle": "Annuler la demande ?",
+  "@bidCancelBeforePaymentSheetTitle": {"description": "Titre de la feuille de confirmation de l'annulation avant paiement (cancel_before_payment_sheet.dart)."},
+  "bidCancelBeforePaymentSheetBodyCard": "La carte ne sera pas débitée, le voyageur sera prévenu.",
+  "@bidCancelBeforePaymentSheetBodyCard": {"description": "Conséquence de l'annulation d'un colis payé par carte, en attente de paiement (cancel_before_payment_sheet.dart)."},
+  "bidCancelBeforePaymentSheetBodyMobileMoney": "Aucun paiement ne sera prélevé, le voyageur sera prévenu et ses kilos libérés.",
+  "@bidCancelBeforePaymentSheetBodyMobileMoney": {"description": "Conséquence de l'annulation d'un colis mobile money en attente de paiement (cancel_before_payment_sheet.dart)."},
+  "bidCancelBeforePaymentSheetConversationNote": "Votre conversation avec le voyageur reste disponible.",
+  "@bidCancelBeforePaymentSheetConversationNote": {"description": "Précision sous la conséquence : la conversation n'est jamais retirée (cancel_before_payment_sheet.dart)."},
+  "bidCancelBeforePaymentConfirm": "Oui, annuler la demande",
+  "@bidCancelBeforePaymentConfirm": {"description": "Bouton de confirmation (stickyBottom) de la feuille d'annulation avant paiement."},
+  "bidCancelBeforePaymentKeep": "Garder la demande",
+  "@bidCancelBeforePaymentKeep": {"description": "Bouton secondaire (stickyBottom) qui referme la feuille d'annulation avant paiement."},
+  "bidCancelBeforePaymentSuccessSnackbar": "Demande annulée. Rien n'a été débité.",
+  "@bidCancelBeforePaymentSuccessSnackbar": {"description": "Snackbar après l'annulation avant paiement (bid_detail_screen.dart)."},
+  "billetCancelledBeforePaymentSender": "Vous avez annulé cette demande avant le paiement.",
+  "@billetCancelledBeforePaymentSender": {"description": "Motif affiché à l'expéditeur sur un colis annulé avant paiement (billet_talon.dart, rejectionReason SENDER_CANCELLED_BEFORE_PAYMENT)."},
+  "billetCancelledBeforePaymentTraveler": "L'expéditeur a annulé cette demande avant le paiement.",
+  "@billetCancelledBeforePaymentTraveler": {"description": "Motif affiché au voyageur sur un colis annulé avant paiement (billet_talon.dart)."},
+  "errorPaymentAlreadyAuthorizedTitle": "Paiement déjà validé",
+  "@errorPaymentAlreadyAuthorizedTitle": {"description": "Titre de l'erreur 409 payment-already-authorized (annulation avant paiement refusée)."},
+  "errorPaymentAlreadyAuthorizedMessage": "Votre paiement vient d'être validé. Le colis est à jour : annulez-le depuis sa fiche, vous serez remboursé.",
+  "@errorPaymentAlreadyAuthorizedMessage": {"description": "Message de l'erreur 409 payment-already-authorized."},
+  "errorPaymentInProgressTitle": "Paiement en cours",
+  "@errorPaymentInProgressTitle": {"description": "Titre de l'erreur 409 payment-in-progress (dépôt mobile money ou paiement carte en cours de validation)."},
+  "errorPaymentInProgressMessage": "Un paiement est en cours de validation. Réessayez dans quelques minutes.",
+  "@errorPaymentInProgressMessage": {"description": "Message de l'erreur 409 payment-in-progress."}
 }

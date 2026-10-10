@@ -210,6 +210,15 @@ class _CancelledBlock extends StatelessWidget {
           ],
         );
       }
+      if (bid.rejectionReason == kCancelledBeforePaymentReason) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _CancelledBeforePaymentLine(isSender: isSender),
+            const _TerminalBlock(),
+          ],
+        );
+      }
       return const _TerminalBlock();
     }
     final cs = Theme.of(context).colorScheme;
@@ -283,6 +292,38 @@ class _RejectedBlock extends StatelessWidget {
           _RematchCta(tripCancellationId: bid.tripCancellationId!),
         ],
       ],
+    );
+  }
+}
+
+/// Motif posé par yadony-back sur une demande annulée par l'expéditeur
+/// avant paiement (`POST /bids/{id}/cancel-before-payment`).
+const kCancelledBeforePaymentReason = 'SENDER_CANCELLED_BEFORE_PAYMENT';
+
+/// « Vous avez annulé… » / « L'expéditeur a annulé… avant le paiement ».
+class _CancelledBeforePaymentLine extends StatelessWidget {
+  final bool isSender;
+
+  const _CancelledBeforePaymentLine({required this.isSender});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.only(top: DonySpacing.sm),
+      child: Text(
+        isSender
+            ? l.billetCancelledBeforePaymentSender
+            : l.billetCancelledBeforePaymentTraveler,
+        key: const Key('billet-cancelled-before-payment'),
+        textAlign: TextAlign.center,
+        style: tt.bodyMedium?.copyWith(
+          color: cs.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

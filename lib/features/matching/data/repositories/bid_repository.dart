@@ -127,6 +127,9 @@ class BidRepository {
 
   Future<void> hideBid(String bidId) => _datasource.hideBid(bidId);
 
+  Future<bool> cancelBeforePayment(String bidId) =>
+      _datasource.cancelBeforePayment(bidId);
+
   Future<void> dismissBidAsTraveler(String bidId) =>
       _datasource.dismissBidAsTraveler(bidId);
 

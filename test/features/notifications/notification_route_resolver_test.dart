@@ -16,6 +16,7 @@ void main() {
       'CONFIRMATION_CODE_READY',
       'CONFIRMATION_CODE_BLOCKED',
       'DELIVERY_NOSHOW_REPORTED',
+      'BID_CANCELLED_BEFORE_PAYMENT',
     ]) {
       test('$type routes to bid detail', () {
         expect(

@@ -66,6 +66,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidMyListAutoRefreshRequested>(_onMyListAutoRefreshRequested);
     on<BidCancelRequested>(_onCancelRequested);
     on<BidHideRequested>(_onHideRequested);
+    on<BidCancelBeforePaymentRequested>(_onCancelBeforePaymentRequested);
     on<BidDeleteRequested>(_onDeleteRequested);
     on<BidTravelerDismissRequested>(_onTravelerDismissRequested);
     on<BidQuoteRequested>(_onQuoteRequested);
@@ -360,6 +361,70 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }
+  }
+
+  /// Vraie annulation avant paiement. Trois issues :
+  /// - succès → [BidCancelledBeforePayment] ;
+  /// - back antérieur (404 sans code métier, route inconnue, ou 405) → repli
+  ///   sur le masquage d'avant, [BidDeleted] (PR jumelle, l'app peut précéder
+  ///   le déploiement du back) ;
+  /// - refus (409 : paiement déjà validé ou en cours) → [BidError] puis la
+  ///   fiche relue, pour que l'écran montre l'état réel du colis.
+  Future<void> _onCancelBeforePaymentRequested(
+    BidCancelBeforePaymentRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    emit(BidLoading());
+    try {
+      final already = await _repository.cancelBeforePayment(event.bidId);
+      emit(BidCancelledBeforePayment(alreadyCancelled: already));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.bidCancelledBeforePayment,
+          properties: {
+            'payment_method': event.paymentMethod,
+            'already_cancelled': already,
+            'fallback': false,
+          },
+        ),
+      );
+    } catch (e) {
+      final error = unwrapDioError(e);
+      if (_isLegacyBackend(error)) {
+        try {
+          await _repository.hideBid(event.bidId);
+          emit(BidDeleted());
+          unawaited(
+            _analytics.logEvent(
+              AnalyticsEvents.bidCancelledBeforePayment,
+              properties: {
+                'payment_method': event.paymentMethod,
+                'fallback': true,
+              },
+            ),
+          );
+        } catch (e2) {
+          emit(BidError(unwrapDioError(e2)));
+        }
+        return;
+      }
+      emit(BidError(error));
+      if (error is ConflictException) {
+        try {
+          emit(BidDetailLoaded(await _repository.getBidById(event.bidId)));
+        } catch (_) {
+          // Fiche illisible : l'erreur est déjà affichée, le polling relira.
+        }
+      }
+    }
+  }
+
+  /// Back sans l'endpoint : 404 « No endpoint matches this path » (aucun
+  /// code métier, d'où le code synthétique `NOT_FOUND`) ou 405. Un 404
+  /// `bid-not-found` vient du nouveau back : la demande n'existe plus.
+  static bool _isLegacyBackend(AppException error) {
+    if (error is NotFoundException) return error.code == 'NOT_FOUND';
+    return error.code == '405';
   }
 
   Future<void> _onDeleteRequested(

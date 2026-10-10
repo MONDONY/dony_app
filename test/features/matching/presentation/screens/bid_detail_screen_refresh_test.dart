@@ -280,6 +280,36 @@ void main() {
   int detailRequests() =>
       verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).callCount;
 
+  group('Annulation avant paiement', () {
+    testWidgets(
+      'BidCancelledBeforePayment → snackbar « Demande annulée » et sortie de la fiche',
+      (tester) async {
+        final states = StreamController<BidState>.broadcast();
+        addTearDown(states.close);
+        when(() => bidBloc.stream).thenAnswer((_) => states.stream);
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.stripe,
+          ),
+          authBloc: senderAuth(),
+        );
+
+        states.add(BidCancelledBeforePayment());
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(
+          find.text("Demande annulée. Rien n'a été débité."),
+          findsOneWidget,
+        );
+        expect(find.text('Home'), findsOneWidget);
+      },
+    );
+  });
+
   group('FLUTTER-CH — relecture du colis en attente du voyageur', () {
     for (final status in ['PENDING', 'PAYMENT_ESCROWED']) {
       testWidgets('$status → relevé périodique toutes les 30 s', (

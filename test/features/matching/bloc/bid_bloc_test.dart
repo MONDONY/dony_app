@@ -1184,6 +1184,176 @@ void main() {
     );
   });
 
+  // ─── BidCancelBeforePaymentRequested ─────────────────────────────────────────
+
+  group('BidCancelBeforePaymentRequested', () {
+    DioException dioError(AppException error, int status) => DioException(
+      requestOptions: RequestOptions(
+        path: '/bids/bid-001/cancel-before-payment',
+      ),
+      error: error,
+      response: Response(
+        requestOptions: RequestOptions(
+          path: '/bids/bid-001/cancel-before-payment',
+        ),
+        statusCode: status,
+      ),
+    );
+
+    BidCancelBeforePaymentRequested event() =>
+        BidCancelBeforePaymentRequested('bid-001', paymentMethod: 'stripe');
+
+    blocTest<BidBloc, BidState>(
+      'annulation réussie → [Loading, BidCancelledBeforePayment], sans masquage',
+      build: () {
+        when(
+          () => mockRepo.cancelBeforePayment('bid-001'),
+        ).thenAnswer((_) async => false);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+          (s) => s is BidCancelledBeforePayment && !s.alreadyCancelled,
+        ),
+      ],
+      verify: (_) => verifyNever(() => mockRepo.hideBid(any())),
+    );
+
+    blocTest<BidBloc, BidState>(
+      'double appel → BidCancelledBeforePayment(alreadyCancelled: true)',
+      build: () {
+        when(
+          () => mockRepo.cancelBeforePayment('bid-001'),
+        ).thenAnswer((_) async => true);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+          (s) => s is BidCancelledBeforePayment && s.alreadyCancelled,
+        ),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'back antérieur (404 sans code) → repli sur le masquage, BidDeleted',
+      build: () {
+        when(() => mockRepo.cancelBeforePayment('bid-001')).thenThrow(
+          dioError(
+            const NotFoundException(message: 'No endpoint matches this path'),
+            404,
+          ),
+        );
+        when(() => mockRepo.hideBid('bid-001')).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [isA<BidLoading>(), isA<BidDeleted>()],
+      verify: (_) => verify(() => mockRepo.hideBid('bid-001')).called(1),
+    );
+
+    blocTest<BidBloc, BidState>(
+      'back antérieur (405) → repli sur le masquage',
+      build: () {
+        when(() => mockRepo.cancelBeforePayment('bid-001')).thenThrow(
+          dioError(
+            const NetworkException('Method Not Allowed', code: '405'),
+            405,
+          ),
+        );
+        when(() => mockRepo.hideBid('bid-001')).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [isA<BidLoading>(), isA<BidDeleted>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'repli qui échoue lui aussi → BidError',
+      build: () {
+        when(() => mockRepo.cancelBeforePayment('bid-001')).thenThrow(
+          dioError(const NotFoundException(message: 'No endpoint'), 404),
+        );
+        when(() => mockRepo.hideBid('bid-001')).thenThrow(Exception('réseau'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      '404 bid-not-found (nouveau back) → BidError, jamais de masquage',
+      build: () {
+        when(() => mockRepo.cancelBeforePayment('bid-001')).thenThrow(
+          dioError(
+            const NotFoundException(
+              message: "Cette demande n'existe plus.",
+              apiCode: 'bid-not-found',
+            ),
+            404,
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+          (s) => s is BidError && s.error.code == 'bid-not-found',
+        ),
+      ],
+      verify: (_) => verifyNever(() => mockRepo.hideBid(any())),
+    );
+
+    blocTest<BidBloc, BidState>(
+      '409 paiement déjà validé → BidError puis fiche relue',
+      build: () {
+        when(() => mockRepo.cancelBeforePayment('bid-001')).thenThrow(
+          dioError(
+            const ConflictException(
+              'Votre paiement vient d’être validé.',
+              code: 'payment-already-authorized',
+            ),
+            409,
+          ),
+        );
+        when(
+          () => mockRepo.getBidById('bid-001'),
+        ).thenAnswer((_) async => buildBid(status: 'PAYMENT_ESCROWED'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+          (s) => s is BidError && s.error.code == 'payment-already-authorized',
+        ),
+        predicate<BidState>(
+          (s) => s is BidDetailLoaded && s.bid.status == 'PAYMENT_ESCROWED',
+        ),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      '409 puis fiche illisible → BidError seulement',
+      build: () {
+        when(() => mockRepo.cancelBeforePayment('bid-001')).thenThrow(
+          dioError(
+            const ConflictException('En cours', code: 'payment-in-progress'),
+            409,
+          ),
+        );
+        when(() => mockRepo.getBidById('bid-001')).thenThrow(Exception('x'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
+  });
+
   // ─── BidMyListAutoRefreshRequested ───────────────────────────────────────────
 
   group('BidMyListAutoRefreshRequested', () {

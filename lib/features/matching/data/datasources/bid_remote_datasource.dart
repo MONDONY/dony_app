@@ -285,6 +285,21 @@ class BidRemoteDatasource {
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Annulation par l'expéditeur d'une demande qui attend son paiement
+  /// (yadony-back, `POST /bids/{id}/cancel-before-payment`) : autorisation
+  /// carte libérée ou paiement mobile money en attente clos, voyageur prévenu.
+  /// Rend `true` si la demande était déjà annulée (double appel). Erreurs :
+  /// 409 `payment-already-authorized` / `payment-in-progress` /
+  /// `bid-not-awaiting-payment`, 403, 404 `bid-not-found`. Un back antérieur
+  /// répond 404 sans code (route inconnue) : voir [BidBloc].
+  Future<bool> cancelBeforePayment(String bidId) async {
+    final response = await _apiClient.dio.post(
+      '/bids/$bidId/cancel-before-payment',
+    );
+    final data = response.data;
+    return data is Map && data['alreadyCancelled'] == true;
+  }
+
   Future<void> hideBid(String bidId) async {
     await _apiClient.dio.delete('/bids/$bidId/me');
   }

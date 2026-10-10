@@ -163,6 +163,17 @@ class BidHideRequested extends BidEvent {
   BidHideRequested(this.bidId);
 }
 
+/// « Annuler la demande » de l'expéditeur sur un colis qui attend son
+/// paiement (`AWAITING_PAYMENT`) : vraie annulation côté back, repli sur le
+/// masquage ([BidDeleteRequested]) si le back ne connaît pas encore l'endpoint.
+class BidCancelBeforePaymentRequested extends BidEvent {
+  final String bidId;
+
+  /// Rail du colis (`stripe`, `mobile_money`), pour l'analytics seulement.
+  final String paymentMethod;
+  BidCancelBeforePaymentRequested(this.bidId, {required this.paymentMethod});
+}
+
 class BidDeleteRequested extends BidEvent {
   final String bidId;
   BidDeleteRequested(this.bidId);

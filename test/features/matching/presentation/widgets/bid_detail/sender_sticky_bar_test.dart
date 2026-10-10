@@ -102,6 +102,9 @@ PaymentModel _payment({
 void main() {
   setUpAll(() {
     registerFallbackValue(BidDeleteRequested('bid-test-1'));
+    registerFallbackValue(
+      BidCancelBeforePaymentRequested('bid-test-1', paymentMethod: 'stripe'),
+    );
   });
 
   // Test 1: PENDING stripe non payé → 'Payer mon envoi'
@@ -662,10 +665,11 @@ void main() {
     expect(find.text('Payer mon envoi'), findsNothing);
   });
 
-  // Test 23: AWAITING_PAYMENT stripe → tap "Annuler la demande" → dialog →
-  // "Oui, annuler" → BidDeleteRequested dispatché une fois
+  // Test 23: AWAITING_PAYMENT stripe → « Annuler la demande » → feuille de
+  // confirmation → « Oui, annuler la demande » → vraie annulation (jamais le
+  // masquage BidDeleteRequested, qui reste le repli du BLoC).
   testWidgets(
-    '23. AWAITING_PAYMENT → "Annuler la demande" → dialog → "Oui, annuler" → BidDeleteRequested',
+    '23. AWAITING_PAYMENT stripe → feuille → confirmer → BidCancelBeforePaymentRequested',
     (tester) async {
       final bloc = _MockBidBloc();
       whenListen<BidState>(
@@ -682,12 +686,99 @@ void main() {
       await tester.tap(find.text('Annuler la demande'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Annuler la demande de transport ?'), findsOneWidget);
+      expect(find.text('Annuler la demande ?'), findsOneWidget);
+      expect(
+        find.text('La carte ne sera pas débitée, le voyageur sera prévenu.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Votre conversation avec le voyageur reste disponible.'),
+        findsOneWidget,
+      );
 
-      await tester.tap(find.text('Oui, annuler'));
+      await tester.tap(find.text('Oui, annuler la demande'));
       await tester.pumpAndSettle();
 
-      verify(() => bloc.add(any(that: isA<BidDeleteRequested>()))).called(1);
+      final captured = verify(
+        () =>
+            bloc.add(captureAny(that: isA<BidCancelBeforePaymentRequested>())),
+      ).captured;
+      expect(captured, hasLength(1));
+      final event = captured.single as BidCancelBeforePaymentRequested;
+      expect(event.bidId, 'bid-test-1');
+      expect(event.paymentMethod, 'stripe');
+      verifyNever(() => bloc.add(any(that: isA<BidDeleteRequested>())));
+      expect(find.text('Annuler la demande ?'), findsNothing);
+    },
+  );
+
+  testWidgets('23 bis. feuille → « Garder la demande » → aucun événement', (
+    tester,
+  ) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
+
+    await tester.pumpWidget(
+      _host(bloc, _bid(status: 'AWAITING_PAYMENT'), paymentLoaded: true),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Annuler la demande'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Garder la demande'));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => bloc.add(any()));
+    expect(find.text('Annuler la demande ?'), findsNothing);
+  });
+
+  testWidgets(
+    '23 ter. AWAITING_PAYMENT mobile money → conséquence mobile money, rail mobile_money',
+    (tester) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          _bid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+          paymentLoaded: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Annuler la demande'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Aucun paiement ne sera prélevé, le voyageur sera prévenu et ses kilos libérés.',
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Oui, annuler la demande'));
+      await tester.pumpAndSettle();
+
+      final event =
+          verify(
+                () => bloc.add(
+                  captureAny(that: isA<BidCancelBeforePaymentRequested>()),
+                ),
+              ).captured.single
+              as BidCancelBeforePaymentRequested;
+      expect(event.paymentMethod, 'mobile_money');
     },
   );
 
@@ -717,79 +808,6 @@ void main() {
     expect(find.text('Payer par mobile money'), findsOneWidget);
     expect(find.text('Annuler la demande'), findsOneWidget);
     expect(find.text('Payer mon envoi'), findsNothing);
-  });
-
-  // Test 25: AWAITING_PAYMENT mobile money → "Annuler la demande" → dialog
-  // → "Oui, annuler" → BidDeleteRequested dispatché une fois
-  testWidgets(
-    '25. AWAITING_PAYMENT mobile money → "Annuler la demande" → dialog → '
-    '"Oui, annuler" → BidDeleteRequested',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(
-        bloc,
-        const Stream.empty(),
-        initialState: BidInitial(),
-      );
-
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(
-            status: 'AWAITING_PAYMENT',
-            paymentMethod: BidPaymentMethod.mobileMoney,
-          ),
-          paymentLoaded: true,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Annuler la demande'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Annuler la demande de transport ?'), findsOneWidget);
-      expect(
-        find.text("Aucun paiement n'a été effectué. La demande sera retirée."),
-        findsOneWidget,
-      );
-
-      await tester.tap(find.text('Oui, annuler'));
-      await tester.pumpAndSettle();
-
-      verify(() => bloc.add(any(that: isA<BidDeleteRequested>()))).called(1);
-    },
-  );
-
-  // Test 26: AWAITING_PAYMENT mobile money → dialog → "Retour" → aucun
-  // BidDeleteRequested
-  testWidgets('26. AWAITING_PAYMENT mobile money → dialog → "Retour" → aucun '
-      'BidDeleteRequested', (tester) async {
-    final bloc = _MockBidBloc();
-    whenListen<BidState>(
-      bloc,
-      const Stream.empty(),
-      initialState: BidInitial(),
-    );
-
-    await tester.pumpWidget(
-      _host(
-        bloc,
-        _bid(
-          status: 'AWAITING_PAYMENT',
-          paymentMethod: BidPaymentMethod.mobileMoney,
-        ),
-        paymentLoaded: true,
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Annuler la demande'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Retour'));
-    await tester.pumpAndSettle();
-
-    verifyNever(() => bloc.add(any(that: isA<BidDeleteRequested>())));
   });
 
   // ── Tap tests that open bottom sheets (requires GetIt mocks) ─────────────────

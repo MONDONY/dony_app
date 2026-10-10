@@ -382,6 +382,42 @@ void main() {
     expect(find.byKey(const Key('billet-rejection-reason')), findsNothing);
   });
 
+  testWidgets(
+    'sender + CANCELLED avant paiement → motif « Vous avez annulé… »',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          rejectionReason: 'SENDER_CANCELLED_BEFORE_PAYMENT',
+        ),
+        true,
+      );
+      expect(
+        find.text('Vous avez annulé cette demande avant le paiement.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'voyageur + CANCELLED avant paiement → motif « L’expéditeur a annulé… »',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          rejectionReason: 'SENDER_CANCELLED_BEFORE_PAYMENT',
+        ),
+        false,
+      );
+      expect(
+        find.text("L'expéditeur a annulé cette demande avant le paiement."),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('sender + CANCELLED → message terminal', (tester) async {
     await _pump(tester, _bid(status: 'CANCELLED'), true);
     expect(find.textContaining('Cette demande est terminée'), findsOneWidget);

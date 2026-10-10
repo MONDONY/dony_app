@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -5,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/cancel_before_payment_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
@@ -328,38 +331,44 @@ class SenderStickyBar extends StatelessWidget {
   // ── Cancel request button ────────────────────────────────────────────────────
 
   /// Bouton « Annuler la demande » partagé par les blocs AWAITING_PAYMENT
-  /// mobile money et stripe : même dialogue de confirmation dans les deux cas.
+  /// mobile money et stripe : vraie annulation (autorisation carte ou paiement
+  /// en attente libéré, voyageur prévenu) après une feuille de confirmation.
+  /// Le BLoC retombe sur le masquage d'avant si le back ne connaît pas encore
+  /// l'endpoint.
   Widget _cancelRequestButton(BuildContext context) {
     final l = context.l10n;
     return DonyButton(
+      key: const Key('sender-cancel-before-payment'),
       label: l.bidDetailCancelRequestLabel,
       variant: DonyButtonVariant.ghost,
-      onPressed: isLoading
-          ? null
-          : () => _showDeleteDialog(
-              context,
-              title: l.bidDetailCancelTransportRequestTitle,
-              body: l.bidDetailCancelTransportRequestBody,
-              confirmLabel: l.bidDetailConfirmCancelButton,
-              dismissLabel: l.commonBack,
-            ),
+      onPressed: isLoading ? null : () => _confirmCancelBeforePayment(context),
+    );
+  }
+
+  Future<void> _confirmCancelBeforePayment(BuildContext context) async {
+    // Lu avant la feuille : la route modale est posée au-dessus du provider.
+    final bloc = context.read<BidBloc>();
+    final confirmed = await CancelBeforePaymentSheet.show(context, bid: bid);
+    if (!confirmed) return;
+    unawaited(HapticFeedback.mediumImpact());
+    bloc.add(
+      BidCancelBeforePaymentRequested(
+        bid.id,
+        paymentMethod: bid.paymentMethod == BidPaymentMethod.mobileMoney
+            ? 'mobile_money'
+            : 'stripe',
+      ),
     );
   }
 
   // ── Delete dialog ────────────────────────────────────────────────────────────
 
-  void _showDeleteDialog(
-    BuildContext context, {
-    String? title,
-    String? body,
-    String? confirmLabel,
-    String? dismissLabel,
-  }) {
+  void _showDeleteDialog(BuildContext context) {
     final l = context.l10n;
-    final resolvedTitle = title ?? l.bidDetailDeleteRequestQuestionTitle;
-    final resolvedBody = body ?? l.bidDetailDeleteRequestDefaultBody;
-    final resolvedConfirmLabel = confirmLabel ?? l.commonDelete;
-    final resolvedDismissLabel = dismissLabel ?? l.commonCancel;
+    final resolvedTitle = l.bidDetailDeleteRequestQuestionTitle;
+    final resolvedBody = l.bidDetailDeleteRequestDefaultBody;
+    final resolvedConfirmLabel = l.commonDelete;
+    final resolvedDismissLabel = l.commonCancel;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     // Capture the bloc before opening the dialog so the reference stays valid
