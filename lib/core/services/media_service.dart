@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show decodeImageFromList;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -43,13 +46,23 @@ class UnsupportedMediaTypeException implements Exception {
 ///   photo is downscaled, not rejected.
 /// - [maxInputBytes] (50 MB) is only an out-of-memory safety net for absurd
 ///   files → throws [MediaFileTooLargeException].
-/// - Output is always JPEG, max [_maxDimensionPx]×[_maxDimensionPx], quality [_quality].
+/// - Output is always JPEG, grand côté max [maxLongEdgePx], quality [jpegQuality], jamais d'agrandissement.
 ///
 /// Inject [imagePicker] / [compressor] in tests to avoid platform channels.
 class DonyMediaService {
   static const int maxInputBytes = 50 * 1024 * 1024; // 50 MB
-  static const int _maxDimensionPx = 1920;
-  static const int _quality = 85;
+  static const int maxLongEdgePx = 1600;
+  static const int jpegQuality = 80;
+
+  /// Dimensions cibles : grand côté plafonné à [maxLongEdgePx], ratio conservé,
+  /// jamais d'agrandissement. Pure, testée seule.
+  @visibleForTesting
+  static ({int width, int height}) targetSize(int width, int height) {
+    final longEdge = width > height ? width : height;
+    if (longEdge <= maxLongEdgePx) return (width: width, height: height);
+    final scale = maxLongEdgePx / longEdge;
+    return (width: (width * scale).round(), height: (height * scale).round());
+  }
 
   /// File extensions that are explicitly rejected (videos / non-images).
   static const Set<String> _videoExtensions = {
@@ -73,11 +86,23 @@ class DonyMediaService {
   DonyMediaService({
     ImagePicker? imagePicker,
     Future<XFile> Function(XFile)? compressor,
+    Future<({int width, int height})> Function(Uint8List)? dimensionReader,
   }) : _imagePicker = imagePicker ?? ImagePicker(),
-       _compressorOverride = compressor;
+       _compressorOverride = compressor,
+       _dimensionReader = dimensionReader ?? _readDimensions;
 
   final ImagePicker _imagePicker;
   final Future<XFile> Function(XFile)? _compressorOverride;
+  final Future<({int width, int height})> Function(Uint8List) _dimensionReader;
+
+  static Future<({int width, int height})> _readDimensions(
+    Uint8List bytes,
+  ) async {
+    final ui.Image image = await decodeImageFromList(bytes);
+    final size = (width: image.width, height: image.height);
+    image.dispose();
+    return size;
+  }
 
   /// Picks an image from [source], rejects videos, then compresses/resizes it.
   ///
@@ -119,12 +144,22 @@ class DonyMediaService {
 
   Future<XFile> _compress(XFile source) async {
     final bytes = await source.readAsBytes();
+    // minWidth/minHeight sont des bornes minimales du petit côté pour le
+    // plugin : on lui passe les dimensions cibles exactes (grand côté plafonné).
+    final ({int width, int height}) dims;
+    try {
+      dims = await _dimensionReader(bytes);
+    } catch (_) {
+      throw UnsupportedMediaTypeException(source.name);
+    }
+    final t = targetSize(dims.width, dims.height);
     final compressed = await FlutterImageCompress.compressWithList(
       bytes,
+      minWidth: t.width,
+      minHeight: t.height,
+      quality: jpegQuality,
       // ignore: avoid_redundant_argument_values
-      minWidth: _maxDimensionPx,
-      minHeight: _maxDimensionPx,
-      quality: _quality,
+      format: CompressFormat.jpeg,
     );
     // An empty result means the file could not be decoded as an image
     // (e.g. a video renamed with an image extension).

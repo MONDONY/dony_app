@@ -117,4 +117,57 @@ void main() {
       expect(result!.path, equals(small.path));
     });
   });
+
+  group('targetSize', () {
+    test('paysage 4000x3000 -> 1600x1200', () {
+      expect(DonyMediaService.targetSize(4000, 3000), (
+        width: 1600,
+        height: 1200,
+      ));
+    });
+
+    test('portrait 3000x4000 -> 1200x1600', () {
+      expect(DonyMediaService.targetSize(3000, 4000), (
+        width: 1200,
+        height: 1600,
+      ));
+    });
+
+    test('petite image inchangée (jamais d\'agrandissement)', () {
+      expect(DonyMediaService.targetSize(800, 600), (width: 800, height: 600));
+    });
+
+    test('exactement 1600x1600 inchangée', () {
+      expect(DonyMediaService.targetSize(1600, 1600), (
+        width: 1600,
+        height: 1600,
+      ));
+    });
+
+    test('constantes du contrat', () {
+      expect(DonyMediaService.maxLongEdgePx, 1600);
+      expect(DonyMediaService.jpegQuality, 80);
+    });
+  });
+
+  group('pick - sortie image/jpeg', () {
+    test('le compresseur injecté rend un XFile image/jpeg', () async {
+      final photo = fakeXFile('big.png', 512);
+      when(
+        () => mockPicker.pickImage(
+          source: any(named: 'source'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
+      ).thenAnswer((_) async => photo);
+      final service = DonyMediaService(
+        imagePicker: mockPicker,
+        compressor: (f) async => XFile('${f.path}.jpg', mimeType: 'image/jpeg'),
+      );
+
+      final result = await service.pick(source: ImageSource.gallery);
+
+      expect(result!.mimeType, 'image/jpeg');
+      expect(result.path, endsWith('.jpg'));
+    });
+  });
 }
