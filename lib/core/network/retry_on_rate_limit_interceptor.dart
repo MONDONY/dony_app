@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:dony/core/network/retry_policy.dart';
 
 /// Retente automatiquement une requête ayant reçu un `429 Too Many Requests`,
 /// avec un backoff court et un peu de jitter, avant de laisser l'erreur
@@ -22,17 +23,24 @@ import 'package:dio/dio.dart';
 /// quelques centaines de millisecondes plus tard, et l'écran attendait
 /// ~1,5 s de relances inutiles avant d'afficher le délai à respecter. Seuls
 /// les 429 de limitation (Nginx, corps HTML ou vide) sont relancés.
+///
+/// Seules les requêtes rejouables le sont ([RetryPolicy.isReplayable]) : GET,
+/// HEAD, OPTIONS, ou écriture portant une clé d'idempotence. Un 429 Nginx est
+/// rendu avant d'atteindre l'API, un POST y serait donc sans doublon, mais la
+/// règle reste la même pour tous les rejeux : aucune écriture sans clé.
 class RetryOnRateLimitInterceptor extends Interceptor {
-  RetryOnRateLimitInterceptor(this._dio, {Random? random})
-    : _random = random ?? Random();
+  RetryOnRateLimitInterceptor(this._dio, {Random? random, RetrySleep? sleep})
+    : _random = random ?? Random(),
+      _sleep = sleep ?? defaultRetrySleep;
 
   final Dio _dio;
   final Random _random;
+  final RetrySleep _sleep;
 
   static const int maxRetries = 2;
   static const Duration baseDelay = Duration(milliseconds: 400);
   static const Duration jitterMax = Duration(milliseconds: 300);
-  static const _attemptKey = '_retry429Attempt';
+  static const _attemptKey = RetryPolicy.rateLimitAttemptKey;
 
   @override
   Future<void> onError(
@@ -42,12 +50,12 @@ class RetryOnRateLimitInterceptor extends Interceptor {
     final statusCode = err.response?.statusCode;
     final attempt = (err.requestOptions.extra[_attemptKey] as int?) ?? 0;
 
-    // Un corps multipart (photo du chat, pièce jointe) ne se rejoue pas : Dio
-    // refuse un FormData déjà finalisé, et rejouer un envoi refusé pour débit
-    // le compterait une seconde fois. Le 429 remonte tel quel à l'appelant.
+    // Un corps multipart (photo du chat, pièce jointe) ne se rejoue pas
+    // (FLUTTER-B4), une écriture sans clé d'idempotence non plus : le 429
+    // remonte tel quel à l'appelant.
     if (statusCode != 429 ||
         attempt >= maxRetries ||
-        err.requestOptions.data is FormData ||
+        !RetryPolicy.isReplayable(err.requestOptions) ||
         isBusinessRateLimit(err.response?.data)) {
       handler.next(err);
       return;
@@ -56,15 +64,14 @@ class RetryOnRateLimitInterceptor extends Interceptor {
     final delay =
         baseDelay * (attempt + 1) +
         Duration(milliseconds: _random.nextInt(jitterMax.inMilliseconds));
-    await Future<void>.delayed(delay);
+    await _sleep(delay);
 
-    final retryOptions = err.requestOptions..extra[_attemptKey] = attempt + 1;
-    try {
-      final response = await _dio.fetch(retryOptions);
-      handler.resolve(response);
-    } on DioException catch (retryError) {
-      handler.next(retryError);
-    }
+    await RetryPolicy.replayRequest(
+      _dio,
+      err,
+      handler,
+      extra: {_attemptKey: attempt + 1},
+    );
   }
 
   /// `true` pour un 429 métier du back : corps problem+json portant un

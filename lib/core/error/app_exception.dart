@@ -8,7 +8,9 @@ AppException unwrapDioError(Object e) {
   if (e is DioException) {
     final inner = e.error;
     if (inner is AppException) return inner;
-    // Connection failures don't go through onError mapping (no response).
+    // Erreurs qui n'ont pas traversé la conversion de l'intercepteur : rejet
+    // en onRequest (OfflineFastFailInterceptor, sans interface réseau) ou
+    // DioException construite à la main. Le reste arrive déjà converti.
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
@@ -132,6 +134,16 @@ class RateLimitException extends AppException {
 class ServerException extends AppException {
   const ServerException([super.message = 'Server error', String? apiCode])
     : super(code: apiCode ?? 'SERVER_ERROR');
+}
+
+/// 502, 503, 504 ou API injoignable alors que l'appareil a du réseau :
+/// redémarrage ou déploiement en cours (FLUTTER-J1). Rejouable plus tard,
+/// jamais un refus définitif pour la file hors-ligne.
+class ServiceUnavailableException extends ServerException {
+  const ServiceUnavailableException([
+    String message = 'Service unavailable', // i18n-ignore
+    String? apiCode,
+  ]) : super(message, apiCode ?? 'SERVICE_UNAVAILABLE');
 }
 
 class StorageException extends AppException {
