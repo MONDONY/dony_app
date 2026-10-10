@@ -168,6 +168,7 @@ import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/mobile_money_account_repository.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
+import 'package:dony/features/payments/money/bloc/money_trips_cubit.dart';
 import 'package:dony/features/payments/money/data/datasources/money_remote_datasource.dart';
 import 'package:dony/features/payments/money/data/repositories/money_repository.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_active_currency_cubit.dart';
@@ -652,16 +653,18 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<MoneyRepository>(
     () => MoneyRepository(getIt<MoneyRemoteDatasource>()),
   );
-  // param1 `true` : pastille de l'en-tête d'Activités (pas de repli sur le
-  // portefeuille, pas d'événement de consultation). `false` : l'écran.
+  // param1 `true` : pastille d'en-tête ou « Mes trajets » (pas d'événement
+  // de consultation). `false` : l'écran « Mon argent ».
   getIt.registerFactoryParam<MoneyOverviewBloc, bool, void>(
-    (header, _) => MoneyOverviewBloc(
+    (secondary, _) => MoneyOverviewBloc(
       getIt<MoneyRepository>(),
-      getIt<WalletRepository>(),
       getIt<AnalyticsService>(),
-      fallbackToWallet: !header,
-      trackViews: !header,
+      trackViews: !secondary,
     ),
+  );
+  getIt.registerFactoryParam<MoneyTripsCubit, String?, void>(
+    (focusKey, _) =>
+        MoneyTripsCubit(getIt<AnalyticsService>(), focusKey: focusKey),
   );
 
   // Wallet

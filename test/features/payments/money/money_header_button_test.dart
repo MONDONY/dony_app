@@ -67,7 +67,7 @@ void main() {
   );
 
   testWidgets('rien en attente : simple icône', (tester) async {
-    stub(const MoneyOverviewLoaded(MoneyOverviewModel()));
+    stub(MoneyOverviewLoaded(const MoneyOverviewModel()));
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('money-header-amount')), findsNothing);

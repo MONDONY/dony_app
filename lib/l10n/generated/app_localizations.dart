@@ -29072,41 +29072,11 @@ abstract class AppLocalizations {
   /// **'Mon argent : {amount} à venir'**
   String moneyHeaderSemanticsUpcoming(String amount);
 
-  /// Titre de la carte des soldes disponibles du portefeuille (money_summary_cards.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Disponible'**
-  String get moneyAvailableLabel;
-
-  /// Titre de la carte de l'argent en séquestre (money_summary_cards.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Bloqué jusqu\'à livraison'**
-  String get moneyBlockedLabel;
-
-  /// Nombre de colis dont l'argent est en séquestre (money_summary_cards.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =0{Aucun colis en séquestre} =1{1 colis en séquestre} other{{count} colis en séquestre}}'**
-  String moneyBlockedCount(int count);
-
-  /// Titre de la section des colis du voyageur et de la date de versement (money_overview_screen.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Quand mon argent arrive'**
-  String get moneyWhenSection;
-
   /// Titre de la section de l'argent payé par l'expéditeur pour ses envois (money_overview_screen.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
   /// **'Mes envois'**
   String get moneySenderSection;
-
-  /// Lien vers l'écran du portefeuille et ses mouvements (money_overview_screen.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Historique des mouvements'**
-  String get moneyHistoryLink;
 
   /// Titre de l'état vide de « Mon argent » (money_overview_screen.dart, FLUTTER-HV).
   ///
@@ -29129,50 +29099,8 @@ abstract class AppLocalizations {
   /// Description affichée quand le serveur ne fournit pas encore le suivi du séquestre (money_overview_screen.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
-  /// **'Le suivi de l\'argent en séquestre arrive bientôt. Votre solde reste consultable ci-dessus.'**
+  /// **'Le suivi de l\'argent de vos colis sera bientôt disponible.'**
   String get moneyUnavailableBody;
-
-  /// Étape 1 de la frise de libération (money_release_timeline.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Payé'**
-  String get moneyStepPaid;
-
-  /// Étape 2 de la frise de libération : colis remis au voyageur (money_release_timeline.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Remis'**
-  String get moneyStepHandedOver;
-
-  /// Étape 3 de la frise de libération (money_release_timeline.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Livré'**
-  String get moneyStepDelivered;
-
-  /// Étape 4 de la frise de libération : argent versé au voyageur (money_release_timeline.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Versé'**
-  String get moneyStepPaidOut;
-
-  /// Libellé d'accessibilité de la frise de libération (money_release_timeline.dart, FLUTTER-HV). {label} = nom de l'étape atteinte.
-  ///
-  /// In fr, this message translates to:
-  /// **'Étape {step} sur {total}, {label}'**
-  String moneyTimelineSemantics(int step, int total, String label);
-
-  /// Poids du colis sur une carte « Mon argent » (money_parcel_card.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'{weight} kg'**
-  String moneyItemWeight(String weight);
-
-  /// Date de départ du trajet sur une carte « Mon argent » (money_parcel_card.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'départ {date}'**
-  String moneyItemDeparture(String date);
 
   /// Indication d'accessibilité au tap sur une carte « Mon argent » (money_parcel_card.dart, FLUTTER-HV).
   ///
@@ -29180,137 +29108,23 @@ abstract class AppLocalizations {
   /// **'Ouvrir le colis'**
   String get moneyOpenParcelHint;
 
-  /// Condition de versement au voyageur (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Versé quand le destinataire confirme la livraison'**
-  String get moneyReleaseOnDelivery;
-
-  /// Versement automatique à la fin de la garde « destinataire absent » (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Versé automatiquement le {date} si aucun litige'**
-  String moneyReleaseAuto(String date);
-
-  /// Argent du voyageur bloqué par un litige (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'En litige : l\'équipe Yadony décide avant tout versement'**
-  String get moneyReleaseDispute;
-
-  /// Versement retenu pour vérification (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Versement en cours de vérification par l\'équipe Yadony'**
-  String get moneyReleaseReview;
-
-  /// Colis livré, versement au voyageur en cours (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Livré : versement en cours'**
-  String get moneyReleaseProcessing;
-
-  /// Argent déjà versé au voyageur (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Versé le {date}'**
-  String moneyReleased(String date);
-
-  /// Argent déjà versé, date inconnue (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Versé'**
-  String get moneyReleasedNoDate;
-
-  /// Vue voyageur d'un paiement en cours de remboursement (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Annulé : remboursement en cours à l\'expéditeur'**
-  String get moneyRefundToSender;
-
-  /// Colis réglé en espèces, vue voyageur (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Payé en espèces à la remise'**
-  String get moneyCashTraveler;
-
-  /// Colis réglé en espèces, vue expéditeur (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'À régler en espèces à la remise'**
-  String get moneyCashSender;
-
-  /// Suffixe d'un colis en espèces dont la commission Yadony est réglée (money_conditions.dart, FLUTTER-HV).
+  /// Suffixe d'un colis en espèces dont la commission Yadony est réglée (money_labels.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
   /// **'commission réglée'**
   String get moneyCashCommissionSettled;
 
-  /// Suffixe d'un colis en espèces dont la commission Yadony n'est pas encore réglée (money_conditions.dart, FLUTTER-HV).
+  /// Suffixe d'un colis en espèces dont la commission Yadony n'est pas encore réglée (money_labels.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
   /// **'commission en attente'**
   String get moneyCashCommissionPending;
 
-  /// Suffixe d'un colis en espèces dont la commission Yadony a été rendue (money_conditions.dart, FLUTTER-HV).
+  /// Suffixe d'un colis en espèces dont la commission Yadony a été rendue (money_labels.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
   /// **'commission remboursée'**
   String get moneyCashCommissionRefunded;
-
-  /// Condition de libération vue par l'expéditeur (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Bloqué jusqu\'à la livraison, puis versé au voyageur'**
-  String get moneySenderOnDelivery;
-
-  /// Versement automatique vu par l'expéditeur (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Versé au voyageur le {date} si aucun litige'**
-  String moneySenderAuto(String date);
-
-  /// Litige vu par l'expéditeur (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'En litige : l\'équipe Yadony décide'**
-  String get moneySenderDispute;
-
-  /// Paiement retenu vu par l'expéditeur (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'En cours de vérification par l\'équipe Yadony'**
-  String get moneySenderReview;
-
-  /// Versement en cours vu par l'expéditeur (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Livré : versement au voyageur en cours'**
-  String get moneySenderProcessing;
-
-  /// Remboursement de l'expéditeur en cours (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Remboursement en cours'**
-  String get moneySenderRefundPending;
-
-  /// Remboursement de l'expéditeur effectué (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Remboursé le {date}'**
-  String moneySenderRefunded(String date);
-
-  /// Remboursement effectué, date inconnue (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Remboursé'**
-  String get moneySenderRefundedNoDate;
-
-  /// État inconnu renvoyé par un serveur plus récent que l'app (money_conditions.dart, FLUTTER-HV).
-  ///
-  /// In fr, this message translates to:
-  /// **'Statut en cours de mise à jour'**
-  String get moneyUnknownState;
 
   /// Aide sous le numéro de suivi du talon : le numéro est public, ce n'est pas le code de retrait (talon_tracking_strip.dart, FLUTTER-J2).
   ///
@@ -29335,6 +29149,318 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'À la remise, demandez au destinataire son code de retrait à 6 chiffres.'**
   String get deliveryLockedHelp;
+
+  /// Titre de la carte de tête : argent des colis encore attendu par le voyageur (money_upcoming_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'À venir · {count, plural, =1{1 colis} other{{count} colis}}'**
+  String moneyUpcomingLabel(int count);
+
+  /// Titre de la carte de tête d'un expéditeur sans trajet : argent payé encore bloqué en séquestre (money_upcoming_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé, en séquestre · {count, plural, =1{1 colis} other{{count} colis}}'**
+  String moneySenderHeroLabel(int count);
+
+  /// Tuile d'échéance : versements attendus cette semaine, retards compris (money_upcoming_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette semaine'**
+  String get moneyBucketThisWeek;
+
+  /// Tuile d'échéance : versements attendus la semaine prochaine (money_upcoming_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Semaine prochaine'**
+  String get moneyBucketNextWeek;
+
+  /// Tuile d'échéance : versements attendus après la semaine prochaine (money_upcoming_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get moneyBucketLater;
+
+  /// Tuile d'échéance : argent bloqué par un litige ou une vérification (money_upcoming_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Litige'**
+  String get moneyBucketDispute;
+
+  /// Libellé d'accessibilité d'une tuile ou d'un total : intitulé puis montants par devise (money_upcoming_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} : {amounts}'**
+  String moneyAmountsSemantics(String label, String amounts);
+
+  /// Titre de la section des versements groupés par échéance (money_overview_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochains versements'**
+  String get moneyNextPayoutsSection;
+
+  /// En-tête du groupe des colis livrés dont le versement est en cours (money_payout_group.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livré · versement en cours'**
+  String get moneyGroupInProgress;
+
+  /// En-tête du groupe des séquestres d'un trajet, échéance = arrivée du trajet (money_payout_group.dart, FLUTTER-HV). {route} = « Paris → Abidjan ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée {date} · {route}'**
+  String moneyGroupTrip(String date, String route);
+
+  /// En-tête du groupe des colis en litige (money_payout_group.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloqué · en litige'**
+  String get moneyGroupDispute;
+
+  /// En-tête du groupe des versements retenus pour vérification (money_payout_group.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'En vérification'**
+  String get moneyGroupReview;
+
+  /// Ligne du groupe d'un trajet dans « Prochains versements » (money_payout_group.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 colis versé à la confirmation de livraison} other{{count} colis versés à la confirmation de livraison}}'**
+  String moneyTripGroupBody(int count);
+
+  /// Lien vers « Mes trajets » filtré sur ce trajet (money_payout_group.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Détail du colis} other{Détail des {count} colis}}'**
+  String moneyTripGroupDetails(int count);
+
+  /// Fin de ligne d'un versement automatique daté (money_payout_group.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'versement auto'**
+  String get moneyLineAuto;
+
+  /// Fin de ligne d'un versement en cours (money_payout_group.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'versement en cours'**
+  String get moneyLineInProgress;
+
+  /// Fin de ligne d'un colis en litige (money_payout_group.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'l\'équipe Yadony décide'**
+  String get moneyLineDispute;
+
+  /// Fin de ligne d'un versement retenu pour vérification (money_payout_group.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'vérification par l\'équipe Yadony'**
+  String get moneyLineReview;
+
+  /// Entrée vers l'écran « Mes trajets » (money_overview_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous mes trajets'**
+  String get moneyAllTripsLink;
+
+  /// Titre de la section des colis versés dans la fenêtre récente (money_overview_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Versés récemment'**
+  String get moneyRecentlyPaidSection;
+
+  /// Note quand le serveur a coupé la liste à son plafond (money_overview_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Liste partielle : seuls vos colis les plus récents sont comptés.'**
+  String get moneyTruncatedNote;
+
+  /// Lien discret vers l'écran du solde Yadony, distinct de l'argent des colis (money_overview_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon solde Yadony'**
+  String get moneyWalletLink;
+
+  /// État court d'un colis déjà versé (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'versé le {date}'**
+  String moneyShortReleased(String date);
+
+  /// État court d'un colis versé, date inconnue (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'versé'**
+  String get moneyShortReleasedNoDate;
+
+  /// État court d'un colis livré dont le versement est en cours (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'livré · versement en cours'**
+  String get moneyShortInProgress;
+
+  /// État court d'un versement automatique à la fin de la garde (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'versement auto le {date}'**
+  String moneyShortAuto(String date);
+
+  /// État court d'un séquestre versé à la confirmation de livraison (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'à la livraison'**
+  String get moneyShortOnDelivery;
+
+  /// État court d'un colis en litige (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'en litige'**
+  String get moneyShortDispute;
+
+  /// État court d'un versement retenu pour vérification (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'en vérification'**
+  String get moneyShortReview;
+
+  /// État court d'un remboursement en cours (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'remboursement en cours'**
+  String get moneyShortRefundPending;
+
+  /// État court d'un colis remboursé (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'remboursé le {date}'**
+  String moneyShortRefunded(String date);
+
+  /// État court d'un colis remboursé, date inconnue (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'remboursé'**
+  String get moneyShortRefundedNoDate;
+
+  /// État court d'un colis réglé en espèces, hors Yadony (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'en espèces'**
+  String get moneyShortCash;
+
+  /// État inconnu renvoyé par un serveur plus récent que l'app (money_labels.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'mise à jour en cours'**
+  String get moneyShortUnknown;
+
+  /// Titre de l'écran du détail par trajet de « Mon argent » (money_trips_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes trajets'**
+  String get moneyTripsTitle;
+
+  /// Sous-titre de l'ordre des trajets (money_trips_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Du plus proche au plus lointain'**
+  String get moneyTripsSubtitle;
+
+  /// Nombre de colis d'un trajet (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 colis} other{{count} colis}}'**
+  String moneyParcelCount(int count);
+
+  /// Compteur de colis versés d'un trajet (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 versé} other{{count} versés}}'**
+  String moneyTripPaid(int count);
+
+  /// Compteur de colis livrés, versement en cours (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 livré} other{{count} livrés}}'**
+  String moneyTripDelivered(int count);
+
+  /// Compteur de colis en séquestre (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} en séquestre'**
+  String moneyTripEscrow(int count);
+
+  /// Compteur de colis en litige (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} en litige'**
+  String moneyTripDispute(int count);
+
+  /// Compteur de versements retenus pour vérification (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} en vérification'**
+  String moneyTripReview(int count);
+
+  /// Compteur de colis réglés en espèces (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} en espèces'**
+  String moneyTripCash(int count);
+
+  /// Compteur de colis remboursés ou en cours de remboursement (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 remboursement} other{{count} remboursements}}'**
+  String moneyTripRefund(int count);
+
+  /// Libellé d'accessibilité de la barre d'avancement d'un trajet, ex. « Paris → Abidjan, 6 colis : 2 versés, 1 livré, 3 en séquestre » (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'{route}, {parcels} : {counters}'**
+  String moneyTripSemantics(String route, String parcels, String counters);
+
+  /// Indication d'accessibilité pour déplier une carte trajet (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher les colis'**
+  String get moneyTripExpandHint;
+
+  /// Indication d'accessibilité pour replier une carte trajet (money_trip_card.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer les colis'**
+  String get moneyTripCollapseHint;
+
+  /// Bouton de chargement progressif des trajets (money_trips_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher plus de trajets'**
+  String get moneyTripsShowMore;
+
+  /// Lien de l'écran filtré sur un trajet vers la liste complète (money_trips_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir tous mes trajets'**
+  String get moneyTripsShowAll;
+
+  /// Titre de l'état vide de « Mes trajets » (money_trips_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet payé'**
+  String get moneyTripsEmptyTitle;
+
+  /// Description de l'état vide de « Mes trajets » (money_trips_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les colis payés sur vos trajets apparaîtront ici.'**
+  String get moneyTripsEmptyBody;
+
+  /// Titre quand le trajet ciblé n'a plus d'argent dans l'aperçu (money_trips_screen.dart, FLUTTER-HV).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus rien à suivre sur ce trajet'**
+  String get moneyTripNotFoundTitle;
 }
 
 class _AppLocalizationsDelegate

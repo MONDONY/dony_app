@@ -192,7 +192,7 @@ Future<void> _pump(
 
   /// État de la pastille « Mon argent » de l'en-tête (FLUTTER-J3) : rien en
   /// attente par défaut, une simple icône.
-  MoneyOverviewState money = const MoneyOverviewLoaded(MoneyOverviewModel()),
+  MoneyOverviewState? money,
 }) async {
   registerFakeMoneyOverview(state: money);
   tester.view.physicalSize = physicalSize ?? const Size(900, 1800);
@@ -801,8 +801,8 @@ void main() {
   });
 
   group('pastille « Mon argent » (FLUTTER-J3)', () {
-    const upcoming = MoneyOverviewLoaded(
-      MoneyOverviewModel(
+    final upcoming = MoneyOverviewLoaded(
+      const MoneyOverviewModel(
         travelerTotals: [
           TravelerTotalModel(
             currency: 'EUR',

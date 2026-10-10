@@ -5,11 +5,9 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
+import 'package:dony/features/payments/money/bloc/money_schedule.dart';
 import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
 import 'package:dony/features/payments/money/data/repositories/money_repository.dart';
-import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
-import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
-import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -17,36 +15,33 @@ import 'money_fixtures.dart';
 
 class MockMoneyRepository extends Mock implements MoneyRepository {}
 
-class MockWalletRepository extends Mock implements WalletRepository {}
-
 class MockAnalyticsService extends Mock implements AnalyticsService {}
+
+/// Samedi 10 octobre 2026, midi.
+final _now = DateTime(2026, 10, 10, 12);
 
 void main() {
   late MockMoneyRepository repo;
-  late MockWalletRepository wallet;
   late MockAnalyticsService analytics;
 
   setUp(() {
     repo = MockMoneyRepository();
-    wallet = MockWalletRepository();
     analytics = MockAnalyticsService();
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
   });
 
-  MoneyOverviewBloc build({bool header = false, String? cached}) =>
-      MoneyOverviewBloc(
-        repo,
-        wallet,
-        analytics,
-        fallbackToWallet: !header,
-        trackViews: !header,
-        cachedActiveCurrency: () => cached,
-      );
+  MoneyOverviewBloc build({bool secondary = false}) => MoneyOverviewBloc(
+    repo,
+    analytics,
+    trackViews: !secondary,
+    now: () => _now,
+  );
 
   blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-    'succès : chargement puis aperçu, consultation tracée une fois',
+    'succès : aperçu et échéancier calculés à l\'horloge injectée, '
+    'consultation tracée une fois',
     build: () {
       when(() => repo.getOverview()).thenAnswer((_) async => overviewModel());
       return build();
@@ -58,7 +53,24 @@ void main() {
       isA<MoneyOverviewLoading>(),
       isA<MoneyOverviewLoaded>()
           .having((s) => s.upcomingAvailable, 'upcomingAvailable', isTrue)
-          .having((s) => s.overview.travelerItems.length, 'items', 4),
+          .having((s) => s.overview.travelerItems.length, 'items', 4)
+          // Versement auto le dimanche 11 : cette semaine. Séquestre à
+          // l'arrivée du lundi 19 : après la semaine prochaine (12-18).
+          .having(
+            (s) => s.schedule.buckets[MoneyBucket.thisWeek]!.single.amount,
+            'cette semaine',
+            7950,
+          )
+          .having(
+            (s) => s.schedule.buckets[MoneyBucket.nextWeek],
+            'semaine prochaine',
+            isEmpty,
+          )
+          .having(
+            (s) => s.schedule.buckets[MoneyBucket.later]!.single.amount,
+            'plus tard',
+            9450,
+          ),
       isA<MoneyOverviewLoaded>(),
     ],
     verify: (_) => verify(
@@ -67,6 +79,7 @@ void main() {
         properties: {
           'traveler_items': 4,
           'sender_items': 1,
+          'trip_count': 4,
           'legacy_backend': false,
         },
       ),
@@ -84,11 +97,9 @@ void main() {
     act: (b) => b.add(const MoneyOverviewLoadRequested()),
     expect: () => [
       isA<MoneyOverviewLoading>(),
-      isA<MoneyOverviewLoaded>().having(
-        (s) => s.overview.isEmpty,
-        'isEmpty',
-        isTrue,
-      ),
+      isA<MoneyOverviewLoaded>()
+          .having((s) => s.overview.isEmpty, 'isEmpty', isTrue)
+          .having((s) => s.schedule.groups, 'groups', isEmpty),
     ],
   );
 
@@ -110,30 +121,11 @@ void main() {
   );
 
   blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-    'ancien back (404) : repli sur les soldes du portefeuille',
+    'ancien back (404) : vide et marqué indisponible, jamais le portefeuille',
     build: () {
       when(
         () => repo.getOverview(),
       ).thenThrow(const MoneyOverviewUnavailable());
-      when(() => wallet.getBalance()).thenAnswer(
-        (_) async => const WalletModel(
-          balance: 12.5,
-          currency: 'EUR',
-          transactions: [],
-          balances: [
-            WalletCurrencyBalanceModel(
-              currency: 'EUR',
-              balance: 12.5,
-              active: true,
-            ),
-            WalletCurrencyBalanceModel(
-              currency: 'XOF',
-              balance: 3000,
-              active: false,
-            ),
-          ],
-        ),
-      );
       return build();
     },
     act: (b) => b.add(const MoneyOverviewLoadRequested()),
@@ -141,11 +133,7 @@ void main() {
       isA<MoneyOverviewLoading>(),
       isA<MoneyOverviewLoaded>()
           .having((s) => s.upcomingAvailable, 'upcomingAvailable', isFalse)
-          .having(
-            (s) => s.overview.wallet.map((w) => w.currency).toList(),
-            'wallet',
-            ['EUR', 'XOF'],
-          ),
+          .having((s) => s.overview.isEmpty, 'isEmpty', isTrue),
     ],
     verify: (_) => verify(
       () => analytics.logEvent(
@@ -153,6 +141,7 @@ void main() {
         properties: {
           'traveler_items': 0,
           'sender_items': 0,
+          'trip_count': 0,
           'legacy_backend': true,
         },
       ),
@@ -160,48 +149,12 @@ void main() {
   );
 
   blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-    'ancien back sans portefeuille détaillé : solde principal seul',
+    'pastille / Mes trajets (ancien back) : aucun tracking',
     build: () {
       when(
         () => repo.getOverview(),
       ).thenThrow(const MoneyOverviewUnavailable());
-      when(() => wallet.getBalance()).thenAnswer(
-        (_) async =>
-            const WalletModel(balance: 4, currency: 'EUR', transactions: []),
-      );
-      return build();
-    },
-    act: (b) => b.add(const MoneyOverviewLoadRequested()),
-    expect: () => [
-      isA<MoneyOverviewLoading>(),
-      isA<MoneyOverviewLoaded>().having(
-        (s) => s.overview.wallet.single.amount,
-        'balance',
-        4,
-      ),
-    ],
-  );
-
-  blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-    'ancien back et portefeuille en échec : erreur',
-    build: () {
-      when(
-        () => repo.getOverview(),
-      ).thenThrow(const MoneyOverviewUnavailable());
-      when(() => wallet.getBalance()).thenThrow(const OfflineException());
-      return build();
-    },
-    act: (b) => b.add(const MoneyOverviewLoadRequested()),
-    expect: () => [isA<MoneyOverviewLoading>(), isA<MoneyOverviewError>()],
-  );
-
-  blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-    'pastille (ancien back) : aucun appel portefeuille, aucun tracking',
-    build: () {
-      when(
-        () => repo.getOverview(),
-      ).thenThrow(const MoneyOverviewUnavailable());
-      return build(header: true);
+      return build(secondary: true);
     },
     act: (b) => b.add(const MoneyOverviewLoadRequested()),
     expect: () => [
@@ -212,19 +165,16 @@ void main() {
         isFalse,
       ),
     ],
-    verify: (_) {
-      verifyNever(() => wallet.getBalance());
-      verifyNever(
-        () => analytics.logEvent(any(), properties: any(named: 'properties')),
-      );
-    },
+    verify: (_) => verifyNever(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ),
   );
 
   blocTest<MoneyOverviewBloc, MoneyOverviewState>(
     'pastille : succès sans tracking',
     build: () {
       when(() => repo.getOverview()).thenAnswer((_) async => overviewModel());
-      return build(header: true);
+      return build(secondary: true);
     },
     act: (b) => b.add(const MoneyOverviewLoadRequested()),
     expect: () => [isA<MoneyOverviewLoading>(), isA<MoneyOverviewLoaded>()],
@@ -261,122 +211,12 @@ void main() {
     expect: () => [isA<MoneyOverviewError>()],
   );
 
-  group('devise active de la carte « Disponible » (FLUTTER-J4)', () {
-    MoneyOverviewModel twoWallets({String? active}) => MoneyOverviewModel(
-      wallet: const [MoneyAmount('EUR', 10), MoneyAmount('XOF', 5000)],
-      activeCurrency: active,
-    );
-
-    const xofWallet = WalletModel(
-      balance: 5000,
-      currency: 'XOF',
-      transactions: [],
-    );
-
-    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-      'back récent : activeCurrency de l\'aperçu, sans appel au portefeuille',
-      build: () {
-        when(
-          () => repo.getOverview(),
-        ).thenAnswer((_) async => twoWallets(active: 'XOF'));
-        return build(cached: 'EUR');
-      },
-      act: (b) => b.add(const MoneyOverviewLoadRequested()),
-      expect: () => [
-        isA<MoneyOverviewLoading>(),
-        isA<MoneyOverviewLoaded>().having(
-          (s) => s.overview.activeCurrency,
-          'activeCurrency',
-          'XOF',
-        ),
-      ],
-      verify: (_) => verifyNever(() => wallet.getBalance()),
-    );
-
-    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-      'ancien back sans activeCurrency : devise du portefeuille',
-      build: () {
-        when(() => repo.getOverview()).thenAnswer((_) async => twoWallets());
-        when(() => wallet.getBalance()).thenAnswer((_) async => xofWallet);
-        return build(cached: 'EUR');
-      },
-      act: (b) => b.add(const MoneyOverviewLoadRequested()),
-      expect: () => [
-        isA<MoneyOverviewLoading>(),
-        isA<MoneyOverviewLoaded>()
-            .having((s) => s.overview.activeCurrency, 'activeCurrency', 'XOF')
-            .having((s) => s.overview.wallet.length, 'wallet', 2),
-      ],
-    );
-
-    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-      'portefeuille injoignable : devise active du cache local',
-      build: () {
-        when(() => repo.getOverview()).thenAnswer((_) async => twoWallets());
-        when(() => wallet.getBalance()).thenThrow(const OfflineException());
-        return build(cached: 'XOF');
-      },
-      act: (b) => b.add(const MoneyOverviewLoadRequested()),
-      expect: () => [
-        isA<MoneyOverviewLoading>(),
-        isA<MoneyOverviewLoaded>().having(
-          (s) => s.overview.activeCurrency,
-          'activeCurrency',
-          'XOF',
-        ),
-      ],
-    );
-
-    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-      'un seul solde : rien à départager, aucun appel de plus',
-      build: () {
-        when(() => repo.getOverview()).thenAnswer(
-          (_) async =>
-              const MoneyOverviewModel(wallet: [MoneyAmount('EUR', 10)]),
-        );
-        return build();
-      },
-      act: (b) => b.add(const MoneyOverviewLoadRequested()),
-      expect: () => [isA<MoneyOverviewLoading>(), isA<MoneyOverviewLoaded>()],
-      verify: (_) => verifyNever(() => wallet.getBalance()),
-    );
-
-    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-      'pastille d\'en-tête : jamais d\'appel au portefeuille',
-      build: () {
-        when(() => repo.getOverview()).thenAnswer((_) async => twoWallets());
-        return build(header: true);
-      },
-      act: (b) => b.add(const MoneyOverviewLoadRequested()),
-      expect: () => [
-        isA<MoneyOverviewLoading>(),
-        isA<MoneyOverviewLoaded>().having(
-          (s) => s.overview.activeCurrency,
-          'activeCurrency',
-          isNull,
-        ),
-      ],
-      verify: (_) => verifyNever(() => wallet.getBalance()),
-    );
-
-    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
-      'back sans aperçu : devise du portefeuille de repli',
-      build: () {
-        when(
-          () => repo.getOverview(),
-        ).thenThrow(const MoneyOverviewUnavailable());
-        when(() => wallet.getBalance()).thenAnswer((_) async => xofWallet);
-        return build();
-      },
-      act: (b) => b.add(const MoneyOverviewLoadRequested()),
-      expect: () => [
-        isA<MoneyOverviewLoading>(),
-        isA<MoneyOverviewLoaded>().having(
-          (s) => s.overview.activeCurrency,
-          'activeCurrency',
-          'XOF',
-        ),
-      ],
+  test('horloge par défaut : l\'état calcule l\'échéancier sans `now`', () {
+    final state = MoneyOverviewLoaded(overviewModel());
+    expect(state.schedule.trips, isNotEmpty);
+    expect(
+      MoneyOverviewBloc(repo, analytics).state,
+      isA<MoneyOverviewInitial>(),
     );
   });
 }

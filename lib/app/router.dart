@@ -137,7 +137,9 @@ import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/presentation/screens/commission_method_screen.dart';
 import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
+import 'package:dony/features/payments/money/bloc/money_trips_cubit.dart';
 import 'package:dony/features/payments/money/presentation/screens/money_overview_screen.dart';
+import 'package:dony/features/payments/money/presentation/screens/money_trips_screen.dart';
 import 'package:dony/features/payments/money/presentation/widgets/money_header_button.dart';
 import 'package:dony/features/payments/presentation/screens/mobile_money_account_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
@@ -1022,6 +1024,26 @@ final appRouter = GoRouter(
               ..add(const MoneyOverviewLoadRequested()),
         child: const MoneyOverviewScreen(),
       ),
+    ),
+    // « Mes trajets » de « Mon argent » (écran D), filtrable sur un trajet.
+    GoRoute(
+      path: kMoneyTripsRoute,
+      builder: (context, state) {
+        final announcementId = state.uri.queryParameters['announcementId'];
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) =>
+                  getIt<MoneyOverviewBloc>(param1: true)
+                    ..add(const MoneyOverviewLoadRequested()),
+            ),
+            BlocProvider(
+              create: (_) => getIt<MoneyTripsCubit>(param1: announcementId),
+            ),
+          ],
+          child: MoneyTripsScreen(announcementId: announcementId),
+        );
+      },
     ),
     // ── Wallet (hors shell) ──────────────────────────────────────────────
     GoRoute(

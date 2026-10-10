@@ -17805,31 +17805,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get moneyAvailableLabel => 'Disponible';
-
-  @override
-  String get moneyBlockedLabel => 'Bloqué jusqu\'à livraison';
-
-  @override
-  String moneyBlockedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count colis en séquestre',
-      one: '1 colis en séquestre',
-      zero: 'Aucun colis en séquestre',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get moneyWhenSection => 'Quand mon argent arrive';
-
-  @override
   String get moneySenderSection => 'Mes envois';
-
-  @override
-  String get moneyHistoryLink => 'Historique des mouvements';
 
   @override
   String get moneyEmptyTitle => 'Rien en attente';
@@ -17843,75 +17819,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get moneyUnavailableBody =>
-      'Le suivi de l\'argent en séquestre arrive bientôt. Votre solde reste consultable ci-dessus.';
-
-  @override
-  String get moneyStepPaid => 'Payé';
-
-  @override
-  String get moneyStepHandedOver => 'Remis';
-
-  @override
-  String get moneyStepDelivered => 'Livré';
-
-  @override
-  String get moneyStepPaidOut => 'Versé';
-
-  @override
-  String moneyTimelineSemantics(int step, int total, String label) {
-    return 'Étape $step sur $total, $label';
-  }
-
-  @override
-  String moneyItemWeight(String weight) {
-    return '$weight kg';
-  }
-
-  @override
-  String moneyItemDeparture(String date) {
-    return 'départ $date';
-  }
+      'Le suivi de l\'argent de vos colis sera bientôt disponible.';
 
   @override
   String get moneyOpenParcelHint => 'Ouvrir le colis';
-
-  @override
-  String get moneyReleaseOnDelivery =>
-      'Versé quand le destinataire confirme la livraison';
-
-  @override
-  String moneyReleaseAuto(String date) {
-    return 'Versé automatiquement le $date si aucun litige';
-  }
-
-  @override
-  String get moneyReleaseDispute =>
-      'En litige : l\'équipe Yadony décide avant tout versement';
-
-  @override
-  String get moneyReleaseReview =>
-      'Versement en cours de vérification par l\'équipe Yadony';
-
-  @override
-  String get moneyReleaseProcessing => 'Livré : versement en cours';
-
-  @override
-  String moneyReleased(String date) {
-    return 'Versé le $date';
-  }
-
-  @override
-  String get moneyReleasedNoDate => 'Versé';
-
-  @override
-  String get moneyRefundToSender =>
-      'Annulé : remboursement en cours à l\'expéditeur';
-
-  @override
-  String get moneyCashTraveler => 'Payé en espèces à la remise';
-
-  @override
-  String get moneyCashSender => 'À régler en espèces à la remise';
 
   @override
   String get moneyCashCommissionSettled => 'commission réglée';
@@ -17921,39 +17832,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get moneyCashCommissionRefunded => 'commission remboursée';
-
-  @override
-  String get moneySenderOnDelivery =>
-      'Bloqué jusqu\'à la livraison, puis versé au voyageur';
-
-  @override
-  String moneySenderAuto(String date) {
-    return 'Versé au voyageur le $date si aucun litige';
-  }
-
-  @override
-  String get moneySenderDispute => 'En litige : l\'équipe Yadony décide';
-
-  @override
-  String get moneySenderReview =>
-      'En cours de vérification par l\'équipe Yadony';
-
-  @override
-  String get moneySenderProcessing => 'Livré : versement au voyageur en cours';
-
-  @override
-  String get moneySenderRefundPending => 'Remboursement en cours';
-
-  @override
-  String moneySenderRefunded(String date) {
-    return 'Remboursé le $date';
-  }
-
-  @override
-  String get moneySenderRefundedNoDate => 'Remboursé';
-
-  @override
-  String get moneyUnknownState => 'Statut en cours de mise à jour';
 
   @override
   String get ticketTrackingNumberHelp =>
@@ -17969,4 +17847,246 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get deliveryLockedHelp =>
       'À la remise, demandez au destinataire son code de retrait à 6 chiffres.';
+
+  @override
+  String moneyUpcomingLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis',
+      one: '1 colis',
+    );
+    return 'À venir · $_temp0';
+  }
+
+  @override
+  String moneySenderHeroLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis',
+      one: '1 colis',
+    );
+    return 'Payé, en séquestre · $_temp0';
+  }
+
+  @override
+  String get moneyBucketThisWeek => 'Cette semaine';
+
+  @override
+  String get moneyBucketNextWeek => 'Semaine prochaine';
+
+  @override
+  String get moneyBucketLater => 'Plus tard';
+
+  @override
+  String get moneyBucketDispute => 'Litige';
+
+  @override
+  String moneyAmountsSemantics(String label, String amounts) {
+    return '$label : $amounts';
+  }
+
+  @override
+  String get moneyNextPayoutsSection => 'Prochains versements';
+
+  @override
+  String get moneyGroupInProgress => 'Livré · versement en cours';
+
+  @override
+  String moneyGroupTrip(String date, String route) {
+    return 'Arrivée $date · $route';
+  }
+
+  @override
+  String get moneyGroupDispute => 'Bloqué · en litige';
+
+  @override
+  String get moneyGroupReview => 'En vérification';
+
+  @override
+  String moneyTripGroupBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis versés à la confirmation de livraison',
+      one: '1 colis versé à la confirmation de livraison',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moneyTripGroupDetails(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Détail des $count colis',
+      one: 'Détail du colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moneyLineAuto => 'versement auto';
+
+  @override
+  String get moneyLineInProgress => 'versement en cours';
+
+  @override
+  String get moneyLineDispute => 'l\'équipe Yadony décide';
+
+  @override
+  String get moneyLineReview => 'vérification par l\'équipe Yadony';
+
+  @override
+  String get moneyAllTripsLink => 'Tous mes trajets';
+
+  @override
+  String get moneyRecentlyPaidSection => 'Versés récemment';
+
+  @override
+  String get moneyTruncatedNote =>
+      'Liste partielle : seuls vos colis les plus récents sont comptés.';
+
+  @override
+  String get moneyWalletLink => 'Mon solde Yadony';
+
+  @override
+  String moneyShortReleased(String date) {
+    return 'versé le $date';
+  }
+
+  @override
+  String get moneyShortReleasedNoDate => 'versé';
+
+  @override
+  String get moneyShortInProgress => 'livré · versement en cours';
+
+  @override
+  String moneyShortAuto(String date) {
+    return 'versement auto le $date';
+  }
+
+  @override
+  String get moneyShortOnDelivery => 'à la livraison';
+
+  @override
+  String get moneyShortDispute => 'en litige';
+
+  @override
+  String get moneyShortReview => 'en vérification';
+
+  @override
+  String get moneyShortRefundPending => 'remboursement en cours';
+
+  @override
+  String moneyShortRefunded(String date) {
+    return 'remboursé le $date';
+  }
+
+  @override
+  String get moneyShortRefundedNoDate => 'remboursé';
+
+  @override
+  String get moneyShortCash => 'en espèces';
+
+  @override
+  String get moneyShortUnknown => 'mise à jour en cours';
+
+  @override
+  String get moneyTripsTitle => 'Mes trajets';
+
+  @override
+  String get moneyTripsSubtitle => 'Du plus proche au plus lointain';
+
+  @override
+  String moneyParcelCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis',
+      one: '1 colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moneyTripPaid(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count versés',
+      one: '1 versé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moneyTripDelivered(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livrés',
+      one: '1 livré',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moneyTripEscrow(int count) {
+    return '$count en séquestre';
+  }
+
+  @override
+  String moneyTripDispute(int count) {
+    return '$count en litige';
+  }
+
+  @override
+  String moneyTripReview(int count) {
+    return '$count en vérification';
+  }
+
+  @override
+  String moneyTripCash(int count) {
+    return '$count en espèces';
+  }
+
+  @override
+  String moneyTripRefund(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count remboursements',
+      one: '1 remboursement',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moneyTripSemantics(String route, String parcels, String counters) {
+    return '$route, $parcels : $counters';
+  }
+
+  @override
+  String get moneyTripExpandHint => 'Afficher les colis';
+
+  @override
+  String get moneyTripCollapseHint => 'Masquer les colis';
+
+  @override
+  String get moneyTripsShowMore => 'Afficher plus de trajets';
+
+  @override
+  String get moneyTripsShowAll => 'Voir tous mes trajets';
+
+  @override
+  String get moneyTripsEmptyTitle => 'Aucun trajet payé';
+
+  @override
+  String get moneyTripsEmptyBody =>
+      'Les colis payés sur vos trajets apparaîtront ici.';
+
+  @override
+  String get moneyTripNotFoundTitle => 'Plus rien à suivre sur ce trajet';
 }

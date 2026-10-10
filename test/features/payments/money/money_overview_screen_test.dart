@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
 import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
@@ -39,7 +40,21 @@ void main() {
     );
   }
 
-  Widget host() {
+  MoneyOverviewLoaded loaded(
+    MoneyOverviewModel overview, {
+    bool upcomingAvailable = true,
+  }) => MoneyOverviewLoaded(
+    overview,
+    upcomingAvailable: upcomingAvailable,
+    now: kMoneyNow,
+  );
+
+  Widget host({ThemeData? theme}) {
+    Widget record(GoRouterState s, String label) {
+      pushed.add(s.uri.toString());
+      return Scaffold(body: Text(label));
+    }
+
     final router = GoRouter(
       initialLocation: '/payments/money',
       routes: [
@@ -50,28 +65,27 @@ void main() {
             child: const MoneyOverviewScreen(),
           ),
         ),
-        GoRoute(
-          path: '/bids/:bidId',
-          builder: (_, s) {
-            pushed.add(s.uri.toString());
-            return const Scaffold(body: Text('bid'));
-          },
-        ),
+        GoRoute(path: kMoneyTripsRoute, builder: (_, s) => record(s, 'trips')),
+        GoRoute(path: '/bids/:bidId', builder: (_, s) => record(s, 'bid')),
         GoRoute(
           path: '/payments/wallet',
-          builder: (_, s) {
-            pushed.add(s.uri.toString());
-            return const Scaffold(body: Text('wallet'));
-          },
+          builder: (_, s) => record(s, 'wallet'),
         ),
       ],
     );
     return MaterialApp.router(
+      theme: theme ?? AppTheme.light(),
       locale: AppL10n.fr,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,
     );
+  }
+
+  void tall(WidgetTester tester, {double width = 400}) {
+    tester.view.physicalSize = Size(width, 4000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
   }
 
   testWidgets('chargement', (tester) async {
@@ -82,134 +96,200 @@ void main() {
     expect(find.text('Mon argent'), findsOneWidget);
   });
 
-  testWidgets('séquestre affiché avec sa condition et sa date, frise '
-      'accessible, multi-devises', (tester) async {
-    tester.view.physicalSize = const Size(400, 3000);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    stub(MoneyOverviewLoaded(overviewModel()));
+  testWidgets('carte de tête : à venir et quatre tuiles, jamais le solde '
+      'Yadony', (tester) async {
+    tall(tester);
+    stub(loaded(richOverview()));
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
 
-    // Cartes de synthèse : solde EUR principal, XOF en second, séquestre XOF.
-    expect(find.text('Disponible'), findsOneWidget);
-    expect(find.text('Bloqué jusqu\'à livraison'), findsOneWidget);
-    expect(find.text('2 colis en séquestre'), findsOneWidget);
+    expect(find.text('À venir · 9 colis'), findsOneWidget);
+    final card = find.byKey(const Key('money-upcoming-card'));
     expect(
-      find.descendant(
-        of: find.byKey(const Key('money-available-card')),
-        matching: find.textContaining('96,10'),
-      ),
+      find.descendant(of: card, matching: find.textContaining('241')),
       findsOneWidget,
     );
+    // L'autre devise en petit, jamais additionnée.
     expect(
-      find.descendant(
-        of: find.byKey(const Key('money-available-card')),
-        matching: find.textContaining('+ '),
-      ),
+      find.descendant(of: card, matching: find.textContaining('+ ')),
+      findsOneWidget,
+    );
+    Finder tile(String name, String text) => find.descendant(
+      of: find.byKey(Key('money-bucket-$name')),
+      matching: find.textContaining(text),
+    );
+    expect(tile('thisWeek', 'Cette semaine'), findsOneWidget);
+    expect(tile('thisWeek', '43'), findsOneWidget);
+    expect(tile('nextWeek', '108'), findsOneWidget);
+    expect(tile('later', '50'), findsOneWidget);
+    expect(tile('later', '9'), findsWidgets); // 9 000 F CFA, ligne à part
+    expect(tile('dispute', '40'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(r'^Semaine prochaine : 108')),
       findsOneWidget,
     );
 
-    // Sections.
-    expect(find.text('Quand mon argent arrive'), findsOneWidget);
-    expect(find.text('Mes envois'), findsOneWidget);
+    // Aucune trace du portefeuille Yadony dans les montants.
+    expect(find.text('Disponible'), findsNothing);
+    expect(find.textContaining('portefeuille'), findsNothing);
+  });
 
-    // Garde datée.
-    expect(find.text('DON-5DD4K2QP · Paris → Abidjan'), findsOneWidget);
-    expect(find.text('Awa K. · 10 kg'), findsOneWidget);
-    expect(
-      find.text('Versé automatiquement le 11 oct. si aucun litige'),
-      findsOneWidget,
-    );
-    expect(find.bySemanticsLabel('Étape 3 sur 4, Livré'), findsOneWidget);
+  testWidgets('prochains versements : en cours, daté, trajets, litige, '
+      'vérification', (tester) async {
+    tall(tester);
+    stub(loaded(richOverview()));
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
 
-    // Séquestre avant remise : date de départ, condition de livraison.
-    expect(find.text('Fatou S. · départ 18 oct.'), findsOneWidget);
+    expect(find.text('Prochains versements'), findsOneWidget);
+    expect(find.text('Livré · versement en cours'), findsOneWidget);
+    expect(find.text('dim. 11 oct.'), findsOneWidget);
+    expect(find.text('Arrivée 18 oct. · Paris → Abidjan'), findsOneWidget);
+    expect(find.text('Arrivée 24 oct. · Lyon → Dakar'), findsOneWidget);
+    expect(find.text('Bloqué · en litige'), findsOneWidget);
+    expect(find.text('En vérification'), findsOneWidget);
     expect(
-      find.text('Versé quand le destinataire confirme la livraison'),
-      findsOneWidget,
-    );
-    expect(find.bySemanticsLabel('Étape 1 sur 4, Payé'), findsOneWidget);
-
-    // Espèces : carte compacte, sans frise.
-    expect(
-      find.text('Payé en espèces à la remise · commission réglée'),
+      find.text('3 colis versés à la confirmation de livraison'),
       findsOneWidget,
     );
     expect(
-      find.descendant(
-        of: find.byKey(const Key('money-parcel-bid-cash')),
-        matching: find.text('Payé'),
-      ),
+      find.text('2 colis versés à la confirmation de livraison'),
+      findsOneWidget,
+    );
+    expect(find.text('Détail des 6 colis'), findsOneWidget);
+    expect(find.text('Détail des 3 colis'), findsOneWidget);
+    expect(
+      find.textContaining('DON-5DD4 · Paris → Abidjan · versement auto'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('DON-4HJ8 · Marseille → Bamako · l\'équipe Yadony'),
+      findsOneWidget,
+    );
+
+    // Groupe multi-devises : une ligne par devise, jamais additionnées.
+    final dkr = find.byKey(const Key('money-group-trip-dkr'));
+    expect(
+      find.descendant(of: dkr, matching: find.textContaining('50')),
+      findsWidgets,
+    );
+    expect(
+      find.descendant(of: dkr, matching: find.textContaining('9')),
+      findsWidgets,
+    );
+    expect(
+      find.descendant(of: dkr, matching: find.textContaining('9 050')),
       findsNothing,
     );
 
-    // Versé récemment, puis le litige côté expéditeur.
-    expect(find.text('Versé le 5 oct.'), findsOneWidget);
-    expect(find.text('En litige : l\'équipe Yadony décide'), findsOneWidget);
-    expect(find.text('Moussa K. · 4,5 kg'), findsOneWidget);
-    expect(
-      find.byKey(const Key('money-timeline-segment-1-attention')),
-      findsOneWidget,
-    );
+    // Versés récemment, envois, lien discret vers le solde Yadony.
+    expect(find.text('Versés récemment'), findsOneWidget);
+    expect(find.textContaining('versé le 6 oct.'), findsOneWidget);
+    expect(find.text('Mes envois'), findsOneWidget);
+    expect(find.textContaining('DON-SENT'), findsOneWidget);
+    expect(find.text('Mon solde Yadony'), findsOneWidget);
   });
 
-  testWidgets('tap sur une carte → /bids/:id puis rafraîchissement', (
-    tester,
-  ) async {
-    stub(MoneyOverviewLoaded(overviewModel()));
+  testWidgets('« Détail des N colis » ouvre Mes trajets filtré, puis '
+      'rafraîchit au retour', (tester) async {
+    tall(tester);
+    stub(loaded(richOverview()));
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('money-parcel-bid-held')));
+    await tester.tap(find.byKey(const Key('money-trip-link-abj')));
     await tester.pumpAndSettle();
-    expect(pushed, ['/bids/bid-held']);
+    expect(pushed, ['/payments/money/trips?announcementId=abj']);
 
-    final nav = tester.state<NavigatorState>(find.byType(Navigator).last);
-    nav.pop();
+    tester.state<NavigatorState>(find.byType(Navigator).last).pop();
     await tester.pumpAndSettle();
     verify(
       () => bloc.add(any(that: isA<MoneyOverviewRefreshRequested>())),
     ).called(1);
   });
 
-  testWidgets('lien historique → écran du portefeuille', (tester) async {
-    stub(const MoneyOverviewLoaded(MoneyOverviewModel()));
+  testWidgets('« Tous mes trajets », une ligne colis et le solde Yadony', (
+    tester,
+  ) async {
+    tall(tester);
+    stub(loaded(richOverview()));
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('money-history-link')));
+
+    await tester.tap(find.byKey(const Key('money-all-trips')));
     await tester.pumpAndSettle();
-    expect(pushed, ['/payments/wallet']);
+    tester.state<NavigatorState>(find.byType(Navigator).last).pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('money-line-auto')));
+    await tester.pumpAndSettle();
+    tester.state<NavigatorState>(find.byType(Navigator).last).pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('money-wallet-link')));
+    await tester.pumpAndSettle();
+    expect(pushed, ['/payments/money/trips', '/bids/auto', '/payments/wallet']);
+  });
+
+  testWidgets('liste coupée par le back : note discrète', (tester) async {
+    tall(tester);
+    stub(loaded(richOverview(truncated: true)));
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('money-truncated')), findsOneWidget);
+  });
+
+  testWidgets('expéditeur seul : argent payé en séquestre, sans tuiles', (
+    tester,
+  ) async {
+    tall(tester);
+    stub(
+      loaded(
+        MoneyOverviewModel(
+          senderTotals: const [
+            SenderTotalModel(
+              currency: 'EUR',
+              blocked: 60,
+              refundPending: 0,
+              refundedRecently: 0,
+            ),
+          ],
+          senderItems: [
+            item(bidId: 'sent', role: MoneyRole.sender, amount: 60),
+            item(
+              bidId: 'refunded',
+              role: MoneyRole.sender,
+              state: MoneyState.refundedRecently,
+              settledAt: DateTime(2026, 10, 2),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(find.text('Payé, en séquestre · 1 colis'), findsOneWidget);
+    expect(find.byKey(const Key('money-bucket-thisWeek')), findsNothing);
+    expect(find.textContaining('remboursé le 2 oct.'), findsOneWidget);
+    expect(find.byKey(const Key('money-all-trips')), findsNothing);
   });
 
   testWidgets('vide : état « Rien en attente »', (tester) async {
-    stub(
-      const MoneyOverviewLoaded(
-        MoneyOverviewModel(wallet: [MoneyAmount('EUR', 0)]),
-      ),
-    );
+    stub(loaded(const MoneyOverviewModel()));
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('money-empty')), findsOneWidget);
-    expect(find.text('Rien en attente'), findsOneWidget);
-    expect(find.text('Aucun colis en séquestre'), findsOneWidget);
+    expect(find.byKey(const Key('money-upcoming-card')), findsNothing);
   });
 
-  testWidgets('ancien back : soldes seuls et « Bientôt disponible »', (
+  testWidgets('ancien back : « Bientôt disponible », sans solde', (
     tester,
   ) async {
-    stub(
-      const MoneyOverviewLoaded(
-        MoneyOverviewModel(wallet: [MoneyAmount('EUR', 12.5)]),
-        upcomingAvailable: false,
-      ),
-    );
+    stub(loaded(const MoneyOverviewModel(), upcomingAvailable: false));
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('money-unavailable')), findsOneWidget);
-    expect(find.text('Bientôt disponible'), findsOneWidget);
-    expect(find.byKey(const Key('money-blocked-card')), findsNothing);
-    expect(find.textContaining('12,50'), findsOneWidget);
+    expect(find.byKey(const Key('money-upcoming-card')), findsNothing);
   });
 
   testWidgets('erreur : message et « Réessayer » relance le chargement', (
@@ -225,7 +305,7 @@ void main() {
   });
 
   testWidgets('pull-to-refresh envoie un rafraîchissement', (tester) async {
-    stub(MoneyOverviewLoaded(overviewModel()));
+    stub(loaded(richOverview()));
     when(() => bloc.add(any())).thenAnswer((inv) {
       final e = inv.positionalArguments.first;
       if (e is MoneyOverviewRefreshRequested) e.completer?.complete();
@@ -239,30 +319,16 @@ void main() {
     ).called(1);
   });
 
-  testWidgets('thème sombre : rendu sans erreur', (tester) async {
-    stub(MoneyOverviewLoaded(overviewModel()));
-    final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, _) => BlocProvider<MoneyOverviewBloc>.value(
-            value: bloc,
-            child: const MoneyOverviewScreen(),
-          ),
-        ),
-      ],
-    );
-    await tester.pumpWidget(
-      MaterialApp.router(
-        theme: ThemeData(brightness: Brightness.dark, useMaterial3: true),
-        locale: AppL10n.fr,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: router,
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.text('Quand mon argent arrive'), findsOneWidget);
-  });
+  for (final width in [320.0, 360.0]) {
+    testWidgets('$width dp, thème sombre : rendu sans débordement', (
+      tester,
+    ) async {
+      tall(tester, width: width);
+      stub(loaded(richOverview()));
+      await tester.pumpWidget(host(theme: AppTheme.dark()));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Prochains versements'), findsOneWidget);
+    });
+  }
 }

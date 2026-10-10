@@ -6,8 +6,8 @@ import 'money_fixtures.dart';
 void main() {
   test('lit le contrat complet du back', () {
     final m = overviewModel();
-    expect(m.wallet.map((w) => w.currency), ['EUR', 'XOF']);
-    expect(m.wallet.first.amount, 96.1);
+    expect(m.activeCurrency, 'XOF');
+    expect(m.truncated, isFalse);
     expect(m.recentWindowDays, 30);
     expect(m.travelerItems, hasLength(4));
     final held = m.travelerItems.first;
@@ -20,6 +20,12 @@ void main() {
     expect(held.role, MoneyRole.traveler);
     expect(held.releaseAt, DateTime.utc(2026, 10, 11, 8).toLocal());
     expect(held.departureDate, DateTime(2026, 10, 14));
+    // Ancien back sans arrivalDate : l'échéance retombe sur le départ.
+    expect(held.arrivalDate, isNull);
+    expect(held.tripDate, DateTime(2026, 10, 14));
+    final escrow = m.travelerItems[1];
+    expect(escrow.arrivalDate, DateTime(2026, 10, 19));
+    expect(escrow.tripDate, DateTime(2026, 10, 19));
     expect(held.weightKg, 10);
     expect(held.amount, 7950);
     expect(held.counterpartyName, 'Awa K.');
@@ -53,7 +59,8 @@ void main() {
         ],
       },
     });
-    expect(m.wallet, isEmpty);
+    expect(m.activeCurrency, isNull);
+    expect(m.truncated, isFalse);
     expect(m.recentWindowDays, 30);
     expect(m.senderItems, isEmpty);
     final i = m.travelerItems.single;
@@ -62,6 +69,15 @@ void main() {
     expect(i.channel, MoneyChannel.card);
     expect(i.isUpcoming, isFalse);
     expect(MoneyOverviewModel.fromJson({}).isEmpty, isTrue);
+  });
+
+  test('lit truncated et ignore une devise active vide', () {
+    final m = MoneyOverviewModel.fromJson({
+      'truncated': true,
+      'activeCurrency': '  ',
+    });
+    expect(m.truncated, isTrue);
+    expect(m.activeCurrency, isNull);
   });
 
   test('parse chaque code serveur', () {
@@ -117,7 +133,7 @@ void main() {
   });
 
   test('activeCurrency optionnelle (FLUTTER-J4)', () {
-    expect(overviewModel().activeCurrency, isNull);
+    expect(overviewModel().activeCurrency, 'XOF');
     expect(
       MoneyOverviewModel.fromJson({'activeCurrency': 'xof'}).activeCurrency,
       'XOF',
@@ -130,9 +146,5 @@ void main() {
       MoneyOverviewModel.fromJson({'activeCurrency': 42}).activeCurrency,
       isNull,
     );
-    final copy = overviewModel().withActiveCurrency('EUR');
-    expect(copy.activeCurrency, 'EUR');
-    expect(copy.travelerItems, hasLength(4));
-    expect(copy.recentWindowDays, 30);
   });
 }
