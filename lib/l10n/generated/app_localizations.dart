@@ -12950,7 +12950,7 @@ abstract class AppLocalizations {
   /// Message d'information hors rate-limit (talon_retrait_code_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Transmettez ce code au voyageur par vos propres moyens (SMS, WhatsApp…). Il devra le saisir à la livraison.'**
+  /// **'Transmettez ce code à votre destinataire par vos propres moyens (SMS, WhatsApp…). Ne le donnez pas au voyageur : il le demandera au destinataire au moment de la remise.'**
   String get ticketShareCodeManuallyHint;
 
   /// Tampon de statut AWAITING_PAYMENT, vue expéditeur (billet_status_stamp.dart)
@@ -13070,7 +13070,7 @@ abstract class AppLocalizations {
   /// Étiquette de section au-dessus du numéro de suivi, casse conservée telle quelle (talon_tracking_strip.dart)
   ///
   /// In fr, this message translates to:
-  /// **'N° DE SUIVI'**
+  /// **'NUMÉRO DE SUIVI'**
   String get ticketTrackingNumberSectionLabel;
 
   /// Snackbar après copie du numéro de suivi (talon_tracking_strip.dart)
@@ -17239,13 +17239,13 @@ abstract class AppLocalizations {
   /// Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet).
   ///
   /// In fr, this message translates to:
-  /// **'Code de confirmation'**
+  /// **'Code de retrait du destinataire'**
   String get scanConfirmationCodeLabel;
 
   /// Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet).
   ///
   /// In fr, this message translates to:
-  /// **'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.'**
+  /// **'Demandez au destinataire son code de retrait à 6 chiffres, au moment de la remise. Ce n\'est pas le numéro de suivi.'**
   String get scanConfirmationCodeHintLong;
 
   /// Libellé/titre de la section photo (qr_scanner_screen.dart, scan_photo_screen.dart).
@@ -17311,7 +17311,7 @@ abstract class AppLocalizations {
   /// Texte d'aide du champ code de confirmation de scan_confirm_screen.dart (version courte, distincte de scanConfirmationCodeHintLong).
   ///
   /// In fr, this message translates to:
-  /// **'Demandez le code à 6 chiffres au destinataire.'**
+  /// **'Demandez au destinataire son code de retrait à 6 chiffres. Ce n\'est pas le numéro de suivi DON-…'**
   String get scanConfirmConfirmationCodeHint;
 
   /// Bouton de validation d'une lecture DEPART/TRANSIT (scan_confirm_screen.dart).
@@ -26117,7 +26117,7 @@ abstract class AppLocalizations {
   /// Explication sous le code de retrait (reception_detail_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Donnez ce code au voyageur à la remise du colis, pas avant.'**
+  /// **'Code secret : donnez-le au voyageur seulement au moment de la remise du colis, pas avant.'**
   String get receptionCodeExplanation;
 
   /// Code de retrait pas encore généré (reception_detail_screen.dart).
@@ -29060,7 +29060,7 @@ abstract class AppLocalizations {
   /// **'Mon argent'**
   String get moneyTitle;
 
-  /// Libellé d'accessibilité de la pastille portefeuille de l'en-tête de l'accueil, sans argent en attente (money_header_button.dart, FLUTTER-HV).
+  /// Libellé d'accessibilité de la pastille portefeuille de l'en-tête d'Activités, sans argent en attente (money_header_button.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
   /// **'Mon argent'**
@@ -29311,6 +29311,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Statut en cours de mise à jour'**
   String get moneyUnknownState;
+
+  /// Aide sous le numéro de suivi du talon : le numéro est public, ce n'est pas le code de retrait (talon_tracking_strip.dart, FLUTTER-J2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifiant public du colis, ce n\'est pas un code de remise.'**
+  String get ticketTrackingNumberHelp;
+
+  /// Aide sous l'étiquette du code de retrait de l'expéditeur (talon_retrait_code_view.dart, FLUTTER-J2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Secret, à donner au voyageur seulement au moment de la remise.'**
+  String get ticketPickupCodeSecretHint;
+
+  /// Libellé de la ligne du numéro de suivi dans le détail d'un colis (details_accordion.dart, FLUTTER-J2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de suivi'**
+  String get bidDetailTrackingNumberLabel;
+
+  /// Aide sous le bouton de remise grisé avant le départ du trajet (delivery_departure_gate.dart, FLUTTER-J2).
+  ///
+  /// In fr, this message translates to:
+  /// **'À la remise, demandez au destinataire son code de retrait à 6 chiffres.'**
+  String get deliveryLockedHelp;
 }
 
 class _AppLocalizationsDelegate

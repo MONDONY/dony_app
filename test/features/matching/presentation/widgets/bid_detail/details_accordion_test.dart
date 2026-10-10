@@ -12,17 +12,21 @@ import 'package:intl/intl.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
 
-BidModel _bid({DateTime? handoverDeadline, DateTime? departureDate}) =>
-    BidModel(
-      id: 'bid-001',
-      announcementId: 'ann-001',
-      senderId: 'sender-001',
-      status: 'ACCEPTED',
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-      handoverDeadline: handoverDeadline,
-      departureDate: departureDate,
-    );
+BidModel _bid({
+  DateTime? handoverDeadline,
+  DateTime? departureDate,
+  String? trackingNumber,
+}) => BidModel(
+  id: 'bid-001',
+  announcementId: 'ann-001',
+  senderId: 'sender-001',
+  status: 'ACCEPTED',
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+  handoverDeadline: handoverDeadline,
+  departureDate: departureDate,
+  trackingNumber: trackingNumber,
+);
 
 Widget _host(BidModel bid) => MaterialApp(
   // Défilant comme l'écran réel : l'accordéon ouvert dépasse la hauteur du test.
@@ -187,5 +191,22 @@ void main() {
     expect(find.text('22 Rue du Séminaire, Chevilly-Larue'), findsOneWidget);
     expect(find.byKey(const Key('details-handover-address')), findsNothing);
     expect(find.text("RÉCUPÉRATION À L'ARRIVÉE"), findsNothing);
+  });
+
+  testWidgets('numéro de suivi servi : libellé « Numéro de suivi », jamais '
+      '« Référence » (FLUTTER-J2)', (tester) async {
+    await tester.pumpWidget(_host(_bid(trackingNumber: 'DON-E69EDCSG')));
+    await ouvrir(tester);
+    expect(find.text('Numéro de suivi'), findsOneWidget);
+    expect(find.text('Référence'), findsNothing);
+    expect(find.text('DON-E69EDCSG'), findsOneWidget);
+  });
+
+  testWidgets('sans numéro de suivi : « Référence » de la demande', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_host(_bid()));
+    await ouvrir(tester);
+    expect(find.text('Référence'), findsOneWidget);
   });
 }

@@ -35,13 +35,15 @@ void main() {
     ).thenAnswer((_) async {});
   });
 
-  MoneyOverviewBloc build({bool header = false}) => MoneyOverviewBloc(
-    repo,
-    wallet,
-    analytics,
-    fallbackToWallet: !header,
-    trackViews: !header,
-  );
+  MoneyOverviewBloc build({bool header = false, String? cached}) =>
+      MoneyOverviewBloc(
+        repo,
+        wallet,
+        analytics,
+        fallbackToWallet: !header,
+        trackViews: !header,
+        cachedActiveCurrency: () => cached,
+      );
 
   blocTest<MoneyOverviewBloc, MoneyOverviewState>(
     'succès : chargement puis aperçu, consultation tracée une fois',
@@ -258,4 +260,123 @@ void main() {
     act: (b) => b.add(const MoneyOverviewRefreshRequested()),
     expect: () => [isA<MoneyOverviewError>()],
   );
+
+  group('devise active de la carte « Disponible » (FLUTTER-J4)', () {
+    MoneyOverviewModel twoWallets({String? active}) => MoneyOverviewModel(
+      wallet: const [MoneyAmount('EUR', 10), MoneyAmount('XOF', 5000)],
+      activeCurrency: active,
+    );
+
+    const xofWallet = WalletModel(
+      balance: 5000,
+      currency: 'XOF',
+      transactions: [],
+    );
+
+    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
+      'back récent : activeCurrency de l\'aperçu, sans appel au portefeuille',
+      build: () {
+        when(
+          () => repo.getOverview(),
+        ).thenAnswer((_) async => twoWallets(active: 'XOF'));
+        return build(cached: 'EUR');
+      },
+      act: (b) => b.add(const MoneyOverviewLoadRequested()),
+      expect: () => [
+        isA<MoneyOverviewLoading>(),
+        isA<MoneyOverviewLoaded>().having(
+          (s) => s.overview.activeCurrency,
+          'activeCurrency',
+          'XOF',
+        ),
+      ],
+      verify: (_) => verifyNever(() => wallet.getBalance()),
+    );
+
+    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
+      'ancien back sans activeCurrency : devise du portefeuille',
+      build: () {
+        when(() => repo.getOverview()).thenAnswer((_) async => twoWallets());
+        when(() => wallet.getBalance()).thenAnswer((_) async => xofWallet);
+        return build(cached: 'EUR');
+      },
+      act: (b) => b.add(const MoneyOverviewLoadRequested()),
+      expect: () => [
+        isA<MoneyOverviewLoading>(),
+        isA<MoneyOverviewLoaded>()
+            .having((s) => s.overview.activeCurrency, 'activeCurrency', 'XOF')
+            .having((s) => s.overview.wallet.length, 'wallet', 2),
+      ],
+    );
+
+    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
+      'portefeuille injoignable : devise active du cache local',
+      build: () {
+        when(() => repo.getOverview()).thenAnswer((_) async => twoWallets());
+        when(() => wallet.getBalance()).thenThrow(const OfflineException());
+        return build(cached: 'XOF');
+      },
+      act: (b) => b.add(const MoneyOverviewLoadRequested()),
+      expect: () => [
+        isA<MoneyOverviewLoading>(),
+        isA<MoneyOverviewLoaded>().having(
+          (s) => s.overview.activeCurrency,
+          'activeCurrency',
+          'XOF',
+        ),
+      ],
+    );
+
+    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
+      'un seul solde : rien à départager, aucun appel de plus',
+      build: () {
+        when(() => repo.getOverview()).thenAnswer(
+          (_) async =>
+              const MoneyOverviewModel(wallet: [MoneyAmount('EUR', 10)]),
+        );
+        return build();
+      },
+      act: (b) => b.add(const MoneyOverviewLoadRequested()),
+      expect: () => [isA<MoneyOverviewLoading>(), isA<MoneyOverviewLoaded>()],
+      verify: (_) => verifyNever(() => wallet.getBalance()),
+    );
+
+    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
+      'pastille d\'en-tête : jamais d\'appel au portefeuille',
+      build: () {
+        when(() => repo.getOverview()).thenAnswer((_) async => twoWallets());
+        return build(header: true);
+      },
+      act: (b) => b.add(const MoneyOverviewLoadRequested()),
+      expect: () => [
+        isA<MoneyOverviewLoading>(),
+        isA<MoneyOverviewLoaded>().having(
+          (s) => s.overview.activeCurrency,
+          'activeCurrency',
+          isNull,
+        ),
+      ],
+      verify: (_) => verifyNever(() => wallet.getBalance()),
+    );
+
+    blocTest<MoneyOverviewBloc, MoneyOverviewState>(
+      'back sans aperçu : devise du portefeuille de repli',
+      build: () {
+        when(
+          () => repo.getOverview(),
+        ).thenThrow(const MoneyOverviewUnavailable());
+        when(() => wallet.getBalance()).thenAnswer((_) async => xofWallet);
+        return build();
+      },
+      act: (b) => b.add(const MoneyOverviewLoadRequested()),
+      expect: () => [
+        isA<MoneyOverviewLoading>(),
+        isA<MoneyOverviewLoaded>().having(
+          (s) => s.overview.activeCurrency,
+          'activeCurrency',
+          'XOF',
+        ),
+      ],
+    );
+  });
 }

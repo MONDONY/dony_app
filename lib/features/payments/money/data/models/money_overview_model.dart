@@ -240,6 +240,7 @@ class MoneyOverviewModel {
     this.senderTotals = const [],
     this.senderItems = const [],
     this.recentWindowDays = 30,
+    this.activeCurrency,
   });
 
   /// Soldes disponibles du portefeuille, par devise.
@@ -249,6 +250,21 @@ class MoneyOverviewModel {
   final List<SenderTotalModel> senderTotals;
   final List<MoneyItemModel> senderItems;
   final int recentWindowDays;
+
+  /// Devise du portefeuille actif (FLUTTER-J4), mise en grand sur la carte
+  /// « Disponible ». Optionnelle : absente d'un back antérieur, l'écran la
+  /// résout lui-même (voir `MoneyOverviewBloc`).
+  final String? activeCurrency;
+
+  MoneyOverviewModel withActiveCurrency(String? currency) => MoneyOverviewModel(
+    wallet: wallet,
+    travelerTotals: travelerTotals,
+    travelerItems: travelerItems,
+    senderTotals: senderTotals,
+    senderItems: senderItems,
+    recentWindowDays: recentWindowDays,
+    activeCurrency: currency,
+  );
 
   factory MoneyOverviewModel.fromJson(Map<String, dynamic> json) {
     List<Map<String, dynamic>> list(Object? v) =>
@@ -275,6 +291,11 @@ class MoneyOverviewModel {
       ).map(SenderTotalModel.fromJson).toList(),
       senderItems: list(sender['items']).map(MoneyItemModel.fromJson).toList(),
       recentWindowDays: (json['recentWindowDays'] as num?)?.toInt() ?? 30,
+      activeCurrency: switch (json['activeCurrency']) {
+        final String code when code.trim().isNotEmpty =>
+          code.trim().toUpperCase(),
+        _ => null,
+      },
     );
   }
 

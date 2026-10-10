@@ -8003,7 +8003,7 @@
       }
     }
   },
-  "ticketShareCodeManuallyHint": "Transmettez ce code au voyageur par vos propres moyens (SMS, WhatsApp…). Il devra le saisir à la livraison.",
+  "ticketShareCodeManuallyHint": "Transmettez ce code à votre destinataire par vos propres moyens (SMS, WhatsApp…). Ne le donnez pas au voyageur : il le demandera au destinataire au moment de la remise.",
   "@ticketShareCodeManuallyHint": {
     "description": "Message d'information hors rate-limit (talon_retrait_code_view.dart)"
   },
@@ -8096,7 +8096,7 @@
       }
     }
   },
-  "ticketTrackingNumberSectionLabel": "N° DE SUIVI",
+  "ticketTrackingNumberSectionLabel": "NUMÉRO DE SUIVI",
   "@ticketTrackingNumberSectionLabel": {
     "description": "Étiquette de section au-dessus du numéro de suivi, casse conservée telle quelle (talon_tracking_strip.dart)"
   },
@@ -11385,11 +11385,11 @@
   "@scanEventTypeSectionLabel": {
     "description": "Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
-  "scanConfirmationCodeLabel": "Code de confirmation",
+  "scanConfirmationCodeLabel": "Code de retrait du destinataire",
   "@scanConfirmationCodeLabel": {
     "description": "Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
-  "scanConfirmationCodeHintLong": "Demandez le code à 6 chiffres au destinataire. Il l'a reçu de l'expéditeur.",
+  "scanConfirmationCodeHintLong": "Demandez au destinataire son code de retrait à 6 chiffres, au moment de la remise. Ce n'est pas le numéro de suivi.",
   "@scanConfirmationCodeHintLong": {
     "description": "Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
@@ -11433,7 +11433,7 @@
   "@scanConfirmStepLabel": {
     "description": "Libellé de la ligne étape du récapitulatif (scan_confirm_screen.dart, _MetaRow)."
   },
-  "scanConfirmConfirmationCodeHint": "Demandez le code à 6 chiffres au destinataire.",
+  "scanConfirmConfirmationCodeHint": "Demandez au destinataire son code de retrait à 6 chiffres. Ce n'est pas le numéro de suivi DON-…",
   "@scanConfirmConfirmationCodeHint": {
     "description": "Texte d'aide du champ code de confirmation de scan_confirm_screen.dart (version courte, distincte de scanConfirmationCodeHintLong)."
   },
@@ -18197,7 +18197,7 @@
       }
     }
   },
-  "receptionCodeExplanation": "Donnez ce code au voyageur à la remise du colis, pas avant.",
+  "receptionCodeExplanation": "Code secret : donnez-le au voyageur seulement au moment de la remise du colis, pas avant.",
   "@receptionCodeExplanation": {
     "description": "Explication sous le code de retrait (reception_detail_screen.dart)."
   },
@@ -19781,7 +19781,7 @@
   "moneyTitle": "Mon argent",
   "@moneyTitle": {"description": "Titre de l'écran « Mon argent » (money_overview_screen.dart, FLUTTER-HV)."},
   "moneyHeaderSemantics": "Mon argent",
-  "@moneyHeaderSemantics": {"description": "Libellé d'accessibilité de la pastille portefeuille de l'en-tête de l'accueil, sans argent en attente (money_header_button.dart, FLUTTER-HV)."},
+  "@moneyHeaderSemantics": {"description": "Libellé d'accessibilité de la pastille portefeuille de l'en-tête d'Activités, sans argent en attente (money_header_button.dart, FLUTTER-HV)."},
   "moneyHeaderSemanticsUpcoming": "Mon argent : {amount} à venir",
   "@moneyHeaderSemanticsUpcoming": {"description": "Libellé d'accessibilité de la pastille portefeuille quand de l'argent est en attente (money_header_button.dart, FLUTTER-HV). {amount} = montant formaté avec sa devise.", "placeholders": {"amount": {"type": "String"}}},
   "moneyAvailableLabel": "Disponible",
@@ -19863,5 +19863,13 @@
   "moneySenderRefundedNoDate": "Remboursé",
   "@moneySenderRefundedNoDate": {"description": "Remboursement effectué, date inconnue (money_conditions.dart, FLUTTER-HV)."},
   "moneyUnknownState": "Statut en cours de mise à jour",
-  "@moneyUnknownState": {"description": "État inconnu renvoyé par un serveur plus récent que l'app (money_conditions.dart, FLUTTER-HV)."}
+  "@moneyUnknownState": {"description": "État inconnu renvoyé par un serveur plus récent que l'app (money_conditions.dart, FLUTTER-HV)."},
+  "ticketTrackingNumberHelp": "Identifiant public du colis, ce n'est pas un code de remise.",
+  "@ticketTrackingNumberHelp": {"description": "Aide sous le numéro de suivi du talon : le numéro est public, ce n'est pas le code de retrait (talon_tracking_strip.dart, FLUTTER-J2)."},
+  "ticketPickupCodeSecretHint": "Secret, à donner au voyageur seulement au moment de la remise.",
+  "@ticketPickupCodeSecretHint": {"description": "Aide sous l'étiquette du code de retrait de l'expéditeur (talon_retrait_code_view.dart, FLUTTER-J2)."},
+  "bidDetailTrackingNumberLabel": "Numéro de suivi",
+  "@bidDetailTrackingNumberLabel": {"description": "Libellé de la ligne du numéro de suivi dans le détail d'un colis (details_accordion.dart, FLUTTER-J2)."},
+  "deliveryLockedHelp": "À la remise, demandez au destinataire son code de retrait à 6 chiffres.",
+  "@deliveryLockedHelp": {"description": "Aide sous le bouton de remise grisé avant le départ du trajet (delivery_departure_gate.dart, FLUTTER-J2)."}
 }

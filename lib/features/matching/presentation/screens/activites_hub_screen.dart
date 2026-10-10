@@ -35,6 +35,7 @@ import 'package:dony/features/matching/presentation/widgets/tool_status_badge.da
 import 'package:dony/features/matching/presentation/widgets/tools_completion_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/payments/money/presentation/widgets/money_header_button.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -598,6 +599,36 @@ class _Header extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
 
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          _row(context, constraints.maxWidth, tt, cs, l),
+    );
+  }
+
+  /// Menu, titre, scarabée puis pastille « Mon argent ». [fixed] : tout ce
+  /// qui n'est ni le titre ni la pastille (boutons de 48 et écarts).
+  Widget _row(
+    BuildContext context,
+    double width,
+    TextTheme tt,
+    ColorScheme cs,
+    AppLocalizations l,
+  ) {
+    // Burger (44), scarabée (IconButton, 48) et les trois écarts.
+    const fixed =
+        kDonyMinTapTarget +
+        kMinInteractiveDimension +
+        DonySpacing.sm * 2 +
+        DonySpacing.xs;
+    final titlePainter = TextPainter(
+      text: TextSpan(text: l.activityHubTitle, style: tt.headlineLarge),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final titleWidth = titlePainter.width;
+    titlePainter.dispose();
+
     return Row(
       children: [
         // Le burger remplace l'ancien bouton « Suivre un colis », qui occupait
@@ -620,8 +651,26 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(width: DonySpacing.sm),
-        Expanded(child: Text(l.activityHubTitle, style: tt.headlineLarge)),
+        Expanded(
+          // Une ligne : à 320 dp ou à 200 % de texte, le titre se réduit
+          // plutôt que de se couper au milieu du mot.
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(l.activityHubTitle, style: tt.headlineLarge),
+          ),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        // Portefeuille « Mon argent » (FLUTTER-HV), déplacé de l'accueil
+        // (FLUTTER-J3) : juste à droite du scarabée. Le montant à venir ne
+        // s'affiche que s'il tient à côté du titre entier ; sinon, à 320 dp
+        // comme à grande taille de texte, l'icône seule reste accessible.
         const DonyFeedbackButton(),
+        const SizedBox(width: DonySpacing.xs),
+        MoneyHeaderEntry(
+          size: kDonyMinTapTarget,
+          maxWidth: (width - fixed - titleWidth).clamp(0, double.infinity),
+        ),
       ],
     );
   }

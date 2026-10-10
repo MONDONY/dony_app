@@ -26,7 +26,7 @@ void main() {
     opened = 0;
   });
 
-  Widget host({bool showAmount = true}) {
+  Widget host({bool showAmount = true, double? maxWidth}) {
     final router = GoRouter(
       routes: [
         GoRoute(
@@ -35,7 +35,10 @@ void main() {
             body: Center(
               child: BlocProvider<MoneyOverviewBloc>.value(
                 value: bloc,
-                child: MoneyHeaderButton(showAmount: showAmount),
+                child: MoneyHeaderButton(
+                  showAmount: showAmount,
+                  maxWidth: maxWidth,
+                ),
               ),
             ),
           ),
@@ -122,6 +125,25 @@ void main() {
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('money-header-amount')), findsOneWidget);
+  });
+
+  testWidgets('place suffisante (FLUTTER-J3) : le montant s\'affiche', (
+    tester,
+  ) async {
+    stub(MoneyOverviewLoaded(overviewModel()));
+    await tester.pumpWidget(host(maxWidth: 600));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('money-header-amount')), findsOneWidget);
+  });
+
+  testWidgets('montant trop large pour la place (FLUTTER-J3) : icône seule, '
+      'montant gardé dans le libellé', (tester) async {
+    stub(MoneyOverviewLoaded(overviewModel()));
+    await tester.pumpWidget(host(maxWidth: 60));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('money-header-amount')), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('à venir')), findsOneWidget);
   });
 
   testWidgets('tap → « Mon argent », rafraîchit au retour', (tester) async {

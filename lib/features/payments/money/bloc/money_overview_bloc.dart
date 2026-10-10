@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -11,7 +12,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 part 'money_overview_event.dart';
 part 'money_overview_state.dart';
 
-/// Écran « Mon argent » et pastille de l'en-tête de l'accueil (FLUTTER-HV).
+/// Écran « Mon argent » et pastille de l'en-tête d'Activités (FLUTTER-HV,
+/// déplacée de l'accueil par FLUTTER-J3).
 ///
 /// [fallbackToWallet] : sur un back sans l'aperçu, l'écran retombe sur les
 /// soldes de `/wallet/balance` ; la pastille, elle, n'en a pas besoin et
@@ -23,7 +25,10 @@ class MoneyOverviewBloc extends Bloc<MoneyOverviewEvent, MoneyOverviewState> {
     this._analytics, {
     this.fallbackToWallet = true,
     this.trackViews = true,
-  }) : super(const MoneyOverviewInitial()) {
+    String? Function()? cachedActiveCurrency,
+  }) : _cachedActiveCurrency =
+           cachedActiveCurrency ?? (() => ActiveCurrency.current?.code),
+       super(const MoneyOverviewInitial()) {
     on<MoneyOverviewLoadRequested>(_onLoad);
     on<MoneyOverviewRefreshRequested>(_onRefresh);
   }
@@ -35,6 +40,10 @@ class MoneyOverviewBloc extends Bloc<MoneyOverviewEvent, MoneyOverviewState> {
 
   /// `false` pour la pastille : seul l'écran compte comme une consultation.
   final bool trackViews;
+
+  /// Devise active du cache local (préférence confirmée par le serveur),
+  /// dernier repli quand ni l'aperçu ni le portefeuille ne la donnent.
+  final String? Function() _cachedActiveCurrency;
 
   bool _viewTracked = false;
 
@@ -63,7 +72,9 @@ class MoneyOverviewBloc extends Bloc<MoneyOverviewEvent, MoneyOverviewState> {
     required bool keepOnError,
   }) async {
     try {
-      final overview = await _repository.getOverview();
+      final overview = await _resolveActiveCurrency(
+        await _repository.getOverview(),
+      );
       if (emit.isDone) return;
       emit(MoneyOverviewLoaded(overview));
       _track(overview, legacy: false);
@@ -88,7 +99,10 @@ class MoneyOverviewBloc extends Bloc<MoneyOverviewEvent, MoneyOverviewState> {
                 for (final b in wallet.heldBalances)
                   MoneyAmount(b.currency, b.balance),
               ];
-        final overview = MoneyOverviewModel(wallet: balances);
+        final overview = MoneyOverviewModel(
+          wallet: balances,
+          activeCurrency: wallet.currency.toUpperCase(),
+        );
         emit(MoneyOverviewLoaded(overview, upcomingAvailable: false));
         _track(overview, legacy: true);
       } catch (e) {
@@ -99,6 +113,27 @@ class MoneyOverviewBloc extends Bloc<MoneyOverviewEvent, MoneyOverviewState> {
       // Rafraîchissement raté : on garde ce qui est affiché.
       if (emit.isDone || keepOnError) return;
       emit(MoneyOverviewError(unwrapDioError(e)));
+    }
+  }
+
+  /// Devise active à mettre en grand sur la carte « Disponible »
+  /// (FLUTTER-J4). Un back récent la donne dans l'aperçu (`activeCurrency`) ;
+  /// sinon l'écran la lit comme le portefeuille (`/wallet/balance`), puis
+  /// dans le cache local. Inutile pour la pastille, et tant qu'un seul solde
+  /// existe : aucun appel de plus dans ces cas.
+  Future<MoneyOverviewModel> _resolveActiveCurrency(
+    MoneyOverviewModel overview,
+  ) async {
+    if (overview.activeCurrency != null ||
+        !fallbackToWallet ||
+        overview.wallet.length < 2) {
+      return overview;
+    }
+    try {
+      final wallet = await _walletRepository.getBalance();
+      return overview.withActiveCurrency(wallet.currency.toUpperCase());
+    } catch (_) {
+      return overview.withActiveCurrency(_cachedActiveCurrency());
     }
   }
 

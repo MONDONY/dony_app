@@ -35,10 +35,13 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
+import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -48,6 +51,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
+import '../../../../helpers/money_test_doubles.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -185,7 +189,12 @@ Future<void> _pump(
   /// où rien ne serre ; passer 360 px pour éprouver le plus petit téléphone
   /// visé, là où les tuiles-outils tombent à 154 px de large.
   Size? physicalSize,
+
+  /// État de la pastille « Mon argent » de l'en-tête (FLUTTER-J3) : rien en
+  /// attente par défaut, une simple icône.
+  MoneyOverviewState money = const MoneyOverviewLoaded(MoneyOverviewModel()),
 }) async {
+  registerFakeMoneyOverview(state: money);
   tester.view.physicalSize = physicalSize ?? const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
@@ -337,6 +346,7 @@ Future<void> _pump(
       route('/tracking', 'Suivi'),
       route('/settings', 'Paramètres'),
       route('/payments/wallet', 'Portefeuille'),
+      route('/payments/money', 'Mon argent'),
       route('/profile/shipments/history', 'Écran historique'),
       route('/profile/help/faq', 'FAQ'),
       route('/corridor-alerts', 'Alertes'),
@@ -788,6 +798,86 @@ void main() {
         findsOneWidget,
       );
     });
+  });
+
+  group('pastille « Mon argent » (FLUTTER-J3)', () {
+    const upcoming = MoneyOverviewLoaded(
+      MoneyOverviewModel(
+        travelerTotals: [
+          TravelerTotalModel(
+            currency: 'EUR',
+            upcoming: 120,
+            releasedRecently: 0,
+          ),
+        ],
+      ),
+    );
+
+    testWidgets('dans l\'en-tête, juste à droite du scarabée', (tester) async {
+      await _pump(tester);
+      final pill = find.byKey(const Key('money-header-button'));
+      final bug = find.byType(DonyFeedbackButton);
+      expect(pill, findsOneWidget);
+      expect(bug, findsOneWidget);
+      expect(tester.getCenter(pill).dx, greaterThan(tester.getCenter(bug).dx));
+      expect(
+        (tester.getCenter(pill).dy - tester.getCenter(bug).dy).abs(),
+        lessThan(1),
+      );
+    });
+
+    testWidgets('vue large avec de l\'argent à venir : montant affiché', (
+      tester,
+    ) async {
+      await _pump(tester, money: upcoming);
+      expect(find.byKey(const Key('money-header-amount')), findsOneWidget);
+    });
+
+    testWidgets('tap → « Mon argent »', (tester) async {
+      await _pump(tester);
+      await tester.tap(find.byKey(const Key('money-header-button')));
+      await tester.pumpAndSettle();
+      expect(visited, contains('/payments/money'));
+    });
+
+    for (final width in [320.0, 360.0]) {
+      for (final scale in [1.0, 2.0]) {
+        testWidgets('${width.toInt()} dp, texte à ${(scale * 100).toInt()} % : '
+            'pastille accessible, sans débordement', (tester) async {
+          tester.platformDispatcher.textScaleFactorTestValue = scale;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          await _pump(tester, money: upcoming, physicalSize: Size(width, 1800));
+          await tester.pump(const Duration(milliseconds: 300));
+          // La police de test (glyphes d'un cadratin) fait déborder les puces
+          // de période, hors de l'en-tête : on ne juge ici que la rangée de
+          // l'en-tête.
+          tester.takeException();
+          final header = tester.renderObject<RenderFlex>(
+            find
+                .ancestor(
+                  of: find.byKey(const Key('money-header-button')),
+                  matching: find.byType(Row),
+                )
+                .first,
+          );
+          var used = 0.0;
+          var child = header.firstChild;
+          while (child != null) {
+            used += child.size.width;
+            child = (child.parentData! as FlexParentData).nextSibling;
+          }
+          expect(used, lessThanOrEqualTo(header.size.width + 0.5));
+          final pill = find.byKey(const Key('money-header-button'));
+          expect(pill, findsOneWidget);
+          // Le montant ne tient pas à côté du titre : icône seule, dans
+          // l'écran et à taille de cible tactile.
+          expect(find.byKey(const Key('money-header-amount')), findsNothing);
+          final rect = tester.getRect(pill);
+          expect(rect.right, lessThanOrEqualTo(width));
+          expect(rect.height, greaterThanOrEqualTo(kDonyMinTapTarget));
+        });
+      }
+    }
   });
 
   group('anglais', () {

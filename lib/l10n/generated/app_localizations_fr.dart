@@ -7831,7 +7831,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ticketShareCodeManuallyHint =>
-      'Transmettez ce code au voyageur par vos propres moyens (SMS, WhatsApp…). Il devra le saisir à la livraison.';
+      'Transmettez ce code à votre destinataire par vos propres moyens (SMS, WhatsApp…). Ne le donnez pas au voyageur : il le demandera au destinataire au moment de la remise.';
 
   @override
   String get ticketStatusAwaitingPaymentSenderLabel => 'À payer';
@@ -7900,7 +7900,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get ticketTrackingNumberSectionLabel => 'N° DE SUIVI';
+  String get ticketTrackingNumberSectionLabel => 'NUMÉRO DE SUIVI';
 
   @override
   String get ticketTrackingNumberCopiedSnackbar => 'Numéro copié';
@@ -10469,11 +10469,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanEventTypeSectionLabel => 'Type d\'étape';
 
   @override
-  String get scanConfirmationCodeLabel => 'Code de confirmation';
+  String get scanConfirmationCodeLabel => 'Code de retrait du destinataire';
 
   @override
   String get scanConfirmationCodeHintLong =>
-      'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.';
+      'Demandez au destinataire son code de retrait à 6 chiffres, au moment de la remise. Ce n\'est pas le numéro de suivi.';
 
   @override
   String get scanPhotoOfParcelLabel => 'Photo du colis';
@@ -10508,7 +10508,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get scanConfirmConfirmationCodeHint =>
-      'Demandez le code à 6 chiffres au destinataire.';
+      'Demandez au destinataire son code de retrait à 6 chiffres. Ce n\'est pas le numéro de suivi DON-…';
 
   @override
   String get scanValidateReadingButton => 'Valider la lecture';
@@ -15938,7 +15938,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get receptionCodeExplanation =>
-      'Donnez ce code au voyageur à la remise du colis, pas avant.';
+      'Code secret : donnez-le au voyageur seulement au moment de la remise du colis, pas avant.';
 
   @override
   String get receptionCodePending =>
@@ -17954,4 +17954,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get moneyUnknownState => 'Statut en cours de mise à jour';
+
+  @override
+  String get ticketTrackingNumberHelp =>
+      'Identifiant public du colis, ce n\'est pas un code de remise.';
+
+  @override
+  String get ticketPickupCodeSecretHint =>
+      'Secret, à donner au voyageur seulement au moment de la remise.';
+
+  @override
+  String get bidDetailTrackingNumberLabel => 'Numéro de suivi';
+
+  @override
+  String get deliveryLockedHelp =>
+      'À la remise, demandez au destinataire son code de retrait à 6 chiffres.';
 }

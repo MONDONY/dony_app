@@ -8,7 +8,7 @@ class MockMoneyOverviewBloc
     implements MoneyOverviewBloc {}
 
 /// Enregistre la fabrique du [MoneyOverviewBloc] de la pastille « Mon
-/// argent » de l'en-tête de l'accueil (FLUTTER-HV) : rien en attente par
+/// argent » de l'en-tête d'Activités (FLUTTER-HV, FLUTTER-J3) : rien en attente par
 /// défaut, une simple icône.
 void registerFakeMoneyOverview({
   MoneyOverviewState state = const MoneyOverviewLoaded(MoneyOverviewModel()),

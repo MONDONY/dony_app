@@ -115,4 +115,24 @@ void main() {
       expect(item(state: s).isUpcoming, isFalse, reason: s.name);
     }
   });
+
+  test('activeCurrency optionnelle (FLUTTER-J4)', () {
+    expect(overviewModel().activeCurrency, isNull);
+    expect(
+      MoneyOverviewModel.fromJson({'activeCurrency': 'xof'}).activeCurrency,
+      'XOF',
+    );
+    expect(
+      MoneyOverviewModel.fromJson({'activeCurrency': ''}).activeCurrency,
+      isNull,
+    );
+    expect(
+      MoneyOverviewModel.fromJson({'activeCurrency': 42}).activeCurrency,
+      isNull,
+    );
+    final copy = overviewModel().withActiveCurrency('EUR');
+    expect(copy.activeCurrency, 'EUR');
+    expect(copy.travelerItems, hasLength(4));
+    expect(copy.recentWindowDays, 30);
+  });
 }

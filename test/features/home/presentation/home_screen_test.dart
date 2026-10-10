@@ -69,7 +69,6 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 import '../../../helpers/mock_recent_city_store.dart';
-import '../../../helpers/money_test_doubles.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -786,7 +785,6 @@ void main() {
       () => _FakeContentCategoryRepository(),
     );
     registerFakeRecentCityStore();
-    registerFakeMoneyOverview();
 
     // Résumé d'activité par défaut : deux trajets actifs. Les tests qui
     // s'intéressent au cas « aucun trajet » passent `activeTrips: 0` à
@@ -1583,24 +1581,13 @@ void main() {
     );
 
     testWidgets(
-      'pastille « Mon argent » : présente pour un inscrit, absente pour un '
-      'invité (FLUTTER-HV)',
+      'la pastille « Mon argent » a quitté l\'en-tête de l\'accueil pour '
+      'celui d\'Activités (FLUTTER-J3)',
       (tester) async {
         await pumpHome(tester);
-        expect(find.byKey(const Key('money-header-button')), findsOneWidget);
+        expect(find.byKey(const Key('money-header-button')), findsNothing);
       },
     );
-
-    testWidgets('pas de pastille « Mon argent » pour un invité', (
-      tester,
-    ) async {
-      getIt.unregister<FirebaseSessionProbe>();
-      getIt.registerSingleton<FirebaseSessionProbe>(
-        const _StubSessionProbe.guest(),
-      );
-      await pumpHome(tester, authState: const AuthGuestSessionReady());
-      expect(find.byKey(const Key('money-header-button')), findsNothing);
-    });
 
     testWidgets(
       'un invité voit le cœur sur une carte de trajet et peut le basculer',

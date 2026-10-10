@@ -118,7 +118,19 @@ void main() {
       useEnglish();
       await _pump(tester);
       expect(find.text('TRACKING NUMBER'), findsOneWidget);
-      expect(find.text('N° DE SUIVI'), findsNothing);
+      expect(find.text('NUMÉRO DE SUIVI'), findsNothing);
     });
+  });
+
+  testWidgets('libellé « Numéro de suivi » et aide : public, pas un code de '
+      'remise (FLUTTER-J2)', (tester) async {
+    await _pump(tester);
+    expect(find.text('NUMÉRO DE SUIVI'), findsOneWidget);
+    expect(
+      find.text(
+        'Identifiant public du colis, ce n\'est pas un code de remise.',
+      ),
+      findsOneWidget,
+    );
   });
 }

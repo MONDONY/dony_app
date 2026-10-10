@@ -302,4 +302,33 @@ void main() {
       );
     });
   });
+
+  testWidgets('bouton grisé : aide sur le code à demander à la remise '
+      '(FLUTTER-J2)', (tester) async {
+    final departure = DateTime(2026, 10, 8, 14, 30);
+    await tester.pumpWidget(
+      _gate(
+        DeliveryWindow(departure: departure, hasTime: true),
+        _Clock(departure.subtract(const Duration(hours: 3))),
+      ),
+    );
+    expect(
+      find.text(
+        'À la remise, demandez au destinataire son code de retrait à 6 '
+        'chiffres.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('livraison ouverte : ni explication ni aide', (tester) async {
+    final departure = DateTime(2026, 10, 8, 14, 30);
+    await tester.pumpWidget(
+      _gate(
+        DeliveryWindow(departure: departure, hasTime: true),
+        _Clock(departure.add(const Duration(hours: 1))),
+      ),
+    );
+    expect(find.byKey(const Key('delivery-locked-help')), findsNothing);
+  });
 }

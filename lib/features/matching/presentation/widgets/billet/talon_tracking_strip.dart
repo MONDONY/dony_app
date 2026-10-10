@@ -7,8 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
-/// Bande « n° de suivi » en pied de talon : code-barres décoratif,
-/// numéro, et actions Copier / Partager.
+/// Bande « numéro de suivi » en pied de talon : code-barres décoratif,
+/// numéro, aide « identifiant public, pas un code de remise » (FLUTTER-J2),
+/// et actions Copier / Partager.
 class TalonTrackingStrip extends StatelessWidget {
   final String trackingNumber;
 
@@ -69,6 +70,13 @@ class TalonTrackingStrip extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.5,
                   ),
+                ),
+                // Le numéro est public (page de suivi, destinataire) : vu des
+                // deux côtés, il passait pour un code en double (FLUTTER-J2).
+                Text(
+                  l.ticketTrackingNumberHelp,
+                  key: const Key('talon-tracking-help'),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
