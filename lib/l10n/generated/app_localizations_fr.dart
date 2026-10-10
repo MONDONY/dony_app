@@ -871,6 +871,27 @@ class AppLocalizationsFr extends AppLocalizations {
       'La requête a pris trop de temps. Réessayez dans quelques secondes.';
 
   @override
+  String get errorPhotoQuotaTitle => 'Limite de photos atteinte';
+
+  @override
+  String get errorPhotoQuotaMessage =>
+      'Vous avez atteint la limite de photos pour aujourd\'hui. Réessayez demain.';
+
+  @override
+  String get errorTrackingPhotoLimitMessage =>
+      'Ce colis a déjà le nombre maximum de photos de suivi.';
+
+  @override
+  String get errorFileTooLargeMessage =>
+      'Image trop volumineuse (5 Mo maximum).';
+
+  @override
+  String get errorImageTooLargeTitle => 'Image refusée';
+
+  @override
+  String get errorImageTooLargeMessage => 'Image trop grande.';
+
+  @override
   String get errorRateLimitedTitle => 'Trop de requêtes';
 
   @override

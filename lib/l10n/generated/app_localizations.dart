@@ -1568,6 +1568,42 @@ abstract class AppLocalizations {
   /// **'La requête a pris trop de temps. Réessayez dans quelques secondes.'**
   String get errorTimeoutMessage;
 
+  /// No description provided for @errorPhotoQuotaTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de photos atteinte'**
+  String get errorPhotoQuotaTitle;
+
+  /// No description provided for @errorPhotoQuotaMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez atteint la limite de photos pour aujourd\'hui. Réessayez demain.'**
+  String get errorPhotoQuotaMessage;
+
+  /// No description provided for @errorTrackingPhotoLimitMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis a déjà le nombre maximum de photos de suivi.'**
+  String get errorTrackingPhotoLimitMessage;
+
+  /// No description provided for @errorFileTooLargeMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Image trop volumineuse (5 Mo maximum).'**
+  String get errorFileTooLargeMessage;
+
+  /// No description provided for @errorImageTooLargeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Image refusée'**
+  String get errorImageTooLargeTitle;
+
+  /// No description provided for @errorImageTooLargeMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Image trop grande.'**
+  String get errorImageTooLargeMessage;
+
   /// No description provided for @errorRateLimitedTitle.
   ///
   /// In fr, this message translates to:

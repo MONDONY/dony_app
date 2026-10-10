@@ -1269,6 +1269,31 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_disabled_rounded,
     ),
+    // ─── Limites de photos ────────────────────────────────────────────
+    'photo-upload-quota-exceeded': _Entry(
+      title: (l) => l.errorPhotoQuotaTitle,
+      message: (l) => l.errorPhotoQuotaMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.photo_library_rounded,
+    ),
+    'tracking-photo-limit-reached': _Entry(
+      title: (l) => l.errorPhotoQuotaTitle,
+      message: (l) => l.errorTrackingPhotoLimitMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.photo_library_rounded,
+    ),
+    'file-too-large': _Entry(
+      title: (l) => l.errorImageTooLargeTitle,
+      message: (l) => l.errorFileTooLargeMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.image_not_supported_rounded,
+    ),
+    'image/too-large': _Entry(
+      title: (l) => l.errorImageTooLargeTitle,
+      message: (l) => l.errorImageTooLargeMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.image_not_supported_rounded,
+    ),
     'RATE_LIMITED': _Entry(
       title: (l) => l.errorRateLimitedTitle,
       message: (l) => l.errorRateLimitedMessage,
@@ -1355,7 +1380,10 @@ abstract final class ErrorCatalog {
   static ErrorPresentation lookup(Object? error, {AppLocalizations? l10n}) {
     final l = l10n ?? AppL10n.current;
     if (error is AppException) {
-      final entry = _byCode[error.code];
+      // 429 métier : le code du back prime sur le générique 'RATE_LIMITED'.
+      final entry =
+          (error is RateLimitException ? _byCode[error.apiCode] : null) ??
+          _byCode[error.code];
       if (entry != null) {
         final p = entry.resolve(l);
         // Ruling R35 : `r.error` de `commission/failed` est un code machine

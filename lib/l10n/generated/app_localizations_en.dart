@@ -865,6 +865,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'The request took too long. Try again in a few seconds.';
 
   @override
+  String get errorPhotoQuotaTitle => 'Photo limit reached';
+
+  @override
+  String get errorPhotoQuotaMessage =>
+      'You\'ve reached today\'s photo limit. Try again tomorrow.';
+
+  @override
+  String get errorTrackingPhotoLimitMessage =>
+      'This parcel already has the maximum number of tracking photos.';
+
+  @override
+  String get errorFileTooLargeMessage => 'Image too large (5 MB maximum).';
+
+  @override
+  String get errorImageTooLargeTitle => 'Image rejected';
+
+  @override
+  String get errorImageTooLargeMessage => 'Image too large.';
+
+  @override
   String get errorRateLimitedTitle => 'Too many requests';
 
   @override
