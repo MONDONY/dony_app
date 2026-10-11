@@ -608,7 +608,7 @@ void main() {
           () => mockRepo.getEvents('bid-1'),
         ).thenAnswer((_) async => [recorded]);
         final key = await schedule();
-        expect(await timed.sendScheduled(key), same(recorded));
+        expect((await timed.sendScheduled(key))?.event, same(recorded));
         expect(_hiveService.offlineQueue.isEmpty, isTrue);
       },
     );
@@ -715,6 +715,240 @@ void main() {
       expect(await sending, isNull);
       expect(_hiveService.offlineQueue.isEmpty, isTrue);
     });
+  });
+
+  group('photo refusée par le serveur', () {
+    late _MockReporter reporter;
+    late OfflineSyncService reported;
+
+    setUp(() {
+      reporter = _MockReporter();
+      when(
+        () => reporter.report(
+          any(),
+          operation: any(named: 'operation'),
+          stackTrace: any(named: 'stackTrace'),
+          context: any(named: 'context'),
+        ),
+      ).thenAnswer((_) async {});
+      reported = OfflineSyncService(_hiveService, mockRepo, reporter);
+      when(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          scanMethod: any(named: 'scanMethod'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).thenAnswer((_) async => _fakeEvent());
+    });
+
+    void stubUploadError(AppException error) =>
+        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/storage/upload/tracking'),
+            error: error,
+          ),
+        );
+
+    Future<void> queueWithPhoto() => reported.queueScan(
+      bidId: 'bid-1',
+      eventType: 'ARRIVEE',
+      photoPath: '/tmp/arrivee.jpg',
+    );
+
+    void verifyPostedWithoutPhoto() => verify(
+      () => mockRepo.postScan(
+        bidId: 'bid-1',
+        eventType: 'ARRIVEE',
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoUrl: any(named: 'photoUrl', that: isNull),
+        scanMethod: any(named: 'scanMethod'),
+        offlineTimestamp: any(named: 'offlineTimestamp'),
+      ),
+    ).called(1);
+
+    void verifyNeverReported() => verifyNever(
+      () => reporter.report(
+        any(),
+        operation: any(named: 'operation'),
+        stackTrace: any(named: 'stackTrace'),
+        context: any(named: 'context'),
+      ),
+    );
+
+    final refusals = <String, AppException>{
+      '429 tracking-photo-limit-reached': const RateLimitException(
+        'Limite de photos atteinte',
+        'tracking-photo-limit-reached',
+      ),
+      '429 photo-upload-quota-exceeded': const RateLimitException(
+        'Quota journalier atteint',
+        'photo-upload-quota-exceeded',
+      ),
+      '413 file-too-large': const ValidationException(
+        'Fichier trop lourd',
+        code: 'file-too-large',
+      ),
+      '422 image/too-large': const ValidationException(
+        'Image trop grande',
+        code: 'image/too-large',
+      ),
+    };
+
+    for (final MapEntry(key: label, value: error) in refusals.entries) {
+      test('$label : étape postée sans photo, entrée retirée', () async {
+        stubUploadError(error);
+        await queueWithPhoto();
+
+        await reported.syncAll();
+
+        verifyPostedWithoutPhoto();
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+        verifyNeverReported();
+      });
+    }
+
+    test('sendScheduled : résultat photoDropped, entrée retirée', () async {
+      stubUploadError(refusals['429 tracking-photo-limit-reached']!);
+      final key = await reported.queueScan(
+        bidId: 'bid-1',
+        eventType: 'ARRIVEE',
+        photoPath: '/tmp/arrivee.jpg',
+        notBefore: DateTime.now().add(const Duration(minutes: 1)),
+      );
+
+      final sent = await reported.sendScheduled(key);
+
+      expect(sent, isNotNull);
+      expect(sent!.photoDropped, isTrue);
+      expect(sent.event.id, 'ev-1');
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      verifyNeverReported();
+    });
+
+    test('photo envoyée : photoDropped faux, clé transmise', () async {
+      when(
+        () => mockRepo.uploadTrackingPhoto(any(), any()),
+      ).thenAnswer((_) async => 'tracking/bid-1/1_ARRIVEE.jpg');
+      final key = await reported.queueScan(
+        bidId: 'bid-1',
+        eventType: 'ARRIVEE',
+        photoPath: '/tmp/arrivee.jpg',
+        notBefore: DateTime.now().add(const Duration(minutes: 1)),
+      );
+
+      final sent = await reported.sendScheduled(key);
+
+      expect(sent!.photoDropped, isFalse);
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-1',
+          eventType: 'ARRIVEE',
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: 'tracking/bid-1/1_ARRIVEE.jpg',
+          scanMethod: any(named: 'scanMethod'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(1);
+    });
+
+    test('upload en erreur réseau : entrée gardée, étape pas postée', () async {
+      when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/storage/upload/tracking'),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+      await queueWithPhoto();
+
+      await reported.syncAll();
+
+      expect(reported.pendingCount, 1);
+      verifyNever(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          scanMethod: any(named: 'scanMethod'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      );
+    });
+
+    test('autre 429 (limite de débit) : entrée gardée', () async {
+      stubUploadError(const RateLimitException());
+      await queueWithPhoto();
+
+      await reported.syncAll();
+
+      expect(reported.pendingCount, 1);
+    });
+
+    test('autre refus définitif de l\'upload : étape postée sans photo, '
+        'jamais le scan entier jeté', () async {
+      // Le scan d'arrivée déclenche la capture du paiement : un refus de la
+      // seule photo ne doit jamais le faire disparaître de la file.
+      stubUploadError(
+        const ValidationException('Type refusé', code: 'invalid-file-type'),
+      );
+      await queueWithPhoto();
+
+      await reported.syncAll();
+
+      verifyPostedWithoutPhoto();
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+
+    test(
+      'photo abandonnée puis postScan en 409 : rejet définitif, entrée retirée',
+      () async {
+        stubUploadError(refusals['429 tracking-photo-limit-reached']!);
+        when(
+          () => mockRepo.postScan(
+            bidId: any(named: 'bidId'),
+            eventType: any(named: 'eventType'),
+            gpsLat: any(named: 'gpsLat'),
+            gpsLon: any(named: 'gpsLon'),
+            gpsLabel: any(named: 'gpsLabel'),
+            photoUrl: any(named: 'photoUrl'),
+            scanMethod: any(named: 'scanMethod'),
+            offlineTimestamp: any(named: 'offlineTimestamp'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/tracking/events'),
+            error: const ConflictException(
+              'Étape hors séquence',
+              code: 'invalid-step-order',
+            ),
+          ),
+        );
+        final key = await reported.queueScan(
+          bidId: 'bid-1',
+          eventType: 'ARRIVEE',
+          photoPath: '/tmp/arrivee.jpg',
+          notBefore: DateTime.now().add(const Duration(minutes: 1)),
+        );
+
+        await expectLater(
+          reported.sendScheduled(key),
+          throwsA(isA<DioException>()),
+        );
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+        verifyPostedWithoutPhoto();
+      },
+    );
   });
 
   group('dispose', () {

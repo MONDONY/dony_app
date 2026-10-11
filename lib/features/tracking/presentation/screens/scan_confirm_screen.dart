@@ -11,6 +11,7 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/presentation/photo_dropped_warning.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:dony/features/tracking/presentation/widgets/pickup_code_request_panel.dart';
@@ -124,10 +125,12 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     return BlocConsumer<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is QrScanSuccess) {
+          if (state.photoDropped) warnTrackingPhotoDropped(context);
           _showSuccess(context, state.event.stepLabel(l));
         } else if (state is QrScanQueued) {
           _showQueued(context);
         } else if (state is DeliveryConfirmSuccess) {
+          if (state.photoDropped) warnTrackingPhotoDropped(context);
           _navigateToDeliverySuccess(
             context,
             state.event.stepLabel(l),

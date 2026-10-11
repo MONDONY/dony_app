@@ -1604,6 +1604,12 @@ abstract class AppLocalizations {
   /// **'Image trop grande.'**
   String get errorImageTooLargeMessage;
 
+  /// Avertissement après une étape de suivi dont la photo a été refusée par le serveur (limite, taille) : l'étape est enregistrée sans photo
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape enregistrée sans photo : la limite de photos de ce colis est atteinte.'**
+  String get trackingPhotoDropped;
+
   /// No description provided for @errorRateLimitedTitle.
   ///
   /// In fr, this message translates to:

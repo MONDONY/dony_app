@@ -263,12 +263,14 @@ void main() {
     when(
       () => offlineSync.sendScheduled(any(), position: any(named: 'position')),
     ).thenAnswer(
-      (_) async => TrackingEventModel(
-        id: 'e1',
-        bidId: 'sali',
-        eventType: 'TRANSIT',
-        scannedAt: DateTime(2026, 9, 28),
-        createdAt: DateTime(2026, 9, 28),
+      (_) async => SentScan(
+        TrackingEventModel(
+          id: 'e1',
+          bidId: 'sali',
+          eventType: 'TRANSIT',
+          scannedAt: DateTime(2026, 9, 28),
+          createdAt: DateTime(2026, 9, 28),
+        ),
       ),
     );
     queue = ChangeNotifier();

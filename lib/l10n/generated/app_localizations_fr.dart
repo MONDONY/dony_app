@@ -892,6 +892,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorImageTooLargeMessage => 'Image trop grande.';
 
   @override
+  String get trackingPhotoDropped =>
+      'Étape enregistrée sans photo : la limite de photos de ce colis est atteinte.';
+
+  @override
   String get errorRateLimitedTitle => 'Trop de requêtes';
 
   @override

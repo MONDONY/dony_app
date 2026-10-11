@@ -263,6 +263,8 @@
   "errorFileTooLargeMessage": "Image trop volumineuse (5 Mo maximum).",
   "errorImageTooLargeTitle": "Image refusée",
   "errorImageTooLargeMessage": "Image trop grande.",
+  "trackingPhotoDropped": "Étape enregistrée sans photo : la limite de photos de ce colis est atteinte.",
+  "@trackingPhotoDropped": {"description": "Avertissement après une étape de suivi dont la photo a été refusée par le serveur (limite, taille) : l'étape est enregistrée sans photo"},
   "errorRateLimitedTitle": "Trop de requêtes",
   "errorRateLimitedMessage": "Vous avez fait trop d'appels en peu de temps. Patientez un instant avant de réessayer.",
   "errorServerErrorTitle": "Erreur serveur",

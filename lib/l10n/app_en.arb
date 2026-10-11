@@ -251,6 +251,7 @@
   "errorFileTooLargeMessage": "Image too large (5 MB maximum).",
   "errorImageTooLargeTitle": "Image rejected",
   "errorImageTooLargeMessage": "Image too large.",
+  "trackingPhotoDropped": "Step saved without a photo: this parcel has reached its photo limit.",
   "errorRateLimitedTitle": "Too many requests",
   "errorRateLimitedMessage": "You've made too many requests in a short time. Wait a moment before trying again.",
   "errorServerErrorTitle": "Server error",

@@ -885,6 +885,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorImageTooLargeMessage => 'Image too large.';
 
   @override
+  String get trackingPhotoDropped =>
+      'Step saved without a photo: this parcel has reached its photo limit.';
+
+  @override
   String get errorRateLimitedTitle => 'Too many requests';
 
   @override

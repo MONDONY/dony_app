@@ -68,15 +68,14 @@ void main() {
       ),
     ).thenAnswer(answer);
 
-    void stubSend(Future<TrackingEventModel?> Function(Invocation) answer) =>
-        when(
-          () => queue.sendScheduled(any(), position: any(named: 'position')),
-        ).thenAnswer(answer);
+    void stubSend(Future<SentScan?> Function(Invocation) answer) => when(
+      () => queue.sendScheduled(any(), position: any(named: 'position')),
+    ).thenAnswer(answer);
 
     setUp(() {
       queue = _MockQueue();
       stubQueueScan((_) async => 7);
-      stubSend((_) async => _event);
+      stubSend((_) async => SentScan(_event));
       when(() => queue.discard(any())).thenAnswer((_) async {});
     });
 
@@ -186,7 +185,7 @@ void main() {
 
     test('FLUTTER-JV : un colis en cours d\'envoi n\'est pas reprogrammé', () {
       fakeAsync((async) {
-        final answer = Completer<TrackingEventModel?>();
+        final answer = Completer<SentScan?>();
         stubSend((_) => answer.future);
         final c = build();
         scheduleTransit(c);
@@ -194,7 +193,7 @@ void main() {
         // Plus « en attente », mais la réponse du back n'est pas arrivée.
         expect(c.state.pending, isEmpty);
         expect(scheduleTransit(c), isNull);
-        answer.complete(_event);
+        answer.complete(SentScan(_event));
         async.flushMicrotasks();
         expect(c.state.outcome, isA<SuiviValidationSent>());
         expect(scheduleTransit(c), isNotNull);
