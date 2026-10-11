@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/cancellation/bloc/delivery_noshow_procedure/delivery_noshow_procedure_cubit.dart';
 import 'package:dony/features/cancellation/data/models/delivery_noshow_procedure_model.dart';
 import 'package:dony/features/cancellation/presentation/widgets/retry_appointment_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -136,4 +139,95 @@ void main() {
     await tester.pumpAndSettle();
     expect(submitButton(tester).onPressed, isNull);
   });
+
+  testWidgets('sélecteurs de date et d\'heure : choix affichés', (
+    tester,
+  ) async {
+    await open(tester);
+    expect(find.text('Choisir'), findsNWidgets(2));
+
+    await tester.tap(find.byKey(const Key('dnp-appointment-date')));
+    await tester.pumpAndSettle();
+    expect(find.byType(DatePickerDialog), findsOneWidget);
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choisir'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('dnp-appointment-time')));
+    await tester.pumpAndSettle();
+    expect(find.byType(TimePickerDialog), findsOneWidget);
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choisir'), findsNothing);
+  });
+
+  testWidgets('sélecteur de date annulé : rien ne change', (tester) async {
+    await open(tester);
+    await tester.tap(find.byKey(const Key('dnp-appointment-date')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choisir'), findsNWidgets(2));
+
+    await tester.tap(find.byKey(const Key('dnp-appointment-time')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choisir'), findsNWidgets(2));
+  });
+
+  testWidgets('erreur serveur : message de l\'erreur', (tester) async {
+    await open(tester);
+    const error = ServerException();
+    states.add(
+      DeliveryNoShowProcedureLoaded(procedure, now: now, submitError: error),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    final l = lookupAppLocalizations(AppL10n.fr);
+    expect(
+      find.text(ErrorPresenter.resolve(error, l10n: l).message),
+      findsOneWidget,
+    );
+    expect(find.byType(RetryAppointmentSheet), findsOneWidget);
+    await tester.pump(const Duration(seconds: 10));
+  });
+
+  testWidgets(
+    'envoi forcé sans rendez-vous valide : avis, rien n\'est envoyé',
+    (tester) async {
+      VoidCallback? submit;
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: AppL10n.fr,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: BlocProvider<DeliveryNoShowProcedureCubit>.value(
+              value: cubit,
+              child: RetryAppointmentSheet(
+                holdUntil: holdUntil,
+                now: () => now,
+                onSubmitReady: (fn) => submit = fn,
+              ),
+            ),
+          ),
+        ),
+      );
+      submit!();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(
+        find.text('Choisissez un moment à venir, avant la fin de la garde'),
+        findsOneWidget,
+      );
+      verifyNever(
+        () => cubit.setRetryAppointment(
+          appointmentAt: any(named: 'appointmentAt'),
+          note: any(named: 'note'),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 10));
+    },
+  );
 }

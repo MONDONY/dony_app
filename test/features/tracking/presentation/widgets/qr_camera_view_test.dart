@@ -1,7 +1,10 @@
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+
+import '../../../../helpers/l10n_test_helpers.dart';
 
 const _uuid = '3f2b6c1e-8a4d-4f6b-9c2e-1d7a5b3c9e0f';
 
@@ -125,5 +128,109 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 2));
+  });
+
+  group('QrCameraView : lecture des codes', () {
+    Future<List<String>> pumpView(
+      WidgetTester tester, {
+      ValueNotifier<bool>? paused,
+    }) async {
+      final read = <String>[];
+      await tester.pumpWidget(
+        localizedApp(
+          QrCameraView(onBidId: read.add, paused: paused),
+          locale: AppL10n.en,
+        ),
+      );
+      await tester.pump();
+      return read;
+    }
+
+    void detect(WidgetTester tester, List<Barcode> barcodes) => tester
+        .widget<MobileScanner>(find.byType(MobileScanner))
+        .onDetect!(BarcodeCapture(barcodes: barcodes));
+
+    double noticeOpacity(WidgetTester tester) => tester
+        .widget<AnimatedOpacity>(
+          find.ancestor(
+            of: find.byKey(const Key('qr-foreign-notice')),
+            matching: find.byType(AnimatedOpacity),
+          ),
+        )
+        .opacity;
+
+    testWidgets('QR Yadony : l\'identifiant du colis remonte', (tester) async {
+      enableEnglish();
+      final read = await pumpView(tester);
+      detect(tester, const [
+        Barcode(rawValue: 'https://yadony.com/tracking/$_uuid'),
+      ]);
+      expect(read, [_uuid]);
+      expect(noticeOpacity(tester), 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('QR étranger : avis temporaire, une fois par rafale', (
+      tester,
+    ) async {
+      enableEnglish();
+      final read = await pumpView(tester);
+      detect(tester, const [Barcode(rawValue: 'https://menu.example/carte')]);
+      await tester.pump();
+      expect(read, isEmpty);
+      expect(noticeOpacity(tester), 1);
+      expect(find.text("This QR isn't a Yadony parcel code"), findsOneWidget);
+
+      // Même code relu à l'image suivante : pas de nouvel avis.
+      detect(tester, const [Barcode(rawValue: 'https://menu.example/carte')]);
+      await tester.pump(const Duration(seconds: 2));
+      expect(noticeOpacity(tester), 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('code sans contenu : ignoré', (tester) async {
+      final read = await pumpView(tester);
+      detect(tester, const [Barcode()]);
+      await tester.pump();
+      expect(read, isEmpty);
+      expect(noticeOpacity(tester), 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('caméra en pause : aucune lecture', (tester) async {
+      final paused = ValueNotifier(true);
+      addTearDown(paused.dispose);
+      final read = await pumpView(tester, paused: paused);
+      detect(tester, const [
+        Barcode(rawValue: 'https://yadony.com/tracking/$_uuid'),
+      ]);
+      expect(read, isEmpty);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('caméra indisponible : message d\'aide', (tester) async {
+      enableEnglish();
+      await pumpView(tester);
+      final scanner = tester.widget<MobileScanner>(find.byType(MobileScanner));
+      await tester.pumpWidget(
+        localizedApp(
+          Builder(
+            builder: (context) => scanner.errorBuilder!(
+              context,
+              const MobileScannerException(
+                errorCode: MobileScannerErrorCode.permissionDenied,
+              ),
+            ),
+          ),
+          locale: AppL10n.en,
+        ),
+      );
+      expect(
+        find.text(
+          'Camera unavailable. Allow camera access in your phone settings.',
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }

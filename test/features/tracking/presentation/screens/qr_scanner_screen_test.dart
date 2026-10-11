@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -224,6 +225,68 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(warning, findsNothing);
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    // Régression : l'écran et la feuille faisaient chacun `context.pop()` sur
+    // QrScanSuccess / QrScanQueued. Le second pop retirait le dialogue que
+    // l'écran venait d'ouvrir : il n'était jamais visible après un envoi
+    // depuis la feuille.
+    testWidgets('QrScanSuccess : la feuille se ferme, le dialogue reste', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      states.add(QrScanSuccess(event('DEPART')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Confirm scan'), findsNothing);
+      expect(find.text('Scan recorded!'), findsOneWidget);
+      expect(find.text('Done'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    testWidgets('QrScanSuccess photo refusée : avertissement et dialogue', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      states.add(QrScanSuccess(event('DEPART'), photoDropped: true));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(warning, findsOneWidget);
+      expect(find.text('Scan recorded!'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    testWidgets('QrScanQueued : la feuille se ferme, le dialogue reste', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      states.add(QrScanQueued());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Confirm scan'), findsNothing);
+      expect(find.text('Scan pending'), findsOneWidget);
+      expect(find.text('Got it'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    testWidgets('QrScanError : la feuille reste ouverte, sans dialogue', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      states.add(QrScanError(const NetworkException('boom')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Confirm scan'), findsOneWidget);
+      expect(find.text('Scan recorded!'), findsNothing);
+      expect(find.text('Scan pending'), findsNothing);
       await tester.pump(const Duration(seconds: 10));
     });
   });
