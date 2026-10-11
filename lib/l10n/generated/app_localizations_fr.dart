@@ -10220,6 +10220,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre message n\'a pas pu être envoyé : vous ne pouvez pas écrire dans cette conversation pour le moment.';
 
   @override
+  String get chatSendFailed =>
+      'Votre message n\'a pas pu être envoyé. Vérifiez votre connexion puis réessayez.';
+
+  @override
   String get chatReadOnlyBannerMessage =>
       'Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.';
 

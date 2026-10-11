@@ -285,5 +285,8 @@ Future<void> main() async {
     // ErrorReportingService, avec filtrage des données personnelles ; le
     // natif n'a pas de ciblage par hôte, on le coupe.
     options.captureNativeFailedRequests = false;
+    // Erreurs non rattrapées de type coupure réseau : jamais rapportées,
+    // comme celles qui passent par ErrorReportingService (FLUTTER-KW).
+    options.beforeSend = dropTransportFailureEvent;
   }, appRunner: _bootstrap);
 }

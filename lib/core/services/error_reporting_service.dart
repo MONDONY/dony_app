@@ -86,6 +86,30 @@ class SentryErrorReportingSink implements ErrorReportingSink {
   }
 }
 
+/// Filtre `beforeSend` du SDK Sentry : un événement dont l'exception est une
+/// coupure réseau de l'appareil (délai dépassé, hors ligne, socket fermée)
+/// n'est jamais envoyé.
+///
+/// [ErrorReportingService] écarte déjà ces erreurs quand l'app les rapporte.
+/// Une erreur NON rattrapée, elle, passe par `PlatformDispatcher.onError` ou
+/// la zone directement au SDK, sans ce tri : un délai dépassé sur une requête
+/// secondaire du chat devenait un crash « fatal » (FLUTTER-KW). Les autres
+/// événements, ceux d'[ErrorReportingService] compris, passent inchangés.
+SentryEvent? dropTransportFailureEvent(SentryEvent event, Hint hint) =>
+    isTransportThrowable(event.throwable) ? null : event;
+
+/// L'erreur est-elle une coupure réseau, sans réponse du serveur ?
+bool isTransportThrowable(Object? error) => switch (error) {
+  DioException(:final response, error: final inner) =>
+    response == null &&
+        (isTransportFailure(error) || _isTransportAppException(inner)),
+  AppException() => _isTransportAppException(error),
+  _ => isTransportError(error),
+};
+
+bool _isTransportAppException(Object? error) =>
+    error is TimeoutException || error is OfflineException;
+
 /// Captures only actionable failures and deliberately discards raw exception
 /// messages. Backend details can contain addresses, phone numbers or secrets.
 class ErrorReportingService {

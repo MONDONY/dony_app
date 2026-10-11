@@ -1095,6 +1095,52 @@ void main() {
         verify(() => auth.add(const AuthProfileRefreshRequested())).called(1);
         await tester.pump(const Duration(seconds: 5));
       });
+
+      testWidgets(
+        'envoi échoué (FLUTTER-KW) : texte rendu, « Réessayer » rejoue '
+        "l'envoi et vide le champ",
+        (tester) async {
+          const loaded = ChatLoaded([]);
+          const retry = ChatTextSendRequested(
+            firestoreConversationId: 'conv_bid-1',
+            conversationId: 'conv-1',
+            senderFirebaseUid: 'uid-1',
+            body: 'Bonjour Kadi',
+          );
+          final controller = StreamController<ChatState>.broadcast();
+          addTearDown(controller.close);
+          when(() => bloc.state).thenReturn(loaded);
+          when(() => bloc.isClosed).thenReturn(false);
+          when(() => bloc.stream).thenAnswer((_) => controller.stream);
+          await pumpWithAuth(tester, AuthAuthenticated(user()));
+
+          controller.add(
+            const ChatSendFailed(loaded, retry: retry, text: 'Bonjour Kadi'),
+          );
+          await tester.pump();
+          controller.add(loaded);
+          await tester.pump(const Duration(milliseconds: 400));
+
+          expect(
+            find.textContaining('Vérifiez votre connexion'),
+            findsOneWidget,
+          );
+          final field = tester.widget<TextField>(find.byType(TextField));
+          expect(field.controller?.text, 'Bonjour Kadi');
+          verifyNever(() => auth.add(any()));
+
+          // La SnackBar flotte hors de la zone de test : l'action est
+          // déclenchée directement.
+          tester
+              .widget<SnackBarAction>(find.byType(SnackBarAction))
+              .onPressed();
+          await tester.pump();
+
+          verify(() => bloc.add(retry)).called(1);
+          expect(field.controller?.text, isEmpty);
+          await tester.pump(const Duration(seconds: 5));
+        },
+      );
     });
   });
 

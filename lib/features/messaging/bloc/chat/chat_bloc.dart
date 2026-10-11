@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
@@ -172,16 +173,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // conversation dont l'interlocuteur a supprimé son compte ou sa copie
     // ne redescend jamais et le badge Messages reste bloqué.
     if (event.currentUserUid.isNotEmpty) {
+      // Écritures secondaires non attendues : leur échec (hors ligne,
+      // Firestore indisponible) est rattrapé, jamais une erreur non gérée.
       unawaited(
-        _firestoreRepo.markConversationRead(
-          event.firestoreConversationId,
-          event.currentUserUid,
+        _secondary(
+          'chat.mark_conversation_read_failed',
+          () => _firestoreRepo.markConversationRead(
+            event.firestoreConversationId,
+            event.currentUserUid,
+          ),
         ),
       );
       unawaited(
-        _firestoreRepo.markMessagesRead(
-          firestoreConversationId: event.firestoreConversationId,
-          currentUserUid: event.currentUserUid,
+        _secondary(
+          'chat.mark_messages_read_failed',
+          () => _firestoreRepo.markMessagesRead(
+            firestoreConversationId: event.firestoreConversationId,
+            currentUserUid: event.currentUserUid,
+          ),
         ),
       );
     }
@@ -230,6 +239,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         body: event.body,
         replyToId: event.replyToId,
       ),
+      retry: event,
       text: event.body,
     );
     if (!sent) return;
@@ -237,9 +247,39 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final preview = event.body.length > 80
         ? '${event.body.substring(0, 77)}...'
         : event.body;
-    await _conversationRepo.updateLastMessage(event.conversationId, preview);
+    await _updateLastMessage(event.conversationId, preview);
     unawaited(_analytics.logEvent(AnalyticsEvents.messageSent));
   }
+
+  /// Aperçu « dernier message » de la liste des conversations : opération
+  /// secondaire, le message est déjà dans Firestore. Un échec (délai dépassé,
+  /// coupure réseau) ne fait ni échouer l'envoi ni sortir le handler en
+  /// erreur non rattrapée, remontée en crash fatal (FLUTTER-KW). L'aperçu est
+  /// réécrit au prochain envoi ; l'intercepteur HTTP rapporte déjà les
+  /// erreurs serveur.
+  Future<void> _updateLastMessage(String conversationId, String preview) =>
+      _secondary(
+        'chat.last_message_update_failed',
+        () => _conversationRepo.updateLastMessage(conversationId, preview),
+      );
+
+  /// Exécute une opération secondaire sans jamais lever : l'échec devient un
+  /// log Sentry (code d'erreur seul, jamais de contenu).
+  Future<void> _secondary(
+    String operation,
+    Future<void> Function() action,
+  ) async {
+    try {
+      await action();
+    } catch (e) {
+      AppLog.warn(operation, data: {'reason': _reasonOf(e)});
+    }
+  }
+
+  static String _reasonOf(Object error) => switch (error) {
+    FirebaseException(:final code) => code,
+    _ => unwrapDioError(error).code ?? error.runtimeType.toString(),
+  };
 
   /// Retire les bulles locales dont le vrai message est arrivé dans le fil.
   void _dropArrivedImages() {
@@ -385,32 +425,38 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         longitude: event.longitude,
         replyToId: event.replyToId,
       ),
+      retry: event,
     );
     if (!sent) return;
     _clearReplyAfterSend(event.replyToId, emit);
-    await _conversationRepo.updateLastMessage(
-      event.conversationId,
-      kChatPreviewLocation,
-    );
+    await _updateLastMessage(event.conversationId, kChatPreviewLocation);
   }
 
-  /// Écrit dans Firestore ; `false` si les règles refusent l'écriture
-  /// (`permission-denied` : messagerie coupée par un administrateur ou
-  /// conversation fermée). Le refus n'est plus une erreur non rattrapée
-  /// (crash fatal Sentry FLUTTER-CV) : l'écran l'explique et rend le texte.
-  /// Toute autre erreur remonte comme avant.
+  /// Écrit dans Firestore ; `false` si l'écriture échoue. Aucun échec ne
+  /// sort du handler en erreur non rattrapée (crashs fatals FLUTTER-CV,
+  /// FLUTTER-KW) :
+  /// - refus des règles (`permission-denied` : messagerie coupée par un
+  ///   administrateur ou conversation fermée) → [ChatSendRejected], l'écran
+  ///   l'explique et rend le texte ;
+  /// - tout autre échec → [ChatSendFailed], l'écran rend le texte et propose
+  ///   de réessayer avec [retry].
   Future<bool> _rejectable(
     Emitter<ChatState> emit,
     Future<void> Function() write, {
+    required ChatEvent retry,
     String? text,
   }) async {
     try {
       await write();
       return true;
-    } on FirebaseException catch (e) {
-      if (e.code != 'permission-denied') rethrow;
+    } catch (e) {
       final previous = state;
-      emit(ChatSendRejected(previous, text: text));
+      if (e is FirebaseException && e.code == 'permission-denied') {
+        emit(ChatSendRejected(previous, text: text));
+      } else {
+        AppLog.warn('chat.send_failed', data: {'reason': _reasonOf(e)});
+        emit(ChatSendFailed(previous, retry: retry, text: text));
+      }
       emit(previous);
       return false;
     }

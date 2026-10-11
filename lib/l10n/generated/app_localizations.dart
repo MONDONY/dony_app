@@ -16816,6 +16816,12 @@ abstract class AppLocalizations {
   /// **'Votre message n\'a pas pu être envoyé : vous ne pouvez pas écrire dans cette conversation pour le moment.'**
   String get chatSendRejected;
 
+  /// Snackbar quand l'envoi d'un message échoue hors refus des règles (réseau, Firestore indisponible) ; le texte est rendu dans le champ, action Réessayer (chat_screen.dart, FLUTTER-KW).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre message n\'a pas pu être envoyé. Vérifiez votre connexion puis réessayez.'**
+  String get chatSendFailed;
+
   /// Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner).
   ///
   /// In fr, this message translates to:
