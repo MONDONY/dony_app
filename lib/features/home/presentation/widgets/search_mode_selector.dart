@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -82,6 +83,7 @@ class SearchModeSelector extends StatelessWidget {
                 Expanded(
                   child: _Segment(
                     key: const Key('search_mode_segment_trips'),
+                    iconName: 'package',
                     title: tripsTitle(l),
                     subtitle: _subtitle(l, SearchMode.trips),
                     countShown: _countShown(SearchMode.trips),
@@ -94,6 +96,7 @@ class SearchModeSelector extends StatelessWidget {
                 Expanded(
                   child: _Segment(
                     key: const Key('search_mode_segment_colis'),
+                    iconName: 'plane',
                     title: parcelsTitle(l),
                     subtitle: _subtitle(l, SearchMode.parcels),
                     countShown: _countShown(SearchMode.parcels),
@@ -114,6 +117,7 @@ class SearchModeSelector extends StatelessWidget {
 class _Segment extends StatelessWidget {
   const _Segment({
     super.key,
+    required this.iconName,
     required this.title,
     required this.subtitle,
     required this.countShown,
@@ -121,6 +125,9 @@ class _Segment extends StatelessWidget {
     required this.onTap,
   });
 
+  /// Icône Lucide de l'intention, la même que sur la tuile correspondante du
+  /// hub Activités (`package` pour l'envoi, `plane` pour le voyage).
+  final String iconName;
   final String title;
   final String subtitle;
 
@@ -133,6 +140,7 @@ class _Segment extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final titleColor = isActive ? cs.onSurface : cs.onSurfaceVariant;
     return Semantics(
       button: true,
       selected: isActive,
@@ -165,15 +173,35 @@ class _Segment extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: tt.labelLarge?.copyWith(
-                  color: isActive ? cs.onSurface : cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w700,
-                ),
+              // Icône et titre forment une ligne centrée. Le titre est
+              // Flexible : sur un écran étroit ou en grande police, c'est lui
+              // qui s'abrège, jamais l'icône qui déborde. L'icône est
+              // décorative, le libellé du segment suffit à la sémantique.
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExcludeSemantics(
+                    child: DonyIcon(
+                      iconName,
+                      key: Key('search_mode_icon_$iconName'),
+                      size: 16,
+                      color: titleColor,
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.xs),
+                  Flexible(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: tt.labelLarge?.copyWith(
+                        color: titleColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: DonySpacing.xxs),
               Text(
