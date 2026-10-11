@@ -197,7 +197,7 @@ class DonyMediaService {
     try {
       dims = await _dimensionReader(bytes);
     } catch (e) {
-      AppLog.warn('Dimensions de ${source.name} illisibles : $e');
+      AppLog.warn('Unreadable dimensions for ${source.name}: $e');
       throw UnsupportedMediaTypeException(source.name);
     }
     // Bornes carrées = petit côté cible (voir [minBounds]).

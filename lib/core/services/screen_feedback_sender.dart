@@ -67,7 +67,7 @@ class ScreenFeedbackSender {
             ext = 'jpg';
           }
         } catch (e) {
-          AppLog.warn('Conversion JPEG de la capture impossible : $e');
+          AppLog.warn('JPEG conversion of the capture failed: $e');
         }
         file = File(
           '${dir.path}/dony_screen_feedback_${DateTime.now().millisecondsSinceEpoch}.$ext',
