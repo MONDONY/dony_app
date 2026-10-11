@@ -24,6 +24,7 @@ void main() {
     sender = ScreenFeedbackSender(
       repository,
       tempDirectory: () async => tempDir,
+      jpegEncoder: (png) async => Uint8List.fromList([255, 216, 255, 224]),
     );
     when(() => repository.uploadPhoto(any())).thenAnswer(
       (inv) async =>
@@ -69,7 +70,7 @@ void main() {
       expect(uploaded, hasLength(3));
       // La capture automatique part en premier, en PNG, depuis le dossier temporaire.
       expect(uploaded.first, startsWith(tempDir.path));
-      expect(uploaded.first, endsWith('.png'));
+      expect(uploaded.first, endsWith('.jpg'));
       expect(uploaded.sublist(1), ['/tmp/a.jpg', '/tmp/b.jpg']);
       // Le fichier temporaire est nettoyé après l'upload.
       expect(File(uploaded.first).existsSync(), isFalse);
@@ -85,6 +86,41 @@ void main() {
       ).called(1);
     },
   );
+
+  test('la capture envoyée est le JPEG encodé', () async {
+    List<int>? written;
+    when(() => repository.uploadPhoto(any())).thenAnswer((inv) async {
+      written = File(inv.positionalArguments.first as String).readAsBytesSync();
+      return 'k';
+    });
+    await sender.send(
+      report: const FeedbackReport(message: 'x'),
+      route: '/home',
+      screenshot: Uint8List.fromList([137, 80, 78, 71]),
+    );
+    expect(written, [255, 216, 255, 224]);
+  });
+
+  test('si la conversion JPEG échoue, le PNG part tel quel', () async {
+    final failing = ScreenFeedbackSender(
+      repository,
+      tempDirectory: () async => tempDir,
+      jpegEncoder: (png) async => throw Exception('encodage'),
+    );
+    List<int>? written;
+    when(() => repository.uploadPhoto(any())).thenAnswer((inv) async {
+      final path = inv.positionalArguments.first as String;
+      expect(path, endsWith('.png'));
+      written = File(path).readAsBytesSync();
+      return 'k';
+    });
+    await failing.send(
+      report: const FeedbackReport(message: 'x'),
+      route: '/home',
+      screenshot: Uint8List.fromList([137, 80, 78, 71]),
+    );
+    expect(written, [137, 80, 78, 71]);
+  });
 
   test(
     'sans capture automatique ni pièce jointe, le rapport part quand même',

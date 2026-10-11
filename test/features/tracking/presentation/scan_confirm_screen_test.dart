@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -348,6 +349,68 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Colis livré !'), findsOneWidget);
+  });
+
+  // ─── Photo refusée par le serveur → avertissement ────────────────────────
+  testWidgets('DeliveryConfirmSuccess photo refusée — avertit, livré quand '
+      'même', (tester) async {
+    DonySnackbar.clearDedup();
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(
+      bloc,
+      Stream.fromIterable([
+        DeliveryConfirmSuccess(
+          _fakeEvent(eventType: 'ARRIVEE'),
+          photoDropped: true,
+        ),
+      ]),
+    );
+    await tester.pumpWidget(_wrap('ARRIVEE', bloc));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      find.text(
+        'Étape enregistrée sans photo : la photo a été refusée par le '
+        'serveur.',
+      ),
+      findsOneWidget,
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 10));
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+  });
+
+  testWidgets('QrScanSuccess photo refusée — avertit', (tester) async {
+    DonySnackbar.clearDedup();
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(
+      bloc,
+      Stream.fromIterable([QrScanSuccess(_fakeEvent(), photoDropped: true)]),
+    );
+    await tester.pumpWidget(_wrap('DEPART', bloc));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      find.text(
+        'Étape enregistrée sans photo : la photo a été refusée par le '
+        'serveur.',
+      ),
+      findsOneWidget,
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 10));
+  });
+
+  testWidgets('QrScanSuccess photo envoyée — aucun avertissement', (
+    tester,
+  ) async {
+    DonySnackbar.clearDedup();
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(bloc, Stream.fromIterable([QrScanSuccess(_fakeEvent())]));
+    await tester.pumpWidget(_wrap('DEPART', bloc));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Étape enregistrée sans photo'), findsNothing);
   });
 
   // ─── QrScanError → affiche message erreur ────────────────────────────────

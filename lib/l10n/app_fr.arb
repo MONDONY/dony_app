@@ -257,6 +257,14 @@
   "errorOfflineMessage": "Vérifiez votre connexion Internet puis réessayez. Vos lectures hors-ligne seront synchronisées à la reconnexion.",
   "errorTimeoutTitle": "Le serveur met du temps",
   "errorTimeoutMessage": "La requête a pris trop de temps. Réessayez dans quelques secondes.",
+  "errorPhotoQuotaTitle": "Limite de photos atteinte",
+  "errorPhotoQuotaMessage": "Vous avez atteint la limite de photos pour aujourd'hui. Réessayez demain.",
+  "errorTrackingPhotoLimitMessage": "Ce colis a déjà le nombre maximum de photos de suivi.",
+  "errorFileTooLargeMessage": "Image trop volumineuse (5 Mo maximum).",
+  "errorImageTooLargeTitle": "Image refusée",
+  "errorImageTooLargeMessage": "Image trop grande.",
+  "trackingPhotoDropped": "Étape enregistrée sans photo : la photo a été refusée par le serveur.",
+  "@trackingPhotoDropped": {"description": "Avertissement après une étape de suivi dont la photo a été refusée par le serveur (limite, taille) : l'étape est enregistrée sans photo"},
   "errorRateLimitedTitle": "Trop de requêtes",
   "errorRateLimitedMessage": "Vous avez fait trop d'appels en peu de temps. Patientez un instant avant de réessayer.",
   "errorServerErrorTitle": "Erreur serveur",
@@ -17443,6 +17451,10 @@
   "trackingStepHandoverToRecipient": "Remise au destinataire",
   "@trackingStepHandoverToRecipient": {
     "description": "Dernière étape à venir de la frise (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingPhotoPurged": "Photo supprimée après livraison",
+  "@trackingPhotoPurged": {
+    "description": "Frise de suivi : la photo de l'étape a été supprimée par le serveur après la livraison (tracking_timeline_bottom_sheet.dart)."
   },
   "trackingStepPhotoLabel": "Photo de l'étape",
   "@trackingStepPhotoLabel": {

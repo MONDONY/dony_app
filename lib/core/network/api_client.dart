@@ -519,7 +519,20 @@ AppException mapHttpError(DioException err) {
     );
   }
   if (statusCode == 429) {
-    return RateLimitException(detail ?? l.networkFallbackTooManyAttempts);
+    return RateLimitException(
+      detail ?? l.networkFallbackTooManyAttempts,
+      apiCode,
+    );
+  }
+  // Fichier refusé pour sa taille : définitif (rejouer l'envoi échouerait à
+  // l'identique), donc même famille que le 422. Code `file-too-large` du back,
+  // forcé si le corps est vide (passerelle) pour que le catalogue le traduise.
+  if (statusCode == 413) {
+    return ValidationException(
+      detail ?? l.errorFileTooLargeMessage,
+      code: apiCode ?? 'file-too-large',
+      errors: violations,
+    );
   }
   // Passerelle ou API indisponible (redémarrage, déploiement : FLUTTER-J1).
   if (statusCode == 502 || statusCode == 503 || statusCode == 504) {

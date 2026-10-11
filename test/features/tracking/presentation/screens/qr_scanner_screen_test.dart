@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
@@ -7,6 +10,7 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
@@ -126,6 +130,102 @@ void main() {
     // Le numéro saisi pour identifier le colis part avec la remise (DEPART).
     expect(event.trackingNumber, 'DON-ABC123');
     await tester.pump(const Duration(seconds: 2));
+  });
+
+  group('photo refusée par le serveur', () {
+    late StreamController<TrackingState> states;
+    late _MockTrackingBloc bloc;
+
+    TrackingEventModel event(String type) => TrackingEventModel(
+      id: 'ev-1',
+      bidId: 'bid-9',
+      eventType: type,
+      scannedAt: DateTime(2026, 10, 11),
+      createdAt: DateTime(2026, 10, 11),
+    );
+
+    /// Ouvre la feuille de confirmation par la saisie manuelle du numéro.
+    Future<void> openSheet(WidgetTester tester) async {
+      useEnglish();
+      DonySnackbar.clearDedup();
+      final repo = _MockTrackingRepository();
+      when(() => repo.searchByTrackingNumber(any())).thenAnswer(
+        (_) async => const TrackingSearchModel(
+          trackingNumber: 'DON-ABC123',
+          bidId: 'bid-9',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          currentStep: 'DEPART',
+          stepLabel: 'Départ',
+          paymentStatus: 'CAPTURED',
+        ),
+      );
+      getIt.registerSingleton<TrackingRepository>(repo);
+      addTearDown(() => getIt.unregister<TrackingRepository>());
+      states = StreamController<TrackingState>.broadcast();
+      addTearDown(states.close);
+      bloc = _MockTrackingBloc();
+      when(() => bloc.state).thenReturn(TrackingInitial());
+      whenListen(bloc, states.stream);
+      final ratingBloc = _MockRatingBloc();
+      when(() => ratingBloc.state).thenReturn(const RatingInitial());
+      whenListen(ratingBloc, const Stream<RatingState>.empty());
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => MultiBlocProvider(
+              providers: [
+                BlocProvider<TrackingBloc>.value(value: bloc),
+                BlocProvider<RatingBloc>.value(value: ratingBloc),
+              ],
+              child: const QrScannerScreen(),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pump();
+      await tester.tap(find.text('Confirm & continue'));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.enterText(find.byType(TextField), 'don-abc123');
+      await tester.tap(find.text('Confirm'));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Confirm scan'), findsOneWidget);
+    }
+
+    final warning = find.text(
+      'Step saved without a photo: the server rejected the photo.',
+    );
+
+    testWidgets('QrScanSuccess : l\'écran avertit', (tester) async {
+      await openSheet(tester);
+      states.add(QrScanSuccess(event('DEPART'), photoDropped: true));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(warning, findsOneWidget);
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    testWidgets('DeliveryConfirmSuccess : la feuille avertit', (tester) async {
+      await openSheet(tester);
+      states.add(DeliveryConfirmSuccess(event('ARRIVEE'), photoDropped: true));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(warning, findsOneWidget);
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    testWidgets('photo acceptée : aucun avertissement', (tester) async {
+      await openSheet(tester);
+      states.add(DeliveryConfirmSuccess(event('ARRIVEE')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(warning, findsNothing);
+      await tester.pump(const Duration(seconds: 10));
+    });
   });
 
   // Régression finale F (Important 6 de la relecture) : la fonction comparait

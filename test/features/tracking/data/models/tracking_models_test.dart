@@ -46,6 +46,21 @@ void main() {
       expect(model.offlineTimestamp, isNull);
     });
 
+    test('photoPurged vrai quand le back supprime la photo', () {
+      final model = TrackingEventModel.fromJson({
+        ...baseJson,
+        'photoUrl': null,
+        'photoPurged': true,
+      });
+      expect(model.photoPurged, isTrue);
+      expect(model.photoUrl, isNull);
+    });
+
+    test('photoPurged faux quand le champ est absent (ancien back)', () {
+      final model = TrackingEventModel.fromJson(baseJson);
+      expect(model.photoPurged, isFalse);
+    });
+
     group('scanMethod', () {
       test('QR', () {
         final model = TrackingEventModel.fromJson({

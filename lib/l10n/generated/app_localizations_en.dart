@@ -865,6 +865,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'The request took too long. Try again in a few seconds.';
 
   @override
+  String get errorPhotoQuotaTitle => 'Photo limit reached';
+
+  @override
+  String get errorPhotoQuotaMessage =>
+      'You\'ve reached today\'s photo limit. Try again tomorrow.';
+
+  @override
+  String get errorTrackingPhotoLimitMessage =>
+      'This parcel already has the maximum number of tracking photos.';
+
+  @override
+  String get errorFileTooLargeMessage => 'Image too large (5 MB maximum).';
+
+  @override
+  String get errorImageTooLargeTitle => 'Image rejected';
+
+  @override
+  String get errorImageTooLargeMessage => 'Image too large.';
+
+  @override
+  String get trackingPhotoDropped =>
+      'Step saved without a photo: the server rejected the photo.';
+
+  @override
   String get errorRateLimitedTitle => 'Too many requests';
 
   @override
@@ -15238,6 +15262,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackingStepHandoverToRecipient => 'Handover to the recipient';
+
+  @override
+  String get trackingPhotoPurged => 'Photo deleted after delivery';
 
   @override
   String get trackingStepPhotoLabel => 'Step photo';

@@ -170,7 +170,7 @@ class DonyFeedbackButton extends StatelessWidget {
       if (boundary == null) {
         return null;
       }
-      final image = await boundary.toImage(pixelRatio: 2.0);
+      final image = await boundary.toImage(pixelRatio: 1.5);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       return byteData?.buffer.asUint8List();
     } catch (_) {

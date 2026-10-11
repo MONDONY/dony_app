@@ -1568,6 +1568,48 @@ abstract class AppLocalizations {
   /// **'La requête a pris trop de temps. Réessayez dans quelques secondes.'**
   String get errorTimeoutMessage;
 
+  /// No description provided for @errorPhotoQuotaTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de photos atteinte'**
+  String get errorPhotoQuotaTitle;
+
+  /// No description provided for @errorPhotoQuotaMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez atteint la limite de photos pour aujourd\'hui. Réessayez demain.'**
+  String get errorPhotoQuotaMessage;
+
+  /// No description provided for @errorTrackingPhotoLimitMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis a déjà le nombre maximum de photos de suivi.'**
+  String get errorTrackingPhotoLimitMessage;
+
+  /// No description provided for @errorFileTooLargeMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Image trop volumineuse (5 Mo maximum).'**
+  String get errorFileTooLargeMessage;
+
+  /// No description provided for @errorImageTooLargeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Image refusée'**
+  String get errorImageTooLargeTitle;
+
+  /// No description provided for @errorImageTooLargeMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Image trop grande.'**
+  String get errorImageTooLargeMessage;
+
+  /// Avertissement après une étape de suivi dont la photo a été refusée par le serveur (limite, taille) : l'étape est enregistrée sans photo
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape enregistrée sans photo : la photo a été refusée par le serveur.'**
+  String get trackingPhotoDropped;
+
   /// No description provided for @errorRateLimitedTitle.
   ///
   /// In fr, this message translates to:
@@ -25190,6 +25232,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Remise au destinataire'**
   String get trackingStepHandoverToRecipient;
+
+  /// Frise de suivi : la photo de l'étape a été supprimée par le serveur après la livraison (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo supprimée après livraison'**
+  String get trackingPhotoPurged;
 
   /// Libellé d'accessibilité de la miniature photo d'une étape (tracking_timeline_bottom_sheet.dart).
   ///

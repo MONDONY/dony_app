@@ -446,6 +446,7 @@ class _JourneyRow extends StatelessWidget {
         ? ''
         : [?event.locationLabel(l), ?event.methodLabel(l)].join(' · ');
     final photo = event?.photoUrl;
+    final photoPurged = event?.photoPurged ?? false;
 
     final Widget marker = switch (step.state) {
       _StepState.done => Container(
@@ -552,7 +553,41 @@ class _JourneyRow extends StatelessWidget {
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
-                  if (photo != null) ...[
+                  if (photoPurged) ...[
+                    const SizedBox(height: DonySpacing.sm),
+                    // Photo supprimée par le serveur après la livraison :
+                    // vignette neutre explicative, rien à ouvrir.
+                    Container(
+                      key: const Key('tracking-step-photo-purged'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.surfaceWarm,
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 18,
+                            color: cs.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: DonySpacing.sm),
+                          Flexible(
+                            child: Text(
+                              l.trackingPhotoPurged,
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else if (photo != null) ...[
                     const SizedBox(height: DonySpacing.sm),
                     // Miniature touchable : la photo s'ouvre en plein écran,
                     // zoomable (FLUTTER-82, elle ne s'agrandissait pas).

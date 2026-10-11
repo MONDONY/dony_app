@@ -9,9 +9,18 @@ import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/scan_send_guard.dart';
+import 'package:dony/features/tracking/data/tracking_photo_upload.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
+/// Étape reçue par le back. [photoDropped] : la photo a été refusée par le
+/// serveur (limite, taille) et l'étape est partie sans elle.
+final class SentScan {
+  const SentScan(this.event, {this.photoDropped = false});
+  final TrackingEventModel event;
+  final bool photoDropped;
+}
 
 /// File Hive des étapes pas encore reçues par le back : scans faits hors
 /// ligne, et validations annulables de l'onglet Suivi (entrées avec une
@@ -125,11 +134,11 @@ class OfflineSyncService {
   /// Envoie tout de suite l'entrée [key], sans attendre son échéance, avec
   /// la [position] relevée entre-temps (écrite dans l'entrée avant l'envoi).
   ///
-  /// Rend l'évènement créé, ou `null` quand l'entrée reste en file (réseau,
+  /// Rend l'étape envoyée, ou `null` quand l'entrée reste en file (réseau,
   /// 5xx, session expirée : son échéance est alors levée et [syncAll] la
   /// reprend), n'existe plus ou part déjà par [syncAll]. Un refus définitif
   /// du back la retire de la file et remonte.
-  Future<TrackingEventModel?> sendScheduled(
+  Future<SentScan?> sendScheduled(
     int key, {
     Future<ScanPosition?>? position,
   }) async {
@@ -214,34 +223,41 @@ class OfflineSyncService {
     }
   }
 
-  /// Photo d'abord, puis l'étape ; l'entrée quitte la file au succès. Un
-  /// refus définitif la retire aussi ; toute erreur remonte. [deferred] :
-  /// envoi différé (hors ligne ou rejeu), daté de la mise en file.
-  Future<TrackingEventModel> _send(
+  /// Photo d'abord, puis l'étape ; l'entrée quitte la file au succès. Une
+  /// photo refusée par le serveur ne fait pas échouer l'étape : elle part
+  /// sans photo ([SentScan.photoDropped]). Seul un refus définitif de
+  /// l'étape elle-même retire l'entrée en échec ; toute erreur remonte.
+  /// [deferred] : envoi différé (hors ligne ou rejeu), daté de la mise en
+  /// file.
+  Future<SentScan> _send(
     Object? key,
     Map<String, dynamic> entry, {
     required bool deferred,
   }) async {
     final bidId = entry['bidId'] as String;
     final eventType = entry['eventType'] as String;
+    var photoDropped = false;
     try {
       final event = await _guard.postStepOnce(
         bidId: bidId,
         eventType: eventType,
         repository: _repository,
         post: () async {
-          String? photoKey;
-          final photoPath = entry['photoPath'] as String?;
-          if (photoPath != null) {
-            photoKey = await _repository.uploadTrackingPhoto(bidId, photoPath);
-          }
+          // Une panne réseau pendant l'upload remonte telle quelle : elle
+          // n'est pas un refus définitif, l'entrée reste en file.
+          final photo = await uploadTrackingPhotoOrDrop(
+            _repository,
+            bidId: bidId,
+            photoPath: entry['photoPath'] as String?,
+          );
+          photoDropped = photo.dropped;
           return _repository.postScan(
             bidId: bidId,
             eventType: eventType,
             gpsLat: (entry['gpsLat'] as num?)?.toDouble(),
             gpsLon: (entry['gpsLon'] as num?)?.toDouble(),
             gpsLabel: entry['gpsLabel'] as String?,
-            photoUrl: photoKey,
+            photoUrl: photo.key,
             scanMethod: ScanMethod.fromWire(entry['scanMethod']),
             trackingNumber: entry['trackingNumber'] as String?,
             offlineTimestamp: deferred
@@ -251,10 +267,10 @@ class OfflineSyncService {
         },
       );
       await _hive.offlineQueue.delete(key);
-      return event;
+      return SentScan(event, photoDropped: photoDropped);
     } catch (error) {
       if (isDefinitiveRejection(unwrapDioError(error))) {
-        // Le serveur a tranché (409, 422, 404, 403) :
+        // Le serveur a tranché sur l'étape (409, 422, 404, 403) :
         // rejouer l'entrée à chaque retour du réseau ne changera rien et
         // gonflait Sentry côté back d'un 500 par tentative
         // (YADONY-BACK-STAGING-8, deux évènements à 8 s d'écart).
@@ -295,10 +311,7 @@ class OfflineSyncService {
 
   /// Vrai quand le back a refusé le scan pour une raison qui ne dépend pas
   /// du réseau ni du moment : la même requête échouerait à l'identique.
-  static bool isDefinitiveRejection(AppException error) {
-    return error is ConflictException ||
-        error is ValidationException ||
-        error is NotFoundException ||
-        error is ForbiddenException;
-  }
+  /// Délègue à [isDefinitiveTrackingRejection].
+  static bool isDefinitiveRejection(AppException error) =>
+      isDefinitiveTrackingRejection(error);
 }

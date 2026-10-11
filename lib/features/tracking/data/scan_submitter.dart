@@ -3,6 +3,7 @@ import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_send_guard.dart';
+import 'package:dony/features/tracking/data/tracking_photo_upload.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 /// Issue d'un envoi d'étape : parti vers le back, ou gardé dans la file hors
@@ -12,8 +13,12 @@ sealed class ScanSubmitResult {
 }
 
 final class ScanSubmitSent extends ScanSubmitResult {
-  const ScanSubmitSent(this.event);
+  const ScanSubmitSent(this.event, {this.photoDropped = false});
   final TrackingEventModel event;
+
+  /// La photo a été refusée par le serveur (limite, taille) : l'étape est
+  /// enregistrée sans elle.
+  final bool photoDropped;
 }
 
 final class ScanSubmitQueued extends ScanSubmitResult {
@@ -75,27 +80,30 @@ class ScanSubmitter {
     // Même verrou que la file : la même étape envoyée au même moment par la
     // file ou l'onglet Suivi ne part qu'une fois (FLUTTER-JV), et un « déjà
     // enregistré » du back est un succès.
+    var photoDropped = false;
     final event = await _guard.postStepOnce(
       bidId: bidId,
       eventType: eventType,
       repository: _repository,
       post: () async {
-        String? photoKey;
-        if (photoPath != null) {
-          photoKey = await _repository.uploadTrackingPhoto(bidId, photoPath);
-        }
+        final photo = await uploadTrackingPhotoOrDrop(
+          _repository,
+          bidId: bidId,
+          photoPath: photoPath,
+        );
+        photoDropped = photo.dropped;
         return _repository.postScan(
           bidId: bidId,
           eventType: eventType,
           gpsLat: gpsLat,
           gpsLon: gpsLon,
           gpsLabel: gpsLabel,
-          photoUrl: photoKey,
+          photoUrl: photo.key,
           scanMethod: scanMethod,
           trackingNumber: trackingNumber,
         );
       },
     );
-    return ScanSubmitSent(event);
+    return ScanSubmitSent(event, photoDropped: photoDropped);
   }
 }
