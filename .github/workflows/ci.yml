@@ -99,6 +99,11 @@ jobs:
   # au fil des ajouts de tests, jamais descendre. Ne l'abaissez pas pour faire
   # passer une PR : c'est le signal qu'elle retire de la couverture.
   #
+  # 2026-10-11 : relevé de 78 à 90, l'objectif du projet, une fois la mesure
+  # passée au-dessus (90,27 % en local avec test/l10n/all_messages_test.dart).
+  # Chaque nouvelle clé ARB ajoute une ligne par langue au dénominateur :
+  # régénérer le catalogue (dart run tool/gen_l10n_catalog.dart) la couvre.
+  #
   # Jusqu'au 2026-09-30, ce contrôle ne mesurait rien : `lcov` n'est pas
   # installé sur le runner, son erreur partait dans /dev/null, la mesure restait
   # vide et `bc` échouait sans faire échouer l'étape (« Couverture mesurée : % »
@@ -117,7 +122,7 @@ jobs:
 
       - name: Check coverage (seuil-cliquet)
         env:
-          MIN_COVERAGE: '78'
+          MIN_COVERAGE: '90'
         run: |
           COVERAGE=$(awk -F'[:,]' '
             /^SF:/ { sf = substr($0, 4); next }
