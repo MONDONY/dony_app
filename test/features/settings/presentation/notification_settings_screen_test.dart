@@ -131,6 +131,24 @@ void main() {
       expect(find.text('Toujours actif'), findsNWidgets(6));
     });
 
+    /// Recette 2026-10-11 : chaque tuile verrouillée dit pourquoi elle reste
+    /// active, mention du SMS de repli comprise là où elle existe.
+    testWidgets('chaque tuile verrouillée explique pourquoi', (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      for (final text in [
+        'Pour savoir que votre colis est bien arrivé, avec SMS si le push n\'arrive pas',
+        'Pour suivre l\'argent de vos colis, avec SMS si le push n\'arrive pas',
+        'Pour répondre à temps à un litige, avec SMS si le push n\'arrive pas',
+        'Pour savoir quand remettre votre colis, avec SMS si le push n\'arrive pas',
+        'Deux heures avant la remise du colis, avec SMS si le push n\'arrive pas',
+        'Sécurité de votre compte et de votre argent',
+      ]) {
+        expect(find.text(text), findsOneWidget, reason: text);
+      }
+      expect(find.text('SMS automatique si push non reçu'), findsNothing);
+    });
+
     /// FLUTTER-GB (b) : trois familles qui partaient sans réglage.
     for (final (label, key) in [
       ('Automatisations voyageur', 'push_traveler_automations'),

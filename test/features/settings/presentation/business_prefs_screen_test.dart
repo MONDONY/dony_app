@@ -86,13 +86,60 @@ void main() {
 
     // La tuile « Devise d'affichage » (lot 8) a poussé la section sous la
     // fenêtre du ListView lazy : la faire entrer dans le viewport d'abord.
-    await tester.scrollUntilVisible(find.text('MES TRAJETS'), 200);
+    await tester.scrollUntilVisible(
+      find.text('MES TRAJETS'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
 
     expect(find.text('MES TRAJETS'), findsOneWidget);
     expect(find.text('Poids par défaut'), findsOneWidget);
-    expect(find.text('Prix minimum'), findsOneWidget);
+    expect(find.text('Prix minimum par kg'), findsOneWidget);
+    expect(
+      find.text('Les offres en dessous ne vous sont pas envoyées'),
+      findsOneWidget,
+    );
     expect(find.text('Mode de contact'), findsOneWidget);
     expect(find.text('Délai de réponse'), findsOneWidget);
+  });
+
+  testWidgets(
+    'recette 2026-10-11 : devises renommées, rayon de collecte retiré',
+    (tester) async {
+      when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(_makeUser()));
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Devise de mon portefeuille'), findsOneWidget);
+      expect(
+        find.text('Celle de vos paiements, recharges et retraits'),
+        findsOneWidget,
+      );
+      expect(find.text('Afficher les prix en'), findsOneWidget);
+      expect(
+        find.text(
+          'Conversion indicative, vous payez toujours dans la devise du trajet',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Rayon de collecte'), findsNothing);
+      expect(find.text('GÉOLOCALISATION'), findsNothing);
+      expect(find.byType(Slider), findsNothing);
+    },
+  );
+
+  testWidgets('en anglais : devises renommées', (tester) async {
+    useEnglish();
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(_makeUser()));
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
+
+    expect(find.text('My wallet currency'), findsOneWidget);
+    expect(
+      find.text('Used for your payments, top-ups and withdrawals'),
+      findsOneWidget,
+    );
+    expect(find.text('Show prices in'), findsOneWidget);
   });
 
   testWidgets('section MES TRAJETS visible si rôle TRAVELER-only', (
@@ -104,7 +151,11 @@ void main() {
     await tester.pumpWidget(buildScreen());
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(find.text('MES TRAJETS'), 200);
+    await tester.scrollUntilVisible(
+      find.text('MES TRAJETS'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
 
     expect(find.text('MES TRAJETS'), findsOneWidget);
   });
@@ -354,14 +405,15 @@ void main() {
 
       final tile = tester.widget<DonyListTile>(
         find.ancestor(
-          of: find.text('Devise'),
+          of: find.text('Devise de mon portefeuille'),
           matching: find.byType(DonyListTile),
         ),
       );
       expect(tile.enabled, isTrue);
-      expect(tile.subtitle, isNull);
+      // Hors verrou, la tuile dit à quoi sert la devise du portefeuille.
+      expect(tile.subtitle, 'Celle de vos paiements, recharges et retraits');
 
-      await tester.tap(find.text('Devise'));
+      await tester.tap(find.text('Devise de mon portefeuille'));
       await tester.pumpAndSettle();
 
       expect(find.text('Choisir une devise'), findsOneWidget);
@@ -381,7 +433,7 @@ void main() {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Devise'));
+      await tester.tap(find.text('Devise de mon portefeuille'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Franc CFA Ouest (XOF)'));
       await tester.pumpAndSettle();
@@ -406,7 +458,7 @@ void main() {
 
       final tile = tester.widget<DonyListTile>(
         find.ancestor(
-          of: find.text('Devise'),
+          of: find.text('Devise de mon portefeuille'),
           matching: find.byType(DonyListTile),
         ),
       );
@@ -415,7 +467,7 @@ void main() {
       expect(tile.subtitle, isNotNull);
       expect(find.textContaining('videz votre portefeuille'), findsOneWidget);
 
-      await tester.tap(find.text('Devise'));
+      await tester.tap(find.text('Devise de mon portefeuille'));
       await tester.pumpAndSettle();
 
       expect(find.text('Choisir une devise'), findsNothing);
@@ -465,14 +517,18 @@ void main() {
       );
       final currencyTile = tester.widget<DonyListTile>(
         find.ancestor(
-          of: find.text('Devise'),
+          of: find.text('Devise de mon portefeuille'),
           matching: find.byType(DonyListTile),
         ),
       );
       // Le pays verrouillé reste touchable (feuille vers le support,
       // FLUTTER-EE) : le verrou se lit dans son sous-titre.
       expect(countryTile.subtitle, isNotNull);
-      expect(currencyTile.subtitle, isNull);
+      // Hors verrou, la tuile dit à quoi sert la devise du portefeuille.
+      expect(
+        currencyTile.subtitle,
+        'Celle de vos paiements, recharges et retraits',
+      );
       expect(currencyTile.enabled, isTrue);
     },
   );
@@ -500,7 +556,7 @@ void main() {
       );
       final currencyTile = tester.widget<DonyListTile>(
         find.ancestor(
-          of: find.text('Devise'),
+          of: find.text('Devise de mon portefeuille'),
           matching: find.byType(DonyListTile),
         ),
       );

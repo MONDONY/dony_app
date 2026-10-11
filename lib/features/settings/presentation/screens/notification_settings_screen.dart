@@ -67,19 +67,20 @@ class _NotificationSettingsScreenState
                         context,
                         iconAsset: 'badge-check',
                         label: l.notificationSettingsDeliveryConfirmedLabel,
-                        subtitle: l.notificationSettingsSmsFallbackSubtitle,
+                        subtitle:
+                            l.notificationSettingsDeliveryConfirmedSubtitle,
                       ),
                       _buildLockedTile(
                         context,
                         iconAsset: 'banknote',
                         label: l.notificationSettingsPaymentReceivedLabel,
-                        subtitle: l.notificationSettingsSmsFallbackSubtitle,
+                        subtitle: l.notificationSettingsPaymentReceivedSubtitle,
                       ),
                       _buildLockedTile(
                         context,
                         iconAsset: 'gavel',
                         label: l.notificationSettingsDisputeOpenedLabel,
-                        subtitle: l.notificationSettingsSmsFallbackSubtitle,
+                        subtitle: l.notificationSettingsDisputeOpenedSubtitle,
                       ),
                       // Les deux autres types critiques du backend
                       // (NotificationTypes.CRITICAL) : ils ignorent les réglages
@@ -95,8 +96,11 @@ class _NotificationSettingsScreenState
                         context,
                         iconAsset: 'calendar-sync',
                         label: l.notificationSettingsTripRescheduledLabel,
-                        subtitle: l.notificationSettingsSmsFallbackSubtitle,
+                        subtitle: l.notificationSettingsTripRescheduledSubtitle,
                       ),
+                      // Chaque tuile verrouillée dit POURQUOI elle reste active
+                      // (recette du 2026-10-11), SMS de repli compris là où il
+                      // existe.
                       // Non réglables sans être critiques (ALWAYS_ON côté
                       // serveur) : pas de SMS, mais aucun interrupteur ne les
                       // coupe. Les nommer évite de chercher un réglage absent.

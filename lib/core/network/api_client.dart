@@ -516,6 +516,7 @@ AppException mapHttpError(DioException err) {
       detail ?? l.networkFallbackInvalidData,
       code: apiCode,
       errors: violations,
+      extensions: data is Map ? Map<String, Object?>.from(data) : null,
     );
   }
   if (statusCode == 429) {

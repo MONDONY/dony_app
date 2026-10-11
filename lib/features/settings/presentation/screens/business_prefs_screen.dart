@@ -125,7 +125,7 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                           label: l.prefsCurrencyLabel,
                           subtitle: state.currencyLocked
                               ? l.prefsCurrencyLockedSubtitle
-                              : null,
+                              : l.prefsCurrencySubtitle,
                           trailing: Text(
                             state.currencyCode,
                             style: tt.labelMedium?.copyWith(
@@ -162,48 +162,8 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                         ),
                       ],
                     ),
-                    SettingsSectionHeader(l.prefsSectionGeolocation),
-                    SettingsFlatGroup(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(DonySpacing.base),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    l.prefsPickupRadiusLabel,
-                                    style: tt.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${state.pickupRadiusKm} km',
-                                    style: tt.labelMedium?.copyWith(
-                                      color: cs.primary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Slider(
-                                value: state.pickupRadiusKm.toDouble(),
-                                min: 1,
-                                max: 50,
-                                divisions: 49,
-                                activeColor: cs.primary,
-                                onChanged: (v) => context
-                                    .read<BusinessPrefsBloc>()
-                                    .add(PickupRadiusChanged(v.round())),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    // « Rayon de collecte » retiré (recette du 2026-10-11) : le
+                    // réglage n'avait aucun effet. Sa section n'avait que lui.
                     const SizedBox(height: DonySpacing.lg),
                     BlocBuilder<AuthBloc, AuthState>(
                       builder: (context, authState) {
@@ -722,9 +682,9 @@ class _TravelerSectionState extends State<_TravelerSection> {
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
               label: l.prefsMinPriceLabel,
-              subtitle: l.prefsMinPriceNone(
-                SupportedCurrency.symbolOf(state.currencyCode),
-              ),
+              // Appliqué par le serveur (422 bid-below-min-price) depuis le
+              // 2026-10-11 ; la liste « À traiter » garde son filtre en repli.
+              subtitle: l.prefsMinPriceSubtitle,
               trailing: Text(
                 state.minBidPriceEur == 0
                     ? l.prefsMinPriceValueNone
