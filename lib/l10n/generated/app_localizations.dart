@@ -1607,7 +1607,7 @@ abstract class AppLocalizations {
   /// Avertissement après une étape de suivi dont la photo a été refusée par le serveur (limite, taille) : l'étape est enregistrée sans photo
   ///
   /// In fr, this message translates to:
-  /// **'Étape enregistrée sans photo : la limite de photos de ce colis est atteinte.'**
+  /// **'Étape enregistrée sans photo : la photo a été refusée par le serveur.'**
   String get trackingPhotoDropped;
 
   /// No description provided for @errorRateLimitedTitle.

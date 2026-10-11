@@ -371,8 +371,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(
       find.text(
-        'Étape enregistrée sans photo : la limite de photos de ce colis '
-        'est atteinte.',
+        'Étape enregistrée sans photo : la photo a été refusée par le '
+        'serveur.',
       ),
       findsOneWidget,
     );
@@ -393,8 +393,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(
       find.text(
-        'Étape enregistrée sans photo : la limite de photos de ce colis '
-        'est atteinte.',
+        'Étape enregistrée sans photo : la photo a été refusée par le '
+        'serveur.',
       ),
       findsOneWidget,
     );

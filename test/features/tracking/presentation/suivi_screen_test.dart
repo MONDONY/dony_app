@@ -1642,6 +1642,42 @@ void main() {
       await settle(tester, rounds: 12);
     });
 
+    testWidgets('photo refusée par le serveur → avertissement', (tester) async {
+      when(
+        () =>
+            offlineSync.sendScheduled(any(), position: any(named: 'position')),
+      ).thenAnswer(
+        (_) async => SentScan(
+          TrackingEventModel(
+            id: 'e1',
+            bidId: 'sali',
+            eventType: 'TRANSIT',
+            scannedAt: DateTime(2026, 9, 28),
+            createdAt: DateTime(2026, 9, 28),
+          ),
+          photoDropped: true,
+        ),
+      );
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+
+      scan!('sali');
+
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        text(
+          'Étape enregistrée sans photo : la photo a été refusée par le '
+          'serveur.',
+        ),
+        findsOneWidget,
+      );
+      await settle(tester, rounds: 12);
+    });
+
     testWidgets('refus du back → message d\'échec', (tester) async {
       when(
         () =>

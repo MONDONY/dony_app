@@ -1,11 +1,18 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/app_log.dart';
-import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 /// Issue de l'envoi de la photo d'une étape : sa clé de stockage, ou
 /// [dropped] quand le serveur l'a refusée et que l'étape part sans elle.
 typedef TrackingPhotoUpload = ({String? key, bool dropped});
+
+/// Vrai quand le back a refusé l'envoi pour une raison qui ne dépend pas
+/// du réseau ni du moment : la même requête échouerait à l'identique.
+bool isDefinitiveTrackingRejection(AppException error) =>
+    error is ConflictException ||
+    error is ValidationException ||
+    error is NotFoundException ||
+    error is ForbiddenException;
 
 /// Codes par lesquels le serveur refuse la photo elle-même : la renvoyer
 /// échouerait à l'identique.
@@ -46,7 +53,7 @@ Future<TrackingPhotoUpload> uploadTrackingPhotoOrDrop(
   } catch (error) {
     final cause = unwrapDioError(error);
     if (isTrackingPhotoRefused(cause)) return (key: null, dropped: true);
-    if (OfflineSyncService.isDefinitiveRejection(cause)) {
+    if (isDefinitiveTrackingRejection(cause)) {
       // Refus définitif inattendu de la seule photo : l'étape part quand
       // même, et le cas reste visible dans les journaux.
       AppLog.warn(

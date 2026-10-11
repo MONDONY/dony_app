@@ -893,7 +893,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get trackingPhotoDropped =>
-      'Étape enregistrée sans photo : la limite de photos de ce colis est atteinte.';
+      'Étape enregistrée sans photo : la photo a été refusée par le serveur.';
 
   @override
   String get errorRateLimitedTitle => 'Trop de requêtes';

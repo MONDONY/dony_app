@@ -311,10 +311,7 @@ class OfflineSyncService {
 
   /// Vrai quand le back a refusé le scan pour une raison qui ne dépend pas
   /// du réseau ni du moment : la même requête échouerait à l'identique.
-  static bool isDefinitiveRejection(AppException error) {
-    return error is ConflictException ||
-        error is ValidationException ||
-        error is NotFoundException ||
-        error is ForbiddenException;
-  }
+  /// Délègue à [isDefinitiveTrackingRejection].
+  static bool isDefinitiveRejection(AppException error) =>
+      isDefinitiveTrackingRejection(error);
 }

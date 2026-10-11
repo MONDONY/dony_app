@@ -202,6 +202,45 @@ void main() {
       });
     });
 
+    test('photo refusée par le serveur : SuiviValidationSent.photoDropped', () {
+      fakeAsync((async) {
+        stubSend((_) async => SentScan(_event, photoDropped: true));
+        final c = build();
+        scheduleTransit(c);
+        async.elapse(const Duration(seconds: 6));
+        async.flushMicrotasks();
+        expect(
+          c.state.outcome,
+          isA<SuiviValidationSent>().having(
+            (o) => o.photoDropped,
+            'photoDropped',
+            isTrue,
+          ),
+        );
+        unawaited(c.close());
+        async.flushMicrotasks();
+      });
+    });
+
+    test('photo acceptée : photoDropped faux', () {
+      fakeAsync((async) {
+        final c = build();
+        scheduleTransit(c);
+        async.elapse(const Duration(seconds: 6));
+        async.flushMicrotasks();
+        expect(
+          c.state.outcome,
+          isA<SuiviValidationSent>().having(
+            (o) => o.photoDropped,
+            'photoDropped',
+            isFalse,
+          ),
+        );
+        unawaited(c.close());
+        async.flushMicrotasks();
+      });
+    });
+
     test(
       'une étape que la file ou un autre écran envoie déjà est refusée',
       () async {

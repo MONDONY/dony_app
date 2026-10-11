@@ -886,7 +886,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackingPhotoDropped =>
-      'Step saved without a photo: this parcel has reached its photo limit.';
+      'Step saved without a photo: the server rejected the photo.';
 
   @override
   String get errorRateLimitedTitle => 'Too many requests';
