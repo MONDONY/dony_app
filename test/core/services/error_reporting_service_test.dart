@@ -495,4 +495,63 @@ void main() {
       },
     );
   });
+
+  group('dropTransportFailureEvent (erreurs non rattrapées, FLUTTER-KW)', () {
+    final options = RequestOptions(path: '/conversations/c1/last-message');
+    SentryEvent eventOf(Object error) => SentryEvent(throwable: error);
+    bool dropped(Object error) =>
+        dropTransportFailureEvent(eventOf(error), Hint()) == null;
+
+    test('délai de connexion dépassé, non rattrapé : jamais envoyé', () {
+      expect(
+        dropped(
+          DioException(
+            requestOptions: options,
+            type: DioExceptionType.connectionTimeout,
+            error: const TimeoutException(),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('rejet hors ligne en onRequest (DioException unknown + Offline)', () {
+      expect(
+        dropped(
+          DioException(
+            requestOptions: options,
+            error: const OfflineException(),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test(
+      'AppException TIMEOUT / OFFLINE et socket coupée : jamais envoyés',
+      () {
+        expect(dropped(const TimeoutException()), isTrue);
+        expect(dropped(const OfflineException()), isTrue);
+        expect(dropped(const SocketException('Connection reset')), isTrue);
+      },
+    );
+
+    test('réponse serveur, autre exception ou événement sans exception : '
+        'envoyés', () {
+      expect(
+        dropped(
+          DioException(
+            requestOptions: options,
+            type: DioExceptionType.badResponse,
+            response: Response(requestOptions: options, statusCode: 500),
+          ),
+        ),
+        isFalse,
+      );
+      expect(dropped(StateError('bug')), isFalse);
+      expect(dropped(const NetworkException('x', code: 'X')), isFalse);
+      final bare = SentryEvent();
+      expect(dropTransportFailureEvent(bare, Hint()), same(bare));
+    });
+  });
 }

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 
 abstract class ChatState {
@@ -130,4 +131,16 @@ class ChatSendRejected extends ChatState {
   final ChatState previous;
   final String? text;
   const ChatSendRejected(this.previous, {this.text});
+}
+
+/// Envoi d'un texte ou d'une position échoué hors refus des règles (réseau,
+/// Firestore indisponible…, FLUTTER-KW). Signal ponctuel, aussitôt suivi de
+/// [previous] : l'écran l'écoute sans jamais le dessiner. [text] rend le
+/// texte saisi, jamais perdu (`null` pour une position) ; [retry] rejoue
+/// l'envoi à l'identique.
+class ChatSendFailed extends ChatState {
+  final ChatState previous;
+  final ChatEvent retry;
+  final String? text;
+  const ChatSendFailed(this.previous, {required this.retry, this.text});
 }

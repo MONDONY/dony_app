@@ -635,6 +635,32 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  /// Envoi échoué (réseau, Firestore indisponible, FLUTTER-KW) : le texte
+  /// revient dans le champ, jamais perdu, et « Réessayer » rejoue l'envoi.
+  void _onSendFailed(ChatSendFailed state) {
+    final text = state.text;
+    if (text != null && _controller.text.isEmpty) {
+      _controller.text = text;
+      _controller.selection = TextSelection.collapsed(offset: text.length);
+    }
+    final bloc = context.read<ChatBloc>();
+    DonySnackbar.show(
+      context,
+      message: context.l10n.chatSendFailed,
+      type: DonySnackbarType.error,
+      actionLabel: context.l10n.commonRetry,
+      onAction: () {
+        if (bloc.isClosed) return;
+        // Le texte rendu part avec le nouvel essai : le champ est vidé pour
+        // ne pas l'envoyer deux fois, sauf si l'utilisateur l'a modifié.
+        if (mounted && text != null && _controller.text == text) {
+          _controller.clear();
+        }
+        bloc.add(state.retry);
+      },
+    );
+  }
+
   /// Sourdine du fil (FLUTTER-CM), fournie par la route. Absente (tests
   /// d'écran isolés), l'entrée du menu ⋯ n'est pas proposée.
   ConversationNotificationsCubit? _notificationsCubit(BuildContext context) {
@@ -910,14 +936,19 @@ class _ChatScreenState extends State<ChatScreen> {
             current is ChatConversationDeleted ||
             current is ChatError ||
             current is ChatSendRejected ||
+            current is ChatSendFailed ||
             current is ChatImageSendFailed,
         // Signaux ponctuels aussitôt remplacés par l'état du fil : jamais
         // dessinés, la liste des messages reste à l'écran.
         buildWhen: (_, current) =>
-            current is! ChatSendRejected && current is! ChatImageSendFailed,
+            current is! ChatSendRejected &&
+            current is! ChatSendFailed &&
+            current is! ChatImageSendFailed,
         listener: (context, state) {
           if (state is ChatSendRejected) {
             _onSendRejected(state);
+          } else if (state is ChatSendFailed) {
+            _onSendFailed(state);
           } else if (state is ChatImageSendFailed) {
             _onImageSendFailed(state);
           } else if (state is ChatConversationDeleted) {

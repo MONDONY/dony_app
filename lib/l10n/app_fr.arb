@@ -11039,6 +11039,10 @@
   "@chatSendRejected": {
     "description": "Snackbar quand Firestore refuse l'envoi d'un message (permission-denied) ; le texte est rendu dans le champ (chat_screen.dart, FLUTTER-CV)."
   },
+  "chatSendFailed": "Votre message n'a pas pu être envoyé. Vérifiez votre connexion puis réessayez.",
+  "@chatSendFailed": {
+    "description": "Snackbar quand l'envoi d'un message échoue hors refus des règles (réseau, Firestore indisponible) ; le texte est rendu dans le champ, action Réessayer (chat_screen.dart, FLUTTER-KW)."
+  },
   "chatReadOnlyBannerMessage": "Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.",
   "@chatReadOnlyBannerMessage": {
     "description": "Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner)."

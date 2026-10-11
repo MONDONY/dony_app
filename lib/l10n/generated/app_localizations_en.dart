@@ -10130,6 +10130,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your message couldn\'t be sent: you can\'t write in this conversation right now.';
 
   @override
+  String get chatSendFailed =>
+      'Your message couldn\'t be sent. Check your connection and try again.';
+
+  @override
   String get chatReadOnlyBannerMessage =>
       'The other person has left this conversation. You\'re in read-only mode.';
 

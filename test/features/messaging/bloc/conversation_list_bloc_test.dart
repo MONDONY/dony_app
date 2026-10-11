@@ -593,6 +593,33 @@ void main() {
         await bloc.close();
       },
     );
+
+    test(
+      'échec du nettoyage (hors ligne) : rattrapé, liste chargée (FLUTTER-KW)',
+      () async {
+        when(
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([_conv]));
+        when(
+          () => firestoreRepo.cleanupOrphanUnreadCounters(
+            currentUserUid: any(named: 'currentUserUid'),
+            validFirestoreIds: any(named: 'validFirestoreIds'),
+          ),
+        ).thenAnswer((_) => Future.error(StateError('unavailable')));
+        final bloc = ConversationListBloc(
+          convRepo,
+          firestoreRepo,
+          currentUid: () => 'me',
+        );
+
+        bloc.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        expect(bloc.state, isA<ConversationListLoaded>());
+        verify(() => firestoreRepo.perConversationUnreadStream('me')).called(1);
+        await bloc.close();
+      },
+    );
   });
 
   // ── Réaction aux blocages ────────────────────────────────────────────────

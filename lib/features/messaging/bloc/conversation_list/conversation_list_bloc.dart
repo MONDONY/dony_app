@@ -120,11 +120,15 @@ class ConversationListBloc
             .map((c) => c.firestoreConversationId)
             .where((id) => id.isNotEmpty)
             .toSet();
+        // Nettoyage secondaire non attendu : un échec (hors ligne, Firestore
+        // indisponible) ne doit jamais devenir une erreur non gérée.
         unawaited(
-          _firestoreRepo.cleanupOrphanUnreadCounters(
-            currentUserUid: uid,
-            validFirestoreIds: validIds,
-          ),
+          _firestoreRepo
+              .cleanupOrphanUnreadCounters(
+                currentUserUid: uid,
+                validFirestoreIds: validIds,
+              )
+              .catchError((Object _) {}),
         );
       }
       if (uid.isNotEmpty) {
