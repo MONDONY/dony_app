@@ -9,6 +9,10 @@ class TrackingEventModel {
   final double? gpsLon;
   final String? gpsLabel;
   final String? photoUrl;
+
+  /// Photo supprimée par le serveur après la livraison (`photoUrl` est alors
+  /// `null`). Faux si le back ne renvoie pas le champ.
+  final bool photoPurged;
   final DateTime? offlineTimestamp;
   final DateTime createdAt;
 
@@ -24,6 +28,7 @@ class TrackingEventModel {
     this.gpsLon,
     this.gpsLabel,
     this.photoUrl,
+    this.photoPurged = false,
     this.offlineTimestamp,
     required this.createdAt,
     this.scanMethod,
@@ -39,6 +44,7 @@ class TrackingEventModel {
         gpsLon: (json['gpsLon'] as num?)?.toDouble(),
         gpsLabel: json['gpsLabel'] as String?,
         photoUrl: json['photoUrl'] as String?,
+        photoPurged: json['photoPurged'] as bool? ?? false,
         offlineTimestamp: json['offlineTimestamp'] == null
             ? null
             : DateTime.parse(json['offlineTimestamp'] as String),

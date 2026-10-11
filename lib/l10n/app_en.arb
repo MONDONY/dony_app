@@ -245,6 +245,13 @@
   "errorOfflineMessage": "Check your internet connection and try again. Your offline scans will sync when you're back online.",
   "errorTimeoutTitle": "The server is taking a while",
   "errorTimeoutMessage": "The request took too long. Try again in a few seconds.",
+  "errorPhotoQuotaTitle": "Photo limit reached",
+  "errorPhotoQuotaMessage": "You've reached today's photo limit. Try again tomorrow.",
+  "errorTrackingPhotoLimitMessage": "This parcel already has the maximum number of tracking photos.",
+  "errorFileTooLargeMessage": "Image too large (5 MB maximum).",
+  "errorImageTooLargeTitle": "Image rejected",
+  "errorImageTooLargeMessage": "Image too large.",
+  "trackingPhotoDropped": "Step saved without a photo: the server rejected the photo.",
   "errorRateLimitedTitle": "Too many requests",
   "errorRateLimitedMessage": "You've made too many requests in a short time. Wait a moment before trying again.",
   "errorServerErrorTitle": "Server error",
@@ -8485,6 +8492,10 @@
   "trackingStepHandoverToRecipient": "Handover to the recipient",
   "@trackingStepHandoverToRecipient": {
     "description": "Dernière étape à venir de la frise (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingPhotoPurged": "Photo deleted after delivery",
+  "@trackingPhotoPurged": {
+    "description": "Frise de suivi : la photo de l'étape a été supprimée par le serveur après la livraison (tracking_timeline_bottom_sheet.dart)."
   },
   "trackingStepPhotoLabel": "Step photo",
   "@trackingStepPhotoLabel": {

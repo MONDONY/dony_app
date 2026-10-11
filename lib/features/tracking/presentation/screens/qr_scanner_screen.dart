@@ -12,6 +12,7 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
+import 'package:dony/features/tracking/presentation/photo_dropped_warning.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -105,6 +106,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     return BlocListener<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is QrScanSuccess) {
+          if (state.photoDropped) warnTrackingPhotoDropped(context);
           context.pop(); // close sheet
           _showSuccessDialog(state.event.eventType, state.event.stepLabel(l));
         } else if (state is QrScanQueued) {
@@ -722,6 +724,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
       child: BlocConsumer<TrackingBloc, TrackingState>(
         listener: (context, state) {
           if (state is DeliveryConfirmSuccess) {
+            if (state.photoDropped) warnTrackingPhotoDropped(context);
             context.pop();
             widget.onDeliveryConfirmed?.call(state.event.bidId);
           } else if (state is QrScanSuccess || state is QrScanQueued) {

@@ -74,7 +74,11 @@ class QrScanSubmitting extends TrackingState {}
 
 class QrScanSuccess extends TrackingState {
   final TrackingEventModel event;
-  QrScanSuccess(this.event);
+
+  /// Photo refusée par le serveur : l'écran affiche
+  /// `trackingPhotoDropped`.
+  final bool photoDropped;
+  QrScanSuccess(this.event, {this.photoDropped = false});
 }
 
 class QrScanQueued extends TrackingState {}
@@ -89,7 +93,11 @@ class DeliveryConfirmLoading extends TrackingState {}
 
 class DeliveryConfirmSuccess extends TrackingState {
   final TrackingEventModel event;
-  DeliveryConfirmSuccess(this.event);
+
+  /// Photo refusée par le serveur : livraison confirmée sans elle, l'écran
+  /// affiche `trackingPhotoDropped`.
+  final bool photoDropped;
+  DeliveryConfirmSuccess(this.event, {this.photoDropped = false});
 }
 
 class DeliveryConfirmError extends TrackingState {

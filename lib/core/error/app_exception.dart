@@ -126,9 +126,18 @@ class RateLimitException extends AppException {
   // Jamais affiché PAR ErrorCatalog : ErrorCatalog.lookup résout
   // 'RATE_LIMITED' via errorRateLimitedMessage, sans jamais lire ce champ. Un
   // écran qui contournerait ErrorCatalog reste hors de cette garantie.
+  //
+  // [apiCode] garde le code métier du back (`photo-upload-quota-exceeded`,
+  // `tracking-photo-limit-reached`...) ; [code] reste 'RATE_LIMITED'.
   const RateLimitException([
     super.message = 'Trop de tentatives', // i18n-ignore
+    this.apiCode,
   ]) : super(code: 'RATE_LIMITED');
+
+  final String? apiCode;
+
+  @override
+  List<Object?> get props => [message, code, apiCode];
 }
 
 class ServerException extends AppException {

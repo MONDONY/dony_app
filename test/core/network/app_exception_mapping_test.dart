@@ -68,4 +68,48 @@ void main() {
     expect(mapHttpError(_err(404)), isA<NotFoundException>());
     expect(mapHttpError(_err(418)), isA<NetworkException>());
   });
+
+  group('limites de photos', () {
+    test('429 avec code : RateLimitException garde apiCode', () {
+      final e = mapHttpError(
+        _err(
+          429,
+          data: {
+            'detail': 'Trop de photos',
+            'code': 'photo-upload-quota-exceeded',
+          },
+        ),
+      );
+      expect(e, isA<RateLimitException>());
+      expect((e as RateLimitException).apiCode, 'photo-upload-quota-exceeded');
+      expect(e.code, 'RATE_LIMITED');
+      expect(e.message, 'Trop de photos');
+    });
+
+    test('429 sans code : apiCode nul, repli inchangé', () {
+      final e = mapHttpError(_err(429)) as RateLimitException;
+      expect(e.apiCode, isNull);
+      expect(e.message, 'Trop de tentatives');
+    });
+
+    test('413 : ValidationException code file-too-large', () {
+      final e = mapHttpError(
+        _err(413, data: {'code': 'file-too-large', 'detail': 'Trop gros'}),
+      );
+      expect(e, isA<ValidationException>());
+      expect(e.code, 'file-too-large');
+    });
+
+    test('413 sans corps : ValidationException code file-too-large', () {
+      final e = mapHttpError(_err(413));
+      expect(e, isA<ValidationException>());
+      expect(e.code, 'file-too-large');
+    });
+
+    test('422 image/too-large garde son code', () {
+      final e = mapHttpError(_err(422, data: {'code': 'image/too-large'}));
+      expect(e, isA<ValidationException>());
+      expect(e.code, 'image/too-large');
+    });
+  });
 }

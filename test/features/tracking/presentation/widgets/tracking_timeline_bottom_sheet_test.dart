@@ -1,4 +1,5 @@
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_image.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -26,6 +27,7 @@ TrackingEventModel _event(
   ScanMethod? scanMethod,
   String? gpsLabel,
   String? photoUrl,
+  bool photoPurged = false,
 }) => TrackingEventModel(
   id: 'evt-$type',
   bidId: 'bid-1',
@@ -35,6 +37,7 @@ TrackingEventModel _event(
   scanMethod: scanMethod,
   gpsLabel: gpsLabel,
   photoUrl: photoUrl,
+  photoPurged: photoPurged,
 );
 
 Finder _route(String from, String to) => find.byWidgetPredicate(
@@ -122,6 +125,39 @@ void main() {
 
   Finder steps(String state) =>
       find.byKey(Key('tracking-step-$state'), skipOffstage: false);
+
+  testWidgets('photo purgée : vignette explicative, ni image ni visionneuse', (
+    tester,
+  ) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(TrackingEventsLoaded([_event('DEPART', photoPurged: true)]));
+    await _openSheet(tester, bloc);
+
+    expect(find.byKey(const Key('tracking-step-photo-purged')), findsOneWidget);
+    expect(find.text('Photo supprimée après livraison'), findsOneWidget);
+    expect(find.byIcon(Icons.image_not_supported_outlined), findsOneWidget);
+    expect(find.byType(DonyImage), findsNothing);
+    expect(find.byKey(const Key('tracking-step-photo')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('tracking-step-photo-purged')));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(InteractiveViewer), findsNothing);
+  });
+
+  testWidgets('photo présente et non purgée : miniature habituelle', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(
+      TrackingEventsLoaded([
+        _event('DEPART', photoUrl: 'https://example.com/depart.jpg'),
+      ]),
+    );
+    await _openSheet(tester, bloc);
+
+    expect(find.byKey(const Key('tracking-step-photo')), findsOneWidget);
+    expect(find.byKey(const Key('tracking-step-photo-purged')), findsNothing);
+  });
 
   testWidgets('FLUTTER-82 : toucher la photo d\'une étape l\'ouvre en grand', (
     tester,

@@ -15,6 +15,7 @@ import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/presentation/photo_dropped_warning.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
@@ -481,8 +482,8 @@ class _SuiviBodyState extends State<_SuiviBody> {
     final l = context.l10n;
     final step = trackingStepLabel(l, outcome.step);
     switch (outcome) {
-      case SuiviValidationSent():
-        break;
+      case SuiviValidationSent(:final photoDropped):
+        if (photoDropped) warnTrackingPhotoDropped(context);
       case SuiviValidationQueued(:final parcelLabel):
         DonySnackbar.show(
           context,

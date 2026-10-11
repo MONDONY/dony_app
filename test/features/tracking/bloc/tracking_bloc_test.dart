@@ -319,12 +319,12 @@ void main() {
     );
 
     blocTest<TrackingBloc, TrackingState>(
-      'avec photo : un upload en échec émet DeliveryConfirmError sans confirmer',
+      'avec photo : un upload en panne réseau émet DeliveryConfirmError sans confirmer',
       build: buildBloc,
       setUp: () {
         when(
           () => mockRepo.uploadTrackingPhoto(any(), any()),
-        ).thenThrow(const ValidationException('Photo trop lourde'));
+        ).thenThrow(const TimeoutException());
       },
       act: (b) => b.add(
         ConfirmDeliveryRequested(
@@ -336,9 +336,9 @@ void main() {
       expect: () => [
         isA<DeliveryConfirmLoading>(),
         isA<DeliveryConfirmError>().having(
-          (s) => s.error.message,
-          'message',
-          'Photo trop lourde',
+          (s) => s.error,
+          'error',
+          isA<TimeoutException>(),
         ),
       ],
       verify: (_) {
@@ -350,6 +350,71 @@ void main() {
           ),
         );
       },
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'photo refusée : livraison confirmée sans photo, photoDropped',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenThrow(
+          const RateLimitException(
+            'Limite de photos atteinte',
+            'tracking-photo-limit-reached',
+          ),
+        );
+        when(
+          () => mockRepo.confirmDelivery(bidId: 'bid-1', code: '4721'),
+        ).thenAnswer((_) async => _event);
+      },
+      act: (b) => b.add(
+        ConfirmDeliveryRequested(
+          bidId: 'bid-1',
+          code: '4721',
+          photo: XFile('/tmp/arrivee.jpg'),
+        ),
+      ),
+      expect: () => [
+        isA<DeliveryConfirmLoading>(),
+        isA<DeliveryConfirmSuccess>()
+            .having((s) => s.event, 'event', _event)
+            .having((s) => s.photoDropped, 'photoDropped', isTrue),
+      ],
+      verify: (_) {
+        verify(
+          () => mockRepo.confirmDelivery(bidId: 'bid-1', code: '4721'),
+        ).called(1);
+      },
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'photo trop grande (422) : livraison confirmée sans photo',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenThrow(
+          const ValidationException(
+            'Image trop grande',
+            code: 'image/too-large',
+          ),
+        );
+        when(
+          () => mockRepo.confirmDelivery(bidId: 'bid-1', code: '4721'),
+        ).thenAnswer((_) async => _event);
+      },
+      act: (b) => b.add(
+        ConfirmDeliveryRequested(
+          bidId: 'bid-1',
+          code: '4721',
+          photo: XFile('/tmp/arrivee.jpg'),
+        ),
+      ),
+      expect: () => [
+        isA<DeliveryConfirmLoading>(),
+        isA<DeliveryConfirmSuccess>().having(
+          (s) => s.photoDropped,
+          'photoDropped',
+          isTrue,
+        ),
+      ],
     );
 
     blocTest<TrackingBloc, TrackingState>(
@@ -490,6 +555,37 @@ void main() {
       expect: () => [
         isA<QrScanSubmitting>(),
         isA<QrScanSuccess>().having((s) => s.event, 'event', _event),
+      ],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'en ligne, photo refusée : QrScanSuccess sans photo, photoDropped',
+      setUp: () {
+        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenThrow(
+          const RateLimitException(
+            'Limite de photos atteinte',
+            'tracking-photo-limit-reached',
+          ),
+        );
+        when(
+          () => mockRepo.postScan(bidId: 'bid-1', eventType: 'TRANSIT'),
+        ).thenAnswer((_) async => _event);
+      },
+      build: () => withNetwork(online: true),
+      act: (b) => b.add(
+        QrScanSubmitRequested(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          photo: XFile('/tmp/transit.jpg'),
+        ),
+      ),
+      expect: () => [
+        isA<QrScanSubmitting>(),
+        isA<QrScanSuccess>().having(
+          (s) => s.photoDropped,
+          'photoDropped',
+          isTrue,
+        ),
       ],
     );
 

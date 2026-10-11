@@ -146,6 +146,52 @@ void main() {
     verifyNever(() => repo.uploadTrackingPhoto(any(), any()));
   });
 
+  test(
+    'photo refusée (limite du colis) : étape postée sans photo, photoDropped',
+    () async {
+      when(() => repo.uploadTrackingPhoto(any(), any())).thenThrow(
+        const RateLimitException(
+          'Limite de photos atteinte',
+          'tracking-photo-limit-reached',
+        ),
+      );
+      final result = await build().submit(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        photoPath: '/tmp/p.jpg',
+        gpsLat: 14.7,
+      );
+      expect(result, isA<ScanSubmitSent>());
+      final sent = result as ScanSubmitSent;
+      expect(sent.event, _event);
+      expect(sent.photoDropped, isTrue);
+      verify(
+        () => repo.postScan(bidId: 'bid-1', eventType: 'TRANSIT', gpsLat: 14.7),
+      ).called(1);
+    },
+  );
+
+  test('photo trop lourde (413) : étape postée sans photo', () async {
+    when(() => repo.uploadTrackingPhoto(any(), any())).thenThrow(
+      const ValidationException('Trop lourd', code: 'file-too-large'),
+    );
+    final result = await build().submit(
+      bidId: 'bid-1',
+      eventType: 'TRANSIT',
+      photoPath: '/tmp/p.jpg',
+    );
+    expect((result as ScanSubmitSent).photoDropped, isTrue);
+  });
+
+  test('photo envoyée : photoDropped faux', () async {
+    final result = await build().submit(
+      bidId: 'bid-1',
+      eventType: 'TRANSIT',
+      photoPath: '/tmp/p.jpg',
+    );
+    expect((result as ScanSubmitSent).photoDropped, isFalse);
+  });
+
   test('réseau coupé pendant l\'envoi : l\'erreur remonte', () async {
     when(
       () => repo.uploadTrackingPhoto(any(), any()),

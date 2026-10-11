@@ -1425,4 +1425,61 @@ void main() {
       },
     );
   });
+
+  group('ErrorCatalog — limites de photos', () {
+    test('429 photo-upload-quota-exceeded', () {
+      final p = ErrorCatalog.lookup(
+        const RateLimitException('x', 'photo-upload-quota-exceeded'),
+      );
+      expect(p.title, 'Limite de photos atteinte');
+      expect(
+        p.message,
+        "Vous avez atteint la limite de photos pour aujourd'hui. "
+        'Réessayez demain.',
+      );
+    });
+
+    test('429 tracking-photo-limit-reached', () {
+      final p = ErrorCatalog.lookup(
+        const RateLimitException('x', 'tracking-photo-limit-reached'),
+      );
+      expect(
+        p.message,
+        'Ce colis a déjà le nombre maximum de photos de suivi.',
+      );
+    });
+
+    test('413 file-too-large', () {
+      final p = ErrorCatalog.lookup(
+        const ValidationException('x', code: 'file-too-large'),
+      );
+      expect(p.message, 'Image trop volumineuse (5 Mo maximum).');
+    });
+
+    test('422 image/too-large', () {
+      final p = ErrorCatalog.lookup(
+        const ValidationException('x', code: 'image/too-large'),
+      );
+      expect(p.message, 'Image trop grande.');
+    });
+
+    test('429 sans code ou code inconnu : RATE_LIMITED générique', () {
+      for (final e in const [
+        RateLimitException(),
+        RateLimitException('x', 'autre-code'),
+      ]) {
+        expect(ErrorCatalog.lookup(e).title, 'Trop de requêtes');
+      }
+    });
+
+    test('anglais', () {
+      useEnglish();
+      expect(
+        ErrorCatalog.lookup(
+          const RateLimitException('x', 'photo-upload-quota-exceeded'),
+        ).title,
+        'Photo limit reached',
+      );
+    });
+  });
 }

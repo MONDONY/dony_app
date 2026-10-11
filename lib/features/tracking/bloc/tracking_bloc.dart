@@ -7,6 +7,7 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_submitter.dart';
+import 'package:dony/features/tracking/data/tracking_photo_upload.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -147,7 +148,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
         emit(QrScanQueued());
         return;
       }
-      emit(QrScanSuccess(result.event));
+      emit(QrScanSuccess(result.event, photoDropped: result.photoDropped));
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.qrScanSuccess,
@@ -165,23 +166,23 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   ) async {
     emit(DeliveryConfirmLoading());
     try {
-      String? photoKey;
-      if (event.photo != null) {
-        photoKey = await _repository.uploadTrackingPhoto(
-          event.bidId,
-          event.photo!.path,
-        );
-      }
+      // Photo refusée par le serveur : la livraison est confirmée sans elle
+      // (elle déclenche la capture du paiement).
+      final photo = await uploadTrackingPhotoOrDrop(
+        _repository,
+        bidId: event.bidId,
+        photoPath: event.photo?.path,
+      );
       final result = await _repository.confirmDelivery(
         bidId: event.bidId,
         code: event.code,
-        photoUrl: photoKey,
+        photoUrl: photo.key,
         scanMethod: event.scanMethod,
         gpsLat: event.gpsLat,
         gpsLon: event.gpsLon,
         gpsLabel: event.gpsLabel,
       );
-      emit(DeliveryConfirmSuccess(result));
+      emit(DeliveryConfirmSuccess(result, photoDropped: photo.dropped));
     } catch (e) {
       if (kDebugMode) debugPrint('[TrackingBloc] confirmDelivery error: $e');
       emit(DeliveryConfirmError(unwrapDioError(e)));

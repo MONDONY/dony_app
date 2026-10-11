@@ -43,7 +43,14 @@ sealed class SuiviValidationOutcome {
 }
 
 final class SuiviValidationSent extends SuiviValidationOutcome {
-  const SuiviValidationSent(super.step, super.parcelLabel);
+  const SuiviValidationSent(
+    super.step,
+    super.parcelLabel, {
+    this.photoDropped = false,
+  });
+
+  /// Photo refusée par le serveur : l'étape est enregistrée sans elle.
+  final bool photoDropped;
 }
 
 /// Sans réseau : l'étape attend dans la file hors ligne.
@@ -225,7 +232,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
 
     SuiviValidationOutcome outcome;
     try {
-      final event = await _queue.sendScheduled(
+      final sent = await _queue.sendScheduled(
         await key,
         position: _positionOrNull(position),
       );
@@ -235,8 +242,12 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
           properties: {'step': pending.step, 'method': pending.method.name},
         ),
       );
-      outcome = event != null
-          ? SuiviValidationSent(pending.step, pending.parcelLabel)
+      outcome = sent != null
+          ? SuiviValidationSent(
+              pending.step,
+              pending.parcelLabel,
+              photoDropped: sent.photoDropped,
+            )
           : SuiviValidationQueued(pending.step, pending.parcelLabel);
     } catch (e) {
       outcome = SuiviValidationFailed(

@@ -123,6 +123,8 @@ void main() {
     '{"code":"code-request-too-soon","nextRequestAllowedAt":"2026-10-09T10:15:00Z"}',
     '{"code":"recipient-replacement-too-soon"}',
     '{"retryAfterSeconds":540}',
+    '{"code":"photo-upload-quota-exceeded"}',
+    '{"code":"tracking-photo-limit-reached"}',
   ]) {
     test('429 métier $body → jamais rejoué', () async {
       final d = buildDio([429, 200], body: body);
