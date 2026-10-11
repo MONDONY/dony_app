@@ -18358,4 +18358,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String tripPosterCaptionPayment(String methods) {
     return 'Paiement : $methods';
   }
+
+  @override
+  String suiviPhotoLost(String step) {
+    return 'La photo de l\'étape « $step » n\'est plus disponible sur ce téléphone : l\'étape a été enregistrée sans photo.';
+  }
+
+  @override
+  String get suiviPhotoLostDismiss => 'Fermer le message sur la photo perdue';
 }

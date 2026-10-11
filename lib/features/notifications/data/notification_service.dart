@@ -11,6 +11,7 @@ import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/calls/data/stream_video_push.dart';
+import 'package:dony/features/notifications/data/fcm_token_retry.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
@@ -165,6 +166,17 @@ class NotificationService {
   bool _permissionDeniedReported = false;
   bool _tokenResolutionFailureReported = false;
 
+  /// Réessais du jeton FCM sur échec passager de Google Play Services
+  /// (FLUTTER-N1), partagés avec l'enregistrement des appels Stream Video.
+  late final FcmTokenRetry _tokenRetry =
+      _tokenRetryOverride ?? FcmTokenRetry(reporter: _errorReporter);
+  final FcmTokenRetry? _tokenRetryOverride;
+
+  /// Jeton resté indisponible après les essais : l'upload repart à la
+  /// prochaine occasion (premier plan, réseau retrouvé).
+  bool _tokenRetryPending = false;
+  StreamSubscription<void>? _tokenRetrySub;
+
   NotificationService(
     this._apiClient,
     this._repository,
@@ -173,6 +185,7 @@ class NotificationService {
     this._sessionProbe = const FirebaseSessionProbe(),
     this._fcmOverride,
     this._hasConnection,
+    this._tokenRetryOverride,
   ]);
 
   /// `true` dans le doute : la sonde ne doit jamais faire perdre une remontée.
@@ -316,6 +329,20 @@ class NotificationService {
     // Token upload is deferred to after authentication (called by app.dart).
     // onTokenRefresh re-uploads automatically once the user is signed in.
     _fcm.onTokenRefresh.listen((_) => _scheduleTokenUpload());
+    listenTokenRetryOpportunities();
+  }
+
+  /// Relance l'upload à chaque occasion de [FcmTokenRetry] tant que le jeton
+  /// n'a pas pu être obtenu (FLUTTER-N1).
+  @visibleForTesting
+  void listenTokenRetryOpportunities() {
+    _tokenRetrySub ??= _tokenRetry.retryOpportunities.listen((_) {
+      // uploadCurrentToken rend l'upload déjà en vol : la reprise de l'app
+      // (onAppResumed) et ce signal ne lancent pas deux lectures du jeton.
+      if (_tokenRetryPending && _sessionProbe.hasRealSession) {
+        unawaited(uploadCurrentToken());
+      }
+    });
   }
 
   /// Recrée les deux canaux Android avec leurs noms traduits dans la langue
@@ -397,6 +424,7 @@ class NotificationService {
   Future<void> _uploadCurrentTokenOnce() async {
     try {
       final token = await _resolveFcmToken();
+      _tokenRetryPending = false;
       if (token != null) {
         await _uploadToken(token);
         return;
@@ -430,6 +458,14 @@ class NotificationService {
       );
     } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] uploadCurrentToken failed: $e');
+      // FLUTTER-N1 : Google Play Services n'a pas fabriqué le jeton malgré
+      // les réessais. Rien de cassé : l'upload repart à la prochaine
+      // occasion, et Sentry n'en reçoit qu'un avertissement par session.
+      if (isTransientFcmTokenError(e)) {
+        _tokenRetryPending = true;
+        if (await _isOnline()) _tokenRetry.reportExhausted(e, channel: 'fcm');
+        return;
+      }
       // Une seule remontée par session : l'upload est retenté à chaque reprise
       // de l'app, et un appareil sans réseau produisait une salve d'événements
       // identiques (jusqu'à 28 pour un seul utilisateur). Le premier suffit à
@@ -511,7 +547,7 @@ class NotificationService {
   Future<String?> _resolveFcmToken() => resolveFcmToken(
     isIOS: Platform.isIOS,
     getApnsToken: _fcm.getAPNSToken,
-    getFcmToken: _fcm.getToken,
+    getFcmToken: () => _tokenRetry.fetch(_fcm.getToken),
   );
 
   /// Cœur testable de [_resolveFcmToken], sans dépendance à Firebase.
@@ -919,6 +955,7 @@ class NotificationService {
   static const announcementsInboxRoute = '/notifications/annonces';
 
   void dispose() {
+    unawaited(_tokenRetrySub?.cancel());
     _navigationController.close();
     _newNotificationController.close();
   }

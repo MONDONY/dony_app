@@ -6,6 +6,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/features/notifications/data/fcm_token_retry.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/notifications/presentation/announcements_inbox_screen.dart';
@@ -772,6 +773,132 @@ void main() {
       await service.uploadCurrentToken();
       await Future<void>.delayed(Duration.zero);
 
+      expect(sink.contexts, hasLength(1));
+    });
+  });
+
+  // FLUTTER-N1 : `[firebase_messaging/unknown] java.io.IOException: FCM
+  // Registration failed!` est un aléa de Google Play Services. Réessayé avec
+  // backoff, jamais remonté avant l'épuisement des essais, puis un seul
+  // avertissement ; nouvel essai à la prochaine occasion.
+  group('NotificationService : jeton FCM indisponible passagèrement', () {
+    late MockFirebaseMessaging fcm;
+    late _RecordingErrorSink sink;
+    late FcmTokenRetry retry;
+    late List<Duration> slept;
+
+    FirebaseException registrationFailed() => FirebaseException(
+      plugin: 'firebase_messaging',
+      code: 'unknown',
+      message: 'java.io.IOException: FCM Registration failed!',
+    );
+
+    NotificationService build({Future<bool> Function()? hasConnection}) {
+      final probe = MockFirebaseSessionProbe();
+      when(() => probe.hasRealSession).thenReturn(true);
+      final errorReporter = ErrorReportingService(sink);
+      retry = FcmTokenRetry(
+        reporter: errorReporter,
+        sleep: (d) async => slept.add(d),
+      );
+      return NotificationService(
+        apiClient,
+        repository,
+        deviceIdService,
+        errorReporter,
+        probe,
+        fcm,
+        hasConnection,
+        retry,
+      );
+    }
+
+    setUp(() {
+      fcm = MockFirebaseMessaging();
+      sink = _RecordingErrorSink();
+      slept = [];
+      when(() => fcm.getToken()).thenThrow(registrationFailed());
+    });
+
+    tearDown(() => retry.dispose());
+
+    test('réessaie avec backoff puis un seul avertissement', () async {
+      service = build();
+      addTearDown(service.dispose);
+
+      await service.uploadCurrentToken();
+      await service.uploadCurrentToken();
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => fcm.getToken(),
+      ).called(2 * (FcmTokenRetry.defaultBackoff.length + 1));
+      expect(slept, [
+        ...FcmTokenRetry.defaultBackoff,
+        ...FcmTokenRetry.defaultBackoff,
+      ]);
+      expect(sink.contexts, hasLength(1));
+      expect(
+        sink.contexts.single['operation'],
+        'notifications.fcm_token_unavailable_transient',
+      );
+      expect(sink.contexts.single['_level'], 'warning');
+    });
+
+    test('hors ligne : aucune remontée', () async {
+      service = build(hasConnection: () async => false);
+      addTearDown(service.dispose);
+
+      await service.uploadCurrentToken();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(sink.contexts, isEmpty);
+    });
+
+    test(
+      'jeton obtenu au deuxième essai : aucun échec passager remonté',
+      () async {
+        var calls = 0;
+        when(() => fcm.getToken()).thenAnswer((_) async {
+          if (++calls == 1) throw registrationFailed();
+          return null;
+        });
+        service = build();
+        addTearDown(service.dispose);
+
+        await service.uploadCurrentToken();
+        await Future<void>.delayed(Duration.zero);
+
+        expect(calls, 2);
+        // Jeton null : remonté comme avant (appareil jamais enregistré), pas
+        // comme un échec passager.
+        expect(
+          sink.contexts.single['operation'],
+          'notifications.fcm_token_unavailable',
+        );
+      },
+    );
+
+    test('occasion de réessai (premier plan, réseau) : nouvel essai tant que '
+        'le jeton manque', () async {
+      service = build();
+      addTearDown(service.dispose);
+      service.listenTokenRetryOpportunities();
+
+      // Rien d'attendu : aucun essai avant le premier échec.
+      retry.notifyRetryOpportunity();
+      await pumpEventQueue();
+      verifyNever(() => fcm.getToken());
+
+      await service.uploadCurrentToken();
+      clearInteractions(fcm);
+
+      retry.notifyRetryOpportunity();
+      await pumpEventQueue();
+
+      verify(
+        () => fcm.getToken(),
+      ).called(FcmTokenRetry.defaultBackoff.length + 1);
       expect(sink.contexts, hasLength(1));
     });
   });

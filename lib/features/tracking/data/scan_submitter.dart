@@ -91,7 +91,7 @@ class ScanSubmitter {
           bidId: bidId,
           photoPath: photoPath,
         );
-        photoDropped = photo.dropped;
+        photoDropped = photo.dropped || photo.lost;
         return _repository.postScan(
           bidId: bidId,
           eventType: eventType,

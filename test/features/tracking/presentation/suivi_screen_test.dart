@@ -303,6 +303,8 @@ void main() {
     );
     when(() => offlineSync.pendingCountFor(any())).thenReturn(0);
     when(() => offlineSync.queueChanges).thenReturn(queue);
+    when(() => offlineSync.lostPhotoChanges).thenReturn(queue);
+    when(() => offlineSync.lostPhotosFor(any())).thenReturn(const []);
 
     _unregisterAll();
     getIt

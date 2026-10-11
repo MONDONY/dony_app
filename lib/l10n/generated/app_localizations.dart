@@ -29870,6 +29870,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Paiement : {methods}'**
   String tripPosterCaptionPayment(String methods);
+
+  /// Onglet Suivi : une étape de la file hors ligne est partie sans sa photo, dont le fichier local a disparu (cache purgé, FLUTTER-MJ). step = libellé d'étape traduit.
+  ///
+  /// In fr, this message translates to:
+  /// **'La photo de l\'étape « {step} » n\'est plus disponible sur ce téléphone : l\'étape a été enregistrée sans photo.'**
+  String suiviPhotoLost(String step);
+
+  /// Libellé d'accessibilité du bouton qui ferme le message de photo perdue (onglet Suivi)
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer le message sur la photo perdue'**
+  String get suiviPhotoLostDismiss;
 }
 
 class _AppLocalizationsDelegate

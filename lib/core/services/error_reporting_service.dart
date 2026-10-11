@@ -252,6 +252,8 @@ class ErrorReportingService {
       'apns_token_available',
       'platform',
       'attempts',
+      // Étape de suivi (DEPART, TRANSIT, ARRIVEE) : valeur fermée.
+      'tracking_step',
       // Échec Stripe (FLUTTER-7S) : codes fermés du SDK et message brut,
       // générique, de Stripe (« Your card was declined. »), sans donnée de
       // carte ni d'identité.

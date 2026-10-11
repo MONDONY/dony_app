@@ -138,6 +138,7 @@ import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/notifications/bloc/announcements_inbox_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_detail_cubit.dart';
+import 'package:dony/features/notifications/data/fcm_token_retry.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
@@ -257,6 +258,7 @@ import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
@@ -322,6 +324,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<NotificationRepository>(
     () => NotificationRepository(getIt<NotificationRemoteDatasource>()),
   );
+  // Jeton FCM : réessais sur échec passager de Google Play Services
+  // (FLUTTER-N1), partagés par les notifications et les appels.
+  getIt.registerLazySingleton<FcmTokenRetry>(
+    () => FcmTokenRetry(
+      reporter: getIt<ErrorReportingService>(),
+      connectivityChanges:
+          getIt<ConnectivityRepository>().onHasConnectionChanged,
+    ),
+    dispose: (r) => r.dispose(),
+  );
   getIt.registerLazySingleton<NotificationService>(
     () => NotificationService(
       getIt<ApiClient>(),
@@ -331,6 +343,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<FirebaseSessionProbe>(),
       null,
       getIt<ConnectivityRepository>().hasConnection,
+      getIt<FcmTokenRetry>(),
     ),
     dispose: (s) => s.dispose(),
   );
@@ -1075,6 +1088,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<HiveService>(),
       getIt<TrackingRepository>(),
       getIt<ErrorReportingService>(),
+      DateTime.now,
+      null,
+      TrackingQueuePhotoStore(),
     ),
     dispose: (s) => s.dispose(),
   );
@@ -1190,7 +1206,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<CallsRepository>(
     () => CallsRepository(getIt<CallsDatasource>()),
   );
-  getIt.registerLazySingleton<CallGateway>(StreamCallGateway.new);
+  getIt.registerLazySingleton<CallGateway>(
+    () => StreamCallGateway(tokenRetry: getIt<FcmTokenRetry>()),
+  );
   foregroundStreamVideoPushHandler = (data) =>
       getIt<CallGateway>().handlePush(data);
   getIt.registerLazySingleton<CallSessionService>(

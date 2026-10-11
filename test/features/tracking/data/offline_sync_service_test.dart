@@ -3,12 +3,15 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/report_severity.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/tracking/data/scan_send_guard.dart';
+import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
@@ -949,6 +952,303 @@ void main() {
         verifyPostedWithoutPhoto();
       },
     );
+  });
+
+  group('photo disparue du téléphone (FLUTTER-MJ)', () {
+    late _MockReporter reporter;
+    late OfflineSyncService reported;
+    late Directory supportDir;
+    late TrackingQueuePhotoStore store;
+
+    void stubPost({Object? error}) {
+      final when_ = when(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          scanMethod: any(named: 'scanMethod'),
+          trackingNumber: any(named: 'trackingNumber'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      );
+      if (error != null) {
+        when_.thenThrow(error);
+      } else {
+        when_.thenAnswer((_) async => _fakeEvent());
+      }
+    }
+
+    void verifyPosted({required Matcher photoUrl, int times = 1}) => verify(
+      () => mockRepo.postScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoUrl: any(named: 'photoUrl', that: photoUrl),
+        scanMethod: any(named: 'scanMethod'),
+        trackingNumber: any(named: 'trackingNumber'),
+        offlineTimestamp: any(named: 'offlineTimestamp'),
+      ),
+    ).called(times);
+
+    List<Map<String, Object>> reports() => verify(
+      () => reporter.report(
+        any(),
+        operation: any(named: 'operation'),
+        stackTrace: any(named: 'stackTrace'),
+        context: captureAny(named: 'context'),
+      ),
+    ).captured.cast<Map<String, Object>>();
+
+    Future<File> photo(String name) async {
+      final file = File('${_tempDir.path}/$name');
+      await file.writeAsBytes([1, 2, 3]);
+      return file;
+    }
+
+    setUp(() async {
+      await _hiveService.userPrefs.delete(OfflineSyncService.lostPhotosKey);
+      reporter = _MockReporter();
+      when(
+        () => reporter.report(
+          any(),
+          operation: any(named: 'operation'),
+          stackTrace: any(named: 'stackTrace'),
+          context: any(named: 'context'),
+        ),
+      ).thenAnswer((_) async {});
+      supportDir = await _tempDir.createTemp('support_');
+      store = TrackingQueuePhotoStore(baseDirectory: () async => supportDir);
+      reported = OfflineSyncService(
+        _hiveService,
+        mockRepo,
+        reporter,
+        DateTime.now,
+        ScanSendGuard(),
+        store,
+      );
+    });
+
+    test('fichier absent : étape postée sans photo, entrée retirée, '
+        'un seul avertissement, utilisateur prévenu', () async {
+      when(
+        () => mockRepo.uploadTrackingPhoto(any(), any()),
+      ).thenThrow(const PathNotFoundException('/tmp/gone.jpg', OSError()));
+      stubPost();
+      // Ancienne entrée : chemin absolu dans le cache, purgé depuis.
+      await OfflineSyncService(_hiveService, mockRepo).queueScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        photoPath: '/tmp/gone.jpg',
+      );
+
+      await reported.syncAll();
+
+      verifyPosted(photoUrl: isNull);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      final captured = verify(
+        () => reporter.report(
+          captureAny(),
+          operation: captureAny(named: 'operation'),
+          stackTrace: any(named: 'stackTrace'),
+          context: captureAny(named: 'context'),
+        ),
+      ).captured;
+      expect(captured, hasLength(3));
+      expect(captured[0], isA<TrackingPhotoLostError>());
+      expect(
+        (captured[0] as TrackingPhotoLostError).reportSeverity,
+        ReportSeverity.warning,
+      );
+      expect(captured[1], 'tracking.photo_lost');
+      expect((captured[2] as Map)['tracking_step'], 'DEPART');
+      expect(reported.lostPhotosFor({'bid-1'}), [
+        const LostTrackingPhoto(bidId: 'bid-1', eventType: 'DEPART'),
+      ]);
+      expect(reported.lostPhotosFor({'bid-2'}), isEmpty);
+    });
+
+    test('photo perdue puis panne réseau : la photo n\'est plus cherchée, '
+        'rien n\'est remonté au nouvel essai', () async {
+      when(
+        () => mockRepo.uploadTrackingPhoto(any(), any()),
+      ).thenThrow(const PathNotFoundException('/tmp/gone.jpg', OSError()));
+      stubPost(
+        error: DioException(
+          requestOptions: RequestOptions(path: '/tracking/events'),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+      await OfflineSyncService(_hiveService, mockRepo).queueScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        photoPath: '/tmp/gone.jpg',
+      );
+
+      await reported.syncAll();
+      expect(reported.pendingCount, 1);
+      final entry = _hiveService.offlineQueue.values.single;
+      expect(entry.containsKey('photoPath'), isFalse);
+      expect(reports(), hasLength(1));
+
+      stubPost();
+      await reported.syncAll();
+
+      verify(() => mockRepo.uploadTrackingPhoto(any(), any())).called(1);
+      verifyPosted(photoUrl: isNull, times: 2);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      verifyNever(
+        () => reporter.report(
+          any(),
+          operation: any(named: 'operation'),
+          stackTrace: any(named: 'stackTrace'),
+          context: any(named: 'context'),
+        ),
+      );
+      expect(reported.lostPhotosFor({'bid-1'}), hasLength(1));
+    });
+
+    test(
+      'fichier disparu pendant l\'envoi (Dio) : étape postée sans photo',
+      () async {
+        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/storage/upload/tracking'),
+            error: const FileSystemException('gone'),
+          ),
+        );
+        stubPost();
+        final key = await reported.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoPath: (await photo('depart.jpg')).path,
+          notBefore: DateTime.now().add(const Duration(minutes: 1)),
+        );
+
+        final sent = await reported.sendScheduled(key);
+
+        expect(sent, isNotNull);
+        expect(sent!.photoDropped, isFalse);
+        verifyPosted(photoUrl: isNull);
+        expect(reported.lostPhotosFor({'bid-1'}), hasLength(1));
+      },
+    );
+
+    test('la photo est copiée hors du cache, envoyée depuis la copie, '
+        'puis supprimée', () async {
+      final original = await photo('transit.jpg');
+      String? uploadedPath;
+      bool? existedAtUpload;
+      when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenAnswer((
+        invocation,
+      ) async {
+        uploadedPath = invocation.positionalArguments[1] as String;
+        existedAtUpload = File(uploadedPath!).existsSync();
+        return 'tracking/bid-1/1_DEPART.jpg';
+      });
+      stubPost();
+
+      await reported.queueScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        photoPath: original.path,
+      );
+      final entry = _hiveService.offlineQueue.values.single;
+      expect(entry.containsKey('photoPath'), isFalse);
+      expect(entry['photoFile'], endsWith('_transit.jpg'));
+      // Le cache purgé ne fait plus rien perdre.
+      await original.delete();
+
+      await reported.syncAll();
+
+      expect(existedAtUpload, isTrue);
+      expect(
+        uploadedPath,
+        startsWith('${supportDir.path}/${TrackingQueuePhotoStore.folder}/'),
+      );
+      verifyPosted(photoUrl: equals('tracking/bid-1/1_DEPART.jpg'));
+      expect(File(uploadedPath!).existsSync(), isFalse);
+      expect(reported.lostPhotosFor({'bid-1'}), isEmpty);
+    });
+
+    test('discard supprime aussi la copie de la photo', () async {
+      final key = await reported.queueScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        photoPath: (await photo('annule.jpg')).path,
+      );
+      final name = _hiveService.offlineQueue.get(key)!['photoFile'] as String;
+      final copy = File(await store.resolve(name));
+      expect(copy.existsSync(), isTrue);
+
+      await reported.discard(key);
+
+      expect(copy.existsSync(), isFalse);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+
+    test(
+      'refus définitif de l\'étape : copie supprimée avec l\'entrée',
+      () async {
+        when(
+          () => mockRepo.uploadTrackingPhoto(any(), any()),
+        ).thenAnswer((_) async => 'tracking/bid-1/1_DEPART.jpg');
+        stubPost(
+          error: DioException(
+            requestOptions: RequestOptions(path: '/tracking/events'),
+            error: const ConflictException('Hors séquence', code: 'x'),
+          ),
+        );
+        final key = await reported.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoPath: (await photo('refus.jpg')).path,
+        );
+        final name = _hiveService.offlineQueue.get(key)!['photoFile'] as String;
+
+        await reported.syncAll();
+
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+        expect(File(await store.resolve(name)).existsSync(), isFalse);
+      },
+    );
+
+    test('dismissLostPhoto retire le message et notifie', () async {
+      await _hiveService.userPrefs.put(OfflineSyncService.lostPhotosKey, [
+        {'bidId': 'bid-1', 'eventType': 'DEPART'},
+        {'bidId': 'bid-1', 'eventType': 'TRANSIT'},
+        'illisible',
+      ]);
+      var calls = 0;
+      void listener() => calls++;
+      reported.lostPhotoChanges.addListener(listener);
+      addTearDown(() => reported.lostPhotoChanges.removeListener(listener));
+
+      expect(reported.lostPhotosFor({'bid-1'}), hasLength(2));
+      await reported.dismissLostPhoto(
+        const LostTrackingPhoto(bidId: 'bid-1', eventType: 'DEPART'),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(reported.lostPhotosFor({'bid-1'}), [
+        const LostTrackingPhoto(bidId: 'bid-1', eventType: 'TRANSIT'),
+      ]);
+      expect(calls, greaterThan(0));
+    });
+
+    test('LostTrackingPhoto : égalité et lecture défensive', () {
+      const a = LostTrackingPhoto(bidId: 'b', eventType: 'DEPART');
+      expect(a, const LostTrackingPhoto(bidId: 'b', eventType: 'DEPART'));
+      expect(a.hashCode, Object.hash('b', 'DEPART'));
+      expect(a == const LostTrackingPhoto(bidId: 'b', eventType: 'X'), isFalse);
+      expect(LostTrackingPhoto.fromJson({'bidId': 1}), isNull);
+      expect(LostTrackingPhoto.fromJson(null), isNull);
+      expect(const TrackingPhotoLostError().toString(), contains('Lost'));
+    });
   });
 
   group('dispose', () {
