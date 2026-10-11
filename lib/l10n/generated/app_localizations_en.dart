@@ -15283,6 +15283,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackingStepHandoverToRecipient => 'Handover to the recipient';
 
   @override
+  String get trackingPhotoPurged => 'Photo deleted after delivery';
+
+  @override
   String get trackingStepPhotoLabel => 'Step photo';
 
   @override

@@ -25262,6 +25262,12 @@ abstract class AppLocalizations {
   /// **'Remise au destinataire'**
   String get trackingStepHandoverToRecipient;
 
+  /// Frise de suivi : la photo de l'étape a été supprimée par le serveur après la livraison (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo supprimée après livraison'**
+  String get trackingPhotoPurged;
+
   /// Libellé d'accessibilité de la miniature photo d'une étape (tracking_timeline_bottom_sheet.dart).
   ///
   /// In fr, this message translates to:

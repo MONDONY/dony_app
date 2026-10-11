@@ -8494,6 +8494,10 @@
   "@trackingStepHandoverToRecipient": {
     "description": "Dernière étape à venir de la frise (tracking_timeline_bottom_sheet.dart)."
   },
+  "trackingPhotoPurged": "Photo deleted after delivery",
+  "@trackingPhotoPurged": {
+    "description": "Frise de suivi : la photo de l'étape a été supprimée par le serveur après la livraison (tracking_timeline_bottom_sheet.dart)."
+  },
   "trackingStepPhotoLabel": "Step photo",
   "@trackingStepPhotoLabel": {
     "description": "Libellé d'accessibilité de la miniature photo d'une étape (tracking_timeline_bottom_sheet.dart)."

@@ -15379,6 +15379,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trackingStepHandoverToRecipient => 'Remise au destinataire';
 
   @override
+  String get trackingPhotoPurged => 'Photo supprimée après livraison';
+
+  @override
   String get trackingStepPhotoLabel => 'Photo de l\'étape';
 
   @override
