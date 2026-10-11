@@ -40,6 +40,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   final _pausedNotifier = ValueNotifier<bool>(false);
   final _torchOn = ValueNotifier<bool>(false);
 
+  /// Feuille de confirmation affichée : c'est elle qui se ferme sur
+  /// QrScanSuccess / QrScanQueued et renvoie l'état en résultat ; l'écran
+  /// n'ouvre son dialogue qu'une fois la feuille retirée. Sans ce relais,
+  /// l'écran et la feuille faisaient chacun un `pop`, et le second retirait
+  /// le dialogue à peine ouvert. Pas d'impact sur le rendu : simple champ.
+  bool _sheetOpen = false;
+
   @override
   void dispose() {
     _detectedNotifier.dispose();
@@ -64,7 +71,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     ScanMethod method, {
     String? trackingNumber,
   }) {
-    showModalBottomSheet<void>(
+    _sheetOpen = true;
+    showModalBottomSheet<TrackingState>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -95,7 +103,22 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           },
         ),
       ),
-    );
+    ).then((result) {
+      _sheetOpen = false;
+      if (!mounted) return;
+      _showScanOutcome(result);
+    });
+  }
+
+  /// Dialogue de fin de scan (succès ou file d'attente hors ligne).
+  void _showScanOutcome(TrackingState? state) {
+    final l = context.l10n;
+    if (state is QrScanSuccess) {
+      if (state.photoDropped) warnTrackingPhotoDropped(context);
+      _showSuccessDialog(state.event.eventType, state.event.stepLabel(l));
+    } else if (state is QrScanQueued) {
+      _showQueuedDialog();
+    }
   }
 
   @override
@@ -104,15 +127,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     final l = context.l10n;
 
     return BlocListener<TrackingBloc, TrackingState>(
+      listenWhen: (_, state) =>
+          !_sheetOpen && (state is QrScanSuccess || state is QrScanQueued),
       listener: (context, state) {
-        if (state is QrScanSuccess) {
-          if (state.photoDropped) warnTrackingPhotoDropped(context);
-          context.pop(); // close sheet
-          _showSuccessDialog(state.event.eventType, state.event.stepLabel(l));
-        } else if (state is QrScanQueued) {
-          context.pop(); // close sheet
-          _showQueuedDialog();
-        }
+        // Feuille fermée : on garde le comportement historique. Feuille
+        // ouverte : elle se ferme elle-même et _showScanOutcome prend le
+        // relais une fois retirée (cf. _sheetOpen).
+        context.pop();
+        _showScanOutcome(state);
       },
       child: Scaffold(
         backgroundColor: DonyColors.ink900,
@@ -728,7 +750,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
             context.pop();
             widget.onDeliveryConfirmed?.call(state.event.bidId);
           } else if (state is QrScanSuccess || state is QrScanQueued) {
-            context.pop();
+            // Seul pop de la feuille : l'écran ouvre son dialogue quand le
+            // résultat lui revient (voir _QrScannerScreenState._sheetOpen).
+            context.pop(state);
             widget.onClose();
           }
         },
