@@ -1,10 +1,15 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 /// Issue de l'envoi de la photo d'une étape : sa clé de stockage, ou
-/// [dropped] quand le serveur l'a refusée et que l'étape part sans elle.
-typedef TrackingPhotoUpload = ({String? key, bool dropped});
+/// [dropped] quand le serveur l'a refusée et que l'étape part sans elle, ou
+/// [lost] quand le fichier local n'existe plus (cache purgé par le système,
+/// réinstallation) et que l'étape part sans elle (FLUTTER-MJ).
+typedef TrackingPhotoUpload = ({String? key, bool dropped, bool lost});
 
 /// Vrai quand le back a refusé l'envoi pour une raison qui ne dépend pas
 /// du réseau ni du moment : la même requête échouerait à l'identique.
@@ -37,7 +42,8 @@ bool isTrackingPhotoRefused(AppException error) => switch (error) {
 
 /// Envoie la photo de l'étape si [photoPath] existe. Une photo refusée par
 /// le serveur n'empêche jamais l'étape : elle part sans photo (le scan
-/// d'arrivée déclenche la capture du paiement, le perdre est grave).
+/// d'arrivée déclenche la capture du paiement, le perdre est grave). Une
+/// photo dont le fichier local a disparu non plus ([TrackingPhotoUpload.lost]).
 ///
 /// Panne réseau, délai, 5xx, session expirée, limite de débit : l'erreur
 /// remonte et l'appelant garde l'étape pour plus tard.
@@ -46,13 +52,24 @@ Future<TrackingPhotoUpload> uploadTrackingPhotoOrDrop(
   required String bidId,
   required String? photoPath,
 }) async {
-  if (photoPath == null) return (key: null, dropped: false);
+  if (photoPath == null) return (key: null, dropped: false, lost: false);
   try {
     final key = await repository.uploadTrackingPhoto(bidId, photoPath);
-    return (key: key, dropped: false);
+    return (key: key, dropped: false, lost: false);
+  } on FileSystemException {
+    // FLUTTER-MJ : photo locale disparue (PathNotFoundException). Le back
+    // accepte toutes les étapes sans photo : réessayer ne la ferait pas
+    // revenir, l'étape part sans elle.
+    return (key: null, dropped: false, lost: true);
   } catch (error) {
+    // Fichier disparu pendant l'envoi : Dio enveloppe l'erreur de lecture.
+    if (error is DioException && error.error is FileSystemException) {
+      return (key: null, dropped: false, lost: true);
+    }
     final cause = unwrapDioError(error);
-    if (isTrackingPhotoRefused(cause)) return (key: null, dropped: true);
+    if (isTrackingPhotoRefused(cause)) {
+      return (key: null, dropped: true, lost: false);
+    }
     if (isDefinitiveTrackingRejection(cause)) {
       // Refus définitif inattendu de la seule photo : l'étape part quand
       // même, et le cas reste visible dans les journaux.
@@ -60,7 +77,7 @@ Future<TrackingPhotoUpload> uploadTrackingPhotoOrDrop(
         'tracking.photo_refused',
         data: {'type': cause.runtimeType.toString(), 'code': ?cause.code},
       );
-      return (key: null, dropped: true);
+      return (key: null, dropped: true, lost: false);
     }
     rethrow;
   }

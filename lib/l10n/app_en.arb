@@ -9645,5 +9645,9 @@
   "requestPosterCaptionFooter": "Secure payment, parcel tracking by QR code.",
   "requestPosterShareSubject": "Parcel {departure} to {arrival}",
   "tripPosterPayment": "Payment",
-  "tripPosterCaptionPayment": "Payment: {methods}"
+  "tripPosterCaptionPayment": "Payment: {methods}",
+  "suiviPhotoLost": "The photo for the “{step}” step is no longer available on this phone: the step was recorded without a photo.",
+  "@suiviPhotoLost": {"description": "Onglet Suivi : une étape de la file hors ligne est partie sans sa photo, dont le fichier local a disparu (cache purgé, FLUTTER-MJ). step = libellé d'étape traduit.", "placeholders": {"step": {"type": "String"}}},
+  "suiviPhotoLostDismiss": "Close the lost photo message",
+  "@suiviPhotoLostDismiss": {"description": "Libellé d'accessibilité du bouton qui ferme le message de photo perdue (onglet Suivi)"}
 }

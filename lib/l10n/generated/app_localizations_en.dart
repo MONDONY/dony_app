@@ -18231,4 +18231,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String tripPosterCaptionPayment(String methods) {
     return 'Payment: $methods';
   }
+
+  @override
+  String suiviPhotoLost(String step) {
+    return 'The photo for the “$step” step is no longer available on this phone: the step was recorded without a photo.';
+  }
+
+  @override
+  String get suiviPhotoLostDismiss => 'Close the lost photo message';
 }

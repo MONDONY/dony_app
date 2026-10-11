@@ -9,9 +9,12 @@ import 'package:dony/features/calls/data/audio_output_choice.dart';
 import 'package:dony/features/calls/data/call_flow.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/models/call_token.dart';
+import 'package:dony/features/notifications/data/fcm_token_retry.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'
+    show FirebaseMessaging;
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/rxdart.dart' show CompositeSubscription;
@@ -26,7 +29,13 @@ import 'package:stream_video_push_notification/stream_video_push_notification.da
 /// Non couvert par les tests unitaires (le SDK exige les plugins natifs WebRTC
 /// et CallKit) : vérifié en recette sur appareil.
 class StreamCallGateway implements CallGateway {
+  StreamCallGateway({FcmTokenRetry? tokenRetry})
+    : _tokenRetry = tokenRetry ?? FcmTokenRetry();
+
   static const _callType = 'audio_call';
+
+  /// Jeton FCM lu pour Stream sans jamais lever (FLUTTER-N1).
+  final FcmTokenRetry _tokenRetry;
 
   /// Absence tolérée de l'autre partie (coupure réseau) avant de conclure
   /// qu'elle a raccroché.
@@ -84,7 +93,7 @@ class StreamCallGateway implements CallGateway {
       tokenLoader: (_) => tokenLoader(),
       failIfSingletonExists: false,
       options: StreamVideoOptions(keepConnectionsAliveWhenInBackground: true),
-      pushNotificationManagerProvider: _pushManager(),
+      pushNotificationManagerProvider: _pushManager(_tokenRetry),
     );
     final result = await client.connect();
     if (result.isFailure) {
@@ -453,7 +462,7 @@ Future<void> handleStreamVideoBackgroundPush(Map<String, dynamic> data) async {
       user: User.regular(userId: token.userId),
       userToken: token.token,
       failIfSingletonExists: false,
-      pushNotificationManagerProvider: _pushManager(),
+      pushNotificationManagerProvider: _pushManager(FcmTokenRetry()),
     );
     final ringing = client.observeCoreRingingEventsForBackground();
     client.disposeAfterResolvingRinging(disposingCallback: ringing.cancel);
@@ -463,14 +472,22 @@ Future<void> handleStreamVideoBackgroundPush(Map<String, dynamic> data) async {
   }
 }
 
-PNManagerProvider _pushManager() => StreamVideoPushNotificationManager.create(
-  iosPushProvider: StreamVideoPushProvider.apn(name: streamIosPushProvider),
-  androidPushProvider: StreamVideoPushProvider.firebase(
-    name: streamAndroidPushProvider,
-  ),
-  pushConfiguration: const StreamVideoPushConfiguration(
-    android: AndroidPushConfiguration(
-      telecom: TelecomPushConfiguration(enabled: true),
-    ),
-  ),
-);
+/// Le flux de jetons par défaut du SDK lève sur un échec de `getToken()`,
+/// et le SDK l'écoute sans gérer ses erreurs : crash non géré (FLUTTER-N1).
+/// [tokenRetry] fournit un flux qui réessaie et n'émet jamais d'erreur.
+PNManagerProvider _pushManager(FcmTokenRetry tokenRetry) =>
+    StreamVideoPushNotificationManager.create(
+      iosPushProvider: StreamVideoPushProvider.apn(name: streamIosPushProvider),
+      androidPushProvider: StreamVideoPushProvider.firebase(
+        name: streamAndroidPushProvider,
+        tokenStreamProvider: () => tokenRetry.tokenStream(
+          getToken: () => FirebaseMessaging.instance.getToken(),
+          onTokenRefresh: () => FirebaseMessaging.instance.onTokenRefresh,
+        ),
+      ),
+      pushConfiguration: const StreamVideoPushConfiguration(
+        android: AndroidPushConfiguration(
+          telecom: TelecomPushConfiguration(enabled: true),
+        ),
+      ),
+    );

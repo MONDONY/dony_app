@@ -182,7 +182,12 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
         gpsLon: event.gpsLon,
         gpsLabel: event.gpsLabel,
       );
-      emit(DeliveryConfirmSuccess(result, photoDropped: photo.dropped));
+      emit(
+        DeliveryConfirmSuccess(
+          result,
+          photoDropped: photo.dropped || photo.lost,
+        ),
+      );
     } catch (e) {
       if (kDebugMode) debugPrint('[TrackingBloc] confirmDelivery error: $e');
       emit(DeliveryConfirmError(unwrapDioError(e)));

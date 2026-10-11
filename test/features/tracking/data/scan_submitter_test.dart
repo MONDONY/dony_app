@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
@@ -181,6 +183,29 @@ void main() {
       photoPath: '/tmp/p.jpg',
     );
     expect((result as ScanSubmitSent).photoDropped, isTrue);
+  });
+
+  test('photo disparue du téléphone : étape envoyée sans photo '
+      '(FLUTTER-MJ)', () async {
+    when(
+      () => repo.uploadTrackingPhoto(any(), any()),
+    ).thenThrow(const PathNotFoundException('/tmp/p.jpg', OSError()));
+    final result = await build().submit(
+      bidId: 'bid-1',
+      eventType: 'TRANSIT',
+      photoPath: '/tmp/p.jpg',
+    );
+    expect((result as ScanSubmitSent).photoDropped, isTrue);
+    verify(
+      () => repo.postScan(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoUrl: any(named: 'photoUrl', that: isNull),
+      ),
+    ).called(1);
   });
 
   test('photo envoyée : photoDropped faux', () async {

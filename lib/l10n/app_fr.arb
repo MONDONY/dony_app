@@ -20023,5 +20023,9 @@
   "tripPosterPayment": "Paiement",
   "@tripPosterPayment": {"description": "Libellé de la ligne des moyens de paiement acceptés sur l'affiche de trajet"},
   "tripPosterCaptionPayment": "Paiement : {methods}",
-  "@tripPosterCaptionPayment": {"description": "Ligne des moyens de paiement dans la légende de l'affiche de trajet", "placeholders": {"methods": {"type": "String"}}}
+  "@tripPosterCaptionPayment": {"description": "Ligne des moyens de paiement dans la légende de l'affiche de trajet", "placeholders": {"methods": {"type": "String"}}},
+  "suiviPhotoLost": "La photo de l'étape « {step} » n'est plus disponible sur ce téléphone : l'étape a été enregistrée sans photo.",
+  "@suiviPhotoLost": {"description": "Onglet Suivi : une étape de la file hors ligne est partie sans sa photo, dont le fichier local a disparu (cache purgé, FLUTTER-MJ). step = libellé d'étape traduit.", "placeholders": {"step": {"type": "String"}}},
+  "suiviPhotoLostDismiss": "Fermer le message sur la photo perdue",
+  "@suiviPhotoLostDismiss": {"description": "Libellé d'accessibilité du bouton qui ferme le message de photo perdue (onglet Suivi)"}
 }

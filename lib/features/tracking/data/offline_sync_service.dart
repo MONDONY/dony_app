@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/report_severity.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
@@ -10,6 +11,7 @@ import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/scan_send_guard.dart';
 import 'package:dony/features/tracking/data/tracking_photo_upload.dart';
+import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -20,6 +22,45 @@ final class SentScan {
   const SentScan(this.event, {this.photoDropped = false});
   final TrackingEventModel event;
   final bool photoDropped;
+}
+
+/// Étape partie sans sa photo parce que le fichier local avait disparu
+/// (FLUTTER-MJ). Gardée jusqu'à ce que l'utilisateur ferme le message.
+final class LostTrackingPhoto {
+  const LostTrackingPhoto({required this.bidId, required this.eventType});
+  final String bidId;
+  final String eventType;
+
+  Map<String, String> toJson() => {'bidId': bidId, 'eventType': eventType};
+
+  static LostTrackingPhoto? fromJson(Object? raw) {
+    if (raw is! Map) return null;
+    final bidId = raw['bidId'];
+    final eventType = raw['eventType'];
+    if (bidId is! String || eventType is! String) return null;
+    return LostTrackingPhoto(bidId: bidId, eventType: eventType);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is LostTrackingPhoto &&
+      other.bidId == bidId &&
+      other.eventType == eventType;
+
+  @override
+  int get hashCode => Object.hash(bidId, eventType);
+}
+
+/// Photo d'une étape en file disparue du téléphone : remontée une seule
+/// fois, en avertissement (l'étape part quand même, sans elle).
+final class TrackingPhotoLostError implements SeverityAwareError {
+  const TrackingPhotoLostError();
+
+  @override
+  ReportSeverity get reportSeverity => ReportSeverity.warning;
+
+  @override
+  String toString() => 'TrackingPhotoLostError';
 }
 
 /// File Hive des étapes pas encore reçues par le back : scans faits hors
@@ -35,6 +76,13 @@ class OfflineSyncService {
   final ErrorReportingService? _errorReporter;
   final DateTime Function() _now;
   final ScanSendGuard _guard;
+
+  /// Copies persistantes des photos de la file. `null` (tests) : la file
+  /// garde le chemin d'origine de la photo.
+  final TrackingQueuePhotoStore? _photos;
+
+  /// Clé des étapes parties sans leur photo disparue, dans `user_prefs`.
+  static const lostPhotosKey = 'tracking_lost_photos';
 
   StreamSubscription<List<ConnectivityResult>>? _sub;
   bool _syncing = false;
@@ -52,6 +100,7 @@ class OfflineSyncService {
     this._errorReporter,
     this._now = DateTime.now,
     ScanSendGuard? guard,
+    this._photos,
   ]) : _guard = guard ?? ScanSendGuard.shared;
 
   void startListening() {
@@ -108,14 +157,19 @@ class OfflineSyncService {
     ScanMethod? scanMethod,
     String? trackingNumber,
     DateTime? notBefore,
-  }) {
+  }) async {
+    // Copiée hors du cache temporaire, que le système purge (FLUTTER-MJ).
+    final photoFile = photoPath == null ? null : await _photos?.keep(photoPath);
     final entry = <String, dynamic>{
       'bidId': bidId,
       'eventType': eventType,
       'gpsLat': ?gpsLat,
       'gpsLon': ?gpsLon,
       'gpsLabel': ?gpsLabel,
-      'photoPath': ?photoPath,
+      if (photoFile != null)
+        'photoFile': photoFile
+      else
+        'photoPath': ?photoPath,
       // Absent des entrées mises en file avant la provenance : rien n'est
       // alors envoyé au back.
       'scanMethod': ?scanMethod?.wire,
@@ -129,7 +183,77 @@ class OfflineSyncService {
   }
 
   /// Retire l'entrée [key] de la file : elle ne partira pas (« Annuler »).
-  Future<void> discard(int key) => _hive.offlineQueue.delete(key);
+  Future<void> discard(int key) => _delete(key, _hive.offlineQueue.get(key));
+
+  /// Retire l'entrée de la file avec sa copie de photo.
+  Future<void> _delete(Object? key, Map? entry) async {
+    await _hive.offlineQueue.delete(key);
+    await _photos?.remove(entry?['photoFile'] as String?);
+  }
+
+  /// Étapes de ces colis parties sans leur photo, disparue du téléphone.
+  List<LostTrackingPhoto> lostPhotosFor(Set<String> bidIds) => [
+    for (final lost in _lostPhotos())
+      if (bidIds.contains(lost.bidId)) lost,
+  ];
+
+  /// Notifie chaque photo perdue ajoutée ou message fermé.
+  Listenable get lostPhotoChanges =>
+      _hive.userPrefs.listenable(keys: [lostPhotosKey]);
+
+  /// L'utilisateur a lu le message : il disparaît.
+  Future<void> dismissLostPhoto(LostTrackingPhoto lost) =>
+      _hive.userPrefs.put(lostPhotosKey, [
+        for (final other in _lostPhotos())
+          if (other != lost) other.toJson(),
+      ]);
+
+  List<LostTrackingPhoto> _lostPhotos() {
+    final raw = _hive.userPrefs.get(lostPhotosKey);
+    if (raw is! List) return const [];
+    return [for (final item in raw) ?LostTrackingPhoto.fromJson(item)];
+  }
+
+  /// FLUTTER-MJ : le fichier de la photo n'existe plus. L'entrée oublie sa
+  /// photo (un nouvel essai ne la cherchera plus et ne remontera rien), le
+  /// cas est remonté une seule fois et l'utilisateur prévenu.
+  Future<void> _forgetLostPhoto(Object? key, Map<String, dynamic> entry) async {
+    final lost = LostTrackingPhoto(
+      bidId: entry['bidId'] as String,
+      eventType: entry['eventType'] as String,
+    );
+    final photoFile = entry.remove('photoFile') as String?;
+    entry.remove('photoPath');
+    if (_hive.offlineQueue.containsKey(key)) {
+      await _hive.offlineQueue.put(key, entry);
+    }
+    await _photos?.remove(photoFile);
+    final known = _lostPhotos();
+    if (!known.contains(lost)) {
+      await _hive.userPrefs.put(lostPhotosKey, [
+        for (final other in known) other.toJson(),
+        lost.toJson(),
+      ]);
+    }
+    unawaited(
+      _errorReporter?.report(
+        const TrackingPhotoLostError(),
+        operation: 'tracking.photo_lost',
+        context: {
+          'feature': 'tracking',
+          'channel': 'offline',
+          'tracking_step': lost.eventType,
+        },
+      ),
+    );
+  }
+
+  Future<String?> _photoPathOf(Map<String, dynamic> entry) async {
+    final photoFile = entry['photoFile'] as String?;
+    final photos = _photos;
+    if (photoFile != null && photos != null) return photos.resolve(photoFile);
+    return entry['photoPath'] as String?;
+  }
 
   /// Envoie tout de suite l'entrée [key], sans attendre son échéance, avec
   /// la [position] relevée entre-temps (écrite dans l'entrée avant l'envoi).
@@ -248,9 +372,10 @@ class OfflineSyncService {
           final photo = await uploadTrackingPhotoOrDrop(
             _repository,
             bidId: bidId,
-            photoPath: entry['photoPath'] as String?,
+            photoPath: await _photoPathOf(entry),
           );
           photoDropped = photo.dropped;
+          if (photo.lost) await _forgetLostPhoto(key, entry);
           return _repository.postScan(
             bidId: bidId,
             eventType: eventType,
@@ -266,7 +391,7 @@ class OfflineSyncService {
           );
         },
       );
-      await _hive.offlineQueue.delete(key);
+      await _delete(key, entry);
       return SentScan(event, photoDropped: photoDropped);
     } catch (error) {
       if (isDefinitiveRejection(unwrapDioError(error))) {
@@ -274,7 +399,7 @@ class OfflineSyncService {
         // rejouer l'entrée à chaque retour du réseau ne changera rien et
         // gonflait Sentry côté back d'un 500 par tentative
         // (YADONY-BACK-STAGING-8, deux évènements à 8 s d'écart).
-        await _hive.offlineQueue.delete(key);
+        await _delete(key, entry);
       }
       rethrow;
     }

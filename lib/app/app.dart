@@ -38,6 +38,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/notifications/data/fcm_token_retry.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
@@ -153,6 +154,8 @@ class _DonyAppState extends State<DonyApp> {
     });
     _lifecycleListener = AppLifecycleListener(
       onResume: () {
+        // Jeton FCM resté indisponible (FLUTTER-N1) : nouvel essai.
+        getIt<FcmTokenRetry>().notifyRetryOpportunity();
         unawaited(getIt<NotificationService>().onAppResumed());
       },
     );
