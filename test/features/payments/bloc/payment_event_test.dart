@@ -2,6 +2,8 @@
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/value_equality.dart';
+
 void main() {
   group('PaymentConnectAccountRequested', () {
     test('props is empty', () {
@@ -29,6 +31,37 @@ void main() {
   group('PaymentSheetCompleted', () {
     test('props is empty', () {
       expect(PaymentSheetCompleted().props, isEmpty);
+    });
+  });
+
+  group('BidCheckoutPaymentRequested', () {
+    BidCheckoutPaymentRequested make({
+      double amount = 42,
+      String currency = 'EUR',
+      List<String> types = const ['card'],
+    }) => BidCheckoutPaymentRequested(
+      clientSecret: 'pi_secret',
+      publishableKey: 'pk',
+      bidId: 'bid-001',
+      amountEur: amount,
+      currencyCode: currency,
+      paymentMethodTypes: types,
+    );
+
+    test('égalité sur tous les champs du paiement', () {
+      expectValueEquality(make, [
+        make(amount: 43),
+        make(currency: 'XOF'),
+        make(types: const ['card', 'paypal']),
+      ]);
+    });
+  });
+
+  group('PaymentOnboardingRefreshRequested', () {
+    test('sans champ, distinct de la vérification de statut', () {
+      expectValueEquality(() => PaymentOnboardingRefreshRequested(), [
+        PaymentOnboardingStatusChecked(),
+      ]);
     });
   });
 
