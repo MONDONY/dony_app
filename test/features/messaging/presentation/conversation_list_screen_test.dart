@@ -8,6 +8,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
+import 'package:dony/features/messaging/bloc/conversation_selection/conversation_selection_cubit.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/conversation_list_screen.dart';
 import 'package:dony/features/support/bloc/support_summary_cubit.dart';
@@ -159,10 +160,21 @@ void main() {
     }
     getIt.registerLazySingleton<SupportUnreadCubit>(() => supportUnreadCubit);
     getIt.registerLazySingleton<SupportSummaryCubit>(() => supportSummaryCubit);
+    if (getIt.isRegistered<ConversationSelectionCubit>()) {
+      getIt.unregister<ConversationSelectionCubit>();
+    }
+    getIt.registerFactoryParam<
+      ConversationSelectionCubit,
+      ConversationSelectionSource,
+      void
+    >((source, _) => ConversationSelectionCubit(source: source));
   });
 
   tearDown(() async {
     await bloc.close();
+    if (getIt.isRegistered<ConversationSelectionCubit>()) {
+      getIt.unregister<ConversationSelectionCubit>();
+    }
     if (getIt.isRegistered<SupportUnreadCubit>()) {
       getIt.unregister<SupportUnreadCubit>();
     }
@@ -861,5 +873,331 @@ void main() {
         ).called(1);
       },
     );
+  });
+
+  group('sélection multiple (FLUTTER-M4)', () {
+    final delivered = ConversationModel(
+      id: 'conv-6',
+      bidId: 'bid-6',
+      firestoreConversationId: 'conv_bid-6',
+      otherParticipant: const ParticipantModel(id: 'uid-6', name: 'Mariam'),
+      lastMessageAt: DateTime.now(),
+      bidStatus: 'DELIVERY_CONFIRMED',
+    );
+    final cancelled = ConversationModel(
+      id: 'conv-7',
+      bidId: 'bid-7',
+      firestoreConversationId: 'conv_bid-7',
+      otherParticipant: const ParticipantModel(id: 'uid-7', name: 'Ibrahim'),
+      lastMessageAt: DateTime.now(),
+      parcelStatus: 'CANCELLED',
+    );
+
+    Future<void> enterSelection(WidgetTester tester, String name) async {
+      await tester.longPress(find.text(name));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'appui long : cases, compteur, en-tête remplacé, fermeture par la croix',
+      (tester) async {
+        when(
+          () => bloc.state,
+        ).thenReturn(ConversationListLoaded([_conv, _convDaysAgo]));
+        await _pump(tester, bloc);
+
+        await enterSelection(tester, 'Aïcha Bah');
+
+        expect(find.text('1 sélectionnée'), findsOneWidget);
+        expect(find.text('Messages'), findsNothing);
+        expect(find.byKey(const Key('conversation-select-conv-1')), findsOne);
+        expect(find.byKey(const Key('conversation-select-conv-3')), findsOne);
+
+        // En mode sélection, le tap coche au lieu d'ouvrir le chat.
+        await tester.tap(find.text('Fatoumata'));
+        await tester.pumpAndSettle();
+        expect(find.text('2 sélectionnées'), findsOneWidget);
+        expect(find.text('Chat'), findsNothing);
+
+        await tester.tap(find.text('Fatoumata'));
+        await tester.pumpAndSettle();
+        expect(find.text('1 sélectionnée'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('conversation-selection-close')));
+        await tester.pumpAndSettle();
+        expect(find.text('Messages'), findsOneWidget);
+        expect(
+          find.byKey(const Key('conversation-select-conv-1')),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets('décocher la dernière conversation referme le mode', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await _pump(tester, bloc);
+
+      await enterSelection(tester, 'Aïcha Bah');
+      await tester.tap(find.text('Aïcha Bah'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('conversation-selection-bar')), findsNothing);
+      expect(find.text('Messages'), findsOneWidget);
+    });
+
+    testWidgets('« Archiver » envoie tout le lot et ferme le mode', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(ConversationListLoaded([_conv, _convDaysAgo]));
+      await _pump(tester, bloc);
+
+      await enterSelection(tester, 'Aïcha Bah');
+      await tester.tap(find.text('Fatoumata'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('conversation-batch-archive')));
+      await tester.pumpAndSettle();
+
+      final event =
+          verify(
+                () => bloc.add(
+                  captureAny(that: isA<ConversationsBatchArchiveRequested>()),
+                ),
+              ).captured.single
+              as ConversationsBatchArchiveRequested;
+      expect(event.conversationIds.toSet(), {'conv-1', 'conv-3'});
+      expect(find.byKey(const Key('conversation-selection-bar')), findsNothing);
+    });
+
+    testWidgets(
+      '« Supprimer » : dialogue avec le nombre, rien sans confirmation',
+      (tester) async {
+        when(
+          () => bloc.state,
+        ).thenReturn(ConversationListLoaded([_conv, _convDaysAgo]));
+        await _pump(tester, bloc);
+
+        await enterSelection(tester, 'Aïcha Bah');
+        await tester.tap(find.text('Fatoumata'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('conversation-batch-delete')));
+        await tester.pumpAndSettle();
+        expect(find.text('Supprimer 2 conversations ?'), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const Key('conversation-batch-delete-cancel')),
+        );
+        await tester.pumpAndSettle();
+        verifyNever(
+          () => bloc.add(any(that: isA<ConversationsBatchDeleteRequested>())),
+        );
+        expect(find.text('2 sélectionnées'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('conversation-batch-delete')));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const Key('conversation-batch-delete-confirm')),
+        );
+        await tester.pumpAndSettle();
+
+        final event =
+            verify(
+                  () => bloc.add(
+                    captureAny(that: isA<ConversationsBatchDeleteRequested>()),
+                  ),
+                ).captured.single
+                as ConversationsBatchDeleteRequested;
+        expect(event.conversationIds.toSet(), {'conv-1', 'conv-3'});
+        expect(
+          find.byKey(const Key('conversation-selection-bar')),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      '« Sélectionner les terminées » coche les colis livrés ou annulés',
+      (tester) async {
+        when(
+          () => bloc.state,
+        ).thenReturn(ConversationListLoaded([_conv, delivered, cancelled]));
+        await _pump(tester, bloc);
+
+        await enterSelection(tester, 'Aïcha Bah');
+        await tester.tap(find.byKey(const Key('conversation-select-finished')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('3 sélectionnées'), findsOneWidget);
+      },
+    );
+
+    testWidgets('« Sélectionner les terminées » sans terminée : message', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await _pump(tester, bloc);
+
+      await enterSelection(tester, 'Aïcha Bah');
+      await tester.tap(find.byKey(const Key('conversation-select-finished')));
+      await tester.pump();
+
+      expect(
+        find.text('Aucune conversation terminée à sélectionner'),
+        findsOneWidget,
+      );
+      expect(find.text('1 sélectionnée'), findsOneWidget);
+    });
+
+    testWidgets(
+      'retour d\'archivage groupé : snackbar, « Annuler » désarchive le lot',
+      (tester) async {
+        final states = StreamController<ConversationListState>.broadcast();
+        addTearDown(states.close);
+        whenListen(
+          bloc,
+          states.stream,
+          initialState: ConversationListLoaded([_convDaysAgo]),
+        );
+        await _pump(tester, bloc);
+
+        states.add(
+          ConversationListLoaded(
+            [_convDaysAgo],
+            archivedConversations: [_conv, _convNow],
+            batchFeedback: const ConversationBatchFeedback(
+              action: ConversationBatchAction.archive,
+              succeededIds: ['conv-1', 'conv-5'],
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(find.text('2 conversations archivées'), findsOneWidget);
+
+        await tester.tap(find.text('Annuler'));
+        await tester.pump();
+
+        final event =
+            verify(
+                  () => bloc.add(
+                    captureAny(
+                      that: isA<ConversationsBatchUnarchiveRequested>(),
+                    ),
+                  ),
+                ).captured.single
+                as ConversationsBatchUnarchiveRequested;
+        expect(event.conversationIds, ['conv-1', 'conv-5']);
+        expect(event.isUndo, isTrue);
+      },
+    );
+
+    testWidgets('échec partiel d\'une suppression : message avec le nombre', (
+      tester,
+    ) async {
+      final states = StreamController<ConversationListState>.broadcast();
+      addTearDown(states.close);
+      whenListen(
+        bloc,
+        states.stream,
+        initialState: ConversationListLoaded([_conv]),
+      );
+      await _pump(tester, bloc);
+
+      states.add(
+        ConversationListLoaded(
+          [_conv],
+          batchFeedback: const ConversationBatchFeedback(
+            action: ConversationBatchAction.delete,
+            succeededIds: ['conv-3'],
+            failedCount: 1,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.textContaining('1 conversation supprimée'), findsOneWidget);
+      expect(
+        find.textContaining('1 conversation n\'a pas pu être traitée'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('erreur globale d\'une action groupée : snackbar d\'erreur', (
+      tester,
+    ) async {
+      final states = StreamController<ConversationListState>.broadcast();
+      addTearDown(states.close);
+      whenListen(
+        bloc,
+        states.stream,
+        initialState: ConversationListLoaded([_conv]),
+      );
+      await _pump(tester, bloc);
+
+      states.add(
+        ConversationListLoaded(
+          [_conv],
+          batchFeedback: const ConversationBatchFeedback(
+            action: ConversationBatchAction.archive,
+            failedCount: 1,
+            error: NetworkException('boom'),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(SnackBar), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'un désarchivage confirmé ou un « Annuler » réussi n\'affichent rien ici',
+      (tester) async {
+        final states = StreamController<ConversationListState>.broadcast();
+        addTearDown(states.close);
+        whenListen(
+          bloc,
+          states.stream,
+          initialState: ConversationListLoaded([_conv]),
+        );
+        await _pump(tester, bloc);
+
+        for (final undo in [false, true]) {
+          states.add(
+            ConversationListLoaded(
+              [_conv],
+              batchFeedback: ConversationBatchFeedback(
+                action: ConversationBatchAction.unarchive,
+                succeededIds: const ['conv-1'],
+                isUndo: undo,
+              ),
+            ),
+          );
+          await tester.pump();
+        }
+
+        expect(find.byType(SnackBar), findsNothing);
+      },
+    );
+
+    testWidgets('anglais : compteur et raccourci traduits', (tester) async {
+      useEnglish();
+      when(
+        () => bloc.state,
+      ).thenReturn(ConversationListLoaded([_conv, _convDaysAgo]));
+      await _pump(tester, bloc);
+
+      await enterSelection(tester, 'Aïcha Bah');
+      await tester.tap(find.text('Fatoumata'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 selected'), findsOneWidget);
+      expect(find.text('Select finished'), findsOneWidget);
+      expect(find.text('Archive'), findsOneWidget);
+    });
   });
 }

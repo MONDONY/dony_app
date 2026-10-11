@@ -5832,6 +5832,26 @@
   "@conversationUnarchivedSnackbar": {
     "description": "Snackbar affichée après désarchivage d'une conversation (archived_conversations_screen.dart)."
   },
+  "conversationSelectionCount": "{count} selected",
+  "@conversationSelectionCount": {"description": "Sélection multiple des conversations (FLUTTER-M4) : compteur de l'en-tête.", "placeholders": {"count": {"type": "int"}}},
+  "conversationSelectionClose": "Close selection",
+  "@conversationSelectionClose": {"description": "Bouton qui ferme le mode sélection de la liste des conversations."},
+  "conversationSelectFinished": "Select finished",
+  "@conversationSelectFinished": {"description": "Raccourci du mode sélection : coche les conversations des colis livrés ou annulés."},
+  "conversationSelectFinishedNone": "No finished conversation to select",
+  "@conversationSelectFinishedNone": {"description": "Snackbar : le raccourci « Sélectionner les terminées » n'a trouvé aucune conversation de colis livré ou annulé."},
+  "conversationSelectLongPressHint": "Select",
+  "@conversationSelectLongPressHint": {"description": "Indication d'accessibilité de l'appui long sur une conversation (ouvre le mode sélection)."},
+  "conversationBatchArchivedSnackbar": "{count, plural, =1{1 conversation archived} other{{count} conversations archived}}",
+  "@conversationBatchArchivedSnackbar": {"description": "Snackbar après un archivage groupé, avec « Annuler ».", "placeholders": {"count": {"type": "int"}}},
+  "conversationBatchUnarchivedSnackbar": "{count, plural, =1{1 conversation unarchived} other{{count} conversations unarchived}}",
+  "@conversationBatchUnarchivedSnackbar": {"description": "Snackbar après un désarchivage groupé (écran des archives).", "placeholders": {"count": {"type": "int"}}},
+  "conversationBatchDeletedSnackbar": "{count, plural, =1{1 conversation deleted} other{{count} conversations deleted}}",
+  "@conversationBatchDeletedSnackbar": {"description": "Snackbar après une suppression groupée.", "placeholders": {"count": {"type": "int"}}},
+  "conversationBatchPartialFailure": "{count, plural, =1{1 conversation couldn't be updated and stays where it was.} other{{count} conversations couldn't be updated and stay where they were.}}",
+  "@conversationBatchPartialFailure": {"description": "Snackbar d'échec partiel d'une action groupée sur les conversations.", "placeholders": {"count": {"type": "int"}}},
+  "conversationBatchDeleteConfirmTitle": "{count, plural, =1{Delete 1 conversation?} other{Delete {count} conversations?}}",
+  "@conversationBatchDeleteConfirmTitle": {"description": "Titre du dialogue de confirmation d'une suppression groupée.", "placeholders": {"count": {"type": "int"}}},
   "conversationUnarchiveAction": "Unarchive",
   "@conversationUnarchiveAction": {
     "description": "Libellé du SlidableAction de désarchivage de archived_conversations_screen.dart."

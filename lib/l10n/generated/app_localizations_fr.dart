@@ -10363,6 +10363,86 @@ class AppLocalizationsFr extends AppLocalizations {
   String get conversationUnarchivedSnackbar => 'Conversation désarchivée';
 
   @override
+  String conversationSelectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sélectionnées',
+      one: '1 sélectionnée',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get conversationSelectionClose => 'Fermer la sélection';
+
+  @override
+  String get conversationSelectFinished => 'Sélectionner les terminées';
+
+  @override
+  String get conversationSelectFinishedNone =>
+      'Aucune conversation terminée à sélectionner';
+
+  @override
+  String get conversationSelectLongPressHint => 'Sélectionner';
+
+  @override
+  String conversationBatchArchivedSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations archivées',
+      one: '1 conversation archivée',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String conversationBatchUnarchivedSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations désarchivées',
+      one: '1 conversation désarchivée',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String conversationBatchDeletedSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations supprimées',
+      one: '1 conversation supprimée',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String conversationBatchPartialFailure(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count conversations n\'ont pas pu être traitées, elles restent à leur place.',
+      one: '1 conversation n\'a pas pu être traitée, elle reste à sa place.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String conversationBatchDeleteConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Supprimer $count conversations ?',
+      one: 'Supprimer 1 conversation ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get conversationUnarchiveAction => 'Désarchiver';
 
   @override

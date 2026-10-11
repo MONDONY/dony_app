@@ -17075,6 +17075,66 @@ abstract class AppLocalizations {
   /// **'Conversation désarchivée'**
   String get conversationUnarchivedSnackbar;
 
+  /// Sélection multiple des conversations (FLUTTER-M4) : compteur de l'en-tête.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 sélectionnée} other{{count} sélectionnées}}'**
+  String conversationSelectionCount(int count);
+
+  /// Bouton qui ferme le mode sélection de la liste des conversations.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer la sélection'**
+  String get conversationSelectionClose;
+
+  /// Raccourci du mode sélection : coche les conversations des colis livrés ou annulés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionner les terminées'**
+  String get conversationSelectFinished;
+
+  /// Snackbar : le raccourci « Sélectionner les terminées » n'a trouvé aucune conversation de colis livré ou annulé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune conversation terminée à sélectionner'**
+  String get conversationSelectFinishedNone;
+
+  /// Indication d'accessibilité de l'appui long sur une conversation (ouvre le mode sélection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionner'**
+  String get conversationSelectLongPressHint;
+
+  /// Snackbar après un archivage groupé, avec « Annuler ».
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 conversation archivée} other{{count} conversations archivées}}'**
+  String conversationBatchArchivedSnackbar(int count);
+
+  /// Snackbar après un désarchivage groupé (écran des archives).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 conversation désarchivée} other{{count} conversations désarchivées}}'**
+  String conversationBatchUnarchivedSnackbar(int count);
+
+  /// Snackbar après une suppression groupée.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 conversation supprimée} other{{count} conversations supprimées}}'**
+  String conversationBatchDeletedSnackbar(int count);
+
+  /// Snackbar d'échec partiel d'une action groupée sur les conversations.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 conversation n\'a pas pu être traitée, elle reste à sa place.} other{{count} conversations n\'ont pas pu être traitées, elles restent à leur place.}}'**
+  String conversationBatchPartialFailure(int count);
+
+  /// Titre du dialogue de confirmation d'une suppression groupée.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Supprimer 1 conversation ?} other{Supprimer {count} conversations ?}}'**
+  String conversationBatchDeleteConfirmTitle(int count);
+
   /// Libellé du SlidableAction de désarchivage de archived_conversations_screen.dart.
   ///
   /// In fr, this message translates to:
