@@ -239,6 +239,7 @@ void main() {
           type: MessageType.text,
           sentAt: at,
           deletedAt: '2026-10-10T12:00:00Z',
+          deletedBy: kDeletedByAuthor,
         ),
         MessageModel(
           id: 'm2',
@@ -285,7 +286,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('Hier'), findsOneWidget);
-    expect(find.text('Message supprimé'), findsNWidgets(3));
+    // Retiré par son auteur (m1) ou par la modération (m2, m5, FLUTTER-MG).
+    expect(find.text('Message supprimé'), findsOneWidget);
+    expect(find.text('Message retiré par la modération'), findsNWidgets(2));
     expect(find.text('texte effacé'), findsNothing);
     expect(find.textContaining(', -17.4441'), findsOneWidget);
     expect(find.text('5.3600, -4.0083'), findsOneWidget);

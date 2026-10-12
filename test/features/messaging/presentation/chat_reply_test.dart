@@ -39,6 +39,7 @@ MessageModel _msg(
   MessageType type = MessageType.text,
   String? replyToId,
   String? deletedAt,
+  String? deletedBy,
   DateTime? sentAt,
 }) => MessageModel(
   id: id,
@@ -48,6 +49,7 @@ MessageModel _msg(
   sentAt: sentAt ?? DateTime(2026, 10, 7, 10),
   replyToId: replyToId,
   deletedAt: deletedAt,
+  deletedBy: deletedBy,
   latitude: type == MessageType.location ? 14.69 : null,
   longitude: type == MessageType.location ? -17.44 : null,
 );
@@ -153,9 +155,15 @@ void main() {
           _msg('r1', body: 'a', replyToId: 'img'),
           _msg('r2', body: 'b', replyToId: 'loc'),
           _msg('r3', body: 'c', replyToId: 'del'),
+          _msg('r4', body: 'd', replyToId: 'mod'),
           _msg('img', type: MessageType.location).copyAsImage(),
           _msg('loc', type: MessageType.location),
-          _msg('del', deletedAt: '2026-10-07T10:00:00Z'),
+          _msg(
+            'del',
+            deletedAt: '2026-10-07T10:00:00Z',
+            deletedBy: kDeletedByAuthor,
+          ),
+          _msg('mod', deletedAt: '2026-10-07T10:00:00Z'),
         ]),
       );
       await _pump(tester, bloc);
@@ -163,6 +171,7 @@ void main() {
       expect(_quoteText('Photo'), findsOneWidget);
       expect(_quoteText('Position'), findsOneWidget);
       expect(_quoteText('Message supprimé'), findsOneWidget);
+      expect(_quoteText('Message retiré par la modération'), findsOneWidget);
     });
 
     testWidgets('hors du fil, en cours de lecture : « Chargement… »', (

@@ -1,3 +1,5 @@
+import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
+import 'package:dony/features/messaging/data/message_edit_repository.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +20,11 @@ void main() {
         '📍 Localisation partagée',
       );
       expect(chatPreviewLabel(en, kChatPreviewLocation), '📍 Shared location');
+    });
+
+    test('marqueur suppression (FLUTTER-MG) → traduit', () {
+      expect(chatPreviewLabel(fr, kChatPreviewDeleted), 'Message supprimé');
+      expect(chatPreviewLabel(en, kChatPreviewDeleted), 'Message deleted');
     });
 
     test('texte libre → rendu tel quel, quelle que soit la langue', () {
@@ -149,6 +156,48 @@ void main() {
       expect(
         chatBlockedMessage(en, 'profanity'),
         'Keep it polite: this message contains banned words.',
+      );
+    });
+  });
+
+  group('chatMessageEditFailureMessage (FLUTTER-MG)', () {
+    test('un message non vide par raison, dans les deux langues', () {
+      for (final l in [fr, en]) {
+        for (final action in ChatMessageEditAction.values) {
+          for (final failure in MessageEditFailure.values) {
+            expect(
+              chatMessageEditFailureMessage(l, action, failure),
+              isNotEmpty,
+            );
+          }
+        }
+      }
+    });
+
+    test('other : texte propre à la modification ou à la suppression', () {
+      expect(
+        chatMessageEditFailureMessage(
+          fr,
+          ChatMessageEditAction.edit,
+          MessageEditFailure.other,
+        ),
+        fr.chatEditFailed,
+      );
+      expect(
+        chatMessageEditFailureMessage(
+          fr,
+          ChatMessageEditAction.delete,
+          MessageEditFailure.other,
+        ),
+        fr.chatDeleteFailed,
+      );
+      expect(
+        chatMessageEditFailureMessage(
+          en,
+          ChatMessageEditAction.edit,
+          MessageEditFailure.windowExpired,
+        ),
+        en.chatEditWindowExpired,
       );
     });
   });

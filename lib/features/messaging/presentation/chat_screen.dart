@@ -37,6 +37,7 @@ import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:dony/features/messaging/presentation/chat_photo_viewer_screen.dart';
 import 'package:dony/features/messaging/presentation/widgets/chat_photo.dart';
+import 'package:dony/features/messaging/presentation/widgets/edit_message_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -67,12 +68,18 @@ class ChatScreen extends StatefulWidget {
   @visibleForTesting
   final Future<bool?> Function(Uint8List bytes)? previewPhotoOverride;
 
+  /// Uid de l'utilisateur courant en test (FirebaseAuth absent) : sans lui,
+  /// aucun message n'est « à moi » et l'édition (FLUTTER-MG) est intestable.
+  @visibleForTesting
+  final String? currentUidOverride;
+
   const ChatScreen({
     super.key,
     required this.conversation,
     this.onNavigate,
     this.pickPhotoOverride,
     this.previewPhotoOverride,
+    this.currentUidOverride,
   });
 
   @override
@@ -108,6 +115,8 @@ class _ChatScreenState extends State<ChatScreen> {
   bool get _keepsDraft => !widget.conversation.readOnly;
 
   String get _myUid {
+    final override = widget.currentUidOverride;
+    if (override != null) return override;
     try {
       return FirebaseAuth.instance.currentUser?.uid ?? '';
     } catch (_) {
@@ -599,6 +608,35 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  /// « Modifier » sur son propre message texte (FLUTTER-MG) : feuille avec
+  /// le texte actuel, puis callable. La bulle change par le flux Firestore.
+  Future<void> _editMessage(MessageModel message) async {
+    final bloc = context.read<ChatBloc>();
+    final text = await EditMessageSheet.show(
+      context,
+      initialText: message.body ?? '',
+    );
+    if (text == null || bloc.isClosed) return;
+    bloc.add(ChatMessageEditRequested(messageId: message.id, text: text));
+  }
+
+  /// « Supprimer » sur son propre message texte, après confirmation.
+  Future<void> _deleteMessage(MessageModel message) async {
+    final bloc = context.read<ChatBloc>();
+    final l = context.l10n;
+    final confirmed = await DonyDialog.show(
+      context,
+      title: l.chatDeleteConfirmTitle,
+      message: l.chatDeleteConfirmMessage,
+      confirmLabel: l.chatDeleteConfirmButton,
+      cancelLabel: l.commonCancel,
+      variant: DonyDialogVariant.destructive,
+      iconAsset: 'trash-2',
+    );
+    if (confirmed != true || bloc.isClosed) return;
+    bloc.add(ChatMessageDeleteRequested(message.id));
+  }
+
   void _onImageSendFailed(ChatImageSendFailed state) {
     final l = context.l10n;
     final message = switch (state.failure) {
@@ -937,13 +975,15 @@ class _ChatScreenState extends State<ChatScreen> {
             current is ChatError ||
             current is ChatSendRejected ||
             current is ChatSendFailed ||
-            current is ChatImageSendFailed,
+            current is ChatImageSendFailed ||
+            current is ChatMessageEditFailed,
         // Signaux ponctuels aussitôt remplacés par l'état du fil : jamais
         // dessinés, la liste des messages reste à l'écran.
         buildWhen: (_, current) =>
             current is! ChatSendRejected &&
             current is! ChatSendFailed &&
-            current is! ChatImageSendFailed,
+            current is! ChatImageSendFailed &&
+            current is! ChatMessageEditFailed,
         listener: (context, state) {
           if (state is ChatSendRejected) {
             _onSendRejected(state);
@@ -951,6 +991,16 @@ class _ChatScreenState extends State<ChatScreen> {
             _onSendFailed(state);
           } else if (state is ChatImageSendFailed) {
             _onImageSendFailed(state);
+          } else if (state is ChatMessageEditFailed) {
+            DonySnackbar.show(
+              context,
+              message: chatMessageEditFailureMessage(
+                l,
+                state.action,
+                state.failure,
+              ),
+              type: DonySnackbarType.error,
+            );
           } else if (state is ChatConversationDeleted) {
             getIt<ConversationListBloc>().add(
               ConversationRemovedLocally(widget.conversation.id),
@@ -1115,6 +1165,12 @@ class _ChatScreenState extends State<ChatScreen> {
                               !isMe &&
                               !message.isDeleted &&
                               message.type != MessageType.system;
+                          // FLUTTER-MG : ses propres messages texte, moins
+                          // de 15 min, fil modifiable. Le délai est revu à
+                          // l'ouverture du menu ; le serveur reste seul juge.
+                          final canEdit =
+                              !isReadOnly &&
+                              message.isEditableBy(_myUid, DateTime.now());
                           final showSep = _showDateSeparator(messages, index);
                           // Dernier d'un groupe (visuellement en bas du groupe) :
                           // le message plus récent (index-1) a un autre expéditeur,
@@ -1167,6 +1223,16 @@ class _ChatScreenState extends State<ChatScreen> {
                                                 : null,
                                             onReport: canReport
                                                 ? () => _reportMessage(message)
+                                                : null,
+                                            onEdit: canEdit
+                                                ? () => unawaited(
+                                                    _editMessage(message),
+                                                  )
+                                                : null,
+                                            onDelete: canEdit
+                                                ? () => unawaited(
+                                                    _deleteMessage(message),
+                                                  )
                                                 : null,
                                             onOpenImage: () =>
                                                 _openPhoto(message),
@@ -1671,6 +1737,11 @@ class _MessageBubble extends StatelessWidget {
 
   /// Ouvre la photo en plein écran.
   final VoidCallback? onOpenImage;
+
+  /// « Modifier » / « Supprimer » son propre message texte (FLUTTER-MG),
+  /// `null` hors de ce cas. Proposés tant que le délai n'est pas passé.
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   const _MessageBubble({
     required this.message,
     required this.isMe,
@@ -1682,6 +1753,8 @@ class _MessageBubble extends StatelessWidget {
     this.conversationId = '',
     this.onReport,
     this.onOpenImage,
+    this.onEdit,
+    this.onDelete,
   });
 
   /// Photo ou position : pas de texte sélectionnable, l'appui long ouvre un
@@ -1755,7 +1828,7 @@ class _MessageBubble extends StatelessWidget {
                 ),
                 child: Text(
                   message.isDeleted
-                      ? l.chatMessageDeleted
+                      ? l.chatMessageModerated
                       : (message.body ?? ''),
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   textAlign: TextAlign.center,
@@ -1800,6 +1873,8 @@ class _MessageBubble extends StatelessWidget {
     final replyLabel = l.chatReplyAction;
     final onReply = this.onReply;
     final onReport = this.onReport;
+    final onEdit = this.onEdit;
+    final onDelete = this.onDelete;
     final longPressable =
         (onReply != null || onReport != null) &&
         (message.type == MessageType.image ||
@@ -1840,7 +1915,12 @@ class _MessageBubble extends StatelessWidget {
                     ),
                     child: _withQuote(
                       message.isDeleted
-                          ? _DeletedContent(isMe: isMe, cs: cs, tt: tt)
+                          ? _DeletedContent(
+                              isMe: isMe,
+                              byAuthor: message.isDeletedByAuthor,
+                              cs: cs,
+                              tt: tt,
+                            )
                           : message.isServerImage
                           ? ChatServerImage(
                               conversationId: conversationId,
@@ -1865,26 +1945,45 @@ class _MessageBubble extends StatelessWidget {
                               tt: tt,
                               onReply: onReply,
                               onReport: onReport,
+                              onEdit: onEdit,
+                              onDelete: onDelete,
+                              editableUntil: message.editableUntil,
                             ),
                     ),
                   ),
                   // Horodatage + accusé : seulement sur le dernier du groupe.
-                  if (isLastOfGroup) ...[
+                  // « modifié » : sur toute bulle modifiée (FLUTTER-MG).
+                  if (isLastOfGroup || message.isEdited) ...[
                     const SizedBox(height: 3),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          DateFormat.jm(
-                            l.localeName,
-                          ).format(message.sentAt.toLocal()),
-                          style: tt.bodySmall?.copyWith(
-                            fontSize: 10,
-                            color: cs.onSurfaceVariant,
-                            fontFeatures: const [FontFeature.tabularFigures()],
+                        if (message.isEdited) ...[
+                          Text(
+                            l.chatMessageEditedLabel,
+                            key: const Key('chat-message-edited'),
+                            style: tt.bodySmall?.copyWith(
+                              fontSize: 10,
+                              fontStyle: FontStyle.italic,
+                              color: cs.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        if (isMe) ...[
+                          if (isLastOfGroup) const SizedBox(width: 4),
+                        ],
+                        if (isLastOfGroup)
+                          Text(
+                            DateFormat.jm(
+                              l.localeName,
+                            ).format(message.sentAt.toLocal()),
+                            style: tt.bodySmall?.copyWith(
+                              fontSize: 10,
+                              color: cs.onSurfaceVariant,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        if (isMe && isLastOfGroup) ...[
                           const SizedBox(width: 3),
                           DonyIcon(
                             message.readAt != null ? 'check-check' : 'check',
@@ -1911,11 +2010,18 @@ class _MessageBubble extends StatelessWidget {
         child: bubble,
       );
     }
-    if (onReply == null && onReport == null) return bubble;
+    if (onReply == null &&
+        onReport == null &&
+        onEdit == null &&
+        onDelete == null) {
+      return bubble;
+    }
     return Semantics(
       customSemanticsActions: {
         CustomSemanticsAction(label: replyLabel): ?onReply,
         CustomSemanticsAction(label: l.chatReportMessageAction): ?onReport,
+        CustomSemanticsAction(label: l.chatEditMessageAction): ?onEdit,
+        CustomSemanticsAction(label: l.chatDeleteMessageAction): ?onDelete,
       },
       child: onReply == null
           ? bubble
@@ -1969,7 +2075,13 @@ class _QuoteData {
 }) {
   if (pending) return (null, l.chatQuoteLoading, true);
   if (message == null) return (null, l.chatQuoteUnavailable, true);
-  if (message.isDeleted) return (null, l.chatMessageDeleted, true);
+  if (message.isDeleted) {
+    return (
+      null,
+      message.isDeletedByAuthor ? l.chatMessageDeleted : l.chatMessageModerated,
+      true,
+    );
+  }
   return switch (message.type) {
     MessageType.image => ('image', l.chatQuotePhoto, false),
     MessageType.location => ('map-pin', l.chatQuoteLocation, false),
@@ -2379,6 +2491,12 @@ class _TextContent extends StatelessWidget {
 
   /// Ajoute « Signaler » en fin de menu (message reçu, FLUTTER-B4).
   final VoidCallback? onReport;
+
+  /// Ajoute « Modifier » / « Supprimer » (son message, FLUTTER-MG) tant que
+  /// [editableUntil] n'est pas passé au moment où le menu s'ouvre.
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final DateTime? editableUntil;
   const _TextContent({
     required this.body,
     required this.isMe,
@@ -2386,7 +2504,15 @@ class _TextContent extends StatelessWidget {
     required this.tt,
     this.onReply,
     this.onReport,
+    this.onEdit,
+    this.onDelete,
+    this.editableUntil,
   });
+
+  bool get _editableNow {
+    final until = editableUntil;
+    return until == null || DateTime.now().isBefore(until);
+  }
 
   // « Copier le message » recopie la bulle entière : une adresse ou un
   // numéro reçu se recolle ailleurs (Sentry FLUTTER-5F).
@@ -2436,36 +2562,56 @@ class _TextContent extends StatelessWidget {
     return SelectableText(
       body,
       style: tt.bodyMedium?.copyWith(color: isMe ? cs.onPrimary : cs.onSurface),
-      contextMenuBuilder: (menuContext, editableTextState) =>
-          AdaptiveTextSelectionToolbar.buttonItems(
-            anchors: editableTextState.contextMenuAnchors,
-            buttonItems: [
-              if (onReply case final reply?)
-                ContextMenuButtonItem(
-                  label: context.l10n.chatReplyAction,
-                  onPressed: () {
-                    editableTextState.hideToolbar();
-                    reply();
-                  },
-                ),
-              ...editableTextState.contextMenuButtonItems,
+      contextMenuBuilder: (menuContext, editableTextState) {
+        final editable = _editableNow;
+        return AdaptiveTextSelectionToolbar.buttonItems(
+          anchors: editableTextState.contextMenuAnchors,
+          buttonItems: [
+            if (onReply case final reply?)
               ContextMenuButtonItem(
-                label: copyLabel,
+                label: context.l10n.chatReplyAction,
                 onPressed: () {
                   editableTextState.hideToolbar();
-                  _copy(context);
+                  reply();
                 },
               ),
-              if (onReport case final report?)
-                ContextMenuButtonItem(
-                  label: context.l10n.chatReportMessageAction,
-                  onPressed: () {
-                    editableTextState.hideToolbar();
-                    report();
-                  },
-                ),
-            ],
-          ),
+            // Avant les entrées natives : sans quoi la barre déborde et
+            // les cache derrière « ⋮ ».
+            if (onEdit case final edit? when editable)
+              ContextMenuButtonItem(
+                label: context.l10n.chatEditMessageAction,
+                onPressed: () {
+                  editableTextState.hideToolbar();
+                  edit();
+                },
+              ),
+            if (onDelete case final delete? when editable)
+              ContextMenuButtonItem(
+                label: context.l10n.chatDeleteMessageAction,
+                onPressed: () {
+                  editableTextState.hideToolbar();
+                  delete();
+                },
+              ),
+            ...editableTextState.contextMenuButtonItems,
+            ContextMenuButtonItem(
+              label: copyLabel,
+              onPressed: () {
+                editableTextState.hideToolbar();
+                _copy(context);
+              },
+            ),
+            if (onReport case final report?)
+              ContextMenuButtonItem(
+                label: context.l10n.chatReportMessageAction,
+                onPressed: () {
+                  editableTextState.hideToolbar();
+                  report();
+                },
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -2579,12 +2725,16 @@ class _LocationContent extends StatelessWidget {
   }
 }
 
+/// Bulle d'un message supprimé : « Message supprimé » quand l'auteur l'a
+/// retiré (FLUTTER-MG), « Message retiré par la modération » sinon.
 class _DeletedContent extends StatelessWidget {
   final bool isMe;
+  final bool byAuthor;
   final ColorScheme cs;
   final TextTheme tt;
   const _DeletedContent({
     required this.isMe,
+    required this.byAuthor,
     required this.cs,
     required this.tt,
   });
@@ -2600,7 +2750,7 @@ class _DeletedContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyIcon(
-            'ban',
+            byAuthor ? 'trash-2' : 'ban',
             size: 14,
             color: isMe
                 ? cs.onPrimary.withValues(alpha: 0.6)
@@ -2608,7 +2758,9 @@ class _DeletedContent extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.xs),
           Text(
-            context.l10n.chatMessageDeleted,
+            byAuthor
+                ? context.l10n.chatMessageDeleted
+                : context.l10n.chatMessageModerated,
             style: tt.bodySmall?.copyWith(
               fontStyle: FontStyle.italic,
               color: isMe

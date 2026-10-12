@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
+import 'package:dony/features/messaging/data/message_edit_repository.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 
 abstract class ChatState {
@@ -143,4 +144,16 @@ class ChatSendFailed extends ChatState {
   final ChatEvent retry;
   final String? text;
   const ChatSendFailed(this.previous, {required this.retry, this.text});
+}
+
+enum ChatMessageEditAction { edit, delete }
+
+/// Modification ou suppression refusée ou échouée (FLUTTER-MG). Signal
+/// ponctuel, aussitôt suivi de l'état du fil : l'écran l'écoute sans jamais
+/// le dessiner (comme [ChatSendRejected]). En cas de succès, rien à signaler :
+/// la bulle change d'elle-même par le flux Firestore.
+class ChatMessageEditFailed extends ChatState {
+  final ChatMessageEditAction action;
+  final MessageEditFailure failure;
+  const ChatMessageEditFailed(this.action, this.failure);
 }

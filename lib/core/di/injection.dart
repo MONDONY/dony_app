@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
@@ -134,6 +135,7 @@ import 'package:dony/features/messaging/data/chat_draft_store.dart';
 import 'package:dony/features/messaging/data/chat_image_cache.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
+import 'package:dony/features/messaging/data/message_edit_repository.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/notifications/bloc/announcements_inbox_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
@@ -798,11 +800,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<ChatDraftStore>(
     () => ChatDraftStore(getIt<HiveService>().userPrefs),
   );
+  // Modification / suppression de ses messages (FLUTTER-MG) : callables
+  // dony-functions. Région par défaut (us-central1), comme onNewMessage.
+  getIt.registerLazySingleton<MessageEditRepository>(
+    () => MessageEditRepository(FirebaseFunctions.instance),
+  );
   getIt.registerFactory<ChatBloc>(
     () => ChatBloc(
       getIt<FirestoreChatRepository>(),
       getIt<ConversationRepository>(),
       getIt<AnalyticsService>(),
+      editRepository: getIt<MessageEditRepository>(),
     ),
   );
   getIt.registerFactoryParam<

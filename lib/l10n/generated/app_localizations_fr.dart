@@ -18366,4 +18366,77 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviPhotoLostDismiss => 'Fermer le message sur la photo perdue';
+
+  @override
+  String get chatEditMessageAction => 'Modifier';
+
+  @override
+  String get chatDeleteMessageAction => 'Supprimer';
+
+  @override
+  String get chatEditSheetTitle => 'Modifier le message';
+
+  @override
+  String get chatEditSheetSubtitle =>
+      'Votre interlocuteur verra la mention « modifié ».';
+
+  @override
+  String get chatEditFieldLabel => 'Message';
+
+  @override
+  String get chatEditSaveButton => 'Enregistrer';
+
+  @override
+  String get chatDeleteConfirmTitle => 'Supprimer ce message ?';
+
+  @override
+  String get chatDeleteConfirmMessage =>
+      'Votre interlocuteur verra « Message supprimé » à sa place.';
+
+  @override
+  String get chatDeleteConfirmButton => 'Supprimer';
+
+  @override
+  String get chatMessageEditedLabel => 'modifié';
+
+  @override
+  String get chatMessageModerated => 'Message retiré par la modération';
+
+  @override
+  String get chatPreviewDeleted => 'Message supprimé';
+
+  @override
+  String get chatEditWindowExpired =>
+      'Le délai de 15 minutes est passé : ce message ne peut plus être modifié ni supprimé.';
+
+  @override
+  String get chatEditConversationLocked =>
+      'Cette conversation est fermée : ses messages ne peuvent plus être modifiés.';
+
+  @override
+  String get chatEditConversationDisputed =>
+      'Un litige est en cours : les messages de cette conversation ne peuvent plus être modifiés.';
+
+  @override
+  String get chatEditMuted =>
+      'Votre messagerie est suspendue : vous ne pouvez pas modifier vos messages.';
+
+  @override
+  String get chatEditInvalidContent =>
+      'Ce texte ne peut pas être envoyé. Les coordonnées personnelles ne sont pas autorisées.';
+
+  @override
+  String get chatEditNotEditable => 'Ce message ne peut plus être modifié.';
+
+  @override
+  String get chatEditUnavailable =>
+      'La modification des messages n\'est pas encore disponible. Réessayez plus tard.';
+
+  @override
+  String get chatEditFailed =>
+      'Le message n\'a pas pu être modifié. Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get chatDeleteFailed =>
+      'Le message n\'a pas pu être supprimé. Vérifiez votre connexion et réessayez.';
 }
