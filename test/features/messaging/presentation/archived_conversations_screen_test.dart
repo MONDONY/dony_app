@@ -1,7 +1,7 @@
-import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'dart:async';
 
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';

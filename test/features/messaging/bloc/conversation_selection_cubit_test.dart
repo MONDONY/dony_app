@@ -93,7 +93,8 @@ void main() {
 
     test('ouverture du mode tracée une fois, avec sa source', () async {
       final backend = MockAnalyticsBackend();
-      final analytics = makeEnabledAnalytics(backend)..onConfigured();
+      final analytics = makeEnabledAnalytics(backend);
+      await analytics.onConfigured();
       ConversationSelectionCubit(
           analytics: analytics,
           source: ConversationSelectionSource.archives,
