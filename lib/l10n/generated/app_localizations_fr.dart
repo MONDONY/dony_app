@@ -18366,4 +18366,365 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get suiviPhotoLostDismiss => 'Fermer le message sur la photo perdue';
+
+  @override
+  String get shellTabTickets => 'Billets';
+
+  @override
+  String get authRequiredFlightAlertSubtitle =>
+      'Recevez une alerte quand le prix baisse';
+
+  @override
+  String get authRequiredFlightAlertBody =>
+      'Les alertes prix sont liées à votre compte : créez-le en une minute pour être prévenu dès qu\'un billet passe sous votre prix.';
+
+  @override
+  String get flightsTitle => 'Billets';
+
+  @override
+  String get flightsAlertsTooltip => 'Mes alertes prix';
+
+  @override
+  String get flightsAffiliationNotice =>
+      'Yadony ne vend pas de billets : vous réservez chez notre partenaire, qui peut nous verser une commission, sans frais pour vous. Les prix sont indicatifs.';
+
+  @override
+  String get flightsFieldDeparture => 'Départ';
+
+  @override
+  String get flightsFieldArrival => 'Arrivée';
+
+  @override
+  String get flightsFieldChooseCity => 'Choisir une ville';
+
+  @override
+  String get flightsFieldChooseDates => 'Choisir les dates';
+
+  @override
+  String get flightsSwapTooltip => 'Inverser départ et arrivée';
+
+  @override
+  String get flightsOutboundLabel => 'Aller';
+
+  @override
+  String get flightsReturnLabel => 'Retour';
+
+  @override
+  String get flightsOneWay => 'Aller simple';
+
+  @override
+  String get flightsRoundTrip => 'Aller-retour';
+
+  @override
+  String get flightsDirectOnly => 'Vols directs uniquement';
+
+  @override
+  String get flightsSearchButton => 'Rechercher';
+
+  @override
+  String get flightsDatesAny => 'Toutes les dates';
+
+  @override
+  String get flightsDatesTitle => 'Quand partez-vous ?';
+
+  @override
+  String get flightsDatesPreciseDay => 'Jour précis';
+
+  @override
+  String get flightsDatesWholeMonth => 'Tout le mois';
+
+  @override
+  String get flightsDatesValidate => 'Valider les dates';
+
+  @override
+  String get flightsDatesReturnBeforeDeparture =>
+      'Le retour ne peut pas précéder l\'aller.';
+
+  @override
+  String get flightsCityDepartureTitle => 'Ville de départ';
+
+  @override
+  String get flightsCityArrivalTitle => 'Ville d\'arrivée';
+
+  @override
+  String get flightsCitySearchHint => 'Tapez une ville';
+
+  @override
+  String get flightsCitySuggestions => 'SUGGESTIONS';
+
+  @override
+  String get flightsCityResults => 'RÉSULTATS';
+
+  @override
+  String get flightsCityNoResult => 'Aucune ville trouvée';
+
+  @override
+  String get flightsDealsTitle => 'Bons plans pour vous';
+
+  @override
+  String get flightsDealVsUsual => 'vs prix habituel';
+
+  @override
+  String flightsDealDiscount(int percent) {
+    return '−$percent %';
+  }
+
+  @override
+  String flightsDealFrom(String date) {
+    return 'Dès le $date';
+  }
+
+  @override
+  String flightsDealSemantics(
+    String origin,
+    String destination,
+    String price,
+    int percent,
+  ) {
+    return 'Bon plan $origin vers $destination, $price, $percent % sous le prix habituel';
+  }
+
+  @override
+  String flightsRouteTitle(String origin, String destination) {
+    return '$origin → $destination';
+  }
+
+  @override
+  String flightsResultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count billets',
+      one: '1 billet',
+      zero: 'Aucun billet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsAlertCreateTooltip => 'Créer une alerte prix';
+
+  @override
+  String get flightsEmptyTitle => 'Aucun billet trouvé';
+
+  @override
+  String get flightsEmptyDescription =>
+      'Essayez d\'autres dates, ou créez une alerte : on vous prévient dès qu\'un billet apparaît à votre prix.';
+
+  @override
+  String get flightsStampCheapest => 'Le moins cher';
+
+  @override
+  String get flightsStampFastest => 'Le plus rapide';
+
+  @override
+  String get flightsPriceDisclaimer =>
+      'Prix indicatif · réservation chez notre partenaire';
+
+  @override
+  String get flightsOpenOffer => 'Voir l\'offre';
+
+  @override
+  String get flightsStopsDirect => 'Direct';
+
+  @override
+  String flightsStopsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count escales',
+      one: '1 escale',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsStopsAny => 'Toutes';
+
+  @override
+  String get flightsStopsOneMax => '1 escale max';
+
+  @override
+  String flightsDurationHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String flightsDurationHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes';
+  }
+
+  @override
+  String get flightsFiltersTitle => 'Filtres';
+
+  @override
+  String get flightsFiltersActive => 'Filtres actifs';
+
+  @override
+  String get flightsFiltersReset => 'Réinitialiser';
+
+  @override
+  String flightsFiltersShow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Voir $count billets',
+      one: 'Voir 1 billet',
+      zero: 'Aucun billet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsFiltersSort => 'Trier par';
+
+  @override
+  String get flightsSortCheapest => 'Prix croissant';
+
+  @override
+  String get flightsSortFastest => 'Plus rapide';
+
+  @override
+  String get flightsSortFewestStops => 'Moins d\'escales';
+
+  @override
+  String get flightsFiltersPrice => 'Prix';
+
+  @override
+  String get flightsFiltersStops => 'Escales';
+
+  @override
+  String get flightsFiltersAirlines => 'Compagnies';
+
+  @override
+  String get flightsFiltersGates => 'Sites de réservation';
+
+  @override
+  String get flightsFiltersGatesHint =>
+      'Un même vol peut coûter différemment selon le site qui le vend.';
+
+  @override
+  String flightsFromPrice(String price) {
+    return 'dès $price';
+  }
+
+  @override
+  String get flightsAlertsTitle => 'Mes alertes prix';
+
+  @override
+  String flightsAlertsCount(int count, int max) {
+    return '$count sur $max';
+  }
+
+  @override
+  String get flightsAlertsEmptyTitle => 'Aucune alerte prix';
+
+  @override
+  String get flightsAlertsEmptyDescription =>
+      'Choisissez un trajet, une période et votre prix : on vérifie toutes les 6 heures et on vous prévient quand un billet passe dessous.';
+
+  @override
+  String get flightsAlertsFootnote =>
+      'Glissez une alerte pour la supprimer. On vous prévient seulement si le prix baisse encore. Une alerte s\'arrête d\'elle-même quand sa période de départ est passée.';
+
+  @override
+  String get flightsAlertsLimitReached =>
+      'Vous avez atteint la limite de 10 alertes : supprimez-en une pour en créer une autre.';
+
+  @override
+  String get flightsAlertNewTitle => 'Nouvelle alerte';
+
+  @override
+  String get flightsAlertCreated => 'Alerte prix créée';
+
+  @override
+  String get flightsAlertCreate => 'Créer l\'alerte';
+
+  @override
+  String get flightsAlertDeparturePeriod => 'Période de départ';
+
+  @override
+  String get flightsAlertReturnPeriod => 'Période de retour';
+
+  @override
+  String get flightsAlertAnyDate => 'Toutes les dates à venir';
+
+  @override
+  String flightsAlertPeriod(String from, String to) {
+    return 'du $from au $to';
+  }
+
+  @override
+  String get flightsAlertPeriodTooLong => '31 jours au plus';
+
+  @override
+  String flightsAlertDepartureLine(String period) {
+    return 'Départ $period';
+  }
+
+  @override
+  String flightsAlertReturnLine(String period) {
+    return 'Retour $period';
+  }
+
+  @override
+  String get flightsAlertThreshold => 'Prévenez-moi sous';
+
+  @override
+  String get flightsAlertThresholdShort => 'Seuil';
+
+  @override
+  String flightsAlertAtMost(String price) {
+    return '≤ $price';
+  }
+
+  @override
+  String get flightsAlertLastSeen => 'Dernier prix vu';
+
+  @override
+  String get flightsAlertNotChecked => 'Pas encore vérifié';
+
+  @override
+  String flightsAlertCurrentLowest(String price) {
+    return 'Prix le plus bas actuellement : $price';
+  }
+
+  @override
+  String get flightsAlertHint =>
+      'Vérification toutes les 6 heures. Période de 31 jours au plus, pour le départ comme pour le retour.';
+
+  @override
+  String get errorFlightsTitle => 'Billets indisponibles';
+
+  @override
+  String get errorFlightsUnavailableMessage =>
+      'La recherche de billets est momentanément indisponible. Réessayez plus tard.';
+
+  @override
+  String get errorFlightsProviderMessage =>
+      'Le service de prix ne répond pas. Réessayez dans un instant.';
+
+  @override
+  String get errorFlightsInvalidQueryMessage =>
+      'Vérifiez le trajet et les dates : le départ et l\'arrivée doivent être différents et les dates à venir.';
+
+  @override
+  String get errorFlightAlertDuplicateMessage =>
+      'Une alerte identique existe déjà pour ce trajet.';
+
+  @override
+  String get errorFlightAlertLimitMessage =>
+      'Vous avez atteint la limite de 10 alertes prix.';
+
+  @override
+  String get errorFlightsPeriodMessage =>
+      'La période choisie ne convient pas : 31 jours au plus, bornes complètes et à venir.';
+
+  @override
+  String get errorFlightsAccountRequiredMessage =>
+      'Créez un compte pour utiliser les alertes prix.';
+
+  @override
+  String get errorFlightsLaunchMessage =>
+      'Impossible d\'ouvrir le site partenaire. Réessayez.';
 }

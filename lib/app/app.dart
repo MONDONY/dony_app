@@ -231,6 +231,8 @@ class _DonyAppState extends State<DonyApp> {
     '/stripe/onboarding/refresh',
     '/payment/confirm',
     '/tracking/scan',
+    // Alertes prix des billets (notification FLIGHT_PRICE_ALERT).
+    '/flights/alerts',
   };
 
   void _handleDeepLink(Uri uri) {

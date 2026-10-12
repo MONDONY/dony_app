@@ -592,6 +592,16 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `search_filter_applied` | HomeScreen._trackFilterDiff — un filtre passe d'inactif à actif, quel que soit le chemin (chip, feuille de filtres, composeur, bascule « Pour mes trajets »). Propriétés `filter` (énumération fermée de `HomeSearchFilters.activeKeys` : `departure`, `arrival`, `date`, `urgent`, `near_me`, `kilo_pro`, `rating`, `weight`, `price`, `weekend`, `transport_mode`, `kyc_verified`, `content_type`, `urgency`, `max_weight`, `parcel_size`, `matching_my_trips`, `stops` (FLUTTER-GD), `payment_methods` (FLUTTER-G0)) et `mode`. Jamais la valeur choisie (ville, poids, prix). Sert à classer les filtres les plus et les moins utilisés |
 | `search_filter_cleared` | HomeScreen._trackFilterDiff — un filtre passe d'actif à inactif (mêmes propriétés `filter`, `mode`) |
 | `preferred_language_synced` | LanguageSyncCubit.sync() — langue effective de l'app (`fr`/`en` résolue, jamais `system`) écrite avec succès dans `preferredLanguage` du compte serveur, au démarrage, à la connexion ou à un changement de langue (propriété `language`). Non émis quand la langue était déjà à jour côté serveur, sur un backend ancien (404) ou en cas d'échec réseau |
+| `flights_prefill_applied` | FlightSearchCubit.loadDefaults — onglet Billets prérempli par `GET /flights/defaults` (propriété `source` : `search` dernière recherche de billets, `corridor` corridor le plus récent). Jamais émis pour un visiteur ni quand l'utilisateur a déjà saisi une ville |
+| `flights_search_submitted` | FlightSearchCubit.search — recherche de billets réussie (propriétés `round_trip`, `direct_only`, `date_mode` : `day`/`month`/`none`, `from_deal` : lancée depuis un bon plan, `count` : offres reçues). Jamais les villes ni les dates |
+| `flights_search_failed` | FlightSearchCubit.search — recherche refusée ou impossible (propriété `reason` : code back `flights-*` ou `unknown`) |
+| `flights_deal_opened` | FlightSearchCubit.openDeal — mini-billet du carrousel « Bons plans pour vous » touché (propriétés `discount_percent`, `personalized`) |
+| `flights_filter_applied` | FlightSearchCubit.applyFilters — feuille de filtres validée (propriétés `sort`, `stops`, `airlines_count`, `gates_count`, `price_range`). Jamais les compagnies ni les prix choisis |
+| `flights_offer_clicked` | FlightLinkCubit.open — « Voir l'offre » : lien affilié obtenu (`POST /flights/clicks`) et ouvert dans le navigateur externe (propriétés `source` : `search`/`deal`/`alert`, `airline_code`, `stops`, `round_trip`). Jamais le prix |
+| `flights_offer_open_failed` | FlightLinkCubit.open — lien non obtenu ou navigateur introuvable (propriété `reason` : code back ou `launch`) |
+| `flights_alert_created` | FlightAlertsCubit.create — alerte prix créée (`POST /me/flight-alerts`), propriétés `round_trip`, `has_period`, `direct_only`, `source` : `results` (cloche des résultats) / `alerts` (écran des alertes). Jamais le trajet ni le seuil |
+| `flights_alert_toggled` | FlightAlertsCubit.setActive — interrupteur d'une alerte prix confirmé par le serveur (propriété `active`) |
+| `flights_alert_deleted` | FlightAlertsCubit.delete — alerte prix supprimée (glissement), confirmée par le serveur |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

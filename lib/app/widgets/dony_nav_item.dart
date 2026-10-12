@@ -18,10 +18,10 @@ import 'package:flutter/material.dart';
 /// Facebook) avec un anneau primary à l'état actif — pas de pastille partagée
 /// sur ce slot (le cercle avatar ne se marie pas avec une pilule).
 ///
-/// Le libellé est toujours affiché sous l'icône. Rendu visuel exclu de
-/// l'arbre sémantique ([ExcludeSemantics]) pour éviter la double annonce
-/// avec le [Semantics.label] déjà posé sur tout l'item. Public pour pouvoir
-/// être testé isolément.
+/// Icône seule, sans libellé visible (barre à six onglets, style Facebook) :
+/// [label] reste le nom annoncé par le lecteur d'écran ([Semantics.label]) et
+/// affiché en infobulle à l'appui long. Public pour pouvoir être testé
+/// isolément.
 class DonyNavItem extends StatelessWidget {
   const DonyNavItem({
     super.key,
@@ -76,11 +76,10 @@ class DonyNavItem extends StatelessWidget {
   /// Hauteur de la pastille icône — idem.
   static const double pillHeight = 36;
 
-  /// Offset vertical FIXE (non calculé/centré) entre le haut du slot et le
-  /// haut de la pastille. Garantit que l'indicateur partagé du parent tombe
-  /// pile sous l'icône, peu importe les métriques réelles de la police
-  /// (labelSmall) qui varient légèrement selon iOS/Android.
-  static const double pillTopInset = 11;
+  /// Offset vertical FIXE entre le haut du slot et le haut de la pastille :
+  /// l'indicateur partagé du parent tombe pile sous l'icône. Sans libellé,
+  /// la pastille est centrée dans la barre (66 − 36) / 2.
+  static const double pillTopInset = 15;
 
   bool get _active => index == currentIndex;
 
@@ -93,72 +92,64 @@ class DonyNavItem extends StatelessWidget {
       button: true,
       selected: _active,
       label: label,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          children: [
-            const SizedBox(height: pillTopInset),
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                if (isAvatar) _buildAvatar(cs) else _buildIconPill(cs),
-                if (badgeCount > 0)
-                  Positioned(
-                    right: 2,
-                    top: -2,
-                    child: _NavBadge(count: badgeCount, ringColor: cs.surface),
-                  ),
-                if (showDot && badgeCount <= 0 && !isPro)
-                  Positioned(
-                    right: 6,
-                    top: -1,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: DonyColors.error,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: cs.surface, width: 2),
+      child: Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Column(
+            children: [
+              const SizedBox(height: pillTopInset),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  if (isAvatar) _buildAvatar(cs) else _buildIconPill(cs),
+                  if (badgeCount > 0)
+                    Positioned(
+                      right: 2,
+                      top: -2,
+                      child: _NavBadge(
+                        count: badgeCount,
+                        ringColor: cs.surface,
                       ),
                     ),
-                  ),
-                if (isPro && !isAvatar)
-                  Positioned(
-                    right: 1,
-                    top: -1,
-                    child: Container(
-                      width: 14,
-                      height: 14,
-                      decoration: const BoxDecoration(
-                        color: DonyColors.warning,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const DonyIcon(
-                        'star',
-                        color: DonyColors.white,
-                        size: 9,
+                  if (showDot && badgeCount <= 0 && !isPro)
+                    Positioned(
+                      right: 6,
+                      top: -1,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: DonyColors.error,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cs.surface, width: 2),
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 3),
-            ExcludeSemantics(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  softWrap: false,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: _active ? cs.primary : cs.onSurfaceVariant,
-                    fontWeight: _active ? FontWeight.w700 : FontWeight.w600,
-                  ),
-                ),
+                  if (isPro && !isAvatar)
+                    Positioned(
+                      right: 1,
+                      top: -1,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: const BoxDecoration(
+                          color: DonyColors.warning,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const DonyIcon(
+                          'star',
+                          color: DonyColors.white,
+                          size: 9,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

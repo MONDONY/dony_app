@@ -29882,6 +29882,581 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Fermer le message sur la photo perdue'**
   String get suiviPhotoLostDismiss;
+
+  /// Nom de l'onglet Billets de la barre du bas, lu par le lecteur d'écran et affiché en infobulle (barre en icônes seules).
+  ///
+  /// In fr, this message translates to:
+  /// **'Billets'**
+  String get shellTabTickets;
+
+  /// Feuille compte requis : un visiteur veut créer ou voir des alertes prix de billets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevez une alerte quand le prix baisse'**
+  String get authRequiredFlightAlertSubtitle;
+
+  /// Feuille compte requis, alertes prix de billets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les alertes prix sont liées à votre compte : créez-le en une minute pour être prévenu dès qu\'un billet passe sous votre prix.'**
+  String get authRequiredFlightAlertBody;
+
+  /// Grand titre de l'onglet Billets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Billets'**
+  String get flightsTitle;
+
+  /// Infobulle de la cloche de l'onglet Billets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes alertes prix'**
+  String get flightsAlertsTooltip;
+
+  /// Mention d'affiliation en bas de l'onglet Billets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony ne vend pas de billets : vous réservez chez notre partenaire, qui peut nous verser une commission, sans frais pour vous. Les prix sont indicatifs.'**
+  String get flightsAffiliationNotice;
+
+  /// Champ ville de départ.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get flightsFieldDeparture;
+
+  /// Champ ville d'arrivée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get flightsFieldArrival;
+
+  /// Valeur d'un champ ville vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une ville'**
+  String get flightsFieldChooseCity;
+
+  /// Valeur d'un champ de période vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir les dates'**
+  String get flightsFieldChooseDates;
+
+  /// Bouton d'inversion du formulaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Inverser départ et arrivée'**
+  String get flightsSwapTooltip;
+
+  /// Libellé de la date aller.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aller'**
+  String get flightsOutboundLabel;
+
+  /// Libellé de la date retour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour'**
+  String get flightsReturnLabel;
+
+  /// Valeur du champ retour sans retour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aller simple'**
+  String get flightsOneWay;
+
+  /// Interrupteur aller-retour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aller-retour'**
+  String get flightsRoundTrip;
+
+  /// Interrupteur vols directs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vols directs uniquement'**
+  String get flightsDirectOnly;
+
+  /// Bouton de recherche de billets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher'**
+  String get flightsSearchButton;
+
+  /// Valeur d'une date non choisie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les dates'**
+  String get flightsDatesAny;
+
+  /// Titre de la feuille de dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand partez-vous ?'**
+  String get flightsDatesTitle;
+
+  /// Puce jour précis de la feuille de dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jour précis'**
+  String get flightsDatesPreciseDay;
+
+  /// Puce mois entier de la feuille de dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout le mois'**
+  String get flightsDatesWholeMonth;
+
+  /// Bouton de la feuille de dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider les dates'**
+  String get flightsDatesValidate;
+
+  /// Erreur de la feuille de dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le retour ne peut pas précéder l\'aller.'**
+  String get flightsDatesReturnBeforeDeparture;
+
+  /// Titre de la feuille ville (départ).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville de départ'**
+  String get flightsCityDepartureTitle;
+
+  /// Titre de la feuille ville (arrivée).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville d\'arrivée'**
+  String get flightsCityArrivalTitle;
+
+  /// Indice du champ de recherche de ville.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tapez une ville'**
+  String get flightsCitySearchHint;
+
+  /// Titre de section : villes proposées à vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'SUGGESTIONS'**
+  String get flightsCitySuggestions;
+
+  /// Titre de section : villes trouvées.
+  ///
+  /// In fr, this message translates to:
+  /// **'RÉSULTATS'**
+  String get flightsCityResults;
+
+  /// Recherche de ville sans résultat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune ville trouvée'**
+  String get flightsCityNoResult;
+
+  /// Titre du carrousel des bons plans.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bons plans pour vous'**
+  String get flightsDealsTitle;
+
+  /// Mention du talon d'un bon plan.
+  ///
+  /// In fr, this message translates to:
+  /// **'vs prix habituel'**
+  String get flightsDealVsUsual;
+
+  /// Tampon d'un bon plan : écart à la médiane des prix observés.
+  ///
+  /// In fr, this message translates to:
+  /// **'−{percent} %'**
+  String flightsDealDiscount(int percent);
+
+  /// Date de départ d'un bon plan.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dès le {date}'**
+  String flightsDealFrom(String date);
+
+  /// Lecteur d'écran d'un bon plan.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bon plan {origin} vers {destination}, {price}, {percent} % sous le prix habituel'**
+  String flightsDealSemantics(
+    String origin,
+    String destination,
+    String price,
+    int percent,
+  );
+
+  /// Trajet en titre (résultats, alertes).
+  ///
+  /// In fr, this message translates to:
+  /// **'{origin} → {destination}'**
+  String flightsRouteTitle(String origin, String destination);
+
+  /// Nombre de billets affichés.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucun billet} =1{1 billet} other{{count} billets}}'**
+  String flightsResultsCount(int count);
+
+  /// Cloche de l'en-tête des résultats.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une alerte prix'**
+  String get flightsAlertCreateTooltip;
+
+  /// Résultats vides.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun billet trouvé'**
+  String get flightsEmptyTitle;
+
+  /// Résultats vides.
+  ///
+  /// In fr, this message translates to:
+  /// **'Essayez d\'autres dates, ou créez une alerte : on vous prévient dès qu\'un billet apparaît à votre prix.'**
+  String get flightsEmptyDescription;
+
+  /// Tampon du billet le moins cher.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le moins cher'**
+  String get flightsStampCheapest;
+
+  /// Tampon du billet le plus rapide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le plus rapide'**
+  String get flightsStampFastest;
+
+  /// Mention sous le prix d'un billet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix indicatif · réservation chez notre partenaire'**
+  String get flightsPriceDisclaimer;
+
+  /// Bouton qui ouvre le site partenaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir l\'offre'**
+  String get flightsOpenOffer;
+
+  /// Vol sans escale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Direct'**
+  String get flightsStopsDirect;
+
+  /// Nombre d'escales.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 escale} other{{count} escales}}'**
+  String flightsStopsCount(int count);
+
+  /// Filtre escales : toutes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes'**
+  String get flightsStopsAny;
+
+  /// Filtre escales : une au plus.
+  ///
+  /// In fr, this message translates to:
+  /// **'1 escale max'**
+  String get flightsStopsOneMax;
+
+  /// Durée de vol en heures pleines.
+  ///
+  /// In fr, this message translates to:
+  /// **'{hours} h'**
+  String flightsDurationHours(int hours);
+
+  /// Durée de vol en heures et minutes.
+  ///
+  /// In fr, this message translates to:
+  /// **'{hours} h {minutes}'**
+  String flightsDurationHoursMinutes(int hours, int minutes);
+
+  /// Titre de la feuille de filtres et puce des résultats.
+  ///
+  /// In fr, this message translates to:
+  /// **'Filtres'**
+  String get flightsFiltersTitle;
+
+  /// Puce des résultats quand un filtre restreint la liste.
+  ///
+  /// In fr, this message translates to:
+  /// **'Filtres actifs'**
+  String get flightsFiltersActive;
+
+  /// Bouton de la feuille de filtres.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réinitialiser'**
+  String get flightsFiltersReset;
+
+  /// Bouton de validation des filtres.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucun billet} =1{Voir 1 billet} other{Voir {count} billets}}'**
+  String flightsFiltersShow(int count);
+
+  /// Section tri.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trier par'**
+  String get flightsFiltersSort;
+
+  /// Tri par prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix croissant'**
+  String get flightsSortCheapest;
+
+  /// Tri par durée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus rapide'**
+  String get flightsSortFastest;
+
+  /// Tri par escales.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moins d\'escales'**
+  String get flightsSortFewestStops;
+
+  /// Section prix des filtres.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix'**
+  String get flightsFiltersPrice;
+
+  /// Section escales des filtres.
+  ///
+  /// In fr, this message translates to:
+  /// **'Escales'**
+  String get flightsFiltersStops;
+
+  /// Section compagnies des filtres.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compagnies'**
+  String get flightsFiltersAirlines;
+
+  /// Section sites vendeurs des filtres.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sites de réservation'**
+  String get flightsFiltersGates;
+
+  /// Explication des sites de réservation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un même vol peut coûter différemment selon le site qui le vend.'**
+  String get flightsFiltersGatesHint;
+
+  /// Prix le plus bas d'une compagnie dans les filtres.
+  ///
+  /// In fr, this message translates to:
+  /// **'dès {price}'**
+  String flightsFromPrice(String price);
+
+  /// Titre de l'écran des alertes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes alertes prix'**
+  String get flightsAlertsTitle;
+
+  /// Nombre d'alertes sur le maximum.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} sur {max}'**
+  String flightsAlertsCount(int count, int max);
+
+  /// Écran des alertes vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune alerte prix'**
+  String get flightsAlertsEmptyTitle;
+
+  /// Écran des alertes vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un trajet, une période et votre prix : on vérifie toutes les 6 heures et on vous prévient quand un billet passe dessous.'**
+  String get flightsAlertsEmptyDescription;
+
+  /// Note sous la liste des alertes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Glissez une alerte pour la supprimer. On vous prévient seulement si le prix baisse encore. Une alerte s\'arrête d\'elle-même quand sa période de départ est passée.'**
+  String get flightsAlertsFootnote;
+
+  /// Note quand la limite d'alertes est atteinte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez atteint la limite de 10 alertes : supprimez-en une pour en créer une autre.'**
+  String get flightsAlertsLimitReached;
+
+  /// Bouton et titre de la feuille de création d'alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle alerte'**
+  String get flightsAlertNewTitle;
+
+  /// Snackbar après création d'une alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Alerte prix créée'**
+  String get flightsAlertCreated;
+
+  /// Bouton de création d'alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer l\'alerte'**
+  String get flightsAlertCreate;
+
+  /// Champ période de départ d'une alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Période de départ'**
+  String get flightsAlertDeparturePeriod;
+
+  /// Champ période de retour d'une alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Période de retour'**
+  String get flightsAlertReturnPeriod;
+
+  /// Alerte sans période.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les dates à venir'**
+  String get flightsAlertAnyDate;
+
+  /// Période d'une alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'du {from} au {to}'**
+  String flightsAlertPeriod(String from, String to);
+
+  /// Erreur : période d'alerte trop longue.
+  ///
+  /// In fr, this message translates to:
+  /// **'31 jours au plus'**
+  String get flightsAlertPeriodTooLong;
+
+  /// Ligne départ d'une carte d'alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ {period}'**
+  String flightsAlertDepartureLine(String period);
+
+  /// Ligne retour d'une carte d'alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour {period}'**
+  String flightsAlertReturnLine(String period);
+
+  /// Champ seuil d'une alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévenez-moi sous'**
+  String get flightsAlertThreshold;
+
+  /// Libellé du seuil sur une carte d'alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuil'**
+  String get flightsAlertThresholdShort;
+
+  /// Seuil d'une alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'≤ {price}'**
+  String flightsAlertAtMost(String price);
+
+  /// Libellé du dernier prix vu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernier prix vu'**
+  String get flightsAlertLastSeen;
+
+  /// Alerte jamais vérifiée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore vérifié'**
+  String get flightsAlertNotChecked;
+
+  /// Aide de la feuille d'alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix le plus bas actuellement : {price}'**
+  String flightsAlertCurrentLowest(String price);
+
+  /// Note de la feuille d'alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification toutes les 6 heures. Période de 31 jours au plus, pour le départ comme pour le retour.'**
+  String get flightsAlertHint;
+
+  /// Titre des erreurs de la recherche de billets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Billets indisponibles'**
+  String get errorFlightsTitle;
+
+  /// 503 flights-unavailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'La recherche de billets est momentanément indisponible. Réessayez plus tard.'**
+  String get errorFlightsUnavailableMessage;
+
+  /// 502 flights-provider-error.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le service de prix ne répond pas. Réessayez dans un instant.'**
+  String get errorFlightsProviderMessage;
+
+  /// 422 sur la recherche (même aéroport, date passée, retour avant l'aller).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez le trajet et les dates : le départ et l\'arrivée doivent être différents et les dates à venir.'**
+  String get errorFlightsInvalidQueryMessage;
+
+  /// 409 flight-alert-duplicate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une alerte identique existe déjà pour ce trajet.'**
+  String get errorFlightAlertDuplicateMessage;
+
+  /// 422 flight-alert-limit-reached.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez atteint la limite de 10 alertes prix.'**
+  String get errorFlightAlertLimitMessage;
+
+  /// 422 flights-period-too-long / flights-invalid-period.
+  ///
+  /// In fr, this message translates to:
+  /// **'La période choisie ne convient pas : 31 jours au plus, bornes complètes et à venir.'**
+  String get errorFlightsPeriodMessage;
+
+  /// 403 flights-account-required.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez un compte pour utiliser les alertes prix.'**
+  String get errorFlightsAccountRequiredMessage;
+
+  /// Échec d'ouverture du lien partenaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ouvrir le site partenaire. Réessayez.'**
+  String get errorFlightsLaunchMessage;
 }
 
 class _AppLocalizationsDelegate

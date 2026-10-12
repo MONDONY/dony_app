@@ -77,8 +77,8 @@ void main() {
       expect(find.byType(DonyAvatar), findsOneWidget);
       expect(find.byIcon(Icons.person_rounded), findsNothing);
       expect(find.byIcon(Icons.person_outline_rounded), findsNothing);
-      // Le libellé est désormais toujours rendu visuellement sous l'icône.
-      expect(find.text('Moi'), findsOneWidget);
+      // Barre en icônes seules : le libellé n'est plus rendu en texte.
+      expect(find.text('Moi'), findsNothing);
     });
 
     testWidgets('anneau primary quand actif', (tester) async {
@@ -228,40 +228,26 @@ void main() {
     });
   });
 
-  group('DonyNavItem — libellé visible (audit UX bottom nav)', () {
-    testWidgets('libellé en primary quand actif', (tester) async {
+  group('DonyNavItem — icônes seules (barre à six onglets)', () {
+    testWidgets('aucun libellé visible, actif ou non', (tester) async {
       await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
       await tester.pumpAndSettle();
+      expect(find.text('Moi'), findsNothing);
 
-      final text = tester.widget<Text>(find.text('Moi'));
-      expect(text.style?.color, DonyColors.primary);
-      expect(text.style?.fontWeight, FontWeight.w700);
-    });
-
-    testWidgets('libellé en onSurfaceVariant quand inactif', (tester) async {
       await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 0)));
       await tester.pumpAndSettle();
-
-      final text = tester.widget<Text>(find.text('Moi'));
-      expect(text.style?.color, DonyColors.textSubtle);
-      expect(text.style?.fontWeight, FontWeight.w600);
+      expect(find.text('Moi'), findsNothing);
     });
 
-    testWidgets(
-      'libellé exclu de l\'arbre sémantique (pas de double annonce)',
-      (tester) async {
-        await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
-        await tester.pumpAndSettle();
+    testWidgets('le libellé reste en infobulle, hors de l\'arbre sémantique', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 0)));
 
-        expect(
-          find.ancestor(
-            of: find.text('Moi'),
-            matching: find.byType(ExcludeSemantics),
-          ),
-          findsOneWidget,
-        );
-      },
-    );
+      final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
+      expect(tooltip.message, 'Moi');
+      expect(tooltip.excludeFromSemantics, isTrue);
+    });
   });
 
   group('DonyNavItem — accessibilité & interaction', () {

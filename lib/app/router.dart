@@ -50,6 +50,8 @@ import 'package:dony/features/disputes/presentation/dispute_list_screen.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/favorites/presentation/favorites_screen.dart';
+import 'package:dony/features/flights/presentation/flight_alerts_screen.dart';
+import 'package:dony/features/flights/presentation/flights_screen.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
@@ -1196,6 +1198,14 @@ final appRouter = GoRouter(
           ReceptionDetailScreen(bidId: state.pathParameters['bidId']!),
     ),
 
+    // ── Alertes prix des billets (hors shell) ────────────────────────────
+    // Cloche de l'onglet Billets, notification FLIGHT_PRICE_ALERT et deeplink
+    // `yadony://flights/alerts`.
+    GoRoute(
+      path: '/flights/alerts',
+      builder: (_, _) => const FlightAlertsScreen(),
+    ),
+
     // ── Alertes corridor (hors shell) ────────────────────────────────────
     GoRoute(
       path: '/corridor-alerts',
@@ -1956,6 +1966,18 @@ final appRouter = GoRouter(
                 ],
                 child: const ProfileScreen(),
               ),
+            ),
+          ],
+        ),
+
+        // Branch 5 — Billets d'avion. Ajoutée EN DERNIER pour ne décaler aucun
+        // index existant : la barre du bas l'affiche pourtant en 2e position
+        // (voir `MainShell.navSlotOrder`).
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/flights',
+              builder: (context, state) => const FlightsScreen(),
             ),
           ],
         ),

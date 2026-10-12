@@ -4,7 +4,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-enum AuthRequiredReason { explore, offer, report }
+enum AuthRequiredReason { explore, offer, report, flightAlert }
 
 abstract final class AuthRequiredSheet {
   static Future<void> show(
@@ -67,6 +67,10 @@ abstract final class AuthRequiredSheet {
       AuthRequiredReason.report => _AuthRequiredCopy(
         subtitle: l10n.authRequiredReportSubtitle,
         body: l10n.authRequiredReportBody,
+      ),
+      AuthRequiredReason.flightAlert => _AuthRequiredCopy(
+        subtitle: l10n.authRequiredFlightAlertSubtitle,
+        body: l10n.authRequiredFlightAlertBody,
       ),
       AuthRequiredReason.explore => _AuthRequiredCopy(
         subtitle: l10n.authRequiredExploreSubtitle,

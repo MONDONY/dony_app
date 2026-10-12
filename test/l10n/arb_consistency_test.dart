@@ -104,6 +104,9 @@ int _matchingBrace(String text, int openIndex) {
 /// Clés dont l'anglais est volontairement identique au français.
 /// Toute nouvelle entrée doit être justifiée en commentaire.
 const _sameInBothLanguages = <String>{
+  'flightsRouteTitle', // « {origin} → {destination} » : le trajet, sans mot
+  'flightsStopsDirect', // « Direct » se dit pareil
+  'flightsAlertAtMost', // « ≤ {price} » : symbole et montant
   'recipientNotifyRoute', // « (Paris → Dakar) » : seulement le trajet, sans mot
   'commonOk', // « OK » se dit pareil
   'tripStopsDirect', // « Direct » (vol direct) se dit pareil (FLUTTER-GE)

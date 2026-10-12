@@ -104,7 +104,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     '/tracking',
     '/messages',
     '/profile',
+    '/flights',
   ];
+
+  /// Branche du shell affichée dans chaque emplacement de la barre, de gauche
+  /// à droite. Billets (branche 5, ajoutée en dernier pour ne décaler aucun
+  /// index existant) s'affiche en 2e position, entre Recherche et Activités.
+  static const List<int> navSlotOrder = [0, 5, 1, 2, 3, 4];
 
   void _logTabScreen(int index) {
     if (index < 0 || index >= _tabScreenNames.length) return;
@@ -447,6 +453,16 @@ class _DonyBottomNav extends StatelessWidget {
                                 onTap: () => onTap(0),
                               ),
                             ),
+                            // 5 — Billets d'avion (affiché en 2e position).
+                            Expanded(
+                              child: DonyNavItem(
+                                iconAsset: 'ticket',
+                                label: context.l10n.shellTabTickets,
+                                index: 5,
+                                currentIndex: currentIndex,
+                                onTap: () => onTap(5),
+                              ),
+                            ),
                             // 1 — Activités (point d'attention = demandes reçues
                             // + négociations actives, les deux signaux que les
                             // cartes du hub portent aussi)
@@ -603,9 +619,9 @@ class _SlidingNavIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemWidth = barWidth / 5;
-    final left =
-        itemWidth * currentIndex + (itemWidth - DonyNavItem.pillWidth) / 2;
+    final itemWidth = barWidth / _MainShellState.navSlotOrder.length;
+    final slot = _MainShellState.navSlotOrder.indexOf(currentIndex);
+    final left = itemWidth * slot + (itemWidth - DonyNavItem.pillWidth) / 2;
     final visible = currentIndex != 2 && currentIndex != 4;
 
     return AnimatedPositioned(

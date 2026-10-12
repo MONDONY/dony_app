@@ -18239,4 +18239,365 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suiviPhotoLostDismiss => 'Close the lost photo message';
+
+  @override
+  String get shellTabTickets => 'Tickets';
+
+  @override
+  String get authRequiredFlightAlertSubtitle =>
+      'Get an alert when the price drops';
+
+  @override
+  String get authRequiredFlightAlertBody =>
+      'Price alerts are tied to your account: create one in a minute to be notified as soon as a ticket drops below your price.';
+
+  @override
+  String get flightsTitle => 'Tickets';
+
+  @override
+  String get flightsAlertsTooltip => 'My price alerts';
+
+  @override
+  String get flightsAffiliationNotice =>
+      'Yadony doesn\'t sell tickets: you book with our partner, who may pay us a commission at no cost to you. Prices are indicative.';
+
+  @override
+  String get flightsFieldDeparture => 'From';
+
+  @override
+  String get flightsFieldArrival => 'To';
+
+  @override
+  String get flightsFieldChooseCity => 'Choose a city';
+
+  @override
+  String get flightsFieldChooseDates => 'Choose dates';
+
+  @override
+  String get flightsSwapTooltip => 'Swap origin and destination';
+
+  @override
+  String get flightsOutboundLabel => 'Outbound';
+
+  @override
+  String get flightsReturnLabel => 'Return';
+
+  @override
+  String get flightsOneWay => 'One way';
+
+  @override
+  String get flightsRoundTrip => 'Round trip';
+
+  @override
+  String get flightsDirectOnly => 'Direct flights only';
+
+  @override
+  String get flightsSearchButton => 'Search';
+
+  @override
+  String get flightsDatesAny => 'Any date';
+
+  @override
+  String get flightsDatesTitle => 'When are you leaving?';
+
+  @override
+  String get flightsDatesPreciseDay => 'Exact day';
+
+  @override
+  String get flightsDatesWholeMonth => 'Whole month';
+
+  @override
+  String get flightsDatesValidate => 'Confirm dates';
+
+  @override
+  String get flightsDatesReturnBeforeDeparture =>
+      'The return can\'t be before the outbound.';
+
+  @override
+  String get flightsCityDepartureTitle => 'Departure city';
+
+  @override
+  String get flightsCityArrivalTitle => 'Arrival city';
+
+  @override
+  String get flightsCitySearchHint => 'Type a city';
+
+  @override
+  String get flightsCitySuggestions => 'SUGGESTED CITIES';
+
+  @override
+  String get flightsCityResults => 'RESULTS';
+
+  @override
+  String get flightsCityNoResult => 'No city found';
+
+  @override
+  String get flightsDealsTitle => 'Deals for you';
+
+  @override
+  String get flightsDealVsUsual => 'vs usual price';
+
+  @override
+  String flightsDealDiscount(int percent) {
+    return '−$percent%';
+  }
+
+  @override
+  String flightsDealFrom(String date) {
+    return 'From $date';
+  }
+
+  @override
+  String flightsDealSemantics(
+    String origin,
+    String destination,
+    String price,
+    int percent,
+  ) {
+    return 'Deal $origin to $destination, $price, $percent% below the usual price';
+  }
+
+  @override
+  String flightsRouteTitle(String origin, String destination) {
+    return '$origin → $destination';
+  }
+
+  @override
+  String flightsResultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tickets',
+      one: '1 ticket',
+      zero: 'No ticket',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsAlertCreateTooltip => 'Create a price alert';
+
+  @override
+  String get flightsEmptyTitle => 'No ticket found';
+
+  @override
+  String get flightsEmptyDescription =>
+      'Try other dates, or create an alert: we\'ll let you know as soon as a ticket shows up at your price.';
+
+  @override
+  String get flightsStampCheapest => 'Cheapest';
+
+  @override
+  String get flightsStampFastest => 'Fastest';
+
+  @override
+  String get flightsPriceDisclaimer =>
+      'Indicative price · book with our partner';
+
+  @override
+  String get flightsOpenOffer => 'View offer';
+
+  @override
+  String get flightsStopsDirect => 'Direct';
+
+  @override
+  String flightsStopsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stops',
+      one: '1 stop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsStopsAny => 'Any';
+
+  @override
+  String get flightsStopsOneMax => '1 stop max';
+
+  @override
+  String flightsDurationHours(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String flightsDurationHoursMinutes(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String get flightsFiltersTitle => 'Filters';
+
+  @override
+  String get flightsFiltersActive => 'Filters on';
+
+  @override
+  String get flightsFiltersReset => 'Reset';
+
+  @override
+  String flightsFiltersShow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Show $count tickets',
+      one: 'Show 1 ticket',
+      zero: 'No ticket',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsFiltersSort => 'Sort by';
+
+  @override
+  String get flightsSortCheapest => 'Lowest price';
+
+  @override
+  String get flightsSortFastest => 'Fastest';
+
+  @override
+  String get flightsSortFewestStops => 'Fewest stops';
+
+  @override
+  String get flightsFiltersPrice => 'Price';
+
+  @override
+  String get flightsFiltersStops => 'Stops';
+
+  @override
+  String get flightsFiltersAirlines => 'Airlines';
+
+  @override
+  String get flightsFiltersGates => 'Booking sites';
+
+  @override
+  String get flightsFiltersGatesHint =>
+      'The same flight can cost more or less depending on the site selling it.';
+
+  @override
+  String flightsFromPrice(String price) {
+    return 'from $price';
+  }
+
+  @override
+  String get flightsAlertsTitle => 'My price alerts';
+
+  @override
+  String flightsAlertsCount(int count, int max) {
+    return '$count of $max';
+  }
+
+  @override
+  String get flightsAlertsEmptyTitle => 'No price alert';
+
+  @override
+  String get flightsAlertsEmptyDescription =>
+      'Choose a route, a period and your price: we check every 6 hours and let you know when a ticket drops below it.';
+
+  @override
+  String get flightsAlertsFootnote =>
+      'Swipe an alert to delete it. We only notify you if the price keeps dropping. An alert stops by itself once its departure period is over.';
+
+  @override
+  String get flightsAlertsLimitReached =>
+      'You have reached the limit of 10 alerts: delete one to create another.';
+
+  @override
+  String get flightsAlertNewTitle => 'New alert';
+
+  @override
+  String get flightsAlertCreated => 'Price alert created';
+
+  @override
+  String get flightsAlertCreate => 'Create alert';
+
+  @override
+  String get flightsAlertDeparturePeriod => 'Departure period';
+
+  @override
+  String get flightsAlertReturnPeriod => 'Return period';
+
+  @override
+  String get flightsAlertAnyDate => 'All upcoming dates';
+
+  @override
+  String flightsAlertPeriod(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String get flightsAlertPeriodTooLong => '31 days at most';
+
+  @override
+  String flightsAlertDepartureLine(String period) {
+    return 'Departure $period';
+  }
+
+  @override
+  String flightsAlertReturnLine(String period) {
+    return 'Return $period';
+  }
+
+  @override
+  String get flightsAlertThreshold => 'Notify me below';
+
+  @override
+  String get flightsAlertThresholdShort => 'Threshold';
+
+  @override
+  String flightsAlertAtMost(String price) {
+    return '≤ $price';
+  }
+
+  @override
+  String get flightsAlertLastSeen => 'Last price seen';
+
+  @override
+  String get flightsAlertNotChecked => 'Not checked yet';
+
+  @override
+  String flightsAlertCurrentLowest(String price) {
+    return 'Current lowest price: $price';
+  }
+
+  @override
+  String get flightsAlertHint =>
+      'Checked every 6 hours. Periods of 31 days at most, for both outbound and return.';
+
+  @override
+  String get errorFlightsTitle => 'Tickets unavailable';
+
+  @override
+  String get errorFlightsUnavailableMessage =>
+      'Ticket search is temporarily unavailable. Please try again later.';
+
+  @override
+  String get errorFlightsProviderMessage =>
+      'The price service is not responding. Try again in a moment.';
+
+  @override
+  String get errorFlightsInvalidQueryMessage =>
+      'Check the route and dates: origin and destination must differ and dates must be upcoming.';
+
+  @override
+  String get errorFlightAlertDuplicateMessage =>
+      'An identical alert already exists for this route.';
+
+  @override
+  String get errorFlightAlertLimitMessage =>
+      'You have reached the limit of 10 price alerts.';
+
+  @override
+  String get errorFlightsPeriodMessage =>
+      'The chosen period doesn\'t work: 31 days at most, both ends set and upcoming.';
+
+  @override
+  String get errorFlightsAccountRequiredMessage =>
+      'Create an account to use price alerts.';
+
+  @override
+  String get errorFlightsLaunchMessage =>
+      'Couldn\'t open the partner site. Please try again.';
 }

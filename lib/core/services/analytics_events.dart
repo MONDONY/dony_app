@@ -630,4 +630,17 @@ abstract final class AnalyticsEvents {
   // Langue serveur — synchronisation de la langue effective de l'app avec
   // `preferredLanguage` du compte (`LanguageSyncCubit`).
   static const preferredLanguageSynced = 'preferred_language_synced';
+
+  // Billets d'avion en affiliation (onglet Billets, `features/flights`).
+  // Aucune ville saisie, aucun prix exact ni numéro ne part dans l'analytics.
+  static const flightsSearchSubmitted = 'flights_search_submitted';
+  static const flightsSearchFailed = 'flights_search_failed';
+  static const flightsPrefillApplied = 'flights_prefill_applied';
+  static const flightsDealOpened = 'flights_deal_opened';
+  static const flightsFilterApplied = 'flights_filter_applied';
+  static const flightsOfferClicked = 'flights_offer_clicked';
+  static const flightsOfferOpenFailed = 'flights_offer_open_failed';
+  static const flightsAlertCreated = 'flights_alert_created';
+  static const flightsAlertToggled = 'flights_alert_toggled';
+  static const flightsAlertDeleted = 'flights_alert_deleted';
 }
