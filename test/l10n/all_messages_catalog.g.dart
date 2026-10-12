@@ -3729,6 +3729,22 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'archivedConversationsEmptyDescription': (l) =>
       l.archivedConversationsEmptyDescription,
   'conversationUnarchivedSnackbar': (l) => l.conversationUnarchivedSnackbar,
+  'conversationSelectionCount': (l) =>
+      l.conversationSelectionCount(intPlaceholderValue),
+  'conversationSelectionClose': (l) => l.conversationSelectionClose,
+  'conversationSelectFinished': (l) => l.conversationSelectFinished,
+  'conversationSelectFinishedNone': (l) => l.conversationSelectFinishedNone,
+  'conversationSelectLongPressHint': (l) => l.conversationSelectLongPressHint,
+  'conversationBatchArchivedSnackbar': (l) =>
+      l.conversationBatchArchivedSnackbar(intPlaceholderValue),
+  'conversationBatchUnarchivedSnackbar': (l) =>
+      l.conversationBatchUnarchivedSnackbar(intPlaceholderValue),
+  'conversationBatchDeletedSnackbar': (l) =>
+      l.conversationBatchDeletedSnackbar(intPlaceholderValue),
+  'conversationBatchPartialFailure': (l) =>
+      l.conversationBatchPartialFailure(intPlaceholderValue),
+  'conversationBatchDeleteConfirmTitle': (l) =>
+      l.conversationBatchDeleteConfirmTitle(intPlaceholderValue),
   'conversationUnarchiveAction': (l) => l.conversationUnarchiveAction,
   'conversationLoaderNotFoundTitle': (l) => l.conversationLoaderNotFoundTitle,
   'conversationLoaderNotFoundDescription': (l) =>

@@ -52,6 +52,9 @@ class ConversationListBloc
     on<ConversationUnarchiveRequested>(_onUnarchive);
     on<ConversationNotificationsMuteToggled>(_onMuteToggled);
     on<ConversationNotificationsMuteSynced>(_onMuteSynced);
+    on<ConversationsBatchArchiveRequested>(_onBatchArchive);
+    on<ConversationsBatchUnarchiveRequested>(_onBatchUnarchive);
+    on<ConversationsBatchDeleteRequested>(_onBatchDelete);
 
     // Ce Bloc est un singleton GetIt (jamais fermé via BlocProvider.value) :
     // sans ce listener, _unreadSub survit à un signOut() et Firestore renvoie
@@ -355,6 +358,221 @@ class ConversationListBloc
     final current = _mutedOf(event.conversationId);
     if (current == null || current == event.muted) return;
     _applyMuted(event.conversationId, event.muted, emit);
+  }
+
+  // ── Actions groupées (sélection multiple, FLUTTER-M4) ──────────────────────
+
+  void _emitLists(
+    Emitter<ConversationListState> emit, {
+    ConversationBatchFeedback? feedback,
+  }) {
+    if (_loaded == null) return;
+    emit(
+      ConversationListLoaded(
+        _loaded!,
+        archivedConversations: _archived,
+        filter: _currentFilter,
+        searchQuery: _currentSearchQuery,
+        batchFeedback: feedback,
+      ),
+    );
+  }
+
+  /// Archive le lot : retrait optimiste de la liste active, puis remise en
+  /// place des fils que le serveur n'a pas archivés.
+  Future<void> _onBatchArchive(
+    ConversationsBatchArchiveRequested event,
+    Emitter<ConversationListState> emit,
+  ) async {
+    final ids = event.conversationIds.toSet();
+    final loaded = _loaded;
+    if (loaded == null || ids.isEmpty) return;
+    final moved = loaded.where((c) => ids.contains(c.id)).toList();
+    if (moved.isEmpty) return;
+    final movedIds = {for (final c in moved) c.id};
+    _loaded = loaded.where((c) => !movedIds.contains(c.id)).toList();
+    _archived = [..._archived.where((c) => !movedIds.contains(c.id)), ...moved];
+    _emitLists(emit);
+
+    final BatchConversationResult result;
+    try {
+      result = await _repository.archiveConversations(movedIds.toList());
+    } catch (e) {
+      _archived = _archived.where((c) => !movedIds.contains(c.id)).toList();
+      _loaded = ConversationRepository.sortByLastMessage([
+        ...?_loaded,
+        ...moved,
+      ]);
+      _emitLists(
+        emit,
+        feedback: ConversationBatchFeedback(
+          action: ConversationBatchAction.archive,
+          failedCount: moved.length,
+          error: unwrapDioError(e),
+        ),
+      );
+      return;
+    }
+    final failed = result.failed.toSet();
+    if (failed.isNotEmpty) {
+      _archived = _archived.where((c) => !failed.contains(c.id)).toList();
+      _loaded = ConversationRepository.sortByLastMessage([
+        ...?_loaded,
+        ...moved.where((c) => failed.contains(c.id)),
+      ]);
+    }
+    _logBatch(AnalyticsEvents.conversationsBatchArchived, result);
+    _emitLists(
+      emit,
+      feedback: ConversationBatchFeedback(
+        action: ConversationBatchAction.archive,
+        succeededIds: result.succeeded,
+        failedCount: failed.length,
+      ),
+    );
+  }
+
+  /// Désarchive le lot : les fils reviennent dans la liste active, ceux que
+  /// le serveur refuse restent aux archives.
+  Future<void> _onBatchUnarchive(
+    ConversationsBatchUnarchiveRequested event,
+    Emitter<ConversationListState> emit,
+  ) async {
+    final ids = event.conversationIds.toSet();
+    if (_loaded == null || ids.isEmpty) return;
+    final moved = _archived.where((c) => ids.contains(c.id)).toList();
+    if (moved.isEmpty) return;
+    final movedIds = {for (final c in moved) c.id};
+    _archived = _archived.where((c) => !movedIds.contains(c.id)).toList();
+    _loaded = ConversationRepository.sortByLastMessage([
+      ...moved,
+      ..._loaded!.where((c) => !movedIds.contains(c.id)),
+    ]);
+    _emitLists(emit);
+
+    void restore(Set<String> failed) {
+      _loaded = _loaded!.where((c) => !failed.contains(c.id)).toList();
+      _archived = [..._archived, ...moved.where((c) => failed.contains(c.id))];
+    }
+
+    final BatchConversationResult result;
+    try {
+      result = await _repository.unarchiveConversations(movedIds.toList());
+    } catch (e) {
+      restore(movedIds);
+      _emitLists(
+        emit,
+        feedback: ConversationBatchFeedback(
+          action: ConversationBatchAction.unarchive,
+          failedCount: moved.length,
+          error: unwrapDioError(e),
+          isUndo: event.isUndo,
+        ),
+      );
+      return;
+    }
+    final failed = result.failed.toSet();
+    if (failed.isNotEmpty) restore(failed);
+    _logBatch(
+      AnalyticsEvents.conversationsBatchUnarchived,
+      result,
+      extra: {'undo': event.isUndo},
+    );
+    _emitLists(
+      emit,
+      feedback: ConversationBatchFeedback(
+        action: ConversationBatchAction.unarchive,
+        succeededIds: result.succeeded,
+        failedCount: failed.length,
+        isUndo: event.isUndo,
+      ),
+    );
+  }
+
+  /// Supprime le lot, actif ou archivé. Les non-lus des fils sont remis à
+  /// zéro avant l'appel, comme pour la suppression unitaire.
+  Future<void> _onBatchDelete(
+    ConversationsBatchDeleteRequested event,
+    Emitter<ConversationListState> emit,
+  ) async {
+    final ids = event.conversationIds.toSet();
+    if (_loaded == null || ids.isEmpty) return;
+    final fromActive = _loaded!.where((c) => ids.contains(c.id)).toList();
+    final fromArchived = _archived.where((c) => ids.contains(c.id)).toList();
+    final removed = [...fromActive, ...fromArchived];
+    if (removed.isEmpty) return;
+    final removedIds = {for (final c in removed) c.id};
+    _loaded = _loaded!.where((c) => !removedIds.contains(c.id)).toList();
+    _archived = _archived.where((c) => !removedIds.contains(c.id)).toList();
+    _emitLists(emit);
+
+    final uid = _currentUid();
+    if (uid.isNotEmpty) {
+      for (final c in removed) {
+        if (c.firestoreConversationId.isEmpty) continue;
+        try {
+          await _firestoreRepo.markConversationRead(
+            c.firestoreConversationId,
+            uid,
+          );
+        } catch (_) {}
+      }
+    }
+
+    void restore(Set<String> failed) {
+      _loaded = ConversationRepository.sortByLastMessage([
+        ..._loaded!,
+        ...fromActive.where((c) => failed.contains(c.id)),
+      ]);
+      _archived = [
+        ..._archived,
+        ...fromArchived.where((c) => failed.contains(c.id)),
+      ];
+    }
+
+    final BatchConversationResult result;
+    try {
+      result = await _repository.deleteConversations(removedIds.toList());
+    } catch (e) {
+      restore(removedIds);
+      _emitLists(
+        emit,
+        feedback: ConversationBatchFeedback(
+          action: ConversationBatchAction.delete,
+          failedCount: removed.length,
+          error: unwrapDioError(e),
+        ),
+      );
+      return;
+    }
+    final failed = result.failed.toSet();
+    if (failed.isNotEmpty) restore(failed);
+    _logBatch(AnalyticsEvents.conversationsBatchDeleted, result);
+    _emitLists(
+      emit,
+      feedback: ConversationBatchFeedback(
+        action: ConversationBatchAction.delete,
+        succeededIds: result.succeeded,
+        failedCount: failed.length,
+      ),
+    );
+  }
+
+  void _logBatch(
+    String event,
+    BatchConversationResult result, {
+    Map<String, Object> extra = const {},
+  }) {
+    unawaited(
+      _analytics?.logEvent(
+        event,
+        properties: {
+          'count': result.succeeded.length,
+          'failed': result.failed.length,
+          ...extra,
+        },
+      ),
+    );
   }
 
   void _removeFromLoaded(String id, Emitter<ConversationListState> emit) {

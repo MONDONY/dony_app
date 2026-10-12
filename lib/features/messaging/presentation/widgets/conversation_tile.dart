@@ -13,7 +13,36 @@ import 'package:intl/intl.dart';
 
 class ConversationTile extends StatelessWidget {
   final ConversationModel conversation;
-  const ConversationTile({super.key, required this.conversation});
+
+  /// Mode sélection (FLUTTER-M4) : `null` hors sélection, sinon l'état de la
+  /// case à cocher affichée devant l'avatar.
+  final bool? selected;
+
+  /// Remplace l'ouverture du chat (le tap coche la case en mode sélection).
+  final VoidCallback? onTap;
+
+  /// Appui long : ouvre le mode sélection.
+  final VoidCallback? onLongPress;
+
+  const ConversationTile({
+    super.key,
+    required this.conversation,
+    this.selected,
+    this.onTap,
+    this.onLongPress,
+  });
+
+  Future<void> _openChat(BuildContext context) async {
+    // Le chat a son propre ChatBloc (registerFactory) : la liste ne sait
+    // pas qu'un message a été envoyé/lu tant qu'on ne recharge pas au
+    // retour (règle CLAUDE.md « Rafraîchissement après navigation »).
+    final bloc = context.read<ConversationListBloc>();
+    await context.push(
+      '/conversations/${conversation.id}',
+      extra: conversation,
+    );
+    bloc.add(const ConversationsLoadRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,146 +62,198 @@ class ConversationTile extends StatelessWidget {
             returnPending: conversation.returnPending,
           );
 
-    return Material(
-      // Surlignage non-lu : teinte primary légère par-dessus la surface,
-      // lisible en clair comme en sombre (fini le bleu clair figé).
-      color: unread
-          ? Color.alphaBlend(cs.primary.withValues(alpha: 0.06), cs.surface)
-          : cs.surface,
-      child: InkWell(
-        onTap: () async {
-          // Le chat a son propre ChatBloc (registerFactory) : la liste ne sait
-          // pas qu'un message a été envoyé/lu tant qu'on ne recharge pas au
-          // retour (règle CLAUDE.md « Rafraîchissement après navigation »).
-          final bloc = context.read<ConversationListBloc>();
-          await context.push(
-            '/conversations/${conversation.id}',
-            extra: conversation,
-          );
-          bloc.add(const ConversationsLoadRequested());
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.lg,
-            vertical: 12,
-          ),
-          child: Row(
-            children: [
-              DonyAvatar(
-                name: participant.name.isNotEmpty ? participant.name : '?',
-                imageUrl: participant.avatarUrl,
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            participant.name.isNotEmpty
-                                ? participant.name
-                                : l.conversationUserFallback,
-                            style: tt.titleLarge?.copyWith(
-                              fontWeight: unread
-                                  ? FontWeight.w800
-                                  : FontWeight.w700,
-                              color: cs.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+    final isSelected = selected ?? false;
+    return Semantics(
+      selected: selected == null ? null : isSelected,
+      onLongPressHint: onLongPress == null
+          ? null
+          : l.conversationSelectLongPressHint,
+      child: Material(
+        // Surlignage : sélection d'abord, puis non-lu (teinte primary légère par
+        // dessus la surface, lisible en clair comme en sombre).
+        color: isSelected
+            ? Color.alphaBlend(cs.primary.withValues(alpha: 0.12), cs.surface)
+            : unread
+            ? Color.alphaBlend(cs.primary.withValues(alpha: 0.06), cs.surface)
+            : cs.surface,
+        child: InkWell(
+          onTap: onTap ?? () => _openChat(context),
+          onLongPress: onLongPress,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.lg,
+              vertical: 12,
+            ),
+            child: Row(
+              children: [
+                // Case à cocher du mode sélection, glissée devant l'avatar.
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  child: selected == null
+                      ? const SizedBox.shrink()
+                      : Padding(
+                          padding: const EdgeInsets.only(right: DonySpacing.sm),
+                          child: _SelectionCheck(
+                            key: Key('conversation-select-${conversation.id}'),
+                            selected: isSelected,
+                            cs: cs,
                           ),
                         ),
-                        if (conversation.notificationsMuted) ...[
-                          const SizedBox(width: DonySpacing.xs),
-                          Semantics(
-                            label: l.conversationNotificationsMutedSemantics,
-                            child: Icon(
-                              Icons.notifications_off_outlined,
-                              key: const Key('conversation-tile-muted'),
-                              size: 14,
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                        if (conversation.lastMessageAt != null) ...[
-                          const SizedBox(width: DonySpacing.xs),
-                          Text(
-                            formatConversationTime(
-                              l,
-                              conversation.lastMessageAt!,
-                            ),
-                            style: tt.labelSmall?.copyWith(
-                              color: unread ? cs.primary : cs.onSurfaceVariant,
-                              fontWeight: unread
-                                  ? FontWeight.w700
-                                  : FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (_contextLabel(l, conversation) != null ||
-                        parcelBadge != null) ...[
-                      const SizedBox(height: 3),
+                ),
+                DonyAvatar(
+                  name: participant.name.isNotEmpty ? participant.name : '?',
+                  imageUrl: participant.avatarUrl,
+                ),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Row(
                         children: [
-                          if (_contextLabel(l, conversation) case final label?)
-                            Flexible(
-                              child: _TripLabel(
-                                label: label,
-                                iconAsset: conversation.isRecipientConversation
-                                    ? 'package'
-                                    : 'plane',
-                                cs: cs,
-                                tt: tt,
+                          Expanded(
+                            child: Text(
+                              participant.name.isNotEmpty
+                                  ? participant.name
+                                  : l.conversationUserFallback,
+                              style: tt.titleLarge?.copyWith(
+                                fontWeight: unread
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
+                                color: cs.onSurface,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (conversation.notificationsMuted) ...[
+                            const SizedBox(width: DonySpacing.xs),
+                            Semantics(
+                              label: l.conversationNotificationsMutedSemantics,
+                              child: Icon(
+                                Icons.notifications_off_outlined,
+                                key: const Key('conversation-tile-muted'),
+                                size: 14,
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
-                          if (parcelBadge != null) ...[
-                            const SizedBox(width: DonySpacing.sm),
-                            ParcelStatusPill(
-                              key: const Key('conversation-tile-parcel-status'),
-                              badge: parcelBadge,
-                              compact: true,
+                          ],
+                          if (conversation.lastMessageAt != null) ...[
+                            const SizedBox(width: DonySpacing.xs),
+                            Text(
+                              formatConversationTime(
+                                l,
+                                conversation.lastMessageAt!,
+                              ),
+                              style: tt.labelSmall?.copyWith(
+                                color: unread
+                                    ? cs.primary
+                                    : cs.onSurfaceVariant,
+                                fontWeight: unread
+                                    ? FontWeight.w700
+                                    : FontWeight.w400,
+                              ),
                             ),
                           ],
                         ],
                       ),
-                    ],
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _previewText(l, conversation),
-                            style: tt.bodySmall?.copyWith(
-                              color: unread
-                                  ? cs.onSurface
-                                  : cs.onSurfaceVariant,
-                              fontWeight: unread
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      if (_contextLabel(l, conversation) != null ||
+                          parcelBadge != null) ...[
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            if (_contextLabel(l, conversation)
+                                case final label?)
+                              Flexible(
+                                child: _TripLabel(
+                                  label: label,
+                                  iconAsset:
+                                      conversation.isRecipientConversation
+                                      ? 'package'
+                                      : 'plane',
+                                  cs: cs,
+                                  tt: tt,
+                                ),
+                              ),
+                            if (parcelBadge != null) ...[
+                              const SizedBox(width: DonySpacing.sm),
+                              ParcelStatusPill(
+                                key: const Key(
+                                  'conversation-tile-parcel-status',
+                                ),
+                                badge: parcelBadge,
+                                compact: true,
+                              ),
+                            ],
+                          ],
                         ),
-                        const SizedBox(width: DonySpacing.xs),
-                        if (unread && conversation.unreadCount > 0)
-                          _UnreadBadge(
-                            count: conversation.unreadCount,
-                            cs: cs,
-                            tt: tt,
-                          ),
                       ],
-                    ),
-                  ],
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _previewText(l, conversation),
+                              style: tt.bodySmall?.copyWith(
+                                color: unread
+                                    ? cs.onSurface
+                                    : cs.onSurfaceVariant,
+                                fontWeight: unread
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: DonySpacing.xs),
+                          if (unread && conversation.unreadCount > 0)
+                            _UnreadBadge(
+                              count: conversation.unreadCount,
+                              cs: cs,
+                              tt: tt,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Case ronde du mode sélection. L'état coché est porté par la [Semantics]
+/// de la tuile : la case elle-même n'est pas un contrôle séparé.
+class _SelectionCheck extends StatelessWidget {
+  final bool selected;
+  final ColorScheme cs;
+  const _SelectionCheck({super.key, required this.selected, required this.cs});
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOutCubic,
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: selected ? cs.primary : Colors.transparent,
+          border: Border.all(
+            color: selected ? cs.primary : cs.outline,
+            width: 2,
+          ),
+        ),
+        child: selected
+            ? Icon(Icons.check_rounded, size: 16, color: cs.onPrimary)
+            : null,
       ),
     );
   }

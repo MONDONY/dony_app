@@ -5,7 +5,9 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
+import 'package:dony/features/messaging/bloc/conversation_selection/conversation_selection_cubit.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
+import 'package:dony/features/messaging/presentation/widgets/conversation_selection_bar.dart';
 import 'package:dony/features/messaging/presentation/widgets/conversation_tile.dart';
 import 'package:dony/features/messaging/presentation/widgets/negotiations_shortcut_tile.dart';
 import 'package:dony/features/support/bloc/support_summary_cubit.dart';
@@ -13,6 +15,7 @@ import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -67,37 +70,148 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        bottom: false,
-        child: BlocConsumer<ConversationListBloc, ConversationListState>(
-          listenWhen: (previous, current) =>
-              current is ConversationListLoaded && current.muteFeedback != null,
-          listener: (context, state) =>
-              _showMuteFeedback(context, state as ConversationListLoaded),
-          builder: (context, state) {
-            final filter = state is ConversationListLoaded
-                ? state.filter
-                : ConversationFilter.all;
-            final searchQuery = state is ConversationListLoaded
-                ? state.searchQuery
-                : '';
-
-            return Column(
-              children: [
-                _MessagesHeader(
-                  searchController: _searchController,
-                  activeFilter: filter,
-                  searchQuery: searchQuery,
-                ),
-                Expanded(child: _buildBody(context, state)),
-              ],
-            );
-          },
-        ),
+    // Sélection multiple (FLUTTER-M4) : propre à cet écran, l'écran des
+    // archives a la sienne.
+    return BlocProvider<ConversationSelectionCubit>(
+      create: (_) => getIt<ConversationSelectionCubit>(
+        param1: ConversationSelectionSource.list,
       ),
+      child:
+          BlocBuilder<ConversationSelectionCubit, ConversationSelectionState>(
+            builder: (context, selection) => PopScope(
+              // Retour système en mode sélection : referme le mode, reste ici.
+              canPop: !selection.isActive,
+              onPopInvokedWithResult: (didPop, _) {
+                if (!didPop) context.read<ConversationSelectionCubit>().clear();
+              },
+              child: Scaffold(
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                body: SafeArea(
+                  bottom: false,
+                  child:
+                      BlocConsumer<ConversationListBloc, ConversationListState>(
+                        listenWhen: (previous, current) =>
+                            current is ConversationListLoaded &&
+                            (current.muteFeedback != null ||
+                                current.batchFeedback != null ||
+                                selection.isActive),
+                        listener: (context, state) => _onListState(
+                          context,
+                          state as ConversationListLoaded,
+                        ),
+                        builder: (context, state) {
+                          final filter = state is ConversationListLoaded
+                              ? state.filter
+                              : ConversationFilter.all;
+                          final searchQuery = state is ConversationListLoaded
+                              ? state.searchQuery
+                              : '';
+
+                          return Column(
+                            children: [
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                child: selection.isActive
+                                    ? ConversationSelectionBar(
+                                        key: const Key(
+                                          'conversation-selection-bar',
+                                        ),
+                                        count: selection.count,
+                                        onClose: context
+                                            .read<ConversationSelectionCubit>()
+                                            .clear,
+                                        onSelectFinished:
+                                            state is ConversationListLoaded
+                                            ? () => selectFinished(
+                                                context,
+                                                state.displayed,
+                                              )
+                                            : null,
+                                        actions: [
+                                          ConversationSelectionAction(
+                                            key: const Key(
+                                              'conversation-batch-archive',
+                                            ),
+                                            icon: Icons.archive_outlined,
+                                            label: context
+                                                .l10n
+                                                .conversationArchiveAction,
+                                            onPressed: () =>
+                                                _archiveSelection(context),
+                                          ),
+                                          ConversationSelectionAction(
+                                            key: const Key(
+                                              'conversation-batch-delete',
+                                            ),
+                                            icon: Icons.delete_outline_rounded,
+                                            label: context.l10n.commonDelete,
+                                            destructive: true,
+                                            onPressed: () =>
+                                                _deleteSelection(context),
+                                          ),
+                                        ],
+                                      )
+                                    : _MessagesHeader(
+                                        searchController: _searchController,
+                                        activeFilter: filter,
+                                        searchQuery: searchQuery,
+                                      ),
+                              ),
+                              Expanded(child: _buildBody(context, state)),
+                            ],
+                          );
+                        },
+                      ),
+                ),
+              ),
+            ),
+          ),
     );
+  }
+
+  void _onListState(BuildContext context, ConversationListLoaded state) {
+    // Une conversation sélectionnée qui quitte l'affichage (filtre, archivage
+    // depuis le chat, blocage) sort aussi de la sélection.
+    context.read<ConversationSelectionCubit>().retainOnly({
+      for (final c in state.displayed) c.id,
+    });
+    if (state.muteFeedback != null) _showMuteFeedback(context, state);
+    final batch = state.batchFeedback;
+    if (batch == null) return;
+    // L'écran des archives affiche lui-même son désarchivage groupé.
+    if (batch.action == ConversationBatchAction.unarchive && !batch.isUndo) {
+      return;
+    }
+    final bloc = context.read<ConversationListBloc>();
+    showBatchFeedback(
+      context,
+      batch,
+      onUndoArchive: (ids) =>
+          bloc.add(ConversationsBatchUnarchiveRequested(ids, isUndo: true)),
+    );
+  }
+
+  void _archiveSelection(BuildContext context) {
+    final selection = context.read<ConversationSelectionCubit>();
+    final ids = selection.state.selectedIds.toList();
+    if (ids.isEmpty) return;
+    context.read<ConversationListBloc>().add(
+      ConversationsBatchArchiveRequested(ids),
+    );
+    selection.clear();
+  }
+
+  Future<void> _deleteSelection(BuildContext context) async {
+    final selection = context.read<ConversationSelectionCubit>();
+    final bloc = context.read<ConversationListBloc>();
+    final ids = selection.state.selectedIds.toList();
+    if (ids.isEmpty) return;
+    final confirmed = await confirmBatchDelete(context, ids.length);
+    if (!confirmed) return;
+    bloc.add(ConversationsBatchDeleteRequested(ids));
+    selection.clear();
   }
 
   /// Retour d'une bascule de sourdine faite depuis le volet glissant.
@@ -610,8 +724,16 @@ class _SlidableTile extends StatelessWidget {
     final l = context.l10n;
 
     final muted = conversation.notificationsMuted;
+    final id = conversation.id;
+    // `null` hors mode sélection, sinon l'état de la case.
+    final selected = context.select<ConversationSelectionCubit, bool?>(
+      (c) => c.state.isActive ? c.state.isSelected(id) : null,
+    );
+    final selection = context.read<ConversationSelectionCubit>();
     return Slidable(
       key: ValueKey(conversation.id),
+      // Pas de balayage en mode sélection : les actions passent par la barre.
+      enabled: selected == null,
       // Sourdine (FLUTTER-CM) : balayage vers la droite, à part d'Archiver et
       // Supprimer. La snackbar part à la réponse du serveur (listener de
       // l'écran), pas au tap : un échec annule la bascule.
@@ -706,7 +828,15 @@ class _SlidableTile extends StatelessWidget {
           ),
         ],
       ),
-      child: ConversationTile(conversation: conversation),
+      child: ConversationTile(
+        conversation: conversation,
+        selected: selected,
+        onTap: selected == null ? null : () => selection.toggle(id),
+        onLongPress: () {
+          HapticFeedback.selectionClick();
+          selection.startWith(id);
+        },
+      ),
     );
   }
 }

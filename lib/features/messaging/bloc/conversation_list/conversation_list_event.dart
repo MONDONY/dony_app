@@ -64,3 +64,31 @@ class ConversationNotificationsMuteSynced extends ConversationListEvent {
     required this.muted,
   });
 }
+
+/// Sélection multiple (FLUTTER-M4) : archive le lot. Retrait optimiste des
+/// fils, remis en place pour ceux que le serveur refuse ; le retour arrive
+/// dans [ConversationListLoaded.batchFeedback].
+class ConversationsBatchArchiveRequested extends ConversationListEvent {
+  final List<String> conversationIds;
+  const ConversationsBatchArchiveRequested(this.conversationIds);
+}
+
+/// Désarchive le lot : depuis l'écran des archives, ou « Annuler » après un
+/// archivage groupé.
+class ConversationsBatchUnarchiveRequested extends ConversationListEvent {
+  final List<String> conversationIds;
+
+  /// `true` pour l'« Annuler » d'un archivage groupé : aucune snackbar de
+  /// confirmation ne suit, seulement un éventuel échec.
+  final bool isUndo;
+  const ConversationsBatchUnarchiveRequested(
+    this.conversationIds, {
+    this.isUndo = false,
+  });
+}
+
+/// Supprime le lot (après confirmation dans l'écran).
+class ConversationsBatchDeleteRequested extends ConversationListEvent {
+  final List<String> conversationIds;
+  const ConversationsBatchDeleteRequested(this.conversationIds);
+}

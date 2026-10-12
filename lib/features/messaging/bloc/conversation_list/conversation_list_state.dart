@@ -29,6 +29,35 @@ class ConversationMuteFeedback {
   const ConversationMuteFeedback({required this.muted, this.error});
 }
 
+/// Action groupée de la sélection multiple.
+enum ConversationBatchAction { archive, unarchive, delete }
+
+/// Retour ponctuel d'une action groupée, porté par la seule émission qui suit
+/// la réponse du serveur : l'écran l'affiche une fois en snackbar.
+class ConversationBatchFeedback {
+  final ConversationBatchAction action;
+
+  /// Ids traités par le serveur (cible de l'« Annuler » d'un archivage).
+  final List<String> succeededIds;
+
+  /// Nombre de fils refusés ou en échec, remis dans leur liste.
+  final int failedCount;
+
+  /// Erreur globale (réseau, serveur) : rien n'a été traité.
+  final AppException? error;
+
+  /// « Annuler » d'un archivage : pas de snackbar de confirmation.
+  final bool isUndo;
+
+  const ConversationBatchFeedback({
+    required this.action,
+    this.succeededIds = const [],
+    this.failedCount = 0,
+    this.error,
+    this.isUndo = false,
+  });
+}
+
 class ConversationListLoaded extends ConversationListState {
   final List<ConversationModel> conversations;
   final List<ConversationModel> archivedConversations;
@@ -39,12 +68,16 @@ class ConversationListLoaded extends ConversationListState {
   /// ensuite : l'écran l'affiche une fois en snackbar.
   final ConversationMuteFeedback? muteFeedback;
 
+  /// Même règle que [muteFeedback] pour les actions groupées.
+  final ConversationBatchFeedback? batchFeedback;
+
   const ConversationListLoaded(
     this.conversations, {
     this.archivedConversations = const [],
     this.filter = ConversationFilter.all,
     this.searchQuery = '',
     this.muteFeedback,
+    this.batchFeedback,
   });
 
   /// Liste filtrée + recherche — calculée à chaque build, sans duplication.

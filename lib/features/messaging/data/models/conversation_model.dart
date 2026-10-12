@@ -143,6 +143,19 @@ class ConversationModel {
   /// le numéro n'y est jamais révélé.
   bool get isRecipientConversation => kind == kindRecipientTraveler;
 
+  /// Colis livré ou annulé : cible du raccourci « Sélectionner les
+  /// terminées » (FLUTTER-M4). Lu sur [bidStatus] (`DELIVERY_CONFIRMED`,
+  /// `TRIP_CANCELLED`), à défaut sur [parcelStatus]. Un retour de colis en
+  /// cours n'est pas terminé : on se parle encore pour le rendre. Rien n'est
+  /// retiré d'office, c'est l'utilisateur qui choisit d'agir sur ces fils.
+  bool get isFinished {
+    if (returnPending) return false;
+    return switch (bidStatus) {
+      'DELIVERY_CONFIRMED' || 'TRIP_CANCELLED' => true,
+      _ => parcelStatus == 'COMPLETED' || parcelStatus == 'CANCELLED',
+    };
+  }
+
   /// L'utilisateur courant est le destinataire de cette conversation
   /// voyageur ↔ destinataire. [viewerRole] fait foi quand le back le sert.
   /// Sinon (back antérieur), on le déduit du rôle de l'autre participant :

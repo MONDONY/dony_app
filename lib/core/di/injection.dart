@@ -137,6 +137,7 @@ import 'package:dony/features/matching/data/repositories/tools_completion_reposi
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_notifications/conversation_notifications_cubit.dart';
+import 'package:dony/features/messaging/bloc/conversation_selection/conversation_selection_cubit.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/chat_draft_store.dart';
 import 'package:dony/features/messaging/data/chat_image_cache.dart';
@@ -801,6 +802,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       analytics: getIt<AnalyticsService>(),
     ),
     dispose: (b) => b.close(),
+  );
+  // Sélection multiple (FLUTTER-M4) : une instance par écran (liste, archives).
+  getIt.registerFactoryParam<
+    ConversationSelectionCubit,
+    ConversationSelectionSource,
+    void
+  >(
+    (source, _) => ConversationSelectionCubit(
+      analytics: getIt<AnalyticsService>(),
+      source: source,
+    ),
   );
   // Brouillons de messages par conversation (FLUTTER-CY), dans user_prefs
   // pour être vidés avec le reste à la déconnexion.

@@ -10294,6 +10294,80 @@ class AppLocalizationsEn extends AppLocalizations {
   String get conversationUnarchivedSnackbar => 'Conversation unarchived';
 
   @override
+  String conversationSelectionCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get conversationSelectionClose => 'Close selection';
+
+  @override
+  String get conversationSelectFinished => 'Select finished';
+
+  @override
+  String get conversationSelectFinishedNone =>
+      'No finished conversation to select';
+
+  @override
+  String get conversationSelectLongPressHint => 'Select';
+
+  @override
+  String conversationBatchArchivedSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations archived',
+      one: '1 conversation archived',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String conversationBatchUnarchivedSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations unarchived',
+      one: '1 conversation unarchived',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String conversationBatchDeletedSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations deleted',
+      one: '1 conversation deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String conversationBatchPartialFailure(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count conversations couldn\'t be updated and stay where they were.',
+      one: '1 conversation couldn\'t be updated and stays where it was.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String conversationBatchDeleteConfirmTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count conversations?',
+      one: 'Delete 1 conversation?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get conversationUnarchiveAction => 'Unarchive';
 
   @override

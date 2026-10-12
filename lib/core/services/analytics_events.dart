@@ -239,6 +239,16 @@ abstract final class AnalyticsEvents {
   static const conversationNotificationsUnmuted =
       'conversation_notifications_unmuted';
 
+  /// Mode sélection ouvert par un appui long (FLUTTER-M4). Propriété
+  /// `source` : `list` / `archives`.
+  static const conversationSelectionStarted = 'conversation_selection_started';
+
+  /// Actions groupées confirmées par le serveur. Propriétés `count` (fils
+  /// traités) et `failed` (refusés) ; `undo` (bool) pour le désarchivage.
+  static const conversationsBatchArchived = 'conversations_batch_archived';
+  static const conversationsBatchUnarchived = 'conversations_batch_unarchived';
+  static const conversationsBatchDeleted = 'conversations_batch_deleted';
+
   // Wallet
   static const walletTopupStarted = 'wallet_topup_started';
   static const walletTopupCompleted = 'wallet_topup_completed';
