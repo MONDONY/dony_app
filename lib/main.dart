@@ -221,6 +221,8 @@ Future<void> _loadFlightsEnabled() async {
     setFlightsEnabled(await getIt<IConfigRepository>().getFlightsEnabled());
   } catch (_) {
     // Repli sur kFlightsEnabledDefault (masqué) conservé — non bloquant.
+  } finally {
+    markFlightsFlagLoaded();
   }
 }
 

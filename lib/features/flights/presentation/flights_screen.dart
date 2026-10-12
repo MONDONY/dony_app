@@ -10,6 +10,7 @@ import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_link_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_search_cubit.dart';
+import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_alert_sheet.dart';
@@ -22,6 +23,11 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// « Abidjan (ABJ) », ou le code seul quand la ville n'a pas de nom (trajet
+/// repris d'un bon plan, qui ne porte que les codes).
+String _placeLabel(FlightPlace place) =>
+    place.name == place.code ? place.code : '${place.name} (${place.code})';
 
 /// Onglet Billets (`/flights`) : billets d'avion en affiliation.
 ///
@@ -191,7 +197,7 @@ class _SearchForm extends StatelessWidget {
                           label: l.flightsFieldDeparture,
                           value: q.origin == null
                               ? null
-                              : '${q.origin!.name} (${q.origin!.code})',
+                              : _placeLabel(q.origin!),
                           onTap: () async {
                             final place = await FlightCitySheet.show(
                               context,
@@ -206,7 +212,7 @@ class _SearchForm extends StatelessWidget {
                           label: l.flightsFieldArrival,
                           value: q.destination == null
                               ? null
-                              : '${q.destination!.name} (${q.destination!.code})',
+                              : _placeLabel(q.destination!),
                           onTap: () async {
                             final place = await FlightCitySheet.show(
                               context,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -33,7 +35,13 @@ class _AlertsView extends StatelessWidget {
     final created = await FlightAlertSheet.show(
       context,
       currencyCode: FlightsRepository.displayCurrencyFromHive() ?? 'EUR',
-      onSubmit: (draft) => cubit.create(draft, source: 'alerts'),
+      onSubmit: (draft) async {
+        final ok = await cubit.create(draft, source: 'alerts');
+        if (!ok && context.mounted) {
+          unawaited(ErrorPresenter.show(context, cubit.state.error));
+        }
+        return ok;
+      },
     );
     if ((created ?? false) && context.mounted) {
       DonySnackbar.show(
@@ -50,10 +58,15 @@ class _AlertsView extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     return BlocConsumer<FlightAlertsCubit, FlightAlertsState>(
-      // Erreur d'une action sur une liste déjà affichée : snackbar. Une erreur
-      // de premier chargement s'affiche, elle, en plein écran.
+      // Erreur d'une bascule ou d'une suppression sur une liste déjà
+      // affichée : snackbar. Une erreur de premier chargement s'affiche en
+      // plein écran, une erreur de création depuis la feuille (`_create`),
+      // liste vide comprise.
       listenWhen: (a, b) =>
-          b.error != null && b.error != a.error && b.alerts.isNotEmpty,
+          b.error != null &&
+          b.error != a.error &&
+          b.alerts.isNotEmpty &&
+          !a.creating,
       listener: (context, state) => ErrorPresenter.show(context, state.error),
       builder: (context, state) {
         final full = state.alerts.length >= FlightAlertsCubit.maxAlerts;

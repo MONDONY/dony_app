@@ -83,10 +83,17 @@ class _AlertFormState extends State<_AlertForm> {
   late final ValueNotifier<bool> _direct = ValueNotifier(widget.directOnly);
   final ValueNotifier<bool> _submitting = ValueNotifier(false);
   late final TextEditingController _price = TextEditingController(
-    text: widget.currentLowest == null
-        ? ''
-        : widget.currentLowest!.round().toString(),
+    text: _suggestedThreshold(widget.currentLowest),
   );
+
+  /// Seuil proposé : l'entier juste sous le prix le plus bas actuel. Au prix
+  /// actuel ou au-dessus, la première vérification préviendrait aussitôt
+  /// d'un prix déjà affiché.
+  static String _suggestedThreshold(double? lowest) {
+    if (lowest == null) return '';
+    final below = lowest.ceil() - 1;
+    return below >= 1 ? '$below' : '';
+  }
 
   /// Une période trop longue (mois entier de 31 jours compris) est ramenée à
   /// 31 jours ; une période passée est ignorée.
@@ -96,8 +103,10 @@ class _AlertFormState extends State<_AlertForm> {
     final today = DateTime(now.year, now.month, now.day);
     if (r.end.isBefore(today)) return null;
     final start = r.start.isBefore(today) ? today : r.start;
-    final maxEnd = start.add(
-      const Duration(days: FlightAlertDraft.maxPeriodDays - 1),
+    final maxEnd = DateTime(
+      start.year,
+      start.month,
+      start.day + FlightAlertDraft.maxPeriodDays - 1,
     );
     return DateTimeRange(
       start: start,
@@ -116,8 +125,14 @@ class _AlertFormState extends State<_AlertForm> {
     _price,
   ]);
 
-  static bool _tooLong(DateTimeRange? r) =>
-      r != null && r.duration.inDays + 1 > FlightAlertDraft.maxPeriodDays;
+  /// Jours calendaires, pas `duration.inDays` : une période qui traverse le
+  /// passage à l'heure d'hiver ou d'été compterait un jour de moins ou de plus.
+  static bool _tooLong(DateTimeRange? r) {
+    if (r == null) return false;
+    final start = DateTime.utc(r.start.year, r.start.month, r.start.day);
+    final end = DateTime.utc(r.end.year, r.end.month, r.end.day);
+    return end.difference(start).inDays + 1 > FlightAlertDraft.maxPeriodDays;
+  }
 
   double? get _maxPrice => double.tryParse(_price.text.replaceAll(',', '.'));
 
@@ -125,7 +140,7 @@ class _AlertFormState extends State<_AlertForm> {
     final o = _origin.value;
     final d = _destination.value;
     final price = _maxPrice;
-    final ret = _return.value;
+    final ret = _roundTrip.value ? _return.value : null;
     final dep = _departure.value;
     return o != null &&
         d != null &&
@@ -176,6 +191,8 @@ class _AlertFormState extends State<_AlertForm> {
         returnTo: ret?.end,
         directOnly: _direct.value,
         maxPrice: _maxPrice!,
+        // Le seuil est saisi dans la devise affichée à côté du champ.
+        currency: widget.currencyCode,
       ),
     );
     if (!mounted) return;

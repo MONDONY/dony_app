@@ -37,8 +37,6 @@ class FlightSearchState extends Equatable {
   List<FlightOffer> get visibleOffers =>
       filters.apply(result?.offers ?? const []);
 
-  FlightFacets get facets => FlightFacets.of(result?.offers ?? const []);
-
   /// Offre la moins chère et la plus rapide de TOUTES les offres reçues : les
   /// tampons ne bougent pas quand on filtre.
   FlightOffer? get cheapest {
@@ -83,6 +81,10 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
 
   final FlightsRepository _repository;
   final AnalyticsService _analytics;
+
+  /// Incrémenté à chaque recherche et au retour au formulaire : une réponse
+  /// arrivée après coup (recherche plus récente, flèche retour) est ignorée.
+  int _generation = 0;
 
   /// Préremplit départ et arrivée avec la dernière recherche ou le corridor le
   /// plus récent (`GET /flights/defaults`). Ne remplace jamais une saisie : un
@@ -138,6 +140,7 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
   Future<void> search({bool fromDeal = false}) async {
     final query = state.query;
     if (!query.isComplete) return;
+    final generation = ++_generation;
     emit(
       state.copyWith(
         status: FlightSearchStatus.loading,
@@ -147,7 +150,7 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
     );
     try {
       final result = await _repository.search(query);
-      if (isClosed) return;
+      if (isClosed || generation != _generation) return;
       emit(state.copyWith(status: FlightSearchStatus.loaded, result: result));
       unawaited(
         _analytics.logEvent(
@@ -162,7 +165,7 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
         ),
       );
     } catch (err) {
-      if (isClosed) return;
+      if (isClosed || generation != _generation) return;
       final error = unwrapDioError(err);
       emit(state.copyWith(status: FlightSearchStatus.error, error: error));
       unawaited(
@@ -207,13 +210,16 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
   }
 
   /// Retour au formulaire depuis les résultats (flèche de l'en-tête).
-  void backToForm() => emit(
-    state.copyWith(
-      status: FlightSearchStatus.editing,
-      clearResult: true,
-      filters: const FlightFilters(),
-    ),
-  );
+  void backToForm() {
+    _generation++;
+    emit(
+      state.copyWith(
+        status: FlightSearchStatus.editing,
+        clearResult: true,
+        filters: const FlightFilters(),
+      ),
+    );
+  }
 
   void applyFilters(FlightFilters filters) {
     emit(state.copyWith(filters: filters));

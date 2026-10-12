@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -96,10 +98,7 @@ void main() {
           destinationCode: 'ABJ',
           roundTrip: false,
           currency: 'EUR',
-          offers: [
-            offer('a', price: 500, minutes: 380),
-            offer('b'),
-          ],
+          offers: [offer('a', price: 500, minutes: 380), offer('b')],
         ),
       );
       cubit
@@ -216,4 +215,73 @@ void main() {
     expect(cubit.state.result, isNull);
     expect(cubit.state.query.origin, _paris);
   });
+
+  test(
+    'une réponse arrivée après le retour au formulaire est ignorée',
+    () async {
+      final response = Completer<FlightSearchResult>();
+      when(() => repository.search(any())).thenAnswer((_) => response.future);
+      cubit
+        ..setOrigin(_paris)
+        ..setDestination(_abidjan)
+        ..setDates(FlightWhen.day(DateTime(2026, 12, 12)), null);
+
+      final pending = cubit.search();
+      cubit.backToForm();
+      response.complete(
+        const FlightSearchResult(
+          originCode: 'PAR',
+          destinationCode: 'ABJ',
+          roundTrip: false,
+          currency: 'EUR',
+          offers: [],
+        ),
+      );
+      await pending;
+
+      expect(cubit.state.status, FlightSearchStatus.editing);
+      expect(cubit.state.result, isNull);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.flightsSearchSubmitted,
+          properties: any(named: 'properties'),
+        ),
+      );
+    },
+  );
+
+  test('seule la recherche la plus récente s\'affiche', () async {
+    final first = Completer<FlightSearchResult>();
+    final second = Completer<FlightSearchResult>();
+    final responses = [first, second];
+    when(
+      () => repository.search(any()),
+    ).thenAnswer((_) => responses.removeAt(0).future);
+    cubit
+      ..setOrigin(_paris)
+      ..setDestination(_abidjan)
+      ..setDates(FlightWhen.day(DateTime(2026, 12, 12)), null);
+
+    final a = cubit.search();
+    final b = cubit.search();
+    second.complete(
+      FlightSearchResult(
+        originCode: 'PAR',
+        destinationCode: 'ABJ',
+        roundTrip: false,
+        currency: 'EUR',
+        offers: [offer('recent')],
+      ),
+    );
+    first.completeError(_dioError());
+    await Future.wait([a, b]);
+
+    expect(cubit.state.status, FlightSearchStatus.loaded);
+    expect(cubit.state.result?.offers.single.offerPath, contains('recent'));
+  });
 }
+
+DioException _dioError() => DioException(
+  requestOptions: RequestOptions(),
+  error: const NetworkException('x', code: 'flights-provider-error'),
+);

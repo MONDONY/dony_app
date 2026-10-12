@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -143,6 +145,27 @@ void main() {
     await cubit.delete('a');
 
     expect(cubit.state.alerts.map((a) => a.id), ['a', 'b']);
+  });
+
+  test('un échec ne rétablit que son alerte : une suppression menée pendant '
+      'l\'appel garde son effet', () async {
+    when(
+      () => repository.alerts(),
+    ).thenAnswer((_) async => [_alert('a'), _alert('b')]);
+    final toggle = Completer<FlightAlert>();
+    when(
+      () => repository.setAlertActive('a', false),
+    ).thenAnswer((_) => toggle.future);
+    when(() => repository.deleteAlert('b')).thenAnswer((_) async {});
+    await cubit.load();
+
+    final pending = cubit.setActive('a', false);
+    await cubit.delete('b');
+    toggle.completeError(_error('x'));
+    await pending;
+
+    expect(cubit.state.alerts.map((a) => a.id), ['a']);
+    expect(cubit.state.alerts.single.active, isTrue);
   });
 
   test('suppression réussie', () async {

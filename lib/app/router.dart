@@ -1204,7 +1204,7 @@ final appRouter = GoRouter(
     // `yadony://flights/alerts`.
     GoRoute(
       path: '/flights/alerts',
-      redirect: (_, _) => flightsEnabledListenable.value ? null : '/home',
+      redirect: (_, _) async => await flightsEnabledResolved() ? null : '/home',
       builder: (_, _) => const FlightAlertsScreen(),
     ),
 
@@ -1981,8 +1981,8 @@ final appRouter = GoRouter(
               path: '/flights',
               // Flag éteint : la branche existe (le shell a besoin d'un index
               // fixe) mais n'est jamais atteinte, même par un lien.
-              redirect: (_, _) =>
-                  flightsEnabledListenable.value ? null : '/home',
+              redirect: (_, _) async =>
+                  await flightsEnabledResolved() ? null : '/home',
               builder: (context, state) => const FlightsScreen(),
             ),
           ],

@@ -91,14 +91,10 @@ class FlightsRemoteDatasource {
     return FlightAlert.fromJson(res.data!);
   }
 
-  Future<FlightAlert> updateAlert(
-    String id, {
-    bool? active,
-    double? maxPrice,
-  }) async {
+  Future<FlightAlert> updateAlert(String id, {required bool active}) async {
     final res = await _apiClient.dio.patch<Map<String, dynamic>>(
       '/me/flight-alerts/$id',
-      data: {'active': ?active, 'maxPrice': ?maxPrice},
+      data: {'active': active},
     );
     return FlightAlert.fromJson(res.data!);
   }

@@ -105,11 +105,13 @@ class FlightAlertsCubit extends Cubit<FlightAlertsState> {
   }
 
   Future<void> setActive(String id, bool active) async {
-    final previous = state.alerts;
+    final previous = state.alerts.where((a) => a.id == id).firstOrNull;
+    if (previous == null) return;
     emit(
       state.copyWith(
         alerts: [
-          for (final a in previous) a.id == id ? a.copyWith(active: active) : a,
+          for (final a in state.alerts)
+            a.id == id ? a.copyWith(active: active) : a,
         ],
       ),
     );
@@ -129,19 +131,31 @@ class FlightAlertsCubit extends Cubit<FlightAlertsState> {
       );
     } catch (err) {
       if (isClosed) return;
-      emit(state.copyWith(alerts: previous, error: unwrapDioError(err)));
+      // Seule cette alerte est rétablie : une autre action menée pendant
+      // l'appel garde son effet.
+      emit(
+        state.copyWith(
+          alerts: [for (final a in state.alerts) a.id == id ? previous : a],
+          error: unwrapDioError(err),
+        ),
+      );
     }
   }
 
   Future<void> delete(String id) async {
-    final previous = state.alerts;
-    emit(state.copyWith(alerts: previous.where((a) => a.id != id).toList()));
+    final index = state.alerts.indexWhere((a) => a.id == id);
+    if (index < 0) return;
+    final removed = state.alerts[index];
+    emit(state.copyWith(alerts: [...state.alerts]..removeAt(index)));
     try {
       await _repository.deleteAlert(id);
       unawaited(_analytics.logEvent(AnalyticsEvents.flightsAlertDeleted));
     } catch (err) {
       if (isClosed) return;
-      emit(state.copyWith(alerts: previous, error: unwrapDioError(err)));
+      // Remise à sa place, sans écraser ce qui a changé entre-temps.
+      final alerts = [...state.alerts];
+      alerts.insert(index.clamp(0, alerts.length), removed);
+      emit(state.copyWith(alerts: alerts, error: unwrapDioError(err)));
     }
   }
 }
