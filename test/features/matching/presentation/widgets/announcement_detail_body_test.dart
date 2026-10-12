@@ -135,6 +135,8 @@ void main() {
     expect(find.text('12 rue de Paris, 75001'), findsOneWidget);
     expect(find.text('Marché Sandaga, Dakar'), findsOneWidget);
     expect(find.text('DÉPÔT DES COLIS'), findsOneWidget);
+    // Jour ET heure de la date limite (FLUTTER-MY).
+    expect(find.text("Jusqu'au lun. 10 août à 18:00"), findsOneWidget);
     expect(find.text('PAIEMENTS ACCEPTÉS'), findsOneWidget);
     expect(find.text('💵 Espèces'), findsOneWidget);
     expect(find.text('💳 Carte'), findsOneWidget);

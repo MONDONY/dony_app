@@ -1508,7 +1508,7 @@
   "@tripPublishCashLabel": {
     "description": "Titre de la ligne paiement en espèces"
   },
-  "tripPublishCashLockedSubtitle": "Toujours accepté sur ce trajet. Commission prélevée au voyageur à la remise",
+  "tripPublishCashLockedSubtitle": "Toujours accepté sur ce trajet. Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis",
   "@tripPublishCashLockedSubtitle": {
     "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
   },
@@ -1524,9 +1524,9 @@
   "@tripPublishCardCheckingSubtitle": {
     "description": "Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_conditions_step.dart, Sentry FLUTTER-D2)."
   },
-  "tripPublishCashSubtitle": "Commission prélevée au voyageur à la remise",
+  "tripPublishCashSubtitle": "Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis",
   "@tripPublishCashSubtitle": {
-    "description": "Sous-titre de la ligne paiement en espèces"
+    "description": "Sous-titre de la ligne paiement en espèces. La commission est prélevée sur le portefeuille du voyageur à l'acceptation du colis, pas à la remise (Sentry FLUTTER-MR)."
   },
   "tripPublishAcceptedContentSectionLabel": "Ce que j'accepte",
   "@tripPublishAcceptedContentSectionLabel": {

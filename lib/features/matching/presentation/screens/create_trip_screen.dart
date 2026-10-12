@@ -740,7 +740,9 @@ class _TripFormContentState extends State<_TripFormContent> {
       _departureCountryCodeNotifier.value = a.departureCountryCode;
       _arrivalCountryCodeNotifier.value = a.arrivalCountryCode;
       _departureDateNotifier.value = a.departureDate;
-      _handoverDeadlineNotifier.value = widget.announcement?.handoverDeadline;
+      // En heure locale : le jour comparé à celui du départ en dépend.
+      _handoverDeadlineNotifier.value = widget.announcement?.handoverDeadline
+          ?.toLocal();
       _availableKgNotifier.value = a.availableKg;
 
       if (a.departureTime != null) {
@@ -1174,6 +1176,16 @@ class _TripFormContentState extends State<_TripFormContent> {
       );
     }
     return DateTime(deadline.year, deadline.month, deadline.day, 23, 59);
+  }
+
+  /// Date limite telle qu'elle partira au serveur, jour et heure.
+  String? _handoverDeadlineDisplay(AppLocalizations l) {
+    final resolved = _resolveHandoverDeadline();
+    if (resolved == null) return null;
+    return l.commonDateAtTime(
+      DateFormat.MMMd(l.localeName).format(resolved),
+      DateFormat.jm(l.localeName).format(resolved),
+    );
   }
 
   void _syncCityToFormBloc() {
@@ -2362,9 +2374,17 @@ class _TripFormContentState extends State<_TripFormContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ValueListenableBuilder<DateTime?>(
-              valueListenable: _handoverDeadlineNotifier,
-              builder: (context, dt, _) => ListTile(
+            // Le jour seul ne suffisait pas : le jour du départ, la limite
+            // est l'heure de départ, pas la fin de journée, et rien ne le
+            // disait (Sentry FLUTTER-MY). L'heure affichée est celle que
+            // [_resolveHandoverDeadline] enverra, recalculée si le départ change.
+            AnimatedBuilder(
+              animation: Listenable.merge([
+                _handoverDeadlineNotifier,
+                _departureDateNotifier,
+                _departureTimeNotifier,
+              ]),
+              builder: (context, _) => ListTile(
                 key: const Key('sheet-handover-deadline-row'),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: DonySpacing.base,
@@ -2379,9 +2399,10 @@ class _TripFormContentState extends State<_TripFormContent> {
                   context.l10n.tripPublishHandoverDeadlineSubtitle,
                 ),
                 trailing: Text(
-                  dt != null
-                      ? DateFormat.MMMd(context.l10n.localeName).format(dt)
-                      : context.l10n.tripPublishHandoverDeadlineChoose,
+                  _handoverDeadlineDisplay(context.l10n) ??
+                      context.l10n.tripPublishHandoverDeadlineChoose,
+                  key: const Key('sheet-handover-deadline-value'),
+                  textAlign: TextAlign.end,
                 ),
                 onTap: _selectHandoverDeadline,
               ),

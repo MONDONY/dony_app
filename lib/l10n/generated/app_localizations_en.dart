@@ -2825,7 +2825,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCashLockedSubtitle =>
-      'Always accepted on this trip. Commission collected from the traveler at handover';
+      'Always accepted on this trip. Service fee taken from your Yadony wallet when you accept the parcel';
 
   @override
   String get tripPublishCashLockedExplanation =>
@@ -2841,7 +2841,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCashSubtitle =>
-      'Service fee charged to the traveler at drop-off';
+      'Service fee taken from your Yadony wallet when you accept the parcel';
 
   @override
   String get tripPublishAcceptedContentSectionLabel => 'What I accept';

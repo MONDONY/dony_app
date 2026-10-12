@@ -788,7 +788,7 @@
   "tripPublishCardPaymentTitle": "Card payment (Stripe)",
   "tripPublishCardPaymentSubtitle": "Secure payment by default",
   "tripPublishCashLabel": "Cash",
-  "tripPublishCashLockedSubtitle": "Always accepted on this trip. Commission collected from the traveler at handover",
+  "tripPublishCashLockedSubtitle": "Always accepted on this trip. Service fee taken from your Yadony wallet when you accept the parcel",
   "@tripPublishCashLockedSubtitle": {
     "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
   },
@@ -804,7 +804,7 @@
   "@tripPublishCardCheckingSubtitle": {
     "description": "Card row subtitle while the Stripe status reloads."
   },
-  "tripPublishCashSubtitle": "Service fee charged to the traveler at drop-off",
+  "tripPublishCashSubtitle": "Service fee taken from your Yadony wallet when you accept the parcel",
   "tripPublishAcceptedContentSectionLabel": "What I accept",
   "tripPublishRefusedContentSectionLabel": "What I refuse",
   "tripPublishRefusedContentHint": "E.g. Liquids, Perishable goods…",

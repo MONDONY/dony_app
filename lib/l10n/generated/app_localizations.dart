@@ -4829,7 +4829,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M).
   ///
   /// In fr, this message translates to:
-  /// **'Toujours accepté sur ce trajet. Commission prélevée au voyageur à la remise'**
+  /// **'Toujours accepté sur ce trajet. Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis'**
   String get tripPublishCashLockedSubtitle;
 
   /// Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M).
@@ -4850,10 +4850,10 @@ abstract class AppLocalizations {
   /// **'Vérification de votre compte de paiement…'**
   String get tripPublishCardCheckingSubtitle;
 
-  /// Sous-titre de la ligne paiement en espèces
+  /// Sous-titre de la ligne paiement en espèces. La commission est prélevée sur le portefeuille du voyageur à l'acceptation du colis, pas à la remise (Sentry FLUTTER-MR).
   ///
   /// In fr, this message translates to:
-  /// **'Commission prélevée au voyageur à la remise'**
+  /// **'Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis'**
   String get tripPublishCashSubtitle;
 
   /// Libellé de la section des contenus acceptés

@@ -74,6 +74,34 @@ void main() {
     });
   });
 
+  group('OfflineScanQueueScreen — en-tête (FLUTTER-KN)', () {
+    testWidgets('la pastille Hors-ligne est dans le contenu, pas dans '
+        'l AppBar : le titre garde sa place à 360 dp', (tester) async {
+      tester.view.physicalSize = const Size(720, 1640);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(_buildApp());
+      await tester.pump();
+
+      final badge = find.byKey(const Key('offline-queue-badge'));
+      expect(badge, findsOneWidget);
+      expect(
+        find.descendant(of: find.byType(AppBar), matching: badge),
+        findsNothing,
+      );
+      final title = find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Lectures hors-ligne'),
+      );
+      expect(title, findsOneWidget);
+      // Retour (56) et scarabée (48) seuls à côté : le titre dispose de
+      // plus de 200 dp. Avec la pastille, il en restait ≈ 120 et « Lectures
+      // hors-ligne » (≈ 190 dp en Plus Jakarta) se coupait en « Lectures ho… ».
+      expect(tester.getSize(title).width, greaterThan(200));
+    });
+  });
+
   group('OfflineScanQueueScreen — with queue items', () {
     setUp(() async {
       final now = DateTime.now().toUtc();
@@ -114,7 +142,7 @@ void main() {
       expect(find.textContaining('2 lectures en attente'), findsOneWidget);
     });
 
-    testWidgets('shows Hors-ligne chip in appbar', (tester) async {
+    testWidgets('shows Hors-ligne chip', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       expect(find.text('Hors-ligne'), findsOneWidget);
