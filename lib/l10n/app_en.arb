@@ -10035,5 +10035,26 @@
   "scanOfflineQueueRetryNow": "Retry now",
   "@scanOfflineQueueRetryNow": {
     "description": "File des lectures hors ligne : renvoyer tout de suite les étapes en attente (FLUTTER-KZ)"
+  },
+  "negotiationCashDealConfirmedTitle": "Deal confirmed",
+  "@negotiationCashDealConfirmedTitle": {
+    "description": "Fil de négociation d'un trajet : accord en espèces conclu, vu par l'expéditeur (FLUTTER-NG)"
+  },
+  "negotiationCashDealConfirmedMessage": "You'll pay {amount} in cash to the traveler when you hand over the parcel. They pay the Yadony fee on their side to confirm the shipment.",
+  "@negotiationCashDealConfirmedMessage": {
+    "description": "Détail de l'accord en espèces conclu, montant formaté dans la devise du trajet (FLUTTER-NG)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadSeeParcelButton": "View the parcel",
+  "@negotiationThreadSeeParcelButton": {
+    "description": "Fil de négociation d'un trajet, accord conclu : ouvre le colis (FLUTTER-P4, FLUTTER-MM)"
+  },
+  "negotiationThreadCounterSameAmountHint": "Enter your new price here: this amount is what gets proposed, not the one written in the message.",
+  "@negotiationThreadCounterSameAmountHint": {
+    "description": "Contre-offre au montant inchangé : bouton inactif tant que le prix n'est pas modifié (FLUTTER-MK)"
   }
 }

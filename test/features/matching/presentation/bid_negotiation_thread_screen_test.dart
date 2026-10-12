@@ -20,6 +20,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/screens/bid_negotiation_thread_screen.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
@@ -726,6 +727,69 @@ void main() {
     expect(find.byKey(const Key('nego-closed-hint')), findsOneWidget);
   });
 
+  // FLUTTER-MM / FLUTTER-P4 : après le paiement, le fil affichait « Terminé »
+  // comme une négociation ratée, sans aucun bouton vers le colis.
+  for (final status in ['PAYMENT_ESCROWED', 'IN_TRANSIT', 'COMPLETED']) {
+    testWidgets('accord paye ($status) : accepte, bouton vers le colis', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(_thread(status: status, myTurn: false)),
+      );
+
+      expect(
+        tripNegoVariant(_thread(status: status)),
+        ThreadStatusVariant.accepted,
+      );
+      expect(
+        find.text('Prix accepté. Rendez-vous sur votre colis pour la suite.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('nego-see-parcel-btn')), findsOneWidget);
+    });
+  }
+
+  testWidgets('fil clos sans accord : pas de bouton vers le colis', (
+    tester,
+  ) async {
+    await pumpScreen(
+      tester,
+      BidNegotiationLoaded(
+        _thread(status: 'NEGOTIATION_CLOSED', myTurn: false),
+      ),
+    );
+    expect(find.byKey(const Key('nego-see-parcel-btn')), findsNothing);
+    expect(
+      tripNegoVariant(_thread(status: 'NEGOTIATION_CLOSED')),
+      ThreadStatusVariant.terminal,
+    );
+  });
+
+  // FLUTTER-MK : le prix tapé dans le message, la contre-offre partait au
+  // montant pré-rempli.
+  testWidgets('contre-offre au montant inchange : bouton inactif et aide', (
+    tester,
+  ) async {
+    await pumpScreen(tester, BidNegotiationLoaded(_thread()));
+
+    await tester.tap(find.byKey(const Key('nego-counter-btn')));
+    await tester.pump(_kSettle);
+    await tester.pump(_kSettle);
+
+    DonyButton submit() =>
+        tester.widget<DonyButton>(find.byKey(const Key('nego-counter-submit')));
+    expect(submit().onPressed, isNull);
+    expect(find.byKey(const Key('nego-counter-same-amount')), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('nego-counter-amount')), '35');
+    await tester.pump(_kSettle);
+    await tester.pump(_kSettle);
+
+    expect(submit().onPressed, isNotNull);
+    expect(find.byKey(const Key('nego-counter-same-amount')), findsNothing);
+  });
+
   // Le serveur n'envoie plus qu'un seul statut de clôture, NEGOTIATION_CLOSED,
   // pour ne plus recycler les statuts de colis. La raison se relit sur le fil.
   group('fil eteint : refus ou peremption', () {
@@ -905,6 +969,47 @@ void main() {
         await tester.pump(_kSettle);
         await tester.pump(_kSettle);
 
+        expect(find.text('Ouvrir'), findsOneWidget);
+      },
+    );
+
+    // FLUTTER-NG : l'expéditeur acceptait en espèces et le fil se refermait
+    // sans un mot.
+    testWidgets(
+      'accepter en especes cote expediteur : accord confirme puis fil ferme',
+      (tester) async {
+        final states = StreamController<BidNegotiationState>.broadcast();
+        addTearDown(states.close);
+        whenListen(
+          bloc,
+          states.stream,
+          initialState: BidNegotiationLoaded(_thread()),
+        );
+
+        tester.view.physicalSize = const Size(800, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(wrapPushed());
+        await tester.pump(_kSettle);
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pump(_kSettle);
+        await tester.pump(_kSettle);
+
+        states.add(
+          BidNegotiationLoaded(
+            _thread(
+              status: 'PENDING',
+              myTurn: false,
+              paymentMethod: BidPaymentMethod.cash,
+            ),
+            action: BidNegotiationAction.accepted,
+          ),
+        );
+        await tester.pump(_kSettle);
+        await tester.pump(_kSettle);
+
+        expect(find.text('Accord conclu'), findsOneWidget);
+        expect(find.textContaining('en espèces au voyageur'), findsOneWidget);
         expect(find.text('Ouvrir'), findsOneWidget);
       },
     );

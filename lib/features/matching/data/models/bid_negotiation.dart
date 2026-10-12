@@ -247,6 +247,23 @@ class BidNegotiation {
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
   bool get isClosed => status != 'NEGOTIATING';
 
+  /// Statuts d'un accord conclu, jusqu'à la livraison. Le serveur renvoie le
+  /// statut brut du colis : une fois payé (`PAYMENT_ESCROWED`), remis ou en
+  /// route, le fil s'affichait « Terminé » comme une négociation ratée
+  /// (FLUTTER-MM).
+  static const dealStatuses = {
+    'ACCEPTED',
+    'PAYMENT_ESCROWED',
+    'HANDED_OVER',
+    'IN_TRANSIT',
+    'ARRIVED',
+    'DELIVERED',
+    'COMPLETED',
+  };
+
+  /// Le prix est acquis et le colis existe : la suite se passe sur le colis.
+  bool get isDealConcluded => dealStatuses.contains(status);
+
   /// Plus rien n'est attendu de personne : le fil peut être archivé ou
   /// supprimé de sa liste. Même règle que le serveur (yadony-back #423) et que
   /// [BidNegotiationSummary.isClosed] — un accord encore à payer ou à régler

@@ -6658,6 +6658,13 @@ final allMessages = <String, String Function(AppLocalizations)>{
       ),
   'moneyChannelMobileMoney': (l) => l.moneyChannelMobileMoney,
   'scanOfflineQueueRetryNow': (l) => l.scanOfflineQueueRetryNow,
+  'negotiationCashDealConfirmedTitle': (l) =>
+      l.negotiationCashDealConfirmedTitle,
+  'negotiationCashDealConfirmedMessage': (l) =>
+      l.negotiationCashDealConfirmedMessage(placeholderMarker('amount')),
+  'negotiationThreadSeeParcelButton': (l) => l.negotiationThreadSeeParcelButton,
+  'negotiationThreadCounterSameAmountHint': (l) =>
+      l.negotiationThreadCounterSameAmountHint,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7177,4 +7184,5 @@ const textParameters = <String, List<String>>{
   'flightsSuggestWholeMonth': ['month'],
   'flightsSuggestFlexible': ['route'],
   'tripEditMobileMoneyCurrencyLockedNotice': ['tripCurrency'],
+  'negotiationCashDealConfirmedMessage': ['amount'],
 };
