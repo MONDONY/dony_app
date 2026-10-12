@@ -16019,6 +16019,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get travelerContactCardTitle => 'Contact the recipient';
 
   @override
+  String get travelerContactAvailableAfterPickup =>
+      'The recipient\'s contact details will be available once you\'ve picked up the parcel.';
+
+  @override
   String get travelerContactMessageCopied =>
       'Message copied. Paste it into your messaging app.';
 

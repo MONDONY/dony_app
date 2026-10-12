@@ -399,12 +399,13 @@ class TravelerRecipientContactCard extends StatelessWidget {
   /// Injecté en test ; sinon le lanceur de la plateforme.
   final ContactLinkLauncher? launcher;
 
-  /// Visible une fois la demande acceptée ([bidAllowsContact]) et le numéro
-  /// du destinataire connu. Jamais quand il a refusé le colis : la carte
-  /// « Colis & destinataire » porte alors l'encart de remplacement.
+  /// Visible une fois le colis retiré ([bidAllowsRecipientContact], pas dès
+  /// l'acceptation : FLUTTER-JT) et le numéro du destinataire connu. Jamais
+  /// quand il a refusé le colis : la carte « Colis & destinataire » porte
+  /// alors l'encart de remplacement.
   static bool shouldShow(BidModel bid) =>
       !bid.recipientDeclined &&
-      bidAllowsContact(bid.status) &&
+      bidAllowsRecipientContact(bid.status) &&
       ((bid.recipientPhone?.trim().isNotEmpty ?? false) ||
           (bid.recipientPhoneHidden && recipientReachableInApp(bid)));
 
@@ -413,6 +414,46 @@ class TravelerRecipientContactCard extends StatelessWidget {
     return DetailCard(
       title: context.l10n.travelerContactCardTitle,
       child: RecipientContactActions(bid: bid, launcher: launcher),
+    );
+  }
+}
+
+/// Ligne discrète de la vue voyageur, à la place de la carte « Contacter le
+/// destinataire », tant que la demande est acceptée mais le colis pas encore
+/// retiré : le voyageur sait que le contact viendra, sans moyen de joindre le
+/// destinataire avant la remise (FLUTTER-JT).
+class TravelerRecipientContactPendingNote extends StatelessWidget {
+  const TravelerRecipientContactPendingNote({super.key});
+
+  /// Demande acceptée (contact expéditeur ouvert), colis pas encore retiré, et
+  /// destinataire qui n'a pas refusé le colis.
+  static bool shouldShow(BidModel bid) =>
+      !bid.recipientDeclined &&
+      bidAllowsContact(bid.status) &&
+      !bidAllowsRecipientContact(bid.status);
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: DonyIcon('clock', size: 14, color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          Expanded(
+            child: Text(
+              context.l10n.travelerContactAvailableAfterPickup,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -8975,6 +8975,7 @@
   "travelerContactSms": "SMS",
   "travelerContactCall": "Call",
   "travelerContactCardTitle": "Contact the recipient",
+  "travelerContactAvailableAfterPickup": "The recipient's contact details will be available once you've picked up the parcel.",
   "travelerContactMessageCopied": "Message copied. Paste it into your messaging app.",
   "travelerContactIntro": "I'm {traveler}, your Yadony traveler.",
   "travelerContactIntroAnonymous": "I'm your Yadony traveler.",

@@ -166,11 +166,25 @@ void main() {
   });
 
   group('TravelerRecipientContactCard.shouldShow', () {
-    test('statut de contact et téléphone requis', () {
+    test('colis retiré et téléphone requis', () {
       expect(TravelerRecipientContactCard.shouldShow(_bid()), isTrue);
+      for (final status in [
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'COMPLETED',
+        'DELIVERED',
+      ]) {
+        expect(
+          TravelerRecipientContactCard.shouldShow(_bid(status: status)),
+          isTrue,
+          reason: status,
+        );
+      }
+      // FLUTTER-JT : acceptée mais pas encore retirée, rien, même si un ancien
+      // serveur sert le numéro.
       expect(
         TravelerRecipientContactCard.shouldShow(_bid(status: 'ACCEPTED')),
-        isTrue,
+        isFalse,
       );
       expect(
         TravelerRecipientContactCard.shouldShow(_bid(status: 'PENDING')),
@@ -203,6 +217,60 @@ void main() {
           _bid(recipientPhone: null, recipientPhoneHidden: true),
         ),
         isFalse,
+      );
+    });
+  });
+
+  group('TravelerRecipientContactPendingNote (FLUTTER-JT)', () {
+    test('visible seulement entre acceptation et retrait', () {
+      expect(
+        TravelerRecipientContactPendingNote.shouldShow(
+          _bid(status: 'ACCEPTED'),
+        ),
+        isTrue,
+      );
+      for (final status in [
+        'PENDING',
+        'PAYMENT_ESCROWED',
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'ARRIVED',
+        'COMPLETED',
+        'CANCELLED',
+      ]) {
+        expect(
+          TravelerRecipientContactPendingNote.shouldShow(_bid(status: status)),
+          isFalse,
+          reason: status,
+        );
+      }
+    });
+
+    testWidgets('affiche la ligne discrète en FR et en EN', (tester) async {
+      Future<void> pump(Locale locale) => tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: TravelerRecipientContactPendingNote()),
+        ),
+      );
+      await pump(const Locale('fr'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'Le contact du destinataire sera disponible après la récupération du colis.',
+        ),
+        findsOneWidget,
+      );
+      await pump(const Locale('en'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          "The recipient's contact details will be available once you've picked up the parcel.",
+        ),
+        findsOneWidget,
       );
     });
   });

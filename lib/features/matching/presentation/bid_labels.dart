@@ -92,6 +92,24 @@ const bidContactStatuses = <String>{
 
 bool bidAllowsContact(String status) => bidContactStatuses.contains(status);
 
+/// Statuts où le VOYAGEUR peut joindre le destinataire (appel, WhatsApp, SMS,
+/// numéro affiché) : seulement après le retrait du colis. Plus étroit que
+/// [bidContactStatuses], qui règle le contact expéditeur ↔ voyageur et reste
+/// ouvert dès `ACCEPTED` (décision produit du 11/10/2026, Sentry FLUTTER-JT).
+///
+/// Appliqué côté app même si le serveur sert encore le numéro à `ACCEPTED`
+/// (ancien contrat) : il n'est alors simplement pas affiché.
+const bidRecipientContactStatuses = <String>{
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+  'COMPLETED',
+  'DELIVERED',
+};
+
+bool bidAllowsRecipientContact(String status) =>
+    bidRecipientContactStatuses.contains(status);
+
 /// Retour en cours d'un colis annulé alors que le voyageur l'avait déjà
 /// (FLUTTER-FM) : expéditeur et voyageur doivent pouvoir s'écrire et
 /// s'appeler pour organiser la restitution, jusqu'à ce qu'elle soit confirmée

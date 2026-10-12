@@ -18298,6 +18298,10 @@
   "@travelerContactCardTitle": {
     "description": "Vue voyageur d'un envoi : titre de la carte des actions de contact du destinataire (recipient_contact.dart)."
   },
+  "travelerContactAvailableAfterPickup": "Le contact du destinataire sera disponible après la récupération du colis.",
+  "@travelerContactAvailableAfterPickup": {
+    "description": "Vue voyageur d'un envoi accepté mais pas encore remis : ligne discrète à la place de la carte « Contacter le destinataire », qui n'apparaît qu'après le retrait du colis (Sentry FLUTTER-JT, recipient_contact.dart)."
+  },
   "travelerContactMessageCopied": "Message copié. Collez-le dans votre messagerie.",
   "@travelerContactMessageCopied": {
     "description": "Repli quand WhatsApp ou la messagerie ne s'ouvre pas : le message pré-rempli est copié (recipient_contact.dart)."

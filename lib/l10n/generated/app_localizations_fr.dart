@@ -16124,6 +16124,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get travelerContactCardTitle => 'Contacter le destinataire';
 
   @override
+  String get travelerContactAvailableAfterPickup =>
+      'Le contact du destinataire sera disponible après la récupération du colis.';
+
+  @override
   String get travelerContactMessageCopied =>
       'Message copié. Collez-le dans votre messagerie.';
 

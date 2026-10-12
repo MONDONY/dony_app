@@ -26355,6 +26355,12 @@ abstract class AppLocalizations {
   /// **'Contacter le destinataire'**
   String get travelerContactCardTitle;
 
+  /// Vue voyageur d'un envoi accepté mais pas encore remis : ligne discrète à la place de la carte « Contacter le destinataire », qui n'apparaît qu'après le retrait du colis (Sentry FLUTTER-JT, recipient_contact.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le contact du destinataire sera disponible après la récupération du colis.'**
+  String get travelerContactAvailableAfterPickup;
+
   /// Repli quand WhatsApp ou la messagerie ne s'ouvre pas : le message pré-rempli est copié (recipient_contact.dart).
   ///
   /// In fr, this message translates to:

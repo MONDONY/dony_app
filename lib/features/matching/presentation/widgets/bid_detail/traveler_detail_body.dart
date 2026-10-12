@@ -96,9 +96,12 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       ExpediteurContactCard(bid: widget.bid),
       ColisDestinataireCard(bid: widget.bid, isSender: false),
       // WhatsApp / SMS / appel au destinataire, message pré-rempli selon le
-      // statut du colis (lot 3B).
+      // statut du colis (lot 3B). Seulement après le retrait du colis ; avant,
+      // une ligne discrète annonce que le contact viendra (FLUTTER-JT).
       if (TravelerRecipientContactCard.shouldShow(widget.bid))
-        TravelerRecipientContactCard(bid: widget.bid),
+        TravelerRecipientContactCard(bid: widget.bid)
+      else if (TravelerRecipientContactPendingNote.shouldShow(widget.bid))
+        const TravelerRecipientContactPendingNote(),
       TravelerGainCard(bid: widget.bid),
       DetailsAccordion(bid: widget.bid, showTrackingLink: false),
       if (status == 'COMPLETED' && widget.bid.travelerHasRated)
