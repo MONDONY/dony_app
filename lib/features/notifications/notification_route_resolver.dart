@@ -1,4 +1,5 @@
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
+
 // Résout la route GoRouter correspondant à un type + payload de notification —
 // utilisé à la fois par le tap sur push (foreground/background/terminated) et
 // par le tap dans la boîte de réception in-app, pour garantir que les deux
@@ -22,6 +23,7 @@ const notificationShellTabs = {
   '/tracking',
   '/messages',
   '/profile',
+  '/flights',
 };
 
 /// `true` si [route] doit être atteinte via `context.go` plutôt que
@@ -192,6 +194,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'TRAVELER_NEW_ANNOUNCEMENT' when _isUuid(announcementId) =>
       '/traveler/$announcementId',
     // Expéditeur → détail du trajet qui matche son alerte
+    // Alerte prix d'un billet d'avion (scheduler 6 h du back) : la liste des
+    // alertes, d'où l'utilisateur relance la recherche.
+    'FLIGHT_PRICE_ALERT' => '/flights/alerts',
     'CORRIDOR_ALERT' when _isUuid(announcementId) =>
       '/traveler/$announcementId',
     // Voyageur → détail du colis qui matche son alerte (push instantané)

@@ -85,6 +85,13 @@ import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/favorites/data/datasources/favorite_remote_datasource.dart';
 import 'package:dony/features/favorites/data/favorites_migration.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
+import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
+import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
+import 'package:dony/features/flights/bloc/flight_link_cubit.dart';
+import 'package:dony/features/flights/bloc/flight_places_cubit.dart';
+import 'package:dony/features/flights/bloc/flight_search_cubit.dart';
+import 'package:dony/features/flights/data/datasources/flights_remote_datasource.dart';
+import 'package:dony/features/flights/data/repositories/flights_repository.dart';
 import 'package:dony/features/home/data/datasources/search_parse_datasource.dart';
 import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
@@ -1345,6 +1352,38 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
       alertId: alertId,
       alert: alert,
+    ),
+  );
+  // Billets d'avion en affiliation (onglet Billets, alertes prix).
+  getIt.registerLazySingleton<FlightsRemoteDatasource>(
+    () => FlightsRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<FlightsRepository>(
+    () => FlightsRepository(getIt<FlightsRemoteDatasource>()),
+  );
+  getIt.registerFactory<FlightSearchCubit>(
+    () => FlightSearchCubit(
+      getIt<FlightsRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<FlightDealsCubit>(
+    () => FlightDealsCubit(getIt<FlightsRepository>()),
+  );
+  getIt.registerFactory<FlightPlacesCubit>(
+    () => FlightPlacesCubit(getIt<FlightsRepository>()),
+  );
+  getIt.registerFactory<FlightAlertsCubit>(
+    () => FlightAlertsCubit(
+      getIt<FlightsRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<FlightLinkCubit>(
+    () => FlightLinkCubit(
+      getIt<FlightsRepository>(),
+      getIt<AnalyticsService>(),
+      getIt<ExternalUrlLauncher>(),
     ),
   );
   // Résumé des nouveautés pour la tuile « Mes alertes » du hub Activités.

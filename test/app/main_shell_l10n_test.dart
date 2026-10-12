@@ -23,6 +23,13 @@ void main() {
             onTap: () {},
           ),
           DonyNavItem(
+            iconAsset: 'ticket',
+            label: context.l10n.shellTabTickets,
+            index: 5,
+            currentIndex: 0,
+            onTap: () {},
+          ),
+          DonyNavItem(
             iconAsset: 'layout-grid',
             label: context.l10n.shellTabActivity,
             index: 1,
@@ -50,12 +57,17 @@ void main() {
   );
 
   testWidgets('onglets de la barre de navigation traduits en anglais '
-      '(Activity, Search, Messages, Profile)', (tester) async {
+      '(Search, Tickets, Activity, Messages, Profile)', (tester) async {
     await tester.pumpWidget(buildTabs());
 
-    expect(find.text('Search'), findsOneWidget);
-    expect(find.text('Activity'), findsOneWidget);
-    expect(find.text('Messages'), findsOneWidget);
-    expect(find.text('Profile'), findsOneWidget);
+    for (final label in [
+      'Search',
+      'Tickets',
+      'Activity',
+      'Messages',
+      'Profile',
+    ]) {
+      expect(find.bySemanticsLabel(label), findsOneWidget, reason: label);
+    }
   });
 }

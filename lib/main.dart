@@ -6,6 +6,7 @@ import 'package:dony/app/initial_location.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/config/environment.dart';
+import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/currency/active_rates.dart';
@@ -208,6 +209,21 @@ Future<void> _bootstrap() async {
   // « Passer en PRO » suivent automatiquement. Repli sûr sur false (masqué)
   // tant que le flag n'a pas été chargé ou en cas d'erreur.
   unawaited(_loadProEnabled());
+
+  // Feature flag des billets d'avion (réglage plateforme flights_enabled) :
+  // éteint, l'onglet Billets n'existe pas et la barre du bas reste celle
+  // d'avant. Repli sûr sur false tant que le flag n'est pas chargé.
+  unawaited(_loadFlightsEnabled());
+}
+
+Future<void> _loadFlightsEnabled() async {
+  try {
+    setFlightsEnabled(await getIt<IConfigRepository>().getFlightsEnabled());
+  } catch (_) {
+    // Repli sur kFlightsEnabledDefault (masqué) conservé — non bloquant.
+  } finally {
+    markFlightsFlagLoaded();
+  }
 }
 
 Future<void> _loadProEnabled() async {

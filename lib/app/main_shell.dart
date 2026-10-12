@@ -4,6 +4,7 @@ import 'package:dony/app/notification_badge_sync.dart';
 import 'package:dony/app/resume_refresh_policy.dart';
 import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/app/widgets/dony_nav_orb.dart';
+import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
@@ -104,7 +105,16 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     '/tracking',
     '/messages',
     '/profile',
+    '/flights',
   ];
+
+  /// Branche du shell affichée dans chaque emplacement de la barre, de gauche
+  /// à droite. Billets (branche 5, ajoutée en dernier pour ne décaler aucun
+  /// index existant) s'affiche en 2e position, entre Recherche et Activités.
+  static const List<int> navSlotOrder = [0, 5, 1, 2, 3, 4];
+
+  /// Barre d'avant, quand le flag des billets d'avion est éteint.
+  static const List<int> navSlotOrderWithoutFlights = [0, 1, 2, 3, 4];
 
   void _logTabScreen(int index) {
     if (index < 0 || index >= _tabScreenNames.length) return;
@@ -385,201 +395,229 @@ class _DonyBottomNav extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    return BlocBuilder<AuthBloc, AuthState>(
-      buildWhen: (p, c) =>
-          (p is AuthAuthenticated) != (c is AuthAuthenticated) ||
-          (c is AuthAuthenticated &&
-              (p as AuthAuthenticated?)?.user.isProAccount !=
-                  c.user.isProAccount) ||
-          (c is AuthProfileUpdated),
-      builder: (context, authState) {
-        UserModel? authUser;
-        if (authState is AuthAuthenticated) authUser = authState.user;
-        if (authState is AuthProfileUpdated) authUser = authState.user;
-        final isProAccount = authUser?.isProAccount ?? false;
+    // Billets d'avion (flag flights_enabled) : éteint, la barre reste celle
+    // d'avant, cinq onglets avec libellés ; allumé, six onglets en icônes
+    // seules, Billets en 2e position.
+    return ValueListenableBuilder<bool>(
+      valueListenable: flightsEnabledListenable,
+      builder: (context, flights, _) => BlocBuilder<AuthBloc, AuthState>(
+        buildWhen: (p, c) =>
+            (p is AuthAuthenticated) != (c is AuthAuthenticated) ||
+            (c is AuthAuthenticated &&
+                (p as AuthAuthenticated?)?.user.isProAccount !=
+                    c.user.isProAccount) ||
+            (c is AuthProfileUpdated),
+        builder: (context, authState) {
+          UserModel? authUser;
+          if (authState is AuthAuthenticated) authUser = authState.user;
+          if (authState is AuthProfileUpdated) authUser = authState.user;
+          final isProAccount = authUser?.isProAccount ?? false;
 
-        return BlocBuilder<ActiveRoleCubit, ActiveRole>(
-          builder: (context, activeRole) {
-            // Tab 1 — Activités (hub unique : depuis la Phase 2, le contenu ne
-            // dépend plus du profil — cf. ActivitesHubScreen)
-            // 'zap' remplacé par 'layout-grid' : l'éclair se lisait
-            // « action rapide/boost », pas « mes trajets » — cf. audit UX bottom nav.
-            final tab1Label = context.l10n.shellTabActivity;
-            const tab1IconAsset = 'layout-grid';
+          return BlocBuilder<ActiveRoleCubit, ActiveRole>(
+            builder: (context, activeRole) {
+              // Tab 1 — Activités (hub unique : depuis la Phase 2, le contenu ne
+              // dépend plus du profil — cf. ActivitesHubScreen)
+              // 'zap' remplacé par 'layout-grid' : l'éclair se lisait
+              // « action rapide/boost », pas « mes trajets » — cf. audit UX bottom nav.
+              final tab1Label = context.l10n.shellTabActivity;
+              const tab1IconAsset = 'layout-grid';
 
-            return DecoratedBox(
-              decoration: BoxDecoration(
-                color: cs.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.45)
-                        : DonyColors.ink800.withValues(alpha: 0.12),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Padding(
-                // Le fond coloré s'étend sous le home indicator ; seul le
-                // contenu (icônes/libellés) respecte la safe area, comme
-                // une tab bar iOS/Android native.
-                padding: EdgeInsets.only(bottom: bottomPadding),
-                child: SizedBox(
-                  height: MainShell.navBarContentHeight,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => Stack(
-                      children: [
-                        _SlidingNavIndicator(
-                          currentIndex: currentIndex,
-                          barWidth: constraints.maxWidth,
-                          color: cs.primary,
-                        ),
-                        Row(
-                          children: [
-                            // 0 — Accueil
-                            Expanded(
-                              child: DonyNavItem(
-                                iconAsset: 'search',
-                                label: context.l10n.shellTabSearch,
-                                index: 0,
-                                currentIndex: currentIndex,
-                                onTap: () => onTap(0),
-                              ),
-                            ),
-                            // 1 — Activités (point d'attention = demandes reçues
-                            // + négociations actives, les deux signaux que les
-                            // cartes du hub portent aussi)
-                            //
-                            // Les notifications non lues sont volontairement
-                            // exclues : la boîte de réception s'ouvre depuis la
-                            // cloche de l'Accueil, pas depuis cet onglet. Les
-                            // compter ici allumait un point qu'aucune action de
-                            // l'onglet ne pouvait éteindre — on traitait toutes
-                            // ses demandes, les pastilles des cartes tombaient,
-                            // et le point restait jusqu'à un « Tout lire » sur
-                            // un autre onglet. La cloche porte déjà son propre
-                            // badge chiffré pour ce compteur.
-                            Expanded(
-                              child: Builder(
-                                builder: (context) {
-                                  final pendingRequests = context
-                                      .select<TravelerBidsBloc, int>(
-                                        (b) => b.state is TravelerBidsLoaded
-                                            ? (b.state as TravelerBidsLoaded)
-                                                  .pendingCount
-                                            : 0,
-                                      );
-                                  // Onglet : seulement quand c'est à
-                                  // l'utilisateur de répondre (pas quand on
-                                  // attend la partie adverse). La carte, elle,
-                                  // reste allumée via activeCount.
-                                  final activeNegos = context
-                                      .select<NegotiationListBloc, int>(
-                                        (b) => b.state.actionableCount,
-                                      );
-                                  final hasNew =
-                                      pendingRequests > 0 || activeNegos > 0;
-                                  return DonyNavItem(
-                                    iconAsset: tab1IconAsset,
-                                    label: tab1Label,
-                                    index: 1,
-                                    currentIndex: currentIndex,
-                                    onTap: () => onTap(1),
-                                    showDot: hasNew,
-                                  );
-                                },
-                              ),
-                            ),
-                            // 2 — Suivi / scan QR : orb au même niveau que
-                            // les autres items, pas surélevé.
-                            Expanded(
-                              child: Center(
-                                child: DonyNavOrb(
-                                  size: _orbInlineSize,
-                                  active: currentIndex == 2,
-                                  onTap: () => onTap(2),
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark
+                          ? Colors.black.withValues(alpha: 0.45)
+                          : DonyColors.ink800.withValues(alpha: 0.12),
+                      blurRadius: 16,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  // Le fond coloré s'étend sous le home indicator ; seul le
+                  // contenu (icônes/libellés) respecte la safe area, comme
+                  // une tab bar iOS/Android native.
+                  padding: EdgeInsets.only(bottom: bottomPadding),
+                  child: SizedBox(
+                    height: MainShell.navBarContentHeight,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => Stack(
+                        children: [
+                          _SlidingNavIndicator(
+                            currentIndex: currentIndex,
+                            barWidth: constraints.maxWidth,
+                            color: cs.primary,
+                            slotOrder: flights
+                                ? _MainShellState.navSlotOrder
+                                : _MainShellState.navSlotOrderWithoutFlights,
+                            top: DonyNavItem.pillTopFor(showLabel: !flights),
+                          ),
+                          Row(
+                            children: [
+                              // 0 — Accueil
+                              Expanded(
+                                child: DonyNavItem(
+                                  iconAsset: 'search',
+                                  label: context.l10n.shellTabSearch,
+                                  index: 0,
+                                  currentIndex: currentIndex,
+                                  onTap: () => onTap(0),
+                                  showLabel: !flights,
                                 ),
                               ),
-                            ),
-                            // 3 — Messages
-                            Expanded(
-                              child: Builder(
-                                builder: (context) {
-                                  // `hasRealSession` : un visiteur a un uid
-                                  // anonyme parfaitement valide, mais aucune
-                                  // conversation. Ouvrir le stream sur cet uid
-                                  // n'apporterait qu'une écoute Firestore
-                                  // inutile, refusée par les règles d'accès.
-                                  final uid =
-                                      getIt<FirebaseSessionProbe>()
-                                          .hasRealSession
-                                      ? FirebaseAuth.instance.currentUser?.uid
-                                      : null;
-                                  if (uid == null || uid.isEmpty) {
-                                    // Pendant le sign-out, ou pour un
-                                    // visiteur : pas de stream Firestore
-                                    // (path vide invalide).
+                              // 5 — Billets d'avion (affiché en 2e position),
+                              // seulement quand le flag est allumé.
+                              if (flights)
+                                Expanded(
+                                  child: DonyNavItem(
+                                    iconAsset: 'ticket',
+                                    label: context.l10n.shellTabTickets,
+                                    index: 5,
+                                    currentIndex: currentIndex,
+                                    onTap: () => onTap(5),
+                                    showLabel: !flights,
+                                  ),
+                                ),
+                              // 1 — Activités (point d'attention = demandes reçues
+                              // + négociations actives, les deux signaux que les
+                              // cartes du hub portent aussi)
+                              //
+                              // Les notifications non lues sont volontairement
+                              // exclues : la boîte de réception s'ouvre depuis la
+                              // cloche de l'Accueil, pas depuis cet onglet. Les
+                              // compter ici allumait un point qu'aucune action de
+                              // l'onglet ne pouvait éteindre — on traitait toutes
+                              // ses demandes, les pastilles des cartes tombaient,
+                              // et le point restait jusqu'à un « Tout lire » sur
+                              // un autre onglet. La cloche porte déjà son propre
+                              // badge chiffré pour ce compteur.
+                              Expanded(
+                                child: Builder(
+                                  builder: (context) {
+                                    final pendingRequests = context
+                                        .select<TravelerBidsBloc, int>(
+                                          (b) => b.state is TravelerBidsLoaded
+                                              ? (b.state as TravelerBidsLoaded)
+                                                    .pendingCount
+                                              : 0,
+                                        );
+                                    // Onglet : seulement quand c'est à
+                                    // l'utilisateur de répondre (pas quand on
+                                    // attend la partie adverse). La carte, elle,
+                                    // reste allumée via activeCount.
+                                    final activeNegos = context
+                                        .select<NegotiationListBloc, int>(
+                                          (b) => b.state.actionableCount,
+                                        );
+                                    final hasNew =
+                                        pendingRequests > 0 || activeNegos > 0;
                                     return DonyNavItem(
-                                      iconAsset: 'message-circle',
-                                      label: context.l10n.shellTabMessages,
-                                      index: 3,
+                                      iconAsset: tab1IconAsset,
+                                      label: tab1Label,
+                                      index: 1,
                                       currentIndex: currentIndex,
-                                      onTap: () => onTap(3),
+                                      onTap: () => onTap(1),
+                                      showLabel: !flights,
+                                      showDot: hasNew,
                                     );
-                                  }
-                                  return StreamBuilder<int>(
-                                    stream: getIt<FirestoreChatRepository>()
-                                        .totalUnreadStream(uid),
-                                    builder: (context, snapshot) {
-                                      return BlocBuilder<
-                                        SupportUnreadCubit,
-                                        int
-                                      >(
-                                        bloc: getIt<SupportUnreadCubit>(),
-                                        builder: (context, supportUnread) {
-                                          return DonyNavItem(
-                                            iconAsset: 'message-circle',
-                                            label:
-                                                context.l10n.shellTabMessages,
-                                            index: 3,
-                                            currentIndex: currentIndex,
-                                            onTap: () => onTap(3),
-                                            badgeCount:
-                                                (snapshot.data ?? 0) +
-                                                supportUnread,
-                                          );
-                                        },
+                                  },
+                                ),
+                              ),
+                              // 2 — Suivi / scan QR : orb au même niveau que
+                              // les autres items, pas surélevé.
+                              Expanded(
+                                child: Center(
+                                  child: DonyNavOrb(
+                                    size: _orbInlineSize,
+                                    active: currentIndex == 2,
+                                    onTap: () => onTap(2),
+                                  ),
+                                ),
+                              ),
+                              // 3 — Messages
+                              Expanded(
+                                child: Builder(
+                                  builder: (context) {
+                                    // `hasRealSession` : un visiteur a un uid
+                                    // anonyme parfaitement valide, mais aucune
+                                    // conversation. Ouvrir le stream sur cet uid
+                                    // n'apporterait qu'une écoute Firestore
+                                    // inutile, refusée par les règles d'accès.
+                                    final uid =
+                                        getIt<FirebaseSessionProbe>()
+                                            .hasRealSession
+                                        ? FirebaseAuth.instance.currentUser?.uid
+                                        : null;
+                                    if (uid == null || uid.isEmpty) {
+                                      // Pendant le sign-out, ou pour un
+                                      // visiteur : pas de stream Firestore
+                                      // (path vide invalide).
+                                      return DonyNavItem(
+                                        iconAsset: 'message-circle',
+                                        label: context.l10n.shellTabMessages,
+                                        index: 3,
+                                        currentIndex: currentIndex,
+                                        onTap: () => onTap(3),
+                                        showLabel: !flights,
                                       );
-                                    },
-                                  );
-                                },
+                                    }
+                                    return StreamBuilder<int>(
+                                      stream: getIt<FirestoreChatRepository>()
+                                          .totalUnreadStream(uid),
+                                      builder: (context, snapshot) {
+                                        return BlocBuilder<
+                                          SupportUnreadCubit,
+                                          int
+                                        >(
+                                          bloc: getIt<SupportUnreadCubit>(),
+                                          builder: (context, supportUnread) {
+                                            return DonyNavItem(
+                                              iconAsset: 'message-circle',
+                                              label:
+                                                  context.l10n.shellTabMessages,
+                                              index: 3,
+                                              currentIndex: currentIndex,
+                                              onTap: () => onTap(3),
+                                              showLabel: !flights,
+                                              badgeCount:
+                                                  (snapshot.data ?? 0) +
+                                                  supportUnread,
+                                            );
+                                          },
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                            // 4 — Moi (photo de profil style Facebook)
-                            Expanded(
-                              child: DonyNavItem(
-                                iconAsset: 'user',
-                                label: context.l10n.shellTabProfile,
-                                index: 4,
-                                currentIndex: currentIndex,
-                                onTap: () => onTap(4),
-                                isPro: isProAccount,
-                                avatarUrl: authUser?.avatarUrl,
-                                avatarName: authUser?.displayName,
+                              // 4 — Moi (photo de profil style Facebook)
+                              Expanded(
+                                child: DonyNavItem(
+                                  iconAsset: 'user',
+                                  label: context.l10n.shellTabProfile,
+                                  index: 4,
+                                  currentIndex: currentIndex,
+                                  onTap: () => onTap(4),
+                                  showLabel: !flights,
+                                  isPro: isProAccount,
+                                  avatarUrl: authUser?.avatarUrl,
+                                  avatarName: authUser?.displayName,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
-        );
-      },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -595,24 +633,32 @@ class _SlidingNavIndicator extends StatelessWidget {
     required this.currentIndex,
     required this.barWidth,
     required this.color,
+    required this.slotOrder,
+    required this.top,
   });
 
   final int currentIndex;
   final double barWidth;
   final Color color;
 
+  /// Branche affichée dans chaque emplacement, de gauche à droite.
+  final List<int> slotOrder;
+
+  /// Haut de la pastille : plus bas quand les libellés sont masqués.
+  final double top;
+
   @override
   Widget build(BuildContext context) {
-    final itemWidth = barWidth / 5;
-    final left =
-        itemWidth * currentIndex + (itemWidth - DonyNavItem.pillWidth) / 2;
-    final visible = currentIndex != 2 && currentIndex != 4;
+    final itemWidth = barWidth / slotOrder.length;
+    final slot = slotOrder.indexOf(currentIndex);
+    final left = itemWidth * slot + (itemWidth - DonyNavItem.pillWidth) / 2;
+    final visible = slot >= 0 && currentIndex != 2 && currentIndex != 4;
 
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,
       left: left,
-      top: DonyNavItem.pillTopInset,
+      top: top,
       width: DonyNavItem.pillWidth,
       height: DonyNavItem.pillHeight,
       child: AnimatedOpacity(

@@ -1,0 +1,96 @@
+import 'package:dony/features/flights/data/models/flight_place.dart';
+import 'package:equatable/equatable.dart';
+import 'package:intl/intl.dart';
+
+/// Date de départ ou de retour du formulaire : un jour précis, ou tout le mois
+/// de [date] quand [wholeMonth] est vrai. Le back accepte les deux formes
+/// (`AAAA-MM-JJ` ou `AAAA-MM`).
+class FlightWhen extends Equatable {
+  const FlightWhen.day(this.date) : wholeMonth = false;
+  const FlightWhen.month(this.date) : wholeMonth = true;
+
+  final DateTime date;
+  final bool wholeMonth;
+
+  String toQueryValue() => wholeMonth
+      ? DateFormat('yyyy-MM').format(date)
+      : DateFormat('yyyy-MM-dd').format(date);
+
+  /// Premier jour couvert.
+  DateTime get first =>
+      wholeMonth ? DateTime(date.year, date.month) : _day(date);
+
+  /// Dernier jour couvert.
+  DateTime get last =>
+      wholeMonth ? DateTime(date.year, date.month + 1, 0) : _day(date);
+
+  @override
+  List<Object?> get props => [
+    date.year,
+    date.month,
+    wholeMonth ? 0 : date.day,
+    wholeMonth,
+  ];
+}
+
+/// Tronque à minuit sans dépendre de Flutter (modèle pur, testable en Dart).
+DateTime _day(DateTime d) => DateTime(d.year, d.month, d.day);
+
+/// Recherche saisie dans l'onglet Billets.
+class FlightSearchQuery extends Equatable {
+  const FlightSearchQuery({
+    this.origin,
+    this.destination,
+    this.departure,
+    this.returnDate,
+    this.directOnly = false,
+  });
+
+  final FlightPlace? origin;
+  final FlightPlace? destination;
+  final FlightWhen? departure;
+
+  /// Présent = aller-retour.
+  final FlightWhen? returnDate;
+  final bool directOnly;
+
+  bool get isComplete =>
+      origin != null &&
+      destination != null &&
+      origin!.code != destination!.code;
+
+  bool get isRoundTrip => returnDate != null;
+
+  FlightSearchQuery copyWith({
+    FlightPlace? origin,
+    FlightPlace? destination,
+    FlightWhen? departure,
+    FlightWhen? returnDate,
+    bool clearReturn = false,
+    bool? directOnly,
+  }) => FlightSearchQuery(
+    origin: origin ?? this.origin,
+    destination: destination ?? this.destination,
+    departure: departure ?? this.departure,
+    returnDate: clearReturn ? null : (returnDate ?? this.returnDate),
+    directOnly: directOnly ?? this.directOnly,
+  );
+
+  /// Départ et arrivée échangés (bouton d'inversion du formulaire).
+  FlightSearchQuery swapped() => FlightSearchQuery(
+    origin: destination,
+    destination: origin,
+    departure: departure,
+    returnDate: returnDate,
+    directOnly: directOnly,
+  );
+
+  @override
+  List<Object?> get props => [
+    origin,
+    destination,
+    departure,
+    returnDate,
+    directOnly,
+  ];
+}

@@ -74,10 +74,17 @@ class BilletCorridor extends StatelessWidget {
     super.key,
     required this.departureCity,
     required this.arrivalCity,
+    this.departureCode,
+    this.arrivalCode,
   });
 
   final String departureCity;
   final String arrivalCity;
+
+  /// Code affiché en grand quand l'appelant le connaît déjà (code IATA d'un
+  /// vol) ; `null` : déduit du nom de la ville ([cityAirportCode]).
+  final String? departureCode;
+  final String? arrivalCode;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +119,8 @@ class BilletCorridor extends StatelessWidget {
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      cityAirportCode(departureCity, departure: true),
+                      departureCode ??
+                          cityAirportCode(departureCity, departure: true),
                       maxLines: 1,
                       style: codeStyle,
                     ),
@@ -152,7 +160,8 @@ class BilletCorridor extends StatelessWidget {
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerRight,
                     child: Text(
-                      cityAirportCode(arrivalCity, departure: false),
+                      arrivalCode ??
+                          cityAirportCode(arrivalCity, departure: false),
                       maxLines: 1,
                       style: codeStyle,
                       textAlign: TextAlign.end,

@@ -446,6 +446,25 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — FLIGHT_PRICE_ALERT', () {
+    test(
+      'alerte prix d\'un billet → liste des alertes, poussée hors shell',
+      () {
+        final route = resolveNotificationRoute('FLIGHT_PRICE_ALERT', {
+          'alertId': '0a1b2c3d-e5f6-7890-abcd-ef1234567890',
+          'origin': 'PAR',
+          'destination': 'ABJ',
+        });
+        expect(route, '/flights/alerts');
+        expect(isShellTabRoute(route!), isFalse);
+      },
+    );
+
+    test('l\'onglet Billets est un onglet du shell', () {
+      expect(isShellTabRoute('/flights'), isTrue);
+    });
+  });
+
   group('resolveNotificationRoute — CORRIDOR_ALERT', () {
     const alertId = '0a1b2c3d-e5f6-7890-abcd-ef1234567890';
 
