@@ -266,6 +266,10 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               case MobileMoneyPaymentDepositFailed():
                 _pollingTimer?.cancel();
               case final MobileMoneyPaymentError e:
+                // Numéro refusé : aucun dépôt n'existe, sonder ne fait que
+                // tourner à vide jusqu'à la saisie d'un autre numéro (le
+                // bouton de [_PhoneRequiredBody] relance le sondage).
+                if (_needsPayerPhone(e.error)) _pollingTimer?.cancel();
                 unawaited(ErrorPresenter.show(context, e.error));
               case _:
             }
@@ -336,11 +340,16 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             ),
             MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
             // Aucun numéro disponible pour payer (compte Firebase de
-            // l'expéditeur sans téléphone) : corps dédié avec saisie
-            // obligatoire, plutôt que le DonyEmptyState générique.
-            final MobileMoneyPaymentError e when _isPhoneRequired(e.error) =>
+            // l'expéditeur sans téléphone), ou numéro que l'opérateur refuse
+            // (téléphone du compte étranger, +33) : corps dédié avec saisie
+            // obligatoire. Le DonyEmptyState générique montrait une icône
+            // wifi barrée et « Réessayer » rejouait le même numéro, donc le
+            // même refus (FLUTTER-MQ).
+            final MobileMoneyPaymentError e when _needsPayerPhone(e.error) =>
               _PhoneRequiredBody(
-                message: l.mobileMoneyPhoneRequiredExplanation,
+                message: _isPhoneRequired(e.error)
+                    ? l.mobileMoneyPhoneRequiredExplanation
+                    : l.mobileMoneyPayerUnsupportedExplanation,
                 phoneController: _payerPhoneController,
                 onRetry: () => _retry(_payerPhoneController.text),
               ),

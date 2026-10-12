@@ -9954,5 +9954,86 @@
   "chatEditNotEditable": "This message can no longer be edited.",
   "chatEditUnavailable": "Editing messages isn't available yet. Please try again later.",
   "chatEditFailed": "The message couldn't be edited. Check your connection and try again.",
-  "chatDeleteFailed": "The message couldn't be deleted. Check your connection and try again."
+  "chatDeleteFailed": "The message couldn't be deleted. Check your connection and try again.",
+  "errorTripNoLongerAvailableTitle": "Trip no longer available",
+  "@errorTripNoLongerAvailableTitle": {
+    "description": "Titre, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)"
+  },
+  "errorTripNoLongerAvailableMessage": "This trip no longer accepts requests: it has left, is full or was closed by the traveler. Look for another trip on this route.",
+  "@errorTripNoLongerAvailableMessage": {
+    "description": "Message, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)"
+  },
+  "errorSurplusNotOpenTitle": "Space not open",
+  "@errorSurplusNotOpenTitle": {
+    "description": "Titre, 409 surplus-not-open : capacité supplémentaire du trajet non ouverte"
+  },
+  "errorSurplusNotOpenMessage": "The traveler hasn't opened their remaining space to other senders.",
+  "@errorSurplusNotOpenMessage": {
+    "description": "Message, 409 surplus-not-open : capacité supplémentaire du trajet non ouverte"
+  },
+  "errorReservedSenderCannotBidTitle": "Parcel already booked",
+  "@errorReservedSenderCannotBidTitle": {
+    "description": "Titre, 409 reserved-sender-cannot-bid : l'expéditeur a déjà une réservation sur ce trajet"
+  },
+  "errorReservedSenderCannotBidMessage": "You already have a parcel booked on this trip. Find it in your activities.",
+  "@errorReservedSenderCannotBidMessage": {
+    "description": "Message, 409 reserved-sender-cannot-bid : l'expéditeur a déjà une réservation sur ce trajet"
+  },
+  "errorCannotBidOwnAnnouncementTitle": "Your own trip",
+  "@errorCannotBidOwnAnnouncementTitle": {
+    "description": "Titre, 409 cannot-bid-own-announcement : demande sur sa propre annonce"
+  },
+  "errorCannotBidOwnAnnouncementMessage": "You can't send a parcel on your own trip.",
+  "@errorCannotBidOwnAnnouncementMessage": {
+    "description": "Message, 409 cannot-bid-own-announcement : demande sur sa propre annonce"
+  },
+  "errorDepartureTimePassedTitle": "Departure time passed",
+  "@errorDepartureTimePassedTitle": {
+    "description": "Titre, 422 departure-time-passed : publication d'un trajet dont le départ est déjà passé (FLUTTER-NR)"
+  },
+  "errorDepartureTimePassedMessage": "The departure time you chose has already passed. Pick a later time.",
+  "@errorDepartureTimePassedMessage": {
+    "description": "Message, 422 departure-time-passed : publication d'un trajet dont le départ est déjà passé (FLUTTER-NR)"
+  },
+  "errorHandoverDeadlineInPastTitle": "Drop-off deadline passed",
+  "@errorHandoverDeadlineInPastTitle": {
+    "description": "Titre, 422 handover-deadline-in-past : date limite de dépôt déjà passée à la publication (FLUTTER-NR)"
+  },
+  "errorHandoverDeadlineInPastMessage": "The parcel drop-off deadline has already passed. Pick a later date.",
+  "@errorHandoverDeadlineInPastMessage": {
+    "description": "Message, 422 handover-deadline-in-past : date limite de dépôt déjà passée à la publication (FLUTTER-NR)"
+  },
+  "errorInvalidDepartureDateTitle": "Departure date passed",
+  "@errorInvalidDepartureDateTitle": {
+    "description": "Titre, 422 invalid-departure-date : date de départ passée"
+  },
+  "errorInvalidDepartureDateMessage": "The departure date can't be in the past.",
+  "@errorInvalidDepartureDateMessage": {
+    "description": "Message, 422 invalid-departure-date : date de départ passée"
+  },
+  "errorHandoverAfterDepartureTitle": "Deadline after departure",
+  "@errorHandoverAfterDepartureTitle": {
+    "description": "Titre, 422 handover-after-departure : date limite de dépôt postérieure au départ"
+  },
+  "errorHandoverAfterDepartureMessage": "The drop-off deadline must be before the traveler's departure.",
+  "@errorHandoverAfterDepartureMessage": {
+    "description": "Message, 422 handover-after-departure : date limite de dépôt postérieure au départ"
+  },
+  "tripEditMobileMoneyCurrencyLockedNotice": "This trip is published in {tripCurrency} and its currency can no longer change. Mobile money receives CFA francs: to accept it, publish a new trip in XOF or XAF.",
+  "@tripEditMobileMoneyCurrencyLockedNotice": {
+    "description": "Modification d'un trajet publié hors zone CFA : la devise est figée, plus de bouton pour passer en XOF (FLUTTER-JS)",
+    "placeholders": {
+      "tripCurrency": {
+        "type": "String"
+      }
+    }
+  },
+  "moneyChannelMobileMoney": "Mobile Money",
+  "@moneyChannelMobileMoney": {
+    "description": "Mon argent : mention du canal sur la ligne d'un colis payé en mobile money (FLUTTER-P3)"
+  },
+  "scanOfflineQueueRetryNow": "Retry now",
+  "@scanOfflineQueueRetryNow": {
+    "description": "File des lectures hors ligne : renvoyer tout de suite les étapes en attente (FLUTTER-KZ)"
+  }
 }

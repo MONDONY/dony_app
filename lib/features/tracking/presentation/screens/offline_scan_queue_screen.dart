@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class OfflineScanQueueScreen extends StatelessWidget {
   const OfflineScanQueueScreen({super.key});
@@ -42,9 +46,26 @@ class OfflineScanQueueScreen extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final queue = getIt<HiveService>().offlineQueue;
-    final entries = queue.values
-        .map((v) => Map<String, dynamic>.from(v))
-        .toList();
+
+    // Rebâti à chaque envoi : une étape partie disparaît de la liste.
+    return ValueListenableBuilder(
+      valueListenable: queue.listenable(),
+      builder: (context, _, _) {
+        final entries = queue.values
+            .map((v) => Map<String, dynamic>.from(v))
+            .toList();
+        return _buildScaffold(context, cs, tt, l, entries);
+      },
+    );
+  }
+
+  Widget _buildScaffold(
+    BuildContext context,
+    ColorScheme cs,
+    TextTheme tt,
+    AppLocalizations l,
+    List<Map<String, dynamic>> entries,
+  ) {
     final count = entries.length;
 
     return Scaffold(
@@ -108,6 +129,19 @@ class OfflineScanQueueScreen extends StatelessWidget {
                       ),
                     ),
 
+                  // L'envoi repart seul (retour du réseau, retour dans l'app,
+                  // nouvel essai espacé) ; ce bouton évite d'attendre quand
+                  // le réseau est visiblement revenu (FLUTTER-KZ).
+                  if (entries.isNotEmpty) ...[
+                    const SizedBox(height: DonySpacing.base),
+                    DonyButton(
+                      key: const Key('offline-queue-retry'),
+                      label: l.scanOfflineQueueRetryNow,
+                      variant: DonyButtonVariant.secondary,
+                      onPressed: () =>
+                          unawaited(getIt<OfflineSyncService>().syncAll()),
+                    ),
+                  ],
                   const SizedBox(height: DonySpacing.xxl),
                   Center(
                     child: Text(

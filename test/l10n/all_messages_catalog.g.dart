@@ -6629,6 +6629,35 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'chatEditUnavailable': (l) => l.chatEditUnavailable,
   'chatEditFailed': (l) => l.chatEditFailed,
   'chatDeleteFailed': (l) => l.chatDeleteFailed,
+  'errorTripNoLongerAvailableTitle': (l) => l.errorTripNoLongerAvailableTitle,
+  'errorTripNoLongerAvailableMessage': (l) =>
+      l.errorTripNoLongerAvailableMessage,
+  'errorSurplusNotOpenTitle': (l) => l.errorSurplusNotOpenTitle,
+  'errorSurplusNotOpenMessage': (l) => l.errorSurplusNotOpenMessage,
+  'errorReservedSenderCannotBidTitle': (l) =>
+      l.errorReservedSenderCannotBidTitle,
+  'errorReservedSenderCannotBidMessage': (l) =>
+      l.errorReservedSenderCannotBidMessage,
+  'errorCannotBidOwnAnnouncementTitle': (l) =>
+      l.errorCannotBidOwnAnnouncementTitle,
+  'errorCannotBidOwnAnnouncementMessage': (l) =>
+      l.errorCannotBidOwnAnnouncementMessage,
+  'errorDepartureTimePassedTitle': (l) => l.errorDepartureTimePassedTitle,
+  'errorDepartureTimePassedMessage': (l) => l.errorDepartureTimePassedMessage,
+  'errorHandoverDeadlineInPastTitle': (l) => l.errorHandoverDeadlineInPastTitle,
+  'errorHandoverDeadlineInPastMessage': (l) =>
+      l.errorHandoverDeadlineInPastMessage,
+  'errorInvalidDepartureDateTitle': (l) => l.errorInvalidDepartureDateTitle,
+  'errorInvalidDepartureDateMessage': (l) => l.errorInvalidDepartureDateMessage,
+  'errorHandoverAfterDepartureTitle': (l) => l.errorHandoverAfterDepartureTitle,
+  'errorHandoverAfterDepartureMessage': (l) =>
+      l.errorHandoverAfterDepartureMessage,
+  'tripEditMobileMoneyCurrencyLockedNotice': (l) =>
+      l.tripEditMobileMoneyCurrencyLockedNotice(
+        placeholderMarker('tripCurrency'),
+      ),
+  'moneyChannelMobileMoney': (l) => l.moneyChannelMobileMoney,
+  'scanOfflineQueueRetryNow': (l) => l.scanOfflineQueueRetryNow,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7147,4 +7176,5 @@ const textParameters = <String, List<String>>{
   'flightsVia': ['gate'],
   'flightsSuggestWholeMonth': ['month'],
   'flightsSuggestFlexible': ['route'],
+  'tripEditMobileMoneyCurrencyLockedNotice': ['tripCurrency'],
 };

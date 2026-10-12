@@ -13,7 +13,7 @@ import 'package:dony/features/tracking/data/scan_send_guard.dart';
 import 'package:dony/features/tracking/data/tracking_photo_upload.dart';
 import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// Étape reçue par le back. [photoDropped] : la photo a été refusée par le
@@ -94,6 +94,27 @@ class OfflineSyncService {
   /// Relance [syncAll] à la prochaine échéance d'une entrée pas encore due.
   Timer? _wakeUp;
 
+  /// Premier délai avant un nouvel essai après un échec réseau, un délai
+  /// dépassé ou un 5xx, doublé à chaque échec jusqu'à [retryMax]. Sans lui,
+  /// une étape refusée restait en file jusqu'au prochain changement de
+  /// réseau du téléphone, qui peut ne jamais venir : `connectivity_plus` ne
+  /// signale rien tant que le téléphone reste sur le même réseau
+  /// (FLUTTER-KZ, photo de suivi coupée en 4G ; FLUTTER-KK, 502 pendant un
+  /// redéploiement du back).
+  @visibleForTesting
+  Duration retryBase = const Duration(seconds: 15);
+  @visibleForTesting
+  Duration retryMax = const Duration(minutes: 5);
+
+  /// Délai du nouvel essai programmé, `null` quand rien n'est en échec.
+  @visibleForTesting
+  Duration? get nextRetryDelay => _retryDelay;
+
+  Timer? _retry;
+  Duration? _retryDelay;
+
+  AppLifecycleListener? _lifecycle;
+
   OfflineSyncService(
     this._hive,
     this._repository, [
@@ -112,11 +133,27 @@ class OfflineSyncService {
       final hasConnection = results.any((r) => r != ConnectivityResult.none);
       if (hasConnection) syncAll();
     });
+    // Retour au premier plan : le réseau a pu revenir sans que le téléphone
+    // change de réseau, et les minuteries ne tournent pas en arrière-plan.
+    _lifecycle = AppLifecycleListener(onResume: () => unawaited(syncAll()));
   }
 
   void dispose() {
     _sub?.cancel();
     _wakeUp?.cancel();
+    _retry?.cancel();
+    _lifecycle?.dispose();
+  }
+
+  /// Programme un nouvel essai, chaque fois plus espacé.
+  void _scheduleRetry() {
+    final previous = _retryDelay;
+    final delay = previous == null
+        ? retryBase
+        : (previous * 2 > retryMax ? retryMax : previous * 2);
+    _retryDelay = delay;
+    _retry?.cancel();
+    _retry = Timer(delay, () => unawaited(syncAll()));
   }
 
   /// Scans en attente de réseau. Une validation encore annulable ou en
@@ -287,6 +324,7 @@ class OfflineSyncService {
     } catch (error, stackTrace) {
       if (isDefinitiveRejection(unwrapDioError(error))) rethrow;
       _reportUnexpected(error, stackTrace, failedCount: 1);
+      _scheduleRetry();
       // Libérée avant l'écriture : le bandeau rebâti par cette écriture la
       // compte déjà parmi les scans en attente.
       _inFlight.remove(key);
@@ -303,6 +341,7 @@ class OfflineSyncService {
     if (_syncing || _hive.offlineQueue.isEmpty) return;
     _syncing = true;
     _wakeUp?.cancel();
+    _retry?.cancel();
     DateTime? nextDue;
     var failedCount = 0;
     Object? lastError;
@@ -338,6 +377,9 @@ class OfflineSyncService {
       }
       if (failedCount > 0) {
         _reportUnexpected(lastError!, lastStackTrace, failedCount: failedCount);
+        _scheduleRetry();
+      } else {
+        _retryDelay = null;
       }
     } finally {
       _syncing = false;
