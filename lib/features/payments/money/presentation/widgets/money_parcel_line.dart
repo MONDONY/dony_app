@@ -62,6 +62,11 @@ class MoneyParcelLine extends StatelessWidget {
         ),
       );
     }
+    // Payé en mobile money : sans cette mention, rien ne distinguait ces
+    // colis des paiements par carte (FLUTTER-P3).
+    if (item.channel == MoneyChannel.mobileMoney) {
+      add(TextSpan(text: l.moneyChannelMobileMoney));
+    }
     for (final d in details) {
       add(TextSpan(text: d));
     }

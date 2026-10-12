@@ -30715,6 +30715,114 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le message n\'a pas pu être supprimé. Vérifiez votre connexion et réessayez.'**
   String get chatDeleteFailed;
+
+  /// Titre, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet plus disponible'**
+  String get errorTripNoLongerAvailableTitle;
+
+  /// Message, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet n\'accepte plus de demandes : il est parti, complet ou fermé par le voyageur. Cherchez un autre trajet sur ce corridor.'**
+  String get errorTripNoLongerAvailableMessage;
+
+  /// Titre, 409 surplus-not-open : capacité supplémentaire du trajet non ouverte
+  ///
+  /// In fr, this message translates to:
+  /// **'Places non ouvertes'**
+  String get errorSurplusNotOpenTitle;
+
+  /// Message, 409 surplus-not-open : capacité supplémentaire du trajet non ouverte
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur n\'a pas ouvert sa place restante à d\'autres expéditeurs.'**
+  String get errorSurplusNotOpenMessage;
+
+  /// Titre, 409 reserved-sender-cannot-bid : l'expéditeur a déjà une réservation sur ce trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis déjà réservé'**
+  String get errorReservedSenderCannotBidTitle;
+
+  /// Message, 409 reserved-sender-cannot-bid : l'expéditeur a déjà une réservation sur ce trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà un colis réservé sur ce trajet. Retrouvez-le dans vos activités.'**
+  String get errorReservedSenderCannotBidMessage;
+
+  /// Titre, 409 cannot-bid-own-announcement : demande sur sa propre annonce
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre propre trajet'**
+  String get errorCannotBidOwnAnnouncementTitle;
+
+  /// Message, 409 cannot-bid-own-announcement : demande sur sa propre annonce
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne pouvez pas envoyer un colis sur votre propre trajet.'**
+  String get errorCannotBidOwnAnnouncementMessage;
+
+  /// Titre, 422 departure-time-passed : publication d'un trajet dont le départ est déjà passé (FLUTTER-NR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ passée'**
+  String get errorDepartureTimePassedTitle;
+
+  /// Message, 422 departure-time-passed : publication d'un trajet dont le départ est déjà passé (FLUTTER-NR)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'heure de départ choisie est déjà passée. Choisissez une heure à venir.'**
+  String get errorDepartureTimePassedMessage;
+
+  /// Titre, 422 handover-deadline-in-past : date limite de dépôt déjà passée à la publication (FLUTTER-NR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date limite passée'**
+  String get errorHandoverDeadlineInPastTitle;
+
+  /// Message, 422 handover-deadline-in-past : date limite de dépôt déjà passée à la publication (FLUTTER-NR)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt des colis est déjà passée. Choisissez une date à venir.'**
+  String get errorHandoverDeadlineInPastMessage;
+
+  /// Titre, 422 invalid-departure-date : date de départ passée
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ passée'**
+  String get errorInvalidDepartureDateTitle;
+
+  /// Message, 422 invalid-departure-date : date de départ passée
+  ///
+  /// In fr, this message translates to:
+  /// **'La date de départ ne peut pas être dans le passé.'**
+  String get errorInvalidDepartureDateMessage;
+
+  /// Titre, 422 handover-after-departure : date limite de dépôt postérieure au départ
+  ///
+  /// In fr, this message translates to:
+  /// **'Date limite après le départ'**
+  String get errorHandoverAfterDepartureTitle;
+
+  /// Message, 422 handover-after-departure : date limite de dépôt postérieure au départ
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt doit précéder le départ du voyageur.'**
+  String get errorHandoverAfterDepartureMessage;
+
+  /// Modification d'un trajet publié hors zone CFA : la devise est figée, plus de bouton pour passer en XOF (FLUTTER-JS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet est publié en {tripCurrency} et sa devise ne change plus. Le mobile money reçoit des francs CFA : pour l\'accepter, publiez un nouveau trajet en XOF ou XAF.'**
+  String tripEditMobileMoneyCurrencyLockedNotice(String tripCurrency);
+
+  /// Mon argent : mention du canal sur la ligne d'un colis payé en mobile money (FLUTTER-P3)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile Money'**
+  String get moneyChannelMobileMoney;
 }
 
 class _AppLocalizationsDelegate

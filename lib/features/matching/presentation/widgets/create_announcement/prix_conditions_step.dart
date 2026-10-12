@@ -120,6 +120,10 @@ class PrixConditionsStep extends StatelessWidget {
   /// trajet dédié (le mode de paiement est déjà fixé par la négociation).
   final bool showPaymentMethods;
 
+  /// Devise figée (modification d'un trajet publié, trajet dédié) : l'avis
+  /// mobile money explique la devise au lieu de proposer d'en changer.
+  final bool currencyLocked;
+
   const PrixConditionsStep({
     super.key,
     this.currency,
@@ -148,6 +152,7 @@ class PrixConditionsStep extends StatelessWidget {
     this.lockPrice = false,
     this.lockedTotalPriceEur,
     this.showPaymentMethods = true,
+    this.currencyLocked = false,
   });
 
   /// Repères de la devise de l'annonce : chips, médiane, fourchette.
@@ -1164,6 +1169,12 @@ class PrixConditionsStep extends StatelessWidget {
     required SupportedCurrency tripCurrency,
   }) {
     final target = mobileMoneyCurrency;
+    if (currencyLocked) {
+      return PaymentSetupNotice(
+        key: const Key('mobile-money-currency-notice'),
+        message: l.tripEditMobileMoneyCurrencyLockedNotice(tripCurrency.code),
+      );
+    }
     if (target == null || !target.isMobileMoneyEligible) {
       return PaymentSetupNotice(
         key: const Key('mobile-money-currency-notice'),

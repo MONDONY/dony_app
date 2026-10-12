@@ -2521,6 +2521,10 @@ class _TripFormContentState extends State<_TripFormContent> {
                   ? widget.lockContext!.agreedPriceEur
                   : null,
               showPaymentMethods: !_isLocked,
+              // La devise ne change plus une fois le trajet publié : le PUT ne
+              // l'envoie pas, basculer l'écran en F CFA faisait valider le prix
+              // dans l'ancienne devise et renvoyait un 422 (FLUTTER-JS).
+              currencyLocked: _isEdit || _isLocked,
             ),
           );
         },

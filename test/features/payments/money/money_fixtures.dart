@@ -133,6 +133,7 @@ MoneyItemModel item({
   double? weightKg,
   DateTime? departureDate,
   String? counterpartyName,
+  MoneyChannel channel = MoneyChannel.card,
 }) => MoneyItemModel(
   bidId: bidId,
   announcementId: announcementId,
@@ -140,7 +141,7 @@ MoneyItemModel item({
   role: role,
   state: state,
   releaseCondition: ReleaseCondition.unknown,
-  channel: MoneyChannel.card,
+  channel: channel,
   trackingNumber: trackingNumber,
   departureCity: departureCity,
   arrivalCity: arrivalCity,
