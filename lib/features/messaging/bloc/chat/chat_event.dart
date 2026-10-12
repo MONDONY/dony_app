@@ -120,3 +120,12 @@ class ChatMessageDeleteRequested extends ChatEvent {
   final String messageId;
   const ChatMessageDeleteRequested(this.messageId);
 }
+
+/// L'app passe au premier plan ([visible] vrai) ou en arrière-plan, fil
+/// ouvert. Au premier plan, les messages arrivés entre-temps sont marqués lus ;
+/// en arrière-plan, rien n'est marqué : l'utilisateur ne les a pas vus
+/// (FLUTTER-NX).
+class ChatAppVisibilityChanged extends ChatEvent {
+  final bool visible;
+  const ChatAppVisibilityChanged({required this.visible});
+}

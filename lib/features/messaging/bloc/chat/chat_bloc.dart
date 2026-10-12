@@ -36,6 +36,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   StreamSubscription<dynamic>? _messageSub;
   StreamSubscription<bool>? _deletedSub;
 
+  // Lecture pendant que le fil est ouvert (FLUTTER-NX, FLUTTER-NY) : la
+  // fonction `onNewMessage` incrémente `unread_{conv}` à chaque message reçu,
+  // sans savoir que le fil est affiché. Marquer lu à la seule ouverture
+  // laissait tous les messages reçus ensuite comptés comme non lus.
+  StreamSubscription<Map<String, int>>? _unreadSub;
+  Timer? _markReadTimer;
+  String _currentUserUid = '';
+  int _unreadHere = 0;
+  bool _appVisible = true;
+  final Duration _markReadDelay;
+
   // Fil courant, conservé pour reconstruire l'état quand la réponse en
   // cours ou une citation résolue change (FLUTTER-86).
   String _firestoreConversationId = '';
@@ -56,7 +67,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     this._conversationRepo,
     this._analytics, {
     MessageEditRepository? editRepository,
+    Duration markReadDelay = const Duration(milliseconds: 500),
   }) : _editRepo = editRepository,
+       _markReadDelay = markReadDelay,
        super(const ChatInitial()) {
     on<ChatSubscribeRequested>(_onSubscribe);
     on<ChatTextSendRequested>(_onSendText);
@@ -71,6 +84,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<_QuoteResolved>(_onQuoteResolved);
     on<ChatMessageEditRequested>(_onEditMessage);
     on<ChatMessageDeleteRequested>(_onDeleteMessage);
+    on<ChatAppVisibilityChanged>(_onAppVisibilityChanged);
   }
 
   ChatState _snapshot() {
@@ -184,27 +198,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // Marquer lu aussi en read-only : sinon le compteur unread_* d'une
     // conversation dont l'interlocuteur a supprimé son compte ou sa copie
     // ne redescend jamais et le badge Messages reste bloqué.
-    if (event.currentUserUid.isNotEmpty) {
-      // Écritures secondaires non attendues : leur échec (hors ligne,
-      // Firestore indisponible) est rattrapé, jamais une erreur non gérée.
-      unawaited(
-        _secondary(
-          'chat.mark_conversation_read_failed',
-          () => _firestoreRepo.markConversationRead(
-            event.firestoreConversationId,
-            event.currentUserUid,
-          ),
-        ),
-      );
-      unawaited(
-        _secondary(
-          'chat.mark_messages_read_failed',
-          () => _firestoreRepo.markMessagesRead(
-            firestoreConversationId: event.firestoreConversationId,
-            currentUserUid: event.currentUserUid,
-          ),
-        ),
-      );
+    await _unreadSub?.cancel();
+    _markReadTimer?.cancel();
+    _currentUserUid = event.currentUserUid;
+    _unreadHere = 0;
+    if (_currentUserUid.isNotEmpty) {
+      _markRead();
+      _watchUnreadWhileOpen();
     }
 
     // Only watch deletion stream when NOT already in read-only
@@ -274,6 +274,77 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         'chat.last_message_update_failed',
         () => _conversationRepo.updateLastMessage(conversationId, preview),
       );
+
+  /// Remet le fil courant à « lu » : compteur `unread_*` et `readAt` des
+  /// messages reçus. Écritures secondaires non attendues : leur échec (hors
+  /// ligne, Firestore indisponible) est rattrapé, jamais une erreur non gérée.
+  void _markRead() {
+    final convId = _firestoreConversationId;
+    final uid = _currentUserUid;
+    if (convId.isEmpty || uid.isEmpty) return;
+    _unreadHere = 0;
+    unawaited(
+      _secondary(
+        'chat.mark_conversation_read_failed',
+        () => _firestoreRepo.markConversationRead(convId, uid),
+      ),
+    );
+    unawaited(
+      _secondary(
+        'chat.mark_messages_read_failed',
+        () => _firestoreRepo.markMessagesRead(
+          firestoreConversationId: convId,
+          currentUserUid: uid,
+        ),
+      ),
+    );
+  }
+
+  /// Écoute le compteur de non-lus de ce fil tant qu'il est ouvert : dès qu'un
+  /// message reçu le fait remonter, l'app au premier plan, le fil est remis à
+  /// « lu » après [_markReadDelay] (plusieurs messages rapprochés = une seule
+  /// écriture). On réagit au compteur et non à l'arrivée du message : la
+  /// fonction l'incrémente une à trois secondes après, une remise à 0 faite à
+  /// l'arrivée serait aussitôt annulée (FLUTTER-NX).
+  void _watchUnreadWhileOpen() {
+    final convId = _firestoreConversationId;
+    try {
+      _unreadSub = _firestoreRepo
+          .perConversationUnreadStream(_currentUserUid)
+          .listen(
+            (counts) {
+              _unreadHere = counts[convId] ?? 0;
+              if (_unreadHere > 0 && _appVisible) _scheduleMarkRead();
+            },
+            onError: (Object e) => AppLog.warn(
+              'chat.unread_watch_failed',
+              data: {'reason': _reasonOf(e)},
+            ),
+          );
+    } catch (e) {
+      AppLog.warn('chat.unread_watch_failed', data: {'reason': _reasonOf(e)});
+    }
+  }
+
+  void _scheduleMarkRead() {
+    _markReadTimer?.cancel();
+    _markReadTimer = Timer(_markReadDelay, () {
+      if (isClosed || !_appVisible || _unreadHere <= 0) return;
+      _markRead();
+    });
+  }
+
+  void _onAppVisibilityChanged(
+    ChatAppVisibilityChanged event,
+    Emitter<ChatState> emit,
+  ) {
+    _appVisible = event.visible;
+    if (!event.visible) {
+      _markReadTimer?.cancel();
+      return;
+    }
+    if (_unreadHere > 0) _markRead();
+  }
 
   /// Exécute une opération secondaire sans jamais lever : l'échec devient un
   /// log Sentry (code d'erreur seul, jamais de contenu).
@@ -607,6 +678,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> close() async {
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
+    await _unreadSub?.cancel();
+    _markReadTimer?.cancel();
+    // Sortie du fil : dernière remise à « lu » pour un message arrivé pendant
+    // le délai anti-rebond, sinon il resterait compté à l'arrivée sur la liste.
+    if (_appVisible && _unreadHere > 0) _markRead();
     return super.close();
   }
 }
