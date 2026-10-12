@@ -476,15 +476,26 @@ void main() {
       },
     );
 
+    // FLUTTER-JT : le voyageur ne voit le numéro du destinataire qu'après le
+    // retrait du colis, même si un ancien serveur le sert dès l'acceptation.
     testWidgets(
-      'voyageur, demande acceptée : téléphone du destinataire visible',
+      'voyageur, demande acceptée : téléphone du destinataire encore masqué',
       (tester) async {
         final bid = _bid(recipientPhone: '+221700000000');
         await tester.pumpWidget(hostAs(bid, isSender: false));
 
-        expect(find.textContaining('+221700000000'), findsWidgets);
+        expect(find.textContaining('+221700000000'), findsNothing);
       },
     );
+
+    testWidgets('voyageur, colis retiré : téléphone du destinataire visible', (
+      tester,
+    ) async {
+      final bid = _bid(status: 'HANDED_OVER', recipientPhone: '+221700000000');
+      await tester.pumpWidget(hostAs(bid, isSender: false));
+
+      expect(find.textContaining('+221700000000'), findsWidgets);
+    });
 
     testWidgets('expéditeur, demande en attente : téléphone visible', (
       tester,
