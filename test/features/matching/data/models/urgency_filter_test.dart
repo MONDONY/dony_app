@@ -106,4 +106,27 @@ void main() {
       }
     });
   });
+  group('UrgencyFilter.departureRange', () {
+    test('couvre exactement les jours que matches accepte', () {
+      final now = DateTime(2026, 10, 11, 15, 30);
+      for (final filter in UrgencyFilter.values) {
+        final range = filter.departureRange(now);
+        expect(range.from.hour, 0, reason: filter.name);
+        for (var offset = -1; offset < 40; offset++) {
+          final d = DateTime(2026, 10, 11 + offset);
+          final inRange =
+              !d.isBefore(range.from) &&
+              (range.to == null || !d.isAfter(range.to!));
+          final diff = offset;
+          final expected = switch (filter) {
+            UrgencyFilter.veryUrgent => diff >= 0 && diff < 3,
+            UrgencyFilter.urgent => diff >= 3 && diff < 7,
+            UrgencyFilter.soon => diff >= 7 && diff < 14,
+            UrgencyFilter.later => diff >= 14,
+          };
+          expect(inRange, expected, reason: '${filter.name} J+$offset');
+        }
+      }
+    });
+  });
 }

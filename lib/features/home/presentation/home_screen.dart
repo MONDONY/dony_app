@@ -1429,12 +1429,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
           // marqués « Ton trajet » (TravelerCard.isOwnAnnouncement) et sans
           // réservation : il voit qu'ils sont bien publiés et comment les
           // expéditeurs les voient (FLUTTER-43). Ils étaient masqués.
-          final urgencyFilter = _filters.urgencyFilter;
-          final announcements = urgencyFilter == null
-              ? raw
-              : raw
-                    .where((a) => urgencyFilter.matches(a.departureDate))
-                    .toList();
+          // Le filtre d'urgence part au serveur avec la fenêtre de départ
+          // (HomeSearchFilters.toAnnouncementQuery) : la liste reçue est déjà
+          // filtrée et le total serveur la compte (FLUTTER-MH, FLUTTER-JG).
+          final announcements = raw;
 
           return BlocConsumer<
             PackageRequestSearchBloc,
@@ -1591,11 +1589,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             isKycVerified: isKycVerified,
                             tripsFailed: state is AnnouncementError,
                             tripsLoading: state is AnnouncementLoading,
-                            // Filtre d'urgence local : seul ce qui est chargé
-                            // compte. Sinon le total serveur, toutes pages.
-                            tripsTotal:
-                                urgencyFilter == null &&
-                                    state is AnnouncementSearchLoaded
+                            // Total serveur, toutes pages, filtre d'urgence
+                            // compris.
+                            tripsTotal: state is AnnouncementSearchLoaded
                                 ? state.displayCount
                                 : null,
                           ),

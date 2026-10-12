@@ -8,6 +8,7 @@ import 'package:dony/features/home/data/models/search_parse_result.dart';
 import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -341,6 +342,44 @@ void main() {
     verify: (bloc) {
       expect(bloc.state.filters.departureCity, 'Paris');
       expect(bloc.state.filters.arrivalCity, 'Dakar');
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    'le filtre d urgence part au comptage : le compteur du bas suit '
+    '(FLUTTER-MH)',
+    build: build,
+    act: (bloc) => bloc.add(
+      const SearchComposerFiltersChanged(
+        HomeSearchFilters(urgencyFilter: UrgencyFilter.veryUrgent),
+      ),
+    ),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      final n = DateTime.now();
+      final today = DateTime(n.year, n.month, n.day);
+      verify(
+        () => announcementRepo.countAnnouncements(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: today,
+          departureDateTo: DateTime(n.year, n.month, n.day + 2),
+          minAvailableKg: any(named: 'minAvailableKg'),
+          maxAvailableKg: any(named: 'maxAvailableKg'),
+          maxPricePerKg: any(named: 'maxPricePerKg'),
+          kiloProOnly: any(named: 'kiloProOnly'),
+          minRating: any(named: 'minRating'),
+          weekendOnly: any(named: 'weekendOnly'),
+          transportMode: any(named: 'transportMode'),
+          kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+          contentType: any(named: 'contentType'),
+          userLat: any(named: 'userLat'),
+          userLng: any(named: 'userLng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+        ),
+      ).called(1);
+      expect(bloc.state.resultCount, 14);
     },
   );
 

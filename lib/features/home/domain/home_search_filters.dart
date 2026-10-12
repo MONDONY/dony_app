@@ -270,11 +270,12 @@ class HomeSearchFilters {
   /// explicitement, même convention que [toPackageRequestQuery].
   AnnouncementQuery toAnnouncementQuery() {
     final ignoreCorridor = nearMeActive;
+    final (:from, :to) = _departureWindow();
     return AnnouncementQuery(
       departureCity: ignoreCorridor ? null : departureCity,
       arrivalCity: ignoreCorridor ? null : arrivalCity,
-      departureDateFrom: dateFrom,
-      departureDateTo: dateTo,
+      departureDateFrom: from,
+      departureDateTo: to,
       minAvailableKg: weightMin,
       maxAvailableKg: weightMax,
       maxPricePerKg: maxPricePerKg,
@@ -293,6 +294,33 @@ class HomeSearchFilters {
           ? null
           : (paymentMethods.map((m) => m.apiValue).toList()..sort()),
     );
+  }
+
+  /// Fenêtre de départ envoyée au serveur : la date choisie croisée avec le
+  /// filtre d'urgence. Le serveur filtre et compte alors lui-même : la liste,
+  /// le compteur de l'accueil et celui du composeur disent le même nombre
+  /// (Sentry FLUTTER-MH, FLUTTER-JG). Une intersection vide (« aujourd'hui »
+  /// et « plus de 14 jours ») renvoie une fenêtre inversée, donc aucun trajet,
+  /// ce qui est bien le résultat attendu.
+  ({DateTime? from, DateTime? to}) _departureWindow() {
+    final urgency = urgencyFilter;
+    if (urgency == null) return (from: dateFrom, to: dateTo);
+    final range = urgency.departureRange();
+    final chosenFrom = dateFrom;
+    final chosenTo = dateTo;
+    final from = chosenFrom == null || chosenFrom.isBefore(range.from)
+        ? range.from
+        : chosenFrom;
+    final rangeTo = range.to;
+    final DateTime? to;
+    if (chosenTo == null) {
+      to = rangeTo;
+    } else if (rangeTo == null) {
+      to = chosenTo;
+    } else {
+      to = chosenTo.isBefore(rangeTo) ? chosenTo : rangeTo;
+    }
+    return (from: from, to: to);
   }
 
   /// Clés des filtres actifs, énumération fermée et sans valeur : sert au

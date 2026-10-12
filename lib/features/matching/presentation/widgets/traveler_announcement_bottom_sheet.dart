@@ -849,7 +849,11 @@ class _StatCardsRow extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: _StatCard(
-                value: DateFormat.MMMEd(l.localeName).format(deadline),
+                // Jour et heure (Sentry FLUTTER-MY).
+                value: l.commonDateAtTime(
+                  DateFormat.MMMEd(l.localeName).format(deadline),
+                  DateFormat.jm(l.localeName).format(deadline),
+                ),
                 label: l.listingDepositDeadlineLabel,
               ),
             ),

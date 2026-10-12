@@ -2837,7 +2837,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishCashLockedSubtitle =>
-      'Toujours accepté sur ce trajet. Commission prélevée au voyageur à la remise';
+      'Toujours accepté sur ce trajet. Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis';
 
   @override
   String get tripPublishCashLockedExplanation =>
@@ -2853,7 +2853,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishCashSubtitle =>
-      'Commission prélevée au voyageur à la remise';
+      'Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis';
 
   @override
   String get tripPublishAcceptedContentSectionLabel => 'Ce que j\'accepte';
