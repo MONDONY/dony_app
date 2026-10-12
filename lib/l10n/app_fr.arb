@@ -20355,5 +20355,82 @@
   "chatDeleteFailed": "Le message n'a pas pu être supprimé. Vérifiez votre connexion et réessayez.",
   "@chatDeleteFailed": {
     "description": "Erreur réseau ou serveur à la suppression."
+  },
+  "errorAnnouncementNotActiveTitle": "Trajet plus disponible",
+  "@errorAnnouncementNotActiveTitle": {
+    "description": "Titre, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)"
+  },
+  "errorAnnouncementNotActiveMessage": "Ce trajet n'accepte plus de demandes : il est parti, complet ou fermé par le voyageur. Cherchez un autre trajet sur ce corridor.",
+  "@errorAnnouncementNotActiveMessage": {
+    "description": "Message, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)"
+  },
+  "errorSurplusNotOpenTitle": "Places non ouvertes",
+  "@errorSurplusNotOpenTitle": {
+    "description": "Titre, 409 surplus-not-open : capacité supplémentaire du trajet non ouverte"
+  },
+  "errorSurplusNotOpenMessage": "Le voyageur n'a pas ouvert sa place restante à d'autres expéditeurs.",
+  "@errorSurplusNotOpenMessage": {
+    "description": "Message, 409 surplus-not-open : capacité supplémentaire du trajet non ouverte"
+  },
+  "errorReservedSenderCannotBidTitle": "Colis déjà réservé",
+  "@errorReservedSenderCannotBidTitle": {
+    "description": "Titre, 409 reserved-sender-cannot-bid : l'expéditeur a déjà une réservation sur ce trajet"
+  },
+  "errorReservedSenderCannotBidMessage": "Vous avez déjà un colis réservé sur ce trajet. Retrouvez-le dans vos activités.",
+  "@errorReservedSenderCannotBidMessage": {
+    "description": "Message, 409 reserved-sender-cannot-bid : l'expéditeur a déjà une réservation sur ce trajet"
+  },
+  "errorCannotBidOwnAnnouncementTitle": "Votre propre trajet",
+  "@errorCannotBidOwnAnnouncementTitle": {
+    "description": "Titre, 409 cannot-bid-own-announcement : demande sur sa propre annonce"
+  },
+  "errorCannotBidOwnAnnouncementMessage": "Vous ne pouvez pas envoyer un colis sur votre propre trajet.",
+  "@errorCannotBidOwnAnnouncementMessage": {
+    "description": "Message, 409 cannot-bid-own-announcement : demande sur sa propre annonce"
+  },
+  "errorDepartureTimePassedTitle": "Heure de départ passée",
+  "@errorDepartureTimePassedTitle": {
+    "description": "Titre, 422 departure-time-passed : publication d'un trajet dont le départ est déjà passé (FLUTTER-NR)"
+  },
+  "errorDepartureTimePassedMessage": "L'heure de départ choisie est déjà passée. Choisissez une heure à venir.",
+  "@errorDepartureTimePassedMessage": {
+    "description": "Message, 422 departure-time-passed : publication d'un trajet dont le départ est déjà passé (FLUTTER-NR)"
+  },
+  "errorHandoverDeadlineInPastTitle": "Date limite passée",
+  "@errorHandoverDeadlineInPastTitle": {
+    "description": "Titre, 422 handover-deadline-in-past : date limite de dépôt déjà passée à la publication (FLUTTER-NR)"
+  },
+  "errorHandoverDeadlineInPastMessage": "La date limite de dépôt des colis est déjà passée. Choisissez une date à venir.",
+  "@errorHandoverDeadlineInPastMessage": {
+    "description": "Message, 422 handover-deadline-in-past : date limite de dépôt déjà passée à la publication (FLUTTER-NR)"
+  },
+  "errorInvalidDepartureDateTitle": "Date de départ passée",
+  "@errorInvalidDepartureDateTitle": {
+    "description": "Titre, 422 invalid-departure-date : date de départ passée"
+  },
+  "errorInvalidDepartureDateMessage": "La date de départ ne peut pas être dans le passé.",
+  "@errorInvalidDepartureDateMessage": {
+    "description": "Message, 422 invalid-departure-date : date de départ passée"
+  },
+  "errorHandoverAfterDepartureTitle": "Date limite après le départ",
+  "@errorHandoverAfterDepartureTitle": {
+    "description": "Titre, 422 handover-after-departure : date limite de dépôt postérieure au départ"
+  },
+  "errorHandoverAfterDepartureMessage": "La date limite de dépôt doit précéder le départ du voyageur.",
+  "@errorHandoverAfterDepartureMessage": {
+    "description": "Message, 422 handover-after-departure : date limite de dépôt postérieure au départ"
+  },
+  "tripEditMobileMoneyCurrencyLockedNotice": "Ce trajet est publié en {tripCurrency} et sa devise ne change plus. Le mobile money reçoit des francs CFA : pour l'accepter, publiez un nouveau trajet en XOF ou XAF.",
+  "@tripEditMobileMoneyCurrencyLockedNotice": {
+    "description": "Modification d'un trajet publié hors zone CFA : la devise est figée, plus de bouton pour passer en XOF (FLUTTER-JS)",
+    "placeholders": {
+      "tripCurrency": {
+        "type": "String"
+      }
+    }
+  },
+  "moneyChannelMobileMoney": "Mobile Money",
+  "@moneyChannelMobileMoney": {
+    "description": "Mon argent : mention du canal sur la ligne d'un colis payé en mobile money (FLUTTER-P3)"
   }
 }

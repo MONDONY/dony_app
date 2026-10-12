@@ -63,6 +63,7 @@ Widget _host({
   bool mobileMoneyAccountActive = false,
   SupportedCurrency? mobileMoneyCurrency,
   VoidCallback? onMobileMoneySetupReturned,
+  bool currencyLocked = false,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   when(
@@ -96,6 +97,7 @@ Widget _host({
             ],
             child: SingleChildScrollView(
               child: PrixConditionsStep(
+                currencyLocked: currencyLocked,
                 currency: initialCurrency,
                 priceOptionNotifier: ValueNotifier<int>(0),
                 customPriceNotifier: ValueNotifier<double>(0),
@@ -476,6 +478,37 @@ void main() {
       );
       expect(tile.onChanged, isNotNull);
       await tester.pumpAndSettle();
+    });
+
+    // FLUTTER-JS : en modification, le bouton faisait afficher des F CFA alors
+    // que le PUT n'envoie pas la devise : prix validé en EUR, 422 en boucle.
+    testWidgets('devise figée (modification) : explication sans bouton', (
+      tester,
+    ) async {
+      final currency = ValueNotifier<SupportedCurrency>(SupportedCurrency.eur);
+      await _pump(
+        tester,
+        _host(
+          currencyNotifier: currency,
+          mobileMoneyAccountActive: true,
+          mobileMoneyCurrency: SupportedCurrency.xof,
+          currencyLocked: true,
+        ),
+      );
+
+      expect(
+        find.byKey(const Key('mobile-money-currency-notice')),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Ce trajet est publié en EUR'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('switch-to-mobile-money-currency-cta')),
+        findsNothing,
+      );
+      expect(currency.value.code, SupportedCurrency.eur.code);
     });
 
     testWidgets('FLUTTER-GK : « Annuler » garde la devise du voyage', (

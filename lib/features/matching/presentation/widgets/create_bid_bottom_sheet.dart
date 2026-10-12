@@ -1055,6 +1055,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       ErrorPresenter.show(context, state.error);
     } else if (state is BidError) {
       ErrorPresenter.show(context, state.error);
+      // Trajet parti, complet ou fermé entre-temps : la demande ne pourra plus
+      // aboutir, on rend la main au lieu de laisser un formulaire bloqué
+      // (FLUTTER-NR).
+      if (state.error.code == 'announcement-not-active' && context.canPop()) {
+        context.pop();
+      }
     }
   }
 

@@ -18290,7 +18290,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorAnnouncementNotActiveMessage =>
-      'Le trajet de ce voyageur est terminé ou annulé : ce paiement ne peut plus aboutir et rien ne vous a été débité. Choisissez une autre offre ou attendez celle d\'un autre voyageur.';
+      'Ce trajet n\'accepte plus de demandes : il est parti, complet ou fermé par le voyageur. Cherchez un autre trajet sur ce corridor.';
 
   @override
   String get errorTravelerNotEligibleTitle => 'Paiement pas encore possible';
@@ -18928,4 +18928,61 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get chatDeleteFailed =>
       'Le message n\'a pas pu être supprimé. Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get errorSurplusNotOpenTitle => 'Places non ouvertes';
+
+  @override
+  String get errorSurplusNotOpenMessage =>
+      'Le voyageur n\'a pas ouvert sa place restante à d\'autres expéditeurs.';
+
+  @override
+  String get errorReservedSenderCannotBidTitle => 'Colis déjà réservé';
+
+  @override
+  String get errorReservedSenderCannotBidMessage =>
+      'Vous avez déjà un colis réservé sur ce trajet. Retrouvez-le dans vos activités.';
+
+  @override
+  String get errorCannotBidOwnAnnouncementTitle => 'Votre propre trajet';
+
+  @override
+  String get errorCannotBidOwnAnnouncementMessage =>
+      'Vous ne pouvez pas envoyer un colis sur votre propre trajet.';
+
+  @override
+  String get errorDepartureTimePassedTitle => 'Heure de départ passée';
+
+  @override
+  String get errorDepartureTimePassedMessage =>
+      'L\'heure de départ choisie est déjà passée. Choisissez une heure à venir.';
+
+  @override
+  String get errorHandoverDeadlineInPastTitle => 'Date limite passée';
+
+  @override
+  String get errorHandoverDeadlineInPastMessage =>
+      'La date limite de dépôt des colis est déjà passée. Choisissez une date à venir.';
+
+  @override
+  String get errorInvalidDepartureDateTitle => 'Date de départ passée';
+
+  @override
+  String get errorInvalidDepartureDateMessage =>
+      'La date de départ ne peut pas être dans le passé.';
+
+  @override
+  String get errorHandoverAfterDepartureTitle => 'Date limite après le départ';
+
+  @override
+  String get errorHandoverAfterDepartureMessage =>
+      'La date limite de dépôt doit précéder le départ du voyageur.';
+
+  @override
+  String tripEditMobileMoneyCurrencyLockedNotice(String tripCurrency) {
+    return 'Ce trajet est publié en $tripCurrency et sa devise ne change plus. Le mobile money reçoit des francs CFA : pour l\'accepter, publiez un nouveau trajet en XOF ou XAF.';
+  }
+
+  @override
+  String get moneyChannelMobileMoney => 'Mobile Money';
 }

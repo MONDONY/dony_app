@@ -18155,7 +18155,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorAnnouncementNotActiveMessage =>
-      'This traveller\'s trip is completed or cancelled: this payment can no longer go through and you have not been charged. Choose another offer or wait for one from another traveller.';
+      'This trip no longer accepts requests: it has left, is full or was closed by the traveler. Look for another trip on this route.';
 
   @override
   String get errorTravelerNotEligibleTitle => 'Payment not possible yet';
@@ -18793,4 +18793,61 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatDeleteFailed =>
       'The message couldn\'t be deleted. Check your connection and try again.';
+
+  @override
+  String get errorSurplusNotOpenTitle => 'Space not open';
+
+  @override
+  String get errorSurplusNotOpenMessage =>
+      'The traveler hasn\'t opened their remaining space to other senders.';
+
+  @override
+  String get errorReservedSenderCannotBidTitle => 'Parcel already booked';
+
+  @override
+  String get errorReservedSenderCannotBidMessage =>
+      'You already have a parcel booked on this trip. Find it in your activities.';
+
+  @override
+  String get errorCannotBidOwnAnnouncementTitle => 'Your own trip';
+
+  @override
+  String get errorCannotBidOwnAnnouncementMessage =>
+      'You can\'t send a parcel on your own trip.';
+
+  @override
+  String get errorDepartureTimePassedTitle => 'Departure time passed';
+
+  @override
+  String get errorDepartureTimePassedMessage =>
+      'The departure time you chose has already passed. Pick a later time.';
+
+  @override
+  String get errorHandoverDeadlineInPastTitle => 'Drop-off deadline passed';
+
+  @override
+  String get errorHandoverDeadlineInPastMessage =>
+      'The parcel drop-off deadline has already passed. Pick a later date.';
+
+  @override
+  String get errorInvalidDepartureDateTitle => 'Departure date passed';
+
+  @override
+  String get errorInvalidDepartureDateMessage =>
+      'The departure date can\'t be in the past.';
+
+  @override
+  String get errorHandoverAfterDepartureTitle => 'Deadline after departure';
+
+  @override
+  String get errorHandoverAfterDepartureMessage =>
+      'The drop-off deadline must be before the traveler\'s departure.';
+
+  @override
+  String tripEditMobileMoneyCurrencyLockedNotice(String tripCurrency) {
+    return 'This trip is published in $tripCurrency and its currency can no longer change. Mobile money receives CFA francs: to accept it, publish a new trip in XOF or XAF.';
+  }
+
+  @override
+  String get moneyChannelMobileMoney => 'Mobile Money';
 }

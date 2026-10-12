@@ -1522,6 +1522,49 @@ void main() {
       },
     );
 
+    // Sentry FLUTTER-MQ : numéro du compte (+33) refusé à l'initiation d'un
+    // fil de négociation. L'écran affichait une icône wifi barrée et
+    // « Réessayer » rejouait le même numéro, donc le même refus.
+    testWidgets(
+      'numéro refusé à l\'initiation (payer-unsupported) : saisie dédiée, '
+      'relance avec le numéro saisi',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentError(
+            ValidationException(
+              'Numéro non pris en charge',
+              code: 'mobile-money-payer-unsupported',
+            ),
+          ),
+        );
+
+        await pumpScreen(tester);
+
+        expect(find.text('Une erreur est survenue'), findsNothing);
+        expect(
+          find.textContaining('Ce numéro ne peut pas payer en mobile money'),
+          findsOneWidget,
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('mobile-money-phone-required-field')),
+          '+221 77 345 67 89',
+        );
+        await tester.pump();
+        await tester.tap(find.text('Réessayer'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentInitiateRequested(
+              scope: MobileMoneyScope.bid(bidId),
+              phoneNumber: '+221773456789',
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
     testWidgets(
       'un autre code métier (mobile-money-disabled) garde le DonyEmptyState '
       'générique, jamais le corps dédié',
