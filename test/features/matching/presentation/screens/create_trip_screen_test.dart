@@ -2769,7 +2769,53 @@ void main() {
         );
 
         expect(find.text('Choisir'), findsNothing);
-        expect(find.text('1 août'), findsOneWidget);
+        // Le jour du départ (22:00), la limite est l'heure de départ : elle
+        // s'affiche avec le jour (Sentry FLUTTER-MY).
+        expect(find.text('1 août à 22:00'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'date limite avant le jour du départ : fin de journée affichée',
+      (tester) async {
+        setupViewport(tester);
+
+        final ann = AnnouncementModel(
+          id: 'ann-handover-eod',
+          travelerId: 'trav-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 8, 20),
+          departureTime: '08:00',
+          availableKg: 10.0,
+          totalKg: 23.0,
+          pricePerKg: 8.0,
+          status: 'ACTIVE',
+          bidsCount: 0,
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+          handoverDeadline: DateTime(2026, 8, 18, 23, 59),
+          transportMode: TransportMode.plane,
+          acceptedPaymentMethods: {BidPaymentMethod.stripe},
+          acceptedContentTypes: const ['Vêtements'],
+          refusedTypes: const [],
+        );
+
+        await pumpAndDrain(
+          tester,
+          _wrapWithRouter(
+            CreateTripScreen(args: CreateTripArgs(announcement: ann)),
+          ),
+        );
+
+        expect(
+          tester
+              .widget<Text>(
+                find.byKey(const Key('sheet-handover-deadline-value')),
+              )
+              .data,
+          '18 août à 23:59',
+        );
       },
     );
 

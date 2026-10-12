@@ -51,7 +51,6 @@ class HiveService {
       'country_code'; // ISO 3166-1 alpha-2, ou absent
   static const String kTravelerCountryUnsupported =
       'traveler_country_unsupported';
-  static const String kPickupRadiusKm = 'pickup_radius_km'; // int
   static const String kDefaultPackageWeight = 'default_package_weight'; // int
   static const String kMinBidPrice = 'min_bid_price'; // int
   static const String kContactMode = 'contact_mode'; // String?

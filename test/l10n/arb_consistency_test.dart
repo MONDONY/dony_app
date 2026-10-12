@@ -118,6 +118,7 @@ const _sameInBothLanguages = <String>{
   'travelerContactWhatsApp', // « WhatsApp » : nom de l'application
   'travelerContactSms', // « SMS » se dit pareil
   'travelerContactInAppMessage', // « Message » se dit pareil
+  'chatEditFieldLabel', // « Message » se dit pareil (FLUTTER-MG)
   'authEmailStepLabel', // « Email » se dit pareil
   'authOnboardingDestinationsEyebrow', // « Destinations » se dit pareil
   'negotiationParcelSheetPhotos', // « Photos » se dit pareil

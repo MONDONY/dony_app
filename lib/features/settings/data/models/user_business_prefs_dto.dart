@@ -1,6 +1,10 @@
 class UserBusinessPrefsDto {
   final String weightUnit;
   final String currencyCode;
+
+  /// Rayon de collecte : plus aucun écran ne le règle (il n'avait aucun
+  /// effet). Gardé tel que le serveur le renvoie, et renvoyé à l'identique :
+  /// un backend antérieur au 2026-10-11 l'exige encore (`@NotNull`) au `PUT`.
   final int pickupRadiusKm;
   final int defaultPackageWeightKg;
   final int minBidPriceEur;
@@ -33,7 +37,7 @@ class UserBusinessPrefsDto {
   const UserBusinessPrefsDto({
     required this.weightUnit,
     required this.currencyCode,
-    required this.pickupRadiusKm,
+    this.pickupRadiusKm = 10,
     required this.defaultPackageWeightKg,
     required this.minBidPriceEur,
     this.contactMode,

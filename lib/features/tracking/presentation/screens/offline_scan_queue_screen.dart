@@ -51,35 +51,9 @@ class OfflineScanQueueScreen extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: DonyAppBar(
         title: l.scanOfflineQueueTitle,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: DonySpacing.base),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.sm,
-                  vertical: DonySpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: cs.secondaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                  border: Border.all(color: cs.secondary),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DonyIcon('wifi-off', size: 12, color: cs.secondary),
-                    const SizedBox(width: DonySpacing.xs),
-                    Text(
-                      l.scanOfflineBadge,
-                      style: tt.labelMedium?.copyWith(color: cs.secondary),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        // La pastille « Hors-ligne » était dans les actions : avec le retour
+        // et le scarabée, elle réduisait le titre à « Lectures ho… » à 360 dp
+        // (Sentry FLUTTER-KN, Redmi). Elle vit maintenant en tête du contenu.
       ),
       body: Builder(
         builder: (context) {
@@ -96,6 +70,8 @@ class OfflineScanQueueScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const _OfflineBadge(),
+                  const SizedBox(height: DonySpacing.md),
                   _AlertBanner(count: count),
                   const SizedBox(height: DonySpacing.xl),
 
@@ -294,6 +270,40 @@ class _EventChip extends StatelessWidget {
       child: Text(
         label,
         style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+      ),
+    );
+  }
+}
+
+/// Pastille « Hors-ligne », en tête du contenu plutôt que dans l'AppBar.
+class _OfflineBadge extends StatelessWidget {
+  const _OfflineBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('offline-queue-badge'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.secondaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: cs.secondary),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyIcon('wifi-off', size: 12, color: cs.secondary),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            context.l10n.scanOfflineBadge,
+            style: tt.labelMedium?.copyWith(color: cs.secondary),
+          ),
+        ],
       ),
     );
   }

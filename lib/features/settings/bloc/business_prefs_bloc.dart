@@ -21,7 +21,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     on<CurrencyChanged>(_onCurrency);
     on<DisplayCurrencyChanged>(_onDisplayCurrency);
     on<CountryChanged>(_onCountry);
-    on<PickupRadiusChanged>(_onPickupRadius);
     on<DefaultWeightChanged>(_onDefaultWeight);
     on<MinBidPriceChanged>(_onMinBidPrice);
     on<ContactModeChanged>(_onContactMode);
@@ -32,8 +31,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     weightUnit: box.get(HiveService.kWeightUnit, defaultValue: 'kg') as String,
     currencyCode:
         box.get(HiveService.kCurrencyCode, defaultValue: 'EUR') as String,
-    pickupRadiusKm:
-        box.get(HiveService.kPickupRadiusKm, defaultValue: 10) as int,
     defaultPackageWeightKg:
         box.get(HiveService.kDefaultPackageWeight, defaultValue: 23) as int,
     minBidPriceEur: box.get(HiveService.kMinBidPrice, defaultValue: 0) as int,
@@ -140,16 +137,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     }
   }
 
-  Future<void> _onPickupRadius(
-    PickupRadiusChanged e,
-    Emitter<BusinessPrefsState> emit,
-  ) async {
-    final prev = state;
-    await _box.put(HiveService.kPickupRadiusKm, e.km);
-    emit(state.copyWith(pickupRadiusKm: e.km, hasSyncError: false));
-    await _putOrRollback(emit, prev);
-  }
-
   Future<void> _onDefaultWeight(
     DefaultWeightChanged e,
     Emitter<BusinessPrefsState> emit,
@@ -222,7 +209,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   Future<void> _writeToHive(UserBusinessPrefsDto dto) async {
     await _box.put(HiveService.kWeightUnit, dto.weightUnit);
     await _box.put(HiveService.kCurrencyCode, dto.currencyCode);
-    await _box.put(HiveService.kPickupRadiusKm, dto.pickupRadiusKm);
     await _box.put(
       HiveService.kDefaultPackageWeight,
       dto.defaultPackageWeightKg,
@@ -250,7 +236,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
       BusinessPrefsState(
         weightUnit: dto.weightUnit,
         currencyCode: dto.currencyCode,
-        pickupRadiusKm: dto.pickupRadiusKm,
         defaultPackageWeightKg: dto.defaultPackageWeightKg,
         minBidPriceEur: dto.minBidPriceEur,
         contactMode: dto.contactMode,
@@ -265,7 +250,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
       UserBusinessPrefsDto(
         weightUnit: s.weightUnit,
         currencyCode: s.currencyCode,
-        pickupRadiusKm: s.pickupRadiusKm,
         defaultPackageWeightKg: s.defaultPackageWeightKg,
         minBidPriceEur: s.minBidPriceEur,
         contactMode: s.contactMode,

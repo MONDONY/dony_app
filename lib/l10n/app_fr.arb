@@ -113,7 +113,18 @@
   "errorBidNotFoundTitle": "Demande introuvable",
   "errorBidNotFoundMessage": "Cette demande n'existe plus.",
   "errorContactKycRequiredTitle": "Profil vérifié requis",
-  "errorContactKycRequiredMessage": "Ce voyageur ne reçoit que des profils vérifiés. Vérifiez votre identité pour lui envoyer une demande.",
+  "errorContactKycRequiredMessage": "Cette personne n'accepte que les profils vérifiés. Vérifiez votre identité pour lui envoyer une offre.",
+  "errorBidBelowMinPriceTitle": "Prix trop bas",
+  "errorBidBelowMinPriceMessage": "Ce voyageur n'accepte pas moins de {price}/kg",
+  "@errorBidBelowMinPriceMessage": {
+    "description": "422 bid-below-min-price (error_catalog.dart) : prix minimum par kg du voyageur, brut et dans la devise du trajet, formaté (ex. « 6,72 € »).",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "errorBidBelowMinPriceFallbackMessage": "Ce voyageur n'accepte pas un prix au kilo aussi bas. Proposez un prix plus élevé.",
   "errorBidNotAcceptedTitle": "Étape impossible pour ce colis",
   "errorBidNotAcceptedMessage": "Ce colis n'est pas à une étape qui permet cette action. Son statut a peut-être changé entre-temps (trajet marqué arrivé, colis livré ou annulé).",
   "errorBidNotDeliveredTitle": "Colis non livré",
@@ -1508,7 +1519,7 @@
   "@tripPublishCashLabel": {
     "description": "Titre de la ligne paiement en espèces"
   },
-  "tripPublishCashLockedSubtitle": "Toujours accepté sur ce trajet. Commission prélevée au voyageur à la remise",
+  "tripPublishCashLockedSubtitle": "Toujours accepté sur ce trajet. Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis",
   "@tripPublishCashLockedSubtitle": {
     "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
   },
@@ -1524,9 +1535,9 @@
   "@tripPublishCardCheckingSubtitle": {
     "description": "Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_conditions_step.dart, Sentry FLUTTER-D2)."
   },
-  "tripPublishCashSubtitle": "Commission prélevée au voyageur à la remise",
+  "tripPublishCashSubtitle": "Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis",
   "@tripPublishCashSubtitle": {
-    "description": "Sous-titre de la ligne paiement en espèces"
+    "description": "Sous-titre de la ligne paiement en espèces. La commission est prélevée sur le portefeuille du voyageur à l'acceptation du colis, pas à la remise (Sentry FLUTTER-MR)."
   },
   "tripPublishAcceptedContentSectionLabel": "Ce que j'accepte",
   "@tripPublishAcceptedContentSectionLabel": {
@@ -13957,10 +13968,14 @@
   "@notificationSettingsDeliveryConfirmedLabel": {
     "description": "Libellé de la tuile verrouillée « Livraison confirmée » (notification_settings_screen.dart)"
   },
-  "notificationSettingsSmsFallbackSubtitle": "SMS automatique si push non reçu",
-  "@notificationSettingsSmsFallbackSubtitle": {
-    "description": "Sous-titre des trois tuiles verrouillées de la section Protections critiques (notification_settings_screen.dart) : même texte, même écran (R42)."
-  },
+  "notificationSettingsDeliveryConfirmedSubtitle": "Pour savoir que votre colis est bien arrivé, avec SMS si le push n'arrive pas",
+  "@notificationSettingsDeliveryConfirmedSubtitle": {"description": "Pourquoi la tuile verrouillée « Livraison confirmée » reste active, mention du SMS de repli (notification_settings_screen.dart)"},
+  "notificationSettingsPaymentReceivedSubtitle": "Pour suivre l'argent de vos colis, avec SMS si le push n'arrive pas",
+  "@notificationSettingsPaymentReceivedSubtitle": {"description": "Pourquoi la tuile verrouillée « Paiement reçu » reste active, mention du SMS de repli (notification_settings_screen.dart)"},
+  "notificationSettingsDisputeOpenedSubtitle": "Pour répondre à temps à un litige, avec SMS si le push n'arrive pas",
+  "@notificationSettingsDisputeOpenedSubtitle": {"description": "Pourquoi la tuile verrouillée « Litige ouvert » reste active, mention du SMS de repli (notification_settings_screen.dart)"},
+  "notificationSettingsTripRescheduledSubtitle": "Pour savoir quand remettre votre colis, avec SMS si le push n'arrive pas",
+  "@notificationSettingsTripRescheduledSubtitle": {"description": "Pourquoi la tuile verrouillée « Trajet reporté » reste active, mention du SMS de repli (notification_settings_screen.dart)"},
   "notificationSettingsPaymentReceivedLabel": "Paiement reçu",
   "@notificationSettingsPaymentReceivedLabel": {
     "description": "Libellé de la tuile verrouillée « Paiement reçu » (notification_settings_screen.dart)"
@@ -14029,7 +14044,7 @@
   "@notificationSettingsTripRescheduledLabel": {"description": "Tuile verrouillée TRIP_RESCHEDULED, type critique du backend (notification_settings_screen.dart)"},
   "notificationSettingsAccountSafetyLabel": "Argent, identité, litiges et compte",
   "@notificationSettingsAccountSafetyLabel": {"description": "Tuile verrouillée des notifications non réglables sans SMS de repli : paiements, portefeuille, KYC, litiges, absences, modération (notification_settings_screen.dart)"},
-  "notificationSettingsAccountSafetySubtitle": "Portefeuille, vérification d'identité, litiges, messages de Yadony",
+  "notificationSettingsAccountSafetySubtitle": "Sécurité de votre compte et de votre argent",
   "@notificationSettingsAccountSafetySubtitle": {"description": "Sous-titre de la tuile verrouillée argent/identité/litiges/compte (notification_settings_screen.dart)"},
   "notificationSettingsAutomationsLabel": "Automatisations voyageur",
   "@notificationSettingsAutomationsLabel": {"description": "Tuile push_traveler_automations : automation_capacity_free, automation_loyal_sender, automation_last_minute (notification_settings_screen.dart)"},
@@ -14075,7 +14090,7 @@
   "@prefsCountryPlaceholder": {
     "description": "Valeur affichée tant qu'aucun pays n'est choisi (business_prefs_screen.dart)"
   },
-  "prefsCurrencyLabel": "Devise",
+  "prefsCurrencyLabel": "Devise de mon portefeuille",
   "@prefsCurrencyLabel": {
     "description": "Libellé de la tuile devise (business_prefs_screen.dart)"
   },
@@ -14104,29 +14119,25 @@
     "description": "Bouton de la feuille de devise verrouillée vers le portefeuille (business_prefs_screen.dart _showCurrencyLockedSheet)."
   },
 
+  "prefsCurrencySubtitle": "Celle de vos paiements, recharges et retraits",
+  "@prefsCurrencySubtitle": {
+    "description": "Sous-titre de la tuile devise du portefeuille, hors verrouillage (business_prefs_screen.dart)"
+  },
   "prefsCurrencyLockedSubtitle": "Verrouillée : videz votre portefeuille pour en changer",
   "@prefsCurrencyLockedSubtitle": {
     "description": "Sous-titre quand la devise est verrouillée (business_prefs_screen.dart)"
   },
-  "prefsDisplayCurrencyLabel": "Devise d'affichage",
+  "prefsDisplayCurrencyLabel": "Afficher les prix en",
   "@prefsDisplayCurrencyLabel": {
     "description": "Libellé de la tuile devise d'affichage et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42)."
   },
-  "prefsDisplayCurrencySubtitle": "Les prix publiés dans une autre devise sont convertis à titre indicatif",
+  "prefsDisplayCurrencySubtitle": "Conversion indicative, vous payez toujours dans la devise du trajet",
   "@prefsDisplayCurrencySubtitle": {
     "description": "Sous-titre de la tuile devise d'affichage (business_prefs_screen.dart). Fusion de deux fragments concaténés."
   },
   "prefsAutoLabel": "Automatique",
   "@prefsAutoLabel": {
     "description": "Valeur affichée pour la devise d'affichage AUTO, tuile et sheet (business_prefs_screen.dart) : même texte, même écran cible (R42)."
-  },
-  "prefsSectionGeolocation": "GÉOLOCALISATION",
-  "@prefsSectionGeolocation": {
-    "description": "En-tête de section (business_prefs_screen.dart)"
-  },
-  "prefsPickupRadiusLabel": "Rayon de collecte",
-  "@prefsPickupRadiusLabel": {
-    "description": "Libellé du curseur de rayon de collecte (business_prefs_screen.dart)"
   },
   "prefsCountrySearchHint": "Rechercher un pays",
   "@prefsCountrySearchHint": {
@@ -14156,18 +14167,13 @@
   "@prefsDefaultWeightSubtitle": {
     "description": "Sous-titre du curseur de poids par défaut (business_prefs_screen.dart)"
   },
-  "prefsMinPriceLabel": "Prix minimum",
+  "prefsMinPriceLabel": "Prix minimum par kg",
   "@prefsMinPriceLabel": {
     "description": "Libellé du curseur de prix minimum (business_prefs_screen.dart)"
   },
-  "prefsMinPriceNone": "0 {symbol} = aucun filtre",
-  "@prefsMinPriceNone": {
-    "description": "Sous-titre du curseur de prix minimum à 0 (business_prefs_screen.dart)",
-    "placeholders": {
-      "symbol": {
-        "type": "String"
-      }
-    }
+  "prefsMinPriceSubtitle": "Les offres en dessous ne vous sont pas envoyées",
+  "@prefsMinPriceSubtitle": {
+    "description": "Sous-titre du curseur de prix minimum par kg (business_prefs_screen.dart) : le serveur refuse les propositions sous ce prix (422 bid-below-min-price)."
   },
   "prefsMinPriceValueNone": "Aucun",
   "@prefsMinPriceValueNone": {
@@ -20217,5 +20223,89 @@
   "errorFlightsAccountRequiredMessage": "Créez un compte pour utiliser les alertes prix.",
   "@errorFlightsAccountRequiredMessage": {"description": "403 flights-account-required."},
   "errorFlightsLaunchMessage": "Impossible d'ouvrir le site partenaire. Réessayez.",
-  "@errorFlightsLaunchMessage": {"description": "Échec d'ouverture du lien partenaire."}
+  "@errorFlightsLaunchMessage": {"description": "Échec d'ouverture du lien partenaire."},
+  "chatEditMessageAction": "Modifier",
+  "@chatEditMessageAction": {
+    "description": "Appui long sur son propre message texte (moins de 15 min) : ouvre la feuille de modification."
+  },
+  "chatDeleteMessageAction": "Supprimer",
+  "@chatDeleteMessageAction": {
+    "description": "Appui long sur son propre message texte (moins de 15 min) : supprime le message après confirmation."
+  },
+  "chatEditSheetTitle": "Modifier le message",
+  "@chatEditSheetTitle": {
+    "description": "Titre de la feuille de modification d'un message."
+  },
+  "chatEditSheetSubtitle": "Votre interlocuteur verra la mention « modifié ».",
+  "@chatEditSheetSubtitle": {
+    "description": "Sous-titre de la feuille de modification d'un message."
+  },
+  "chatEditFieldLabel": "Message",
+  "@chatEditFieldLabel": {
+    "description": "Libellé du champ de la feuille de modification."
+  },
+  "chatEditSaveButton": "Enregistrer",
+  "@chatEditSaveButton": {
+    "description": "Bouton de la feuille de modification d'un message."
+  },
+  "chatDeleteConfirmTitle": "Supprimer ce message ?",
+  "@chatDeleteConfirmTitle": {
+    "description": "Titre de la confirmation de suppression d'un message."
+  },
+  "chatDeleteConfirmMessage": "Votre interlocuteur verra « Message supprimé » à sa place.",
+  "@chatDeleteConfirmMessage": {
+    "description": "Texte de la confirmation de suppression d'un message."
+  },
+  "chatDeleteConfirmButton": "Supprimer",
+  "@chatDeleteConfirmButton": {
+    "description": "Bouton de confirmation de suppression d'un message."
+  },
+  "chatMessageEditedLabel": "modifié",
+  "@chatMessageEditedLabel": {
+    "description": "Mention sous une bulle modifiée par son auteur."
+  },
+  "chatMessageModerated": "Message retiré par la modération",
+  "@chatMessageModerated": {
+    "description": "Bulle d'un message supprimé par l'administration (distincte de « Message supprimé », suppression par l'auteur)."
+  },
+  "chatPreviewDeleted": "Message supprimé",
+  "@chatPreviewDeleted": {
+    "description": "Aperçu de liste quand le dernier message a été supprimé par son auteur (marqueur kChatPreviewDeleted)."
+  },
+  "chatEditWindowExpired": "Le délai de 15 minutes est passé : ce message ne peut plus être modifié ni supprimé.",
+  "@chatEditWindowExpired": {
+    "description": "Erreur : délai de modification dépassé."
+  },
+  "chatEditConversationLocked": "Cette conversation est fermée : ses messages ne peuvent plus être modifiés.",
+  "@chatEditConversationLocked": {
+    "description": "Erreur : conversation fermée ou en lecture seule."
+  },
+  "chatEditConversationDisputed": "Un litige est en cours : les messages de cette conversation ne peuvent plus être modifiés.",
+  "@chatEditConversationDisputed": {
+    "description": "Erreur : litige en cours."
+  },
+  "chatEditMuted": "Votre messagerie est suspendue : vous ne pouvez pas modifier vos messages.",
+  "@chatEditMuted": {
+    "description": "Erreur : messagerie coupée par la modération."
+  },
+  "chatEditInvalidContent": "Ce texte ne peut pas être envoyé. Les coordonnées personnelles ne sont pas autorisées.",
+  "@chatEditInvalidContent": {
+    "description": "Erreur : nouveau texte refusé par le serveur."
+  },
+  "chatEditNotEditable": "Ce message ne peut plus être modifié.",
+  "@chatEditNotEditable": {
+    "description": "Erreur : message déjà supprimé, introuvable ou non modifiable."
+  },
+  "chatEditUnavailable": "La modification des messages n'est pas encore disponible. Réessayez plus tard.",
+  "@chatEditUnavailable": {
+    "description": "Erreur : fonction serveur indisponible (pas encore déployée)."
+  },
+  "chatEditFailed": "Le message n'a pas pu être modifié. Vérifiez votre connexion et réessayez.",
+  "@chatEditFailed": {
+    "description": "Erreur réseau ou serveur à la modification."
+  },
+  "chatDeleteFailed": "Le message n'a pas pu être supprimé. Vérifiez votre connexion et réessayez.",
+  "@chatDeleteFailed": {
+    "description": "Erreur réseau ou serveur à la suppression."
+  }
 }

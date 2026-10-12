@@ -57,7 +57,6 @@ void main() {
         const dto = UserBusinessPrefsDto(
           weightUnit: 'kg',
           currencyCode: 'EUR',
-          pickupRadiusKm: 10,
           defaultPackageWeightKg: 23,
           minBidPriceEur: 0,
         );

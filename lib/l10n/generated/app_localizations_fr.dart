@@ -361,7 +361,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorContactKycRequiredMessage =>
-      'Ce voyageur ne reçoit que des profils vérifiés. Vérifiez votre identité pour lui envoyer une demande.';
+      'Cette personne n\'accepte que les profils vérifiés. Vérifiez votre identité pour lui envoyer une offre.';
+
+  @override
+  String get errorBidBelowMinPriceTitle => 'Prix trop bas';
+
+  @override
+  String errorBidBelowMinPriceMessage(String price) {
+    return 'Ce voyageur n\'accepte pas moins de $price/kg';
+  }
+
+  @override
+  String get errorBidBelowMinPriceFallbackMessage =>
+      'Ce voyageur n\'accepte pas un prix au kilo aussi bas. Proposez un prix plus élevé.';
 
   @override
   String get errorBidNotAcceptedTitle => 'Étape impossible pour ce colis';
@@ -2837,7 +2849,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishCashLockedSubtitle =>
-      'Toujours accepté sur ce trajet. Commission prélevée au voyageur à la remise';
+      'Toujours accepté sur ce trajet. Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis';
 
   @override
   String get tripPublishCashLockedExplanation =>
@@ -2853,7 +2865,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishCashSubtitle =>
-      'Commission prélevée au voyageur à la remise';
+      'Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis';
 
   @override
   String get tripPublishAcceptedContentSectionLabel => 'Ce que j\'accepte';
@@ -12643,8 +12655,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Livraison confirmée';
 
   @override
-  String get notificationSettingsSmsFallbackSubtitle =>
-      'SMS automatique si push non reçu';
+  String get notificationSettingsDeliveryConfirmedSubtitle =>
+      'Pour savoir que votre colis est bien arrivé, avec SMS si le push n\'arrive pas';
+
+  @override
+  String get notificationSettingsPaymentReceivedSubtitle =>
+      'Pour suivre l\'argent de vos colis, avec SMS si le push n\'arrive pas';
+
+  @override
+  String get notificationSettingsDisputeOpenedSubtitle =>
+      'Pour répondre à temps à un litige, avec SMS si le push n\'arrive pas';
+
+  @override
+  String get notificationSettingsTripRescheduledSubtitle =>
+      'Pour savoir quand remettre votre colis, avec SMS si le push n\'arrive pas';
 
   @override
   String get notificationSettingsPaymentReceivedLabel => 'Paiement reçu';
@@ -12713,7 +12737,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationSettingsAccountSafetySubtitle =>
-      'Portefeuille, vérification d\'identité, litiges, messages de Yadony';
+      'Sécurité de votre compte et de votre argent';
 
   @override
   String get notificationSettingsAutomationsLabel => 'Automatisations voyageur';
@@ -12762,7 +12786,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get prefsCountryPlaceholder => 'Choisir mon pays';
 
   @override
-  String get prefsCurrencyLabel => 'Devise';
+  String get prefsCurrencyLabel => 'Devise de mon portefeuille';
 
   @override
   String prefsCurrencyLockedSheetTitle(String currency) {
@@ -12778,24 +12802,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get prefsCurrencyLockedSheetWalletCta => 'Ouvrir mon portefeuille';
 
   @override
+  String get prefsCurrencySubtitle =>
+      'Celle de vos paiements, recharges et retraits';
+
+  @override
   String get prefsCurrencyLockedSubtitle =>
       'Verrouillée : videz votre portefeuille pour en changer';
 
   @override
-  String get prefsDisplayCurrencyLabel => 'Devise d\'affichage';
+  String get prefsDisplayCurrencyLabel => 'Afficher les prix en';
 
   @override
   String get prefsDisplayCurrencySubtitle =>
-      'Les prix publiés dans une autre devise sont convertis à titre indicatif';
+      'Conversion indicative, vous payez toujours dans la devise du trajet';
 
   @override
   String get prefsAutoLabel => 'Automatique';
-
-  @override
-  String get prefsSectionGeolocation => 'GÉOLOCALISATION';
-
-  @override
-  String get prefsPickupRadiusLabel => 'Rayon de collecte';
 
   @override
   String get prefsCountrySearchHint => 'Rechercher un pays';
@@ -12819,12 +12841,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get prefsDefaultWeightSubtitle => 'Pré-remplit vos annonces';
 
   @override
-  String get prefsMinPriceLabel => 'Prix minimum';
+  String get prefsMinPriceLabel => 'Prix minimum par kg';
 
   @override
-  String prefsMinPriceNone(String symbol) {
-    return '0 $symbol = aucun filtre';
-  }
+  String get prefsMinPriceSubtitle =>
+      'Les offres en dessous ne vous sont pas envoyées';
 
   @override
   String get prefsMinPriceValueNone => 'Aucun';
@@ -18727,4 +18748,77 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorFlightsLaunchMessage =>
       'Impossible d\'ouvrir le site partenaire. Réessayez.';
+
+  @override
+  String get chatEditMessageAction => 'Modifier';
+
+  @override
+  String get chatDeleteMessageAction => 'Supprimer';
+
+  @override
+  String get chatEditSheetTitle => 'Modifier le message';
+
+  @override
+  String get chatEditSheetSubtitle =>
+      'Votre interlocuteur verra la mention « modifié ».';
+
+  @override
+  String get chatEditFieldLabel => 'Message';
+
+  @override
+  String get chatEditSaveButton => 'Enregistrer';
+
+  @override
+  String get chatDeleteConfirmTitle => 'Supprimer ce message ?';
+
+  @override
+  String get chatDeleteConfirmMessage =>
+      'Votre interlocuteur verra « Message supprimé » à sa place.';
+
+  @override
+  String get chatDeleteConfirmButton => 'Supprimer';
+
+  @override
+  String get chatMessageEditedLabel => 'modifié';
+
+  @override
+  String get chatMessageModerated => 'Message retiré par la modération';
+
+  @override
+  String get chatPreviewDeleted => 'Message supprimé';
+
+  @override
+  String get chatEditWindowExpired =>
+      'Le délai de 15 minutes est passé : ce message ne peut plus être modifié ni supprimé.';
+
+  @override
+  String get chatEditConversationLocked =>
+      'Cette conversation est fermée : ses messages ne peuvent plus être modifiés.';
+
+  @override
+  String get chatEditConversationDisputed =>
+      'Un litige est en cours : les messages de cette conversation ne peuvent plus être modifiés.';
+
+  @override
+  String get chatEditMuted =>
+      'Votre messagerie est suspendue : vous ne pouvez pas modifier vos messages.';
+
+  @override
+  String get chatEditInvalidContent =>
+      'Ce texte ne peut pas être envoyé. Les coordonnées personnelles ne sont pas autorisées.';
+
+  @override
+  String get chatEditNotEditable => 'Ce message ne peut plus être modifié.';
+
+  @override
+  String get chatEditUnavailable =>
+      'La modification des messages n\'est pas encore disponible. Réessayez plus tard.';
+
+  @override
+  String get chatEditFailed =>
+      'Le message n\'a pas pu être modifié. Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get chatDeleteFailed =>
+      'Le message n\'a pas pu être supprimé. Vérifiez votre connexion et réessayez.';
 }

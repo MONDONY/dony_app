@@ -15,7 +15,6 @@ class MockBox extends Mock implements Box<dynamic> {}
 const _defaultDto = UserBusinessPrefsDto(
   weightUnit: 'kg',
   currencyCode: 'EUR',
-  pickupRadiusKm: 10,
   defaultPackageWeightKg: 23,
   minBidPriceEur: 0,
 );
@@ -62,7 +61,6 @@ void main() {
       final bloc = build();
       expect(bloc.state.weightUnit, 'kg');
       expect(bloc.state.currencyCode, 'EUR');
-      expect(bloc.state.pickupRadiusKm, 10);
       bloc.close();
     });
 
@@ -355,7 +353,6 @@ void main() {
           (_) async => const UserBusinessPrefsDto(
             weightUnit: 'kg',
             currencyCode: 'CAD',
-            pickupRadiusKm: 10,
             defaultPackageWeightKg: 23,
             minBidPriceEur: 0,
             country: 'CA',
@@ -406,53 +403,52 @@ void main() {
     );
   });
 
-  group(
-    'events existants — WeightUnitChanged, CurrencyChanged, PickupRadiusChanged',
-    () {
-      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-        'WeightUnitChanged écrit Hive + PUT',
-        build: build,
-        act: (bloc) => bloc.add(const WeightUnitChanged('lbs')),
-        expect: () => [
-          isA<BusinessPrefsState>().having((s) => s.weightUnit, 'unit', 'lbs'),
-          syncStarted,
-          syncSettled,
-        ],
-        verify: (_) {
-          verify(() => mockBox.put(HiveService.kWeightUnit, 'lbs')).called(1);
-          verify(() => mockRepo.updatePrefs(any())).called(1);
-        },
-      );
+  group('events existants — WeightUnitChanged, CurrencyChanged', () {
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'WeightUnitChanged écrit Hive + PUT',
+      build: build,
+      act: (bloc) => bloc.add(const WeightUnitChanged('lbs')),
+      expect: () => [
+        isA<BusinessPrefsState>().having((s) => s.weightUnit, 'unit', 'lbs'),
+        syncStarted,
+        syncSettled,
+      ],
+      verify: (_) {
+        verify(() => mockBox.put(HiveService.kWeightUnit, 'lbs')).called(1);
+        verify(() => mockRepo.updatePrefs(any())).called(1);
+      },
+    );
 
-      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-        'CurrencyChanged écrit Hive + PUT',
-        build: build,
-        act: (bloc) => bloc.add(const CurrencyChanged('XOF')),
-        expect: () => [
-          isA<BusinessPrefsState>().having(
-            (s) => s.currencyCode,
-            'code',
-            'XOF',
-          ),
-          syncStarted,
-          syncSettled,
-        ],
-        verify: (_) {
-          verify(() => mockBox.put(HiveService.kCurrencyCode, 'XOF')).called(1);
-          verify(() => mockRepo.updatePrefs(any())).called(1);
-        },
-      );
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'CurrencyChanged écrit Hive + PUT',
+      build: build,
+      act: (bloc) => bloc.add(const CurrencyChanged('XOF')),
+      expect: () => [
+        isA<BusinessPrefsState>().having((s) => s.currencyCode, 'code', 'XOF'),
+        syncStarted,
+        syncSettled,
+      ],
+      verify: (_) {
+        verify(() => mockBox.put(HiveService.kCurrencyCode, 'XOF')).called(1);
+        verify(() => mockRepo.updatePrefs(any())).called(1);
+      },
+    );
 
-      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-        'PickupRadiusChanged écrit Hive + PUT',
-        build: build,
-        act: (bloc) => bloc.add(const PickupRadiusChanged(25)),
-        expect: () => [
-          isA<BusinessPrefsState>().having((s) => s.pickupRadiusKm, 'km', 25),
-          syncStarted,
-          syncSettled,
-        ],
-      );
-    },
-  );
+    // « Rayon de collecte » retiré des réglages (2026-10-11) : le PUT
+    // renvoie tel quel le rayon reçu du serveur, qu'un backend antérieur
+    // exige encore, sans que le bloc ne le stocke ni ne l'expose.
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'le rayon de collecte n\'est plus écrit dans Hive et part à sa valeur par défaut',
+      build: build,
+      act: (bloc) => bloc.add(const WeightUnitChanged('lbs')),
+      verify: (_) {
+        final sent =
+            verify(() => mockRepo.updatePrefs(captureAny())).captured.single
+                as UserBusinessPrefsDto;
+        expect(sent.pickupRadiusKm, 10);
+        expect(sent.toJson()['pickupRadiusKm'], 10);
+        verifyNever(() => mockBox.put('pickup_radius_km', any<dynamic>()));
+      },
+    );
+  });
 }

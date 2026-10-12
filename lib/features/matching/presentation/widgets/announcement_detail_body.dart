@@ -687,9 +687,14 @@ class _ParcelStatCell extends StatelessWidget {
 }
 
 /// Formate la plage de remise — toujours dates complètes début et fin.
+/// Jour ET heure : le jour du départ, la limite est l'heure de départ et non
+/// la fin de journée (Sentry FLUTTER-MY).
 String _handoverDeadlineLabel(AppLocalizations l, DateTime deadline) {
   return l.listingHandoverUntil(
-    DateFormat.MMMEd(l.localeName).format(deadline),
+    l.commonDateAtTime(
+      DateFormat.MMMEd(l.localeName).format(deadline),
+      DateFormat.jm(l.localeName).format(deadline),
+    ),
   );
 }
 

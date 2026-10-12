@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -632,6 +634,16 @@ abstract final class ErrorCatalog {
       message: (l) => l.errorContactKycRequiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.badge_outlined,
+    ),
+    // 422 : proposition de prix sous le « Prix minimum par kg » du voyageur.
+    // Le message cite le minimum (brut, devise du trajet) que le back pose en
+    // propriétés du ProblemDetail (`minPricePerKg`, `currency`) : voir
+    // `_bidBelowMinPriceMessage`. Ce texte-ci n'est que le repli.
+    'bid-below-min-price': _Entry(
+      title: (l) => l.errorBidBelowMinPriceTitle,
+      message: (l) => l.errorBidBelowMinPriceFallbackMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_outlined,
     ),
     // ─── Appels audio (POST /conversations/{id}/calls) ────────────────
     'call-already-in-progress': _Entry(
@@ -1468,6 +1480,14 @@ abstract final class ErrorCatalog {
         // Ruling R35 : `r.error` de `commission/failed` est un code machine
         // kebab-case (jamais une phrase) — le traduire avant affichage plutôt
         // que de le relayer via `_serverDetailCodes` comme les autres codes.
+        if (error.code == 'bid-below-min-price') {
+          return ErrorPresentation(
+            title: p.title,
+            message: _bidBelowMinPriceMessage(error, l) ?? p.message,
+            severity: p.severity,
+            icon: p.icon,
+          );
+        }
         if (error.code == 'commission/failed') {
           return ErrorPresentation(
             title: p.title,
@@ -1496,6 +1516,26 @@ abstract final class ErrorCatalog {
       return _byType(error, l);
     }
     return _generic.resolve(l);
+  }
+
+  /// « Ce voyageur n'accepte pas moins de {prix}/kg », depuis les propriétés
+  /// `minPricePerKg` et `currency` du ProblemDetail. `null` si elles manquent
+  /// ou sont illisibles : l'appelant retombe alors sur le texte générique.
+  static String? _bidBelowMinPriceMessage(
+    AppException error,
+    AppLocalizations l,
+  ) {
+    if (error is! ValidationException) return null;
+    final ext = error.extensions;
+    final raw = ext?['minPricePerKg'];
+    final amount = raw is num ? raw.toDouble() : double.tryParse('$raw');
+    if (amount == null || amount <= 0) return null;
+    final currency = SupportedCurrency.fromCodeOrDefault(
+      ext?['currency'] as String?,
+    );
+    return l.errorBidBelowMinPriceMessage(
+      CurrencyFormatter.format(amount, currency),
+    );
   }
 
   /// Traduit le code machine kebab-case renvoyé par

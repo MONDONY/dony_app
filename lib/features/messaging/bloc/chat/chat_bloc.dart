@@ -7,6 +7,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
+import 'package:dony/features/messaging/data/message_edit_repository.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -28,6 +29,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FirestoreChatRepository _firestoreRepo;
   final ConversationRepository _conversationRepo;
   final AnalyticsService _analytics;
+
+  /// Callables de modification / suppression (FLUTTER-MG). `null` hors
+  /// injection : la demande échoue alors proprement en « indisponible ».
+  final MessageEditRepository? _editRepo;
   StreamSubscription<dynamic>? _messageSub;
   StreamSubscription<bool>? _deletedSub;
 
@@ -46,8 +51,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   List<PendingChatImage> _pendingImages = const [];
   int _localImageSeq = 0;
 
-  ChatBloc(this._firestoreRepo, this._conversationRepo, this._analytics)
-    : super(const ChatInitial()) {
+  ChatBloc(
+    this._firestoreRepo,
+    this._conversationRepo,
+    this._analytics, {
+    MessageEditRepository? editRepository,
+  }) : _editRepo = editRepository,
+       super(const ChatInitial()) {
     on<ChatSubscribeRequested>(_onSubscribe);
     on<ChatTextSendRequested>(_onSendText);
     on<ChatImageSendRequested>(_onSendImage);
@@ -59,6 +69,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatReplyStarted>(_onReplyStarted);
     on<ChatReplyCancelled>(_onReplyCancelled);
     on<_QuoteResolved>(_onQuoteResolved);
+    on<ChatMessageEditRequested>(_onEditMessage);
+    on<ChatMessageDeleteRequested>(_onDeleteMessage);
   }
 
   ChatState _snapshot() {
@@ -460,6 +472,88 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(previous);
       return false;
     }
+  }
+
+  Future<void> _onEditMessage(
+    ChatMessageEditRequested event,
+    Emitter<ChatState> emit,
+  ) async => _applyEdit(
+    emit,
+    ChatMessageEditAction.edit,
+    (repo) => repo.editMessage(
+      firestoreConversationId: _firestoreConversationId,
+      messageId: event.messageId,
+      text: event.text,
+    ),
+  );
+
+  Future<void> _onDeleteMessage(
+    ChatMessageDeleteRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    final deleted = await _applyEdit(
+      emit,
+      ChatMessageEditAction.delete,
+      (repo) => repo.deleteMessage(
+        firestoreConversationId: _firestoreConversationId,
+        messageId: event.messageId,
+      ),
+    );
+    // Un message supprimé ne se cite plus : la barre « Réponse à … » tombe.
+    if (deleted &&
+        _syncWithThread() &&
+        !_readOnly &&
+        _replyingTo?.id == event.messageId) {
+      _replyingTo = null;
+      emit(_snapshot());
+    }
+  }
+
+  /// Appelle la callable ; aucun échec ne sort du handler. Le fil n'est pas
+  /// touché localement : la bulle change quand Firestore renvoie le message.
+  Future<bool> _applyEdit(
+    Emitter<ChatState> emit,
+    ChatMessageEditAction action,
+    Future<void> Function(MessageEditRepository repo) call,
+  ) async {
+    if (!_syncWithThread() || _readOnly) return false;
+    final repo = _editRepo;
+    MessageEditFailure? failure;
+    if (repo == null) {
+      failure = MessageEditFailure.unavailable;
+    } else {
+      try {
+        await call(repo);
+      } on MessageEditException catch (e) {
+        failure = e.failure;
+      } catch (_) {
+        failure = MessageEditFailure.other;
+      }
+    }
+    if (failure == null) {
+      unawaited(
+        _analytics.logEvent(
+          action == ChatMessageEditAction.edit
+              ? AnalyticsEvents.messageEdited
+              : AnalyticsEvents.messageDeleted,
+        ),
+      );
+      return true;
+    }
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.messageEditFailed,
+        properties: {'action': action.name, 'reason': failure.name},
+      ),
+    );
+    if (failure == MessageEditFailure.other ||
+        failure == MessageEditFailure.unavailable) {
+      AppLog.warn('chat.message_edit_failed', data: {'reason': failure.name});
+    }
+    final previous = _syncWithThread() ? _snapshot() : state;
+    emit(ChatMessageEditFailed(action, failure));
+    emit(previous);
+    return false;
   }
 
   Future<void> _onDeleteConversation(

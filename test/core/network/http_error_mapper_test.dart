@@ -46,6 +46,30 @@ void main() {
       expect(e.code, 'depart-already-scanned');
     });
 
+    test('422 bid-below-min-price → propriétés RFC 7807 conservées', () {
+      final e = mapHttpError(
+        _http(
+          422,
+          body: {
+            'detail': "Ce voyageur n'accepte pas moins de 6.72 EUR/kg",
+            'code': 'bid-below-min-price',
+            'minPricePerKg': 6.72,
+            'currency': 'EUR',
+          },
+        ),
+      );
+
+      expect(e, isA<ValidationException>());
+      final v = e as ValidationException;
+      expect(v.extensions?['minPricePerKg'], 6.72);
+      expect(v.extensions?['currency'], 'EUR');
+    });
+
+    test('422 sans corps → aucune propriété', () {
+      final e = mapHttpError(_http(422)) as ValidationException;
+      expect(e.extensions, isNull);
+    });
+
     // FLUTTER-CB (yadony-back #419) : remise tentée avant le départ.
     test('422 trip-not-departed → ValidationException, jamais rejouée', () {
       final e = mapHttpError(

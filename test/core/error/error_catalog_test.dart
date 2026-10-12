@@ -1482,4 +1482,77 @@ void main() {
       );
     });
   });
+
+  group('ErrorCatalog — bid-below-min-price et contact-kyc-required', () {
+    test('cite le minimum par kg et la devise du trajet', () {
+      const error = ValidationException(
+        'detail',
+        code: 'bid-below-min-price',
+        extensions: {'minPricePerKg': 6.72, 'currency': 'EUR'},
+      );
+
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+
+      expect(p.title, 'Prix trop bas');
+      expect(p.message, startsWith("Ce voyageur n'accepte pas moins de 6,72"));
+      expect(p.message, endsWith('/kg'));
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('minimum renvoyé en texte : lu quand même', () {
+      const error = ValidationException(
+        'detail',
+        code: 'bid-below-min-price',
+        extensions: {'minPricePerKg': '3936', 'currency': 'XOF'},
+      );
+
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+
+      expect(p.message, startsWith("This traveler doesn't accept less than"));
+      expect(p.message, contains('3'));
+    });
+
+    test('sans propriétés exploitables : texte de repli', () {
+      for (final error in [
+        const ValidationException('d', code: 'bid-below-min-price'),
+        const ValidationException(
+          'd',
+          code: 'bid-below-min-price',
+          extensions: {'minPricePerKg': 'abc'},
+        ),
+        const NetworkException('d', code: 'bid-below-min-price'),
+      ]) {
+        final p = ErrorCatalog.lookup(
+          error,
+          l10n: lookupAppLocalizations(AppL10n.fr),
+        );
+        expect(
+          p.message,
+          "Ce voyageur n'accepte pas un prix au kilo aussi bas. "
+          'Proposez un prix plus élevé.',
+        );
+      }
+    });
+
+    test(
+      'contact-kyc-required : message neutre, valable dans les deux sens',
+      () {
+        const error = ForbiddenException('x', 'contact-kyc-required');
+
+        final p = ErrorCatalog.lookup(
+          error,
+          l10n: lookupAppLocalizations(AppL10n.fr),
+        );
+
+        expect(p.title, 'Profil vérifié requis');
+        expect(p.message, contains('Cette personne'));
+      },
+    );
+  });
 }

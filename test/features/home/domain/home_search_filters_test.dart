@@ -2,6 +2,7 @@ import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
+import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -286,6 +287,56 @@ void main() {
       expect(f.dateFrom!.year, today.year);
       expect(f.dateFrom!.month, today.month);
       expect(f.dateFrom!.day, today.day);
+    });
+    group('filtre d\'urgence envoyé au serveur (FLUTTER-MH, FLUTTER-JG)', () {
+      DateTime day(int offset) {
+        final n = DateTime.now();
+        return DateTime(n.year, n.month, n.day + offset);
+      }
+
+      test('seul, il devient la fenêtre de départ de la requête', () {
+        const f = HomeSearchFilters(urgencyFilter: UrgencyFilter.veryUrgent);
+
+        final q = f.toAnnouncementQuery();
+
+        expect(q.departureDateFrom, day(0));
+        expect(q.departureDateTo, day(2));
+      });
+
+      test('« plus tard » n\'a pas de borne haute', () {
+        const f = HomeSearchFilters(urgencyFilter: UrgencyFilter.later);
+
+        final q = f.toAnnouncementQuery();
+
+        expect(q.departureDateFrom, day(14));
+        expect(q.departureDateTo, isNull);
+      });
+
+      test('croisé avec une date choisie, garde l\'intersection', () {
+        const f = HomeSearchFilters(
+          urgencyFilter: UrgencyFilter.urgent,
+          datePreset: DonyDatePreset.thisMonth,
+        );
+
+        final q = f.toAnnouncementQuery();
+        final monthEnd = f.dateTo!;
+        final urgentEnd = day(6);
+
+        expect(q.departureDateFrom, day(3));
+        expect(
+          q.departureDateTo,
+          monthEnd.isBefore(urgentEnd) ? monthEnd : urgentEnd,
+        );
+      });
+
+      test('sans filtre d\'urgence, la date choisie part telle quelle', () {
+        const f = HomeSearchFilters(datePreset: DonyDatePreset.today);
+
+        final q = f.toAnnouncementQuery();
+
+        expect(q.departureDateFrom, f.dateFrom);
+        expect(q.departureDateTo, f.dateTo);
+      });
     });
   });
 }

@@ -33,13 +33,6 @@ class CountryChanged extends BusinessPrefsEvent {
   List<Object?> get props => [code];
 }
 
-class PickupRadiusChanged extends BusinessPrefsEvent {
-  final int km;
-  const PickupRadiusChanged(this.km);
-  @override
-  List<Object?> get props => [km];
-}
-
 // ── Nouveaux ─────────────────────────────────────────────────────────────────
 class DefaultWeightChanged extends BusinessPrefsEvent {
   final int kg;

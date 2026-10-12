@@ -203,6 +203,15 @@ abstract final class AnalyticsEvents {
   /// Envoi de photo refusé ou échoué (propriété `reason` : `notAllowed` /
   /// `rateLimited` / `invalid` / `other`).
   static const chatPhotoFailed = 'chat_photo_failed';
+
+  /// Message texte modifié / supprimé par son auteur, confirmé par le serveur
+  /// (FLUTTER-MG). Aucune propriété : jamais le contenu.
+  static const messageEdited = 'message_edited';
+  static const messageDeleted = 'message_deleted';
+
+  /// Modification ou suppression refusée ou échouée. Propriétés `action`
+  /// (`edit` / `delete`) et `reason` (`MessageEditFailure.name`).
+  static const messageEditFailed = 'message_edit_failed';
   static const conversationCallInitiated = 'conversation_call_initiated';
   // Appels audio Yadony (Stream Video).
   static const callModeChosen = 'call_mode_chosen';

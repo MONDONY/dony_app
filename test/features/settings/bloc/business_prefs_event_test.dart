@@ -18,9 +18,6 @@ void main() {
         CountryChanged('EUR'),
       ]);
       expectValueEquality(() => CountryChanged('SN'), [CountryChanged('CI')]);
-      expectValueEquality(() => PickupRadiusChanged(10), [
-        PickupRadiusChanged(20),
-      ]);
     });
 
     test('nouvelles préférences, valeur nulle comprise', () {
