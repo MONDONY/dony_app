@@ -1192,8 +1192,8 @@ abstract final class ErrorCatalog {
       icon: Icons.lock_clock_rounded,
     ),
     'announcement-not-active': _Entry(
-      title: (l) => l.errorAnnouncementNotActiveTitle,
-      message: (l) => l.errorAnnouncementNotActiveMessage,
+      title: (l) => l.errorTripNoLongerAvailableTitle,
+      message: (l) => l.errorTripNoLongerAvailableMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.event_busy_rounded,
     ),

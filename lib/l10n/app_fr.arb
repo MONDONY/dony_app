@@ -20356,12 +20356,12 @@
   "@chatDeleteFailed": {
     "description": "Erreur réseau ou serveur à la suppression."
   },
-  "errorAnnouncementNotActiveTitle": "Trajet plus disponible",
-  "@errorAnnouncementNotActiveTitle": {
+  "errorTripNoLongerAvailableTitle": "Trajet plus disponible",
+  "@errorTripNoLongerAvailableTitle": {
     "description": "Titre, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)"
   },
-  "errorAnnouncementNotActiveMessage": "Ce trajet n'accepte plus de demandes : il est parti, complet ou fermé par le voyageur. Cherchez un autre trajet sur ce corridor.",
-  "@errorAnnouncementNotActiveMessage": {
+  "errorTripNoLongerAvailableMessage": "Ce trajet n'accepte plus de demandes : il est parti, complet ou fermé par le voyageur. Cherchez un autre trajet sur ce corridor.",
+  "@errorTripNoLongerAvailableMessage": {
     "description": "Message, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)"
   },
   "errorSurplusNotOpenTitle": "Places non ouvertes",

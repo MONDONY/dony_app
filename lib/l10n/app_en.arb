@@ -9893,12 +9893,12 @@
   "chatEditUnavailable": "Editing messages isn't available yet. Please try again later.",
   "chatEditFailed": "The message couldn't be edited. Check your connection and try again.",
   "chatDeleteFailed": "The message couldn't be deleted. Check your connection and try again.",
-  "errorAnnouncementNotActiveTitle": "Trip no longer available",
-  "@errorAnnouncementNotActiveTitle": {
+  "errorTripNoLongerAvailableTitle": "Trip no longer available",
+  "@errorTripNoLongerAvailableTitle": {
     "description": "Titre, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)"
   },
-  "errorAnnouncementNotActiveMessage": "This trip no longer accepts requests: it has left, is full or was closed by the traveler. Look for another trip on this route.",
-  "@errorAnnouncementNotActiveMessage": {
+  "errorTripNoLongerAvailableMessage": "This trip no longer accepts requests: it has left, is full or was closed by the traveler. Look for another trip on this route.",
+  "@errorTripNoLongerAvailableMessage": {
     "description": "Message, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)"
   },
   "errorSurplusNotOpenTitle": "Space not open",

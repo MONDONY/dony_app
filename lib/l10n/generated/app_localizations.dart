@@ -29709,16 +29709,16 @@ abstract class AppLocalizations {
   /// **'Ce trajet n\'accepte plus de colis : il est terminé, annulé ou retiré. Cette demande ne peut plus être acceptée.'**
   String get errorAnnouncementNotAcceptingMessage;
 
-  /// Titre, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)
+  /// Titre de l'erreur 422 announcement/not-active : l'expéditeur paie une offre dont le trajet est terminé ou annulé
   ///
   /// In fr, this message translates to:
   /// **'Trajet plus disponible'**
   String get errorAnnouncementNotActiveTitle;
 
-  /// Message, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)
+  /// Message de l'erreur 422 announcement/not-active (paiement d'une négociation)
   ///
   /// In fr, this message translates to:
-  /// **'Ce trajet n\'accepte plus de demandes : il est parti, complet ou fermé par le voyageur. Cherchez un autre trajet sur ce corridor.'**
+  /// **'Le trajet de ce voyageur est terminé ou annulé : ce paiement ne peut plus aboutir et rien ne vous a été débité. Choisissez une autre offre ou attendez celle d\'un autre voyageur.'**
   String get errorAnnouncementNotActiveMessage;
 
   /// Titre de l'erreur 422 traveler-not-eligible : le voyageur n'a pas terminé la configuration de ses versements
@@ -30715,6 +30715,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le message n\'a pas pu être supprimé. Vérifiez votre connexion et réessayez.'**
   String get chatDeleteFailed;
+
+  /// Titre, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet plus disponible'**
+  String get errorTripNoLongerAvailableTitle;
+
+  /// Message, 409 announcement-not-active : trajet parti, complet ou fermé au moment de la demande (FLUTTER-NR)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet n\'accepte plus de demandes : il est parti, complet ou fermé par le voyageur. Cherchez un autre trajet sur ce corridor.'**
+  String get errorTripNoLongerAvailableMessage;
 
   /// Titre, 409 surplus-not-open : capacité supplémentaire du trajet non ouverte
   ///

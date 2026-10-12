@@ -18290,7 +18290,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorAnnouncementNotActiveMessage =>
-      'Ce trajet n\'accepte plus de demandes : il est parti, complet ou fermé par le voyageur. Cherchez un autre trajet sur ce corridor.';
+      'Le trajet de ce voyageur est terminé ou annulé : ce paiement ne peut plus aboutir et rien ne vous a été débité. Choisissez une autre offre ou attendez celle d\'un autre voyageur.';
 
   @override
   String get errorTravelerNotEligibleTitle => 'Paiement pas encore possible';
@@ -18928,6 +18928,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get chatDeleteFailed =>
       'Le message n\'a pas pu être supprimé. Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get errorTripNoLongerAvailableTitle => 'Trajet plus disponible';
+
+  @override
+  String get errorTripNoLongerAvailableMessage =>
+      'Ce trajet n\'accepte plus de demandes : il est parti, complet ou fermé par le voyageur. Cherchez un autre trajet sur ce corridor.';
 
   @override
   String get errorSurplusNotOpenTitle => 'Places non ouvertes';

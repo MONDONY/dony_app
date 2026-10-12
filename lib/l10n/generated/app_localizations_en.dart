@@ -18155,7 +18155,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorAnnouncementNotActiveMessage =>
-      'This trip no longer accepts requests: it has left, is full or was closed by the traveler. Look for another trip on this route.';
+      'This traveller\'s trip is completed or cancelled: this payment can no longer go through and you have not been charged. Choose another offer or wait for one from another traveller.';
 
   @override
   String get errorTravelerNotEligibleTitle => 'Payment not possible yet';
@@ -18793,6 +18793,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatDeleteFailed =>
       'The message couldn\'t be deleted. Check your connection and try again.';
+
+  @override
+  String get errorTripNoLongerAvailableTitle => 'Trip no longer available';
+
+  @override
+  String get errorTripNoLongerAvailableMessage =>
+      'This trip no longer accepts requests: it has left, is full or was closed by the traveler. Look for another trip on this route.';
 
   @override
   String get errorSurplusNotOpenTitle => 'Space not open';

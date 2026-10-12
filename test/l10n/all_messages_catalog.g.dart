@@ -6555,6 +6555,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'chatEditUnavailable': (l) => l.chatEditUnavailable,
   'chatEditFailed': (l) => l.chatEditFailed,
   'chatDeleteFailed': (l) => l.chatDeleteFailed,
+  'errorTripNoLongerAvailableTitle': (l) => l.errorTripNoLongerAvailableTitle,
+  'errorTripNoLongerAvailableMessage': (l) =>
+      l.errorTripNoLongerAvailableMessage,
   'errorSurplusNotOpenTitle': (l) => l.errorSurplusNotOpenTitle,
   'errorSurplusNotOpenMessage': (l) => l.errorSurplusNotOpenMessage,
   'errorReservedSenderCannotBidTitle': (l) =>
