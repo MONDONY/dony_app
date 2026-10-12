@@ -91,7 +91,10 @@ import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_link_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_places_cubit.dart';
+import 'package:dony/features/flights/bloc/flight_route_picker_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_search_cubit.dart';
+import 'package:dony/features/flights/data/datasources/flight_locator.dart';
+import 'package:dony/features/flights/data/datasources/flight_recent_store.dart';
 import 'package:dony/features/flights/data/datasources/flights_remote_datasource.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
 import 'package:dony/features/home/data/datasources/search_parse_datasource.dart';
@@ -1375,18 +1378,33 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<FlightsRepository>(
     () => FlightsRepository(getIt<FlightsRemoteDatasource>()),
   );
+  getIt.registerLazySingleton<FlightRecentStore>(
+    () => HiveFlightRecentStore(getIt<HiveService>()),
+  );
+  getIt.registerLazySingleton<FlightLocator>(() => const GeoFlightLocator());
   getIt.registerFactory<FlightSearchCubit>(
     () => FlightSearchCubit(
       getIt<FlightsRepository>(),
       getIt<AnalyticsService>(),
+      recents: getIt<FlightRecentStore>(),
     ),
   );
   getIt.registerFactory<FlightDealsCubit>(
     () => FlightDealsCubit(getIt<FlightsRepository>()),
   );
   getIt.registerFactory<FlightPlacesCubit>(
-    () => FlightPlacesCubit(getIt<FlightsRepository>()),
+    () => FlightPlacesCubit(
+      getIt<FlightsRepository>(),
+      recents: getIt<FlightRecentStore>(),
+      locator: getIt<FlightLocator>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
   );
+  getIt.registerFactoryParam<
+    FlightRoutePickerCubit,
+    FlightRoutePickerArgs,
+    void
+  >((args, _) => FlightRoutePickerCubit(args));
   getIt.registerFactory<FlightAlertsCubit>(
     () => FlightAlertsCubit(
       getIt<FlightsRepository>(),

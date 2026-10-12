@@ -601,12 +601,18 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `flights_search_submitted` | FlightSearchCubit.search — recherche de billets réussie (propriétés `round_trip`, `direct_only`, `date_mode` : `day`/`month`/`none`, `from_deal` : lancée depuis un bon plan, `count` : offres reçues). Jamais les villes ni les dates |
 | `flights_search_failed` | FlightSearchCubit.search — recherche refusée ou impossible (propriété `reason` : code back `flights-*` ou `unknown`) |
 | `flights_deal_opened` | FlightSearchCubit.openDeal — mini-billet du carrousel « Bons plans pour vous » touché (propriétés `discount_percent`, `personalized`) |
-| `flights_filter_applied` | FlightSearchCubit.applyFilters — feuille de filtres validée (propriétés `sort`, `stops`, `airlines_count`, `gates_count`, `price_range`). Jamais les compagnies ni les prix choisis |
+| `flights_filter_applied` | FlightSearchCubit.applyFilters — feuille de filtres validée (propriétés `sort` : onglet de tri affiché, `stops`, `airlines_count`, `gates_count`, `price_range`, `slots_count` : tranches horaires cochées). Jamais les compagnies ni les prix choisis |
 | `flights_offer_clicked` | FlightLinkCubit.open — « Voir l'offre » : lien affilié obtenu (`POST /flights/clicks`) et ouvert dans le navigateur externe (propriétés `source` : `search`/`deal`/`alert`, `airline_code`, `stops`, `round_trip`). Jamais le prix |
 | `flights_offer_open_failed` | FlightLinkCubit.open — lien non obtenu ou navigateur introuvable (propriété `reason` : code back ou `launch`) |
 | `flights_alert_created` | FlightAlertsCubit.create — alerte prix créée (`POST /me/flight-alerts`), propriétés `round_trip`, `has_period`, `direct_only`, `source` : `results` (cloche des résultats) / `alerts` (écran des alertes). Jamais le trajet ni le seuil |
 | `flights_alert_toggled` | FlightAlertsCubit.setActive — interrupteur d'une alerte prix confirmé par le serveur (propriété `active`) |
 | `flights_alert_deleted` | FlightAlertsCubit.delete — alerte prix supprimée (glissement), confirmée par le serveur |
+| `flights_sort_tab_changed` | FlightSearchCubit.selectTab — onglet de tri des résultats touché (propriété `tab` : `cheapest`/`fastest`/`direct`) |
+| `flights_recent_search_opened` | FlightSearchCubit.openRecent — recherche récente relancée depuis « Vos recherches » (propriétés `position`, `age_days`). Jamais les villes |
+| `flights_recent_searches_cleared` | FlightSearchCubit.clearRecents — « Effacer » des recherches récentes. Aucune propriété |
+| `flights_all_airlines_opened` | FlightLinkCubit.openAllAirlines — « Voir toutes les compagnies » : recherche Aviasales du trajet (`searchPath`) ouverte dans le navigateur (propriété `from` : `results` encart de la liste / `empty` écran « Aucun vol »). Remplace `flights_offer_clicked` pour ce clic |
+| `flights_empty_suggestion_tapped` | FlightSearchCubit.trackSuggestion / searchFromParis / searchWholeMonth — suggestion de l'écran « Aucun vol » touchée (propriété `kind` : `paris`/`wholeMonth`/`aviasales`/`alert`) |
+| `flights_location_used` | FlightPlacesCubit.locate — « Utiliser ma position » du choix de la ville de départ, proposé seulement si la permission est déjà accordée (propriété `found` : un aéroport à moins de 150 km). Jamais les coordonnées |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

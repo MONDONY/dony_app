@@ -4,37 +4,39 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_link_cubit.dart';
+import 'package:dony/features/flights/bloc/flight_route_picker_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_search_cubit.dart';
-import 'package:dony/features/flights/data/models/flight_place.dart';
+import 'package:dony/features/flights/data/models/flight_filters.dart';
+import 'package:dony/features/flights/data/models/flight_offer.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
+import 'package:dony/features/flights/presentation/flight_city_picker_screen.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_alert_sheet.dart';
-import 'package:dony/features/flights/presentation/widgets/flight_billet_card.dart';
-import 'package:dony/features/flights/presentation/widgets/flight_city_sheet.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_dates_sheet.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_deal_card.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_filter_sheet.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_loading_view.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_offer_card.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_recent_searches.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_results_parts.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_search_form.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// « Abidjan (ABJ) », ou le code seul quand la ville n'a pas de nom (trajet
-/// repris d'un bon plan, qui ne porte que les codes).
-String _placeLabel(FlightPlace place) =>
-    place.name == place.code ? place.code : '${place.name} (${place.code})';
-
 /// Onglet Billets (`/flights`) : billets d'avion en affiliation.
 ///
-/// Formulaire et bons plans d'abord ; une recherche lancée bascule l'onglet
-/// sur ses résultats (même écran, flèche de retour vers le formulaire).
-/// Yadony ne vend rien : « Voir l'offre » ouvre le site partenaire dans le
-/// navigateur.
+/// Formulaire, recherches récentes et bons plans d'abord ; une recherche
+/// lancée passe par l'écran d'attente puis bascule l'onglet sur ses
+/// résultats (même écran, retour au formulaire par la flèche ou la pastille
+/// résumé). Yadony ne vend rien : une offre s'ouvre chez le partenaire, dans
+/// le navigateur.
 class FlightsScreen extends StatelessWidget {
   const FlightsScreen({super.key});
 
@@ -63,6 +65,15 @@ Future<void> openFlightAlerts(BuildContext context) {
   return context.push('/flights/alerts');
 }
 
+/// Nom affiché d'une ville de la recherche : le nom saisi, sinon le code.
+String _cityName(FlightSearchState state, {required bool origin}) {
+  final place = origin ? state.query.origin : state.query.destination;
+  final code = origin
+      ? state.result?.originCode
+      : state.result?.destinationCode;
+  return place?.name ?? code ?? '';
+}
+
 class _FlightsView extends StatelessWidget {
   const _FlightsView();
 
@@ -73,12 +84,28 @@ class _FlightsView extends StatelessWidget {
       listener: (context, state) => ErrorPresenter.show(context, state.error),
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          bottom: false,
-          child: BlocBuilder<FlightSearchCubit, FlightSearchState>(
-            buildWhen: (a, b) => a.showsResults != b.showsResults,
-            builder: (context, state) =>
-                state.showsResults ? const _ResultsView() : const _FormView(),
+        body: BlocBuilder<FlightSearchCubit, FlightSearchState>(
+          buildWhen: (a, b) => a.status != b.status,
+          builder: (context, state) => AnimatedSwitcher(
+            duration: DonyDuration.base,
+            switchInCurve: DonyCurve.enter,
+            switchOutCurve: DonyCurve.exit,
+            child: switch (state.status) {
+              FlightSearchStatus.editing => const SafeArea(
+                key: ValueKey('form'),
+                bottom: false,
+                child: _FormView(),
+              ),
+              FlightSearchStatus.loading => _Loading(
+                key: const ValueKey('loading'),
+                state: state,
+              ),
+              _ => const SafeArea(
+                key: ValueKey('results'),
+                bottom: false,
+                child: _ResultsView(),
+              ),
+            },
           ),
         ),
       ),
@@ -86,10 +113,56 @@ class _FlightsView extends StatelessWidget {
   }
 }
 
-// ── Formulaire et bons plans ────────────────────────────────────────────────
+// ── Formulaire, recherches récentes et bons plans ───────────────────────────
 
 class _FormView extends StatelessWidget {
   const _FormView();
+
+  Future<void> _pickRoute(
+    BuildContext context, {
+    required bool departure,
+  }) async {
+    final cubit = context.read<FlightSearchCubit>();
+    final q = cubit.state.query;
+    final pick = await pickFlightRoute(
+      context,
+      FlightRoutePickerArgs(
+        origin: q.origin,
+        destination: q.destination,
+        departure: departure,
+      ),
+    );
+    if (pick != null) {
+      cubit.setRoute(origin: pick.origin, destination: pick.destination);
+    }
+  }
+
+  Future<void> _pickDates(
+    BuildContext context, {
+    bool returnFirst = false,
+  }) async {
+    final cubit = context.read<FlightSearchCubit>();
+    final q = cubit.state.query;
+    final choice = await FlightDatesSheet.show(
+      context,
+      departure: q.departure,
+      returnDate: q.returnDate,
+      roundTrip: q.roundTrip,
+      returnFirst: returnFirst,
+    );
+    if (choice != null) cubit.setDates(choice.departure, choice.returnDate);
+  }
+
+  /// Aller-retour sans date de retour : la feuille des dates s'ouvre sur le
+  /// retour, puis la recherche part si la date est choisie.
+  Future<void> _submit(BuildContext context) async {
+    final cubit = context.read<FlightSearchCubit>();
+    if (cubit.state.query.needsReturnDate) {
+      await _pickDates(context, returnFirst: true);
+      if (cubit.state.query.needsReturnDate) return;
+    }
+    await cubit.search();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,196 +172,112 @@ class _FormView extends StatelessWidget {
 
     return ListView(
       key: const Key('flights-form'),
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.base,
-        DonySpacing.lg,
-        DonySpacing.huge,
-      ),
+      padding: const EdgeInsets.only(bottom: DonySpacing.huge),
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(l.flightsTitle, style: tt.displayMedium),
-              ),
-            ),
-            IconButton(
-              key: const Key('flights-alerts-button'),
-              tooltip: l.flightsAlertsTooltip,
-              onPressed: () => openFlightAlerts(context),
-              icon: DonyIcon('bell', color: cs.onSurface),
-            ),
-            const DonyFeedbackButton(),
-          ],
-        ),
-        const SizedBox(height: DonySpacing.base),
-        const _SearchForm(),
-        const SizedBox(height: DonySpacing.xl),
-        const _DealsSection(),
-        const SizedBox(height: DonySpacing.base),
-        Container(
-          padding: const EdgeInsets.all(DonySpacing.md),
-          decoration: BoxDecoration(
-            color: cs.surfaceWarm,
-            borderRadius: BorderRadius.circular(DonyRadius.md),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            DonySpacing.sm,
+            DonySpacing.xs,
+            DonySpacing.sm,
           ),
-          child: Text(
-            l.flightsAffiliationNotice,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          child: Row(
+            children: [
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(l.flightsTitle, style: tt.displayMedium),
+                ),
+              ),
+              FlightRoundButton(
+                key: const Key('flights-alerts-button'),
+                icon: 'bell',
+                tooltip: l.flightsAlertsTooltip,
+                onPressed: () => openFlightAlerts(context),
+              ),
+              const DonyFeedbackButton(),
+            ],
+          ),
+        ),
+        BlocBuilder<FlightSearchCubit, FlightSearchState>(
+          buildWhen: (a, b) => a.query != b.query,
+          builder: (context, state) {
+            final cubit = context.read<FlightSearchCubit>();
+            final q = state.query;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.lg,
+                  ),
+                  child: FlightTripTypeSwitch(
+                    roundTrip: q.roundTrip,
+                    onChanged: cubit.setRoundTrip,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.md + DonySpacing.xxs),
+                FlightSearchForm(
+                  query: q,
+                  onPickCity: ({required departure}) =>
+                      _pickRoute(context, departure: departure),
+                  onSwap: cubit.swap,
+                  onPickDates: () => _pickDates(context),
+                  onDirectChanged: cubit.setDirectOnly,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.base,
+                    DonySpacing.lg,
+                    0,
+                  ),
+                  child: DonyButton(
+                    key: const Key('flights-search-button'),
+                    label: l.flightsSearchButton,
+                    iconAsset: 'search',
+                    onPressed: q.isComplete ? () => _submit(context) : null,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        BlocBuilder<FlightSearchCubit, FlightSearchState>(
+          buildWhen: (a, b) => a.recents != b.recents,
+          builder: (context, state) {
+            if (state.recents.isEmpty) return const SizedBox.shrink();
+            final cubit = context.read<FlightSearchCubit>();
+            return FlightRecentSearches(
+              key: const Key('flights-recents'),
+              recents: state.recents,
+              onOpen: cubit.openRecent,
+              onClear: cubit.clearRecents,
+            );
+          },
+        ),
+        const _DealsSection(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            DonySpacing.xl,
+            DonySpacing.lg,
+            0,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(DonySpacing.md),
+            decoration: BoxDecoration(
+              color: cs.surfaceWarm,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: Text(
+              l.flightsAffiliationNotice,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _SearchForm extends StatelessWidget {
-  const _SearchForm();
-
-  Future<void> _pickDates(BuildContext context, FlightSearchQuery q) async {
-    final cubit = context.read<FlightSearchCubit>();
-    final choice = await FlightDatesSheet.show(
-      context,
-      departure: q.departure,
-      returnDate: q.returnDate,
-    );
-    if (choice != null) cubit.setDates(choice.departure, choice.returnDate);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-
-    return BlocBuilder<FlightSearchCubit, FlightSearchState>(
-      buildWhen: (a, b) => a.query != b.query,
-      builder: (context, state) {
-        final cubit = context.read<FlightSearchCubit>();
-        final q = state.query;
-        String when(FlightWhen? w) => w == null
-            ? l.flightsDatesAny
-            : w.wholeMonth
-            ? FlightFormat.month(l, w.date)
-            : FlightFormat.dateTime(l, w.date, withTime: false);
-
-        // Material et non Container décoré : l'interrupteur (ListTile) peint
-        // son encre sur le Material le plus proche.
-        return Material(
-          color: cs.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            side: BorderSide(color: cs.outline),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(DonySpacing.base),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Column(
-                      children: [
-                        DonyTextField.tappable(
-                          key: const Key('flights-origin'),
-                          label: l.flightsFieldDeparture,
-                          value: q.origin == null
-                              ? null
-                              : _placeLabel(q.origin!),
-                          onTap: () async {
-                            final place = await FlightCitySheet.show(
-                              context,
-                              departure: true,
-                            );
-                            if (place != null) cubit.setOrigin(place);
-                          },
-                        ),
-                        const SizedBox(height: DonySpacing.sm),
-                        DonyTextField.tappable(
-                          key: const Key('flights-destination'),
-                          label: l.flightsFieldArrival,
-                          value: q.destination == null
-                              ? null
-                              : _placeLabel(q.destination!),
-                          onTap: () async {
-                            final place = await FlightCitySheet.show(
-                              context,
-                              departure: false,
-                            );
-                            if (place != null) cubit.setDestination(place);
-                          },
-                        ),
-                      ],
-                    ),
-                    PositionedDirectional(
-                      end: DonySpacing.md,
-                      top: 34,
-                      child: Material(
-                        color: cs.surface,
-                        shape: CircleBorder(
-                          side: BorderSide(color: cs.outline),
-                        ),
-                        child: IconButton(
-                          key: const Key('flights-swap'),
-                          tooltip: l.flightsSwapTooltip,
-                          onPressed: cubit.swap,
-                          icon: RotatedBox(
-                            quarterTurns: 1,
-                            child: DonyIcon(
-                              'arrow-left-right',
-                              size: 20,
-                              color: cs.primary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DonyTextField.tappable(
-                        key: const Key('flights-departure-date'),
-                        label: l.flightsOutboundLabel,
-                        value: when(q.departure),
-                        onTap: () => _pickDates(context, q),
-                      ),
-                    ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Expanded(
-                      child: DonyTextField.tappable(
-                        key: const Key('flights-return-date'),
-                        label: l.flightsReturnLabel,
-                        value: q.returnDate == null
-                            ? l.flightsOneWay
-                            : when(q.returnDate),
-                        onTap: () => _pickDates(context, q),
-                      ),
-                    ),
-                  ],
-                ),
-                SwitchListTile(
-                  key: const Key('flights-direct'),
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l.flightsDirectOnly),
-                  value: q.directOnly,
-                  onChanged: cubit.setDirectOnly,
-                ),
-                DonyButton(
-                  key: const Key('flights-search-button'),
-                  label: l.flightsSearchButton,
-                  onPressed: q.isComplete ? cubit.search : null,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -299,7 +288,6 @@ class _DealsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final tt = Theme.of(context).textTheme;
 
     return BlocBuilder<FlightDealsCubit, FlightDealsState>(
       builder: (context, state) {
@@ -307,34 +295,119 @@ class _DealsSection extends StatelessWidget {
             state.status == FlightDealsStatus.initial) {
           return const SizedBox.shrink();
         }
+        final loading = state.status == FlightDealsStatus.loading;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l.flightsDealsTitle, style: tt.headlineMedium),
-            const SizedBox(height: DonySpacing.md),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.xl,
+                DonySpacing.lg,
+                DonySpacing.md,
+              ),
+              child: FlightSectionTitle(title: l.flightsDealsTitle),
+            ),
             SizedBox(
               height: 196,
-              child: state.status == FlightDealsStatus.loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.separated(
-                      key: const Key('flights-deals'),
-                      scrollDirection: Axis.horizontal,
-                      clipBehavior: Clip.none,
-                      itemCount: state.deals.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(width: DonySpacing.md),
-                      itemBuilder: (context, i) => FlightDealCard(
-                        deal: state.deals[i],
-                        onTap: () => context.read<FlightSearchCubit>().openDeal(
-                          state.deals[i],
-                          personalized: state.personalized,
+              child: ListView.separated(
+                key: loading
+                    ? const Key('flights-deals-loading')
+                    : const Key('flights-deals'),
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+                clipBehavior: Clip.none,
+                physics: loading ? const NeverScrollableScrollPhysics() : null,
+                itemCount: loading ? 2 : state.deals.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(width: DonySpacing.md),
+                itemBuilder: (context, i) => loading
+                    ? const _DealSkeleton()
+                    // Calée en haut : la carte garde sa hauteur naturelle au
+                    // lieu de s'étirer sur toute la bande.
+                    : Align(
+                        alignment: Alignment.topCenter,
+                        child: FlightDealCard(
+                          deal: state.deals[i],
+                          onTap: () =>
+                              context.read<FlightSearchCubit>().openDeal(
+                                state.deals[i],
+                                personalized: state.personalized,
+                              ),
                         ),
                       ),
-                    ),
+              ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+/// Squelette d'un mini-billet, mêmes dimensions que [FlightDealCard].
+class _DealSkeleton extends StatelessWidget {
+  const _DealSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return DonyShimmer(
+      child: Container(
+        width: FlightDealCard.width,
+        padding: const EdgeInsets.all(DonySpacing.md),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          boxShadow: DonyShadow.sm,
+        ),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                DonySkeletonCircle(diameter: 26),
+                SizedBox(width: DonySpacing.sm),
+                DonySkeletonBox(width: 90),
+              ],
+            ),
+            SizedBox(height: DonySpacing.base),
+            DonySkeletonBox(height: 22),
+            SizedBox(height: DonySpacing.sm),
+            DonySkeletonBox(width: 120),
+            Spacer(),
+            DonySkeletonBox(width: 80, height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Attente ─────────────────────────────────────────────────────────────────
+
+class _Loading extends StatelessWidget {
+  const _Loading({super.key, required this.state});
+
+  final FlightSearchState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final q = state.query;
+    final chip = [
+      FlightFormat.route(
+        l,
+        q.origin?.code ?? '',
+        q.destination?.code ?? '',
+        roundTrip: q.isRoundTrip,
+      ),
+      FlightFormat.dates(l, q.departure, q.returnDate),
+      l.flightsPassengers(1),
+    ].join(' · ');
+    return FlightLoadingView(
+      routeChip: chip,
+      destinationName: _cityName(state, origin: false),
     );
   }
 }
@@ -347,6 +420,7 @@ class _ResultsView extends StatelessWidget {
   Future<void> _openFilters(
     BuildContext context,
     FlightSearchState state,
+    FlightFilterSection? section,
   ) async {
     final cubit = context.read<FlightSearchCubit>();
     final filters = await FlightFilterSheet.show(
@@ -354,6 +428,7 @@ class _ResultsView extends StatelessWidget {
       offers: state.result?.offers ?? const [],
       current: state.filters,
       currency: state.result?.currency ?? 'EUR',
+      focus: section,
     );
     if (filters != null) cubit.applyFilters(filters);
   }
@@ -403,159 +478,269 @@ class _ResultsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
 
     return BlocBuilder<FlightSearchCubit, FlightSearchState>(
       builder: (context, state) {
         final cubit = context.read<FlightSearchCubit>();
         final q = state.query;
-        final originName = q.origin?.name ?? state.result?.originCode ?? '';
-        final destinationName =
-            q.destination?.name ?? state.result?.destinationCode ?? '';
-        final offers = state.visibleOffers;
-        final cheapest = state.cheapest;
-        final fastest = state.fastest;
+        final roundTrip = state.result?.roundTrip ?? q.isRoundTrip;
+        final route = FlightFormat.route(
+          l,
+          _cityName(state, origin: true),
+          _cityName(state, origin: false),
+          roundTrip: roundTrip,
+        );
+        final dates = FlightFormat.dates(l, q.departure, q.returnDate);
+        final offers = state.result?.offers ?? const <FlightOffer>[];
 
-        final header = Padding(
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.xs,
-            DonySpacing.sm,
-            DonySpacing.sm,
-            DonySpacing.sm,
-          ),
-          child: Row(
+        if (state.status == FlightSearchStatus.error ||
+            (state.status == FlightSearchStatus.loaded && offers.isEmpty)) {
+          final error = state.status == FlightSearchStatus.error;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DonyAppBarBackButton(onBack: cubit.backToForm),
+              FlightResultsHeader(
+                route: route,
+                dates: dates,
+                onBack: cubit.backToForm,
+              ),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.flightsRouteTitle(originName, destinationName),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: tt.headlineMedium,
-                    ),
-                    if (state.status == FlightSearchStatus.loaded)
-                      Text(
-                        l.flightsResultsCount(offers.length),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                  ],
+                child: FlightEmptyResults(
+                  title: error
+                      ? l.flightsSearchErrorTitle
+                      : l.flightsNoFlightsTitle,
+                  body: error
+                      ? ErrorPresenter.resolve(state.error, l10n: l).message
+                      : l.flightsNoFlightsBody,
+                  suggestions: _suggestions(context, state, error: error),
                 ),
               ),
-              IconButton(
-                key: const Key('flights-create-alert'),
-                tooltip: l.flightsAlertCreateTooltip,
-                onPressed: state.status == FlightSearchStatus.loaded
-                    ? () => _createAlert(context, state)
-                    : null,
-                icon: DonyIcon('bell', color: cs.primary),
-              ),
-              const DonyFeedbackButton(),
             ],
-          ),
-        );
+          );
+        }
 
-        final Widget body = switch (state.status) {
-          FlightSearchStatus.loading || FlightSearchStatus.editing => ListView(
-            padding: const EdgeInsets.all(DonySpacing.lg),
-            children: const [
-              DonyTicketCardSkeleton(),
-              SizedBox(height: DonySpacing.base),
-              DonyTicketCardSkeleton(),
-            ],
-          ),
-          FlightSearchStatus.error => DonyEmptyState(
-            mascotte: DonyMascotteType.erreurLegere,
-            type: DonyEmptyStateType.error,
-            title: l.commonLoadError,
-            description: ErrorPresenter.resolve(state.error, l10n: l).message,
-            actionLabel: l.commonRetry,
-            onAction: cubit.search,
-          ),
-          FlightSearchStatus.loaded when (state.result?.offers ?? []).isEmpty =>
-            DonyEmptyState(
-              mascotte: DonyMascotteType.aucunResultat,
-              title: l.flightsEmptyTitle,
-              description: l.flightsEmptyDescription,
-              actionLabel: l.flightsAlertCreate,
-              onAction: () => _createAlert(context, state),
+        final visible = state.visibleOffers;
+        final summaries = state.tabSummaries;
+        final cheapest = summaries[FlightResultsTab.cheapest]?.offer;
+        final fastest = summaries[FlightResultsTab.fastest]?.offer;
+        final facets = FlightFacets.of(offers);
+        final searchPath = state.result?.searchPath;
+
+        Widget card(FlightOffer offer) {
+          FlightOfferBadge? badge;
+          if (visible.length > 1 && identical(offer, cheapest)) {
+            badge = FlightOfferBadge.cheapest;
+          } else if (visible.length > 1 && identical(offer, fastest)) {
+            badge = FlightOfferBadge.fastest;
+          }
+          return BlocSelector<FlightLinkCubit, FlightLinkState, bool>(
+            selector: (s) => s.openingPath == offer.offerPath,
+            builder: (context, opening) => FlightOfferCard(
+              offer: offer,
+              badge: badge,
+              opening: opening,
+              onOpen: () =>
+                  context.read<FlightLinkCubit>().open(offer, source: 'search'),
             ),
-          FlightSearchStatus.loaded => ListView.separated(
-            key: const Key('flights-results'),
+          );
+        }
+
+        Widget more(Key key) =>
+            BlocSelector<FlightLinkCubit, FlightLinkState, bool>(
+              selector: (s) => s.openingPath == searchPath,
+              builder: (context, opening) => FlightAllAirlinesCard(
+                key: key,
+                opening: opening,
+                onTap: () => context.read<FlightLinkCubit>().openAllAirlines(
+                  state.result!,
+                  from: 'results',
+                ),
+              ),
+            );
+
+        final items = <Widget>[
+          Padding(
             padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
+              DonySpacing.xs,
+              DonySpacing.xs,
+              DonySpacing.xs,
               0,
-              DonySpacing.lg,
-              DonySpacing.huge,
             ),
-            itemCount: offers.length + 1,
-            separatorBuilder: (_, _) =>
-                const SizedBox(height: DonySpacing.base),
-            itemBuilder: (context, i) {
-              if (i == 0) {
-                return _FilterBar(
-                  activeFilters: state.filters.isFiltering,
-                  onTap: () => _openFilters(context, state),
-                );
-              }
-              final offer = offers[i - 1];
-              return BlocSelector<FlightLinkCubit, FlightLinkState, bool>(
-                selector: (s) => s.openingPath == offer.offerPath,
-                builder: (context, opening) => FlightBilletCard(
-                  offer: offer,
-                  originName: originName,
-                  destinationName: destinationName,
-                  cheapest: offers.length > 1 && identical(offer, cheapest),
-                  fastest:
-                      offers.length > 1 &&
-                      !identical(offer, cheapest) &&
-                      identical(offer, fastest),
-                  opening: opening,
-                  onOpen: () => context.read<FlightLinkCubit>().open(
-                    offer,
-                    source: 'search',
+            child: Text(
+              roundTrip
+                  ? l.flightsResultsSummaryRoundTrip(visible.length)
+                  : l.flightsResultsSummaryOneWay(visible.length),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          for (final (i, offer) in visible.indexed) ...[
+            card(offer),
+            if (i == 2 && visible.length > 3 && searchPath != null)
+              more(const Key('flights-all-airlines-inline')),
+          ],
+          if (searchPath != null) more(const Key('flights-all-airlines')),
+        ];
+
+        return Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FlightResultsHeader(
+                  route: route,
+                  dates: dates,
+                  onBack: cubit.backToForm,
+                  onCreateAlert: () => _createAlert(context, state),
+                ),
+                FlightSortTabs(
+                  summaries: summaries,
+                  selected: state.effectiveTab,
+                  onSelect: cubit.selectTab,
+                ),
+                const SizedBox(height: DonySpacing.xs),
+                FlightFilterChips(
+                  activeCount: state.filters.activeCount,
+                  showAirlines: facets.airlines.isNotEmpty,
+                  showTimes: facets.slots.isNotEmpty,
+                  onOpen: (section) => _openFilters(context, state, section),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    key: const Key('flights-results'),
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.md,
+                      0,
+                      DonySpacing.md,
+                      DonySpacing.huge + DonySpacing.xxl,
+                    ),
+                    itemCount: items.length,
+                    separatorBuilder: (_, i) => SizedBox(
+                      height: i == 0 ? DonySpacing.sm : DonySpacing.sm + 2,
+                    ),
+                    itemBuilder: (_, i) => items[i],
                   ),
                 ),
-              );
-            },
-          ),
-        };
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            header,
-            Expanded(child: body),
+              ],
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: DonySpacing.base,
+              child: Center(
+                child: FlightPillButton(
+                  key: const Key('flights-alert-fab'),
+                  icon: 'bell',
+                  label: l.flightsAlertFab,
+                  onPressed: () => _createAlert(context, state),
+                ),
+              ),
+            ),
           ],
         );
       },
     );
   }
-}
 
-class _FilterBar extends StatelessWidget {
-  const _FilterBar({required this.activeFilters, required this.onTap});
-
-  final bool activeFilters;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
+  /// Sorties de l'écran « Aucun vol » (ou d'erreur).
+  List<FlightSuggestion> _suggestions(
+    BuildContext context,
+    FlightSearchState state, {
+    required bool error,
+  }) {
     final l = context.l10n;
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: DonyChip(
-        key: const Key('flights-filters'),
-        label: activeFilters ? l.flightsFiltersActive : l.flightsFiltersTitle,
-        selected: activeFilters,
-        icon: Icons.tune_rounded,
-        onTap: onTap,
-      ),
+    final cubit = context.read<FlightSearchCubit>();
+    final q = state.query;
+    final result = state.result;
+    final destination = _cityName(state, origin: false);
+    final departure = q.departure;
+
+    if (error) {
+      return [
+        FlightSuggestion(
+          key: const Key('flights-retry'),
+          icon: 'refresh-cw',
+          title: l.commonRetry,
+          subtitle: l.flightsRouteTitle(
+            _cityName(state, origin: true),
+            destination,
+          ),
+          onTap: cubit.search,
+        ),
+        _alertSuggestion(context, state),
+      ];
+    }
+
+    return [
+      if (q.origin != null &&
+          q.origin!.code != FlightSearchCubit.paris.code &&
+          q.destination?.code != FlightSearchCubit.paris.code)
+        FlightSuggestion(
+          key: const Key('flights-suggest-paris'),
+          icon: 'plane',
+          title: FlightFormat.route(
+            l,
+            FlightSearchCubit.paris.name,
+            destination,
+            roundTrip: q.isRoundTrip,
+          ),
+          subtitle: l.flightsSuggestSameDates,
+          onTap: cubit.searchFromParis,
+        ),
+      if (departure != null && !departure.wholeMonth)
+        FlightSuggestion(
+          key: const Key('flights-suggest-month'),
+          icon: 'calendar',
+          title: l.flightsSuggestWholeMonth(
+            FlightFormat.monthName(l, departure.date),
+          ),
+          subtitle: l.flightsSuggestFlexible(
+            FlightFormat.route(
+              l,
+              _cityName(state, origin: true),
+              destination,
+              roundTrip: q.isRoundTrip,
+            ),
+          ),
+          onTap: cubit.searchWholeMonth,
+        ),
+      if (result?.searchPath != null)
+        FlightSuggestion(
+          key: const Key('flights-suggest-aviasales'),
+          icon: 'external-link',
+          title: l.flightsSuggestAviasales,
+          subtitle: l.flightsSuggestAviasalesBody,
+          onTap: () {
+            cubit.trackSuggestion(FlightEmptySuggestion.aviasales);
+            context.read<FlightLinkCubit>().openAllAirlines(
+              result!,
+              from: 'empty',
+            );
+          },
+        ),
+      _alertSuggestion(context, state),
+    ];
+  }
+
+  FlightSuggestion _alertSuggestion(
+    BuildContext context,
+    FlightSearchState state,
+  ) {
+    final l = context.l10n;
+    return FlightSuggestion(
+      key: const Key('flights-suggest-alert'),
+      icon: 'bell',
+      accent: true,
+      title: l.flightsSuggestAlert,
+      subtitle: l.flightsSuggestAlertBody,
+      onTap: () {
+        context.read<FlightSearchCubit>().trackSuggestion(
+          FlightEmptySuggestion.alert,
+        );
+        _createAlert(context, state);
+      },
     );
   }
 }

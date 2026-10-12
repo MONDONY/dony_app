@@ -50,6 +50,8 @@ String countryName(AppLocalizations l, String code) => switch (code) {
   // Hors catalogue, proposé seulement par la liste fermée diaspora de
   // delivery_address_edit_screen.dart (pas le même GN que GW/GQ).
   'GN' => l.countryNameGn,
+  // Hors catalogue, ville d'aéroport proposée par l'onglet Billets.
+  'MA' => l.countryNameMa,
   _ => code,
 };
 

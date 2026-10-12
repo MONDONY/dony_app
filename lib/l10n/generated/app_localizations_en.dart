@@ -14352,6 +14352,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get countryNameGn => 'Guinea';
 
   @override
+  String get countryNameMa => 'Morocco';
+
+  @override
   String get recipientListTitle => 'My recipients';
 
   @override
@@ -18412,7 +18415,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flightsDirectOnly => 'Direct flights only';
 
   @override
-  String get flightsSearchButton => 'Search';
+  String get flightsSearchButton => 'Search flights';
 
   @override
   String get flightsDatesAny => 'Any date';
@@ -18543,7 +18546,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String flightsDurationHoursMinutes(int hours, int minutes) {
+  String flightsDurationHoursMinutes(int hours, String minutes) {
     return '${hours}h ${minutes}m';
   }
 
@@ -18685,6 +18688,239 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flightsAlertHint =>
       'Checked every 6 hours. Periods of 31 days at most, for both outbound and return.';
+
+  @override
+  String get flightsFieldDestination => 'Destination';
+
+  @override
+  String flightsRouteRoundTrip(String origin, String destination) {
+    return '$origin ⇄ $destination';
+  }
+
+  @override
+  String flightsDateRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String flightsPassengers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travellers',
+      one: '1 traveller',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsRecentTitle => 'Your searches';
+
+  @override
+  String get flightsRecentClear => 'Clear';
+
+  @override
+  String get flightsAgoNow => 'just now';
+
+  @override
+  String flightsAgoMinutes(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String flightsAgoHours(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String flightsAgoDays(int count) {
+    return '$count d ago';
+  }
+
+  @override
+  String flightsAgoWeeks(int count) {
+    return '$count wk ago';
+  }
+
+  @override
+  String get flightsRecentNoPrice => 'no price';
+
+  @override
+  String get flightsPickerTitle => 'Where are you going?';
+
+  @override
+  String get flightsPickerOriginHint => 'Choose a departure';
+
+  @override
+  String get flightsPickerDestinationHint => 'Choose a destination';
+
+  @override
+  String get flightsPickerUseLocation => 'Use my location';
+
+  @override
+  String get flightsPickerLocationFailed => 'No airport found near you.';
+
+  @override
+  String get flightsPickerRecentDestinations => 'Recent destinations';
+
+  @override
+  String get flightsPickerRecentOrigins => 'Recent departures';
+
+  @override
+  String get flightsPickerDiaspora => 'Diaspora destinations';
+
+  @override
+  String flightsLoadingKicker(String city) {
+    return 'Searching flights to $city';
+  }
+
+  @override
+  String get flightsLoadingTitle => 'We\'re comparing airline prices for you';
+
+  @override
+  String get flightsLoadingStepStops => 'Flights with stops';
+
+  @override
+  String get flightsLoadingStepDirect => 'Direct flights';
+
+  @override
+  String get flightsLoadingStepSort => 'Sorting by price';
+
+  @override
+  String get flightsLoadingTipTitle => 'Good to know';
+
+  @override
+  String get flightsLoadingTipBody =>
+      'Prices come from recent searches on Aviasales. They may change when you book.';
+
+  @override
+  String get flightsSummaryEdit => 'Edit search';
+
+  @override
+  String get flightsTabCheapest => 'Cheapest';
+
+  @override
+  String get flightsTabFastest => 'Fastest';
+
+  @override
+  String get flightsTabDirect => 'Direct';
+
+  @override
+  String get flightsTabNone => 'None';
+
+  @override
+  String flightsChipFiltersCount(int count) {
+    return 'Filters · $count';
+  }
+
+  @override
+  String get flightsChipTimes => 'Times';
+
+  @override
+  String flightsResultsSummaryRoundTrip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count flights',
+      one: '1 flight',
+      zero: 'No flights',
+    );
+    return '$_temp0 · price per person, round trip';
+  }
+
+  @override
+  String flightsResultsSummaryOneWay(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count flights',
+      one: '1 flight',
+      zero: 'No flights',
+    );
+    return '$_temp0 · price per person, one way';
+  }
+
+  @override
+  String flightsVia(String gate) {
+    return 'via $gate';
+  }
+
+  @override
+  String get flightsPriceIndicative => 'indicative price';
+
+  @override
+  String get flightsOfferOpening => 'Opening the offer';
+
+  @override
+  String get flightsMoreTitle => 'Missing an airline?';
+
+  @override
+  String get flightsMoreBody => 'See every airline on Aviasales, same dates.';
+
+  @override
+  String get flightsAlertFab => 'Price alert';
+
+  @override
+  String get flightsNoFlightsTitle => 'No flights on these dates';
+
+  @override
+  String get flightsNoFlightsBody =>
+      'No recent price for this route. Try another departure city or the whole month.';
+
+  @override
+  String get flightsTryInstead => 'Try instead';
+
+  @override
+  String get flightsSuggestSameDates => 'same dates';
+
+  @override
+  String flightsSuggestWholeMonth(String month) {
+    return 'All of $month';
+  }
+
+  @override
+  String flightsSuggestFlexible(String route) {
+    return '$route, flexible dates';
+  }
+
+  @override
+  String get flightsSuggestAviasales => 'Search on Aviasales';
+
+  @override
+  String get flightsSuggestAviasalesBody => 'every airline';
+
+  @override
+  String get flightsSuggestAlert => 'Notify me';
+
+  @override
+  String get flightsSuggestAlertBody => 'as soon as a price shows up';
+
+  @override
+  String get flightsSearchErrorTitle => 'Search failed';
+
+  @override
+  String get flightsFiltersTimes => 'Departure times';
+
+  @override
+  String get flightsSlotNight => 'Night · 12am – 5am';
+
+  @override
+  String get flightsSlotMorning => 'Morning · 5am – 12pm';
+
+  @override
+  String get flightsSlotAfternoon => 'Afternoon · 12pm – 6pm';
+
+  @override
+  String get flightsSlotEvening => 'Evening · 6pm – 12am';
+
+  @override
+  String get flightsFiltersMaxPrice => 'Maximum price';
+
+  @override
+  String get flightsPriceAny => 'Any price';
+
+  @override
+  String get flightsAlertActiveLabel => 'Alert active';
 
   @override
   String get errorFlightsTitle => 'Tickets unavailable';

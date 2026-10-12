@@ -44,15 +44,24 @@ class FlightSearchQuery extends Equatable {
     this.departure,
     this.returnDate,
     this.directOnly = false,
-  });
+    bool? roundTrip,
+  }) : roundTrip = roundTrip ?? returnDate != null;
 
   final FlightPlace? origin;
   final FlightPlace? destination;
   final FlightWhen? departure;
 
-  /// Présent = aller-retour.
+  /// Date du retour, envoyée au back : présente = aller-retour.
   final FlightWhen? returnDate;
   final bool directOnly;
+
+  /// Choix « Aller-retour » du sélecteur du formulaire. Peut être vrai sans
+  /// [returnDate] tant que la date du retour n'est pas choisie : le bouton de
+  /// recherche ouvre alors la feuille des dates.
+  final bool roundTrip;
+
+  /// Aller-retour choisi mais date du retour encore manquante.
+  bool get needsReturnDate => roundTrip && returnDate == null;
 
   bool get isComplete =>
       origin != null &&
@@ -68,12 +77,14 @@ class FlightSearchQuery extends Equatable {
     FlightWhen? returnDate,
     bool clearReturn = false,
     bool? directOnly,
+    bool? roundTrip,
   }) => FlightSearchQuery(
     origin: origin ?? this.origin,
     destination: destination ?? this.destination,
     departure: departure ?? this.departure,
     returnDate: clearReturn ? null : (returnDate ?? this.returnDate),
     directOnly: directOnly ?? this.directOnly,
+    roundTrip: roundTrip ?? this.roundTrip,
   );
 
   /// Départ et arrivée échangés (bouton d'inversion du formulaire).
@@ -83,6 +94,7 @@ class FlightSearchQuery extends Equatable {
     departure: departure,
     returnDate: returnDate,
     directOnly: directOnly,
+    roundTrip: roundTrip,
   );
 
   @override
@@ -92,5 +104,6 @@ class FlightSearchQuery extends Equatable {
     departure,
     returnDate,
     directOnly,
+    roundTrip,
   ];
 }
