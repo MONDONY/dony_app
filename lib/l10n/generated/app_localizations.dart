@@ -27429,6 +27429,42 @@ abstract class AppLocalizations {
   /// **'Ce trajet est complet : il n\'accepte plus de demande.'**
   String get listingTripFullMessage;
 
+  /// Bouton du pied de la feuille d'un trajet complet : s'abonner à la libération d'une place (FLUTTER-JH)
+  ///
+  /// In fr, this message translates to:
+  /// **'Me prévenir si de la place se libère'**
+  String get tripSpaceAlertNotifyButton;
+
+  /// Pied de la feuille d'un trajet complet, une fois abonné (FLUTTER-JH)
+  ///
+  /// In fr, this message translates to:
+  /// **'On vous préviendra dès qu\'une place se libère.'**
+  String get tripSpaceAlertSubscribedMessage;
+
+  /// Bouton secondaire : retirer l'abonnement à la libération d'une place (FLUTTER-JH)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne plus me prévenir'**
+  String get tripSpaceAlertCancelButton;
+
+  /// Confirmation après l'abonnement à un trajet complet (FLUTTER-JH)
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est noté : vous recevrez une notification si de la place se libère.'**
+  String get tripSpaceAlertSubscribedSnack;
+
+  /// Le trajet n'est plus complet au moment de s'abonner (409 trip-not-full, FLUTTER-JH)
+  ///
+  /// In fr, this message translates to:
+  /// **'De la place vient de se libérer : rouvrez le trajet pour faire votre demande.'**
+  String get tripSpaceAlertSpaceAvailable;
+
+  /// Échec de l'abonnement ou du désabonnement à un trajet complet (FLUTTER-JH)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer l\'alerte pour le moment. Réessayez.'**
+  String get tripSpaceAlertError;
+
   /// Titre de la confirmation d'envoi d'un signalement (incident_report_screen.dart, FLUTTER-BJ)
   ///
   /// In fr, this message translates to:

@@ -2000,7 +2000,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
     // leur pastille. Le titre les retirait et la liste s'arrêtait à 20 : le
     // testeur lisait 19, 20 et 22 pour la même recherche (Sentry FLUTTER-6P,
     // FLUTTER-6Q).
-    final tripCount = tripsTotal ?? count;
+    // Trajets complets listés (grisés) mais jamais comptés (FLUTTER-JH).
+    final tripCount =
+        tripsTotal ?? announcements.where((a) => !a.isFull).length;
 
     final statusBarHeight = MediaQuery.of(ctx).padding.top;
 

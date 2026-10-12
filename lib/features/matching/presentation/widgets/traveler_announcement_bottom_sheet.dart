@@ -11,6 +11,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/features/corridor_alerts/bloc/trip_space_alert_cubit.dart';
+import 'package:dony/features/corridor_alerts/presentation/widgets/trip_space_alert_footer.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
@@ -157,18 +159,48 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
     /* Absent de ce contexte (tests, points d'entrée isolés) : pas de cœur. */
   }
 
+  // Trajet complet d'un autre voyageur (FLUTTER-JH) : ni demande ni
+  // négociation, mais « Me prévenir si de la place se libère ». Le cubit vit
+  // dans le `wrapper`, le bouton dans le `stickyBottom`.
+  final offersSpaceAlert =
+      announcement.isFull &&
+      lecteurId != announcement.travelerId &&
+      getIt.isRegistered<TripSpaceAlertCubit>();
+  final hasSession =
+      getIt.isRegistered<FirebaseSessionProbe>() &&
+      getIt<FirebaseSessionProbe>().hasRealSession;
+
   return DonyBottomSheet.show<TravelerSheetExit>(
     context,
     title: context.l10n.listingTripDetailTitle,
     // Scarabée de signalement dans l'en-tête, comme sur les écrans
     // (FLUTTER-83 : la feuille en était dépourvue).
     showFeedback: true,
-    wrapper: favoris == null
+    wrapper: favoris == null && !offersSpaceAlert
         ? null
-        : (child) => BlocProvider<FavoriteIdsCubit>.value(
-            value: favoris!,
-            child: child,
-          ),
+        : (child) {
+            var wrapped = child;
+            if (offersSpaceAlert) {
+              wrapped = BlocProvider<TripSpaceAlertCubit>(
+                create: (_) {
+                  final cubit = getIt<TripSpaceAlertCubit>(
+                    param1: announcement.id,
+                  );
+                  // Invité : rien à lire, le bouton l'invite à se connecter.
+                  if (hasSession) unawaited(cubit.load());
+                  return cubit;
+                },
+                child: wrapped,
+              );
+            }
+            if (favoris != null) {
+              wrapped = BlocProvider<FavoriteIdsCubit>.value(
+                value: favoris,
+                child: wrapped,
+              );
+            }
+            return wrapped;
+          },
     stickyBottom: Builder(
       builder: (innerCtx) {
         // Le viewer a déjà un colis sur ce trajet : on n'autorise pas une
@@ -316,7 +348,14 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
         final cs = Theme.of(innerCtx).colorScheme;
         final innerL = innerCtx.l10n;
         // Trajet complet : on peut le consulter, mais plus lui faire de
-        // demande ni lui proposer de prix (FLUTTER-BG).
+        // demande ni lui proposer de prix (FLUTTER-BG). On peut en revanche
+        // demander à être prévenu quand une place se libère (FLUTTER-JH).
+        if (offersSpaceAlert) {
+          return TripSpaceAlertFooter(
+            hasSession: hasSession,
+            onAuthRequired: () => AuthRequiredSheet.show(innerCtx),
+          );
+        }
         if (announcement.isFull) {
           return Column(
             key: const Key('trip-full-footer'),

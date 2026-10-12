@@ -275,12 +275,17 @@ class AnnouncementRemoteDatasource {
     bool? urgent,
     int? maxStops,
     List<String>? paymentMethods,
+    bool includeFull = false,
   }) async {
     final params = <String, dynamic>{
       'page': page,
       'size': 20,
       'sortBy': sortBy,
       'sortDir': sortDir,
+      // FLUTTER-JH : les trajets complets à venir, après les réservables. Un
+      // back antérieur ignore le paramètre (réservables seuls). Jamais envoyé
+      // par le compteur : « N trajets » ne compte que ce qui se réserve.
+      if (includeFull) 'includeFull': true,
       ..._announcementFilterParams(
         departureCity: departureCity,
         arrivalCity: arrivalCity,

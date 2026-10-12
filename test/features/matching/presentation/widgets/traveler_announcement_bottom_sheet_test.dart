@@ -9,6 +9,8 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/corridor_alerts/bloc/trip_space_alert_cubit.dart';
+import 'package:dony/features/corridor_alerts/data/trip_space_alert_repository.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
@@ -44,6 +46,7 @@ import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/mock_analytics_backend.dart';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -79,6 +82,9 @@ class _MockBidNegotiationRepository extends Mock
     implements BidNegotiationRepository {}
 
 class _FakeUri extends Fake implements Uri {}
+
+class _MockTripSpaceAlertRepository extends Mock
+    implements TripSpaceAlertRepository {}
 
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
@@ -1669,6 +1675,118 @@ void main() {
       },
     );
   }
+
+  // ── FLUTTER-JH : trajet complet, « Me prévenir si de la place se libère » ──
+
+  group('trajet complet avec alerte de place', () {
+    late _MockTripSpaceAlertRepository repo;
+
+    setUp(() {
+      repo = _MockTripSpaceAlertRepository();
+      getIt.registerFactoryParam<TripSpaceAlertCubit, String, void>(
+        (id, _) => TripSpaceAlertCubit(
+          repo,
+          makeDisabledAnalytics(MockAnalyticsBackend()),
+          announcementId: id,
+        ),
+      );
+      getIt.registerSingleton<FirebaseSessionProbe>(const _RealSessionProbe());
+    });
+
+    tearDown(() async {
+      await getIt.unregister<TripSpaceAlertCubit>();
+      await getIt.unregister<FirebaseSessionProbe>();
+    });
+
+    testWidgets(
+      'ni demande ni négociation, bouton « Me prévenir » qui abonne',
+      (tester) async {
+        when(() => repo.getSubscribedTripIds()).thenAnswer((_) async => {});
+        when(() => repo.subscribe('a1')).thenAnswer((_) async {});
+
+        await tester.pumpWidget(
+          _harness(
+            announcement: _buildAnnouncement(status: 'FULL', negotiable: true),
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('trip-full-footer')), findsOneWidget);
+        expect(
+          find.byKey(const Key('make-request-btn-disabled')),
+          findsNothing,
+        );
+        expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
+        expect(find.text('Faire une demande'), findsNothing);
+
+        await tester.tap(find.byKey(const Key('trip-space-alert-btn')));
+        await tester.pumpAndSettle();
+
+        verify(() => repo.subscribe('a1')).called(1);
+        expect(
+          find.text("On vous préviendra dès qu'une place se libère."),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('trip-space-alert-cancel-btn')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('déjà abonné : « Ne plus me prévenir » désabonne', (
+      tester,
+    ) async {
+      when(() => repo.getSubscribedTripIds()).thenAnswer((_) async => {'a1'});
+      when(() => repo.unsubscribe('a1')).thenAnswer((_) async {});
+
+      await tester.pumpWidget(
+        _harness(announcement: _buildAnnouncement(status: 'FULL')),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('trip-space-alert-cancel-btn')));
+      await tester.pumpAndSettle();
+
+      verify(() => repo.unsubscribe('a1')).called(1);
+      expect(find.byKey(const Key('trip-space-alert-btn')), findsOneWidget);
+    });
+
+    testWidgets('son propre trajet complet : pas de bouton « Me prévenir »', (
+      tester,
+    ) async {
+      const own = UserModel(
+        id: 't1',
+        roles: [],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+      );
+      await tester.pumpWidget(
+        _harness(
+          announcement: _buildAnnouncement(status: 'FULL'),
+          authState: const AuthAuthenticated(own),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('trip-space-alert-btn')), findsNothing);
+      verifyNever(() => repo.getSubscribedTripIds());
+    });
+
+    testWidgets('trajet réservable : formulaire de demande, pas d’alerte', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_harness(announcement: _buildAnnouncement()));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('trip-space-alert-btn')), findsNothing);
+      expect(find.byKey(const Key('trip-full-footer')), findsNothing);
+    });
+  });
 
   testWidgets('FLUTTER-GG : corridor lu « départ → arrivée »', (tester) async {
     final a = _buildAnnouncement(

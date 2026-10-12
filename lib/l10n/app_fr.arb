@@ -19066,6 +19066,30 @@
   "@listingTripFullMessage": {
     "description": "Pied de la feuille trajet quand le trajet est complet : bouton de demande grisé, FLUTTER-BG (traveler_announcement_bottom_sheet.dart)"
   },
+  "tripSpaceAlertNotifyButton": "Me prévenir si de la place se libère",
+  "@tripSpaceAlertNotifyButton": {
+    "description": "Bouton du pied de la feuille d'un trajet complet : s'abonner à la libération d'une place (FLUTTER-JH)"
+  },
+  "tripSpaceAlertSubscribedMessage": "On vous préviendra dès qu'une place se libère.",
+  "@tripSpaceAlertSubscribedMessage": {
+    "description": "Pied de la feuille d'un trajet complet, une fois abonné (FLUTTER-JH)"
+  },
+  "tripSpaceAlertCancelButton": "Ne plus me prévenir",
+  "@tripSpaceAlertCancelButton": {
+    "description": "Bouton secondaire : retirer l'abonnement à la libération d'une place (FLUTTER-JH)"
+  },
+  "tripSpaceAlertSubscribedSnack": "C'est noté : vous recevrez une notification si de la place se libère.",
+  "@tripSpaceAlertSubscribedSnack": {
+    "description": "Confirmation après l'abonnement à un trajet complet (FLUTTER-JH)"
+  },
+  "tripSpaceAlertSpaceAvailable": "De la place vient de se libérer : rouvrez le trajet pour faire votre demande.",
+  "@tripSpaceAlertSpaceAvailable": {
+    "description": "Le trajet n'est plus complet au moment de s'abonner (409 trip-not-full, FLUTTER-JH)"
+  },
+  "tripSpaceAlertError": "Impossible d'enregistrer l'alerte pour le moment. Réessayez.",
+  "@tripSpaceAlertError": {
+    "description": "Échec de l'abonnement ou du désabonnement à un trajet complet (FLUTTER-JH)"
+  },
   "reportSentTitle": "Signalement envoyé",
   "@reportSentTitle": {
     "description": "Titre de la confirmation d'envoi d'un signalement (incident_report_screen.dart, FLUTTER-BJ)"

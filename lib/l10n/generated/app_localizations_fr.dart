@@ -16790,6 +16790,29 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce trajet est complet : il n\'accepte plus de demande.';
 
   @override
+  String get tripSpaceAlertNotifyButton =>
+      'Me prévenir si de la place se libère';
+
+  @override
+  String get tripSpaceAlertSubscribedMessage =>
+      'On vous préviendra dès qu\'une place se libère.';
+
+  @override
+  String get tripSpaceAlertCancelButton => 'Ne plus me prévenir';
+
+  @override
+  String get tripSpaceAlertSubscribedSnack =>
+      'C\'est noté : vous recevrez une notification si de la place se libère.';
+
+  @override
+  String get tripSpaceAlertSpaceAvailable =>
+      'De la place vient de se libérer : rouvrez le trajet pour faire votre demande.';
+
+  @override
+  String get tripSpaceAlertError =>
+      'Impossible d\'enregistrer l\'alerte pour le moment. Réessayez.';
+
+  @override
   String get reportSentTitle => 'Signalement envoyé';
 
   @override

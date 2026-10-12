@@ -537,6 +537,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `corridor_alert_deleted` | CorridorAlertListBloc._onDelete — suppression d'une alerte corridor |
 | `corridor_alert_created` | CorridorAlertFormCubit.submit() — création d'une alerte corridor |
 | `corridor_alert_updated` | CorridorAlertFormCubit.submit() — édition d'une alerte corridor |
+| `trip_space_alert_subscribed` / `trip_space_alert_unsubscribed` | TripSpaceAlertCubit.subscribe()/unsubscribe() — « Me prévenir si de la place se libère » sur la feuille d'un trajet complet, activé ou retiré, confirmé par le serveur (`PUT`/`DELETE /me/trip-space-alerts/{id}`, FLUTTER-JH). Non émis sur un échec ni sur le 409 `trip-not-full`. Aucune propriété |
 | `favorites_opened` | FavoritesScreen.initState — ouverture du hub favoris |
 | `recipient_picker_opened` | RecipientPickerSheet.initState — ouverture de la sheet de sélection destinataire |
 | `recipient_selected` | RecipientBloc._onPicked — destinataire confirmé dans la sheet (propriété `source`: saved/phone_contact/new) |

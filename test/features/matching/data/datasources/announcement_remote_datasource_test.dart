@@ -566,6 +566,67 @@ void main() {
     });
   });
 
+  // ── FLUTTER-JH : trajets complets visibles ─────────────────────────────────
+
+  group('searchAnnouncementsPage — includeFull', () {
+    void stubSearch(Map<String, dynamic> body) {
+      when(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => _ok(body, '/announcements'));
+    }
+
+    Map<String, dynamic> capturedQuery() =>
+        verify(
+              () => mockDio.get(
+                '/announcements',
+                queryParameters: captureAny(named: 'queryParameters'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
+
+    test('includeFull envoyé seulement quand demandé', () async {
+      stubSearch({'content': <dynamic>[], 'totalElements': 0});
+
+      await datasource.searchAnnouncementsPage(includeFull: true);
+
+      expect(capturedQuery()['includeFull'], true);
+    });
+
+    test('absent par défaut (recherche de trajets compatibles)', () async {
+      stubSearch({'content': <dynamic>[], 'totalElements': 0});
+
+      await datasource.searchAnnouncementsPage();
+
+      expect(capturedQuery().containsKey('includeFull'), isFalse);
+    });
+
+    test('lit bookableElements, null sur un back antérieur', () async {
+      stubSearch({
+        'content': [_announcementJson],
+        'totalElements': 3,
+        'bookableElements': 2,
+      });
+      final withFull = await datasource.searchAnnouncementsPage(
+        includeFull: true,
+      );
+      expect(withFull.totalElements, 3);
+      expect(withFull.bookableElements, 2);
+
+      reset(mockDio);
+      stubSearch({
+        'content': [_announcementJson],
+        'totalElements': 1,
+      });
+      final legacy = await datasource.searchAnnouncementsPage(
+        includeFull: true,
+      );
+      expect(legacy.bookableElements, isNull);
+    });
+  });
+
   // ── countAnnouncements ───────────────────────────────────────────────────────
 
   group('countAnnouncements', () {

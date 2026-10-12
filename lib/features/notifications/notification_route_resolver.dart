@@ -199,6 +199,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'FLIGHT_PRICE_ALERT' => '/flights/alerts',
     'CORRIDOR_ALERT' when _isUuid(announcementId) =>
       '/traveler/$announcementId',
+    // FLUTTER-JH : de la place s'est libérée sur un trajet complet suivi →
+    // son détail, d'où l'on fait sa demande.
+    'TRIP_SPACE_FREED' when _isUuid(announcementId) =>
+      '/traveler/$announcementId',
     // Voyageur → détail du colis qui matche son alerte (push instantané)
     'CORRIDOR_ALERT' when _isUuid(requestId) =>
       '/package-requests/$requestId/public',

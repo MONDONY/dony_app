@@ -465,6 +465,24 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — TRIP_SPACE_FREED (FLUTTER-JH)', () {
+    test('place libérée sur un trajet suivi → détail du trajet', () {
+      expect(
+        resolveNotificationRoute('TRIP_SPACE_FREED', {
+          'announcementId': announcementId,
+        }),
+        '/traveler/$announcementId',
+      );
+    });
+
+    test('sans id de trajet valide → aucune route', () {
+      expect(
+        resolveNotificationRoute('TRIP_SPACE_FREED', {'announcementId': 'x'}),
+        isNull,
+      );
+    });
+  });
+
   group('resolveNotificationRoute — CORRIDOR_ALERT', () {
     const alertId = '0a1b2c3d-e5f6-7890-abcd-ef1234567890';
 

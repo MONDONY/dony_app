@@ -45,20 +45,22 @@ const kTestDeliveryAddress = AddressData(
   lng: -17.4902,
 );
 
-AnnouncementModel buildAnnouncement({String id = 'ann-001'}) =>
-    AnnouncementModel(
-      id: id,
-      travelerId: 'traveler-001',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime.now().add(const Duration(days: 10)),
-      availableKg: 20.0,
-      totalKg: 20.0,
-      pricePerKg: 5.0,
-      status: 'ACTIVE',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+AnnouncementModel buildAnnouncement({
+  String id = 'ann-001',
+  String status = 'ACTIVE',
+}) => AnnouncementModel(
+  id: id,
+  travelerId: 'traveler-001',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime.now().add(const Duration(days: 10)),
+  availableKg: 20.0,
+  totalKg: 20.0,
+  pricePerKg: 5.0,
+  status: status,
+  createdAt: DateTime.now(),
+  updatedAt: DateTime.now(),
+);
 
 AnnouncementSearchPage _page(
   List<AnnouncementModel> content, {
@@ -824,6 +826,7 @@ void main() {
           sortDir: any(named: 'sortDir'),
           urgent: any(named: 'urgent'),
           page: page,
+          includeFull: any(named: 'includeFull'),
         ),
       ).thenAnswer((_) async => result);
     }
@@ -886,6 +889,68 @@ void main() {
     );
   });
 
+  // FLUTTER-JH : les trajets complets restent listés, grisés, après les
+  // réservables, mais ne comptent pas dans « N trajets ».
+  group('trajets complets visibles', () {
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'la recherche demande les complets, le compteur lit bookableElements',
+      build: () {
+        when(
+          () => mockRepo.searchAnnouncementsPage(
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            departureDateFrom: any(named: 'departureDateFrom'),
+            departureDateTo: any(named: 'departureDateTo'),
+            minAvailableKg: any(named: 'minAvailableKg'),
+            userLat: any(named: 'userLat'),
+            userLng: any(named: 'userLng'),
+            radiusKm: any(named: 'radiusKm'),
+            sortBy: any(named: 'sortBy'),
+            sortDir: any(named: 'sortDir'),
+            urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
+            includeFull: true,
+          ),
+        ).thenAnswer(
+          (_) async => AnnouncementSearchPage(
+            content: [
+              buildAnnouncement(id: 'a'),
+              buildAnnouncement(id: 'f'),
+            ],
+            totalElements: 2,
+            bookableElements: 1,
+            page: 0,
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementSearchLoaded &&
+              s.results.length == 2 &&
+              s.displayCount == 1 &&
+              !s.hasMore,
+        ),
+      ],
+    );
+
+    test('back antérieur (pas de bookableElements) : total serveur', () {
+      final state = AnnouncementSearchLoaded([
+        buildAnnouncement(),
+      ], totalElements: 5);
+      expect(state.displayCount, 5);
+    });
+
+    test('total inconnu : seuls les réservables chargés comptent', () {
+      final full = buildAnnouncement(id: 'f', status: 'FULL');
+      final state = AnnouncementSearchLoaded([buildAnnouncement(), full]);
+      expect(state.displayCount, 1);
+    });
+  });
+
   group('AnnouncementSearchRequested', () {
     blocTest<AnnouncementBloc, AnnouncementState>(
       'recherche avec résultats → [Loading, AnnouncementSearchLoaded]',
@@ -904,6 +969,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).thenAnswer((_) async => _page([buildAnnouncement()]));
         return buildBloc();
@@ -939,6 +1005,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).thenAnswer((_) async => _page([]));
         return buildBloc();
@@ -969,6 +1036,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).thenThrow(Exception('Network error'));
         return buildBloc();
@@ -994,6 +1062,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).thenAnswer((_) async => _page([buildAnnouncement(id: 'new')]));
         return buildBloc();
@@ -1040,6 +1109,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).thenThrow(Exception('network down'));
         return buildBloc();
@@ -1082,6 +1152,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).thenAnswer((_) async => _page(const []));
         return buildBloc();
@@ -1110,6 +1181,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).called(1);
       },
@@ -1132,6 +1204,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).thenAnswer((_) async => _page(const []));
         return buildBloc();
@@ -1152,6 +1225,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: true,
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).called(1);
       },
@@ -1174,6 +1248,7 @@ void main() {
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
             page: any(named: 'page'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).thenAnswer((_) async => _page(const []));
         return buildBloc();
@@ -1192,6 +1267,7 @@ void main() {
             radiusKm: any(named: 'radiusKm'),
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
+            includeFull: any(named: 'includeFull'),
           ),
         ).called(1);
       },

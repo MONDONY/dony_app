@@ -74,6 +74,10 @@ class AnnouncementSearchLoaded extends AnnouncementState {
   /// `null` quand il n'est pas connu.
   final int? totalElements;
 
+  /// Trajets réservables seuls, quand la liste inclut aussi les complets
+  /// (FLUTTER-JH) ; `null` sur un back antérieur.
+  final int? bookableElements;
+
   /// Dernière page chargée (0 = première).
   final int page;
 
@@ -84,6 +88,7 @@ class AnnouncementSearchLoaded extends AnnouncementState {
     this.results, {
     this.isReloading = false,
     this.totalElements,
+    this.bookableElements,
     this.page = 0,
     this.isLoadingMore = false,
   }) : isEmpty = results.isEmpty;
@@ -91,8 +96,14 @@ class AnnouncementSearchLoaded extends AnnouncementState {
   /// D'autres trajets restent à charger.
   bool get hasMore => totalElements != null && results.length < totalElements!;
 
-  /// Nombre à afficher : le total serveur s'il est connu, sinon la liste.
-  int get displayCount => totalElements ?? results.length;
+  /// Nombre à afficher : les trajets réservables. Un trajet complet reste
+  /// listé mais ne se réserve pas, l'annoncer dans « N trajets » promettrait
+  /// une place qui n'existe pas (FLUTTER-JH). Repli : le total serveur, puis
+  /// les seuls réservables chargés.
+  int get displayCount =>
+      bookableElements ??
+      totalElements ??
+      results.where((a) => !a.isFull).length;
 }
 
 class AnnouncementNotFound extends AnnouncementState {}
