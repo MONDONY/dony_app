@@ -9969,5 +9969,9 @@
   "moneyChannelMobileMoney": "Mobile Money",
   "@moneyChannelMobileMoney": {
     "description": "Mon argent : mention du canal sur la ligne d'un colis payé en mobile money (FLUTTER-P3)"
+  },
+  "scanOfflineQueueRetryNow": "Retry now",
+  "@scanOfflineQueueRetryNow": {
+    "description": "File des lectures hors ligne : renvoyer tout de suite les étapes en attente (FLUTTER-KZ)"
   }
 }

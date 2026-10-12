@@ -6583,6 +6583,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
         placeholderMarker('tripCurrency'),
       ),
   'moneyChannelMobileMoney': (l) => l.moneyChannelMobileMoney,
+  'scanOfflineQueueRetryNow': (l) => l.scanOfflineQueueRetryNow,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

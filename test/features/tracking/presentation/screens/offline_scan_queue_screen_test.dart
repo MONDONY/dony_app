@@ -3,13 +3,17 @@ import 'dart:io';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+
+class _MockOfflineSyncService extends Mock implements OfflineSyncService {}
 
 late Directory _tempDir;
 late HiveService _hiveService;
@@ -210,6 +214,71 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+  });
+
+  // FLUTTER-KZ : l'étape restait « en attente du réseau » sans aucun moyen de
+  // la renvoyer quand le téléphone ne changeait pas de réseau.
+  group('OfflineScanQueueScreen — réessayer maintenant', () {
+    late _MockOfflineSyncService sync;
+
+    setUp(() {
+      sync = _MockOfflineSyncService();
+      when(() => sync.syncAll()).thenAnswer((_) async {});
+      if (getIt.isRegistered<OfflineSyncService>()) {
+        getIt.unregister<OfflineSyncService>();
+      }
+      getIt.registerSingleton<OfflineSyncService>(sync);
+    });
+
+    tearDown(() => getIt.unregister<OfflineSyncService>());
+
+    testWidgets('file vide : pas de bouton', (tester) async {
+      await tester.pumpWidget(_buildApp());
+      await tester.pump();
+      expect(find.byKey(const Key('offline-queue-retry')), findsNothing);
+    });
+
+    testWidgets('étape en attente : le bouton relance l\'envoi', (
+      tester,
+    ) async {
+      await tester.runAsync(
+        () => Hive.box<Map>(HiveService.offlineQueueBox).add({
+          'bidId': 'bid-123',
+          'eventType': 'DEPART',
+          'offlineTimestamp': DateTime.now().toUtc().toIso8601String(),
+        }),
+      );
+      await tester.pumpWidget(_buildApp());
+      await tester.pump();
+
+      final button = find.byKey(const Key('offline-queue-retry'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
+
+      verify(() => sync.syncAll()).called(1);
+    });
+
+    testWidgets('étape envoyée : retirée de la liste sans rouvrir l\'écran', (
+      tester,
+    ) async {
+      final box = Hive.box<Map>(HiveService.offlineQueueBox);
+      final key = await tester.runAsync(
+        () => box.add({
+          'bidId': 'bid-123',
+          'eventType': 'DEPART',
+          'offlineTimestamp': DateTime.now().toUtc().toIso8601String(),
+        }),
+      );
+      await tester.pumpWidget(_buildApp());
+      await tester.pump();
+      expect(find.byKey(const Key('offline-queue-retry')), findsOneWidget);
+
+      await tester.runAsync(() => box.delete(key));
+      await tester.pump();
+
+      expect(find.byKey(const Key('offline-queue-retry')), findsNothing);
     });
   });
 }
