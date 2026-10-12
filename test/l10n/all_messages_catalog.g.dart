@@ -5606,6 +5606,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'travelerContactSms': (l) => l.travelerContactSms,
   'travelerContactCall': (l) => l.travelerContactCall,
   'travelerContactCardTitle': (l) => l.travelerContactCardTitle,
+  'travelerContactAvailableAfterPickup': (l) =>
+      l.travelerContactAvailableAfterPickup,
   'travelerContactMessageCopied': (l) => l.travelerContactMessageCopied,
   'travelerContactIntro': (l) =>
       l.travelerContactIntro(placeholderMarker('traveler')),

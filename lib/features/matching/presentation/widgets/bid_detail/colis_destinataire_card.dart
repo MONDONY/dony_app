@@ -21,7 +21,9 @@ class ColisDestinataireCard extends StatelessWidget {
   final BidModel bid;
 
   /// Vue expéditeur : le téléphone du destinataire est toujours affiché. Vue
-  /// voyageur : seulement une fois la demande acceptée ([bidAllowsContact]).
+  /// voyageur : seulement une fois le colis retiré
+  /// ([bidAllowsRecipientContact], FLUTTER-JT), même si un ancien serveur
+  /// sert déjà le numéro à `ACCEPTED`.
   final bool isSender;
 
   const ColisDestinataireCard({
@@ -73,7 +75,8 @@ class ColisDestinataireCard extends StatelessWidget {
             ),
           ],
           if (isSender ||
-              (bidAllowsContact(bid.status) && !bid.recipientDeclined)) ...[
+              (bidAllowsRecipientContact(bid.status) &&
+                  !bid.recipientDeclined)) ...[
             const SizedBox(height: DonySpacing.sm),
             InfoRow(
               label: l.bidDetailPhoneLabel,

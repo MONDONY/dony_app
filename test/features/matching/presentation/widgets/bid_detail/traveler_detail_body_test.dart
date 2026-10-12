@@ -133,7 +133,7 @@ void main() {
   );
 
   group('contact du destinataire (lot 3B)', () {
-    for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+    for (final status in ['HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
       testWidgets('$status + téléphone → rangée WhatsApp / SMS / Appeler', (
         tester,
       ) async {
@@ -146,6 +146,40 @@ void main() {
         );
       });
     }
+
+    // FLUTTER-JT : le voyageur ne joint le destinataire qu'après le retrait.
+    // Même si un ancien serveur sert encore le numéro à ACCEPTED, ni carte, ni
+    // boutons, ni numéro : une ligne discrète annonce que le contact viendra.
+    testWidgets('ACCEPTED + téléphone (ancien serveur) → ligne discrète seule', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('ACCEPTED', recipientPhone: '+221700000000'));
+      expect(find.byType(TravelerRecipientContactCard), findsNothing);
+      expect(find.text('Contacter le destinataire'), findsNothing);
+      expect(find.byKey(const Key('recipient-contact-sms-b1')), findsNothing);
+      expect(find.text('+221700000000'), findsNothing);
+      expect(find.byType(TravelerRecipientContactPendingNote), findsOneWidget);
+      expect(
+        find.text(
+          'Le contact du destinataire sera disponible après la récupération du colis.',
+        ),
+        findsOneWidget,
+      );
+      // Le contact de l'expéditeur, lui, reste ouvert dès l'acceptation.
+      expect(
+        _contactIcon(ExpediteurContactCard, 'message-circle'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('HANDED_OVER → numéro affiché, plus de ligne discrète', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('HANDED_OVER', recipientPhone: '+221700000000'));
+      expect(find.text('+221700000000'), findsWidgets);
+      expect(find.byType(TravelerRecipientContactCard), findsOneWidget);
+      expect(find.byType(TravelerRecipientContactPendingNote), findsNothing);
+    });
 
     testWidgets('demande pas encore acceptée → rangée masquée', (tester) async {
       await _pump(tester, _bid('PENDING', recipientPhone: '+221700000000'));
