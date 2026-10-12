@@ -18860,4 +18860,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanOfflineQueueRetryNow => 'Retry now';
+
+  @override
+  String get negotiationCashDealConfirmedTitle => 'Deal confirmed';
+
+  @override
+  String negotiationCashDealConfirmedMessage(String amount) {
+    return 'You\'ll pay $amount in cash to the traveler when you hand over the parcel. They pay the Yadony fee on their side to confirm the shipment.';
+  }
+
+  @override
+  String get negotiationThreadSeeParcelButton => 'View the parcel';
+
+  @override
+  String get negotiationThreadCounterSameAmountHint =>
+      'Enter your new price here: this amount is what gets proposed, not the one written in the message.';
 }

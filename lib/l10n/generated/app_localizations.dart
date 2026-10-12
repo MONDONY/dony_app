@@ -30829,6 +30829,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Réessayer maintenant'**
   String get scanOfflineQueueRetryNow;
+
+  /// Fil de négociation d'un trajet : accord en espèces conclu, vu par l'expéditeur (FLUTTER-NG)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accord conclu'**
+  String get negotiationCashDealConfirmedTitle;
+
+  /// Détail de l'accord en espèces conclu, montant formaté dans la devise du trajet (FLUTTER-NG)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous paierez {amount} en espèces au voyageur, à la remise du colis. Il règle de son côté la commission Yadony pour confirmer l\'envoi.'**
+  String negotiationCashDealConfirmedMessage(String amount);
+
+  /// Fil de négociation d'un trajet, accord conclu : ouvre le colis (FLUTTER-P4, FLUTTER-MM)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le colis'**
+  String get negotiationThreadSeeParcelButton;
+
+  /// Contre-offre au montant inchangé : bouton inactif tant que le prix n'est pas modifié (FLUTTER-MK)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez ici votre nouveau prix : c\'est ce montant qui est proposé, pas celui écrit dans le message.'**
+  String get negotiationThreadCounterSameAmountHint;
 }
 
 class _AppLocalizationsDelegate

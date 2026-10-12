@@ -18995,4 +18995,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get scanOfflineQueueRetryNow => 'Réessayer maintenant';
+
+  @override
+  String get negotiationCashDealConfirmedTitle => 'Accord conclu';
+
+  @override
+  String negotiationCashDealConfirmedMessage(String amount) {
+    return 'Vous paierez $amount en espèces au voyageur, à la remise du colis. Il règle de son côté la commission Yadony pour confirmer l\'envoi.';
+  }
+
+  @override
+  String get negotiationThreadSeeParcelButton => 'Voir le colis';
+
+  @override
+  String get negotiationThreadCounterSameAmountHint =>
+      'Indiquez ici votre nouveau prix : c\'est ce montant qui est proposé, pas celui écrit dans le message.';
 }

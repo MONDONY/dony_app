@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -131,6 +132,23 @@ class _BidNegotiationThreadScreenState
         if (state.negotiation.needsMyPayment) break;
         refreshActivityAfterBidChange(context);
         if (state.negotiation.needsMyCommissionSettlement) break;
+        // Accord en espèces vu par l'expéditeur : rien à payer dans l'app,
+        // le fil se refermait sans un mot et l'expéditeur ne savait pas si
+        // l'accord avait abouti (FLUTTER-NG).
+        final deal = state.negotiation;
+        if (deal.isAwaitingCashSettlement && !deal.isTravelerView) {
+          DonySnackbar.show(
+            context,
+            title: context.l10n.negotiationCashDealConfirmedTitle,
+            message: context.l10n.negotiationCashDealConfirmedMessage(
+              CurrencyFormatter.format(
+                deal.proposedGrossEur,
+                SupportedCurrency.fromCodeOrDefault(deal.currency),
+              ),
+            ),
+            type: DonySnackbarType.success,
+          );
+        }
         context.pop(true);
       case BidNegotiationAction.rejected:
       case BidNegotiationAction.cancelled:
@@ -327,9 +345,9 @@ ThreadStatusVariant tripNegoVariant(BidNegotiation n) {
   if (n.isAwaitingCashSettlement) {
     return ThreadStatusVariant.awaitingCommission;
   }
+  if (n.isDealConcluded) return ThreadStatusVariant.accepted;
   return switch (n.status) {
     'NEGOTIATING' => ThreadStatusVariant.open,
-    'ACCEPTED' => ThreadStatusVariant.accepted,
     _ => ThreadStatusVariant.terminal,
   };
 }
@@ -891,13 +909,34 @@ class _ThreadActions extends StatelessWidget {
       );
     }
 
+    if (negotiation.isDealConcluded) {
+      // « Rendez-vous sur votre colis » sans aucun bouton pour y aller
+      // (FLUTTER-P4, FLUTTER-MM).
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          hint(
+            l.negotiationThreadClosedAccepted,
+            'nego-closed-hint',
+            icon: 'circle-check',
+            tint: cs.success,
+          ),
+          const SizedBox(height: DonySpacing.md),
+          DonyButton(
+            key: const Key('nego-see-parcel-btn'),
+            label: l.negotiationThreadSeeParcelButton,
+            onPressed: () => context.push('/bids/$bidId'),
+          ),
+        ],
+      );
+    }
+
     if (negotiation.isClosed) {
-      final accepted = negotiation.status == 'ACCEPTED';
       return hint(
         _closedLabel(l, negotiation),
         'nego-closed-hint',
-        icon: accepted ? 'circle-check' : 'circle-x',
-        tint: accepted ? cs.success : cs.onSurfaceVariant,
+        icon: 'circle-x',
+        tint: cs.onSurfaceVariant,
       );
     }
 
@@ -987,7 +1026,7 @@ class _ThreadActions extends StatelessWidget {
   /// plutôt que le dernier message, pour ne dépendre d'aucun ordre de tri.
   static String _closedLabel(AppLocalizations l, BidNegotiation negotiation) =>
       switch (negotiation.status) {
-        'ACCEPTED' => l.negotiationThreadClosedAccepted,
+        _ when negotiation.isDealConcluded => l.negotiationThreadClosedAccepted,
         'NEGOTIATION_CLOSED' =>
           negotiation.messages.any(
                 (m) => m.kind == BidNegotiationMessageKind.reject,
@@ -1365,8 +1404,15 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
 
   double? _read() => parsePriceInput(_amountCtrl.text);
 
+  /// Montant inchangé : la contre-offre partait au prix d'en face pendant que
+  /// le vrai prix était tapé dans le message (FLUTTER-MK).
+  bool get _unchanged {
+    final amount = _read();
+    return amount != null && (amount - widget.initialAmount).abs() < 0.01;
+  }
+
   void _validate() {
-    final isValid = _read() != null;
+    final isValid = _read() != null && !_unchanged;
     if (isValid == _valid) return;
     _valid = isValid;
     widget.onSubmitReady(isValid ? _submit : null);
@@ -1400,6 +1446,21 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
           ),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           requiredLabel: true,
+        ),
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _amountCtrl,
+          builder: (context, _, _) => _unchanged
+              ? Padding(
+                  padding: const EdgeInsets.only(top: DonySpacing.xs),
+                  child: Text(
+                    l.negotiationThreadCounterSameAmountHint,
+                    key: const Key('nego-counter-same-amount'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
         const SizedBox(height: DonySpacing.base),
         DonyTextField(
