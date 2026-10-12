@@ -16680,6 +16680,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'This trip is full: it no longer accepts requests.';
 
   @override
+  String get tripSpaceAlertNotifyButton => 'Notify me if space opens up';
+
+  @override
+  String get tripSpaceAlertSubscribedMessage =>
+      'We\'ll let you know as soon as space opens up.';
+
+  @override
+  String get tripSpaceAlertCancelButton => 'Stop notifying me';
+
+  @override
+  String get tripSpaceAlertSubscribedSnack =>
+      'Got it: you\'ll get a notification if space opens up.';
+
+  @override
+  String get tripSpaceAlertSpaceAvailable =>
+      'Space just opened up: reopen the trip to send your request.';
+
+  @override
+  String get tripSpaceAlertError =>
+      'Couldn\'t save the alert right now. Please try again.';
+
+  @override
   String get reportSentTitle => 'Report sent';
 
   @override

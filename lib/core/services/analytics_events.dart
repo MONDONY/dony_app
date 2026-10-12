@@ -551,6 +551,13 @@ abstract final class AnalyticsEvents {
   static const corridorAlertDeleted = 'corridor_alert_deleted';
   static const corridorAlertCreated = 'corridor_alert_created';
   static const corridorAlertUpdated = 'corridor_alert_updated';
+
+  /// « Me prévenir si de la place se libère » sur un trajet complet, accepté
+  /// par le serveur (FLUTTER-JH).
+  static const tripSpaceAlertSubscribed = 'trip_space_alert_subscribed';
+
+  /// Alerte de place retirée depuis la feuille du trajet complet (FLUTTER-JH).
+  static const tripSpaceAlertUnsubscribed = 'trip_space_alert_unsubscribed';
   static const corridorAlertMatchesViewed = 'corridor_alert_matches_viewed';
 
   // Favorites

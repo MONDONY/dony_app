@@ -8,6 +8,7 @@ class AnnouncementSearchPage {
     required this.content,
     required this.totalElements,
     required this.page,
+    this.bookableElements,
   });
 
   factory AnnouncementSearchPage.fromJson(
@@ -22,10 +23,17 @@ class AnnouncementSearchPage {
       // Un back qui omettrait le total : on s'en tient à ce qui est chargé.
       totalElements: (json['totalElements'] as num?)?.toInt() ?? content.length,
       page: page,
+      bookableElements: (json['bookableElements'] as num?)?.toInt(),
     );
   }
 
   final List<AnnouncementModel> content;
   final int totalElements;
   final int page;
+
+  /// Trajets réservables seuls, quand la page inclut aussi les complets
+  /// (FLUTTER-JH). [totalElements] compte alors les deux, pour paginer
+  /// jusqu'au bout ; ce nombre-ci alimente le compteur « N trajets ». `null`
+  /// sur un back antérieur, qui ne renvoie que des réservables.
+  final int? bookableElements;
 }

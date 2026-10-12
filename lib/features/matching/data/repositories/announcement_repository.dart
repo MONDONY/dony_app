@@ -177,6 +177,7 @@ class AnnouncementRepository {
     int? maxStops,
     List<String>? paymentMethods,
     int page = 0,
+    bool includeFull = false,
   }) {
     return _remoteDatasource.searchAnnouncementsPage(
       departureCity: departureCity,
@@ -201,6 +202,7 @@ class AnnouncementRepository {
       maxStops: maxStops,
       paymentMethods: paymentMethods,
       page: page,
+      includeFull: includeFull,
     );
   }
 

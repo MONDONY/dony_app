@@ -5858,6 +5858,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorTrackingNumberRequiredMessage': (l) =>
       l.errorTrackingNumberRequiredMessage,
   'listingTripFullMessage': (l) => l.listingTripFullMessage,
+  'tripSpaceAlertNotifyButton': (l) => l.tripSpaceAlertNotifyButton,
+  'tripSpaceAlertSubscribedMessage': (l) => l.tripSpaceAlertSubscribedMessage,
+  'tripSpaceAlertCancelButton': (l) => l.tripSpaceAlertCancelButton,
+  'tripSpaceAlertSubscribedSnack': (l) => l.tripSpaceAlertSubscribedSnack,
+  'tripSpaceAlertSpaceAvailable': (l) => l.tripSpaceAlertSpaceAvailable,
+  'tripSpaceAlertError': (l) => l.tripSpaceAlertError,
   'reportSentTitle': (l) => l.reportSentTitle,
   'addressCopiedMessage': (l) => l.addressCopiedMessage,
   'parcelLocationsCurrentStep': (l) => l.parcelLocationsCurrentStep,

@@ -214,6 +214,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         AnnouncementSearchLoaded(
           result.content,
           totalElements: result.totalElements,
+          bookableElements: result.bookableElements,
         ),
       );
     } catch (e, stacktrace) {
@@ -261,6 +262,9 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       maxStops: event.maxStops,
       paymentMethods: event.paymentMethods,
       page: page,
+      // FLUTTER-JH : les trajets complets restent visibles, grisés, après
+      // les réservables (« Me prévenir si de la place se libère »).
+      includeFull: true,
     );
   }
 
@@ -281,6 +285,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       AnnouncementSearchLoaded(
         current.results,
         totalElements: current.totalElements,
+        bookableElements: current.bookableElements,
         page: current.page,
         isLoadingMore: true,
       ),
@@ -297,6 +302,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
             ...next.content.where((a) => !known.contains(a.id)),
           ],
           totalElements: next.totalElements,
+          bookableElements: next.bookableElements,
           page: next.page,
         ),
       );
@@ -307,6 +313,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         AnnouncementSearchLoaded(
           current.results,
           totalElements: current.totalElements,
+          bookableElements: current.bookableElements,
           page: current.page,
         ),
       );

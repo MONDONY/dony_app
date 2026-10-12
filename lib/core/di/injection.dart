@@ -70,9 +70,11 @@ import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dar
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_summary_cubit.dart';
+import 'package:dony/features/corridor_alerts/bloc/trip_space_alert_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/corridor_alerts/data/trip_space_alert_repository.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/data/datasources/delivery_address_datasource.dart';
 import 'package:dony/features/delivery_addresses/data/repositories/delivery_address_repository.dart';
@@ -1396,6 +1398,18 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<FlightsRepository>(),
       getIt<AnalyticsService>(),
       getIt<ExternalUrlLauncher>(),
+    ),
+  );
+  // « Me prévenir si de la place se libère » sur un trajet complet (FLUTTER-JH).
+  getIt.registerLazySingleton<TripSpaceAlertRepository>(
+    () => TripSpaceAlertRepository(getIt<ApiClient>()),
+  );
+  // param1 = announcementId.
+  getIt.registerFactoryParam<TripSpaceAlertCubit, String, void>(
+    (announcementId, _) => TripSpaceAlertCubit(
+      getIt<TripSpaceAlertRepository>(),
+      getIt<AnalyticsService>(),
+      announcementId: announcementId,
     ),
   );
   // Résumé des nouveautés pour la tuile « Mes alertes » du hub Activités.
