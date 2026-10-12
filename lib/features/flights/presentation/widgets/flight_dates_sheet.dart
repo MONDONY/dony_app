@@ -15,22 +15,27 @@ class FlightDatesChoice {
 enum _Leg { departure, returnLeg }
 
 /// Feuille « Quand partez-vous ? » : jour précis (calendrier) ou mois entier
-/// (grille de mois), aller simple ou aller-retour. Rend le choix, `null` si
-/// la feuille est fermée sans valider.
+/// (grille de mois). L'aller-retour se choisit dans le formulaire ([roundTrip])
+/// ; [returnFirst] ouvre la feuille sur la date du retour. Rend le choix,
+/// `null` si la feuille est fermée sans valider.
 abstract final class FlightDatesSheet {
   static Future<FlightDatesChoice?> show(
     BuildContext context, {
     FlightWhen? departure,
     FlightWhen? returnDate,
+    bool roundTrip = false,
+    bool returnFirst = false,
     DateTime? today,
   }) {
     final now = today ?? DateTime.now();
     final state = _DatesState(
-      roundTrip: ValueNotifier(returnDate != null),
+      roundTrip: roundTrip || returnDate != null,
       wholeMonth: ValueNotifier(departure?.wholeMonth ?? false),
       departure: ValueNotifier(departure?.date),
       returnDate: ValueNotifier(returnDate?.date),
-      leg: ValueNotifier(_Leg.departure),
+      leg: ValueNotifier(
+        returnFirst && departure != null ? _Leg.returnLeg : _Leg.departure,
+      ),
       today: DateTime(now.year, now.month, now.day),
     );
     return DonyBottomSheet.show<FlightDatesChoice>(
@@ -53,7 +58,7 @@ class _DatesState {
     required this.today,
   });
 
-  final ValueNotifier<bool> roundTrip;
+  final bool roundTrip;
   final ValueNotifier<bool> wholeMonth;
   final ValueNotifier<DateTime?> departure;
   final ValueNotifier<DateTime?> returnDate;
@@ -61,7 +66,7 @@ class _DatesState {
   final DateTime today;
 
   Listenable get all =>
-      Listenable.merge([roundTrip, wholeMonth, departure, returnDate, leg]);
+      Listenable.merge([wholeMonth, departure, returnDate, leg]);
 
   FlightWhen? _when(DateTime? d) {
     if (d == null) return null;
@@ -70,14 +75,14 @@ class _DatesState {
 
   FlightDatesChoice get choice => FlightDatesChoice(
     departure: _when(departure.value),
-    returnDate: roundTrip.value ? _when(returnDate.value) : null,
+    returnDate: roundTrip ? _when(returnDate.value) : null,
   );
 
   /// Un retour qui précède l'aller (au jour, ou au mois) est refusé.
   bool get isValid {
     final out = departure.value;
     final back = returnDate.value;
-    if (!roundTrip.value || out == null || back == null) return true;
+    if (!roundTrip || out == null || back == null) return true;
     return wholeMonth.value
         ? DateTime(
                 back.year,
@@ -92,14 +97,13 @@ class _DatesState {
       departure.value = d;
       final back = returnDate.value;
       if (back != null && back.isBefore(d)) returnDate.value = null;
-      if (roundTrip.value) leg.value = _Leg.returnLeg;
+      if (roundTrip) leg.value = _Leg.returnLeg;
     } else {
       returnDate.value = d;
     }
   }
 
   void dispose() {
-    roundTrip.dispose();
     wholeMonth.dispose();
     departure.dispose();
     returnDate.dispose();
@@ -121,7 +125,7 @@ class _DatesBody extends StatelessWidget {
       listenable: state.all,
       builder: (context, _) {
         final wholeMonth = state.wholeMonth.value;
-        final roundTrip = state.roundTrip.value;
+        final roundTrip = state.roundTrip;
         String label(DateTime? d) => d == null
             ? l.flightsDatesAny
             : wholeMonth
@@ -131,19 +135,6 @@ class _DatesBody extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SwitchListTile(
-              key: const Key('flight-dates-roundtrip'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l.flightsRoundTrip),
-              value: roundTrip,
-              onChanged: (v) {
-                state.roundTrip.value = v;
-                if (!v) {
-                  state.returnDate.value = null;
-                  state.leg.value = _Leg.departure;
-                }
-              },
-            ),
             Row(
               children: [
                 Expanded(

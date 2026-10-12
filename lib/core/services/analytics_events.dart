@@ -669,4 +669,10 @@ abstract final class AnalyticsEvents {
   static const flightsAlertCreated = 'flights_alert_created';
   static const flightsAlertToggled = 'flights_alert_toggled';
   static const flightsAlertDeleted = 'flights_alert_deleted';
+  static const flightsSortTabChanged = 'flights_sort_tab_changed';
+  static const flightsRecentSearchOpened = 'flights_recent_search_opened';
+  static const flightsRecentSearchesCleared = 'flights_recent_searches_cleared';
+  static const flightsAllAirlinesOpened = 'flights_all_airlines_opened';
+  static const flightsEmptySuggestionTapped = 'flights_empty_suggestion_tapped';
+  static const flightsLocationUsed = 'flights_location_used';
 }

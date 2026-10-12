@@ -108,6 +108,11 @@ const _sameInBothLanguages = <String>{
   'flightsRouteTitle', // « {origin} → {destination} » : le trajet, sans mot
   'flightsStopsDirect', // « Direct » se dit pareil
   'flightsAlertAtMost', // « ≤ {price} » : symbole et montant
+  'flightsFieldDestination', // « Destination » se dit pareil
+  'flightsRouteRoundTrip', // « {origin} ↔ {destination} » : symbole seul
+  'flightsDateRange', // « {start} – {end} » : dates déjà localisées
+  'flightsTabDirect', // « Direct » se dit pareil
+  'flightsVia', // « via {gate} » se dit pareil
   'recipientNotifyRoute', // « (Paris → Dakar) » : seulement le trajet, sans mot
   'commonOk', // « OK » se dit pareil
   'tripStopsDirect', // « Direct » (vol direct) se dit pareil (FLUTTER-GE)

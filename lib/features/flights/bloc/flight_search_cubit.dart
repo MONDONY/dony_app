@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/flights/data/datasources/flight_recent_store.dart';
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_filters.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
+import 'package:dony/features/flights/data/models/flight_recent_search.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/data/models/flight_search_result.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
@@ -15,12 +17,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 enum FlightSearchStatus { editing, loading, loaded, error }
 
+/// Sortie proposée par l'écran « Aucun vol » (propriété `kind` de
+/// `flights_empty_suggestion_tapped`).
+enum FlightEmptySuggestion { paris, wholeMonth, aviasales, alert }
+
 class FlightSearchState extends Equatable {
   const FlightSearchState({
     this.query = const FlightSearchQuery(),
     this.status = FlightSearchStatus.editing,
     this.result,
     this.filters = const FlightFilters(),
+    this.tab = FlightResultsTab.cheapest,
+    this.recents = const [],
     this.error,
   });
 
@@ -28,23 +36,42 @@ class FlightSearchState extends Equatable {
   final FlightSearchStatus status;
   final FlightSearchResult? result;
   final FlightFilters filters;
+  final FlightResultsTab tab;
+
+  /// Recherches récentes gardées sur le téléphone (« Vos recherches »).
+  final List<FlightRecentSearch> recents;
   final Object? error;
 
   /// Vrai dès qu'une recherche est lancée ou affichée : l'onglet montre alors
   /// les résultats au lieu du formulaire.
   bool get showsResults => status != FlightSearchStatus.editing;
 
-  List<FlightOffer> get visibleOffers =>
-      filters.apply(result?.offers ?? const []);
+  /// Offres qui passent les filtres de la feuille, dans l'ordre du prix.
+  List<FlightOffer> get filteredOffers =>
+      filters.copyWith(sort: FlightSort.cheapest).apply(result?.offers ?? []);
 
-  /// Offre la moins chère et la plus rapide de TOUTES les offres reçues : les
-  /// tampons ne bougent pas quand on filtre.
+  /// Meilleure offre de chaque onglet, calculée sur les offres filtrées : les
+  /// onglets suivent les filtres.
+  Map<FlightResultsTab, FlightTabSummary> get tabSummaries =>
+      FlightTabSummary.of(filteredOffers);
+
+  /// Onglet réellement appliqué : « Direct » sans vol direct retombe sur
+  /// « Le moins cher » plutôt que d'afficher une liste vide.
+  FlightResultsTab get effectiveTab =>
+      tabSummaries.containsKey(tab) ? tab : FlightResultsTab.cheapest;
+
+  List<FlightOffer> get visibleOffers =>
+      FlightTabSummary.rank(filteredOffers, effectiveTab);
+
+  /// Offre la moins chère de TOUTES les offres reçues (seuil proposé de
+  /// l'alerte prix).
   FlightOffer? get cheapest {
     final offers = result?.offers ?? const <FlightOffer>[];
     if (offers.isEmpty) return null;
     return offers.reduce((a, b) => b.price < a.price ? b : a);
   }
 
+  /// Offre la plus rapide de toutes les offres reçues.
   FlightOffer? get fastest {
     final timed = (result?.offers ?? const <FlightOffer>[])
         .where((o) => o.durationMinutes != null)
@@ -61,26 +88,57 @@ class FlightSearchState extends Equatable {
     FlightSearchResult? result,
     bool clearResult = false,
     FlightFilters? filters,
+    FlightResultsTab? tab,
+    List<FlightRecentSearch>? recents,
     Object? error,
   }) => FlightSearchState(
     query: query ?? this.query,
     status: status ?? this.status,
     result: clearResult ? null : (result ?? this.result),
     filters: filters ?? this.filters,
+    tab: tab ?? this.tab,
+    recents: recents ?? this.recents,
     error: error,
   );
 
   @override
-  List<Object?> get props => [query, status, result, filters, error];
+  List<Object?> get props => [
+    query,
+    status,
+    result,
+    filters,
+    tab,
+    recents,
+    error,
+  ];
 }
 
-/// Formulaire, résultats et filtres de l'onglet Billets.
+/// Formulaire, résultats, onglets de tri, filtres et historique de l'onglet
+/// Billets.
 class FlightSearchCubit extends Cubit<FlightSearchState> {
-  FlightSearchCubit(this._repository, this._analytics)
-    : super(const FlightSearchState());
+  FlightSearchCubit(
+    this._repository,
+    this._analytics, {
+    FlightRecentStore? recents,
+    DateTime Function()? clock,
+  }) : _recents = recents ?? MemoryFlightRecentStore(),
+       _clock = clock ?? DateTime.now,
+       super(const FlightSearchState()) {
+    emit(state.copyWith(recents: _recents.read()));
+  }
 
   final FlightsRepository _repository;
   final AnalyticsService _analytics;
+  final FlightRecentStore _recents;
+  final DateTime Function() _clock;
+
+  /// Ville proposée en repli quand un trajet ne donne rien depuis une autre
+  /// ville de départ (« Paris, mêmes dates »).
+  static const paris = FlightPlace(
+    code: 'PAR',
+    name: 'Paris',
+    countryCode: 'FR',
+  ); // i18n-ignore
 
   /// Incrémenté à chaque recherche et au retour au formulaire : une réponse
   /// arrivée après coup (recherche plus récente, flèche retour) est ignorée.
@@ -119,9 +177,28 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
   void setDestination(FlightPlace place) =>
       emit(state.copyWith(query: state.query.copyWith(destination: place)));
 
+  /// Départ et arrivée choisis ensemble sur l'écran de choix des villes.
+  void setRoute({FlightPlace? origin, FlightPlace? destination}) => emit(
+    state.copyWith(
+      query: state.query.copyWith(origin: origin, destination: destination),
+    ),
+  );
+
   void swap() => emit(state.copyWith(query: state.query.swapped()));
 
-  /// [returnDate] `null` = aller simple.
+  /// Sélecteur « Aller-retour / Aller simple » du formulaire. Passer en aller
+  /// simple oublie la date du retour.
+  void setRoundTrip(bool roundTrip) => emit(
+    state.copyWith(
+      query: state.query.copyWith(
+        roundTrip: roundTrip,
+        clearReturn: !roundTrip,
+      ),
+    ),
+  );
+
+  /// [returnDate] `null` = pas de date de retour (aller simple, ou retour
+  /// encore à choisir).
   void setDates(FlightWhen? departure, FlightWhen? returnDate) => emit(
     state.copyWith(
       query: FlightSearchQuery(
@@ -130,6 +207,7 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
         departure: departure,
         returnDate: returnDate,
         directOnly: state.query.directOnly,
+        roundTrip: state.query.roundTrip || returnDate != null,
       ),
     ),
   );
@@ -146,12 +224,21 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
         status: FlightSearchStatus.loading,
         clearResult: true,
         filters: const FlightFilters(),
+        tab: FlightResultsTab.cheapest,
       ),
     );
     try {
       final result = await _repository.search(query);
       if (isClosed || generation != _generation) return;
-      emit(state.copyWith(status: FlightSearchStatus.loaded, result: result));
+      final recents = await _remember(query, result);
+      if (isClosed || generation != _generation) return;
+      emit(
+        state.copyWith(
+          status: FlightSearchStatus.loaded,
+          result: result,
+          recents: recents,
+        ),
+      );
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.flightsSearchSubmitted,
@@ -175,6 +262,55 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
         ),
       );
     }
+  }
+
+  /// Mémorise la recherche avec son prix le plus bas. Un historique
+  /// inaccessible n'empêche jamais d'afficher les résultats.
+  Future<List<FlightRecentSearch>> _remember(
+    FlightSearchQuery query,
+    FlightSearchResult result,
+  ) async {
+    final lowest = result.offers.isEmpty
+        ? null
+        : result.offers.map((o) => o.price).reduce((a, b) => a < b ? a : b);
+    try {
+      return await _recents.add(
+        FlightRecentSearch.fromQuery(
+          query,
+          lowestPrice: lowest,
+          currency: result.currency,
+          at: _clock(),
+        ),
+      );
+    } catch (_) {
+      return state.recents;
+    }
+  }
+
+  /// Une recherche de « Vos recherches » touchée : elle remplit le
+  /// formulaire et repart.
+  Future<void> openRecent(FlightRecentSearch recent) {
+    final index = state.recents.indexOf(recent);
+    emit(state.copyWith(query: recent.toQuery()));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.flightsRecentSearchOpened,
+        properties: {
+          'position': index,
+          'age_days': _clock().difference(recent.searchedAt).inDays,
+        },
+      ),
+    );
+    return search();
+  }
+
+  Future<void> clearRecents() async {
+    await _recents.clear();
+    if (isClosed) return;
+    emit(state.copyWith(recents: const []));
+    unawaited(
+      _analytics.logEvent(AnalyticsEvents.flightsRecentSearchesCleared),
+    );
   }
 
   /// Un bon plan touché : son trajet et son mois de départ remplissent le
@@ -209,7 +345,43 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
     return search(fromDeal: true);
   }
 
-  /// Retour au formulaire depuis les résultats (flèche de l'en-tête).
+  /// « Paris, mêmes dates » de l'écran « Aucun vol ».
+  Future<void> searchFromParis() {
+    trackSuggestion(FlightEmptySuggestion.paris);
+    emit(state.copyWith(query: state.query.copyWith(origin: paris)));
+    return search();
+  }
+
+  /// « Tout {mois} » de l'écran « Aucun vol » : les jours précis deviennent
+  /// leurs mois entiers.
+  Future<void> searchWholeMonth() {
+    trackSuggestion(FlightEmptySuggestion.wholeMonth);
+    final q = state.query;
+    FlightWhen? month(FlightWhen? w) =>
+        w == null ? null : FlightWhen.month(w.date);
+    emit(
+      state.copyWith(
+        query: FlightSearchQuery(
+          origin: q.origin,
+          destination: q.destination,
+          departure: month(q.departure),
+          returnDate: month(q.returnDate),
+          directOnly: q.directOnly,
+          roundTrip: q.roundTrip,
+        ),
+      ),
+    );
+    return search();
+  }
+
+  void trackSuggestion(FlightEmptySuggestion kind) => unawaited(
+    _analytics.logEvent(
+      AnalyticsEvents.flightsEmptySuggestionTapped,
+      properties: {'kind': kind.name},
+    ),
+  );
+
+  /// Retour au formulaire depuis les résultats (flèche ou pastille résumé).
   void backToForm() {
     _generation++;
     emit(
@@ -217,6 +389,19 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
         status: FlightSearchStatus.editing,
         clearResult: true,
         filters: const FlightFilters(),
+        tab: FlightResultsTab.cheapest,
+      ),
+    );
+  }
+
+  /// Onglet « Le moins cher / Le plus rapide / Direct » des résultats.
+  void selectTab(FlightResultsTab tab) {
+    if (tab == state.tab) return;
+    emit(state.copyWith(tab: tab));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.flightsSortTabChanged,
+        properties: {'tab': tab.name},
       ),
     );
   }
@@ -227,11 +412,12 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
       _analytics.logEvent(
         AnalyticsEvents.flightsFilterApplied,
         properties: {
-          'sort': filters.sort.name,
+          'sort': state.effectiveTab.name,
           'stops': filters.stops.name,
           'airlines_count': filters.airlines.length,
           'gates_count': filters.gates.length,
           'price_range': filters.minPrice != null || filters.maxPrice != null,
+          'slots_count': filters.slots.length,
         },
       ),
     );

@@ -1,11 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/flights/bloc/flight_route_picker_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
+import 'package:dony/features/flights/presentation/flight_city_picker_screen.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
-import 'package:dony/features/flights/presentation/widgets/flight_city_sheet.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Feuille « Nouvelle alerte prix » : trajet (repris de la recherche quand il
 /// y en a une), période de départ et de retour (31 jours au plus), vols
@@ -23,11 +24,26 @@ abstract final class FlightAlertSheet {
     required String currencyCode,
     required Future<bool> Function(FlightAlertDraft draft) onSubmit,
   }) {
+    // Possédé et disposé par le `State` du formulaire : il y écrit après
+    // l'appel réseau, qui peut se terminer feuille fermée.
+    final submitState = ValueNotifier(const _SubmitState());
+    VoidCallback? submit;
     return DonyBottomSheet.show<bool>(
       context,
       title: context.l10n.flightsAlertNewTitle,
       heightFraction: 0.92,
+      stickyBottom: ValueListenableBuilder<_SubmitState>(
+        valueListenable: submitState,
+        builder: (context, s, _) => DonyButton(
+          key: const Key('flight-alert-submit'),
+          label: context.l10n.flightsAlertCreate,
+          isLoading: s.submitting,
+          onPressed: s.valid && !s.submitting ? () => submit?.call() : null,
+        ),
+      ),
       child: _AlertForm(
+        submitState: submitState,
+        onSubmitReady: (fn) => submit = fn,
         origin: origin,
         destination: destination,
         departure: departure,
@@ -41,8 +57,19 @@ abstract final class FlightAlertSheet {
   }
 }
 
+/// Validité du formulaire et envoi en cours, lus par le bouton du
+/// `stickyBottom`.
+class _SubmitState {
+  const _SubmitState({this.valid = false, this.submitting = false});
+
+  final bool valid;
+  final bool submitting;
+}
+
 class _AlertForm extends StatefulWidget {
   const _AlertForm({
+    required this.submitState,
+    required this.onSubmitReady,
     required this.origin,
     required this.destination,
     required this.departure,
@@ -61,6 +88,8 @@ class _AlertForm extends StatefulWidget {
   final double? currentLowest;
   final String currencyCode;
   final Future<bool> Function(FlightAlertDraft draft) onSubmit;
+  final ValueNotifier<_SubmitState> submitState;
+  final void Function(VoidCallback submit) onSubmitReady;
 
   @override
   State<_AlertForm> createState() => _AlertFormState();
@@ -114,7 +143,7 @@ class _AlertFormState extends State<_AlertForm> {
     );
   }
 
-  Listenable get _all => Listenable.merge([
+  late final Listenable _all = Listenable.merge([
     _origin,
     _destination,
     _departure,
@@ -124,6 +153,21 @@ class _AlertFormState extends State<_AlertForm> {
     _submitting,
     _price,
   ]);
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onSubmitReady(_submit);
+    _all.addListener(_syncSubmit);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncSubmit();
+    });
+  }
+
+  void _syncSubmit() => widget.submitState.value = _SubmitState(
+    valid: _valid,
+    submitting: _submitting.value,
+  );
 
   /// Jours calendaires, pas `duration.inDays` : une période qui traverse le
   /// passage à l'heure d'hiver ou d'été compterait un jour de moins ou de plus.
@@ -165,15 +209,22 @@ class _AlertFormState extends State<_AlertForm> {
     if (picked != null) target.value = picked;
   }
 
-  Future<void> _pickCity(
-    ValueNotifier<FlightPlace?> target,
-    bool departure,
-  ) async {
-    final place = await FlightCitySheet.show(context, departure: departure);
-    if (place != null) target.value = place;
+  Future<void> _pickCity({required bool departure}) async {
+    final pick = await pickFlightRoute(
+      context,
+      FlightRoutePickerArgs(
+        origin: _origin.value,
+        destination: _destination.value,
+        departure: departure,
+      ),
+    );
+    if (pick == null || !mounted) return;
+    if (pick.origin != null) _origin.value = pick.origin;
+    if (pick.destination != null) _destination.value = pick.destination;
   }
 
   Future<void> _submit() async {
+    if (!_valid || _submitting.value) return;
     final o = _origin.value!;
     final d = _destination.value!;
     final dep = _departure.value;
@@ -202,6 +253,8 @@ class _AlertFormState extends State<_AlertForm> {
 
   @override
   void dispose() {
+    _all.removeListener(_syncSubmit);
+    widget.submitState.dispose();
     for (final n in [
       _origin,
       _destination,
@@ -239,14 +292,14 @@ class _AlertFormState extends State<_AlertForm> {
             key: const Key('flight-alert-origin'),
             label: l.flightsFieldDeparture,
             value: _origin.value?.name ?? l.flightsFieldChooseCity,
-            onTap: () => _pickCity(_origin, true),
+            onTap: () => _pickCity(departure: true),
           ),
           const SizedBox(height: DonySpacing.sm),
           _Field(
             key: const Key('flight-alert-destination'),
             label: l.flightsFieldArrival,
             value: _destination.value?.name ?? l.flightsFieldChooseCity,
-            onTap: () => _pickCity(_destination, false),
+            onTap: () => _pickCity(departure: false),
           ),
           const SizedBox(height: DonySpacing.base),
           _Field(
@@ -258,17 +311,18 @@ class _AlertFormState extends State<_AlertForm> {
                 : null,
             onTap: () => _pickRange(_departure),
           ),
-          SwitchListTile(
+          const SizedBox(height: DonySpacing.md),
+          FlightTripTypeSwitch(
             key: const Key('flight-alert-roundtrip'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(l.flightsRoundTrip),
-            value: _roundTrip.value,
+            keyPrefix: 'flight-alert-trip',
+            roundTrip: _roundTrip.value,
             onChanged: (v) {
               _roundTrip.value = v;
               if (!v) _return.value = null;
             },
           ),
-          if (_roundTrip.value)
+          if (_roundTrip.value) ...[
+            const SizedBox(height: DonySpacing.md),
             _Field(
               key: const Key('flight-alert-return'),
               label: l.flightsAlertReturnPeriod,
@@ -280,21 +334,29 @@ class _AlertFormState extends State<_AlertForm> {
                   : null,
               onTap: () => _pickRange(_return),
             ),
-          SwitchListTile(
+          ],
+          const SizedBox(height: DonySpacing.sm),
+          FlightCheckRow(
             key: const Key('flight-alert-direct'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(l.flightsDirectOnly),
+            label: l.flightsDirectOnly,
             value: _direct.value,
             onChanged: (v) => _direct.value = v,
           ),
-          TextField(
+          const SizedBox(height: DonySpacing.sm),
+          DonyTextField(
             key: const Key('flight-alert-price'),
             controller: _price,
             keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: l.flightsAlertThreshold,
-              suffixText: widget.currencyCode,
+            label: l.flightsAlertThreshold,
+            suffixIcon: Padding(
+              padding: const EdgeInsetsDirectional.only(end: DonySpacing.md),
+              child: Center(
+                widthFactor: 1,
+                child: Text(
+                  widget.currencyCode,
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ),
             ),
           ),
           if (widget.currentLowest != null)
@@ -310,14 +372,7 @@ class _AlertFormState extends State<_AlertForm> {
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
-          const SizedBox(height: DonySpacing.xl),
-          DonyButton(
-            key: const Key('flight-alert-submit'),
-            label: l.flightsAlertCreate,
-            isLoading: _submitting.value,
-            onPressed: _valid && !_submitting.value ? _submit : null,
-          ),
-          const SizedBox(height: DonySpacing.sm),
+          const SizedBox(height: DonySpacing.base),
           Text(
             l.flightsAlertHint,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),

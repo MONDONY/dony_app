@@ -51,7 +51,9 @@ import 'package:dony/features/disputes/presentation/dispute_list_screen.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/favorites/presentation/favorites_screen.dart';
+import 'package:dony/features/flights/bloc/flight_route_picker_cubit.dart';
 import 'package:dony/features/flights/presentation/flight_alerts_screen.dart';
+import 'package:dony/features/flights/presentation/flight_city_picker_screen.dart';
 import 'package:dony/features/flights/presentation/flights_screen.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
@@ -1206,6 +1208,17 @@ final appRouter = GoRouter(
       path: '/flights/alerts',
       redirect: (_, _) async => await flightsEnabledResolved() ? null : '/home',
       builder: (_, _) => const FlightAlertsScreen(),
+    ),
+    // « Où allez-vous ? » : choix des villes d'un billet, en plein écran par
+    // dessus la barre du bas. Sans `extra` (lien direct), champ destination.
+    GoRoute(
+      path: '/flights/city',
+      redirect: (_, _) async => await flightsEnabledResolved() ? null : '/home',
+      builder: (_, state) => FlightCityPickerScreen(
+        args: state.extra is FlightRoutePickerArgs
+            ? state.extra! as FlightRoutePickerArgs
+            : const FlightRoutePickerArgs(departure: false),
+      ),
     ),
 
     // ── Alertes corridor (hors shell) ────────────────────────────────────

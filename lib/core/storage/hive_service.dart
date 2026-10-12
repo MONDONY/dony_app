@@ -39,6 +39,10 @@ class HiveService {
   static const String kRecentDepartureCities = 'recent_departure_cities';
   static const String kRecentArrivalCities = 'recent_arrival_cities';
 
+  // 5 dernières recherches de billets (onglet Billets, « Vos recherches »),
+  // propres à l'appareil. List<Map> sérialisation FlightRecentSearch.toJson().
+  static const String kFlightRecentSearches = 'flight_recent_searches';
+
   // ── Préférences métier ───────────────────────────────────────────────────
   static const String kWeightUnit = 'weight_unit'; // 'kg' | 'lbs'
   // Devise active, telle que renvoyée par le serveur (dérivée du pays) : une

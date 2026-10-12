@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_alert_sheet.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -92,20 +94,38 @@ class _AlertsView extends StatelessWidget {
                 ),
             ],
           ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
           floatingActionButton:
-              state.status == FlightAlertsStatus.loaded && !full
-              ? FloatingActionButton.extended(
+              state.status == FlightAlertsStatus.loaded &&
+                  !full &&
+                  state.alerts.isNotEmpty
+              ? FlightPillButton(
                   key: const Key('flight-alerts-new'),
-                  backgroundColor: cs.primary,
-                  foregroundColor: cs.onPrimary,
-                  icon: const Icon(Icons.add_rounded),
-                  label: Text(l.flightsAlertNewTitle),
+                  icon: 'plus',
+                  label: l.flightsAlertNewTitle,
                   onPressed: () => _create(context),
                 )
               : null,
           body: switch (state.status) {
-            FlightAlertsStatus.initial || FlightAlertsStatus.loading =>
-              const Center(child: CircularProgressIndicator()),
+            FlightAlertsStatus.initial ||
+            FlightAlertsStatus.loading => ListView(
+              key: const Key('flight-alerts-loading'),
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.base,
+                DonySpacing.lg,
+                0,
+              ),
+              children: const [
+                DonyListCardSkeleton(),
+                SizedBox(height: DonySpacing.md),
+                DonyListCardSkeleton(),
+                SizedBox(height: DonySpacing.md),
+                DonyListCardSkeleton(),
+              ],
+            ),
             FlightAlertsStatus.error when state.alerts.isEmpty =>
               DonyEmptyState(
                 mascotte: DonyMascotteType.erreurLegere,
@@ -194,7 +214,7 @@ class _AlertCard extends StatelessWidget {
           color: cs.error,
           borderRadius: BorderRadius.circular(DonyRadius.card),
         ),
-        child: Icon(Icons.delete_outline_rounded, color: cs.onError),
+        child: DonyIcon('trash-2', color: cs.onError),
       ),
       onDismissed: (_) => cubit.delete(alert.id),
       child: Opacity(
@@ -220,9 +240,10 @@ class _AlertCard extends StatelessWidget {
                       style: tt.titleLarge,
                     ),
                   ),
-                  Switch(
+                  FlightToggle(
                     key: Key('flight-alert-switch-${alert.id}'),
                     value: alert.active,
+                    semanticLabel: l.flightsAlertActiveLabel,
                     onChanged: (v) => cubit.setActive(alert.id, v),
                   ),
                 ],
