@@ -30,6 +30,7 @@ void main() {
     String? avatarUrl,
     String? avatarName,
     VoidCallback? onTap,
+    bool showLabel = true,
   }) => DonyNavItem(
     icon: Icons.person_rounded,
     outlinedIcon: Icons.person_outline_rounded,
@@ -42,6 +43,7 @@ void main() {
     isPro: isPro,
     avatarUrl: avatarUrl,
     avatarName: avatarName,
+    showLabel: showLabel,
   );
 
   // Le point d'attention : Container 10×10, rempli error, cercle, sans enfant.
@@ -77,8 +79,8 @@ void main() {
       expect(find.byType(DonyAvatar), findsOneWidget);
       expect(find.byIcon(Icons.person_rounded), findsNothing);
       expect(find.byIcon(Icons.person_outline_rounded), findsNothing);
-      // Barre en icônes seules : le libellé n'est plus rendu en texte.
-      expect(find.text('Moi'), findsNothing);
+      // Le libellé est désormais toujours rendu visuellement sous l'icône.
+      expect(find.text('Moi'), findsOneWidget);
     });
 
     testWidgets('anneau primary quand actif', (tester) async {
@@ -228,26 +230,40 @@ void main() {
     });
   });
 
-  group('DonyNavItem — icônes seules (barre à six onglets)', () {
-    testWidgets('aucun libellé visible, actif ou non', (tester) async {
+  group('DonyNavItem — libellé visible (audit UX bottom nav)', () {
+    testWidgets('libellé en primary quand actif', (tester) async {
       await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
       await tester.pumpAndSettle();
-      expect(find.text('Moi'), findsNothing);
 
+      final text = tester.widget<Text>(find.text('Moi'));
+      expect(text.style?.color, DonyColors.primary);
+      expect(text.style?.fontWeight, FontWeight.w700);
+    });
+
+    testWidgets('libellé en onSurfaceVariant quand inactif', (tester) async {
       await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 0)));
       await tester.pumpAndSettle();
-      expect(find.text('Moi'), findsNothing);
+
+      final text = tester.widget<Text>(find.text('Moi'));
+      expect(text.style?.color, DonyColors.textSubtle);
+      expect(text.style?.fontWeight, FontWeight.w600);
     });
 
-    testWidgets('le libellé reste en infobulle, hors de l\'arbre sémantique', (
-      tester,
-    ) async {
-      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 0)));
+    testWidgets(
+      'libellé exclu de l\'arbre sémantique (pas de double annonce)',
+      (tester) async {
+        await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
+        await tester.pumpAndSettle();
 
-      final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
-      expect(tooltip.message, 'Moi');
-      expect(tooltip.excludeFromSemantics, isTrue);
-    });
+        expect(
+          find.ancestor(
+            of: find.text('Moi'),
+            matching: find.byType(ExcludeSemantics),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('DonyNavItem — accessibilité & interaction', () {
@@ -269,6 +285,43 @@ void main() {
 
       await tester.tap(find.byType(DonyNavItem));
       expect(tapped, isTrue);
+    });
+  });
+
+  group('DonyNavItem — icônes seules (billets d\'avion activés)', () {
+    testWidgets('aucun libellé visible, actif ou non', (tester) async {
+      await tester.pumpWidget(
+        host(buildItem(index: 4, currentIndex: 4, showLabel: false)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Moi'), findsNothing);
+
+      await tester.pumpWidget(
+        host(buildItem(index: 4, currentIndex: 0, showLabel: false)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Moi'), findsNothing);
+    });
+
+    testWidgets('le libellé reste en infobulle et pour le lecteur d\'écran', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(buildItem(index: 4, currentIndex: 4, showLabel: false)),
+      );
+
+      final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
+      expect(tooltip.message, 'Moi');
+      expect(tooltip.excludeFromSemantics, isTrue);
+      expect(find.bySemanticsLabel('Moi'), findsOneWidget);
+    });
+
+    test('la pastille descend quand le libellé disparaît', () {
+      expect(DonyNavItem.pillTopFor(showLabel: true), DonyNavItem.pillTopInset);
+      expect(
+        DonyNavItem.pillTopFor(showLabel: false),
+        DonyNavItem.pillTopInsetIconOnly,
+      );
     });
   });
 }

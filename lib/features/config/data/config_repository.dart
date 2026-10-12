@@ -7,6 +7,7 @@ abstract class IConfigRepository {
   Future<double> getReimbursementCap();
   Future<bool> getSmsEnabled();
   Future<bool> getProEnabled();
+  Future<bool> getFlightsEnabled();
   Future<Map<String, double>> getExchangeRates();
 }
 
@@ -46,6 +47,15 @@ class ConfigRepository implements IConfigRepository {
   Future<bool> getSmsEnabled() async {
     try {
       return await _datasource.getSmsEnabled();
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<bool> getFlightsEnabled() async {
+    try {
+      return await _datasource.getFlightsEnabled();
     } catch (e) {
       throw unwrapDioError(e);
     }

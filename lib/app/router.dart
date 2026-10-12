@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dony/app/main_shell.dart';
+import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
@@ -1203,6 +1204,7 @@ final appRouter = GoRouter(
     // `yadony://flights/alerts`.
     GoRoute(
       path: '/flights/alerts',
+      redirect: (_, _) => flightsEnabledListenable.value ? null : '/home',
       builder: (_, _) => const FlightAlertsScreen(),
     ),
 
@@ -1977,6 +1979,10 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/flights',
+              // Flag éteint : la branche existe (le shell a besoin d'un index
+              // fixe) mais n'est jamais atteinte, même par un lien.
+              redirect: (_, _) =>
+                  flightsEnabledListenable.value ? null : '/home',
               builder: (context, state) => const FlightsScreen(),
             ),
           ],

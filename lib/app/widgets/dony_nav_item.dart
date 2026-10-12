@@ -18,10 +18,10 @@ import 'package:flutter/material.dart';
 /// Facebook) avec un anneau primary à l'état actif — pas de pastille partagée
 /// sur ce slot (le cercle avatar ne se marie pas avec une pilule).
 ///
-/// Icône seule, sans libellé visible (barre à six onglets, style Facebook) :
-/// [label] reste le nom annoncé par le lecteur d'écran ([Semantics.label]) et
-/// affiché en infobulle à l'appui long. Public pour pouvoir être testé
-/// isolément.
+/// Le libellé est toujours affiché sous l'icône. Rendu visuel exclu de
+/// l'arbre sémantique ([ExcludeSemantics]) pour éviter la double annonce
+/// avec le [Semantics.label] déjà posé sur tout l'item. Public pour pouvoir
+/// être testé isolément.
 class DonyNavItem extends StatelessWidget {
   const DonyNavItem({
     super.key,
@@ -37,6 +37,7 @@ class DonyNavItem extends StatelessWidget {
     this.isPro = false,
     this.avatarUrl,
     this.avatarName,
+    this.showLabel = true,
   }) : assert(
          avatarName != null ||
              iconAsset != null ||
@@ -70,16 +71,28 @@ class DonyNavItem extends StatelessWidget {
   final String? avatarUrl;
   final String? avatarName;
 
+  /// Faux : icône seule (barre à six onglets, billets d'avion activés), le
+  /// libellé reste annoncé par le lecteur d'écran et affiché en infobulle.
+  final bool showLabel;
+
   /// Largeur de la pastille icône — partagée avec l'indicateur glissant du parent.
   static const double pillWidth = 52;
 
   /// Hauteur de la pastille icône — idem.
   static const double pillHeight = 36;
 
-  /// Offset vertical FIXE entre le haut du slot et le haut de la pastille :
-  /// l'indicateur partagé du parent tombe pile sous l'icône. Sans libellé,
-  /// la pastille est centrée dans la barre (66 − 36) / 2.
-  static const double pillTopInset = 15;
+  /// Offset vertical FIXE (non calculé/centré) entre le haut du slot et le
+  /// haut de la pastille. Garantit que l'indicateur partagé du parent tombe
+  /// pile sous l'icône, peu importe les métriques réelles de la police
+  /// (labelSmall) qui varient légèrement selon iOS/Android.
+  static const double pillTopInset = 11;
+
+  /// Sans libellé, la pastille est centrée dans la barre : (66 − 36) / 2.
+  static const double pillTopInsetIconOnly = 15;
+
+  /// Offset de la pastille selon que le libellé est affiché ou non.
+  static double pillTopFor({required bool showLabel}) =>
+      showLabel ? pillTopInset : pillTopInsetIconOnly;
 
   bool get _active => index == currentIndex;
 
@@ -93,14 +106,14 @@ class DonyNavItem extends StatelessWidget {
       selected: _active,
       label: label,
       child: Tooltip(
-        message: label,
+        message: showLabel ? '' : label,
         excludeFromSemantics: true,
         child: GestureDetector(
           onTap: onTap,
           behavior: HitTestBehavior.opaque,
           child: Column(
             children: [
-              const SizedBox(height: pillTopInset),
+              SizedBox(height: pillTopFor(showLabel: showLabel)),
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -148,6 +161,22 @@ class DonyNavItem extends StatelessWidget {
                     ),
                 ],
               ),
+              if (showLabel) const SizedBox(height: 3),
+              if (showLabel)
+                ExcludeSemantics(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: _active ? cs.primary : cs.onSurfaceVariant,
+                        fontWeight: _active ? FontWeight.w700 : FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
