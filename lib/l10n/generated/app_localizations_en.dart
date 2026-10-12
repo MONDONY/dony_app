@@ -18239,4 +18239,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suiviPhotoLostDismiss => 'Close the lost photo message';
+
+  @override
+  String get chatEditMessageAction => 'Edit';
+
+  @override
+  String get chatDeleteMessageAction => 'Delete';
+
+  @override
+  String get chatEditSheetTitle => 'Edit message';
+
+  @override
+  String get chatEditSheetSubtitle =>
+      'The other person will see it marked as “edited”.';
+
+  @override
+  String get chatEditFieldLabel => 'Message';
+
+  @override
+  String get chatEditSaveButton => 'Save';
+
+  @override
+  String get chatDeleteConfirmTitle => 'Delete this message?';
+
+  @override
+  String get chatDeleteConfirmMessage =>
+      'The other person will see “Message deleted” instead.';
+
+  @override
+  String get chatDeleteConfirmButton => 'Delete';
+
+  @override
+  String get chatMessageEditedLabel => 'edited';
+
+  @override
+  String get chatMessageModerated => 'Message removed by moderation';
+
+  @override
+  String get chatPreviewDeleted => 'Message deleted';
+
+  @override
+  String get chatEditWindowExpired =>
+      'The 15-minute window has passed: this message can no longer be edited or deleted.';
+
+  @override
+  String get chatEditConversationLocked =>
+      'This conversation is closed: its messages can no longer be edited.';
+
+  @override
+  String get chatEditConversationDisputed =>
+      'A dispute is open: messages in this conversation can no longer be edited.';
+
+  @override
+  String get chatEditMuted =>
+      'Your messaging is suspended: you can\'t edit your messages.';
+
+  @override
+  String get chatEditInvalidContent =>
+      'This text can\'t be sent. Personal contact details aren\'t allowed.';
+
+  @override
+  String get chatEditNotEditable => 'This message can no longer be edited.';
+
+  @override
+  String get chatEditUnavailable =>
+      'Editing messages isn\'t available yet. Please try again later.';
+
+  @override
+  String get chatEditFailed =>
+      'The message couldn\'t be edited. Check your connection and try again.';
+
+  @override
+  String get chatDeleteFailed =>
+      'The message couldn\'t be deleted. Check your connection and try again.';
 }

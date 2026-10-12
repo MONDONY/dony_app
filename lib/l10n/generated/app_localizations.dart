@@ -29882,6 +29882,132 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Fermer le message sur la photo perdue'**
   String get suiviPhotoLostDismiss;
+
+  /// Appui long sur son propre message texte (moins de 15 min) : ouvre la feuille de modification.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get chatEditMessageAction;
+
+  /// Appui long sur son propre message texte (moins de 15 min) : supprime le message après confirmation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get chatDeleteMessageAction;
+
+  /// Titre de la feuille de modification d'un message.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le message'**
+  String get chatEditSheetTitle;
+
+  /// Sous-titre de la feuille de modification d'un message.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre interlocuteur verra la mention « modifié ».'**
+  String get chatEditSheetSubtitle;
+
+  /// Libellé du champ de la feuille de modification.
+  ///
+  /// In fr, this message translates to:
+  /// **'Message'**
+  String get chatEditFieldLabel;
+
+  /// Bouton de la feuille de modification d'un message.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get chatEditSaveButton;
+
+  /// Titre de la confirmation de suppression d'un message.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer ce message ?'**
+  String get chatDeleteConfirmTitle;
+
+  /// Texte de la confirmation de suppression d'un message.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre interlocuteur verra « Message supprimé » à sa place.'**
+  String get chatDeleteConfirmMessage;
+
+  /// Bouton de confirmation de suppression d'un message.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get chatDeleteConfirmButton;
+
+  /// Mention sous une bulle modifiée par son auteur.
+  ///
+  /// In fr, this message translates to:
+  /// **'modifié'**
+  String get chatMessageEditedLabel;
+
+  /// Bulle d'un message supprimé par l'administration (distincte de « Message supprimé », suppression par l'auteur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message retiré par la modération'**
+  String get chatMessageModerated;
+
+  /// Aperçu de liste quand le dernier message a été supprimé par son auteur (marqueur kChatPreviewDeleted).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message supprimé'**
+  String get chatPreviewDeleted;
+
+  /// Erreur : délai de modification dépassé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le délai de 15 minutes est passé : ce message ne peut plus être modifié ni supprimé.'**
+  String get chatEditWindowExpired;
+
+  /// Erreur : conversation fermée ou en lecture seule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette conversation est fermée : ses messages ne peuvent plus être modifiés.'**
+  String get chatEditConversationLocked;
+
+  /// Erreur : litige en cours.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un litige est en cours : les messages de cette conversation ne peuvent plus être modifiés.'**
+  String get chatEditConversationDisputed;
+
+  /// Erreur : messagerie coupée par la modération.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre messagerie est suspendue : vous ne pouvez pas modifier vos messages.'**
+  String get chatEditMuted;
+
+  /// Erreur : nouveau texte refusé par le serveur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce texte ne peut pas être envoyé. Les coordonnées personnelles ne sont pas autorisées.'**
+  String get chatEditInvalidContent;
+
+  /// Erreur : message déjà supprimé, introuvable ou non modifiable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce message ne peut plus être modifié.'**
+  String get chatEditNotEditable;
+
+  /// Erreur : fonction serveur indisponible (pas encore déployée).
+  ///
+  /// In fr, this message translates to:
+  /// **'La modification des messages n\'est pas encore disponible. Réessayez plus tard.'**
+  String get chatEditUnavailable;
+
+  /// Erreur réseau ou serveur à la modification.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le message n\'a pas pu être modifié. Vérifiez votre connexion et réessayez.'**
+  String get chatEditFailed;
+
+  /// Erreur réseau ou serveur à la suppression.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le message n\'a pas pu être supprimé. Vérifiez votre connexion et réessayez.'**
+  String get chatDeleteFailed;
 }
 
 class _AppLocalizationsDelegate

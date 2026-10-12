@@ -1,5 +1,15 @@
 enum MessageType { text, image, location, system }
 
+/// Délai pendant lequel l'auteur peut modifier ou supprimer son message texte
+/// (FLUTTER-MG). Miroir de `EDIT_WINDOW_MS` (dony-functions), seul juge : le
+/// serveur compte depuis la création du document, l'app ne fait que masquer
+/// le menu une fois le délai passé.
+const kMessageEditWindow = Duration(minutes: 15);
+
+/// Valeur de `deletedBy` pour un message retiré par son auteur. Absente pour
+/// une suppression par la modération (le back ne pose que `deletedAt`).
+const kDeletedByAuthor = 'author';
+
 class MessageModel {
   final String id;
   final String senderId;
@@ -9,6 +19,12 @@ class MessageModel {
   final DateTime sentAt;
   final DateTime? readAt;
   final String? deletedAt;
+
+  /// `author` si l'auteur a supprimé son message, `null` pour la modération.
+  final String? deletedBy;
+
+  /// Dernière modification par l'auteur (FLUTTER-MG), `null` sinon.
+  final DateTime? editedAt;
   // Location message fields
   final double? latitude;
   final double? longitude;
@@ -38,6 +54,8 @@ class MessageModel {
     required this.sentAt,
     this.readAt,
     this.deletedAt,
+    this.deletedBy,
+    this.editedAt,
     this.latitude,
     this.longitude,
     this.replyToId,
@@ -50,6 +68,24 @@ class MessageModel {
   bool get isServerImage => type == MessageType.image && imageKey != null;
 
   bool get isDeleted => deletedAt != null;
+
+  /// Supprimé par son auteur (« Message supprimé »), et non par la modération.
+  bool get isDeletedByAuthor => isDeleted && deletedBy == kDeletedByAuthor;
+
+  /// Modifié par son auteur : la bulle affiche « modifié ».
+  bool get isEdited => editedAt != null && !isDeleted;
+
+  /// Fin du délai de modification, comptée depuis l'envoi.
+  DateTime get editableUntil => sentAt.add(kMessageEditWindow);
+
+  /// [uid] peut-il encore modifier ou supprimer ce message à [now] ? Texte
+  /// seulement, jamais un message supprimé, système, photo ou position.
+  bool isEditableBy(String uid, DateTime now) =>
+      uid.isNotEmpty &&
+      senderId == uid &&
+      type == MessageType.text &&
+      !isDeleted &&
+      now.isBefore(editableUntil);
 
   factory MessageModel.fromFirestore(String id, Map<String, dynamic> data) {
     final typeStr = data['type'] as String? ?? 'TEXT';
@@ -68,6 +104,8 @@ class MessageModel {
       sentAt: _parseTs(data['sentAt']),
       readAt: data['readAt'] != null ? _parseTs(data['readAt']) : null,
       deletedAt: data['deletedAt'] as String?,
+      deletedBy: _nonBlank(data['deletedBy']),
+      editedAt: data['editedAt'] is String ? _parseTs(data['editedAt']) : null,
       latitude: (data['latitude'] as num?)?.toDouble(),
       longitude: (data['longitude'] as num?)?.toDouble(),
       replyToId: _replyToId(data['replyToId']),

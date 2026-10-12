@@ -20027,5 +20027,89 @@
   "suiviPhotoLost": "La photo de l'étape « {step} » n'est plus disponible sur ce téléphone : l'étape a été enregistrée sans photo.",
   "@suiviPhotoLost": {"description": "Onglet Suivi : une étape de la file hors ligne est partie sans sa photo, dont le fichier local a disparu (cache purgé, FLUTTER-MJ). step = libellé d'étape traduit.", "placeholders": {"step": {"type": "String"}}},
   "suiviPhotoLostDismiss": "Fermer le message sur la photo perdue",
-  "@suiviPhotoLostDismiss": {"description": "Libellé d'accessibilité du bouton qui ferme le message de photo perdue (onglet Suivi)"}
+  "@suiviPhotoLostDismiss": {"description": "Libellé d'accessibilité du bouton qui ferme le message de photo perdue (onglet Suivi)"},
+  "chatEditMessageAction": "Modifier",
+  "@chatEditMessageAction": {
+    "description": "Appui long sur son propre message texte (moins de 15 min) : ouvre la feuille de modification."
+  },
+  "chatDeleteMessageAction": "Supprimer",
+  "@chatDeleteMessageAction": {
+    "description": "Appui long sur son propre message texte (moins de 15 min) : supprime le message après confirmation."
+  },
+  "chatEditSheetTitle": "Modifier le message",
+  "@chatEditSheetTitle": {
+    "description": "Titre de la feuille de modification d'un message."
+  },
+  "chatEditSheetSubtitle": "Votre interlocuteur verra la mention « modifié ».",
+  "@chatEditSheetSubtitle": {
+    "description": "Sous-titre de la feuille de modification d'un message."
+  },
+  "chatEditFieldLabel": "Message",
+  "@chatEditFieldLabel": {
+    "description": "Libellé du champ de la feuille de modification."
+  },
+  "chatEditSaveButton": "Enregistrer",
+  "@chatEditSaveButton": {
+    "description": "Bouton de la feuille de modification d'un message."
+  },
+  "chatDeleteConfirmTitle": "Supprimer ce message ?",
+  "@chatDeleteConfirmTitle": {
+    "description": "Titre de la confirmation de suppression d'un message."
+  },
+  "chatDeleteConfirmMessage": "Votre interlocuteur verra « Message supprimé » à sa place.",
+  "@chatDeleteConfirmMessage": {
+    "description": "Texte de la confirmation de suppression d'un message."
+  },
+  "chatDeleteConfirmButton": "Supprimer",
+  "@chatDeleteConfirmButton": {
+    "description": "Bouton de confirmation de suppression d'un message."
+  },
+  "chatMessageEditedLabel": "modifié",
+  "@chatMessageEditedLabel": {
+    "description": "Mention sous une bulle modifiée par son auteur."
+  },
+  "chatMessageModerated": "Message retiré par la modération",
+  "@chatMessageModerated": {
+    "description": "Bulle d'un message supprimé par l'administration (distincte de « Message supprimé », suppression par l'auteur)."
+  },
+  "chatPreviewDeleted": "Message supprimé",
+  "@chatPreviewDeleted": {
+    "description": "Aperçu de liste quand le dernier message a été supprimé par son auteur (marqueur kChatPreviewDeleted)."
+  },
+  "chatEditWindowExpired": "Le délai de 15 minutes est passé : ce message ne peut plus être modifié ni supprimé.",
+  "@chatEditWindowExpired": {
+    "description": "Erreur : délai de modification dépassé."
+  },
+  "chatEditConversationLocked": "Cette conversation est fermée : ses messages ne peuvent plus être modifiés.",
+  "@chatEditConversationLocked": {
+    "description": "Erreur : conversation fermée ou en lecture seule."
+  },
+  "chatEditConversationDisputed": "Un litige est en cours : les messages de cette conversation ne peuvent plus être modifiés.",
+  "@chatEditConversationDisputed": {
+    "description": "Erreur : litige en cours."
+  },
+  "chatEditMuted": "Votre messagerie est suspendue : vous ne pouvez pas modifier vos messages.",
+  "@chatEditMuted": {
+    "description": "Erreur : messagerie coupée par la modération."
+  },
+  "chatEditInvalidContent": "Ce texte ne peut pas être envoyé. Les coordonnées personnelles ne sont pas autorisées.",
+  "@chatEditInvalidContent": {
+    "description": "Erreur : nouveau texte refusé par le serveur."
+  },
+  "chatEditNotEditable": "Ce message ne peut plus être modifié.",
+  "@chatEditNotEditable": {
+    "description": "Erreur : message déjà supprimé, introuvable ou non modifiable."
+  },
+  "chatEditUnavailable": "La modification des messages n'est pas encore disponible. Réessayez plus tard.",
+  "@chatEditUnavailable": {
+    "description": "Erreur : fonction serveur indisponible (pas encore déployée)."
+  },
+  "chatEditFailed": "Le message n'a pas pu être modifié. Vérifiez votre connexion et réessayez.",
+  "@chatEditFailed": {
+    "description": "Erreur réseau ou serveur à la modification."
+  },
+  "chatDeleteFailed": "Le message n'a pas pu être supprimé. Vérifiez votre connexion et réessayez.",
+  "@chatDeleteFailed": {
+    "description": "Erreur réseau ou serveur à la suppression."
+  }
 }

@@ -106,3 +106,17 @@ class ChatReplyStarted extends ChatEvent {
 class ChatReplyCancelled extends ChatEvent {
   const ChatReplyCancelled();
 }
+
+/// « Modifier » sur son propre message texte, moins de 15 minutes après
+/// l'envoi (FLUTTER-MG). [text] a déjà passé `ChatMessageValidator`.
+class ChatMessageEditRequested extends ChatEvent {
+  final String messageId;
+  final String text;
+  const ChatMessageEditRequested({required this.messageId, required this.text});
+}
+
+/// « Supprimer » sur son propre message texte, confirmé par l'utilisateur.
+class ChatMessageDeleteRequested extends ChatEvent {
+  final String messageId;
+  const ChatMessageDeleteRequested(this.messageId);
+}
