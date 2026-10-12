@@ -54,7 +54,7 @@ void main() {
   ChatBloc makeBloc() => ChatBloc(
     repo,
     _MockConversationRepository(),
-    makeEnabledAnalytics(MockAnalyticsBackend())..onConfigured(),
+    makeEnabledAnalytics(MockAnalyticsBackend()),
     markReadDelay: delay,
   );
 
@@ -143,7 +143,7 @@ void main() {
     final bloc = ChatBloc(
       repo,
       _MockConversationRepository(),
-      makeEnabledAnalytics(MockAnalyticsBackend())..onConfigured(),
+      makeEnabledAnalytics(MockAnalyticsBackend()),
       markReadDelay: const Duration(seconds: 5),
     );
     await open(bloc);
