@@ -108,7 +108,7 @@ const _sameInBothLanguages = <String>{
   'flightsStopsDirect', // « Direct » se dit pareil
   'flightsAlertAtMost', // « ≤ {price} » : symbole et montant
   'flightsFieldDestination', // « Destination » se dit pareil
-  'flightsRouteRoundTrip', // « {origin} ⇄ {destination} » : symbole seul
+  'flightsRouteRoundTrip', // « {origin} ↔ {destination} » : symbole seul
   'flightsDateRange', // « {start} – {end} » : dates déjà localisées
   'flightsTabDirect', // « Direct » se dit pareil
   'flightsVia', // « via {gate} » se dit pareil

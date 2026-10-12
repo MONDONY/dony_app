@@ -20258,7 +20258,7 @@
   "@flightsAlertHint": {"description": "Note de la feuille d'alerte."},
   "flightsFieldDestination": "Destination",
   "@flightsFieldDestination": {"description": "Libellé du champ ville d'arrivée du formulaire Billets."},
-  "flightsRouteRoundTrip": "{origin} ⇄ {destination}",
+  "flightsRouteRoundTrip": "{origin} ↔ {destination}",
   "@flightsRouteRoundTrip": {"description": "Trajet aller-retour (récentes, résumé des résultats).", "placeholders": {"origin": {"type": "String"}, "destination": {"type": "String"}}},
   "flightsDateRange": "{from} – {to}",
   "@flightsDateRange": {"description": "Période aller – retour.", "placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},

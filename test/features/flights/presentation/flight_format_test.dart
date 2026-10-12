@@ -49,7 +49,7 @@ void main() {
   test('trajet aller-retour ou aller simple', () {
     expect(
       FlightFormat.route(fr, 'Paris', 'Abidjan', roundTrip: true),
-      'Paris ⇄ Abidjan',
+      'Paris ↔ Abidjan',
     );
     expect(
       FlightFormat.route(fr, 'Paris', 'Abidjan', roundTrip: false),

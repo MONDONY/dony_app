@@ -30551,7 +30551,7 @@ abstract class AppLocalizations {
   /// Trajet aller-retour (récentes, résumé des résultats).
   ///
   /// In fr, this message translates to:
-  /// **'{origin} ⇄ {destination}'**
+  /// **'{origin} ↔ {destination}'**
   String flightsRouteRoundTrip(String origin, String destination);
 
   /// Période aller – retour.

@@ -14,7 +14,7 @@ Widget _host({bool reduceMotion = false, Locale locale = AppL10n.fr}) =>
           ).copyWith(disableAnimations: reduceMotion),
           child: const Scaffold(
             body: FlightLoadingView(
-              routeChip: 'PAR ⇄ ABJ · 12 déc. – 3 janv. · 1 pers.',
+              routeChip: 'PAR ↔ ABJ · 12 déc. – 3 janv. · 1 pers.',
               destinationName: 'Abidjan',
             ),
           ),
@@ -31,7 +31,7 @@ void main() {
       await tester.pump();
 
       expect(
-        find.text('PAR ⇄ ABJ · 12 déc. – 3 janv. · 1 pers.'),
+        find.text('PAR ↔ ABJ · 12 déc. – 3 janv. · 1 pers.'),
         findsOneWidget,
       );
       expect(find.text('Recherche de vols vers Abidjan'), findsOneWidget);

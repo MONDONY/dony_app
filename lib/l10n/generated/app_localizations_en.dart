@@ -18694,7 +18694,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String flightsRouteRoundTrip(String origin, String destination) {
-    return '$origin ⇄ $destination';
+    return '$origin ↔ $destination';
   }
 
   @override

@@ -20,6 +20,7 @@ abstract final class DonyTypography {
   static TextTheme get textTheme => const TextTheme(
     displayLarge: TextStyle(
       fontFamily: fontDisplay,
+      fontFamilyFallback: [fontBody],
       fontSize: 32,
       fontWeight: FontWeight.w800,
       letterSpacing: -0.64,
@@ -27,6 +28,7 @@ abstract final class DonyTypography {
     ),
     displayMedium: TextStyle(
       fontFamily: fontDisplay,
+      fontFamilyFallback: [fontBody],
       fontSize: 26,
       fontWeight: FontWeight.w800,
       letterSpacing: -0.52,
@@ -34,6 +36,7 @@ abstract final class DonyTypography {
     ),
     displaySmall: TextStyle(
       fontFamily: fontDisplay,
+      fontFamilyFallback: [fontBody],
       fontSize: 22,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.44,
@@ -41,6 +44,7 @@ abstract final class DonyTypography {
     ),
     headlineLarge: TextStyle(
       fontFamily: fontDisplay,
+      fontFamilyFallback: [fontBody],
       fontSize: 22,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.22,
@@ -48,6 +52,7 @@ abstract final class DonyTypography {
     ),
     headlineMedium: TextStyle(
       fontFamily: fontDisplay,
+      fontFamilyFallback: [fontBody],
       fontSize: 18,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.18,
@@ -55,6 +60,7 @@ abstract final class DonyTypography {
     ),
     headlineSmall: TextStyle(
       fontFamily: fontDisplay,
+      fontFamilyFallback: [fontBody],
       fontSize: 16,
       fontWeight: FontWeight.w600,
       height: 1.35,

@@ -25,7 +25,7 @@ class FlightLoadingView extends StatefulWidget {
     required this.destinationName,
   });
 
-  /// « PAR ⇄ ABJ · 12 déc. – 3 janv. · 1 pers. ».
+  /// « PAR ↔ ABJ · 12 déc. – 3 janv. · 1 pers. ».
   final String routeChip;
   final String destinationName;
 

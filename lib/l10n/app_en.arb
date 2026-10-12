@@ -9855,7 +9855,7 @@
   "@flightsAlertCurrentLowest": {"description": "Aide de la feuille d'alerte.", "placeholders": {"price": {"type": "String"}}},
   "flightsAlertHint": "Checked every 6 hours. Periods of 31 days at most, for both outbound and return.",
   "flightsFieldDestination": "Destination",
-  "flightsRouteRoundTrip": "{origin} ⇄ {destination}",
+  "flightsRouteRoundTrip": "{origin} ↔ {destination}",
   "flightsDateRange": "{from} – {to}",
   "flightsPassengers": "{count, plural, =1{1 traveller} other{{count} travellers}}",
   "flightsRecentTitle": "Your searches",

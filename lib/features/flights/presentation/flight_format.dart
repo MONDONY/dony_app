@@ -96,7 +96,7 @@ abstract final class FlightFormat {
     return l.flightsDateRange(one(out), one(back));
   }
 
-  /// « Paris ⇄ Abidjan » en aller-retour, « Paris → Abidjan » sinon.
+  /// « Paris ↔ Abidjan » en aller-retour, « Paris → Abidjan » sinon.
   static String route(
     AppLocalizations l,
     String origin,
