@@ -18992,4 +18992,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get moneyChannelMobileMoney => 'Mobile Money';
+
+  @override
+  String get scanOfflineQueueRetryNow => 'Réessayer maintenant';
 }

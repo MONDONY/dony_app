@@ -47,6 +47,7 @@ void main() {
   setUp(() async {
     mockRepo = MockTrackingRepository();
     service = OfflineSyncService(_hiveService, mockRepo);
+    addTearDown(service.dispose);
     await _hiveService.offlineQueue.clear();
   });
 
@@ -252,6 +253,83 @@ void main() {
       await service.syncAll();
 
       expect(service.pendingCount, 1);
+    });
+
+    // FLUTTER-KZ / FLUTTER-KK : une étape refusée par le réseau ou un 5xx
+    // n'était rejouée qu'au prochain changement de réseau du téléphone.
+    group('nouvel essai automatique', () {
+      void postScanFails() => when(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).thenThrow(Exception('network error'));
+
+      test(
+        'échec : nouvel essai programmé, délai doublé puis plafonné',
+        () async {
+          postScanFails();
+          service
+            ..retryBase = const Duration(minutes: 1)
+            ..retryMax = const Duration(minutes: 3);
+          await service.queueScan(bidId: 'bid-2', eventType: 'DEPART');
+
+          await service.syncAll();
+          expect(service.nextRetryDelay, const Duration(minutes: 1));
+          await service.syncAll();
+          expect(service.nextRetryDelay, const Duration(minutes: 2));
+          await service.syncAll();
+          expect(service.nextRetryDelay, const Duration(minutes: 3));
+          await service.syncAll();
+          expect(service.nextRetryDelay, const Duration(minutes: 3));
+        },
+      );
+
+      test(
+        'le nouvel essai part seul et vide la file au retour du back',
+        () async {
+          var calls = 0;
+          when(
+            () => mockRepo.postScan(
+              bidId: any(named: 'bidId'),
+              eventType: any(named: 'eventType'),
+              gpsLat: any(named: 'gpsLat'),
+              gpsLon: any(named: 'gpsLon'),
+              gpsLabel: any(named: 'gpsLabel'),
+              photoUrl: any(named: 'photoUrl'),
+              offlineTimestamp: any(named: 'offlineTimestamp'),
+            ),
+          ).thenAnswer((_) async {
+            if (calls++ == 0) throw Exception('502');
+            return _fakeEvent();
+          });
+          service.retryBase = const Duration(milliseconds: 30);
+          await service.queueScan(bidId: 'bid-2', eventType: 'DEPART');
+
+          await service.syncAll();
+          expect(service.pendingCount, 1);
+          for (
+            var i = 0;
+            i < 100 && _hiveService.offlineQueue.isNotEmpty;
+            i++
+          ) {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+          }
+
+          expect(_hiveService.offlineQueue.isEmpty, isTrue);
+          expect(service.nextRetryDelay, isNull);
+        },
+      );
+
+      test('file vidée sans erreur : aucun essai programmé', () async {
+        await service.syncAll();
+        expect(service.nextRetryDelay, isNull);
+      });
     });
 
     test('drops the entry when the server rejects it for good (409)', () async {

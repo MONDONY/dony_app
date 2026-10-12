@@ -18857,4 +18857,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moneyChannelMobileMoney => 'Mobile Money';
+
+  @override
+  String get scanOfflineQueueRetryNow => 'Retry now';
 }

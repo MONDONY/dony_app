@@ -30823,6 +30823,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Mobile Money'**
   String get moneyChannelMobileMoney;
+
+  /// File des lectures hors ligne : renvoyer tout de suite les étapes en attente (FLUTTER-KZ)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer maintenant'**
+  String get scanOfflineQueueRetryNow;
 }
 
 class _AppLocalizationsDelegate
