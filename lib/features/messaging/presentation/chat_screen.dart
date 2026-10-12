@@ -174,7 +174,18 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     // Une app tuée en arrière-plan ne passe jamais par `dispose` : le
     // brouillon est aussi écrit dès que l'écran est masqué.
-    _lifecycle = AppLifecycleListener(onHide: _persistDraft);
+    // Le fil ne marque les messages lus qu'au premier plan (FLUTTER-NX).
+    _lifecycle = AppLifecycleListener(
+      onHide: () {
+        _persistDraft();
+        context.read<ChatBloc>().add(
+          const ChatAppVisibilityChanged(visible: false),
+        );
+      },
+      onShow: () => context.read<ChatBloc>().add(
+        const ChatAppVisibilityChanged(visible: true),
+      ),
+    );
   }
 
   ChatDraftStore? _draftStore() {
