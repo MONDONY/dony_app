@@ -1,3 +1,4 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:flutter/material.dart';
@@ -268,4 +269,88 @@ void main() {
     expect(find.text('1 parcel to carry'), findsOneWidget);
     expect(find.text('Travelers available'), findsOneWidget);
   });
+
+  testWidgets('chaque segment porte son icône Lucide, teintée selon l\'état', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(SearchModeSelector(mode: SearchMode.trips, onChanged: (_) {})),
+    );
+
+    final envoi = find.descendant(
+      of: find.byKey(_trajetsKey),
+      matching: find.byKey(const Key('search_mode_icon_package')),
+    );
+    final voyage = find.descendant(
+      of: find.byKey(_colisKey),
+      matching: find.byKey(const Key('search_mode_icon_plane')),
+    );
+    expect(envoi, findsOneWidget);
+    expect(voyage, findsOneWidget);
+
+    final cs = Theme.of(tester.element(envoi)).colorScheme;
+    final iconeEnvoi = tester.widget<DonyIcon>(envoi);
+    final iconeVoyage = tester.widget<DonyIcon>(voyage);
+    expect(iconeEnvoi.name, 'package');
+    expect(iconeVoyage.name, 'plane');
+    expect(iconeEnvoi.size, iconeVoyage.size);
+    expect(iconeEnvoi.color, cs.onSurface);
+    expect(iconeVoyage.color, cs.onSurfaceVariant);
+  });
+
+  testWidgets('les icônes, décoratives, n\'entrent pas dans la sémantique', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      wrap(SearchModeSelector(mode: SearchMode.trips, onChanged: (_) {})),
+    );
+
+    expect(
+      tester.getSemantics(find.byKey(_trajetsKey)),
+      matchesSemantics(
+        label: 'J\'envoie un colis, Voyageurs disponibles',
+        isButton: true,
+        hasSelectedState: true,
+        isSelected: true,
+      ),
+    );
+    handle.dispose();
+  });
+
+  for (final scale in [1.0, 1.3]) {
+    testWidgets('aucun débordement à 320 dp avec textScaler $scale', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(scale)),
+              child: Scaffold(
+                body: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SearchModeSelector(
+                    mode: SearchMode.trips,
+                    onChanged: (_) {},
+                    otherModeCount: 128,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(DonyIcon), findsNWidgets(2));
+    });
+  }
 }
