@@ -146,6 +146,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorBidNotFoundMessage': (l) => l.errorBidNotFoundMessage,
   'errorContactKycRequiredTitle': (l) => l.errorContactKycRequiredTitle,
   'errorContactKycRequiredMessage': (l) => l.errorContactKycRequiredMessage,
+  'errorBidBelowMinPriceTitle': (l) => l.errorBidBelowMinPriceTitle,
+  'errorBidBelowMinPriceMessage': (l) =>
+      l.errorBidBelowMinPriceMessage(placeholderMarker('price')),
+  'errorBidBelowMinPriceFallbackMessage': (l) =>
+      l.errorBidBelowMinPriceFallbackMessage,
   'errorBidNotAcceptedTitle': (l) => l.errorBidNotAcceptedTitle,
   'errorBidNotAcceptedMessage': (l) => l.errorBidNotAcceptedMessage,
   'errorBidNotDeliveredTitle': (l) => l.errorBidNotDeliveredTitle,
@@ -4443,8 +4448,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.notificationSettingsSectionCritical,
   'notificationSettingsDeliveryConfirmedLabel': (l) =>
       l.notificationSettingsDeliveryConfirmedLabel,
-  'notificationSettingsSmsFallbackSubtitle': (l) =>
-      l.notificationSettingsSmsFallbackSubtitle,
+  'notificationSettingsDeliveryConfirmedSubtitle': (l) =>
+      l.notificationSettingsDeliveryConfirmedSubtitle,
+  'notificationSettingsPaymentReceivedSubtitle': (l) =>
+      l.notificationSettingsPaymentReceivedSubtitle,
+  'notificationSettingsDisputeOpenedSubtitle': (l) =>
+      l.notificationSettingsDisputeOpenedSubtitle,
+  'notificationSettingsTripRescheduledSubtitle': (l) =>
+      l.notificationSettingsTripRescheduledSubtitle,
   'notificationSettingsPaymentReceivedLabel': (l) =>
       l.notificationSettingsPaymentReceivedLabel,
   'notificationSettingsDisputeOpenedLabel': (l) =>
@@ -4510,12 +4521,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.prefsCurrencyLockedSheetBody(placeholderMarker('currency')),
   'prefsCurrencyLockedSheetWalletCta': (l) =>
       l.prefsCurrencyLockedSheetWalletCta,
+  'prefsCurrencySubtitle': (l) => l.prefsCurrencySubtitle,
   'prefsCurrencyLockedSubtitle': (l) => l.prefsCurrencyLockedSubtitle,
   'prefsDisplayCurrencyLabel': (l) => l.prefsDisplayCurrencyLabel,
   'prefsDisplayCurrencySubtitle': (l) => l.prefsDisplayCurrencySubtitle,
   'prefsAutoLabel': (l) => l.prefsAutoLabel,
-  'prefsSectionGeolocation': (l) => l.prefsSectionGeolocation,
-  'prefsPickupRadiusLabel': (l) => l.prefsPickupRadiusLabel,
   'prefsCountrySearchHint': (l) => l.prefsCountrySearchHint,
   'prefsCountryNotFound': (l) => l.prefsCountryNotFound,
   'prefsAutoCurrencySubtitle': (l) => l.prefsAutoCurrencySubtitle,
@@ -4524,7 +4534,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'prefsDefaultWeightLabel': (l) => l.prefsDefaultWeightLabel,
   'prefsDefaultWeightSubtitle': (l) => l.prefsDefaultWeightSubtitle,
   'prefsMinPriceLabel': (l) => l.prefsMinPriceLabel,
-  'prefsMinPriceNone': (l) => l.prefsMinPriceNone(placeholderMarker('symbol')),
+  'prefsMinPriceSubtitle': (l) => l.prefsMinPriceSubtitle,
   'prefsMinPriceValueNone': (l) => l.prefsMinPriceValueNone,
   'prefsContactModeLabel': (l) => l.prefsContactModeLabel,
   'prefsContactModeCall': (l) => l.prefsContactModeCall,
@@ -6415,6 +6425,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
 /// Paramètres texte (`String` ou non typés) de chaque message qui
 /// en a, dans l'ordre de la signature.
 const textParameters = <String, List<String>>{
+  'errorBidBelowMinPriceMessage': ['price'],
   'authOtpCodeSentTo': ['contact'],
   'authOtpCodeSentToPhone': ['contact'],
   'authCountryOptionSavingLabel': ['country', 'currency'],
@@ -6700,7 +6711,6 @@ const textParameters = <String, List<String>>{
   'a11yTextSizeDisabledSemantics': ['percent'],
   'prefsCurrencyLockedSheetTitle': ['currency'],
   'prefsCurrencyLockedSheetBody': ['currency'],
-  'prefsMinPriceNone': ['symbol'],
   'deletionWalletRefundRequestedMessage': ['amounts'],
   'deletionManualRailMessage': ['amount'],
   'deletionRefundableOnCardMessage': ['amount'],

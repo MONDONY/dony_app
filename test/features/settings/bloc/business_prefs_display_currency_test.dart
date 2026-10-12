@@ -15,7 +15,6 @@ class MockBox extends Mock implements Box<dynamic> {}
 const _defaultDto = UserBusinessPrefsDto(
   weightUnit: 'kg',
   currencyCode: 'EUR',
-  pickupRadiusKm: 10,
   defaultPackageWeightKg: 23,
   minBidPriceEur: 0,
 );

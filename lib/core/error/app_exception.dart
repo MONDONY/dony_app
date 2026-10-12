@@ -110,12 +110,22 @@ class NotFoundException extends AppException {
 }
 
 class ValidationException extends AppException {
-  const ValidationException(super.message, {super.code, this.errors});
+  const ValidationException(
+    super.message, {
+    super.code,
+    this.errors,
+    this.extensions,
+  });
 
   final Map<String, List<String>>? errors;
 
+  /// Membres d'extension du ProblemDetail RFC 7807 (propriétés posées par le
+  /// back à côté de `code`), par exemple `minPricePerKg` et `currency` de
+  /// `bid-below-min-price`. `null` quand la réponse n'en porte pas.
+  final Map<String, Object?>? extensions;
+
   @override
-  List<Object?> get props => [message, code, errors];
+  List<Object?> get props => [message, code, errors, extensions];
 }
 
 class ConflictException extends AppException {

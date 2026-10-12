@@ -361,7 +361,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorContactKycRequiredMessage =>
-      'Ce voyageur ne reçoit que des profils vérifiés. Vérifiez votre identité pour lui envoyer une demande.';
+      'Cette personne n\'accepte que les profils vérifiés. Vérifiez votre identité pour lui envoyer une offre.';
+
+  @override
+  String get errorBidBelowMinPriceTitle => 'Prix trop bas';
+
+  @override
+  String errorBidBelowMinPriceMessage(String price) {
+    return 'Ce voyageur n\'accepte pas moins de $price/kg';
+  }
+
+  @override
+  String get errorBidBelowMinPriceFallbackMessage =>
+      'Ce voyageur n\'accepte pas un prix au kilo aussi bas. Proposez un prix plus élevé.';
 
   @override
   String get errorBidNotAcceptedTitle => 'Étape impossible pour ce colis';
@@ -12643,8 +12655,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Livraison confirmée';
 
   @override
-  String get notificationSettingsSmsFallbackSubtitle =>
-      'SMS automatique si push non reçu';
+  String get notificationSettingsDeliveryConfirmedSubtitle =>
+      'Pour savoir que votre colis est bien arrivé, avec SMS si le push n\'arrive pas';
+
+  @override
+  String get notificationSettingsPaymentReceivedSubtitle =>
+      'Pour suivre l\'argent de vos colis, avec SMS si le push n\'arrive pas';
+
+  @override
+  String get notificationSettingsDisputeOpenedSubtitle =>
+      'Pour répondre à temps à un litige, avec SMS si le push n\'arrive pas';
+
+  @override
+  String get notificationSettingsTripRescheduledSubtitle =>
+      'Pour savoir quand remettre votre colis, avec SMS si le push n\'arrive pas';
 
   @override
   String get notificationSettingsPaymentReceivedLabel => 'Paiement reçu';
@@ -12713,7 +12737,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationSettingsAccountSafetySubtitle =>
-      'Portefeuille, vérification d\'identité, litiges, messages de Yadony';
+      'Sécurité de votre compte et de votre argent';
 
   @override
   String get notificationSettingsAutomationsLabel => 'Automatisations voyageur';
@@ -12762,7 +12786,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get prefsCountryPlaceholder => 'Choisir mon pays';
 
   @override
-  String get prefsCurrencyLabel => 'Devise';
+  String get prefsCurrencyLabel => 'Devise de mon portefeuille';
 
   @override
   String prefsCurrencyLockedSheetTitle(String currency) {
@@ -12778,24 +12802,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get prefsCurrencyLockedSheetWalletCta => 'Ouvrir mon portefeuille';
 
   @override
+  String get prefsCurrencySubtitle =>
+      'Celle de vos paiements, recharges et retraits';
+
+  @override
   String get prefsCurrencyLockedSubtitle =>
       'Verrouillée : videz votre portefeuille pour en changer';
 
   @override
-  String get prefsDisplayCurrencyLabel => 'Devise d\'affichage';
+  String get prefsDisplayCurrencyLabel => 'Afficher les prix en';
 
   @override
   String get prefsDisplayCurrencySubtitle =>
-      'Les prix publiés dans une autre devise sont convertis à titre indicatif';
+      'Conversion indicative, vous payez toujours dans la devise du trajet';
 
   @override
   String get prefsAutoLabel => 'Automatique';
-
-  @override
-  String get prefsSectionGeolocation => 'GÉOLOCALISATION';
-
-  @override
-  String get prefsPickupRadiusLabel => 'Rayon de collecte';
 
   @override
   String get prefsCountrySearchHint => 'Rechercher un pays';
@@ -12819,12 +12841,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get prefsDefaultWeightSubtitle => 'Pré-remplit vos annonces';
 
   @override
-  String get prefsMinPriceLabel => 'Prix minimum';
+  String get prefsMinPriceLabel => 'Prix minimum par kg';
 
   @override
-  String prefsMinPriceNone(String symbol) {
-    return '0 $symbol = aucun filtre';
-  }
+  String get prefsMinPriceSubtitle =>
+      'Les offres en dessous ne vous sont pas envoyées';
 
   @override
   String get prefsMinPriceValueNone => 'Aucun';

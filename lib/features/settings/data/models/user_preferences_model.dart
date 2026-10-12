@@ -6,6 +6,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 /// L'ancienne clé `fav_destinations` (section « Destinations favorites »,
 /// retirée : FLUTTER-H5) peut rester dans la boîte des appareils existants ;
 /// elle n'est plus ni lue ni écrite, ce qui ne gêne pas la lecture des autres.
+/// Même chose pour `pickup_radius_km` (« Rayon de collecte », retiré le
+/// 2026-10-11 : le réglage n'avait aucun effet).
 class UserPreferencesModel {
   /// Langue de l'app : `'system'` suit le téléphone, `'fr'`/`'en'` forcent.
   static const String kLanguageSystem = 'system';
@@ -15,7 +17,6 @@ class UserPreferencesModel {
   final String languageCode;
   final String weightUnit;
   final String currencyCode;
-  final int pickupRadiusKm;
   final String profileVisibility;
   final bool hidePhoneNumber;
   final bool biometricEnabled;
@@ -28,7 +29,6 @@ class UserPreferencesModel {
     this.languageCode = kLanguageSystem,
     this.weightUnit = 'kg',
     this.currencyCode = 'EUR',
-    this.pickupRadiusKm = 10,
     this.profileVisibility = 'public',
     this.hidePhoneNumber = false,
     this.biometricEnabled = false,
@@ -40,7 +40,6 @@ class UserPreferencesModel {
     String? languageCode,
     String? weightUnit,
     String? currencyCode,
-    int? pickupRadiusKm,
     String? profileVisibility,
     bool? hidePhoneNumber,
     bool? biometricEnabled,
@@ -50,7 +49,6 @@ class UserPreferencesModel {
     languageCode: languageCode ?? this.languageCode,
     weightUnit: weightUnit ?? this.weightUnit,
     currencyCode: currencyCode ?? this.currencyCode,
-    pickupRadiusKm: pickupRadiusKm ?? this.pickupRadiusKm,
     profileVisibility: profileVisibility ?? this.profileVisibility,
     hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
     biometricEnabled: biometricEnabled ?? this.biometricEnabled,
@@ -64,8 +62,6 @@ class UserPreferencesModel {
     weightUnit: box.get(HiveService.kWeightUnit, defaultValue: 'kg') as String,
     currencyCode:
         box.get(HiveService.kCurrencyCode, defaultValue: 'EUR') as String,
-    pickupRadiusKm:
-        box.get(HiveService.kPickupRadiusKm, defaultValue: 10) as int,
     profileVisibility:
         box.get(HiveService.kProfileVisibility, defaultValue: 'public')
             as String,
@@ -82,7 +78,6 @@ class UserPreferencesModel {
     box.put(HiveService.kLanguageCode, languageCode);
     box.put(HiveService.kWeightUnit, weightUnit);
     box.put(HiveService.kCurrencyCode, currencyCode);
-    box.put(HiveService.kPickupRadiusKm, pickupRadiusKm);
     box.put(HiveService.kProfileVisibility, profileVisibility);
     box.put(HiveService.kHidePhoneNumber, hidePhoneNumber);
     box.put(HiveService.kBiometricEnabled, biometricEnabled);

@@ -113,7 +113,18 @@
   "errorBidNotFoundTitle": "Demande introuvable",
   "errorBidNotFoundMessage": "Cette demande n'existe plus.",
   "errorContactKycRequiredTitle": "Profil vérifié requis",
-  "errorContactKycRequiredMessage": "Ce voyageur ne reçoit que des profils vérifiés. Vérifiez votre identité pour lui envoyer une demande.",
+  "errorContactKycRequiredMessage": "Cette personne n'accepte que les profils vérifiés. Vérifiez votre identité pour lui envoyer une offre.",
+  "errorBidBelowMinPriceTitle": "Prix trop bas",
+  "errorBidBelowMinPriceMessage": "Ce voyageur n'accepte pas moins de {price}/kg",
+  "@errorBidBelowMinPriceMessage": {
+    "description": "422 bid-below-min-price (error_catalog.dart) : prix minimum par kg du voyageur, brut et dans la devise du trajet, formaté (ex. « 6,72 € »).",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "errorBidBelowMinPriceFallbackMessage": "Ce voyageur n'accepte pas un prix au kilo aussi bas. Proposez un prix plus élevé.",
   "errorBidNotAcceptedTitle": "Étape impossible pour ce colis",
   "errorBidNotAcceptedMessage": "Ce colis n'est pas à une étape qui permet cette action. Son statut a peut-être changé entre-temps (trajet marqué arrivé, colis livré ou annulé).",
   "errorBidNotDeliveredTitle": "Colis non livré",
@@ -13957,10 +13968,14 @@
   "@notificationSettingsDeliveryConfirmedLabel": {
     "description": "Libellé de la tuile verrouillée « Livraison confirmée » (notification_settings_screen.dart)"
   },
-  "notificationSettingsSmsFallbackSubtitle": "SMS automatique si push non reçu",
-  "@notificationSettingsSmsFallbackSubtitle": {
-    "description": "Sous-titre des trois tuiles verrouillées de la section Protections critiques (notification_settings_screen.dart) : même texte, même écran (R42)."
-  },
+  "notificationSettingsDeliveryConfirmedSubtitle": "Pour savoir que votre colis est bien arrivé, avec SMS si le push n'arrive pas",
+  "@notificationSettingsDeliveryConfirmedSubtitle": {"description": "Pourquoi la tuile verrouillée « Livraison confirmée » reste active, mention du SMS de repli (notification_settings_screen.dart)"},
+  "notificationSettingsPaymentReceivedSubtitle": "Pour suivre l'argent de vos colis, avec SMS si le push n'arrive pas",
+  "@notificationSettingsPaymentReceivedSubtitle": {"description": "Pourquoi la tuile verrouillée « Paiement reçu » reste active, mention du SMS de repli (notification_settings_screen.dart)"},
+  "notificationSettingsDisputeOpenedSubtitle": "Pour répondre à temps à un litige, avec SMS si le push n'arrive pas",
+  "@notificationSettingsDisputeOpenedSubtitle": {"description": "Pourquoi la tuile verrouillée « Litige ouvert » reste active, mention du SMS de repli (notification_settings_screen.dart)"},
+  "notificationSettingsTripRescheduledSubtitle": "Pour savoir quand remettre votre colis, avec SMS si le push n'arrive pas",
+  "@notificationSettingsTripRescheduledSubtitle": {"description": "Pourquoi la tuile verrouillée « Trajet reporté » reste active, mention du SMS de repli (notification_settings_screen.dart)"},
   "notificationSettingsPaymentReceivedLabel": "Paiement reçu",
   "@notificationSettingsPaymentReceivedLabel": {
     "description": "Libellé de la tuile verrouillée « Paiement reçu » (notification_settings_screen.dart)"
@@ -14029,7 +14044,7 @@
   "@notificationSettingsTripRescheduledLabel": {"description": "Tuile verrouillée TRIP_RESCHEDULED, type critique du backend (notification_settings_screen.dart)"},
   "notificationSettingsAccountSafetyLabel": "Argent, identité, litiges et compte",
   "@notificationSettingsAccountSafetyLabel": {"description": "Tuile verrouillée des notifications non réglables sans SMS de repli : paiements, portefeuille, KYC, litiges, absences, modération (notification_settings_screen.dart)"},
-  "notificationSettingsAccountSafetySubtitle": "Portefeuille, vérification d'identité, litiges, messages de Yadony",
+  "notificationSettingsAccountSafetySubtitle": "Sécurité de votre compte et de votre argent",
   "@notificationSettingsAccountSafetySubtitle": {"description": "Sous-titre de la tuile verrouillée argent/identité/litiges/compte (notification_settings_screen.dart)"},
   "notificationSettingsAutomationsLabel": "Automatisations voyageur",
   "@notificationSettingsAutomationsLabel": {"description": "Tuile push_traveler_automations : automation_capacity_free, automation_loyal_sender, automation_last_minute (notification_settings_screen.dart)"},
@@ -14075,7 +14090,7 @@
   "@prefsCountryPlaceholder": {
     "description": "Valeur affichée tant qu'aucun pays n'est choisi (business_prefs_screen.dart)"
   },
-  "prefsCurrencyLabel": "Devise",
+  "prefsCurrencyLabel": "Devise de mon portefeuille",
   "@prefsCurrencyLabel": {
     "description": "Libellé de la tuile devise (business_prefs_screen.dart)"
   },
@@ -14104,29 +14119,25 @@
     "description": "Bouton de la feuille de devise verrouillée vers le portefeuille (business_prefs_screen.dart _showCurrencyLockedSheet)."
   },
 
+  "prefsCurrencySubtitle": "Celle de vos paiements, recharges et retraits",
+  "@prefsCurrencySubtitle": {
+    "description": "Sous-titre de la tuile devise du portefeuille, hors verrouillage (business_prefs_screen.dart)"
+  },
   "prefsCurrencyLockedSubtitle": "Verrouillée : videz votre portefeuille pour en changer",
   "@prefsCurrencyLockedSubtitle": {
     "description": "Sous-titre quand la devise est verrouillée (business_prefs_screen.dart)"
   },
-  "prefsDisplayCurrencyLabel": "Devise d'affichage",
+  "prefsDisplayCurrencyLabel": "Afficher les prix en",
   "@prefsDisplayCurrencyLabel": {
     "description": "Libellé de la tuile devise d'affichage et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42)."
   },
-  "prefsDisplayCurrencySubtitle": "Les prix publiés dans une autre devise sont convertis à titre indicatif",
+  "prefsDisplayCurrencySubtitle": "Conversion indicative, vous payez toujours dans la devise du trajet",
   "@prefsDisplayCurrencySubtitle": {
     "description": "Sous-titre de la tuile devise d'affichage (business_prefs_screen.dart). Fusion de deux fragments concaténés."
   },
   "prefsAutoLabel": "Automatique",
   "@prefsAutoLabel": {
     "description": "Valeur affichée pour la devise d'affichage AUTO, tuile et sheet (business_prefs_screen.dart) : même texte, même écran cible (R42)."
-  },
-  "prefsSectionGeolocation": "GÉOLOCALISATION",
-  "@prefsSectionGeolocation": {
-    "description": "En-tête de section (business_prefs_screen.dart)"
-  },
-  "prefsPickupRadiusLabel": "Rayon de collecte",
-  "@prefsPickupRadiusLabel": {
-    "description": "Libellé du curseur de rayon de collecte (business_prefs_screen.dart)"
   },
   "prefsCountrySearchHint": "Rechercher un pays",
   "@prefsCountrySearchHint": {
@@ -14156,18 +14167,13 @@
   "@prefsDefaultWeightSubtitle": {
     "description": "Sous-titre du curseur de poids par défaut (business_prefs_screen.dart)"
   },
-  "prefsMinPriceLabel": "Prix minimum",
+  "prefsMinPriceLabel": "Prix minimum par kg",
   "@prefsMinPriceLabel": {
     "description": "Libellé du curseur de prix minimum (business_prefs_screen.dart)"
   },
-  "prefsMinPriceNone": "0 {symbol} = aucun filtre",
-  "@prefsMinPriceNone": {
-    "description": "Sous-titre du curseur de prix minimum à 0 (business_prefs_screen.dart)",
-    "placeholders": {
-      "symbol": {
-        "type": "String"
-      }
-    }
+  "prefsMinPriceSubtitle": "Les offres en dessous ne vous sont pas envoyées",
+  "@prefsMinPriceSubtitle": {
+    "description": "Sous-titre du curseur de prix minimum par kg (business_prefs_screen.dart) : le serveur refuse les propositions sous ce prix (422 bid-below-min-price)."
   },
   "prefsMinPriceValueNone": "Aucun",
   "@prefsMinPriceValueNone": {

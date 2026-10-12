@@ -23,7 +23,6 @@ class FakeUserBusinessPrefsDto extends Fake implements UserBusinessPrefsDto {}
 const _prefs = UserBusinessPrefsDto(
   weightUnit: 'kg',
   currencyCode: 'EUR',
-  pickupRadiusKm: 10,
   defaultPackageWeightKg: 23,
   minBidPriceEur: 0,
 );

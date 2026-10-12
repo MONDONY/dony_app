@@ -206,19 +206,6 @@ void main() {
       const b = CountryChanged('SN');
       expect(a, isNot(equals(b)));
     });
-
-    test('PickupRadiusChanged props are correct', () {
-      const a = PickupRadiusChanged(25);
-      const b = PickupRadiusChanged(25);
-      expect(a, equals(b));
-      expect(a.props, equals([25]));
-    });
-
-    test('PickupRadiusChanged with different values are not equal', () {
-      const a = PickupRadiusChanged(10);
-      const b = PickupRadiusChanged(20);
-      expect(a, isNot(equals(b)));
-    });
   });
 
   group('AccountDeletionEvent props', () {

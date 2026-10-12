@@ -707,8 +707,26 @@ abstract class AppLocalizations {
   /// No description provided for @errorContactKycRequiredMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce voyageur ne reçoit que des profils vérifiés. Vérifiez votre identité pour lui envoyer une demande.'**
+  /// **'Cette personne n\'accepte que les profils vérifiés. Vérifiez votre identité pour lui envoyer une offre.'**
   String get errorContactKycRequiredMessage;
+
+  /// No description provided for @errorBidBelowMinPriceTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix trop bas'**
+  String get errorBidBelowMinPriceTitle;
+
+  /// 422 bid-below-min-price (error_catalog.dart) : prix minimum par kg du voyageur, brut et dans la devise du trajet, formaté (ex. « 6,72 € »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur n\'accepte pas moins de {price}/kg'**
+  String errorBidBelowMinPriceMessage(String price);
+
+  /// No description provided for @errorBidBelowMinPriceFallbackMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur n\'accepte pas un prix au kilo aussi bas. Proposez un prix plus élevé.'**
+  String get errorBidBelowMinPriceFallbackMessage;
 
   /// No description provided for @errorBidNotAcceptedTitle.
   ///
@@ -20933,11 +20951,29 @@ abstract class AppLocalizations {
   /// **'Livraison confirmée'**
   String get notificationSettingsDeliveryConfirmedLabel;
 
-  /// Sous-titre des trois tuiles verrouillées de la section Protections critiques (notification_settings_screen.dart) : même texte, même écran (R42).
+  /// Pourquoi la tuile verrouillée « Livraison confirmée » reste active, mention du SMS de repli (notification_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'SMS automatique si push non reçu'**
-  String get notificationSettingsSmsFallbackSubtitle;
+  /// **'Pour savoir que votre colis est bien arrivé, avec SMS si le push n\'arrive pas'**
+  String get notificationSettingsDeliveryConfirmedSubtitle;
+
+  /// Pourquoi la tuile verrouillée « Paiement reçu » reste active, mention du SMS de repli (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour suivre l\'argent de vos colis, avec SMS si le push n\'arrive pas'**
+  String get notificationSettingsPaymentReceivedSubtitle;
+
+  /// Pourquoi la tuile verrouillée « Litige ouvert » reste active, mention du SMS de repli (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour répondre à temps à un litige, avec SMS si le push n\'arrive pas'**
+  String get notificationSettingsDisputeOpenedSubtitle;
+
+  /// Pourquoi la tuile verrouillée « Trajet reporté » reste active, mention du SMS de repli (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour savoir quand remettre votre colis, avec SMS si le push n\'arrive pas'**
+  String get notificationSettingsTripRescheduledSubtitle;
 
   /// Libellé de la tuile verrouillée « Paiement reçu » (notification_settings_screen.dart)
   ///
@@ -21056,7 +21092,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la tuile verrouillée argent/identité/litiges/compte (notification_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Portefeuille, vérification d\'identité, litiges, messages de Yadony'**
+  /// **'Sécurité de votre compte et de votre argent'**
   String get notificationSettingsAccountSafetySubtitle;
 
   /// Tuile push_traveler_automations : automation_capacity_free, automation_loyal_sender, automation_last_minute (notification_settings_screen.dart)
@@ -21146,7 +21182,7 @@ abstract class AppLocalizations {
   /// Libellé de la tuile devise (business_prefs_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Devise'**
+  /// **'Devise de mon portefeuille'**
   String get prefsCurrencyLabel;
 
   /// Titre de la feuille ouverte au toucher de la devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet, Sentry FLUTTER-8A).
@@ -21167,6 +21203,12 @@ abstract class AppLocalizations {
   /// **'Ouvrir mon portefeuille'**
   String get prefsCurrencyLockedSheetWalletCta;
 
+  /// Sous-titre de la tuile devise du portefeuille, hors verrouillage (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Celle de vos paiements, recharges et retraits'**
+  String get prefsCurrencySubtitle;
+
   /// Sous-titre quand la devise est verrouillée (business_prefs_screen.dart)
   ///
   /// In fr, this message translates to:
@@ -21176,13 +21218,13 @@ abstract class AppLocalizations {
   /// Libellé de la tuile devise d'affichage et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42).
   ///
   /// In fr, this message translates to:
-  /// **'Devise d\'affichage'**
+  /// **'Afficher les prix en'**
   String get prefsDisplayCurrencyLabel;
 
   /// Sous-titre de la tuile devise d'affichage (business_prefs_screen.dart). Fusion de deux fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Les prix publiés dans une autre devise sont convertis à titre indicatif'**
+  /// **'Conversion indicative, vous payez toujours dans la devise du trajet'**
   String get prefsDisplayCurrencySubtitle;
 
   /// Valeur affichée pour la devise d'affichage AUTO, tuile et sheet (business_prefs_screen.dart) : même texte, même écran cible (R42).
@@ -21190,18 +21232,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Automatique'**
   String get prefsAutoLabel;
-
-  /// En-tête de section (business_prefs_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'GÉOLOCALISATION'**
-  String get prefsSectionGeolocation;
-
-  /// Libellé du curseur de rayon de collecte (business_prefs_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Rayon de collecte'**
-  String get prefsPickupRadiusLabel;
 
   /// Placeholder du champ de recherche de pays (business_prefs_screen.dart)
   ///
@@ -21248,14 +21278,14 @@ abstract class AppLocalizations {
   /// Libellé du curseur de prix minimum (business_prefs_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Prix minimum'**
+  /// **'Prix minimum par kg'**
   String get prefsMinPriceLabel;
 
-  /// Sous-titre du curseur de prix minimum à 0 (business_prefs_screen.dart)
+  /// Sous-titre du curseur de prix minimum par kg (business_prefs_screen.dart) : le serveur refuse les propositions sous ce prix (422 bid-below-min-price).
   ///
   /// In fr, this message translates to:
-  /// **'0 {symbol} = aucun filtre'**
-  String prefsMinPriceNone(String symbol);
+  /// **'Les offres en dessous ne vous sont pas envoyées'**
+  String get prefsMinPriceSubtitle;
 
   /// Valeur affichée quand le prix minimum est à 0 (business_prefs_screen.dart)
   ///
