@@ -1,11 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
 import 'package:dony/features/flights/presentation/widgets/airline_logo.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 /// Pastille de l'en-tête d'une carte.
 enum FlightOfferBadge { cheapest, fastest }
@@ -20,6 +22,9 @@ class FlightOfferCard extends StatelessWidget {
     required this.onOpen,
     this.badge,
     this.opening = false,
+    this.showDates = false,
+    this.requestedDeparture,
+    this.requestedReturn,
   });
 
   final FlightOffer offer;
@@ -28,6 +33,16 @@ class FlightOfferCard extends StatelessWidget {
 
   /// Le lien partenaire est en cours de récupération.
   final bool opening;
+
+  /// Vols à quelques jours des dates demandées (`nearbyDates` du back) : la
+  /// date de départ de chaque trajet s'affiche sous son aéroport, en
+  /// terracotta quand elle sort des dates demandées. Faux : carte inchangée.
+  final bool showDates;
+
+  /// Dates demandées, pour repérer celles qui diffèrent ; `null` = toutes
+  /// les dates, rien n'est alors mis en évidence.
+  final FlightWhen? requestedDeparture;
+  final FlightWhen? requestedReturn;
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +118,9 @@ class FlightOfferCard extends StatelessWidget {
                 minutes: o.outboundMinutes,
                 transfers: o.transfers,
                 dayOffset: o.arrivalDayOffset,
+                date: showDates
+                    ? _LegDate.of(o.departureAt, requestedDeparture)
+                    : null,
               ),
               if (o.isRoundTrip)
                 _LegRow(
@@ -114,6 +132,9 @@ class FlightOfferCard extends StatelessWidget {
                   minutes: o.returnDurationMinutes,
                   transfers: o.returnTransfers,
                   dayOffset: o.returnArrivalDayOffset,
+                  date: showDates
+                      ? _LegDate.of(o.returnAt, requestedReturn)
+                      : null,
                 ),
               const SizedBox(height: DonySpacing.xs + DonySpacing.xxs),
               const FlightDashedLine(),
@@ -230,6 +251,7 @@ class _LegRow extends StatelessWidget {
     required this.minutes,
     required this.transfers,
     required this.dayOffset,
+    this.date,
   });
 
   final DateTime? departure;
@@ -239,6 +261,9 @@ class _LegRow extends StatelessWidget {
   final int? minutes;
   final int? transfers;
   final int dayOffset;
+
+  /// Date du départ du trajet, affichée sous l'aéroport de départ.
+  final _LegDate? date;
 
   @override
   Widget build(BuildContext context) {
@@ -252,7 +277,7 @@ class _LegRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _Stop(time: start, code: fromCode, end: false),
+          _Stop(time: start, code: fromCode, end: false, date: date),
           const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
           Expanded(
             child: _Middle(minutes: minutes, transfers: transfers),
@@ -277,12 +302,14 @@ class _Stop extends StatelessWidget {
     required this.code,
     required this.end,
     this.dayOffset = 0,
+    this.date,
   });
 
   final String? time;
   final String code;
   final bool end;
   final int dayOffset;
+  final _LegDate? date;
 
   @override
   Widget build(BuildContext context) {
@@ -303,9 +330,19 @@ class _Stop extends StatelessWidget {
     );
     final align = end ? CrossAxisAlignment.end : CrossAxisAlignment.start;
 
+    final dateLine = date == null ? null : _DateLine(date: date!);
     if (time == null) {
       // Heure inconnue : le code seul, à la place de l'heure.
-      return Text(code, style: big?.copyWith(color: cs.onSurfaceVariant));
+      final alone = Text(
+        code,
+        style: big?.copyWith(color: cs.onSurfaceVariant),
+      );
+      if (dateLine == null) return alone;
+      return Column(
+        crossAxisAlignment: align,
+        mainAxisSize: MainAxisSize.min,
+        children: [alone, dateLine],
+      );
     }
     return Column(
       crossAxisAlignment: align,
@@ -336,7 +373,50 @@ class _Stop extends StatelessWidget {
           style: big,
         ),
         Text(code, style: small),
+        ?dateLine,
       ],
+    );
+  }
+}
+
+/// Jour de départ d'un trajet et s'il sort des dates demandées.
+class _LegDate {
+  const _LegDate(this.day, {required this.shifted});
+
+  final DateTime day;
+  final bool shifted;
+
+  static _LegDate? of(DateTime? at, FlightWhen? requested) {
+    if (at == null) return null;
+    final day = DateTime(at.year, at.month, at.day);
+    final shifted =
+        requested != null &&
+        (day.isBefore(requested.first) || day.isAfter(requested.last));
+    return _LegDate(day, shifted: shifted);
+  }
+}
+
+/// « mar. 22 déc. », en terracotta quand le jour diffère de la demande.
+class _DateLine extends StatelessWidget {
+  const _DateLine({required this.date});
+
+  final _LegDate date;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return Text(
+      DateFormat.MMMEd(l.localeName).format(date.day),
+      key: Key(date.shifted ? 'flight-leg-date-shifted' : 'flight-leg-date'),
+      maxLines: 1,
+      style: tt.bodySmall?.copyWith(
+        height: 1.2,
+        fontWeight: date.shifted ? FontWeight.w700 : FontWeight.w500,
+        color: date.shifted ? cs.secondary : cs.onSurfaceVariant,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
@@ -24,6 +25,7 @@ import 'package:dony/features/flights/presentation/widgets/flight_deal_card.dart
 import 'package:dony/features/flights/presentation/widgets/flight_offer_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -52,7 +54,7 @@ const _paris = FlightPlace(code: 'PAR', name: 'Paris');
 const _abidjan = FlightPlace(code: 'ABJ', name: 'Abidjan');
 const _lille = FlightPlace(code: 'LIL', name: 'Lille');
 
-Widget _app({Locale locale = AppL10n.fr}) {
+Widget _app({Locale locale = AppL10n.fr, ThemeData? theme}) {
   final router = GoRouter(
     routes: [
       GoRoute(path: '/', builder: (_, _) => const FlightsScreen()),
@@ -69,6 +71,7 @@ Widget _app({Locale locale = AppL10n.fr}) {
   );
   return MaterialApp.router(
     locale: locale,
+    theme: theme,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     routerConfig: router,
@@ -191,15 +194,156 @@ void main() {
     }
   });
 
-  Future<void> open(WidgetTester tester, {Locale locale = AppL10n.fr}) async {
+  Future<void> open(
+    WidgetTester tester, {
+    Locale locale = AppL10n.fr,
+    ThemeData? theme,
+  }) async {
     tester.view.physicalSize = const Size(390, 844) * 3;
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(_app(locale: locale));
+    await tester.pumpWidget(_app(locale: locale, theme: theme));
     await tester.pumpAndSettle();
   }
 
   Finder rich(String text) => find.text(text, findRichText: true);
+
+  /// Style de barre d'état exposé en haut de l'écran, celui que Flutter
+  /// envoie au système à chaque image.
+  SystemUiOverlayStyle? statusBar(WidgetTester tester) {
+    final view = tester.view;
+    final layer = tester.binding.renderViews.first.debugLayer!;
+    return layer.find<SystemUiOverlayStyle>(
+      Offset(view.physicalSize.width / 2, 1),
+    );
+  }
+
+  group('barre d\'état', () {
+    testWidgets('icônes sombres sur le formulaire et les résultats, claires '
+        'pendant l\'attente et sur le choix de ville', (tester) async {
+      final pending = Completer<FlightSearchResult>();
+      final fast = search;
+      search = (q) => pending.future;
+      await open(tester, theme: AppTheme.light());
+
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.dark);
+      expect(statusBar(tester)?.statusBarBrightness, Brightness.light);
+
+      await tester.tap(find.byKey(const Key('flights-search-button')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.light);
+      expect(statusBar(tester)?.statusBarBrightness, Brightness.dark);
+
+      pending.complete(await fast(const FlightSearchQuery()));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('flights-results')), findsOneWidget);
+      // Le bug : le style clair de l'attente restait sur les résultats.
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.dark);
+      expect(statusBar(tester)?.statusBarColor, Colors.transparent);
+      expect(
+        SystemChrome.latestStyle?.statusBarIconBrightness,
+        Brightness.dark,
+      );
+
+      await tester.tap(find.byKey(const Key('flights-back')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('flights-destination')));
+      await tester.pumpAndSettle();
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.light);
+
+      await tester.tap(find.byKey(const Key('flight-city-DKR')));
+      await tester.pumpAndSettle();
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.dark);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('thème sombre : icônes claires partout', (tester) async {
+      await open(tester, theme: AppTheme.dark());
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.light);
+
+      await tester.tap(find.byKey(const Key('flights-search-button')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('flights-results')), findsOneWidget);
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.light);
+      expect(statusBar(tester)?.statusBarBrightness, Brightness.dark);
+    });
+
+    testWidgets('thème sans style de barre : repli sur le défaut Material', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.dark);
+    });
+  });
+
+  group('dates proches', () {
+    FlightSearchResult nearby({int? window}) => FlightSearchResult.fromJson({
+      'originCode': 'PAR',
+      'destinationCode': 'ABJ',
+      'roundTrip': false,
+      'currency': 'EUR',
+      'nearbyDates': true,
+      'nearbyDaysWindow': ?window,
+      'offers': [
+        {
+          'originCode': 'PAR',
+          'destinationCode': 'ABJ',
+          'departureAt': '2026-12-15T11:45:00+01:00',
+          'price': 431,
+          'currency': 'EUR',
+          'airlineName': 'Corsair',
+          'transfers': 0,
+          'offerPath': 'n1',
+        },
+      ],
+    });
+
+    testWidgets('bandeau en tête et date du départ sur la carte', (
+      tester,
+    ) async {
+      search = (_) async => nearby();
+      await open(tester);
+      await tester.tap(find.byKey(const Key('flights-search-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('flights-nearby-dates')), findsOneWidget);
+      expect(
+        find.text(
+          'Pas de prix exact pour ces dates. Voici des vols à 3 jours près.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('mar. 15 déc.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('écart donné par le back, en anglais', (tester) async {
+      enableEnglish();
+      search = (_) async => nearby(window: 1);
+      await open(tester, locale: const Locale('en'));
+      await tester.tap(find.byKey(const Key('flights-search-button')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'No exact price for these dates. Here are flights within 1 day.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Tue, Dec 15'), findsOneWidget);
+    });
+
+    testWidgets('résultats exacts : ni bandeau ni date', (tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const Key('flights-search-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('flights-nearby-dates')), findsNothing);
+      expect(find.byKey(const Key('flight-leg-date')), findsNothing);
+      expect(find.byKey(const Key('flight-leg-date-shifted')), findsNothing);
+    });
+  });
 
   testWidgets('formulaire prérempli et bons plans, puis résultats en cartes', (
     tester,

@@ -6579,6 +6579,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsAlertFab': (l) => l.flightsAlertFab,
   'flightsNoFlightsTitle': (l) => l.flightsNoFlightsTitle,
   'flightsNoFlightsBody': (l) => l.flightsNoFlightsBody,
+  'flightsNearbyDatesNotice': (l) =>
+      l.flightsNearbyDatesNotice(intPlaceholderValue),
   'flightsTryInstead': (l) => l.flightsTryInstead,
   'flightsSuggestSameDates': (l) => l.flightsSuggestSameDates,
   'flightsSuggestWholeMonth': (l) =>

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_offer_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +53,9 @@ Widget _host(
   bool opening = false,
   VoidCallback? onOpen,
   Locale locale = AppL10n.fr,
+  bool showDates = false,
+  FlightWhen? requestedDeparture,
+  FlightWhen? requestedReturn,
 }) => localizedApp(
   Scaffold(
     body: SingleChildScrollView(
@@ -61,6 +65,9 @@ Widget _host(
         badge: badge,
         opening: opening,
         onOpen: onOpen,
+        showDates: showDates,
+        requestedDeparture: requestedDeparture,
+        requestedReturn: requestedReturn,
       ),
     ),
   ),
@@ -149,5 +156,105 @@ void main() {
     expect(find.text('1 stop'), findsOneWidget);
     expect(find.text('6h 20m'), findsOneWidget);
     expect(find.text('indicative price'), findsOneWidget);
+  });
+
+  group('dates proches', () {
+    const plain = Key('flight-leg-date');
+    const shifted = Key('flight-leg-date-shifted');
+
+    testWidgets('sans dates proches : carte inchangée, aucune date', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_host(_roundTrip));
+      await tester.pumpAndSettle();
+      expect(find.byKey(plain), findsNothing);
+      expect(find.byKey(shifted), findsNothing);
+    });
+
+    testWidgets('date de chaque trajet ; celle qui diffère en terracotta', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          _roundTrip,
+          showDates: true,
+          requestedDeparture: FlightWhen.day(DateTime(2026, 12, 12)),
+          requestedReturn: FlightWhen.day(DateTime(2027, 1, 2)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Aller le jour demandé, retour un jour plus tard.
+      expect(find.byKey(plain), findsOneWidget);
+      expect(find.byKey(shifted), findsOneWidget);
+      expect(find.text('sam. 12 déc.'), findsOneWidget);
+      expect(find.text('dim. 3 janv.'), findsOneWidget);
+      final context = tester.element(find.byKey(shifted));
+      final cs = Theme.of(context).colorScheme;
+      expect(
+        tester.widget<Text>(find.byKey(shifted)).style?.color,
+        cs.secondary,
+      );
+      expect(
+        tester.widget<Text>(find.byKey(plain)).style?.color,
+        cs.onSurfaceVariant,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('mois demandé ou toutes les dates : rien en évidence', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          _roundTrip,
+          showDates: true,
+          requestedDeparture: FlightWhen.month(DateTime(2026, 12)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(plain), findsNWidgets(2));
+      expect(find.byKey(shifted), findsNothing);
+    });
+
+    testWidgets('heure inconnue : la date sous le code, décalée', (
+      tester,
+    ) async {
+      final dateOnly = FlightOffer.fromJson(const {
+        'originCode': 'PAR',
+        'destinationCode': 'ABJ',
+        'departureAt': '2026-12-14',
+        'price': 431,
+        'offerPath': '/search/Z',
+      });
+      await tester.pumpWidget(
+        _host(
+          dateOnly,
+          showDates: true,
+          requestedDeparture: FlightWhen.day(DateTime(2026, 12, 12)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('PAR'), findsOneWidget);
+      expect(find.text('lun. 14 déc.'), findsOneWidget);
+      expect(find.byKey(shifted), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('en anglais', (tester) async {
+      enableEnglish();
+      await tester.pumpWidget(
+        _host(
+          _roundTrip,
+          showDates: true,
+          requestedDeparture: FlightWhen.day(DateTime(2026, 12, 10)),
+          locale: const Locale('en'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Sat, Dec 12'), findsOneWidget);
+      expect(find.text('Sun, Jan 3'), findsOneWidget);
+      expect(find.byKey(shifted), findsOneWidget);
+    });
   });
 }
