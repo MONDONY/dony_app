@@ -1,4 +1,5 @@
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -20,6 +21,10 @@ class AnnouncementPreviewSheet extends StatelessWidget {
   /// `MOBILE_MONEY`). Null : repli sur `formState.cashAccepted`.
   final List<String>? paymentMethods;
 
+  /// « Modifier » de la ligne Devise (FLUTTER-NN) : ramène au sélecteur de
+  /// devise du formulaire. Null : ligne sans lien (devise figée).
+  final VoidCallback? onChangeCurrency;
+
   const AnnouncementPreviewSheet({
     super.key,
     required this.formState,
@@ -28,6 +33,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     this.departureTime,
     this.currency,
     this.paymentMethods,
+    this.onChangeCurrency,
   });
 
   static Future<void> show(
@@ -39,6 +45,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     TimeOfDay? departureTime,
     SupportedCurrency? currency,
     List<String>? paymentMethods,
+    VoidCallback? onChangeCurrency,
   }) {
     final l = context.l10n;
     return DonyBottomSheet.show<void>(
@@ -69,6 +76,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         departureTime: departureTime,
         currency: currency,
         paymentMethods: paymentMethods,
+        onChangeCurrency: onChangeCurrency,
       ),
     );
   }
@@ -121,6 +129,12 @@ class AnnouncementPreviewSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Devise en tête du récapitulatif (FLUTTER-NN, après FLUTTER-GK) :
+          // découverte trop tard, elle se vérifie avant tout le reste.
+          if (currency case final c?) ...[
+            _CurrencyRecap(currency: c, onChange: onChangeCurrency),
+            const SizedBox(height: DonySpacing.sm),
+          ],
           _PreviewRow(
             iconAsset: 'plane-takeoff',
             label: l.listingHeroTripLabel,
@@ -160,15 +174,6 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             label: l.listingRowLabelPrice,
             value: prixStr,
           ),
-          // Devise du voyage rappelée (FLUTTER-GK) : un prix d'étape saisi
-          // en pensant euros ne passe plus inaperçu en F CFA.
-          if (currency case final c?)
-            _PreviewRow(
-              key: const Key('preview-currency-row'),
-              iconAsset: 'wallet',
-              label: l.listingRowLabelCurrency,
-              value: '${c.symbol} (${c.code})',
-            ),
           _PreviewRow(
             iconAsset: 'banknote',
             label: l.listingRowLabelPayment,
@@ -230,13 +235,64 @@ class AnnouncementPreviewSheet extends StatelessWidget {
   }
 }
 
+/// Ligne « Devise : Franc CFA Ouest (XOF) » mise en avant, avec « Modifier »
+/// quand la devise peut encore changer (création d'un trajet).
+class _CurrencyRecap extends StatelessWidget {
+  const _CurrencyRecap({required this.currency, this.onChange});
+
+  final SupportedCurrency currency;
+  final VoidCallback? onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return Container(
+      key: const Key('preview-currency-row'),
+      padding: const EdgeInsets.only(
+        left: DonySpacing.md,
+        top: DonySpacing.xs,
+        bottom: DonySpacing.xs,
+        right: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.infoLight,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.info.withValues(alpha: 0.35)),
+      ),
+      constraints: const BoxConstraints(minHeight: 48),
+      child: Row(
+        children: [
+          DonyIcon('wallet', size: 18, color: cs.info),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              l.listingPreviewCurrencyValue(currency.name(l), currency.code),
+              style: tt.titleSmall?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (onChange != null)
+            TextButton(
+              key: const Key('preview-currency-change'),
+              onPressed: onChange,
+              child: Text(l.commonEdit),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _PreviewRow extends StatelessWidget {
   final String iconAsset;
   final String label;
   final String value;
 
   const _PreviewRow({
-    super.key,
     required this.iconAsset,
     required this.label,
     required this.value,

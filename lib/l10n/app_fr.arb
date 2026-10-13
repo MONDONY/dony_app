@@ -20581,5 +20581,17 @@
   "negotiationThreadCounterSameAmountHint": "Indiquez ici votre nouveau prix : c'est ce montant qui est proposé, pas celui écrit dans le message.",
   "@negotiationThreadCounterSameAmountHint": {
     "description": "Contre-offre au montant inchangé : bouton inactif tant que le prix n'est pas modifié (FLUTTER-MK)"
+  },
+  "listingPreviewCurrencyValue": "Devise : {currencyName} ({currencyCode})",
+  "@listingPreviewCurrencyValue": {
+    "description": "Ligne mise en avant en tête du récapitulatif avant publication d'un trajet (FLUTTER-NN)",
+    "placeholders": {
+      "currencyName": {
+        "type": "String"
+      },
+      "currencyCode": {
+        "type": "String"
+      }
+    }
   }
 }

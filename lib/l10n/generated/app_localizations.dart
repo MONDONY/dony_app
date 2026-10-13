@@ -31225,6 +31225,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Indiquez ici votre nouveau prix : c\'est ce montant qui est proposé, pas celui écrit dans le message.'**
   String get negotiationThreadCounterSameAmountHint;
+
+  /// Ligne mise en avant en tête du récapitulatif avant publication d'un trajet (FLUTTER-NN)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise : {currencyName} ({currencyCode})'**
+  String listingPreviewCurrencyValue(String currencyName, String currencyCode);
 }
 
 class _AppLocalizationsDelegate
