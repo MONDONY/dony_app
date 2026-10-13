@@ -1684,9 +1684,14 @@ class _DateSeparator extends StatelessWidget {
 
   String _label(AppLocalizations l) {
     final now = DateTime.now();
-    final isToday =
-        now.year == date.year && now.month == date.month && now.day == date.day;
-    final isYesterday = now.difference(date).inDays == 1;
+    final local = date.toLocal();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(local.year, local.month, local.day);
+    final isToday = day == today;
+    // Jour calendaire, pas 24 h d'écart : un message d'hier 12 h lu à 1 h du
+    // matin tombait sous les 24 h et s'affichait avec sa date complète.
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    final isYesterday = day == yesterday;
     if (isToday) return l.commonDateToday;
     if (isYesterday) return l.commonDateYesterday;
     return DateFormat.yMMMMd(l.localeName).format(date);
