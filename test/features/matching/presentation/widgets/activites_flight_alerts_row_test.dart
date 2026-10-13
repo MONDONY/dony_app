@@ -175,7 +175,31 @@ void main() {
     expect(find.text(' · 3 vols'), findsOneWidget);
     expect(find.byKey(const Key('hub-flight-alerts-ticket-hit')), findsOne);
     expect(_text('389 €'), findsOneWidget);
-    expect(_text('−61 € sous votre prix'), findsOneWidget);
+    expect(_text('−61 €\nsous votre prix'), findsOneWidget);
+  });
+
+  testWidgets('360 dp, trajet long : logos retirés avant de couper le trajet', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800) * 3;
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await pump(tester, [
+      _alert(
+        'a',
+        from: 'Marseille',
+        to: 'Brazzaville',
+        seen: 389,
+        count: 3,
+        codes: const ['AT', 'SS', 'AF'],
+      ),
+    ]);
+
+    // Trop étroit pour les logos : le trajet garde toute la place, le
+    // nombre de vols reste affiché.
+    expect(find.byKey(const Key('airline-logo-stack')), findsNothing);
+    expect(find.text(' · 3 vols'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('prix pile au seuil, sans nombre ni compagnies (ancien back)', (
@@ -201,7 +225,7 @@ void main() {
     expect(_text('2 alertes · dès 280 €'), findsOneWidget);
     expect(find.byKey(const Key('airline-logo-stack')), findsNothing);
     expect(_text('280 €'), findsOneWidget);
-    expect(_text('−20 € sous votre prix'), findsOneWidget);
+    expect(_text('−20 €\nsous votre prix'), findsOneWidget);
   });
 
   testWidgets('prix trouvé sans prix connu : flèche à la place du billet', (

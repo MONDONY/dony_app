@@ -90,7 +90,7 @@ void main() {
     expect(find.byType(AirlineLogo), findsNWidgets(3));
     expect(
       tester.getSize(find.byKey(const Key('airline-logo-stack'))).width,
-      38,
+      48,
     );
 
     await tester.pumpWidget(_wrap(const AirlineLogoStack(codes: [])));

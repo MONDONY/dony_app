@@ -6737,6 +6737,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsAlertOffersEmptyBody': (l) => l.flightsAlertOffersEmptyBody,
   'flightsAlertOffersMoreTitle': (l) => l.flightsAlertOffersMoreTitle,
   'flightsAlertOffersMoreBody': (l) => l.flightsAlertOffersMoreBody,
+  'activityFlightAlertsBelowByTicket': (l) =>
+      l.activityFlightAlertsBelowByTicket(placeholderMarker('amount')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7267,4 +7269,5 @@ const textParameters = <String, List<String>>{
   'flightsAlertResultAbove': ['price'],
   'flightsAlertOffersBanner': ['price'],
   'flightsAlertOffersMax': ['price'],
+  'activityFlightAlertsBelowByTicket': ['amount'],
 };

@@ -19332,4 +19332,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flightsAlertOffersMoreBody =>
       'All airlines, live prices, on the first day of your period.';
+
+  @override
+  String activityFlightAlertsBelowByTicket(String amount) {
+    return '−$amount\nunder your price';
+  }
 }

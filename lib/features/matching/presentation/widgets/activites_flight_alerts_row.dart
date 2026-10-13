@@ -194,20 +194,17 @@ class _RowContent extends StatelessWidget {
                   ),
                 ),
               )
-            else ...[
-              if (best.matchAirlineCodes.isNotEmpty) ...[
-                AirlineLogoStack(codes: best.matchAirlineCodes),
-                const SizedBox(width: DonySpacing.xs + DonySpacing.xxs),
-              ],
-              // Le trajet se coupe le premier : le nombre de vols reste lu.
-              Flexible(child: line(route)),
-              if (count > 0)
-                Text(
-                  ' · ${l.activityFlightAlertsHitFlights(count)}',
-                  maxLines: 1,
+            else
+              Expanded(
+                child: _RouteLine(
+                  route: route,
+                  flights: count > 0
+                      ? ' · ${l.activityFlightAlertsHitFlights(count)}'
+                      : null,
+                  codes: best.matchAirlineCodes,
                   style: subStyle,
                 ),
-            ],
+              ),
           ],
         );
         trailing = price == null
@@ -329,7 +326,97 @@ class _RowContent extends StatelessWidget {
   static String _savingsCaption(AppLocalizations l, FlightAlertsSummary s) {
     final savings = s.savings ?? 0;
     if (savings < 1) return l.flightsAlertAtYourPrice;
-    return l.flightsAlertBelowBy(FlightFormat.price(savings, s.currency!));
+    return l.activityFlightAlertsBelowByTicket(
+      FlightFormat.price(savings, s.currency!),
+    );
+  }
+}
+
+/// Trajet et nombre de vols d'une alerte qui a trouvé, précédés des logos
+/// des compagnies quand la place le permet. Le trajet complet passe avant
+/// les logos : trois, puis un, puis aucun, avant de couper le trajet ; le
+/// nombre de vols reste toujours lu.
+class _RouteLine extends StatelessWidget {
+  const _RouteLine({
+    required this.route,
+    required this.flights,
+    required this.codes,
+    required this.style,
+  });
+
+  final String route;
+  final String? flights;
+  final List<String> codes;
+  final TextStyle? style;
+
+  static const _gap = DonySpacing.xs + DonySpacing.xxs;
+
+  /// Logos affichés pour une largeur [available] : le plus grand nombre
+  /// parmi 3, 1 et 0 qui laisse le trajet entier.
+  static int logosFor({
+    required double available,
+    required double textWidth,
+    required int codes,
+  }) {
+    for (final n in const [3, 1]) {
+      if (n > codes) continue;
+      final logos = AirlineLogoStack.widthFor(n) + _gap;
+      if (logos + textWidth <= available) return n;
+    }
+    return 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter = TextPainter(
+          text: TextSpan(text: '$route${flights ?? ''}', style: style),
+          maxLines: 1,
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout();
+        final n = logosFor(
+          available: constraints.maxWidth,
+          textWidth: painter.width,
+          codes: codes.length,
+        );
+        // Nombre de vols démesuré face à la place (texte agrandi, écran
+        // très étroit) : il se coupe aussi plutôt que de déborder.
+        painter
+          ..text = TextSpan(text: flights ?? '', style: style)
+          ..layout();
+        final flightsFit = painter.width <= constraints.maxWidth / 2;
+        painter.dispose();
+        final count = flights == null
+            ? null
+            : Text(
+                flights!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: style,
+              );
+        return Row(
+          children: [
+            if (n > 0) ...[
+              AirlineLogoStack(codes: codes.take(n).toList()),
+              const SizedBox(width: _gap),
+            ],
+            // Le trajet se coupe le premier : le nombre de vols reste lu.
+            Flexible(
+              child: Text(
+                route,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: style,
+              ),
+            ),
+            if (count != null)
+              if (flightsFit) count else Flexible(child: count),
+          ],
+        );
+      },
+    );
   }
 }
 

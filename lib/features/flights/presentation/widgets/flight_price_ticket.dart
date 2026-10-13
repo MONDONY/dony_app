@@ -131,7 +131,8 @@ class FlightPriceTicket extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
                   caption!,
-                  maxLines: 1,
+                  maxLines: 2,
+                  textAlign: TextAlign.end,
                   // Petite ligne du billet, à la taille des libellés de la
                   // barre d'onglets : le billet doit laisser la place au
                   // trajet sur un écran de 360 points.
@@ -184,12 +185,24 @@ class _TicketPerforation extends CustomPainter {
 /// Pile de logos de compagnies (trois au plus), qui se chevauchent : les
 /// compagnies des vols trouvés par une alerte.
 class AirlineLogoStack extends StatelessWidget {
-  const AirlineLogoStack({super.key, required this.codes, this.size = 16});
+  const AirlineLogoStack({
+    super.key,
+    required this.codes,
+    this.size = defaultSize,
+  });
 
   final List<String> codes;
   final double size;
 
-  static const _overlap = 5.0;
+  static const defaultSize = 18.0;
+
+  /// Chevauchement d'un logo sur le précédent : un sixième du diamètre, le
+  /// code de chaque compagnie reste lisible en entier.
+  static double overlapFor(double size) => size / 6;
+
+  /// Largeur occupée par [count] logos de [size].
+  static double widthFor(int count, {double size = defaultSize}) =>
+      count <= 0 ? 0 : size + (count - 1) * (size - overlapFor(size));
 
   @override
   Widget build(BuildContext context) {
@@ -198,14 +211,14 @@ class AirlineLogoStack extends StatelessWidget {
     if (shown.isEmpty) return const SizedBox.shrink();
     return SizedBox(
       key: const Key('airline-logo-stack'),
-      width: size + (shown.length - 1) * (size - _overlap),
+      width: widthFor(shown.length, size: size),
       height: size,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           for (final (i, code) in shown.indexed)
             PositionedDirectional(
-              start: i * (size - _overlap),
+              start: i * (size - overlapFor(size)),
               // Liseré de la couleur de la carte, tracé à l'extérieur : il
               // détache chaque logo de celui qu'il recouvre.
               child: DecoratedBox(

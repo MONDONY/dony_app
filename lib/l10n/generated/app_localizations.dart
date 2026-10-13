@@ -31519,6 +31519,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Toutes les compagnies, prix du moment, au premier jour de votre période.'**
   String get flightsAlertOffersMoreBody;
+
+  /// Petite ligne du billet vert de la ligne des Outils, sur deux lignes pour garder le billet étroit : écart sous le seuil.
+  ///
+  /// In fr, this message translates to:
+  /// **'−{amount}\nsous votre prix'**
+  String activityFlightAlertsBelowByTicket(String amount);
 }
 
 class _AppLocalizationsDelegate

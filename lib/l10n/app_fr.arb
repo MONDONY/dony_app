@@ -20740,5 +20740,7 @@
   "flightsAlertOffersMoreTitle": "Plus de vols sur Aviasales",
   "@flightsAlertOffersMoreTitle": {"description": "Encart en fin de liste des vols trouvés."},
   "flightsAlertOffersMoreBody": "Toutes les compagnies, prix du moment, au premier jour de votre période.",
-  "@flightsAlertOffersMoreBody": {"description": "Encart en fin de liste des vols trouvés."}
+  "@flightsAlertOffersMoreBody": {"description": "Encart en fin de liste des vols trouvés."},
+  "activityFlightAlertsBelowByTicket": "−{amount}\nsous votre prix",
+  "@activityFlightAlertsBelowByTicket": {"description": "Petite ligne du billet vert de la ligne des Outils, sur deux lignes pour garder le billet étroit : écart sous le seuil.", "placeholders": {"amount": {"type": "String"}}}
 }
