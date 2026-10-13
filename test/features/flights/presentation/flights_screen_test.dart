@@ -285,7 +285,7 @@ void main() {
       'currency': 'EUR',
       'nearbyDates': true,
       'nearbyDaysWindow': ?window,
-      'offers': [
+      'offers': const [
         {
           'originCode': 'PAR',
           'destinationCode': 'ABJ',
