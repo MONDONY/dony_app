@@ -12,6 +12,7 @@ import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -190,6 +191,30 @@ class Step2DetailsState extends State<Step2Details> {
       _kMaxCategories,
     ),
   };
+
+  /// Saisie de l'étape au format du brouillon local
+  /// (`PackageRequestFormDraft`), validée ou non. Un poids illisible est
+  /// laissé vide plutôt que gardé faux.
+  Map<String, dynamic> get draftInput {
+    final w = double.tryParse(_weightCtrl.text.trim().replaceAll(',', '.'));
+    final desc = _descriptionCtrl.text.trim();
+    return {
+      'weightKg': w,
+      'parcelSize': w == null ? null : _sizeFromWeight(w).wireName,
+      'categories': _allCategories,
+      'description': desc.isEmpty ? null : desc,
+    };
+  }
+
+  /// Vrai si l'étape porte une saisie que le bloc n'a pas encore reçue.
+  bool get hasUnsubmittedInput {
+    final s = context.read<PackageRequestFormBloc>().state;
+    final w = double.tryParse(_weightCtrl.text.trim().replaceAll(',', '.'));
+    final desc = _descriptionCtrl.text.trim();
+    return w != s.weightKg ||
+        !listEquals(_allCategories, s.categories) ||
+        (desc.isEmpty ? null : desc) != s.description;
+  }
 
   void submit() {
     // Backstop : « Continuer » est déjà grisé tant que l'étape est incomplète.

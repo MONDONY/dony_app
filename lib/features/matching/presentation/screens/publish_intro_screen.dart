@@ -9,8 +9,14 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
+import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
+import 'package:dony/features/publish_gate/bloc/publish_gate_cubit.dart';
+import 'package:dony/features/publish_gate/bloc/publish_gate_state.dart';
+import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
+import 'package:dony/features/publish_gate/data/models/publish_draft_entry.dart';
+import 'package:dony/features/publish_gate/presentation/publish_drafts_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -20,14 +26,32 @@ import 'package:go_router/go_router.dart';
 
 /// Rôle de publication : détermine tout le contenu (illustration, couleur,
 /// engagements, destination du CTA) de [PublishIntroScreen].
-enum PublishIntroRole { trip, parcel }
+enum PublishIntroRole {
+  trip(PublishCommitmentRole.traveler),
+  parcel(PublishCommitmentRole.sender);
 
-/// Écran d'introduction affiché avant le formulaire de publication.
+  const PublishIntroRole(this.commitmentRole);
+
+  /// Engagements acceptés pour ce rôle (serveur).
+  final PublishCommitmentRole commitmentRole;
+}
+
+UserModel? _currentUser(AuthState authState) => switch (authState) {
+  final AuthAuthenticated s => s.user,
+  final AuthProfileUpdated s => s.user,
+  _ => null,
+};
+
+/// Aiguillage avant le formulaire de publication, point de passage de tous
+/// les boutons « Publier ».
 ///
-/// Il rappelle la condition d'accès (identité vérifiée) et situe les
-/// responsabilités du rôle avant d'ouvrir le formulaire. Le même écran sert
-/// aux deux flux — voyageur (bleu) et expéditeur (terracotta) — pilotés par
-/// [role].
+/// Première publication du rôle (ou nouveau texte des engagements) : l'écran
+/// rappelle la condition d'accès (identité vérifiée) et les engagements du
+/// rôle, qu'il faut lire jusqu'en bas pour cocher « J'ai lu… » puis
+/// continuer. Ensuite, l'écran ne s'affiche plus : on passe directement au
+/// formulaire, ou d'abord par la feuille des brouillons s'il en reste. Le
+/// même écran sert aux deux flux — voyageur (bleu) et expéditeur
+/// (terracotta) — pilotés par [role].
 class PublishIntroScreen extends StatelessWidget {
   const PublishIntroScreen({super.key, required this.role});
 
@@ -35,18 +59,149 @@ class PublishIntroScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return BlocProvider<PublishGateCubit>(
+      create: (ctx) {
+        final verified =
+            _currentUser(ctx.read<AuthBloc>().state)?.isKycVerified ?? false;
+        return getIt<PublishGateCubit>(param1: role.commitmentRole)
+          ..start(kycVerified: verified);
+      },
+      child: BlocConsumer<PublishGateCubit, PublishGateState>(
+        listenWhen: (prev, next) =>
+            (next.status == PublishGateStatus.ready &&
+                prev.status != PublishGateStatus.ready) ||
+            next.errorSeq != prev.errorSeq,
+        listener: _onGateChanged,
+        builder: (context, gate) => gate.introShown
+            ? _buildIntro(context, gate)
+            : _buildPending(context, gate),
+      ),
+    );
+  }
+
+  void _onGateChanged(BuildContext context, PublishGateState gate) {
+    final error = gate.error;
+    if (error != null && gate.status == PublishGateStatus.intro) {
+      DonySnackbar.show(
+        context,
+        message: switch (error) {
+          PublishGateError.acceptFailed =>
+            context.l10n.publishCommitmentAcceptFailed,
+          PublishGateError.outdated => context.l10n.publishCommitmentOutdated,
+        },
+        type: DonySnackbarType.warning,
+      );
+      return;
+    }
+    if (gate.status == PublishGateStatus.ready) {
+      unawaited(_continueToForm(context, gate));
+    }
+  }
+
+  /// Feuille des brouillons s'il en reste, sinon directement le formulaire.
+  Future<void> _continueToForm(
+    BuildContext context,
+    PublishGateState gate,
+  ) async {
+    final cubit = context.read<PublishGateCubit>();
+    if (gate.drafts.isEmpty) {
+      _openForm(context, null);
+      return;
+    }
+    final result = await PublishDraftsSheet.show(
+      context,
+      role: role.commitmentRole,
+      drafts: gate.drafts,
+    );
+    if (!context.mounted) return;
+    switch (result) {
+      case ResumePublishDraft(:final entry):
+        cubit.trackChoice(
+          entry is LocalPublishDraft
+              ? PublishDraftChoice.local
+              : PublishDraftChoice.server,
+          entry: entry,
+        );
+        _openForm(context, entry);
+      case CreateNewPublication():
+        cubit.trackChoice(PublishDraftChoice.createNew);
+        _openForm(context, null);
+      case null:
+        cubit.trackChoice(PublishDraftChoice.dismissed);
+        // Sans écran des engagements derrière, il n'y a rien à montrer.
+        if (!gate.introShown) _leave(context);
+    }
+  }
+
+  /// Remplace cet écran : le retour depuis le formulaire ramène là d'où
+  /// l'utilisateur est parti, pas à un aiguillage déjà franchi.
+  void _openForm(BuildContext context, PublishDraftEntry? entry) {
+    switch ((role, entry)) {
+      case (PublishIntroRole.trip, final LocalPublishDraft d):
+        context.pushReplacement(
+          '/trips/create',
+          extra: CreateTripArgs(
+            resumeDraft: TripFormDraft.fromJson(d.draft.data),
+          ),
+        );
+      case (PublishIntroRole.trip, final ServerTripDraft d):
+        context.pushReplacement(
+          '/announcements/${d.announcement.id}/trip',
+          extra: d.announcement,
+        );
+      case (PublishIntroRole.trip, _):
+        context.pushReplacement('/trips/create', extra: const CreateTripArgs());
+      case (PublishIntroRole.parcel, final LocalPublishDraft d):
+        context.pushReplacement(
+          '/package-requests/new',
+          extra: PackageRequestDraftResume(d.draft.data),
+        );
+      case (PublishIntroRole.parcel, final ServerRequestDraft d):
+        context.pushReplacement('/package-requests/${d.request.id}');
+      case (PublishIntroRole.parcel, _):
+        context.pushReplacement('/package-requests/new');
+    }
+  }
+
+  void _leave(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
+  }
+
+  /// Engagements déjà acceptés : rien à lire, on attend les brouillons. Une
+  /// fois prêt, la feuille des brouillons recouvre un fond vide.
+  Widget _buildPending(BuildContext context, PublishGateState gate) {
+    final cs = Theme.of(context).colorScheme;
+    return Scaffold(
+      backgroundColor: cs.surfaceContainerLowest,
+      appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
+        backgroundColor: cs.surface,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        leading: const DonyAppBarBackButton(),
+      ),
+      body: gate.status == PublishGateStatus.ready
+          ? const SizedBox.shrink()
+          : Center(child: CircularProgressIndicator(color: cs.primary)),
+    );
+  }
+
+  Widget _buildIntro(BuildContext context, PublishGateState gate) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final config = _IntroConfig.of(role, cs, l10n);
 
-    final authState = context.watch<AuthBloc>().state;
-    final user = switch (authState) {
-      final AuthAuthenticated s => s.user,
-      final AuthProfileUpdated s => s.user,
-      _ => null,
-    };
+    final user = _currentUser(context.watch<AuthBloc>().state);
     final verified = user?.isKycVerified ?? false;
+    final busy =
+        gate.status == PublishGateStatus.accepting ||
+        gate.status == PublishGateStatus.checkingDrafts;
+    final needsCheck = gate.commitmentRequired && !gate.checked;
 
     return Scaffold(
       backgroundColor: cs.surfaceContainerLowest,
@@ -115,6 +270,19 @@ class PublishIntroScreen extends StatelessWidget {
                             bullets: config.whyBullets,
                             accent: config.accent,
                           ),
+                          // Tout en bas du contenu : on ne l'atteint qu'en
+                          // ayant fait défiler tous les engagements.
+                          if (gate.commitmentRequired) ...[
+                            const SizedBox(height: DonySpacing.lg),
+                            _CommitmentCheck(
+                              label: config.checkboxLabel,
+                              checked: gate.checked,
+                              enabled: !busy,
+                              onChanged: (v) => context
+                                  .read<PublishGateCubit>()
+                                  .setChecked(v),
+                            ),
+                          ],
                         ],
                       )
                       .animate()
@@ -125,7 +293,10 @@ class PublishIntroScreen extends StatelessWidget {
           _CtaBar(
             verified: verified,
             accentVariant: config.buttonVariant,
-            onContinue: () => config.onContinue(context),
+            isLoading: busy,
+            needsCheck: needsCheck,
+            onContinue: () =>
+                unawaited(context.read<PublishGateCubit>().accept()),
             onVerify: () => _startKyc(context, user),
           ),
         ],
@@ -163,7 +334,7 @@ class _IntroConfig {
     required this.rules,
     required this.whyTitle,
     required this.whyBullets,
-    required this.onContinue,
+    required this.checkboxLabel,
   });
 
   final String title;
@@ -177,7 +348,9 @@ class _IntroConfig {
   final List<_Rule> rules;
   final String whyTitle;
   final List<String> whyBullets;
-  final void Function(BuildContext) onContinue;
+
+  /// « J'ai lu et j'ai pris connaissance de mes engagements… ».
+  final String checkboxLabel;
 
   static _IntroConfig of(
     PublishIntroRole role,
@@ -208,8 +381,7 @@ class _IntroConfig {
             l10n.tripPublishIntroWhyBulletTripEarnings,
             l10n.tripPublishIntroWhyBulletTripReputation,
           ],
-          onContinue: (context) =>
-              context.push('/trips/create', extra: const CreateTripArgs()),
+          checkboxLabel: l10n.publishCommitmentCheckboxTrip,
         );
       case PublishIntroRole.parcel:
         return _IntroConfig(
@@ -237,7 +409,7 @@ class _IntroConfig {
             l10n.requestPublishIntroWhyBulletPayment,
             l10n.requestPublishIntroWhyBulletTracking,
           ],
-          onContinue: (context) => PackageRequestCreateWizard.show(context),
+          checkboxLabel: l10n.publishCommitmentCheckboxParcel,
         );
     }
   }
@@ -643,16 +815,62 @@ class _WhyCard extends StatelessWidget {
   }
 }
 
+/// Case d'acceptation des engagements, en fin d'écran.
+class _CommitmentCheck extends StatelessWidget {
+  const _CommitmentCheck({
+    required this.label,
+    required this.checked,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool checked;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: checked ? cs.primaryContainer : cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: checked ? cs.primary : cs.outline),
+      ),
+      child: DonyCheckbox(
+        key: const Key('publish-commitment-checkbox'),
+        label: label,
+        value: checked,
+        enabled: enabled,
+        onChanged: (v) => onChanged(v ?? false),
+      ),
+    );
+  }
+}
+
 class _CtaBar extends StatelessWidget {
   const _CtaBar({
     required this.verified,
     required this.accentVariant,
+    required this.isLoading,
+    required this.needsCheck,
     required this.onContinue,
     required this.onVerify,
   });
 
   final bool verified;
   final DonyButtonVariant accentVariant;
+
+  /// Acceptation en cours d'envoi, ou brouillons en cours de lecture.
+  final bool isLoading;
+
+  /// La case des engagements reste à cocher : « Continuer » est grisé.
+  final bool needsCheck;
   final VoidCallback onContinue;
   final VoidCallback onVerify;
 
@@ -679,14 +897,24 @@ class _CtaBar extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (verified)
+              if (verified) ...[
                 DonyButton(
+                  key: const Key('publish-intro-continue'),
                   label: l10n.commonContinue,
                   iconRightAsset: 'arrow-right',
                   variant: accentVariant,
-                  onPressed: onContinue,
-                )
-              else ...[
+                  isLoading: isLoading,
+                  onPressed: (needsCheck || isLoading) ? null : onContinue,
+                ),
+                if (needsCheck) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  Text(
+                    l10n.publishCommitmentCheckHint,
+                    textAlign: TextAlign.center,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ] else ...[
                 DonyButton(
                   label: l10n.tripPublishIntroVerifyButton,
                   iconAsset: 'lock',

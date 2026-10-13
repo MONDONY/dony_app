@@ -163,4 +163,88 @@ void main() {
     expect(find.text('Leave'), findsOneWidget);
     expect(find.text('Keep editing'), findsOneWidget);
   });
+
+  group('confirmExitWithDraft', () {
+    Future<DraftExitChoice?> open(WidgetTester tester, String tap) async {
+      DraftExitChoice? result;
+      var done = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () async {
+                  result = await DonyDialog.confirmExitWithDraft(context);
+                  done = true;
+                },
+                child: const Text('ouvrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key(tap)));
+      await tester.pumpAndSettle();
+      expect(done, isTrue);
+      return result;
+    }
+
+    testWidgets('textes français et trois issues', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => DonyDialog.confirmExitWithDraft(context),
+                child: const Text('ouvrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Garder votre saisie ?'), findsOneWidget);
+      expect(find.text('Enregistrer le brouillon'), findsOneWidget);
+      expect(find.text('Quitter sans enregistrer'), findsOneWidget);
+      expect(find.text('Continuer la saisie'), findsOneWidget);
+    });
+
+    testWidgets('Enregistrer rend save', (tester) async {
+      expect(await open(tester, 'draft-exit-save'), DraftExitChoice.save);
+    });
+
+    testWidgets('Quitter sans enregistrer rend discard', (tester) async {
+      expect(await open(tester, 'draft-exit-discard'), DraftExitChoice.discard);
+    });
+
+    testWidgets('Continuer la saisie rend null', (tester) async {
+      expect(await open(tester, 'draft-exit-stay'), isNull);
+    });
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => DonyDialog.confirmExitWithDraft(context),
+                child: const Text('ouvrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Keep what you entered?'), findsOneWidget);
+      expect(find.text('Save draft'), findsOneWidget);
+      expect(find.text('Leave without saving'), findsOneWidget);
+    });
+  });
 }

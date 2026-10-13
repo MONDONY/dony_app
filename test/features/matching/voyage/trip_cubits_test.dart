@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,6 +37,21 @@ void main() {
         TripLegsState(legs: [doualaLeg(), doualaLeg(price: 7)]),
         TripLegsState(legs: [doualaLeg(price: 9), doualaLeg(price: 7)]),
         TripLegsState(legs: [doualaLeg(price: 9)]),
+      ],
+    );
+
+    blocTest<TripLegsCubit, TripLegsState>(
+      'restore (reprise d\'un brouillon) remet les étapes, plafonnées',
+      build: build,
+      act: (c) => c.restore([
+        for (var i = 0; i < TripLegChain.maxLegs + 2; i++) doualaLeg(),
+      ]),
+      expect: () => [
+        TripLegsState(
+          legs: [
+            for (var i = 0; i < TripLegChain.maxLegs - 1; i++) doualaLeg(),
+          ],
+        ),
       ],
     );
 

@@ -45,6 +45,18 @@ abstract final class AnalyticsEvents {
   static const surplusOpened = 'surplus_opened';
   static const tripCreateStarted = 'trip_create_started';
 
+  /// Brouillon local d'un formulaire de publication (trajet ou demande
+  /// d'envoi), à n'importe quelle étape : enregistré, supprimé. La reprise
+  /// se mesure par `publish_draft_chosen` (`choice: local`).
+  static const formDraftSaved = 'form_draft_saved';
+  static const formDraftDiscarded = 'form_draft_discarded';
+
+  /// Aiguillage avant le formulaire de publication : engagements acceptés,
+  /// feuille des brouillons montrée, choix fait dans cette feuille.
+  static const publishCommitmentAccepted = 'publish_commitment_accepted';
+  static const publishDraftsSheetShown = 'publish_drafts_sheet_shown';
+  static const publishDraftChosen = 'publish_draft_chosen';
+
   /// Voyage à plusieurs étapes (FLUTTER-4D) : étape ajoutée au formulaire.
   static const tripLegAdded = 'trip_leg_added';
 

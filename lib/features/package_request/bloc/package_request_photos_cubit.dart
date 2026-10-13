@@ -57,6 +57,33 @@ class PackageRequestPhotosCubit extends Cubit<List<PackageRequestPhotoUpload>> {
     ]);
   }
 
+  /// Reprise d'un brouillon local : photos déjà envoyées, affichées depuis
+  /// leur fichier. Celle dont le fichier a disparu (cache vidé par le
+  /// système) est écartée plutôt qu'affichée en vignette cassée. No-op si
+  /// des photos sont déjà là.
+  void restoreDraft(
+    List<({String key, String localPath})> photos, {
+    bool Function(String path)? fileExists,
+  }) {
+    if (state.isNotEmpty) {
+      return;
+    }
+    final exists = fileExists ?? (path) => File(path).existsSync();
+    final kept = [
+      for (final p in photos.take(maxPhotos))
+        if (exists(p.localPath))
+          PackageRequestPhotoUpload(
+            localId: 'd${_counter++}',
+            localPath: p.localPath,
+            status: PackageRequestPhotoUploadStatus.ready,
+            remoteKey: p.key,
+          ),
+    ];
+    if (kept.isNotEmpty) {
+      emit(kept);
+    }
+  }
+
   Future<void> add(String localPath) async {
     if (!canAddMore) {
       return;

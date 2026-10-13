@@ -6,8 +6,12 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/storage/form_draft_cubit.dart';
+import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
@@ -98,7 +102,12 @@ abstract final class PackageRequestCreateWizard {
 // ─── Screen ─────────────────────────────────────────────────────────────────
 
 class PackageRequestCreateScreen extends StatefulWidget {
-  const PackageRequestCreateScreen({super.key, this.initial, this.duplicating});
+  const PackageRequestCreateScreen({
+    super.key,
+    this.initial,
+    this.duplicating,
+    this.resuming,
+  });
 
   /// Non-null en mode édition.
   final PackageRequest? initial;
@@ -107,6 +116,10 @@ class PackageRequestCreateScreen extends StatefulWidget {
   /// exclusif avec [initial] : le router ne peuple jamais les deux.
   final PackageRequestDuplicate? duplicating;
 
+  /// Non-null quand l'expéditeur reprend son brouillon local depuis la
+  /// feuille des brouillons. Création seulement.
+  final PackageRequestDraftResume? resuming;
+
   @override
   State<PackageRequestCreateScreen> createState() =>
       _PackageRequestCreateScreenState();
@@ -114,9 +127,25 @@ class PackageRequestCreateScreen extends StatefulWidget {
 
 class _PackageRequestCreateScreenState
     extends State<PackageRequestCreateScreen> {
-  final _step1Key = GlobalKey<Step1TrajetColisState>();
-  final _step2Key = GlobalKey<Step2DetailsState>();
-  final _step3Key = GlobalKey<Step3RecapBudgetState>();
+  var _step1Key = GlobalKey<Step1TrajetColisState>();
+  var _step2Key = GlobalKey<Step2DetailsState>();
+  var _step3Key = GlobalKey<Step3RecapBudgetState>();
+
+  /// `draftRevision` du bloc pour lequel les clés d'étape ont été créées. Une
+  /// reprise de brouillon l'incrémente : de nouvelles clés forcent les étapes
+  /// à relire l'état du bloc, ce qu'elles ne font qu'à leur `initState`.
+  int _stepKeysRevision = 0;
+
+  /// Brouillon local proposé en création seulement : modifier une demande ou
+  /// en dupliquer une part d'un contenu déjà connu.
+  late final bool _draftsEnabled =
+      widget.initial == null && widget.duplicating == null;
+
+  /// Porté par l'écran (et non créé par un provider) : la sortie et le
+  /// bouton brouillon s'en servent depuis ce `State`, au-dessus des providers.
+  late final FormDraftCubit? _draftCubit = _draftsEnabled
+      ? getIt<FormDraftCubit>(param1: FormDraftKind.packageRequest)
+      : null;
 
   /// Résolue une fois : la devise active ne peut pas changer pendant qu'un
   /// formulaire de publication est ouvert, et ce getter était réévalué
@@ -173,11 +202,15 @@ class _PackageRequestCreateScreenState
     if (_initialSignature != null && _signatureOf(state) != _initialSignature) {
       return true;
     }
-    return _step1Key.currentState?.hasUnsubmittedInput ?? false;
+    return (_step1Key.currentState?.hasUnsubmittedInput ?? false) ||
+        (_step2Key.currentState?.hasUnsubmittedInput ?? false);
   }
 
   /// Sortie demandée depuis l'étape 0 (croix ou retour système).
-  Future<void> _handleExitRequest(PackageRequestFormState state) async {
+  Future<void> _handleExitRequest(
+    BuildContext formContext,
+    PackageRequestFormState state,
+  ) async {
     final dirty = _isDirty(state);
     if (!dirty) {
       _leave();
@@ -185,10 +218,76 @@ class _PackageRequestCreateScreenState
     }
     if (_confirmingExit) return;
     _confirmingExit = true;
-    final confirmed = await DonyDialog.confirmDiscard(context);
+    if (!_draftsEnabled) {
+      final confirmed = await DonyDialog.confirmDiscard(context);
+      _confirmingExit = false;
+      if (!mounted || confirmed != true) return;
+      _leave();
+      return;
+    }
+    final choice = await DonyDialog.confirmExitWithDraft(context);
     _confirmingExit = false;
-    if (!mounted || confirmed != true) return;
+    if (!mounted || !formContext.mounted || choice == null) return;
+    switch (choice) {
+      case DraftExitChoice.save:
+        await _saveDraftAndLeave(formContext, FormDraftSource.exitDialog);
+      case DraftExitChoice.discard:
+        await _draftCubit!.discard(source: FormDraftSource.exitDialog);
+        if (mounted) _leave();
+    }
+  }
+
+  /// Saisie de l'étape affichée, que l'étape ne remonte au bloc qu'à sa
+  /// validation. L'étape budget, elle, écrit dans le bloc à chaque frappe.
+  Map<String, dynamic> _currentStepInput(int step) => switch (step) {
+    0 => _step1Key.currentState?.draftInput ?? const {},
+    1 => _step2Key.currentState?.draftInput ?? const {},
+    _ => const {},
+  };
+
+  /// Garde la saisie en brouillon local, à l'étape où elle en est, puis
+  /// quitte le formulaire. En cas d'échec, l'utilisateur reste sur sa saisie.
+  Future<void> _saveDraftAndLeave(
+    BuildContext formContext,
+    FormDraftSource source,
+  ) async {
+    final state = formContext.read<PackageRequestFormBloc>().state;
+    final data = PackageRequestFormDraft.encode(
+      state,
+      stepInput: _currentStepInput(state.currentStep),
+      photos: formContext.read<PackageRequestPhotosCubit>().state,
+    );
+    final saved = await _draftCubit!.save(data, source: source);
+    if (!mounted) return;
+    if (!saved) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.formDraftSaveFailedMessage,
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    DonySnackbar.show(
+      context,
+      message: context.l10n.formDraftSavedMessage,
+      type: DonySnackbarType.success,
+    );
     _leave();
+  }
+
+  /// Bouton « Brouillon » de la barre, disponible à chaque étape.
+  void _onSaveDraftPressed(
+    BuildContext formContext,
+    PackageRequestFormState state,
+  ) {
+    if (!_isDirty(state)) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.formDraftNothingToSaveMessage,
+      );
+      return;
+    }
+    unawaited(_saveDraftAndLeave(formContext, FormDraftSource.appBar));
   }
 
   void _leave() {
@@ -202,6 +301,7 @@ class _PackageRequestCreateScreenState
   @override
   void dispose() {
     _canContinueNotifier.dispose();
+    unawaited(_draftCubit?.close());
     super.dispose();
   }
 
@@ -210,16 +310,35 @@ class _PackageRequestCreateScreenState
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => getIt<PackageRequestFormBloc>(
-            param1: widget.initial,
-            param2: widget.duplicating,
-          ),
+          create: (_) {
+            final bloc = getIt<PackageRequestFormBloc>(
+              param1: widget.initial,
+              param2: widget.duplicating,
+            );
+            final resuming = widget.resuming;
+            if (resuming != null) {
+              // Traité avant la première saisie possible ; draftRevision
+              // recrée les étapes déjà construites sur l'état vide.
+              bloc.add(
+                FormDraftRestored(
+                  PackageRequestFormDraft.decode(resuming.data),
+                ),
+              );
+            }
+            return bloc;
+          },
         ),
         BlocProvider(
           create: (_) {
             final cubit = getIt<PackageRequestPhotosCubit>();
             if (widget.initial != null && widget.initial!.photos.isNotEmpty) {
               cubit.seed(widget.initial!.photos);
+            }
+            final resuming = widget.resuming;
+            if (resuming != null) {
+              cubit.restoreDraft(
+                PackageRequestFormDraft.decodePhotos(resuming.data),
+              );
             }
             return cubit;
           },
@@ -232,6 +351,8 @@ class _PackageRequestCreateScreenState
               getIt<MobileMoneyAccountBloc>()
                 ..add(const MobileMoneyAccountRequested()),
         ),
+        if (_draftCubit != null)
+          BlocProvider<FormDraftCubit>.value(value: _draftCubit),
       ],
       child: BlocConsumer<PackageRequestFormBloc, PackageRequestFormState>(
         listener: _onStateChange,
@@ -243,6 +364,9 @@ class _PackageRequestCreateScreenState
   void _onStateChange(BuildContext context, PackageRequestFormState state) {
     if (state.submissionStatus == FormSubmissionStatus.success &&
         state.createdRequest != null) {
+      // Publiée ou gardée en brouillon serveur : la saisie locale n'a plus
+      // lieu d'être proposée.
+      if (_draftCubit != null) unawaited(_draftCubit.clear());
       final l10n = context.l10n;
       final isEditing = state.isEditing;
       final isDraft =
@@ -382,6 +506,12 @@ class _PackageRequestCreateScreenState
     };
 
     _initialSignature ??= _signatureOf(state);
+    if (state.draftRevision != _stepKeysRevision) {
+      _stepKeysRevision = state.draftRevision;
+      _step1Key = GlobalKey<Step1TrajetColisState>();
+      _step2Key = GlobalKey<Step2DetailsState>();
+      _step3Key = GlobalKey<Step3RecapBudgetState>();
+    }
 
     return PopScope(
       // Aux étapes 1 et 2, le retour recule d'une étape. À l'étape 0 il sort
@@ -392,7 +522,7 @@ class _PackageRequestCreateScreenState
         if (state.currentStep > 0) {
           context.read<PackageRequestFormBloc>().add(const FormStepBack());
         } else {
-          unawaited(_handleExitRequest(state));
+          unawaited(_handleExitRequest(context, state));
         }
       },
       child: Scaffold(
@@ -409,7 +539,7 @@ class _PackageRequestCreateScreenState
                   const FormStepBack(),
                 );
               } else {
-                unawaited(_handleExitRequest(state));
+                unawaited(_handleExitRequest(context, state));
               }
             },
           ),
@@ -443,6 +573,16 @@ class _PackageRequestCreateScreenState
                 ),
               ),
             ),
+            if (_draftsEnabled)
+              IconButton(
+                key: const Key('request-save-draft'),
+                tooltip: l10n.formDraftSaveTooltip,
+                onPressed:
+                    state.submissionStatus == FormSubmissionStatus.submitting
+                    ? null
+                    : () => _onSaveDraftPressed(context, state),
+                icon: DonyIcon('notebook-pen', color: cs.primary, size: 22),
+              ),
             const DonyFeedbackButton(),
           ],
           bottom: PreferredSize(

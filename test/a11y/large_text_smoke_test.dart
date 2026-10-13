@@ -101,6 +101,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../features/payments/money/money_fixtures.dart';
+import '../helpers/form_draft_test_doubles.dart';
 import '../helpers/mock_analytics_backend.dart';
 import '../helpers/money_test_doubles.dart';
 
@@ -482,6 +483,7 @@ void _tripRegisterDependencies() {
   }
   // TripLegsCubit — étapes d'un voyage (FLUTTER-4D), fourni par getIt.
   if (!getIt.isRegistered<TripLegsCubit>()) {
+    registerTestFormDraftCubit();
     getIt.registerFactory<TripLegsCubit>(
       () => TripLegsCubit(getIt<AnalyticsService>()),
     );

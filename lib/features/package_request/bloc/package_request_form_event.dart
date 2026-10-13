@@ -1,5 +1,6 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
@@ -75,6 +76,15 @@ class FormStepBack extends PackageRequestFormEvent {
 
 class FormReset extends PackageRequestFormEvent {
   const FormReset();
+}
+
+/// Reprise d'un brouillon local : [draft] remplace la saisie, étape comprise.
+class FormDraftRestored extends PackageRequestFormEvent {
+  const FormDraftRestored(this.draft);
+  final PackageRequestFormState draft;
+
+  @override
+  List<Object?> get props => [draft];
 }
 
 class PackageRequestNegotiableToggled extends PackageRequestFormEvent {

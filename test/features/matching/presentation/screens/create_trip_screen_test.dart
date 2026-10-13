@@ -8,6 +8,8 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/form_draft_cubit.dart';
+import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -29,6 +31,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart'
     show BidPaymentMethod;
+import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
@@ -69,6 +72,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/currency_test_doubles.dart';
+import '../../../../helpers/form_draft_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
@@ -451,6 +455,7 @@ void main() {
 
     // TripLegsCubit — étapes d'un voyage (FLUTTER-4D), fourni par getIt.
     if (!getIt.isRegistered<TripLegsCubit>()) {
+      registerTestFormDraftCubit();
       getIt.registerFactory<TripLegsCubit>(
         () => TripLegsCubit(getIt<AnalyticsService>()),
       );
@@ -4109,6 +4114,202 @@ void main() {
         expect(find.text('Publier un trajet'), findsNothing);
       },
     );
+  });
+
+  // ── Brouillon local (création) ────────────────────────────────────────────
+  group('CreateTripScreen — brouillon local', () {
+    late InMemoryFormDraftStorage storage;
+    late FormDraftStore store;
+
+    setUp(() {
+      storage = InMemoryFormDraftStorage();
+      store = testFormDraftStore(storage: storage);
+      if (getIt.isRegistered<FormDraftCubit>()) {
+        getIt.unregister<FormDraftCubit>();
+      }
+      registerTestFormDraftCubit(store: store);
+      DonySnackbar.clearDedup();
+    });
+
+    TripFormDraft draft({int step = 1}) {
+      final day = DateUtils.dateOnly(
+        DateTime.now().add(const Duration(days: 30)),
+      );
+      return TripFormDraft(
+        step: step,
+        currency: 'EUR',
+        departureCity: 'Paris',
+        departureCountryCode: 'FR',
+        arrivalCity: 'Dakar',
+        arrivalCountryCode: 'SN',
+        departureDate: day,
+        departureTime: '10:00',
+        handoverDeadline: day.subtract(const Duration(days: 1)),
+        transportMode: 'PLANE',
+        description: 'Valise rigide',
+      );
+    }
+
+    Future<void> pumpScreen(WidgetTester tester, CreateTripArgs? args) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
+      // Post-frames : référence de saisie, puis reprise du brouillon.
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets('reprise : champs rechargés, étape où il s\'était arrêté', (
+      tester,
+    ) async {
+      await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
+
+      // Étape 1 (« Lieux & capacité ») : « Retour » n'existe qu'au-delà de
+      // l'étape 0, validée d'après la saisie rechargée.
+      expect(find.text('Trajet ✓'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Retour'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(DonyButton, 'Retour'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Paris'), findsWidgets);
+      expect(find.text('Dakar'), findsWidgets);
+    });
+
+    testWidgets('reprise à une étape dont les précédentes sont incomplètes : '
+        'retour à l\'étape 0', (tester) async {
+      await pumpScreen(
+        tester,
+        CreateTripArgs(
+          resumeDraft: TripFormDraft(
+            step: 2,
+            departureCity: draft().departureCity,
+          ),
+        ),
+      );
+
+      expect(find.widgetWithText(DonyButton, 'Retour'), findsNothing);
+    });
+
+    testWidgets('sortie après saisie : « Enregistrer le brouillon » le garde', (
+      tester,
+    ) async {
+      await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
+
+      await tester.tap(find.byType(DonyAppBarBackButton));
+      await tester.pumpAndSettle();
+      expect(find.text('Garder votre saisie ?'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('draft-exit-save')));
+      await tester.pumpAndSettle();
+
+      final saved = await store.read(FormDraftKind.trip);
+      expect(saved, isNotNull);
+      final back = TripFormDraft.fromJson(saved!.data);
+      expect(back.departureCity, 'Paris');
+      expect(back.arrivalCity, 'Dakar');
+      expect(back.description, 'Valise rigide');
+      expect(back.step, 1);
+      expect(find.byType(CreateTripScreen), findsNothing);
+    });
+
+    testWidgets('sortie : « Quitter sans enregistrer » efface le brouillon', (
+      tester,
+    ) async {
+      await store.save(FormDraftKind.trip, draft().toJson());
+      await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
+
+      await tester.tap(find.byType(DonyAppBarBackButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('draft-exit-discard')));
+      await tester.pumpAndSettle();
+
+      expect(await store.read(FormDraftKind.trip), isNull);
+      expect(find.byType(CreateTripScreen), findsNothing);
+    });
+
+    testWidgets('sortie : « Continuer la saisie » ne change rien', (
+      tester,
+    ) async {
+      await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
+
+      await tester.tap(find.byType(DonyAppBarBackButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('draft-exit-stay')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateTripScreen), findsOneWidget);
+      expect(await store.read(FormDraftKind.trip), isNull);
+    });
+
+    testWidgets('bouton « Brouillon » : enregistre et quitte', (tester) async {
+      await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
+
+      await tester.tap(find.byKey(const Key('trip-save-draft')));
+      await tester.pumpAndSettle();
+
+      expect((await store.read(FormDraftKind.trip))?.step, 1);
+      expect(find.byType(CreateTripScreen), findsNothing);
+    });
+
+    testWidgets(
+      'bouton « Brouillon » sur un formulaire vierge : rien à garder',
+      (tester) async {
+        await pumpScreen(tester, null);
+
+        await tester.tap(find.byKey(const Key('trip-save-draft')));
+        await tester.pump();
+
+        expect(
+          find.text('Rien à enregistrer pour l\'instant.'),
+          findsOneWidget,
+        );
+        expect(storage.values, isEmpty);
+        expect(find.byType(CreateTripScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets('trousseau en panne : message, la saisie reste à l\'écran', (
+      tester,
+    ) async {
+      storage.failWrites = true;
+      await pumpScreen(tester, CreateTripArgs(resumeDraft: draft()));
+
+      await tester.tap(find.byKey(const Key('trip-save-draft')));
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text('Le brouillon n\'a pas pu être enregistré sur ce téléphone.'),
+        findsOneWidget,
+      );
+      expect(find.byType(CreateTripScreen), findsOneWidget);
+    });
+
+    testWidgets('modification d\'un trajet : pas de bouton brouillon', (
+      tester,
+    ) async {
+      final ann = AnnouncementModel(
+        id: 'ann-1',
+        travelerId: 'trav-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 8),
+        availableKg: 10.0,
+        totalKg: 23.0,
+        pricePerKg: 8.0,
+        status: 'ACTIVE',
+        bidsCount: 0,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        transportMode: TransportMode.plane,
+        acceptedPaymentMethods: {BidPaymentMethod.stripe},
+      );
+      await pumpScreen(tester, CreateTripArgs(announcement: ann));
+
+      expect(find.byKey(const Key('trip-save-draft')), findsNothing);
+    });
   });
 }
 

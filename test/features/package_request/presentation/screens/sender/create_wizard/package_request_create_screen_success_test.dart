@@ -6,6 +6,8 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/storage/form_draft_cubit.dart';
+import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -31,6 +33,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../../helpers/currency_test_doubles.dart';
+import '../../../../../../helpers/form_draft_test_doubles.dart';
 import '../../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../../helpers/mock_analytics_backend.dart';
 import '../../../../../../helpers/mock_recent_city_store.dart';
@@ -91,6 +94,7 @@ class _MockMobileMoneyAccountBloc
 void main() {
   late _MockRepo repo;
   late PackageRequestFormBloc capturedBloc;
+  late FormDraftStore draftStore;
 
   final fakeRequest = PackageRequest(
     id: 'pr-created-1',
@@ -230,6 +234,10 @@ void main() {
       );
       return capturedBloc;
     });
+    if (getIt.isRegistered<FormDraftCubit>()) {
+      getIt.unregister<FormDraftCubit>();
+    }
+    draftStore = registerTestFormDraftCubit();
     getIt.registerFactory<PackageRequestPhotosCubit>(
       () => PackageRequestPhotosCubit(
         repo,
@@ -495,6 +503,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
+  });
+
+  testWidgets('publication réussie : le brouillon local est effacé', (
+    tester,
+  ) async {
+    await draftStore.save(FormDraftKind.packageRequest, {'step': 1});
+
+    await driveToSuccess(tester);
+
+    expect(await draftStore.read(FormDraftKind.packageRequest), isNull);
   });
 
   testWidgets('création réussie affiche DonySuccessScreen (plus de SnackBar)', (
