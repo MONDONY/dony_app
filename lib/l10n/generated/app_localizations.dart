@@ -30914,6 +30914,42 @@ abstract class AppLocalizations {
   /// **'Pas de prix exact pour ces dates. Voici des vols à {days, plural, =1{1 jour près} other{{days} jours près}}.'**
   String flightsNearbyDatesNotice(int days);
 
+  /// Titre de la section des allers-retours de durée de séjour proche (similarOffers), plage de durée du back.
+  ///
+  /// In fr, this message translates to:
+  /// **'Séjours de {min} à {max} jours'**
+  String flightsSimilarTitle(int min, int max);
+
+  /// Titre de la section des séjours proches quand la plage tient en une seule durée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Séjours de {days, plural, =1{1 jour} other{{days} jours}}'**
+  String flightsSimilarTitleSingle(int days);
+
+  /// Titre de la section des séjours proches sans plage de durée connue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Séjours de durée proche'**
+  String get flightsSimilarTitleFallback;
+
+  /// Sous-titre de la section des séjours proches.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dates différentes de votre recherche, durée de séjour proche'**
+  String get flightsSimilarSubtitle;
+
+  /// Pastille de durée du séjour d'un aller-retour (« 28 j »).
+  ///
+  /// In fr, this message translates to:
+  /// **'{days} j'**
+  String flightsStayDays(int days);
+
+  /// Lecture d'écran de la pastille de durée du séjour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Séjour de {days, plural, =1{1 jour} other{{days} jours}}'**
+  String flightsStayDaysSemantics(int days);
+
   /// Suggestions de l'écran sans résultat.
   ///
   /// In fr, this message translates to:

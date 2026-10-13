@@ -18964,6 +18964,51 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String flightsSimilarTitle(int min, int max) {
+    return '$min to $max day trips';
+  }
+
+  @override
+  String flightsSimilarTitleSingle(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days day trips',
+      one: '1 day trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsSimilarTitleFallback => 'Trips of a similar length';
+
+  @override
+  String get flightsSimilarSubtitle =>
+      'Different dates from your search, similar trip length';
+
+  @override
+  String flightsStayDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String flightsStayDaysSemantics(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days day trips',
+      one: '1 day trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get flightsTryInstead => 'Try instead';
 
   @override

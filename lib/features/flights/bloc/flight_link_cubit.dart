@@ -36,6 +36,11 @@ class FlightLinkCubit extends Cubit<FlightLinkState> {
   final AnalyticsService _analytics;
   final ExternalUrlLauncher _launcher;
 
+  /// Séjour proche des résultats (`similarOffers`) : même clic qu'une offre
+  /// de la recherche pour le back, source `similar` pour l'analytics.
+  Future<void> openSimilar(FlightOffer offer) =>
+      open(offer, source: 'search', analyticsSource: 'similar');
+
   /// « Voir toutes les compagnies sur Aviasales » : la recherche complète du
   /// trajet ([FlightSearchResult.searchPath]) passe par le même endpoint que
   /// les offres, qui la transforme en lien affilié. [from] : `results`
@@ -61,9 +66,13 @@ class FlightLinkCubit extends Cubit<FlightLinkState> {
   }
 
   /// [source] : `search`, `deal` ou `alert` (contrat du back).
+  /// [analyticsSource] : source plus fine pour `flights_offer_clicked` seul
+  /// (`similar` : séjour proche des résultats, envoyé au back comme
+  /// `search`, que son contrat accepte) ; [source] par défaut.
   Future<void> open(
     FlightOffer offer, {
     required String source,
+    String? analyticsSource,
     String? allAirlinesFrom,
   }) async {
     if (state.openingPath != null) return;
@@ -90,7 +99,7 @@ class FlightLinkCubit extends Cubit<FlightLinkState> {
           _analytics.logEvent(
             AnalyticsEvents.flightsOfferClicked,
             properties: {
-              'source': source,
+              'source': analyticsSource ?? source,
               'airline_code': ?offer.airlineCode,
               'stops': offer.transfers ?? -1,
               'round_trip': offer.isRoundTrip,

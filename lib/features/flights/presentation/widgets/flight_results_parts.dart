@@ -588,6 +588,7 @@ class FlightEmptyResults extends StatelessWidget {
     required this.suggestions,
     this.onLiveSearch,
     this.liveSearchOpening = false,
+    this.similar,
   });
 
   final String title;
@@ -600,6 +601,10 @@ class FlightEmptyResults extends StatelessWidget {
   /// quand le back n'a pas fourni de lien de recherche.
   final VoidCallback? onLiveSearch;
   final bool liveSearchOpening;
+
+  /// Section des séjours proches, placée sous l'explication : de vrais vols
+  /// valent mieux qu'un écran vide.
+  final Widget? similar;
 
   @override
   Widget build(BuildContext context) {
@@ -661,6 +666,10 @@ class FlightEmptyResults extends StatelessWidget {
             ],
           ),
         ),
+        if (similar != null) ...[
+          const SizedBox(height: DonySpacing.lg),
+          similar!,
+        ],
         if (onLiveSearch != null) ...[
           const SizedBox(height: DonySpacing.base),
           DonyButton(
