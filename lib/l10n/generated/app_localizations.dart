@@ -31243,6 +31243,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'À noter'**
   String get ratingPendingPillLabel;
+
+  /// Label du champ de contre-offre du voyageur, saisie en net (FLUTTER-NS, bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que vous recevrez ({symbol})'**
+  String negotiationThreadCounterNetAmountLabel(String symbol);
+
+  /// Aperçu sous la saisie en net du voyageur : brut calculé payé par l'expéditeur, commission incluse (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur paiera {amount}'**
+  String negotiationThreadCounterSenderWillPay(String amount);
+
+  /// Erreur 422 counter-amount-ambiguous : contre-offre de trajet portant à la fois le brut et le net (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant à préciser'**
+  String get errorCounterAmountAmbiguousTitle;
+
+  /// Erreur 422 counter-amount-ambiguous (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre contre-proposition n\'a pas pu être lue. Saisissez à nouveau le montant.'**
+  String get errorCounterAmountAmbiguousMessage;
+
+  /// Erreur 422 counter-net-traveler-only : un expéditeur a envoyé un net (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant non accepté'**
+  String get errorCounterNetTravelerOnlyTitle;
+
+  /// Erreur 422 counter-net-traveler-only (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposez le prix total que vous paierez, frais Yadony inclus.'**
+  String get errorCounterNetTravelerOnlyMessage;
+
+  /// Erreur 422 counter-same-amount : contre-offre identique à la dernière proposition (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Même montant'**
+  String get errorCounterSameAmountTitle;
+
+  /// Erreur 422 counter-same-amount (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce montant est identique à la dernière proposition : acceptez-la ou changez le prix.'**
+  String get errorCounterSameAmountMessage;
 }
 
 class _AppLocalizationsDelegate

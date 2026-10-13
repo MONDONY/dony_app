@@ -275,6 +275,23 @@ void main() {
       expect(body['body'], 'Un peu plus lourd');
     });
 
+    test('net du voyageur : seul proposedNetEur part (FLUTTER-NS)', () async {
+      when(
+        () => dio.post(
+          '/bids/bid-1/negotiation/counter',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok(_threadJson, '/bids/bid-1/negotiation/counter'),
+      );
+
+      await datasource.counter('bid-1', proposedNetEur: 35.0);
+
+      final body = capturedBody();
+      expect(body['proposedNetEur'], 35.0);
+      expect(body.containsKey('proposedTotalEur'), isFalse);
+    });
+
     test('le message est omis quand il est vide ou nul', () async {
       when(
         () => dio.post(

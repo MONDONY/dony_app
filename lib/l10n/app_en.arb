@@ -10072,5 +10072,47 @@
   "ratingPendingPillLabel": "To rate",
   "@ratingPendingPillLabel": {
     "description": "Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)"
+  },
+  "negotiationThreadCounterNetAmountLabel": "What you will receive ({symbol})",
+  "@negotiationThreadCounterNetAmountLabel": {
+    "description": "Label du champ de contre-offre du voyageur, saisie en net (FLUTTER-NS, bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadCounterSenderWillPay": "The sender will pay {amount}",
+  "@negotiationThreadCounterSenderWillPay": {
+    "description": "Aperçu sous la saisie en net du voyageur : brut calculé payé par l'expéditeur, commission incluse (FLUTTER-NS)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCounterAmountAmbiguousTitle": "Amount unclear",
+  "@errorCounterAmountAmbiguousTitle": {
+    "description": "Erreur 422 counter-amount-ambiguous : contre-offre de trajet portant à la fois le brut et le net (FLUTTER-NS)"
+  },
+  "errorCounterAmountAmbiguousMessage": "Your counter-offer could not be read. Please enter the amount again.",
+  "@errorCounterAmountAmbiguousMessage": {
+    "description": "Erreur 422 counter-amount-ambiguous (FLUTTER-NS)"
+  },
+  "errorCounterNetTravelerOnlyTitle": "Amount not accepted",
+  "@errorCounterNetTravelerOnlyTitle": {
+    "description": "Erreur 422 counter-net-traveler-only : un expéditeur a envoyé un net (FLUTTER-NS)"
+  },
+  "errorCounterNetTravelerOnlyMessage": "Propose the total price you will pay, Yadony fees included.",
+  "@errorCounterNetTravelerOnlyMessage": {
+    "description": "Erreur 422 counter-net-traveler-only (FLUTTER-NS)"
+  },
+  "errorCounterSameAmountTitle": "Same amount",
+  "@errorCounterSameAmountTitle": {
+    "description": "Erreur 422 counter-same-amount : contre-offre identique à la dernière proposition (FLUTTER-NS)"
+  },
+  "errorCounterSameAmountMessage": "This amount matches the last offer: accept it or change the price.",
+  "@errorCounterSameAmountMessage": {
+    "description": "Erreur 422 counter-same-amount (FLUTTER-NS)"
   }
 }
