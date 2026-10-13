@@ -212,6 +212,7 @@ import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/data/rating_prompt_tracker.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
@@ -1083,11 +1084,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // RatingBloc (invite racine, détail d'un colis, scan) rafraîchit le détail
   // du colis déjà ouvert (FLUTTER-HQ).
   getIt.registerLazySingleton<RatingEventsService>(RatingEventsService.new);
+  getIt.registerLazySingleton<RatingPromptTracker>(
+    () => RatingPromptTracker(getIt<HiveService>().userPrefs),
+  );
   getIt.registerFactory<RatingBloc>(
     () => RatingBloc(
       getIt<RatingRepository>(),
       getIt<AnalyticsService>(),
       ratingEvents: getIt<RatingEventsService>(),
+      promptTracker: getIt<RatingPromptTracker>(),
     ),
   );
   getIt.registerLazySingleton<MyReviewsBloc>(

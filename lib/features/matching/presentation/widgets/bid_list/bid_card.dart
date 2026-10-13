@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/features/matching/presentation/widgets/rating_pending_pill.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -185,9 +186,15 @@ class BidCard extends StatelessWidget {
                   onReject: onReject!,
                 ),
               ] else
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _StatusDot(status: bid.status),
+                Row(
+                  children: [
+                    _StatusDot(status: bid.status),
+                    // Note de l'expéditeur en attente (FLUTTER-P2).
+                    if (bidAwaitsRating(bid, asSender: false)) ...[
+                      const SizedBox(width: DonySpacing.sm),
+                      const RatingPendingPill(),
+                    ],
+                  ],
                 ),
             ],
           ),

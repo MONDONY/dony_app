@@ -6,12 +6,15 @@ import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/data/models/pending_rating.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
+import 'package:dony/features/ratings/data/rating_prompt_tracker.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockRatingRepository extends Mock implements RatingRepository {}
+
+class _MockPromptTracker extends Mock implements RatingPromptTracker {}
 
 void main() {
   late MockRatingRepository mockRepo;
@@ -181,6 +184,61 @@ void main() {
             .having((s) => s.isTravelerRating, 'isTravelerRating', false),
       ],
     );
+
+    group('avec mémoire des colis déjà proposés (FLUTTER-P2)', () {
+      late _MockPromptTracker tracker;
+
+      setUp(() {
+        tracker = _MockPromptTracker();
+        when(() => mockRepo.getPendingRating()).thenAnswer(
+          (_) async => PendingRating(
+            bidId: 'bid-42',
+            otherPartyName: 'Moussa D.',
+            otherPartyId: 'user-99',
+            deliveredAt: DateTime(2026, 5, 8),
+            isTravelerRating: false,
+          ),
+        );
+      });
+
+      RatingBloc buildWithTracker() => RatingBloc(
+        mockRepo,
+        makeDisabledAnalytics(backend),
+        promptTracker: tracker,
+      );
+
+      blocTest<RatingBloc, RatingState>(
+        'première fois pour ce colis : la feuille est proposée',
+        setUp: () =>
+            when(() => tracker.claim('bid-42')).thenAnswer((_) async => true),
+        build: buildWithTracker,
+        act: (bloc) => bloc.add(const PendingRatingChecked()),
+        expect: () => [
+          isA<PendingRatingFound>().having((s) => s.bidId, 'bidId', 'bid-42'),
+        ],
+        verify: (_) => verify(() => tracker.claim('bid-42')).called(1),
+      );
+
+      blocTest<RatingBloc, RatingState>(
+        'colis déjà proposé : plus d\'ouverture automatique',
+        setUp: () =>
+            when(() => tracker.claim('bid-42')).thenAnswer((_) async => false),
+        build: buildWithTracker,
+        act: (bloc) => bloc.add(const PendingRatingChecked()),
+        expect: () => [isA<PendingRatingNone>()],
+      );
+
+      blocTest<RatingBloc, RatingState>(
+        'aucune note en attente : la mémoire n\'est pas touchée',
+        setUp: () => when(
+          () => mockRepo.getPendingRating(),
+        ).thenAnswer((_) async => null),
+        build: buildWithTracker,
+        act: (bloc) => bloc.add(const PendingRatingChecked()),
+        expect: () => [isA<PendingRatingNone>()],
+        verify: (_) => verifyNever(() => tracker.claim(any())),
+      );
+    });
 
     blocTest<RatingBloc, RatingState>(
       'emits PendingRatingNone when no pending',

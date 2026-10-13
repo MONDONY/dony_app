@@ -19111,4 +19111,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get negotiationThreadCounterSameAmountHint =>
       'Enter your new price here: this amount is what gets proposed, not the one written in the message.';
+
+  @override
+  String get ratingPendingPillLabel => 'To rate';
 }

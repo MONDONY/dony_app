@@ -10056,5 +10056,9 @@
   "negotiationThreadCounterSameAmountHint": "Enter your new price here: this amount is what gets proposed, not the one written in the message.",
   "@negotiationThreadCounterSameAmountHint": {
     "description": "Contre-offre au montant inchangé : bouton inactif tant que le prix n'est pas modifié (FLUTTER-MK)"
+  },
+  "ratingPendingPillLabel": "To rate",
+  "@ratingPendingPillLabel": {
+    "description": "Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)"
   }
 }

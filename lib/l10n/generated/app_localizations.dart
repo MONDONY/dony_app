@@ -31225,6 +31225,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Indiquez ici votre nouveau prix : c\'est ce montant qui est proposé, pas celui écrit dans le message.'**
   String get negotiationThreadCounterSameAmountHint;
+
+  /// Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)
+  ///
+  /// In fr, this message translates to:
+  /// **'À noter'**
+  String get ratingPendingPillLabel;
 }
 
 class _AppLocalizationsDelegate
