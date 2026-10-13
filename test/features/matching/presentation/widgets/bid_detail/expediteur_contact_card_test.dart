@@ -441,6 +441,50 @@ void main() {
     );
   });
 
+  // FLUTTER-P1 : contact gardé 48 h après l'annulation, sur décision serveur.
+  testWidgets('annulé, fenêtre de 48 h ouverte : 💬 + 📞 et indication', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: true));
+    expect(_chatIcon, findsOneWidget);
+    expect(_phoneIcon, findsOneWidget);
+    expect(
+      find.text(
+        "Vous pouvez encore vous appeler pendant 48\u00a0h après l'annulation.",
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('contact-return-in-progress-hint')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('annulé, fenêtre ouverte mais numéro non servi : 💬 seul', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'CANCELLED',
+        contactWindowOpen: true,
+        senderPhoneAvailable: false,
+      ),
+    );
+    expect(_chatIcon, findsOneWidget);
+    expect(_phoneIcon, findsNothing);
+  });
+
+  testWidgets('annulé sans le champ (ancien back) : fermé', (tester) async {
+    await _pump(tester, _bid(status: 'CANCELLED'));
+    expect(_chatIcon, findsNothing);
+    expect(_phoneIcon, findsNothing);
+    expect(
+      find.byKey(const Key('contact-cancelled-window-hint')),
+      findsNothing,
+    );
+  });
+
   testWidgets('colis annulé sans retour : plus aucun bouton', (tester) async {
     await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: false));
     expect(_chatIcon, findsNothing);

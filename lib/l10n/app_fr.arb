@@ -20597,5 +20597,9 @@
   "ratingPendingPillLabel": "À noter",
   "@ratingPendingPillLabel": {
     "description": "Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)"
+  },
+  "bidDetailCancelledContactWindowHint": "Vous pouvez encore vous appeler pendant 48 h après l'annulation.",
+  "@bidDetailCancelledContactWindowHint": {
+    "description": "Indication des cartes expéditeur / voyageur du détail d'un colis annulé : le serveur garde le contact ouvert 48 h (FLUTTER-P1)"
   }
 }

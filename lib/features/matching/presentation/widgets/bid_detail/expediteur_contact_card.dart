@@ -73,7 +73,9 @@ class ExpediteurContactCard extends StatelessWidget {
     final name = bid.senderDisplayName(l);
     // Retour en cours d'un colis annulé : contact rouvert (FLUTTER-FM).
     final returnInProgress = bidReturnInProgress(bid);
-    final contactAllowed = bidAllowsContact(bid.status) || returnInProgress;
+    // Commande annulée : le serveur garde le contact 48 h (FLUTTER-P1).
+    final cancelledWindow = bidCancelledContactOpen(bid);
+    final contactAllowed = bidAllowsContactFor(bid);
     final canOpenProfile = bid.senderId.isNotEmpty;
 
     return InkWell(
@@ -218,6 +220,23 @@ class ExpediteurContactCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       l.bidDetailReturnContactTravelerHint,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (cancelledWindow) ...[
+              const SizedBox(height: DonySpacing.sm),
+              Row(
+                key: const Key('contact-cancelled-window-hint'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DonyIcon('clock', size: 14, color: cs.onSurfaceVariant),
+                  const SizedBox(width: DonySpacing.xs),
+                  Expanded(
+                    child: Text(
+                      l.bidDetailCancelledContactWindowHint,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ),

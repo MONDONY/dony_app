@@ -19122,4 +19122,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ratingPendingPillLabel => 'To rate';
+
+  @override
+  String get bidDetailCancelledContactWindowHint =>
+      'You can still call each other for 48 hours after the cancellation.';
 }
