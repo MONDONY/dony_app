@@ -111,6 +111,77 @@ void main() {
       ),
     );
     expect(find.byKey(const Key('preview-currency-row')), findsOneWidget);
-    expect(find.text('F CFA (XOF)'), findsOneWidget);
+    expect(find.text('Devise : Franc CFA Ouest (XOF)'), findsOneWidget);
+    // Sans rappel, la devise est figée : pas de « Modifier ».
+    expect(find.byKey(const Key('preview-currency-change')), findsNothing);
+  });
+
+  group('FLUTTER-NN : devise en tête du récapitulatif, modifiable', () {
+    Future<void> pumpSheet(
+      WidgetTester tester, {
+      required VoidCallback onChange,
+      SupportedCurrency currency = SupportedCurrency.eur,
+    }) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => AnnouncementPreviewSheet.show(
+                  context,
+                  formState: const AnnouncementFormState(
+                    departureCity: 'Paris',
+                    arrivalCity: 'Dakar',
+                    pricePerKg: 10,
+                    availableKg: 5,
+                  ),
+                  onConfirm: () {},
+                  currency: currency,
+                  paymentMethods: const ['CASH'],
+                  onChangeCurrency: onChange,
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('ligne « Devise : Euro (EUR) » avant le trajet', (
+      tester,
+    ) async {
+      await pumpSheet(tester, onChange: () {});
+      expect(find.text('Devise : Euro (EUR)'), findsOneWidget);
+      final currencyY = tester
+          .getTopLeft(find.byKey(const Key('preview-currency-row')))
+          .dy;
+      final tripY = tester.getTopLeft(find.text('Paris → Dakar')).dy;
+      expect(currencyY, lessThan(tripY));
+    });
+
+    testWidgets('« Modifier » appelle le retour au sélecteur de devise', (
+      tester,
+    ) async {
+      var changes = 0;
+      await pumpSheet(
+        tester,
+        currency: SupportedCurrency.xof,
+        onChange: () => changes++,
+      );
+      expect(find.text('Devise : Franc CFA Ouest (XOF)'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('preview-currency-change')));
+      await tester.pump();
+      expect(changes, 1);
+    });
+
+    testWidgets('anglais', (tester) async {
+      useEnglish();
+      await pumpSheet(tester, onChange: () {});
+      expect(find.text('Currency: Euro (EUR)'), findsOneWidget);
+      expect(find.text('Edit'), findsOneWidget);
+    });
   });
 }

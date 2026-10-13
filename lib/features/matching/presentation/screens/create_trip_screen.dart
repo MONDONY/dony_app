@@ -125,6 +125,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   /// confirmée.
   final ValueNotifier<bool> _isDirtyNotifier = ValueNotifier<bool>(false);
 
+  /// Défilement du formulaire : le « Modifier » de la devise du récapitulatif
+  /// remonte au sélecteur posé en tête (FLUTTER-NN).
+  final ScrollController _formScrollController = ScrollController();
+
   /// Vrai pendant l'affichage du dialogue de confirmation, pour ne pas en
   /// empiler deux si l'utilisateur insiste sur le retour système.
   bool _confirmingExit = false;
@@ -179,6 +183,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _canContinueStep1Notifier.dispose();
     _isDirtyNotifier.dispose();
     _currencyNotifier.dispose();
+    _formScrollController.dispose();
     super.dispose();
   }
 
@@ -197,6 +202,23 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _confirmingExit = false;
     if (!mounted || confirmed != true) return;
     _leave();
+  }
+
+  /// « Modifier » de la ligne Devise du récapitulatif (FLUTTER-NN) : ferme
+  /// l'aperçu, remonte en tête du formulaire où se trouve la bannière de
+  /// devise, puis ouvre directement son sélecteur. Création seulement : en
+  /// modification ou en trajet dédié la devise est figée.
+  Future<void> _changeCurrencyFromPreview(BuildContext formContext) async {
+    Navigator.of(formContext, rootNavigator: true).pop();
+    if (_formScrollController.hasClients) {
+      await _formScrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    if (!mounted || !formContext.mounted) return;
+    await CurrencySelectionBanner.openSelector(formContext, _currencyNotifier);
   }
 
   /// Quitte l'écran. `pop` quand il y a une page dessous, repli sur l'accueil
@@ -281,6 +303,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             children: [
               Expanded(
                 child: SingleChildScrollView(
+                  controller: _formScrollController,
                   padding: const EdgeInsets.all(DonySpacing.base),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -509,6 +532,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                                     _currencyNotifier.value,
                                                 paymentMethods: _paymentMethods
                                                     ?.call(),
+                                                onChangeCurrency: () =>
+                                                    unawaited(
+                                                      _changeCurrencyFromPreview(
+                                                        ctx2,
+                                                      ),
+                                                    ),
                                               );
                                             }
                                           : null,

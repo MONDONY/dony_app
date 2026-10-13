@@ -19113,5 +19113,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter your new price here: this amount is what gets proposed, not the one written in the message.';
 
   @override
+  String listingPreviewCurrencyValue(String currencyName, String currencyCode) {
+    return 'Currency: $currencyName ($currencyCode)';
+  }
+
+  @override
   String get ratingPendingPillLabel => 'To rate';
 }
