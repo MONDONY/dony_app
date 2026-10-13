@@ -84,10 +84,13 @@ class FlightsRemoteDatasource {
         .toList();
   }
 
-  /// Vols sous le seuil d'une alerte, lus au moment de l'appel.
+  /// Vols d'une alerte, lus au moment de l'appel : ceux sous le seuil puis
+  /// les autres (`scope=all`). Un back qui ignore `scope` ne renvoie que
+  /// ceux sous le seuil.
   Future<FlightAlertOffers> alertOffers(String id) async {
     final res = await _apiClient.dio.get<Map<String, dynamic>>(
       '/me/flight-alerts/$id/offers',
+      queryParameters: const {'scope': 'all'},
     );
     return FlightAlertOffers.fromJson(res.data!);
   }

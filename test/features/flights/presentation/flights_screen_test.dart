@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
@@ -24,6 +25,8 @@ import 'package:dony/features/flights/presentation/flight_city_picker_screen.dar
 import 'package:dony/features/flights/presentation/flights_screen.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_deal_card.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_offer_card.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_results_parts.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -444,16 +447,33 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('créer une alerte depuis les résultats ouvre la feuille', (
+  testWidgets('résultats : scarabée seul en haut, alerte par le bouton bas', (
     tester,
   ) async {
     await open(tester);
     await tester.tap(find.byKey(const Key('flights-search-button')));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('flights-create-alert')));
-    await tester.pumpAndSettle();
+    // Plus de cloche dans l'en-tête des résultats : seul le scarabée reste.
+    expect(find.byKey(const Key('flights-create-alert')), findsNothing);
+    expect(find.byKey(const Key('flights-alerts-button')), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(FlightResultsHeader),
+        matching: find.byType(DonyFeedbackButton),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(FlightResultsHeader),
+        matching: find.byType(FlightRoundButton),
+      ),
+      findsOneWidget,
+    );
 
+    await tester.tap(find.byKey(const Key('flights-alert-fab')));
+    await tester.pumpAndSettle();
     expect(find.text('Nouvelle alerte'), findsOneWidget);
     expect(find.byKey(const Key('flight-alert-submit')), findsOneWidget);
     await tester.tap(find.byTooltip('Fermer'));
@@ -545,6 +565,13 @@ void main() {
     expect(find.byKey(const Key('flights-suggest-aviasales')), findsOneWidget);
     expect(find.byKey(const Key('flights-suggest-alert')), findsOneWidget);
     expect(find.byKey(const Key('flights-create-alert')), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(FlightResultsHeader),
+        matching: find.byType(DonyFeedbackButton),
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(const Key('flights-suggest-paris')));
     await tester.pumpAndSettle();

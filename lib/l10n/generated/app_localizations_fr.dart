@@ -18684,9 +18684,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get flightsAlertCreateTooltip => 'Créer une alerte prix';
-
-  @override
   String get flightsEmptyTitle => 'Aucun billet trouvé';
 
   @override
@@ -19496,6 +19493,25 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get flightsAlertSeeOffers => 'Voir';
+
+  @override
+  String get flightsAlertSeeFlights => 'Voir les vols';
+
+  @override
+  String get flightsAlertOffersTitleAll => 'Vols de votre alerte';
+
+  @override
+  String flightsAlertOffersNoneBelow(String price) {
+    return 'Aucun vol sous votre prix pour l\'instant, le moins cher est à $price';
+  }
+
+  @override
+  String get flightsAlertOffersAboveTitle => 'Au-dessus de votre prix';
+
+  @override
+  String flightsAlertAboveBy(String amount) {
+    return '+$amount au-dessus';
+  }
 
   @override
   String get flightsAlertOffersTitle => 'Vols trouvés';

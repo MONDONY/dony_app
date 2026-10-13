@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -23,14 +25,16 @@ import 'package:go_router/go_router.dart';
 String flightAlertOffersLocation(String alertId, {bool notification = false}) =>
     '/flights/alerts/$alertId/offers${notification ? '?source=notification' : ''}';
 
-/// Vols trouvés par une alerte prix (`/flights/alerts/:id/offers`) : les vols
-/// de la période sous le seuil, du moins cher au plus cher. Ouvert par
-/// « Voir » dans « Mes alertes » (l'alerte arrive en `extra`) ou par la
-/// notification `FLIGHT_PRICE_ALERT`.
+/// Vols d'une alerte prix (`/flights/alerts/:id/offers`) : les vols de la
+/// période sous le seuil, du moins cher au plus cher, puis ceux au-dessus
+/// (« Au-dessus de votre prix »). Ouvert par le bloc résultat d'une carte de
+/// « Mes alertes », quel que soit son état (l'alerte arrive en `extra`), ou
+/// par la notification `FLIGHT_PRICE_ALERT`.
 ///
-/// Les prix sont relus à l'ouverture. Plus rien sous le seuil (ou un back
-/// qui ne connaît pas encore la route) : l'écran le dit et propose la
-/// recherche en direct sur Aviasales.
+/// Les prix sont relus à l'ouverture. Rien sous le seuil : bandeau neutre et
+/// titre « Vols de votre alerte ». Aucun vol du tout (ou un back qui ne
+/// connaît pas encore la route) : l'écran le dit et propose la recherche en
+/// direct sur Aviasales.
 class FlightAlertOffersScreen extends StatelessWidget {
   const FlightAlertOffersScreen({
     super.key,
@@ -101,15 +105,26 @@ class _OffersView extends StatelessWidget {
                       ),
                       const SizedBox(width: DonySpacing.xs),
                       Expanded(
-                        child: Text(
-                          l.flightsAlertOffersTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: tt.headlineLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
+                        child:
+                            BlocSelector<
+                              FlightAlertOffersCubit,
+                              FlightAlertOffersState,
+                              bool
+                            >(
+                              selector: (s) => s.hasBelow,
+                              builder: (context, hasBelow) => Text(
+                                hasBelow
+                                    ? l.flightsAlertOffersTitle
+                                    : l.flightsAlertOffersTitleAll,
+                                key: const Key('flight-alert-offers-title'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: tt.headlineLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                            ),
                       ),
                       const DonyFeedbackButton(),
                     ],
@@ -202,26 +217,48 @@ class _OffersList extends StatelessWidget {
       return l.flightsAlertBelowBy(FlightFormat.price(diff, offer.currency));
     }
 
-    final items = <Widget>[
-      _Summary(state: state),
-      _Banner(
-        text: l.flightsAlertOffersBanner(
-          result.offers.length,
-          FlightFormat.price(cheapest.price, cheapest.currency),
-        ),
-      ),
-      for (final offer in result.offers)
+    String above(FlightOffer offer) {
+      final diff = math.max(1, (offer.price - result.maxPrice).ceil());
+      return l.flightsAlertAboveBy(
+        FlightFormat.price(diff.toDouble(), offer.currency),
+      );
+    }
+
+    Widget card(FlightOffer offer, {required bool isBelow}) =>
         BlocSelector<FlightLinkCubit, FlightLinkState, bool>(
           selector: (s) => s.openingPath == offer.offerPath,
           builder: (context, opening) => FlightOfferCard(
             offer: offer,
             opening: opening,
             showDates: true,
-            savingsLabel: savings(offer),
+            savingsLabel: isBelow ? savings(offer) : null,
+            aboveLabel: isBelow ? null : above(offer),
             onOpen: () =>
                 context.read<FlightLinkCubit>().open(offer, source: 'alert'),
           ),
+        );
+
+    final below = result.below;
+    final over = result.above;
+    final items = <Widget>[
+      _Summary(state: state),
+      if (below.isNotEmpty)
+        _Banner(
+          text: l.flightsAlertOffersBanner(
+            below.length,
+            FlightFormat.price(cheapest.price, cheapest.currency),
+          ),
+        )
+      else
+        _Banner(
+          neutral: true,
+          text: l.flightsAlertOffersNoneBelow(
+            FlightFormat.price(cheapest.price, cheapest.currency),
+          ),
         ),
+      for (final offer in below) card(offer, isBelow: true),
+      if (over.isNotEmpty) _SectionTitle(text: l.flightsAlertOffersAboveTitle),
+      for (final offer in over) card(offer, isBelow: false),
       if (onAviasales != null)
         FlightAllAirlinesCard(
           key: const Key('flight-alert-offers-aviasales'),
@@ -348,29 +385,36 @@ class _Summary extends StatelessWidget {
   }
 }
 
-/// Bandeau vert « 3 vols sous votre prix, le moins cher à 389 € ».
+/// Bandeau vert « 3 vols sous votre prix, le moins cher à 389 € », ou
+/// neutre quand aucun vol n'est sous le prix.
 class _Banner extends StatelessWidget {
-  const _Banner({required this.text});
+  const _Banner({required this.text, this.neutral = false});
 
   final String text;
+  final bool neutral;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final fg = neutral ? cs.onSurfaceVariant : cs.success;
     return Container(
-      key: const Key('flight-alert-offers-banner'),
+      key: Key(
+        neutral
+            ? 'flight-alert-offers-banner-none'
+            : 'flight-alert-offers-banner',
+      ),
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.md,
         vertical: DonySpacing.sm + DonySpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: cs.successLight,
+        color: neutral ? cs.surfaceContainerHighest : cs.successLight,
         borderRadius: BorderRadius.circular(DonyRadius.lg),
       ),
       child: Row(
         children: [
-          DonyIcon('check', size: 18, color: cs.success),
+          DonyIcon(neutral ? 'info' : 'check', size: 18, color: fg),
           const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
           Expanded(
             child: Text(
@@ -378,12 +422,44 @@ class _Banner extends StatelessWidget {
               style: tt.bodySmall?.copyWith(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: cs.success,
+                color: fg,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Titre de la section « Au-dessus de votre prix ».
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      key: const Key('flight-alert-offers-above-title'),
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.xs,
+        DonySpacing.sm,
+        DonySpacing.xs,
+        0,
+      ),
+      child: Semantics(
+        header: true,
+        child: Text(
+          text,
+          style: tt.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: cs.onSurface,
+          ),
+        ),
       ),
     );
   }

@@ -7,23 +7,20 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// En-tête des résultats : retour, pastille résumé de la recherche (qui
-/// ramène au formulaire), cloche d'alerte prix.
+/// ramène au formulaire) et scarabée. L'alerte prix se crée depuis le bouton
+/// « Alerte prix » en bas de la liste, ou la suggestion de l'écran « Aucun
+/// vol ».
 class FlightResultsHeader extends StatelessWidget {
   const FlightResultsHeader({
     super.key,
     required this.route,
     required this.dates,
     required this.onBack,
-    this.onCreateAlert,
   });
 
   final String route;
   final String dates;
   final VoidCallback onBack;
-
-  /// `null` : pas de cloche (écran « Aucun vol », qui propose l'alerte plus
-  /// bas).
-  final VoidCallback? onCreateAlert;
 
   @override
   Widget build(BuildContext context) {
@@ -128,16 +125,7 @@ class FlightResultsHeader extends StatelessWidget {
               ),
             ),
           ),
-          if (onCreateAlert != null) ...[
-            const SizedBox(width: DonySpacing.xs),
-            FlightRoundButton(
-              key: const Key('flights-create-alert'),
-              icon: 'bell',
-              tooltip: l.flightsAlertCreateTooltip,
-              iconColor: cs.primary,
-              onPressed: onCreateAlert,
-            ),
-          ],
+          const SizedBox(width: DonySpacing.xs),
           const DonyFeedbackButton(),
         ],
       ),

@@ -202,6 +202,9 @@ void main() {
       final result = await datasource.alertOffers('a1');
 
       expect(api.last.method, 'GET');
+      expect(api.last.queryParameters, {'scope': 'all'});
+      expect(result.belowCount, 2);
+      expect(result.above, isEmpty);
       expect(result.alertId, 'a1');
       expect(result.originLabel, 'Paris');
       expect(result.maxPrice, 450);
@@ -209,6 +212,25 @@ void main() {
       expect(result.cheapest!.price, 431);
       expect(result.searchPath, '/search/PAR0112ABJ1');
       expect(result.checkedAt, DateTime.utc(2026, 10, 13, 8));
+    },
+  );
+
+  test(
+    'vols d\'une alerte : belowCount du back sépare les deux sections',
+    () async {
+      api.on('GET', '/me/flight-alerts/a3/offers', {
+        'maxPrice': 450,
+        'belowCount': 1,
+        'offers': [
+          {..._offerJson, 'price': 470, 'offerPath': '/search/c'},
+          {..._offerJson, 'price': 389, 'offerPath': '/search/a'},
+        ],
+      });
+
+      final result = await datasource.alertOffers('a3');
+
+      expect(result.below.single.price, 389);
+      expect(result.above.single.price, 470);
     },
   );
 
@@ -228,6 +250,7 @@ void main() {
       expect(result.cheapest, isNull);
       expect(result.searchPath, isNull);
       expect(result.checkedAt, isNull);
+      expect(result.belowCount, 0);
       expect(result.toSearchResult().searchPath, isNull);
       expect(
         result.toSearchResult(fallbackSearchPath: '/search/X1').searchPath,

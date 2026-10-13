@@ -2,10 +2,11 @@ import 'package:dony/features/flights/data/models/flight_offer.dart';
 import 'package:dony/features/flights/data/models/flight_search_result.dart';
 import 'package:equatable/equatable.dart';
 
-/// Vols trouvés par une alerte prix (`GET /me/flight-alerts/{id}/offers`) :
-/// les offres de la période de l'alerte au prix inférieur ou égal à
-/// [maxPrice], du moins cher au plus cher. Prix indicatifs, lus au moment
-/// de l'ouverture ([checkedAt]).
+/// Vols d'une alerte prix (`GET /me/flight-alerts/{id}/offers?scope=all`) :
+/// les offres de la période de l'alerte, du moins cher au plus cher, d'abord
+/// celles au prix inférieur ou égal à [maxPrice] ([below]), puis les autres
+/// ([above]). Un back antérieur à `scope` ne renvoie que les premières.
+/// Prix indicatifs, lus au moment de l'ouverture ([checkedAt]).
 class FlightAlertOffers extends Equatable {
   const FlightAlertOffers({
     required this.alertId,
@@ -19,7 +20,8 @@ class FlightAlertOffers extends Equatable {
     required this.offers,
     this.searchPath,
     this.checkedAt,
-  });
+    int? belowCount,
+  }) : _belowCount = belowCount;
 
   factory FlightAlertOffers.fromJson(Map<String, dynamic> json) {
     final offers = <FlightOffer>[
@@ -43,6 +45,7 @@ class FlightAlertOffers extends Equatable {
       checkedAt: json['checkedAt'] is String
           ? DateTime.tryParse(json['checkedAt'] as String)
           : null,
+      belowCount: (json['belowCount'] as num?)?.toInt(),
     );
   }
 
@@ -60,6 +63,23 @@ class FlightAlertOffers extends Equatable {
   /// `null` sans période de départ.
   final String? searchPath;
   final DateTime? checkedAt;
+
+  /// Nombre de vols sous le seuil donné par le back, `null` s'il ne le
+  /// donne pas (ancien back) : [belowCount] le recalcule.
+  final int? _belowCount;
+
+  /// Vols au prix inférieur ou égal à [maxPrice], en tête de [offers]
+  /// (triées du moins cher au plus cher).
+  int get belowCount =>
+      (_belowCount ?? offers.where((o) => o.price <= maxPrice).length).clamp(
+        0,
+        offers.length,
+      );
+
+  List<FlightOffer> get below => offers.sublist(0, belowCount);
+
+  /// Vols au-dessus du seuil, vides sur un ancien back.
+  List<FlightOffer> get above => offers.sublist(belowCount);
 
   FlightOffer? get cheapest => offers.isEmpty ? null : offers.first;
 
@@ -88,5 +108,6 @@ class FlightAlertOffers extends Equatable {
     offers,
     searchPath,
     checkedAt,
+    _belowCount,
   ];
 }

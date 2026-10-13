@@ -22,17 +22,20 @@ final _alert = FlightAlert(
   active: true,
 );
 
-FlightAlertOffers _result({List<double> prices = const [389, 438]}) =>
-    FlightAlertOffers(
-      alertId: 'a1',
-      originCode: 'PAR',
-      destinationCode: 'ABJ',
-      roundTrip: false,
-      currency: 'EUR',
-      maxPrice: 450,
-      offers: [for (final p in prices) offer('/search/$p', price: p)],
-      searchPath: '/search/PAR0112ABJ1',
-    );
+FlightAlertOffers _result({
+  List<double> prices = const [389, 438],
+  int? belowCount,
+}) => FlightAlertOffers(
+  alertId: 'a1',
+  originCode: 'PAR',
+  destinationCode: 'ABJ',
+  roundTrip: false,
+  currency: 'EUR',
+  maxPrice: 450,
+  offers: [for (final p in prices) offer('/search/$p', price: p)],
+  searchPath: '/search/PAR0112ABJ1',
+  belowCount: belowCount,
+);
 
 DioException _dio(AppException error) =>
     DioException(requestOptions: RequestOptions(), error: error);
@@ -81,9 +84,118 @@ void main() {
     verify(
       () => analytics.logEvent(
         AnalyticsEvents.flightsAlertOffersViewed,
-        properties: {'count': 2, 'source': 'list'},
+        properties: {
+          'count': 2,
+          'has_below': true,
+          'above_count': 0,
+          'source': 'list',
+        },
       ),
     ).called(1);
+  });
+
+  test('scope=all : vols sous le prix puis au-dessus, tracés', () async {
+    when(() => repository.alertOffers('a1')).thenAnswer(
+      (_) async => _result(prices: const [389, 438, 470, 520], belowCount: 2),
+    );
+    final cubit = build(alert: _alert);
+    addTearDown(cubit.close);
+
+    await cubit.load();
+
+    final r = cubit.state.result!;
+    expect(cubit.state.status, FlightAlertOffersStatus.loaded);
+    expect(r.below.map((o) => o.price), [389, 438]);
+    expect(r.above.map((o) => o.price), [470, 520]);
+    expect(cubit.state.hasBelow, isTrue);
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.flightsAlertOffersViewed,
+        properties: {
+          'count': 2,
+          'has_below': true,
+          'above_count': 2,
+          'source': 'list',
+        },
+      ),
+    ).called(1);
+  });
+
+  test('aucun vol sous le prix : section au-dessus seule', () async {
+    when(
+      () => repository.alertOffers('a1'),
+    ).thenAnswer((_) async => _result(prices: const [470, 520], belowCount: 0));
+    final cubit = build(alert: _alert);
+    addTearDown(cubit.close);
+
+    await cubit.load();
+
+    expect(cubit.state.status, FlightAlertOffersStatus.loaded);
+    expect(cubit.state.result!.below, isEmpty);
+    expect(cubit.state.result!.above, hasLength(2));
+    expect(cubit.state.hasBelow, isFalse);
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.flightsAlertOffersViewed,
+        properties: {
+          'count': 0,
+          'has_below': false,
+          'above_count': 2,
+          'source': 'list',
+        },
+      ),
+    ).called(1);
+  });
+
+  test('belowCount absent : recalculé depuis le prix max', () {
+    final r = _result(prices: const [389, 450, 451]);
+    expect(r.belowCount, 2);
+    expect(r.above.single.price, 451);
+    // Valeur du back incohérente : bornée à la liste.
+    expect(_result(belowCount: 9).belowCount, 2);
+    expect(_result(belowCount: -1).belowCount, 0);
+  });
+
+  test(
+    'ancien back (scope ignoré) : seulement des vols sous le prix',
+    () async {
+      when(
+        () => repository.alertOffers('a1'),
+      ).thenAnswer((_) async => _result());
+      final cubit = build(alert: _alert);
+      addTearDown(cubit.close);
+
+      await cubit.load();
+
+      expect(cubit.state.result!.below, hasLength(2));
+      expect(cubit.state.result!.above, isEmpty);
+    },
+  );
+
+  test('hasBelow avant la réponse : l\'alerte en décide', () {
+    expect(const FlightAlertOffersState().hasBelow, isTrue);
+    expect(FlightAlertOffersState(alert: _alert).hasBelow, isFalse);
+    expect(
+      const FlightAlertOffersState(
+        alert: FlightAlert(
+          id: 'a2',
+          originCode: 'PAR',
+          destinationCode: 'ABJ',
+          directOnly: false,
+          maxPrice: 450,
+          currency: 'EUR',
+          active: true,
+          matchCount: 3,
+        ),
+      ).hasBelow,
+      isTrue,
+    );
+    expect(
+      const FlightAlertOffersState(
+        status: FlightAlertOffersStatus.empty,
+      ).hasBelow,
+      isFalse,
+    );
   });
 
   test('ouvert par une notification : l\'alerte est retrouvée', () async {
@@ -101,7 +213,12 @@ void main() {
     verify(
       () => analytics.logEvent(
         AnalyticsEvents.flightsAlertOffersViewed,
-        properties: {'count': 0, 'source': 'notification'},
+        properties: {
+          'count': 0,
+          'has_below': false,
+          'above_count': 0,
+          'source': 'notification',
+        },
       ),
     ).called(1);
   });
@@ -139,7 +256,12 @@ void main() {
       verify(
         () => analytics.logEvent(
           AnalyticsEvents.flightsAlertOffersViewed,
-          properties: {'count': 0, 'source': 'list'},
+          properties: {
+            'count': 0,
+            'has_below': false,
+            'above_count': 0,
+            'source': 'list',
+          },
         ),
       ).called(1);
     },

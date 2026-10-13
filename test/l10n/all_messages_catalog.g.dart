@@ -6481,7 +6481,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('destination'),
   ),
   'flightsResultsCount': (l) => l.flightsResultsCount(intPlaceholderValue),
-  'flightsAlertCreateTooltip': (l) => l.flightsAlertCreateTooltip,
   'flightsEmptyTitle': (l) => l.flightsEmptyTitle,
   'flightsEmptyDescription': (l) => l.flightsEmptyDescription,
   'flightsStampCheapest': (l) => l.flightsStampCheapest,
@@ -6742,6 +6741,13 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsAlertResultNoFlight': (l) => l.flightsAlertResultNoFlight,
   'flightsAlertResultPaused': (l) => l.flightsAlertResultPaused,
   'flightsAlertSeeOffers': (l) => l.flightsAlertSeeOffers,
+  'flightsAlertSeeFlights': (l) => l.flightsAlertSeeFlights,
+  'flightsAlertOffersTitleAll': (l) => l.flightsAlertOffersTitleAll,
+  'flightsAlertOffersNoneBelow': (l) =>
+      l.flightsAlertOffersNoneBelow(placeholderMarker('price')),
+  'flightsAlertOffersAboveTitle': (l) => l.flightsAlertOffersAboveTitle,
+  'flightsAlertAboveBy': (l) =>
+      l.flightsAlertAboveBy(placeholderMarker('amount')),
   'flightsAlertOffersTitle': (l) => l.flightsAlertOffersTitle,
   'flightsAlertOffersBanner': (l) => l.flightsAlertOffersBanner(
     intPlaceholderValue,
@@ -7289,6 +7295,8 @@ const textParameters = <String, List<String>>{
   'flightsAlertMaxShort': ['price'],
   'flightsAlertCheckedAgo': ['ago'],
   'flightsAlertResultAbove': ['price'],
+  'flightsAlertOffersNoneBelow': ['price'],
+  'flightsAlertAboveBy': ['amount'],
   'flightsAlertOffersBanner': ['price'],
   'flightsAlertOffersMax': ['price'],
   'activityFlightAlertsBelowByTicket': ['amount'],

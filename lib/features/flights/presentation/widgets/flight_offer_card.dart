@@ -26,6 +26,7 @@ class FlightOfferCard extends StatelessWidget {
     this.requestedDeparture,
     this.requestedReturn,
     this.savingsLabel,
+    this.aboveLabel,
   });
 
   final FlightOffer offer;
@@ -48,6 +49,10 @@ class FlightOfferCard extends StatelessWidget {
   /// Pastille verte d'un vol trouvé par une alerte (« −61 € sous votre
   /// prix »), à la place de [badge].
   final String? savingsLabel;
+
+  /// Pastille neutre d'un vol d'une alerte au-dessus de son prix (« +24 €
+  /// au-dessus »), à la place de [badge] et de [savingsLabel].
+  final String? aboveLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +112,10 @@ class FlightOfferCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (savingsLabel != null) ...[
+                    if (aboveLabel != null) ...[
+                      const SizedBox(width: DonySpacing.sm),
+                      _SavingsTag(label: aboveLabel!, above: true),
+                    ] else if (savingsLabel != null) ...[
                       const SizedBox(width: DonySpacing.sm),
                       _SavingsTag(label: savingsLabel!),
                     ] else if (badge != null) ...[
@@ -246,24 +254,25 @@ class _Badge extends StatelessWidget {
   }
 }
 
-/// « −61 € sous votre prix », en vert.
+/// « −61 € sous votre prix », en vert, ou « +24 € au-dessus », en gris.
 class _SavingsTag extends StatelessWidget {
-  const _SavingsTag({required this.label});
+  const _SavingsTag({required this.label, this.above = false});
 
   final String label;
+  final bool above;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
-      key: const Key('flight-offer-savings'),
+      key: Key(above ? 'flight-offer-above' : 'flight-offer-savings'),
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,
         vertical: DonySpacing.xxs + 1,
       ),
       decoration: BoxDecoration(
-        color: cs.successLight,
+        color: above ? cs.surfaceContainerHighest : cs.successLight,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
@@ -272,7 +281,7 @@ class _SavingsTag extends StatelessWidget {
         style: tt.bodySmall?.copyWith(
           height: 1.2,
           fontWeight: FontWeight.w700,
-          color: cs.success,
+          color: above ? cs.onSurfaceVariant : cs.success,
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
