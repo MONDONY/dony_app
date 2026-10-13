@@ -31243,6 +31243,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'À noter'**
   String get ratingPendingPillLabel;
+
+  /// Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et c'est à lui de répondre (FLUTTER-NZ)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre tour'**
+  String get requestMyNegotiationYourTurn;
+
+  /// Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et attend la réponse de l'expéditeur (FLUTTER-NZ)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition en attente'**
+  String get requestMyNegotiationPending;
 }
 
 class _AppLocalizationsDelegate

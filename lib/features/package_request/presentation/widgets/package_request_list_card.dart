@@ -15,6 +15,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/features/package_request/presentation/widgets/my_negotiation_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -174,6 +175,16 @@ class PackageRequestListCard extends StatelessWidget {
                               const SizedBox(height: DonySpacing.xs),
                               _MatchScoreRow(item: item, cs: cs, tt: tt),
                             ],
+                            // ── Négociation déjà engagée par le voyageur
+                            //    (FLUTTER-NZ) : « Votre tour » ou
+                            //    « Proposition en attente », ouvre le fil.
+                            if (!isOwnRequest && item.myNegotiation != null)
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: MyNegotiationChip(
+                                  negotiation: item.myNegotiation!,
+                                ),
+                              ),
                             const SizedBox(height: DonySpacing.sm),
 
                             // ── Photo colis + infos colis ─────────────────────

@@ -6671,6 +6671,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currencyCode'),
   ),
   'ratingPendingPillLabel': (l) => l.ratingPendingPillLabel,
+  'requestMyNegotiationYourTurn': (l) => l.requestMyNegotiationYourTurn,
+  'requestMyNegotiationPending': (l) => l.requestMyNegotiationPending,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

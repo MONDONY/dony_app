@@ -10072,5 +10072,13 @@
   "ratingPendingPillLabel": "To rate",
   "@ratingPendingPillLabel": {
     "description": "Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)"
+  },
+  "requestMyNegotiationYourTurn": "Your turn",
+  "@requestMyNegotiationYourTurn": {
+    "description": "Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et c'est à lui de répondre (FLUTTER-NZ)"
+  },
+  "requestMyNegotiationPending": "Offer pending",
+  "@requestMyNegotiationPending": {
+    "description": "Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et attend la réponse de l'expéditeur (FLUTTER-NZ)"
   }
 }
