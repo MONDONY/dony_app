@@ -1,3 +1,4 @@
+import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -7,6 +8,15 @@ import 'package:flutter/services.dart';
 /// Petits éléments communs aux écrans de billets, dessinés comme la maquette
 /// de l'onglet (bouton rond, case arrondie, sélecteur en pilule, bouton
 /// flottant noir) plutôt que les contrôles Material bruts.
+
+/// Hauteur à réserver en bas des listes de l'onglet Billets.
+///
+/// Le shell monte l'onglet avec `extendBody: true` : le contenu passe sous la
+/// barre d'onglets. Sans cette réserve, la fin de la liste des résultats
+/// (encart « Une compagnie manque ? ») et le bouton « Alerte prix » restaient
+/// cachés sous la barre, sans pouvoir défiler plus loin.
+double flightNavBarReserve(BuildContext context) =>
+    MainShell.navBarContentHeight + MediaQuery.paddingOf(context).bottom;
 
 /// Style de la barre d'état des écrans de billets.
 ///

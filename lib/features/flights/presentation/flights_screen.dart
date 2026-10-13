@@ -178,7 +178,9 @@ class _FormView extends StatelessWidget {
 
     return ListView(
       key: const Key('flights-form'),
-      padding: const EdgeInsets.only(bottom: DonySpacing.huge),
+      padding: EdgeInsets.only(
+        bottom: flightNavBarReserve(context) + DonySpacing.huge,
+      ),
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -626,11 +628,13 @@ class _ResultsView extends StatelessWidget {
                 Expanded(
                   child: ListView.separated(
                     key: const Key('flights-results'),
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       DonySpacing.md,
                       0,
                       DonySpacing.md,
-                      DonySpacing.huge + DonySpacing.xxl,
+                      flightNavBarReserve(context) +
+                          DonySpacing.huge +
+                          DonySpacing.xxl,
                     ),
                     itemCount: items.length,
                     separatorBuilder: (_, i) => SizedBox(
@@ -644,7 +648,7 @@ class _ResultsView extends StatelessWidget {
             Positioned(
               left: 0,
               right: 0,
-              bottom: DonySpacing.base,
+              bottom: flightNavBarReserve(context) + DonySpacing.base,
               child: Center(
                 child: FlightPillButton(
                   key: const Key('flights-alert-fab'),
