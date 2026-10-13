@@ -2,10 +2,7 @@ import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 
 abstract final class GuestAccessGuard {
-  /// Recherche (0) et Billets (5) : un visiteur cherche et réserve un billet
-  /// sans compte, le backend sert `/flights/*` à un invité (rien n'est
-  /// enregistré à son nom). Les alertes prix, elles, exigent un compte.
-  static bool isAllowedShellTab(int index) => index == 0 || index == 5;
+  static bool isAllowedShellTab(int index) => index == 0;
 
   /// Favoris inclus : c'est le seul contenu qu'un visiteur peut conserver, et
   /// le backend autorise déjà un invité sur `GET/PUT/DELETE /favorites/*`.
@@ -21,7 +18,6 @@ abstract final class GuestAccessGuard {
       path == '/recherche/composer' ||
       path == '/package-requests/search' ||
       path == '/favoris' ||
-      path == '/flights' ||
       RegExp(r'^/package-requests/[^/]+/public$').hasMatch(path) ||
       RegExp(r'^/announcements/[^/]+/trip$').hasMatch(path);
 

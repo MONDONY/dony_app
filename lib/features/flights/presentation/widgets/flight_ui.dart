@@ -9,10 +9,11 @@ import 'package:flutter/services.dart';
 /// de l'onglet (bouton rond, case arrondie, sélecteur en pilule, bouton
 /// flottant noir) plutôt que les contrôles Material bruts.
 
-/// Hauteur à réserver en bas des listes de l'onglet Billets.
+/// Hauteur à réserver en bas des listes de l'écran Billets.
 ///
-/// Le shell monte l'onglet avec `extendBody: true` : le contenu passe sous la
-/// barre d'onglets. Sans cette réserve, la fin de la liste des résultats
+/// L'écran s'ouvre dans la branche Activités du shell, monté avec
+/// `extendBody: true` : la barre d'onglets reste visible et le contenu passe
+/// dessous. Sans cette réserve, la fin de la liste des résultats
 /// (encart « Une compagnie manque ? ») et le bouton « Alerte prix » restaient
 /// cachés sous la barre, sans pouvoir défiler plus loin.
 double flightNavBarReserve(BuildContext context) =>

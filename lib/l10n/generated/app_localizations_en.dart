@@ -8768,7 +8768,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activitySectionCurrent => 'Right now';
 
   @override
-  String get activitySectionStats => 'Statistics';
+  String get activityStatsTitle => 'My statistics';
+
+  @override
+  String get activityFlightsSectionTitle => 'Flight tickets';
+
+  @override
+  String get activityFlightsSeeAll => 'See all';
 
   @override
   String get activitySectionTools => 'Tools';
@@ -18365,9 +18371,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suiviPhotoLostDismiss => 'Close the lost photo message';
-
-  @override
-  String get shellTabTickets => 'Tickets';
 
   @override
   String get authRequiredFlightAlertSubtitle =>

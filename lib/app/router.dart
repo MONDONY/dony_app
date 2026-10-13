@@ -90,6 +90,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
+import 'package:dony/features/matching/presentation/screens/activity_stats_screen.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_accepted_success_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
@@ -1201,8 +1202,13 @@ final appRouter = GoRouter(
           ReceptionDetailScreen(bidId: state.pathParameters['bidId']!),
     ),
 
+    // ── Billets d'avion : ancien onglet, désormais dans Activités ─────────
+    // `/flights` reste un chemin valide (anciens liens, raccourcis internes) :
+    // il ouvre l'écran Billets par-dessus le hub Activités.
+    GoRoute(path: '/flights', redirect: (_, _) => '/announcements/flights'),
+
     // ── Alertes prix des billets (hors shell) ────────────────────────────
-    // Cloche de l'onglet Billets, notification FLIGHT_PRICE_ALERT et deeplink
+    // Cloche de l'écran Billets, notification FLIGHT_PRICE_ALERT et deeplink
     // `yadony://flights/alerts`.
     GoRoute(
       path: '/flights/alerts',
@@ -1908,7 +1914,8 @@ final appRouter = GoRouter(
     ),
 
     // ── Shell principal avec Bottom Navigation ───────────────────────────
-    // Règle : UNIQUEMENT les 5 racines de tabs, sans sous-routes.
+    // Règle : les 5 racines de tabs ; seule Activités porte deux sous-pages
+    // (Billets d'avion, statistiques), ouvertes sous la barre d'onglets.
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainShell(navigationShell: navigationShell),
@@ -1927,11 +1934,37 @@ final appRouter = GoRouter(
         ),
 
         // Branch 1 — Activités (hub unique, double rôle permanent)
+        //
+        // Ses deux sous-pages s'ouvrent par-dessus le hub, dans la branche :
+        // la barre d'onglets reste visible et Activités reste sélectionné.
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/announcements',
               builder: (context, state) => const ActivitesHubScreen(),
+              routes: [
+                // Billets d'avion (flag flights_enabled), ouverts depuis le
+                // bloc « Billets d'avion » du hub. `extra` : un bon plan
+                // touché dans le hub, dont la recherche part à l'ouverture.
+                GoRoute(
+                  path: 'flights',
+                  name: '/announcements/flights',
+                  redirect: (_, _) async =>
+                      await flightsEnabledResolved() ? null : '/home',
+                  builder: (context, state) => FlightsScreen(
+                    launch: state.extra is FlightsLaunch
+                        ? state.extra! as FlightsLaunch
+                        : null,
+                  ),
+                ),
+                // Statistiques (revenus, kg vendus, trajets, colis), sorties
+                // du hub vers le menu ☰.
+                GoRoute(
+                  path: 'stats',
+                  name: '/announcements/stats',
+                  builder: (context, state) => const ActivityStatsScreen(),
+                ),
+              ],
             ),
           ],
         ),
@@ -1981,22 +2014,6 @@ final appRouter = GoRouter(
                 ],
                 child: const ProfileScreen(),
               ),
-            ),
-          ],
-        ),
-
-        // Branch 5 — Billets d'avion. Ajoutée EN DERNIER pour ne décaler aucun
-        // index existant : la barre du bas l'affiche pourtant en 2e position
-        // (voir `MainShell.navSlotOrder`).
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/flights',
-              // Flag éteint : la branche existe (le shell a besoin d'un index
-              // fixe) mais n'est jamais atteinte, même par un lien.
-              redirect: (_, _) async =>
-                  await flightsEnabledResolved() ? null : '/home',
-              builder: (context, state) => const FlightsScreen(),
             ),
           ],
         ),

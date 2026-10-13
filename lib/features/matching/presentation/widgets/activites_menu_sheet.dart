@@ -28,7 +28,8 @@ class ActivitesMenuChoice {
 /// derrière la feuille, avec leurs compteurs et leur pastille de non-lus, et
 /// deux chemins concurrents vers la même route ne rendent service à personne.
 /// La feuille porte ce que l'écran ne montre pas (suivi, scan, paramètres,
-/// portefeuille, aide) et les outils, qui vivent tout en bas du hub.
+/// statistiques, portefeuille, aide) et les outils, qui vivent tout en bas
+/// du hub.
 abstract final class ActivitesMenuSheet {
   static Future<ActivitesMenuChoice?> show(
     BuildContext context, {
@@ -159,6 +160,19 @@ class _ActivitesMenuContent extends StatelessWidget {
           color: DonyColors.violet,
           event: AnalyticsEvents.activitesHubRecipientsOpened,
           tools: tools,
+        ),
+        // Les statistiques (revenus, kg vendus, trajets, colis) ont quitté le
+        // hub pour le bloc « Billets d'avion » : leur écran s'ouvre d'ici.
+        // Comme l'historique, ce n'est pas un outil à préparer.
+        _MenuTile(
+          itemKey: const Key('menu-item-stats'),
+          iconAsset: 'trending-up',
+          label: l.activityStatsTitle,
+          color: cs.success,
+          choice: const ActivitesMenuChoice(
+            AnalyticsEvents.activitesHubStatsMenuOpened,
+            '/announcements/stats',
+          ),
         ),
         // L'historique n'est pas un outil à préparer : jamais de pastille, et
         // il ne compte pas dans « x/5 prêts ».

@@ -148,31 +148,47 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
   /// arrivée après coup (recherche plus récente, flèche retour) est ignorée.
   int _generation = 0;
 
-  /// Préremplit départ et arrivée avec la dernière recherche ou le corridor le
-  /// plus récent (`GET /flights/defaults`). Ne remplace jamais une saisie : un
-  /// utilisateur plus rapide que le réseau garde ce qu'il a choisi. Un échec
-  /// laisse simplement les champs vides.
+  /// Préremplit le formulaire avec le trajet habituel de l'utilisateur.
+  ///
+  /// Dans l'ordre : `GET /flights/defaults` (dernière recherche de billets
+  /// du compte, sinon son corridor le plus récent : trajets publiés, demandes
+  /// d'envoi, alertes corridor), puis, si le serveur ne propose rien
+  /// (visiteur, nouveau compte, échec réseau), la recherche la plus récente
+  /// gardée sur le téléphone. Le départ suffit : une destination inconnue
+  /// reste à choisir. Ne remplace jamais une saisie : un utilisateur plus
+  /// rapide que le réseau garde ce qu'il a choisi.
   Future<void> loadDefaults() async {
+    var source = 'none';
+    FlightPlace? origin;
+    FlightPlace? destination;
     try {
       final defaults = await _repository.defaults();
-      final origin = defaults.origin;
-      final destination = defaults.destination;
-      if (isClosed || origin == null || destination == null) return;
-      if (state.query.origin != null || state.query.destination != null) return;
-      emit(
-        state.copyWith(
-          query: state.query.copyWith(origin: origin, destination: destination),
-        ),
-      );
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.flightsPrefillApplied,
-          properties: {'source': defaults.source},
-        ),
-      );
+      origin = defaults.origin;
+      destination = defaults.destination;
+      source = defaults.source;
     } catch (_) {
-      // Préremplissage de confort : sans lui, le formulaire reste utilisable.
+      // Préremplissage de confort : le repli local prend le relais.
     }
+    if (isClosed) return;
+    if (origin == null) {
+      final recent = state.recents.isEmpty ? null : state.recents.first;
+      if (recent == null) return;
+      origin = recent.origin;
+      destination = recent.destination;
+      source = 'recent';
+    }
+    if (state.query.origin != null || state.query.destination != null) return;
+    emit(
+      state.copyWith(
+        query: state.query.copyWith(origin: origin, destination: destination),
+      ),
+    );
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.flightsPrefillApplied,
+        properties: {'source': source},
+      ),
+    );
   }
 
   void setOrigin(FlightPlace place) =>

@@ -2,8 +2,9 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
-/// Carte de statistique du hub — largeur fixe, pensée pour une rangée
-/// horizontale défilante.
+/// Carte de statistique (écran « Mes statistiques ») : largeur fixe pour une
+/// rangée horizontale défilante, ou toute la place offerte ([width] `null`)
+/// dans une grille.
 ///
 /// Tapable quand `onTap` est fourni : la carte surélevée porte déjà l'état
 /// pressé.
@@ -16,9 +17,13 @@ class StatTile extends StatelessWidget {
     required this.color,
     this.isLoading = false,
     this.onTap,
+    this.width = defaultWidth,
   });
 
-  static const double width = 132;
+  static const double defaultWidth = 132;
+
+  /// `null` : la carte prend toute la largeur que lui donne son parent.
+  final double? width;
 
   final String iconName;
   final String label;

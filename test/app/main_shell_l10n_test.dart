@@ -1,5 +1,5 @@
 // `MainShell` monte trop de dépendances (GoRouter, getIt, une dizaine de
-// BLoCs) pour être testé isolément ici — voir `_DonyBottomNav` dans
+// BLoCs) pour être testé isolément ici — voir `MainShellBottomNav` dans
 // `main_shell.dart`, privée à ce fichier. On vérifie donc la traduction des
 // libellés d'onglets via `DonyNavItem`, l'unité qui les affiche réellement,
 // alimentée par les mêmes clés `context.l10n.shellTab…` que `main_shell.dart`.
@@ -19,13 +19,6 @@ void main() {
             iconAsset: 'search',
             label: context.l10n.shellTabSearch,
             index: 0,
-            currentIndex: 0,
-            onTap: () {},
-          ),
-          DonyNavItem(
-            iconAsset: 'ticket',
-            label: context.l10n.shellTabTickets,
-            index: 5,
             currentIndex: 0,
             onTap: () {},
           ),
@@ -57,17 +50,12 @@ void main() {
   );
 
   testWidgets('onglets de la barre de navigation traduits en anglais '
-      '(Search, Tickets, Activity, Messages, Profile)', (tester) async {
+      '(Activity, Search, Messages, Profile)', (tester) async {
     await tester.pumpWidget(buildTabs());
 
-    for (final label in [
-      'Search',
-      'Tickets',
-      'Activity',
-      'Messages',
-      'Profile',
-    ]) {
-      expect(find.bySemanticsLabel(label), findsOneWidget, reason: label);
-    }
+    expect(find.text('Search'), findsOneWidget);
+    expect(find.text('Activity'), findsOneWidget);
+    expect(find.text('Messages'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
   });
 }

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 /// Item de la bottom navigation bar Yadony (île flottante).
 ///
 /// L'état actif est signalé par deux choses : (1) une pastille bleue
-/// PARTAGÉE et glissante, peinte par le parent (`_DonyBottomNav` dans
+/// PARTAGÉE et glissante, peinte par le parent (`MainShellBottomNav` dans
 /// `main_shell.dart`) derrière la [Row] d'items — donne la transition
 /// « focus qui glisse » d'un onglet à l'autre au lieu d'un fondu indépendant
 /// par item (audit UX bottom nav) — et (2) la couleur de l'icône/libellé de
@@ -37,7 +37,6 @@ class DonyNavItem extends StatelessWidget {
     this.isPro = false,
     this.avatarUrl,
     this.avatarName,
-    this.showLabel = true,
   }) : assert(
          avatarName != null ||
              iconAsset != null ||
@@ -71,10 +70,6 @@ class DonyNavItem extends StatelessWidget {
   final String? avatarUrl;
   final String? avatarName;
 
-  /// Faux : icône seule (barre à six onglets, billets d'avion activés), le
-  /// libellé reste annoncé par le lecteur d'écran et affiché en infobulle.
-  final bool showLabel;
-
   /// Largeur de la pastille icône — partagée avec l'indicateur glissant du parent.
   static const double pillWidth = 52;
 
@@ -87,13 +82,6 @@ class DonyNavItem extends StatelessWidget {
   /// (labelSmall) qui varient légèrement selon iOS/Android.
   static const double pillTopInset = 11;
 
-  /// Sans libellé, la pastille est centrée dans la barre : (66 − 36) / 2.
-  static const double pillTopInsetIconOnly = 15;
-
-  /// Offset de la pastille selon que le libellé est affiché ou non.
-  static double pillTopFor({required bool showLabel}) =>
-      showLabel ? pillTopInset : pillTopInsetIconOnly;
-
   bool get _active => index == currentIndex;
 
   @override
@@ -105,80 +93,72 @@ class DonyNavItem extends StatelessWidget {
       button: true,
       selected: _active,
       label: label,
-      child: Tooltip(
-        message: showLabel ? '' : label,
-        excludeFromSemantics: true,
-        child: GestureDetector(
-          onTap: onTap,
-          behavior: HitTestBehavior.opaque,
-          child: Column(
-            children: [
-              SizedBox(height: pillTopFor(showLabel: showLabel)),
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  if (isAvatar) _buildAvatar(cs) else _buildIconPill(cs),
-                  if (badgeCount > 0)
-                    Positioned(
-                      right: 2,
-                      top: -2,
-                      child: _NavBadge(
-                        count: badgeCount,
-                        ringColor: cs.surface,
-                      ),
-                    ),
-                  if (showDot && badgeCount <= 0 && !isPro)
-                    Positioned(
-                      right: 6,
-                      top: -1,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: DonyColors.error,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: cs.surface, width: 2),
-                        ),
-                      ),
-                    ),
-                  if (isPro && !isAvatar)
-                    Positioned(
-                      right: 1,
-                      top: -1,
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: const BoxDecoration(
-                          color: DonyColors.warning,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const DonyIcon(
-                          'star',
-                          color: DonyColors.white,
-                          size: 9,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              if (showLabel) const SizedBox(height: 3),
-              if (showLabel)
-                ExcludeSemantics(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      softWrap: false,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: _active ? cs.primary : cs.onSurfaceVariant,
-                        fontWeight: _active ? FontWeight.w700 : FontWeight.w600,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: [
+            const SizedBox(height: pillTopInset),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                if (isAvatar) _buildAvatar(cs) else _buildIconPill(cs),
+                if (badgeCount > 0)
+                  Positioned(
+                    right: 2,
+                    top: -2,
+                    child: _NavBadge(count: badgeCount, ringColor: cs.surface),
+                  ),
+                if (showDot && badgeCount <= 0 && !isPro)
+                  Positioned(
+                    right: 6,
+                    top: -1,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: DonyColors.error,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cs.surface, width: 2),
                       ),
                     ),
                   ),
+                if (isPro && !isAvatar)
+                  Positioned(
+                    right: 1,
+                    top: -1,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: const BoxDecoration(
+                        color: DonyColors.warning,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const DonyIcon(
+                        'star',
+                        color: DonyColors.white,
+                        size: 9,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            ExcludeSemantics(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: _active ? cs.primary : cs.onSurfaceVariant,
+                    fontWeight: _active ? FontWeight.w700 : FontWeight.w600,
+                  ),
                 ),
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );
