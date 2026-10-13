@@ -25,6 +25,7 @@ import 'package:dony/features/flights/presentation/widgets/flight_offer_card.dar
 import 'package:dony/features/flights/presentation/widgets/flight_recent_searches.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_results_parts.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_search_form.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_similar_stays_section.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -93,6 +94,22 @@ Future<void> openFlightAlerts(BuildContext context) {
     );
   }
   return context.push('/flights/alerts');
+}
+
+/// Section « Séjours de X à Y jours » des allers-retours à d'autres dates
+/// (`similarOffers`) ; `null` sans offre de ce genre (ancien back compris).
+Widget? _similar(FlightSearchState state, {double top = 0}) {
+  final result = state.result;
+  if (result == null || result.similarOffers.isEmpty) return null;
+  return Padding(
+    padding: EdgeInsets.only(top: top),
+    child: FlightSimilarStaysSection(
+      offers: result.similarOffers,
+      range: result.similarStayRange,
+      requestedDeparture: state.query.departure,
+      requestedReturn: state.query.returnDate,
+    ),
+  );
 }
 
 /// Nom affiché d'une ville de la recherche : le nom saisi, sinon le code.
@@ -579,6 +596,7 @@ class _ResultsView extends StatelessWidget {
                         c.state.openingPath != null &&
                         c.state.openingPath == state.result?.searchPath,
                   ),
+                  similar: error ? null : _similar(state),
                 ),
               ),
             ],
@@ -670,6 +688,9 @@ class _ResultsView extends StatelessWidget {
                 searchPath != null)
               more(const Key('flights-all-airlines-inline')),
           ],
+          // Autres dates, durée de séjour proche : après la liste (hors tri
+          // et filtres), avant l'encart Aviasales de fin.
+          ?_similar(state, top: DonySpacing.lg),
           if (searchPath != null && !fewResults)
             more(const Key('flights-all-airlines')),
         ];

@@ -271,6 +271,17 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
           },
         ),
       );
+      if (result.similarOffers.isNotEmpty) {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.flightsSimilarOffersShown,
+            properties: {
+              'count': result.similarOffers.length,
+              'empty': result.offers.isEmpty,
+            },
+          ),
+        );
+      }
     } catch (err) {
       if (isClosed || generation != _generation) return;
       final error = unwrapDioError(err);

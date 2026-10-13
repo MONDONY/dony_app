@@ -703,6 +703,7 @@ abstract final class AnalyticsEvents {
   static const flightsRecentSearchOpened = 'flights_recent_search_opened';
   static const flightsRecentSearchesCleared = 'flights_recent_searches_cleared';
   static const flightsAllAirlinesOpened = 'flights_all_airlines_opened';
+  static const flightsSimilarOffersShown = 'flights_similar_offers_shown';
   static const flightsEmptySuggestionTapped = 'flights_empty_suggestion_tapped';
   static const flightsLocationUsed = 'flights_location_used';
   static const flightsAlertOffersViewed = 'flights_alert_offers_viewed';

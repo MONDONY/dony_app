@@ -130,6 +130,17 @@ class FlightOffer extends Equatable {
 
   bool get isRoundTrip => returnAt != null;
 
+  /// Durée du séjour d'un aller-retour, en jours calendaires entre le départ
+  /// de l'aller et celui du retour ; `null` pour un aller simple ou une date
+  /// de départ inconnue.
+  int? get stayDays {
+    final from = departureAt;
+    final to = returnAt;
+    if (from == null || to == null) return null;
+    final days = dayOffset(from, to);
+    return days > 0 ? days : null;
+  }
+
   bool get isDirect => transfers == 0;
 
   /// Code affiché en grand sur le billet : l'aéroport s'il est connu.
