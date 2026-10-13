@@ -4,6 +4,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/flights/bloc/flight_alert_offers_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/models/flight_alert_offers.dart';
+import 'package:dony/features/flights/data/models/flight_offer.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -207,5 +208,111 @@ void main() {
     await cubit.close();
     await future;
     expect(cubit.state.status, FlightAlertOffersStatus.loading);
+  });
+
+  group('recherche Aviasales sans searchPath du back', () {
+    final today = DateTime(2026, 10, 13, 9);
+
+    FlightAlertOffers noPath({
+      List<FlightOffer> offers = const [],
+      bool roundTrip = false,
+    }) => FlightAlertOffers(
+      alertId: 'a1',
+      originCode: 'PAR',
+      destinationCode: 'DKR',
+      roundTrip: roundTrip,
+      currency: 'EUR',
+      maxPrice: 450,
+      offers: offers,
+    );
+
+    test('chemin du back : période', () {
+      final state = FlightAlertOffersState(result: _result());
+      final a = state.aviasales(today)!;
+      expect(a.path, '/search/PAR0112ABJ1');
+      expect(a.day, FlightAviasalesDay.period);
+    });
+
+    test('« toutes les dates » : jour du vol le moins cher', () {
+      final state = FlightAlertOffersState(
+        result: noPath(
+          offers: [
+            offer('/search/b', price: 420, departureAt: DateTime(2026, 11, 2)),
+            offer(
+              '/search/a',
+              price: 389,
+              departureAt: DateTime(2026, 11, 20, 6),
+            ),
+          ]..sort((x, y) => x.price.compareTo(y.price)),
+        ),
+      );
+      final a = state.aviasales(today)!;
+      expect(a.path, '/search/PAR2011DKR1');
+      expect(a.day, FlightAviasalesDay.cheapest);
+      expect(state.aviasalesTarget(today)!.searchPath, '/search/PAR2011DKR1');
+    });
+
+    test('aller-retour : retour du vol, sinon une semaine plus tard', () {
+      const withReturn = FlightOffer(
+        originCode: 'PAR',
+        destinationCode: 'DKR',
+        price: 389,
+        currency: 'EUR',
+        offerPath: '/search/a',
+      );
+      final out = DateTime(2026, 11, 20);
+      final state = FlightAlertOffersState(
+        result: noPath(
+          roundTrip: true,
+          offers: [
+            FlightOffer.fromJson({
+              ...{
+                'originCode': withReturn.originCode,
+                'destinationCode': withReturn.destinationCode,
+                'price': 389,
+                'offerPath': '/search/a',
+              },
+              'departureAt': '2026-11-20T06:00:00+01:00',
+              'returnAt': '2026-12-03T10:00:00+01:00',
+            }),
+          ],
+        ),
+      );
+      expect(state.aviasales(today)!.path, '/search/PAR2011DKR03121');
+
+      final noReturn = FlightAlertOffersState(
+        result: noPath(
+          roundTrip: true,
+          offers: [offer('/search/a', departureAt: out)],
+        ),
+      );
+      expect(noReturn.aviasales(today)!.path, '/search/PAR2011DKR27111');
+    });
+
+    test('vol déjà parti : période de l\'alerte', () {
+      final state = FlightAlertOffersState(
+        alert: _alert,
+        result: noPath(
+          offers: [offer('/search/a', departureAt: DateTime(2026, 10))],
+        ),
+      );
+      final a = state.aviasales(today)!;
+      expect(a.day, FlightAviasalesDay.period);
+      expect(a.path, startsWith('/search/PAR0112'));
+    });
+
+    test('ni vol ni période : demain', () {
+      final state = FlightAlertOffersState(result: noPath());
+      final a = state.aviasales(today)!;
+      expect(a.path, '/search/PAR1410DKR1');
+      expect(a.day, FlightAviasalesDay.tomorrow);
+
+      final roundTrip = FlightAlertOffersState(result: noPath(roundTrip: true));
+      expect(roundTrip.aviasales(today)!.path, '/search/PAR1410DKR21101');
+    });
+
+    test('sans codes de villes : rien', () {
+      expect(const FlightAlertOffersState().aviasales(today), isNull);
+    });
   });
 }

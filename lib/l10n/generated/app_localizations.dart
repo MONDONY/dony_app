@@ -31525,6 +31525,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'−{amount}\nsous votre prix'**
   String activityFlightAlertsBelowByTicket(String amount);
+
+  /// Encart Aviasales des vols trouvés quand l'alerte n'a pas de période : recherche au jour du vol le moins cher.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les compagnies, prix du moment, à la date du vol le moins cher.'**
+  String get flightsAlertOffersMoreBodyCheapest;
+
+  /// Encart Aviasales des vols trouvés sans période ni vol : recherche à partir de demain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les compagnies, prix du moment, à partir de demain.'**
+  String get flightsAlertOffersMoreBodyTomorrow;
 }
 
 class _AppLocalizationsDelegate

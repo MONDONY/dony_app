@@ -122,18 +122,26 @@ class FlightAlert extends Equatable {
     if (out == null || originCode.isEmpty || destinationCode.isEmpty) {
       return null;
     }
+    DateTime? back;
+    if (isRoundTrip) {
+      back = firstDay(returnFrom, returnTo);
+      if (back == null || back.isBefore(out)) return null;
+    }
+    return searchPathFor(originCode, destinationCode, out, back: back);
+  }
+
+  /// `/search/{ORIG}{JJMM}{DEST}[{JJMM retour}]1` (1 = un adulte), le format
+  /// du back (`FlightQuery.searchPath`).
+  static String searchPathFor(
+    String origin,
+    String destination,
+    DateTime out, {
+    DateTime? back,
+  }) {
     String ddmm(DateTime d) =>
         '${d.day.toString().padLeft(2, '0')}${d.month.toString().padLeft(2, '0')}';
-    final buffer = StringBuffer(
-      '/search/$originCode${ddmm(out)}$destinationCode',
-    );
-    if (isRoundTrip) {
-      final back = firstDay(returnFrom, returnTo);
-      if (back == null || back.isBefore(out)) return null;
-      buffer.write(ddmm(back));
-    }
-    buffer.write('1');
-    return buffer.toString();
+    return '/search/$origin${ddmm(out)}$destination'
+        '${back == null ? '' : ddmm(back)}1';
   }
 
   bool get isRoundTrip => returnFrom != null;

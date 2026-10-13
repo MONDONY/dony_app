@@ -22,6 +22,18 @@ enum FlightAlertOffersSource {
       raw == 'notification' ? notification : list;
 }
 
+/// Jour visé par la recherche Aviasales des vols trouvés.
+enum FlightAviasalesDay {
+  /// Premier jour à venir de la période de l'alerte.
+  period,
+
+  /// Jour de départ du vol le moins cher trouvé.
+  cheapest,
+
+  /// Demain, faute de période et de vol.
+  tomorrow,
+}
+
 /// Paramètres de l'écran « Vols trouvés » (GetIt `registerFactoryParam`).
 class FlightAlertOffersArgs {
   const FlightAlertOffersArgs({
@@ -52,10 +64,65 @@ class FlightAlertOffersState extends Equatable {
   final FlightAlertOffers? result;
   final AppException? error;
 
-  /// Recherche Aviasales du trajet : celle du back, sinon reconstruite
-  /// depuis l'alerte (ancien back sans la route des vols trouvés).
-  String? searchPath(DateTime today) =>
-      result?.searchPath ?? alert?.aviasalesSearchPath(today);
+  /// Recherche Aviasales du trajet et le jour qu'elle vise, `null` sans
+  /// codes de villes. Le back la donne quand l'alerte a une période de
+  /// départ ; sinon (« Toutes les dates à venir », ou ancien back) elle est
+  /// reconstruite : jour de départ du vol le moins cher, à défaut premier
+  /// jour à venir de la période, à défaut demain.
+  ({String path, FlightAviasalesDay day})? aviasales(DateTime today) {
+    final r = result;
+    final a = alert;
+    final fromBack = r?.searchPath;
+    if (fromBack != null) {
+      return (path: fromBack, day: FlightAviasalesDay.period);
+    }
+    final origin = r?.originCode ?? a?.originCode ?? '';
+    final destination = r?.destinationCode ?? a?.destinationCode ?? '';
+    if (origin.isEmpty || destination.isEmpty) return null;
+    final roundTrip = r?.roundTrip ?? a?.isRoundTrip ?? false;
+    final day = DateTime(today.year, today.month, today.day);
+    DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+    // Retour d'un aller-retour sans date connue : une semaine plus tard.
+    DateTime? returnFor(DateTime out, DateTime? known) {
+      if (!roundTrip) return null;
+      final back = known == null ? null : dateOnly(known);
+      return back == null || back.isBefore(out)
+          ? out.add(const Duration(days: 7))
+          : back;
+    }
+
+    final cheapest = r?.cheapest;
+    final departure = cheapest?.departureAt;
+    if (departure != null && !dateOnly(departure).isBefore(day)) {
+      final out = dateOnly(departure);
+      return (
+        path: FlightAlert.searchPathFor(
+          origin,
+          destination,
+          out,
+          back: returnFor(out, cheapest!.returnAt),
+        ),
+        day: FlightAviasalesDay.cheapest,
+      );
+    }
+    final fromPeriod = a?.aviasalesSearchPath(today);
+    if (fromPeriod != null) {
+      return (path: fromPeriod, day: FlightAviasalesDay.period);
+    }
+    final tomorrow = day.add(const Duration(days: 1));
+    return (
+      path: FlightAlert.searchPathFor(
+        origin,
+        destination,
+        tomorrow,
+        back: returnFor(tomorrow, null),
+      ),
+      day: FlightAviasalesDay.tomorrow,
+    );
+  }
+
+  String? searchPath(DateTime today) => aviasales(today)?.path;
 
   /// Ce qu'ouvre « Plus de vols sur Aviasales » / « Rechercher en direct »,
   /// `null` sans chemin de recherche.

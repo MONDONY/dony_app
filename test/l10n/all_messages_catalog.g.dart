@@ -6739,6 +6739,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsAlertOffersMoreBody': (l) => l.flightsAlertOffersMoreBody,
   'activityFlightAlertsBelowByTicket': (l) =>
       l.activityFlightAlertsBelowByTicket(placeholderMarker('amount')),
+  'flightsAlertOffersMoreBodyCheapest': (l) =>
+      l.flightsAlertOffersMoreBodyCheapest,
+  'flightsAlertOffersMoreBodyTomorrow': (l) =>
+      l.flightsAlertOffersMoreBodyTomorrow,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

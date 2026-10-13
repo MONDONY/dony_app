@@ -190,6 +190,11 @@ class _OffersList extends StatelessWidget {
     final cheapest = result.cheapest!;
     final onAviasales = _aviasales(context, state);
     final opening = _aviasalesOpening(context, state);
+    final aviasalesBody = switch (state.aviasales(DateTime.now())?.day) {
+      FlightAviasalesDay.cheapest => l.flightsAlertOffersMoreBodyCheapest,
+      FlightAviasalesDay.tomorrow => l.flightsAlertOffersMoreBodyTomorrow,
+      _ => l.flightsAlertOffersMoreBody,
+    };
 
     String savings(FlightOffer offer) {
       final diff = result.maxPrice - offer.price;
@@ -221,7 +226,7 @@ class _OffersList extends StatelessWidget {
         FlightAllAirlinesCard(
           key: const Key('flight-alert-offers-aviasales'),
           title: l.flightsAlertOffersMoreTitle,
-          body: l.flightsAlertOffersMoreBody,
+          body: aviasalesBody,
           opening: opening,
           onTap: onAviasales,
         ),

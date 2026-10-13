@@ -341,4 +341,27 @@ void main() {
       '/flights/alerts/a1/offers?source=notification',
     );
   });
+
+  testWidgets('alerte sans période : encart Aviasales au jour du moins cher', (
+    tester,
+  ) async {
+    when(
+      () => repository.alertOffers('a1'),
+    ).thenAnswer((_) async => _result(searchPath: null));
+    await open(tester, alert: _alert);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Toutes les compagnies, prix du moment, à la date du vol le moins cher.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('flight-alert-offers-aviasales')));
+    await tester.pumpAndSettle();
+    final captured = verify(
+      () => repository.affiliateLink(captureAny(), source: 'search'),
+    ).captured;
+    expect((captured.single as FlightOffer).offerPath, '/search/PAR1212ABJ1');
+  });
 }

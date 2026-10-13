@@ -19474,4 +19474,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String activityFlightAlertsBelowByTicket(String amount) {
     return '−$amount\nsous votre prix';
   }
+
+  @override
+  String get flightsAlertOffersMoreBodyCheapest =>
+      'Toutes les compagnies, prix du moment, à la date du vol le moins cher.';
+
+  @override
+  String get flightsAlertOffersMoreBodyTomorrow =>
+      'Toutes les compagnies, prix du moment, à partir de demain.';
 }

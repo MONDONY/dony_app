@@ -20742,5 +20742,9 @@
   "flightsAlertOffersMoreBody": "Toutes les compagnies, prix du moment, au premier jour de votre période.",
   "@flightsAlertOffersMoreBody": {"description": "Encart en fin de liste des vols trouvés."},
   "activityFlightAlertsBelowByTicket": "−{amount}\nsous votre prix",
-  "@activityFlightAlertsBelowByTicket": {"description": "Petite ligne du billet vert de la ligne des Outils, sur deux lignes pour garder le billet étroit : écart sous le seuil.", "placeholders": {"amount": {"type": "String"}}}
+  "@activityFlightAlertsBelowByTicket": {"description": "Petite ligne du billet vert de la ligne des Outils, sur deux lignes pour garder le billet étroit : écart sous le seuil.", "placeholders": {"amount": {"type": "String"}}},
+  "flightsAlertOffersMoreBodyCheapest": "Toutes les compagnies, prix du moment, à la date du vol le moins cher.",
+  "@flightsAlertOffersMoreBodyCheapest": {"description": "Encart Aviasales des vols trouvés quand l'alerte n'a pas de période : recherche au jour du vol le moins cher."},
+  "flightsAlertOffersMoreBodyTomorrow": "Toutes les compagnies, prix du moment, à partir de demain.",
+  "@flightsAlertOffersMoreBodyTomorrow": {"description": "Encart Aviasales des vols trouvés sans période ni vol : recherche à partir de demain."}
 }
