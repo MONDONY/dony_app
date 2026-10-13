@@ -19289,6 +19289,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ratingPendingPillLabel => 'À noter';
 
   @override
+  String profileReliabilityPercent(int percent) {
+    return 'Fiabilité $percent %';
+  }
+
+  @override
+  String get profileReliabilityHelp =>
+      'Part des envois menés à bien. Les annulations dont la personne n\'est pas responsable ne comptent pas.';
+
+  @override
   String get tripEditCurrencyLockedHint =>
       'La devise ne peut plus changer : ce trajet a déjà des demandes.';
 

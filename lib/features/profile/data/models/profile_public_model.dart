@@ -21,6 +21,7 @@ class ProfilePublicModel {
     this.measuredResponseMinutes,
     this.lastSeenDaysAgo,
     this.senderIncidentCount = 0,
+    this.reliabilityPercent,
   });
 
   final String userId;
@@ -61,6 +62,11 @@ class ProfilePublicModel {
   /// confirmées. `0` sur un back antérieur.
   final int senderIncidentCount;
 
+  /// Part des envois menés à bien, de 0 à 100 (FLUTTER-NV, yadony-back #517).
+  /// Absente sous trois envois engagés ou sur un back antérieur : le profil
+  /// public n'affiche alors ni taux ni compteur d'incidents.
+  final int? reliabilityPercent;
+
   factory ProfilePublicModel.fromJson(Map<String, dynamic> json) {
     return ProfilePublicModel(
       userId: json['userId'] as String? ?? '',
@@ -93,6 +99,10 @@ class ProfilePublicModel {
           ?.toInt(),
       lastSeenDaysAgo: (json['lastSeenDaysAgo'] as num?)?.toInt(),
       senderIncidentCount: (json['senderIncidentCount'] as num?)?.toInt() ?? 0,
+      reliabilityPercent: switch (json['reliabilityPercent']) {
+        final num v => v.toInt().clamp(0, 100),
+        _ => null,
+      },
     );
   }
 }
