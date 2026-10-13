@@ -18548,9 +18548,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get flightsAlertCreateTooltip => 'Create a price alert';
-
-  @override
   String get flightsEmptyTitle => 'No ticket found';
 
   @override
@@ -19360,6 +19357,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flightsAlertSeeOffers => 'View';
 
   @override
+  String get flightsAlertSeeFlights => 'View flights';
+
+  @override
+  String get flightsAlertOffersTitleAll => 'Your alert\'s flights';
+
+  @override
+  String flightsAlertOffersNoneBelow(String price) {
+    return 'No flights under your price yet, the cheapest is $price';
+  }
+
+  @override
+  String get flightsAlertOffersAboveTitle => 'Above your price';
+
+  @override
+  String flightsAlertAboveBy(String amount) {
+    return '+$amount above';
+  }
+
+  @override
   String get flightsAlertOffersTitle => 'Flights found';
 
   @override
@@ -19385,6 +19401,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flightsAlertOffersEmptyBody =>
       'Prices have moved since the last check. We keep watching and will let you know as soon as a flight drops below it again.';
+
+  @override
+  String get flightsAlertOffersNoFlightTitle => 'No flights found yet';
+
+  @override
+  String get flightsAlertOffersNoFlightBody =>
+      'No prices available for this route and these dates from our partners. We keep watching and will let you know as soon as a flight drops below your price.';
 
   @override
   String get flightsAlertOffersMoreTitle => 'More flights on Aviasales';

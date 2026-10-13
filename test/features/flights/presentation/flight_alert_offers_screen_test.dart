@@ -39,6 +39,7 @@ final _alert = FlightAlert(
 FlightAlertOffers _result({
   List<FlightOffer>? offers,
   String? searchPath = '/search/PAR0112ABJ1',
+  int? belowCount,
 }) => FlightAlertOffers(
   alertId: 'a1',
   originCode: 'PAR',
@@ -55,6 +56,21 @@ FlightAlertOffers _result({
         offer('/search/b', price: 450, departureAt: DateTime(2099, 12, 16, 11)),
       ],
   searchPath: searchPath,
+  belowCount: belowCount,
+);
+
+const _aboveAlert = FlightAlert(
+  id: 'a1',
+  originCode: 'PAR',
+  destinationCode: 'ABJ',
+  originLabel: 'Paris',
+  destinationLabel: 'Abidjan',
+  directOnly: false,
+  maxPrice: 450,
+  currency: 'EUR',
+  active: true,
+  lastSeenPrice: 470,
+  matchCount: 0,
 );
 
 /// Texte affiché, espaces insécables ramenées à des espaces simples.
@@ -201,6 +217,76 @@ void main() {
     expect(find.text('Plus de vols sur Aviasales'), findsOneWidget);
   });
 
+  testWidgets('scope=all : section « Au-dessus de votre prix » après', (
+    tester,
+  ) async {
+    when(() => repository.alertOffers('a1')).thenAnswer(
+      (_) async => _result(
+        offers: [
+          offer('/search/a', price: 389, departureAt: DateTime(2099, 12, 2)),
+          offer('/search/c', price: 473.4, departureAt: DateTime(2099, 12, 5)),
+          offer('/search/d', price: 450.2, departureAt: DateTime(2099, 12, 9)),
+        ]..sort((a, b) => a.price.compareTo(b.price)),
+        belowCount: 1,
+      ),
+    );
+    await open(tester, alert: _alert);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Vols trouvés'), findsOneWidget);
+    expect(_text('1 vol sous votre prix, à 389 €'), findsOneWidget);
+    expect(find.text('Au-dessus de votre prix'), findsOneWidget);
+    expect(find.byKey(const Key('flight-offer-savings')), findsOneWidget);
+    expect(find.byKey(const Key('flight-offer-above')), findsNWidgets(2));
+    expect(_text('+1 € au-dessus'), findsOneWidget);
+    expect(_text('+24 € au-dessus'), findsOneWidget);
+    expect(find.byKey(const Key('flight-leg-date')), findsNWidgets(3));
+    // Ordre : vol sous le prix, titre, vols au-dessus, encart Aviasales.
+    final y = [
+      find.byKey(const Key('flight-open-/search/a')),
+      find.byKey(const Key('flight-alert-offers-above-title')),
+      find.byKey(const Key('flight-open-/search/d')),
+      find.byKey(const Key('flight-alert-offers-aviasales')),
+    ].map((f) => tester.getTopLeft(f).dy).toList();
+    expect(y, orderedEquals([...y]..sort()));
+  });
+
+  testWidgets('aucun vol sous le prix : bandeau neutre, titre de l\'alerte', (
+    tester,
+  ) async {
+    final pending = Completer<FlightAlertOffers>();
+    when(() => repository.alertOffers('a1')).thenAnswer((_) => pending.future);
+    await open(tester, alert: _aboveAlert);
+    await tester.pump(const Duration(milliseconds: 400));
+    // Pendant le chargement, l'alerte sans vol sous le prix donne le titre.
+    expect(find.text('Vols de votre alerte'), findsOneWidget);
+
+    pending.complete(
+      _result(
+        offers: [
+          offer('/search/c', price: 470, departureAt: DateTime(2099, 12, 5)),
+          offer('/search/d', price: 520, departureAt: DateTime(2099, 12, 9)),
+        ],
+        belowCount: 0,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Vols de votre alerte'), findsOneWidget);
+    expect(find.text('Vols trouvés'), findsNothing);
+    expect(find.byKey(const Key('flight-alert-offers-banner')), findsNothing);
+    expect(
+      _text(
+        "Aucun vol sous votre prix pour l'instant, le moins cher est à 470 €",
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Au-dessus de votre prix'), findsOneWidget);
+    expect(find.byKey(const Key('flight-offer-savings')), findsNothing);
+    expect(find.byKey(const Key('flight-offer-above')), findsNWidgets(2));
+    expect(find.byKey(const Key('flight-alert-offers-aviasales')), findsOne);
+  });
+
   testWidgets('toucher une offre : lien affilié, source alerte', (
     tester,
   ) async {
@@ -248,11 +334,37 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('flight-alert-offers-empty')), findsOne);
+    expect(find.text('Vols de votre alerte'), findsOneWidget);
     expect(
       find.text("Plus de vol sous votre prix pour l'instant"),
       findsOneWidget,
     );
     expect(find.byKey(const Key('flight-alert-offers-summary')), findsOne);
+    await tester.tap(find.byKey(const Key('flights-suggest-aviasales')));
+    await tester.pumpAndSettle();
+    verify(() => repository.affiliateLink(any(), source: 'search')).called(1);
+  });
+
+  testWidgets('back récent sans aucun vol : « Aucun vol trouvé »', (
+    tester,
+  ) async {
+    when(
+      () => repository.alertOffers('a1'),
+    ).thenAnswer((_) async => _result(offers: const [], belowCount: 0));
+    await open(tester, alert: _alert);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('flight-alert-offers-empty')), findsOne);
+    expect(find.text('Vols de votre alerte'), findsOneWidget);
+    expect(find.text("Aucun vol trouvé pour l'instant"), findsOneWidget);
+    expect(
+      find.textContaining('Aucun prix disponible pour ce trajet'),
+      findsOneWidget,
+    );
+    expect(
+      find.text("Plus de vol sous votre prix pour l'instant"),
+      findsNothing,
+    );
     await tester.tap(find.byKey(const Key('flights-suggest-aviasales')));
     await tester.pumpAndSettle();
     verify(() => repository.affiliateLink(any(), source: 'search')).called(1);

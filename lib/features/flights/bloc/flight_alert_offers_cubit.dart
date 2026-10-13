@@ -124,6 +124,16 @@ class FlightAlertOffersState extends Equatable {
 
   String? searchPath(DateTime today) => aviasales(today)?.path;
 
+  /// Au moins un vol sous le prix : titre « Vols trouvés », sinon « Vols de
+  /// votre alerte ». Avant la réponse, l'alerte connue en décide (une
+  /// notification, sans alerte, annonce des vols sous le prix).
+  bool get hasBelow {
+    final r = result;
+    if (r != null) return r.belowCount > 0;
+    if (status == FlightAlertOffersStatus.empty) return false;
+    return alert?.hasHit ?? true;
+  }
+
   /// Ce qu'ouvre « Plus de vols sur Aviasales » / « Rechercher en direct »,
   /// `null` sans chemin de recherche.
   FlightSearchResult? aviasalesTarget(DateTime today) {
@@ -158,12 +168,13 @@ class FlightAlertOffersState extends Equatable {
   List<Object?> get props => [status, alert, result, error];
 }
 
-/// Vols trouvés par une alerte prix (`GET /me/flight-alerts/{id}/offers`).
+/// Vols d'une alerte prix (`GET /me/flight-alerts/{id}/offers?scope=all`) :
+/// ceux sous le seuil, puis ceux au-dessus.
 ///
 /// Les prix sont relus à l'ouverture : un vol vu sous le seuil à la dernière
-/// vérification peut avoir disparu, l'écran dit alors qu'il n'y a plus rien
-/// sous le prix et propose Aviasales. Un back qui ne connaît pas encore la
-/// route (404) mène au même état vide.
+/// vérification peut avoir disparu, l'écran montre alors les vols au-dessus
+/// du prix. Aucun vol du tout, ou un back qui ne connaît pas encore la route
+/// (404) : état vide, Aviasales proposé.
 class FlightAlertOffersCubit extends Cubit<FlightAlertOffersState> {
   FlightAlertOffersCubit(
     this._repository,
@@ -196,7 +207,7 @@ class FlightAlertOffersCubit extends Cubit<FlightAlertOffersState> {
           alert: alert,
         ),
       );
-      _trackViewed(result.offers.length);
+      _trackViewed(result.belowCount, above: result.above.length);
     } catch (err) {
       final error = unwrapDioError(err);
       final alert = alertLookup == null ? null : await alertLookup;
@@ -208,7 +219,7 @@ class FlightAlertOffersCubit extends Cubit<FlightAlertOffersState> {
         emit(
           state.copyWith(status: FlightAlertOffersStatus.empty, alert: alert),
         );
-        _trackViewed(0);
+        _trackViewed(0, above: 0);
         return;
       }
       emit(
@@ -232,13 +243,18 @@ class FlightAlertOffersCubit extends Cubit<FlightAlertOffersState> {
   }
 
   /// Une fois par écran, au premier chargement abouti. Ni trajet ni prix.
-  void _trackViewed(int count) {
+  void _trackViewed(int count, {required int above}) {
     if (_tracked) return;
     _tracked = true;
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.flightsAlertOffersViewed,
-        properties: {'count': count, 'source': source.name},
+        properties: {
+          'count': count,
+          'has_below': count > 0,
+          'above_count': above,
+          'source': source.name,
+        },
       ),
     );
   }

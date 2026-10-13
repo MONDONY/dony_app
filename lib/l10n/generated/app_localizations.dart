@@ -30302,12 +30302,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Aucun billet} =1{1 billet} other{{count} billets}}'**
   String flightsResultsCount(int count);
 
-  /// Cloche de l'en-tête des résultats.
-  ///
-  /// In fr, this message translates to:
-  /// **'Créer une alerte prix'**
-  String get flightsAlertCreateTooltip;
-
   /// Résultats vides.
   ///
   /// In fr, this message translates to:
@@ -31550,6 +31544,36 @@ abstract class AppLocalizations {
   /// **'Voir'**
   String get flightsAlertSeeOffers;
 
+  /// Bouton neutre d'une alerte (au-dessus du prix, en pause, pas encore vérifiée) : ouvre les vols de l'alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les vols'**
+  String get flightsAlertSeeFlights;
+
+  /// Titre de l'écran des vols d'une alerte quand aucun n'est sous le prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vols de votre alerte'**
+  String get flightsAlertOffersTitleAll;
+
+  /// Bandeau neutre de l'écran des vols d'une alerte quand aucun vol n'est sous le prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun vol sous votre prix pour l\'instant, le moins cher est à {price}'**
+  String flightsAlertOffersNoneBelow(String price);
+
+  /// Titre de la section des vols au-dessus du prix d'une alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au-dessus de votre prix'**
+  String get flightsAlertOffersAboveTitle;
+
+  /// Écart entre le prix d'un vol et le seuil d'une alerte, au-dessus du seuil.
+  ///
+  /// In fr, this message translates to:
+  /// **'+{amount} au-dessus'**
+  String flightsAlertAboveBy(String amount);
+
   /// Titre de l'écran des vols trouvés par une alerte prix.
   ///
   /// In fr, this message translates to:
@@ -31579,6 +31603,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les prix ont bougé depuis la dernière vérification. On continue de surveiller et on vous prévient dès qu\'un vol repasse dessous.'**
   String get flightsAlertOffersEmptyBody;
+
+  /// Écran des vols d'une alerte vide, back récent : aucun vol n'existe pour ce trajet et ces dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun vol trouvé pour l\'instant'**
+  String get flightsAlertOffersNoFlightTitle;
+
+  /// Texte de l'écran des vols d'une alerte vide, back récent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun prix disponible pour ce trajet et ces dates chez nos partenaires. On continue de surveiller et on vous prévient dès qu\'un vol passe sous votre prix.'**
+  String get flightsAlertOffersNoFlightBody;
 
   /// Encart en fin de liste des vols trouvés.
   ///

@@ -18684,9 +18684,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get flightsAlertCreateTooltip => 'Créer une alerte prix';
-
-  @override
   String get flightsEmptyTitle => 'Aucun billet trouvé';
 
   @override
@@ -19498,6 +19495,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flightsAlertSeeOffers => 'Voir';
 
   @override
+  String get flightsAlertSeeFlights => 'Voir les vols';
+
+  @override
+  String get flightsAlertOffersTitleAll => 'Vols de votre alerte';
+
+  @override
+  String flightsAlertOffersNoneBelow(String price) {
+    return 'Aucun vol sous votre prix pour l\'instant, le moins cher est à $price';
+  }
+
+  @override
+  String get flightsAlertOffersAboveTitle => 'Au-dessus de votre prix';
+
+  @override
+  String flightsAlertAboveBy(String amount) {
+    return '+$amount au-dessus';
+  }
+
+  @override
   String get flightsAlertOffersTitle => 'Vols trouvés';
 
   @override
@@ -19523,6 +19539,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get flightsAlertOffersEmptyBody =>
       'Les prix ont bougé depuis la dernière vérification. On continue de surveiller et on vous prévient dès qu\'un vol repasse dessous.';
+
+  @override
+  String get flightsAlertOffersNoFlightTitle =>
+      'Aucun vol trouvé pour l\'instant';
+
+  @override
+  String get flightsAlertOffersNoFlightBody =>
+      'Aucun prix disponible pour ce trajet et ces dates chez nos partenaires. On continue de surveiller et on vous prévient dès qu\'un vol passe sous votre prix.';
 
   @override
   String get flightsAlertOffersMoreTitle => 'Plus de vols sur Aviasales';

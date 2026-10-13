@@ -271,7 +271,8 @@ class _AlertCard extends StatelessWidget {
 
 /// Où en est l'alerte, sous ses informations : vert avec le prix trouvé et
 /// « Voir », gris avec le meilleur prix du moment, « En pause » ou « Pas
-/// encore vérifiée ».
+/// encore vérifiée », et « Voir les vols ». Tout le bloc ouvre les vols de
+/// l'alerte, quel que soit son état.
 class _AlertResult extends StatelessWidget {
   const _AlertResult({required this.alert});
 
@@ -307,21 +308,32 @@ class _AlertResult extends StatelessWidget {
       height: 1,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
+    void open() => _openOffers(context);
+    final seeAll = _SeeButton(
+      key: Key('flight-alert-see-${alert.id}'),
+      label: l.flightsAlertSeeFlights,
+    );
 
     if (!alert.active) {
       return _ResultBox(
         key: const Key('flight-alert-result-paused'),
         dim: true,
+        onTap: open,
         children: [
           Expanded(child: Text(l.flightsAlertResultPaused, style: textStyle)),
+          const SizedBox(width: DonySpacing.sm),
+          seeAll,
         ],
       );
     }
     if (!alert.checked) {
       return _ResultBox(
         key: const Key('flight-alert-result-pending'),
+        onTap: open,
         children: [
           Expanded(child: Text(l.flightsAlertNotChecked, style: textStyle)),
+          const SizedBox(width: DonySpacing.sm),
+          seeAll,
         ],
       );
     }
@@ -333,6 +345,7 @@ class _AlertResult extends StatelessWidget {
       return _ResultBox(
         key: const Key('flight-alert-result-hit'),
         color: cs.successLight,
+        onTap: open,
         children: [
           if (price != null) ...[
             Text(
@@ -350,7 +363,8 @@ class _AlertResult extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           _SeeButton(
             key: Key('flight-alert-see-${alert.id}'),
-            onTap: () => _openOffers(context),
+            label: l.flightsAlertSeeOffers,
+            highlight: true,
           ),
         ],
       );
@@ -358,30 +372,41 @@ class _AlertResult extends StatelessWidget {
     // Au-dessus du seuil, ou plus rien de trouvé : le dernier prix vu ne
     // s'affiche que s'il est encore crédible ([FlightAlert.currentPrice]).
     final current = alert.currentPrice;
+    final status = Text(
+      [
+        if (current != null)
+          l.flightsAlertResultAbove(
+            FlightFormat.price(alert.maxPrice, alert.currency),
+          )
+        else
+          l.flightsAlertResultNoFlight,
+        ?checked,
+      ].join('\n'),
+      style: textStyle,
+    );
     return _ResultBox(
       key: const Key('flight-alert-result-above'),
+      onTap: open,
       children: [
-        if (current != null) ...[
-          Text(
-            FlightFormat.price(current, alert.currency),
-            style: priceStyle?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
-        ],
+        // Le prix passe au-dessus du texte : la pilule « Voir les vols »
+        // laisse trop peu de place pour les trois côte à côte.
         Expanded(
-          child: Text(
-            [
-              if (current != null)
-                l.flightsAlertResultAbove(
-                  FlightFormat.price(alert.maxPrice, alert.currency),
-                )
-              else
-                l.flightsAlertResultNoFlight,
-              ?checked,
-            ].join('\n'),
-            style: textStyle,
-          ),
+          child: current == null
+              ? status
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      FlightFormat.price(current, alert.currency),
+                      style: priceStyle?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: DonySpacing.xs),
+                    status,
+                  ],
+                ),
         ),
+        const SizedBox(width: DonySpacing.sm),
+        seeAll,
       ],
     );
   }
@@ -391,11 +416,13 @@ class _ResultBox extends StatelessWidget {
   const _ResultBox({
     super.key,
     required this.children,
+    required this.onTap,
     this.color,
     this.dim = false,
   });
 
   final List<Widget> children;
+  final VoidCallback onTap;
 
   /// Fond du bloc, gris doux par défaut.
   final Color? color;
@@ -404,68 +431,62 @@ class _ResultBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Opacity(
-      opacity: dim ? 0.7 : 1,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 52),
-        padding: const EdgeInsets.all(DonySpacing.sm + DonySpacing.xxs),
-        decoration: BoxDecoration(
-          color: color ?? cs.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
+    return Semantics(
+      button: true,
+      child: DonyPressable(
+        onTap: onTap,
+        scale: 0.98,
+        child: Opacity(
+          opacity: dim ? 0.7 : 1,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 52),
+            padding: const EdgeInsets.all(DonySpacing.sm + DonySpacing.xxs),
+            decoration: BoxDecoration(
+              color: color ?? cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: Row(children: children),
+          ),
         ),
-        child: Row(children: children),
       ),
     );
   }
 }
 
-/// Pilule verte « Voir › » : ouvre les vols trouvés.
+/// Pilule « Voir › » (verte, vols sous le prix) ou « Voir les vols › »
+/// (neutre) : signale que le bloc ouvre les vols de l'alerte, le tap est
+/// porté par tout le bloc ([_ResultBox]).
 class _SeeButton extends StatelessWidget {
-  const _SeeButton({super.key, required this.onTap});
+  const _SeeButton({super.key, required this.label, this.highlight = false});
 
-  final VoidCallback onTap;
+  final String label;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return Semantics(
-      button: true,
-      child: DonyPressable(
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
-          child: Center(
-            widthFactor: 1,
-            child: Container(
-              height: 32,
-              padding: const EdgeInsetsDirectional.fromSTEB(
-                DonySpacing.md,
-                0,
-                DonySpacing.sm,
-                0,
-              ),
-              decoration: BoxDecoration(
-                color: cs.success,
-                borderRadius: BorderRadius.circular(DonyRadius.full),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.l10n.flightsAlertSeeOffers,
-                    style: tt.labelLarge?.copyWith(
-                      fontSize: 12,
-                      color: cs.onPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.xxs),
-                  DonyIcon('chevron-right', size: 14, color: cs.onPrimary),
-                ],
-              ),
-            ),
-          ),
-        ),
+    final fg = highlight ? cs.onPrimary : cs.onSurface;
+    return Container(
+      height: 32,
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        DonySpacing.md,
+        0,
+        DonySpacing.sm,
+        0,
+      ),
+      decoration: BoxDecoration(
+        color: highlight ? cs.success : cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: highlight ? null : Border.all(color: cs.outline),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: tt.labelLarge?.copyWith(fontSize: 12, color: fg)),
+          const SizedBox(width: DonySpacing.xxs),
+          DonyIcon('chevron-right', size: 14, color: fg),
+        ],
       ),
     );
   }

@@ -295,7 +295,19 @@ void main() {
 
       expect(find.byKey(const Key('flight-alert-result-paused')), findsOne);
       expect(find.text('En pause : plus de vérification'), findsOneWidget);
-      expect(find.byKey(const Key('flight-alert-see-paused')), findsNothing);
+      // Chaque état ouvre les vols : « Voir » vert sur le bloc vert, « Voir
+      // les vols » neutre ailleurs.
+      for (final id in ['hit', 'above', 'paused', 'pending']) {
+        expect(find.byKey(Key('flight-alert-see-$id')), findsOneWidget);
+      }
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('flight-alert-see-hit')),
+          matching: find.text('Voir'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Voir les vols'), findsNWidgets(3));
 
       expect(find.byKey(const Key('flight-alert-result-pending')), findsOne);
       expect(find.text('Pas encore vérifiée'), findsOneWidget);
@@ -366,5 +378,64 @@ void main() {
       expect(location, '/flights/alerts/a1/offers');
       expect(extra, hit);
     });
+
+    for (final (state, build, result) in [
+      (
+        'au-dessus du prix',
+        () => alert('a1', seen: 512, count: 0, checkedAt: DateTime.now()),
+        'above',
+      ),
+      ('en pause', () => alert('a1', seen: 300, active: false), 'paused'),
+      ('pas encore vérifiée', () => alert('a1'), 'pending'),
+    ]) {
+      testWidgets('$state : « Voir les vols » et tout le bloc ouvrent', (
+        tester,
+      ) async {
+        final a = build();
+        when(() => repository.alerts()).thenAnswer((_) async => [a]);
+        final opened = <Object?>[];
+        final router = GoRouter(
+          routes: [
+            GoRoute(path: '/', builder: (_, _) => const FlightAlertsScreen()),
+            GoRoute(
+              path: '/flights/alerts/:id/offers',
+              builder: (context, state) {
+                opened.add(state.extra);
+                return Scaffold(
+                  body: TextButton(
+                    onPressed: context.pop,
+                    child: const Text('vols de l\'alerte'),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+        await tester.pumpWidget(
+          MaterialApp.router(
+            locale: AppL10n.fr,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('flight-alert-see-a1')));
+        await tester.pumpAndSettle();
+        expect(find.text('vols de l\'alerte'), findsOneWidget);
+
+        await tester.tap(find.text('vols de l\'alerte'));
+        await tester.pumpAndSettle();
+        // Le texte du bloc, hors pilule, ouvre aussi.
+        await tester.tapAt(
+          tester.getTopLeft(find.byKey(Key('flight-alert-result-$result'))) +
+              const Offset(16, 16),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('vols de l\'alerte'), findsOneWidget);
+        expect(opened, [a, a]);
+      });
+    }
   });
 }

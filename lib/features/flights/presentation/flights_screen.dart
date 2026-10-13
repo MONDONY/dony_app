@@ -683,7 +683,6 @@ class _ResultsView extends StatelessWidget {
                   route: route,
                   dates: dates,
                   onBack: cubit.backToForm,
-                  onCreateAlert: () => _createAlert(context, state),
                 ),
                 FlightSortTabs(
                   summaries: summaries,
