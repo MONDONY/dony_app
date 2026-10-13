@@ -6673,6 +6673,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currencyCode'),
   ),
   'ratingPendingPillLabel': (l) => l.ratingPendingPillLabel,
+  'bidDetailCancelledContactWindowHint': (l) =>
+      l.bidDetailCancelledContactWindowHint,
   'negotiationThreadCounterNetAmountLabel': (l) =>
       l.negotiationThreadCounterNetAmountLabel(placeholderMarker('symbol')),
   'negotiationThreadCounterSenderWillPay': (l) =>

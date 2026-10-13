@@ -31250,6 +31250,12 @@ abstract class AppLocalizations {
   /// **'À noter'**
   String get ratingPendingPillLabel;
 
+  /// Indication des cartes expéditeur / voyageur du détail d'un colis annulé : le serveur garde le contact ouvert 48 h (FLUTTER-P1)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez encore vous appeler pendant 48 h après l\'annulation.'**
+  String get bidDetailCancelledContactWindowHint;
+
   /// Label du champ de contre-offre du voyageur, saisie en net (FLUTTER-NS, bid_negotiation_thread_screen.dart)
   ///
   /// In fr, this message translates to:

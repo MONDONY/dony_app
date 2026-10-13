@@ -10074,6 +10074,10 @@
   "@ratingPendingPillLabel": {
     "description": "Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)"
   },
+  "bidDetailCancelledContactWindowHint": "You can still call each other for 48 hours after the cancellation.",
+  "@bidDetailCancelledContactWindowHint": {
+    "description": "Indication des cartes expéditeur / voyageur du détail d'un colis annulé : le serveur garde le contact ouvert 48 h (FLUTTER-P1)"
+  },
   "negotiationThreadCounterNetAmountLabel": "What you will receive ({symbol})",
   "@negotiationThreadCounterNetAmountLabel": {
     "description": "Label du champ de contre-offre du voyageur, saisie en net (FLUTTER-NS, bid_negotiation_thread_screen.dart)",

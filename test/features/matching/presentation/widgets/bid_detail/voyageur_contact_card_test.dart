@@ -94,6 +94,31 @@ void main() {
 
   // FLUTTER-FM : après l'annulation, l'expéditeur doit pouvoir joindre le
   // voyageur qui a encore son colis.
+  // FLUTTER-P1 : contact gardé 48 h après l'annulation, sur décision serveur.
+  testWidgets('annulé, fenêtre de 48 h ouverte : 💬 + 📞 et indication', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: true));
+    expect(_chatIcon, findsOneWidget);
+    expect(_phoneIcon, findsOneWidget);
+    expect(
+      find.byKey(const Key('contact-cancelled-window-hint')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('annulé, fenêtre refermée : fermé, sans indication', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'CANCELLED', contactWindowOpen: false));
+    expect(_chatIcon, findsNothing);
+    expect(_phoneIcon, findsNothing);
+    expect(
+      find.byKey(const Key('contact-cancelled-window-hint')),
+      findsNothing,
+    );
+  });
+
   testWidgets('colis annulé, retour en cours : 💬 + 📞 et indication', (
     tester,
   ) async {

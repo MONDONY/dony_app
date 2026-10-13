@@ -19272,6 +19272,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ratingPendingPillLabel => 'À noter';
 
   @override
+  String get bidDetailCancelledContactWindowHint =>
+      'Vous pouvez encore vous appeler pendant 48 h après l\'annulation.';
+
+  @override
   String negotiationThreadCounterNetAmountLabel(String symbol) {
     return 'Ce que vous recevrez ($symbol)';
   }

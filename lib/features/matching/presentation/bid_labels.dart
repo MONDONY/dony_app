@@ -126,9 +126,23 @@ bool bidReturnInProgress(BidModel bid, {DateTime? now}) {
   return (now ?? DateTime.now()).isBefore(bid.returnDeadline!);
 }
 
-/// [bidAllowsContact], retour d'un colis annulé compris ([bidReturnInProgress]).
+/// Commande annulée en cours de route, sans retour de colis à organiser :
+/// le serveur garde le contact expéditeur ↔ voyageur (appel in-app, numéro,
+/// photos) ouvert 48 h après l'annulation (FLUTTER-P1, yadony-back #514), et
+/// le dit par `contactWindowOpen`. Champ absent ou faux : fermé comme avant.
+///
+/// Ne concerne jamais le destinataire ([bidAllowsRecipientContact] inchangé).
+bool bidCancelledContactOpen(BidModel bid, {DateTime? now}) =>
+    bid.status == 'CANCELLED' &&
+    bid.contactWindowOpen == true &&
+    !bidReturnInProgress(bid, now: now);
+
+/// [bidAllowsContact], retour d'un colis annulé compris ([bidReturnInProgress])
+/// et fenêtre de 48 h après l'annulation ([bidCancelledContactOpen]).
 bool bidAllowsContactFor(BidModel bid, {DateTime? now}) =>
-    bidAllowsContact(bid.status) || bidReturnInProgress(bid, now: now);
+    bidAllowsContact(bid.status) ||
+    bidReturnInProgress(bid, now: now) ||
+    bidCancelledContactOpen(bid, now: now);
 
 /// Statuts d'une demande pas encore acceptée : les cartes de profil y
 /// expliquent quand le contact deviendra possible (FLUTTER-4T).
