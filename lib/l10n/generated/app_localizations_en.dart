@@ -19133,4 +19133,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ratingPendingPillLabel => 'To rate';
+
+  @override
+  String get requestMyNegotiationYourTurn => 'Your turn';
+
+  @override
+  String get requestMyNegotiationPending => 'Offer pending';
 }

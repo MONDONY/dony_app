@@ -19270,4 +19270,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ratingPendingPillLabel => 'À noter';
+
+  @override
+  String get requestMyNegotiationYourTurn => 'Votre tour';
+
+  @override
+  String get requestMyNegotiationPending => 'Proposition en attente';
 }
