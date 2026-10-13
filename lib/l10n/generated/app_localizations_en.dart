@@ -18861,6 +18861,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flightsMoreBody => 'See every airline on Aviasales, same dates.';
 
   @override
+  String get flightsFewResultsTitle => 'More flights on Aviasales';
+
+  @override
+  String get flightsFewResultsBody =>
+      'We only have recent prices. Aviasales searches every airline live, for the same dates.';
+
+  @override
+  String get flightsLiveSearchCta => 'Search live on Aviasales';
+
+  @override
+  String get flightsLiveSearchHint =>
+      'Every airline, current prices, same dates.';
+
+  @override
   String get flightsAlertFab => 'Price alert';
 
   @override
@@ -19142,4 +19156,63 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get profileReliabilityHelp =>
       'Share of shipments completed. Cancellations this person is not responsible for do not count.';
+
+  @override
+  String get tripEditCurrencyLockedHint =>
+      'The currency can no longer change: this trip already has requests.';
+
+  @override
+  String get errorTripCurrencyLockedTitle => 'Currency locked';
+
+  @override
+  String get errorTripCurrencyLockedMessage =>
+      'This trip has just received a request: its currency can no longer change. The original currency has been restored.';
+
+  @override
+  String get errorCurrencyUnsupportedTitle => 'Currency not supported';
+
+  @override
+  String get errorCurrencyUnsupportedMessage =>
+      'This currency is not available for a trip. Please choose another one.';
+
+  @override
+  String get bidDetailCancelledContactWindowHint =>
+      'You can still call each other for 48 hours after the cancellation.';
+
+  @override
+  String negotiationThreadCounterNetAmountLabel(String symbol) {
+    return 'What you will receive ($symbol)';
+  }
+
+  @override
+  String negotiationThreadCounterSenderWillPay(String amount) {
+    return 'The sender will pay $amount';
+  }
+
+  @override
+  String get errorCounterAmountAmbiguousTitle => 'Amount unclear';
+
+  @override
+  String get errorCounterAmountAmbiguousMessage =>
+      'Your counter-offer could not be read. Please enter the amount again.';
+
+  @override
+  String get errorCounterNetTravelerOnlyTitle => 'Amount not accepted';
+
+  @override
+  String get errorCounterNetTravelerOnlyMessage =>
+      'Propose the total price you will pay, Yadony fees included.';
+
+  @override
+  String get errorCounterSameAmountTitle => 'Same amount';
+
+  @override
+  String get errorCounterSameAmountMessage =>
+      'This amount matches the last offer: accept it or change the price.';
+
+  @override
+  String get requestMyNegotiationYourTurn => 'Your turn';
+
+  @override
+  String get requestMyNegotiationPending => 'Offer pending';
 }

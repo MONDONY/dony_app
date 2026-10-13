@@ -241,6 +241,40 @@ void main() {
       expect(bidReturnInProgress(b, now: now), isFalse);
     });
 
+    // FLUTTER-P1 : le serveur garde le contact 48 h après l'annulation.
+    test('annulé sans retour, fenêtre de 48 h ouverte : contact ouvert', () {
+      final b = bid(contactWindowOpen: true);
+      expect(bidReturnInProgress(b, now: now), isFalse);
+      expect(bidCancelledContactOpen(b, now: now), isTrue);
+      expect(bidAllowsContactFor(b, now: now), isTrue);
+      // Jamais vers le destinataire.
+      expect(bidAllowsRecipientContact(b.status), isFalse);
+    });
+
+    test('annulé, fenêtre refermée ou champ absent : fermé', () {
+      expect(bidCancelledContactOpen(bid(contactWindowOpen: false)), isFalse);
+      expect(bidAllowsContactFor(bid(contactWindowOpen: false)), isFalse);
+      expect(bidCancelledContactOpen(bid()), isFalse);
+    });
+
+    test('retour en cours : pas confondu avec la fenêtre de 48 h', () {
+      final b = bid(
+        returnDeadline: now.add(const Duration(days: 2)),
+        contactWindowOpen: true,
+      );
+      expect(bidCancelledContactOpen(b, now: now), isFalse);
+      expect(bidAllowsContactFor(b, now: now), isTrue);
+    });
+
+    test('fenêtre ouverte sur un autre statut : sans effet', () {
+      expect(
+        bidCancelledContactOpen(
+          bid(status: 'REJECTED', contactWindowOpen: true),
+        ),
+        isFalse,
+      );
+    });
+
     test('annulé sans retour, ou statut actif : selon le statut seul', () {
       expect(bidAllowsContactFor(bid(), now: now), isFalse);
       expect(bidAllowsContactFor(bid(status: 'ACCEPTED'), now: now), isTrue);

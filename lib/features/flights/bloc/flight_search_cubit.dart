@@ -22,6 +22,10 @@ enum FlightSearchStatus { editing, loading, loaded, error }
 enum FlightEmptySuggestion { paris, wholeMonth, aviasales, alert }
 
 class FlightSearchState extends Equatable {
+  /// En dessous de ce nombre de vols affichés, la recherche en direct
+  /// d'Aviasales passe en tête de liste : notre cache est maigre sur le trajet.
+  static const fewResultsThreshold = 5;
+
   const FlightSearchState({
     this.query = const FlightSearchQuery(),
     this.status = FlightSearchStatus.editing,

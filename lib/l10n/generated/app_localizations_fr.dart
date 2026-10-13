@@ -18998,6 +18998,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Voir toutes les compagnies sur Aviasales, avec les mêmes dates.';
 
   @override
+  String get flightsFewResultsTitle => 'Plus de vols sur Aviasales';
+
+  @override
+  String get flightsFewResultsBody =>
+      'Nous n\'avons que les prix récents. Aviasales cherche en direct sur toutes les compagnies, avec les mêmes dates.';
+
+  @override
+  String get flightsLiveSearchCta => 'Rechercher en direct sur Aviasales';
+
+  @override
+  String get flightsLiveSearchHint =>
+      'Toutes les compagnies, prix du moment, mêmes dates.';
+
+  @override
   String get flightsAlertFab => 'Alerte prix';
 
   @override
@@ -19279,4 +19293,63 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get profileReliabilityHelp =>
       'Part des envois menés à bien. Les annulations dont la personne n\'est pas responsable ne comptent pas.';
+
+  @override
+  String get tripEditCurrencyLockedHint =>
+      'La devise ne peut plus changer : ce trajet a déjà des demandes.';
+
+  @override
+  String get errorTripCurrencyLockedTitle => 'Devise figée';
+
+  @override
+  String get errorTripCurrencyLockedMessage =>
+      'Ce trajet vient de recevoir une demande : sa devise ne peut plus changer. La devise d\'origine a été remise.';
+
+  @override
+  String get errorCurrencyUnsupportedTitle => 'Devise non prise en charge';
+
+  @override
+  String get errorCurrencyUnsupportedMessage =>
+      'Cette devise n\'est pas disponible pour un trajet. Choisissez-en une autre.';
+
+  @override
+  String get bidDetailCancelledContactWindowHint =>
+      'Vous pouvez encore vous appeler pendant 48 h après l\'annulation.';
+
+  @override
+  String negotiationThreadCounterNetAmountLabel(String symbol) {
+    return 'Ce que vous recevrez ($symbol)';
+  }
+
+  @override
+  String negotiationThreadCounterSenderWillPay(String amount) {
+    return 'L\'expéditeur paiera $amount';
+  }
+
+  @override
+  String get errorCounterAmountAmbiguousTitle => 'Montant à préciser';
+
+  @override
+  String get errorCounterAmountAmbiguousMessage =>
+      'Votre contre-proposition n\'a pas pu être lue. Saisissez à nouveau le montant.';
+
+  @override
+  String get errorCounterNetTravelerOnlyTitle => 'Montant non accepté';
+
+  @override
+  String get errorCounterNetTravelerOnlyMessage =>
+      'Proposez le prix total que vous paierez, frais Yadony inclus.';
+
+  @override
+  String get errorCounterSameAmountTitle => 'Même montant';
+
+  @override
+  String get errorCounterSameAmountMessage =>
+      'Ce montant est identique à la dernière proposition : acceptez-la ou changez le prix.';
+
+  @override
+  String get requestMyNegotiationYourTurn => 'Votre tour';
+
+  @override
+  String get requestMyNegotiationPending => 'Proposition en attente';
 }

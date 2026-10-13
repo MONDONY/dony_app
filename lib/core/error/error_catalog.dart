@@ -516,6 +516,21 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.lock_outline_rounded,
     ),
+    // Modification d'un trajet (FLUTTER-KV, yadony-back #515) : une demande
+    // ou une offre est arrivée, la devise ne peut plus changer. Le bloc
+    // renomme le `currency-locked` du serveur, partagé avec le portefeuille.
+    'announcement/currency-locked': _Entry(
+      title: (l) => l.errorTripCurrencyLockedTitle,
+      message: (l) => l.errorTripCurrencyLockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
+    ),
+    'currency-unsupported': _Entry(
+      title: (l) => l.errorCurrencyUnsupportedTitle,
+      message: (l) => l.errorCurrencyUnsupportedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.currency_exchange_rounded,
+    ),
     'country-unsupported': _Entry(
       title: (l) => l.errorCountryUnsupportedTitle,
       message: (l) => l.errorCountryUnsupportedMessage,
@@ -898,6 +913,27 @@ abstract final class ErrorCatalog {
       message: (l) => l.errorCommissionFailedMessage,
       severity: ErrorSeverity.critical,
       icon: Icons.credit_card_off_rounded,
+    ),
+    // Contre-offre d'un fil de TRAJET (`POST /bids/{bidId}/negotiation/counter`,
+    // FLUTTER-NS, yadony-back #516). Le voyageur saisit son net, l'expéditeur
+    // le brut : un seul des deux montants part.
+    'counter-amount-ambiguous': _Entry(
+      title: (l) => l.errorCounterAmountAmbiguousTitle,
+      message: (l) => l.errorCounterAmountAmbiguousMessage,
+      severity: ErrorSeverity.error,
+      icon: Icons.error_outline_rounded,
+    ),
+    'counter-net-traveler-only': _Entry(
+      title: (l) => l.errorCounterNetTravelerOnlyTitle,
+      message: (l) => l.errorCounterNetTravelerOnlyMessage,
+      severity: ErrorSeverity.error,
+      icon: Icons.error_outline_rounded,
+    ),
+    'counter-same-amount': _Entry(
+      title: (l) => l.errorCounterSameAmountTitle,
+      message: (l) => l.errorCounterSameAmountMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_outlined,
     ),
     'negotiation/commission-charge-failed': _Entry(
       title: (l) => l.errorNegotiationCommissionChargeFailedTitle,

@@ -6577,6 +6577,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsOfferOpening': (l) => l.flightsOfferOpening,
   'flightsMoreTitle': (l) => l.flightsMoreTitle,
   'flightsMoreBody': (l) => l.flightsMoreBody,
+  'flightsFewResultsTitle': (l) => l.flightsFewResultsTitle,
+  'flightsFewResultsBody': (l) => l.flightsFewResultsBody,
+  'flightsLiveSearchCta': (l) => l.flightsLiveSearchCta,
+  'flightsLiveSearchHint': (l) => l.flightsLiveSearchHint,
   'flightsAlertFab': (l) => l.flightsAlertFab,
   'flightsNoFlightsTitle': (l) => l.flightsNoFlightsTitle,
   'flightsNoFlightsBody': (l) => l.flightsNoFlightsBody,
@@ -6676,6 +6680,27 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'profileReliabilityPercent': (l) =>
       l.profileReliabilityPercent(intPlaceholderValue),
   'profileReliabilityHelp': (l) => l.profileReliabilityHelp,
+  'tripEditCurrencyLockedHint': (l) => l.tripEditCurrencyLockedHint,
+  'errorTripCurrencyLockedTitle': (l) => l.errorTripCurrencyLockedTitle,
+  'errorTripCurrencyLockedMessage': (l) => l.errorTripCurrencyLockedMessage,
+  'errorCurrencyUnsupportedTitle': (l) => l.errorCurrencyUnsupportedTitle,
+  'errorCurrencyUnsupportedMessage': (l) => l.errorCurrencyUnsupportedMessage,
+  'bidDetailCancelledContactWindowHint': (l) =>
+      l.bidDetailCancelledContactWindowHint,
+  'negotiationThreadCounterNetAmountLabel': (l) =>
+      l.negotiationThreadCounterNetAmountLabel(placeholderMarker('symbol')),
+  'negotiationThreadCounterSenderWillPay': (l) =>
+      l.negotiationThreadCounterSenderWillPay(placeholderMarker('amount')),
+  'errorCounterAmountAmbiguousTitle': (l) => l.errorCounterAmountAmbiguousTitle,
+  'errorCounterAmountAmbiguousMessage': (l) =>
+      l.errorCounterAmountAmbiguousMessage,
+  'errorCounterNetTravelerOnlyTitle': (l) => l.errorCounterNetTravelerOnlyTitle,
+  'errorCounterNetTravelerOnlyMessage': (l) =>
+      l.errorCounterNetTravelerOnlyMessage,
+  'errorCounterSameAmountTitle': (l) => l.errorCounterSameAmountTitle,
+  'errorCounterSameAmountMessage': (l) => l.errorCounterSameAmountMessage,
+  'requestMyNegotiationYourTurn': (l) => l.requestMyNegotiationYourTurn,
+  'requestMyNegotiationPending': (l) => l.requestMyNegotiationPending,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7197,4 +7222,6 @@ const textParameters = <String, List<String>>{
   'tripEditMobileMoneyCurrencyLockedNotice': ['tripCurrency'],
   'negotiationCashDealConfirmedMessage': ['amount'],
   'listingPreviewCurrencyValue': ['currencyName', 'currencyCode'],
+  'negotiationThreadCounterNetAmountLabel': ['symbol'],
+  'negotiationThreadCounterSenderWillPay': ['amount'],
 };

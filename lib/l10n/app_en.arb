@@ -9895,6 +9895,10 @@
   "flightsOfferOpening": "Opening the offer",
   "flightsMoreTitle": "Missing an airline?",
   "flightsMoreBody": "See every airline on Aviasales, same dates.",
+  "flightsFewResultsTitle": "More flights on Aviasales",
+  "flightsFewResultsBody": "We only have recent prices. Aviasales searches every airline live, for the same dates.",
+  "flightsLiveSearchCta": "Search live on Aviasales",
+  "flightsLiveSearchHint": "Every airline, current prices, same dates.",
   "flightsAlertFab": "Price alert",
   "flightsNoFlightsTitle": "No flights on these dates",
   "flightsNoFlightsBody": "No recent price for this route. Try another departure city or the whole month.",
@@ -10086,5 +10090,79 @@
   "profileReliabilityHelp": "Share of shipments completed. Cancellations this person is not responsible for do not count.",
   "@profileReliabilityHelp": {
     "description": "Aide affichée au tap sur le taux de fiabilité du profil public (FLUTTER-NV)"
+  },
+  "tripEditCurrencyLockedHint": "The currency can no longer change: this trip already has requests.",
+  "@tripEditCurrencyLockedHint": {
+    "description": "Modification d'un trajet : explication sous l'en-tête quand le serveur fige la devise (currencyEditable false, FLUTTER-KV)"
+  },
+  "errorTripCurrencyLockedTitle": "Currency locked",
+  "@errorTripCurrencyLockedTitle": {
+    "description": "Erreur 409 currency-locked en modification d'un trajet : une demande est arrivée entre-temps (FLUTTER-KV)"
+  },
+  "errorTripCurrencyLockedMessage": "This trip has just received a request: its currency can no longer change. The original currency has been restored.",
+  "@errorTripCurrencyLockedMessage": {
+    "description": "Erreur 409 currency-locked en modification d'un trajet (FLUTTER-KV)"
+  },
+  "errorCurrencyUnsupportedTitle": "Currency not supported",
+  "@errorCurrencyUnsupportedTitle": {
+    "description": "Erreur 422 currency-unsupported : devise refusée par le serveur (FLUTTER-KV)"
+  },
+  "errorCurrencyUnsupportedMessage": "This currency is not available for a trip. Please choose another one.",
+  "@errorCurrencyUnsupportedMessage": {
+    "description": "Erreur 422 currency-unsupported (FLUTTER-KV)"
+  },
+  "bidDetailCancelledContactWindowHint": "You can still call each other for 48 hours after the cancellation.",
+  "@bidDetailCancelledContactWindowHint": {
+    "description": "Indication des cartes expéditeur / voyageur du détail d'un colis annulé : le serveur garde le contact ouvert 48 h (FLUTTER-P1)"
+  },
+  "negotiationThreadCounterNetAmountLabel": "What you will receive ({symbol})",
+  "@negotiationThreadCounterNetAmountLabel": {
+    "description": "Label du champ de contre-offre du voyageur, saisie en net (FLUTTER-NS, bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadCounterSenderWillPay": "The sender will pay {amount}",
+  "@negotiationThreadCounterSenderWillPay": {
+    "description": "Aperçu sous la saisie en net du voyageur : brut calculé payé par l'expéditeur, commission incluse (FLUTTER-NS)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCounterAmountAmbiguousTitle": "Amount unclear",
+  "@errorCounterAmountAmbiguousTitle": {
+    "description": "Erreur 422 counter-amount-ambiguous : contre-offre de trajet portant à la fois le brut et le net (FLUTTER-NS)"
+  },
+  "errorCounterAmountAmbiguousMessage": "Your counter-offer could not be read. Please enter the amount again.",
+  "@errorCounterAmountAmbiguousMessage": {
+    "description": "Erreur 422 counter-amount-ambiguous (FLUTTER-NS)"
+  },
+  "errorCounterNetTravelerOnlyTitle": "Amount not accepted",
+  "@errorCounterNetTravelerOnlyTitle": {
+    "description": "Erreur 422 counter-net-traveler-only : un expéditeur a envoyé un net (FLUTTER-NS)"
+  },
+  "errorCounterNetTravelerOnlyMessage": "Propose the total price you will pay, Yadony fees included.",
+  "@errorCounterNetTravelerOnlyMessage": {
+    "description": "Erreur 422 counter-net-traveler-only (FLUTTER-NS)"
+  },
+  "errorCounterSameAmountTitle": "Same amount",
+  "@errorCounterSameAmountTitle": {
+    "description": "Erreur 422 counter-same-amount : contre-offre identique à la dernière proposition (FLUTTER-NS)"
+  },
+  "errorCounterSameAmountMessage": "This amount matches the last offer: accept it or change the price.",
+  "@errorCounterSameAmountMessage": {
+    "description": "Erreur 422 counter-same-amount (FLUTTER-NS)"
+  },
+  "requestMyNegotiationYourTurn": "Your turn",
+  "@requestMyNegotiationYourTurn": {
+    "description": "Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et c'est à lui de répondre (FLUTTER-NZ)"
+  },
+  "requestMyNegotiationPending": "Offer pending",
+  "@requestMyNegotiationPending": {
+    "description": "Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et attend la réponse de l'expéditeur (FLUTTER-NZ)"
   }
 }

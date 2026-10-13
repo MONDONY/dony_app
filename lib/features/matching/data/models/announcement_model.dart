@@ -255,6 +255,12 @@ class AnnouncementModel {
   /// Nombre d'étapes encore présentes dans le voyage. `null` hors voyage.
   final int? tripLegCount;
 
+  /// La devise peut encore changer en modification : trajet sans aucune
+  /// demande ni offre (FLUTTER-KV, yadony-back #515). Servi au seul
+  /// propriétaire par `GET /announcements/{id}` ; `null` pour tout autre
+  /// lecteur ou sur un back antérieur, la devise reste alors figée.
+  final bool? currencyEditable;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -307,6 +313,7 @@ class AnnouncementModel {
     this.tripGroupId,
     this.tripLegIndex,
     this.tripLegCount,
+    this.currencyEditable,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

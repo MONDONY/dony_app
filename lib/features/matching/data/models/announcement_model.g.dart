@@ -107,6 +107,7 @@ AnnouncementModel _$AnnouncementModelFromJson(
   tripGroupId: json['tripGroupId'] as String?,
   tripLegIndex: (json['tripLegIndex'] as num?)?.toInt(),
   tripLegCount: (json['tripLegCount'] as num?)?.toInt(),
+  currencyEditable: json['currencyEditable'] as bool?,
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -164,6 +165,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'tripGroupId': instance.tripGroupId,
       'tripLegIndex': instance.tripLegIndex,
       'tripLegCount': instance.tripLegCount,
+      'currencyEditable': instance.currencyEditable,
     };
 
 const _$BidPaymentMethodEnumMap = {

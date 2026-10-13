@@ -466,10 +466,17 @@ class FlightAllAirlinesCard extends StatelessWidget {
     super.key,
     required this.onTap,
     this.opening = false,
+    this.prominent = false,
   });
 
   final VoidCallback onTap;
   final bool opening;
+
+  /// Version mise en avant, en tête d'une liste maigre (peu de vols, ou vols
+  /// à dates proches) : fond bleu et texte qui dit pourquoi aller sur
+  /// Aviasales. Nos prix viennent du cache des recherches récentes, Aviasales
+  /// cherche en direct sur toutes les compagnies.
+  final bool prominent;
 
   @override
   Widget build(BuildContext context) {
@@ -483,8 +490,11 @@ class FlightAllAirlinesCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(DonySpacing.md + DonySpacing.xxs),
           decoration: BoxDecoration(
-            color: cs.surfaceWarm,
+            color: prominent ? cs.primaryContainer : cs.surfaceWarm,
             borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: prominent
+                ? Border.all(color: cs.primary.withValues(alpha: 0.25))
+                : null,
           ),
           child: Row(
             children: [
@@ -493,7 +503,7 @@ class FlightAllAirlinesCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l.flightsMoreTitle,
+                      prominent ? l.flightsFewResultsTitle : l.flightsMoreTitle,
                       style: tt.headlineSmall?.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -501,7 +511,7 @@ class FlightAllAirlinesCard extends StatelessWidget {
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
-                      l.flightsMoreBody,
+                      prominent ? l.flightsFewResultsBody : l.flightsMoreBody,
                       style: tt.bodySmall?.copyWith(
                         fontSize: 12.5,
                         height: 1.45,
@@ -517,7 +527,7 @@ class FlightAllAirlinesCard extends StatelessWidget {
                 height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: cs.inverseSurface,
+                  color: prominent ? cs.primary : cs.inverseSurface,
                   shape: BoxShape.circle,
                 ),
                 child: opening
@@ -525,13 +535,13 @@ class FlightAllAirlinesCard extends StatelessWidget {
                         dimension: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: cs.onInverseSurface,
+                          color: prominent ? cs.onPrimary : cs.onInverseSurface,
                         ),
                       )
                     : DonyIcon(
                         'external-link',
                         size: 17,
-                        color: cs.onInverseSurface,
+                        color: prominent ? cs.onPrimary : cs.onInverseSurface,
                       ),
               ),
             ],
@@ -571,11 +581,20 @@ class FlightEmptyResults extends StatelessWidget {
     required this.title,
     required this.body,
     required this.suggestions,
+    this.onLiveSearch,
+    this.liveSearchOpening = false,
   });
 
   final String title;
   final String body;
   final List<FlightSuggestion> suggestions;
+
+  /// Recherche en direct sur Aviasales, mise en avant comme action
+  /// principale sous l'explication : sans prix récent dans notre cache,
+  /// c'est presque toujours là que l'utilisateur trouvera un vol. `null`
+  /// quand le back n'a pas fourni de lien de recherche.
+  final VoidCallback? onLiveSearch;
+  final bool liveSearchOpening;
 
   @override
   Widget build(BuildContext context) {
@@ -584,11 +603,11 @@ class FlightEmptyResults extends StatelessWidget {
     final l = context.l10n;
     return ListView(
       key: const Key('flights-empty'),
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         DonySpacing.base,
         DonySpacing.xs,
         DonySpacing.base,
-        DonySpacing.huge,
+        flightNavBarReserve(context) + DonySpacing.huge,
       ),
       children: [
         Container(
@@ -637,6 +656,22 @@ class FlightEmptyResults extends StatelessWidget {
             ],
           ),
         ),
+        if (onLiveSearch != null) ...[
+          const SizedBox(height: DonySpacing.base),
+          DonyButton(
+            key: const Key('flights-suggest-aviasales'),
+            label: l.flightsLiveSearchCta,
+            iconRightAsset: 'external-link',
+            isLoading: liveSearchOpening,
+            onPressed: onLiveSearch,
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            l.flightsLiveSearchHint,
+            textAlign: TextAlign.center,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
         if (suggestions.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(

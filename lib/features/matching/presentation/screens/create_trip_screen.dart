@@ -102,6 +102,14 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   late final ValueNotifier<SupportedCurrency> _currencyNotifier =
       ValueNotifier<SupportedCurrency>(_initialCurrency());
 
+  /// Modification : la devise peut-elle encore changer ? Valeur servie par le
+  /// serveur (`currencyEditable`, FLUTTER-KV) : `true` ouvre le sélecteur,
+  /// `false` fige la devise avec une explication, `null` (champ absent, back
+  /// antérieur) la fige sans rien ajouter. Repasse à `false` sur un 409
+  /// `currency-locked` (demande arrivée entre-temps).
+  late final ValueNotifier<bool?> _currencyEditableNotifier =
+      ValueNotifier<bool?>(widget.args?.announcement?.currencyEditable);
+
   SupportedCurrency _initialCurrency() {
     final announcement = widget.args?.announcement;
     if (announcement != null) {
@@ -183,6 +191,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _canContinueStep1Notifier.dispose();
     _isDirtyNotifier.dispose();
     _currencyNotifier.dispose();
+    _currencyEditableNotifier.dispose();
     _formScrollController.dispose();
     super.dispose();
   }
@@ -219,6 +228,16 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     }
     if (!mounted || !formContext.mounted) return;
     await CurrencySelectionBanner.openSelector(formContext, _currencyNotifier);
+  }
+
+  /// La devise se choisit encore : création libre, ou modification d'un
+  /// trajet que le serveur déclare modifiable (FLUTTER-KV). Jamais pour un
+  /// trajet dédié, dont la devise est celle de la demande.
+  bool get _canChangeCurrency {
+    final args = widget.args;
+    if (args?.lockContext != null) return false;
+    if (args?.announcement == null) return true;
+    return _currencyEditableNotifier.value == true;
   }
 
   /// Quitte l'écran. `pop` quand il y a une page dessous, repli sur l'accueil
@@ -317,7 +336,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           currencyNotifier: _currencyNotifier,
                         ),
                         const SizedBox(height: DonySpacing.base),
-                      ],
+                      ] else if (isEdit && !isLocked)
+                        _EditCurrencySection(
+                          editableNotifier: _currencyEditableNotifier,
+                          currencyNotifier: _currencyNotifier,
+                        ),
                       _TripFormContent(
                         // Réservé aux tests : cf. `handoverDeadlineForTest`
                         // sur `_TripFormContentState`, atteint via ce Key
@@ -333,6 +356,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         currentStepNotifier: _currentStepNotifier,
                         departureTimeNotifier: _departureTimeNotifier,
                         currencyNotifier: _currencyNotifier,
+                        currencyEditableNotifier: _currencyEditableNotifier,
                         onSubmitReady: (fn) => _submit = fn,
                         onPaymentMethodsReady: (fn) => _paymentMethods = fn,
                         dirtyNotifier: _isDirtyNotifier,
@@ -532,12 +556,17 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                                     _currencyNotifier.value,
                                                 paymentMethods: _paymentMethods
                                                     ?.call(),
-                                                onChangeCurrency: () =>
-                                                    unawaited(
-                                                      _changeCurrencyFromPreview(
-                                                        ctx2,
-                                                      ),
-                                                    ),
+                                                // « Modifier » : en création, ou
+                                                // en modification d'un trajet
+                                                // encore sans demande (FLUTTER-KV).
+                                                onChangeCurrency:
+                                                    _canChangeCurrency
+                                                    ? () => unawaited(
+                                                        _changeCurrencyFromPreview(
+                                                          ctx2,
+                                                        ),
+                                                      )
+                                                    : null,
                                               );
                                             }
                                           : null,
@@ -583,6 +612,10 @@ class _TripFormContent extends StatefulWidget {
   /// Devise de l'annonce, portée par le parent (cf. `_CreateTripScreenState`).
   /// Choisie par l'utilisateur en création, figée en édition/trajet dédié.
   final ValueNotifier<SupportedCurrency> currencyNotifier;
+
+  /// Devise encore modifiable en édition (cf. `_CreateTripScreenState`).
+  /// `null` en création comme pour un back antérieur.
+  final ValueNotifier<bool?>? currencyEditableNotifier;
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
   final void Function(List<String> Function())? onPaymentMethodsReady;
 
@@ -598,6 +631,7 @@ class _TripFormContent extends StatefulWidget {
     this.dirtyNotifier,
     this.departureTimeNotifier,
     required this.currencyNotifier,
+    this.currencyEditableNotifier,
     this.onSubmitReady,
     this.onPaymentMethodsReady,
   });
@@ -697,6 +731,10 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   bool get _isEdit => widget.announcement != null;
   bool get _isLocked => widget.lockContext != null;
+
+  /// Modification d'un trajet dont la devise peut encore changer (FLUTTER-KV).
+  bool get _isEditCurrencyEditable =>
+      _isEdit && widget.currencyEditableNotifier?.value == true;
 
   /// Devise de l'annonce — suit le sélecteur du parent (`_CreateTripScreenState`),
   /// pas la devise active du profil : une annonce se publie désormais dans la
@@ -1666,6 +1704,13 @@ class _TripFormContentState extends State<_TripFormContent> {
           pricingMode: pricingModeWire,
           handoverDeadline: handoverDeadline,
           negotiable: _negotiableNotifier.value,
+          // Envoyée seulement si elle a changé sur un trajet encore
+          // modifiable : absente, le serveur garde la devise (FLUTTER-KV).
+          currency:
+              _isEditCurrencyEditable &&
+                  _currency.code != widget.announcement!.currency
+              ? _currency.code
+              : null,
         ),
       );
     } else {
@@ -2135,6 +2180,15 @@ class _TripFormContentState extends State<_TripFormContent> {
               type: DonySnackbarType.warning,
             );
           } else if (state is AnnouncementError) {
+            // Demande arrivée pendant la modification (FLUTTER-KV) : la devise
+            // se fige, l'écran revient à celle du trajet et l'explique.
+            if (_isEdit && state.error.code == 'announcement/currency-locked') {
+              widget.currencyEditableNotifier?.value = false;
+              widget.currencyNotifier.value =
+                  SupportedCurrency.fromCodeOrDefault(
+                    widget.announcement!.currency,
+                  );
+            }
             unawaited(ErrorPresenter.show(context, state.error));
           }
         },
@@ -2509,10 +2563,13 @@ class _TripFormContentState extends State<_TripFormContent> {
           final mobileMoneyAccountActive = mobileMoneyAccountActiveFrom(
             mobileMoneyState,
           );
-          return ValueListenableBuilder<SupportedCurrency>(
-            valueListenable: widget.currencyNotifier,
-            builder: (context, currency, _) => PrixConditionsStep(
-              currency: currency,
+          return ListenableBuilder(
+            listenable: Listenable.merge([
+              widget.currencyNotifier,
+              ?widget.currencyEditableNotifier,
+            ]),
+            builder: (context, _) => PrixConditionsStep(
+              currency: widget.currencyNotifier.value,
               gridCurrency: ActiveCurrency.current,
               priceOptionNotifier: _priceOptionNotifier,
               customPriceNotifier: _customPriceNotifier,
@@ -2550,10 +2607,12 @@ class _TripFormContentState extends State<_TripFormContent> {
                   ? widget.lockContext!.agreedPriceEur
                   : null,
               showPaymentMethods: !_isLocked,
-              // La devise ne change plus une fois le trajet publié : le PUT ne
-              // l'envoie pas, basculer l'écran en F CFA faisait valider le prix
-              // dans l'ancienne devise et renvoyait un 422 (FLUTTER-JS).
-              currencyLocked: _isEdit || _isLocked,
+              // En modification, la devise ne change que si le serveur le
+              // permet (`currencyEditable`, FLUTTER-KV) : le PUT l'envoie
+              // alors. Sinon elle reste figée, sans quoi l'écran validait le
+              // prix dans une devise que le PUT n'envoyait pas (FLUTTER-JS).
+              currencyLocked:
+                  _isLocked || (_isEdit && !_isEditCurrencyEditable),
             ),
           );
         },
@@ -2756,6 +2815,59 @@ class _LockedBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Devise d'un trajet en modification (FLUTTER-KV) : sélecteur tant que le
+/// serveur la déclare modifiable, explication courte une fois figée, rien
+/// avec un back qui ne sert pas `currencyEditable`.
+class _EditCurrencySection extends StatelessWidget {
+  const _EditCurrencySection({
+    required this.editableNotifier,
+    required this.currencyNotifier,
+  });
+
+  final ValueNotifier<bool?> editableNotifier;
+  final ValueNotifier<SupportedCurrency> currencyNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool?>(
+      valueListenable: editableNotifier,
+      builder: (context, editable, _) {
+        if (editable == true) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: DonySpacing.base),
+            child: CurrencySelectionBanner(currencyNotifier: currencyNotifier),
+          );
+        }
+        if (editable == null) return const SizedBox.shrink();
+        final cs = Theme.of(context).colorScheme;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: DonySpacing.base),
+          child: Row(
+            key: const Key('trip-edit-currency-locked-hint'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.lock_outline_rounded,
+                size: 16,
+                color: cs.onSurfaceVariant,
+              ),
+              const SizedBox(width: DonySpacing.xs),
+              Expanded(
+                child: Text(
+                  context.l10n.tripEditCurrencyLockedHint,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

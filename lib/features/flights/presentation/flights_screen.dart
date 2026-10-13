@@ -178,7 +178,9 @@ class _FormView extends StatelessWidget {
 
     return ListView(
       key: const Key('flights-form'),
-      padding: const EdgeInsets.only(bottom: DonySpacing.huge),
+      padding: EdgeInsets.only(
+        bottom: flightNavBarReserve(context) + DonySpacing.huge,
+      ),
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -519,6 +521,22 @@ class _ResultsView extends StatelessWidget {
                       ? ErrorPresenter.resolve(state.error, l10n: l).message
                       : l.flightsNoFlightsBody,
                   suggestions: _suggestions(context, state, error: error),
+                  onLiveSearch: error || state.result?.searchPath == null
+                      ? null
+                      : () {
+                          cubit.trackSuggestion(
+                            FlightEmptySuggestion.aviasales,
+                          );
+                          context.read<FlightLinkCubit>().openAllAirlines(
+                            state.result!,
+                            from: 'empty',
+                          );
+                        },
+                  liveSearchOpening: context.select<FlightLinkCubit, bool>(
+                    (c) =>
+                        c.state.openingPath != null &&
+                        c.state.openingPath == state.result?.searchPath,
+                  ),
                 ),
               ),
             ],
@@ -556,12 +574,19 @@ class _ResultsView extends StatelessWidget {
           );
         }
 
-        Widget more(Key key) =>
+        // Peu de vols ou vols à dates proches : notre cache est maigre sur ce
+        // trajet, la recherche en direct d'Aviasales passe devant.
+        final fewResults =
+            searchPath != null &&
+            (nearby || visible.length < FlightSearchState.fewResultsThreshold);
+
+        Widget more(Key key, {bool prominent = false}) =>
             BlocSelector<FlightLinkCubit, FlightLinkState, bool>(
               selector: (s) => s.openingPath == searchPath,
               builder: (context, opening) => FlightAllAirlinesCard(
                 key: key,
                 opening: opening,
+                prominent: prominent,
                 onTap: () => context.read<FlightLinkCubit>().openAllAirlines(
                   state.result!,
                   from: 'results',
@@ -592,12 +617,19 @@ class _ResultsView extends StatelessWidget {
               ),
             ),
           ),
+          // Liste maigre : Aviasales en tête, c'est là que sont les autres vols.
+          if (fewResults)
+            more(const Key('flights-all-airlines-top'), prominent: true),
           for (final (i, offer) in visible.indexed) ...[
             card(offer),
-            if (i == 2 && visible.length > 3 && searchPath != null)
+            if (!fewResults &&
+                i == 2 &&
+                visible.length > 3 &&
+                searchPath != null)
               more(const Key('flights-all-airlines-inline')),
           ],
-          if (searchPath != null) more(const Key('flights-all-airlines')),
+          if (searchPath != null && !fewResults)
+            more(const Key('flights-all-airlines')),
         ];
 
         return Stack(
@@ -626,11 +658,13 @@ class _ResultsView extends StatelessWidget {
                 Expanded(
                   child: ListView.separated(
                     key: const Key('flights-results'),
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       DonySpacing.md,
                       0,
                       DonySpacing.md,
-                      DonySpacing.huge + DonySpacing.xxl,
+                      flightNavBarReserve(context) +
+                          DonySpacing.huge +
+                          DonySpacing.xxl,
                     ),
                     itemCount: items.length,
                     separatorBuilder: (_, i) => SizedBox(
@@ -644,7 +678,7 @@ class _ResultsView extends StatelessWidget {
             Positioned(
               left: 0,
               right: 0,
-              bottom: DonySpacing.base,
+              bottom: flightNavBarReserve(context) + DonySpacing.base,
               child: Center(
                 child: FlightPillButton(
                   key: const Key('flights-alert-fab'),
@@ -669,7 +703,6 @@ class _ResultsView extends StatelessWidget {
     final l = context.l10n;
     final cubit = context.read<FlightSearchCubit>();
     final q = state.query;
-    final result = state.result;
     final destination = _cityName(state, origin: false);
     final departure = q.departure;
 
@@ -721,20 +754,6 @@ class _ResultsView extends StatelessWidget {
             ),
           ),
           onTap: cubit.searchWholeMonth,
-        ),
-      if (result?.searchPath != null)
-        FlightSuggestion(
-          key: const Key('flights-suggest-aviasales'),
-          icon: 'external-link',
-          title: l.flightsSuggestAviasales,
-          subtitle: l.flightsSuggestAviasalesBody,
-          onTap: () {
-            cubit.trackSuggestion(FlightEmptySuggestion.aviasales);
-            context.read<FlightLinkCubit>().openAllAirlines(
-              result!,
-              from: 'empty',
-            );
-          },
         ),
       _alertSuggestion(context, state),
     ];
