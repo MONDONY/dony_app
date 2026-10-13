@@ -19008,6 +19008,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun prix récent pour ce trajet. Essayez une autre ville de départ ou tout le mois.';
 
   @override
+  String flightsNearbyDatesNotice(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days jours près',
+      one: '1 jour près',
+    );
+    return 'Pas de prix exact pour ces dates. Voici des vols à $_temp0.';
+  }
+
+  @override
   String get flightsTryInstead => 'Essayez plutôt';
 
   @override

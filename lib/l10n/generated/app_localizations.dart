@@ -30812,6 +30812,12 @@ abstract class AppLocalizations {
   /// **'Aucun prix récent pour ce trajet. Essayez une autre ville de départ ou tout le mois.'**
   String get flightsNoFlightsBody;
 
+  /// Bandeau des résultats quand le back renvoie des vols à quelques jours des dates demandées.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de prix exact pour ces dates. Voici des vols à {days, plural, =1{1 jour près} other{{days} jours près}}.'**
+  String flightsNearbyDatesNotice(int days);
+
   /// Suggestions de l'écran sans résultat.
   ///
   /// In fr, this message translates to:
