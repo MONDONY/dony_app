@@ -10078,6 +10078,19 @@
   "@ratingPendingPillLabel": {
     "description": "Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)"
   },
+  "profileReliabilityPercent": "Reliability {percent}%",
+  "@profileReliabilityPercent": {
+    "description": "Profil public : taux de fiabilité, part des envois menés à bien (reliabilityPercent, FLUTTER-NV)",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileReliabilityHelp": "Share of shipments completed. Cancellations this person is not responsible for do not count.",
+  "@profileReliabilityHelp": {
+    "description": "Aide affichée au tap sur le taux de fiabilité du profil public (FLUTTER-NV)"
+  },
   "tripEditCurrencyLockedHint": "The currency can no longer change: this trip already has requests.",
   "@tripEditCurrencyLockedHint": {
     "description": "Modification d'un trajet : explication sous l'en-tête quand le serveur fige la devise (currencyEditable false, FLUTTER-KV)"

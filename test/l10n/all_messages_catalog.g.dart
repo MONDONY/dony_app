@@ -6677,6 +6677,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currencyCode'),
   ),
   'ratingPendingPillLabel': (l) => l.ratingPendingPillLabel,
+  'profileReliabilityPercent': (l) =>
+      l.profileReliabilityPercent(intPlaceholderValue),
+  'profileReliabilityHelp': (l) => l.profileReliabilityHelp,
   'tripEditCurrencyLockedHint': (l) => l.tripEditCurrencyLockedHint,
   'errorTripCurrencyLockedTitle': (l) => l.errorTripCurrencyLockedTitle,
   'errorTripCurrencyLockedMessage': (l) => l.errorTripCurrencyLockedMessage,
