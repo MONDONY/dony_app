@@ -1,5 +1,7 @@
 import 'package:dony/app/router.dart';
 import 'package:dony/core/config/flights_flag.dart';
+import 'package:dony/features/flights/bloc/flight_alert_offers_cubit.dart';
+import 'package:dony/features/flights/presentation/flight_alert_offers_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -74,5 +76,57 @@ void main() {
 
     setFlightsEnabled(true);
     expect(await redirect(context, _MockState()), isNull);
+  });
+
+  testWidgets('vols trouvés : enfant de Mes alertes, alias sous Billets', (
+    tester,
+  ) async {
+    final offers = topLevel(
+      '/flights/alerts',
+    ).routes.whereType<GoRoute>().single;
+    expect(offers.path, ':id/offers');
+    expect(offers.name, '/flights/alerts/:id/offers');
+
+    final alias = activitesChild('flights').routes.whereType<GoRoute>().single;
+    expect(alias.path, 'alerts/:id/offers');
+    expect(alias.name, '/announcements/flights/alerts/:id/offers');
+
+    await tester.pumpWidget(const SizedBox());
+    final context = tester.element(find.byType(SizedBox));
+    final state = _MockState();
+    when(() => state.pathParameters).thenReturn({'id': 'a1'});
+    when(
+      () => state.uri,
+    ).thenReturn(Uri.parse('/announcements/flights/alerts/a1/offers'));
+    expect(await alias.redirect!(context, state), '/flights/alerts/a1/offers');
+
+    when(() => state.uri).thenReturn(
+      Uri.parse('/announcements/flights/alerts/a1/offers?source=notification'),
+    );
+    expect(
+      await alias.redirect!(context, state),
+      '/flights/alerts/a1/offers?source=notification',
+    );
+  });
+
+  testWidgets('vols trouvés : la route s\'ouvre avec l\'alerte et la source', (
+    tester,
+  ) async {
+    final offers = topLevel(
+      '/flights/alerts',
+    ).routes.whereType<GoRoute>().single;
+    await tester.pumpWidget(const SizedBox());
+    final context = tester.element(find.byType(SizedBox));
+    final state = _MockState();
+    when(() => state.pathParameters).thenReturn({'id': 'a1'});
+    when(() => state.extra).thenReturn(null);
+    when(
+      () => state.uri,
+    ).thenReturn(Uri.parse('/flights/alerts/a1/offers?source=notification'));
+
+    final screen = offers.builder!(context, state) as FlightAlertOffersScreen;
+    expect(screen.alertId, 'a1');
+    expect(screen.alert, isNull);
+    expect(screen.source, FlightAlertOffersSource.notification);
   });
 }

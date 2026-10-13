@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/flights/bloc/flight_alerts_summary.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -38,11 +39,15 @@ class FlightAlertsState extends Equatable {
     creating: creating ?? this.creating,
   );
 
+  /// Résumé de la ligne « Alertes prix vols » des Outils d'Activités.
+  FlightAlertsSummary get summary => FlightAlertsSummary.of(alerts);
+
   @override
   List<Object?> get props => [status, alerts, error, creating];
 }
 
-/// Alertes prix de l'écran `/flights/alerts` et de la feuille de création.
+/// Alertes prix de l'écran `/flights/alerts`, de la feuille de création et
+/// de la ligne « Alertes prix vols » des Outils d'Activités.
 class FlightAlertsCubit extends Cubit<FlightAlertsState> {
   FlightAlertsCubit(this._repository, this._analytics)
     : super(const FlightAlertsState());
@@ -53,8 +58,13 @@ class FlightAlertsCubit extends Cubit<FlightAlertsState> {
   /// Limite côté back (`FlightAlertService.MAX_ALERTS`).
   static const maxAlerts = 10;
 
-  Future<void> load() async {
-    emit(state.copyWith(status: FlightAlertsStatus.loading));
+  /// [silent] : rechargement d'une liste déjà affichée (retour sur l'onglet,
+  /// tirer pour rafraîchir) ; l'état de chargement n'est pas émis, la ligne
+  /// des Outils ne clignote pas.
+  Future<void> load({bool silent = false}) async {
+    if (!silent || state.status != FlightAlertsStatus.loaded) {
+      emit(state.copyWith(status: FlightAlertsStatus.loading));
+    }
     try {
       final alerts = await _repository.alerts();
       if (isClosed) return;
@@ -70,8 +80,18 @@ class FlightAlertsCubit extends Cubit<FlightAlertsState> {
     }
   }
 
+  /// Ligne « Alertes prix vols » des Outils d'Activités touchée, avec l'état
+  /// qu'elle montrait (`hit`, `no_hit` ou `empty`). Ni trajet ni prix.
+  void trackHubOpened() => unawaited(
+    _analytics.logEvent(
+      AnalyticsEvents.activitesHubFlightAlertsOpened,
+      properties: {'state': state.summary.kind.analyticsValue},
+    ),
+  );
+
   /// Rend `true` si l'alerte est créée. [source] : `results` (bannière des
-  /// résultats) ou `alerts` (bouton de l'écran des alertes).
+  /// résultats), `alerts` (bouton de l'écran des alertes) ou `hub` (billet
+  /// « Créer » de la ligne des Outils d'Activités).
   Future<bool> create(FlightAlertDraft draft, {required String source}) async {
     emit(state.copyWith(creating: true));
     try {

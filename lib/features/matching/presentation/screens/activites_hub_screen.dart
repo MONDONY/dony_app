@@ -9,6 +9,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_summary_cubit.dart';
+import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -21,6 +22,7 @@ import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
 import 'package:dony/features/matching/presentation/activity_labels.dart';
 import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/activites_flight_alerts_row.dart';
 import 'package:dony/features/matching/presentation/widgets/activites_flights_section.dart';
 import 'package:dony/features/matching/presentation/widgets/activites_menu_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
@@ -101,6 +103,9 @@ class ActivitesHubScreen extends StatelessWidget {
         BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
         BlocProvider(create: (_) => getIt<ToolsCompletionCubit>()),
         BlocProvider(create: (_) => getIt<CorridorAlertSummaryCubit>()),
+        // Alertes prix des billets (ligne en tête des Outils) : créé à la
+        // première lecture, seulement quand la ligne a sa place.
+        BlocProvider(create: (_) => getIt<FlightAlertsCubit>()),
         // TravelerBidsBloc est désormais un singleton (partagé avec l'onglet) :
         // `.value` pour ne pas le fermer quand le hub se démonte.
         BlocProvider.value(value: getIt<TravelerBidsBloc>()),
@@ -220,6 +225,9 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     context.read<PackageRequestBloc>().add(const FetchMyRequests());
     unawaited(context.read<ToolsCompletionCubit>().load());
     unawaited(context.read<CorridorAlertSummaryCubit>().load());
+    if (flightAlertsRowAvailable()) {
+      unawaited(context.read<FlightAlertsCubit>().load(silent: true));
+    }
   }
 
   Future<void> _onRefresh() async {
@@ -418,6 +426,9 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                   children: [
                     Text(l.activitySectionTools, style: tt.titleMedium),
                     const SizedBox(height: DonySpacing.md),
+                    // Alertes prix des billets, en premier des Outils (flag
+                    // `flights_enabled`, compte connecté).
+                    const ActivitesFlightAlertsRow(),
                     if (toolsState.status == ToolsCompletionStatus.loaded &&
                         toolsState.model != null) ...[
                       ToolsCompletionCard(

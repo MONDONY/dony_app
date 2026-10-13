@@ -182,4 +182,64 @@ void main() {
       () => analytics.logEvent(AnalyticsEvents.flightsAlertDeleted),
     ).called(1);
   });
+
+  test('rechargement discret : pas d\'état de chargement émis', () async {
+    when(() => repository.alerts()).thenAnswer((_) async => [_alert('a')]);
+    await cubit.load();
+    final statuses = <FlightAlertsStatus>[];
+    final sub = cubit.stream.listen((s) => statuses.add(s.status));
+
+    await cubit.load(silent: true);
+    await Future<void>.delayed(Duration.zero);
+    await sub.cancel();
+
+    expect(statuses, isNot(contains(FlightAlertsStatus.loading)));
+    expect(cubit.state.status, FlightAlertsStatus.loaded);
+  });
+
+  test('rechargement discret sans liste : chargement émis', () async {
+    when(() => repository.alerts()).thenAnswer((_) async => const []);
+    final statuses = <FlightAlertsStatus>[];
+    final sub = cubit.stream.listen((s) => statuses.add(s.status));
+
+    await cubit.load(silent: true);
+    await Future<void>.delayed(Duration.zero);
+    await sub.cancel();
+
+    expect(statuses, [FlightAlertsStatus.loading, FlightAlertsStatus.loaded]);
+  });
+
+  test('ligne des Outils touchée : état tracé, sans trajet ni prix', () async {
+    cubit.trackHubOpened();
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.activitesHubFlightAlertsOpened,
+        properties: {'state': 'empty'},
+      ),
+    ).called(1);
+
+    when(() => repository.alerts()).thenAnswer(
+      (_) async => [
+        const FlightAlert(
+          id: 'a',
+          originCode: 'PAR',
+          destinationCode: 'ABJ',
+          directOnly: false,
+          maxPrice: 450,
+          currency: 'EUR',
+          active: true,
+          lastSeenPrice: 389,
+          matchCount: 2,
+        ),
+      ],
+    );
+    await cubit.load();
+    cubit.trackHubOpened();
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.activitesHubFlightAlertsOpened,
+        properties: {'state': 'hit'},
+      ),
+    ).called(1);
+  });
 }

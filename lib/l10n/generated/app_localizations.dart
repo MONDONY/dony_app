@@ -30518,28 +30518,16 @@ abstract class AppLocalizations {
   /// **'Prévenez-moi sous'**
   String get flightsAlertThreshold;
 
-  /// Libellé du seuil sur une carte d'alerte.
-  ///
-  /// In fr, this message translates to:
-  /// **'Seuil'**
-  String get flightsAlertThresholdShort;
-
   /// Seuil d'une alerte.
   ///
   /// In fr, this message translates to:
   /// **'≤ {price}'**
   String flightsAlertAtMost(String price);
 
-  /// Libellé du dernier prix vu.
-  ///
-  /// In fr, this message translates to:
-  /// **'Dernier prix vu'**
-  String get flightsAlertLastSeen;
-
   /// Alerte jamais vérifiée.
   ///
   /// In fr, this message translates to:
-  /// **'Pas encore vérifié'**
+  /// **'Pas encore vérifiée'**
   String get flightsAlertNotChecked;
 
   /// Aide de la feuille d'alerte.
@@ -31387,6 +31375,150 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Proposition en attente'**
   String get requestMyNegotiationPending;
+
+  /// Ligne « Alertes prix vols » des Outils d'Activités.
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes prix vols'**
+  String get activityFlightAlertsTitle;
+
+  /// Sous-titre de la ligne des Outils quand aucune alerte prix n'existe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Être prévenu d\'une baisse de prix'**
+  String get activityFlightAlertsEmpty;
+
+  /// Sous-titre de la ligne des Outils quand aucune alerte n'a trouvé de prix sous son seuil.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucune alerte active} =1{1 alerte active} other{{count} alertes actives}}'**
+  String activityFlightAlertsActive(int count);
+
+  /// Nombre de vols sous le seuil, après le trajet, sur la ligne des Outils (« Paris → Abidjan · 3 vols »).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 vol} other{{count} vols}}'**
+  String activityFlightAlertsHitFlights(int count);
+
+  /// Sous-titre de la ligne des Outils : plusieurs alertes ont trouvé des vols sous leur seuil, prix le plus bas.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} alertes · dès {price}'**
+  String activityFlightAlertsHitMany(int count, String price);
+
+  /// Petite ligne du billet gris : meilleur prix vu à la dernière vérification, encore au-dessus du seuil.
+  ///
+  /// In fr, this message translates to:
+  /// **'meilleur prix vu'**
+  String get activityFlightAlertsBestSeen;
+
+  /// Billet bleu de la ligne des Outils : crée une première alerte prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer'**
+  String get activityFlightAlertsCreate;
+
+  /// Écart entre un prix trouvé et le seuil d'une alerte (billet des Outils, cartes des vols trouvés).
+  ///
+  /// In fr, this message translates to:
+  /// **'−{amount} sous votre prix'**
+  String flightsAlertBelowBy(String amount);
+
+  /// Prix trouvé égal au seuil d'une alerte.
+  ///
+  /// In fr, this message translates to:
+  /// **'à votre prix'**
+  String get flightsAlertAtYourPrice;
+
+  /// Seuil d'une alerte sur sa carte.
+  ///
+  /// In fr, this message translates to:
+  /// **'max {price}'**
+  String flightsAlertMaxShort(String price);
+
+  /// Résultat d'une alerte qui a trouvé des vols sous son seuil.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 vol sous votre prix} other{{count} vols sous votre prix}}'**
+  String flightsAlertResultHit(int count);
+
+  /// Résultat d'une alerte sous son seuil, sans nombre de vols (ancien serveur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sous votre prix'**
+  String get flightsAlertResultHitNoCount;
+
+  /// Dernière vérification d'une alerte (ago : « il y a 2 h »).
+  ///
+  /// In fr, this message translates to:
+  /// **'vérifiée {ago}'**
+  String flightsAlertCheckedAgo(String ago);
+
+  /// Résultat d'une alerte dont le meilleur prix reste au-dessus du seuil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Meilleur prix du moment, encore au-dessus de {price}'**
+  String flightsAlertResultAbove(String price);
+
+  /// Résultat d'une alerte vérifiée sans aucun prix trouvé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun vol trouvé pour l\'instant'**
+  String get flightsAlertResultNoFlight;
+
+  /// Résultat d'une alerte en pause.
+  ///
+  /// In fr, this message translates to:
+  /// **'En pause : plus de vérification'**
+  String get flightsAlertResultPaused;
+
+  /// Bouton d'une alerte qui a trouvé des vols : ouvre les vols trouvés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir'**
+  String get flightsAlertSeeOffers;
+
+  /// Titre de l'écran des vols trouvés par une alerte prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vols trouvés'**
+  String get flightsAlertOffersTitle;
+
+  /// Bandeau vert de l'écran des vols trouvés.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 vol sous votre prix, à {price}} other{{count} vols sous votre prix, le moins cher à {price}}}'**
+  String flightsAlertOffersBanner(int count, String price);
+
+  /// Résumé d'une alerte sur l'écran des vols trouvés.
+  ///
+  /// In fr, this message translates to:
+  /// **'prix max {price}'**
+  String flightsAlertOffersMax(String price);
+
+  /// Écran des vols trouvés quand plus aucun vol n'est sous le seuil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de vol sous votre prix pour l\'instant'**
+  String get flightsAlertOffersEmptyTitle;
+
+  /// Écran des vols trouvés vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les prix ont bougé depuis la dernière vérification. On continue de surveiller et on vous prévient dès qu\'un vol repasse dessous.'**
+  String get flightsAlertOffersEmptyBody;
+
+  /// Encart en fin de liste des vols trouvés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de vols sur Aviasales'**
+  String get flightsAlertOffersMoreTitle;
+
+  /// Encart en fin de liste des vols trouvés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les compagnies, prix du moment, au premier jour de votre période.'**
+  String get flightsAlertOffersMoreBody;
 }
 
 class _AppLocalizationsDelegate

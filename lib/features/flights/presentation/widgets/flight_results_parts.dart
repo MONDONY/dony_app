@@ -467,10 +467,17 @@ class FlightAllAirlinesCard extends StatelessWidget {
     required this.onTap,
     this.opening = false,
     this.prominent = false,
+    this.title,
+    this.body,
   });
 
   final VoidCallback onTap;
   final bool opening;
+
+  /// Textes propres à un écran (vols trouvés par une alerte), à la place de
+  /// « Une compagnie manque ? ».
+  final String? title;
+  final String? body;
 
   /// Version mise en avant, en tête d'une liste maigre (peu de vols, ou vols
   /// à dates proches) : fond bleu et texte qui dit pourquoi aller sur
@@ -503,7 +510,10 @@ class FlightAllAirlinesCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      prominent ? l.flightsFewResultsTitle : l.flightsMoreTitle,
+                      title ??
+                          (prominent
+                              ? l.flightsFewResultsTitle
+                              : l.flightsMoreTitle),
                       style: tt.headlineSmall?.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -511,7 +521,10 @@ class FlightAllAirlinesCard extends StatelessWidget {
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
-                      prominent ? l.flightsFewResultsBody : l.flightsMoreBody,
+                      body ??
+                          (prominent
+                              ? l.flightsFewResultsBody
+                              : l.flightsMoreBody),
                       style: tt.bodySmall?.copyWith(
                         fontSize: 12.5,
                         height: 1.45,

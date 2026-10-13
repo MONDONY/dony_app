@@ -448,17 +448,32 @@ void main() {
 
   group('resolveNotificationRoute — FLIGHT_PRICE_ALERT', () {
     test(
-      'alerte prix d\'un billet → liste des alertes, poussée hors shell',
+      'alerte prix d\'un billet → vols trouvés de l\'alerte, hors shell',
       () {
         final route = resolveNotificationRoute('FLIGHT_PRICE_ALERT', {
           'alertId': '0a1b2c3d-e5f6-7890-abcd-ef1234567890',
           'origin': 'PAR',
           'destination': 'ABJ',
         });
-        expect(route, '/flights/alerts');
+        expect(
+          route,
+          '/flights/alerts/0a1b2c3d-e5f6-7890-abcd-ef1234567890/offers'
+          '?source=notification',
+        );
         expect(isShellTabRoute(route!), isFalse);
       },
     );
+
+    test('sans identifiant valide → liste des alertes', () {
+      expect(
+        resolveNotificationRoute('FLIGHT_PRICE_ALERT', {'alertId': '../x'}),
+        '/flights/alerts',
+      );
+      expect(
+        resolveNotificationRoute('FLIGHT_PRICE_ALERT', const {}),
+        '/flights/alerts',
+      );
+    });
 
     test('Billets n\'est plus un onglet du shell : il vit dans Activités', () {
       expect(isShellTabRoute('/flights'), isFalse);

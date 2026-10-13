@@ -193,8 +193,11 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'TRAVELER_NEW_ANNOUNCEMENT' when _isUuid(announcementId) =>
       '/traveler/$announcementId',
     // Expéditeur → détail du trajet qui matche son alerte
-    // Alerte prix d'un billet d'avion (scheduler 6 h du back) : la liste des
-    // alertes, d'où l'utilisateur relance la recherche.
+    // Alerte prix d'un billet d'avion (scheduler 6 h du back) : les vols
+    // trouvés par cette alerte. Sans identifiant valide, la liste des
+    // alertes.
+    'FLIGHT_PRICE_ALERT' when _isUuid(alertId) =>
+      '/flights/alerts/$alertId/offers?source=notification',
     'FLIGHT_PRICE_ALERT' => '/flights/alerts',
     'CORRIDOR_ALERT' when _isUuid(announcementId) =>
       '/traveler/$announcementId',

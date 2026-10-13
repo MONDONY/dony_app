@@ -25,6 +25,7 @@ class FlightOfferCard extends StatelessWidget {
     this.showDates = false,
     this.requestedDeparture,
     this.requestedReturn,
+    this.savingsLabel,
   });
 
   final FlightOffer offer;
@@ -43,6 +44,10 @@ class FlightOfferCard extends StatelessWidget {
   /// les dates, rien n'est alors mis en évidence.
   final FlightWhen? requestedDeparture;
   final FlightWhen? requestedReturn;
+
+  /// Pastille verte d'un vol trouvé par une alerte (« −61 € sous votre
+  /// prix »), à la place de [badge].
+  final String? savingsLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +107,10 @@ class FlightOfferCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (badge != null) ...[
+                    if (savingsLabel != null) ...[
+                      const SizedBox(width: DonySpacing.sm),
+                      _SavingsTag(label: savingsLabel!),
+                    ] else if (badge != null) ...[
                       const SizedBox(width: DonySpacing.sm),
                       _Badge(badge: badge!),
                     ],
@@ -232,6 +240,40 @@ class _Badge extends StatelessWidget {
           height: 1.2,
           fontWeight: FontWeight.w700,
           color: cheapest ? cs.onSecondaryContainer : cs.primary,
+        ),
+      ),
+    );
+  }
+}
+
+/// « −61 € sous votre prix », en vert.
+class _SavingsTag extends StatelessWidget {
+  const _SavingsTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('flight-offer-savings'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs + 1,
+      ),
+      decoration: BoxDecoration(
+        color: cs.successLight,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        style: tt.bodySmall?.copyWith(
+          height: 1.2,
+          fontWeight: FontWeight.w700,
+          color: cs.success,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
     );

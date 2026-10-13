@@ -3,8 +3,10 @@ import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/presentation/flight_alerts_screen.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
@@ -51,7 +53,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mes alertes prix'), findsOneWidget);
-    expect(find.text('Paris → Abidjan'), findsOneWidget);
+    // Aller-retour : double flèche, comme dans l'écran Billets.
+    expect(find.text('Paris ↔ Abidjan'), findsOneWidget);
     expect(find.textContaining('Départ du'), findsOneWidget);
     expect(find.textContaining('Retour du'), findsOneWidget);
     expect(find.text('1 sur 10'), findsOneWidget);
@@ -172,5 +175,143 @@ void main() {
     await tester.tap(find.byKey(const Key('flight-alert-switch-a2')));
     await tester.pumpAndSettle();
     expect(find.byType(SnackBar), findsOneWidget);
+  });
+
+  group('résultat de chaque alerte', () {
+    FlightAlert alert(
+      String id, {
+      double? seen,
+      int? count,
+      bool active = true,
+      DateTime? checkedAt,
+      double max = 450,
+    }) => FlightAlert(
+      id: id,
+      originCode: 'PAR',
+      destinationCode: 'ABJ',
+      originLabel: 'Paris',
+      destinationLabel: 'Abidjan',
+      directOnly: true,
+      maxPrice: max,
+      currency: 'EUR',
+      active: active,
+      lastSeenPrice: seen,
+      lastCheckedAt: checkedAt,
+      matchCount: count,
+    );
+
+    Finder text(String expected) => find.byWidgetPredicate(
+      (w) =>
+          w is Text &&
+          w.data?.replaceAll(RegExp('[\u00a0\u202f]'), ' ') == expected,
+    );
+
+    testWidgets('les quatre états, seuil dans les détails', (tester) async {
+      tester.view.physicalSize = const Size(390, 1400) * 3;
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      final twoHoursAgo = DateTime.now().subtract(const Duration(hours: 2));
+      when(() => repository.alerts()).thenAnswer(
+        (_) async => [
+          alert('hit', seen: 389, count: 3, checkedAt: twoHoursAgo),
+          alert('above', seen: 512, count: 0, checkedAt: twoHoursAgo),
+          alert('paused', seen: 300, count: 2, active: false),
+          alert('pending'),
+        ],
+      );
+
+      await tester.pumpWidget(localizedApp(const FlightAlertsScreen()));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('flight-alert-result-hit')), findsOneWidget);
+      expect(text('389 €'), findsOneWidget);
+      expect(
+        find.text('3 vols sous votre prix\nvérifiée il y a 2 h'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('flight-alert-see-hit')), findsOneWidget);
+
+      expect(find.byKey(const Key('flight-alert-result-above')), findsOne);
+      expect(text('512 €'), findsOneWidget);
+      expect(
+        text(
+          'Meilleur prix du moment, encore au-dessus de 450 €\nvérifiée il y a 2 h',
+        ),
+        findsOneWidget,
+      );
+
+      expect(find.byKey(const Key('flight-alert-result-paused')), findsOne);
+      expect(find.text('En pause : plus de vérification'), findsOneWidget);
+      expect(find.byKey(const Key('flight-alert-see-paused')), findsNothing);
+
+      expect(find.byKey(const Key('flight-alert-result-pending')), findsOne);
+      expect(find.text('Pas encore vérifiée'), findsOneWidget);
+
+      expect(
+        find.textContaining('Vols directs seulement · max 450'),
+        findsNWidgets(4),
+      );
+    });
+
+    testWidgets('vérifiée sans aucun vol ; prix sous le seuil sans nombre', (
+      tester,
+    ) async {
+      when(() => repository.alerts()).thenAnswer(
+        (_) async => [
+          alert('none', checkedAt: DateTime.now()),
+          alert('old', seen: 400),
+          alert('stale', seen: 300, count: 0, checkedAt: DateTime.now()),
+        ],
+      );
+
+      await tester.pumpWidget(localizedApp(const FlightAlertsScreen()));
+      await tester.pumpAndSettle();
+
+      // Sans prix, et avec un dernier prix périmé (matchCount à 0) : aucun
+      // prix affiché.
+      expect(
+        find.text("Aucun vol trouvé pour l'instant\nvérifiée à l'instant"),
+        findsNWidgets(2),
+      );
+      expect(find.text('Sous votre prix'), findsOneWidget);
+    });
+
+    testWidgets('« Voir » ouvre les vols trouvés avec l\'alerte', (
+      tester,
+    ) async {
+      final hit = alert('a1', seen: 389, count: 3);
+      when(() => repository.alerts()).thenAnswer((_) async => [hit]);
+      Object? extra;
+      String? location;
+      final router = GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const FlightAlertsScreen()),
+          GoRoute(
+            path: '/flights/alerts/:id/offers',
+            builder: (_, state) {
+              extra = state.extra;
+              location = state.uri.toString();
+              return const Scaffold(body: Text('vols trouvés'));
+            },
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(
+          locale: AppL10n.fr,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('flight-alert-see-a1')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('vols trouvés'), findsOneWidget);
+      expect(location, '/flights/alerts/a1/offers');
+      expect(extra, hit);
+    });
   });
 }

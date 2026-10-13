@@ -7,11 +7,13 @@ import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_summary_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/presentation/flights_screen.dart';
@@ -195,6 +197,10 @@ Future<void> _pump(
   /// État de la pastille « Mon argent » de l'en-tête (FLUTTER-J3) : rien en
   /// attente par défaut, une simple icône.
   MoneyOverviewState? money,
+
+  /// Alertes prix des billets (ligne en tête des Outils), fournies par le
+  /// hub réel ; absentes, la ligne reste masquée (flag ou session).
+  FlightAlertsCubit? flightAlerts,
 }) async {
   registerFakeMoneyOverview(state: money);
   tester.view.physicalSize = physicalSize ?? const Size(900, 1800);
@@ -302,6 +308,8 @@ Future<void> _pump(
             BlocProvider<CorridorAlertSummaryCubit>.value(
               value: alertsSummaryCubit,
             ),
+            if (flightAlerts != null)
+              BlocProvider<FlightAlertsCubit>.value(value: flightAlerts),
             BlocProvider<HelpCenterBloc>(
               create: (_) => HelpCenterBloc(
                 HelpCenterRepository(
@@ -1601,4 +1609,71 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('alertes prix vols', () {
+    late MockFlightsRepository flights;
+    late FlightAlertsCubit cubit;
+
+    setUp(() {
+      flights = MockFlightsRepository();
+      getIt.registerFactory<FlightDealsCubit>(() => FlightDealsCubit(flights));
+      when(() => flights.deals()).thenAnswer(
+        (_) async =>
+            const FlightDeals(currency: 'EUR', personalized: false, deals: []),
+      );
+      when(() => flights.alerts()).thenAnswer((_) async => const []);
+      cubit = FlightAlertsCubit(flights, silentAnalytics());
+      getIt.registerSingleton<FirebaseSessionProbe>(const _RealSession());
+    });
+
+    tearDown(() async {
+      resetFlightsFlagForTest();
+      await cubit.close();
+    });
+
+    testWidgets('flag allumé et compte : première ligne des Outils, '
+        'rechargée au tirer pour rafraîchir', (tester) async {
+      setFlightsEnabled(true);
+      await _pump(tester, flightAlerts: cubit);
+      await tester.pumpAndSettle();
+
+      final row = find.byKey(const Key('hub-flight-alerts-empty'));
+      expect(row, findsOneWidget);
+      // Au-dessus des autres outils.
+      expect(
+        tester.getTopLeft(row).dy,
+        lessThan(tester.getTopLeft(find.text('Mes alertes')).dy),
+      );
+      verify(() => flights.alerts()).called(1);
+
+      // Tirer pour rafraîchir : rechargement discret, la ligne reste.
+      await tester.fling(
+        find.byType(CustomScrollView),
+        const Offset(0, 800),
+        1000,
+      );
+      await tester.pumpAndSettle();
+      verify(() => flights.alerts()).called(1);
+      expect(row, findsOneWidget);
+    });
+
+    testWidgets('flag éteint : ni ligne ni appel', (tester) async {
+      await _pump(tester, flightAlerts: cubit);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('hub-flight-alerts-row')), findsNothing);
+      verifyNever(() => flights.alerts());
+    });
+  });
+}
+
+class _RealSession implements FirebaseSessionProbe {
+  const _RealSession();
+
+  @override
+  bool get hasSession => true;
+  @override
+  bool get isAnonymous => false;
+  @override
+  bool get hasRealSession => true;
 }

@@ -1,5 +1,6 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
+import 'package:dony/features/flights/data/models/flight_alert_offers.dart';
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_defaults.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
@@ -81,6 +82,14 @@ class FlightsRemoteDatasource {
     return (res.data ?? const [])
         .map((e) => FlightAlert.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Vols sous le seuil d'une alerte, lus au moment de l'appel.
+  Future<FlightAlertOffers> alertOffers(String id) async {
+    final res = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/me/flight-alerts/$id/offers',
+    );
+    return FlightAlertOffers.fromJson(res.data!);
   }
 
   Future<FlightAlert> createAlert(FlightAlertDraft draft) async {

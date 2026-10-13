@@ -20,6 +20,8 @@ class FlightAlert extends Equatable {
     required this.active,
     this.lastSeenPrice,
     this.lastCheckedAt,
+    this.matchCount,
+    this.matchAirlineCodes = const [],
   });
 
   factory FlightAlert.fromJson(Map<String, dynamic> json) => FlightAlert(
@@ -40,6 +42,12 @@ class FlightAlert extends Equatable {
     lastCheckedAt: json['lastCheckedAt'] is String
         ? DateTime.tryParse(json['lastCheckedAt'] as String)
         : null,
+    matchCount: (json['matchCount'] as num?)?.toInt(),
+    matchAirlineCodes: [
+      for (final code
+          in json['matchAirlineCodes'] as List<dynamic>? ?? const [])
+        if (code is String && code.trim().isNotEmpty) code.trim(),
+    ].take(3).toList(),
   );
 
   final String id;
@@ -64,6 +72,70 @@ class FlightAlert extends Equatable {
   final double? lastSeenPrice;
   final DateTime? lastCheckedAt;
 
+  /// Vols de la dernière vérification au prix inférieur ou égal au seuil ;
+  /// `null` avant la première vérification, ou sur un back qui ne le
+  /// renvoie pas encore.
+  final int? matchCount;
+
+  /// Jusqu'à trois codes IATA de ces vols, du moins cher au plus cher ; vide
+  /// quand rien n'est sous le seuil ou sur un ancien back.
+  final List<String> matchAirlineCodes;
+
+  /// Un prix est passé sous le seuil à la dernière vérification. Sans
+  /// [matchCount] (ancien back), le dernier prix vu en décide.
+  bool get hasHit {
+    final count = matchCount;
+    if (count != null) return count > 0;
+    final seen = lastSeenPrice;
+    return seen != null && seen <= maxPrice;
+  }
+
+  /// Dernier prix vu encore crédible comme « meilleur prix du moment ». Le
+  /// back ne remet pas `lastSeenPrice` à zéro quand une vérification ne
+  /// trouve plus rien : un prix sous le seuil avec `matchCount == 0` est
+  /// périmé et n'est pas montré.
+  double? get currentPrice {
+    final seen = lastSeenPrice;
+    if (seen == null) return null;
+    if (matchCount == 0 && seen <= maxPrice) return null;
+    return seen;
+  }
+
+  /// L'alerte a déjà été vérifiée au moins une fois.
+  bool get checked => lastCheckedAt != null || lastSeenPrice != null;
+
+  /// Chemin de recherche Aviasales du trajet, construit comme le back
+  /// (`FlightQuery.searchPath`) sur le premier jour encore à venir de la
+  /// période : `/search/{ORIG}{JJMM}{DEST}[{JJMM retour}]1`. Sert de repli
+  /// quand `GET /me/flight-alerts/{id}/offers` n'existe pas encore (ancien
+  /// back) ; `null` sans période de départ ou si elle est passée.
+  String? aviasalesSearchPath(DateTime today) {
+    final day = DateTime(today.year, today.month, today.day);
+    DateTime? firstDay(DateTime? from, DateTime? to) {
+      if (from == null) return null;
+      final start = from.isBefore(day) ? day : from;
+      if (to != null && start.isAfter(to)) return null;
+      return start;
+    }
+
+    final out = firstDay(departureFrom, departureTo);
+    if (out == null || originCode.isEmpty || destinationCode.isEmpty) {
+      return null;
+    }
+    String ddmm(DateTime d) =>
+        '${d.day.toString().padLeft(2, '0')}${d.month.toString().padLeft(2, '0')}';
+    final buffer = StringBuffer(
+      '/search/$originCode${ddmm(out)}$destinationCode',
+    );
+    if (isRoundTrip) {
+      final back = firstDay(returnFrom, returnTo);
+      if (back == null || back.isBefore(out)) return null;
+      buffer.write(ddmm(back));
+    }
+    buffer.write('1');
+    return buffer.toString();
+  }
+
   bool get isRoundTrip => returnFrom != null;
 
   String get originDisplay => originLabel ?? originCode;
@@ -85,6 +157,8 @@ class FlightAlert extends Equatable {
     active: active ?? this.active,
     lastSeenPrice: lastSeenPrice,
     lastCheckedAt: lastCheckedAt,
+    matchCount: matchCount,
+    matchAirlineCodes: matchAirlineCodes,
   );
 
   static DateTime? _date(Object? raw) =>
@@ -107,6 +181,8 @@ class FlightAlert extends Equatable {
     active,
     lastSeenPrice,
     lastCheckedAt,
+    matchCount,
+    matchAirlineCodes,
   ];
 }
 

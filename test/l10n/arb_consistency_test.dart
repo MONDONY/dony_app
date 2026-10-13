@@ -108,6 +108,7 @@ const _sameInBothLanguages = <String>{
   'flightsRouteTitle', // « {origin} → {destination} » : le trajet, sans mot
   'flightsStopsDirect', // « Direct » se dit pareil
   'flightsAlertAtMost', // « ≤ {price} » : symbole et montant
+  'flightsAlertMaxShort', // « max {price} » : abréviation commune
   'flightsFieldDestination', // « Destination » se dit pareil
   'flightsRouteRoundTrip', // « {origin} ↔ {destination} » : symbole seul
   'flightsDateRange', // « {start} – {end} » : dates déjà localisées

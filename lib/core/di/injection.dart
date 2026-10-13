@@ -87,6 +87,7 @@ import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/favorites/data/datasources/favorite_remote_datasource.dart';
 import 'package:dony/features/favorites/data/favorites_migration.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
+import 'package:dony/features/flights/bloc/flight_alert_offers_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_link_cubit.dart';
@@ -1414,6 +1415,19 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => FlightAlertsCubit(
       getIt<FlightsRepository>(),
       getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactoryParam<
+    FlightAlertOffersCubit,
+    FlightAlertOffersArgs,
+    void
+  >(
+    (args, _) => FlightAlertOffersCubit(
+      getIt<FlightsRepository>(),
+      getIt<AnalyticsService>(),
+      alertId: args.alertId,
+      alert: args.alert,
+      source: args.source,
     ),
   );
   getIt.registerFactory<FlightLinkCubit>(
