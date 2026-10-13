@@ -44,11 +44,13 @@ class BidNegotiationRepository {
 
   Future<BidNegotiation> counter(
     String bidId, {
-    required double proposedTotalEur,
+    double? proposedTotalEur,
+    double? proposedNetEur,
     String? body,
   }) => _datasource.counter(
     bidId,
     proposedTotalEur: proposedTotalEur,
+    proposedNetEur: proposedNetEur,
     body: body,
   );
 

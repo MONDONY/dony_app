@@ -20600,6 +20600,48 @@
   "@ratingPendingPillLabel": {
     "description": "Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)"
   },
+  "negotiationThreadCounterNetAmountLabel": "Ce que vous recevrez ({symbol})",
+  "@negotiationThreadCounterNetAmountLabel": {
+    "description": "Label du champ de contre-offre du voyageur, saisie en net (FLUTTER-NS, bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadCounterSenderWillPay": "L'expéditeur paiera {amount}",
+  "@negotiationThreadCounterSenderWillPay": {
+    "description": "Aperçu sous la saisie en net du voyageur : brut calculé payé par l'expéditeur, commission incluse (FLUTTER-NS)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCounterAmountAmbiguousTitle": "Montant à préciser",
+  "@errorCounterAmountAmbiguousTitle": {
+    "description": "Erreur 422 counter-amount-ambiguous : contre-offre de trajet portant à la fois le brut et le net (FLUTTER-NS)"
+  },
+  "errorCounterAmountAmbiguousMessage": "Votre contre-proposition n'a pas pu être lue. Saisissez à nouveau le montant.",
+  "@errorCounterAmountAmbiguousMessage": {
+    "description": "Erreur 422 counter-amount-ambiguous (FLUTTER-NS)"
+  },
+  "errorCounterNetTravelerOnlyTitle": "Montant non accepté",
+  "@errorCounterNetTravelerOnlyTitle": {
+    "description": "Erreur 422 counter-net-traveler-only : un expéditeur a envoyé un net (FLUTTER-NS)"
+  },
+  "errorCounterNetTravelerOnlyMessage": "Proposez le prix total que vous paierez, frais Yadony inclus.",
+  "@errorCounterNetTravelerOnlyMessage": {
+    "description": "Erreur 422 counter-net-traveler-only (FLUTTER-NS)"
+  },
+  "errorCounterSameAmountTitle": "Même montant",
+  "@errorCounterSameAmountTitle": {
+    "description": "Erreur 422 counter-same-amount : contre-offre identique à la dernière proposition (FLUTTER-NS)"
+  },
+  "errorCounterSameAmountMessage": "Ce montant est identique à la dernière proposition : acceptez-la ou changez le prix.",
+  "@errorCounterSameAmountMessage": {
+    "description": "Erreur 422 counter-same-amount (FLUTTER-NS)"
+  },
   "requestMyNegotiationYourTurn": "Votre tour",
   "@requestMyNegotiationYourTurn": {
     "description": "Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et c'est à lui de répondre (FLUTTER-NZ)"

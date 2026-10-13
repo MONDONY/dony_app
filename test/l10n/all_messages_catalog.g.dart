@@ -6673,6 +6673,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currencyCode'),
   ),
   'ratingPendingPillLabel': (l) => l.ratingPendingPillLabel,
+  'negotiationThreadCounterNetAmountLabel': (l) =>
+      l.negotiationThreadCounterNetAmountLabel(placeholderMarker('symbol')),
+  'negotiationThreadCounterSenderWillPay': (l) =>
+      l.negotiationThreadCounterSenderWillPay(placeholderMarker('amount')),
+  'errorCounterAmountAmbiguousTitle': (l) => l.errorCounterAmountAmbiguousTitle,
+  'errorCounterAmountAmbiguousMessage': (l) =>
+      l.errorCounterAmountAmbiguousMessage,
+  'errorCounterNetTravelerOnlyTitle': (l) => l.errorCounterNetTravelerOnlyTitle,
+  'errorCounterNetTravelerOnlyMessage': (l) =>
+      l.errorCounterNetTravelerOnlyMessage,
+  'errorCounterSameAmountTitle': (l) => l.errorCounterSameAmountTitle,
+  'errorCounterSameAmountMessage': (l) => l.errorCounterSameAmountMessage,
   'requestMyNegotiationYourTurn': (l) => l.requestMyNegotiationYourTurn,
   'requestMyNegotiationPending': (l) => l.requestMyNegotiationPending,
 };
@@ -7196,4 +7208,6 @@ const textParameters = <String, List<String>>{
   'tripEditMobileMoneyCurrencyLockedNotice': ['tripCurrency'],
   'negotiationCashDealConfirmedMessage': ['amount'],
   'listingPreviewCurrencyValue': ['currencyName', 'currencyCode'],
+  'negotiationThreadCounterNetAmountLabel': ['symbol'],
+  'negotiationThreadCounterSenderWillPay': ['amount'],
 };

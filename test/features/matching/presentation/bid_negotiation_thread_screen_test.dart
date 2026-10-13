@@ -91,6 +91,7 @@ BidNegotiation _thread({
   int round = 1,
   String? counterpartyId,
   DateTime? commissionDueBy,
+  double? commissionRate,
   List<BidNegotiationMessage> messages = const [
     BidNegotiationMessage(
       id: 'm1',
@@ -134,6 +135,7 @@ BidNegotiation _thread({
   messages: messages,
   paymentMethod: paymentMethod,
   commissionDueBy: commissionDueBy,
+  commissionRate: commissionRate,
 );
 
 void main() {
@@ -788,6 +790,114 @@ void main() {
 
     expect(submit().onPressed, isNotNull);
     expect(find.byKey(const Key('nego-counter-same-amount')), findsNothing);
+  });
+
+  // FLUTTER-NS : le voyageur voit et saisit son NET, avec l'aperçu du brut.
+  group('voyageur en net (FLUTTER-NS)', () {
+    List<BidNegotiationCounterRequested> counters() => verify(
+      () => bloc.add(captureAny()),
+    ).captured.whereType<BidNegotiationCounterRequested>().toList();
+
+    testWidgets('bulle : le net du voyageur plutôt que le brut', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(
+            netEur: 37.5,
+            commissionRate: 0.12,
+            messages: const [
+              BidNegotiationMessage(
+                id: 'm1',
+                kind: BidNegotiationMessageKind.proposal,
+                authorId: 'sender-1',
+                proposedGrossEur: 42,
+                proposedNetEur: 37.5,
+              ),
+            ],
+          ),
+        ),
+      );
+      final bubble = find.byKey(const Key('nego-bubble-m1'));
+      expect(
+        find.descendant(of: bubble, matching: find.textContaining('37,50')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: bubble, matching: find.textContaining('42')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('saisie en net, aperçu du brut, envoi du seul net', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(_thread(netEur: 37.5, commissionRate: 0.12)),
+      );
+      await tester.tap(find.byKey(const Key('nego-counter-btn')));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      expect(find.textContaining('Ce que vous recevrez'), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('nego-counter-amount')),
+        '35',
+      );
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      final preview = tester.widget<Text>(
+        find.byKey(const Key('nego-counter-gross-preview')),
+      );
+      expect(preview.data, contains("L'expéditeur paiera"));
+      expect(preview.data, contains('39,20'));
+
+      await tester.tap(find.byKey(const Key('nego-counter-submit')));
+      await tester.pump(_kSettle);
+
+      final sent = counters().single;
+      expect(sent.proposedNetEur, 35);
+      expect(sent.proposedTotalEur, isNull);
+    });
+
+    testWidgets('sans taux (ancien back) : saisie brute comme avant', (
+      tester,
+    ) async {
+      await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37.5)));
+      await tester.tap(find.byKey(const Key('nego-counter-btn')));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      expect(find.byKey(const Key('nego-counter-gross-preview')), findsNothing);
+      await tester.enterText(
+        find.byKey(const Key('nego-counter-amount')),
+        '50',
+      );
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+      await tester.tap(find.byKey(const Key('nego-counter-submit')));
+      await tester.pump(_kSettle);
+
+      final sent = counters().single;
+      expect(sent.proposedTotalEur, 50);
+      expect(sent.proposedNetEur, isNull);
+    });
+
+    testWidgets('expéditeur : brut, même si un taux traînait', (tester) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(_thread(commissionRate: 0.12)),
+      );
+      await tester.tap(find.byKey(const Key('nego-counter-btn')));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+      expect(find.textContaining('Ce que vous recevrez'), findsNothing);
+      expect(find.byKey(const Key('nego-counter-gross-preview')), findsNothing);
+    });
   });
 
   // Le serveur n'envoie plus qu'un seul statut de clôture, NEGOTIATION_CLOSED,

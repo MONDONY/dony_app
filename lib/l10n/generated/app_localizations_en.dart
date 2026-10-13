@@ -19135,6 +19135,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ratingPendingPillLabel => 'To rate';
 
   @override
+  String negotiationThreadCounterNetAmountLabel(String symbol) {
+    return 'What you will receive ($symbol)';
+  }
+
+  @override
+  String negotiationThreadCounterSenderWillPay(String amount) {
+    return 'The sender will pay $amount';
+  }
+
+  @override
+  String get errorCounterAmountAmbiguousTitle => 'Amount unclear';
+
+  @override
+  String get errorCounterAmountAmbiguousMessage =>
+      'Your counter-offer could not be read. Please enter the amount again.';
+
+  @override
+  String get errorCounterNetTravelerOnlyTitle => 'Amount not accepted';
+
+  @override
+  String get errorCounterNetTravelerOnlyMessage =>
+      'Propose the total price you will pay, Yadony fees included.';
+
+  @override
+  String get errorCounterSameAmountTitle => 'Same amount';
+
+  @override
+  String get errorCounterSameAmountMessage =>
+      'This amount matches the last offer: accept it or change the price.';
+
+  @override
   String get requestMyNegotiationYourTurn => 'Your turn';
 
   @override

@@ -91,6 +91,11 @@ class BidNegotiationMessage {
 
   /// Montant porté par le message. Nul sur un ACCEPT / REJECT.
   final double? proposedGrossEur;
+
+  /// Net du voyageur pour ce message (FLUTTER-NS, yadony-back #516). Servi au
+  /// seul voyageur : nul pour l'expéditeur, sur un ACCEPT / REJECT, ou avec un
+  /// serveur antérieur. Le fil retombe alors sur [proposedGrossEur].
+  final double? proposedNetEur;
   final String? body;
   final DateTime? createdAt;
 
@@ -99,6 +104,7 @@ class BidNegotiationMessage {
     required this.kind,
     required this.authorId,
     this.proposedGrossEur,
+    this.proposedNetEur,
     this.body,
     this.createdAt,
   });
@@ -109,6 +115,7 @@ class BidNegotiationMessage {
         kind: bidNegotiationMessageKindFromWire(json['kind'] as String?),
         authorId: json['authorId'] as String,
         proposedGrossEur: _asDouble(json['proposedGrossEur']),
+        proposedNetEur: _asDouble(json['proposedNetEur']),
         body: json['body'] as String?,
         createdAt: _asDate(json['createdAt']),
       );
@@ -170,6 +177,12 @@ class BidNegotiation {
   /// le fil n'affiche alors pas de compte à rebours.
   final DateTime? commissionDueBy;
 
+  /// Taux de commission figé du fil (ex. `0.12`), servi au seul voyageur
+  /// (FLUTTER-NS, yadony-back #516). Présent, le voyageur saisit sa
+  /// contre-offre en NET ; absent (expéditeur, serveur antérieur), la saisie
+  /// reste en brut comme avant.
+  final double? commissionRate;
+
   const BidNegotiation({
     required this.bidId,
     required this.announcementId,
@@ -200,6 +213,7 @@ class BidNegotiation {
     this.paymentMethod,
     this.archived = false,
     this.commissionDueBy,
+    this.commissionRate,
   });
 
   factory BidNegotiation.fromJson(Map<String, dynamic> json) => BidNegotiation(
@@ -242,7 +256,11 @@ class BidNegotiation {
     ),
     archived: json['archived'] as bool? ?? false,
     commissionDueBy: _asDate(json['commissionDueBy']),
+    commissionRate: _asDouble(json['commissionRate']),
   );
+
+  /// Le voyageur contre-propose en net : il connaît le taux du fil.
+  bool get counterInNet => isTravelerView && commissionRate != null;
 
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
   bool get isClosed => status != 'NEGOTIATING';
@@ -338,6 +356,10 @@ class BidNegotiationSummary {
   final bool myTurn;
   final bool hasUnread;
   final double proposedGrossEur;
+
+  /// Net du voyageur sur la dernière proposition (FLUTTER-NS). Servi au seul
+  /// voyageur ; nul sinon, la ligne affiche alors [proposedGrossEur].
+  final double? proposedNetEur;
   final String currency;
   final String? counterpartyName;
   final String? departureCity;
@@ -360,6 +382,7 @@ class BidNegotiationSummary {
     this.myTurn = false,
     this.hasUnread = false,
     this.proposedGrossEur = 0,
+    this.proposedNetEur,
     this.currency = 'EUR',
     this.counterpartyName,
     this.departureCity,
@@ -379,6 +402,7 @@ class BidNegotiationSummary {
         myTurn: json['myTurn'] as bool? ?? false,
         hasUnread: json['hasUnread'] as bool? ?? false,
         proposedGrossEur: _asDouble(json['proposedGrossEur']) ?? 0,
+        proposedNetEur: _asDouble(json['proposedNetEur']),
         currency: json['currency'] as String? ?? 'EUR',
         counterpartyName: json['counterpartyName'] as String?,
         departureCity: json['departureCity'] as String?,
@@ -408,4 +432,10 @@ class BidNegotiationSummary {
 
   /// C'est à moi de payer : accord carte, vu par l'expéditeur.
   bool get needsMyPayment => isAwaitingCardPayment && role != 'TRAVELER';
+
+  /// Montant à afficher sur la ligne : le net pour le voyageur quand le
+  /// serveur le sert, le brut sinon.
+  double get displayAmount => role == 'TRAVELER'
+      ? (proposedNetEur ?? proposedGrossEur)
+      : proposedGrossEur;
 }

@@ -1082,7 +1082,8 @@ class _TripNegoCard extends StatelessWidget {
                   children: [
                     Text(
                       PriceDisplay.money(
-                        summary.proposedGrossEur,
+                        // Net pour le voyageur quand servi (FLUTTER-NS).
+                        summary.displayAmount,
                         summary.currency,
                       ),
                       key: Key('trip-nego-amount-${summary.bidId}'),

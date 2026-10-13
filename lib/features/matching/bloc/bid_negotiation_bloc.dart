@@ -130,6 +130,7 @@ class BidNegotiationBloc
       final thread = await _repository.counter(
         event.bidId,
         proposedTotalEur: event.proposedTotalEur,
+        proposedNetEur: event.proposedNetEur,
         body: event.body,
       );
       _emitLoaded(thread, BidNegotiationAction.countered, emit);
