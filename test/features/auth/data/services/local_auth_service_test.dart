@@ -43,9 +43,12 @@ void main() {
 
       final stored = await _storage.read(key: 'dony_pin_v2');
       expect(stored, isNotNull);
-      expect(stored, isNot(contains('1234')));
       final parts = stored!.split(':');
       expect(parts, hasLength(2));
+      // Aucun segment n'est le PIN. Pas de `contains('1234')` sur la chaîne
+      // entière : le sel et le hash hexadécimal aléatoires contiennent parfois
+      // « 1234 » par hasard (test rouge en CI le 13/10).
+      expect(parts, isNot(contains('1234')));
       expect(
         parts[1],
         sha256.convert(utf8.encode('${parts[0]}:1234')).toString(),
