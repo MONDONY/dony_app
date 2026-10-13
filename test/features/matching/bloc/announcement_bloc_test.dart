@@ -1534,6 +1534,81 @@ void main() {
       ],
     );
 
+    // FLUTTER-KV : demande arrivée entre-temps, devise figée par le serveur.
+    // Code renommé : le `currency-locked` du catalogue parle du portefeuille.
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      '409 currency-locked → AnnouncementError announcement/currency-locked',
+      build: () {
+        when(
+          () => mockRepo.updateAnnouncement(
+            id: any(named: 'id'),
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            departureDate: any(named: 'departureDate'),
+            departureTime: any(named: 'departureTime'),
+            arrivalTime: any(named: 'arrivalTime'),
+            pickupAddress: any(named: 'pickupAddress'),
+            deliveryAddress: any(named: 'deliveryAddress'),
+            availableKg: any(named: 'availableKg'),
+            pricePerKg: any(named: 'pricePerKg'),
+            transportMode: any(named: 'transportMode'),
+            handoverDeadline: any(named: 'handoverDeadline'),
+            currency: any(named: 'currency'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/announcements/ann-001'),
+            error: const ConflictException('x', code: 'currency-locked'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/announcements/ann-001'),
+              statusCode: 409,
+            ),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        AnnouncementUpdateRequested(
+          id: 'ann-001',
+          departureCity: 'Lyon',
+          arrivalCity: 'Abidjan',
+          departureDate: DateTime.now().add(const Duration(days: 15)),
+          pickupAddress: kTestPickupAddress,
+          deliveryAddress: kTestDeliveryAddress,
+          availableKg: 25.0,
+          pricePerKg: 6.0,
+          transportMode: TransportMode.plane,
+          handoverDeadline: DateTime(2026, 6, 14, 18),
+          currency: 'XOF',
+        ),
+      ),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementError &&
+              s.error.code == 'announcement/currency-locked',
+        ),
+      ],
+      verify: (_) => verify(
+        () => mockRepo.updateAnnouncement(
+          id: any(named: 'id'),
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
+          handoverDeadline: any(named: 'handoverDeadline'),
+          currency: 'XOF',
+        ),
+      ).called(1),
+    );
+
     blocTest<AnnouncementBloc, AnnouncementState>(
       'erreur générique mise à jour → [Loading, AnnouncementError]',
       build: () {

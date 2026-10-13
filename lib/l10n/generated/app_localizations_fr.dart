@@ -19259,4 +19259,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ratingPendingPillLabel => 'À noter';
+
+  @override
+  String get tripEditCurrencyLockedHint =>
+      'La devise ne peut plus changer : ce trajet a déjà des demandes.';
+
+  @override
+  String get errorTripCurrencyLockedTitle => 'Devise figée';
+
+  @override
+  String get errorTripCurrencyLockedMessage =>
+      'Ce trajet vient de recevoir une demande : sa devise ne peut plus changer. La devise d\'origine a été remise.';
+
+  @override
+  String get errorCurrencyUnsupportedTitle => 'Devise non prise en charge';
+
+  @override
+  String get errorCurrencyUnsupportedMessage =>
+      'Cette devise n\'est pas disponible pour un trajet. Choisissez-en une autre.';
 }

@@ -495,6 +495,7 @@ class AnnouncementRemoteDatasource {
     String pricingMode = 'KG',
     required DateTime handoverDeadline,
     bool negotiable = false,
+    String? currency,
   }) async {
     final response = await _apiClient.dio.put(
       '/announcements/$id',
@@ -523,6 +524,9 @@ class AnnouncementRemoteDatasource {
         'pricingMode': pricingMode,
         'handoverDeadline': handoverDeadline.toUtc().toIso8601String(),
         'negotiable': negotiable,
+        // Absente : devise inchangée. Présente seulement sur un trajet sans
+        // demande ni offre (FLUTTER-KV), sinon 409 `currency-locked`.
+        'currency': ?currency,
       },
     );
 

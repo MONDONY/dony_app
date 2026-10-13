@@ -19122,4 +19122,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ratingPendingPillLabel => 'To rate';
+
+  @override
+  String get tripEditCurrencyLockedHint =>
+      'The currency can no longer change: this trip already has requests.';
+
+  @override
+  String get errorTripCurrencyLockedTitle => 'Currency locked';
+
+  @override
+  String get errorTripCurrencyLockedMessage =>
+      'This trip has just received a request: its currency can no longer change. The original currency has been restored.';
+
+  @override
+  String get errorCurrencyUnsupportedTitle => 'Currency not supported';
+
+  @override
+  String get errorCurrencyUnsupportedMessage =>
+      'This currency is not available for a trip. Please choose another one.';
 }

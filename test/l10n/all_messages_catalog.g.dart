@@ -6671,6 +6671,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currencyCode'),
   ),
   'ratingPendingPillLabel': (l) => l.ratingPendingPillLabel,
+  'tripEditCurrencyLockedHint': (l) => l.tripEditCurrencyLockedHint,
+  'errorTripCurrencyLockedTitle': (l) => l.errorTripCurrencyLockedTitle,
+  'errorTripCurrencyLockedMessage': (l) => l.errorTripCurrencyLockedMessage,
+  'errorCurrencyUnsupportedTitle': (l) => l.errorCurrencyUnsupportedTitle,
+  'errorCurrencyUnsupportedMessage': (l) => l.errorCurrencyUnsupportedMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

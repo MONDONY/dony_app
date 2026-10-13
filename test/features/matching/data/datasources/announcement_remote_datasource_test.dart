@@ -851,6 +851,35 @@ void main() {
       expect(result.id, 'ann-001');
     });
 
+    test('currency : envoyée si fournie, absente sinon (FLUTTER-KV)', () async {
+      final bodies = <Map<String, dynamic>>[];
+      when(
+        () => mockDio.put('/announcements/ann-001', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        bodies.add(
+          inv.namedArguments[const Symbol('data')] as Map<String, dynamic>,
+        );
+        return _ok(_announcementJson, '/announcements/ann-001');
+      });
+      for (final currency in ['XOF', null]) {
+        await datasource.updateAnnouncement(
+          id: 'ann-001',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2024, 6),
+          pickupAddress: kPickup,
+          deliveryAddress: kDelivery,
+          availableKg: 10.0,
+          pricePerKg: 12.0,
+          transportMode: TransportMode.plane,
+          handoverDeadline: DateTime(2026, 6, 14, 18),
+          currency: currency,
+        );
+      }
+      expect(bodies.first['currency'], 'XOF');
+      expect(bodies.last.containsKey('currency'), isFalse);
+    });
+
     test('with optional time and address fields', () async {
       when(
         () => mockDio.put('/announcements/ann-001', data: any(named: 'data')),

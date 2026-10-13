@@ -465,10 +465,24 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         pricingMode: event.pricingMode,
         handoverDeadline: event.handoverDeadline,
         negotiable: event.negotiable,
+        currency: event.currency,
       );
       emit(AnnouncementUpdated(announcement));
     } catch (e) {
-      if (e is DioException && e.response?.statusCode == 409) {
+      final unwrapped = unwrapDioError(e);
+      if (unwrapped.code == 'currency-locked') {
+        // Une demande est arrivée entre l'ouverture du formulaire et
+        // l'enregistrement (FLUTTER-KV) : code propre au trajet, le
+        // `currency-locked` du catalogue parle du portefeuille.
+        emit(
+          AnnouncementError(
+            const ConflictException(
+              'Trip currency locked', // i18n-ignore
+              code: 'announcement/currency-locked',
+            ),
+          ),
+        );
+      } else if (e is DioException && e.response?.statusCode == 409) {
         emit(
           AnnouncementError(
             const ConflictException(
@@ -480,7 +494,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
           ),
         );
       } else {
-        emit(AnnouncementError(unwrapDioError(e)));
+        emit(AnnouncementError(unwrapped));
       }
     }
   }

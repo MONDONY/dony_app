@@ -299,6 +299,7 @@ class AnnouncementRepository {
     String pricingMode = 'KG',
     required DateTime handoverDeadline,
     bool negotiable = false,
+    String? currency,
   }) async {
     return _remoteDatasource.updateAnnouncement(
       id: id,
@@ -324,6 +325,7 @@ class AnnouncementRepository {
       pricingMode: pricingMode,
       handoverDeadline: handoverDeadline,
       negotiable: negotiable,
+      currency: currency,
     );
   }
 
