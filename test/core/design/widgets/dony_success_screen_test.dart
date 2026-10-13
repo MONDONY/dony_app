@@ -156,6 +156,50 @@ void main() {
     expect(find.text('Home stub'), findsOneWidget);
   });
 
+  testWidgets('sans onClose, écran poussé hors GoRouter depuis /home : '
+      'la croix le ferme (FLUTTER-P5)', (tester) async {
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        GoRoute(
+          path: '/home',
+          builder: (context, state) => Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => DonySuccessScreen(
+                      mascotteType: DonyMascotteType.succes,
+                      title: 'Offre envoyée !',
+                      subtitle: 'Le voyageur va répondre.',
+                      ctaLabel: 'Voir mon envoi',
+                      onCta: () {},
+                    ),
+                  ),
+                ),
+                child: const Text('Home stub'),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+    );
+    await tester.tap(find.text('Home stub'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Offre envoyée !'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Fermer'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Offre envoyée !'), findsNothing);
+    expect(find.text('Home stub'), findsOneWidget);
+  });
+
   testWidgets('un retour arrière système (back gesture/bouton) est ignoré : '
       'l\'écran de succès reste affiché', (tester) async {
     final navigatorKey = GlobalKey<NavigatorState>();
