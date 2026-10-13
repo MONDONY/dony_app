@@ -732,7 +732,10 @@ class _ResultsView extends StatelessWidget {
             Positioned(
               left: 0,
               right: 0,
-              bottom: flightNavBarReserve(context) + DonySpacing.base,
+              // Le shell (extendBody) compte déjà la barre d'onglets dans la
+              // marge basse : y ajouter flightNavBarReserve laissait ~66 dp de
+              // vide sous le bouton, qui flottait au milieu de la liste.
+              bottom: MediaQuery.paddingOf(context).bottom + DonySpacing.base,
               child: Center(
                 child: FlightPillButton(
                   key: const Key('flights-alert-fab'),
