@@ -1,3 +1,4 @@
+import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
@@ -44,6 +45,89 @@ void main() {
     expect(FlightFormat.when(fr, out), 'sam. 12 déc.');
     expect(FlightFormat.when(fr, null), 'Toutes les dates');
     expect(FlightFormat.monthName(fr, DateTime(2026, 10)), 'octobre');
+  });
+
+  group('dates d\'une alerte', () {
+    FlightAlert alert({
+      DateTime? departureFrom,
+      DateTime? departureTo,
+      DateTime? returnFrom,
+      DateTime? returnTo,
+    }) => FlightAlert(
+      id: 'a1',
+      originCode: 'PAR',
+      destinationCode: 'DKR',
+      departureFrom: departureFrom,
+      departureTo: departureTo,
+      returnFrom: returnFrom,
+      returnTo: returnTo,
+      directOnly: false,
+      maxPrice: 450,
+      currency: 'EUR',
+      active: true,
+    );
+
+    test('jour unique, aller-retour', () {
+      final a = alert(
+        departureFrom: DateTime(2026, 12, 23),
+        departureTo: DateTime(2026, 12, 23, 12),
+        returnFrom: DateTime(2027, 1, 2),
+        returnTo: DateTime(2027, 1, 2),
+      );
+      expect(FlightFormat.alertDates(fr, a), [
+        'Départ le 23 déc. 2026',
+        'Retour le 2 janv. 2027',
+      ]);
+      expect(FlightFormat.alertDates(en, a), [
+        'Departure Dec 23, 2026',
+        'Return Jan 2, 2027',
+      ]);
+    });
+
+    test('période dans la même année : année non répétée', () {
+      final a = alert(
+        departureFrom: DateTime(2026, 12),
+        departureTo: DateTime(2026, 12, 20),
+        returnFrom: DateTime(2027, 1, 2),
+        returnTo: DateTime(2027, 1, 15),
+      );
+      expect(FlightFormat.alertDates(fr, a), [
+        'Départ du 1 déc. au 20 déc. 2026',
+        'Retour du 2 janv. au 15 janv. 2027',
+      ]);
+      expect(FlightFormat.alertDates(en, a), [
+        'Departure Dec 1 to Dec 20, 2026',
+        'Return Jan 2 to Jan 15, 2027',
+      ]);
+    });
+
+    test('période à cheval sur deux années : les deux années', () {
+      final a = alert(
+        departureFrom: DateTime(2026, 12, 28),
+        departureTo: DateTime(2027, 1, 3),
+      );
+      expect(FlightFormat.alertDates(fr, a), [
+        'Départ du 28 déc. 2026 au 3 janv. 2027',
+        'Aller simple',
+      ]);
+      expect(FlightFormat.alertDates(en, a), [
+        'Departure Dec 28, 2026 to Jan 3, 2027',
+        'One way',
+      ]);
+    });
+
+    test('sans période', () {
+      expect(FlightFormat.alertDates(fr, alert()), [
+        'Départ à toutes dates',
+        'Aller simple',
+      ]);
+      expect(FlightFormat.alertDates(en, alert())[0], 'Any departure date');
+      expect(
+        FlightFormat.alertReturn(fr, DateTime(2027, 1, 2), null),
+        'Retour à toutes dates',
+      );
+      expect(FlightFormat.alertReturn(en, null, null), 'Any return date');
+    });
   });
 
   test('trajet aller-retour ou aller simple', () {

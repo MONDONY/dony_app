@@ -18850,6 +18850,22 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String flightsAlertDepartureOn(String date) {
+    return 'Départ le $date';
+  }
+
+  @override
+  String flightsAlertReturnOn(String date) {
+    return 'Retour le $date';
+  }
+
+  @override
+  String get flightsAlertDepartureAnyDate => 'Départ à toutes dates';
+
+  @override
+  String get flightsAlertReturnAnyDate => 'Retour à toutes dates';
+
+  @override
   String get flightsAlertThreshold => 'Prévenez-moi sous';
 
   @override

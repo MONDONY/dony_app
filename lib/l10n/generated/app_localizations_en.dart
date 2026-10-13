@@ -18714,6 +18714,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String flightsAlertDepartureOn(String date) {
+    return 'Departure $date';
+  }
+
+  @override
+  String flightsAlertReturnOn(String date) {
+    return 'Return $date';
+  }
+
+  @override
+  String get flightsAlertDepartureAnyDate => 'Any departure date';
+
+  @override
+  String get flightsAlertReturnAnyDate => 'Any return date';
+
+  @override
   String get flightsAlertThreshold => 'Notify me below';
 
   @override

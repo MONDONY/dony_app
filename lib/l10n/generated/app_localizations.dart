@@ -30560,6 +30560,30 @@ abstract class AppLocalizations {
   /// **'Retour {period}'**
   String flightsAlertReturnLine(String period);
 
+  /// Ligne départ d'une alerte dont la période tient en un seul jour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ le {date}'**
+  String flightsAlertDepartureOn(String date);
+
+  /// Ligne retour d'une alerte dont la période tient en un seul jour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour le {date}'**
+  String flightsAlertReturnOn(String date);
+
+  /// Ligne départ d'une alerte sans période de départ.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ à toutes dates'**
+  String get flightsAlertDepartureAnyDate;
+
+  /// Ligne retour d'une alerte sans période de retour.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à toutes dates'**
+  String get flightsAlertReturnAnyDate;
+
   /// Champ seuil d'une alerte.
   ///
   /// In fr, this message translates to:

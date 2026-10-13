@@ -305,15 +305,13 @@ class _Summary extends StatelessWidget {
     final roundTrip = r?.roundTrip ?? a?.isRoundTrip ?? false;
     final maxPrice = r?.maxPrice ?? a?.maxPrice;
     final currency = r?.currency ?? a?.currency ?? 'EUR';
-    final from = a?.departureFrom;
-    final to = a?.departureTo;
-
     final details = [
-      if (from != null && to != null)
-        l.flightsAlertPeriod(FlightFormat.day(l, from), FlightFormat.day(l, to))
-      else if (a != null)
-        l.flightsAlertAnyDate,
-      if (roundTrip) l.flightsRoundTrip else l.flightsOneWay,
+      if (a != null)
+        ...FlightFormat.alertDates(l, a)
+      else if (roundTrip)
+        l.flightsRoundTrip
+      else
+        l.flightsOneWay,
       if (maxPrice != null)
         l.flightsAlertOffersMax(FlightFormat.price(maxPrice, currency)),
     ];
