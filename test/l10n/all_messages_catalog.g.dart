@@ -6665,6 +6665,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'negotiationThreadSeeParcelButton': (l) => l.negotiationThreadSeeParcelButton,
   'negotiationThreadCounterSameAmountHint': (l) =>
       l.negotiationThreadCounterSameAmountHint,
+  'ratingPendingPillLabel': (l) => l.ratingPendingPillLabel,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
