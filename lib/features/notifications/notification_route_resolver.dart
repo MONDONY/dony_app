@@ -23,7 +23,6 @@ const notificationShellTabs = {
   '/tracking',
   '/messages',
   '/profile',
-  '/flights',
 };
 
 /// `true` si [route] doit être atteinte via `context.go` plutôt que

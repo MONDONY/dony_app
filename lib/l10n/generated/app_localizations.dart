@@ -14604,11 +14604,23 @@ abstract class AppLocalizations {
   /// **'En ce moment'**
   String get activitySectionCurrent;
 
-  /// Titre de la section statistiques (activites_hub_screen.dart).
+  /// Entrée du menu ☰ d'Activités et titre de l'écran des statistiques (revenus, kg vendus, trajets, colis).
   ///
   /// In fr, this message translates to:
-  /// **'Statistiques'**
-  String get activitySectionStats;
+  /// **'Mes statistiques'**
+  String get activityStatsTitle;
+
+  /// Titre du bloc billets d'avion du hub Activités (bons plans + bouton de recherche).
+  ///
+  /// In fr, this message translates to:
+  /// **'Billets d\'avion'**
+  String get activityFlightsSectionTitle;
+
+  /// Lien du bloc billets d'avion du hub Activités, ouvre l'écran Billets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout voir'**
+  String get activityFlightsSeeAll;
 
   /// Titre de la section outils (activites_hub_screen.dart).
   ///
@@ -30026,12 +30038,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Fermer le message sur la photo perdue'**
   String get suiviPhotoLostDismiss;
-
-  /// Nom de l'onglet Billets de la barre du bas, lu par le lecteur d'écran et affiché en infobulle (barre en icônes seules).
-  ///
-  /// In fr, this message translates to:
-  /// **'Billets'**
-  String get shellTabTickets;
 
   /// Feuille compte requis : un visiteur veut créer ou voir des alertes prix de billets.
   ///

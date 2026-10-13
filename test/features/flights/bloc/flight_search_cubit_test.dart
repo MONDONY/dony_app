@@ -4,10 +4,12 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/flights/bloc/flight_search_cubit.dart';
+import 'package:dony/features/flights/data/datasources/flight_recent_store.dart';
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_defaults.dart';
 import 'package:dony/features/flights/data/models/flight_filters.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
+import 'package:dony/features/flights/data/models/flight_recent_search.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/data/models/flight_search_result.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -80,6 +82,69 @@ void main() {
 
     expect(cubit.state.query, const FlightSearchQuery());
   });
+
+  test('serveur sans destination : le départ habituel suffit', () async {
+    when(() => repository.defaults()).thenAnswer(
+      (_) async => const FlightDefaults(source: 'corridor', origin: _paris),
+    );
+
+    await cubit.loadDefaults();
+
+    expect(cubit.state.query.origin, _paris);
+    expect(cubit.state.query.destination, isNull);
+  });
+
+  test('serveur muet : repli sur la dernière recherche du téléphone', () async {
+    when(
+      () => repository.defaults(),
+    ).thenAnswer((_) async => FlightDefaults.none);
+    final local = FlightSearchCubit(
+      repository,
+      analytics,
+      recents: MemoryFlightRecentStore([
+        FlightRecentSearch(
+          origin: _abidjan,
+          destination: _paris,
+          searchedAt: DateTime(2026, 10),
+        ),
+      ]),
+    );
+    addTearDown(local.close);
+
+    await local.loadDefaults();
+
+    expect(local.state.query.origin, _abidjan);
+    expect(local.state.query.destination, _paris);
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.flightsPrefillApplied,
+        properties: {'source': 'recent'},
+      ),
+    ).called(1);
+  });
+
+  test(
+    'échec réseau : la dernière recherche du téléphone prend le relais',
+    () async {
+      when(() => repository.defaults()).thenThrow(Exception('offline'));
+      final local = FlightSearchCubit(
+        repository,
+        analytics,
+        recents: MemoryFlightRecentStore([
+          FlightRecentSearch(
+            origin: _paris,
+            destination: _abidjan,
+            searchedAt: DateTime(2026, 10),
+          ),
+        ]),
+      );
+      addTearDown(local.close);
+
+      await local.loadDefaults();
+
+      expect(local.state.query.origin, _paris);
+    },
+  );
 
   test('recherche incomplète : rien ne part', () async {
     cubit.setOrigin(_paris);

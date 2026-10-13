@@ -10,6 +10,7 @@ import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_link_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_route_picker_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_search_cubit.dart';
+import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_filters.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
@@ -31,21 +32,49 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Onglet Billets (`/flights`) : billets d'avion en affiliation.
+/// Ouverture de l'écran Billets sur un bon plan touché ailleurs (bloc
+/// « Billets d'avion » du hub Activités) : la recherche de ce trajet part dès
+/// l'ouverture, comme un bon plan touché dans l'écran lui-même.
+class FlightsLaunch {
+  const FlightsLaunch({required this.deal, required this.personalized});
+
+  final FlightDeal deal;
+  final bool personalized;
+}
+
+/// Écran Billets (`/announcements/flights`, alias `/flights`) : billets
+/// d'avion en affiliation, ouvert par-dessus le hub Activités, la barre
+/// d'onglets restant visible.
 ///
 /// Formulaire, recherches récentes et bons plans d'abord ; une recherche
-/// lancée passe par l'écran d'attente puis bascule l'onglet sur ses
-/// résultats (même écran, retour au formulaire par la flèche ou la pastille
-/// résumé). Yadony ne vend rien : une offre s'ouvre chez le partenaire, dans
-/// le navigateur.
+/// lancée passe par l'écran d'attente puis bascule l'écran sur ses
+/// résultats (retour au formulaire par la flèche ou la pastille résumé).
+/// Yadony ne vend rien : une offre s'ouvre chez le partenaire, dans le
+/// navigateur.
 class FlightsScreen extends StatelessWidget {
-  const FlightsScreen({super.key});
+  const FlightsScreen({super.key, this.launch});
+
+  /// Bon plan à chercher dès l'ouverture ; `null` : formulaire prérempli.
+  final FlightsLaunch? launch;
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => getIt<FlightSearchCubit>()..loadDefaults()),
+        BlocProvider(
+          create: (_) {
+            final cubit = getIt<FlightSearchCubit>();
+            final launch = this.launch;
+            if (launch != null) {
+              unawaited(
+                cubit.openDeal(launch.deal, personalized: launch.personalized),
+              );
+            } else {
+              unawaited(cubit.loadDefaults());
+            }
+            return cubit;
+          },
+        ),
         BlocProvider(create: (_) => getIt<FlightDealsCubit>()..load()),
         BlocProvider(create: (_) => getIt<FlightLinkCubit>()),
       ],
@@ -183,14 +212,27 @@ class _FormView extends StatelessWidget {
       ),
       children: [
         Padding(
+          // À gauche, la zone tappable de 44 du bouton retour déborde de sa
+          // pastille : la pastille tombe sur la marge du formulaire.
           padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg,
+            DonySpacing.md,
             DonySpacing.sm,
             DonySpacing.xs,
             DonySpacing.sm,
           ),
           child: Row(
             children: [
+              // Écran poussé par-dessus Activités : retour au hub. Ouvert par
+              // un lien sans rien à dépiler, le hub est rouvert à la place.
+              FlightRoundButton(
+                key: const Key('flights-close'),
+                icon: 'arrow-left',
+                tooltip: l.commonBack,
+                onPressed: () => context.canPop()
+                    ? context.pop()
+                    : context.go('/announcements'),
+              ),
+              const SizedBox(width: DonySpacing.xs),
               Expanded(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,

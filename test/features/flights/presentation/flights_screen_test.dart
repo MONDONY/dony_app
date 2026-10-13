@@ -17,6 +17,7 @@ import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_defaults.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
+import 'package:dony/features/flights/data/models/flight_recent_search.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/data/models/flight_search_result.dart';
 import 'package:dony/features/flights/presentation/flight_city_picker_screen.dart';
@@ -66,6 +67,10 @@ Widget _app({Locale locale = AppL10n.fr, ThemeData? theme}) {
       GoRoute(
         path: '/flights/alerts',
         builder: (_, _) => const Scaffold(body: Text('alertes')),
+      ),
+      GoRoute(
+        path: '/announcements',
+        builder: (_, _) => const Scaffold(body: Text('hub Activités')),
       ),
     ],
   );
@@ -795,5 +800,123 @@ void main() {
       tester.getTopLeft(cta).dy,
       lessThan(tester.getTopLeft(find.text('Essayez plutôt')).dy),
     );
+  });
+
+  group('ouvert depuis Activités', () {
+    /// Billets empilé sur le hub, comme dans la branche Activités du shell.
+    Widget nested({Object? extra}) {
+      final router = GoRouter(
+        initialLocation: '/announcements',
+        routes: [
+          GoRoute(
+            path: '/announcements',
+            builder: (_, _) => const Scaffold(body: Text('hub Activités')),
+            routes: [
+              GoRoute(
+                path: 'flights',
+                builder: (_, state) => FlightsScreen(
+                  launch: state.extra is FlightsLaunch
+                      ? state.extra! as FlightsLaunch
+                      : null,
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/flights/alerts',
+            builder: (_, _) => const Scaffold(body: Text('alertes')),
+          ),
+        ],
+      );
+      return MaterialApp.router(
+        locale: AppL10n.fr,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      );
+    }
+
+    Future<void> openNested(WidgetTester tester, {Object? extra}) async {
+      tester.view.physicalSize = const Size(390, 844) * 3;
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(nested());
+      await tester.pumpAndSettle();
+      final context = tester.element(find.text('hub Activités'));
+      unawaited(
+        GoRouter.of(context).push('/announcements/flights', extra: extra),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('bouton rond retour à gauche du titre, revient au hub', (
+      tester,
+    ) async {
+      await openNested(tester);
+
+      final back = find.byKey(const Key('flights-close'));
+      expect(back, findsOneWidget);
+      expect(
+        tester.getCenter(back).dx,
+        lessThan(tester.getTopLeft(find.text('Billets')).dx),
+      );
+      // Départ habituel prérempli (GET /flights/defaults).
+      expect(rich('PAR · Paris'), findsOneWidget);
+
+      await tester.tap(back);
+      await tester.pumpAndSettle();
+      expect(find.text('hub Activités'), findsOneWidget);
+      expect(find.byType(FlightsScreen), findsNothing);
+    });
+
+    testWidgets('un bon plan du hub lance sa recherche dès l\'ouverture', (
+      tester,
+    ) async {
+      final hubDeal = FlightDeal(
+        offer: offer('hub', departureAt: DateTime(2026, 11, 4)),
+        medianPrice: 600,
+        discountPercent: 48,
+      );
+      await openNested(
+        tester,
+        extra: FlightsLaunch(deal: hubDeal, personalized: true),
+      );
+
+      final query =
+          verify(() => repository.search(captureAny())).captured.single
+              as FlightSearchQuery;
+      expect(query.origin?.code, 'PAR');
+      expect(query.destination?.code, 'ABJ');
+      // Le préremplissage n'écrase pas le trajet du bon plan.
+      verifyNever(() => repository.defaults());
+    });
+
+    testWidgets('serveur muet : départ repris de la dernière recherche', (
+      tester,
+    ) async {
+      defaults = FlightDefaults.none;
+      await recents.add(
+        FlightRecentSearch(
+          origin: _lille,
+          destination: _abidjan,
+          searchedAt: DateTime(2026, 10),
+        ),
+      );
+      await openNested(tester);
+
+      expect(rich('LIL · Lille'), findsOneWidget);
+      expect(rich('ABJ · Abidjan'), findsOneWidget);
+    });
+  });
+
+  testWidgets('ouvert sans rien à dépiler : retour sur le hub Activités', (
+    tester,
+  ) async {
+    await open(tester);
+
+    await tester.tap(find.byKey(const Key('flights-close')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('hub Activités'), findsOneWidget);
   });
 }

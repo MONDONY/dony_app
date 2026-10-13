@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
@@ -9,27 +12,24 @@ import 'package:dony/features/corridor_alerts/bloc/corridor_alert_summary_cubit.
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
+import 'package:dony/features/flights/data/models/flight_deal.dart';
+import 'package:dony/features/flights/presentation/flights_screen.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_deal_card.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
-import 'package:dony/features/matching/bloc/revenue_details_cubit.dart';
-import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/models/kg_sold_model.dart';
-import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/tools_completion_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
-import 'package:dony/features/matching/presentation/widgets/kg_sold_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/revenue_details_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -46,12 +46,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/money_test_doubles.dart';
+import '../../../flights/bloc/flights_test_doubles.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -168,13 +168,15 @@ late List<String> visitedUris;
 /// [EnvoisRefreshNotifier] (throttle anti-rafale).
 late _MockTravelerBidsBloc _travelerBidsBlocUnderTest;
 
+/// `extra` reçu par l'écran Billets (bon plan touché dans le hub).
+Object? flightsExtra;
+
 /// Exposé pour compter les rechargements de la complétion des outils.
 late _MockToolsCompletionRepository _toolsRepoUnderTest;
 
 Future<void> _pump(
   WidgetTester tester, {
   TripsSummaryModel? summary,
-  KgSoldModel? kgSold,
   BidState? bidState,
   TravelerBidsState? travelerBidsState,
   NegotiationListState? negoState,
@@ -208,27 +210,6 @@ Future<void> _pump(
         summary ??
         const TripsSummaryModel(activeTrips: 6, kgSold: 0, revenue: 0),
   );
-  when(() => repo.getRevenueDetails(period: any(named: 'period'))).thenAnswer(
-    (_) async =>
-        const RevenueDetailsModel(period: '30d', deliveries: 0, groups: []),
-  );
-  when(() => repo.getKgSold(period: any(named: 'period'))).thenAnswer(
-    (_) async =>
-        kgSold ??
-        const KgSoldModel(period: '30d', totalKg: 0, parcels: 0, trips: []),
-  );
-  if (getIt.isRegistered<RevenueDetailsCubit>()) {
-    getIt.unregister<RevenueDetailsCubit>();
-  }
-  getIt.registerFactory<RevenueDetailsCubit>(() => RevenueDetailsCubit(repo));
-  if (getIt.isRegistered<KgSoldCubit>()) {
-    getIt.unregister<KgSoldCubit>();
-  }
-  getIt.registerFactory<KgSoldCubit>(() => KgSoldCubit(repo));
-  addTearDown(() {
-    getIt.unregister<RevenueDetailsCubit>();
-    getIt.unregister<KgSoldCubit>();
-  });
 
   final bidBloc = _MockBidBloc();
   when(() => bidBloc.state).thenReturn(
@@ -315,7 +296,6 @@ Future<void> _pump(
             BlocProvider<TripsSummaryCubit>.value(value: summaryCubit),
             BlocProvider<TravelerBidsBloc>.value(value: travelerBids),
             BlocProvider<BidBloc>.value(value: bidBloc),
-            BlocProvider<StatsPeriodCubit>(create: (_) => StatsPeriodCubit()),
             BlocProvider<NegotiationListBloc>.value(value: nego),
             BlocProvider<PackageRequestBloc>.value(value: packageRequests),
             BlocProvider<ToolsCompletionCubit>.value(value: toolsCubit),
@@ -354,6 +334,15 @@ Future<void> _pump(
       route('/profile/addresses', 'Adresses'),
       route('/profile/recipients', 'Destinataires'),
       route('/profile/price-grid', 'Grille de prix'),
+      route('/announcements/stats', 'Mes statistiques écran'),
+      GoRoute(
+        path: '/announcements/flights',
+        builder: (_, state) {
+          visited.add('/announcements/flights');
+          flightsExtra = state.extra;
+          return const Scaffold(body: Text('Écran billets'));
+        },
+      ),
       GoRoute(
         path: '/profile/help/tutorial/:tutorialId',
         builder: (_, state) => Scaffold(
@@ -376,8 +365,6 @@ void main() {
     registerFallbackValue(const TravelerBidsRequested());
     registerFallbackValue(const NegotiationListFetchRequested());
     registerFallbackValue('');
-    // La feuille Kg vendus date ses lignes en français.
-    initializeDateFormatting('fr');
   });
 
   setUp(() {
@@ -564,8 +551,6 @@ void main() {
         ),
         findsOneWidget,
       );
-      // L'activité détectée fait aussi apparaître les statistiques.
-      expect(find.text('Statistiques'), findsOneWidget);
     });
 
     testWidgets('une erreur de résumé n\'affecte que sa propre tuile', (
@@ -894,35 +879,12 @@ void main() {
       expect(find.text('My parcels'), findsOneWidget);
       expect(find.text('Requests received'), findsOneWidget);
       expect(find.text('Price discussions'), findsOneWidget);
-      expect(find.text('Statistics'), findsOneWidget);
-      expect(find.text('Earnings'), findsOneWidget);
-      expect(find.text('Kg sold'), findsOneWidget);
       expect(find.text('Tools'), findsOneWidget);
       expect(find.text('My addresses'), findsOneWidget);
       expect(find.text('My recipients'), findsOneWidget);
       expect(find.text('History'), findsOneWidget);
       expect(find.text('Help & support'), findsOneWidget);
     });
-
-    testWidgets(
-      'en anglais, un seul trajet publié / colis envoyé reste au singulier',
-      (tester) async {
-        useEnglish();
-        await _pump(
-          tester,
-          summary: const TripsSummaryModel(
-            activeTrips: 1,
-            kgSold: 1,
-            revenue: 10,
-            tripsPublished: 1,
-            parcelsSent: 1,
-          ),
-        );
-
-        expect(find.text('1 posted'), findsOneWidget);
-        expect(find.text('1 sent'), findsOneWidget);
-      },
-    );
   });
 
   group('throttle de rechargement', () {
@@ -1003,99 +965,8 @@ void main() {
     });
   });
 
-  group('statistiques', () {
-    testWidgets('les trois périodes sont proposées, 30 jours par défaut', (
-      tester,
-    ) async {
-      await _pump(tester);
-
-      expect(find.text('7 jours'), findsOneWidget);
-      expect(find.text('30 jours'), findsOneWidget);
-      expect(find.text('12 mois'), findsOneWidget);
-    });
-
-    testWidgets('changer de période recharge le résumé', (tester) async {
-      await _pump(tester);
-
-      await tester.ensureVisible(find.text('12 mois'));
-      await tester.tap(find.text('12 mois'));
-      await tester.pump();
-
-      // La sélection est reflétée dans le cubit de période.
-      final context = tester.element(find.text('12 mois'));
-      expect(
-        BlocProvider.of<StatsPeriodCubit>(context).state,
-        StatsPeriod.twelveMonths,
-      );
-    });
-
-    testWidgets('les quatre métriques sont affichées', (tester) async {
-      await _pump(tester);
-
-      expect(find.text('Revenus'), findsOneWidget);
-      expect(find.text('Kg vendus'), findsOneWidget);
-      expect(find.text('Trajets'), findsOneWidget);
-      expect(find.text('Envois'), findsOneWidget);
-    });
-
-    testWidgets(
-      'la tuile Revenus est préfixée de « ≈ » quand le total est converti',
-      (tester) async {
-        await _pump(
-          tester,
-          summary: const TripsSummaryModel(
-            activeTrips: 1,
-            kgSold: 16,
-            revenue: 1418.7,
-            revenueCurrency: 'EUR',
-            revenueConverted: true,
-          ),
-        );
-
-        expect(find.textContaining('≈ '), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'la tuile Revenus est formatée dans la devise annoncée par le backend',
-      (tester) async {
-        // Le cache serveur n'est pas évincé au changement de devise : quand
-        // le backend dit XOF, la tuile affiche des F CFA, quelle que soit la
-        // devise active locale (aucune ici, donc repli EUR si on l'ignorait).
-        await _pump(
-          tester,
-          summary: const TripsSummaryModel(
-            activeTrips: 1,
-            kgSold: 16,
-            revenue: 120000,
-            revenueCurrency: 'XOF',
-            revenueConverted: false,
-          ),
-        );
-
-        expect(find.textContaining('F CFA'), findsOneWidget);
-        expect(find.textContaining('€'), findsNothing);
-      },
-    );
-
-    testWidgets('la tuile Revenus n\'a pas de « ≈ » sans conversion', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        summary: const TripsSummaryModel(
-          activeTrips: 1,
-          kgSold: 16,
-          revenue: 1030,
-          revenueCurrency: 'EUR',
-          revenueConverted: false,
-        ),
-      );
-
-      expect(find.textContaining('≈'), findsNothing);
-    });
-
-    testWidgets('la section est masquée tant que tout est à zéro', (
+  group('tout à zéro', () {
+    testWidgets('les tuiles principales deviennent des invitations', (
       tester,
     ) async {
       await _pump(
@@ -1110,10 +981,6 @@ void main() {
         ),
       );
 
-      // « Revenus 0 € » n'apprend rien à un nouvel utilisateur : la section
-      // n'apparaît qu'à la première activité.
-      expect(find.text('Statistiques'), findsNothing);
-      expect(find.text('Revenus'), findsNothing);
       // Les deux tuiles principales à zéro deviennent des invitations : le
       // rôle plutôt qu'un « 0 », et leur bouton reste là.
       expect(find.text('Je voyage'), findsOneWidget);
@@ -1126,127 +993,12 @@ void main() {
       expect(find.byKey(const Key('activity-tile-badge')), findsNothing);
     });
 
-    testWidgets('taper Revenus ouvre la feuille des revenus', (tester) async {
+    testWidgets('les statistiques ne sont plus dans le hub', (tester) async {
       await _pump(tester);
 
-      await tester.ensureVisible(find.text('Revenus'));
-      await tester.tap(find.text('Revenus'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(RevenueDetailsSheet), findsOneWidget);
-      expect(find.text('30 derniers jours'), findsOneWidget);
-    });
-
-    testWidgets('taper Kg vendus ouvre la feuille des kg', (tester) async {
-      await _pump(tester);
-
-      await tester.ensureVisible(find.text('Kg vendus'));
-      await tester.tap(find.text('Kg vendus'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(KgSoldSheet), findsOneWidget);
-    });
-
-    testWidgets('un trajet choisi dans la feuille Kg ouvre sa fiche', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        kgSold: KgSoldModel(
-          period: '30d',
-          totalKg: 4,
-          parcels: 1,
-          trips: [
-            KgSoldTripModel(
-              tripId: 't1',
-              departureCity: 'Paris',
-              arrivalCity: 'Dakar',
-              date: DateTime(2026, 9, 12),
-              parcels: 1,
-              kg: 4,
-            ),
-          ],
-        ),
-      );
-
-      await tester.ensureVisible(find.text('Kg vendus'));
-      await tester.tap(find.text('Kg vendus'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('kg-trip-t1')));
-      await tester.pumpAndSettle();
-
-      expect(visitedUris, contains('/announcements/t1/trip'));
-    });
-
-    testWidgets('taper Trajets ouvre Mes trajets filtré sur les terminés', (
-      tester,
-    ) async {
-      await _pump(tester);
-
-      await tester.ensureVisible(find.text('Trajets'));
-      await tester.tap(find.text('Trajets'));
-      await tester.pumpAndSettle();
-
-      expect(visitedUris, contains('/announcements/trips?filter=completed'));
-    });
-
-    testWidgets('taper Envois ouvre Mes colis filtré sur les livrés', (
-      tester,
-    ) async {
-      await _pump(tester);
-
-      await tester.ensureVisible(find.text('Envois'));
-      await tester.tap(find.text('Envois'));
-      await tester.pumpAndSettle();
-
-      expect(visitedUris, contains('/envois?status=delivered'));
-    });
-
-    testWidgets(
-      'sans tripsPublished/parcelsSent (ancien backend) : « - », jamais de tiret cadratin',
-      (tester) async {
-        await _pump(tester);
-
-        expect(find.text('-'), findsNWidgets(2));
-        expect(find.textContaining('—'), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'un seul trajet publié / un seul colis envoyé : accord au singulier',
-      (tester) async {
-        await _pump(
-          tester,
-          summary: const TripsSummaryModel(
-            activeTrips: 1,
-            kgSold: 1,
-            revenue: 10,
-            tripsPublished: 1,
-            parcelsSent: 1,
-          ),
-        );
-
-        expect(find.text('1 publié'), findsOneWidget);
-        expect(find.text('1 envoyé'), findsOneWidget);
-      },
-    );
-
-    testWidgets('plusieurs trajets publiés / colis envoyés : pluriel', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        summary: const TripsSummaryModel(
-          activeTrips: 1,
-          kgSold: 1,
-          revenue: 10,
-          tripsPublished: 3,
-          parcelsSent: 4,
-        ),
-      );
-
-      expect(find.text('3 publiés'), findsOneWidget);
-      expect(find.text('4 envoyés'), findsOneWidget);
+      expect(find.text('Statistiques'), findsNothing);
+      expect(find.text('Revenus'), findsNothing);
+      expect(find.text('30 jours'), findsNothing);
     });
   });
 
@@ -1646,6 +1398,207 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => _toolsRepoUnderTest.getToolsCompletion()).called(1);
+    });
+  });
+
+  group('menu ☰ : Mes statistiques', () {
+    testWidgets('l\'entrée ouvre l\'écran des statistiques et se trace', (
+      tester,
+    ) async {
+      await _pump(tester);
+      await tester.tap(find.byKey(const Key('hub-menu-button')));
+      await tester.pumpAndSettle();
+
+      final entry = find.byKey(const Key('menu-item-stats'));
+      await tester.ensureVisible(entry);
+      expect(
+        find.descendant(of: entry, matching: find.text('Mes statistiques')),
+        findsOneWidget,
+      );
+      await tester.tap(entry, warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(visited, contains('/announcements/stats'));
+      verify(
+        () => getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.activitesHubStatsMenuOpened,
+        ),
+      ).called(1);
+    });
+  });
+
+  group('bloc Billets d\'avion', () {
+    late MockFlightsRepository flights;
+
+    FlightDeal deal(int discount, {String path = 'd'}) => FlightDeal(
+      offer: offer(path, departureAt: DateTime(2026, 11, 4)),
+      medianPrice: 600,
+      discountPercent: discount,
+    );
+
+    setUp(() {
+      flights = MockFlightsRepository();
+      getIt.registerFactory<FlightDealsCubit>(() => FlightDealsCubit(flights));
+      flightsExtra = null;
+    });
+
+    tearDown(resetFlightsFlagForTest);
+
+    void dealsAnswer(List<FlightDeal> deals) =>
+        when(() => flights.deals()).thenAnswer(
+          (_) async =>
+              FlightDeals(currency: 'EUR', personalized: true, deals: deals),
+        );
+
+    testWidgets('flag éteint : aucun bloc, aucun appel', (tester) async {
+      dealsAnswer([deal(48)]);
+      await _pump(tester);
+
+      expect(find.byKey(const Key('hub-flights-section')), findsNothing);
+      expect(find.text('Billets d\'avion'), findsNothing);
+      verifyNever(() => flights.deals());
+    });
+
+    testWidgets('flag allumé : titre, Tout voir, bons plans puis bouton', (
+      tester,
+    ) async {
+      setFlightsEnabled(true);
+      dealsAnswer([deal(48), deal(21, path: 'e')]);
+      await _pump(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Billets d\'avion'), findsOneWidget);
+      expect(find.text('Tout voir'), findsOneWidget);
+      expect(find.byKey(const Key('hub-flight-deal-0')), findsOneWidget);
+      expect(find.byKey(const Key('hub-flight-deal-1')), findsOneWidget);
+      expect(find.text('Rechercher un vol'), findsOneWidget);
+      // À la place de la section Statistiques : juste après la grille.
+      final grid = tester.getRect(find.byKey(const Key('hub-tile-requests')));
+      final title = tester.getRect(find.text('Billets d\'avion'));
+      final tools = tester.getRect(find.text('Outils'));
+      expect(title.top, greaterThan(grid.bottom));
+      expect(title.bottom, lessThan(tools.top));
+    });
+
+    testWidgets('squelette pendant le chargement des bons plans', (
+      tester,
+    ) async {
+      setFlightsEnabled(true);
+      final pending = Completer<FlightDeals>();
+      when(() => flights.deals()).thenAnswer((_) => pending.future);
+      await _pump(tester);
+
+      expect(
+        find.byKey(const Key('hub-flights-deals-loading')),
+        findsOneWidget,
+      );
+      expect(find.byType(FlightDealMiniCardSkeleton), findsNWidgets(2));
+      pending.complete(
+        const FlightDeals(currency: 'EUR', personalized: false, deals: []),
+      );
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('aucun bon plan : seulement le titre et le bouton', (
+      tester,
+    ) async {
+      setFlightsEnabled(true);
+      dealsAnswer(const []);
+      await _pump(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Billets d\'avion'), findsOneWidget);
+      expect(find.byType(FlightDealMiniCard), findsNothing);
+      expect(find.byType(FlightDealMiniCardSkeleton), findsNothing);
+      expect(find.text('Rechercher un vol'), findsOneWidget);
+    });
+
+    testWidgets('bons plans en échec : le bloc reste avec son bouton', (
+      tester,
+    ) async {
+      setFlightsEnabled(true);
+      when(() => flights.deals()).thenThrow(Exception('down'));
+      await _pump(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FlightDealMiniCard), findsNothing);
+      expect(find.byKey(const Key('hub-flights-search')), findsOneWidget);
+    });
+
+    testWidgets('« Rechercher un vol » ouvre l\'écran Billets', (tester) async {
+      setFlightsEnabled(true);
+      dealsAnswer(const []);
+      await _pump(tester);
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('hub-flights-search')));
+      await tester.tap(find.byKey(const Key('hub-flights-search')));
+      await tester.pumpAndSettle();
+
+      expect(visited, contains('/announcements/flights'));
+      expect(flightsExtra, isNull);
+      verify(
+        () => getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.activitesHubFlightsSearchTapped,
+        ),
+      ).called(1);
+    });
+
+    testWidgets('« Tout voir » ouvre l\'écran Billets', (tester) async {
+      setFlightsEnabled(true);
+      dealsAnswer([deal(48)]);
+      await _pump(tester);
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('hub-flights-see-all')));
+      await tester.tap(find.byKey(const Key('hub-flights-see-all')));
+      await tester.pumpAndSettle();
+
+      expect(visited, contains('/announcements/flights'));
+      verify(
+        () => getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.activitesHubFlightsSeeAllTapped,
+        ),
+      ).called(1);
+    });
+
+    testWidgets('un bon plan touché ouvre Billets sur sa recherche', (
+      tester,
+    ) async {
+      setFlightsEnabled(true);
+      final touched = deal(48);
+      dealsAnswer([touched]);
+      await _pump(tester);
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('hub-flight-deal-0')));
+      await tester.tap(find.byKey(const Key('hub-flight-deal-0')));
+      await tester.pumpAndSettle();
+
+      expect(visited, contains('/announcements/flights'));
+      final launch = flightsExtra! as FlightsLaunch;
+      expect(launch.deal, touched);
+      expect(launch.personalized, isTrue);
+      verify(
+        () => getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.activitesHubFlightsDealOpened,
+          properties: {'discount_percent': 48},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('à 360 dp, le second billet dépasse pour inviter à défiler', (
+      tester,
+    ) async {
+      setFlightsEnabled(true);
+      dealsAnswer([deal(48), deal(21, path: 'e'), deal(12, path: 'f')]);
+      await _pump(tester, physicalSize: const Size(360, 1800));
+      await tester.pumpAndSettle();
+
+      final second = tester.getRect(find.byKey(const Key('hub-flight-deal-1')));
+      expect(second.left, lessThan(360));
+      expect(second.right, greaterThan(360));
+      expect(tester.takeException(), isNull);
     });
   });
 }

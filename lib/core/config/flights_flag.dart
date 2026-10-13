@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 
 /// Billets d'avion en affiliation : tant que le backend ne confirme pas
 /// `flights_enabled=true` (réglage plateforme piloté depuis le back-office),
-/// l'onglet Billets n'existe pas et la barre du bas reste celle d'avant
-/// (cinq onglets avec libellés). Repli sûr : masquer plutôt que proposer une
-/// fonction que le serveur refuserait (503 `flights-unavailable`).
+/// le bloc « Billets d'avion » du hub Activités est masqué et l'écran Billets
+/// (`/announcements/flights`, alias `/flights`) renvoie sur l'accueil. Repli
+/// sûr : masquer plutôt que proposer une fonction que le serveur refuserait
+/// (503 `flights-unavailable`). La barre d'onglets, elle, ne dépend plus du
+/// flag : cinq onglets avec libellés dans tous les cas.
 const bool kFlightsEnabledDefault = false;
 
 /// Attente maximale du flag par une route Billets ouverte au démarrage à

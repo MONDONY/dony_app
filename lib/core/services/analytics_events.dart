@@ -434,6 +434,19 @@ abstract final class AnalyticsEvents {
       'activites_hub_stats_trips_opened';
   static const activitesHubStatsParcelsOpened =
       'activites_hub_stats_parcels_opened';
+
+  /// Entrée « Mes statistiques » du menu ☰ d'Activités.
+  static const activitesHubStatsMenuOpened = 'activites_hub_stats_menu_opened';
+
+  /// Bloc « Billets d'avion » du hub Activités.
+  static const activitesHubFlightsSearchTapped =
+      'activites_hub_flights_search_tapped';
+  static const activitesHubFlightsSeeAllTapped =
+      'activites_hub_flights_see_all_tapped';
+
+  /// Bon plan touché dans le bloc (propriété `discount_percent`).
+  static const activitesHubFlightsDealOpened =
+      'activites_hub_flights_deal_opened';
   static const activitesHubSearchOpened = 'activites_hub_search_opened';
   static const activitesHubMenuOpened = 'activites_hub_menu_opened';
   static const activitesHubScanOpened = 'activites_hub_scan_opened';

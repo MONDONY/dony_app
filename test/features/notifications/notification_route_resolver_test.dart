@@ -460,8 +460,9 @@ void main() {
       },
     );
 
-    test('l\'onglet Billets est un onglet du shell', () {
-      expect(isShellTabRoute('/flights'), isTrue);
+    test('Billets n\'est plus un onglet du shell : il vit dans Activités', () {
+      expect(isShellTabRoute('/flights'), isFalse);
+      expect(isShellTabRoute('/announcements'), isTrue);
     });
   });
 

@@ -211,8 +211,8 @@ Future<void> _bootstrap() async {
   unawaited(_loadProEnabled());
 
   // Feature flag des billets d'avion (réglage plateforme flights_enabled) :
-  // éteint, l'onglet Billets n'existe pas et la barre du bas reste celle
-  // d'avant. Repli sûr sur false tant que le flag n'est pas chargé.
+  // éteint, le bloc « Billets d'avion » d'Activités est masqué et l'écran
+  // Billets inaccessible. Repli sûr sur false tant que le flag n'est pas chargé.
   unawaited(_loadFlightsEnabled());
 }
 

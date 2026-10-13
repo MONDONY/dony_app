@@ -9199,9 +9199,17 @@
   "@activitySectionCurrent": {
     "description": "Titre de la section grille d'activité (activites_hub_screen.dart)."
   },
-  "activitySectionStats": "Statistiques",
-  "@activitySectionStats": {
-    "description": "Titre de la section statistiques (activites_hub_screen.dart)."
+  "activityStatsTitle": "Mes statistiques",
+  "@activityStatsTitle": {
+    "description": "Entrée du menu ☰ d'Activités et titre de l'écran des statistiques (revenus, kg vendus, trajets, colis)."
+  },
+  "activityFlightsSectionTitle": "Billets d'avion",
+  "@activityFlightsSectionTitle": {
+    "description": "Titre du bloc billets d'avion du hub Activités (bons plans + bouton de recherche)."
+  },
+  "activityFlightsSeeAll": "Tout voir",
+  "@activityFlightsSeeAll": {
+    "description": "Lien du bloc billets d'avion du hub Activités, ouvre l'écran Billets."
   },
   "activitySectionTools": "Outils",
   "@activitySectionTools": {
@@ -20084,8 +20092,6 @@
   "@suiviPhotoLost": {"description": "Onglet Suivi : une étape de la file hors ligne est partie sans sa photo, dont le fichier local a disparu (cache purgé, FLUTTER-MJ). step = libellé d'étape traduit.", "placeholders": {"step": {"type": "String"}}},
   "suiviPhotoLostDismiss": "Fermer le message sur la photo perdue",
   "@suiviPhotoLostDismiss": {"description": "Libellé d'accessibilité du bouton qui ferme le message de photo perdue (onglet Suivi)"},
-  "shellTabTickets": "Billets",
-  "@shellTabTickets": {"description": "Nom de l'onglet Billets de la barre du bas, lu par le lecteur d'écran et affiché en infobulle (barre en icônes seules)."},
   "authRequiredFlightAlertSubtitle": "Recevez une alerte quand le prix baisse",
   "@authRequiredFlightAlertSubtitle": {"description": "Feuille compte requis : un visiteur veut créer ou voir des alertes prix de billets."},
   "authRequiredFlightAlertBody": "Les alertes prix sont liées à votre compte : créez-le en une minute pour être prévenu dès qu'un billet passe sous votre prix.",

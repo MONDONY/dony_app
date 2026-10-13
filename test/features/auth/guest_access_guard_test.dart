@@ -27,12 +27,8 @@ UserModel _makeUser() => const UserModel(
 
 void main() {
   group('GuestAccessGuard', () {
-    test('autorise les onglets Recherche et Billets pour un invité', () {
+    test('autorise uniquement l’onglet recherche pour un invité', () {
       expect(GuestAccessGuard.isAllowedShellTab(0), isTrue);
-      expect(GuestAccessGuard.isAllowedShellTab(5), isTrue);
-      expect(GuestAccessGuard.isPublicGuestPath('/flights'), isTrue);
-      // Les alertes prix exigent un compte : jamais ouvertes à un visiteur.
-      expect(GuestAccessGuard.isPublicGuestPath('/flights/alerts'), isFalse);
       expect(GuestAccessGuard.isAllowedShellTab(1), isFalse);
       expect(GuestAccessGuard.isAllowedShellTab(2), isFalse);
       expect(GuestAccessGuard.isAllowedShellTab(3), isFalse);

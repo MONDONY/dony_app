@@ -1,11 +1,9 @@
 import 'dart:async';
 
 import 'package:dony/app/main_shell.dart';
-import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -15,21 +13,17 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
-import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
-import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/presentation/activity_labels.dart';
 import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/activites_flights_section.dart';
 import 'package:dony/features/matching/presentation/widgets/activites_menu_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
-import 'package:dony/features/matching/presentation/widgets/kg_sold_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/revenue_details_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_key_presentation.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/features/matching/presentation/widgets/tools_completion_card.dart';
@@ -116,7 +110,6 @@ class ActivitesHubScreen extends StatelessWidget {
               getIt<BidBloc>()
                 ..myListStatuses = {...kEnvoisEnCours, ...kEnvoisAVenir},
         ),
-        BlocProvider(create: (_) => getIt<StatsPeriodCubit>()),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
         // Singleton partagé (volet « Envoyées » de l'écran Demandes) : sert à
         // allumer la pastille de la carte Demandes quand une demande envoyée
@@ -212,8 +205,9 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
 
   void _loadAll() {
     _lastLoadAt = DateTime.now();
-    final period = context.read<StatsPeriodCubit>().state;
-    unawaited(context.read<TripsSummaryCubit>().load(period: period));
+    // Seul le compteur de trajets actifs sert ici : la période par défaut
+    // suffit, les statistiques ont leur écran (menu ☰).
+    unawaited(context.read<TripsSummaryCubit>().load());
     context.read<TravelerBidsBloc>().add(
       const TravelerBidsRequested(force: true),
     );
@@ -363,222 +357,177 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     );
   }
 
-  /// Vrai dès qu'un compteur ou une statistique est non nul. Tant que tout est
-  /// à zéro, la section Statistiques est masquée : « Revenus 0 € » n'apprend
-  /// rien à un nouvel utilisateur et fait tableau de bord mort.
-  bool _hasAnyActivity(BuildContext context) {
-    final summary = context.watch<TripsSummaryCubit>().state.summary;
-    final bidState = context.watch<BidBloc>().state;
-    final travelerState = context.watch<TravelerBidsBloc>().state;
-    final negoState = context.watch<NegotiationListBloc>().state;
-
-    final demandes = travelerState is TravelerBidsLoaded
-        ? travelerState.pendingCount
-        : 0;
-
-    return (summary?.activeTrips ?? 0) > 0 ||
-        envoisActifs(bidState) > 0 ||
-        demandes > 0 ||
-        negoState.activeCount > 0 ||
-        (summary?.revenue ?? 0) > 0 ||
-        (summary?.kgSold ?? 0) > 0 ||
-        (summary?.tripsPublished ?? 0) > 0 ||
-        (summary?.parcelsSent ?? 0) > 0;
-  }
-
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    final summaryState = context.watch<TripsSummaryCubit>().state;
-    final period = context.watch<StatsPeriodCubit>().state;
     final toolsState = context.watch<ToolsCompletionCubit>().state;
     final alertsSummary = context.watch<CorridorAlertSummaryCubit>().state;
-    // Trois portes gardent la section visible en plus de l'activité détectée :
-    // le chargement (pas de flash pendant un reload), et une période non par
-    // défaut — sinon sélectionner « 7 jours » à zéro ferait disparaître les
-    // chips, seul moyen de revenir à « 30 jours » (cul-de-sac).
-    final showStats =
-        _hasAnyActivity(context) ||
-        summaryState.status == TripsSummaryStatus.loading ||
-        period != StatsPeriod.thirtyDays;
-
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: BlocListener<StatsPeriodCubit, StatsPeriod>(
-          listener: (context, period) {
-            _logEvent(AnalyticsEvents.activitesHubStatsPeriodChanged);
-            unawaited(context.read<TripsSummaryCubit>().load(period: period));
-          },
-          child: RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverPadding(
-                  // Aucune marge basse : la rangée de statistiques suit
-                  // immédiatement, à la distance donnée par le SizedBox final.
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.md,
-                    DonySpacing.lg,
-                    0,
-                  ),
-                  sliver: SliverList.list(
-                    children: [
-                      _Header(onMenu: _openMenu),
-                      if (_showIntro) ...[
-                        const SizedBox(height: DonySpacing.md),
-                        _IntroCard(onDismiss: _dismissIntro),
-                      ],
-                      const SizedBox(height: DonySpacing.md),
-                      const ContextualTutorialCard(
-                        context: TutorialContext.activities,
-                      ),
-                      const SizedBox(height: DonySpacing.base),
-                      Text(l.activitySectionCurrent, style: tt.titleMedium),
-                      const SizedBox(height: DonySpacing.md),
-                      const _ActivityGrid(),
-                      if (showStats) ...[
-                        const SizedBox(height: DonySpacing.xl),
-                        Text(l.activitySectionStats, style: tt.titleMedium),
-                        const SizedBox(height: DonySpacing.md),
-                        const _PeriodChips(),
-                        const SizedBox(height: DonySpacing.md),
-                      ],
-                    ],
-                  ),
+        child: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                // Aucune marge basse : le bloc « Billets d'avion » suit, il
+                // porte sa propre marge haute (et disparaît avec le flag).
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.md,
+                  DonySpacing.lg,
+                  0,
                 ),
-                if (showStats) const SliverToBoxAdapter(child: _StatsRow()),
-                SliverPadding(
-                  // Le shell monte cet écran avec extendBody: true — sans
-                  // cette réserve, les tuiles « Outils » passent sous la
-                  // barre d'onglets.
-                  padding: EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.xl,
-                    DonySpacing.lg,
-                    MainShell.navBarContentHeight +
-                        MediaQuery.paddingOf(context).bottom +
-                        DonySpacing.lg,
-                  ),
-                  sliver: SliverList.list(
-                    children: [
-                      Text(l.activitySectionTools, style: tt.titleMedium),
+                sliver: SliverList.list(
+                  children: [
+                    _Header(onMenu: _openMenu),
+                    if (_showIntro) ...[
                       const SizedBox(height: DonySpacing.md),
-                      if (toolsState.status == ToolsCompletionStatus.loaded &&
-                          toolsState.model != null) ...[
-                        ToolsCompletionCard(
-                          model: toolsState.model!,
-                          onCtaTap: _onToolCta,
-                        ),
-                        const SizedBox(height: DonySpacing.md),
-                      ],
-                      _TileRow(
-                        left: _alertsTile(cs, toolsState, alertsSummary),
-                        right: _OtherTile(
-                          iconName: 'bookmark',
-                          label: l.activityToolTitleTemplates,
-                          subtitle: l.activityToolSubtitleTemplates,
-                          color: cs.secondary,
-                          badge: _toolBadge(
-                            toolsState,
-                            ToolKey.tripTemplates,
-                            l.activityToolTitleTemplates,
-                          ),
-                          onTap: () => _openTool(
-                            AnalyticsEvents.activitesHubTemplatesOpened,
-                            '/trip-templates',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: DonySpacing.md),
-                      _TileRow(
-                        // La grille de prix vit ici, aux côtés des modèles de
-                        // trajet : ce sont les deux réglages qu'un voyageur
-                        // prépare avant de publier. Elle était rangée sous
-                        // « ARGENT » dans le profil, entre le solde et les
-                        // virements, alors qu'elle ne parle pas d'argent reçu
-                        // mais de tarifs proposés.
-                        left: _OtherTile(
-                          iconName: 'layout-grid',
-                          label: l.activityToolTitlePriceGrid,
-                          subtitle: l.activityToolSubtitlePriceGrid,
-                          color: cs.primary,
-                          badge: _toolBadge(
-                            toolsState,
-                            ToolKey.priceGrid,
-                            l.activityToolTitlePriceGrid,
-                          ),
-                          onTap: () => _openTool(
-                            AnalyticsEvents.activitesHubPriceGridOpened,
-                            '/profile/price-grid',
-                          ),
-                        ),
-                        right: _OtherTile(
-                          iconName: 'map-pin',
-                          label: l.activityToolTitleAddresses,
-                          subtitle: l.activityToolSubtitleAddresses,
-                          color: cs.secondary,
-                          badge: _toolBadge(
-                            toolsState,
-                            ToolKey.addresses,
-                            l.activityToolTitleAddresses,
-                          ),
-                          onTap: () => _openTool(
-                            AnalyticsEvents.activitesHubAddressesOpened,
-                            '/profile/addresses',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: DonySpacing.md),
-                      _TileRow(
-                        left: _OtherTile(
-                          iconName: 'contact',
-                          label: l.activityToolTitleRecipients,
-                          subtitle: l.activityToolSubtitleRecipients,
-                          color: cs.secondary,
-                          badge: _toolBadge(
-                            toolsState,
-                            ToolKey.recipients,
-                            l.activityToolTitleRecipients,
-                          ),
-                          onTap: () => _openTool(
-                            AnalyticsEvents.activitesHubRecipientsOpened,
-                            '/profile/recipients',
-                          ),
-                        ),
-                        right: _OtherTile(
-                          iconName: 'chart-line',
-                          label: l.activityHistoryTitle,
-                          subtitle: l.activityHistorySubtitle,
-                          color: cs.primary,
-                          onTap: () => _open(
-                            AnalyticsEvents.activitesHubHistoryOpened,
-                            '/profile/shipments/history',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: DonySpacing.md),
-                      _TileRow(
-                        left: _OtherTile(
-                          iconName: 'circle-help',
-                          label: l.activityHelpTitleHub,
-                          subtitle: l.activityHelpSubtitle,
-                          color: cs.primary,
-                          onTap: () => _open(
-                            AnalyticsEvents.activitesHubHelpOpened,
-                            '/profile/help/faq',
-                          ),
-                        ),
-                      ),
+                      _IntroCard(onDismiss: _dismissIntro),
                     ],
-                  ),
+                    const SizedBox(height: DonySpacing.md),
+                    const ContextualTutorialCard(
+                      context: TutorialContext.activities,
+                    ),
+                    const SizedBox(height: DonySpacing.base),
+                    Text(l.activitySectionCurrent, style: tt.titleMedium),
+                    const SizedBox(height: DonySpacing.md),
+                    const _ActivityGrid(),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              // Billets d'avion, à la place des statistiques (parties dans
+              // le menu ☰ › « Mes statistiques ») : carrousel bord à bord.
+              const SliverToBoxAdapter(child: ActivitesFlightsSection()),
+              SliverPadding(
+                // Le shell monte cet écran avec extendBody: true — sans
+                // cette réserve, les tuiles « Outils » passent sous la
+                // barre d'onglets.
+                padding: EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                  DonySpacing.lg,
+                  MainShell.navBarContentHeight +
+                      MediaQuery.paddingOf(context).bottom +
+                      DonySpacing.lg,
+                ),
+                sliver: SliverList.list(
+                  children: [
+                    Text(l.activitySectionTools, style: tt.titleMedium),
+                    const SizedBox(height: DonySpacing.md),
+                    if (toolsState.status == ToolsCompletionStatus.loaded &&
+                        toolsState.model != null) ...[
+                      ToolsCompletionCard(
+                        model: toolsState.model!,
+                        onCtaTap: _onToolCta,
+                      ),
+                      const SizedBox(height: DonySpacing.md),
+                    ],
+                    _TileRow(
+                      left: _alertsTile(cs, toolsState, alertsSummary),
+                      right: _OtherTile(
+                        iconName: 'bookmark',
+                        label: l.activityToolTitleTemplates,
+                        subtitle: l.activityToolSubtitleTemplates,
+                        color: cs.secondary,
+                        badge: _toolBadge(
+                          toolsState,
+                          ToolKey.tripTemplates,
+                          l.activityToolTitleTemplates,
+                        ),
+                        onTap: () => _openTool(
+                          AnalyticsEvents.activitesHubTemplatesOpened,
+                          '/trip-templates',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                    _TileRow(
+                      // La grille de prix vit ici, aux côtés des modèles de
+                      // trajet : ce sont les deux réglages qu'un voyageur
+                      // prépare avant de publier. Elle était rangée sous
+                      // « ARGENT » dans le profil, entre le solde et les
+                      // virements, alors qu'elle ne parle pas d'argent reçu
+                      // mais de tarifs proposés.
+                      left: _OtherTile(
+                        iconName: 'layout-grid',
+                        label: l.activityToolTitlePriceGrid,
+                        subtitle: l.activityToolSubtitlePriceGrid,
+                        color: cs.primary,
+                        badge: _toolBadge(
+                          toolsState,
+                          ToolKey.priceGrid,
+                          l.activityToolTitlePriceGrid,
+                        ),
+                        onTap: () => _openTool(
+                          AnalyticsEvents.activitesHubPriceGridOpened,
+                          '/profile/price-grid',
+                        ),
+                      ),
+                      right: _OtherTile(
+                        iconName: 'map-pin',
+                        label: l.activityToolTitleAddresses,
+                        subtitle: l.activityToolSubtitleAddresses,
+                        color: cs.secondary,
+                        badge: _toolBadge(
+                          toolsState,
+                          ToolKey.addresses,
+                          l.activityToolTitleAddresses,
+                        ),
+                        onTap: () => _openTool(
+                          AnalyticsEvents.activitesHubAddressesOpened,
+                          '/profile/addresses',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                    _TileRow(
+                      left: _OtherTile(
+                        iconName: 'contact',
+                        label: l.activityToolTitleRecipients,
+                        subtitle: l.activityToolSubtitleRecipients,
+                        color: cs.secondary,
+                        badge: _toolBadge(
+                          toolsState,
+                          ToolKey.recipients,
+                          l.activityToolTitleRecipients,
+                        ),
+                        onTap: () => _openTool(
+                          AnalyticsEvents.activitesHubRecipientsOpened,
+                          '/profile/recipients',
+                        ),
+                      ),
+                      right: _OtherTile(
+                        iconName: 'chart-line',
+                        label: l.activityHistoryTitle,
+                        subtitle: l.activityHistorySubtitle,
+                        color: cs.primary,
+                        onTap: () => _open(
+                          AnalyticsEvents.activitesHubHistoryOpened,
+                          '/profile/shipments/history',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                    _TileRow(
+                      left: _OtherTile(
+                        iconName: 'circle-help',
+                        label: l.activityHelpTitleHub,
+                        subtitle: l.activityHelpSubtitle,
+                        color: cs.primary,
+                        onTap: () => _open(
+                          AnalyticsEvents.activitesHubHelpOpened,
+                          '/profile/help/faq',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -899,152 +848,6 @@ class _TileRow extends StatelessWidget {
           Expanded(child: right ?? const SizedBox.shrink()),
         ],
       ),
-    );
-  }
-}
-
-// ── Statistiques ─────────────────────────────────────────────────────────────
-
-class _PeriodChips extends StatelessWidget {
-  const _PeriodChips();
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    return BlocBuilder<StatsPeriodCubit, StatsPeriod>(
-      builder: (context, selected) => Row(
-        children: [
-          for (final p in StatsPeriod.values) ...[
-            DonyChip(
-              key: Key('hub-period-${p.apiValue}'),
-              label: p.label(l),
-              selected: p == selected,
-              onTap: () => context.read<StatsPeriodCubit>().select(p),
-            ),
-            if (p != StatsPeriod.values.last)
-              const SizedBox(width: DonySpacing.sm),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _StatsRow extends StatelessWidget {
-  const _StatsRow();
-
-  /// « ≈ » dès que le backend dit avoir converti : la somme exacte, devise par
-  /// devise, vit dans la feuille ouverte au tap.
-  ///
-  /// Le montant est formaté dans la devise annoncée par le backend
-  /// (`revenueCurrency`), pas dans la devise active locale : le cache serveur
-  /// n'est pas évincé au changement de devise, et pendant quelques minutes
-  /// après un passage EUR → XOF le total arrive encore en euros. Repli sur la
-  /// devise active seulement quand le backend ne dit rien (ancien contrat).
-  String _money(TripsSummaryModel? summary) {
-    final value = formatPriceIn(
-      summary?.revenue ?? 0,
-      summary?.revenueCurrency ?? ActiveCurrency.current?.code,
-    );
-    return (summary?.isRevenueConverted ?? false) ? '≈ $value' : value;
-  }
-
-  String _weight(double v) => '${v.toStringAsFixed(v % 1 == 0 ? 0 : 1)} kg';
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    return BlocBuilder<TripsSummaryCubit, TripsSummaryState>(
-      builder: (context, state) {
-        final summary = state.summary;
-        final loading = state.status == TripsSummaryStatus.loading;
-        final period = context.read<StatsPeriodCubit>().state;
-
-        Future<void> openKgSold() async {
-          _logEvent(AnalyticsEvents.activitesHubStatsKgSoldOpened);
-          final tripId = await KgSoldSheet.show(context, period: period);
-          // Un modèle replié sur '' pousserait « /announcements//trip ».
-          if (tripId != null && tripId.isNotEmpty && context.mounted) {
-            unawaited(context.push('/announcements/$tripId/trip'));
-          }
-        }
-
-        // Même code couleur que les tuiles d'activité : bleu pour le voyage
-        // (kg, trajets), terracotta pour l'envoi ; le vert reste aux gains.
-        final tiles = <Widget>[
-          StatTile(
-            iconName: 'euro',
-            label: l.activityRevenueTitle,
-            value: _money(summary),
-            color: cs.success,
-            isLoading: loading,
-            onTap: () {
-              _logEvent(AnalyticsEvents.activitesHubStatsRevenuesOpened);
-              unawaited(
-                RevenueDetailsSheet.show(
-                  context,
-                  period: period,
-                  approximateTotal: (summary?.isRevenueConverted ?? false)
-                      ? _money(summary)
-                      : null,
-                ),
-              );
-            },
-          ),
-          StatTile(
-            iconName: 'scale',
-            label: l.activityKgSoldTitle,
-            value: _weight(summary?.kgSold ?? 0),
-            color: cs.primary,
-            isLoading: loading,
-            onTap: openKgSold,
-          ),
-          // Un backend antérieur ne renvoie pas ces deux compteurs. Afficher 0
-          // laisserait croire à une absence d'activité : on montre « - »
-          // (tiret court, jamais de tiret cadratin), comme les tuiles dont le
-          // compteur est indisponible.
-          StatTile(
-            iconName: 'plane',
-            label: l.activityStatTripsLabel,
-            value: summary?.tripsPublished == null
-                ? '-'
-                : l.activityStatTripsPublished(summary!.tripsPublished!),
-            color: cs.primary,
-            isLoading: loading,
-            onTap: () => _openRoute(
-              context,
-              AnalyticsEvents.activitesHubStatsTripsOpened,
-              '/announcements/trips?filter=completed',
-            ),
-          ),
-          StatTile(
-            iconName: 'package',
-            label: l.activityStatParcelsLabel,
-            value: summary?.parcelsSent == null
-                ? '-'
-                : l.activityStatParcelsSent(summary!.parcelsSent!),
-            color: cs.secondary,
-            isLoading: loading,
-            onTap: () => _openRoute(
-              context,
-              AnalyticsEvents.activitesHubStatsParcelsOpened,
-              '/envois?status=delivered',
-            ),
-          ),
-        ];
-
-        return SizedBox(
-          height: 132,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
-            itemCount: tiles.length,
-            separatorBuilder: (_, _) => const SizedBox(width: DonySpacing.md),
-            itemBuilder: (_, i) => tiles[i],
-          ),
-        );
-      },
     );
   }
 }
