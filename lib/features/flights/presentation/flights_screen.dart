@@ -27,6 +27,7 @@ import 'package:dony/features/flights/presentation/widgets/flight_search_form.da
 import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -82,30 +83,35 @@ class _FlightsView extends StatelessWidget {
     return BlocListener<FlightLinkCubit, FlightLinkState>(
       listenWhen: (a, b) => b.failures > a.failures,
       listener: (context, state) => ErrorPresenter.show(context, state.error),
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: BlocBuilder<FlightSearchCubit, FlightSearchState>(
-          buildWhen: (a, b) => a.status != b.status,
-          builder: (context, state) => AnimatedSwitcher(
-            duration: DonyDuration.base,
-            switchInCurve: DonyCurve.enter,
-            switchOutCurve: DonyCurve.exit,
-            child: switch (state.status) {
-              FlightSearchStatus.editing => const SafeArea(
-                key: ValueKey('form'),
-                bottom: false,
-                child: _FormView(),
-              ),
-              FlightSearchStatus.loading => _Loading(
-                key: const ValueKey('loading'),
-                state: state,
-              ),
-              _ => const SafeArea(
-                key: ValueKey('results'),
-                bottom: false,
-                child: _ResultsView(),
-              ),
-            },
+      // Fond clair du thème : sans cette région, les icônes blanches posées
+      // par l'écran d'attente (fond nuit) restaient sur les résultats.
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: FlightStatusBar.of(context),
+        child: Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: BlocBuilder<FlightSearchCubit, FlightSearchState>(
+            buildWhen: (a, b) => a.status != b.status,
+            builder: (context, state) => AnimatedSwitcher(
+              duration: DonyDuration.base,
+              switchInCurve: DonyCurve.enter,
+              switchOutCurve: DonyCurve.exit,
+              child: switch (state.status) {
+                FlightSearchStatus.editing => const SafeArea(
+                  key: ValueKey('form'),
+                  bottom: false,
+                  child: _FormView(),
+                ),
+                FlightSearchStatus.loading => _Loading(
+                  key: const ValueKey('loading'),
+                  state: state,
+                ),
+                _ => const SafeArea(
+                  key: ValueKey('results'),
+                  bottom: false,
+                  child: _ResultsView(),
+                ),
+              },
+            ),
           ),
         ),
       ),
@@ -172,7 +178,9 @@ class _FormView extends StatelessWidget {
 
     return ListView(
       key: const Key('flights-form'),
-      padding: const EdgeInsets.only(bottom: DonySpacing.huge),
+      padding: EdgeInsets.only(
+        bottom: flightNavBarReserve(context) + DonySpacing.huge,
+      ),
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -525,6 +533,8 @@ class _ResultsView extends StatelessWidget {
         final fastest = summaries[FlightResultsTab.fastest]?.offer;
         final facets = FlightFacets.of(offers);
         final searchPath = state.result?.searchPath;
+        // Vols à quelques jours des dates demandées : bandeau et dates.
+        final nearby = state.result?.nearbyDates ?? false;
 
         Widget card(FlightOffer offer) {
           FlightOfferBadge? badge;
@@ -539,6 +549,9 @@ class _ResultsView extends StatelessWidget {
               offer: offer,
               badge: badge,
               opening: opening,
+              showDates: nearby,
+              requestedDeparture: q.departure,
+              requestedReturn: q.returnDate,
               onOpen: () =>
                   context.read<FlightLinkCubit>().open(offer, source: 'search'),
             ),
@@ -559,6 +572,11 @@ class _ResultsView extends StatelessWidget {
             );
 
         final items = <Widget>[
+          if (nearby)
+            FlightNearbyDatesNotice(
+              key: const Key('flights-nearby-dates'),
+              days: state.result!.nearbyDaysWindow,
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
               DonySpacing.xs,
@@ -610,11 +628,13 @@ class _ResultsView extends StatelessWidget {
                 Expanded(
                   child: ListView.separated(
                     key: const Key('flights-results'),
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       DonySpacing.md,
                       0,
                       DonySpacing.md,
-                      DonySpacing.huge + DonySpacing.xxl,
+                      flightNavBarReserve(context) +
+                          DonySpacing.huge +
+                          DonySpacing.xxl,
                     ),
                     itemCount: items.length,
                     separatorBuilder: (_, i) => SizedBox(
@@ -628,7 +648,7 @@ class _ResultsView extends StatelessWidget {
             Positioned(
               left: 0,
               right: 0,
-              bottom: DonySpacing.base,
+              bottom: flightNavBarReserve(context) + DonySpacing.base,
               child: Center(
                 child: FlightPillButton(
                   key: const Key('flights-alert-fab'),

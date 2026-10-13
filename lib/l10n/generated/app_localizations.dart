@@ -30812,6 +30812,12 @@ abstract class AppLocalizations {
   /// **'Aucun prix récent pour ce trajet. Essayez une autre ville de départ ou tout le mois.'**
   String get flightsNoFlightsBody;
 
+  /// Bandeau des résultats quand le back renvoie des vols à quelques jours des dates demandées.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de prix exact pour ces dates. Voici des vols à {days, plural, =1{1 jour près} other{{days} jours près}}.'**
+  String flightsNearbyDatesNotice(int days);
+
   /// Suggestions de l'écran sans résultat.
   ///
   /// In fr, this message translates to:
@@ -31249,6 +31255,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous pouvez encore vous appeler pendant 48 h après l\'annulation.'**
   String get bidDetailCancelledContactWindowHint;
+
+  /// Label du champ de contre-offre du voyageur, saisie en net (FLUTTER-NS, bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que vous recevrez ({symbol})'**
+  String negotiationThreadCounterNetAmountLabel(String symbol);
+
+  /// Aperçu sous la saisie en net du voyageur : brut calculé payé par l'expéditeur, commission incluse (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur paiera {amount}'**
+  String negotiationThreadCounterSenderWillPay(String amount);
+
+  /// Erreur 422 counter-amount-ambiguous : contre-offre de trajet portant à la fois le brut et le net (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant à préciser'**
+  String get errorCounterAmountAmbiguousTitle;
+
+  /// Erreur 422 counter-amount-ambiguous (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre contre-proposition n\'a pas pu être lue. Saisissez à nouveau le montant.'**
+  String get errorCounterAmountAmbiguousMessage;
+
+  /// Erreur 422 counter-net-traveler-only : un expéditeur a envoyé un net (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant non accepté'**
+  String get errorCounterNetTravelerOnlyTitle;
+
+  /// Erreur 422 counter-net-traveler-only (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposez le prix total que vous paierez, frais Yadony inclus.'**
+  String get errorCounterNetTravelerOnlyMessage;
+
+  /// Erreur 422 counter-same-amount : contre-offre identique à la dernière proposition (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Même montant'**
+  String get errorCounterSameAmountTitle;
+
+  /// Erreur 422 counter-same-amount (FLUTTER-NS)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce montant est identique à la dernière proposition : acceptez-la ou changez le prix.'**
+  String get errorCounterSameAmountMessage;
+
+  /// Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et c'est à lui de répondre (FLUTTER-NZ)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre tour'**
+  String get requestMyNegotiationYourTurn;
+
+  /// Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et attend la réponse de l'expéditeur (FLUTTER-NZ)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition en attente'**
+  String get requestMyNegotiationPending;
 }
 
 class _AppLocalizationsDelegate

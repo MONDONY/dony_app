@@ -1,6 +1,7 @@
 import 'package:dony/features/flights/presentation/widgets/flight_loading_view.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
@@ -88,6 +89,14 @@ void main() {
       ),
     );
     expect(rotation.turns.value, 0);
+
+    // Fond nuit : icônes claires, barre transparente, quel que soit le thème.
+    final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+      find.byWidgetPredicate((w) => w is AnnotatedRegion<SystemUiOverlayStyle>),
+    );
+    expect(region.value.statusBarIconBrightness, Brightness.light);
+    expect(region.value.statusBarBrightness, Brightness.dark);
+    expect(region.value.statusBarColor, Colors.transparent);
   });
 
   testWidgets('en anglais', (tester) async {

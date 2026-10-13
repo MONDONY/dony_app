@@ -20,6 +20,7 @@ import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/bid_negotiation_pricing.dart';
 import 'package:dony/features/matching/presentation/activity_refresh.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_negotiation_parcel_sheet.dart';
@@ -743,6 +744,11 @@ class _MessagesTimeline extends StatelessWidget {
               final mine = _isMine(m);
               final isLast = i == messages.length - 1;
               // Dernière offre reçue, à traiter : c'est à moi de jouer.
+              // Le voyageur lit son net dans chaque bulle (FLUTTER-NS) ; repli
+              // sur le brut avec un serveur antérieur ou côté expéditeur.
+              final amount = negotiation.isTravelerView
+                  ? (m.proposedNetEur ?? m.proposedGrossEur)
+                  : m.proposedGrossEur;
               final highlight =
                   isLast &&
                   !mine &&
@@ -755,12 +761,9 @@ class _MessagesTimeline extends StatelessWidget {
                     kindLabel: _kindLabel(l, m.kind),
                     mine: mine,
                     highlight: highlight,
-                    priceText: m.proposedGrossEur == null
+                    priceText: amount == null
                         ? null
-                        : formatPriceIn(
-                            m.proposedGrossEur!,
-                            negotiation.currency,
-                          ),
+                        : formatPriceIn(amount, negotiation.currency),
                     body: m.body,
                     sentAt: m.createdAt?.toLocal(),
                   )
@@ -1351,7 +1354,14 @@ abstract final class CounterProposalSheet {
       child: _CounterProposalForm(
         bloc: bloc,
         bidId: bidId,
-        initialAmount: negotiation.proposedGrossEur,
+        // Voyageur et taux connus : saisie du NET qu'il touchera, avec un
+        // aperçu du brut payé par l'expéditeur (FLUTTER-NS). Sinon, saisie
+        // du brut comme avant (expéditeur, serveur antérieur).
+        netRate: negotiation.counterInNet ? negotiation.commissionRate : null,
+        initialAmount: negotiation.counterInNet
+            ? (negotiation.netEur ?? negotiation.proposedGrossEur)
+            : negotiation.proposedGrossEur,
+        currentGross: negotiation.proposedGrossEur,
         currencyCode: negotiation.currency,
         onSubmitReady: (fn) => WidgetsBinding.instance.addPostFrameCallback(
           (_) => submitNotifier.value = fn,
@@ -1366,13 +1376,22 @@ class _CounterProposalForm extends StatefulWidget {
     required this.bloc,
     required this.bidId,
     required this.initialAmount,
+    required this.currentGross,
     required this.currencyCode,
     required this.onSubmitReady,
+    this.netRate,
   });
 
   final BidNegotiationBloc bloc;
   final String bidId;
   final double initialAmount;
+
+  /// Brut actuellement sur la table : le serveur refuse une contre-offre dont
+  /// le brut ne change pas (`counter-same-amount`), même saisie en net.
+  final double currentGross;
+
+  /// Taux du fil quand le voyageur saisit son net ; nul pour une saisie brute.
+  final double? netRate;
   final String currencyCode;
   final void Function(VoidCallback?) onSubmitReady;
 
@@ -1404,11 +1423,26 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
 
   double? _read() => parsePriceInput(_amountCtrl.text);
 
+  bool get _inNet => widget.netRate != null;
+
+  /// Brut qui partira pour la saisie courante : la saisie elle-même en mode
+  /// brut, l'aperçu calculé depuis le net sinon.
+  double? _grossOf(double? amount) {
+    if (amount == null) return null;
+    final rate = widget.netRate;
+    if (rate == null) return amount;
+    return grossForNet(amount, rate, widget.currencyCode);
+  }
+
   /// Montant inchangé : la contre-offre partait au prix d'en face pendant que
-  /// le vrai prix était tapé dans le message (FLUTTER-MK).
+  /// le vrai prix était tapé dans le message (FLUTTER-MK). Jugé sur le brut,
+  /// comme le serveur, et sur la saisie : un net retapé à l'identique aussi.
   bool get _unchanged {
     final amount = _read();
-    return amount != null && (amount - widget.initialAmount).abs() < 0.01;
+    if (amount == null) return false;
+    if ((amount - widget.initialAmount).abs() < 0.01) return true;
+    final gross = _grossOf(amount);
+    return gross != null && (gross - widget.currentGross).abs() < 0.005;
   }
 
   void _validate() {
@@ -1425,7 +1459,8 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
     widget.bloc.add(
       BidNegotiationCounterRequested(
         widget.bidId,
-        proposedTotalEur: amount,
+        proposedTotalEur: _inNet ? null : amount,
+        proposedNetEur: _inNet ? amount : null,
         body: body.isEmpty ? null : body,
       ),
     );
@@ -1441,12 +1476,37 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
         DonyTextField(
           key: const Key('nego-counter-amount'),
           controller: _amountCtrl,
-          label: l.negotiationThreadCounterAmountLabel(
-            SupportedCurrency.symbolOf(widget.currencyCode),
-          ),
+          label: _inNet
+              ? l.negotiationThreadCounterNetAmountLabel(
+                  SupportedCurrency.symbolOf(widget.currencyCode),
+                )
+              : l.negotiationThreadCounterAmountLabel(
+                  SupportedCurrency.symbolOf(widget.currencyCode),
+                ),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           requiredLabel: true,
         ),
+        if (_inNet)
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _amountCtrl,
+            builder: (context, _, _) {
+              final gross = _grossOf(_read());
+              if (gross == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: DonySpacing.xs),
+                child: Text(
+                  l.negotiationThreadCounterSenderWillPay(
+                    formatPriceIn(gross, widget.currencyCode),
+                  ),
+                  key: const Key('nego-counter-gross-preview'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              );
+            },
+          ),
         ValueListenableBuilder<TextEditingValue>(
           valueListenable: _amountCtrl,
           builder: (context, _, _) => _unchanged

@@ -80,19 +80,29 @@ class BidNegotiationProposeRequested extends BidNegotiationEvent {
 }
 
 /// Contre-offre de l'une des deux parties.
+/// Contre-offre : exactement un des deux montants. Le brut
+/// ([proposedTotalEur]) pour l'expéditeur, ou pour un voyageur face à un
+/// serveur antérieur ; le net ([proposedNetEur]) pour le voyageur quand le fil
+/// sert son taux (FLUTTER-NS). Le serveur refuse les deux à la fois
+/// (`counter-amount-ambiguous`).
 class BidNegotiationCounterRequested extends BidNegotiationEvent {
   final String bidId;
-  final double proposedTotalEur;
+  final double? proposedTotalEur;
+  final double? proposedNetEur;
   final String? body;
 
   const BidNegotiationCounterRequested(
     this.bidId, {
-    required this.proposedTotalEur,
+    this.proposedTotalEur,
+    this.proposedNetEur,
     this.body,
-  });
+  }) : assert(
+         (proposedTotalEur == null) != (proposedNetEur == null),
+         'Exactly one amount: gross or net',
+       );
 
   @override
-  List<Object?> get props => [bidId, proposedTotalEur, body];
+  List<Object?> get props => [bidId, proposedTotalEur, proposedNetEur, body];
 }
 
 class BidNegotiationAcceptRequested extends BidNegotiationEvent {

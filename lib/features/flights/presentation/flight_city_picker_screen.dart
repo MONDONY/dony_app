@@ -6,6 +6,7 @@ import 'package:dony/features/flights/bloc/flight_places_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_route_picker_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -130,7 +131,7 @@ class _PickerViewState extends State<_PickerView> {
           if (!didPop) _close(context);
         },
         child: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle.light,
+          value: FlightStatusBar.night(context),
           child: Scaffold(
             backgroundColor: _night,
             resizeToAvoidBottomInset: true,

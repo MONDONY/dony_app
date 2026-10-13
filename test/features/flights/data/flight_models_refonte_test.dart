@@ -108,6 +108,52 @@ void main() {
     });
   });
 
+  group('FlightSearchResult.nearbyDates', () {
+    test('absent (back NON_NULL ou ancien) : faux, écart de 3 jours', () {
+      final r = FlightSearchResult.fromJson(const {});
+      expect(r.nearbyDates, isFalse);
+      expect(r.nearbyDaysWindow, 3);
+    });
+
+    test('vrai avec l\'écart du back, en nombre ou en chaîne', () {
+      final r = FlightSearchResult.fromJson(const {
+        'nearbyDates': true,
+        'nearbyDaysWindow': 2,
+      });
+      expect(r.nearbyDates, isTrue);
+      expect(r.nearbyDaysWindow, 2);
+      expect(
+        FlightSearchResult.fromJson(const {
+          'nearbyDates': true,
+          'nearbyDaysWindow': ' 5 ',
+        }).nearbyDaysWindow,
+        5,
+      );
+      expect(r, isNot(FlightSearchResult.fromJson(const {})));
+    });
+
+    test('valeurs inattendues : tolérées', () {
+      final r = FlightSearchResult.fromJson(const {
+        'nearbyDates': 'true',
+        'nearbyDaysWindow': 0,
+      });
+      expect(r.nearbyDates, isFalse);
+      expect(r.nearbyDaysWindow, 3);
+      expect(
+        FlightSearchResult.fromJson(const {
+          'nearbyDaysWindow': 'trois',
+        }).nearbyDaysWindow,
+        3,
+      );
+      expect(
+        FlightSearchResult.fromJson(const {
+          'nearbyDaysWindow': <Object>[],
+        }).nearbyDaysWindow,
+        3,
+      );
+    });
+  });
+
   group('FlightSearchQuery.roundTrip', () {
     test('déduit de la date de retour, sinon explicite', () {
       expect(
