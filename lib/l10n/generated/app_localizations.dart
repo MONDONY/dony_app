@@ -30794,6 +30794,30 @@ abstract class AppLocalizations {
   /// **'Voir toutes les compagnies sur Aviasales, avec les mêmes dates.'**
   String get flightsMoreBody;
 
+  /// No description provided for @flightsFewResultsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de vols sur Aviasales'**
+  String get flightsFewResultsTitle;
+
+  /// No description provided for @flightsFewResultsBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous n\'avons que les prix récents. Aviasales cherche en direct sur toutes les compagnies, avec les mêmes dates.'**
+  String get flightsFewResultsBody;
+
+  /// No description provided for @flightsLiveSearchCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher en direct sur Aviasales'**
+  String get flightsLiveSearchCta;
+
+  /// No description provided for @flightsLiveSearchHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les compagnies, prix du moment, mêmes dates.'**
+  String get flightsLiveSearchHint;
+
   /// Bouton flottant des résultats.
   ///
   /// In fr, this message translates to:
