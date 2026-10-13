@@ -1,10 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
 import 'package:dony/features/flights/presentation/widgets/airline_logo.dart';
-import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -12,9 +10,11 @@ import 'package:intl/intl.dart';
 /// Pastille de l'en-tête d'une carte.
 enum FlightOfferBadge { cheapest, fastest }
 
-/// Une offre de vol des résultats : compagnie, une ligne par trajet (aller,
-/// puis retour en aller-retour) avec horaires, durée et escales, puis le
-/// site vendeur et le prix. Toute la carte ouvre l'offre chez le partenaire.
+/// Une offre de vol des résultats, à la manière d'Opodo : compagnie, date
+/// du vol, puis une ligne d'horaires par trajet (aller, puis retour empilé
+/// en aller-retour, chacun avec sa compagnie et sa date). Le prix, en grand,
+/// s'aligne à droite de la dernière ligne d'horaires, le site vendeur
+/// dessous. Toute la carte ouvre l'offre chez le partenaire.
 class FlightOfferCard extends StatelessWidget {
   const FlightOfferCard({
     super.key,
@@ -37,8 +37,8 @@ class FlightOfferCard extends StatelessWidget {
   final bool opening;
 
   /// Vols à quelques jours des dates demandées (`nearbyDates` du back) : la
-  /// date de départ de chaque trajet s'affiche sous son aéroport, en
-  /// terracotta quand elle sort des dates demandées. Faux : carte inchangée.
+  /// date d'un trajet qui sort des dates demandées passe en terracotta.
+  /// La date de chaque trajet s'affiche dans tous les cas.
   final bool showDates;
 
   /// Dates demandées, pour repérer celles qui diffèrent ; `null` = toutes
@@ -54,11 +54,12 @@ class FlightOfferCard extends StatelessWidget {
   /// au-dessus »), à la place de [badge] et de [savingsLabel].
   final String? aboveLabel;
 
+  /// Marge intérieure de la carte.
+  static const _pad = DonySpacing.md + DonySpacing.xxs;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
     final o = offer;
     final airline = o.airlineName ?? o.airlineCode ?? '';
     final header = [
@@ -68,11 +69,19 @@ class FlightOfferCard extends StatelessWidget {
     ].where((s) => s.isNotEmpty).join(' · ');
     final radius = BorderRadius.circular(DonyRadius.card);
 
+    final Widget? tag = aboveLabel != null
+        ? _SavingsTag(label: aboveLabel!, above: true)
+        : savingsLabel != null
+        ? _SavingsTag(label: savingsLabel!)
+        : badge != null
+        ? _Badge(badge: badge!)
+        : null;
+
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: radius,
-        border: Border.all(color: cs.outline.withValues(alpha: 0.8)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.6)),
         boxShadow: DonyShadow.sm,
       ),
       child: Material(
@@ -81,131 +90,84 @@ class FlightOfferCard extends StatelessWidget {
           key: Key('flight-open-${o.offerPath}'),
           borderRadius: radius,
           onTap: opening ? null : onOpen,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.md + DonySpacing.xxs,
-                  DonySpacing.md - 1,
-                  DonySpacing.md + DonySpacing.xxs,
-                  DonySpacing.xs,
-                ),
-                child: Row(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(_pad, _pad - 2, _pad, _pad),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   children: [
-                    AirlineLogo(
-                      code: o.airlineCode,
-                      logoUrl: o.logoUrl,
-                      name: airline,
-                      size: 24,
-                    ),
-                    const SizedBox(width: DonySpacing.sm),
                     Expanded(
-                      child: Text(
-                        header,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: _Carrier(
+                        code: o.airlineCode,
+                        logoUrl: o.logoUrl,
+                        name: airline,
+                        label: header,
                       ),
                     ),
-                    if (aboveLabel != null) ...[
+                    if (tag != null) ...[
                       const SizedBox(width: DonySpacing.sm),
-                      _SavingsTag(label: aboveLabel!, above: true),
-                    ] else if (savingsLabel != null) ...[
-                      const SizedBox(width: DonySpacing.sm),
-                      _SavingsTag(label: savingsLabel!),
-                    ] else if (badge != null) ...[
-                      const SizedBox(width: DonySpacing.sm),
-                      _Badge(badge: badge!),
+                      tag,
                     ],
                   ],
                 ),
-              ),
-              _LegRow(
-                key: const Key('flight-leg-outbound'),
-                departure: o.departureAt,
-                arrival: o.arrivalAt,
-                fromCode: o.departureCode,
-                toCode: o.arrivalCode,
-                minutes: o.outboundMinutes,
-                transfers: o.transfers,
-                dayOffset: o.arrivalDayOffset,
-                date: showDates
-                    ? _LegDate.of(o.departureAt, requestedDeparture)
-                    : null,
-              ),
-              if (o.isRoundTrip)
-                _LegRow(
-                  key: const Key('flight-leg-return'),
-                  departure: o.returnAt,
-                  arrival: o.returnArrivalAt,
-                  fromCode: o.arrivalCode,
-                  toCode: o.departureCode,
-                  minutes: o.returnDurationMinutes,
-                  transfers: o.returnTransfers,
-                  dayOffset: o.returnArrivalDayOffset,
-                  date: showDates
-                      ? _LegDate.of(o.returnAt, requestedReturn)
-                      : null,
-                ),
-              const SizedBox(height: DonySpacing.xs + DonySpacing.xxs),
-              const FlightDashedLine(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.md + DonySpacing.xxs,
-                  DonySpacing.sm + DonySpacing.xxs,
-                  DonySpacing.md + DonySpacing.xxs,
-                  DonySpacing.md,
-                ),
-                child: Row(
+                const SizedBox(height: DonySpacing.sm),
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Expanded(child: _Via(gate: o.gate)),
-                    if (opening) ...[
-                      Semantics(
-                        label: l.flightsOfferOpening,
-                        child: SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: cs.primary,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _LegBlock(
+                            key: const Key('flight-leg-outbound'),
+                            departure: o.departureAt,
+                            arrival: o.arrivalAt,
+                            fromCode: o.departureCode,
+                            toCode: o.arrivalCode,
+                            minutes: o.outboundMinutes,
+                            transfers: o.transfers,
+                            dayOffset: o.arrivalDayOffset,
+                            date: _LegDate.of(
+                              o.departureAt,
+                              showDates ? requestedDeparture : null,
+                            ),
                           ),
-                        ),
+                          if (o.isRoundTrip) ...[
+                            const SizedBox(height: DonySpacing.base),
+                            _Carrier(
+                              code: o.airlineCode,
+                              logoUrl: o.logoUrl,
+                              name: airline,
+                              label: airline,
+                            ),
+                            const SizedBox(height: DonySpacing.sm),
+                            _LegBlock(
+                              key: const Key('flight-leg-return'),
+                              departure: o.returnAt,
+                              arrival: o.returnArrivalAt,
+                              fromCode: o.arrivalCode,
+                              toCode: o.departureCode,
+                              minutes: o.returnDurationMinutes,
+                              transfers: o.returnTransfers,
+                              dayOffset: o.returnArrivalDayOffset,
+                              date: _LegDate.of(
+                                o.returnAt,
+                                showDates ? requestedReturn : null,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(width: DonySpacing.sm),
-                    ],
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          FlightFormat.price(o.price, o.currency),
-                          style: tt.headlineMedium?.copyWith(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.4,
-                            height: 1,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                        const SizedBox(height: DonySpacing.xs),
-                        Text(
-                          l.flightsPriceIndicative,
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                            height: 1,
-                          ),
-                        ),
-                      ],
                     ),
+                    const SizedBox(width: DonySpacing.md),
+                    _PriceBlock(offer: o, opening: opening),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -219,6 +181,159 @@ class FlightOfferCard extends StatelessWidget {
     final code = o.airlineCode;
     if (code == null || RegExp('^[A-Za-z]').hasMatch(n)) return n;
     return '$code $n';
+  }
+}
+
+/// Logo rond de la compagnie et son nom (numéro de vol compris), en gris.
+class _Carrier extends StatelessWidget {
+  const _Carrier({
+    required this.code,
+    required this.logoUrl,
+    required this.name,
+    required this.label,
+  });
+
+  final String? code;
+  final String? logoUrl;
+  final String name;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        AirlineLogo(code: code, logoUrl: logoUrl, name: name, size: 22),
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Prix en très grand, aligné à droite, le site vendeur dessous (« via
+/// Kiwi.com »), ou « prix indicatif » quand le site est inconnu.
+class _PriceBlock extends StatelessWidget {
+  const _PriceBlock({required this.offer, required this.opening});
+
+  final FlightOffer offer;
+  final bool opening;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final gate = offer.gate;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 120),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (opening) ...[
+            Semantics(
+              label: l.flightsOfferOpening,
+              child: SizedBox.square(
+                dimension: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: cs.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.xs),
+          ],
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerEnd,
+            child: Text(
+              FlightFormat.price(offer.price, offer.currency),
+              key: const Key('flight-offer-price'),
+              maxLines: 1,
+              style: tt.headlineMedium?.copyWith(
+                fontSize: 25,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.6,
+                height: 1.05,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          if (gate != null && gate.isNotEmpty)
+            _Via(gate: gate)
+          else
+            Text(
+              l.flightsPriceIndicative,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.2,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Date du trajet au-dessus de sa ligne d'horaires.
+class _LegBlock extends StatelessWidget {
+  const _LegBlock({
+    super.key,
+    required this.departure,
+    required this.arrival,
+    required this.fromCode,
+    required this.toCode,
+    required this.minutes,
+    required this.transfers,
+    required this.dayOffset,
+    required this.date,
+  });
+
+  final DateTime? departure;
+  final DateTime? arrival;
+  final String fromCode;
+  final String toCode;
+  final int? minutes;
+  final int? transfers;
+  final int dayOffset;
+  final _LegDate? date;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (date != null) ...[
+          _DateLine(date: date!),
+          const SizedBox(height: DonySpacing.xs),
+        ],
+        _LegRow(
+          departure: departure,
+          arrival: arrival,
+          fromCode: fromCode,
+          toCode: toCode,
+          minutes: minutes,
+          transfers: transfers,
+          dayOffset: dayOffset,
+        ),
+      ],
+    );
   }
 }
 
@@ -294,7 +409,6 @@ class _SavingsTag extends StatelessWidget {
 /// à sa place, sans heure inventée.
 class _LegRow extends StatelessWidget {
   const _LegRow({
-    super.key,
     required this.departure,
     required this.arrival,
     required this.fromCode,
@@ -302,7 +416,6 @@ class _LegRow extends StatelessWidget {
     required this.minutes,
     required this.transfers,
     required this.dayOffset,
-    this.date,
   });
 
   final DateTime? departure;
@@ -313,54 +426,44 @@ class _LegRow extends StatelessWidget {
   final int? transfers;
   final int dayOffset;
 
-  /// Date du départ du trajet, affichée sous l'aéroport de départ.
-  final _LegDate? date;
-
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final start = FlightFormat.time(l, departure);
     final end = FlightFormat.time(l, arrival);
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.md + DonySpacing.xxs,
-        vertical: DonySpacing.xs + DonySpacing.xxs,
-      ),
-      child: Row(
-        children: [
-          _Stop(time: start, code: fromCode, end: false, date: date),
-          const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
-          Expanded(
-            child: _Middle(minutes: minutes, transfers: transfers),
-          ),
-          const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
-          _Stop(
-            time: end,
-            code: toCode,
-            end: true,
-            dayOffset: end == null ? 0 : dayOffset,
-          ),
-        ],
-      ),
+    return Row(
+      children: [
+        _Stop(time: start, code: fromCode, end: false),
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(
+          child: _Middle(minutes: minutes, transfers: transfers),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        _Stop(
+          time: end,
+          code: toCode,
+          end: true,
+          dayOffset: end == null ? 0 : dayOffset,
+        ),
+      ],
     );
   }
 }
 
-/// Heure en grand et code de l'aéroport dessous.
+/// Heure en grand et code de l'aéroport dessous ; « +1 » en exposant quand
+/// l'arrivée tombe un autre jour.
 class _Stop extends StatelessWidget {
   const _Stop({
     required this.time,
     required this.code,
     required this.end,
     this.dayOffset = 0,
-    this.date,
   });
 
   final String? time;
   final String code;
   final bool end;
   final int dayOffset;
-  final _LegDate? date;
 
   @override
   Widget build(BuildContext context) {
@@ -368,35 +471,27 @@ class _Stop extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     const tabular = [FontFeature.tabularFigures()];
     final big = tt.headlineMedium?.copyWith(
-      fontSize: 19,
+      fontSize: 18,
       fontWeight: FontWeight.w800,
       letterSpacing: -0.2,
-      height: 1.05,
+      height: 1.1,
       fontFeatures: tabular,
     );
     final small = tt.bodySmall?.copyWith(
       color: cs.onSurfaceVariant,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.5,
+      height: 1.3,
     );
-    final align = end ? CrossAxisAlignment.end : CrossAxisAlignment.start;
 
-    final dateLine = date == null ? null : _DateLine(date: date!);
     if (time == null) {
       // Heure inconnue : le code seul, à la place de l'heure.
-      final alone = Text(
-        code,
-        style: big?.copyWith(color: cs.onSurfaceVariant),
-      );
-      if (dateLine == null) return alone;
-      return Column(
-        crossAxisAlignment: align,
-        mainAxisSize: MainAxisSize.min,
-        children: [alone, dateLine],
-      );
+      return Text(code, style: big?.copyWith(color: cs.onSurfaceVariant));
     }
     return Column(
-      crossAxisAlignment: align,
+      crossAxisAlignment: end
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text.rich(
@@ -415,6 +510,7 @@ class _Stop extends StatelessWidget {
                         height: 1,
                         fontWeight: FontWeight.w800,
                         color: cs.secondary,
+                        fontFeatures: tabular,
                       ),
                     ),
                   ),
@@ -424,7 +520,6 @@ class _Stop extends StatelessWidget {
           style: big,
         ),
         Text(code, style: small),
-        ?dateLine,
       ],
     );
   }
@@ -472,7 +567,7 @@ class _DateLine extends StatelessWidget {
   }
 }
 
-/// Durée, trait avec les escales en terracotta et le petit avion, puis
+/// Durée, trait fin avec un petit rond par escale, puis
 /// « Direct » en vert ou « 1 escale » en terracotta.
 class _Middle extends StatelessWidget {
   const _Middle({required this.minutes, required this.transfers});
@@ -506,7 +601,7 @@ class _Middle extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Divider(height: 1.5, thickness: 1.5, color: cs.outline),
+              Divider(height: 1, thickness: 1, color: cs.outline),
               if (stops != null && stops > 0)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -523,10 +618,6 @@ class _Middle extends StatelessWidget {
                       ),
                   ],
                 ),
-              PositionedDirectional(
-                end: -2,
-                child: DonyIcon('plane', size: 13, color: cs.onSurfaceVariant),
-              ),
             ],
           ),
         ),

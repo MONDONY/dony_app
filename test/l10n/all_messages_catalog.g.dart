@@ -6575,6 +6575,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsLoadingTipTitle': (l) => l.flightsLoadingTipTitle,
   'flightsLoadingTipBody': (l) => l.flightsLoadingTipBody,
   'flightsSummaryEdit': (l) => l.flightsSummaryEdit,
+  'flightsResultsTitle': (l) => l.flightsResultsTitle,
+  'flightsPassengersCount': (l) =>
+      l.flightsPassengersCount(intPlaceholderValue),
   'flightsTabCheapest': (l) => l.flightsTabCheapest,
   'flightsTabFastest': (l) => l.flightsTabFastest,
   'flightsTabDirect': (l) => l.flightsTabDirect,

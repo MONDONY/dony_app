@@ -26,8 +26,10 @@ double flightNavBarReserve(BuildContext context) =>
 /// l'attente ou le choix de ville (fond nuit, icônes claires), les résultats
 /// restaient donc avec des icônes blanches sur fond clair. Chaque écran pose
 /// son style : celui du thème ([AppBarTheme.systemOverlayStyle], icônes
-/// sombres en clair, claires en sombre), ou des icônes claires sur le fond
-/// nuit ([night]). `statusBarBrightness` sert à iOS, l'autre à Android.
+/// sombres en clair, claires en sombre) ; tous les écrans des billets ont
+/// l'en-tête Yadony clair en haut, la scène de nuit de l'attente et la bande
+/// des champs du choix de ville passent dessous. `statusBarBrightness` sert
+/// à iOS, l'autre à Android.
 abstract final class FlightStatusBar {
   /// Style d'un écran au fond du thème.
   static SystemUiOverlayStyle of(BuildContext context) {
@@ -40,74 +42,6 @@ abstract final class FlightStatusBar {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: light ? Brightness.dark : Brightness.light,
       statusBarBrightness: light ? Brightness.light : Brightness.dark,
-    );
-  }
-
-  /// Style d'un écran au fond nuit, quel que soit le thème.
-  static SystemUiOverlayStyle night(BuildContext context) =>
-      of(context).copyWith(
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      );
-}
-
-/// Bouton rond blanc posé sur le fond (cloche, retour). Zone tappable de
-/// 44 points, pastille visible de [size].
-class FlightRoundButton extends StatelessWidget {
-  const FlightRoundButton({
-    super.key,
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
-    this.iconColor,
-    this.size = 38,
-  });
-
-  /// Nom de l'icône SVG (`assets/icons/`).
-  final String icon;
-  final String tooltip;
-  final VoidCallback? onPressed;
-  final Color? iconColor;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: tooltip,
-      child: Semantics(
-        button: true,
-        enabled: onPressed != null,
-        label: tooltip,
-        excludeSemantics: true,
-        child: DonyPressable(
-          onTap: onPressed ?? () {},
-          child: SizedBox.square(
-            dimension: kDonyMinTapTarget,
-            child: Center(
-              child: AnimatedOpacity(
-                duration: DonyDuration.micro,
-                opacity: onPressed == null ? 0.4 : 1,
-                child: Container(
-                  width: size,
-                  height: size,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    shape: BoxShape.circle,
-                    boxShadow: DonyShadow.sm,
-                  ),
-                  child: DonyIcon(
-                    icon,
-                    size: 20,
-                    color: iconColor ?? cs.onSurface,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -406,42 +340,6 @@ class FlightToggle extends StatelessWidget {
   }
 }
 
-/// Trait pointillé horizontal (pied des cartes d'offre).
-class FlightDashedLine extends StatelessWidget {
-  const FlightDashedLine({super.key, this.color});
-
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(double.infinity, 1),
-      painter: _DashPainter(color ?? Theme.of(context).colorScheme.outline),
-    );
-  }
-}
-
-class _DashPainter extends CustomPainter {
-  _DashPainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1;
-    const dash = 4.0;
-    const gap = 3.0;
-    for (var x = 0.0; x < size.width; x += dash + gap) {
-      canvas.drawLine(Offset(x, 0), Offset(x + dash, 0), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DashPainter old) => old.color != color;
-}
-
 /// Titre de section en Hanken Grotesk extra-gras (« Vos recherches »,
 /// « Essayez plutôt »), avec une action à droite.
 class FlightSectionTitle extends StatelessWidget {
@@ -495,4 +393,19 @@ class FlightSectionTitle extends StatelessWidget {
       ],
     );
   }
+}
+
+/// En-tête Yadony ([DonyAppBar]) posé en tête d'une colonne, hors du slot
+/// `appBar` d'un [Scaffold] : une AppBar a besoin de la hauteur bornée que
+/// lui donnerait le Scaffold, barre d'état comprise (elle la peint).
+class FlightHeaderBar extends StatelessWidget {
+  const FlightHeaderBar({super.key, required this.bar});
+
+  final DonyAppBar bar;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: MediaQuery.paddingOf(context).top + bar.preferredSize.height,
+    child: bar,
+  );
 }

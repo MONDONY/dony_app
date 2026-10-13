@@ -1,28 +1,30 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_loading_view.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 
-Widget _host({bool reduceMotion = false, Locale locale = AppL10n.fr}) =>
-    localizedApp(
-      Builder(
-        builder: (context) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(disableAnimations: reduceMotion),
-          child: const Scaffold(
-            body: FlightLoadingView(
-              routeChip: 'PAR ↔ ABJ · 12 déc. – 3 janv. · 1 pers.',
-              destinationName: 'Abidjan',
-            ),
-          ),
+Widget _host({
+  bool reduceMotion = false,
+  Locale locale = AppL10n.fr,
+  VoidCallback? onBack,
+}) => localizedApp(
+  Builder(
+    builder: (context) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion),
+      child: Scaffold(
+        body: FlightLoadingView(
+          routeChip: 'PAR ↔ ABJ · 12 déc. – 3 janv. · 1 pers.',
+          destinationName: 'Abidjan',
+          onBack: onBack ?? () {},
         ),
       ),
-      locale: locale,
-    );
+    ),
+  ),
+  locale: locale,
+);
 
 void main() {
   testWidgets(
@@ -89,14 +91,26 @@ void main() {
       ),
     );
     expect(rotation.turns.value, 0);
+  });
 
-    // Fond nuit : icônes claires, barre transparente, quel que soit le thème.
-    final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
-      find.byWidgetPredicate((w) => w is AnnotatedRegion<SystemUiOverlayStyle>),
+  testWidgets('en-tête Yadony au-dessus de la scène : « Billets » centré, '
+      'scarabée, le chevron abandonne la recherche', (tester) async {
+    var back = 0;
+    await tester.pumpWidget(_host(reduceMotion: true, onBack: () => back++));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyAppBar), findsOneWidget);
+    expect(find.text('Billets'), findsOneWidget);
+    expect(tester.widget<AppBar>(find.byType(AppBar)).centerTitle, isTrue);
+    expect(find.byType(DonyFeedbackButton), findsOneWidget);
+    // La scène de nuit commence sous l'en-tête.
+    expect(
+      tester.getTopLeft(find.byKey(const Key('flights-loading'))).dy,
+      tester.getBottomLeft(find.byType(AppBar)).dy,
     );
-    expect(region.value.statusBarIconBrightness, Brightness.light);
-    expect(region.value.statusBarBrightness, Brightness.dark);
-    expect(region.value.statusBarColor, Colors.transparent);
+
+    await tester.tap(find.byType(DonyAppBarBackButton));
+    expect(back, 1);
   });
 
   testWidgets('en anglais', (tester) async {

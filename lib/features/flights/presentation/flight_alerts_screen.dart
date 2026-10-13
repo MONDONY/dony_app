@@ -78,6 +78,7 @@ class _AlertsView extends StatelessWidget {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: DonyAppBar(
             title: l.flightsAlertsTitle,
+            centerTitle: true,
             actions: [
               if (state.status == FlightAlertsStatus.loaded)
                 Center(

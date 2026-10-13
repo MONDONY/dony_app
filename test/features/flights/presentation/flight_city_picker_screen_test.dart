@@ -1,3 +1,5 @@
+import 'package:dony/core/design/widgets/dony_app_bar.dart';
+import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/flights/bloc/flight_places_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_route_picker_cubit.dart';
@@ -198,6 +200,10 @@ void main() {
 
     // Toujours ouvert, maintenant sur la destination.
     expect(find.text('Où allez-vous ?'), findsOneWidget);
+    // En-tête Yadony standard, titre centré, scarabée.
+    expect(find.byType(DonyAppBar), findsOneWidget);
+    expect(tester.widget<AppBar>(find.byType(AppBar)).centerTitle, isTrue);
+    expect(find.byType(DonyFeedbackButton), findsOneWidget);
     expect(find.text('DESTINATIONS DE LA DIASPORA'), findsOneWidget);
     await tester.tap(find.byKey(const Key('flight-city-DKR')));
     await tester.pumpAndSettle();
@@ -217,7 +223,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('flight-city-locate')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('flight-city-back')));
+    await tester.tap(find.byType(DonyAppBarBackButton));
     await tester.pumpAndSettle();
     expect(poppedOnce, isTrue);
     expect(popped, isNull);

@@ -97,6 +97,21 @@ abstract final class FlightFormat {
     return l.flightsDateRange(one(out), one(back));
   }
 
+  /// Dates de la barre de recherche des résultats, jour de la semaine
+  /// compris : « jeu. 29 oct. », « jeu. 29 oct. – ven. 13 nov. »,
+  /// « mars 2027 », ou « Toutes les dates ».
+  static String searchDates(
+    AppLocalizations l,
+    FlightWhen? out,
+    FlightWhen? back,
+  ) {
+    if (out == null) return l.flightsDatesAny;
+    if (back == null || (out.wholeMonth && back.wholeMonth && out == back)) {
+      return when(l, out);
+    }
+    return l.flightsDateRange(when(l, out), when(l, back));
+  }
+
   /// Période d'une alerte sur plusieurs jours : « du 1 déc. au 20 déc.
   /// 2026 » (l'année n'est pas répétée dans la même année), sinon « du
   /// 28 déc. 2026 au 3 janv. 2027 ».

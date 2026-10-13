@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
@@ -125,18 +126,18 @@ class _FlightsView extends StatelessWidget {
               switchInCurve: DonyCurve.enter,
               switchOutCurve: DonyCurve.exit,
               child: switch (state.status) {
-                FlightSearchStatus.editing => const SafeArea(
+                // Sans SafeArea : l'en-tête Yadony (AppBar) peint lui-même
+                // la zone de la barre d'état.
+                FlightSearchStatus.editing => const KeyedSubtree(
                   key: ValueKey('form'),
-                  bottom: false,
                   child: _FormView(),
                 ),
                 FlightSearchStatus.loading => _Loading(
                   key: const ValueKey('loading'),
                   state: state,
                 ),
-                _ => const SafeArea(
+                _ => const KeyedSubtree(
                   key: ValueKey('results'),
-                  bottom: false,
                   child: _ResultsView(),
                 ),
               },
@@ -205,126 +206,116 @@ class _FormView extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    return ListView(
-      key: const Key('flights-form'),
-      padding: EdgeInsets.only(
-        bottom: flightNavBarReserve(context) + DonySpacing.huge,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          // À gauche, la zone tappable de 44 du bouton retour déborde de sa
-          // pastille : la pastille tombe sur la marge du formulaire.
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.md,
-            DonySpacing.sm,
-            DonySpacing.xs,
-            DonySpacing.sm,
-          ),
-          child: Row(
-            children: [
-              // Écran poussé par-dessus Activités : retour au hub. Ouvert par
-              // un lien sans rien à dépiler, le hub est rouvert à la place.
-              FlightRoundButton(
-                key: const Key('flights-close'),
-                icon: 'arrow-left',
-                tooltip: l.commonBack,
-                onPressed: () => context.canPop()
-                    ? context.pop()
-                    : context.go('/announcements'),
-              ),
-              const SizedBox(width: DonySpacing.xs),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(l.flightsTitle, style: tt.displayMedium),
-                ),
-              ),
-              FlightRoundButton(
+        // En-tête Yadony standard. Écran poussé par-dessus Activités :
+        // retour au hub ; ouvert par un lien sans rien à dépiler, le hub est
+        // rouvert à la place (repli de [DonyAppBarBackButton]).
+        FlightHeaderBar(
+          bar: DonyAppBar(
+            title: l.flightsTitle,
+            centerTitle: true,
+            onBack: () =>
+                context.canPop() ? context.pop() : context.go('/announcements'),
+            actions: [
+              IconButton(
                 key: const Key('flights-alerts-button'),
-                icon: 'bell',
                 tooltip: l.flightsAlertsTooltip,
                 onPressed: () => openFlightAlerts(context),
+                icon: DonyIcon('bell', size: 22, color: cs.onSurface),
               ),
-              const DonyFeedbackButton(),
             ],
           ),
         ),
-        BlocBuilder<FlightSearchCubit, FlightSearchState>(
-          buildWhen: (a, b) => a.query != b.query,
-          builder: (context, state) {
-            final cubit = context.read<FlightSearchCubit>();
-            final q = state.query;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.lg,
-                  ),
-                  child: FlightTripTypeSwitch(
-                    roundTrip: q.roundTrip,
-                    onChanged: cubit.setRoundTrip,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.md + DonySpacing.xxs),
-                FlightSearchForm(
-                  query: q,
-                  onPickCity: ({required departure}) =>
-                      _pickRoute(context, departure: departure),
-                  onSwap: cubit.swap,
-                  onPickDates: () => _pickDates(context),
-                  onDirectChanged: cubit.setDirectOnly,
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.base,
-                    DonySpacing.lg,
-                    0,
-                  ),
-                  child: DonyButton(
-                    key: const Key('flights-search-button'),
-                    label: l.flightsSearchButton,
-                    iconAsset: 'search',
-                    onPressed: q.isComplete ? () => _submit(context) : null,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        BlocBuilder<FlightSearchCubit, FlightSearchState>(
-          buildWhen: (a, b) => a.recents != b.recents,
-          builder: (context, state) {
-            if (state.recents.isEmpty) return const SizedBox.shrink();
-            final cubit = context.read<FlightSearchCubit>();
-            return FlightRecentSearches(
-              key: const Key('flights-recents'),
-              recents: state.recents,
-              onOpen: cubit.openRecent,
-              onClear: cubit.clearRecents,
-            );
-          },
-        ),
-        const _DealsSection(),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            DonySpacing.xl,
-            DonySpacing.lg,
-            0,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(DonySpacing.md),
-            decoration: BoxDecoration(
-              color: cs.surfaceWarm,
-              borderRadius: BorderRadius.circular(DonyRadius.md),
+        Expanded(
+          child: ListView(
+            key: const Key('flights-form'),
+            padding: EdgeInsets.only(
+              bottom: flightNavBarReserve(context) + DonySpacing.huge,
             ),
-            child: Text(
-              l.flightsAffiliationNotice,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
+            children: [
+              const SizedBox(height: DonySpacing.base),
+              BlocBuilder<FlightSearchCubit, FlightSearchState>(
+                buildWhen: (a, b) => a.query != b.query,
+                builder: (context, state) {
+                  final cubit = context.read<FlightSearchCubit>();
+                  final q = state.query;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.lg,
+                        ),
+                        child: FlightTripTypeSwitch(
+                          roundTrip: q.roundTrip,
+                          onChanged: cubit.setRoundTrip,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.md + DonySpacing.xxs),
+                      FlightSearchForm(
+                        query: q,
+                        onPickCity: ({required departure}) =>
+                            _pickRoute(context, departure: departure),
+                        onSwap: cubit.swap,
+                        onPickDates: () => _pickDates(context),
+                        onDirectChanged: cubit.setDirectOnly,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.lg,
+                          DonySpacing.base,
+                          DonySpacing.lg,
+                          0,
+                        ),
+                        child: DonyButton(
+                          key: const Key('flights-search-button'),
+                          label: l.flightsSearchButton,
+                          iconAsset: 'search',
+                          onPressed: q.isComplete
+                              ? () => _submit(context)
+                              : null,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              BlocBuilder<FlightSearchCubit, FlightSearchState>(
+                buildWhen: (a, b) => a.recents != b.recents,
+                builder: (context, state) {
+                  if (state.recents.isEmpty) return const SizedBox.shrink();
+                  final cubit = context.read<FlightSearchCubit>();
+                  return FlightRecentSearches(
+                    key: const Key('flights-recents'),
+                    recents: state.recents,
+                    onOpen: cubit.openRecent,
+                    onClear: cubit.clearRecents,
+                  );
+                },
+              ),
+              const _DealsSection(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                  DonySpacing.lg,
+                  0,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(DonySpacing.md),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceWarm,
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  child: Text(
+                    l.flightsAffiliationNotice,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -458,6 +449,7 @@ class _Loading extends StatelessWidget {
     return FlightLoadingView(
       routeChip: chip,
       destinationName: _cityName(state, origin: false),
+      onBack: context.read<FlightSearchCubit>().backToForm,
     );
   }
 }
@@ -540,7 +532,7 @@ class _ResultsView extends StatelessWidget {
           _cityName(state, origin: false),
           roundTrip: roundTrip,
         );
-        final dates = FlightFormat.dates(l, q.departure, q.returnDate);
+        final dates = FlightFormat.searchDates(l, q.departure, q.returnDate);
         final offers = state.result?.offers ?? const <FlightOffer>[];
 
         if (state.status == FlightSearchStatus.error ||

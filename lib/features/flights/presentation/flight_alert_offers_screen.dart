@@ -73,7 +73,6 @@ class _OffersView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final tt = Theme.of(context).textTheme;
     return BlocListener<FlightLinkCubit, FlightLinkState>(
       listenWhen: (a, b) => b.failures > a.failures,
       listener: (context, state) => ErrorPresenter.show(context, state.error),
@@ -81,53 +80,30 @@ class _OffersView extends StatelessWidget {
         value: FlightStatusBar.of(context),
         child: Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          // Sans SafeArea : l'en-tête Yadony peint la barre d'état.
           body: SafeArea(
+            top: false,
             bottom: false,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.md,
-                    DonySpacing.sm,
-                    DonySpacing.xs,
-                    DonySpacing.xs,
-                  ),
-                  child: Row(
-                    children: [
-                      FlightRoundButton(
-                        key: const Key('flight-alert-offers-back'),
-                        icon: 'arrow-left',
-                        tooltip: l.commonBack,
-                        onPressed: () => context.canPop()
-                            ? context.pop()
-                            : context.go('/flights/alerts'),
-                      ),
-                      const SizedBox(width: DonySpacing.xs),
-                      Expanded(
-                        child:
-                            BlocSelector<
-                              FlightAlertOffersCubit,
-                              FlightAlertOffersState,
-                              bool
-                            >(
-                              selector: (s) => s.hasBelow,
-                              builder: (context, hasBelow) => Text(
-                                hasBelow
-                                    ? l.flightsAlertOffersTitle
-                                    : l.flightsAlertOffersTitleAll,
-                                key: const Key('flight-alert-offers-title'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: tt.headlineLarge?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                            ),
-                      ),
-                      const DonyFeedbackButton(),
-                    ],
+                BlocSelector<
+                  FlightAlertOffersCubit,
+                  FlightAlertOffersState,
+                  bool
+                >(
+                  selector: (s) => s.hasBelow,
+                  builder: (context, hasBelow) => FlightHeaderBar(
+                    bar: DonyAppBar(
+                      key: const Key('flight-alert-offers-title'),
+                      title: hasBelow
+                          ? l.flightsAlertOffersTitle
+                          : l.flightsAlertOffersTitleAll,
+                      centerTitle: true,
+                      onBack: () => context.canPop()
+                          ? context.pop()
+                          : context.go('/flights/alerts'),
+                    ),
                   ),
                 ),
                 Expanded(

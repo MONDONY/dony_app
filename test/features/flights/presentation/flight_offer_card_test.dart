@@ -82,6 +82,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Corsair · SS 950'), findsOneWidget);
+    // Retour empilé avec sa propre ligne compagnie.
+    expect(find.text('Corsair'), findsOneWidget);
     expect(find.text('Le plus rapide'), findsOneWidget);
     expect(find.byKey(const Key('flight-leg-outbound')), findsOneWidget);
     expect(find.byKey(const Key('flight-leg-return')), findsOneWidget);
@@ -99,8 +101,110 @@ void main() {
     expect(find.text('Kiwi.com', findRichText: true), findsNothing);
     expect(find.text('via Kiwi.com', findRichText: true), findsOneWidget);
     expect(find.textContaining('498'), findsOneWidget);
-    expect(find.text('prix indicatif'), findsOneWidget);
+    // Site vendeur connu : il remplace « prix indicatif » sous le prix.
+    expect(find.text('prix indicatif'), findsNothing);
+    // Date de chaque trajet au-dessus de ses horaires.
+    expect(find.text('sam. 12 déc.'), findsOneWidget);
+    expect(find.text('dim. 3 janv.'), findsOneWidget);
+    // Prix à droite des horaires, aligné sur la ligne du retour.
+    final price = find.byKey(const Key('flight-offer-price'));
+    final back = find.byKey(const Key('flight-leg-return'));
+    expect(
+      tester.getTopLeft(price).dx,
+      greaterThan(tester.getTopRight(back).dx),
+    );
+    expect(
+      tester.getBottomLeft(price).dy,
+      greaterThan(
+        tester.getTopLeft(find.byKey(const Key('flight-leg-return'))).dy,
+      ),
+    );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('aller simple : date du vol, prix à droite des horaires, +1', (
+    tester,
+  ) async {
+    final oneWay = FlightOffer.fromJson(const {
+      'originCode': 'PAR',
+      'destinationCode': 'ABJ',
+      'originAirport': 'LIL',
+      'departureAt': '2026-10-29T14:05:00',
+      'arrivalAt': '2026-10-30T17:40:00',
+      'price': 368,
+      'currency': 'EUR',
+      'airlineCode': 'AT',
+      'airlineName': 'Royal Air Maroc',
+      'transfers': 1,
+      'durationMinutes': 1715,
+      'gate': 'Kiwi.com',
+      'offerPath': '/search/O',
+    });
+    await tester.pumpWidget(_host(oneWay));
+    await tester.pumpAndSettle();
+
+    expect(find.text('jeu. 29 oct.'), findsOneWidget);
+    expect(find.byKey(const Key('flight-leg-date')), findsOneWidget);
+    expect(find.byKey(const Key('flight-leg-return')), findsNothing);
+    expect(find.text('14:05', findRichText: true), findsOneWidget);
+    expect(find.text('28 h 35'), findsOneWidget);
+    expect(find.byKey(const Key('flight-day-offset')), findsOneWidget);
+    final price = find.byKey(const Key('flight-offer-price'));
+    final leg = find.byKey(const Key('flight-leg-outbound'));
+    // À droite de la ligne d'horaires, à sa hauteur.
+    expect(
+      tester.getTopLeft(price).dx,
+      greaterThan(tester.getTopRight(leg).dx),
+    );
+    expect(tester.getCenter(price).dy, lessThan(tester.getBottomLeft(leg).dy));
+    expect(
+      tester.getCenter(price).dy,
+      greaterThan(tester.getTopLeft(find.text('14:05', findRichText: true)).dy),
+    );
+    // La date se lit au-dessus des horaires.
+    expect(
+      tester.getBottomLeft(find.text('jeu. 29 oct.')).dy,
+      lessThanOrEqualTo(
+        tester.getTopLeft(find.text('14:05', findRichText: true)).dy,
+      ),
+    );
+    expect(find.text('via Kiwi.com', findRichText: true), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('pastille d\'alerte en haut à droite, au-dessus du prix', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      localizedApp(
+        Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(DonySpacing.lg),
+            child: FlightOfferCard(
+              offer: _legacy,
+              onOpen: () {},
+              savingsLabel: '−61 € sous votre prix',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final tag = find.byKey(const Key('flight-offer-savings'));
+    expect(tag, findsOneWidget);
+    expect(
+      tester.getBottomLeft(tag).dy,
+      lessThan(
+        tester.getTopLeft(find.byKey(const Key('flight-offer-price'))).dy,
+      ),
+    );
+    expect(
+      tester.getTopRight(tag).dx,
+      closeTo(
+        tester.getTopRight(find.byKey(const Key('flight-offer-price'))).dx,
+        1,
+      ),
+    );
   });
 
   testWidgets('sans heure d\'arrivée : le code de l\'aéroport seul, sans durée '
@@ -117,8 +221,9 @@ void main() {
     expect(find.text('2 escales'), findsOneWidget);
     // Aller simple sur un ancien back : la durée totale est celle de l'aller.
     expect(find.text('9 h 45'), findsOneWidget);
-    // Pas de site vendeur : rien à gauche du prix.
+    // Pas de site vendeur : « prix indicatif » sous le prix.
     expect(find.textContaining('via'), findsNothing);
+    expect(find.text('prix indicatif'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -155,19 +260,25 @@ void main() {
     expect(find.text('Cheapest'), findsOneWidget);
     expect(find.text('1 stop'), findsOneWidget);
     expect(find.text('6h 20m'), findsOneWidget);
-    expect(find.text('indicative price'), findsOneWidget);
+    expect(find.text('via Kiwi.com', findRichText: true), findsOneWidget);
+    expect(find.text('Sat, Dec 12'), findsOneWidget);
   });
 
   group('dates proches', () {
     const plain = Key('flight-leg-date');
     const shifted = Key('flight-leg-date-shifted');
 
-    testWidgets('sans dates proches : carte inchangée, aucune date', (
+    testWidgets('sans dates proches : dates affichées, rien en évidence', (
       tester,
     ) async {
-      await tester.pumpWidget(_host(_roundTrip));
+      await tester.pumpWidget(
+        _host(
+          _roundTrip,
+          requestedDeparture: FlightWhen.day(DateTime(2026, 12, 10)),
+        ),
+      );
       await tester.pumpAndSettle();
-      expect(find.byKey(plain), findsNothing);
+      expect(find.byKey(plain), findsNWidgets(2));
       expect(find.byKey(shifted), findsNothing);
     });
 
