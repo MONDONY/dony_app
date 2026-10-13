@@ -174,7 +174,9 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     // une feuille qui protège une saisie en cours ne se fait
                     // donc plus vider par sa propre croix.
                     onPressed: () => Navigator.maybePop(context),
-                    icon: const DonyIcon('x', size: 20),
+                    // Le SVG garde sa couleur d'origine (noire) sans teinte :
+                    // invisible en mode sombre.
+                    icon: DonyIcon('x', size: 20, color: cs.onSurfaceVariant),
                     style: IconButton.styleFrom(
                       foregroundColor: cs.onSurfaceVariant,
                     ),

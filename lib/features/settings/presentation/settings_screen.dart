@@ -11,8 +11,10 @@ import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/activation/presentation/widgets/intent_prompt_sheet.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/flight_alerts_pause_cubit.dart';
 import 'package:dony/features/settings/bloc/flights_visibility_cubit.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
+import 'package:dony/features/settings/presentation/widgets/flight_alerts_pause_sheet.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -374,51 +376,119 @@ class SettingsScreen extends StatelessWidget {
 /// Interrupteur « Afficher les billets d'avion » (Apparence) : masque le bloc
 /// « Billets d'avion » et la ligne « Alertes prix vols » d'Activités. Absent
 /// tant que le flag `flights_enabled` est éteint.
+///
+/// Le couper avec des alertes prix actives propose de les mettre en pause
+/// ([FlightAlertsPauseCubit]) : masquer les billets ne coupe pas leurs
+/// notifications. Le rallumer ne relance rien.
 class _FlightsVisibilityTile extends StatelessWidget {
   const _FlightsVisibilityTile();
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
     return ValueListenableBuilder<bool>(
       valueListenable: flightsEnabledListenable,
       builder: (context, enabled, _) {
         if (!enabled || !getIt.isRegistered<FlightsVisibilityCubit>()) {
           return const SizedBox.shrink();
         }
-        final cubit = getIt<FlightsVisibilityCubit>();
-        return BlocBuilder<FlightsVisibilityCubit, bool>(
-          bloc: cubit,
-          builder: (context, visible) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Même filet que celui d'un `DonyListTile` : le thème au-dessus
-              // le coupe (`showDivider: false`) quand cette ligne est absente.
-              const Divider(
-                height: 1,
-                indent: DonySpacing.lg + DonySpacing.icon,
-              ),
-              DonyListTile(
-                key: const Key('settings-flights-visible'),
-                iconAsset: 'plane',
-                iconColor: cs.primary,
-                iconBgColor: cs.primaryContainer,
-                label: l.settingsFlightsVisibleLabel,
-                subtitle: l.settingsFlightsVisibleSubtitle,
-                showDivider: false,
-                trailing: Switch(
-                  key: const Key('settings-flights-visible-switch'),
-                  value: visible,
-                  activeThumbColor: cs.primary,
-                  onChanged: (v) => unawaited(cubit.setVisible(v)),
-                ),
-                onTap: () => unawaited(cubit.setVisible(!visible)),
-              ),
-            ],
+        final visibility = getIt<FlightsVisibilityCubit>();
+        if (!getIt.isRegistered<FlightAlertsPauseCubit>()) {
+          return _FlightsVisibilitySwitch(visibility: visibility);
+        }
+        return BlocProvider(
+          create: (_) => getIt<FlightAlertsPauseCubit>(),
+          child: BlocListener<FlightAlertsPauseCubit, FlightAlertsPauseState>(
+            listenWhen: (prev, curr) => prev.phase != curr.phase,
+            listener: (context, state) =>
+                _onPauseState(context, state, visibility),
+            child: _FlightsVisibilitySwitch(visibility: visibility),
           ),
         );
       },
+    );
+  }
+
+  static void _onPauseState(
+    BuildContext context,
+    FlightAlertsPauseState state,
+    FlightsVisibilityCubit visibility,
+  ) {
+    final pause = context.read<FlightAlertsPauseCubit>();
+    switch (state.phase) {
+      case FlightAlertsPausePhase.prompt:
+        // Billets réaffichés pendant la lecture des alertes : plus rien à
+        // proposer.
+        if (visibility.state) {
+          pause.cancel();
+        } else {
+          unawaited(FlightAlertsPauseSheet.show(context, pause));
+        }
+      case FlightAlertsPausePhase.done:
+        final l = context.l10n;
+        if (state.failed > 0) {
+          DonySnackbar.show(
+            context,
+            message: l.settingsFlightsPausePartialError,
+            type: DonySnackbarType.error,
+          );
+        } else {
+          DonySnackbar.show(
+            context,
+            message: l.settingsFlightsPauseDone(state.paused),
+            type: DonySnackbarType.success,
+          );
+        }
+        pause.acknowledge();
+      case FlightAlertsPausePhase.idle:
+      case FlightAlertsPausePhase.checking:
+      case FlightAlertsPausePhase.pausing:
+        break;
+    }
+  }
+}
+
+class _FlightsVisibilitySwitch extends StatelessWidget {
+  const _FlightsVisibilitySwitch({required this.visibility});
+
+  final FlightsVisibilityCubit visibility;
+
+  void _set(BuildContext context, bool visible) {
+    unawaited(visibility.setVisible(visible));
+    if (!visible && getIt.isRegistered<FlightAlertsPauseCubit>()) {
+      unawaited(context.read<FlightAlertsPauseCubit>().onFlightsHidden());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return BlocBuilder<FlightsVisibilityCubit, bool>(
+      bloc: visibility,
+      builder: (context, visible) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Même filet que celui d'un `DonyListTile` : le thème au-dessus
+          // le coupe (`showDivider: false`) quand cette ligne est absente.
+          const Divider(height: 1, indent: DonySpacing.lg + DonySpacing.icon),
+          DonyListTile(
+            key: const Key('settings-flights-visible'),
+            iconAsset: 'plane',
+            iconColor: cs.primary,
+            iconBgColor: cs.primaryContainer,
+            label: l.settingsFlightsVisibleLabel,
+            subtitle: l.settingsFlightsVisibleSubtitle,
+            showDivider: false,
+            trailing: Switch(
+              key: const Key('settings-flights-visible-switch'),
+              value: visible,
+              activeThumbColor: cs.primary,
+              onChanged: (v) => _set(context, v),
+            ),
+            onTap: () => _set(context, !visible),
+          ),
+        ],
+      ),
     );
   }
 }

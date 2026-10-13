@@ -12141,6 +12141,44 @@ class AppLocalizationsFr extends AppLocalizations {
       'Bons plans et alertes prix dans Activités';
 
   @override
+  String get settingsFlightsPauseTitle =>
+      'Mettre aussi vos alertes prix en pause ?';
+
+  @override
+  String settingsFlightsPauseBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Vous avez $count alertes actives. Masquer les billets ne coupe pas leurs notifications. Vous pourrez les relancer depuis Mes alertes prix.',
+      one:
+          'Vous avez 1 alerte active. Masquer les billets ne coupe pas ses notifications. Vous pourrez la relancer depuis Mes alertes prix.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsFlightsPauseConfirm => 'Mettre en pause';
+
+  @override
+  String get settingsFlightsPauseKeep => 'Garder les alertes';
+
+  @override
+  String settingsFlightsPauseDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alertes mises en pause',
+      one: '1 alerte mise en pause',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsFlightsPausePartialError =>
+      'Certaines alertes n\'ont pas pu être mises en pause. Réessayez depuis Mes alertes prix.';
+
+  @override
   String get settingsThemeLight => 'Clair';
 
   @override

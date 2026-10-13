@@ -88,6 +88,7 @@ import 'package:dony/features/favorites/data/datasources/favorite_remote_datasou
 import 'package:dony/features/favorites/data/favorites_migration.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/flights/bloc/flight_alert_offers_cubit.dart';
+import 'package:dony/features/flights/bloc/flight_alert_updates.dart';
 import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_link_cubit.dart';
@@ -238,6 +239,7 @@ import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
+import 'package:dony/features/settings/bloc/flight_alerts_pause_cubit.dart';
 import 'package:dony/features/settings/bloc/flights_visibility_cubit.dart';
 import 'package:dony/features/settings/bloc/language_sync_cubit.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
@@ -975,6 +977,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
   );
+  // Au masquage des billets, propose de mettre les alertes prix en pause.
+  getIt.registerFactory<FlightAlertsPauseCubit>(
+    () => FlightAlertsPauseCubit(
+      getIt<FlightsRepository>(),
+      getIt<AnalyticsService>(),
+      updates: getIt<FlightAlertUpdates>(),
+    ),
+  );
 
   // Settings — Privacy (contactKycOnly + hidePhoneNumber via backend)
   getIt.registerLazySingleton<PrivacySettingsDatasource>(
@@ -1421,10 +1431,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     FlightRoutePickerArgs,
     void
   >((args, _) => FlightRoutePickerCubit(args));
+  getIt.registerLazySingleton<FlightAlertUpdates>(FlightAlertUpdates.new);
   getIt.registerFactory<FlightAlertsCubit>(
     () => FlightAlertsCubit(
       getIt<FlightsRepository>(),
       getIt<AnalyticsService>(),
+      updates: getIt<FlightAlertUpdates>(),
     ),
   );
   getIt.registerFactoryParam<

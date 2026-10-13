@@ -12062,6 +12062,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'Deals and price alerts in Activities';
 
   @override
+  String get settingsFlightsPauseTitle => 'Pause your price alerts too?';
+
+  @override
+  String settingsFlightsPauseBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'You have $count active alerts. Hiding flight tickets does not stop their notifications. You can turn them back on from My price alerts.',
+      one:
+          'You have 1 active alert. Hiding flight tickets does not stop its notifications. You can turn it back on from My price alerts.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsFlightsPauseConfirm => 'Pause them';
+
+  @override
+  String get settingsFlightsPauseKeep => 'Keep alerts';
+
+  @override
+  String settingsFlightsPauseDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alerts paused',
+      one: '1 alert paused',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsFlightsPausePartialError =>
+      'Some alerts could not be paused. Try again from My price alerts.';
+
+  @override
   String get settingsThemeLight => 'Light';
 
   @override

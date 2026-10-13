@@ -20009,6 +20009,42 @@ abstract class AppLocalizations {
   /// **'Bons plans et alertes prix dans Activités'**
   String get settingsFlightsVisibleSubtitle;
 
+  /// Titre de la feuille proposée quand l'utilisateur masque les billets d'avion avec des alertes prix actives (flight_alerts_pause_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre aussi vos alertes prix en pause ?'**
+  String get settingsFlightsPauseTitle;
+
+  /// Texte de la feuille de mise en pause des alertes prix, avec le nombre d'alertes actives (flight_alerts_pause_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Vous avez 1 alerte active. Masquer les billets ne coupe pas ses notifications. Vous pourrez la relancer depuis Mes alertes prix.} other{Vous avez {count} alertes actives. Masquer les billets ne coupe pas leurs notifications. Vous pourrez les relancer depuis Mes alertes prix.}}'**
+  String settingsFlightsPauseBody(int count);
+
+  /// Bouton principal : met en pause les alertes prix actives (flight_alerts_pause_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre en pause'**
+  String get settingsFlightsPauseConfirm;
+
+  /// Bouton secondaire : garde les alertes prix actives (flight_alerts_pause_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder les alertes'**
+  String get settingsFlightsPauseKeep;
+
+  /// Confirmation après la mise en pause des alertes prix (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 alerte mise en pause} other{{count} alertes mises en pause}}'**
+  String settingsFlightsPauseDone(int count);
+
+  /// Erreur quand une partie des alertes prix n'a pas pu être mise en pause (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Certaines alertes n\'ont pas pu être mises en pause. Réessayez depuis Mes alertes prix.'**
+  String get settingsFlightsPausePartialError;
+
   /// Option de thème clair, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)
   ///
   /// In fr, this message translates to:
