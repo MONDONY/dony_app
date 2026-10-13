@@ -104,7 +104,6 @@ class _PickerViewState extends State<_PickerView> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
     return MultiBlocListener(
@@ -131,61 +130,34 @@ class _PickerViewState extends State<_PickerView> {
           if (!didPop) _close(context);
         },
         child: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: FlightStatusBar.night(context),
+          value: FlightStatusBar.of(context),
           child: Scaffold(
             backgroundColor: _night,
             resizeToAvoidBottomInset: true,
+            // En-tête Yadony standard ; la bande de nuit des champs suit.
+            appBar: DonyAppBar(
+              title: l.flightsPickerTitle,
+              centerTitle: true,
+              onBack: () => _close(context),
+              bottom: const PreferredSize(
+                preferredSize: Size.zero,
+                child: SizedBox.shrink(),
+              ),
+            ),
             body: SafeArea(
+              top: false,
               bottom: false,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.sm,
-                      DonySpacing.xs,
-                      DonySpacing.base + DonySpacing.xxs,
+                      DonySpacing.lg,
+                      DonySpacing.lg,
+                      DonySpacing.lg,
                       DonySpacing.xxl,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            IconButton(
-                              key: const Key('flight-city-back'),
-                              tooltip: l.commonBack,
-                              onPressed: () => _close(context),
-                              icon: const DonyIcon(
-                                'arrow-left',
-                                size: 22,
-                                color: _white,
-                              ),
-                            ),
-                            const SizedBox(width: DonySpacing.xs),
-                            Expanded(
-                              child: Text(
-                                l.flightsPickerTitle,
-                                style: tt.headlineLarge?.copyWith(
-                                  fontSize: 21,
-                                  color: _white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: DonySpacing.md),
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(
-                            start: DonySpacing.sm + DonySpacing.xxs,
-                          ),
-                          child: _Fields(
-                            controller: _controller,
-                            focus: _focus,
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: _Fields(controller: _controller, focus: _focus),
                   ),
                   Expanded(
                     child: Container(

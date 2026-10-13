@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_app_bar.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -26,7 +27,6 @@ import 'package:dony/features/flights/presentation/flights_screen.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_deal_card.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_offer_card.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_results_parts.dart';
-import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -228,26 +228,26 @@ void main() {
   }
 
   group('barre d\'état', () {
-    testWidgets('icônes sombres sur le formulaire et les résultats, claires '
-        'pendant l\'attente et sur le choix de ville', (tester) async {
+    testWidgets('icônes sombres partout en thème clair : l\'en-tête Yadony '
+        'clair couvre aussi l\'attente et le choix de ville', (tester) async {
       final pending = Completer<FlightSearchResult>();
       final fast = search;
       search = (q) => pending.future;
       await open(tester, theme: AppTheme.light());
 
       expect(statusBar(tester)?.statusBarIconBrightness, Brightness.dark);
-      expect(statusBar(tester)?.statusBarBrightness, Brightness.light);
 
       await tester.tap(find.byKey(const Key('flights-search-button')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
-      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.light);
-      expect(statusBar(tester)?.statusBarBrightness, Brightness.dark);
+      expect(find.byKey(const Key('flights-loading')), findsOneWidget);
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.dark);
 
       pending.complete(await fast(const FlightSearchQuery()));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('flights-results')), findsOneWidget);
-      // Le bug : le style clair de l'attente restait sur les résultats.
+      // Le bug d'origine : un style clair posé par un écran restait sur
+      // les résultats.
       expect(statusBar(tester)?.statusBarIconBrightness, Brightness.dark);
       expect(statusBar(tester)?.statusBarColor, Colors.transparent);
       expect(
@@ -255,11 +255,12 @@ void main() {
         Brightness.dark,
       );
 
-      await tester.tap(find.byKey(const Key('flights-back')));
+      await tester.tap(find.byType(DonyAppBarBackButton));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('flights-destination')));
       await tester.pumpAndSettle();
-      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.light);
+      expect(find.byType(FlightCityPickerScreen), findsOneWidget);
+      expect(statusBar(tester)?.statusBarIconBrightness, Brightness.dark);
 
       await tester.tap(find.byKey(const Key('flight-city-DKR')));
       await tester.pumpAndSettle();
@@ -275,7 +276,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('flights-results')), findsOneWidget);
       expect(statusBar(tester)?.statusBarIconBrightness, Brightness.light);
-      expect(statusBar(tester)?.statusBarBrightness, Brightness.dark);
     });
 
     testWidgets('thème sans style de barre : repli sur le défaut Material', (
@@ -343,13 +343,15 @@ void main() {
       expect(find.text('Tue, Dec 15'), findsOneWidget);
     });
 
-    testWidgets('résultats exacts : ni bandeau ni date', (tester) async {
+    testWidgets('résultats exacts : pas de bandeau, la date du vol sur chaque '
+        'carte sans mise en évidence', (tester) async {
       await open(tester);
       await tester.tap(find.byKey(const Key('flights-search-button')));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('flights-nearby-dates')), findsNothing);
-      expect(find.byKey(const Key('flight-leg-date')), findsNothing);
+      expect(find.byKey(const Key('flight-leg-date')), findsWidgets);
+      expect(find.text('sam. 12 déc.'), findsWidgets);
       expect(find.byKey(const Key('flight-leg-date-shifted')), findsNothing);
     });
   });
@@ -448,6 +450,79 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('en-tête des résultats : barre Yadony et barre de recherche '
+      'sans cadre', (tester) async {
+    await open(tester);
+    await tester.tap(find.byKey(const Key('flights-search-button')));
+    await tester.pumpAndSettle();
+
+    final header = find.byType(FlightResultsHeader);
+    // Barre Yadony : chevron carré, « Résultats » centré, scarabée.
+    expect(
+      find.descendant(of: header, matching: find.byType(DonyAppBar)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: header, matching: find.text('Résultats')),
+      findsOneWidget,
+    );
+    final bar = tester.widget<AppBar>(
+      find.descendant(of: header, matching: find.byType(AppBar)),
+    );
+    expect(bar.centerTitle, isTrue);
+    final back = find.descendant(
+      of: header,
+      matching: find.byType(DonyAppBarBackButton),
+    );
+    expect(
+      tester.getCenter(back).dx,
+      lessThan(tester.getCenter(find.text('Résultats')).dx),
+    );
+    expect(
+      tester.getCenter(find.byType(DonyFeedbackButton)).dx,
+      greaterThan(tester.getCenter(find.text('Résultats')).dx),
+    );
+    // Barre de recherche : trajet, crayon, dates, passagers.
+    expect(
+      tester.widget<Text>(find.byKey(const Key('flights-summary-route'))).data,
+      'Paris → Abidjan',
+    );
+    expect(find.byKey(const Key('flights-summary-edit')), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('flights-summary-dates'))).data,
+      'Toutes les dates',
+    );
+    expect(
+      tester
+          .widget<Text>(find.byKey(const Key('flights-summary-passengers')))
+          .data,
+      '1',
+    );
+    // Sans cadre : ni bordure ni fond propre autour du résumé.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('flights-summary')),
+        matching: find.byType(DecoratedBox),
+      ),
+      findsNothing,
+    );
+    expect(
+      tester.getSemantics(find.byKey(const Key('flights-summary'))),
+      matchesSemantics(
+        isButton: true,
+        label: 'Paris → Abidjan',
+        value: 'Toutes les dates, 1 passager',
+        hint: 'Modifier la recherche',
+        hasTapAction: true,
+      ),
+    );
+
+    // Toucher la barre de recherche ramène au formulaire.
+    await tester.tap(find.byKey(const Key('flights-summary-edit')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('flights-form')), findsOneWidget);
+  });
+
   testWidgets('résultats : scarabée seul en haut, alerte par le bouton bas', (
     tester,
   ) async {
@@ -468,7 +543,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(FlightResultsHeader),
-        matching: find.byType(FlightRoundButton),
+        matching: find.byType(DonyAppBarBackButton),
       ),
       findsOneWidget,
     );
@@ -523,7 +598,7 @@ void main() {
     expect(find.byKey(const Key('flights-results')), findsOneWidget);
     verify(() => repository.search(any())).called(2);
 
-    await tester.tap(find.byKey(const Key('flights-back')));
+    await tester.tap(find.byType(DonyAppBarBackButton));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('flights-recent-clear')));
     await tester.pumpAndSettle();
@@ -681,7 +756,7 @@ void main() {
     await tester.pumpAndSettle();
     verify(() => repository.search(any())).called(1);
 
-    await tester.tap(find.byKey(const Key('flights-back')));
+    await tester.tap(find.byType(DonyAppBarBackButton));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('flights-alerts-button')));
     await tester.pumpAndSettle();
@@ -783,6 +858,11 @@ void main() {
     final scrollable = await resultsFor(tester, count: 6);
 
     expect(find.byKey(const Key('flights-all-airlines-top')), findsNothing);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('flights-all-airlines-inline')),
+      300,
+      scrollable: scrollable,
+    );
     expect(
       find.byKey(const Key('flights-all-airlines-inline')),
       findsOneWidget,
@@ -877,12 +957,12 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('bouton rond retour à gauche du titre, revient au hub', (
+    testWidgets('en-tête Yadony : retour à gauche du titre, revient au hub', (
       tester,
     ) async {
       await openNested(tester);
 
-      final back = find.byKey(const Key('flights-close'));
+      final back = find.byType(DonyAppBarBackButton);
       expect(back, findsOneWidget);
       expect(
         tester.getCenter(back).dx,
@@ -942,7 +1022,7 @@ void main() {
   ) async {
     await open(tester);
 
-    await tester.tap(find.byKey(const Key('flights-close')));
+    await tester.tap(find.byType(DonyAppBarBackButton));
     await tester.pumpAndSettle();
 
     expect(find.text('hub Activités'), findsOneWidget);

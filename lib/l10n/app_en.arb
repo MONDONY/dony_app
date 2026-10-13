@@ -9892,6 +9892,8 @@
   "flightsLoadingTipTitle": "Good to know",
   "flightsLoadingTipBody": "Prices come from recent searches on Aviasales. They may change when you book.",
   "flightsSummaryEdit": "Edit search",
+  "flightsResultsTitle": "Results",
+  "flightsPassengersCount": "{count, plural, =1{1 passenger} other{{count} passengers}}",
   "flightsTabCheapest": "Cheapest",
   "flightsTabFastest": "Fastest",
   "flightsTabDirect": "Direct",

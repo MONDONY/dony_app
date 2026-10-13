@@ -6,127 +6,131 @@ import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-/// En-tête des résultats : retour, pastille résumé de la recherche (qui
-/// ramène au formulaire) et scarabée. L'alerte prix se crée depuis le bouton
-/// « Alerte prix » en bas de la liste, ou la suggestion de l'écran « Aucun
-/// vol ».
+/// En-tête des résultats : barre Yadony standard (retour carré, « Résultats »
+/// centré, scarabée), puis la barre de recherche sans cadre : trajet en gras
+/// avec un crayon, dates et passagers en gris. Toucher la barre ramène au
+/// formulaire pour modifier la recherche. L'alerte prix se crée depuis le
+/// bouton « Alerte prix » en bas de la liste, ou la suggestion de l'écran
+/// « Aucun vol ».
 class FlightResultsHeader extends StatelessWidget {
   const FlightResultsHeader({
     super.key,
     required this.route,
     required this.dates,
     required this.onBack,
+    this.passengers = 1,
   });
 
   final String route;
   final String dates;
   final VoidCallback onBack;
+  final int passengers;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
     final l = context.l10n;
     const tabular = [FontFeature.tabularFigures()];
+    final muted = tt.bodyMedium?.copyWith(
+      color: cs.onSurfaceVariant,
+      height: 1.3,
+      fontFeatures: tabular,
+    );
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.sm,
-        DonySpacing.xs,
-        DonySpacing.xs,
-        DonySpacing.sm,
-      ),
-      child: Row(
+    return ColoredBox(
+      color: theme.appBarTheme.backgroundColor ?? cs.surface,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          FlightRoundButton(
-            key: const Key('flights-back'),
-            icon: 'arrow-left',
-            tooltip: l.commonBack,
-            onPressed: onBack,
+          FlightHeaderBar(
+            bar: DonyAppBar(
+              title: l.flightsResultsTitle,
+              centerTitle: true,
+              onBack: onBack,
+              // Pas de filet entre le titre et la barre de recherche : les
+              // deux forment un seul bloc, souligné en bas.
+              bottom: const PreferredSize(
+                preferredSize: Size.zero,
+                child: SizedBox.shrink(),
+              ),
+            ),
           ),
-          const SizedBox(width: DonySpacing.xs),
-          Expanded(
-            child: Semantics(
-              button: true,
-              label: l.flightsSummaryEdit,
-              child: DonyPressable(
-                key: const Key('flights-summary'),
-                onTap: onBack,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.md,
-                    vertical: DonySpacing.sm,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.lg),
-                    border: Border.all(color: cs.outline),
-                    boxShadow: DonyShadow.xs,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              route,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: tt.headlineSmall?.copyWith(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                height: 1.25,
-                              ),
+          Semantics(
+            button: true,
+            label: route,
+            value: '$dates, ${l.flightsPassengersCount(passengers)}',
+            hint: l.flightsSummaryEdit,
+            onTap: onBack,
+            excludeSemantics: true,
+            child: DonyPressable(
+              key: const Key('flights-summary'),
+              onTap: onBack,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xs,
+                  DonySpacing.lg,
+                  DonySpacing.md,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            route,
+                            key: const Key('flights-summary-route'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.headlineSmall?.copyWith(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                              height: 1.3,
                             ),
                           ),
-                          const SizedBox(
-                            width: DonySpacing.xs + DonySpacing.xxs,
+                        ),
+                        const SizedBox(width: DonySpacing.sm),
+                        DonyIcon(
+                          'pencil',
+                          key: const Key('flights-summary-edit'),
+                          size: 16,
+                          color: cs.onSurface,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: DonySpacing.xxs),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            dates,
+                            key: const Key('flights-summary-dates'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: muted,
                           ),
-                          DonyIcon(
-                            'square-pen',
-                            size: 15,
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              dates,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                fontFeatures: tabular,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: DonySpacing.sm),
-                          DonyIcon(
-                            'user',
-                            size: 12,
-                            color: cs.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            '1',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                              fontFeatures: tabular,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                        const SizedBox(width: DonySpacing.base),
+                        DonyIcon('user', size: 14, color: cs.onSurfaceVariant),
+                        const SizedBox(width: DonySpacing.xxs),
+                        Text(
+                          '$passengers',
+                          key: const Key('flights-summary-passengers'),
+                          style: muted,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          const SizedBox(width: DonySpacing.xs),
-          const DonyFeedbackButton(),
+          const Divider(height: 1),
         ],
       ),
     );

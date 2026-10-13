@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:dony/core/design/widgets/dony_app_bar.dart';
+import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
@@ -200,6 +202,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Vols trouvés'), findsOneWidget);
+    // En-tête Yadony standard : chevron, titre centré, scarabée.
+    expect(find.byType(DonyAppBarBackButton), findsOneWidget);
+    expect(tester.widget<AppBar>(find.byType(AppBar)).centerTitle, isTrue);
+    expect(find.byType(DonyFeedbackButton), findsOneWidget);
     expect(find.text('Paris → Abidjan'), findsOneWidget);
     expect(
       _text('Départ du 1 déc. au 20 déc. 2099 · Aller simple · prix max 450 €'),
@@ -435,13 +441,13 @@ void main() {
     when(() => repository.alerts()).thenAnswer((_) async => [_alert]);
     await open(tester);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('flight-alert-offers-back')));
+    await tester.tap(find.byType(DonyAppBarBackButton));
     await tester.pumpAndSettle();
     expect(find.text('ouvrir'), findsOneWidget);
 
     await open(tester, asRoot: true);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('flight-alert-offers-back')));
+    await tester.tap(find.byType(DonyAppBarBackButton));
     await tester.pumpAndSettle();
     expect(find.text('mes alertes'), findsOneWidget);
   });

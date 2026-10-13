@@ -30776,6 +30776,18 @@ abstract class AppLocalizations {
   /// **'Modifier la recherche'**
   String get flightsSummaryEdit;
 
+  /// Titre de l'en-tête des résultats de vols.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résultats'**
+  String get flightsResultsTitle;
+
+  /// Lecture d'écran du nombre de passagers de la barre de recherche.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 passager} other{{count} passagers}}'**
+  String flightsPassengersCount(int count);
+
   /// Onglet de tri des résultats.
   ///
   /// In fr, this message translates to:

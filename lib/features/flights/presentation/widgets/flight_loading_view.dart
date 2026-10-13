@@ -5,7 +5,6 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 // Couleurs primitives intentionnelles : l'écran d'attente est sombre dans
 // les deux thèmes (fond de nuit, texte blanc), comme une illustration.
@@ -24,11 +23,15 @@ class FlightLoadingView extends StatefulWidget {
     super.key,
     required this.routeChip,
     required this.destinationName,
+    required this.onBack,
   });
 
   /// « PAR ↔ ABJ · 12 déc. – 3 janv. · 1 pers. ».
   final String routeChip;
   final String destinationName;
+
+  /// Retour au formulaire : la recherche en cours est abandonnée.
+  final VoidCallback onBack;
 
   /// Durée totale du défilé des étapes.
   static const stepsDuration = Duration(milliseconds: 4200);
@@ -71,73 +74,87 @@ class _FlightLoadingViewState extends State<FlightLoadingView>
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: FlightStatusBar.night(context),
-      child: DecoratedBox(
-        key: const Key('flights-loading'),
-        decoration: const BoxDecoration(
-          color: _night,
-          gradient: RadialGradient(
-            center: Alignment(0, -0.64),
-            radius: 1.1,
-            colors: [_nightGlow, _night],
-            stops: [0, 0.62],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // En-tête Yadony standard, au-dessus de la scène de nuit.
+        FlightHeaderBar(
+          bar: DonyAppBar(
+            title: l.flightsTitle,
+            centerTitle: true,
+            onBack: widget.onBack,
+            bottom: const PreferredSize(
+              preferredSize: Size.zero,
+              child: SizedBox.shrink(),
+            ),
           ),
         ),
-        child: SafeArea(
-          bottom: false,
-          child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.xl + DonySpacing.xxs,
+        Expanded(
+          child: DecoratedBox(
+            key: const Key('flights-loading'),
+            decoration: const BoxDecoration(
+              color: _night,
+              gradient: RadialGradient(
+                center: Alignment(0, -0.64),
+                radius: 1.1,
+                colors: [_nightGlow, _night],
+                stops: [0, 0.62],
               ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: DonySpacing.sm),
-                      _RouteChip(text: widget.routeChip),
-                      const SizedBox(height: DonySpacing.huge),
-                      _Ring(animation: _ring),
-                      const SizedBox(height: DonySpacing.xl),
-                      Text(
-                        l.flightsLoadingKicker(widget.destinationName),
-                        textAlign: TextAlign.center,
-                        style: tt.bodyMedium?.copyWith(
-                          color: _white.withValues(alpha: 0.7),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.xl + DonySpacing.xxs,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: DonySpacing.sm),
+                        _RouteChip(text: widget.routeChip),
+                        const SizedBox(height: DonySpacing.huge),
+                        _Ring(animation: _ring),
+                        const SizedBox(height: DonySpacing.xl),
+                        Text(
+                          l.flightsLoadingKicker(widget.destinationName),
+                          textAlign: TextAlign.center,
+                          style: tt.bodyMedium?.copyWith(
+                            color: _white.withValues(alpha: 0.7),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: DonySpacing.sm),
-                      Text(
-                        l.flightsLoadingTitle,
-                        textAlign: TextAlign.center,
-                        style: tt.displayMedium?.copyWith(
-                          fontSize: 27,
-                          color: _white,
-                          height: 1.15,
+                        const SizedBox(height: DonySpacing.sm),
+                        Text(
+                          l.flightsLoadingTitle,
+                          textAlign: TextAlign.center,
+                          style: tt.displayMedium?.copyWith(
+                            fontSize: 27,
+                            color: _white,
+                            height: 1.15,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: DonySpacing.xxl),
-                      AnimatedBuilder(
-                        animation: _steps,
-                        builder: (context, _) => _Steps(progress: _steps.value),
-                      ),
-                      const Spacer(),
-                      const SizedBox(height: DonySpacing.xl),
-                      _Tip(
-                        title: l.flightsLoadingTipTitle,
-                        body: l.flightsLoadingTipBody,
-                      ),
-                      const SizedBox(height: DonySpacing.xl),
-                    ],
+                        const SizedBox(height: DonySpacing.xxl),
+                        AnimatedBuilder(
+                          animation: _steps,
+                          builder: (context, _) =>
+                              _Steps(progress: _steps.value),
+                        ),
+                        const Spacer(),
+                        const SizedBox(height: DonySpacing.xl),
+                        _Tip(
+                          title: l.flightsLoadingTipTitle,
+                          body: l.flightsLoadingTipBody,
+                        ),
+                        const SizedBox(height: DonySpacing.xl),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

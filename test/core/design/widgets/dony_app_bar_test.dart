@@ -96,6 +96,20 @@ void main() {
       },
     );
 
+    testWidgets('titre aligné à gauche par défaut, centré sur demande', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrapAppBar(const DonyAppBar(title: 'Test')));
+      await tester.pump();
+      expect(tester.widget<AppBar>(find.byType(AppBar)).centerTitle, isFalse);
+
+      await tester.pumpWidget(
+        wrapAppBar(const DonyAppBar(title: 'Centré', centerTitle: true)),
+      );
+      await tester.pump();
+      expect(tester.widget<AppBar>(find.byType(AppBar)).centerTitle, isTrue);
+    });
+
     // ── Default icon: chevron_left_rounded ────────────────────────────────────
 
     testWidgets('uses Icons.chevron_left_rounded by default', (tester) async {

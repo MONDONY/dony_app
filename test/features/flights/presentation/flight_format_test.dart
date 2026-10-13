@@ -47,6 +47,20 @@ void main() {
     expect(FlightFormat.monthName(fr, DateTime(2026, 10)), 'octobre');
   });
 
+  test('dates de la barre de recherche, jour de la semaine compris', () {
+    final out = FlightWhen.day(DateTime(2026, 10, 29));
+    final back = FlightWhen.day(DateTime(2026, 11, 13));
+    expect(FlightFormat.searchDates(fr, out, null), 'jeu. 29 oct.');
+    expect(
+      FlightFormat.searchDates(fr, out, back),
+      'jeu. 29 oct. – ven. 13 nov.',
+    );
+    final march = FlightWhen.month(DateTime(2027, 3));
+    expect(FlightFormat.searchDates(fr, march, march), 'mars 2027');
+    expect(FlightFormat.searchDates(fr, null, null), 'Toutes les dates');
+    expect(FlightFormat.searchDates(en, out, null), 'Thu, Oct 29');
+  });
+
   group('dates d\'une alerte', () {
     FlightAlert alert({
       DateTime? departureFrom,

@@ -18854,6 +18854,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flightsSummaryEdit => 'Edit search';
 
   @override
+  String get flightsResultsTitle => 'Results';
+
+  @override
+  String flightsPassengersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count passengers',
+      one: '1 passenger',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get flightsTabCheapest => 'Cheapest';
 
   @override

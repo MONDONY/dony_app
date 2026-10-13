@@ -25,6 +25,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.bottom,
     this.showFeedback = true,
+    this.centerTitle = false,
   }) : assert(
          variant == DonyAppBarVariant.compact,
          'Use DonySliverAppBar for the large variant inside a CustomScrollView.', // i18n-ignore
@@ -49,6 +50,10 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// rapport n'a pas de sens (verrouillage, splash…).
   final bool showFeedback;
 
+  /// Titre centré entre le retour et les actions (écran de résultats) ;
+  /// aligné à gauche par défaut.
+  final bool centerTitle;
+
   @override
   Size get preferredSize =>
       Size.fromHeight(56 + (bottom?.preferredSize.height ?? 0));
@@ -64,7 +69,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
         overflow: TextOverflow.ellipsis,
         style: tt.headlineMedium,
       ),
-      centerTitle: false,
+      centerTitle: centerTitle,
       scrolledUnderElevation: 0,
       leading: showBackButton
           ? DonyAppBarBackButton(
