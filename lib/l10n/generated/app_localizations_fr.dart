@@ -18998,6 +18998,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Voir toutes les compagnies sur Aviasales, avec les mêmes dates.';
 
   @override
+  String get flightsFewResultsTitle => 'Plus de vols sur Aviasales';
+
+  @override
+  String get flightsFewResultsBody =>
+      'Nous n\'avons que les prix récents. Aviasales cherche en direct sur toutes les compagnies, avec les mêmes dates.';
+
+  @override
+  String get flightsLiveSearchCta => 'Rechercher en direct sur Aviasales';
+
+  @override
+  String get flightsLiveSearchHint =>
+      'Toutes les compagnies, prix du moment, mêmes dates.';
+
+  @override
   String get flightsAlertFab => 'Alerte prix';
 
   @override

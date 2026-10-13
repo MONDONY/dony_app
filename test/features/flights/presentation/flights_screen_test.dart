@@ -369,10 +369,7 @@ void main() {
       find.text('4 vols · prix par personne, aller simple'),
       findsOneWidget,
     );
-    expect(
-      find.byKey(const Key('flights-all-airlines-inline')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('flights-all-airlines-top')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.byKey(const Key('flights-filters')));
@@ -590,7 +587,7 @@ void main() {
 
     expect(find.byType(FlightOfferCard), findsOneWidget);
     expect(find.byKey(const Key('flights-all-airlines')), findsNothing);
-    expect(find.byKey(const Key('flights-all-airlines-inline')), findsNothing);
+    expect(find.byKey(const Key('flights-all-airlines-top')), findsNothing);
     // Une seule offre : ni pastille « Le moins cher » ni « Le plus rapide ».
     expect(find.text('Le moins cher'), findsOneWidget);
   });
@@ -629,7 +626,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SnackBar), findsOneWidget);
 
-    final more = find.byKey(const Key('flights-all-airlines-inline'));
+    final more = find.byKey(const Key('flights-all-airlines-top'));
     await tester.scrollUntilVisible(
       more,
       300,
@@ -699,5 +696,104 @@ void main() {
     await tester.tap(find.byKey(const Key('flights-suggest-aviasales')));
     await tester.pumpAndSettle();
     verify(() => repository.affiliateLink(any(), source: 'search')).called(1);
+  });
+  Future<Finder> resultsFor(
+    WidgetTester tester, {
+    required int count,
+    bool nearby = false,
+  }) async {
+    search = (_) async => FlightSearchResult(
+      originCode: 'PAR',
+      destinationCode: 'ABJ',
+      roundTrip: false,
+      currency: 'EUR',
+      offers: [
+        for (var i = 0; i < count; i++)
+          _rich('o$i', 400.0 + i * 10, transfers: i % 2, minutes: 400 + i),
+      ],
+      searchPath: '/search/PAR1212ABJ1',
+      nearbyDates: nearby,
+    );
+    await open(tester);
+    await tester.tap(find.byKey(const Key('flights-search-button')));
+    await tester.pumpAndSettle();
+    return find.descendant(
+      of: find.byKey(const Key('flights-results')),
+      matching: find.byType(Scrollable),
+    );
+  }
+
+  testWidgets('peu de vols : Aviasales mis en avant en tête de liste', (
+    tester,
+  ) async {
+    await resultsFor(tester, count: 2);
+
+    final top = find.byKey(const Key('flights-all-airlines-top'));
+    expect(top, findsOneWidget);
+    expect(find.text('Plus de vols sur Aviasales'), findsOneWidget);
+    // En tête : au-dessus de la première carte.
+    expect(
+      tester.getTopLeft(top).dy,
+      lessThan(tester.getTopLeft(find.byType(FlightOfferCard).first).dy),
+    );
+    expect(find.byKey(const Key('flights-all-airlines')), findsNothing);
+    expect(find.byKey(const Key('flights-all-airlines-inline')), findsNothing);
+
+    await tester.tap(top);
+    await tester.pumpAndSettle();
+    verify(() => repository.affiliateLink(any(), source: 'search')).called(1);
+  });
+
+  testWidgets('beaucoup de vols : encart après la 3e carte et en fin', (
+    tester,
+  ) async {
+    final scrollable = await resultsFor(tester, count: 6);
+
+    expect(find.byKey(const Key('flights-all-airlines-top')), findsNothing);
+    expect(
+      find.byKey(const Key('flights-all-airlines-inline')),
+      findsOneWidget,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('flights-all-airlines')),
+      300,
+      scrollable: scrollable,
+    );
+    expect(find.byKey(const Key('flights-all-airlines')), findsOneWidget);
+  });
+
+  testWidgets('dates proches : Aviasales en tête même avec beaucoup de vols', (
+    tester,
+  ) async {
+    await resultsFor(tester, count: 6, nearby: true);
+
+    expect(find.byKey(const Key('flights-nearby-dates')), findsOneWidget);
+    expect(find.byKey(const Key('flights-all-airlines-top')), findsOneWidget);
+    expect(find.byKey(const Key('flights-all-airlines-inline')), findsNothing);
+  });
+
+  testWidgets('aucun vol : bouton principal de recherche en direct', (
+    tester,
+  ) async {
+    search = (_) async => const FlightSearchResult(
+      originCode: 'PAR',
+      destinationCode: 'ABJ',
+      roundTrip: false,
+      currency: 'EUR',
+      offers: [],
+      searchPath: '/search/PAR1212ABJ1',
+    );
+    await open(tester);
+    await tester.tap(find.byKey(const Key('flights-search-button')));
+    await tester.pumpAndSettle();
+
+    final cta = find.byKey(const Key('flights-suggest-aviasales'));
+    expect(cta, findsOneWidget);
+    expect(find.text('Rechercher en direct sur Aviasales'), findsOneWidget);
+    // Avant « Essayez plutôt » : c'est l'action principale.
+    expect(
+      tester.getTopLeft(cta).dy,
+      lessThan(tester.getTopLeft(find.text('Essayez plutôt')).dy),
+    );
   });
 }

@@ -18861,6 +18861,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flightsMoreBody => 'See every airline on Aviasales, same dates.';
 
   @override
+  String get flightsFewResultsTitle => 'More flights on Aviasales';
+
+  @override
+  String get flightsFewResultsBody =>
+      'We only have recent prices. Aviasales searches every airline live, for the same dates.';
+
+  @override
+  String get flightsLiveSearchCta => 'Search live on Aviasales';
+
+  @override
+  String get flightsLiveSearchHint =>
+      'Every airline, current prices, same dates.';
+
+  @override
   String get flightsAlertFab => 'Price alert';
 
   @override
