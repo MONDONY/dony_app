@@ -20012,7 +20012,7 @@ abstract class AppLocalizations {
   /// Titre de la feuille proposée quand l'utilisateur masque les billets d'avion avec des alertes prix actives (flight_alerts_pause_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Mettre aussi vos alertes prix en pause ?'**
+  /// **'Mettre aussi vos alertes prix en pause ?'**
   String get settingsFlightsPauseTitle;
 
   /// Texte de la feuille de mise en pause des alertes prix, avec le nombre d'alertes actives (flight_alerts_pause_sheet.dart)

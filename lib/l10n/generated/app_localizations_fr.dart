@@ -12142,7 +12142,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsFlightsPauseTitle =>
-      'Mettre aussi vos alertes prix en pause ?';
+      'Mettre aussi vos alertes prix en pause ?';
 
   @override
   String settingsFlightsPauseBody(int count) {

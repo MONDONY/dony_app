@@ -13270,7 +13270,7 @@
   "@settingsFlightsVisibleSubtitle": {
     "description": "Sous-titre de l'interrupteur des billets d'avion (settings_screen.dart)"
   },
-  "settingsFlightsPauseTitle": "Mettre aussi vos alertes prix en pause ?",
+  "settingsFlightsPauseTitle": "Mettre aussi vos alertes prix en pause ?",
   "@settingsFlightsPauseTitle": {
     "description": "Titre de la feuille proposée quand l'utilisateur masque les billets d'avion avec des alertes prix actives (flight_alerts_pause_sheet.dart)"
   },
