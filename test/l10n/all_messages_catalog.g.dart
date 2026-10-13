@@ -5597,6 +5597,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'receptionTrackingNumberLabel': (l) => l.receptionTrackingNumberLabel,
   'receptionWeightLabel': (l) => l.receptionWeightLabel,
   'receptionInstructionsTitle': (l) => l.receptionInstructionsTitle,
+  'receptionDetailCodeTitle': (l) => l.receptionDetailCodeTitle,
   'receptionCodeSemantics': (l) =>
       l.receptionCodeSemantics(placeholderMarker('code')),
   'receptionCodeExplanation': (l) => l.receptionCodeExplanation,

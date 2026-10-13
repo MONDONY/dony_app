@@ -1075,7 +1075,7 @@ class _PickupCodeCard extends StatelessWidget {
               const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Text(
-                  l.receptionCodeTitle,
+                  l.receptionDetailCodeTitle,
                   style: tt.labelMedium?.copyWith(
                     color: cs.onSurfaceVariant,
                     fontWeight: FontWeight.w700,

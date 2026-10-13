@@ -8951,7 +8951,7 @@
   "receptionTrackingNumberLabel": "Tracking number",
   "receptionWeightLabel": "Weight",
   "receptionInstructionsTitle": "PICKUP INSTRUCTIONS",
-  "receptionCodeTitle": "YOUR PICKUP CODE",
+  "receptionDetailCodeTitle": "YOUR PICKUP CODE",
   "receptionCodeSemantics": "Pickup code: {code}",
   "receptionCodeExplanation": "Secret code: give it to the traveler only when you receive the parcel, not before.",
   "receptionCodePending": "Your pickup code will appear here as soon as the traveler has the parcel.",

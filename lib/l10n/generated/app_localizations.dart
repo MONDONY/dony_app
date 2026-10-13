@@ -17711,10 +17711,10 @@ abstract class AppLocalizations {
   /// **'OPTION 2 · CODE'**
   String get receptionCodeOptionLabel;
 
-  /// Titre de la carte du code de retrait (reception_detail_screen.dart).
+  /// Titre du contenu de l'onglet code de reception_confirm_screen.dart (_CodeTabContent).
   ///
   /// In fr, this message translates to:
-  /// **'VOTRE CODE DE RETRAIT'**
+  /// **'Tapez le code reçu'**
   String get receptionCodeTitle;
 
   /// Minuteur de reception_confirm_screen.dart (_CodeTabContent) — {time} est le compte à rebours mm:ss déjà formaté, mis en valeur via emphasizedSpans.
@@ -26216,6 +26216,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'INSTRUCTIONS DE RETRAIT'**
   String get receptionInstructionsTitle;
+
+  /// Titre de la carte du code de retrait (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'VOTRE CODE DE RETRAIT'**
+  String get receptionDetailCodeTitle;
 
   /// Lecture d'écran du code de retrait (reception_detail_screen.dart).
   ///

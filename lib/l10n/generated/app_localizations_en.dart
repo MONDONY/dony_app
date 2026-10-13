@@ -10698,7 +10698,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receptionCodeOptionLabel => 'OPTION 2 · CODE';
 
   @override
-  String get receptionCodeTitle => 'YOUR PICKUP CODE';
+  String get receptionCodeTitle => 'Enter the code you received';
 
   @override
   String receptionCodeExpiresIn(String time) {
@@ -15936,6 +15936,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receptionInstructionsTitle => 'PICKUP INSTRUCTIONS';
+
+  @override
+  String get receptionDetailCodeTitle => 'YOUR PICKUP CODE';
 
   @override
   String receptionCodeSemantics(String code) {
