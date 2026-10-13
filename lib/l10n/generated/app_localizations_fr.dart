@@ -10774,7 +10774,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get receptionCodeOptionLabel => 'OPTION 2 · CODE';
 
   @override
-  String get receptionCodeTitle => 'VOTRE CODE DE RETRAIT';
+  String get receptionCodeTitle => 'Tapez le code reçu';
 
   @override
   String receptionCodeExpiresIn(String time) {
@@ -16040,6 +16040,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get receptionInstructionsTitle => 'INSTRUCTIONS DE RETRAIT';
+
+  @override
+  String get receptionDetailCodeTitle => 'VOTRE CODE DE RETRAIT';
 
   @override
   String receptionCodeSemantics(String code) {
