@@ -6,6 +6,7 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/features/package_request/presentation/widgets/my_negotiation_chip.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -229,6 +230,20 @@ class _PhotoHero extends StatelessWidget {
               top: 8,
               left: 8,
               child: _DistanceBadge(label: distanceLabel!, cs: cs, tt: tt),
+            ),
+          // Négociation déjà engagée (FLUTTER-NZ), en haut à droite.
+          if (!isOwnRequest && item.myNegotiation != null)
+            Positioned(
+              top: 4,
+              right: 8,
+              left: 96,
+              child: Align(
+                alignment: AlignmentDirectional.topEnd,
+                child: MyNegotiationChip(
+                  negotiation: item.myNegotiation!,
+                  onImage: true,
+                ),
+              ),
             ),
         ],
       ),

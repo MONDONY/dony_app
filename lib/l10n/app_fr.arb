@@ -20344,6 +20344,8 @@
   "@flightsNoFlightsTitle": {"description": "Écran sans résultat."},
   "flightsNoFlightsBody": "Aucun prix récent pour ce trajet. Essayez une autre ville de départ ou tout le mois.",
   "@flightsNoFlightsBody": {"description": "Écran sans résultat."},
+  "flightsNearbyDatesNotice": "Pas de prix exact pour ces dates. Voici des vols à {days, plural, =1{1 jour près} other{{days} jours près}}.",
+  "@flightsNearbyDatesNotice": {"description": "Bandeau des résultats quand le back renvoie des vols à quelques jours des dates demandées.", "placeholders": {"days": {"type": "int"}}},
   "flightsTryInstead": "Essayez plutôt",
   "@flightsTryInstead": {"description": "Suggestions de l'écran sans résultat."},
   "flightsSuggestSameDates": "mêmes dates",
@@ -20639,5 +20641,13 @@
   "errorCounterSameAmountMessage": "Ce montant est identique à la dernière proposition : acceptez-la ou changez le prix.",
   "@errorCounterSameAmountMessage": {
     "description": "Erreur 422 counter-same-amount (FLUTTER-NS)"
+  },
+  "requestMyNegotiationYourTurn": "Votre tour",
+  "@requestMyNegotiationYourTurn": {
+    "description": "Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et c'est à lui de répondre (FLUTTER-NZ)"
+  },
+  "requestMyNegotiationPending": "Proposition en attente",
+  "@requestMyNegotiationPending": {
+    "description": "Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et attend la réponse de l'expéditeur (FLUTTER-NZ)"
   }
 }

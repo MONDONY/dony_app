@@ -9898,6 +9898,7 @@
   "flightsAlertFab": "Price alert",
   "flightsNoFlightsTitle": "No flights on these dates",
   "flightsNoFlightsBody": "No recent price for this route. Try another departure city or the whole month.",
+  "flightsNearbyDatesNotice": "No exact price for these dates. Here are flights within {days, plural, =1{1 day} other{{days} days}}.",
   "flightsTryInstead": "Try instead",
   "flightsSuggestSameDates": "same dates",
   "flightsSuggestWholeMonth": "All of {month}",
@@ -10114,5 +10115,13 @@
   "errorCounterSameAmountMessage": "This amount matches the last offer: accept it or change the price.",
   "@errorCounterSameAmountMessage": {
     "description": "Erreur 422 counter-same-amount (FLUTTER-NS)"
+  },
+  "requestMyNegotiationYourTurn": "Your turn",
+  "@requestMyNegotiationYourTurn": {
+    "description": "Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et c'est à lui de répondre (FLUTTER-NZ)"
+  },
+  "requestMyNegotiationPending": "Offer pending",
+  "@requestMyNegotiationPending": {
+    "description": "Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et attend la réponse de l'expéditeur (FLUTTER-NZ)"
   }
 }

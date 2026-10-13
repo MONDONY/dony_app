@@ -30812,6 +30812,12 @@ abstract class AppLocalizations {
   /// **'Aucun prix récent pour ce trajet. Essayez une autre ville de départ ou tout le mois.'**
   String get flightsNoFlightsBody;
 
+  /// Bandeau des résultats quand le back renvoie des vols à quelques jours des dates demandées.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de prix exact pour ces dates. Voici des vols à {days, plural, =1{1 jour près} other{{days} jours près}}.'**
+  String flightsNearbyDatesNotice(int days);
+
   /// Suggestions de l'écran sans résultat.
   ///
   /// In fr, this message translates to:
@@ -31291,6 +31297,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce montant est identique à la dernière proposition : acceptez-la ou changez le prix.'**
   String get errorCounterSameAmountMessage;
+
+  /// Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et c'est à lui de répondre (FLUTTER-NZ)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre tour'**
+  String get requestMyNegotiationYourTurn;
+
+  /// Puce d'une carte de demande d'envoi : le voyageur négocie déjà cette demande et attend la réponse de l'expéditeur (FLUTTER-NZ)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition en attente'**
+  String get requestMyNegotiationPending;
 }
 
 class _AppLocalizationsDelegate

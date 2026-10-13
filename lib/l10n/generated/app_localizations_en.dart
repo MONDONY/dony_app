@@ -18871,6 +18871,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'No recent price for this route. Try another departure city or the whole month.';
 
   @override
+  String flightsNearbyDatesNotice(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return 'No exact price for these dates. Here are flights within $_temp0.';
+  }
+
+  @override
   String get flightsTryInstead => 'Try instead';
 
   @override
@@ -19153,4 +19164,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorCounterSameAmountMessage =>
       'This amount matches the last offer: accept it or change the price.';
+
+  @override
+  String get requestMyNegotiationYourTurn => 'Your turn';
+
+  @override
+  String get requestMyNegotiationPending => 'Offer pending';
 }

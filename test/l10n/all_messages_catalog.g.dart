@@ -6580,6 +6580,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsAlertFab': (l) => l.flightsAlertFab,
   'flightsNoFlightsTitle': (l) => l.flightsNoFlightsTitle,
   'flightsNoFlightsBody': (l) => l.flightsNoFlightsBody,
+  'flightsNearbyDatesNotice': (l) =>
+      l.flightsNearbyDatesNotice(intPlaceholderValue),
   'flightsTryInstead': (l) => l.flightsTryInstead,
   'flightsSuggestSameDates': (l) => l.flightsSuggestSameDates,
   'flightsSuggestWholeMonth': (l) =>
@@ -6683,6 +6685,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.errorCounterNetTravelerOnlyMessage,
   'errorCounterSameAmountTitle': (l) => l.errorCounterSameAmountTitle,
   'errorCounterSameAmountMessage': (l) => l.errorCounterSameAmountMessage,
+  'requestMyNegotiationYourTurn': (l) => l.requestMyNegotiationYourTurn,
+  'requestMyNegotiationPending': (l) => l.requestMyNegotiationPending,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
