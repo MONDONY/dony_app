@@ -197,9 +197,18 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
     _trackEvent(AnalyticsEvents.successScreenClosed);
     if (widget.onClose != null) {
       widget.onClose!();
-    } else {
-      GoRouter.of(context).go('/home');
+      return;
     }
+    final router = GoRouter.of(context);
+    // Écran poussé hors GoRouter (MaterialPageRoute, après une offre
+    // envoyée par exemple) : depuis /home, `go('/home')` ne change aucune
+    // page et la route restait affichée, la croix ne fermait rien
+    // (FLUTTER-P5). On la retire d'abord.
+    final route = ModalRoute.of(context);
+    if (route != null && route.settings is! Page && route.isCurrent) {
+      Navigator.of(context).pop();
+    }
+    router.go('/home');
   }
 
   @override

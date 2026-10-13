@@ -19116,4 +19116,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String listingPreviewCurrencyValue(String currencyName, String currencyCode) {
     return 'Currency: $currencyName ($currencyCode)';
   }
+
+  @override
+  String get ratingPendingPillLabel => 'To rate';
 }

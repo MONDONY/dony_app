@@ -20593,5 +20593,9 @@
         "type": "String"
       }
     }
+  },
+  "ratingPendingPillLabel": "À noter",
+  "@ratingPendingPillLabel": {
+    "description": "Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)"
   }
 }

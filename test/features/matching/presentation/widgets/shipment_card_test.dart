@@ -1,10 +1,16 @@
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/rating_pending_pill.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-BidModel _bid({String status = 'ARRIVED', DateTime? departureDate}) => BidModel(
+BidModel _bid({
+  String status = 'ARRIVED',
+  DateTime? departureDate,
+  bool senderHasRated = false,
+  bool travelerHasRated = false,
+}) => BidModel(
   id: 'bid-1',
   announcementId: 'a-1',
   senderId: 's-1',
@@ -15,6 +21,8 @@ BidModel _bid({String status = 'ARRIVED', DateTime? departureDate}) => BidModel(
   departureCity: 'Paris',
   arrivalCity: 'Abidjan',
   departureDate: departureDate,
+  senderHasRated: senderHasRated,
+  travelerHasRated: travelerHasRated,
 );
 
 void main() {
@@ -99,5 +107,42 @@ void main() {
     expect(find.text('ARRIVÉ'), findsOneWidget);
     expect(find.text('Arrivé, prêt à être récupéré'), findsOneWidget);
     expect(find.text('Suivre le colis →'), findsOneWidget);
+  });
+
+  group('pastille « À noter » (FLUTTER-P2)', () {
+    testWidgets('colis livré sans note de l\'expéditeur : pastille visible', (
+      tester,
+    ) async {
+      await pumpCard(tester, _bid(status: 'COMPLETED'));
+      expect(find.text('À noter'), findsOneWidget);
+    });
+
+    testWidgets('colis livré déjà noté : pas de pastille', (tester) async {
+      await pumpCard(tester, _bid(status: 'COMPLETED', senderHasRated: true));
+      expect(find.text('À noter'), findsNothing);
+    });
+
+    testWidgets('colis pas encore livré : pas de pastille', (tester) async {
+      await pumpCard(tester, _bid());
+      expect(find.text('À noter'), findsNothing);
+    });
+
+    test('bidAwaitsRating suit le rôle de la partie qui regarde', () {
+      final delivered = _bid(status: 'COMPLETED', senderHasRated: true);
+      expect(bidAwaitsRating(delivered, asSender: true), isFalse);
+      expect(bidAwaitsRating(delivered, asSender: false), isTrue);
+      expect(
+        bidAwaitsRating(_bid(status: 'DELIVERED'), asSender: true),
+        isTrue,
+      );
+      expect(bidAwaitsRating(_bid(), asSender: true), isFalse);
+      expect(
+        bidAwaitsRating(
+          _bid(status: 'COMPLETED', travelerHasRated: true),
+          asSender: false,
+        ),
+        isFalse,
+      );
+    });
   });
 }

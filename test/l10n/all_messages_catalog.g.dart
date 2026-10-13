@@ -6669,6 +6669,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currencyName'),
     placeholderMarker('currencyCode'),
   ),
+  'ratingPendingPillLabel': (l) => l.ratingPendingPillLabel,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

@@ -19253,4 +19253,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String listingPreviewCurrencyValue(String currencyName, String currencyCode) {
     return 'Devise : $currencyName ($currencyCode)';
   }
+
+  @override
+  String get ratingPendingPillLabel => 'À noter';
 }

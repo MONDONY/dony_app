@@ -31231,6 +31231,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Devise : {currencyName} ({currencyCode})'**
   String listingPreviewCurrencyValue(String currencyName, String currencyCode);
+
+  /// Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)
+  ///
+  /// In fr, this message translates to:
+  /// **'À noter'**
+  String get ratingPendingPillLabel;
 }
 
 class _AppLocalizationsDelegate
