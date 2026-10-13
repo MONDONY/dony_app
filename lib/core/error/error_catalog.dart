@@ -516,6 +516,21 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.lock_outline_rounded,
     ),
+    // Modification d'un trajet (FLUTTER-KV, yadony-back #515) : une demande
+    // ou une offre est arrivée, la devise ne peut plus changer. Le bloc
+    // renomme le `currency-locked` du serveur, partagé avec le portefeuille.
+    'announcement/currency-locked': _Entry(
+      title: (l) => l.errorTripCurrencyLockedTitle,
+      message: (l) => l.errorTripCurrencyLockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
+    ),
+    'currency-unsupported': _Entry(
+      title: (l) => l.errorCurrencyUnsupportedTitle,
+      message: (l) => l.errorCurrencyUnsupportedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.currency_exchange_rounded,
+    ),
     'country-unsupported': _Entry(
       title: (l) => l.errorCountryUnsupportedTitle,
       message: (l) => l.errorCountryUnsupportedMessage,

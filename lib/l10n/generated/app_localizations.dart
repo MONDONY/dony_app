@@ -31274,6 +31274,36 @@ abstract class AppLocalizations {
   /// **'À noter'**
   String get ratingPendingPillLabel;
 
+  /// Modification d'un trajet : explication sous l'en-tête quand le serveur fige la devise (currencyEditable false, FLUTTER-KV)
+  ///
+  /// In fr, this message translates to:
+  /// **'La devise ne peut plus changer : ce trajet a déjà des demandes.'**
+  String get tripEditCurrencyLockedHint;
+
+  /// Erreur 409 currency-locked en modification d'un trajet : une demande est arrivée entre-temps (FLUTTER-KV)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise figée'**
+  String get errorTripCurrencyLockedTitle;
+
+  /// Erreur 409 currency-locked en modification d'un trajet (FLUTTER-KV)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet vient de recevoir une demande : sa devise ne peut plus changer. La devise d\'origine a été remise.'**
+  String get errorTripCurrencyLockedMessage;
+
+  /// Erreur 422 currency-unsupported : devise refusée par le serveur (FLUTTER-KV)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise non prise en charge'**
+  String get errorCurrencyUnsupportedTitle;
+
+  /// Erreur 422 currency-unsupported (FLUTTER-KV)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette devise n\'est pas disponible pour un trajet. Choisissez-en une autre.'**
+  String get errorCurrencyUnsupportedMessage;
+
   /// Indication des cartes expéditeur / voyageur du détail d'un colis annulé : le serveur garde le contact ouvert 48 h (FLUTTER-P1)
   ///
   /// In fr, this message translates to:

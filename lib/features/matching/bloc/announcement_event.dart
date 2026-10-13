@@ -236,6 +236,11 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   /// Le voyageur ouvre son trajet aux propositions de prix des expéditeurs.
   final bool negotiable;
 
+  /// Nouvelle devise (code ISO), envoyée seulement quand le propriétaire l'a
+  /// changée sur un trajet encore modifiable (`currencyEditable`, FLUTTER-KV).
+  /// `null` : le serveur garde la devise actuelle.
+  final String? currency;
+
   AnnouncementUpdateRequested({
     required this.id,
     required this.departureCity,
@@ -260,6 +265,7 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     this.pricingMode = 'KG',
     required this.handoverDeadline,
     this.negotiable = false,
+    this.currency,
   });
 }
 

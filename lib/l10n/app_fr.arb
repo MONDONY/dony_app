@@ -20604,6 +20604,26 @@
   "@ratingPendingPillLabel": {
     "description": "Pastille d'une carte de colis livré dont la note reste à donner (FLUTTER-P2)"
   },
+  "tripEditCurrencyLockedHint": "La devise ne peut plus changer : ce trajet a déjà des demandes.",
+  "@tripEditCurrencyLockedHint": {
+    "description": "Modification d'un trajet : explication sous l'en-tête quand le serveur fige la devise (currencyEditable false, FLUTTER-KV)"
+  },
+  "errorTripCurrencyLockedTitle": "Devise figée",
+  "@errorTripCurrencyLockedTitle": {
+    "description": "Erreur 409 currency-locked en modification d'un trajet : une demande est arrivée entre-temps (FLUTTER-KV)"
+  },
+  "errorTripCurrencyLockedMessage": "Ce trajet vient de recevoir une demande : sa devise ne peut plus changer. La devise d'origine a été remise.",
+  "@errorTripCurrencyLockedMessage": {
+    "description": "Erreur 409 currency-locked en modification d'un trajet (FLUTTER-KV)"
+  },
+  "errorCurrencyUnsupportedTitle": "Devise non prise en charge",
+  "@errorCurrencyUnsupportedTitle": {
+    "description": "Erreur 422 currency-unsupported : devise refusée par le serveur (FLUTTER-KV)"
+  },
+  "errorCurrencyUnsupportedMessage": "Cette devise n'est pas disponible pour un trajet. Choisissez-en une autre.",
+  "@errorCurrencyUnsupportedMessage": {
+    "description": "Erreur 422 currency-unsupported (FLUTTER-KV)"
+  },
   "bidDetailCancelledContactWindowHint": "Vous pouvez encore vous appeler pendant 48 h après l'annulation.",
   "@bidDetailCancelledContactWindowHint": {
     "description": "Indication des cartes expéditeur / voyageur du détail d'un colis annulé : le serveur garde le contact ouvert 48 h (FLUTTER-P1)"

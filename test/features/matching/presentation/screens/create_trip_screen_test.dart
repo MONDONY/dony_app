@@ -329,6 +329,7 @@ AnnouncementModel _makeFullAnnouncement({
     BidPaymentMethod.stripe,
     BidPaymentMethod.cash,
   },
+  bool? currencyEditable,
 }) => AnnouncementModel(
   id: 'ann-full-1',
   travelerId: 'trav-1',
@@ -362,6 +363,7 @@ AnnouncementModel _makeFullAnnouncement({
   acceptedContentTypes: const ['Vêtements', 'Médicaments'],
   refusedTypes: const ['Produits dangereux'],
   currency: currency,
+  currencyEditable: currencyEditable,
 );
 
 /// Returns a minimal `LockedTripContext` suitable for locked-mode tests.
@@ -1725,6 +1727,126 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       expect(find.text('Enregistrer'), findsOneWidget);
     }
+
+    // ── Devise modifiable en édition (FLUTTER-KV, yadony-back #515) ──────────
+    group('devise en modification (FLUTTER-KV)', () {
+      Future<void> pumpEdit(
+        WidgetTester tester, {
+        bool? currencyEditable,
+      }) async {
+        tester.view.physicalSize = const Size(800, 1024);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        await pumpAndDrain(
+          tester,
+          _wrapWithRouter(
+            CreateTripScreen(
+              args: CreateTripArgs(
+                announcement: _makeFullAnnouncement(
+                  currencyEditable: currencyEditable,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      Future<void> goToStep2AndSubmit(WidgetTester tester) async {
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+      }
+
+      AnnouncementUpdateRequested sentUpdate() => verify(
+        () => announcementBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementUpdateRequested>().single;
+
+      testWidgets('champ absent (ancien back) : devise figée, sans rien '
+          'ajouter, PUT sans currency', (tester) async {
+        await pumpEdit(tester);
+        expect(
+          find.byKey(const Key('trip-currency-selector-row')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const Key('trip-edit-currency-locked-hint')),
+          findsNothing,
+        );
+        await goToStep2AndSubmit(tester);
+        expect(sentUpdate().currency, isNull);
+      });
+
+      testWidgets('false : devise figée avec explication', (tester) async {
+        await pumpEdit(tester, currencyEditable: false);
+        expect(
+          find.byKey(const Key('trip-currency-selector-row')),
+          findsNothing,
+        );
+        expect(
+          find.text(
+            'La devise ne peut plus changer : ce trajet a déjà des demandes.',
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('true, devise inchangée : PUT sans currency', (tester) async {
+        await pumpEdit(tester, currencyEditable: true);
+        expect(
+          find.byKey(const Key('trip-currency-selector-row')),
+          findsOneWidget,
+        );
+        await goToStep2AndSubmit(tester);
+        expect(sentUpdate().currency, isNull);
+      });
+
+      testWidgets('true, devise changée : PUT avec currency', (tester) async {
+        await pumpEdit(tester, currencyEditable: true);
+        await tester.tap(find.byKey(const Key('trip-currency-selector-row')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('(USD)'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('currency-selector-confirm')));
+        await tester.pumpAndSettle();
+
+        await goToStep2AndSubmit(tester);
+        expect(sentUpdate().currency, 'USD');
+      });
+
+      testWidgets('409 currency-locked : devise figée et expliquée', (
+        tester,
+      ) async {
+        final states = StreamController<AnnouncementState>.broadcast();
+        addTearDown(states.close);
+        when(() => announcementBloc.stream).thenAnswer((_) => states.stream);
+
+        await pumpEdit(tester, currencyEditable: true);
+        expect(
+          find.byKey(const Key('trip-currency-selector-row')),
+          findsOneWidget,
+        );
+        states.add(
+          AnnouncementError(
+            const ConflictException('x', code: 'announcement/currency-locked'),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(
+          find.byKey(const Key('trip-currency-selector-row')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const Key('trip-edit-currency-locked-hint')),
+          findsOneWidget,
+        );
+        await tester.pump(const Duration(seconds: 5));
+      });
+    });
 
     testWidgets(
       'paymentMethods sans Stripe configuré : CASH inclus, STRIPE absent (jamais vide)',
