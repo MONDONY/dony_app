@@ -584,11 +584,11 @@ class FlightEmptyResults extends StatelessWidget {
     final l = context.l10n;
     return ListView(
       key: const Key('flights-empty'),
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         DonySpacing.base,
         DonySpacing.xs,
         DonySpacing.base,
-        DonySpacing.huge,
+        flightNavBarReserve(context) + DonySpacing.huge,
       ),
       children: [
         Container(
