@@ -4290,6 +4290,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'settingsThemeSubtitle': (l) => l.settingsThemeSubtitle,
   'settingsFlightsVisibleLabel': (l) => l.settingsFlightsVisibleLabel,
   'settingsFlightsVisibleSubtitle': (l) => l.settingsFlightsVisibleSubtitle,
+  'settingsFlightsPauseTitle': (l) => l.settingsFlightsPauseTitle,
+  'settingsFlightsPauseBody': (l) =>
+      l.settingsFlightsPauseBody(intPlaceholderValue),
+  'settingsFlightsPauseConfirm': (l) => l.settingsFlightsPauseConfirm,
+  'settingsFlightsPauseKeep': (l) => l.settingsFlightsPauseKeep,
+  'settingsFlightsPauseDone': (l) =>
+      l.settingsFlightsPauseDone(intPlaceholderValue),
+  'settingsFlightsPausePartialError': (l) => l.settingsFlightsPausePartialError,
   'settingsThemeLight': (l) => l.settingsThemeLight,
   'settingsThemeDark': (l) => l.settingsThemeDark,
   'settingsThemeAuto': (l) => l.settingsThemeAuto,

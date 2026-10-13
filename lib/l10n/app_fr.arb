@@ -13270,6 +13270,40 @@
   "@settingsFlightsVisibleSubtitle": {
     "description": "Sous-titre de l'interrupteur des billets d'avion (settings_screen.dart)"
   },
+  "settingsFlightsPauseTitle": "Mettre aussi vos alertes prix en pause ?",
+  "@settingsFlightsPauseTitle": {
+    "description": "Titre de la feuille proposée quand l'utilisateur masque les billets d'avion avec des alertes prix actives (flight_alerts_pause_sheet.dart)"
+  },
+  "settingsFlightsPauseBody": "{count, plural, =1{Vous avez 1 alerte active. Masquer les billets ne coupe pas ses notifications. Vous pourrez la relancer depuis Mes alertes prix.} other{Vous avez {count} alertes actives. Masquer les billets ne coupe pas leurs notifications. Vous pourrez les relancer depuis Mes alertes prix.}}",
+  "@settingsFlightsPauseBody": {
+    "description": "Texte de la feuille de mise en pause des alertes prix, avec le nombre d'alertes actives (flight_alerts_pause_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsFlightsPauseConfirm": "Mettre en pause",
+  "@settingsFlightsPauseConfirm": {
+    "description": "Bouton principal : met en pause les alertes prix actives (flight_alerts_pause_sheet.dart)"
+  },
+  "settingsFlightsPauseKeep": "Garder les alertes",
+  "@settingsFlightsPauseKeep": {
+    "description": "Bouton secondaire : garde les alertes prix actives (flight_alerts_pause_sheet.dart)"
+  },
+  "settingsFlightsPauseDone": "{count, plural, =1{1 alerte mise en pause} other{{count} alertes mises en pause}}",
+  "@settingsFlightsPauseDone": {
+    "description": "Confirmation après la mise en pause des alertes prix (settings_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsFlightsPausePartialError": "Certaines alertes n'ont pas pu être mises en pause. Réessayez depuis Mes alertes prix.",
+  "@settingsFlightsPausePartialError": {
+    "description": "Erreur quand une partie des alertes prix n'a pas pu être mise en pause (settings_screen.dart)"
+  },
   "settingsThemeLight": "Clair",
   "@settingsThemeLight": {
     "description": "Option de thème clair, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)"

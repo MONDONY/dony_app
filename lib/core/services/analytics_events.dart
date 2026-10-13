@@ -403,6 +403,17 @@ abstract final class AnalyticsEvents {
   static const settingsGuidanceCardsReset = 'settings_guidance_cards_reset';
   static const settingsFlightsVisibilityChanged =
       'settings_flights_visibility_changed';
+
+  /// FlightAlertsPauseCubit — réponse à la feuille « Mettre aussi vos alertes
+  /// prix en pause ? » ouverte quand l'utilisateur masque les billets avec des
+  /// alertes actives. Propriétés `active_count`, `choice` :
+  /// `pause` / `keep` / `dismiss`.
+  static const settingsFlightsAlertsPausePrompt =
+      'settings_flights_alerts_pause_prompt';
+
+  /// FlightAlertsPauseCubit.pause — alertes mises en pause depuis cette
+  /// feuille. Propriétés `count` (réussies), `failed` (refusées).
+  static const settingsFlightsAlertsPaused = 'settings_flights_alerts_paused';
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
 

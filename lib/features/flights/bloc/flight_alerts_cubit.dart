@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/flights/bloc/flight_alert_updates.dart';
 import 'package:dony/features/flights/bloc/flight_alerts_summary.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
@@ -49,11 +50,36 @@ class FlightAlertsState extends Equatable {
 /// Alertes prix de l'écran `/flights/alerts`, de la feuille de création et
 /// de la ligne « Alertes prix vols » des Outils d'Activités.
 class FlightAlertsCubit extends Cubit<FlightAlertsState> {
-  FlightAlertsCubit(this._repository, this._analytics)
-    : super(const FlightAlertsState());
+  FlightAlertsCubit(
+    this._repository,
+    this._analytics, {
+    FlightAlertUpdates? updates,
+  }) : super(const FlightAlertsState()) {
+    _updates = updates?.stream.listen(_applyUpdate);
+  }
 
   final FlightsRepository _repository;
   final AnalyticsService _analytics;
+  StreamSubscription<FlightAlert>? _updates;
+
+  /// Alerte modifiée ailleurs (pause depuis les Paramètres) : remplacée dans
+  /// la liste si elle y figure.
+  void _applyUpdate(FlightAlert updated) {
+    if (isClosed || !state.alerts.any((a) => a.id == updated.id)) return;
+    emit(
+      state.copyWith(
+        alerts: [
+          for (final a in state.alerts) a.id == updated.id ? updated : a,
+        ],
+      ),
+    );
+  }
+
+  @override
+  Future<void> close() async {
+    await _updates?.cancel();
+    return super.close();
+  }
 
   /// Limite côté back (`FlightAlertService.MAX_ALERTS`).
   static const maxAlerts = 10;
