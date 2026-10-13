@@ -6600,6 +6600,15 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsNoFlightsBody': (l) => l.flightsNoFlightsBody,
   'flightsNearbyDatesNotice': (l) =>
       l.flightsNearbyDatesNotice(intPlaceholderValue),
+  'flightsSimilarTitle': (l) =>
+      l.flightsSimilarTitle(intPlaceholderValue, intPlaceholderValue),
+  'flightsSimilarTitleSingle': (l) =>
+      l.flightsSimilarTitleSingle(intPlaceholderValue),
+  'flightsSimilarTitleFallback': (l) => l.flightsSimilarTitleFallback,
+  'flightsSimilarSubtitle': (l) => l.flightsSimilarSubtitle,
+  'flightsStayDays': (l) => l.flightsStayDays(intPlaceholderValue),
+  'flightsStayDaysSemantics': (l) =>
+      l.flightsStayDaysSemantics(intPlaceholderValue),
   'flightsTryInstead': (l) => l.flightsTryInstead,
   'flightsSuggestSameDates': (l) => l.flightsSuggestSameDates,
   'flightsSuggestWholeMonth': (l) =>

@@ -12,6 +12,9 @@ class FlightSearchResult extends Equatable {
     this.searchPath,
     this.nearbyDates = false,
     this.nearbyDaysWindow = defaultNearbyDaysWindow,
+    this.similarOffers = const [],
+    this.similarStayMinDays,
+    this.similarStayMaxDays,
   });
 
   factory FlightSearchResult.fromJson(Map<String, dynamic> json) =>
@@ -26,7 +29,27 @@ class FlightSearchResult extends Equatable {
         searchPath: _path(json['searchPath']),
         nearbyDates: json['nearbyDates'] == true,
         nearbyDaysWindow: _window(json['nearbyDaysWindow']),
+        similarOffers: _offers(json['similarOffers']),
+        similarStayMinDays: _days(json['similarStayMinDays']),
+        similarStayMaxDays: _days(json['similarStayMaxDays']),
       );
+
+  /// Liste d'offres tolérante : absente, nulle ou d'un autre type = vide ;
+  /// les éléments qui ne sont pas des objets sont ignorés.
+  static List<FlightOffer> _offers(Object? raw) => raw is List
+      ? raw.whereType<Map<String, dynamic>>().map(FlightOffer.fromJson).toList()
+      : const [];
+
+  /// Durée de séjour tolérante : un entier positif (ou sa chaîne), sinon
+  /// `null`.
+  static int? _days(Object? raw) {
+    final n = switch (raw) {
+      final num v => v.toInt(),
+      final String v => int.tryParse(v.trim()),
+      _ => null,
+    };
+    return n != null && n > 0 ? n : null;
+  }
 
   /// Écart des dates proches quand le back ne le précise pas.
   static const defaultNearbyDaysWindow = 3;
@@ -66,6 +89,32 @@ class FlightSearchResult extends Equatable {
   /// Écart maximal, en jours, des dates proches (3 par défaut).
   final int nearbyDaysWindow;
 
+  /// Allers-retours du même trajet, à d'autres dates (mois voisins), dont la
+  /// durée de séjour est proche de celle demandée : au plus 10, triés par
+  /// prix, jamais déjà présents dans [offers]. Absent (ancien back) = vide.
+  /// Ni les onglets de tri ni les filtres ne s'y appliquent.
+  final List<FlightOffer> similarOffers;
+
+  /// Plage de durée de séjour, en jours, retenue par le back pour
+  /// [similarOffers] ; `null` quand il ne la donne pas.
+  final int? similarStayMinDays;
+  final int? similarStayMaxDays;
+
+  /// Plage de durée de séjour à afficher : celle du back, sinon celle des
+  /// offres reçues ; `null` sans aucune durée connue.
+  ({int min, int max})? get similarStayRange {
+    final min = similarStayMinDays;
+    final max = similarStayMaxDays;
+    if (min != null && max != null && min <= max) return (min: min, max: max);
+    final stays = similarOffers
+        .map((o) => o.stayDays)
+        .whereType<int>()
+        .toList();
+    if (stays.isEmpty) return null;
+    stays.sort();
+    return (min: stays.first, max: stays.last);
+  }
+
   @override
   List<Object?> get props => [
     originCode,
@@ -76,5 +125,8 @@ class FlightSearchResult extends Equatable {
     searchPath,
     nearbyDates,
     nearbyDaysWindow,
+    similarOffers,
+    similarStayMinDays,
+    similarStayMaxDays,
   ];
 }

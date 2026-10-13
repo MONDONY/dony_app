@@ -4,6 +4,7 @@ import 'package:dony/features/flights/data/models/flight_offer.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
 import 'package:dony/features/flights/presentation/widgets/airline_logo.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_similar_stays_section.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +28,7 @@ class FlightOfferCard extends StatelessWidget {
     this.requestedReturn,
     this.savingsLabel,
     this.aboveLabel,
+    this.stayDays,
   });
 
   final FlightOffer offer;
@@ -53,6 +55,11 @@ class FlightOfferCard extends StatelessWidget {
   /// Pastille neutre d'un vol d'une alerte au-dessus de son prix (« +24 €
   /// au-dessus »), à la place de [badge] et de [savingsLabel].
   final String? aboveLabel;
+
+  /// Durée du séjour d'un aller-retour proposé à d'autres dates
+  /// (`similarOffers`) : pastille « 28 j » quand aucune autre pastille
+  /// n'occupe l'en-tête.
+  final int? stayDays;
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +128,9 @@ class FlightOfferCard extends StatelessWidget {
                     ] else if (badge != null) ...[
                       const SizedBox(width: DonySpacing.sm),
                       _Badge(badge: badge!),
+                    ] else if (stayDays != null) ...[
+                      const SizedBox(width: DonySpacing.sm),
+                      FlightStayTag(days: stayDays!),
                     ],
                   ],
                 ),

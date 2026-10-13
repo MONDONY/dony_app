@@ -30,6 +30,7 @@ import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -945,5 +946,202 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('hub Activités'), findsOneWidget);
+  });
+
+  group('séjours proches', () {
+    Map<String, dynamic> roundTrip(String path, String out, String back) => {
+      'originCode': 'PAR',
+      'destinationCode': 'ABJ',
+      'departureAt': '${out}T11:45:00+01:00',
+      'returnAt': '${back}T20:10:00+00:00',
+      'price': 612,
+      'currency': 'EUR',
+      'airlineName': 'Air France',
+      'transfers': 0,
+      'returnTransfers': 0,
+      'offerPath': path,
+    };
+
+    FlightSearchResult withSimilar({required int offers, bool range = true}) =>
+        FlightSearchResult.fromJson({
+          'originCode': 'PAR',
+          'destinationCode': 'ABJ',
+          'roundTrip': true,
+          'currency': 'EUR',
+          'searchPath': '/search/PAR0212ABJ30121',
+          'offers': [
+            for (var i = 0; i < offers; i++)
+              roundTrip('o$i', '2026-12-02', '2026-12-30'),
+          ],
+          'similarOffers': [
+            roundTrip('s1', '2026-11-20', '2026-12-18'),
+            roundTrip('s2', '2027-01-05', '2027-02-02'),
+          ],
+          if (range) 'similarStayMinDays': 21,
+          if (range) 'similarStayMaxDays': 35,
+        });
+
+    Future<void> searchWithDates(WidgetTester tester, {Locale? locale}) async {
+      await open(tester, locale: locale ?? AppL10n.fr);
+      BlocProvider.of<FlightSearchCubit>(
+        tester.element(find.byKey(const Key('flights-form'))),
+      ).setDates(
+        FlightWhen.day(DateTime(2026, 12, 2)),
+        FlightWhen.day(DateTime(2026, 12, 30)),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('flights-search-button')));
+      await tester.pumpAndSettle();
+    }
+
+    Finder results() => find
+        .descendant(
+          of: find.byKey(const Key('flights-results')),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+
+    testWidgets('après la liste : titre, dates en accent, badge, tap similar', (
+      tester,
+    ) async {
+      registerFallbackValue(Uri());
+      final analytics = silentAnalytics();
+      final launcher = _MockLauncher();
+      when(() => launcher.open(any())).thenAnswer((_) async => true);
+      when(
+        () => repository.affiliateLink(any(), source: any(named: 'source')),
+      ).thenAnswer((_) async => 'https://www.aviasales.com/search/S1');
+      _register<FlightLinkCubit>(
+        () => FlightLinkCubit(repository, analytics, launcher),
+      );
+      search = (_) async => withSimilar(offers: 1);
+      await searchWithDates(tester);
+
+      // Le compteur ne compte que les vols aux dates demandées.
+      expect(
+        find.text('1 vol · prix par personne, aller-retour'),
+        findsOneWidget,
+      );
+      final section = find.byKey(const Key('flights-similar'));
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('flights-similar-s1')),
+        300,
+        scrollable: results(),
+      );
+      expect(find.text('Séjours de 21 à 35 jours'), findsOneWidget);
+      expect(
+        find.text(
+          'Dates différentes de votre recherche, durée de séjour proche',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(section).dy,
+        greaterThan(
+          tester.getTopLeft(find.byKey(const Key('flight-open-o0'))).dy,
+        ),
+      );
+      final card = find.byKey(const Key('flights-similar-s1'));
+      expect(
+        find.descendant(of: card, matching: find.text('28 j')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byKey(const Key('flight-leg-date-shifted')),
+        ),
+        findsNWidgets(2),
+      );
+      expect(find.text('ven. 20 nov.'), findsOneWidget);
+
+      // Carte suivante visible : la première sort de sous le bouton flottant.
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('flights-similar-s2')),
+        300,
+        scrollable: results(),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('flight-open-s1')));
+      await tester.pumpAndSettle();
+      verify(() => repository.affiliateLink(any(), source: 'search')).called(1);
+      verify(
+        () => analytics.logEvent(
+          'flights_offer_clicked',
+          properties: {'source': 'similar', 'stops': 0, 'round_trip': true},
+        ),
+      ).called(1);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('beaucoup de vols : section avant l\'encart Aviasales de fin', (
+      tester,
+    ) async {
+      search = (_) async => withSimilar(offers: 6);
+      await searchWithDates(tester);
+
+      expect(
+        find.text('6 vols · prix par personne, aller-retour'),
+        findsOneWidget,
+      );
+      final end = find.byKey(const Key('flights-all-airlines'));
+      await tester.scrollUntilVisible(end, 300, scrollable: results());
+      await tester.pumpAndSettle();
+      final section = find.byKey(const Key('flights-similar'));
+      expect(section, findsOneWidget);
+      expect(
+        tester.getTopLeft(section).dy,
+        lessThan(tester.getTopLeft(end).dy),
+      );
+    });
+
+    testWidgets('aucun vol : section sous le bloc, avant « Essayez plutôt »', (
+      tester,
+    ) async {
+      search = (_) async => withSimilar(offers: 0);
+      await searchWithDates(tester);
+
+      expect(find.byKey(const Key('flights-empty')), findsOneWidget);
+      final section = find.byKey(const Key('flights-similar'));
+      expect(section, findsOneWidget);
+      expect(
+        tester.getTopLeft(section).dy,
+        greaterThan(tester.getTopLeft(find.text('Aucun vol à ces dates')).dy),
+      );
+      final tryInstead = find.text('Essayez plutôt');
+      await tester.scrollUntilVisible(
+        tryInstead,
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const Key('flights-empty')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(
+        tester.getTopLeft(section).dy,
+        lessThan(tester.getTopLeft(tryInstead).dy),
+      );
+      expect(find.byType(FlightOfferCard), findsNWidgets(2));
+    });
+
+    testWidgets('en anglais, plage déduite des offres', (tester) async {
+      enableEnglish();
+      search = (_) async => withSimilar(offers: 0, range: false);
+      await searchWithDates(tester, locale: const Locale('en'));
+
+      expect(find.text('28 to 28 day trips'), findsNothing);
+      expect(find.text('28 day trips'), findsOneWidget);
+      expect(find.text('28 days'), findsNWidgets(2));
+    });
+
+    testWidgets('ancien back : pas de section', (tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const Key('flights-search-button')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('flights-similar')), findsNothing);
+      expect(find.byKey(const Key('flight-offer-stay')), findsNothing);
+    });
   });
 }
