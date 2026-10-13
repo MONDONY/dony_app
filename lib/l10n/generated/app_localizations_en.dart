@@ -19133,4 +19133,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ratingPendingPillLabel => 'To rate';
+
+  @override
+  String profileReliabilityPercent(int percent) {
+    return 'Reliability $percent%';
+  }
+
+  @override
+  String get profileReliabilityHelp =>
+      'Share of shipments completed. Cancellations this person is not responsible for do not count.';
 }

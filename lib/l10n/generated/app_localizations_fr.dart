@@ -19270,4 +19270,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ratingPendingPillLabel => 'À noter';
+
+  @override
+  String profileReliabilityPercent(int percent) {
+    return 'Fiabilité $percent %';
+  }
+
+  @override
+  String get profileReliabilityHelp =>
+      'Part des envois menés à bien. Les annulations dont la personne n\'est pas responsable ne comptent pas.';
 }

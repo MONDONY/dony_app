@@ -6673,6 +6673,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('currencyCode'),
   ),
   'ratingPendingPillLabel': (l) => l.ratingPendingPillLabel,
+  'profileReliabilityPercent': (l) =>
+      l.profileReliabilityPercent(intPlaceholderValue),
+  'profileReliabilityHelp': (l) => l.profileReliabilityHelp,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
