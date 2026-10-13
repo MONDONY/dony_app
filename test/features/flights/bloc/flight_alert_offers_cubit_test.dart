@@ -150,6 +150,8 @@ void main() {
   test('belowCount absent : recalculé depuis le prix max', () {
     final r = _result(prices: const [389, 450, 451]);
     expect(r.belowCount, 2);
+    expect(r.allScope, isFalse);
+    expect(_result(belowCount: 0).allScope, isTrue);
     expect(r.above.single.price, 451);
     // Valeur du back incohérente : bornée à la liste.
     expect(_result(belowCount: 9).belowCount, 2);

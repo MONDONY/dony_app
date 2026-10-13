@@ -6757,6 +6757,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.flightsAlertOffersMax(placeholderMarker('price')),
   'flightsAlertOffersEmptyTitle': (l) => l.flightsAlertOffersEmptyTitle,
   'flightsAlertOffersEmptyBody': (l) => l.flightsAlertOffersEmptyBody,
+  'flightsAlertOffersNoFlightTitle': (l) => l.flightsAlertOffersNoFlightTitle,
+  'flightsAlertOffersNoFlightBody': (l) => l.flightsAlertOffersNoFlightBody,
   'flightsAlertOffersMoreTitle': (l) => l.flightsAlertOffersMoreTitle,
   'flightsAlertOffersMoreBody': (l) => l.flightsAlertOffersMoreBody,
   'activityFlightAlertsBelowByTicket': (l) =>

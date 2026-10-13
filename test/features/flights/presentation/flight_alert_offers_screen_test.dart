@@ -345,6 +345,31 @@ void main() {
     verify(() => repository.affiliateLink(any(), source: 'search')).called(1);
   });
 
+  testWidgets('back récent sans aucun vol : « Aucun vol trouvé »', (
+    tester,
+  ) async {
+    when(
+      () => repository.alertOffers('a1'),
+    ).thenAnswer((_) async => _result(offers: const [], belowCount: 0));
+    await open(tester, alert: _alert);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('flight-alert-offers-empty')), findsOne);
+    expect(find.text('Vols de votre alerte'), findsOneWidget);
+    expect(find.text("Aucun vol trouvé pour l'instant"), findsOneWidget);
+    expect(
+      find.textContaining('Aucun prix disponible pour ce trajet'),
+      findsOneWidget,
+    );
+    expect(
+      find.text("Plus de vol sous votre prix pour l'instant"),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const Key('flights-suggest-aviasales')));
+    await tester.pumpAndSettle();
+    verify(() => repository.affiliateLink(any(), source: 'search')).called(1);
+  });
+
   testWidgets('404 (ancien back) : vide, Aviasales depuis l\'alerte', (
     tester,
   ) async {

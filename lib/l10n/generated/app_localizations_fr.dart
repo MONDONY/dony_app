@@ -19541,6 +19541,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les prix ont bougé depuis la dernière vérification. On continue de surveiller et on vous prévient dès qu\'un vol repasse dessous.';
 
   @override
+  String get flightsAlertOffersNoFlightTitle =>
+      'Aucun vol trouvé pour l\'instant';
+
+  @override
+  String get flightsAlertOffersNoFlightBody =>
+      'Aucun prix disponible pour ce trajet et ces dates chez nos partenaires. On continue de surveiller et on vous prévient dès qu\'un vol passe sous votre prix.';
+
+  @override
   String get flightsAlertOffersMoreTitle => 'Plus de vols sur Aviasales';
 
   @override

@@ -19403,6 +19403,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Prices have moved since the last check. We keep watching and will let you know as soon as a flight drops below it again.';
 
   @override
+  String get flightsAlertOffersNoFlightTitle => 'No flights found yet';
+
+  @override
+  String get flightsAlertOffersNoFlightBody =>
+      'No prices available for this route and these dates from our partners. We keep watching and will let you know as soon as a flight drops below your price.';
+
+  @override
   String get flightsAlertOffersMoreTitle => 'More flights on Aviasales';
 
   @override

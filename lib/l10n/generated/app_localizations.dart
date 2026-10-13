@@ -31604,6 +31604,18 @@ abstract class AppLocalizations {
   /// **'Les prix ont bougé depuis la dernière vérification. On continue de surveiller et on vous prévient dès qu\'un vol repasse dessous.'**
   String get flightsAlertOffersEmptyBody;
 
+  /// Écran des vols d'une alerte vide, back récent : aucun vol n'existe pour ce trajet et ces dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun vol trouvé pour l\'instant'**
+  String get flightsAlertOffersNoFlightTitle;
+
+  /// Texte de l'écran des vols d'une alerte vide, back récent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun prix disponible pour ce trajet et ces dates chez nos partenaires. On continue de surveiller et on vous prévient dès qu\'un vol passe sous votre prix.'**
+  String get flightsAlertOffersNoFlightBody;
+
   /// Encart en fin de liste des vols trouvés.
   ///
   /// In fr, this message translates to:

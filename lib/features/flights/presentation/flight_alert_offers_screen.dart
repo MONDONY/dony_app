@@ -292,6 +292,7 @@ class _EmptyView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final hasSummary = state.result != null || state.alert != null;
+    final noFlight = state.result?.allScope ?? false;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -307,8 +308,14 @@ class _EmptyView extends StatelessWidget {
           ),
         Expanded(
           child: FlightEmptyResults(
-            title: l.flightsAlertOffersEmptyTitle,
-            body: l.flightsAlertOffersEmptyBody,
+            // Back récent : aucun vol du tout pour ce trajet et ces dates.
+            // Ancien back (ou 404) : plus rien sous le prix.
+            title: noFlight
+                ? l.flightsAlertOffersNoFlightTitle
+                : l.flightsAlertOffersEmptyTitle,
+            body: noFlight
+                ? l.flightsAlertOffersNoFlightBody
+                : l.flightsAlertOffersEmptyBody,
             suggestions: const [],
             onLiveSearch: _aviasales(context, state),
             liveSearchOpening: _aviasalesOpening(context, state),

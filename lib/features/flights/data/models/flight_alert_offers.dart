@@ -76,6 +76,11 @@ class FlightAlertOffers extends Equatable {
         offers.length,
       );
 
+  /// Réponse d'un back qui connaît `scope=all` (il donne `belowCount`) :
+  /// une liste vide y signifie qu'aucun vol n'existe pour ce trajet et ces
+  /// dates, et non que les prix sont repassés au-dessus du seuil.
+  bool get allScope => _belowCount != null;
+
   List<FlightOffer> get below => offers.sublist(0, belowCount);
 
   /// Vols au-dessus du seuil, vides sur un ancien back.
