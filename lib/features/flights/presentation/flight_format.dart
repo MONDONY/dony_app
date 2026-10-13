@@ -1,5 +1,6 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
@@ -95,6 +96,48 @@ abstract final class FlightFormat {
     if (out.wholeMonth && back.wholeMonth && out == back) return one(out);
     return l.flightsDateRange(one(out), one(back));
   }
+
+  /// Période d'une alerte sur plusieurs jours : « du 1 déc. au 20 déc.
+  /// 2026 » (l'année n'est pas répétée dans la même année), sinon « du
+  /// 28 déc. 2026 au 3 janv. 2027 ».
+  static String alertPeriod(AppLocalizations l, DateTime from, DateTime to) =>
+      l.flightsAlertPeriod(
+        from.year == to.year ? dayMonth(l, from) : day(l, from),
+        day(l, to),
+      );
+
+  /// Ligne départ d'une alerte : « Départ le 23 déc. 2026 » sur un seul
+  /// jour, « Départ du 1 déc. au 20 déc. 2026 », ou « Départ à toutes
+  /// dates » sans période.
+  static String alertDeparture(
+    AppLocalizations l,
+    DateTime? from,
+    DateTime? to,
+  ) {
+    if (from == null || to == null) return l.flightsAlertDepartureAnyDate;
+    if (_sameDay(from, to)) return l.flightsAlertDepartureOn(day(l, from));
+    return l.flightsAlertDepartureLine(alertPeriod(l, from, to));
+  }
+
+  /// Ligne retour d'une alerte, sur le modèle de [alertDeparture].
+  static String alertReturn(AppLocalizations l, DateTime? from, DateTime? to) {
+    if (from == null || to == null) return l.flightsAlertReturnAnyDate;
+    if (_sameDay(from, to)) return l.flightsAlertReturnOn(day(l, from));
+    return l.flightsAlertReturnLine(alertPeriod(l, from, to));
+  }
+
+  /// Dates d'une alerte, partagées par sa carte et l'écran des vols
+  /// trouvés : la ligne départ, puis la ligne retour ou « Aller simple ».
+  static List<String> alertDates(AppLocalizations l, FlightAlert a) => [
+    alertDeparture(l, a.departureFrom, a.departureTo),
+    if (a.isRoundTrip)
+      alertReturn(l, a.returnFrom, a.returnTo)
+    else
+      l.flightsOneWay,
+  ];
+
+  static bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   /// « Paris ↔ Abidjan » en aller-retour, « Paris → Abidjan » sinon.
   static String route(

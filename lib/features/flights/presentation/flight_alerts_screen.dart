@@ -187,21 +187,8 @@ class _AlertCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final cubit = context.read<FlightAlertsCubit>();
 
-    String period(DateTime? from, DateTime? to) => from == null || to == null
-        ? l.flightsAlertAnyDate
-        : l.flightsAlertPeriod(
-            FlightFormat.day(l, from),
-            FlightFormat.day(l, to),
-          );
-
     final details = [
-      l.flightsAlertDepartureLine(
-        period(alert.departureFrom, alert.departureTo),
-      ),
-      if (alert.isRoundTrip)
-        l.flightsAlertReturnLine(period(alert.returnFrom, alert.returnTo))
-      else
-        l.flightsOneWay,
+      ...FlightFormat.alertDates(l, alert),
       if (alert.directOnly) l.flightsDirectOnly,
       l.flightsAlertMaxShort(
         FlightFormat.price(alert.maxPrice, alert.currency),

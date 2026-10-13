@@ -186,7 +186,7 @@ void main() {
     expect(find.text('Vols trouvés'), findsOneWidget);
     expect(find.text('Paris → Abidjan'), findsOneWidget);
     expect(
-      _text('du 1 déc. 2099 au 20 déc. 2099 · Aller simple · prix max 450 €'),
+      _text('Départ du 1 déc. au 20 déc. 2099 · Aller simple · prix max 450 €'),
       findsOneWidget,
     );
     expect(
