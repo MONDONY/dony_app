@@ -19,6 +19,8 @@ import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
+import 'package:dony/core/storage/form_draft_cubit.dart';
+import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
@@ -212,6 +214,9 @@ import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
+import 'package:dony/features/publish_gate/bloc/publish_gate_cubit.dart';
+import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
+import 'package:dony/features/publish_gate/data/repositories/publish_commitment_repository.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/data/rating_prompt_tracker.dart';
@@ -286,6 +291,7 @@ import 'package:dony/features/trip_templates/data/datasources/trip_recurrence_da
 import 'package:dony/features/trip_templates/data/datasources/trip_template_datasource.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_recurrence_repository.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get_it/get_it.dart';
 
@@ -539,6 +545,33 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TripLegsCubit>(
     () => TripLegsCubit(getIt<AnalyticsService>()),
+  );
+  // Brouillons locaux des formulaires de publication, propres à chaque compte.
+  getIt.registerLazySingleton<FormDraftStore>(
+    () => FormDraftStore(
+      storage: SecureFormDraftStorage(),
+      currentUid: () => FirebaseAuth.instance.currentUser?.uid,
+    ),
+  );
+  getIt.registerLazySingleton<PublishCommitmentRepository>(
+    () => PublishCommitmentRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactoryParam<PublishGateCubit, PublishCommitmentRole, void>(
+    (role, _) => PublishGateCubit(
+      role: role,
+      commitments: getIt<PublishCommitmentRepository>(),
+      drafts: getIt<FormDraftStore>(),
+      announcements: getIt<AnnouncementRepository>(),
+      packageRequests: getIt<PackageRequestRepository>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactoryParam<FormDraftCubit, FormDraftKind, void>(
+    (kind, _) => FormDraftCubit(
+      getIt<FormDraftStore>(),
+      getIt<AnalyticsService>(),
+      kind,
+    ),
   );
   getIt.registerFactory<TripGroupCubit>(
     () => TripGroupCubit(getIt<AnnouncementRepository>()),

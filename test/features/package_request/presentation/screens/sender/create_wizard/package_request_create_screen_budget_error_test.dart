@@ -23,6 +23,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../../helpers/form_draft_test_doubles.dart';
 import '../../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../../helpers/mock_analytics_backend.dart';
 import '../../../../../../helpers/mock_recent_city_store.dart';
@@ -84,6 +85,7 @@ void main() {
       );
       return capturedBloc;
     });
+    registerTestFormDraftCubit();
     getIt.registerFactory<PackageRequestPhotosCubit>(
       () => PackageRequestPhotosCubit(
         repo,

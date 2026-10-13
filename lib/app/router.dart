@@ -125,6 +125,7 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -2062,6 +2063,9 @@ final appRouter = GoRouter(
             : null,
         duplicating: state.extra is PackageRequestDuplicate
             ? state.extra as PackageRequestDuplicate
+            : null,
+        resuming: state.extra is PackageRequestDraftResume
+            ? state.extra as PackageRequestDraftResume
             : null,
       ),
     ),

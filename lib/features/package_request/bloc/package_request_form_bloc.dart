@@ -40,6 +40,10 @@ class PackageRequestFormBloc
     on<FormStep3Submitted>(_onStep3);
     on<FormStepBack>(_onStepBack);
     on<FormReset>((_, emit) => emit(const PackageRequestFormState()));
+    on<FormDraftRestored>(
+      (e, emit) =>
+          emit(e.draft.copyWith(draftRevision: state.draftRevision + 1)),
+    );
     on<PackageRequestNegotiableToggled>(
       (e, emit) => emit(state.copyWith(negotiable: e.value)),
     );

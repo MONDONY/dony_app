@@ -9,6 +9,8 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/form_draft_cubit.dart';
+import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -26,6 +28,7 @@ import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/models/trip_leg_draft.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
@@ -66,11 +69,16 @@ class CreateTripArgs {
   final NegotiationBloc? negotiationBloc;
   final bool lockCorridorAndDate;
 
+  /// Ouvert depuis la feuille des brouillons (« Terminer ce trajet ») : ce
+  /// brouillon local est rechargé dès l'ouverture, à l'étape où il en était.
+  final TripFormDraft? resumeDraft;
+
   const CreateTripArgs({
     this.announcement,
     this.lockContext,
     this.negotiationBloc,
     this.lockCorridorAndDate = false,
+    this.resumeDraft,
   });
 }
 
@@ -141,6 +149,21 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   /// empiler deux si l'utilisateur insiste sur le retour système.
   bool _confirmingExit = false;
 
+  /// Brouillon local proposé en création seulement : un trajet modifié ou
+  /// dédié à une demande part d'un contenu déjà connu.
+  late final bool _draftsEnabled =
+      widget.args?.announcement == null && widget.args?.lockContext == null;
+
+  /// Porté par l'écran : la sortie et le bouton brouillon s'en servent depuis
+  /// ce `State`, au-dessus des providers.
+  late final FormDraftCubit? _draftCubit = _draftsEnabled
+      ? getIt<FormDraftCubit>(param1: FormDraftKind.trip)
+      : null;
+
+  /// Fournis par le formulaire (cf. `_TripFormContent.onDraftHandlersReady`).
+  TripFormDraft Function()? _draftSnapshot;
+  void Function(TripFormDraft)? _restoreDraft;
+
   @override
   void initState() {
     super.initState();
@@ -180,6 +203,15 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     if (!stripeBloc.isClosed) {
       stripeBloc.add(const StripeAccountStatusRefreshed(showProgress: true));
     }
+
+    final resumeDraft = args?.resumeDraft;
+    if (_draftsEnabled && resumeDraft != null) {
+      // Après la première frame : le formulaire doit avoir remis ses
+      // fonctions de restauration (onDraftHandlersReady).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _resumeLocalDraft(resumeDraft);
+      });
+    }
   }
 
   @override
@@ -193,6 +225,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _currencyNotifier.dispose();
     _currencyEditableNotifier.dispose();
     _formScrollController.dispose();
+    unawaited(_draftCubit?.close());
     super.dispose();
   }
 
@@ -207,10 +240,71 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     }
     if (_confirmingExit) return;
     _confirmingExit = true;
-    final confirmed = await DonyDialog.confirmDiscard(context);
+    final draftCubit = _draftCubit;
+    if (draftCubit == null) {
+      final confirmed = await DonyDialog.confirmDiscard(context);
+      _confirmingExit = false;
+      if (!mounted || confirmed != true) return;
+      _leave();
+      return;
+    }
+    final choice = await DonyDialog.confirmExitWithDraft(context);
     _confirmingExit = false;
-    if (!mounted || confirmed != true) return;
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case DraftExitChoice.save:
+        await _saveDraftAndLeave(FormDraftSource.exitDialog);
+      case DraftExitChoice.discard:
+        await draftCubit.discard(source: FormDraftSource.exitDialog);
+        if (mounted) _leave();
+    }
+  }
+
+  /// Garde la saisie en brouillon local, à l'étape où elle en est, puis
+  /// quitte le formulaire. En cas d'échec, l'utilisateur reste sur sa saisie.
+  Future<void> _saveDraftAndLeave(FormDraftSource source) async {
+    final snapshot = _draftSnapshot;
+    final draftCubit = _draftCubit;
+    if (snapshot == null || draftCubit == null) return;
+    final saved = await draftCubit.save(snapshot().toJson(), source: source);
+    if (!mounted) return;
+    if (!saved) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.formDraftSaveFailedMessage,
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    DonySnackbar.show(
+      context,
+      message: context.l10n.formDraftSavedMessage,
+      type: DonySnackbarType.success,
+    );
     _leave();
+  }
+
+  /// Bouton « Brouillon » de la barre, disponible à chaque étape.
+  void _onSaveDraftPressed() {
+    if (!_isDirtyNotifier.value) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.formDraftNothingToSaveMessage,
+      );
+      return;
+    }
+    unawaited(_saveDraftAndLeave(FormDraftSource.appBar));
+  }
+
+  /// Recharge le brouillon local choisi dans la feuille des brouillons, puis
+  /// remet le voyageur à l'étape où il s'était arrêté, si les étapes
+  /// précédentes sont toujours complètes.
+  void _resumeLocalDraft(TripFormDraft restored) {
+    _restoreDraft?.call(restored);
+    var step = restored.step;
+    if (step >= 1 && !_canContinueNotifier.value) step = 0;
+    if (step >= 2 && !_canContinueStep1Notifier.value) step = 1;
+    _currentStepNotifier.value = step;
   }
 
   /// « Modifier » de la ligne Devise du récapitulatif (FLUTTER-NN) : ferme
@@ -285,226 +379,174 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         BlocProvider<NegotiationBloc>.value(value: args!.negotiationBloc!),
     ];
 
+    final draftCubit = _draftCubit;
+    if (draftCubit != null) {
+      providers.add(BlocProvider<FormDraftCubit>.value(value: draftCubit));
+    }
+
     return MultiBlocProvider(
       providers: providers,
-      child: ValueListenableBuilder<bool>(
-        valueListenable: _isDirtyNotifier,
-        builder: (context, isDirty, child) => PopScope(
-          // canPop false tant qu'il y a de la saisie : le retour système et le
-          // swipe iOS sont alors interceptés au lieu de fermer l'écran.
-          canPop: !isDirty,
-          onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) unawaited(_handleExitRequest());
-          },
-          child: child!,
-        ),
-        child: Scaffold(
-          appBar: AppBar(
-            actions: const [DonyFeedbackButton()],
-            leading: DonyAppBarBackButton(
-              leadingIconAsset: 'x',
-              onBack: () => unawaited(_handleExitRequest()),
-            ),
-            title: Text(
-              isLocked
-                  ? context.l10n.tripPublishDedicatedTitle
-                  : (isEdit
-                        ? context.l10n.tripPublishEditTitle
-                        : context.l10n.tripPublishTitle),
-            ),
+      child: _withDraftListeners(
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _isDirtyNotifier,
+          builder: (context, isDirty, child) => PopScope(
+            // canPop false tant qu'il y a de la saisie : le retour système et le
+            // swipe iOS sont alors interceptés au lieu de fermer l'écran.
+            canPop: !isDirty,
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop) unawaited(_handleExitRequest());
+            },
+            child: child!,
           ),
-          resizeToAvoidBottomInset: true,
-          // Bouton sticky dans `body` (pas `bottomNavigationBar`) : Flutter ne
-          // remonte pas fiablement `bottomNavigationBar` au-dessus du clavier,
-          // ce qui le cachait derrière sur PrixConditionsStep (champs prix /
-          // conditions). Même fix que phone_auth_screen.dart.
-          body: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: _formScrollController,
-                  padding: const EdgeInsets.all(DonySpacing.base),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const ContextualTutorialCard(
-                        context: TutorialContext.tripPublish,
-                      ),
-                      const SizedBox(height: DonySpacing.base),
-                      if (!isEdit && !isLocked) ...[
-                        CurrencySelectionBanner(
-                          currencyNotifier: _currencyNotifier,
+          child: Scaffold(
+            appBar: AppBar(
+              actions: [
+                if (_draftsEnabled)
+                  IconButton(
+                    key: const Key('trip-save-draft'),
+                    tooltip: context.l10n.formDraftSaveTooltip,
+                    onPressed: _onSaveDraftPressed,
+                    icon: DonyIcon(
+                      'notebook-pen',
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 22,
+                    ),
+                  ),
+                const DonyFeedbackButton(),
+              ],
+              leading: DonyAppBarBackButton(
+                leadingIconAsset: 'x',
+                onBack: () => unawaited(_handleExitRequest()),
+              ),
+              title: Text(
+                isLocked
+                    ? context.l10n.tripPublishDedicatedTitle
+                    : (isEdit
+                          ? context.l10n.tripPublishEditTitle
+                          : context.l10n.tripPublishTitle),
+              ),
+            ),
+            resizeToAvoidBottomInset: true,
+            // Bouton sticky dans `body` (pas `bottomNavigationBar`) : Flutter ne
+            // remonte pas fiablement `bottomNavigationBar` au-dessus du clavier,
+            // ce qui le cachait derrière sur PrixConditionsStep (champs prix /
+            // conditions). Même fix que phone_auth_screen.dart.
+            body: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _formScrollController,
+                    padding: const EdgeInsets.all(DonySpacing.base),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const ContextualTutorialCard(
+                          context: TutorialContext.tripPublish,
                         ),
                         const SizedBox(height: DonySpacing.base),
-                      ] else if (isEdit && !isLocked)
-                        _EditCurrencySection(
-                          editableNotifier: _currencyEditableNotifier,
+                        if (!isEdit && !isLocked) ...[
+                          CurrencySelectionBanner(
+                            currencyNotifier: _currencyNotifier,
+                          ),
+                          const SizedBox(height: DonySpacing.base),
+                        ] else if (isEdit && !isLocked)
+                          _EditCurrencySection(
+                            editableNotifier: _currencyEditableNotifier,
+                            currencyNotifier: _currencyNotifier,
+                          ),
+                        _TripFormContent(
+                          // Réservé aux tests : cf. `handoverDeadlineForTest`
+                          // sur `_TripFormContentState`, atteint via ce Key
+                          // faute de pouvoir nommer `_TripFormContent` (privé)
+                          // depuis un autre fichier.
+                          key: const Key('trip-form-content'),
+                          announcement: args?.announcement,
+                          lockContext: args?.lockContext,
+                          lockCorridorAndDate:
+                              args?.lockCorridorAndDate ?? false,
+                          canSubmitNotifier: _canSubmitNotifier,
+                          canContinueNotifier: _canContinueNotifier,
+                          canContinueStep1Notifier: _canContinueStep1Notifier,
+                          currentStepNotifier: _currentStepNotifier,
+                          departureTimeNotifier: _departureTimeNotifier,
                           currencyNotifier: _currencyNotifier,
+                          currencyEditableNotifier: _currencyEditableNotifier,
+                          onSubmitReady: (fn) => _submit = fn,
+                          onPaymentMethodsReady: (fn) => _paymentMethods = fn,
+                          onDraftHandlersReady: (snapshot, restore) {
+                            _draftSnapshot = snapshot;
+                            _restoreDraft = restore;
+                          },
+                          dirtyNotifier: _isDirtyNotifier,
                         ),
-                      _TripFormContent(
-                        // Réservé aux tests : cf. `handoverDeadlineForTest`
-                        // sur `_TripFormContentState`, atteint via ce Key
-                        // faute de pouvoir nommer `_TripFormContent` (privé)
-                        // depuis un autre fichier.
-                        key: const Key('trip-form-content'),
-                        announcement: args?.announcement,
-                        lockContext: args?.lockContext,
-                        lockCorridorAndDate: args?.lockCorridorAndDate ?? false,
-                        canSubmitNotifier: _canSubmitNotifier,
-                        canContinueNotifier: _canContinueNotifier,
-                        canContinueStep1Notifier: _canContinueStep1Notifier,
-                        currentStepNotifier: _currentStepNotifier,
-                        departureTimeNotifier: _departureTimeNotifier,
-                        currencyNotifier: _currencyNotifier,
-                        currencyEditableNotifier: _currencyEditableNotifier,
-                        onSubmitReady: (fn) => _submit = fn,
-                        onPaymentMethodsReady: (fn) => _paymentMethods = fn,
-                        dirtyNotifier: _isDirtyNotifier,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                    vertical: DonySpacing.sm,
-                  ),
-                  child: ListenableBuilder(
-                    listenable: Listenable.merge([
-                      _canSubmitNotifier,
-                      _currentStepNotifier,
-                      _canContinueNotifier,
-                      _canContinueStep1Notifier,
-                    ]),
-                    builder: (ctx, _) {
-                      final step = _currentStepNotifier.value;
-                      final canSubmit = _canSubmitNotifier.value;
-                      final canContinue = _canContinueNotifier.value;
-                      final canContinueStep1 = _canContinueStep1Notifier.value;
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base,
+                      vertical: DonySpacing.sm,
+                    ),
+                    child: ListenableBuilder(
+                      listenable: Listenable.merge([
+                        _canSubmitNotifier,
+                        _currentStepNotifier,
+                        _canContinueNotifier,
+                        _canContinueStep1Notifier,
+                      ]),
+                      builder: (ctx, _) {
+                        final step = _currentStepNotifier.value;
+                        final canSubmit = _canSubmitNotifier.value;
+                        final canContinue = _canContinueNotifier.value;
+                        final canContinueStep1 =
+                            _canContinueStep1Notifier.value;
 
-                      // ── Étapes 0 et 1 : Continuer (+ Retour si step > 0) ──
-                      if (step < 2) {
-                        return Row(
-                          children: [
-                            if (step > 0) ...[
+                        // ── Étapes 0 et 1 : Continuer (+ Retour si step > 0) ──
+                        if (step < 2) {
+                          return Row(
+                            children: [
+                              if (step > 0) ...[
+                                Expanded(
+                                  child: DonyButton(
+                                    label: ctx.l10n.commonBack,
+                                    variant: DonyButtonVariant.secondary,
+                                    icon: DonyIcons.back,
+                                    onPressed: () =>
+                                        _currentStepNotifier.value = step - 1,
+                                  ),
+                                ),
+                                const SizedBox(width: DonySpacing.sm),
+                              ],
                               Expanded(
                                 child: DonyButton(
-                                  label: ctx.l10n.commonBack,
-                                  variant: DonyButtonVariant.secondary,
-                                  icon: DonyIcons.back,
-                                  onPressed: () =>
-                                      _currentStepNotifier.value = step - 1,
+                                  label: ctx.l10n.commonContinue,
+                                  iconRight: DonyIcons.arrowRight,
+                                  onPressed:
+                                      ((step == 0 && !canContinue) ||
+                                          (step == 1 && !canContinueStep1))
+                                      ? null
+                                      : () => _currentStepNotifier.value =
+                                            step + 1,
                                 ),
                               ),
-                              const SizedBox(width: DonySpacing.sm),
                             ],
-                            Expanded(
-                              child: DonyButton(
-                                label: ctx.l10n.commonContinue,
-                                iconRight: DonyIcons.arrowRight,
-                                onPressed:
-                                    ((step == 0 && !canContinue) ||
-                                        (step == 1 && !canContinueStep1))
-                                    ? null
-                                    : () =>
-                                          _currentStepNotifier.value = step + 1,
-                              ),
-                            ),
-                          ],
-                        );
-                      }
+                          );
+                        }
 
-                      // ── Étape 2 — Trajet dédié : Confirmer ──
-                      if (isLocked) {
-                        return BlocBuilder<NegotiationBloc, NegotiationState>(
-                          builder: (ctx, state) {
-                            final isLoading =
-                                state is NegotiationLoading ||
-                                state is NegotiationActionInProgress;
-                            return Row(
-                              children: [
-                                Expanded(
-                                  child: DonyButton(
-                                    label: ctx.l10n.commonBack,
-                                    variant: DonyButtonVariant.secondary,
-                                    icon: DonyIcons.back,
-                                    onPressed: () =>
-                                        _currentStepNotifier.value = step - 1,
-                                  ),
-                                ),
-                                const SizedBox(width: DonySpacing.sm),
-                                Expanded(
-                                  child: DonyButton(
-                                    key: const Key(
-                                      'create-dedicated-trip-submit',
-                                    ),
-                                    label: ctx.l10n.tripPublishSubmitDedicated,
-                                    isLoading: isLoading,
-                                    onPressed: (canSubmit && !isLoading)
-                                        ? () => _submit?.call()
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-
-                      // ── Étape 2 — Mode édition : Enregistrer ──
-                      if (isEdit) {
-                        return BlocBuilder<AnnouncementBloc, AnnouncementState>(
-                          builder: (ctx, state) {
-                            final isLoading = state is AnnouncementLoading;
-                            return Row(
-                              children: [
-                                Expanded(
-                                  child: DonyButton(
-                                    label: ctx.l10n.commonBack,
-                                    variant: DonyButtonVariant.secondary,
-                                    icon: DonyIcons.back,
-                                    onPressed: () =>
-                                        _currentStepNotifier.value = step - 1,
-                                  ),
-                                ),
-                                const SizedBox(width: DonySpacing.sm),
-                                Expanded(
-                                  child: DonyButton(
-                                    key: const Key(
-                                      'create-announcement-submit',
-                                    ),
-                                    label: ctx.l10n.commonSave,
-                                    isLoading: isLoading,
-                                    onPressed: (canSubmit && !isLoading)
-                                        ? () => _submit?.call()
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-
-                      // ── Étape 2 — Mode création : Aperçu ──
-                      // Publiable sans Stripe configuré (cash-only) — Stripe n'est
-                      // plus une condition bloquante ici, seule la section paiement
-                      // (PrixConditionsStep) reflète le verrouillage de la carte.
-                      return BlocBuilder<AnnouncementBloc, AnnouncementState>(
-                        builder: (ctx, annState) {
-                          final isLoading = annState is AnnouncementLoading;
-                          return BlocBuilder<
-                            AnnouncementFormBloc,
-                            AnnouncementFormState
-                          >(
-                            builder: (ctx2, formState) {
+                        // ── Étape 2 — Trajet dédié : Confirmer ──
+                        if (isLocked) {
+                          return BlocBuilder<NegotiationBloc, NegotiationState>(
+                            builder: (ctx, state) {
+                              final isLoading =
+                                  state is NegotiationLoading ||
+                                  state is NegotiationActionInProgress;
                               return Row(
                                 children: [
                                   Expanded(
                                     child: DonyButton(
-                                      label: ctx2.l10n.commonBack,
+                                      label: ctx.l10n.commonBack,
                                       variant: DonyButtonVariant.secondary,
                                       icon: DonyIcons.back,
                                       onPressed: () =>
@@ -515,60 +557,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                   Expanded(
                                     child: DonyButton(
                                       key: const Key(
-                                        'create-announcement-preview',
+                                        'create-dedicated-trip-submit',
                                       ),
-                                      label: ctx2.l10n.tripPublishPreviewButton,
-                                      iconRight: DonyIcons.arrowRight,
+                                      label:
+                                          ctx.l10n.tripPublishSubmitDedicated,
                                       isLoading: isLoading,
                                       onPressed: (canSubmit && !isLoading)
-                                          ? () {
-                                              AnnouncementPreviewSheet.show(
-                                                ctx2,
-                                                formState: ctx2
-                                                    .read<
-                                                      AnnouncementFormBloc
-                                                    >()
-                                                    .state,
-                                                onConfirm: () {
-                                                  // Intentional: closes the preview sheet,
-                                                  // not the CreateTripScreen.
-                                                  Navigator.of(
-                                                    ctx2,
-                                                    rootNavigator: true,
-                                                  ).pop();
-                                                  _submit?.call();
-                                                },
-                                                onSaveDraft: () {
-                                                  // Même fermeture du sheet que onConfirm.
-                                                  Navigator.of(
-                                                    ctx2,
-                                                    rootNavigator: true,
-                                                  ).pop();
-                                                  _submit?.call(
-                                                    saveAsDraft: true,
-                                                  );
-                                                },
-                                                isSubmitting: isLoading,
-                                                departureTime:
-                                                    _departureTimeNotifier
-                                                        .value,
-                                                currency:
-                                                    _currencyNotifier.value,
-                                                paymentMethods: _paymentMethods
-                                                    ?.call(),
-                                                // « Modifier » : en création, ou
-                                                // en modification d'un trajet
-                                                // encore sans demande (FLUTTER-KV).
-                                                onChangeCurrency:
-                                                    _canChangeCurrency
-                                                    ? () => unawaited(
-                                                        _changeCurrencyFromPreview(
-                                                          ctx2,
-                                                        ),
-                                                      )
-                                                    : null,
-                                              );
-                                            }
+                                          ? () => _submit?.call()
                                           : null,
                                     ),
                                   ),
@@ -576,16 +571,159 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                               );
                             },
                           );
-                        },
-                      );
-                    },
+                        }
+
+                        // ── Étape 2 — Mode édition : Enregistrer ──
+                        if (isEdit) {
+                          return BlocBuilder<
+                            AnnouncementBloc,
+                            AnnouncementState
+                          >(
+                            builder: (ctx, state) {
+                              final isLoading = state is AnnouncementLoading;
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: DonyButton(
+                                      label: ctx.l10n.commonBack,
+                                      variant: DonyButtonVariant.secondary,
+                                      icon: DonyIcons.back,
+                                      onPressed: () =>
+                                          _currentStepNotifier.value = step - 1,
+                                    ),
+                                  ),
+                                  const SizedBox(width: DonySpacing.sm),
+                                  Expanded(
+                                    child: DonyButton(
+                                      key: const Key(
+                                        'create-announcement-submit',
+                                      ),
+                                      label: ctx.l10n.commonSave,
+                                      isLoading: isLoading,
+                                      onPressed: (canSubmit && !isLoading)
+                                          ? () => _submit?.call()
+                                          : null,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+
+                        // ── Étape 2 — Mode création : Aperçu ──
+                        // Publiable sans Stripe configuré (cash-only) — Stripe n'est
+                        // plus une condition bloquante ici, seule la section paiement
+                        // (PrixConditionsStep) reflète le verrouillage de la carte.
+                        return BlocBuilder<AnnouncementBloc, AnnouncementState>(
+                          builder: (ctx, annState) {
+                            final isLoading = annState is AnnouncementLoading;
+                            return BlocBuilder<
+                              AnnouncementFormBloc,
+                              AnnouncementFormState
+                            >(
+                              builder: (ctx2, formState) {
+                                return Row(
+                                  children: [
+                                    Expanded(
+                                      child: DonyButton(
+                                        label: ctx2.l10n.commonBack,
+                                        variant: DonyButtonVariant.secondary,
+                                        icon: DonyIcons.back,
+                                        onPressed: () =>
+                                            _currentStepNotifier.value =
+                                                step - 1,
+                                      ),
+                                    ),
+                                    const SizedBox(width: DonySpacing.sm),
+                                    Expanded(
+                                      child: DonyButton(
+                                        key: const Key(
+                                          'create-announcement-preview',
+                                        ),
+                                        label:
+                                            ctx2.l10n.tripPublishPreviewButton,
+                                        iconRight: DonyIcons.arrowRight,
+                                        isLoading: isLoading,
+                                        onPressed: (canSubmit && !isLoading)
+                                            ? () {
+                                                AnnouncementPreviewSheet.show(
+                                                  ctx2,
+                                                  formState: ctx2
+                                                      .read<
+                                                        AnnouncementFormBloc
+                                                      >()
+                                                      .state,
+                                                  onConfirm: () {
+                                                    // Intentional: closes the preview sheet,
+                                                    // not the CreateTripScreen.
+                                                    Navigator.of(
+                                                      ctx2,
+                                                      rootNavigator: true,
+                                                    ).pop();
+                                                    _submit?.call();
+                                                  },
+                                                  onSaveDraft: () {
+                                                    // Même fermeture du sheet que onConfirm.
+                                                    Navigator.of(
+                                                      ctx2,
+                                                      rootNavigator: true,
+                                                    ).pop();
+                                                    _submit?.call(
+                                                      saveAsDraft: true,
+                                                    );
+                                                  },
+                                                  isSubmitting: isLoading,
+                                                  departureTime:
+                                                      _departureTimeNotifier
+                                                          .value,
+                                                  currency:
+                                                      _currencyNotifier.value,
+                                                  paymentMethods:
+                                                      _paymentMethods?.call(),
+                                                  // « Modifier » : en création, ou
+                                                  // en modification d'un trajet
+                                                  // encore sans demande (FLUTTER-KV).
+                                                  onChangeCurrency:
+                                                      _canChangeCurrency
+                                                      ? () => unawaited(
+                                                          _changeCurrencyFromPreview(
+                                                            ctx2,
+                                                          ),
+                                                        )
+                                                      : null,
+                                                );
+                                              }
+                                            : null,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  /// En création seulement : le brouillon local est effacé une fois le
+  /// trajet publié (ou enregistré en brouillon serveur).
+  Widget _withDraftListeners({required Widget child}) {
+    final draftCubit = _draftCubit;
+    if (draftCubit == null) return child;
+    return BlocListener<AnnouncementBloc, AnnouncementState>(
+      listenWhen: (_, next) => next is AnnouncementCreated,
+      listener: (_, _) => unawaited(draftCubit.clear()),
+      child: child,
     );
   }
 }
@@ -619,6 +757,14 @@ class _TripFormContent extends StatefulWidget {
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
   final void Function(List<String> Function())? onPaymentMethodsReady;
 
+  /// Remet au parent de quoi lire la saisie (brouillon local) et la
+  /// recharger (reprise du brouillon).
+  final void Function(
+    TripFormDraft Function() snapshot,
+    void Function(TripFormDraft) restore,
+  )?
+  onDraftHandlersReady;
+
   const _TripFormContent({
     super.key,
     this.announcement,
@@ -634,6 +780,7 @@ class _TripFormContent extends StatefulWidget {
     this.currencyEditableNotifier,
     this.onSubmitReady,
     this.onPaymentMethodsReady,
+    this.onDraftHandlersReady,
   });
 
   @override
@@ -922,6 +1069,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     }
     widget.onSubmitReady?.call(_submit);
     widget.onPaymentMethodsReady?.call(_paymentMethods);
+    widget.onDraftHandlersReady?.call(_draftSnapshot, _restoreDraft);
     _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
     _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
     _kgPriceEnabledNotifier.addListener(_syncCanSubmit);
@@ -1137,9 +1285,13 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// rendue : voir `_captureInitialSignature`.
   String? _initialFormSignature;
 
+  /// Formulaire rechargé depuis un brouillon local : il compte comme entamé,
+  /// la sortie doit proposer de garder ou de supprimer ce brouillon.
+  bool _restoredFromDraft = false;
+
   void _markDirty() {
     if (_initialFormSignature == null) return;
-    final dirty = _formSignature != _initialFormSignature;
+    final dirty = _restoredFromDraft || _formSignature != _initialFormSignature;
     if (widget.dirtyNotifier != null && widget.dirtyNotifier!.value != dirty) {
       widget.dirtyNotifier!.value = dirty;
     }
@@ -2331,6 +2483,123 @@ class _TripFormContentState extends State<_TripFormContent> {
       date.month,
       date.day,
     ).subtract(Duration(days: lead));
+  }
+
+  /// Saisie complète du formulaire, au format du brouillon local.
+  TripFormDraft _draftSnapshot() {
+    final formState = context.read<AnnouncementFormBloc>().state;
+    final departureTime = _departureTimeNotifier.value;
+    final arrivalTime = _arrivalTimeNotifier.value;
+    final mode = _transportModeNotifier.value;
+    return TripFormDraft(
+      step: widget.currentStepNotifier?.value ?? 0,
+      currency: _currency.code,
+      departureCity: _departureCityNotifier.value,
+      departureCountryCode: _departureCountryCodeNotifier.value,
+      arrivalCity: _arrivalCityNotifier.value,
+      arrivalCountryCode: _arrivalCountryCodeNotifier.value,
+      departureDate: _departureDateNotifier.value,
+      departureTime: departureTime == null ? null : _formatTime(departureTime),
+      arrivalTime: arrivalTime == null ? null : _formatTime(arrivalTime),
+      arrivalDayOffset: _arrivalDayOffsetNotifier.value,
+      handoverDeadline: _handoverDeadlineNotifier.value,
+      handoverLeadDays: _pendingHandoverLeadDays,
+      transportMode: mode == null ? null : transportModeToWire(mode),
+      stops: _stopsNotifier.value,
+      pickupAddress: _pickupAddress,
+      deliveryAddress: _deliveryAddress,
+      availableKg: _availableKgNotifier.value,
+      capacityUnit: formState.capacityUnit.toWire(),
+      pricingMode: formState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG',
+      kgPriceEnabled: _kgPriceEnabledNotifier.value,
+      priceOption: _priceOptionNotifier.value,
+      customPrice: _customPriceNotifier.value,
+      customPriceText: _customPriceCtrl.text,
+      acceptedContent: _selectedContentNotifier.value.toList(),
+      customAccepted: _customAcceptedNotifier.value.toList(),
+      refusedTypes: _refusedTypesNotifier.value.toList(),
+      description: _descriptionCtrl.text,
+      cashEnabled: _cashEnabledNotifier.value,
+      cardEnabled: _cardEnabledNotifier.value,
+      mobileMoneyEnabled: _mobileMoneyEnabledNotifier.value,
+      negotiable: _negotiableNotifier.value,
+      legs: context.read<TripLegsCubit>().state.legs,
+    );
+  }
+
+  /// Recharge un brouillon local, date comprise (à la différence d'un
+  /// modèle). Même ordre que [_applyTemplate] : la devise d'abord, dont
+  /// dépendent les puces de prix, et les codes pays avant les villes.
+  void _restoreDraft(TripFormDraft d) {
+    _restoredFromDraft = true;
+    final currency = SupportedCurrency.fromCode(d.currency);
+    if (currency != null) widget.currencyNotifier.value = currency;
+
+    _departureCountryCodeNotifier.value = d.departureCountryCode;
+    _arrivalCountryCodeNotifier.value = d.arrivalCountryCode;
+    _departureCityNotifier.value = d.departureCity;
+    _arrivalCityNotifier.value = d.arrivalCity;
+    _syncCityToFormBloc();
+    _departureDateNotifier.value = d.departureDate;
+    _departureTimeNotifier.value = _timeOfDay(d.departureTime);
+    _arrivalTimeNotifier.value = _timeOfDay(d.arrivalTime);
+    _arrivalDayOffsetNotifier.value = d.arrivalTime == null
+        ? 0
+        : d.arrivalDayOffset;
+    _transportModeNotifier.value =
+        transportModeFromWire(d.transportMode) ?? TransportMode.plane;
+    _stopsNotifier.value = d.stops;
+    // Après la date : son listener réapplique un délai de modèle en attente.
+    _pendingHandoverLeadDays = d.handoverLeadDays;
+    _handoverDeadlineNotifier.value = d.handoverDeadline;
+
+    final kg = d.availableKg;
+    if (kg != null) _availableKgNotifier.value = kg;
+    _pickupAddressNotifier.value = d.pickupAddress;
+    _deliveryAddressNotifier.value = d.deliveryAddress;
+
+    _kgPriceEnabledNotifier.value = d.kgPriceEnabled;
+    _priceOptionNotifier.value = d.priceOption.clamp(-1, _presets.length);
+    final customPrice = d.customPrice;
+    if (customPrice != null) _customPriceNotifier.value = customPrice;
+    _customPriceCtrl.text = d.customPriceText;
+
+    _selectedContentNotifier.value = d.acceptedContent.toSet();
+    _customAcceptedNotifier.value = d.customAccepted.toSet();
+    _refusedTypesNotifier.value = d.refusedTypes.toSet();
+    _descriptionCtrl.text = d.description;
+    _negotiableNotifier.value = d.negotiable;
+
+    final mobileMoneyPossible =
+        _currency.isMobileMoneyEligible &&
+        mobileMoneyAccountActiveFrom(
+          context.read<MobileMoneyAccountBloc>().state,
+        );
+    _cashEnabledNotifier.value = d.cashEnabled;
+    _cardEnabledNotifier.value = d.cardEnabled;
+    _mobileMoneyEnabledNotifier.value =
+        mobileMoneyPossible && d.mobileMoneyEnabled;
+
+    final formBloc = context.read<AnnouncementFormBloc>();
+    final unit = switch (d.capacityUnit) {
+      'KG_FREE' => CapacityUnit.kgFree,
+      'SUITCASE_32KG' => CapacityUnit.suitcase32kg,
+      'KG_EXACT' => CapacityUnit.custom,
+      _ => CapacityUnit.suitcase23kg,
+    };
+    formBloc.add(CapacityUnitChanged(unit));
+    // Comme pour un modèle : l'unité réécrit le kg à son maximum, le kg
+    // saisi passe ensuite.
+    if (kg != null) formBloc.add(AvailableKgChanged(kg));
+    formBloc.add(
+      AnnouncementPricingModeSetRequested(
+        d.pricingMode == 'MIXED' ? PricingMode.mixed : PricingMode.kg,
+      ),
+    );
+
+    context.read<TripLegsCubit>().restore(d.legs);
+    _updateCanContinueStep1();
+    _markDirty();
   }
 
   static TimeOfDay? _timeOfDay(String? hhmm) {

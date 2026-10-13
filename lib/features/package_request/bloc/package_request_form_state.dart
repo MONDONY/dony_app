@@ -42,6 +42,7 @@ class PackageRequestFormState extends Equatable {
     this.createdRequest,
     this.editingRequestId,
     this.currency,
+    this.draftRevision = 0,
   });
 
   final int currentStep;
@@ -90,6 +91,10 @@ class PackageRequestFormState extends Equatable {
   /// encore initialisée (repli sur la devise du portefeuille côté serveur).
   final SupportedCurrency? currency;
 
+  /// Incrémenté à chaque reprise d'un brouillon local : l'écran recrée alors
+  /// les étapes, qui ne relisent l'état du bloc qu'à leur `initState`.
+  final int draftRevision;
+
   bool get isEditing => editingRequestId != null;
 
   PackageRequestFormState copyWith({
@@ -131,6 +136,7 @@ class PackageRequestFormState extends Equatable {
     PackageRequest? createdRequest,
     String? editingRequestId,
     SupportedCurrency? currency,
+    int? draftRevision,
   }) => PackageRequestFormState(
     currentStep: currentStep ?? this.currentStep,
     departureCity: departureCity ?? this.departureCity,
@@ -163,6 +169,7 @@ class PackageRequestFormState extends Equatable {
     createdRequest: createdRequest ?? this.createdRequest,
     editingRequestId: editingRequestId ?? this.editingRequestId,
     currency: currency ?? this.currency,
+    draftRevision: draftRevision ?? this.draftRevision,
   );
 
   @override
@@ -193,5 +200,6 @@ class PackageRequestFormState extends Equatable {
     createdRequest,
     editingRequestId,
     currency,
+    draftRevision,
   ];
 }

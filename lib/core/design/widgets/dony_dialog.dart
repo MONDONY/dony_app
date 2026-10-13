@@ -21,6 +21,10 @@ import 'package:flutter/material.dart';
 /// sans alternative (une limite atteinte qu'aucune action ne peut lever).
 enum DonyDialogVariant { info, destructive }
 
+/// Réponse au dialogue de sortie d'un formulaire avec brouillon
+/// ([DonyDialog.confirmExitWithDraft]). `null` : l'utilisateur reste.
+enum DraftExitChoice { save, discard }
+
 abstract final class DonyDialog {
   static Future<bool?> show(
     BuildContext context, {
@@ -68,6 +72,95 @@ abstract final class DonyDialog {
       cancelLabel: l.dsDiscardCancel,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-alert',
+    );
+  }
+
+  /// Sortie d'un formulaire de publication entamé : garder la saisie en
+  /// brouillon, la jeter, ou rester (`null`, y compris tap hors du dialogue).
+  static Future<DraftExitChoice?> confirmExitWithDraft(BuildContext context) {
+    return showDialog<DraftExitChoice>(
+      context: context,
+      builder: (_) => const _DraftExitDialog(),
+    );
+  }
+}
+
+class _DraftExitDialog extends StatelessWidget {
+  const _DraftExitDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+      ),
+      backgroundColor: cs.surface,
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.xl,
+        vertical: DonySpacing.huge,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: DonyIcon('notebook-pen', color: cs.primary, size: 26),
+                ),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.base),
+            Text(
+              l.formDraftExitTitle,
+              style: tt.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              l.formDraftExitMessage,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.xl),
+            // Trois issues de poids différent, empilées : l'action conseillée
+            // en plein, la destructive en contour rouge, rester en texte.
+            FilledButton(
+              key: const Key('draft-exit-save'),
+              onPressed: () => Navigator.of(context).pop(DraftExitChoice.save),
+              child: Text(l.formDraftExitSave),
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            OutlinedButton(
+              key: const Key('draft-exit-discard'),
+              onPressed: () =>
+                  Navigator.of(context).pop(DraftExitChoice.discard),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: cs.error,
+                side: BorderSide(color: cs.error),
+              ),
+              child: Text(l.formDraftExitDiscard),
+            ),
+            const SizedBox(height: DonySpacing.xs),
+            TextButton(
+              key: const Key('draft-exit-stay'),
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l.formDraftExitStay),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

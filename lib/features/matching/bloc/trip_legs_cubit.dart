@@ -40,6 +40,12 @@ class TripLegsCubit extends Cubit<TripLegsState> {
     );
   }
 
+  /// Reprise d'un brouillon local : les étapes saisies avant, sans compter
+  /// d'ajout dans l'analytics.
+  void restore(List<TripLegDraft> legs) {
+    emit(TripLegsState(legs: legs.take(TripLegChain.maxLegs - 1).toList()));
+  }
+
   void replace(int index, TripLegDraft leg) {
     if (index < 0 || index >= state.legs.length) return;
     final legs = [...state.legs]..[index] = leg;

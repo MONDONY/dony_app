@@ -5,6 +5,7 @@ import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dar
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -95,6 +96,16 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
         _date != s.desiredDate ||
         _tolerance != (s.dateToleranceDays ?? 2);
   }
+
+  /// Saisie de l'étape au format du brouillon local
+  /// (`PackageRequestFormDraft`), validée ou non.
+  Map<String, dynamic> get draftInput => {
+    'departureCity': _departureCity,
+    'arrivalCity': _arrivalCity,
+    'desiredDate': PackageRequestFormDraft.encodeDate(_date),
+    'dateToleranceDays': _tolerance,
+    'transportMode': transportModeToWire(_transportMode),
+  };
 
   /// Formule la tolérance en dates concrètes plutôt qu'en nombre de jours.
   String _toleranceHint() {

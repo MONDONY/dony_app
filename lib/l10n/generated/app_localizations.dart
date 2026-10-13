@@ -31693,6 +31693,144 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Toutes les compagnies, prix du moment, à partir de demain.'**
   String get flightsAlertOffersMoreBodyTomorrow;
+
+  /// Titre du dialogue de sortie d'un formulaire de publication entamé (trajet ou demande d'envoi), qui propose un brouillon local.
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder votre saisie ?'**
+  String get formDraftExitTitle;
+
+  /// Message du dialogue de sortie avec brouillon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrez-la en brouillon pour la reprendre plus tard sur ce téléphone, à l\'étape où vous en êtes.'**
+  String get formDraftExitMessage;
+
+  /// Bouton principal du dialogue de sortie : garde la saisie en brouillon local puis quitte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer le brouillon'**
+  String get formDraftExitSave;
+
+  /// Bouton du dialogue de sortie : quitte et supprime tout brouillon de ce formulaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quitter sans enregistrer'**
+  String get formDraftExitDiscard;
+
+  /// Bouton du dialogue de sortie : reste sur le formulaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer la saisie'**
+  String get formDraftExitStay;
+
+  /// Infobulle et libellé d'accessibilité du bouton brouillon de la barre du formulaire de publication.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer en brouillon'**
+  String get formDraftSaveTooltip;
+
+  /// Message affiché après l'enregistrement d'un brouillon local, une fois le formulaire quitté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillon enregistré. Vous le retrouverez en revenant publier.'**
+  String get formDraftSavedMessage;
+
+  /// Échec de l'écriture du brouillon local (trousseau indisponible).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le brouillon n\'a pas pu être enregistré sur ce téléphone.'**
+  String get formDraftSaveFailedMessage;
+
+  /// Bouton brouillon touché sur un formulaire encore vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien à enregistrer pour l\'instant.'**
+  String get formDraftNothingToSaveMessage;
+
+  /// Case à cocher en bas de l'écran des engagements du voyageur (première publication d'un trajet).
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai lu et j\'ai pris connaissance de mes engagements en tant que voyageur.'**
+  String get publishCommitmentCheckboxTrip;
+
+  /// Case à cocher en bas de l'écran des engagements de l'expéditeur (première demande d'envoi).
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai lu et j\'ai pris connaissance de mes engagements en tant qu\'expéditeur.'**
+  String get publishCommitmentCheckboxParcel;
+
+  /// Aide sous le bouton Continuer grisé tant que la case des engagements n'est pas cochée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cochez la case en bas de la page pour continuer.'**
+  String get publishCommitmentCheckHint;
+
+  /// Échec de l'enregistrement de l'acceptation des engagements.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accord n\'a pas pu être enregistré. Vérifiez votre connexion et réessayez.'**
+  String get publishCommitmentAcceptFailed;
+
+  /// Le texte des engagements a changé entre l'affichage et l'acceptation (409).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos engagements ont été mis à jour. Relisez-les avant de continuer.'**
+  String get publishCommitmentOutdated;
+
+  /// Titre de la feuille des brouillons avant le formulaire de trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer un trajet commencé ?'**
+  String get publishDraftsTitleTrip;
+
+  /// Titre de la feuille des brouillons avant le formulaire de demande d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer une demande commencée ?'**
+  String get publishDraftsTitleParcel;
+
+  /// Sous-titre de la feuille des brouillons.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprenez un brouillon là où vous l\'avez laissé, ou repartez de zéro.'**
+  String get publishDraftsSubtitle;
+
+  /// Bouton de la feuille des brouillons : formulaire de trajet vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un nouveau trajet'**
+  String get publishDraftsNewTrip;
+
+  /// Bouton de la feuille des brouillons : formulaire de demande vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une nouvelle demande'**
+  String get publishDraftsNewParcel;
+
+  /// Ligne d'état d'un brouillon local : étape atteinte et date d'enregistrement.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours sur ce téléphone · étape {step} sur {total} · {savedAt}'**
+  String publishDraftLocalStatus(int step, int total, String savedAt);
+
+  /// Ligne d'état d'un brouillon enregistré sur le serveur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillon complet, prêt à publier'**
+  String get publishDraftServerStatus;
+
+  /// Trajet d'un brouillon : ville de départ → ville d'arrivée.
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} → {to}'**
+  String publishDraftRoute(String from, String to);
+
+  /// Remplace une ville pas encore choisie dans un brouillon local.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville à choisir'**
+  String get publishDraftNoCity;
 }
 
 class _AppLocalizationsDelegate

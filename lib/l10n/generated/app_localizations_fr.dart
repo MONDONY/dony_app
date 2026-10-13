@@ -19620,4 +19620,87 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get flightsAlertOffersMoreBodyTomorrow =>
       'Toutes les compagnies, prix du moment, à partir de demain.';
+
+  @override
+  String get formDraftExitTitle => 'Garder votre saisie ?';
+
+  @override
+  String get formDraftExitMessage =>
+      'Enregistrez-la en brouillon pour la reprendre plus tard sur ce téléphone, à l\'étape où vous en êtes.';
+
+  @override
+  String get formDraftExitSave => 'Enregistrer le brouillon';
+
+  @override
+  String get formDraftExitDiscard => 'Quitter sans enregistrer';
+
+  @override
+  String get formDraftExitStay => 'Continuer la saisie';
+
+  @override
+  String get formDraftSaveTooltip => 'Enregistrer en brouillon';
+
+  @override
+  String get formDraftSavedMessage =>
+      'Brouillon enregistré. Vous le retrouverez en revenant publier.';
+
+  @override
+  String get formDraftSaveFailedMessage =>
+      'Le brouillon n\'a pas pu être enregistré sur ce téléphone.';
+
+  @override
+  String get formDraftNothingToSaveMessage =>
+      'Rien à enregistrer pour l\'instant.';
+
+  @override
+  String get publishCommitmentCheckboxTrip =>
+      'J\'ai lu et j\'ai pris connaissance de mes engagements en tant que voyageur.';
+
+  @override
+  String get publishCommitmentCheckboxParcel =>
+      'J\'ai lu et j\'ai pris connaissance de mes engagements en tant qu\'expéditeur.';
+
+  @override
+  String get publishCommitmentCheckHint =>
+      'Cochez la case en bas de la page pour continuer.';
+
+  @override
+  String get publishCommitmentAcceptFailed =>
+      'Votre accord n\'a pas pu être enregistré. Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get publishCommitmentOutdated =>
+      'Vos engagements ont été mis à jour. Relisez-les avant de continuer.';
+
+  @override
+  String get publishDraftsTitleTrip => 'Terminer un trajet commencé ?';
+
+  @override
+  String get publishDraftsTitleParcel => 'Terminer une demande commencée ?';
+
+  @override
+  String get publishDraftsSubtitle =>
+      'Reprenez un brouillon là où vous l\'avez laissé, ou repartez de zéro.';
+
+  @override
+  String get publishDraftsNewTrip => 'Créer un nouveau trajet';
+
+  @override
+  String get publishDraftsNewParcel => 'Créer une nouvelle demande';
+
+  @override
+  String publishDraftLocalStatus(int step, int total, String savedAt) {
+    return 'En cours sur ce téléphone · étape $step sur $total · $savedAt';
+  }
+
+  @override
+  String get publishDraftServerStatus => 'Brouillon complet, prêt à publier';
+
+  @override
+  String publishDraftRoute(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get publishDraftNoCity => 'Ville à choisir';
 }

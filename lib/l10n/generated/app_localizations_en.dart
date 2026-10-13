@@ -19487,4 +19487,86 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flightsAlertOffersMoreBodyTomorrow =>
       'All airlines, live prices, from tomorrow.';
+
+  @override
+  String get formDraftExitTitle => 'Keep what you entered?';
+
+  @override
+  String get formDraftExitMessage =>
+      'Save it as a draft to pick it up later on this phone, at the step you reached.';
+
+  @override
+  String get formDraftExitSave => 'Save draft';
+
+  @override
+  String get formDraftExitDiscard => 'Leave without saving';
+
+  @override
+  String get formDraftExitStay => 'Keep editing';
+
+  @override
+  String get formDraftSaveTooltip => 'Save as draft';
+
+  @override
+  String get formDraftSavedMessage =>
+      'Draft saved. You\'ll find it next time you publish.';
+
+  @override
+  String get formDraftSaveFailedMessage =>
+      'The draft couldn\'t be saved on this phone.';
+
+  @override
+  String get formDraftNothingToSaveMessage => 'Nothing to save yet.';
+
+  @override
+  String get publishCommitmentCheckboxTrip =>
+      'I have read and understood my commitments as a traveler.';
+
+  @override
+  String get publishCommitmentCheckboxParcel =>
+      'I have read and understood my commitments as a sender.';
+
+  @override
+  String get publishCommitmentCheckHint =>
+      'Tick the box at the bottom of the page to continue.';
+
+  @override
+  String get publishCommitmentAcceptFailed =>
+      'Your agreement couldn\'t be saved. Check your connection and try again.';
+
+  @override
+  String get publishCommitmentOutdated =>
+      'Your commitments have been updated. Read them again before continuing.';
+
+  @override
+  String get publishDraftsTitleTrip => 'Finish a trip you started?';
+
+  @override
+  String get publishDraftsTitleParcel => 'Finish a request you started?';
+
+  @override
+  String get publishDraftsSubtitle =>
+      'Pick up a draft where you left off, or start from scratch.';
+
+  @override
+  String get publishDraftsNewTrip => 'Create a new trip';
+
+  @override
+  String get publishDraftsNewParcel => 'Create a new request';
+
+  @override
+  String publishDraftLocalStatus(int step, int total, String savedAt) {
+    return 'In progress on this phone · step $step of $total · $savedAt';
+  }
+
+  @override
+  String get publishDraftServerStatus => 'Complete draft, ready to publish';
+
+  @override
+  String publishDraftRoute(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String get publishDraftNoCity => 'City to choose';
 }
