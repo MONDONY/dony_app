@@ -190,7 +190,10 @@ void main() {
 
       // Le masquage n'attend pas la réponse.
       expect(cubit.state, isFalse);
-      expect(find.text('Mettre aussi vos alertes prix en pause\u00a0?'), findsOne);
+      expect(
+        find.text('Mettre aussi vos alertes prix en pause\u00a0?'),
+        findsOne,
+      );
       expect(
         find.text(
           'Vous avez 2 alertes actives. Masquer les billets ne coupe pas '
