@@ -12055,6 +12055,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeSubtitle => 'Overrides the system setting';
 
   @override
+  String get settingsFlightsVisibleLabel => 'Show flight tickets';
+
+  @override
+  String get settingsFlightsVisibleSubtitle =>
+      'Deals and price alerts in Activities';
+
+  @override
   String get settingsThemeLight => 'Light';
 
   @override

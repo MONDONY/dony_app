@@ -27,6 +27,9 @@ class HiveService {
   // ── Préférences app ──────────────────────────────────────────────────────
   static const String kThemeMode = 'theme_mode'; // 'system' | 'light' | 'dark'
   static const String kLanguageCode = 'language_code'; // 'system' | 'fr' | 'en'
+  // Billets d'avion visibles dans Activités (bloc + alertes prix), propre à
+  // l'appareil. Absente = visibles.
+  static const String kFlightsVisible = 'flights_visible'; // bool
   // 'fav_destinations' (destinations favorites) n'est plus lue ni écrite
   // (FLUTTER-H5) : la clé peut subsister sur d'anciens appareils, sans effet.
 

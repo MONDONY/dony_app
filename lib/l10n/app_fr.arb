@@ -13262,6 +13262,14 @@
   "@settingsThemeSubtitle": {
     "description": "Sous-titre de la tuile de choix du thème (settings_screen.dart)"
   },
+  "settingsFlightsVisibleLabel": "Afficher les billets d'avion",
+  "@settingsFlightsVisibleLabel": {
+    "description": "Libellé de l'interrupteur qui affiche ou masque les billets d'avion dans Activités (settings_screen.dart)"
+  },
+  "settingsFlightsVisibleSubtitle": "Bons plans et alertes prix dans Activités",
+  "@settingsFlightsVisibleSubtitle": {
+    "description": "Sous-titre de l'interrupteur des billets d'avion (settings_screen.dart)"
+  },
   "settingsThemeLight": "Clair",
   "@settingsThemeLight": {
     "description": "Option de thème clair, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)"

@@ -7121,6 +7121,8 @@
   "settingsSectionAppearance": "APPEARANCE",
   "settingsThemeLabel": "Theme",
   "settingsThemeSubtitle": "Overrides the system setting",
+  "settingsFlightsVisibleLabel": "Show flight tickets",
+  "settingsFlightsVisibleSubtitle": "Deals and price alerts in Activities",
   "settingsThemeLight": "Light",
   "settingsThemeDark": "Dark",
   "settingsThemeAuto": "Auto",

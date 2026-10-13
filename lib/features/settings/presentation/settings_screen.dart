@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -10,6 +11,7 @@ import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/activation/presentation/widgets/intent_prompt_sheet.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/flights_visibility_cubit.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
@@ -56,6 +58,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     onTap: () => _showThemePicker(context, prefs.themeMode),
                   ),
+                  // Billets d'avion dans Activités : la ligne n'existe que si
+                  // la plateforme les propose (flag `flights_enabled`).
+                  const _FlightsVisibilityTile(),
                 ],
               ),
 
@@ -362,6 +367,58 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Interrupteur « Afficher les billets d'avion » (Apparence) : masque le bloc
+/// « Billets d'avion » et la ligne « Alertes prix vols » d'Activités. Absent
+/// tant que le flag `flights_enabled` est éteint.
+class _FlightsVisibilityTile extends StatelessWidget {
+  const _FlightsVisibilityTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return ValueListenableBuilder<bool>(
+      valueListenable: flightsEnabledListenable,
+      builder: (context, enabled, _) {
+        if (!enabled || !getIt.isRegistered<FlightsVisibilityCubit>()) {
+          return const SizedBox.shrink();
+        }
+        final cubit = getIt<FlightsVisibilityCubit>();
+        return BlocBuilder<FlightsVisibilityCubit, bool>(
+          bloc: cubit,
+          builder: (context, visible) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Même filet que celui d'un `DonyListTile` : le thème au-dessus
+              // le coupe (`showDivider: false`) quand cette ligne est absente.
+              const Divider(
+                height: 1,
+                indent: DonySpacing.lg + DonySpacing.icon,
+              ),
+              DonyListTile(
+                key: const Key('settings-flights-visible'),
+                iconAsset: 'plane',
+                iconColor: cs.primary,
+                iconBgColor: cs.primaryContainer,
+                label: l.settingsFlightsVisibleLabel,
+                subtitle: l.settingsFlightsVisibleSubtitle,
+                showDivider: false,
+                trailing: Switch(
+                  key: const Key('settings-flights-visible-switch'),
+                  value: visible,
+                  activeThumbColor: cs.primary,
+                  onChanged: (v) => unawaited(cubit.setVisible(v)),
+                ),
+                onTap: () => unawaited(cubit.setVisible(!visible)),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

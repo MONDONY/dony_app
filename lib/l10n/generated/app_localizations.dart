@@ -19997,6 +19997,18 @@ abstract class AppLocalizations {
   /// **'Prioritaire sur le réglage système'**
   String get settingsThemeSubtitle;
 
+  /// Libellé de l'interrupteur qui affiche ou masque les billets d'avion dans Activités (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher les billets d\'avion'**
+  String get settingsFlightsVisibleLabel;
+
+  /// Sous-titre de l'interrupteur des billets d'avion (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bons plans et alertes prix dans Activités'**
+  String get settingsFlightsVisibleSubtitle;
+
   /// Option de thème clair, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)
   ///
   /// In fr, this message translates to:
