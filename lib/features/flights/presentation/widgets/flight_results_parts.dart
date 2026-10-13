@@ -420,6 +420,45 @@ class _Chip extends StatelessWidget {
   }
 }
 
+/// Bandeau sable en tête des résultats quand le back n'a rien trouvé aux
+/// jours demandés et renvoie des vols à [days] jours près.
+class FlightNearbyDatesNotice extends StatelessWidget {
+  const FlightNearbyDatesNotice({super.key, required this.days});
+
+  final int days;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surfaceWarm,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyIcon('calendar', size: 18, color: cs.secondary),
+          const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
+          Expanded(
+            child: Text(
+              context.l10n.flightsNearbyDatesNotice(days),
+              style: tt.bodySmall?.copyWith(
+                fontSize: 12.5,
+                height: 1.45,
+                color: cs.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Encart sable « Une compagnie manque ? » : ouvre la recherche Aviasales
 /// complète du trajet.
 class FlightAllAirlinesCard extends StatelessWidget {
@@ -545,11 +584,11 @@ class FlightEmptyResults extends StatelessWidget {
     final l = context.l10n;
     return ListView(
       key: const Key('flights-empty'),
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         DonySpacing.base,
         DonySpacing.xs,
         DonySpacing.base,
-        DonySpacing.huge,
+        flightNavBarReserve(context) + DonySpacing.huge,
       ),
       children: [
         Container(

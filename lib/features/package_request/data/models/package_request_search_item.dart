@@ -1,5 +1,6 @@
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/package_request/data/models/my_negotiation_summary.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
@@ -39,6 +40,7 @@ class PackageRequestSearchItem extends Equatable {
     this.convertedCurrency,
     this.uniqueViewerCount,
     this.grossPriceEur,
+    this.myNegotiation,
   });
 
   final String id;
@@ -124,6 +126,10 @@ class PackageRequestSearchItem extends Equatable {
   /// expéditeur propriétaire ; nul pour tout autre lecteur et sur un back plus ancien.
   final int? uniqueViewerCount;
 
+  /// Négociation déjà engagée par le voyageur connecté sur cette demande
+  /// (FLUTTER-NZ). `null` s'il ne négocie pas, ou sur un back antérieur.
+  final MyNegotiationSummary? myNegotiation;
+
   factory PackageRequestSearchItem.fromJson(
     Map<String, dynamic> json,
   ) => PackageRequestSearchItem(
@@ -171,6 +177,7 @@ class PackageRequestSearchItem extends Equatable {
     convertedCurrency: json['convertedCurrency'] as String?,
     uniqueViewerCount: (json['uniqueViewerCount'] as num?)?.toInt(),
     grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
+    myNegotiation: MyNegotiationSummary.tryFromJson(json['myNegotiation']),
   );
 
   @override
@@ -205,6 +212,7 @@ class PackageRequestSearchItem extends Equatable {
     convertedCurrency,
     grossPriceEur,
     uniqueViewerCount,
+    myNegotiation,
   ];
 }
 

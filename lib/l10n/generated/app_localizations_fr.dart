@@ -19008,6 +19008,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun prix récent pour ce trajet. Essayez une autre ville de départ ou tout le mois.';
 
   @override
+  String flightsNearbyDatesNotice(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days jours près',
+      one: '1 jour près',
+    );
+    return 'Pas de prix exact pour ces dates. Voici des vols à $_temp0.';
+  }
+
+  @override
   String get flightsTryInstead => 'Essayez plutôt';
 
   @override
@@ -19277,4 +19288,45 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorCurrencyUnsupportedMessage =>
       'Cette devise n\'est pas disponible pour un trajet. Choisissez-en une autre.';
+
+  @override
+  String get bidDetailCancelledContactWindowHint =>
+      'Vous pouvez encore vous appeler pendant 48 h après l\'annulation.';
+
+  @override
+  String negotiationThreadCounterNetAmountLabel(String symbol) {
+    return 'Ce que vous recevrez ($symbol)';
+  }
+
+  @override
+  String negotiationThreadCounterSenderWillPay(String amount) {
+    return 'L\'expéditeur paiera $amount';
+  }
+
+  @override
+  String get errorCounterAmountAmbiguousTitle => 'Montant à préciser';
+
+  @override
+  String get errorCounterAmountAmbiguousMessage =>
+      'Votre contre-proposition n\'a pas pu être lue. Saisissez à nouveau le montant.';
+
+  @override
+  String get errorCounterNetTravelerOnlyTitle => 'Montant non accepté';
+
+  @override
+  String get errorCounterNetTravelerOnlyMessage =>
+      'Proposez le prix total que vous paierez, frais Yadony inclus.';
+
+  @override
+  String get errorCounterSameAmountTitle => 'Même montant';
+
+  @override
+  String get errorCounterSameAmountMessage =>
+      'Ce montant est identique à la dernière proposition : acceptez-la ou changez le prix.';
+
+  @override
+  String get requestMyNegotiationYourTurn => 'Votre tour';
+
+  @override
+  String get requestMyNegotiationPending => 'Proposition en attente';
 }

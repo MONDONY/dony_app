@@ -1,11 +1,54 @@
+import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Petits éléments communs aux écrans de billets, dessinés comme la maquette
 /// de l'onglet (bouton rond, case arrondie, sélecteur en pilule, bouton
 /// flottant noir) plutôt que les contrôles Material bruts.
+
+/// Hauteur à réserver en bas des listes de l'onglet Billets.
+///
+/// Le shell monte l'onglet avec `extendBody: true` : le contenu passe sous la
+/// barre d'onglets. Sans cette réserve, la fin de la liste des résultats
+/// (encart « Une compagnie manque ? ») et le bouton « Alerte prix » restaient
+/// cachés sous la barre, sans pouvoir défiler plus loin.
+double flightNavBarReserve(BuildContext context) =>
+    MainShell.navBarContentHeight + MediaQuery.paddingOf(context).bottom;
+
+/// Style de la barre d'état des écrans de billets.
+///
+/// Les écrans de l'onglet n'ont pas d'`AppBar` : sans région annotée, Flutter
+/// ne touche plus à la barre d'état et garde le dernier style posé. Après
+/// l'attente ou le choix de ville (fond nuit, icônes claires), les résultats
+/// restaient donc avec des icônes blanches sur fond clair. Chaque écran pose
+/// son style : celui du thème ([AppBarTheme.systemOverlayStyle], icônes
+/// sombres en clair, claires en sombre), ou des icônes claires sur le fond
+/// nuit ([night]). `statusBarBrightness` sert à iOS, l'autre à Android.
+abstract final class FlightStatusBar {
+  /// Style d'un écran au fond du thème.
+  static SystemUiOverlayStyle of(BuildContext context) {
+    final theme = Theme.of(context);
+    final light = theme.brightness == Brightness.light;
+    final base =
+        theme.appBarTheme.systemOverlayStyle ??
+        (light ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light);
+    return base.copyWith(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: light ? Brightness.dark : Brightness.light,
+      statusBarBrightness: light ? Brightness.light : Brightness.dark,
+    );
+  }
+
+  /// Style d'un écran au fond nuit, quel que soit le thème.
+  static SystemUiOverlayStyle night(BuildContext context) =>
+      of(context).copyWith(
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      );
+}
 
 /// Bouton rond blanc posé sur le fond (cloche, retour). Zone tappable de
 /// 44 points, pastille visible de [size].

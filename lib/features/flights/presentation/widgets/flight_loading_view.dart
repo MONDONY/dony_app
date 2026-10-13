@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -71,7 +72,7 @@ class _FlightLoadingViewState extends State<FlightLoadingView>
     final l = context.l10n;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: FlightStatusBar.night(context),
       child: DecoratedBox(
         key: const Key('flights-loading'),
         decoration: const BoxDecoration(

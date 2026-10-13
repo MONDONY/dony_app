@@ -914,6 +914,27 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.credit_card_off_rounded,
     ),
+    // Contre-offre d'un fil de TRAJET (`POST /bids/{bidId}/negotiation/counter`,
+    // FLUTTER-NS, yadony-back #516). Le voyageur saisit son net, l'expéditeur
+    // le brut : un seul des deux montants part.
+    'counter-amount-ambiguous': _Entry(
+      title: (l) => l.errorCounterAmountAmbiguousTitle,
+      message: (l) => l.errorCounterAmountAmbiguousMessage,
+      severity: ErrorSeverity.error,
+      icon: Icons.error_outline_rounded,
+    ),
+    'counter-net-traveler-only': _Entry(
+      title: (l) => l.errorCounterNetTravelerOnlyTitle,
+      message: (l) => l.errorCounterNetTravelerOnlyMessage,
+      severity: ErrorSeverity.error,
+      icon: Icons.error_outline_rounded,
+    ),
+    'counter-same-amount': _Entry(
+      title: (l) => l.errorCounterSameAmountTitle,
+      message: (l) => l.errorCounterSameAmountMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_outlined,
+    ),
     'negotiation/commission-charge-failed': _Entry(
       title: (l) => l.errorNegotiationCommissionChargeFailedTitle,
       message: (l) => l.errorNegotiationCommissionChargeFailedMessage,

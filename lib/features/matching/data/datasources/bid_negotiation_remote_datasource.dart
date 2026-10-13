@@ -58,13 +58,21 @@ class BidNegotiationRemoteDatasource {
     return BidNegotiation.fromJson(response.data as Map<String, dynamic>);
   }
 
-  /// Contre-offre de l'une des deux parties.
+  /// Contre-offre de l'une des deux parties. Un seul montant part : le net
+  /// quand il est fourni (voyageur, FLUTTER-NS), le brut sinon. Jamais les
+  /// deux, le serveur répondrait `counter-amount-ambiguous`.
   Future<BidNegotiation> counter(
     String bidId, {
-    required double proposedTotalEur,
+    double? proposedTotalEur,
+    double? proposedNetEur,
     String? body,
   }) async {
-    final payload = <String, dynamic>{'proposedTotalEur': proposedTotalEur};
+    final payload = <String, dynamic>{
+      if (proposedNetEur != null)
+        'proposedNetEur': proposedNetEur
+      else
+        'proposedTotalEur': proposedTotalEur,
+    };
     if (body != null && body.trim().isNotEmpty) payload['body'] = body;
     final response = await _apiClient.dio.post(
       '/bids/$bidId/negotiation/counter',

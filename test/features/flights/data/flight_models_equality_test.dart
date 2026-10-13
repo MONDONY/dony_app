@@ -38,7 +38,7 @@ void main() {
     };
     final a = FlightSearchResult.fromJson(json('/search/PAR1212ABJ1'));
     expect(a, FlightSearchResult.fromJson(json('/search/PAR1212ABJ1')));
-    expect(a.props, hasLength(6));
+    expect(a.props, hasLength(8));
     expect(FlightSearchResult.fromJson(json('/autre')).searchPath, isNull);
     expect(FlightSearchResult.fromJson(json(null)).searchPath, isNull);
     expect(FlightSearchResult.fromJson(const {}).offers, isEmpty);
