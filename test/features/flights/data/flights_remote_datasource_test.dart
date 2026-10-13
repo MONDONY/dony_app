@@ -177,4 +177,62 @@ void main() {
     expect(defaults.source, 'none');
     expect(defaults.origin, isNull);
   });
+
+  test(
+    'vols trouvés d\'une alerte : GET, offres triées, chemin gardé',
+    () async {
+      api.on('GET', '/me/flight-alerts/a1/offers', {
+        'alertId': 'a1',
+        'originCode': 'PAR',
+        'destinationCode': 'ABJ',
+        'originLabel': 'Paris',
+        'destinationLabel': 'Abidjan',
+        'roundTrip': false,
+        'currency': 'EUR',
+        'maxPrice': 450,
+        'offers': [
+          {..._offerJson, 'price': 438, 'offerPath': '/search/b'},
+          _offerJson,
+          'pas une offre',
+        ],
+        'searchPath': '/search/PAR0112ABJ1',
+        'checkedAt': '2026-10-13T08:00:00Z',
+      });
+
+      final result = await datasource.alertOffers('a1');
+
+      expect(api.last.method, 'GET');
+      expect(result.alertId, 'a1');
+      expect(result.originLabel, 'Paris');
+      expect(result.maxPrice, 450);
+      expect(result.offers.map((o) => o.price), [431, 438]);
+      expect(result.cheapest!.price, 431);
+      expect(result.searchPath, '/search/PAR0112ABJ1');
+      expect(result.checkedAt, DateTime.utc(2026, 10, 13, 8));
+    },
+  );
+
+  test(
+    'vols trouvés : champs absents tolérés, chemin douteux ignoré',
+    () async {
+      api.on('GET', '/me/flight-alerts/a2/offers', {
+        'searchPath': 'https://ailleurs.test/x',
+      });
+
+      final result = await datasource.alertOffers('a2');
+
+      expect(result.alertId, '');
+      expect(result.currency, 'EUR');
+      expect(result.roundTrip, isFalse);
+      expect(result.offers, isEmpty);
+      expect(result.cheapest, isNull);
+      expect(result.searchPath, isNull);
+      expect(result.checkedAt, isNull);
+      expect(result.toSearchResult().searchPath, isNull);
+      expect(
+        result.toSearchResult(fallbackSearchPath: '/search/X1').searchPath,
+        '/search/X1',
+      );
+    },
+  );
 }

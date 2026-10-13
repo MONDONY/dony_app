@@ -6522,9 +6522,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsAlertReturnLine': (l) =>
       l.flightsAlertReturnLine(placeholderMarker('period')),
   'flightsAlertThreshold': (l) => l.flightsAlertThreshold,
-  'flightsAlertThresholdShort': (l) => l.flightsAlertThresholdShort,
   'flightsAlertAtMost': (l) => l.flightsAlertAtMost(placeholderMarker('price')),
-  'flightsAlertLastSeen': (l) => l.flightsAlertLastSeen,
   'flightsAlertNotChecked': (l) => l.flightsAlertNotChecked,
   'flightsAlertCurrentLowest': (l) =>
       l.flightsAlertCurrentLowest(placeholderMarker('price')),
@@ -6702,6 +6700,49 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorCounterSameAmountMessage': (l) => l.errorCounterSameAmountMessage,
   'requestMyNegotiationYourTurn': (l) => l.requestMyNegotiationYourTurn,
   'requestMyNegotiationPending': (l) => l.requestMyNegotiationPending,
+  'activityFlightAlertsTitle': (l) => l.activityFlightAlertsTitle,
+  'activityFlightAlertsEmpty': (l) => l.activityFlightAlertsEmpty,
+  'activityFlightAlertsActive': (l) =>
+      l.activityFlightAlertsActive(intPlaceholderValue),
+  'activityFlightAlertsHitFlights': (l) =>
+      l.activityFlightAlertsHitFlights(intPlaceholderValue),
+  'activityFlightAlertsHitMany': (l) => l.activityFlightAlertsHitMany(
+    intPlaceholderValue,
+    placeholderMarker('price'),
+  ),
+  'activityFlightAlertsBestSeen': (l) => l.activityFlightAlertsBestSeen,
+  'activityFlightAlertsCreate': (l) => l.activityFlightAlertsCreate,
+  'flightsAlertBelowBy': (l) =>
+      l.flightsAlertBelowBy(placeholderMarker('amount')),
+  'flightsAlertAtYourPrice': (l) => l.flightsAlertAtYourPrice,
+  'flightsAlertMaxShort': (l) =>
+      l.flightsAlertMaxShort(placeholderMarker('price')),
+  'flightsAlertResultHit': (l) => l.flightsAlertResultHit(intPlaceholderValue),
+  'flightsAlertResultHitNoCount': (l) => l.flightsAlertResultHitNoCount,
+  'flightsAlertCheckedAgo': (l) =>
+      l.flightsAlertCheckedAgo(placeholderMarker('ago')),
+  'flightsAlertResultAbove': (l) =>
+      l.flightsAlertResultAbove(placeholderMarker('price')),
+  'flightsAlertResultNoFlight': (l) => l.flightsAlertResultNoFlight,
+  'flightsAlertResultPaused': (l) => l.flightsAlertResultPaused,
+  'flightsAlertSeeOffers': (l) => l.flightsAlertSeeOffers,
+  'flightsAlertOffersTitle': (l) => l.flightsAlertOffersTitle,
+  'flightsAlertOffersBanner': (l) => l.flightsAlertOffersBanner(
+    intPlaceholderValue,
+    placeholderMarker('price'),
+  ),
+  'flightsAlertOffersMax': (l) =>
+      l.flightsAlertOffersMax(placeholderMarker('price')),
+  'flightsAlertOffersEmptyTitle': (l) => l.flightsAlertOffersEmptyTitle,
+  'flightsAlertOffersEmptyBody': (l) => l.flightsAlertOffersEmptyBody,
+  'flightsAlertOffersMoreTitle': (l) => l.flightsAlertOffersMoreTitle,
+  'flightsAlertOffersMoreBody': (l) => l.flightsAlertOffersMoreBody,
+  'activityFlightAlertsBelowByTicket': (l) =>
+      l.activityFlightAlertsBelowByTicket(placeholderMarker('amount')),
+  'flightsAlertOffersMoreBodyCheapest': (l) =>
+      l.flightsAlertOffersMoreBodyCheapest,
+  'flightsAlertOffersMoreBodyTomorrow': (l) =>
+      l.flightsAlertOffersMoreBodyTomorrow,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7225,4 +7266,12 @@ const textParameters = <String, List<String>>{
   'listingPreviewCurrencyValue': ['currencyName', 'currencyCode'],
   'negotiationThreadCounterNetAmountLabel': ['symbol'],
   'negotiationThreadCounterSenderWillPay': ['amount'],
+  'activityFlightAlertsHitMany': ['price'],
+  'flightsAlertBelowBy': ['amount'],
+  'flightsAlertMaxShort': ['price'],
+  'flightsAlertCheckedAgo': ['ago'],
+  'flightsAlertResultAbove': ['price'],
+  'flightsAlertOffersBanner': ['price'],
+  'flightsAlertOffersMax': ['price'],
+  'activityFlightAlertsBelowByTicket': ['amount'],
 };

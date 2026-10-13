@@ -20,6 +20,9 @@ class AirlineLogo extends StatelessWidget {
   final String? name;
   final double size;
 
+  /// En dessous, le code de la pastille de repli est réduit à la taille.
+  static const _smallSize = 20.0;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -34,9 +37,14 @@ class AirlineLogo extends StatelessWidget {
       ),
       child: Text(
         code ?? '',
+        maxLines: 1,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: cs.primary,
           fontWeight: FontWeight.w800,
+          // Pastille miniature (pile des Outils) : le code est un repère
+          // visuel, lu par le lecteur d'écran via `name`, pas un texte.
+          fontSize: size < _smallSize ? size * 0.4 : null,
+          letterSpacing: size < _smallSize ? 0 : null,
         ),
       ),
     );

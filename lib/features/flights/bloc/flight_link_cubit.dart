@@ -39,7 +39,8 @@ class FlightLinkCubit extends Cubit<FlightLinkState> {
   /// « Voir toutes les compagnies sur Aviasales » : la recherche complète du
   /// trajet ([FlightSearchResult.searchPath]) passe par le même endpoint que
   /// les offres, qui la transforme en lien affilié. [from] : `results`
-  /// (encart de la liste) ou `empty` (écran « Aucun vol »).
+  /// (encart de la liste), `empty` (écran « Aucun vol ») ou `alert` (écran
+  /// « Vols trouvés » d'une alerte).
   Future<void> openAllAirlines(
     FlightSearchResult result, {
     required String from,

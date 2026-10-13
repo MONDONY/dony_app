@@ -235,4 +235,50 @@ void main() {
       );
     });
   });
+
+  group('FLIGHT_PRICE_ALERT dans la boîte de notifications', () {
+    const alertId = '0a1b2c3d-e5f6-7890-abcd-ef1234567890';
+
+    NotificationModel alert(Map<String, dynamic> data) => NotificationModel(
+      id: 'n1',
+      type: 'FLIGHT_PRICE_ALERT',
+      title: 't',
+      body: 'b',
+      data: data,
+      read: false,
+      createdAt: DateTime(2026),
+      deeplink: 'yadony://flights/alerts',
+    );
+
+    test('avec un alertId valide : les vols trouvés, malgré le deeplink', () {
+      expect(
+        routeForNotification(
+          alert(const {'alertId': alertId, 'matchCount': '3'}),
+        ),
+        '/flights/alerts/$alertId/offers?source=notification',
+      );
+    });
+
+    test('sans alertId valide : le deeplink garde la main', () {
+      expect(routeForNotification(alert(const {})), '/flights/alerts');
+      expect(
+        routeForNotification(alert(const {'alertId': '../x'})),
+        '/flights/alerts',
+      );
+    });
+
+    test('un autre type garde la priorité du deeplink', () {
+      final n = NotificationModel(
+        id: 'n1',
+        type: 'CORRIDOR_ALERT',
+        title: 't',
+        body: 'b',
+        data: const {'alertId': alertId},
+        read: false,
+        createdAt: DateTime(2026),
+        deeplink: 'yadony://flights/alerts',
+      );
+      expect(routeForNotification(n), '/flights/alerts');
+    });
+  });
 }

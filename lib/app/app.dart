@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:dony/app/announcement_deep_link.dart';
 import 'package:dony/app/deep_link_gate.dart';
+import 'package:dony/app/flight_alert_offers_deep_link.dart';
 import 'package:dony/app/language_change_guard.dart';
 import 'package:dony/app/mobile_money_deep_link.dart';
 import 'package:dony/app/package_request_deep_link.dart';
@@ -218,6 +219,7 @@ class _DonyAppState extends State<DonyApp> {
     resolveAnnouncementDeepLink,
     resolvePackageRequestDeepLink,
     resolveMobileMoneyAwaitingDeepLink,
+    resolveFlightAlertOffersDeepLink,
   ];
 
   // Allowlist par égalité stricte des chemins FIXES atteignables via yadony://.

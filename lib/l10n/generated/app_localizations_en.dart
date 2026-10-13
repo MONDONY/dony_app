@@ -18673,15 +18673,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flightsAlertThreshold => 'Notify me below';
 
   @override
-  String get flightsAlertThresholdShort => 'Threshold';
-
-  @override
   String flightsAlertAtMost(String price) {
     return '≤ $price';
   }
-
-  @override
-  String get flightsAlertLastSeen => 'Last price seen';
 
   @override
   String get flightsAlertNotChecked => 'Not checked yet';
@@ -19218,4 +19212,137 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestMyNegotiationPending => 'Offer pending';
+
+  @override
+  String get activityFlightAlertsTitle => 'Flight price alerts';
+
+  @override
+  String get activityFlightAlertsEmpty => 'Get notified when prices drop';
+
+  @override
+  String activityFlightAlertsActive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active alerts',
+      one: '1 active alert',
+      zero: 'No active alerts',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityFlightAlertsHitFlights(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count flights',
+      one: '1 flight',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityFlightAlertsHitMany(int count, String price) {
+    return '$count alerts · from $price';
+  }
+
+  @override
+  String get activityFlightAlertsBestSeen => 'best price seen';
+
+  @override
+  String get activityFlightAlertsCreate => 'Create';
+
+  @override
+  String flightsAlertBelowBy(String amount) {
+    return '−$amount under your price';
+  }
+
+  @override
+  String get flightsAlertAtYourPrice => 'at your price';
+
+  @override
+  String flightsAlertMaxShort(String price) {
+    return 'max $price';
+  }
+
+  @override
+  String flightsAlertResultHit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count flights under your price',
+      one: '1 flight under your price',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsAlertResultHitNoCount => 'Under your price';
+
+  @override
+  String flightsAlertCheckedAgo(String ago) {
+    return 'checked $ago';
+  }
+
+  @override
+  String flightsAlertResultAbove(String price) {
+    return 'Best price right now, still above $price';
+  }
+
+  @override
+  String get flightsAlertResultNoFlight => 'No flights found yet';
+
+  @override
+  String get flightsAlertResultPaused => 'Paused: no more checks';
+
+  @override
+  String get flightsAlertSeeOffers => 'View';
+
+  @override
+  String get flightsAlertOffersTitle => 'Flights found';
+
+  @override
+  String flightsAlertOffersBanner(int count, String price) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count flights under your price, cheapest at $price',
+      one: '1 flight under your price, at $price',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String flightsAlertOffersMax(String price) {
+    return 'max price $price';
+  }
+
+  @override
+  String get flightsAlertOffersEmptyTitle =>
+      'No flights under your price right now';
+
+  @override
+  String get flightsAlertOffersEmptyBody =>
+      'Prices have moved since the last check. We keep watching and will let you know as soon as a flight drops below it again.';
+
+  @override
+  String get flightsAlertOffersMoreTitle => 'More flights on Aviasales';
+
+  @override
+  String get flightsAlertOffersMoreBody =>
+      'All airlines, live prices, on the first day of your period.';
+
+  @override
+  String activityFlightAlertsBelowByTicket(String amount) {
+    return '−$amount\nunder your price';
+  }
+
+  @override
+  String get flightsAlertOffersMoreBodyCheapest =>
+      'All airlines, live prices, on the date of the cheapest flight.';
+
+  @override
+  String get flightsAlertOffersMoreBodyTomorrow =>
+      'All airlines, live prices, from tomorrow.';
 }

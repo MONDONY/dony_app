@@ -7,12 +7,14 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/flights/bloc/flight_alerts_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
+import 'package:dony/features/flights/presentation/flight_alert_offers_screen.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_alert_sheet.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// Mes alertes prix (`/flights/alerts`, deeplink `yadony://flights/alerts`,
 /// notification `FLIGHT_PRICE_ALERT`). Réservé aux comptes : un visiteur est
@@ -201,8 +203,11 @@ class _AlertCard extends StatelessWidget {
       else
         l.flightsOneWay,
       if (alert.directOnly) l.flightsDirectOnly,
+      l.flightsAlertMaxShort(
+        FlightFormat.price(alert.maxPrice, alert.currency),
+      ),
     ];
-    final lastSeen = alert.lastSeenPrice;
+    final muted = tt.bodySmall?.copyWith(color: cs.onSurfaceVariant);
 
     return Dismissible(
       key: ValueKey(alert.id),
@@ -217,96 +222,264 @@ class _AlertCard extends StatelessWidget {
         child: DonyIcon('trash-2', color: cs.onError),
       ),
       onDismissed: (_) => cubit.delete(alert.id),
-      child: Opacity(
-        opacity: alert.active ? 1 : 0.6,
-        child: Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.base,
+          DonySpacing.md,
+          DonySpacing.base,
+          DonySpacing.md + DonySpacing.xxs,
+        ),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          border: Border.all(color: cs.outline),
+          boxShadow: DonyShadow.xs,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Une alerte en pause s'efface : trajet et détails pâlissent,
+            // l'interrupteur reste net pour la relancer.
+            Row(
+              children: [
+                Expanded(
+                  child: Opacity(
+                    opacity: alert.active ? 1 : 0.55,
                     child: Text(
-                      l.flightsRouteTitle(
+                      FlightFormat.route(
+                        l,
                         alert.originDisplay,
                         alert.destinationDisplay,
+                        roundTrip: alert.isRoundTrip,
                       ),
                       style: tt.titleLarge,
                     ),
                   ),
-                  FlightToggle(
-                    key: Key('flight-alert-switch-${alert.id}'),
-                    value: alert.active,
-                    semanticLabel: l.flightsAlertActiveLabel,
-                    onChanged: (v) => cubit.setActive(alert.id, v),
-                  ),
-                ],
-              ),
-              for (final line in details)
-                Text(
-                  line,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
-              const SizedBox(height: DonySpacing.sm),
-              Row(
-                children: [
-                  _Figure(
-                    label: l.flightsAlertThresholdShort,
-                    value: l.flightsAlertAtMost(
-                      FlightFormat.price(alert.maxPrice, alert.currency),
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.xl),
-                  _Figure(
-                    label: l.flightsAlertLastSeen,
-                    value: lastSeen == null
-                        ? l.flightsAlertNotChecked
-                        : FlightFormat.price(lastSeen, alert.currency),
-                    highlight: lastSeen != null && lastSeen <= alert.maxPrice,
-                  ),
-                ],
+                FlightToggle(
+                  key: Key('flight-alert-switch-${alert.id}'),
+                  value: alert.active,
+                  semanticLabel: l.flightsAlertActiveLabel,
+                  onChanged: (v) => cubit.setActive(alert.id, v),
+                ),
+              ],
+            ),
+            Opacity(
+              opacity: alert.active ? 1 : 0.55,
+              child: Text(
+                details.join(' · '),
+                style: muted?.copyWith(
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: DonySpacing.sm + DonySpacing.xxs),
+            _AlertResult(alert: alert),
+          ],
         ),
       ),
     );
   }
 }
 
-class _Figure extends StatelessWidget {
-  const _Figure({
-    required this.label,
-    required this.value,
-    this.highlight = false,
-  });
+/// Où en est l'alerte, sous ses informations : vert avec le prix trouvé et
+/// « Voir », gris avec le meilleur prix du moment, « En pause » ou « Pas
+/// encore vérifiée ».
+class _AlertResult extends StatelessWidget {
+  const _AlertResult({required this.alert});
 
-  final String label;
-  final String value;
-  final bool highlight;
+  final FlightAlert alert;
+
+  Future<void> _openOffers(BuildContext context) async {
+    await context.push<Object?>(
+      flightAlertOffersLocation(alert.id),
+      extra: alert,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final price = alert.lastSeenPrice;
+    final checkedAt = alert.lastCheckedAt;
+    final checked = checkedAt == null
+        ? null
+        : l.flightsAlertCheckedAgo(
+            FlightFormat.age(l, checkedAt.toLocal(), DateTime.now()),
+          );
+    final textStyle = tt.bodySmall?.copyWith(
+      height: 1.35,
+      color: cs.onSurfaceVariant,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final priceStyle = tt.headlineSmall?.copyWith(
+      fontSize: 18,
+      fontWeight: FontWeight.w800,
+      height: 1,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
+    if (!alert.active) {
+      return _ResultBox(
+        key: const Key('flight-alert-result-paused'),
+        dim: true,
+        children: [
+          Expanded(child: Text(l.flightsAlertResultPaused, style: textStyle)),
+        ],
+      );
+    }
+    if (!alert.checked) {
+      return _ResultBox(
+        key: const Key('flight-alert-result-pending'),
+        children: [
+          Expanded(child: Text(l.flightsAlertNotChecked, style: textStyle)),
+        ],
+      );
+    }
+    if (alert.hasHit) {
+      final count = alert.matchCount;
+      final headline = count != null && count > 0
+          ? l.flightsAlertResultHit(count)
+          : l.flightsAlertResultHitNoCount;
+      return _ResultBox(
+        key: const Key('flight-alert-result-hit'),
+        color: cs.successLight,
+        children: [
+          if (price != null) ...[
+            Text(
+              FlightFormat.price(price, alert.currency),
+              style: priceStyle?.copyWith(color: cs.success),
+            ),
+            const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
+          ],
+          Expanded(
+            child: Text(
+              [headline, ?checked].join('\n'),
+              style: textStyle?.copyWith(color: cs.onSurface),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          _SeeButton(
+            key: Key('flight-alert-see-${alert.id}'),
+            onTap: () => _openOffers(context),
+          ),
+        ],
+      );
+    }
+    // Au-dessus du seuil, ou plus rien de trouvé : le dernier prix vu ne
+    // s'affiche que s'il est encore crédible ([FlightAlert.currentPrice]).
+    final current = alert.currentPrice;
+    return _ResultBox(
+      key: const Key('flight-alert-result-above'),
       children: [
-        Text(label, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-        Text(
-          value,
-          style: tt.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: highlight ? cs.success : cs.onSurface,
+        if (current != null) ...[
+          Text(
+            FlightFormat.price(current, alert.currency),
+            style: priceStyle?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
+        ],
+        Expanded(
+          child: Text(
+            [
+              if (current != null)
+                l.flightsAlertResultAbove(
+                  FlightFormat.price(alert.maxPrice, alert.currency),
+                )
+              else
+                l.flightsAlertResultNoFlight,
+              ?checked,
+            ].join('\n'),
+            style: textStyle,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ResultBox extends StatelessWidget {
+  const _ResultBox({
+    super.key,
+    required this.children,
+    this.color,
+    this.dim = false,
+  });
+
+  final List<Widget> children;
+
+  /// Fond du bloc, gris doux par défaut.
+  final Color? color;
+  final bool dim;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Opacity(
+      opacity: dim ? 0.7 : 1,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.all(DonySpacing.sm + DonySpacing.xxs),
+        decoration: BoxDecoration(
+          color: color ?? cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+        ),
+        child: Row(children: children),
+      ),
+    );
+  }
+}
+
+/// Pilule verte « Voir › » : ouvre les vols trouvés.
+class _SeeButton extends StatelessWidget {
+  const _SeeButton({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      child: DonyPressable(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+          child: Center(
+            widthFactor: 1,
+            child: Container(
+              height: 32,
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                DonySpacing.md,
+                0,
+                DonySpacing.sm,
+                0,
+              ),
+              decoration: BoxDecoration(
+                color: cs.success,
+                borderRadius: BorderRadius.circular(DonyRadius.full),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.l10n.flightsAlertSeeOffers,
+                    style: tt.labelLarge?.copyWith(
+                      fontSize: 12,
+                      color: cs.onPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.xxs),
+                  DonyIcon('chevron-right', size: 14, color: cs.onPrimary),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -51,7 +51,10 @@ import 'package:dony/features/disputes/presentation/dispute_list_screen.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/favorites/presentation/favorites_screen.dart';
+import 'package:dony/features/flights/bloc/flight_alert_offers_cubit.dart';
 import 'package:dony/features/flights/bloc/flight_route_picker_cubit.dart';
+import 'package:dony/features/flights/data/models/flight_alert.dart';
+import 'package:dony/features/flights/presentation/flight_alert_offers_screen.dart';
 import 'package:dony/features/flights/presentation/flight_alerts_screen.dart';
 import 'package:dony/features/flights/presentation/flight_city_picker_screen.dart';
 import 'package:dony/features/flights/presentation/flights_screen.dart';
@@ -1214,6 +1217,26 @@ final appRouter = GoRouter(
       path: '/flights/alerts',
       redirect: (_, _) async => await flightsEnabledResolved() ? null : '/home',
       builder: (_, _) => const FlightAlertsScreen(),
+      routes: [
+        // Vols trouvés par une alerte : « Voir » de « Mes alertes » (l'alerte
+        // en `extra`) et notification FLIGHT_PRICE_ALERT
+        // (`?source=notification`). Hors shell comme « Mes alertes », d'où
+        // il s'ouvre : poussé depuis une page racine, un écran de la branche
+        // Activités passerait dessous.
+        GoRoute(
+          path: ':id/offers',
+          name: '/flights/alerts/:id/offers',
+          builder: (_, state) => FlightAlertOffersScreen(
+            alertId: state.pathParameters['id']!,
+            alert: state.extra is FlightAlert
+                ? state.extra! as FlightAlert
+                : null,
+            source: FlightAlertOffersSource.parse(
+              state.uri.queryParameters['source'],
+            ),
+          ),
+        ),
+      ],
     ),
     // « Où allez-vous ? » : choix des villes d'un billet, en plein écran par
     // dessus la barre du bas. Sans `extra` (lien direct), champ destination.
@@ -1956,6 +1979,17 @@ final appRouter = GoRouter(
                         ? state.extra! as FlightsLaunch
                         : null,
                   ),
+                  routes: [
+                    // Alias des vols trouvés par une alerte, rangé sous
+                    // Billets : l'écran vit hors shell, avec « Mes alertes ».
+                    GoRoute(
+                      path: 'alerts/:id/offers',
+                      name: '/announcements/flights/alerts/:id/offers',
+                      redirect: (_, state) =>
+                          '/flights/alerts/${state.pathParameters['id']}/offers'
+                          '${state.uri.hasQuery ? '?${state.uri.query}' : ''}',
+                    ),
+                  ],
                 ),
                 // Statistiques (revenus, kg vendus, trajets, colis), sorties
                 // du hub vers le menu ☰.

@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/flights/data/datasources/flights_remote_datasource.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
+import 'package:dony/features/flights/data/models/flight_alert_offers.dart';
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_defaults.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
@@ -58,6 +59,9 @@ class FlightsRepository {
       _datasource.click(offer, source: source);
 
   Future<List<FlightAlert>> alerts() => _datasource.alerts();
+
+  Future<FlightAlertOffers> alertOffers(String id) =>
+      _datasource.alertOffers(id);
 
   Future<FlightAlert> createAlert(FlightAlertDraft draft) => _datasource
       .createAlert(draft.currency != null ? draft : _withCurrency(draft));

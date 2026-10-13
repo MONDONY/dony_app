@@ -29,9 +29,22 @@ import 'package:intl/intl.dart';
 /// alors, la ligne ouvre l'écran de détail générique : c'est le cas des
 /// annonces plateforme, dont le texte complet n'existe que là.
 String routeForNotification(NotificationModel n) {
-  return n.deeplinkRoute ??
+  return _flightAlertOffersRoute(n) ??
+      n.deeplinkRoute ??
       resolveNotificationRoute(n.type, n.data) ??
       NotificationDetailScreen.routeFor(n.id);
+}
+
+/// Exception ciblée à la priorité du deeplink : une alerte prix d'un billet
+/// porte le deeplink `flights/alerts` (liste des alertes), que le back garde
+/// pour les versions de l'app qui ne connaissent pas encore les vols trouvés.
+/// Avec un `alertId` valide, la ligne ouvre directement les vols trouvés de
+/// cette alerte, comme le tap sur la push. Sans lui, le deeplink garde la
+/// main.
+String? _flightAlertOffersRoute(NotificationModel n) {
+  if (n.type != 'FLIGHT_PRICE_ALERT') return null;
+  final route = resolveNotificationRoute(n.type, n.data);
+  return route != null && route.startsWith('/flights/alerts/') ? route : null;
 }
 
 /// Route que la ligne peut réellement ouvrir, ou `null` si aucune n'existe.

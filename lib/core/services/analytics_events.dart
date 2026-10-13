@@ -447,6 +447,10 @@ abstract final class AnalyticsEvents {
   /// Bon plan touché dans le bloc (propriété `discount_percent`).
   static const activitesHubFlightsDealOpened =
       'activites_hub_flights_deal_opened';
+
+  /// Ligne « Alertes prix vols » des Outils (propriété `state`).
+  static const activitesHubFlightAlertsOpened =
+      'activites_hub_flight_alerts_opened';
   static const activitesHubSearchOpened = 'activites_hub_search_opened';
   static const activitesHubMenuOpened = 'activites_hub_menu_opened';
   static const activitesHubScanOpened = 'activites_hub_scan_opened';
@@ -688,4 +692,5 @@ abstract final class AnalyticsEvents {
   static const flightsAllAirlinesOpened = 'flights_all_airlines_opened';
   static const flightsEmptySuggestionTapped = 'flights_empty_suggestion_tapped';
   static const flightsLocationUsed = 'flights_location_used';
+  static const flightsAlertOffersViewed = 'flights_alert_offers_viewed';
 }
