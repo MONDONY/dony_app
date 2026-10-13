@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -12,6 +11,7 @@ import 'package:dony/features/flights/data/repositories/flights_repository.dart'
 import 'package:dony/features/flights/presentation/flight_format.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_alert_sheet.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_price_ticket.dart';
+import 'package:dony/features/settings/presentation/widgets/flights_visible_builder.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,7 +23,7 @@ const kFlightAlertsRoute = '/flights/alerts';
 /// La ligne des alertes prix a sa place : billets activés et vrai compte (un
 /// visiteur n'a pas d'alerte, le serveur la refuserait).
 bool flightAlertsRowAvailable() =>
-    flightsEnabledListenable.value &&
+    flightsShown() &&
     getIt.isRegistered<FirebaseSessionProbe>() &&
     getIt<FirebaseSessionProbe>().hasRealSession;
 
@@ -39,16 +39,16 @@ bool flightAlertsRowAvailable() =>
 ///
 /// Toucher la ligne ouvre « Mes alertes ». Le [FlightAlertsCubit] vient du
 /// hub, qui le recharge au retour sur l'onglet et au tirer pour rafraîchir.
-/// Masquée tant que le flag `flights_enabled` est éteint, et pour un
+/// Masquée tant que le flag `flights_enabled` est éteint, quand l'utilisateur
+/// a coupé « Afficher les billets d'avion » dans les Paramètres, et pour un
 /// visiteur.
 class ActivitesFlightAlertsRow extends StatelessWidget {
   const ActivitesFlightAlertsRow({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: flightsEnabledListenable,
-      builder: (context, _, _) {
+    return FlightsVisibleBuilder(
+      builder: (context, _) {
         if (!flightAlertsRowAvailable()) return const SizedBox.shrink();
         return const Padding(
           padding: EdgeInsets.only(bottom: DonySpacing.md),

@@ -401,6 +401,8 @@ abstract final class AnalyticsEvents {
   /// SettingsScreen._resetGuidanceCards — tuile « Réafficher les
   /// suggestions », réaffiche les `ContextualTutorialCard` fermées.
   static const settingsGuidanceCardsReset = 'settings_guidance_cards_reset';
+  static const settingsFlightsVisibilityChanged =
+      'settings_flights_visibility_changed';
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
 

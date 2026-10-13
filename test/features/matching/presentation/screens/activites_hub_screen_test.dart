@@ -42,6 +42,7 @@ import 'package:dony/features/payments/money/data/models/money_overview_model.da
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
+import 'package:dony/features/settings/bloc/flights_visibility_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1663,6 +1664,90 @@ void main() {
 
       expect(find.byKey(const Key('hub-flight-alerts-row')), findsNothing);
       verifyNever(() => flights.alerts());
+    });
+  });
+
+  group('préférence « Afficher les billets d\'avion »', () {
+    late MockFlightsRepository flights;
+    late FlightAlertsCubit alertsCubit;
+    late FlightsVisibilityCubit visibility;
+
+    FlightsVisibilityCubit visibilityCubit({required bool stored}) {
+      final box = _MockBox();
+      when(
+        () => box.get(
+          HiveService.kFlightsVisible,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(stored);
+      when(() => box.put(any(), any())).thenAnswer((_) async {});
+      return FlightsVisibilityCubit(box, silentAnalytics());
+    }
+
+    setUp(() {
+      flights = MockFlightsRepository();
+      getIt.registerFactory<FlightDealsCubit>(() => FlightDealsCubit(flights));
+      when(() => flights.deals()).thenAnswer(
+        (_) async =>
+            const FlightDeals(currency: 'EUR', personalized: false, deals: []),
+      );
+      when(() => flights.alerts()).thenAnswer((_) async => const []);
+      alertsCubit = FlightAlertsCubit(flights, silentAnalytics());
+      getIt.registerSingleton<FirebaseSessionProbe>(const _RealSession());
+      setFlightsEnabled(true);
+    });
+
+    tearDown(() async {
+      resetFlightsFlagForTest();
+      await alertsCubit.close();
+      await visibility.close();
+    });
+
+    testWidgets('flag allumé : ni bloc ni ligne d\'alertes, aucun appel', (
+      tester,
+    ) async {
+      visibility = visibilityCubit(stored: false);
+      getIt.registerSingleton<FlightsVisibilityCubit>(visibility);
+      await _pump(tester, flightAlerts: alertsCubit);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('hub-flights-section')), findsNothing);
+      expect(find.text('Billets d\'avion'), findsNothing);
+      expect(find.text('Rechercher un vol'), findsNothing);
+      expect(find.byKey(const Key('hub-flight-alerts-empty')), findsNothing);
+      verifyNever(() => flights.deals());
+      verifyNever(() => flights.alerts());
+
+      // Tirer pour rafraîchir ne recharge pas non plus les alertes.
+      await tester.fling(
+        find.byType(CustomScrollView),
+        const Offset(0, 800),
+        1000,
+      );
+      await tester.pumpAndSettle();
+      verifyNever(() => flights.alerts());
+    });
+
+    testWidgets('par défaut visibles, puis masqués et rétablis à chaud', (
+      tester,
+    ) async {
+      visibility = visibilityCubit(stored: true);
+      getIt.registerSingleton<FlightsVisibilityCubit>(visibility);
+      await _pump(tester, flightAlerts: alertsCubit);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('hub-flights-section')), findsOneWidget);
+      expect(find.byKey(const Key('hub-flight-alerts-empty')), findsOneWidget);
+
+      await visibility.setVisible(false);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('hub-flights-section')), findsNothing);
+      expect(find.byKey(const Key('hub-flight-alerts-empty')), findsNothing);
+
+      await visibility.setVisible(true);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('hub-flights-section')), findsOneWidget);
+      expect(find.byKey(const Key('hub-flight-alerts-empty')), findsOneWidget);
     });
   });
 }

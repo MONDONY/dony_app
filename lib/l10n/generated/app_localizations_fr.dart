@@ -12134,6 +12134,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsThemeSubtitle => 'Prioritaire sur le réglage système';
 
   @override
+  String get settingsFlightsVisibleLabel => 'Afficher les billets d\'avion';
+
+  @override
+  String get settingsFlightsVisibleSubtitle =>
+      'Bons plans et alertes prix dans Activités';
+
+  @override
   String get settingsThemeLight => 'Clair';
 
   @override

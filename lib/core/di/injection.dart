@@ -238,6 +238,7 @@ import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
+import 'package:dony/features/settings/bloc/flights_visibility_cubit.dart';
 import 'package:dony/features/settings/bloc/language_sync_cubit.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
@@ -964,6 +965,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Settings — App Preferences (theme, language, SMS, destinations)
   getIt.registerLazySingleton<AppPreferencesBloc>(
     () => AppPreferencesBloc(getIt<HiveService>().userPrefs),
+  );
+  // Billets d'avion affichés ou masqués dans Activités : singleton, le hub et
+  // les Paramètres lisent le même état et le hub suit la bascule sans
+  // redémarrage.
+  getIt.registerLazySingleton<FlightsVisibilityCubit>(
+    () => FlightsVisibilityCubit(
+      getIt<HiveService>().userPrefs,
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Settings — Privacy (contactKycOnly + hidePhoneNumber via backend)

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -9,6 +8,7 @@ import 'package:dony/features/flights/bloc/flight_deals_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/presentation/flights_screen.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_deal_card.dart';
+import 'package:dony/features/settings/presentation/widgets/flights_visible_builder.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,7 +21,9 @@ const kActivitesFlightsRoute = '/announcements/flights';
 /// (parties dans le menu ☰) : titre et « Tout voir », mini-billets des bons
 /// plans qui défilent de côté, puis « Rechercher un vol ».
 ///
-/// Entièrement masqué tant que le flag `flights_enabled` est éteint. Sans bon
+/// Entièrement masqué, sans charger les bons plans, tant que le flag
+/// `flights_enabled` est éteint ou que l'utilisateur a coupé « Afficher les
+/// billets d'avion » dans les Paramètres. Sans bon
 /// plan (liste vide ou échec), seuls le titre et le bouton restent : la
 /// recherche reste l'action principale.
 class ActivitesFlightsSection extends StatelessWidget {
@@ -29,10 +31,9 @@ class ActivitesFlightsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: flightsEnabledListenable,
-      builder: (context, enabled, _) {
-        if (!enabled) return const SizedBox.shrink();
+    return FlightsVisibleBuilder(
+      builder: (context, shown) {
+        if (!shown) return const SizedBox.shrink();
         return BlocProvider(
           create: (_) => getIt<FlightDealsCubit>()..load(),
           child: const _FlightsSectionView(),
