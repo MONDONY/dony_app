@@ -6523,6 +6523,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.flightsAlertDepartureLine(placeholderMarker('period')),
   'flightsAlertReturnLine': (l) =>
       l.flightsAlertReturnLine(placeholderMarker('period')),
+  'flightsAlertDepartureOn': (l) =>
+      l.flightsAlertDepartureOn(placeholderMarker('date')),
+  'flightsAlertReturnOn': (l) =>
+      l.flightsAlertReturnOn(placeholderMarker('date')),
+  'flightsAlertDepartureAnyDate': (l) => l.flightsAlertDepartureAnyDate,
+  'flightsAlertReturnAnyDate': (l) => l.flightsAlertReturnAnyDate,
   'flightsAlertThreshold': (l) => l.flightsAlertThreshold,
   'flightsAlertAtMost': (l) => l.flightsAlertAtMost(placeholderMarker('price')),
   'flightsAlertNotChecked': (l) => l.flightsAlertNotChecked,
@@ -7255,6 +7261,8 @@ const textParameters = <String, List<String>>{
   'flightsAlertPeriod': ['from', 'to'],
   'flightsAlertDepartureLine': ['period'],
   'flightsAlertReturnLine': ['period'],
+  'flightsAlertDepartureOn': ['date'],
+  'flightsAlertReturnOn': ['date'],
   'flightsAlertAtMost': ['price'],
   'flightsAlertCurrentLowest': ['price'],
   'flightsRouteRoundTrip': ['origin', 'destination'],

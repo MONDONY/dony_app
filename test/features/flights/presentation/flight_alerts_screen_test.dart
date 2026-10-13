@@ -55,10 +55,63 @@ void main() {
     expect(find.text('Mes alertes prix'), findsOneWidget);
     // Aller-retour : double flèche, comme dans l'écran Billets.
     expect(find.text('Paris ↔ Abidjan'), findsOneWidget);
-    expect(find.textContaining('Départ du'), findsOneWidget);
-    expect(find.textContaining('Retour du'), findsOneWidget);
+    expect(
+      find.textContaining('Départ du 12 déc. au 31 déc. 2026'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Retour du 2 janv. au 15 janv. 2027'),
+      findsOneWidget,
+    );
     expect(find.text('1 sur 10'), findsOneWidget);
     expect(find.byKey(const Key('flight-alerts-new')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('jour unique et sans période : libellés courts', (tester) async {
+    when(() => repository.alerts()).thenAnswer(
+      (_) async => [
+        FlightAlert(
+          id: 'a1',
+          originCode: 'PAR',
+          destinationCode: 'DKR',
+          originLabel: 'Paris',
+          destinationLabel: 'Dakar',
+          departureFrom: DateTime(2026, 12, 23),
+          departureTo: DateTime(2026, 12, 23),
+          returnFrom: DateTime(2027, 1, 2),
+          returnTo: DateTime(2027, 1, 2),
+          directOnly: false,
+          maxPrice: 450,
+          currency: 'EUR',
+          active: true,
+        ),
+        const FlightAlert(
+          id: 'a2',
+          originCode: 'PAR',
+          destinationCode: 'BKO',
+          originLabel: 'Paris',
+          destinationLabel: 'Bamako',
+          directOnly: false,
+          maxPrice: 300,
+          currency: 'EUR',
+          active: true,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(localizedApp(const FlightAlertsScreen()));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Départ le 23 déc. 2026 · Retour le 2 janv. 2027'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Départ à toutes dates · Aller simple'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Toutes les dates à venir'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
