@@ -66,7 +66,13 @@ class MoneyHeaderButton extends StatelessWidget {
           fontFeatures: const [FontFeature.tabularFigures()],
         );
         final amountText = hasUpcoming
-            ? formatMoney(upcoming.first.amount, upcoming.first.currency)
+            // Format court dès 10 000 (FLUTTER-NW) : « 22,1 k F CFA ». Le
+            // libellé d'accessibilité garde le montant exact.
+            ? formatMoneyShort(
+                upcoming.first.amount,
+                upcoming.first.currency,
+                l.localeName,
+              )
             : '';
         final pill =
             hasUpcoming &&

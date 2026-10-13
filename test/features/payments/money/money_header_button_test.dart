@@ -95,6 +95,33 @@ void main() {
     );
   });
 
+  testWidgets('montant dès 10 000 : format court dans la pastille, exact dans '
+      'le libellé (FLUTTER-NW)', (tester) async {
+    stub(
+      MoneyOverviewLoaded(
+        const MoneyOverviewModel(
+          travelerTotals: [
+            TravelerTotalModel(
+              currency: 'XOF',
+              upcoming: 22071,
+              releasedRecently: 0,
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    final amount = tester.widget<Text>(
+      find.byKey(const Key('money-header-amount')),
+    );
+    expect(amount.data, '22,1 k F CFA');
+    expect(
+      find.bySemanticsLabel(RegExp(r'^Mon argent : 22.071.* à venir$')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('écran étroit : icône seule même avec de l\'argent à venir', (
     tester,
   ) async {

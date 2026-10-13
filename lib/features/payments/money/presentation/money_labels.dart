@@ -11,6 +11,40 @@ String formatMoney(double amount, String? currency) => CurrencyFormatter.format(
   compact: true,
 );
 
+/// Seuil (valeur absolue) à partir duquel [formatMoneyShort] abrège.
+const double kMoneyShortThreshold = 10000;
+
+/// Montant abrégé pour la pastille portefeuille de l'en-tête (FLUTTER-NW) :
+/// dès [kMoneyShortThreshold], « 22,1 k F CFA », « 1,2 M F CFA »,
+/// « 12,5 k € » (« 22 k » quand la décimale est nulle). Séparateur décimal de
+/// la langue de l'app ([localeName]), symbole placé comme dans le format
+/// complet de la devise (« £12.5k »). En dessous du seuil : [formatMoney].
+///
+/// Réservé à la pastille : le montant exact reste affiché partout ailleurs
+/// (« Mon argent », portefeuille, libellé d'accessibilité de la pastille).
+String formatMoneyShort(double amount, String? currency, String localeName) {
+  if (amount.abs() < kMoneyShortThreshold) {
+    return formatMoney(amount, currency);
+  }
+  final c = SupportedCurrency.fromCodeOrDefault(currency);
+  final abs = amount.abs();
+  double rounded(double divisor) => (abs / divisor * 10).round() / 10;
+  var value = rounded(1000);
+  var unit = 'k'; // i18n-ignore : symbole d'unité (kilo), identique fr/en
+  // 999 950 arrondi donne « 1 000 k » : on passe au million.
+  if (abs >= 1000000 || value >= 1000) {
+    value = rounded(1000000);
+    unit = 'M'; // i18n-ignore : symbole d'unité (méga), identique fr/en
+  }
+  final number = NumberFormat('#,##0.#', localeName).format(value);
+  final sign = amount < 0 ? '-' : '';
+  // Même place du symbole que le format complet de la devise.
+  final symbolFirst = CurrencyFormatter.format(1, c).startsWith(c.symbol);
+  return symbolFirst
+      ? '$sign${c.symbol}$number$unit'
+      : '$sign$number\u00a0$unit\u00a0${c.symbol}';
+}
+
 /// Montants par devise, jamais additionnés : « 155 € · 7 950 F CFA ».
 String formatAmounts(List<MoneyAmount> amounts) =>
     amounts.map((a) => formatMoney(a.amount, a.currency)).join(' · ');

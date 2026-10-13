@@ -3,6 +3,7 @@ import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/parcel_status_pill.dart';
+import 'package:dony/features/matching/presentation/widgets/rating_pending_pill.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -245,6 +246,13 @@ class ShipmentCard extends StatelessWidget {
                   ),
                 ] else
                   const Spacer(),
+                // Note en attente (FLUTTER-P2) : rappel discret, la feuille
+                // de notation ne s'ouvre d'elle-même qu'une fois par colis.
+                if (bidAwaitsRating(bid, asSender: true)) ...[
+                  const SizedBox(width: DonySpacing.xs),
+                  const RatingPendingPill(),
+                  const SizedBox(width: DonySpacing.sm),
+                ],
                 Text(
                   _ctaLabel(l),
                   style: tt.titleSmall?.copyWith(

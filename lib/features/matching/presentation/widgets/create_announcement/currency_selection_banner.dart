@@ -24,7 +24,7 @@ class CurrencySelectionBanner extends StatelessWidget {
   /// l'éligibilité Stripe par devise suit `SupportedCurrency.isStripeEligible`
   /// (verbatim contrainte serveur). Aperçu client uniquement : le serveur
   /// reste seul décideur au paiement réel.
-  List<CurrencyPaymentOption> _options(bool stripeConfigured) => [
+  static List<CurrencyPaymentOption> _options(bool stripeConfigured) => [
     for (final currency in SupportedCurrency.values)
       CurrencyPaymentOption(
         currency: currency,
@@ -36,7 +36,13 @@ class CurrencySelectionBanner extends StatelessWidget {
       ),
   ];
 
-  Future<void> _openSelector(BuildContext context) async {
+  /// Ouvre le sélecteur de devise et écrit le choix dans [currencyNotifier].
+  /// Aussi appelé par le « Modifier » de la ligne Devise du récapitulatif
+  /// avant publication (FLUTTER-NN). [context] doit voir `StripeAccountBloc`.
+  static Future<void> openSelector(
+    BuildContext context,
+    ValueNotifier<SupportedCurrency> currencyNotifier,
+  ) async {
     final stripeState = context.read<StripeAccountBloc>().state;
     final stripeConfigured =
         stripeState is StripeAccountReady &&
@@ -71,7 +77,7 @@ class CurrencySelectionBanner extends StatelessWidget {
             child: InkWell(
               key: const Key('trip-currency-selector-row'),
               borderRadius: BorderRadius.circular(DonyRadius.card),
-              onTap: () => unawaited(_openSelector(context)),
+              onTap: () => unawaited(openSelector(context, currencyNotifier)),
               child: Container(
                 padding: const EdgeInsets.all(DonySpacing.base),
                 decoration: BoxDecoration(

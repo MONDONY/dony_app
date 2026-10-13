@@ -19251,4 +19251,12 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get negotiationThreadCounterSameAmountHint =>
       'Indiquez ici votre nouveau prix : c\'est ce montant qui est proposé, pas celui écrit dans le message.';
+
+  @override
+  String listingPreviewCurrencyValue(String currencyName, String currencyCode) {
+    return 'Devise : $currencyName ($currencyCode)';
+  }
+
+  @override
+  String get ratingPendingPillLabel => 'À noter';
 }

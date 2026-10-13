@@ -18,6 +18,7 @@ BidModel _makeBid({
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   String? contentCategory = 'Vêtements',
   String? description,
+  bool travelerHasRated = false,
 }) => BidModel(
   id: id,
   announcementId: 'ann-1',
@@ -29,6 +30,7 @@ BidModel _makeBid({
   description: description,
   status: status,
   paymentMethod: paymentMethod,
+  travelerHasRated: travelerHasRated,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -341,4 +343,26 @@ void main() {
       expect(rejected, 1);
     },
   );
+
+  testWidgets('colis livré, expéditeur pas encore noté : pastille « À noter » '
+      '(FLUTTER-P2)', (tester) async {
+    await _pumpCard(
+      tester,
+      BidCard(bid: _makeBid(status: 'COMPLETED'), isProcessing: false),
+    );
+    expect(find.text('À noter'), findsOneWidget);
+  });
+
+  testWidgets('colis livré déjà noté par le voyageur : pas de pastille', (
+    tester,
+  ) async {
+    await _pumpCard(
+      tester,
+      BidCard(
+        bid: _makeBid(status: 'COMPLETED', travelerHasRated: true),
+        isProcessing: false,
+      ),
+    );
+    expect(find.text('À noter'), findsNothing);
+  });
 }

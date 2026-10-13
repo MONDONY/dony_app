@@ -6666,6 +6666,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'negotiationThreadSeeParcelButton': (l) => l.negotiationThreadSeeParcelButton,
   'negotiationThreadCounterSameAmountHint': (l) =>
       l.negotiationThreadCounterSameAmountHint,
+  'listingPreviewCurrencyValue': (l) => l.listingPreviewCurrencyValue(
+    placeholderMarker('currencyName'),
+    placeholderMarker('currencyCode'),
+  ),
+  'ratingPendingPillLabel': (l) => l.ratingPendingPillLabel,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7186,4 +7191,5 @@ const textParameters = <String, List<String>>{
   'flightsSuggestFlexible': ['route'],
   'tripEditMobileMoneyCurrencyLockedNotice': ['tripCurrency'],
   'negotiationCashDealConfirmedMessage': ['amount'],
+  'listingPreviewCurrencyValue': ['currencyName', 'currencyCode'],
 };

@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/features/ratings/data/rating_prompt_tracker.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,7 +15,9 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
     this._repository,
     this._analytics, {
     RatingEventsService? ratingEvents,
+    RatingPromptTracker? promptTracker,
   }) : _ratingEvents = ratingEvents,
+       _promptTracker = promptTracker,
        super(const RatingInitial()) {
     on<RatingSubmitRequested>(_onSubmit);
     on<TravelerRatingSubmitRequested>(_onTravelerSubmit);
@@ -28,6 +31,10 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
   /// Signal global « note envoyée (bidId) » : le détail d'un colis ouvert
   /// avec sa propre instance se relit (FLUTTER-HQ).
   final RatingEventsService? _ratingEvents;
+
+  /// Colis déjà proposés automatiquement (FLUTTER-P2). Absent : chaque
+  /// vérification propose la note en attente (comportement historique).
+  final RatingPromptTracker? _promptTracker;
 
   /// Échec d'un envoi de note. Un 409 `already-rated` signifie que la note
   /// existe déjà côté serveur : l'écran du colis doit se relire pour retirer
@@ -94,7 +101,11 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
   ) async {
     try {
       final pending = await _repository.getPendingRating();
-      if (pending != null) {
+      // Ouverture automatique une seule fois par colis (FLUTTER-P2) : un colis
+      // déjà proposé n'est plus rappelé que par sa pastille et le détail.
+      final tracker = _promptTracker;
+      if (pending != null &&
+          (tracker == null || await tracker.claim(pending.bidId))) {
         emit(
           PendingRatingFound(
             bidId: pending.bidId,
