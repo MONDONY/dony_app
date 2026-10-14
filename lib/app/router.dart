@@ -779,11 +779,8 @@ final appRouter = GoRouter(
     // ── Routes plein écran (hors shell) ─────────────────────────────────
     GoRoute(
       path: '/tracking/scan',
-      builder: (context, state) => MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (_) => getIt<TrackingBloc>()),
-          BlocProvider(create: (_) => getIt<RatingBloc>()),
-        ],
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<TrackingBloc>(),
         child: const QrScannerScreen(),
       ),
     ),

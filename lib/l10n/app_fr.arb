@@ -11434,13 +11434,13 @@
   "@scanEventTypeSectionLabel": {
     "description": "Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
-  "scanConfirmationCodeLabel": "Code de retrait du destinataire",
-  "@scanConfirmationCodeLabel": {
-    "description": "Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  "scanArrivalNextStepsHint": "Pour remettre le colis, prenez-le en photo, puis saisissez le code de retrait à 6 chiffres que vous donne le destinataire.",
+  "@scanArrivalNextStepsHint": {
+    "description": "Explication de la feuille du scanner QR quand l'étape Arrivée est choisie : la remise continue sur l'écran photo puis l'écran du code (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
-  "scanConfirmationCodeHintLong": "Demandez au destinataire son code de retrait à 6 chiffres, au moment de la remise. Ce n'est pas le numéro de suivi.",
-  "@scanConfirmationCodeHintLong": {
-    "description": "Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  "scanArrivalTakePhotoButton": "Prendre la photo du colis",
+  "@scanArrivalTakePhotoButton": {
+    "description": "Bouton de la feuille du scanner QR, étape Arrivée : ferme la feuille et ouvre l'écran photo de la remise (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
   "scanPhotoOfParcelLabel": "Photo du colis",
   "@scanPhotoOfParcelLabel": {
@@ -11457,10 +11457,6 @@
   "scanPhotoTooLargeFixed": "Photo trop lourde (max 10 MB). Réessayez.",
   "@scanPhotoTooLargeFixed": {
     "description": "Message d'erreur photo trop lourde à taille fixe (qr_scanner_screen.dart:1141), distinct de scanPhotoTooLarge (« MB » au lieu de « Mo », taille non dynamique)."
-  },
-  "scanSubmittingConfirmation": "Confirmation...",
-  "@scanSubmittingConfirmation": {
-    "description": "Libellé du bouton pendant la confirmation d'une livraison (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
   "scanSubmittingRecording": "Enregistrement...",
   "@scanSubmittingRecording": {

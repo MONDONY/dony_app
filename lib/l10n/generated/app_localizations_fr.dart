@@ -10638,11 +10638,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanEventTypeSectionLabel => 'Type d\'étape';
 
   @override
-  String get scanConfirmationCodeLabel => 'Code de retrait du destinataire';
+  String get scanArrivalNextStepsHint =>
+      'Pour remettre le colis, prenez-le en photo, puis saisissez le code de retrait à 6 chiffres que vous donne le destinataire.';
 
   @override
-  String get scanConfirmationCodeHintLong =>
-      'Demandez au destinataire son code de retrait à 6 chiffres, au moment de la remise. Ce n\'est pas le numéro de suivi.';
+  String get scanArrivalTakePhotoButton => 'Prendre la photo du colis';
 
   @override
   String get scanPhotoOfParcelLabel => 'Photo du colis';
@@ -10656,9 +10656,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get scanPhotoTooLargeFixed =>
       'Photo trop lourde (max 10 MB). Réessayez.';
-
-  @override
-  String get scanSubmittingConfirmation => 'Confirmation...';
 
   @override
   String get scanSubmittingRecording => 'Enregistrement...';

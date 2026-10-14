@@ -6044,13 +6044,13 @@
   "@scanEventTypeSectionLabel": {
     "description": "Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
-  "scanConfirmationCodeLabel": "Recipient's pickup code",
-  "@scanConfirmationCodeLabel": {
-    "description": "Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  "scanArrivalNextStepsHint": "To hand over the parcel, take a photo of it, then enter the 6-digit pickup code the recipient gives you.",
+  "@scanArrivalNextStepsHint": {
+    "description": "Explication de la feuille du scanner QR quand l'étape Arrivée est choisie : la remise continue sur l'écran photo puis l'écran du code (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
-  "scanConfirmationCodeHintLong": "Ask the recipient for their 6-digit pickup code at handover. It is not the tracking number.",
-  "@scanConfirmationCodeHintLong": {
-    "description": "Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  "scanArrivalTakePhotoButton": "Take the parcel photo",
+  "@scanArrivalTakePhotoButton": {
+    "description": "Bouton de la feuille du scanner QR, étape Arrivée : ferme la feuille et ouvre l'écran photo de la remise (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
   "scanPhotoOfParcelLabel": "Parcel photo",
   "@scanPhotoOfParcelLabel": {
@@ -6067,10 +6067,6 @@
   "scanPhotoTooLargeFixed": "Photo too large (max 10 MB). Try again.",
   "@scanPhotoTooLargeFixed": {
     "description": "Message d'erreur photo trop lourde à taille fixe (qr_scanner_screen.dart:1141), distinct de scanPhotoTooLarge (« MB » au lieu de « Mo », taille non dynamique)."
-  },
-  "scanSubmittingConfirmation": "Confirming...",
-  "@scanSubmittingConfirmation": {
-    "description": "Libellé du bouton pendant la confirmation d'une livraison (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
   "scanSubmittingRecording": "Saving...",
   "@scanSubmittingRecording": {

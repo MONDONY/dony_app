@@ -4,9 +4,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
-import 'package:dony/features/ratings/bloc/rating_bloc.dart';
-import 'package:dony/features/ratings/bloc/rating_event.dart';
-import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -28,15 +25,9 @@ class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
 
 class _MockTrackingRepository extends Mock implements TrackingRepository {}
 
-class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
-    implements RatingBloc {}
-
-Widget _wrap(TrackingBloc bloc, RatingBloc ratingBloc) => MaterialApp(
-  home: MultiBlocProvider(
-    providers: [
-      BlocProvider<TrackingBloc>.value(value: bloc),
-      BlocProvider<RatingBloc>.value(value: ratingBloc),
-    ],
+Widget _wrap(TrackingBloc bloc) => MaterialApp(
+  home: BlocProvider<TrackingBloc>.value(
+    value: bloc,
     child: const QrScannerScreen(),
   ),
 );
@@ -53,11 +44,8 @@ void main() {
       final bloc = _MockTrackingBloc();
       when(() => bloc.state).thenReturn(TrackingInitial());
       whenListen(bloc, const Stream<TrackingState>.empty());
-      final ratingBloc = _MockRatingBloc();
-      when(() => ratingBloc.state).thenReturn(const RatingInitial());
-      whenListen(ratingBloc, const Stream<RatingState>.empty());
 
-      await tester.pumpWidget(_wrap(bloc, ratingBloc));
+      await tester.pumpWidget(_wrap(bloc));
       await tester.pump();
 
       expect(find.text('Departure scan'), findsOneWidget);
@@ -91,20 +79,14 @@ void main() {
     final bloc = _MockTrackingBloc();
     when(() => bloc.state).thenReturn(TrackingInitial());
     whenListen(bloc, const Stream<TrackingState>.empty());
-    final ratingBloc = _MockRatingBloc();
-    when(() => ratingBloc.state).thenReturn(const RatingInitial());
-    whenListen(ratingBloc, const Stream<RatingState>.empty());
 
     // Les boîtes de dialogue se ferment par GoRouter (`ctx.pop()`).
     final router = GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, _) => MultiBlocProvider(
-            providers: [
-              BlocProvider<TrackingBloc>.value(value: bloc),
-              BlocProvider<RatingBloc>.value(value: ratingBloc),
-            ],
+          builder: (_, _) => BlocProvider<TrackingBloc>.value(
+            value: bloc,
             child: const QrScannerScreen(),
           ),
         ),
@@ -136,6 +118,7 @@ void main() {
   group('photo refusée par le serveur', () {
     late StreamController<TrackingState> states;
     late _MockTrackingBloc bloc;
+    late List<Map<String, dynamic>> photoExtras;
 
     TrackingEventModel event(String type) => TrackingEventModel(
       id: 'ev-1',
@@ -149,6 +132,7 @@ void main() {
     Future<void> openSheet(WidgetTester tester) async {
       useEnglish();
       DonySnackbar.clearDedup();
+      photoExtras = [];
       final repo = _MockTrackingRepository();
       when(() => repo.searchByTrackingNumber(any())).thenAnswer(
         (_) async => const TrackingSearchModel(
@@ -168,20 +152,21 @@ void main() {
       bloc = _MockTrackingBloc();
       when(() => bloc.state).thenReturn(TrackingInitial());
       whenListen(bloc, states.stream);
-      final ratingBloc = _MockRatingBloc();
-      when(() => ratingBloc.state).thenReturn(const RatingInitial());
-      whenListen(ratingBloc, const Stream<RatingState>.empty());
       final router = GoRouter(
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, _) => MultiBlocProvider(
-              providers: [
-                BlocProvider<TrackingBloc>.value(value: bloc),
-                BlocProvider<RatingBloc>.value(value: ratingBloc),
-              ],
+            builder: (_, _) => BlocProvider<TrackingBloc>.value(
+              value: bloc,
               child: const QrScannerScreen(),
             ),
+          ),
+          GoRoute(
+            path: '/tracking/scan/photo',
+            builder: (_, state) {
+              photoExtras.add(state.extra! as Map<String, dynamic>);
+              return const Scaffold(body: Text('écran photo'));
+            },
           ),
         ],
       );
@@ -210,21 +195,37 @@ void main() {
       await tester.pump(const Duration(seconds: 10));
     });
 
-    testWidgets('DeliveryConfirmSuccess : la feuille avertit', (tester) async {
-      await openSheet(tester);
-      states.add(DeliveryConfirmSuccess(event('ARRIVEE'), photoDropped: true));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(warning, findsOneWidget);
-      await tester.pump(const Duration(seconds: 10));
-    });
-
     testWidgets('photo acceptée : aucun avertissement', (tester) async {
       await openSheet(tester);
-      states.add(DeliveryConfirmSuccess(event('ARRIVEE')));
+      states.add(QrScanSuccess(event('DEPART')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(warning, findsNothing);
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    // La remise d'un colis identifié par son numéro passe par l'écran photo,
+    // libellé par ce numéro, avec la méthode MANUAL.
+    testWidgets('numéro saisi, arrivée : écran photo avec le numéro', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      await tester.ensureVisible(find.text('Arrival'));
+      await tester.tap(find.text('Arrival'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.ensureVisible(find.text('Take the parcel photo'));
+      await tester.tap(find.text('Take the parcel photo'));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('écran photo'), findsOneWidget);
+      expect(photoExtras.single, {
+        'bidId': 'bid-9',
+        'etape': 'ARRIVEE',
+        'packageLabel': 'DON-ABC123',
+        'scanMethod': ScanMethod.manual,
+      });
+      verifyNever(() => bloc.add(any()));
       await tester.pump(const Duration(seconds: 10));
     });
 
@@ -288,6 +289,16 @@ void main() {
       expect(find.text('Scan recorded!'), findsNothing);
       expect(find.text('Scan pending'), findsNothing);
       await tester.pump(const Duration(seconds: 10));
+    });
+  });
+
+  group('scannedParcelLabel', () {
+    test('identifiant long : ses 8 premiers caractères', () {
+      expect(scannedParcelLabel('3f2b6c1e-8a4d-4f6b'), '3f2b6c1e');
+    });
+
+    test('identifiant court : rendu tel quel', () {
+      expect(scannedParcelLabel('bid-9'), 'bid-9');
     });
   });
 
