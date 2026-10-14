@@ -5,9 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/arrival_label.dart';
-import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/trip_billet_card.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -44,89 +42,29 @@ class AnnouncementDetailBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ── Hero bleu nuit ──────────────────────────────────────────────
-        Container(
-          padding: const EdgeInsets.all(DonySpacing.lg),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0F172A), Color(0xFF1E3A5F), Color(0xFF0C4A6E)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        // ── Billet du trajet (FLUTTER-PY) ───────────────────────────────────
+        // Même billet que la feuille vue par un expéditeur : l'ancien en-tête
+        // en dégradé bleu nuit faisait « généré ». Les kilos sont repris en
+        // grand juste en dessous, le talon ne les répète pas.
+        TripBilletCard(
+          announcement: a,
+          showKg: false,
+          notchColor: Theme.of(context).scaffoldBackgroundColor,
+          trailing: Padding(
+            padding: const EdgeInsets.only(
+              top: DonySpacing.xs,
+              right: DonySpacing.xs,
             ),
-            borderRadius: BorderRadius.circular(DonyRadius.xl),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l.listingHeroTripLabelCaps,
-                          style: tt.labelSmall?.copyWith(
-                            color: Colors.white38,
-                            letterSpacing: 1.2,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${a.departureCity} → ${a.arrivalCity}',
-                          style: tt.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (a.isUrgent) ...[
-                    const DonyUrgentBadge(),
-                    const SizedBox(width: DonySpacing.xs),
-                  ],
-                  _StatusBadge(status: a.status),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (a.isUrgent) ...[
+                  const DonyUrgentBadge(),
+                  const SizedBox(width: DonySpacing.xs),
                 ],
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              Wrap(
-                spacing: DonySpacing.xs,
-                runSpacing: DonySpacing.xs,
-                children: [
-                  _HeroChip(
-                    label: DateFormat.yMMMEd(
-                      l.localeName,
-                    ).format(a.departureDate),
-                  ),
-                  if (a.transportMode != null)
-                    _HeroChip(label: a.transportMode!.label(context.l10n)),
-                  if (a.stops != null)
-                    _HeroChip(
-                      key: const Key('detail-stops-chip'),
-                      label: tripStopsBadgeLabel(l, a.stops!),
-                    ),
-                  if (a.departureTime != null)
-                    _HeroChip(
-                      label:
-                          a.departureTime! +
-                          (a.arrivalTime != null
-                              ? ' → ${arrivalTimeLabel(context.l10n, a.arrivalTime!, departureDate: a.departureDate, arrivalDate: a.arrivalDate)}'
-                              : ''),
-                    ),
-                ],
-              ),
-            ],
+                _StatusBadge(status: a.status),
+              ],
+            ),
           ),
         ).animate().fadeIn(duration: 250.ms),
         const SizedBox(height: DonySpacing.md),
@@ -395,22 +333,22 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final (label, bg, fg) = switch (status) {
-      'ACTIVE' => (l.listingBadgeActive, const Color(0xFF16A34A), Colors.white),
-      'DRAFT' => (l.listingBadgeDraft, const Color(0xFFB45309), Colors.white),
-      'FULL' => (l.listingBadgeFull, const Color(0xFFF59E0B), Colors.white),
-      'IN_PROGRESS' => (
-        l.listingBadgeInProgress,
-        const Color(0xFF16A34A),
-        Colors.white,
-      ),
-      'COMPLETED' => (l.listingBadgeCompleted, Colors.white24, Colors.white),
+    final cs = Theme.of(context).colorScheme;
+    // Posé sur le billet clair : fond teinté, texte foncé de la même famille.
+    const green = (Color(0xFFE8F5EE), Color(0xFF166534));
+    const amber = (Color(0xFFFEF3C7), Color(0xFF92400E));
+    final neutral = (cs.surfaceContainerHighest, cs.onSurfaceVariant);
+    final (label, (bg, fg)) = switch (status) {
+      'ACTIVE' => (l.listingBadgeActive, green),
+      'DRAFT' => (l.listingBadgeDraft, amber),
+      'FULL' => (l.listingBadgeFull, amber),
+      'IN_PROGRESS' => (l.listingBadgeInProgress, green),
+      'COMPLETED' => (l.listingBadgeCompleted, neutral),
       'CANCELLED' => (
         l.listingBadgeCancelled,
-        const Color(0xFFE53935),
-        Colors.white,
+        (cs.error.withValues(alpha: 0.12), cs.error),
       ),
-      _ => (status.toUpperCase(), Colors.white24, Colors.white),
+      _ => (status.toUpperCase(), neutral),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -420,7 +358,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.w700),
+        style: TextStyle(color: fg, fontSize: 12, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -696,33 +634,6 @@ String _handoverDeadlineLabel(AppLocalizations l, DateTime deadline) {
       DateFormat.jm(l.localeName).format(deadline),
     ),
   );
-}
-
-class _HeroChip extends StatelessWidget {
-  final String label;
-  const _HeroChip({super.key, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
 }
 
 class _BSectionTitle extends StatelessWidget {
