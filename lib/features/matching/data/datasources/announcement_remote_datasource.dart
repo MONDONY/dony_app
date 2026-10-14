@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/matching/data/models/trip_series_result.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:intl/intl.dart';
@@ -92,6 +93,23 @@ class AnnouncementRemoteDatasource {
     return ((data['legs'] as List?) ?? const [])
         .map((e) => AnnouncementModel.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Trajet récurrent par dates précises : recopie le trajet direct [id] à
+  /// chaque date de [dates], en brouillons ou publiés (yadony-back #525).
+  Future<TripSeriesResult> createSeries(
+    String id, {
+    required List<DateTime> dates,
+    required bool saveAsDraft,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/announcements/$id/series',
+      data: {
+        'dates': [for (final d in dates) TripSeriesResult.wireDate(d)],
+        'saveAsDraft': saveAsDraft,
+      },
+    );
+    return TripSeriesResult.fromJson(response.data as Map<String, dynamic>);
   }
 
   /// Étapes du voyage auquel appartient l'annonce [id] (FLUTTER-4D).

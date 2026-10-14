@@ -255,6 +255,10 @@ class AnnouncementModel {
   /// Nombre d'étapes encore présentes dans le voyage. `null` hors voyage.
   final int? tripLegCount;
 
+  /// Trajet récurrent par dates précises (yadony-back #525) : série commune
+  /// au trajet d'origine et à ses copies. `null` hors série ou back antérieur.
+  final String? seriesId;
+
   /// La devise peut encore changer en modification : trajet sans aucune
   /// demande ni offre (FLUTTER-KV, yadony-back #515). Servi au seul
   /// propriétaire par `GET /announcements/{id}` ; `null` pour tout autre
@@ -313,6 +317,7 @@ class AnnouncementModel {
     this.tripGroupId,
     this.tripLegIndex,
     this.tripLegCount,
+    this.seriesId,
     this.currencyEditable,
   });
 

@@ -8,6 +8,7 @@ import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/models/trip_legs_info.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+import 'package:dony/features/matching/data/models/trip_series_result.dart';
 import 'package:dony/features/matching/data/models/trip_stops.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 
@@ -75,6 +76,17 @@ class AnnouncementRepository {
   /// Voyage à plusieurs étapes (FLUTTER-4D).
   Future<List<AnnouncementModel>> createTrip(List<AnnouncementPayload> legs) =>
       _remoteDatasource.createTrip(legs);
+
+  /// Trajet récurrent par dates précises (yadony-back #525).
+  Future<TripSeriesResult> createSeries(
+    String id, {
+    required List<DateTime> dates,
+    required bool saveAsDraft,
+  }) => _remoteDatasource.createSeries(
+    id,
+    dates: dates,
+    saveAsDraft: saveAsDraft,
+  );
 
   /// Étapes du voyage de l'annonce [id] (FLUTTER-4D).
   Future<TripLegsInfo> getTripLegs(String id) =>

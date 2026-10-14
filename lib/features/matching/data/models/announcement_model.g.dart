@@ -107,6 +107,7 @@ AnnouncementModel _$AnnouncementModelFromJson(
   tripGroupId: json['tripGroupId'] as String?,
   tripLegIndex: (json['tripLegIndex'] as num?)?.toInt(),
   tripLegCount: (json['tripLegCount'] as num?)?.toInt(),
+  seriesId: json['seriesId'] as String?,
   currencyEditable: json['currencyEditable'] as bool?,
 );
 
@@ -165,6 +166,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'tripGroupId': instance.tripGroupId,
       'tripLegIndex': instance.tripLegIndex,
       'tripLegCount': instance.tripLegCount,
+      'seriesId': instance.seriesId,
       'currencyEditable': instance.currencyEditable,
     };
 

@@ -1,4 +1,5 @@
 import 'package:dony/features/publish_gate/data/models/publish_draft_entry.dart';
+import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:equatable/equatable.dart';
 
 enum PublishGateStatus {
@@ -36,6 +37,7 @@ class PublishGateState extends Equatable {
     this.checked = false,
     this.introShown = false,
     this.drafts = const [],
+    this.templates = const [],
     this.error,
     this.errorSeq = 0,
   });
@@ -58,6 +60,12 @@ class PublishGateState extends Equatable {
   /// Brouillons à proposer, le local d'abord.
   final List<PublishDraftEntry> drafts;
 
+  /// Modèles de trajet du voyageur, proposés sous les brouillons.
+  final List<TripTemplate> templates;
+
+  /// La feuille « Terminer ou créer » a quelque chose à proposer.
+  bool get hasChoices => drafts.isNotEmpty || templates.isNotEmpty;
+
   final PublishGateError? error;
 
   /// Incrémenté à chaque nouvelle erreur, pour la montrer même répétée.
@@ -70,6 +78,7 @@ class PublishGateState extends Equatable {
     bool? checked,
     bool? introShown,
     List<PublishDraftEntry>? drafts,
+    List<TripTemplate>? templates,
     PublishGateError? error,
     bool bumpError = false,
   }) => PublishGateState(
@@ -79,6 +88,7 @@ class PublishGateState extends Equatable {
     checked: checked ?? this.checked,
     introShown: introShown ?? this.introShown,
     drafts: drafts ?? this.drafts,
+    templates: templates ?? this.templates,
     error: bumpError ? error : this.error,
     errorSeq: bumpError ? errorSeq + 1 : errorSeq,
   );
@@ -91,6 +101,7 @@ class PublishGateState extends Equatable {
     checked,
     introShown,
     drafts,
+    templates,
     error,
     errorSeq,
   ];

@@ -20,6 +20,8 @@ import 'package:dony/features/publish_gate/bloc/publish_gate_cubit.dart';
 import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/data/repositories/publish_commitment_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,6 +47,8 @@ class _MockAnnouncements extends Mock implements AnnouncementRepository {}
 
 class _MockRequests extends Mock implements PackageRequestRepository {}
 
+class _MockTemplates extends Mock implements TripTemplateRepository {}
+
 UserModel _user({required String kycStatus}) => UserModel.fromJson({
   'id': 'u1',
   'roles': const ['SENDER', 'TRAVELER'],
@@ -64,6 +68,7 @@ Future<void> _pump(
   bool commitmentRequired = true,
   Map<String, dynamic>? localDraft,
   List<Object> serverDrafts = const [],
+  List<TripTemplate> tripTemplates = const [],
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -111,6 +116,8 @@ Future<void> _pump(
       size: 50,
     ),
   );
+  final templates = _MockTemplates();
+  when(() => templates.getAll()).thenAnswer((_) async => tripTemplates);
   getIt.registerFactoryParam<PublishGateCubit, PublishCommitmentRole, void>(
     (r, _) => PublishGateCubit(
       role: r,
@@ -118,6 +125,7 @@ Future<void> _pump(
       drafts: store,
       announcements: announcements,
       packageRequests: requests,
+      templates: templates,
       analytics: getIt<AnalyticsService>(),
     ),
   );
@@ -187,6 +195,13 @@ Future<void> _pump(
         builder: (_, state) {
           visited.add('/package-requests/${state.pathParameters['id']}');
           return const Scaffold(body: Text('Demande brouillon'));
+        },
+      ),
+      GoRoute(
+        path: '/announcements/trips',
+        builder: (_, state) {
+          visited.add(state.uri.toString());
+          return const Scaffold(body: Text('Mes trajets'));
         },
       ),
       GoRoute(
@@ -549,6 +564,65 @@ void main() {
         expect((extras.single! as CreateTripArgs).resumeDraft, isNull);
       },
     );
+
+    testWidgets('trajet : un modèle seul suffit à proposer la feuille', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'VERIFIED',
+        commitmentRequired: false,
+        tripTemplates: [templateFixture(label: 'Navette Dakar')],
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text("Partir d'un modèle ?"), findsOneWidget);
+      expect(find.text('Navette Dakar'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('publish-template-tpl-1')));
+      await tester.pumpAndSettle();
+
+      expect(visited, ['/trips/create']);
+      final args = extras.single! as CreateTripArgs;
+      expect(args.template?.id, 'tpl-1');
+      expect(args.resumeDraft, isNull);
+    });
+
+    testWidgets('trajet : une série tient sur une ligne et ouvre Mes trajets', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'VERIFIED',
+        commitmentRequired: false,
+        serverDrafts: [
+          tripFixture(
+            id: 's1',
+            seriesId: 'serie',
+            departureDate: DateTime(2026, 11, 27),
+          ),
+          tripFixture(
+            id: 's2',
+            seriesId: 'serie',
+            departureDate: DateTime(2026, 12, 4),
+          ),
+        ],
+        tripTemplates: [templateFixture()],
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Paris → Dakar · 2 dates'), findsOneWidget);
+      expect(find.text('Brouillons prêts à publier'), findsOneWidget);
+      expect(find.byKey(const Key('publish-draft-server')), findsNothing);
+      expect(find.byKey(const Key('publish-template-tpl-1')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('publish-draft-series')));
+      await tester.pumpAndSettle();
+
+      expect(visited, ['/announcements/trips?filter=draft']);
+    });
 
     testWidgets('feuille fermée sans choix (écran sauté) : retour', (
       tester,

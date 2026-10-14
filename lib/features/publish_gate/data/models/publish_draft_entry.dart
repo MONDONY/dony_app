@@ -53,6 +53,25 @@ class ServerTripDraft extends PublishDraftEntry {
   List<Object?> get props => [announcement.id];
 }
 
+/// Brouillons d'une même série (trajet récurrent par dates précises),
+/// regroupés sur une ligne. Triés par date de départ.
+class ServerTripDraftSeries extends PublishDraftEntry {
+  const ServerTripDraftSeries(this.announcements)
+    : assert(announcements.length > 1);
+
+  final List<AnnouncementModel> announcements;
+
+  @override
+  String get departureCity => announcements.first.departureCity;
+  @override
+  String get arrivalCity => announcements.first.arrivalCity;
+  @override
+  DateTime get date => announcements.first.departureDate;
+
+  @override
+  List<Object?> get props => [for (final a in announcements) a.id];
+}
+
 /// Demande d'envoi complète enregistrée en brouillon sur le serveur.
 class ServerRequestDraft extends PublishDraftEntry {
   const ServerRequestDraft(this.request);

@@ -104,7 +104,7 @@ class PublishIntroScreen extends StatelessWidget {
     PublishGateState gate,
   ) async {
     final cubit = context.read<PublishGateCubit>();
-    if (gate.drafts.isEmpty) {
+    if (!gate.hasChoices) {
       _openForm(context, null);
       return;
     }
@@ -112,17 +112,23 @@ class PublishIntroScreen extends StatelessWidget {
       context,
       role: role.commitmentRole,
       drafts: gate.drafts,
+      templates: gate.templates,
     );
     if (!context.mounted) return;
     switch (result) {
       case ResumePublishDraft(:final entry):
-        cubit.trackChoice(
-          entry is LocalPublishDraft
-              ? PublishDraftChoice.local
-              : PublishDraftChoice.server,
-          entry: entry,
-        );
+        cubit.trackChoice(switch (entry) {
+          LocalPublishDraft() => PublishDraftChoice.local,
+          ServerTripDraftSeries() => PublishDraftChoice.series,
+          _ => PublishDraftChoice.server,
+        }, entry: entry);
         _openForm(context, entry);
+      case UsePublishTemplate(:final template):
+        cubit.trackChoice(PublishDraftChoice.template);
+        context.pushReplacement(
+          '/trips/create',
+          extra: CreateTripArgs(template: template),
+        );
       case CreateNewPublication():
         cubit.trackChoice(PublishDraftChoice.createNew);
         _openForm(context, null);
@@ -144,6 +150,10 @@ class PublishIntroScreen extends StatelessWidget {
             resumeDraft: TripFormDraft.fromJson(d.draft.data),
           ),
         );
+      case (PublishIntroRole.trip, ServerTripDraftSeries()):
+        // Plusieurs brouillons d'une même série : « Mes trajets », filtré
+        // sur les brouillons, pour les relire et les publier.
+        context.pushReplacement('/announcements/trips?filter=draft');
       case (PublishIntroRole.trip, final ServerTripDraft d):
         context.pushReplacement(
           '/announcements/${d.announcement.id}/trip',

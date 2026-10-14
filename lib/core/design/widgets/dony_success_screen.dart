@@ -37,6 +37,7 @@ class DonySuccessScreen extends StatefulWidget {
     this.onSecondary,
     this.tertiaryLabel,
     this.onTertiary,
+    this.extra,
   });
 
   final DonyMascotteType mascotteType;
@@ -67,6 +68,10 @@ class DonySuccessScreen extends StatefulWidget {
 
   /// Callback de l'action tertiaire.
   final VoidCallback? onTertiary;
+
+  /// Contenu propre au contexte, sous le sous-titre et avant les boutons
+  /// (ex. « Vous faites ce trajet souvent ? » après un trajet publié).
+  final Widget? extra;
 
   /// Slug identifiant le flux d'origine (ex: `trip_published`) — envoyé comme
   /// propriété `context` sur les events analytics de cet écran (vue,
@@ -320,6 +325,10 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                             height: 1.5,
                           ),
                         ),
+                        if (widget.extra case final extra?) ...[
+                          const SizedBox(height: DonySpacing.xl),
+                          extra,
+                        ],
                         const SizedBox(height: DonySpacing.xxl),
                         DonyButton(
                           label: widget.ctaLabel,
