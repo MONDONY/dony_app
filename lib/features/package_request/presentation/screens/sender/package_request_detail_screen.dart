@@ -122,10 +122,13 @@ class _SheetFrame extends StatelessWidget {
                   ),
                 ),
                 const _MenuButton(),
+                const SizedBox(width: DonySpacing.xs),
                 IconButton(
+                  key: const Key('request-detail-close'),
                   tooltip: context.l10n.commonClose,
+                  style: requestHeaderButtonStyle(cs),
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const DonyIcon('x', size: 20),
+                  icon: DonyIcon('x', size: 20, color: cs.onSurface),
                 ),
               ],
             ),
@@ -394,6 +397,16 @@ Future<void> _openThread(BuildContext context, String threadId) async {
   if (context.mounted) unawaited(cubit.load());
 }
 
+/// Boutons ronds de l'en-tête de « Ma demande » : un fond tonal les détache
+/// de la feuille, en mode sombre surtout, où l'icône grise seule se perdait
+/// (FLUTTER-Q0).
+@visibleForTesting
+ButtonStyle requestHeaderButtonStyle(ColorScheme cs) => IconButton.styleFrom(
+  backgroundColor: cs.surfaceContainerHighest,
+  foregroundColor: cs.onSurface,
+  minimumSize: const Size(44, 44),
+);
+
 class _MenuButton extends StatelessWidget {
   const _MenuButton();
 
@@ -405,9 +418,12 @@ class _MenuButton extends StatelessWidget {
             state.actions.menu.isEmpty) {
           return const SizedBox.shrink();
         }
+        final cs = Theme.of(context).colorScheme;
         return IconButton(
+          key: const Key('request-detail-menu'),
           tooltip: context.l10n.requestDetailMoreActionsTooltip,
-          icon: const DonyIcon('ellipsis', size: 22),
+          style: requestHeaderButtonStyle(cs),
+          icon: DonyIcon('ellipsis', size: 22, color: cs.onSurface),
           onPressed: state.actionInFlight ? null : () => _open(context, state),
         );
       },

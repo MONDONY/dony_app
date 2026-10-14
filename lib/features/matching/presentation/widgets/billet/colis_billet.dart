@@ -28,6 +28,9 @@ class ColisBillet extends StatelessWidget {
           decoration: BoxDecoration(
             color: cs.surface,
             borderRadius: BorderRadius.circular(DonyRadius.card),
+            // Bordure en plus de l'ombre : seule, l'ombre se perd sur le fond
+            // clair de l'app et ne se voit pas en mode sombre (FLUTTER-Q1).
+            border: Border.all(color: cs.outline),
             boxShadow: DonyShadow.md,
           ),
           // overflow visible pour que les encoches de BilletPerforation mordent

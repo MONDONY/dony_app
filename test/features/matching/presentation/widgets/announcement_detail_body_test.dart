@@ -251,6 +251,17 @@ void main() {
       ),
       findsOneWidget,
     );
+    // FLUTTER-Q1 : le billet ne prend plus la couleur du fond de l'écran,
+    // il est bordé et porte un bandeau teinté en tête.
+    final theme = AppTheme.light();
+    final billet = tester.widget<Container>(
+      find.byKey(const Key('trip-billet-card')),
+    );
+    final deco = billet.decoration! as BoxDecoration;
+    expect(deco.color, isNot(theme.scaffoldBackgroundColor));
+    expect(deco.color, theme.colorScheme.surface);
+    expect(deco.border, isNotNull);
+    expect(find.byKey(const Key('trip-billet-header')), findsOneWidget);
     // Plus aucun dégradé : l'ancien en-tête bleu nuit faisait « généré ».
     final gradients = tester
         .widgetList<Container>(find.byType(Container))

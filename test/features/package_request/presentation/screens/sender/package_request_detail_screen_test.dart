@@ -334,6 +334,33 @@ void main() {
     },
   );
 
+  testWidgets("FLUTTER-Q0 : boutons de l'en-tête sur un fond tonal", (
+    tester,
+  ) async {
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pumpAndSettle();
+
+    final cs = AppTheme.light().colorScheme;
+    // Style partagé par ⋯ (écran et feuille) et ✕ (feuille seulement).
+    expect(
+      requestHeaderButtonStyle(cs).backgroundColor?.resolve(<WidgetState>{}),
+      cs.surfaceContainerHighest,
+    );
+    final menu = find.byKey(const Key('request-detail-menu'));
+    expect(menu, findsOneWidget);
+    expect(
+      tester
+          .widget<IconButton>(menu)
+          .style
+          ?.backgroundColor
+          ?.resolve(<WidgetState>{}),
+      cs.surfaceContainerHighest,
+    );
+  });
+
   testWidgets('2. erreur de getById → message, Réessayer recharge le billet', (
     tester,
   ) async {

@@ -43,6 +43,10 @@ class RequestTicketCard extends StatelessWidget {
         color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
         border: Border.all(color: cs.outline),
+        // Ombre en mode clair pour détacher le billet du fond (FLUTTER-Q1).
+        boxShadow: Theme.of(context).brightness == Brightness.light
+            ? DonyShadow.md
+            : null,
       ),
       child: Opacity(
         opacity: dimmed ? 0.6 : 1,
