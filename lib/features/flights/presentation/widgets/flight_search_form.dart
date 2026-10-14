@@ -17,6 +17,7 @@ class FlightSearchForm extends StatelessWidget {
     required this.onPickCity,
     required this.onSwap,
     required this.onPickDates,
+    required this.onPickPassengers,
     required this.onDirectChanged,
   });
 
@@ -26,6 +27,9 @@ class FlightSearchForm extends StatelessWidget {
   final void Function({required bool departure}) onPickCity;
   final VoidCallback onSwap;
   final VoidCallback onPickDates;
+
+  /// Ligne « Passagers » touchée : la feuille des compteurs s'ouvre.
+  final VoidCallback onPickPassengers;
   final ValueChanged<bool> onDirectChanged;
 
   @override
@@ -71,6 +75,18 @@ class FlightSearchForm extends StatelessWidget {
             ],
           ),
           _DatesRow(query: q, onTap: onPickDates),
+          _Row(
+            key: const Key('flights-passengers'),
+            label: l.flightsPassengersLabel,
+            onTap: onPickPassengers,
+            child: Text(
+              FlightFormat.passengers(l, q.passengers),
+              key: const Key('flights-passengers-value'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _valueStyle(context)?.copyWith(color: cs.onSurface),
+            ),
+          ),
           _Row(
             last: true,
             child: FlightCheckRow(

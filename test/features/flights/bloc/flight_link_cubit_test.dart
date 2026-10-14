@@ -4,6 +4,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/features/flights/bloc/flight_link_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_search_result.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -22,6 +23,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(Uri());
     registerFallbackValue(theOffer);
+    registerFallbackValue(FlightPassengers.single);
   });
 
   setUp(() {
@@ -56,6 +58,41 @@ void main() {
           'airline_code': 'AT',
           'stops': 1,
           'round_trip': false,
+          'passengers': 1,
+        },
+      ),
+    ).called(1);
+  });
+
+  test('passagers de la recherche : envoyés au back et tracés', () async {
+    const family = FlightPassengers(adults: 2, children: 1);
+    when(
+      () => repository.affiliateLink(
+        any(),
+        source: any(named: 'source'),
+        passengers: any(named: 'passengers'),
+      ),
+    ).thenAnswer((_) async => 'https://www.aviasales.com/search/X?adults=2');
+    when(() => launcher.open(any())).thenAnswer((_) async => true);
+
+    await cubit.open(theOffer, source: 'search', passengers: family);
+
+    verify(
+      () => repository.affiliateLink(
+        theOffer,
+        source: 'search',
+        passengers: family,
+      ),
+    ).called(1);
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.flightsOfferClicked,
+        properties: {
+          'source': 'search',
+          'airline_code': 'AT',
+          'stops': 1,
+          'round_trip': false,
+          'passengers': 3,
         },
       ),
     ).called(1);
@@ -134,6 +171,25 @@ void main() {
           properties: any(named: 'properties'),
         ),
       );
+    });
+
+    test('toutes les compagnies : passagers transmis', () async {
+      const two = FlightPassengers(adults: 2);
+      when(
+        () => repository.affiliateLink(
+          any(),
+          source: any(named: 'source'),
+          passengers: any(named: 'passengers'),
+        ),
+      ).thenAnswer((_) async => 'https://www.aviasales.com/search/Y');
+      when(() => launcher.open(any())).thenAnswer((_) async => true);
+
+      await cubit.openAllAirlines(result, from: 'results', passengers: two);
+
+      verify(
+        () =>
+            repository.affiliateLink(any(), source: 'search', passengers: two),
+      ).called(1);
     });
 
     test('sans chemin de recherche : rien ne part', () async {

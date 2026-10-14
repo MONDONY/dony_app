@@ -2,6 +2,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/l10n/country_names.dart';
@@ -19,6 +20,14 @@ abstract final class FlightFormat {
     }
     return '${NumberFormat.decimalPattern().format(amount.round())} $currencyCode';
   }
+
+  /// « 1 adulte », « 2 adultes, 1 enfant, 1 bébé » : les catégories vides
+  /// sont omises, les adultes toujours affichés.
+  static String passengers(AppLocalizations l, FlightPassengers p) => [
+    l.flightsPassengersAdults(p.adults),
+    if (p.children > 0) l.flightsPassengersChildren(p.children),
+    if (p.infants > 0) l.flightsPassengersInfants(p.infants),
+  ].join(', ');
 
   /// Franc CFA (XOF, XAF) : arrimé à l'euro à parité fixe.
   static SupportedCurrency? _cfa(String currencyCode) =>

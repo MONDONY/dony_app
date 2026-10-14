@@ -1,5 +1,6 @@
 import 'package:dony/features/flights/data/models/flight_filters.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_recent_search.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
@@ -194,6 +195,36 @@ void main() {
         at: DateTime(2026, 10, 11),
       );
       expect(again.dedupKey, recent.dedupKey);
+    });
+
+    test('passagers : aller-retour JSON, requête et clé', () {
+      const family = FlightPassengers(adults: 2, children: 1);
+      final withFamily = FlightRecentSearch.fromQuery(
+        recent.toQuery().copyWith(passengers: family),
+        at: DateTime(2026, 10, 11),
+      );
+      expect(withFamily.passengers, family);
+      expect(withFamily.toJson()['passengers'], {
+        'adults': 2,
+        'children': 1,
+        'infants': 0,
+      });
+      expect(FlightRecentSearch.tryParse(withFamily.toJson()), withFamily);
+      expect(withFamily.toQuery().passengers, family);
+      expect(withFamily.dedupKey, isNot(recent.dedupKey));
+    });
+
+    test('ancien format sans passagers : un adulte, même clé', () {
+      final json = recent.toJson()..remove('passengers');
+      final old = FlightRecentSearch.tryParse(json)!;
+      expect(old.passengers, FlightPassengers.single);
+      expect(old.dedupKey, recent.dedupKey);
+      final broken = recent.toJson()
+        ..['passengers'] = {'adults': 1, 'infants': 3};
+      expect(
+        FlightRecentSearch.tryParse(broken)!.passengers,
+        FlightPassengers.single,
+      );
     });
 
     test('entrée illisible : ignorée', () {

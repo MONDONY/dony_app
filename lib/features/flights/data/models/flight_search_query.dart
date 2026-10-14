@@ -1,3 +1,4 @@
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
@@ -44,6 +45,7 @@ class FlightSearchQuery extends Equatable {
     this.departure,
     this.returnDate,
     this.directOnly = false,
+    this.passengers = FlightPassengers.single,
     bool? roundTrip,
   }) : roundTrip = roundTrip ?? returnDate != null;
 
@@ -54,6 +56,10 @@ class FlightSearchQuery extends Equatable {
   /// Date du retour, envoyée au back : présente = aller-retour.
   final FlightWhen? returnDate;
   final bool directOnly;
+
+  /// Passagers choisis : ils partent avec le clic (lien Aviasales), jamais
+  /// avec la recherche, dont les prix restent par adulte.
+  final FlightPassengers passengers;
 
   /// Choix « Aller-retour » du sélecteur du formulaire. Peut être vrai sans
   /// [returnDate] tant que la date du retour n'est pas choisie : le bouton de
@@ -77,6 +83,7 @@ class FlightSearchQuery extends Equatable {
     FlightWhen? returnDate,
     bool clearReturn = false,
     bool? directOnly,
+    FlightPassengers? passengers,
     bool? roundTrip,
   }) => FlightSearchQuery(
     origin: origin ?? this.origin,
@@ -84,6 +91,7 @@ class FlightSearchQuery extends Equatable {
     departure: departure ?? this.departure,
     returnDate: clearReturn ? null : (returnDate ?? this.returnDate),
     directOnly: directOnly ?? this.directOnly,
+    passengers: passengers ?? this.passengers,
     roundTrip: roundTrip ?? this.roundTrip,
   );
 
@@ -94,6 +102,7 @@ class FlightSearchQuery extends Equatable {
     departure: departure,
     returnDate: returnDate,
     directOnly: directOnly,
+    passengers: passengers,
     roundTrip: roundTrip,
   );
 
@@ -104,6 +113,7 @@ class FlightSearchQuery extends Equatable {
     departure,
     returnDate,
     directOnly,
+    passengers,
     roundTrip,
   ];
 }

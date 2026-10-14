@@ -221,7 +221,12 @@ void main() {
       verify(
         () => analytics.logEvent(
           AnalyticsEvents.flightsOfferClicked,
-          properties: {'source': 'similar', 'stops': -1, 'round_trip': true},
+          properties: {
+            'source': 'similar',
+            'stops': -1,
+            'round_trip': true,
+            'passengers': 1,
+          },
         ),
       ).called(1);
     });

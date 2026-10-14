@@ -19879,4 +19879,98 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get publishDraftSeriesStatus => 'Brouillons prêts à publier';
+
+  @override
+  String get flightsPassengersLabel => 'Passagers';
+
+  @override
+  String flightsPassengersAdults(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count adultes',
+      one: '1 adulte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String flightsPassengersChildren(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count enfants',
+      one: '1 enfant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String flightsPassengersInfants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bébés',
+      one: '1 bébé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsPassengersSheetTitle => 'Qui voyage ?';
+
+  @override
+  String get flightsPassengersAdultsTitle => 'Adultes';
+
+  @override
+  String get flightsPassengersAdultsHint => '12 ans et plus';
+
+  @override
+  String get flightsPassengersChildrenTitle => 'Enfants';
+
+  @override
+  String get flightsPassengersChildrenHint => 'De 2 à 11 ans';
+
+  @override
+  String get flightsPassengersInfantsTitle => 'Bébés';
+
+  @override
+  String get flightsPassengersInfantsHint => 'Moins de 2 ans';
+
+  @override
+  String get flightsPassengersRules =>
+      '9 passagers au maximum, un bébé par adulte.';
+
+  @override
+  String get flightsPassengersPriceNote =>
+      'Les prix affichés restent par adulte. Le prix final pour tous les passagers s\'affiche sur Aviasales.';
+
+  @override
+  String get flightsPassengersValidate => 'Valider';
+
+  @override
+  String flightsPassengersDecrease(String category) {
+    return '$category, un de moins';
+  }
+
+  @override
+  String flightsPassengersIncrease(String category) {
+    return '$category, un de plus';
+  }
+
+  @override
+  String get flightsPricePerAdult => 'par adulte';
+
+  @override
+  String flightsPriceTotalFor(int count, String total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '≈ $total pour $count pers.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get flightsPriceFinalOnPartner => 'Prix final sur Aviasales';
 }

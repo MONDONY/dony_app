@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/presentation/flight_format.dart';
 import 'package:dony/features/flights/presentation/widgets/airline_logo.dart';
@@ -29,6 +30,7 @@ class FlightOfferCard extends StatelessWidget {
     this.savingsLabel,
     this.aboveLabel,
     this.stayDays,
+    this.passengers = FlightPassengers.single,
   });
 
   final FlightOffer offer;
@@ -60,6 +62,11 @@ class FlightOfferCard extends StatelessWidget {
   /// (`similarOffers`) : pastille « 28 j » quand aucune autre pastille
   /// n'occupe l'en-tête.
   final int? stayDays;
+
+  /// Passagers de la recherche. Le prix reste celui d'un adulte : au-delà
+  /// d'un passager, il porte « par adulte », puis un total estimé (adultes
+  /// seuls) ou le renvoi au prix final du partenaire (enfants, bébés).
+  final FlightPassengers passengers;
 
   /// Marge intérieure de la carte.
   static const _pad = DonySpacing.md + DonySpacing.xxs;
@@ -172,7 +179,11 @@ class FlightOfferCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: DonySpacing.md),
-                    _PriceBlock(offer: o, opening: opening),
+                    _PriceBlock(
+                      offer: o,
+                      opening: opening,
+                      passengers: passengers,
+                    ),
                   ],
                 ),
               ],
@@ -234,10 +245,15 @@ class _Carrier extends StatelessWidget {
 /// Prix en très grand, aligné à droite, le site vendeur dessous (« via
 /// Kiwi.com »), ou « prix indicatif » quand le site est inconnu.
 class _PriceBlock extends StatelessWidget {
-  const _PriceBlock({required this.offer, required this.opening});
+  const _PriceBlock({
+    required this.offer,
+    required this.opening,
+    required this.passengers,
+  });
 
   final FlightOffer offer;
   final bool opening;
+  final FlightPassengers passengers;
 
   @override
   Widget build(BuildContext context) {
@@ -245,6 +261,12 @@ class _PriceBlock extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final gate = offer.gate;
+    final p = passengers;
+    final note = tt.bodySmall?.copyWith(
+      color: cs.onSurfaceVariant,
+      height: 1.2,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 120),
       child: Column(
@@ -280,6 +302,30 @@ class _PriceBlock extends StatelessWidget {
               ),
             ),
           ),
+          if (p.total > 1) ...[
+            const SizedBox(height: DonySpacing.xxs),
+            Text(
+              l.flightsPricePerAdult,
+              key: const Key('flight-offer-per-adult'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: note,
+            ),
+            Text(
+              p.adultsOnly
+                  ? l.flightsPriceTotalFor(
+                      p.total,
+                      FlightFormat.price(offer.price * p.total, offer.currency),
+                    )
+                  : l.flightsPriceFinalOnPartner,
+              key: const Key('flight-offer-total'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: note,
+            ),
+          ],
           const SizedBox(height: DonySpacing.xs),
           if (gate != null && gate.isNotEmpty)
             _Via(gate: gate)

@@ -188,6 +188,10 @@ void main() {
             'date_mode': 'day',
             'from_deal': false,
             'count': 2,
+            'passengers': 1,
+            'adults': 1,
+            'children': 0,
+            'infants': 0,
           },
         ),
       ).called(1);

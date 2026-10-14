@@ -32053,6 +32053,120 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Brouillons prêts à publier'**
   String get publishDraftSeriesStatus;
+
+  /// Libellé de la ligne Passagers du formulaire Billets.
+  ///
+  /// In fr, this message translates to:
+  /// **'Passagers'**
+  String get flightsPassengersLabel;
+
+  /// Résumé des passagers : adultes.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 adulte} other{{count} adultes}}'**
+  String flightsPassengersAdults(int count);
+
+  /// Résumé des passagers : enfants.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 enfant} other{{count} enfants}}'**
+  String flightsPassengersChildren(int count);
+
+  /// Résumé des passagers : bébés.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 bébé} other{{count} bébés}}'**
+  String flightsPassengersInfants(int count);
+
+  /// Titre de la feuille de choix des passagers.
+  ///
+  /// In fr, this message translates to:
+  /// **'Qui voyage ?'**
+  String get flightsPassengersSheetTitle;
+
+  /// Compteur des adultes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adultes'**
+  String get flightsPassengersAdultsTitle;
+
+  /// Âge des adultes.
+  ///
+  /// In fr, this message translates to:
+  /// **'12 ans et plus'**
+  String get flightsPassengersAdultsHint;
+
+  /// Compteur des enfants.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enfants'**
+  String get flightsPassengersChildrenTitle;
+
+  /// Âge des enfants.
+  ///
+  /// In fr, this message translates to:
+  /// **'De 2 à 11 ans'**
+  String get flightsPassengersChildrenHint;
+
+  /// Compteur des bébés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bébés'**
+  String get flightsPassengersInfantsTitle;
+
+  /// Âge des bébés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moins de 2 ans'**
+  String get flightsPassengersInfantsHint;
+
+  /// Règle rappelée sous les compteurs de passagers.
+  ///
+  /// In fr, this message translates to:
+  /// **'9 passagers au maximum, un bébé par adulte.'**
+  String get flightsPassengersRules;
+
+  /// Note de la feuille des passagers sur les prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les prix affichés restent par adulte. Le prix final pour tous les passagers s\'affiche sur Aviasales.'**
+  String get flightsPassengersPriceNote;
+
+  /// Bouton de la feuille des passagers.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider'**
+  String get flightsPassengersValidate;
+
+  /// Lecture d'écran du bouton moins d'un compteur de passagers.
+  ///
+  /// In fr, this message translates to:
+  /// **'{category}, un de moins'**
+  String flightsPassengersDecrease(String category);
+
+  /// Lecture d'écran du bouton plus d'un compteur de passagers.
+  ///
+  /// In fr, this message translates to:
+  /// **'{category}, un de plus'**
+  String flightsPassengersIncrease(String category);
+
+  /// Sous le prix d'une offre quand plusieurs passagers sont choisis.
+  ///
+  /// In fr, this message translates to:
+  /// **'par adulte'**
+  String get flightsPricePerAdult;
+
+  /// Total estimé d'une offre pour plusieurs adultes.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, other{≈ {total} pour {count} pers.}}'**
+  String flightsPriceTotalFor(int count, String total);
+
+  /// Sous le prix d'une offre quand la recherche compte des enfants ou des bébés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix final sur Aviasales'**
+  String get flightsPriceFinalOnPartner;
 }
 
 class _AppLocalizationsDelegate

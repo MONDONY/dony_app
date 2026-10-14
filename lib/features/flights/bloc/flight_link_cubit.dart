@@ -5,6 +5,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_search_result.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -38,17 +39,26 @@ class FlightLinkCubit extends Cubit<FlightLinkState> {
 
   /// Séjour proche des résultats (`similarOffers`) : même clic qu'une offre
   /// de la recherche pour le back, source `similar` pour l'analytics.
-  Future<void> openSimilar(FlightOffer offer) =>
-      open(offer, source: 'search', analyticsSource: 'similar');
+  Future<void> openSimilar(
+    FlightOffer offer, {
+    FlightPassengers passengers = FlightPassengers.single,
+  }) => open(
+    offer,
+    source: 'search',
+    analyticsSource: 'similar',
+    passengers: passengers,
+  );
 
   /// « Voir toutes les compagnies sur Aviasales » : la recherche complète du
   /// trajet ([FlightSearchResult.searchPath]) passe par le même endpoint que
   /// les offres, qui la transforme en lien affilié. [from] : `results`
   /// (encart de la liste), `empty` (écran « Aucun vol ») ou `alert` (écran
-  /// « Vols trouvés » d'une alerte).
+  /// « Vols trouvés » d'une alerte). [passengers] : ceux de la recherche
+  /// courante (un adulte pour une alerte).
   Future<void> openAllAirlines(
     FlightSearchResult result, {
     required String from,
+    FlightPassengers passengers = FlightPassengers.single,
   }) async {
     final path = result.searchPath;
     if (path == null) return;
@@ -62,6 +72,7 @@ class FlightLinkCubit extends Cubit<FlightLinkState> {
       ),
       source: 'search',
       allAirlinesFrom: from,
+      passengers: passengers,
     );
   }
 
@@ -69,11 +80,14 @@ class FlightLinkCubit extends Cubit<FlightLinkState> {
   /// [analyticsSource] : source plus fine pour `flights_offer_clicked` seul
   /// (`similar` : séjour proche des résultats, envoyé au back comme
   /// `search`, que son contrat accepte) ; [source] par défaut.
+  /// [passengers] : passagers de la recherche courante, envoyés au back qui
+  /// réécrit le lien Aviasales ; un adulte par défaut (alertes, bons plans).
   Future<void> open(
     FlightOffer offer, {
     required String source,
     String? analyticsSource,
     String? allAirlinesFrom,
+    FlightPassengers passengers = FlightPassengers.single,
   }) async {
     if (state.openingPath != null) return;
     emit(
@@ -81,7 +95,11 @@ class FlightLinkCubit extends Cubit<FlightLinkState> {
     );
     String reason;
     try {
-      final url = await _repository.affiliateLink(offer, source: source);
+      final url = await _repository.affiliateLink(
+        offer,
+        source: source,
+        passengers: passengers,
+      );
       final uri = Uri.tryParse(url);
       final opened = uri != null && await _launcher.open(uri);
       if (opened) {
@@ -103,6 +121,7 @@ class FlightLinkCubit extends Cubit<FlightLinkState> {
               'airline_code': ?offer.airlineCode,
               'stops': offer.transfers ?? -1,
               'round_trip': offer.isRoundTrip,
+              'passengers': passengers.total,
             },
           ),
         );
