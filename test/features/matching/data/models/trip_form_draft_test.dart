@@ -22,7 +22,7 @@ final _leg = TripLegDraft(
   acceptedPaymentMethods: const ['CASH'],
 );
 
-TripFormDraft _full() => TripFormDraft(
+TripFormDraft _full({DateTime? handoverDeadline}) => TripFormDraft(
   step: 2,
   currency: 'EUR',
   departureCity: 'Paris',
@@ -33,7 +33,7 @@ TripFormDraft _full() => TripFormDraft(
   departureTime: '10:15',
   arrivalTime: '06:00',
   arrivalDayOffset: 1,
-  handoverDeadline: DateTime(2026, 11),
+  handoverDeadline: handoverDeadline ?? DateTime(2026, 11),
   handoverLeadDays: 1,
   transportMode: 'PLANE',
   stops: TripStops.direct,
@@ -112,6 +112,20 @@ void main() {
     expect(back.deliveryAddress, isNull);
     expect(back.legs, isEmpty);
     expect(back.acceptedContent, ['A']);
+  });
+
+  test('date limite avec heure : aller-retour du jour et de l\'heure', () {
+    final draft = _full(handoverDeadline: DateTime(2026, 11, 1, 18, 30));
+    final json = _viaJson(draft);
+    expect(json['handoverDeadline'], '2026-11-01T18:30:00');
+    final back = TripFormDraft.fromJson(json, now: now);
+    expect(back.handoverDeadline, DateTime(2026, 11, 1, 18, 30));
+  });
+
+  test('ancien brouillon (jour seul) : relu à minuit', () {
+    final json = _viaJson(_full())..['handoverDeadline'] = '2026-11-01';
+    final back = TripFormDraft.fromJson(json, now: now);
+    expect(back.handoverDeadline, DateTime(2026, 11));
   });
 
   test('étape sans moyens de paiement mémorisés : null conservé', () {

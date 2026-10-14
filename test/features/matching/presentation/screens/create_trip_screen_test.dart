@@ -72,6 +72,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/currency_test_doubles.dart';
@@ -233,6 +234,7 @@ Widget _wrapWithRouter(
   AuthState? authState,
   String helpConfigJson = _emptyHelpConfigJson,
   Locale? locale,
+  bool use24h = false,
 }) {
   final router = GoRouter(
     initialLocation: '/trips/create',
@@ -300,8 +302,18 @@ Widget _wrapWithRouter(
     ],
   );
 
+  // Téléphone réglé en 24 h, comme en France : le sélecteur d'heure en
+  // saisie clavier n'accepte « 18 » qu'à cette condition.
+  Widget force24h(BuildContext c, Widget? child) => MediaQuery(
+    data: MediaQuery.of(c).copyWith(alwaysUse24HourFormat: true),
+    child: child!,
+  );
   return locale == null
-      ? MaterialApp.router(routerConfig: router, theme: AppTheme.light())
+      ? MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light(),
+          builder: use24h ? force24h : null,
+        )
       : MaterialApp.router(
           routerConfig: router,
           theme: AppTheme.light(),
@@ -343,12 +355,14 @@ AnnouncementModel _makeFullAnnouncement({
     BidPaymentMethod.cash,
   },
   bool? currencyEditable,
+  DateTime? departureDate,
+  DateTime? handoverDeadline,
 }) => AnnouncementModel(
   id: 'ann-full-1',
   travelerId: 'trav-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 8),
+  departureDate: departureDate ?? DateTime(2026, 8),
   // 22:00 departure → handoverEnd 18:00 is safely before departure
   departureTime: '22:00',
   arrivalTime: '10:30',
@@ -359,7 +373,7 @@ AnnouncementModel _makeFullAnnouncement({
   bidsCount: 0,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
-  handoverDeadline: DateTime(2026, 8, 1, 18),
+  handoverDeadline: handoverDeadline ?? DateTime(2026, 8, 1, 18),
   pickupAddress: const AddressData(
     label: 'Tour Eiffel',
     lat: 48.858,
@@ -2952,9 +2966,31 @@ void main() {
         );
 
         expect(find.text('Choisir'), findsNothing);
-        // Le jour du départ (22:00), la limite est l'heure de départ : elle
-        // s'affiche avec le jour (Sentry FLUTTER-MY).
+        // L'heure enregistrée (18:00, avant le départ de 22:00) est gardée
+        // telle quelle et s'affiche avec le jour (FLUTTER-MY, FLUTTER-PK).
+        expect(find.text('1 août à 18:00'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'mode édition : une limite pile à l\'heure de départ suit le départ',
+      (tester) async {
+        setupViewport(tester);
+
+        // Règle d'avant FLUTTER-PK : la limite du jour du départ valait
+        // l'heure de départ. Elle redevient un jour sans heure.
+        final args = CreateTripArgs(
+          announcement: _makeFullAnnouncement(
+            handoverDeadline: DateTime(2026, 8, 1, 22),
+          ),
+        );
+        await pumpAndDrain(
+          tester,
+          _wrapWithRouter(CreateTripScreen(args: args)),
+        );
+
         expect(find.text('1 août à 22:00'), findsOneWidget);
+        expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
       },
     );
 
@@ -3053,6 +3089,104 @@ void main() {
 
       expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
     });
+  });
+
+  // ── Group: Date limite de dépôt — jour puis heure (FLUTTER-PK) ─────────────
+  // Le calendrier enchaîne sur le sélecteur d'heure : l'heure de la limite
+  // est choisie, plus seulement déduite.
+
+  group('CreateTripScreen — Date limite de dépôt (jour puis heure)', () {
+    final departure = _handoverPickDeparture();
+
+    AnnouncementModel futureTrip() => _makeFullAnnouncement(
+      departureDate: departure,
+      handoverDeadline: DateTime(
+        departure.year,
+        departure.month,
+        departure.day - 1,
+        23,
+        59,
+      ),
+    );
+
+    String row(WidgetTester tester) => tester
+        .widget<Text>(find.byKey(const Key('sheet-handover-deadline-value')))
+        .data!;
+
+    String expected(DateTime day, String hhmm) =>
+        '${DateFormat.MMMd('fr').format(day)} à $hhmm';
+
+    Future<void> openTrip(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(args: CreateTripArgs(announcement: futureTrip())),
+          use24h: true,
+        ),
+      );
+    }
+
+    test('le départ de test laisse deux jours avant lui dans le mois', () {
+      expect(departure.day, inInclusiveRange(4, 26));
+    });
+
+    testWidgets('jour puis heure choisie : ligne et valeur envoyée', (
+      tester,
+    ) async {
+      await openTrip(tester);
+      final day = departure.subtract(const Duration(days: 1));
+
+      await _pickHandover(tester, day, hour: '18', minute: '00');
+
+      expect(row(tester), expected(day, '18:00'));
+      expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
+      final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+      expect(tester.widget<DonyButton>(continueBtn).onPressed, isNotNull);
+    });
+
+    testWidgets(
+      'heure postérieure au départ le jour du départ : erreur et Continuer inactif',
+      (tester) async {
+        await openTrip(tester);
+
+        await _pickHandover(tester, departure, hour: '23', minute: '00');
+
+        expect(row(tester), expected(departure, '23:00'));
+        expect(find.byKey(const Key('sheet-handover-error')), findsOneWidget);
+        expect(
+          find.text('La date limite doit précéder le départ.'),
+          findsOneWidget,
+        );
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+      },
+    );
+
+    testWidgets('heure annulée un autre jour : repli en fin de journée', (
+      tester,
+    ) async {
+      await openTrip(tester);
+      final day = departure.subtract(const Duration(days: 2));
+
+      await _pickHandover(tester, day);
+
+      expect(row(tester), expected(day, '23:59'));
+    });
+
+    testWidgets(
+      'heure annulée le jour du départ : repli à l\'heure de départ',
+      (tester) async {
+        await openTrip(tester);
+
+        await _pickHandover(tester, departure);
+
+        expect(row(tester), expected(departure, '22:00'));
+        expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
+      },
+    );
   });
 
   // ── Group: Date limite de dépôt — garde au submit ────────────────────────────
@@ -3195,8 +3329,50 @@ void main() {
             that: isA<AnnouncementUpdateRequested>().having(
               (e) => e.handoverDeadline,
               'handoverDeadline',
-              // Date limite le jour du départ → bornée à l'heure de départ.
-              DateTime(2026, 8, 1, 22),
+              // Heure enregistrée (18:00, avant le départ) gardée telle
+              // quelle (FLUTTER-PK).
+              DateTime(2026, 8, 1, 18),
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('heure choisie au sélecteur : transmise telle quelle au bloc', (
+      tester,
+    ) async {
+      final departure = _handoverPickDeparture();
+      final day = departure.subtract(const Duration(days: 1));
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(
+            args: CreateTripArgs(
+              announcement: _makeFullAnnouncement(departureDate: departure),
+            ),
+          ),
+          use24h: true,
+        ),
+      );
+
+      await _pickHandover(tester, day, hour: '18', minute: '00');
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      verify(
+        () => announcementBloc.add(
+          any(
+            that: isA<AnnouncementUpdateRequested>().having(
+              (e) => e.handoverDeadline,
+              'handoverDeadline',
+              DateTime(day.year, day.month, day.day, 18),
             ),
           ),
         ),
@@ -4414,4 +4590,63 @@ class _PopObserver extends NavigatorObserver {
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     onPop();
   }
+}
+
+/// Départ dans quelques jours, avec la veille et l'avant-veille dans la même
+/// grille du calendrier (le calendrier s'ouvre sur le mois de la limite).
+DateTime _handoverPickDeparture() {
+  final now = DateTime.now();
+  var d = DateTime(now.year, now.month, now.day).add(const Duration(days: 5));
+  while (d.day > 26 || d.day < 4) {
+    d = d.add(const Duration(days: 1));
+  }
+  return d;
+}
+
+/// Touche la ligne « Date limite de dépôt », choisit [day] au calendrier puis,
+/// au sélecteur d'heure enchaîné, saisit [hour]:[minute] au clavier, ou
+/// annule l'heure quand [hour] est nul.
+Future<void> _pickHandover(
+  WidgetTester tester,
+  DateTime day, {
+  String? hour,
+  String? minute,
+}) async {
+  Future<void> settle() async {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+  }
+
+  final rowFinder = find.byKey(const Key('sheet-handover-deadline-row'));
+  await tester.ensureVisible(rowFinder);
+  await settle();
+  await tester.tap(rowFinder);
+  await settle();
+  expect(find.byType(DatePickerDialog), findsOneWidget);
+  await tester.tap(
+    find.descendant(
+      of: find.byType(DatePickerDialog),
+      matching: find.text('${day.day}'),
+    ),
+  );
+  await tester.tap(find.text('OK'));
+  await settle();
+
+  expect(find.byType(TimePickerDialog), findsOneWidget);
+  if (hour == null) {
+    await tester.tap(find.text('Cancel'));
+    await settle();
+    return;
+  }
+  await tester.tap(find.byIcon(Icons.keyboard_outlined));
+  await settle();
+  final fields = find.descendant(
+    of: find.byType(TimePickerDialog),
+    matching: find.byType(TextField),
+  );
+  await tester.enterText(fields.at(0), hour);
+  await tester.enterText(fields.at(1), minute ?? '00');
+  await tester.tap(find.text('OK'));
+  await settle();
+  expect(find.byType(TimePickerDialog), findsNothing);
 }

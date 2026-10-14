@@ -83,6 +83,10 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
   late final ValueNotifier<int> _arrivalDayOffset = ValueNotifier(
     _initialArrivalOffset(),
   );
+
+  /// Date limite de remise : jour et heure choisis (FLUTTER-PK), ou jour
+  /// seul à minuit (valeur initiale, suivi du départ, heure annulée) dont
+  /// l'heure se déduit à l'envoi (cf. [_resolveHandoverDeadline]).
   late final ValueNotifier<DateTime?> _handoverDay = ValueNotifier(
     _initialHandoverDay(),
   );
@@ -178,12 +182,32 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
         _wire(time) == (a.departureTime ?? '').padRight(5).substring(0, 5);
   }
 
+  /// Vrai si la date limite tombe après le nouveau départ (heure choisie
+  /// postérieure à l'heure de départ le même jour, ou jour suivant).
+  bool get _isHandoverAfterDeparture {
+    final handover = _handoverDay.value;
+    final date = _date.value;
+    final time = _departureTime.value;
+    if (handover == null || date == null) return false;
+    if (time == null) {
+      return DateUtils.dateOnly(handover).isAfter(DateUtils.dateOnly(date));
+    }
+    final departure = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+    return _resolveHandoverDeadline(handover, date, time).isAfter(departure);
+  }
+
   bool get _isValid =>
       _reason.value != null &&
       _date.value != null &&
       _departureTime.value != null &&
       _handoverDay.value != null &&
-      !_handoverDay.value!.isAfter(_date.value!) &&
+      !_isHandoverAfterDeparture &&
       !_isSameSchedule;
 
   void _notifyValidity() => widget.onCanSubmitChanged?.call(_isValid);
@@ -200,7 +224,9 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
     if (picked == null) return;
     _date.value = picked;
     final handover = _handoverDay.value;
-    if (!_handoverTouched || (handover != null && handover.isAfter(picked))) {
+    if (!_handoverTouched ||
+        (handover != null &&
+            DateUtils.dateOnly(handover).isAfter(DateUtils.dateOnly(picked)))) {
       _handoverDay.value = _defaultHandoverDay(picked);
     }
   }
@@ -229,36 +255,54 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
     }
   }
 
+  /// Jour puis heure de la date limite, en un seul geste (FLUTTER-PK), comme
+  /// à la publication. Heure proposée : celle déjà choisie, sinon l'heure de
+  /// départ le jour du départ, 20:00 un autre jour. Heure annulée : le jour
+  /// seul est gardé, son heure suit la règle de repli.
   Future<void> _pickHandoverDay() async {
     // Borne haute : le nouveau départ s'il est choisi, sinon l'actuel.
-    final last = _date.value ?? widget.announcement.departureDate;
-    final today = DateUtils.dateOnly(DateTime.now());
-    final lastDay = last.isBefore(today) ? today : DateUtils.dateOnly(last);
-    final current = _handoverDay.value ?? lastDay;
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: current.isAfter(lastDay)
-          ? lastDay
-          : (current.isBefore(today) ? today : current),
-      firstDate: today,
-      lastDate: lastDay,
+    final departure = _date.value ?? widget.announcement.departureDate;
+    final current = _handoverDay.value;
+    final picked = await pickDateThenTime(
+      context,
+      first: DateTime.now(),
+      last: departure,
+      initial: current,
+      initialTimeFor: (day) {
+        if (current != null && _hasTime(current)) {
+          return TimeOfDay.fromDateTime(current);
+        }
+        final time = _departureTime.value;
+        if (time != null && DateUtils.isSameDay(day, departure)) return time;
+        return const TimeOfDay(hour: 20, minute: 0);
+      },
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     _handoverTouched = true;
-    _handoverDay.value = picked;
+    _handoverDay.value = picked.instant ?? picked.day;
   }
 
-  /// Le jour du départ, la remise se cale sur l'heure du départ ; un autre
-  /// jour, en fin de journée (même règle qu'à la publication).
+  static bool _hasTime(DateTime d) => d.hour != 0 || d.minute != 0;
+
+  /// L'heure choisie est gardée telle quelle. Un jour sans heure (minuit) se
+  /// cale sur l'heure du départ le jour du départ, en fin de journée un autre
+  /// jour (même règle qu'à la publication).
   DateTime _resolveHandoverDeadline(
-    DateTime day,
+    DateTime handover,
     DateTime date,
     TimeOfDay time,
   ) {
-    if (DateUtils.isSameDay(day, date)) {
-      return DateTime(day.year, day.month, day.day, time.hour, time.minute);
+    if (_hasTime(handover)) return handover;
+    if (DateUtils.isSameDay(handover, date)) {
+      return DateTime(
+        handover.year,
+        handover.month,
+        handover.day,
+        time.hour,
+        time.minute,
+      );
     }
-    return DateTime(day.year, day.month, day.day, 23, 59);
+    return DateTime(handover.year, handover.month, handover.day, 23, 59);
   }
 
   void _submit() {
@@ -418,15 +462,27 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
                 key: const Key('reschedule-handover-field'),
                 iconAsset: 'clock',
                 label: l.tripRescheduleHandoverShort,
-                value: handover == null ? null : day(handover),
+                value: handover == null
+                    ? null
+                    : (_hasTime(handover)
+                          ? '${day(handover)} · '
+                                '${_wire(TimeOfDay.fromDateTime(handover))}'
+                          : day(handover)),
                 placeholder: l.tripRescheduleChoose,
                 onTap: _pickHandoverDay,
               ),
               const SizedBox(height: DonySpacing.xs),
-              Text(
-                l.tripRescheduleHandoverHint,
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
+              if (_isHandoverAfterDeparture)
+                Text(
+                  l.tripPublishHandoverDeadlineInvalid,
+                  key: const Key('reschedule-handover-error'),
+                  style: tt.bodySmall?.copyWith(color: cs.error),
+                )
+              else
+                Text(
+                  l.tripRescheduleHandoverHint,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
               const SizedBox(height: DonySpacing.lg),
               _SectionTitle(l.tripRescheduleSectionMessage),
               DonyTextField(
