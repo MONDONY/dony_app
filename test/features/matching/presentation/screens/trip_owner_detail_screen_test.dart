@@ -338,7 +338,7 @@ void main() {
     expect(find.text('Trajet'), findsOneWidget);
     expect(find.byType(DonyFeedbackButton), findsOneWidget);
     // Corridor rendu par AnnouncementDetailBody.
-    expect(find.text('Paris → Dakar'), findsOneWidget);
+    expect(find.bySemanticsLabel('Paris → Dakar'), findsOneWidget);
   });
 
   testWidgets(

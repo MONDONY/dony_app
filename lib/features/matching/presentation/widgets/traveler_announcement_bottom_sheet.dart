@@ -30,11 +30,10 @@ import 'package:dony/features/matching/presentation/existing_trip_request.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/trip_view_recording.dart';
 import 'package:dony/features/matching/presentation/widgets/address_location_row.dart';
-import 'package:dony/features/matching/presentation/widgets/billet/billet_route.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/trip_billet_card.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_legs_card.dart';
-import 'package:dony/features/matching/presentation/widgets/trip_stops_badge.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -502,7 +501,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         if (avecFavori)
           _HeroWithFavorite(announcement: announcement)
         else
-          _HeroCorridorCard(announcement: announcement),
+          TripBilletCard(announcement: announcement),
         const SizedBox(height: DonySpacing.md),
         _StatCardsRow(announcement: announcement, hasGrid: hasGrid),
         if (hasGrid) ...[
@@ -701,13 +700,13 @@ class _HeroWithFavorite extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // N'est monté que lorsque le cubit existe : le point d'entrée sans favoris
-    // rend `_HeroCorridorCard` directement.
+    // rend `TripBilletCard` directement.
     return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
       builder: (context, state) {
         final estFavori = state.tripIds.contains(announcement.id);
         // Billet clair (FLUTTER-GG) : signet aux couleurs par défaut, dans
         // l'en-tête du billet plutôt que superposé au corridor.
-        return _HeroCorridorCard(
+        return TripBilletCard(
           announcement: announcement,
           trailing: FavoriteHeartButton(
             isFavorite: estFavori,
@@ -742,121 +741,6 @@ class _HeroWithFavorite extends StatelessWidget {
         type: DonySnackbarType.error,
       );
     }
-  }
-}
-
-/// Fiche trajet au format billet, comme le détail d'un colis (FLUTTER-GG) :
-/// corridor en grand, dates de départ et d'arrivée, perforation, puis les
-/// caractéristiques du trajet (transport, escales, kilos) en talon.
-class _HeroCorridorCard extends StatelessWidget {
-  const _HeroCorridorCard({required this.announcement, this.trailing});
-
-  final AnnouncementModel announcement;
-
-  /// Action posée dans l'en-tête, à droite (signet des favoris).
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-    final kgLabel = announcement.isKgFree
-        ? l.tripKgFree
-        : l.listingKgAvailableLabel(
-            announcement.availableKg.toStringAsFixed(0),
-          );
-    final transportLabel = announcement.transportMode?.label(l);
-    final trailing = this.trailing;
-
-    // La feuille est posée sur `cs.surface` : le billet prend un ton juste
-    // au-dessus pour que les encoches de la perforation se lisent.
-    return Container(
-      key: const Key('trip-billet-card'),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              DonySpacing.base,
-              trailing != null ? DonySpacing.xs : DonySpacing.base,
-              trailing != null ? DonySpacing.xs : DonySpacing.base,
-              DonySpacing.sm,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l.listingHeroTripLabelCaps,
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ),
-                ?trailing,
-              ],
-            ),
-          ),
-          BilletRoute(
-            departureCity: announcement.departureCity,
-            arrivalCity: announcement.arrivalCity,
-            departureDate: announcement.departureDate,
-            departureTime: announcement.departureTime,
-            arrivalDate: announcement.arrivalDate,
-            arrivalTime: announcement.arrivalTime,
-            showWeekday: true,
-            notchColor: cs.surface,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.base,
-              DonySpacing.sm,
-              DonySpacing.base,
-              DonySpacing.base,
-            ),
-            child: Wrap(
-              spacing: DonySpacing.xs + 2,
-              runSpacing: DonySpacing.xs,
-              children: [
-                if (transportLabel != null) _HeroChip(label: transportLabel),
-                if (announcement.stops != null)
-                  _HeroChip(label: tripStopsBadgeLabel(l, announcement.stops!)),
-                _HeroChip(label: kgLabel),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroChip extends StatelessWidget {
-  const _HeroChip({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm + DonySpacing.xxs,
-        vertical: DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.xl),
-      ),
-      child: Text(label, style: tt.labelMedium?.copyWith(color: cs.onSurface)),
-    );
   }
 }
 

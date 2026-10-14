@@ -127,7 +127,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Corridor
-    expect(find.text('Paris → Dakar'), findsOneWidget);
+    expect(find.bySemanticsLabel('Paris → Dakar'), findsOneWidget);
     // Status badge ACTIF
     expect(find.text('● ACTIF'), findsOneWidget);
     // Sections
@@ -183,7 +183,7 @@ void main() {
       await tester.pumpWidget(host(_minimal()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Lyon → Bamako'), findsOneWidget);
+      expect(find.bySemanticsLabel('Lyon → Bamako'), findsOneWidget);
       expect(find.text('● ACTIF'), findsOneWidget);
       // Sections optionnelles absentes
       expect(find.text('LIEUX DE REMISE'), findsNothing);
@@ -237,6 +237,29 @@ void main() {
     expect(find.text('🔥 Urgent'), findsNothing);
   });
 
+  testWidgets('FLUTTER-PY : billet clair, statut et urgence dans son en-tête', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(_full()));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('trip-billet-card')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('trip-billet-card')),
+        matching: find.text('● ACTIF'),
+      ),
+      findsOneWidget,
+    );
+    // Plus aucun dégradé : l'ancien en-tête bleu nuit faisait « généré ».
+    final gradients = tester
+        .widgetList<Container>(find.byType(Container))
+        .map((c) => c.decoration)
+        .whereType<BoxDecoration>()
+        .where((d) => d.gradient != null);
+    expect(gradients, isEmpty);
+  });
+
   testWidgets('en anglais : titres de section traduits', (tester) async {
     useEnglish();
     await tester.pumpWidget(host(_full()));
@@ -248,7 +271,7 @@ void main() {
   });
 
   testWidgets(
-    'date de départ (chip héro) fr non-régression (motif EEE d MMM yyyy inchangé)',
+    'date de départ (billet) en français, jour de la semaine compris',
     (tester) async {
       final announcement = _minimal();
       await tester.pumpWidget(host(announcement));
@@ -256,14 +279,14 @@ void main() {
 
       expect(
         find.textContaining(
-          DateFormat('EEE d MMM yyyy', 'fr').format(announcement.departureDate),
+          DateFormat.MMMEd('fr').format(announcement.departureDate),
         ),
         findsOneWidget,
       );
     },
   );
 
-  testWidgets('date de départ (chip héro) en anglais (ordre anglais)', (
+  testWidgets('date de départ (billet) en anglais (ordre anglais)', (
     tester,
   ) async {
     useEnglish();
@@ -273,7 +296,7 @@ void main() {
 
     expect(
       find.textContaining(
-        DateFormat.yMMMEd('en').format(announcement.departureDate),
+        DateFormat.MMMEd('en').format(announcement.departureDate),
       ),
       findsOneWidget,
     );
