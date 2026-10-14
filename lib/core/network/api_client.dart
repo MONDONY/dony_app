@@ -368,7 +368,7 @@ class _AuthInterceptor extends Interceptor {
           options.path.contains('/kyc') ||
           options.path.contains('/tracking/events') ||
           options.path.contains('/bids/checkout');
-      final token = await _tokenSource.idToken(forceRefresh: isCritical);
+      final token = await _idToken(critical: isCritical);
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
         try {
@@ -412,6 +412,22 @@ class _AuthInterceptor extends Interceptor {
       return;
     }
     handler.next(options);
+  }
+
+  /// Jeton à présenter. Un appel critique force le rafraîchissement ; s'il
+  /// échoue (app en arrière-plan, réseau instable : FLUTTER-KJ), le jeton en
+  /// cache, encore valide, suffit : le back le vérifie de toute façon. Seule
+  /// l'absence de Firebase (`no-app`) court-circuite ce repli.
+  Future<String?> _idToken({required bool critical}) async {
+    if (!critical) return _tokenSource.idToken(forceRefresh: false);
+    try {
+      return await _tokenSource.idToken(forceRefresh: true);
+    } on FirebaseException catch (e) {
+      if (e.code == 'no-app') rethrow;
+    } on Object {
+      // Repli ci-dessous.
+    }
+    return _tokenSource.idToken(forceRefresh: false);
   }
 
   /// Convertit l'erreur en [AppException] (une fois par tentative) et la
