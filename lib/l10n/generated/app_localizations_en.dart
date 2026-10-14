@@ -10562,11 +10562,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanEventTypeSectionLabel => 'Step type';
 
   @override
-  String get scanConfirmationCodeLabel => 'Recipient\'s pickup code';
+  String get scanArrivalNextStepsHint =>
+      'To hand over the parcel, take a photo of it, then enter the 6-digit pickup code the recipient gives you.';
 
   @override
-  String get scanConfirmationCodeHintLong =>
-      'Ask the recipient for their 6-digit pickup code at handover. It is not the tracking number.';
+  String get scanArrivalTakePhotoButton => 'Take the parcel photo';
 
   @override
   String get scanPhotoOfParcelLabel => 'Parcel photo';
@@ -10580,9 +10580,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get scanPhotoTooLargeFixed =>
       'Photo too large (max 10 MB). Try again.';
-
-  @override
-  String get scanSubmittingConfirmation => 'Confirming...';
 
   @override
   String get scanSubmittingRecording => 'Saving...';

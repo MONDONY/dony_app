@@ -5,8 +5,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/ratings/bloc/rating_bloc.dart';
-import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -78,11 +76,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       isDismissible: false,
-      builder: (_) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: context.read<TrackingBloc>()),
-          BlocProvider.value(value: context.read<RatingBloc>()),
-        ],
+      builder: (_) => BlocProvider.value(
+        value: context.read<TrackingBloc>(),
         child: _ScanConfirmSheet(
           bidId: bidId,
           scanMethod: method,
@@ -91,16 +86,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             _detectedNotifier.value = false;
             _resumeScanning();
           },
-          onDeliveryConfirmed: (confirmedBidId) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              RatingBottomSheet.show(
-                context,
-                bidId: confirmedBidId,
-                isTravelerRating: true,
-              );
-            });
-          },
+          onArrivalRequested: () =>
+              _openArrivalFlow(bidId, method, trackingNumber: trackingNumber),
         ),
       ),
     ).then((result) {
@@ -108,6 +95,37 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       if (!mounted) return;
       _showScanOutcome(result);
     });
+  }
+
+  /// Remise au destinataire (ARRIVEE) : même parcours que « Valider la
+  /// remise » du détail du colis et que l'onglet Suivi, photo obligatoire
+  /// puis code de retrait. La feuille ne demandait que le code et la
+  /// livraison partait sans photo, sans moyen d'en prendre une (ticket
+  /// support du 02/10). Appelé par la feuille une fois fermée : on pousse
+  /// depuis le contexte de l'écran, jamais depuis celui de la feuille.
+  Future<void> _openArrivalFlow(
+    String bidId,
+    ScanMethod method, {
+    String? trackingNumber,
+  }) async {
+    if (!mounted) return;
+    final number = trackingNumber?.trim();
+    await context.push<void>(
+      '/tracking/scan/photo',
+      extra: <String, dynamic>{
+        'bidId': bidId,
+        'etape': 'ARRIVEE', // i18n-ignore: valeur de donnée (eventType)
+        'packageLabel': number != null && number.isNotEmpty
+            ? number
+            : scannedParcelLabel(bidId),
+        'scanMethod': method,
+      },
+    );
+    // Retour sans remise (geste retour) : le scanner reprend la lecture. Une
+    // remise réussie quitte tout le flux (`leaveScanFlow`).
+    if (!mounted) return;
+    _detectedNotifier.value = false;
+    _resumeScanning();
   }
 
   /// Dialogue de fin de scan (succès ou file d'attente hors ligne).
@@ -536,6 +554,12 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 /// jamais le libellé traduit affiché à l'écran.
 bool isFinalDeliveryStep(String eventType) => eventType == 'ARRIVEE';
 
+/// Libellé d'un colis identifié par son QR seul : le début de son identifiant,
+/// comme l'identification par QR (`scan_identify_screen.dart`). Le numéro de
+/// suivi, quand il a été saisi, le remplace.
+String scannedParcelLabel(String bidId) =>
+    bidId.length > 8 ? bidId.substring(0, 8) : bidId;
+
 // ── Confirm bottom sheet ──────────────────────────────────────────────────────
 
 class _ScanConfirmSheet extends StatefulWidget {
@@ -544,7 +568,10 @@ class _ScanConfirmSheet extends StatefulWidget {
   /// QR lu par la caméra, ou numéro saisi à la main.
   final ScanMethod scanMethod;
   final VoidCallback onClose;
-  final void Function(String bidId)? onDeliveryConfirmed;
+
+  /// Étape ARRIVEE choisie : la feuille se ferme et l'écran ouvre le parcours
+  /// de remise (photo puis code).
+  final VoidCallback onArrivalRequested;
 
   /// Numéro de suivi saisi pour identifier le colis (scan manuel) : il part
   /// avec la remise (DEPART), où le serveur le vérifie.
@@ -554,7 +581,7 @@ class _ScanConfirmSheet extends StatefulWidget {
     required this.bidId,
     required this.scanMethod,
     required this.onClose,
-    this.onDeliveryConfirmed,
+    required this.onArrivalRequested,
     this.trackingNumber,
   });
 
@@ -569,7 +596,6 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   String? _gpsLabel;
   bool _loadingLocation = false;
   bool _photoTooBig = false;
-  final _codeController = TextEditingController();
 
   // Codes + icônes uniquement : le libellé se calcule dans build() via
   // trackingStepLabel, jamais gardé en dur dans un champ de State.
@@ -578,12 +604,6 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
     ('TRANSIT', 'arrow-left-right', null),
     ('ARRIVEE', null, 'plane-landing'),
   ];
-
-  @override
-  void dispose() {
-    _codeController.dispose();
-    super.dispose();
-  }
 
   Future<void> _pickPhoto() async {
     setState(() {
@@ -694,33 +714,24 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
   void _submit(BuildContext context) {
     if (_eventType == 'ARRIVEE') {
-      final code = _codeController.text.trim();
-      if (code.length != 6) return;
-      context.read<TrackingBloc>().add(
-        ConfirmDeliveryRequested(
-          bidId: widget.bidId,
-          code: code,
-          photo: _photo,
-          scanMethod: widget.scanMethod,
-          gpsLat: _position?.latitude,
-          gpsLon: _position?.longitude,
-          gpsLabel: _gpsLabel,
-        ),
-      );
-    } else {
-      context.read<TrackingBloc>().add(
-        QrScanSubmitRequested(
-          bidId: widget.bidId,
-          eventType: _eventType,
-          photo: _photo,
-          gpsLat: _position?.latitude,
-          gpsLon: _position?.longitude,
-          gpsLabel: _gpsLabel,
-          scanMethod: widget.scanMethod,
-          trackingNumber: _eventType == 'DEPART' ? widget.trackingNumber : null,
-        ),
-      );
+      // La remise passe par l'écran photo puis l'écran du code : la feuille
+      // se ferme d'abord, l'écran pousse ensuite le parcours.
+      context.pop();
+      widget.onArrivalRequested();
+      return;
     }
+    context.read<TrackingBloc>().add(
+      QrScanSubmitRequested(
+        bidId: widget.bidId,
+        eventType: _eventType,
+        photo: _photo,
+        gpsLat: _position?.latitude,
+        gpsLon: _position?.longitude,
+        gpsLabel: _gpsLabel,
+        scanMethod: widget.scanMethod,
+        trackingNumber: _eventType == 'DEPART' ? widget.trackingNumber : null,
+      ),
+    );
   }
 
   @override
@@ -745,11 +756,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
       ),
       child: BlocConsumer<TrackingBloc, TrackingState>(
         listener: (context, state) {
-          if (state is DeliveryConfirmSuccess) {
-            if (state.photoDropped) warnTrackingPhotoDropped(context);
-            context.pop();
-            widget.onDeliveryConfirmed?.call(state.event.bidId);
-          } else if (state is QrScanSuccess || state is QrScanQueued) {
+          if (state is QrScanSuccess || state is QrScanQueued) {
             // Seul pop de la feuille : l'écran ouvre son dialogue quand le
             // résultat lui revient (voir _QrScannerScreenState._sheetOpen).
             context.pop(state);
@@ -757,8 +764,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
           }
         },
         builder: (context, state) {
-          final isSubmitting =
-              state is QrScanSubmitting || state is DeliveryConfirmLoading;
+          final isSubmitting = state is QrScanSubmitting;
           final isArrivee = _eventType == 'ARRIVEE';
 
           return Column(
@@ -864,13 +870,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
               const SizedBox(height: DonySpacing.lg),
 
-              // ARRIVEE: code input — DEPART/TRANSIT: photo
+              // ARRIVEE : la remise se fait sur les écrans photo puis code.
+              // DEPART/TRANSIT : photo facultative ici.
               if (isArrivee) ...[
-                Text(
-                  l.scanConfirmationCodeLabel,
-                  style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                const SizedBox(height: DonySpacing.sm),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: DonySpacing.md,
@@ -887,7 +889,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
-                          l.scanConfirmationCodeHintLong,
+                          l.scanArrivalNextStepsHint,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onPrimaryContainer,
                             fontWeight: FontWeight.w500,
@@ -895,36 +897,6 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                         ),
                       ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.md),
-                TextField(
-                  controller: _codeController,
-                  enabled: !isSubmitting,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  textAlign: TextAlign.center,
-                  style: tt.displayMedium?.copyWith(letterSpacing: 10),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    hintText: '------',
-                    hintStyle: tt.displayMedium?.copyWith(
-                      color: cs.outlineVariant,
-                      letterSpacing: 10,
-                    ),
-                    filled: true,
-                    fillColor: cs.surfaceContainerHighest,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: BorderSide(color: cs.outline),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: BorderSide(color: cs.primary, width: 2),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: DonySpacing.base,
-                    ),
                   ),
                 ),
               ] else ...[
@@ -1070,29 +1042,22 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               // Submit button
               DonyButton(
                 label: isSubmitting
-                    ? (isArrivee
-                          ? l.scanSubmittingConfirmation
-                          : l.scanSubmittingRecording)
+                    ? l.scanSubmittingRecording
                     : (isArrivee
-                          ? l.scanConfirmDeliveryButton
+                          ? l.scanArrivalTakePhotoButton
                           : l.scanConfirmReadingLabel),
-                iconAsset: isArrivee ? 'badge-check' : 'check',
+                iconAsset: isArrivee ? 'camera' : 'check',
                 onPressed: isSubmitting ? null : () => _submit(context),
                 isLoading: isSubmitting,
               ),
 
-              if (state is QrScanError || state is DeliveryConfirmError) ...[
+              if (state is QrScanError) ...[
                 const SizedBox(height: DonySpacing.md),
                 Text(
-                  state is QrScanError
-                      ? ErrorPresenter.resolve(
-                          state.error,
-                          l10n: context.l10n,
-                        ).message
-                      : ErrorPresenter.resolve(
-                          (state as DeliveryConfirmError).error,
-                          l10n: context.l10n,
-                        ).message,
+                  ErrorPresenter.resolve(
+                    state.error,
+                    l10n: context.l10n,
+                  ).message,
                   style: tt.bodySmall?.copyWith(
                     color: cs.error,
                     fontWeight: FontWeight.w500,

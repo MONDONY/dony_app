@@ -6,9 +6,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/media_service.dart';
-import 'package:dony/features/ratings/bloc/rating_bloc.dart';
-import 'package:dony/features/ratings/bloc/rating_event.dart';
-import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -33,9 +30,6 @@ import '../../../../helpers/l10n_test_helpers.dart';
 
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
-
-class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
-    implements RatingBloc {}
 
 class _MockTrackingRepository extends Mock implements TrackingRepository {}
 
@@ -86,7 +80,6 @@ Position _position({double lat = 14.69, double lon = -17.44}) => Position(
 void main() {
   late StreamController<TrackingState> states;
   late _MockTrackingBloc bloc;
-  late _MockRatingBloc ratingBloc;
   late _MockTrackingRepository repo;
   late _MockMediaService media;
   late _MockGeolocatorPlatform geolocator;
@@ -106,9 +99,6 @@ void main() {
     bloc = _MockTrackingBloc();
     when(() => bloc.state).thenReturn(TrackingInitial());
     whenListen(bloc, states.stream);
-    ratingBloc = _MockRatingBloc();
-    when(() => ratingBloc.state).thenReturn(const RatingInitial());
-    whenListen(ratingBloc, const Stream<RatingState>.empty());
 
     repo = _MockTrackingRepository();
     media = _MockMediaService();
@@ -141,9 +131,13 @@ void main() {
     await getIt.reset();
   });
 
+  /// `extra` reçus par l'écran photo de la remise (`/tracking/scan/photo`).
+  late List<Map<String, dynamic>> photoExtras;
+
   /// L'écran du scanner, posé sur deux routes pour que ses `context.pop()`
   /// (feuille, écran, dialogue) aient toujours une route sous eux.
   Future<GoRouter> pumpScreen(WidgetTester tester) async {
+    photoExtras = [];
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.5;
     addTearDown(tester.view.reset);
@@ -160,17 +154,21 @@ void main() {
               routes: [
                 GoRoute(
                   path: 'scan',
-                  builder: (_, _) => MultiBlocProvider(
-                    providers: [
-                      BlocProvider<TrackingBloc>.value(value: bloc),
-                      BlocProvider<RatingBloc>.value(value: ratingBloc),
-                    ],
+                  builder: (_, _) => BlocProvider<TrackingBloc>.value(
+                    value: bloc,
                     child: const QrScannerScreen(),
                   ),
                 ),
               ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/tracking/scan/photo',
+          builder: (_, state) {
+            photoExtras.add(state.extra! as Map<String, dynamic>);
+            return const Scaffold(body: Text('écran photo'));
+          },
         ),
       ],
     );
@@ -225,7 +223,10 @@ void main() {
       await settle(tester);
     });
 
-    testWidgets('arrivée : code à 6 chiffres exigé avant la confirmation', (
+    // Ticket support du 02/10 : la feuille demandait le code de retrait à
+    // la place de la photo et la livraison partait sans photo. L'arrivée
+    // passe désormais par le parcours de remise (photo puis code).
+    testWidgets('arrivée : ouvre l\'écran photo de la remise, sans code ici', (
       tester,
     ) async {
       await pumpScreen(tester);
@@ -233,22 +234,54 @@ void main() {
 
       await tapVisible(tester, find.text('Arrival'));
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('Recipient\'s pickup code'), findsOneWidget);
+      expect(
+        find.text(
+          'To hand over the parcel, take a photo of it, then enter the '
+          '6-digit pickup code the recipient gives you.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(TextField), findsNothing);
       expect(find.text('Take a photo'), findsNothing);
+      expect(find.text('Confirm delivery'), findsNothing);
 
-      await tester.enterText(find.byType(TextField), '123');
-      await tapVisible(tester, find.text('Confirm delivery'));
+      await tapVisible(tester, find.text('Take the parcel photo'));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
       verifyNever(() => bloc.add(any()));
+      expect(find.text('QR scanned'), findsNothing);
+      expect(find.text('écran photo'), findsOneWidget);
+      expect(photoExtras, hasLength(1));
+      expect(photoExtras.single, {
+        'bidId': _bidId,
+        'etape': 'ARRIVEE',
+        'packageLabel': '3f2b6c1e',
+        'scanMethod': ScanMethod.qr,
+      });
+      await settle(tester);
+    });
 
-      await tester.enterText(find.byType(TextField), '123456');
-      await tapVisible(tester, find.text('Confirm delivery'));
-      final event =
-          verify(() => bloc.add(captureAny())).captured.single
-              as ConfirmDeliveryRequested;
-      expect(event.bidId, _bidId);
-      expect(event.code, '123456');
-      expect(event.scanMethod, ScanMethod.qr);
-      expect(event.photo, isNull);
+    testWidgets('retour de l\'écran photo : la lecture reprend', (
+      tester,
+    ) async {
+      final router = await pumpScreen(tester);
+      await detectQr(tester);
+
+      await tapVisible(tester, find.text('Arrival'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tapVisible(tester, find.text('Take the parcel photo'));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('écran photo'), findsOneWidget);
+
+      router.pop();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.text('écran photo'), findsNothing);
+
+      // La détection est réarmée : un nouveau QR rouvre la feuille.
+      await detectQr(tester);
       await settle(tester);
     });
 
@@ -280,7 +313,7 @@ void main() {
       // Pendant l'envoi, les étapes ne se choisissent plus.
       await tester.tap(find.text('Arrival'), warnIfMissed: false);
       await tester.pump();
-      expect(find.text('Recipient\'s pickup code'), findsNothing);
+      expect(find.textContaining('To hand over the parcel'), findsNothing);
       await settle(tester);
     });
 
@@ -294,14 +327,6 @@ void main() {
       await tester.pump();
       expect(
         find.text(ErrorPresenter.resolve(network, l10n: en).message),
-        findsOneWidget,
-      );
-
-      const server = ServerException();
-      states.add(DeliveryConfirmError(server));
-      await tester.pump();
-      expect(
-        find.text(ErrorPresenter.resolve(server, l10n: en).message),
         findsOneWidget,
       );
       expect(find.text('QR scanned'), findsOneWidget);

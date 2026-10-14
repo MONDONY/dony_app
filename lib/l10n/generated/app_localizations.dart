@@ -17441,17 +17441,17 @@ abstract class AppLocalizations {
   /// **'Type d\'étape'**
   String get scanEventTypeSectionLabel;
 
-  /// Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet).
+  /// Explication de la feuille du scanner QR quand l'étape Arrivée est choisie : la remise continue sur l'écran photo puis l'écran du code (qr_scanner_screen.dart, _ScanConfirmSheet).
   ///
   /// In fr, this message translates to:
-  /// **'Code de retrait du destinataire'**
-  String get scanConfirmationCodeLabel;
+  /// **'Pour remettre le colis, prenez-le en photo, puis saisissez le code de retrait à 6 chiffres que vous donne le destinataire.'**
+  String get scanArrivalNextStepsHint;
 
-  /// Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet).
+  /// Bouton de la feuille du scanner QR, étape Arrivée : ferme la feuille et ouvre l'écran photo de la remise (qr_scanner_screen.dart, _ScanConfirmSheet).
   ///
   /// In fr, this message translates to:
-  /// **'Demandez au destinataire son code de retrait à 6 chiffres, au moment de la remise. Ce n\'est pas le numéro de suivi.'**
-  String get scanConfirmationCodeHintLong;
+  /// **'Prendre la photo du colis'**
+  String get scanArrivalTakePhotoButton;
 
   /// Libellé/titre de la section photo (qr_scanner_screen.dart, scan_photo_screen.dart).
   ///
@@ -17476,12 +17476,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Photo trop lourde (max 10 MB). Réessayez.'**
   String get scanPhotoTooLargeFixed;
-
-  /// Libellé du bouton pendant la confirmation d'une livraison (qr_scanner_screen.dart, _ScanConfirmSheet).
-  ///
-  /// In fr, this message translates to:
-  /// **'Confirmation...'**
-  String get scanSubmittingConfirmation;
 
   /// Libellé du bouton pendant l'enregistrement d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart, _ScanConfirmSheet).
   ///
