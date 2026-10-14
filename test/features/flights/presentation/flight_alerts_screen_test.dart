@@ -238,6 +238,7 @@ void main() {
       bool active = true,
       DateTime? checkedAt,
       double max = 450,
+      String currency = 'EUR',
     }) => FlightAlert(
       id: id,
       originCode: 'PAR',
@@ -246,7 +247,7 @@ void main() {
       destinationLabel: 'Abidjan',
       directOnly: true,
       maxPrice: max,
-      currency: 'EUR',
+      currency: currency,
       active: active,
       lastSeenPrice: seen,
       lastCheckedAt: checkedAt,
@@ -258,6 +259,35 @@ void main() {
           w is Text &&
           w.data?.replaceAll(RegExp('[\u00a0\u202f]'), ' ') == expected,
     );
+
+    testWidgets('FLUTTER-PG : alerte en F CFA affichée en euros, CFA dessous', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 1400) * 3;
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      when(() => repository.alerts()).thenAnswer(
+        (_) async => [
+          alert(
+            'hit',
+            seen: 250000,
+            count: 2,
+            max: 300000,
+            currency: 'XOF',
+            checkedAt: DateTime.now(),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(localizedApp(const FlightAlertsScreen()));
+      await tester.pumpAndSettle();
+
+      // 250 000 / 655,957 = 381,12 € ; 300 000 / 655,957 = 457,35 €.
+      expect(text('381 €'), findsOneWidget);
+      expect(text('250 000 F CFA'), findsOneWidget);
+      expect(find.textContaining('max 457'), findsOneWidget);
+      expect(find.textContaining('300 000'), findsNothing);
+    });
 
     testWidgets('les quatre états, seuil dans les détails', (tester) async {
       tester.view.physicalSize = const Size(390, 1400) * 3;

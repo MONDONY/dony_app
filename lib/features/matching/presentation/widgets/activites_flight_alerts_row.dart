@@ -190,7 +190,7 @@ class _RowContent extends StatelessWidget {
                 child: line(
                   l.activityFlightAlertsHitMany(
                     s.hitCount,
-                    FlightFormat.price(price, s.currency!),
+                    FlightFormat.alertPrice(price, s.currency!),
                   ),
                 ),
               )
@@ -212,7 +212,7 @@ class _RowContent extends StatelessWidget {
             : FlightPriceTicket(
                 key: const Key('hub-flight-alerts-ticket-hit'),
                 tone: FlightPriceTicketTone.hit,
-                label: FlightFormat.price(price, s.currency!),
+                label: FlightFormat.alertPrice(price, s.currency!),
                 caption: _savingsCaption(l, s),
               );
       case FlightAlertsSummaryKind.noHit:
@@ -229,7 +229,7 @@ class _RowContent extends StatelessWidget {
             : FlightPriceTicket(
                 key: const Key('hub-flight-alerts-ticket-neutral'),
                 tone: FlightPriceTicketTone.neutral,
-                label: FlightFormat.price(price, s.currency!),
+                label: FlightFormat.alertPrice(price, s.currency!),
                 caption: l.activityFlightAlertsBestSeen,
               );
       case FlightAlertsSummaryKind.empty:
@@ -327,7 +327,7 @@ class _RowContent extends StatelessWidget {
     final savings = s.savings ?? 0;
     if (savings < 1) return l.flightsAlertAtYourPrice;
     return l.activityFlightAlertsBelowByTicket(
-      FlightFormat.price(savings, s.currency!),
+      FlightFormat.alertPrice(savings, s.currency!),
     );
   }
 }

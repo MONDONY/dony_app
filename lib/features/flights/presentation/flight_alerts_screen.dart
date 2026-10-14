@@ -192,7 +192,7 @@ class _AlertCard extends StatelessWidget {
       ...FlightFormat.alertDates(l, alert),
       if (alert.directOnly) l.flightsDirectOnly,
       l.flightsAlertMaxShort(
-        FlightFormat.price(alert.maxPrice, alert.currency),
+        FlightFormat.alertPrice(alert.maxPrice, alert.currency),
       ),
     ];
     final muted = tt.bodySmall?.copyWith(color: cs.onSurfaceVariant);
@@ -349,9 +349,11 @@ class _AlertResult extends StatelessWidget {
         onTap: open,
         children: [
           if (price != null) ...[
-            Text(
-              FlightFormat.price(price, alert.currency),
+            _AlertPrice(
+              amount: price,
+              currency: alert.currency,
               style: priceStyle?.copyWith(color: cs.success),
+              originalStyle: textStyle,
             ),
             const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
           ],
@@ -377,7 +379,7 @@ class _AlertResult extends StatelessWidget {
       [
         if (current != null)
           l.flightsAlertResultAbove(
-            FlightFormat.price(alert.maxPrice, alert.currency),
+            FlightFormat.alertPrice(alert.maxPrice, alert.currency),
           )
         else
           l.flightsAlertResultNoFlight,
@@ -397,9 +399,11 @@ class _AlertResult extends StatelessWidget {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      FlightFormat.price(current, alert.currency),
+                    _AlertPrice(
+                      amount: current,
+                      currency: alert.currency,
                       style: priceStyle?.copyWith(color: cs.onSurfaceVariant),
+                      originalStyle: textStyle,
                     ),
                     const SizedBox(height: DonySpacing.xs),
                     status,
@@ -489,6 +493,42 @@ class _SeeButton extends StatelessWidget {
           DonyIcon('chevron-right', size: 14, color: fg),
         ],
       ),
+    );
+  }
+}
+
+/// Grand prix d'une alerte : en euros pour une alerte en franc CFA, avec le
+/// montant d'origine en petit dessous (FLUTTER-PG).
+class _AlertPrice extends StatelessWidget {
+  const _AlertPrice({
+    required this.amount,
+    required this.currency,
+    required this.style,
+    required this.originalStyle,
+  });
+
+  final double amount;
+  final String currency;
+  final TextStyle? style;
+  final TextStyle? originalStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final original = FlightFormat.cfaOriginal(amount, currency);
+    final main = Text(FlightFormat.alertPrice(amount, currency), style: style);
+    if (original == null) return main;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        main,
+        Text(
+          original,
+          style: originalStyle?.copyWith(
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 }

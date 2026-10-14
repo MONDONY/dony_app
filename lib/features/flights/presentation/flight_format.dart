@@ -20,6 +20,30 @@ abstract final class FlightFormat {
     return '${NumberFormat.decimalPattern().format(amount.round())} $currencyCode';
   }
 
+  /// Franc CFA (XOF, XAF) : arrimé à l'euro à parité fixe.
+  static SupportedCurrency? _cfa(String currencyCode) =>
+      currencyCode == 'XOF' || currencyCode == 'XAF'
+      ? SupportedCurrency.fromCode(currencyCode)
+      : null;
+
+  /// Montant d'une alerte prix : en euros pour une alerte en franc CFA, par la
+  /// parité fixe (1 € = 655,957 F CFA, conversion exacte, sans taux du jour),
+  /// sinon dans la devise de l'alerte (FLUTTER-PG).
+  static String alertPrice(double amount, String currencyCode) {
+    final cfa = _cfa(currencyCode);
+    if (cfa == null) return price(amount, currencyCode);
+    // À l'euro près, comme tous les prix de billets (« 381 € », pas « 381,12 € »).
+    return price(
+      (amount / cfa.unitsPerEur).roundToDouble(),
+      SupportedCurrency.eur.code,
+    );
+  }
+
+  /// Montant d'origine d'une alerte en franc CFA (« 250 000 F CFA »), affiché
+  /// en petit sous son équivalent en euros ; `null` pour toute autre devise.
+  static String? cfaOriginal(double amount, String currencyCode) =>
+      _cfa(currencyCode) == null ? null : price(amount, currencyCode);
+
   /// « 9 h 45 », « 6 h 05 », « 6 h ».
   static String duration(AppLocalizations l, int minutes) {
     final h = minutes ~/ 60;

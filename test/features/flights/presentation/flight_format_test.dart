@@ -18,6 +18,18 @@ void main() {
     en = await AppLocalizations.delegate.load(const Locale('en'));
   });
 
+  test('FLUTTER-PG : alerte en F CFA en euros, montant d\'origine à part', () {
+    String plain(String s) => s.replaceAll(RegExp('[\u00a0\u202f]'), ' ');
+    expect(plain(FlightFormat.alertPrice(250000, 'XOF')), '381 €');
+    expect(plain(FlightFormat.alertPrice(250000, 'XAF')), '381 €');
+    expect(plain(FlightFormat.cfaOriginal(250000, 'XOF')!), '250 000 F CFA');
+    // Une autre devise reste telle quelle, sans montant d'origine.
+    expect(plain(FlightFormat.alertPrice(431, 'EUR')), '431 €');
+    expect(FlightFormat.alertPrice(431, 'USD'), FlightFormat.price(431, 'USD'));
+    expect(FlightFormat.cfaOriginal(431, 'EUR'), isNull);
+    expect(FlightFormat.cfaOriginal(4000, 'MAD'), isNull);
+  });
+
   test('durées : minutes sur deux chiffres', () {
     expect(FlightFormat.duration(fr, 365), '6 h 05');
     expect(FlightFormat.duration(fr, 360), '6 h');
