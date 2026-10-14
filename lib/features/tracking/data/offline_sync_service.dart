@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show FileSystemException;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
@@ -78,7 +79,7 @@ class OfflineSyncService {
   final ScanSendGuard _guard;
 
   /// Copies persistantes des photos de la file. `null` (tests) : la file
-  /// garde le chemin d'origine de la photo.
+  /// garde le chemin d'origine de la photo, sans migration.
   final TrackingQueuePhotoStore? _photos;
 
   /// Clé des étapes parties sans leur photo disparue, dans `user_prefs`.
@@ -196,7 +197,16 @@ class OfflineSyncService {
     DateTime? notBefore,
   }) async {
     // Copiée hors du cache temporaire, que le système purge (FLUTTER-MJ).
-    final photoFile = photoPath == null ? null : await _photos?.keep(photoPath);
+    // Jamais de chemin absolu en file avec le magasin de copies : sur iOS, il
+    // change à chaque mise à jour de l'app (FLUTTER-F). Une copie ratée deux
+    // fois : l'étape reste en file sans photo et l'utilisateur est prévenu.
+    final photos = _photos;
+    String? photoFile;
+    var photoLost = false;
+    if (photoPath != null && photos != null) {
+      photoFile = await photos.keep(photoPath) ?? await photos.keep(photoPath);
+      photoLost = photoFile == null;
+    }
     final entry = <String, dynamic>{
       'bidId': bidId,
       'eventType': eventType,
@@ -205,7 +215,7 @@ class OfflineSyncService {
       'gpsLabel': ?gpsLabel,
       if (photoFile != null)
         'photoFile': photoFile
-      else
+      else if (photos == null)
         'photoPath': ?photoPath,
       // Absent des entrées mises en file avant la provenance : rien n'est
       // alors envoyé au back.
@@ -216,7 +226,11 @@ class OfflineSyncService {
       'offlineTimestamp': _now().toUtc().toIso8601String(),
       'notBefore': ?notBefore?.toUtc().toIso8601String(),
     };
-    return _hive.offlineQueue.add(entry);
+    final key = await _hive.offlineQueue.add(entry);
+    if (photoLost) {
+      await _reportLostPhoto(bidId: bidId, eventType: eventType);
+    }
+    return key;
   }
 
   /// Retire l'entrée [key] de la file : elle ne partira pas (« Annuler »).
@@ -255,16 +269,25 @@ class OfflineSyncService {
   /// photo (un nouvel essai ne la cherchera plus et ne remontera rien), le
   /// cas est remonté une seule fois et l'utilisateur prévenu.
   Future<void> _forgetLostPhoto(Object? key, Map<String, dynamic> entry) async {
-    final lost = LostTrackingPhoto(
-      bidId: entry['bidId'] as String,
-      eventType: entry['eventType'] as String,
-    );
     final photoFile = entry.remove('photoFile') as String?;
     entry.remove('photoPath');
     if (_hive.offlineQueue.containsKey(key)) {
       await _hive.offlineQueue.put(key, entry);
     }
     await _photos?.remove(photoFile);
+    await _reportLostPhoto(
+      bidId: entry['bidId'] as String,
+      eventType: entry['eventType'] as String,
+    );
+  }
+
+  /// Prévient l'utilisateur (bannière, une fois par étape) et remonte le cas
+  /// en avertissement.
+  Future<void> _reportLostPhoto({
+    required String bidId,
+    required String eventType,
+  }) async {
+    final lost = LostTrackingPhoto(bidId: bidId, eventType: eventType);
     final known = _lostPhotos();
     if (!known.contains(lost)) {
       await _hive.userPrefs.put(lostPhotosKey, [
@@ -283,6 +306,29 @@ class OfflineSyncService {
         },
       ),
     );
+  }
+
+  /// FLUTTER-F : entrée mise en file avant les copies (#599), avec le seul
+  /// chemin absolu de la photo. Sa copie est reprise si le fichier se
+  /// retrouve, et l'entrée réécrite avec son nom. Sinon elle garde son chemin
+  /// et l'envoi suit le flux « photo perdue ».
+  Future<void> _migrateLegacyPhoto(
+    Object? key,
+    Map<String, dynamic> entry,
+  ) async {
+    final photos = _photos;
+    final legacyPath = entry['photoPath'];
+    if (photos == null || legacyPath is! String || entry['photoFile'] != null) {
+      return;
+    }
+    final name = await photos.adoptLegacy(legacyPath);
+    if (name == null) return;
+    entry
+      ..['photoFile'] = name
+      ..remove('photoPath');
+    if (_hive.offlineQueue.containsKey(key)) {
+      await _hive.offlineQueue.put(key, entry);
+    }
   }
 
   Future<String?> _photoPathOf(Map<String, dynamic> entry) async {
@@ -404,6 +450,7 @@ class OfflineSyncService {
     final eventType = entry['eventType'] as String;
     var photoDropped = false;
     try {
+      await _migrateLegacyPhoto(key, entry);
       final event = await _guard.postStepOnce(
         bidId: bidId,
         eventType: eventType,
@@ -453,7 +500,9 @@ class OfflineSyncService {
     StackTrace? stackTrace, {
     required int failedCount,
   }) {
-    if (error is DioException) return;
+    // Photo présente mais illisible pour l'instant (téléphone verrouillé) :
+    // passagère comme une panne réseau, l'étape repart au prochain essai.
+    if (error is DioException || error is FileSystemException) return;
     unawaited(
       _errorReporter?.report(
         error,

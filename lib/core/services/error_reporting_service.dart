@@ -162,6 +162,24 @@ class ErrorReportingService {
     return null;
   }
 
+  /// Empreinte imposée à l'événement : celle d'une panne transitoire
+  /// ([transientFingerprint]), sinon, pour un avertissement, une empreinte
+  /// stable `reported:<opération>:<type d'erreur>`. Sans elle, Sentry
+  /// regroupait sous un même ticket des `ReportedError` d'opérations
+  /// différentes, toutes nées au même endroit de ce service (FLUTTER-F).
+  /// `null` : le regroupement par défaut de Sentry s'applique.
+  static String? fingerprintFor(
+    Object error, {
+    required String operation,
+    int? statusCode,
+  }) =>
+      transientFingerprint(error, statusCode) ??
+      (_isWarning(error) ? 'reported:$operation:${error.runtimeType}' : null);
+
+  static bool _isWarning(Object error) =>
+      error is SeverityAwareError &&
+      error.reportSeverity == ReportSeverity.warning;
+
   Future<void> report(
     Object error, {
     required String operation,
@@ -179,12 +197,12 @@ class ErrorReportingService {
       'error_type': error.runtimeType.toString(),
       'status_code': ?effectiveStatusCode,
       ..._safeContext(context),
-      SentryErrorReportingSink.fingerprintKey: ?transientFingerprint(
+      SentryErrorReportingSink.fingerprintKey: ?fingerprintFor(
         error,
-        effectiveStatusCode,
+        operation: operation,
+        statusCode: effectiveStatusCode,
       ),
-      if (error is SeverityAwareError &&
-          error.reportSeverity == ReportSeverity.warning)
+      if (_isWarning(error))
         SentryErrorReportingSink.levelKey: SentryLevel.warning.name,
     };
 

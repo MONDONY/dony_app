@@ -54,6 +54,51 @@ void main() {
       expect(sink.context!['stripe_detail'], 'none');
     });
 
+    test(
+      'warning → empreinte stable par opération et type (FLUTTER-F)',
+      () async {
+        final sink = _RecordingSink();
+        final reporter = ErrorReportingService(sink);
+        await reporter.report(
+          const _Severe(ReportSeverity.warning),
+          operation: 'tracking.photo_lost',
+        );
+        expect(
+          sink.context![SentryErrorReportingSink.fingerprintKey],
+          'reported:tracking.photo_lost:_Severe',
+        );
+        await reporter.report(
+          const _Severe(ReportSeverity.warning),
+          operation: 'payment.stripe_confirm',
+        );
+        expect(
+          sink.context![SentryErrorReportingSink.fingerprintKey],
+          'reported:payment.stripe_confirm:_Severe',
+        );
+        final scope = Scope(SentryOptions());
+        await SentryErrorReportingSink.applyReportContext(scope, sink.context!);
+        expect(scope.fingerprint, ['reported:payment.stripe_confirm:_Severe']);
+      },
+    );
+
+    test('error : pas d\'empreinte imposée hors panne transitoire', () {
+      expect(
+        ErrorReportingService.fingerprintFor(
+          const _Severe(ReportSeverity.error),
+          operation: 'x',
+        ),
+        isNull,
+      );
+      expect(
+        ErrorReportingService.fingerprintFor(
+          const ServiceUnavailableException(),
+          operation: 'x',
+          statusCode: 503,
+        ),
+        'http-transient-503',
+      );
+    });
+
     test('error → remontée sans niveau imposé', () async {
       final sink = _RecordingSink();
       await ErrorReportingService(
