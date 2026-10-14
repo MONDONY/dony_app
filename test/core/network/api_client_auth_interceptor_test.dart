@@ -17,15 +17,19 @@ class _MockDeviceIdService extends Mock implements DeviceIdService {}
 
 /// Source de jeton programmable : rend [token] ou lève [error].
 class _TokenSource implements AuthTokenSource {
-  _TokenSource({this.token, this.error});
+  _TokenSource({this.token, this.error, this.refreshError});
 
   final String? token;
   final Object? error;
+
+  /// Levée seulement par un rafraîchissement forcé.
+  final Object? refreshError;
   final List<bool> forceRefreshes = [];
 
   @override
   Future<String?> idToken({required bool forceRefresh}) async {
     forceRefreshes.add(forceRefresh);
+    if (forceRefresh && refreshError != null) throw refreshError!;
     if (error case final e?) throw e;
     return token;
   }
@@ -85,6 +89,48 @@ void main() {
       final tokens = _TokenSource(token: 'tok');
       await build(tokens).get<dynamic>('/payments/me');
       expect(tokens.forceRefreshes, [true]);
+    });
+
+    test(
+      'rafraîchissement forcé impossible : repli sur le jeton en cache (FLUTTER-KJ)',
+      () async {
+        final tokens = _TokenSource(
+          token: 'cache',
+          refreshError: FirebaseException(plugin: 'auth', code: 'unknown'),
+        );
+        await build(tokens).get<dynamic>('/payments/connect/account');
+
+        expect(tokens.forceRefreshes, [true, false]);
+        expect(adapter.last.headers['Authorization'], 'Bearer cache');
+      },
+    );
+
+    test(
+      'rafraîchissement forcé et cache impossibles : requête rejetée',
+      () async {
+        final tokens = _TokenSource(
+          error: FirebaseException(
+            plugin: 'auth',
+            code: 'network-request-failed',
+          ),
+        );
+        await expectLater(
+          build(tokens).get<dynamic>('/payments/connect/account'),
+          throwsA(authUnavailable()),
+        );
+        expect(tokens.forceRefreshes, [true, false]);
+        expect(adapter.requests, isEmpty);
+      },
+    );
+
+    test('Firebase absent sur un appel critique : aucun repli', () async {
+      final tokens = _TokenSource(
+        error: FirebaseException(plugin: 'core', code: 'no-app'),
+      );
+      await build(tokens).get<dynamic>('/payments/me');
+
+      expect(tokens.forceRefreshes, [true]);
+      expect(adapter.last.headers.containsKey('Authorization'), isFalse);
     });
 
     test('identifiant d’appareil illisible : la requête part sans', () async {
