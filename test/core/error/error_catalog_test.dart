@@ -114,7 +114,10 @@ void main() {
       final p = ErrorCatalog.lookup(error);
 
       expect(p.title, 'Pays de résidence verrouillé');
-      expect(p.message, contains('compte de paiement est déjà créé'));
+      expect(
+        p.message,
+        contains('paiements par carte sont déjà activés dans ce pays'),
+      );
       expect(p.severity, ErrorSeverity.warning);
     });
 

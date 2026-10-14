@@ -397,6 +397,12 @@ abstract final class AnalyticsEvents {
   static const connectUnavailableChangeCountryTapped =
       'connect_unavailable_change_country_tapped';
 
+  /// Pays de résidence changé et enregistré par le serveur depuis Réglages ›
+  /// Préférences (`BusinessPrefsBloc._onCountry`). Propriété
+  /// `reset_payout_setup` (bool) : le changement a annulé une activation des
+  /// paiements par carte commencée (yadony-back #530). Jamais le pays.
+  static const residenceCountryChanged = 'residence_country_changed';
+
   // Détail trajet (propriétaire)
   static const tripOwnerDetailOpened = 'trip_owner_detail_opened';
   static const tripAudienceLoaded = 'trip_audience_loaded';

@@ -587,7 +587,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorCountryLockedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de modifier votre pays de résidence : votre compte de paiement est déjà créé dans ce pays et ne peut plus en changer. Contactez le support pour le faire modifier.'**
+  /// **'Impossible de modifier votre pays de résidence : vos paiements par carte sont déjà activés dans ce pays. Contactez le support pour le faire modifier.'**
   String get errorCountryLockedMessage;
 
   /// No description provided for @errorCountryUnsupportedTitle.
@@ -21386,7 +21386,7 @@ abstract class AppLocalizations {
   /// Sous-titre quand le pays est verrouillé (business_prefs_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Verrouillé : votre compte de paiement est déjà créé dans ce pays'**
+  /// **'Verrouillé : vos paiements par carte sont déjà activés dans ce pays'**
   String get prefsCountryLockedSubtitle;
 
   /// Feuille ouverte au toucher de la ligne Pays de résidence verrouillée (business_prefs_screen.dart, FLUTTER-EE) : bouton vers le support.
@@ -21394,6 +21394,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Contacter le support'**
   String get prefsCountryLockedSupportCta;
+
+  /// Feuille de confirmation avant un changement de pays de résidence qui annule une activation des paiements par carte commencée (business_prefs_screen.dart, yadony-back #530) : titre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de pays de résidence ?'**
+  String get prefsCountryChangeConfirmTitle;
+
+  /// Feuille de confirmation avant un changement de pays de résidence qui annule une activation des paiements par carte commencée (business_prefs_screen.dart, yadony-back #530) : explication, avec l'ancien et le nouveau pays.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez commencé à activer les paiements par carte avec {oldCountry} comme pays de résidence. Cette activation sera annulée : il faudra la relancer avec {newCountry}.'**
+  String prefsCountryChangeConfirmBody(String oldCountry, String newCountry);
+
+  /// Feuille de confirmation avant un changement de pays de résidence qui annule une activation des paiements par carte commencée (business_prefs_screen.dart, yadony-back #530) : explication quand l'ancien pays est inconnu.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'activation des paiements par carte que vous avez commencée sera annulée : il faudra la relancer avec {newCountry}.'**
+  String prefsCountryChangeConfirmBodyNoOrigin(String newCountry);
+
+  /// Feuille de confirmation avant un changement de pays de résidence qui annule une activation des paiements par carte commencée (business_prefs_screen.dart, yadony-back #530) : bouton qui confirme le changement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de pays'**
+  String get prefsCountryChangeConfirmCta;
 
   /// Valeur affichée tant qu'aucun pays n'est choisi (business_prefs_screen.dart)
   ///

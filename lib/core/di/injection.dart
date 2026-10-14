@@ -1110,6 +1110,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => BusinessPrefsBloc(
       getIt<BusinessPrefsRepository>(),
       getIt<HiveService>().userPrefs,
+      analytics: getIt<AnalyticsService>(),
     ),
     dispose: (b) => b.close(),
   );

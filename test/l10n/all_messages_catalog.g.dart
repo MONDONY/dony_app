@@ -4571,6 +4571,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'prefsCountryLabel': (l) => l.prefsCountryLabel,
   'prefsCountryLockedSubtitle': (l) => l.prefsCountryLockedSubtitle,
   'prefsCountryLockedSupportCta': (l) => l.prefsCountryLockedSupportCta,
+  'prefsCountryChangeConfirmTitle': (l) => l.prefsCountryChangeConfirmTitle,
+  'prefsCountryChangeConfirmBody': (l) => l.prefsCountryChangeConfirmBody(
+    placeholderMarker('oldCountry'),
+    placeholderMarker('newCountry'),
+  ),
+  'prefsCountryChangeConfirmBodyNoOrigin': (l) =>
+      l.prefsCountryChangeConfirmBodyNoOrigin(placeholderMarker('newCountry')),
+  'prefsCountryChangeConfirmCta': (l) => l.prefsCountryChangeConfirmCta,
   'prefsCountryPlaceholder': (l) => l.prefsCountryPlaceholder,
   'prefsCurrencyLabel': (l) => l.prefsCurrencyLabel,
   'prefsCurrencyLockedSheetTitle': (l) =>
@@ -7255,6 +7263,8 @@ const textParameters = <String, List<String>>{
   'helpTutorialCardSemanticsLabel': ['title'],
   'blockedUsersOnDate': ['date'],
   'a11yTextSizeDisabledSemantics': ['percent'],
+  'prefsCountryChangeConfirmBody': ['oldCountry', 'newCountry'],
+  'prefsCountryChangeConfirmBodyNoOrigin': ['newCountry'],
   'prefsCurrencyLockedSheetTitle': ['currency'],
   'prefsCurrencyLockedSheetBody': ['currency'],
   'deletionWalletRefundRequestedMessage': ['amounts'],

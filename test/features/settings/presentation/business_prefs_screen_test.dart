@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/presentation/screens/business_prefs_screen.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +20,10 @@ import '../../../helpers/currency_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+class MockStripeAccountBloc
+    extends MockBloc<StripeAccountEvent, StripeAccountState>
+    implements StripeAccountBloc {}
 
 // Helper to create UserModel with specific roles
 UserModel _makeUser({List<String> roles = const ['SENDER']}) => UserModel(
@@ -31,6 +39,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(const CurrencyChanged('EUR'));
+    registerFallbackValue(const StripeAccountStatusRefreshed());
   });
 
   setUp(() {
@@ -39,7 +48,7 @@ void main() {
     mockPrefsBloc = stubBusinessPrefsBloc();
   });
 
-  Widget buildScreen() => MaterialApp.router(
+  Widget buildScreen({StripeAccountBloc? stripe}) => MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
         GoRoute(
@@ -48,6 +57,8 @@ void main() {
             providers: [
               BlocProvider<BusinessPrefsBloc>.value(value: mockPrefsBloc),
               BlocProvider<AuthBloc>.value(value: mockAuthBloc),
+              if (stripe != null)
+                BlocProvider<StripeAccountBloc>.value(value: stripe),
             ],
             child: const BusinessPrefsScreen(),
           ),
@@ -231,7 +242,7 @@ void main() {
     expect(tile.subtitle, isNotNull);
     expect(
       find.textContaining(
-        'Verrouillé : votre compte de paiement est déjà créé dans ce pays',
+        'Verrouillé : vos paiements par carte sont déjà activés dans ce pays',
       ),
       findsOneWidget,
     );
@@ -565,4 +576,217 @@ void main() {
       expect(currencyTile.subtitle, isNotNull);
     },
   );
+
+  // ── Changement de pays et activation des paiements par carte (#530) ─────
+
+  Future<void> pickSenegal(
+    WidgetTester tester, {
+    String tile = 'France',
+  }) async {
+    await tester.tap(find.text(tile));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'senegal');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sénégal'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    'activation non commencée : aucun avertissement, le pays part aussitôt',
+    (tester) async {
+      mockPrefsBloc = stubBusinessPrefsBloc(
+        state: const BusinessPrefsState(country: 'FR'),
+      );
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      await pickSenegal(tester);
+
+      expect(find.byKey(const Key('prefs-country-change-sheet')), findsNothing);
+      verify(() => mockPrefsBloc.add(const CountryChanged('SN'))).called(1);
+    },
+  );
+
+  testWidgets(
+    'activation commencée : la feuille prévient, « Annuler » ne change rien',
+    (tester) async {
+      mockPrefsBloc = stubBusinessPrefsBloc(
+        state: const BusinessPrefsState(
+          country: 'FR',
+          countryChangeResetsPayoutSetup: true,
+        ),
+      );
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      await pickSenegal(tester);
+
+      expect(
+        find.byKey(const Key('prefs-country-change-sheet')),
+        findsOneWidget,
+      );
+      expect(find.text('Changer de pays de résidence ?'), findsOneWidget);
+      expect(
+        find.text(
+          'Vous avez commencé à activer les paiements par carte avec France '
+          'comme pays de résidence. Cette activation sera annulée : il faudra '
+          'la relancer avec Sénégal.',
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const Key('prefs-country-change-cancel')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('prefs-country-change-sheet')), findsNothing);
+      verifyNever(() => mockPrefsBloc.add(any(that: isA<CountryChanged>())));
+    },
+  );
+
+  testWidgets('activation commencée : « Changer de pays » envoie le pays', (
+    tester,
+  ) async {
+    mockPrefsBloc = stubBusinessPrefsBloc(
+      state: const BusinessPrefsState(
+        country: 'FR',
+        countryChangeResetsPayoutSetup: true,
+      ),
+    );
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
+
+    await pickSenegal(tester);
+    await tester.tap(find.byKey(const Key('prefs-country-change-confirm')));
+    await tester.pumpAndSettle();
+
+    verify(() => mockPrefsBloc.add(const CountryChanged('SN'))).called(1);
+  });
+
+  testWidgets('en anglais : la feuille de confirmation est traduite', (
+    tester,
+  ) async {
+    useEnglish();
+    mockPrefsBloc = stubBusinessPrefsBloc(
+      state: const BusinessPrefsState(
+        country: 'FR',
+        countryChangeResetsPayoutSetup: true,
+      ),
+    );
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('France'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'senegal');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Senegal'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Change your country of residence?'), findsOneWidget);
+    expect(find.text('Change country'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    expect(
+      find.textContaining('You started activating card payments with France'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('en anglais : nouveau texte du verrou', (tester) async {
+    useEnglish();
+    mockPrefsBloc = stubBusinessPrefsBloc(
+      state: const BusinessPrefsState(country: 'CA', countryLocked: true),
+    );
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Locked: card payments are already activated in this country'),
+      findsOneWidget,
+    );
+  });
+
+  group('issue de l\'enregistrement du pays', () {
+    late StreamController<BusinessPrefsState> states;
+
+    setUp(() {
+      states = StreamController<BusinessPrefsState>.broadcast();
+      when(
+        () => mockPrefsBloc.state,
+      ).thenReturn(const BusinessPrefsState(country: 'FR'));
+      when(() => mockPrefsBloc.stream).thenAnswer((_) => states.stream);
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    });
+
+    tearDown(() => states.close());
+
+    Future<void> emit(WidgetTester tester, BusinessPrefsState next) async {
+      when(() => mockPrefsBloc.state).thenReturn(next);
+      states.add(next);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    testWidgets('refus country-locked : snackbar avec le motif du catalogue', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      await emit(
+        tester,
+        const BusinessPrefsState(
+          country: 'FR',
+          hasSyncError: true,
+          countryChangeError: ValidationException(
+            'locked',
+            code: 'country-locked',
+          ),
+        ),
+      );
+
+      expect(
+        find.textContaining(
+          'vos paiements par carte sont déjà activés dans ce pays',
+        ),
+        findsOneWidget,
+      );
+      // Le bandeau générique ne double pas le message précis.
+      expect(find.text('Impossible de synchroniser. Réessayez.'), findsNothing);
+    });
+
+    testWidgets('succès : le statut Connect est redemandé', (tester) async {
+      final stripe = MockStripeAccountBloc();
+      when(() => stripe.isClosed).thenReturn(false);
+      await tester.pumpWidget(buildScreen(stripe: stripe));
+      await tester.pumpAndSettle();
+
+      await emit(
+        tester,
+        const BusinessPrefsState(country: 'SN', countrySavedCount: 1),
+      );
+
+      verify(
+        () => stripe.add(any(that: isA<StripeAccountStatusRefreshed>())),
+      ).called(1);
+    });
+
+    testWidgets('succès sans StripeAccountBloc fourni : aucun plantage', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      await emit(
+        tester,
+        const BusinessPrefsState(country: 'SN', countrySavedCount: 1),
+      );
+
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

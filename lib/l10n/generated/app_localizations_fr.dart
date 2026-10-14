@@ -293,7 +293,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorCountryLockedMessage =>
-      'Impossible de modifier votre pays de résidence : votre compte de paiement est déjà créé dans ce pays et ne peut plus en changer. Contactez le support pour le faire modifier.';
+      'Impossible de modifier votre pays de résidence : vos paiements par carte sont déjà activés dans ce pays. Contactez le support pour le faire modifier.';
 
   @override
   String get errorCountryUnsupportedTitle => 'Pays non desservi';
@@ -12973,10 +12973,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get prefsCountryLockedSubtitle =>
-      'Verrouillé : votre compte de paiement est déjà créé dans ce pays';
+      'Verrouillé : vos paiements par carte sont déjà activés dans ce pays';
 
   @override
   String get prefsCountryLockedSupportCta => 'Contacter le support';
+
+  @override
+  String get prefsCountryChangeConfirmTitle => 'Changer de pays de résidence ?';
+
+  @override
+  String prefsCountryChangeConfirmBody(String oldCountry, String newCountry) {
+    return 'Vous avez commencé à activer les paiements par carte avec $oldCountry comme pays de résidence. Cette activation sera annulée : il faudra la relancer avec $newCountry.';
+  }
+
+  @override
+  String prefsCountryChangeConfirmBodyNoOrigin(String newCountry) {
+    return 'L\'activation des paiements par carte que vous avez commencée sera annulée : il faudra la relancer avec $newCountry.';
+  }
+
+  @override
+  String get prefsCountryChangeConfirmCta => 'Changer de pays';
 
   @override
   String get prefsCountryPlaceholder => 'Choisir mon pays';

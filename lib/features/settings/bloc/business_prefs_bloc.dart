@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/data/models/user_business_prefs_dto.dart';
 import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
@@ -14,7 +17,13 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   final BusinessPrefsRepository _repo;
   final Box _box;
 
-  BusinessPrefsBloc(this._repo, this._box) : super(_initialState(_box)) {
+  /// Facultatif : les nombreux tests qui construisent ce bloc sans analytics
+  /// restent valables. L'injection le fournit toujours.
+  final AnalyticsService? _analytics;
+
+  BusinessPrefsBloc(this._repo, this._box, {AnalyticsService? analytics})
+    : _analytics = analytics,
+      super(_initialState(_box)) {
     on<BusinessPrefsSyncRequested>(_onSync);
     on<BusinessPrefsReset>(_onReset);
     on<WeightUnitChanged>(_onWeightUnit);
@@ -52,7 +61,12 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     try {
       final dto = await _repo.fetchPrefs();
       await _writeToHive(dto);
-      emit(_dtoToState(dto).copyWith(isSyncing: false));
+      emit(
+        _dtoToState(dto).copyWith(
+          isSyncing: false,
+          countrySavedCount: state.countrySavedCount,
+        ),
+      );
     } catch (_) {
       emit(state.copyWith(isSyncing: false));
     }
@@ -130,10 +144,33 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     try {
       final saved = await _repo.updatePrefs(_stateToDto(state));
       await _writeToHive(saved);
-      emit(_dtoToState(saved).copyWith(isSyncing: false));
-    } catch (_) {
+      emit(
+        _dtoToState(saved).copyWith(
+          isSyncing: false,
+          countrySavedCount: prev.countrySavedCount + 1,
+        ),
+      );
+      if (e.code != prev.country) {
+        unawaited(
+          _analytics?.logEvent(
+            AnalyticsEvents.residenceCountryChanged,
+            properties: {
+              'reset_payout_setup': prev.countryChangeResetsPayoutSetup,
+            },
+          ),
+        );
+      }
+    } catch (err) {
+      // Plus de retour silencieux à l'ancien pays : la raison du refus
+      // (`country-locked`, hors ligne…) part à l'écran, qui l'affiche.
       await _writeToHive(_stateToDto(prev));
-      emit(prev.copyWith(isSyncing: false, hasSyncError: true));
+      emit(
+        prev.copyWith(
+          isSyncing: false,
+          hasSyncError: true,
+          countryChangeError: unwrapDioError(err),
+        ),
+      );
     }
   }
 
@@ -243,6 +280,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
         currencyLocked: dto.currencyLocked,
         country: dto.country,
         countryLocked: dto.countryLocked,
+        countryChangeResetsPayoutSetup: dto.countryChangeResetsPayoutSetup,
         displayCurrencyCode: dto.displayCurrencyCode,
       );
 

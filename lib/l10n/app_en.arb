@@ -81,7 +81,7 @@
   "errorCountryRequiredTitle": "Country missing",
   "errorCountryRequiredMessage": "Set your country in Settings, under Preferences, before creating your payment account. It sets your currency and can't be changed afterwards.",
   "errorCountryLockedTitle": "Country of residence locked",
-  "errorCountryLockedMessage": "You can't change your country of residence: your payment account has already been created in this country and can't be moved. Contact support to have it changed.",
+  "errorCountryLockedMessage": "You can't change your country of residence: card payments are already activated in this country. Contact support to have it changed.",
   "errorCountryUnsupportedTitle": "Country not served",
   "errorCountryUnsupportedMessage": "Yadony doesn't serve this country yet. Choose another one.",
   "errorDeletionImpossibleTitle": "Can't delete",
@@ -7377,10 +7377,39 @@
   "prefsWeightUnitLabel": "Weight unit",
   "prefsSectionCurrency": "CURRENCY",
   "prefsCountryLabel": "Country of residence",
-  "prefsCountryLockedSubtitle": "Locked: your payment account has already been created in this country",
+  "prefsCountryLockedSubtitle": "Locked: card payments are already activated in this country",
   "prefsCountryLockedSupportCta": "Contact support",
   "@prefsCountryLockedSupportCta": {
     "description": "Feuille ouverte au toucher de la ligne Pays de résidence verrouillée (business_prefs_screen.dart, FLUTTER-EE) : bouton vers le support."
+  },
+  "prefsCountryChangeConfirmTitle": "Change your country of residence?",
+  "@prefsCountryChangeConfirmTitle": {
+    "description": "Feuille de confirmation avant un changement de pays de résidence qui annule une activation des paiements par carte commencée (business_prefs_screen.dart, yadony-back #530) : titre."
+  },
+  "prefsCountryChangeConfirmBody": "You started activating card payments with {oldCountry} as your country of residence. That setup will be cancelled and you'll need to start it again with {newCountry}.",
+  "@prefsCountryChangeConfirmBody": {
+    "description": "Feuille de confirmation avant un changement de pays de résidence qui annule une activation des paiements par carte commencée (business_prefs_screen.dart, yadony-back #530) : explication, avec l'ancien et le nouveau pays.",
+    "placeholders": {
+      "oldCountry": {
+        "type": "String"
+      },
+      "newCountry": {
+        "type": "String"
+      }
+    }
+  },
+  "prefsCountryChangeConfirmBodyNoOrigin": "The card payment setup you started will be cancelled and you'll need to start it again with {newCountry}.",
+  "@prefsCountryChangeConfirmBodyNoOrigin": {
+    "description": "Feuille de confirmation avant un changement de pays de résidence qui annule une activation des paiements par carte commencée (business_prefs_screen.dart, yadony-back #530) : explication quand l'ancien pays est inconnu.",
+    "placeholders": {
+      "newCountry": {
+        "type": "String"
+      }
+    }
+  },
+  "prefsCountryChangeConfirmCta": "Change country",
+  "@prefsCountryChangeConfirmCta": {
+    "description": "Feuille de confirmation avant un changement de pays de résidence qui annule une activation des paiements par carte commencée (business_prefs_screen.dart, yadony-back #530) : bouton qui confirme le changement."
   },
   "prefsCountryPlaceholder": "Choose my country",
   "prefsCurrencyLabel": "My wallet currency",
