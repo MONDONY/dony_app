@@ -62,7 +62,9 @@ class TripFormDraft extends Equatable {
   final String? arrivalTime;
   final int arrivalDayOffset;
 
-  /// Jour limite de dépôt, sans heure.
+  /// Date limite de dépôt, jour et heure choisis (FLUTTER-PK). Minuit = jour
+  /// sans heure (modèle appliqué, heure annulée, brouillon d'avant l'heure) :
+  /// l'écran en déduit l'heure de repli.
   final DateTime? handoverDeadline;
 
   /// Délai de remise d'un modèle appliqué, encore suivi par la date limite.
@@ -112,7 +114,7 @@ class TripFormDraft extends Equatable {
     'departureTime': departureTime,
     'arrivalTime': arrivalTime,
     'arrivalDayOffset': arrivalDayOffset,
-    'handoverDeadline': _encodeDate(handoverDeadline),
+    'handoverDeadline': _encodeDateTime(handoverDeadline),
     'handoverLeadDays': handoverLeadDays,
     'transportMode': transportMode,
     'stops': tripStopsToWire(stops),
@@ -144,7 +146,7 @@ class TripFormDraft extends Equatable {
     final today = _dateOnly(now ?? DateTime.now());
     var step = ((json['step'] as num?)?.toInt() ?? 0).clamp(0, 2);
     var date = _decodeDate(json['departureDate']);
-    var deadline = _decodeDate(json['handoverDeadline']);
+    var deadline = _decodeDateTime(json['handoverDeadline']);
     var legs = [
       for (final raw in (json['legs'] as List?) ?? const [])
         if (raw is Map<String, dynamic>) ?_legFromJson(raw),
@@ -247,6 +249,30 @@ class TripFormDraft extends Equatable {
   }
 
   static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  /// Instant local au format ISO (`yyyy-MM-ddTHH:mm:00`), sans fuseau : il
+  /// se relit tel quel sur le même appareil.
+  static String? _encodeDateTime(DateTime? d) => d == null
+      ? null
+      : '${_encodeDate(d)}T'
+            '${d.hour.toString().padLeft(2, '0')}:'
+            '${d.minute.toString().padLeft(2, '0')}:00';
+
+  /// Relit un instant ISO, ou un ancien jour seul (`yyyy-MM-dd`, minuit).
+  /// Secondes et fractions ignorées.
+  static DateTime? _decodeDateTime(Object? raw) {
+    if (raw is! String) return null;
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) return null;
+    final local = parsed.isUtc ? parsed.toLocal() : parsed;
+    return DateTime(
+      local.year,
+      local.month,
+      local.day,
+      local.hour,
+      local.minute,
+    );
+  }
 
   static String? _hhmm(Object? raw) {
     if (raw is! String || !RegExp(r'^\d{1,2}:\d{2}$').hasMatch(raw)) {

@@ -67,6 +67,12 @@ void main() {
   Widget host() => MaterialApp(
     theme: AppTheme.light(),
     locale: AppL10n.fr,
+    // Téléphone en 24 h : le sélecteur d'heure en saisie clavier n'accepte
+    // « 18 » qu'à cette condition.
+    builder: (c, child) => MediaQuery(
+      data: MediaQuery.of(c).copyWith(alwaysUse24HourFormat: true),
+      child: child!,
+    ),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: BlocProvider<AnnouncementBloc>.value(
@@ -107,6 +113,46 @@ void main() {
     await tester.tap(find.text('${departure.day + 1}'));
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
+  }
+
+  /// Remise des colis : [day] au calendrier, puis l'heure saisie au clavier
+  /// au sélecteur enchaîné (FLUTTER-PK), ou annulée quand [hour] est nul.
+  Future<void> pickHandover(
+    WidgetTester tester,
+    DateTime day, {
+    String? hour,
+  }) async {
+    await tester.tap(find.byKey(const Key('reschedule-handover-field')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DatePickerDialog),
+        matching: find.text('${day.day}'),
+      ),
+    );
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TimePickerDialog), findsOneWidget);
+    if (hour == null) {
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+      return;
+    }
+    await tester.tap(find.byIcon(Icons.keyboard_outlined));
+    await tester.pumpAndSettle();
+    final fields = find.descendant(
+      of: find.byType(TimePickerDialog),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(fields.at(0), hour);
+    await tester.enterText(fields.at(1), '00');
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+  }
+
+  AnnouncementRescheduleRequested submitAndCapture(WidgetTester tester) {
+    return verify(() => bloc.add(captureAny())).captured.single
+        as AnnouncementRescheduleRequested;
   }
 
   testWidgets(
@@ -226,6 +272,69 @@ void main() {
       expect(event.note, 'Nouveau vol confirmé');
     },
   );
+
+  testWidgets('remise : jour puis heure choisis, envoyés tels quels', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
+    await pickNextDay(tester);
+    final newDay = departure.add(const Duration(days: 1));
+
+    await pickHandover(tester, newDay, hour: '18');
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('reschedule-handover-field')),
+        matching: find.textContaining('18:00'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('reschedule-handover-error')), findsNothing);
+    await tester.tap(find.byKey(const Key('trip-reschedule-submit')));
+    await tester.pump();
+
+    expect(
+      submitAndCapture(tester).handoverDeadline,
+      DateTime(newDay.year, newDay.month, newDay.day, 18),
+    );
+  });
+
+  testWidgets(
+    'remise après l\'heure du nouveau départ : erreur et bouton inactif',
+    (tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
+      await pickNextDay(tester);
+      final newDay = departure.add(const Duration(days: 1));
+
+      await pickHandover(tester, newDay, hour: '23');
+
+      expect(
+        find.byKey(const Key('reschedule-handover-error')),
+        findsOneWidget,
+      );
+      expect(submitButton(tester).onPressed, isNull);
+    },
+  );
+
+  testWidgets('remise : heure annulée le jour du départ, heure de départ', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.tap(find.byKey(const Key('reschedule-reason-POSTPONED')));
+    await pickNextDay(tester);
+    final newDay = departure.add(const Duration(days: 1));
+
+    await pickHandover(tester, newDay);
+    await tester.tap(find.byKey(const Key('trip-reschedule-submit')));
+    await tester.pump();
+
+    expect(
+      submitAndCapture(tester).handoverDeadline,
+      DateTime(newDay.year, newDay.month, newDay.day, 22),
+    );
+  });
 
   testWidgets(
     'trajet reporté : la feuille se ferme et annonce les expéditeurs prévenus',

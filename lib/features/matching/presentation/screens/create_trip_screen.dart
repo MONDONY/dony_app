@@ -821,8 +821,10 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Jours entre le départ et l'arrivée (vol de nuit, escale : FLUTTER-4E).
   final _arrivalDayOffsetNotifier = ValueNotifier<int>(0);
 
-  /// Date limite de dépôt : jour seul choisi par le voyageur, converti en
-  /// instant à l'envoi (cf. [_resolveHandoverDeadline]).
+  /// Date limite de dépôt : jour et heure choisis par le voyageur
+  /// (FLUTTER-PK). Une valeur à minuit est un jour sans heure (modèle
+  /// appliqué, ancien brouillon, heure annulée) : son heure se déduit à
+  /// l'envoi (cf. [_resolveHandoverDeadline]).
   final _handoverDeadlineNotifier = ValueNotifier<DateTime?>(null);
 
   /// Réservé aux tests : lecture seule de la date limite de dépôt, pour
@@ -966,8 +968,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _arrivalCountryCodeNotifier.value = a.arrivalCountryCode;
       _departureDateNotifier.value = a.departureDate;
       // En heure locale : le jour comparé à celui du départ en dépend.
-      _handoverDeadlineNotifier.value = widget.announcement?.handoverDeadline
-          ?.toLocal();
+      _handoverDeadlineNotifier.value = _initialEditHandoverDeadline(a);
       _availableKgNotifier.value = a.availableKg;
 
       if (a.departureTime != null) {
@@ -1378,40 +1379,68 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// endroit qui a besoin de se réabonner à `Localizations` pour rester
   /// réactif à un changement de langue à chaud.
   bool _isHandoverDeadlineInvalid() {
-    final deadline = _handoverDeadlineNotifier.value;
+    final deadline = _resolveHandoverDeadline();
     if (deadline == null) return false;
-    final date = _departureDateNotifier.value;
-    if (date == null) return false;
-    final deadlineDay = DateTime(deadline.year, deadline.month, deadline.day);
-    final departureDay = DateTime(date.year, date.month, date.day);
-    return deadlineDay.isAfter(departureDay);
+    final bound = _departureBound();
+    if (bound == null) return false;
+    return deadline.isAfter(bound);
   }
 
-  /// Convertit le jour choisi en instant envoyé au backend.
+  /// Instant du départ, même calcul qu'à l'envoi : jour et heure de départ.
+  /// Sans heure de départ, la fin du jour du départ : seul le jour se
+  /// compare alors.
+  DateTime? _departureBound() {
+    final date = _departureDateNotifier.value;
+    if (date == null) return null;
+    final time = _departureTimeNotifier.value;
+    return time == null
+        ? DateTime(date.year, date.month, date.day, 23, 59, 59)
+        : DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  static bool _hasTime(DateTime d) => d.hour != 0 || d.minute != 0;
+
+  /// Date limite d'une annonce modifiée, en heure locale. Celle qui tombait
+  /// pile à l'heure de départ (règle d'avant FLUTTER-PK) redevient un jour
+  /// sans heure : elle suit encore l'heure de départ si celle-ci change.
+  static DateTime? _initialEditHandoverDeadline(AnnouncementModel a) {
+    final deadline = a.handoverDeadline?.toLocal();
+    if (deadline == null) return null;
+    final time = a.departureTime;
+    final atDeparture =
+        DateUtils.isSameDay(deadline, a.departureDate) &&
+        time != null &&
+        time.length >= 5 &&
+        '${deadline.hour.toString().padLeft(2, '0')}:'
+                '${deadline.minute.toString().padLeft(2, '0')}' ==
+            time.substring(0, 5);
+    return atDeparture ? DateUtils.dateOnly(deadline) : deadline;
+  }
+
+  /// Instant envoyé au backend.
   ///
-  /// Le voyageur ne saisit qu'une date : on la borne à la fin de journée, sauf
-  /// le jour du départ où la limite devient l'heure de départ — le backend
-  /// refuse toute date limite postérieure au départ.
+  /// L'heure choisie par le voyageur est gardée telle quelle (FLUTTER-PK) :
+  /// postérieure au départ, elle est signalée par
+  /// [_isHandoverDeadlineInvalid] au lieu d'être corrigée en silence. Un jour
+  /// sans heure (minuit : modèle appliqué `handoverLeadDays`, ancien
+  /// brouillon, heure annulée) se borne à la fin de journée, sauf le jour du
+  /// départ où la limite devient l'heure de départ : le backend refuse toute
+  /// date limite postérieure au départ.
   DateTime? _resolveHandoverDeadline() {
     final deadline = _handoverDeadlineNotifier.value;
     if (deadline == null) return null;
+    if (_hasTime(deadline)) return deadline;
+    return _fallbackHandoverDeadline(deadline);
+  }
+
+  /// Heure de repli d'un jour limite choisi sans heure.
+  DateTime _fallbackHandoverDeadline(DateTime day) {
     final date = _departureDateNotifier.value;
     final time = _departureTimeNotifier.value;
-    final sameDayAsDeparture =
-        date != null &&
-        deadline.year == date.year &&
-        deadline.month == date.month &&
-        deadline.day == date.day;
-    if (sameDayAsDeparture && time != null) {
-      return DateTime(
-        deadline.year,
-        deadline.month,
-        deadline.day,
-        time.hour,
-        time.minute,
-      );
+    if (date != null && time != null && DateUtils.isSameDay(day, date)) {
+      return DateTime(day.year, day.month, day.day, time.hour, time.minute);
     }
-    return DateTime(deadline.year, deadline.month, deadline.day, 23, 59);
+    return DateTime(day.year, day.month, day.day, 23, 59);
   }
 
   /// Date limite telle qu'elle partira au serveur, jour et heure.
@@ -2115,12 +2144,14 @@ class _TripFormContentState extends State<_TripFormContent> {
     }
   }
 
-  /// Sélection de la date limite de dépôt : un seul calendrier, pas d'heure.
+  /// Sélection de la date limite de dépôt : le jour puis l'heure, en un seul
+  /// geste (retour testeur FLUTTER-PK : l'heure affichée était déduite sans
+  /// jamais être choisie).
   ///
-  /// L'heure exacte se cale de toute façon dans le chat entre les deux parties,
-  /// et la demander ici était la moitié de la friction de l'ancienne fenêtre.
-  /// Le calendrier est borné à la date de départ quand elle est déjà saisie :
-  /// une date limite postérieure au départ est impossible à choisir.
+  /// Le calendrier est borné à la date de départ quand elle est déjà saisie.
+  /// L'heure proposée : celle déjà choisie, sinon l'heure de départ le jour du
+  /// départ, 20:00 un autre jour. Heure annulée : le jour seul est gardé, son
+  /// heure suit la règle de repli (cf. [_resolveHandoverDeadline]).
   Future<void> _selectHandoverDeadline() async {
     final cs = Theme.of(context).colorScheme;
     final departure = _departureDateNotifier.value;
@@ -2128,25 +2159,30 @@ class _TripFormContentState extends State<_TripFormContent> {
     final today = DateTime(now.year, now.month, now.day);
     final last = departure ?? today.add(const Duration(days: 365));
     final current = _handoverDeadlineNotifier.value;
-    final initial = current != null && !current.isAfter(last) ? current : last;
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial.isBefore(today) ? today : initial,
-      firstDate: today,
-      lastDate: last.isBefore(today) ? today : last,
-      builder: (ctx, child) => Theme(
-        data: Theme.of(
-          ctx,
-        ).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
-        child: child!,
-      ),
+    final picked = await pickDateThenTime(
+      context,
+      first: today,
+      last: last,
+      initial: current,
+      primary: cs.primary,
+      initialTimeFor: (day) {
+        if (current != null && _hasTime(current)) {
+          return TimeOfDay.fromDateTime(current);
+        }
+        final departureTime = _departureTimeNotifier.value;
+        if (departure != null &&
+            departureTime != null &&
+            DateUtils.isSameDay(day, departure)) {
+          return departureTime;
+        }
+        return const TimeOfDay(hour: 20, minute: 0);
+      },
     );
-    if (picked != null) {
-      _handoverDeadlineNotifier.value = picked;
-      // Choix manuel : annule le délai en attente d'un modèle appliqué, sinon
-      // un prochain changement de date de départ écraserait ce choix.
-      _pendingHandoverLeadDays = null;
-    }
+    if (picked == null || !mounted) return;
+    _handoverDeadlineNotifier.value = picked.instant ?? picked.day;
+    // Choix manuel : annule le délai en attente d'un modèle appliqué, sinon
+    // un prochain changement de date de départ écraserait ce choix.
+    _pendingHandoverLeadDays = null;
   }
 
   @override
@@ -2753,8 +2789,10 @@ class _TripFormContentState extends State<_TripFormContent> {
           children: [
             // Le jour seul ne suffisait pas : le jour du départ, la limite
             // est l'heure de départ, pas la fin de journée, et rien ne le
-            // disait (Sentry FLUTTER-MY). L'heure affichée est celle que
-            // [_resolveHandoverDeadline] enverra, recalculée si le départ change.
+            // disait (Sentry FLUTTER-MY). Le voyageur choisit désormais le jour
+            // puis l'heure (FLUTTER-PK) ; l'heure affichée est celle que
+            // [_resolveHandoverDeadline] enverra : l'heure choisie, ou à défaut
+            // la règle de repli, recalculée si le départ change.
             AnimatedBuilder(
               animation: Listenable.merge([
                 _handoverDeadlineNotifier,
@@ -2788,6 +2826,7 @@ class _TripFormContentState extends State<_TripFormContent> {
               animation: Listenable.merge([
                 _handoverDeadlineNotifier,
                 _departureDateNotifier,
+                _departureTimeNotifier,
                 _step0ErrorsNotifier,
               ]),
               builder: (context, _) {
