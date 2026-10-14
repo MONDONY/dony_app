@@ -25,6 +25,10 @@ Uri? whatsAppChatUri(String? phone, String text) {
   return Uri.https('wa.me', '/$digits', {'text': text});
 }
 
+/// Lien `wa.me` sans destinataire : WhatsApp s'ouvre sur le choix de la
+/// conversation, message [text] pré-rempli (partage d'un lien d'invitation).
+Uri whatsAppShareUri(String text) => Uri.https('wa.me', '/', {'text': text});
+
 /// Lien `sms:` qui ouvre la messagerie du téléphone sur [phone], corps [body]
 /// pré-rempli.
 ///

@@ -18,14 +18,26 @@ class MockReferralBloc extends MockBloc<ReferralEvent, ReferralState>
 
 class FakeReferralEvent extends Fake implements ReferralEvent {}
 
-Widget _wrap(ReferralBloc bloc) => BlocProvider<ReferralBloc>.value(
-  value: bloc,
-  child: MaterialApp.router(
-    routerConfig: GoRouter(
-      routes: [GoRoute(path: '/', builder: (_, _) => const ReferralScreen())],
-    ),
-  ),
+/// Texte affiché, espaces insécables (montants formatés) ramenés à des
+/// espaces simples.
+Finder _normalized(String text) => find.byWidgetPredicate(
+  (w) => w is Text && w.data?.replaceAll(RegExp(r'\s'), ' ') == text,
 );
+
+Widget _wrap(ReferralBloc bloc, {String? prefillCode}) =>
+    BlocProvider<ReferralBloc>.value(
+      value: bloc,
+      child: MaterialApp.router(
+        routerConfig: GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => ReferralScreen(prefillCode: prefillCode),
+            ),
+          ],
+        ),
+      ),
+    );
 
 // Lot 3 (2026-08-19/20) : le parrainage n'est plus un montant crédité mais un
 // bon de réduction de commission — plus aucune devise n'entre en jeu.
@@ -52,6 +64,17 @@ void main() {
   setUp(() {
     bloc = MockReferralBloc();
     when(() => bloc.state).thenReturn(const ReferralInitial());
+  });
+
+  setUp(() {
+    // Toujours un écran haut : la liste est paresseuse (ListView).
+    final binding = TestWidgetsFlutterBinding.ensureInitialized();
+    binding.platformDispatcher.views.first.physicalSize = const Size(
+      1170,
+      9000,
+    );
+    binding.platformDispatcher.views.first.devicePixelRatio = 3;
+    addTearDown(binding.platformDispatcher.views.first.reset);
   });
 
   // 1. Affiche CircularProgressIndicator quand ReferralLoading
@@ -81,11 +104,13 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('DONY-XYZ42'), findsOneWidget);
+    expect(find.text('Code : DONY-XYZ42', findRichText: true), findsOneWidget);
+    // Le lien s'affiche sans son schéma.
+    expect(find.text('dony.app/invite/DONY-XYZ42'), findsOneWidget);
   });
 
-  // 4. Affiche le bouton "Partager mon code"
-  testWidgets('shows "Partager mon code" button when ReferralLoaded', (
+  // 4. Boutons WhatsApp et Partager
+  testWidgets('shows WhatsApp and Partager buttons when ReferralLoaded', (
     tester,
   ) async {
     when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
@@ -93,19 +118,21 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Partager mon code'), findsOneWidget);
+    expect(find.text('WhatsApp'), findsOneWidget);
+    expect(find.text('Partager'), findsOneWidget);
+    expect(find.text('Copier'), findsOneWidget);
   });
 
-  // 5. Affiche les stats (invités / inscrits / récompensés)
+  // 5. Affiche les stats (inscrits / 1er envoi fait / gagnés)
   testWidgets('shows stats labels when ReferralLoaded', (tester) async {
     when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Invités'), findsOneWidget);
     expect(find.text('Inscrits'), findsOneWidget);
-    expect(find.text('Récompensés'), findsOneWidget);
+    expect(find.text('1er envoi fait'), findsOneWidget);
+    expect(find.text('Gagnés'), findsOneWidget);
   });
 
   // 6. Affiche "Réessayer" quand ReferralError
@@ -127,10 +154,12 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    // totalInvited = 4, signedUp = 2, rewarded = 1
-    expect(find.text('4'), findsOneWidget);
-    expect(find.text('2'), findsOneWidget);
-    expect(find.text('1'), findsOneWidget);
+    // signedUp = 2, firstDelivery absent → rewarded = 1, aucun crédit choisi.
+    // « 2 » et « 1 » servent aussi aux numéros d'étape de « Comment ça
+    // marche » : on vérifie qu'ils apparaissent, le montant est unique.
+    expect(find.text('2'), findsWidgets);
+    expect(find.text('1'), findsWidgets);
+    expect(_normalized('0 €'), findsOneWidget);
   });
 
   // 8. Affiche le bandeau du bon si activeVoucherCount > 0
@@ -205,14 +234,40 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    // Le pourcentage promis vient du serveur (voucherFactor) : plus aucun
-    // montant ni devise écrits en dur dans l'écran.
-    expect(find.text('Invitez et gagnez -50%'), findsOneWidget);
+    // Ancien back sans barème : repli sur 5 € / -5 %.
+    expect(find.text('Invitez vos proches'), findsOneWidget);
+    expect(
+      _normalized('5 € offerts ou -5 % sur votre prochain envoi'),
+      findsOneWidget,
+    );
   });
 
-  // 9 bis. Sans barème serveur, la promesse chiffrée disparaît : aucun
-  // pourcentage inventé côté client.
-  testWidgets('hides the discount promise when voucherFactor is missing', (
+  testWidgets('hero : barème servi par le back', (tester) async {
+    const info = ReferralInfo(
+      code: 'DONY-XYZ42',
+      shareUrl: 'https://dony.app/invite/DONY-XYZ42',
+      totalInvited: 4,
+      signedUp: 2,
+      rewarded: 1,
+      hasBeenReferred: false,
+      activeVoucherCount: 0,
+      rewardWalletAmount: 10,
+      rewardWalletCurrency: 'EUR',
+      rewardDiscountPercent: 8,
+    );
+    when(() => bloc.state).thenReturn(const ReferralLoaded(info));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      _normalized('10 € offerts ou -8 % sur votre prochain envoi'),
+      findsOneWidget,
+    );
+  });
+
+  // 9 bis. Sans barème serveur, aucun pourcentage de bon inventé.
+  testWidgets('hides the voucher percent when voucherFactor is missing', (
     tester,
   ) async {
     const info = ReferralInfo(
@@ -231,7 +286,7 @@ void main() {
 
     expect(find.text('Invitez vos proches'), findsOneWidget);
     expect(find.textContaining('-50%'), findsNothing);
-    expect(find.textContaining('-null%'), findsNothing);
+    expect(find.textContaining('-null'), findsNothing);
   });
 
   // 9 ter. Bon(s) actif(s) sans pourcentage connu (repli défensif) : le
@@ -261,7 +316,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.textContaining('%'), findsNothing);
+      expect(find.textContaining('commission -'), findsNothing);
       expect(find.textContaining('-0'), findsNothing);
     },
   );
@@ -288,7 +343,7 @@ void main() {
         find.text('🎁 You have a discount voucher on your next service fee'),
         findsOneWidget,
       );
-      expect(find.textContaining('%'), findsNothing);
+      expect(find.textContaining('commission -'), findsNothing);
       expect(find.textContaining('-0'), findsNothing);
     },
   );
@@ -329,31 +384,62 @@ void main() {
     );
   });
 
-  // 12. Le bouton « Partager mon code » dispatche ReferralShared avec le
-  // texte réellement partagé (recopié à l'identique en français).
+  // 12. « Partager » dispatche ReferralShared (feuille système) avec le
+  // texte réellement partagé, qui ne promet rien au filleul.
   testWidgets(
-    'le bouton de partage dispatche ReferralShared avec le message fr',
+    'le bouton Partager dispatche ReferralShared avec le message fr',
     (tester) async {
       when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
 
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
-      await tester.tap(find.text('Partager mon code'));
+      await tester.tap(find.text('Partager'));
       await tester.pump();
 
       final captured = verify(
         () => bloc.add(captureAny(that: isA<ReferralShared>())),
       ).captured.cast<ReferralShared>();
       expect(captured, hasLength(1));
+      expect(captured.single.channel, ReferralShareChannel.shareSheet);
       expect(
         captured.single.message,
-        'Bonjour ! Utilisez mon code Yadony : ${_testInfo.code} pour vous inscrire, '
-        'ça m\'aide à gagner une réduction sur ma prochaine commission. '
+        "Rejoignez-moi sur Yadony pour envoyer vos colis vers l'Afrique avec "
+        'des voyageurs vérifiés. Mon code parrain : ${_testInfo.code} '
         '${_testInfo.shareUrl}',
       );
     },
   );
+
+  testWidgets('WhatsApp dispatche ReferralShared canal whatsapp', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tap(find.text('WhatsApp'));
+    await tester.pump();
+
+    final captured = verify(
+      () => bloc.add(captureAny(that: isA<ReferralShared>())),
+    ).captured.cast<ReferralShared>();
+    expect(captured.single.channel, ReferralShareChannel.whatsapp);
+  });
+
+  testWidgets('Copier dispatche ReferralLinkCopied', (tester) async {
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tap(find.text('Copier'));
+    await tester.pump();
+
+    verify(() => bloc.add(any(that: isA<ReferralLinkCopied>()))).called(1);
+    await tester.pump(const Duration(seconds: 5));
+  });
 
   // ── Anglais ──────────────────────────────────────────────────────────────
 
@@ -367,11 +453,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Referral'), findsOneWidget);
-    expect(find.text('Invited'), findsOneWidget);
     expect(find.text('Signed up'), findsOneWidget);
-    expect(find.text('Rewarded'), findsOneWidget);
-    expect(find.text('Invite and get -50%'), findsOneWidget);
-    expect(find.text('Share my code'), findsOneWidget);
+    expect(find.text('First shipment done'), findsOneWidget);
+    expect(find.text('Earned'), findsOneWidget);
+    expect(
+      _normalized('€5 credit or 5% off your next shipment'),
+      findsOneWidget,
+    );
+    expect(find.text('Share'), findsOneWidget);
     expect(
       find.text('🎁 You have a 50% voucher on your next service fee'),
       findsOneWidget,

@@ -19,6 +19,25 @@ void main() {
     const annId = '123e4567-e89b-12d3-a456-426614174000';
     const bidId = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
+    test('REFERRAL_REWARD_AVAILABLE : le deeplink ouvre Parrainage', () {
+      final n = NotificationModel(
+        id: 'n1',
+        type: 'REFERRAL_REWARD_AVAILABLE',
+        title: 't',
+        body: 'b',
+        data: const {'invitationId': annId, 'route': '/profile/referral'},
+        read: false,
+        createdAt: DateTime(2026),
+        deeplink: 'yadony://profile/referral',
+      );
+      expect(routeForNotification(n), '/profile/referral');
+      // Sans deeplink, le resolver partagé avec la push donne la même cible.
+      expect(
+        routeForNotification(_notif('REFERRAL_REWARD_AVAILABLE')),
+        '/profile/referral',
+      );
+    });
+
     test(
       'SUPPORT_MESSAGE du centre de notifications ouvre la conversation',
       () {

@@ -248,6 +248,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // l'intention (trajets ou colis de la ligne).
     'FIRST_ACTION_REMINDER' => firstStepsRoute,
     'CARD_EXPIRING' => '/payments/commission-method',
+    // Un filleul a fait son premier envoi : la récompense est à choisir sur
+    // l'écran Parrainage (yadony-back #528).
+    'REFERRAL_REWARD_AVAILABLE' => '/profile/referral',
 
     // Message de l'équipe support → détail du ticket si l'id est valide,
     // sinon la liste des tickets.

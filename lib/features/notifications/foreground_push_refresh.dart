@@ -8,6 +8,7 @@ class ForegroundPushRefresh {
     required this.notificationFeed,
     required this.activityIndicators,
     this.profile = false,
+    this.referral = false,
   });
 
   /// Le fil et le compteur de la cloche (`NotificationsLoadRequested`).
@@ -20,6 +21,10 @@ class ForegroundPushRefresh {
   /// messagerie posée par un administrateur doit apparaître dans les
   /// conversations sans relancer l'app (FLUTTER-CT/CV).
   final bool profile;
+
+  /// L'écran Parrainage (`ReferralLoadRequested`) : une récompense vient de
+  /// se débloquer, sa carte doit apparaître sans relancer l'écran.
+  final bool referral;
 
   /// [type] est le champ `type` des données de la push, `null` s'il manque :
   /// on recharge alors tout, faute de savoir.
@@ -36,6 +41,11 @@ class ForegroundPushRefresh {
     'SUPPORT_MESSAGE' => const ForegroundPushRefresh(
       notificationFeed: true,
       activityIndicators: false,
+    ),
+    'REFERRAL_REWARD_AVAILABLE' => const ForegroundPushRefresh(
+      notificationFeed: true,
+      activityIndicators: false,
+      referral: true,
     ),
     _ => const ForegroundPushRefresh(
       notificationFeed: true,

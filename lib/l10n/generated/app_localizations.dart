@@ -1550,6 +1550,66 @@ abstract class AppLocalizations {
   /// **'Vous avez déjà utilisé un code de parrainage.'**
   String get errorAlreadyReferredMessage;
 
+  /// No description provided for @errorReferralInvitationNotFoundTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Invitation introuvable'**
+  String get errorReferralInvitationNotFoundTitle;
+
+  /// No description provided for @errorReferralInvitationNotFoundMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette invitation n\'existe plus. Actualisez la page Parrainage.'**
+  String get errorReferralInvitationNotFoundMessage;
+
+  /// No description provided for @errorReferralRewardAlreadyChosenTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récompense déjà choisie'**
+  String get errorReferralRewardAlreadyChosenTitle;
+
+  /// No description provided for @errorReferralRewardAlreadyChosenMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà choisi la récompense de cette invitation.'**
+  String get errorReferralRewardAlreadyChosenMessage;
+
+  /// No description provided for @errorReferralRewardNotAvailableTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récompense pas encore disponible'**
+  String get errorReferralRewardNotAvailableTitle;
+
+  /// No description provided for @errorReferralRewardNotAvailableMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle se débloque quand le premier colis de votre filleul est livré.'**
+  String get errorReferralRewardNotAvailableMessage;
+
+  /// No description provided for @errorReferralRewardChoiceInvalidTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choix impossible'**
+  String get errorReferralRewardChoiceInvalidTitle;
+
+  /// No description provided for @errorReferralRewardChoiceInvalidMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette récompense n\'est pas proposée. Choisissez une autre option.'**
+  String get errorReferralRewardChoiceInvalidMessage;
+
+  /// No description provided for @errorPromoNotOwnerTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code personnel'**
+  String get errorPromoNotOwnerTitle;
+
+  /// No description provided for @errorPromoNotOwnerMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code est réservé au compte qui l\'a reçu en récompense de parrainage.'**
+  String get errorPromoNotOwnerMessage;
+
   /// No description provided for @errorUserNotFoundTitle.
   ///
   /// In fr, this message translates to:
@@ -3025,6 +3085,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Continuer'**
   String get authReferralContinueHome;
+
+  /// No description provided for @authReferralPrefilledBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre code parrain est déjà rempli : la personne qui vous a invité sera récompensée à votre premier envoi.'**
+  String get authReferralPrefilledBody;
+
+  /// No description provided for @authReferralPrefilledHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code reconnu, venu de votre lien d\'invitation'**
+  String get authReferralPrefilledHint;
 
   /// No description provided for @authConsentTitle.
   ///
@@ -24215,23 +24287,11 @@ abstract class AppLocalizations {
   /// **'Parrainage'**
   String get referralScreenTitle;
 
-  /// Libellé de la stat « invités » (referral_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Invités'**
-  String get referralStatInvited;
-
   /// Libellé de la stat « inscrits » (referral_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Inscrits'**
   String get referralStatSignedUp;
-
-  /// Libellé de la stat « récompensés » (referral_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Récompensés'**
-  String get referralStatRewarded;
 
   /// Bandeau de bons actifs, affiché seulement si activeVoucherCount >= 1 : la branche =1 peut donc écrire « un » en toutes lettres (referral_screen.dart).
   ///
@@ -24251,41 +24311,11 @@ abstract class AppLocalizations {
   /// **'Valable jusqu\'au {date}'**
   String referralVoucherExpiresLabel(String date);
 
-  /// Titre de la hero card sans pourcentage connu (referral_screen.dart).
+  /// Surtitre de la carte bleue de l'écran Parrainage (referral_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Invitez vos proches'**
   String get referralHeroTitleDefault;
-
-  /// Titre de la hero card avec pourcentage connu (referral_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Invitez et gagnez -{percent}%'**
-  String referralHeroTitlePercent(int percent);
-
-  /// Sous-titre de la hero card sans pourcentage connu (referral_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous recevez un bon de réduction sur votre prochaine commission dès la première livraison de votre invité.'**
-  String get referralHeroSubtitleDefault;
-
-  /// Sous-titre de la hero card avec pourcentage connu (referral_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous recevez un bon de -{percent}% sur votre prochaine commission dès la première livraison de votre invité.'**
-  String referralHeroSubtitlePercent(int percent);
-
-  /// Libellé au-dessus du code affiché (referral_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre code de parrainage'**
-  String get referralCodeBoxLabel;
-
-  /// Libellé d'accessibilité du bouton de copie du code (referral_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Copier le code de parrainage'**
-  String get referralCopyCodeSemantics;
 
   /// Snackbar de confirmation de copie du code (referral_screen.dart).
   ///
@@ -24293,16 +24323,10 @@ abstract class AppLocalizations {
   /// **'Code copié !'**
   String get referralCodeCopiedMessage;
 
-  /// Bouton sticky de partage (referral_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Partager mon code'**
-  String get referralShareButtonLabel;
-
   /// Texte réellement partagé via la feuille système, code et url non traduits (referral_screen.dart, construit par l'écran et transporté par ReferralShared jusqu'au bloc).
   ///
   /// In fr, this message translates to:
-  /// **'Bonjour ! Utilisez mon code Yadony : {code} pour vous inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. {url}'**
+  /// **'Rejoignez-moi sur Yadony pour envoyer vos colis vers l\'Afrique avec des voyageurs vérifiés. Mon code parrain : {code} {url}'**
   String referralShareMessage(String code, String url);
 
   /// Titre de la bottom sheet de saisie d'un code parrain (redeem_code_bottom_sheet.dart).
@@ -24328,6 +24352,300 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ex : {example}'**
   String referralRedeemCodeHint(String example);
+
+  /// Titre de la carte bleue de l'écran Parrainage : la récompense au choix du parrain, montant déjà formaté avec sa devise et pourcentage entier, servis par GET /me/referral avec repli 5 € / 5 % (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} offerts ou -{percent} % sur votre prochain envoi'**
+  String referralHeroRewardTitle(String amount, int percent);
+
+  /// Texte sous le titre de la carte bleue de l'écran Parrainage (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour chaque proche qui fait son premier envoi avec Yadony. Vous choisissez votre récompense.'**
+  String get referralHeroRewardBody;
+
+  /// Libellé de la carte du lien d'invitation, écran Parrainage (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre lien d\'invitation'**
+  String get referralLinkLabel;
+
+  /// Libellé d'accessibilité du bouton Copier du lien d'invitation (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le lien d\'invitation'**
+  String get referralCopyLinkSemantics;
+
+  /// Snackbar après la copie du lien d'invitation (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien copié'**
+  String get referralLinkCopiedMessage;
+
+  /// Libellé devant le code parrain, sous le lien d'invitation ; le code suit en gras (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code :'**
+  String get referralCodeInlineLabel;
+
+  /// Titre de la carte affichée pour chaque filleul dont la récompense attend un choix (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Récompense disponible'**
+  String get referralRewardAvailableTitle;
+
+  /// Sous-titre de la carte « Récompense disponible », name = nom court du filleul (« Awa D. ») (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} a fait son premier envoi'**
+  String referralRewardAvailableBody(String name);
+
+  /// Sous-titre de la carte « Récompense disponible » quand le filleul n'a pas de nom affichable (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un de vos filleuls a fait son premier envoi'**
+  String get referralRewardAvailableBodyAnonymous;
+
+  /// Bouton de la carte « Récompense disponible », ouvre la feuille de choix (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir ma récompense'**
+  String get referralChooseRewardButton;
+
+  /// Compteur des filleuls dont le premier envoi est livré, et badge d'un filleul dans ce cas (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'1er envoi fait'**
+  String get referralStatFirstDelivery;
+
+  /// Compteur du total des crédits de solde gagnés par parrainage (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Gagnés'**
+  String get referralStatEarned;
+
+  /// Titre de la section listant les filleuls, affiché en capitales (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos filleuls'**
+  String get referralRefereesSectionTitle;
+
+  /// Sous-texte d'un filleul : date d'inscription déjà formatée (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Inscription le {date}'**
+  String referralRefereeSignedUp(String date);
+
+  /// Nom affiché d'un filleul sans nom connu (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Filleul'**
+  String get referralRefereeAnonymous;
+
+  /// Récompense « crédit sur le solde » obtenue : sous-texte d'un filleul et titre de la confirmation, montant déjà formaté avec sa devise (referral_screen.dart, referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} ajoutés à votre solde'**
+  String referralWalletCredited(String amount);
+
+  /// État d'un code de réduction obtenu en récompense et déjà utilisé (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code utilisé'**
+  String get referralRefereeCodeUsed;
+
+  /// État d'un code de réduction obtenu en récompense et expiré (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code expiré'**
+  String get referralRefereeCodeExpired;
+
+  /// Sous-texte d'un filleul récompensé par l'ancien bon de commission, attribué avant le choix de récompense (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bon de commission obtenu'**
+  String get referralRefereeVoucherObtained;
+
+  /// Libellé d'accessibilité du bouton de copie d'un code de réduction (referral_screen.dart, referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le code'**
+  String get referralCopyCodeAction;
+
+  /// Badge d'un filleul dont la récompense attend un choix (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'À choisir'**
+  String get referralBadgeToChoose;
+
+  /// Badge d'un filleul dont la récompense est obtenue (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Obtenue'**
+  String get referralBadgeObtained;
+
+  /// Badge d'un filleul inscrit sans premier envoi livré (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore d\'envoi'**
+  String get referralBadgeNoShipmentYet;
+
+  /// Section des filleuls vide (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Personne n\'a encore utilisé votre lien. Partagez-le pour inviter vos proches.'**
+  String get referralRefereesEmpty;
+
+  /// Échec du chargement de la liste des filleuls, suivi d'un bouton Réessayer (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos filleuls.'**
+  String get referralRefereesError;
+
+  /// Bouton qui charge la page suivante des filleuls (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir plus de filleuls'**
+  String get referralRefereesLoadMore;
+
+  /// Titre de la section explicative, affiché en capitales (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment ça marche'**
+  String get referralHowItWorksTitle;
+
+  /// Étape 1 de « Comment ça marche » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagez votre lien'**
+  String get referralStepShareTitle;
+
+  /// Texte de l'étape 1 de « Comment ça marche » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Par WhatsApp ou ailleurs. Votre code se remplit tout seul à l\'inscription.'**
+  String get referralStepShareBody;
+
+  /// Étape 2 de « Comment ça marche » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre proche envoie un colis'**
+  String get referralStepShipTitle;
+
+  /// Texte de l'étape 2 de « Comment ça marche » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La récompense se débloque quand son premier colis est livré.'**
+  String get referralStepShipBody;
+
+  /// Étape 3 de « Comment ça marche » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous choisissez'**
+  String get referralStepChooseTitle;
+
+  /// Texte de l'étape 3 de « Comment ça marche », montant déjà formaté avec sa devise (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} sur votre solde Yadony, ou un code de -{percent} % sur votre prochain envoi (valable 6 mois).'**
+  String referralStepChooseBody(String amount, int percent);
+
+  /// Lien en bas de l'écran Parrainage, ouvre la saisie d'un code parrain ; masqué si le compte a déjà été parrainé (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez un code parrain ? Saisissez-le'**
+  String get referralHaveCodeLink;
+
+  /// Titre de la feuille de choix de la récompense (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez votre récompense'**
+  String get referralChoiceTitle;
+
+  /// Sous-titre de la feuille de choix, name = nom court du filleul (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Merci d\'avoir invité {name}. Ce choix est définitif.'**
+  String referralChoiceSubtitle(String name);
+
+  /// Sous-titre de la feuille de choix quand le filleul n'a pas de nom affichable (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Merci pour votre invitation. Ce choix est définitif.'**
+  String get referralChoiceSubtitleAnonymous;
+
+  /// Option « crédit sur le solde » de la feuille de choix, montant déjà formaté avec sa devise (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} sur mon solde'**
+  String referralChoiceWalletTitle(String amount);
+
+  /// Description de l'option « crédit sur le solde » (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutés tout de suite. Utilisables sur tous vos prochains envois.'**
+  String get referralChoiceWalletBody;
+
+  /// Option « code de réduction » de la feuille de choix (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'-{percent} % sur mon prochain envoi'**
+  String referralChoiceCodeTitle(int percent);
+
+  /// Description de l'option « code de réduction » (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un code personnel à saisir au paiement. Valable 6 mois, une fois.'**
+  String get referralChoiceCodeBody;
+
+  /// Pastille de l'option « code de réduction » (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'-{percent} %'**
+  String referralPercentBadge(int percent);
+
+  /// Mention sous les options de la feuille de choix (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le solde Yadony sert à payer vos envois. Il n\'est pas retirable en espèces.'**
+  String get referralChoiceWalletNote;
+
+  /// Bouton de la feuille de choix quand le crédit sur le solde est sélectionné (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir {amount}'**
+  String referralChoiceWalletCta(String amount);
+
+  /// Bouton de la feuille de choix quand le code de réduction est sélectionné (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir mon code -{percent} %'**
+  String referralChoiceCodeCta(int percent);
+
+  /// Titre de la confirmation après le choix du code de réduction (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre code -{percent} % est prêt'**
+  String referralCodeReadyTitle(int percent);
+
+  /// Texte de la confirmation après le choix du code de réduction (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez-le au paiement de votre prochain envoi. Il est réservé à votre compte.'**
+  String get referralCodeReadyBody;
+
+  /// Mention sous le code de réduction obtenu (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'1 utilisation'**
+  String get referralCodeSingleUse;
+
+  /// Texte de la confirmation après le choix du crédit sur le solde (referral_reward_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant apparaît dans votre Portefeuille. Il sert à payer vos prochains envois.'**
+  String get referralWalletCreditedBody;
 
   /// Titre du refus 422 `reason-not-applicable` (ReportService.java, error_catalog.dart) : le motif choisi ne s'applique pas au type de cible signalée.
   ///

@@ -31,6 +31,16 @@ void main() {
       expect(ForegroundPushRefresh.forType('BID_RECEIVED').profile, isFalse);
     });
 
+    test('récompense de parrainage : le fil et l\'écran Parrainage', () {
+      final refresh = ForegroundPushRefresh.forType(
+        'REFERRAL_REWARD_AVAILABLE',
+      );
+      expect(refresh.referral, isTrue);
+      expect(refresh.notificationFeed, isTrue);
+      expect(refresh.activityIndicators, isFalse);
+      expect(ForegroundPushRefresh.forType('BID_RECEIVED').referral, isFalse);
+    });
+
     test('type absent : tout, par prudence', () {
       final refresh = ForegroundPushRefresh.forType(null);
       expect(refresh.notificationFeed, isTrue);

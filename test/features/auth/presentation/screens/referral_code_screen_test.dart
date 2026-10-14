@@ -4,11 +4,13 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/data/pending_referral_code_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 
@@ -58,6 +60,7 @@ Future<void> _wrap(
   WidgetTester tester,
   ReferralBloc bloc, {
   OnboardingProgress progress = _progress,
+  PendingReferralCodeStore? store,
 }) async {
   final router = GoRouter(
     routes: [
@@ -65,7 +68,10 @@ Future<void> _wrap(
         path: '/',
         builder: (_, _) => BlocProvider<ReferralBloc>.value(
           value: bloc,
-          child: ReferralCodeScreen(progress: progress),
+          child: ReferralCodeScreen(
+            progress: progress,
+            pendingCodeStore: store,
+          ),
         ),
       ),
       GoRoute(
@@ -215,5 +221,73 @@ void main() {
     await _wrap(tester, bloc);
 
     expect(find.text('Apply code'), findsOneWidget);
+  });
+
+  group('code venu d\'un lien d\'invitation', () {
+    late PendingReferralCodeStore store;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      store = PendingReferralCodeStore();
+      await store.save('ABOU1890');
+    });
+
+    testWidgets('champ pré-rempli, coche et mention, aucun envoi automatique', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ReferralInitial());
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _wrap(tester, bloc, store: store);
+
+      expect(find.widgetWithText(TextField, 'ABOU1890'), findsOneWidget);
+      expect(
+        find.textContaining('Votre code parrain est déjà rempli'),
+        findsOneWidget,
+      );
+      expect(
+        find.text("Code reconnu, venu de votre lien d'invitation"),
+        findsOneWidget,
+      );
+      verifyNever(() => bloc.add(any(that: isA<ReferralRedeemRequested>())));
+
+      await tester.ensureVisible(find.text('Appliquer le code'));
+      await tester.tap(find.text('Appliquer le code'));
+      await tester.pump();
+
+      final event =
+          verify(
+                () =>
+                    bloc.add(captureAny(that: isA<ReferralRedeemRequested>())),
+              ).captured.single
+              as ReferralRedeemRequested;
+      expect(event.code, 'ABOU1890');
+    });
+
+    testWidgets('code modifié : la mention du lien disparaît', (tester) async {
+      when(() => bloc.state).thenReturn(const ReferralInitial());
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _wrap(tester, bloc, store: store);
+      await tester.enterText(find.byType(TextField), 'AUTRE123');
+      await tester.pump();
+
+      expect(
+        find.text("Code reconnu, venu de votre lien d'invitation"),
+        findsNothing,
+      );
+    });
+
+    testWidgets('passer l\'étape efface le code gardé', (tester) async {
+      when(() => bloc.state).thenReturn(const ReferralInitial());
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _wrap(tester, bloc, store: store);
+      await tester.ensureVisible(find.text('Passer pour l\'instant'));
+      await tester.tap(find.text('Passer pour l\'instant'));
+      await tester.pumpAndSettle();
+
+      expect(store.current, isNull);
+    });
   });
 }

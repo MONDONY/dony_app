@@ -862,6 +862,42 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous avez déjà utilisé un code de parrainage.';
 
   @override
+  String get errorReferralInvitationNotFoundTitle => 'Invitation introuvable';
+
+  @override
+  String get errorReferralInvitationNotFoundMessage =>
+      'Cette invitation n\'existe plus. Actualisez la page Parrainage.';
+
+  @override
+  String get errorReferralRewardAlreadyChosenTitle => 'Récompense déjà choisie';
+
+  @override
+  String get errorReferralRewardAlreadyChosenMessage =>
+      'Vous avez déjà choisi la récompense de cette invitation.';
+
+  @override
+  String get errorReferralRewardNotAvailableTitle =>
+      'Récompense pas encore disponible';
+
+  @override
+  String get errorReferralRewardNotAvailableMessage =>
+      'Elle se débloque quand le premier colis de votre filleul est livré.';
+
+  @override
+  String get errorReferralRewardChoiceInvalidTitle => 'Choix impossible';
+
+  @override
+  String get errorReferralRewardChoiceInvalidMessage =>
+      'Cette récompense n\'est pas proposée. Choisissez une autre option.';
+
+  @override
+  String get errorPromoNotOwnerTitle => 'Code personnel';
+
+  @override
+  String get errorPromoNotOwnerMessage =>
+      'Ce code est réservé au compte qui l\'a reçu en récompense de parrainage.';
+
+  @override
   String get errorUserNotFoundTitle => 'Utilisateur introuvable';
 
   @override
@@ -1674,6 +1710,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authReferralContinueHome => 'Continuer';
+
+  @override
+  String get authReferralPrefilledBody =>
+      'Votre code parrain est déjà rempli : la personne qui vous a invité sera récompensée à votre premier envoi.';
+
+  @override
+  String get authReferralPrefilledHint =>
+      'Code reconnu, venu de votre lien d\'invitation';
 
   @override
   String get authConsentTitle => 'Une dernière chose';
@@ -14707,13 +14751,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get referralScreenTitle => 'Parrainage';
 
   @override
-  String get referralStatInvited => 'Invités';
-
-  @override
   String get referralStatSignedUp => 'Inscrits';
-
-  @override
-  String get referralStatRewarded => 'Récompensés';
 
   @override
   String referralVouchers(int count, int percent) {
@@ -14748,34 +14786,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get referralHeroTitleDefault => 'Invitez vos proches';
 
   @override
-  String referralHeroTitlePercent(int percent) {
-    return 'Invitez et gagnez -$percent%';
-  }
-
-  @override
-  String get referralHeroSubtitleDefault =>
-      'Vous recevez un bon de réduction sur votre prochaine commission dès la première livraison de votre invité.';
-
-  @override
-  String referralHeroSubtitlePercent(int percent) {
-    return 'Vous recevez un bon de -$percent% sur votre prochaine commission dès la première livraison de votre invité.';
-  }
-
-  @override
-  String get referralCodeBoxLabel => 'Votre code de parrainage';
-
-  @override
-  String get referralCopyCodeSemantics => 'Copier le code de parrainage';
-
-  @override
   String get referralCodeCopiedMessage => 'Code copié !';
 
   @override
-  String get referralShareButtonLabel => 'Partager mon code';
-
-  @override
   String referralShareMessage(String code, String url) {
-    return 'Bonjour ! Utilisez mon code Yadony : $code pour vous inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. $url';
+    return 'Rejoignez-moi sur Yadony pour envoyer vos colis vers l\'Afrique avec des voyageurs vérifiés. Mon code parrain : $code $url';
   }
 
   @override
@@ -14792,6 +14807,188 @@ class AppLocalizationsFr extends AppLocalizations {
   String referralRedeemCodeHint(String example) {
     return 'Ex : $example';
   }
+
+  @override
+  String referralHeroRewardTitle(String amount, int percent) {
+    return '$amount offerts ou -$percent % sur votre prochain envoi';
+  }
+
+  @override
+  String get referralHeroRewardBody =>
+      'Pour chaque proche qui fait son premier envoi avec Yadony. Vous choisissez votre récompense.';
+
+  @override
+  String get referralLinkLabel => 'Votre lien d\'invitation';
+
+  @override
+  String get referralCopyLinkSemantics => 'Copier le lien d\'invitation';
+
+  @override
+  String get referralLinkCopiedMessage => 'Lien copié';
+
+  @override
+  String get referralCodeInlineLabel => 'Code :';
+
+  @override
+  String get referralRewardAvailableTitle => 'Récompense disponible';
+
+  @override
+  String referralRewardAvailableBody(String name) {
+    return '$name a fait son premier envoi';
+  }
+
+  @override
+  String get referralRewardAvailableBodyAnonymous =>
+      'Un de vos filleuls a fait son premier envoi';
+
+  @override
+  String get referralChooseRewardButton => 'Choisir ma récompense';
+
+  @override
+  String get referralStatFirstDelivery => '1er envoi fait';
+
+  @override
+  String get referralStatEarned => 'Gagnés';
+
+  @override
+  String get referralRefereesSectionTitle => 'Vos filleuls';
+
+  @override
+  String referralRefereeSignedUp(String date) {
+    return 'Inscription le $date';
+  }
+
+  @override
+  String get referralRefereeAnonymous => 'Filleul';
+
+  @override
+  String referralWalletCredited(String amount) {
+    return '$amount ajoutés à votre solde';
+  }
+
+  @override
+  String get referralRefereeCodeUsed => 'Code utilisé';
+
+  @override
+  String get referralRefereeCodeExpired => 'Code expiré';
+
+  @override
+  String get referralRefereeVoucherObtained => 'Bon de commission obtenu';
+
+  @override
+  String get referralCopyCodeAction => 'Copier le code';
+
+  @override
+  String get referralBadgeToChoose => 'À choisir';
+
+  @override
+  String get referralBadgeObtained => 'Obtenue';
+
+  @override
+  String get referralBadgeNoShipmentYet => 'Pas encore d\'envoi';
+
+  @override
+  String get referralRefereesEmpty =>
+      'Personne n\'a encore utilisé votre lien. Partagez-le pour inviter vos proches.';
+
+  @override
+  String get referralRefereesError => 'Impossible de charger vos filleuls.';
+
+  @override
+  String get referralRefereesLoadMore => 'Voir plus de filleuls';
+
+  @override
+  String get referralHowItWorksTitle => 'Comment ça marche';
+
+  @override
+  String get referralStepShareTitle => 'Partagez votre lien';
+
+  @override
+  String get referralStepShareBody =>
+      'Par WhatsApp ou ailleurs. Votre code se remplit tout seul à l\'inscription.';
+
+  @override
+  String get referralStepShipTitle => 'Votre proche envoie un colis';
+
+  @override
+  String get referralStepShipBody =>
+      'La récompense se débloque quand son premier colis est livré.';
+
+  @override
+  String get referralStepChooseTitle => 'Vous choisissez';
+
+  @override
+  String referralStepChooseBody(String amount, int percent) {
+    return '$amount sur votre solde Yadony, ou un code de -$percent % sur votre prochain envoi (valable 6 mois).';
+  }
+
+  @override
+  String get referralHaveCodeLink => 'Vous avez un code parrain ? Saisissez-le';
+
+  @override
+  String get referralChoiceTitle => 'Choisissez votre récompense';
+
+  @override
+  String referralChoiceSubtitle(String name) {
+    return 'Merci d\'avoir invité $name. Ce choix est définitif.';
+  }
+
+  @override
+  String get referralChoiceSubtitleAnonymous =>
+      'Merci pour votre invitation. Ce choix est définitif.';
+
+  @override
+  String referralChoiceWalletTitle(String amount) {
+    return '$amount sur mon solde';
+  }
+
+  @override
+  String get referralChoiceWalletBody =>
+      'Ajoutés tout de suite. Utilisables sur tous vos prochains envois.';
+
+  @override
+  String referralChoiceCodeTitle(int percent) {
+    return '-$percent % sur mon prochain envoi';
+  }
+
+  @override
+  String get referralChoiceCodeBody =>
+      'Un code personnel à saisir au paiement. Valable 6 mois, une fois.';
+
+  @override
+  String referralPercentBadge(int percent) {
+    return '-$percent %';
+  }
+
+  @override
+  String get referralChoiceWalletNote =>
+      'Le solde Yadony sert à payer vos envois. Il n\'est pas retirable en espèces.';
+
+  @override
+  String referralChoiceWalletCta(String amount) {
+    return 'Recevoir $amount';
+  }
+
+  @override
+  String referralChoiceCodeCta(int percent) {
+    return 'Recevoir mon code -$percent %';
+  }
+
+  @override
+  String referralCodeReadyTitle(int percent) {
+    return 'Votre code -$percent % est prêt';
+  }
+
+  @override
+  String get referralCodeReadyBody =>
+      'Saisissez-le au paiement de votre prochain envoi. Il est réservé à votre compte.';
+
+  @override
+  String get referralCodeSingleUse => '1 utilisation';
+
+  @override
+  String get referralWalletCreditedBody =>
+      'Le montant apparaît dans votre Portefeuille. Il sert à payer vos prochains envois.';
 
   @override
   String get errorReportReasonNotApplicableTitle => 'Motif invalide';

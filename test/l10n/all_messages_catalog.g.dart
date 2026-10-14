@@ -318,6 +318,24 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorSelfReferralMessage': (l) => l.errorSelfReferralMessage,
   'errorAlreadyReferredTitle': (l) => l.errorAlreadyReferredTitle,
   'errorAlreadyReferredMessage': (l) => l.errorAlreadyReferredMessage,
+  'errorReferralInvitationNotFoundTitle': (l) =>
+      l.errorReferralInvitationNotFoundTitle,
+  'errorReferralInvitationNotFoundMessage': (l) =>
+      l.errorReferralInvitationNotFoundMessage,
+  'errorReferralRewardAlreadyChosenTitle': (l) =>
+      l.errorReferralRewardAlreadyChosenTitle,
+  'errorReferralRewardAlreadyChosenMessage': (l) =>
+      l.errorReferralRewardAlreadyChosenMessage,
+  'errorReferralRewardNotAvailableTitle': (l) =>
+      l.errorReferralRewardNotAvailableTitle,
+  'errorReferralRewardNotAvailableMessage': (l) =>
+      l.errorReferralRewardNotAvailableMessage,
+  'errorReferralRewardChoiceInvalidTitle': (l) =>
+      l.errorReferralRewardChoiceInvalidTitle,
+  'errorReferralRewardChoiceInvalidMessage': (l) =>
+      l.errorReferralRewardChoiceInvalidMessage,
+  'errorPromoNotOwnerTitle': (l) => l.errorPromoNotOwnerTitle,
+  'errorPromoNotOwnerMessage': (l) => l.errorPromoNotOwnerMessage,
   'errorUserNotFoundTitle': (l) => l.errorUserNotFoundTitle,
   'errorUserNotFoundMessage': (l) => l.errorUserNotFoundMessage,
   'errorOfflineTitle': (l) => l.errorOfflineTitle,
@@ -587,6 +605,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'authReferralSuccessBody': (l) => l.authReferralSuccessBody,
   'authReferralSuccessFootnote': (l) => l.authReferralSuccessFootnote,
   'authReferralContinueHome': (l) => l.authReferralContinueHome,
+  'authReferralPrefilledBody': (l) => l.authReferralPrefilledBody,
+  'authReferralPrefilledHint': (l) => l.authReferralPrefilledHint,
   'authConsentTitle': (l) => l.authConsentTitle,
   'authConsentBody': (l) => l.authConsentBody,
   'authConsentFootnote': (l) => l.authConsentFootnote,
@@ -5136,9 +5156,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('percent'),
   ),
   'referralScreenTitle': (l) => l.referralScreenTitle,
-  'referralStatInvited': (l) => l.referralStatInvited,
   'referralStatSignedUp': (l) => l.referralStatSignedUp,
-  'referralStatRewarded': (l) => l.referralStatRewarded,
   'referralVouchers': (l) =>
       l.referralVouchers(intPlaceholderValue, intPlaceholderValue),
   'referralVouchersUnknownPercent': (l) =>
@@ -5146,15 +5164,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'referralVoucherExpiresLabel': (l) =>
       l.referralVoucherExpiresLabel(placeholderMarker('date')),
   'referralHeroTitleDefault': (l) => l.referralHeroTitleDefault,
-  'referralHeroTitlePercent': (l) =>
-      l.referralHeroTitlePercent(intPlaceholderValue),
-  'referralHeroSubtitleDefault': (l) => l.referralHeroSubtitleDefault,
-  'referralHeroSubtitlePercent': (l) =>
-      l.referralHeroSubtitlePercent(intPlaceholderValue),
-  'referralCodeBoxLabel': (l) => l.referralCodeBoxLabel,
-  'referralCopyCodeSemantics': (l) => l.referralCopyCodeSemantics,
   'referralCodeCopiedMessage': (l) => l.referralCodeCopiedMessage,
-  'referralShareButtonLabel': (l) => l.referralShareButtonLabel,
   'referralShareMessage': (l) => l.referralShareMessage(
     placeholderMarker('code'),
     placeholderMarker('url'),
@@ -5164,6 +5174,70 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'referralRedeemCodeFieldLabel': (l) => l.referralRedeemCodeFieldLabel,
   'referralRedeemCodeHint': (l) =>
       l.referralRedeemCodeHint(placeholderMarker('example')),
+  'referralHeroRewardTitle': (l) => l.referralHeroRewardTitle(
+    placeholderMarker('amount'),
+    intPlaceholderValue,
+  ),
+  'referralHeroRewardBody': (l) => l.referralHeroRewardBody,
+  'referralLinkLabel': (l) => l.referralLinkLabel,
+  'referralCopyLinkSemantics': (l) => l.referralCopyLinkSemantics,
+  'referralLinkCopiedMessage': (l) => l.referralLinkCopiedMessage,
+  'referralCodeInlineLabel': (l) => l.referralCodeInlineLabel,
+  'referralRewardAvailableTitle': (l) => l.referralRewardAvailableTitle,
+  'referralRewardAvailableBody': (l) =>
+      l.referralRewardAvailableBody(placeholderMarker('name')),
+  'referralRewardAvailableBodyAnonymous': (l) =>
+      l.referralRewardAvailableBodyAnonymous,
+  'referralChooseRewardButton': (l) => l.referralChooseRewardButton,
+  'referralStatFirstDelivery': (l) => l.referralStatFirstDelivery,
+  'referralStatEarned': (l) => l.referralStatEarned,
+  'referralRefereesSectionTitle': (l) => l.referralRefereesSectionTitle,
+  'referralRefereeSignedUp': (l) =>
+      l.referralRefereeSignedUp(placeholderMarker('date')),
+  'referralRefereeAnonymous': (l) => l.referralRefereeAnonymous,
+  'referralWalletCredited': (l) =>
+      l.referralWalletCredited(placeholderMarker('amount')),
+  'referralRefereeCodeUsed': (l) => l.referralRefereeCodeUsed,
+  'referralRefereeCodeExpired': (l) => l.referralRefereeCodeExpired,
+  'referralRefereeVoucherObtained': (l) => l.referralRefereeVoucherObtained,
+  'referralCopyCodeAction': (l) => l.referralCopyCodeAction,
+  'referralBadgeToChoose': (l) => l.referralBadgeToChoose,
+  'referralBadgeObtained': (l) => l.referralBadgeObtained,
+  'referralBadgeNoShipmentYet': (l) => l.referralBadgeNoShipmentYet,
+  'referralRefereesEmpty': (l) => l.referralRefereesEmpty,
+  'referralRefereesError': (l) => l.referralRefereesError,
+  'referralRefereesLoadMore': (l) => l.referralRefereesLoadMore,
+  'referralHowItWorksTitle': (l) => l.referralHowItWorksTitle,
+  'referralStepShareTitle': (l) => l.referralStepShareTitle,
+  'referralStepShareBody': (l) => l.referralStepShareBody,
+  'referralStepShipTitle': (l) => l.referralStepShipTitle,
+  'referralStepShipBody': (l) => l.referralStepShipBody,
+  'referralStepChooseTitle': (l) => l.referralStepChooseTitle,
+  'referralStepChooseBody': (l) => l.referralStepChooseBody(
+    placeholderMarker('amount'),
+    intPlaceholderValue,
+  ),
+  'referralHaveCodeLink': (l) => l.referralHaveCodeLink,
+  'referralChoiceTitle': (l) => l.referralChoiceTitle,
+  'referralChoiceSubtitle': (l) =>
+      l.referralChoiceSubtitle(placeholderMarker('name')),
+  'referralChoiceSubtitleAnonymous': (l) => l.referralChoiceSubtitleAnonymous,
+  'referralChoiceWalletTitle': (l) =>
+      l.referralChoiceWalletTitle(placeholderMarker('amount')),
+  'referralChoiceWalletBody': (l) => l.referralChoiceWalletBody,
+  'referralChoiceCodeTitle': (l) =>
+      l.referralChoiceCodeTitle(intPlaceholderValue),
+  'referralChoiceCodeBody': (l) => l.referralChoiceCodeBody,
+  'referralPercentBadge': (l) => l.referralPercentBadge(intPlaceholderValue),
+  'referralChoiceWalletNote': (l) => l.referralChoiceWalletNote,
+  'referralChoiceWalletCta': (l) =>
+      l.referralChoiceWalletCta(placeholderMarker('amount')),
+  'referralChoiceCodeCta': (l) => l.referralChoiceCodeCta(intPlaceholderValue),
+  'referralCodeReadyTitle': (l) =>
+      l.referralCodeReadyTitle(intPlaceholderValue),
+  'referralCodeReadyBody': (l) => l.referralCodeReadyBody,
+  'referralCodeSingleUse': (l) => l.referralCodeSingleUse,
+  'referralWalletCreditedBody': (l) => l.referralWalletCreditedBody,
   'errorReportReasonNotApplicableTitle': (l) =>
       l.errorReportReasonNotApplicableTitle,
   'errorReportReasonNotApplicableMessage': (l) =>
@@ -7230,6 +7304,14 @@ const textParameters = <String, List<String>>{
   'referralVoucherExpiresLabel': ['date'],
   'referralShareMessage': ['code', 'url'],
   'referralRedeemCodeHint': ['example'],
+  'referralHeroRewardTitle': ['amount'],
+  'referralRewardAvailableBody': ['name'],
+  'referralRefereeSignedUp': ['date'],
+  'referralWalletCredited': ['amount'],
+  'referralStepChooseBody': ['amount'],
+  'referralChoiceSubtitle': ['name'],
+  'referralChoiceWalletTitle': ['amount'],
+  'referralChoiceWalletCta': ['amount'],
   'currencySelectorConfirm': ['code'],
   'currencyCardAndCashAvailable': ['currency'],
   'currencyMobileMoneyAndCashAvailable': ['currency'],

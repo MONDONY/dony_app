@@ -8,10 +8,12 @@ import 'package:dony/app/language_change_guard.dart';
 import 'package:dony/app/mobile_money_deep_link.dart';
 import 'package:dony/app/package_request_deep_link.dart';
 import 'package:dony/app/reduced_motion_priming.dart';
+import 'package:dony/app/referral_deep_link.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/app/system_back_dispatcher.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -46,6 +48,7 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/referral/data/pending_referral_code_store.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
@@ -185,6 +188,9 @@ class _DonyAppState extends State<DonyApp> {
   }
 
   void _initDeepLinks() {
+    // Lit tout de suite le code parrain gardé d'un précédent lancement :
+    // l'étape « Parrainage » de l'inscription le lit sans attendre.
+    getIt<PendingReferralCodeStore>();
     // Notification touchée avant que l'app n'écoute (lancement à froid).
     final pendingRoute = getIt<NotificationService>().takePendingRoute();
     if (pendingRoute != null) {
@@ -235,10 +241,25 @@ class _DonyAppState extends State<DonyApp> {
     '/tracking/scan',
     // Alertes prix des billets (notification FLIGHT_PRICE_ALERT).
     '/flights/alerts',
+    // Récompense de parrainage à choisir (REFERRAL_REWARD_AVAILABLE).
+    '/profile/referral',
   };
 
   void _handleDeepLink(Uri uri) {
     if (uri.scheme != 'yadony') {
+      return;
+    }
+
+    // Lien d'invitation : le code est gardé même sans compte (inscription à
+    // venir), il ne passe donc pas par la seule porte de navigation.
+    final user = FirebaseAuth.instance.currentUser;
+    if (handleReferralDeepLink(
+      uri,
+      store: getIt<PendingReferralCodeStore>(),
+      analytics: getIt<AnalyticsService>(),
+      signedIn: user != null && !user.isAnonymous,
+      dispatch: _deepLinkGate.dispatch,
+    )) {
       return;
     }
 

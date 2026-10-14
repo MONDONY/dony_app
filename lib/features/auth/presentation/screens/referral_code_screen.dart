@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/data/pending_referral_code_store.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -15,30 +17,47 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class ReferralCodeScreen extends StatefulWidget {
-  const ReferralCodeScreen({super.key, required this.progress});
+  const ReferralCodeScreen({
+    super.key,
+    required this.progress,
+    this.pendingCodeStore,
+  });
 
   /// Le parrainage est hors décompte (spec §4.2) : `progress.current` y vaut
   /// toujours `null`, aucun segment n'est donc jamais à moitié rempli ici.
   final OnboardingProgress progress;
+
+  /// Code venu d'un lien d'invitation (`yadony://referral?code=…`) : il
+  /// pré-remplit le champ, la personne valide elle-même.
+  final PendingReferralCodeStore? pendingCodeStore;
 
   @override
   State<ReferralCodeScreen> createState() => _ReferralCodeScreenState();
 }
 
 class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
-  final _ctrl = TextEditingController();
-  final _isNotEmpty = ValueNotifier<bool>(false);
+  late final String? _linkCode = widget.pendingCodeStore?.current;
+  late final _ctrl = TextEditingController(text: _linkCode);
+  late final _isNotEmpty = ValueNotifier<bool>(_linkCode != null);
+
+  /// Le champ porte encore le code du lien : la carte et le champ le disent.
+  late final _prefilled = ValueNotifier<bool>(_linkCode != null);
 
   @override
   void initState() {
     super.initState();
-    _ctrl.addListener(() => _isNotEmpty.value = _ctrl.text.trim().isNotEmpty);
+    _ctrl.addListener(() {
+      _isNotEmpty.value = _ctrl.text.trim().isNotEmpty;
+      _prefilled.value =
+          _linkCode != null && _ctrl.text.trim().toUpperCase() == _linkCode;
+    });
   }
 
   @override
   void dispose() {
     _ctrl.dispose();
     _isNotEmpty.dispose();
+    _prefilled.dispose();
     super.dispose();
   }
 
@@ -62,6 +81,8 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
             .nextAfter(OnboardingStep.personalInfo)
             ?.onboardingRoute ??
         '/home';
+    // Appliqué ou volontairement passé : le code du lien a servi.
+    unawaited(widget.pendingCodeStore?.clear());
     if (destination == '/home') {
       unawaited(
         getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
@@ -117,6 +138,7 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
                           progress: widget.progress,
                           ctrl: _ctrl,
                           isNotEmpty: _isNotEmpty,
+                          prefilled: _prefilled,
                           isLoading: state is ReferralRedeemLoading,
                           onApply: _apply,
                           onSkip: () => _continue(context),
@@ -138,6 +160,7 @@ class _FormView extends StatelessWidget {
     required this.progress,
     required this.ctrl,
     required this.isNotEmpty,
+    required this.prefilled,
     required this.isLoading,
     required this.onApply,
     required this.onSkip,
@@ -146,6 +169,7 @@ class _FormView extends StatelessWidget {
   final OnboardingProgress progress;
   final TextEditingController ctrl;
   final ValueNotifier<bool> isNotEmpty;
+  final ValueNotifier<bool> prefilled;
   final bool isLoading;
   final VoidCallback onApply;
   final VoidCallback onSkip;
@@ -168,18 +192,23 @@ class _FormView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                AuthIntroCard.compact(
-                  iconAsset: 'gift',
-                  title: l.authReferralTitle,
-                  body: l.authReferralBody,
-                  footnote: l.authReferralFootnote,
+                ValueListenableBuilder<bool>(
+                  valueListenable: prefilled,
+                  builder: (context, fromLink, _) => AuthIntroCard.compact(
+                    iconAsset: 'gift',
+                    title: l.authReferralTitle,
+                    body: fromLink
+                        ? l.authReferralPrefilledBody
+                        : l.authReferralBody,
+                    footnote: l.authReferralFootnote,
+                  ),
                 ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
                 const SizedBox(height: DonySpacing.md),
                 _ReferralActionPanel(
-                  child: DonyTextField(
-                    controller: ctrl,
-                    label: l.authReferralCodeLabel,
-                    hint: l.authReferralCodeHint,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: prefilled,
+                    builder: (context, fromLink, _) =>
+                        _CodeField(ctrl: ctrl, fromLink: fromLink),
                   ),
                 ).animate().fadeIn(delay: 120.ms, duration: 300.ms),
               ],
@@ -201,6 +230,59 @@ class _FormView extends StatelessWidget {
           skipEnabled: !isLoading,
           onSkip: onSkip,
         ),
+      ],
+    );
+  }
+}
+
+/// Champ du code. Venu du lien, il porte une coche verte et une ligne qui
+/// dit d'où vient le code.
+class _CodeField extends StatelessWidget {
+  const _CodeField({required this.ctrl, required this.fromLink});
+
+  final TextEditingController ctrl;
+  final bool fromLink;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DonyTextField(
+          controller: ctrl,
+          label: l.authReferralCodeLabel,
+          hint: l.authReferralCodeHint,
+          suffixIcon: fromLink
+              ? Padding(
+                  padding: const EdgeInsets.all(DonySpacing.md),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: cs.success,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const DonyIcon(
+                      'check',
+                      size: 14,
+                      color: DonyColors.textOnBrand,
+                    ),
+                  ),
+                )
+              : null,
+        ),
+        if (fromLink) ...[
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            l.authReferralPrefilledHint,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(color: cs.success),
+          ),
+        ],
       ],
     );
   }

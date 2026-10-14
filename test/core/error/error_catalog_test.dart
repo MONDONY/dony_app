@@ -1571,4 +1571,45 @@ void main() {
       },
     );
   });
+
+  group('ErrorCatalog — récompense de parrainage (yadony-back #528)', () {
+    const cases = {
+      'referral-invitation-not-found': (
+        'Invitation introuvable',
+        'Invitation not found',
+      ),
+      'referral-reward-already-chosen': (
+        'Récompense déjà choisie',
+        'Reward already chosen',
+      ),
+      'referral-reward-not-available': (
+        'Récompense pas encore disponible',
+        'Reward not available yet',
+      ),
+      'referral-reward-choice-invalid': (
+        'Choix impossible',
+        'Choice not possible',
+      ),
+      'promo-not-owner': ('Code personnel', 'Personal code'),
+    };
+
+    for (final MapEntry(key: code, value: (fr, en)) in cases.entries) {
+      test('$code : titre fr et en', () {
+        final error = ConflictException('x', code: code);
+        expect(
+          ErrorCatalog.lookup(
+            error,
+            l10n: lookupAppLocalizations(AppL10n.fr),
+          ).title,
+          fr,
+        );
+        final english = ErrorCatalog.lookup(
+          error,
+          l10n: lookupAppLocalizations(AppL10n.en),
+        );
+        expect(english.title, en);
+        expect(english.message, isNotEmpty);
+      });
+    }
+  });
 }
