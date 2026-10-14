@@ -14,13 +14,16 @@ import 'package:path_provider/path_provider.dart';
 class TrackingQueuePhotoStore {
   TrackingQueuePhotoStore({
     Future<Directory> Function()? baseDirectory,
+    Future<Directory> Function()? temporaryDirectory,
     DateTime Function()? now,
   }) : _baseDirectory = baseDirectory ?? getApplicationSupportDirectory,
+       _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory,
        _now = now ?? DateTime.now;
 
   static const folder = 'tracking_queue_photos';
 
   final Future<Directory> Function() _baseDirectory;
+  final Future<Directory> Function() _temporaryDirectory;
   final DateTime Function() _now;
 
   Future<Directory> _directory() async {
@@ -30,7 +33,7 @@ class TrackingQueuePhotoStore {
   }
 
   /// Copie [path] dans le répertoire persistant et rend le nom de la copie,
-  /// ou `null` si la copie a échoué (la file garde alors le chemin d'origine).
+  /// ou `null` si la copie a échoué.
   Future<String?> keep(String path) async {
     try {
       final dir = await _directory();
@@ -40,6 +43,32 @@ class TrackingQueuePhotoStore {
     } catch (error) {
       AppLog.warn(
         'tracking.queue_photo_copy_failed',
+        data: {'type': error.runtimeType.toString()},
+      );
+      return null;
+    }
+  }
+
+  /// Reprend la photo d'une entrée mise en file avant les copies (#599), qui
+  /// ne garde que son chemin absolu [legacyPath] : rend le nom de sa copie,
+  /// ou `null` si le fichier est introuvable.
+  ///
+  /// FLUTTER-F : sur iOS, ce chemin pointe vers le répertoire temporaire de
+  /// l'ancien conteneur, dont l'identifiant change à chaque mise à jour. Le
+  /// fichier, s'il a survécu, est cherché par son nom dans le répertoire
+  /// temporaire actuel, puis parmi les copies.
+  Future<String?> adoptLegacy(String legacyPath) async {
+    try {
+      if (File(legacyPath).existsSync()) return await keep(legacyPath);
+      final name = _basename(legacyPath);
+      if (name.isEmpty) return null;
+      final inTemp = File('${(await _temporaryDirectory()).path}/$name');
+      if (inTemp.existsSync()) return await keep(inTemp.path);
+      if (File(await resolve(name)).existsSync()) return name;
+      return null;
+    } catch (error) {
+      AppLog.warn(
+        'tracking.queue_photo_legacy_failed',
         data: {'type': error.runtimeType.toString()},
       );
       return null;

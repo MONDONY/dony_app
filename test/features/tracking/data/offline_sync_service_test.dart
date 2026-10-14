@@ -1036,6 +1036,7 @@ void main() {
     late _MockReporter reporter;
     late OfflineSyncService reported;
     late Directory supportDir;
+    late Directory tmpDir;
     late TrackingQueuePhotoStore store;
 
     void stubPost({Object? error}) {
@@ -1100,7 +1101,11 @@ void main() {
         ),
       ).thenAnswer((_) async {});
       supportDir = await _tempDir.createTemp('support_');
-      store = TrackingQueuePhotoStore(baseDirectory: () async => supportDir);
+      tmpDir = await _tempDir.createTemp('tmp_');
+      store = TrackingQueuePhotoStore(
+        baseDirectory: () async => supportDir,
+        temporaryDirectory: () async => tmpDir,
+      );
       reported = OfflineSyncService(
         _hiveService,
         mockRepo,
@@ -1193,12 +1198,15 @@ void main() {
     test(
       'fichier disparu pendant l\'envoi (Dio) : étape postée sans photo',
       () async {
-        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenThrow(
-          DioException(
+        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenAnswer((
+          invocation,
+        ) async {
+          await File(invocation.positionalArguments[1] as String).delete();
+          throw DioException(
             requestOptions: RequestOptions(path: '/storage/upload/tracking'),
             error: const FileSystemException('gone'),
-          ),
-        );
+          );
+        });
         stubPost();
         final key = await reported.queueScan(
           bidId: 'bid-1',
@@ -1294,6 +1302,217 @@ void main() {
         expect(File(await store.resolve(name)).existsSync(), isFalse);
       },
     );
+
+    group('entrées héritées et copies ratées (FLUTTER-F)', () {
+      void stubUploadCapturing(List<String> paths) {
+        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenAnswer((
+          invocation,
+        ) async {
+          final path = invocation.positionalArguments[1] as String;
+          if (!File(path).existsSync()) {
+            throw PathNotFoundException(path, const OSError());
+          }
+          paths.add(path);
+          return 'tracking/bid-1/1_DEPART.jpg';
+        });
+      }
+
+      Future<void> queueLegacy(String photoPath) =>
+          _hiveService.offlineQueue.add({
+            'bidId': 'bid-1',
+            'eventType': 'DEPART',
+            'photoPath': photoPath,
+            'offlineTimestamp': DateTime.now().toUtc().toIso8601String(),
+          });
+
+      test('chemin hérité encore présent : migré en photoFile, envoyé '
+          'avec sa photo', () async {
+        final uploaded = <String>[];
+        stubUploadCapturing(uploaded);
+        stubPost(
+          error: DioException(
+            requestOptions: RequestOptions(path: '/tracking/events'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
+        final original = await photo('herite.jpg');
+        await queueLegacy(original.path);
+
+        await reported.syncAll();
+
+        // Réécrite avant l'envoi : le cache peut être purgé ensuite.
+        final entry = _hiveService.offlineQueue.values.single;
+        expect(entry.containsKey('photoPath'), isFalse);
+        expect(entry['photoFile'], endsWith('_herite.jpg'));
+        await original.delete();
+
+        stubPost();
+        await reported.syncAll();
+
+        expect(
+          uploaded.last,
+          startsWith('${supportDir.path}/${TrackingQueuePhotoStore.folder}/'),
+        );
+        verifyPosted(photoUrl: equals('tracking/bid-1/1_DEPART.jpg'), times: 2);
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+        expect(reported.lostPhotosFor({'bid-1'}), isEmpty);
+      });
+
+      test('ancien conteneur iOS : photo retrouvée par son nom dans le '
+          'répertoire temporaire actuel', () async {
+        final uploaded = <String>[];
+        stubUploadCapturing(uploaded);
+        stubPost();
+        await File('${tmpDir.path}/image_picker_1.jpg').writeAsBytes([7]);
+        await queueLegacy(
+          '/private/var/mobile/Containers/Data/Application/OLD-UUID/tmp/'
+          'image_picker_1.jpg',
+        );
+
+        await reported.syncAll();
+
+        expect(uploaded.single, endsWith('_image_picker_1.jpg'));
+        verifyPosted(photoUrl: equals('tracking/bid-1/1_DEPART.jpg'));
+        expect(reported.lostPhotosFor({'bid-1'}), isEmpty);
+        verifyNever(
+          () => reporter.report(
+            any(),
+            operation: any(named: 'operation'),
+            stackTrace: any(named: 'stackTrace'),
+            context: any(named: 'context'),
+          ),
+        );
+      });
+
+      test('chemin hérité introuvable : étape envoyée sans photo, un seul '
+          'signalement', () async {
+        when(
+          () => mockRepo.uploadTrackingPhoto(any(), any()),
+        ).thenThrow(const FileSystemException('cannot open'));
+        stubPost(
+          error: DioException(
+            requestOptions: RequestOptions(path: '/tracking/events'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
+        await queueLegacy('/var/OLD-UUID/tmp/introuvable.jpg');
+
+        await reported.syncAll();
+        stubPost();
+        await reported.syncAll();
+
+        verifyPosted(photoUrl: isNull, times: 2);
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+        expect(reports(), hasLength(1));
+        expect(reported.lostPhotosFor({'bid-1'}), hasLength(1));
+      });
+
+      test('copie ratée deux fois : aucun chemin absolu en file, photo '
+          'perdue signalée tout de suite', () async {
+        // Le répertoire des copies ne peut pas être créé : c'est un fichier.
+        final blocker = File('${_tempDir.path}/bloque_${supportDir.hashCode}');
+        await blocker.writeAsBytes([0]);
+        final failing = OfflineSyncService(
+          _hiveService,
+          mockRepo,
+          reporter,
+          DateTime.now,
+          ScanSendGuard(),
+          TrackingQueuePhotoStore(
+            baseDirectory: () async => Directory(blocker.path),
+            temporaryDirectory: () async => tmpDir,
+          ),
+        );
+        stubPost();
+
+        await failing.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoPath: (await photo('ratee.jpg')).path,
+        );
+
+        final entry = _hiveService.offlineQueue.values.single;
+        expect(entry.containsKey('photoPath'), isFalse);
+        expect(entry.containsKey('photoFile'), isFalse);
+        expect(failing.lostPhotosFor({'bid-1'}), hasLength(1));
+        final captured = reports();
+        expect(captured, hasLength(1));
+        expect(captured.single['tracking_step'], 'DEPART');
+
+        await failing.syncAll();
+
+        verifyNever(() => mockRepo.uploadTrackingPhoto(any(), any()));
+        verifyPosted(photoUrl: isNull);
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      });
+
+      test('photo présente mais illisible (téléphone verrouillé) : gardée, '
+          'renvoyée au nouvel essai', () async {
+        var calls = 0;
+        when(() => mockRepo.uploadTrackingPhoto(any(), any())).thenAnswer((
+          _,
+        ) async {
+          if (calls++ == 0) {
+            throw DioException(
+              requestOptions: RequestOptions(path: '/storage/upload/tracking'),
+              error: const FileSystemException(
+                'Operation not permitted',
+                '',
+                OSError('Operation not permitted', 1),
+              ),
+            );
+          }
+          return 'tracking/bid-1/1_DEPART.jpg';
+        });
+        stubPost();
+        await reported.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoPath: (await photo('verrouille.jpg')).path,
+        );
+        final name =
+            _hiveService.offlineQueue.values.single['photoFile'] as String;
+
+        await reported.syncAll();
+
+        expect(reported.pendingCount, 1);
+        expect(_hiveService.offlineQueue.values.single['photoFile'], name);
+        expect(File(await store.resolve(name)).existsSync(), isTrue);
+        expect(reported.lostPhotosFor({'bid-1'}), isEmpty);
+        expect(reported.nextRetryDelay, isNotNull);
+        verifyNever(
+          () => reporter.report(
+            any(),
+            operation: any(named: 'operation'),
+            stackTrace: any(named: 'stackTrace'),
+            context: any(named: 'context'),
+          ),
+        );
+
+        await reported.syncAll();
+
+        verifyPosted(photoUrl: equals('tracking/bid-1/1_DEPART.jpg'));
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      });
+
+      test('FileSystemException directe, fichier présent : relancée', () async {
+        final file = await photo('directe.jpg');
+        when(
+          () => mockRepo.uploadTrackingPhoto(any(), any()),
+        ).thenThrow(const FileSystemException('locked'));
+        stubPost();
+        final key = await reported.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoPath: file.path,
+          notBefore: DateTime.now().add(const Duration(minutes: 1)),
+        );
+
+        expect(await reported.sendScheduled(key), isNull);
+        expect(_hiveService.offlineQueue.get(key)!['photoFile'], isNotNull);
+        expect(reported.lostPhotosFor({'bid-1'}), isEmpty);
+      });
+    });
 
     test('dismissLostPhoto retire le message et notifie', () async {
       await _hiveService.userPrefs.put(OfflineSyncService.lostPhotosKey, [

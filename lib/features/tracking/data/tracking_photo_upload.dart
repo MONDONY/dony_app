@@ -40,13 +40,35 @@ bool isTrackingPhotoRefused(AppException error) => switch (error) {
   _ => false,
 };
 
+/// Vrai quand l'échec de lecture vient d'une photo qui n'existe vraiment
+/// plus. Toute autre [FileSystemException] (fichier protégé tant que le
+/// téléphone est verrouillé, sur iOS) est passagère : la photo est gardée et
+/// l'envoi réessayé plus tard (FLUTTER-F).
+bool isTrackingPhotoMissing(FileSystemException error, String path) {
+  if (error is PathNotFoundException) return true;
+  try {
+    return !File(path).existsSync();
+  } on FileSystemException {
+    return false;
+  }
+}
+
+void _warnUnreadable(FileSystemException error) => AppLog.warn(
+  'tracking.photo_unreadable',
+  data: {
+    'type': error.runtimeType.toString(),
+    'errno': ?error.osError?.errorCode,
+  },
+);
+
 /// Envoie la photo de l'étape si [photoPath] existe. Une photo refusée par
 /// le serveur n'empêche jamais l'étape : elle part sans photo (le scan
 /// d'arrivée déclenche la capture du paiement, le perdre est grave). Une
 /// photo dont le fichier local a disparu non plus ([TrackingPhotoUpload.lost]).
 ///
-/// Panne réseau, délai, 5xx, session expirée, limite de débit : l'erreur
-/// remonte et l'appelant garde l'étape pour plus tard.
+/// Panne réseau, délai, 5xx, session expirée, limite de débit, photo
+/// présente mais illisible pour l'instant : l'erreur remonte et l'appelant
+/// garde l'étape pour plus tard.
 Future<TrackingPhotoUpload> uploadTrackingPhotoOrDrop(
   TrackingRepository repository, {
   required String bidId,
@@ -56,15 +78,23 @@ Future<TrackingPhotoUpload> uploadTrackingPhotoOrDrop(
   try {
     final key = await repository.uploadTrackingPhoto(bidId, photoPath);
     return (key: key, dropped: false, lost: false);
-  } on FileSystemException {
-    // FLUTTER-MJ : photo locale disparue (PathNotFoundException). Le back
-    // accepte toutes les étapes sans photo : réessayer ne la ferait pas
-    // revenir, l'étape part sans elle.
-    return (key: null, dropped: false, lost: true);
+  } on FileSystemException catch (error) {
+    // FLUTTER-MJ : photo locale disparue. Le back accepte toutes les étapes
+    // sans photo : réessayer ne la ferait pas revenir, l'étape part sans elle.
+    if (isTrackingPhotoMissing(error, photoPath)) {
+      return (key: null, dropped: false, lost: true);
+    }
+    _warnUnreadable(error);
+    rethrow;
   } catch (error) {
     // Fichier disparu pendant l'envoi : Dio enveloppe l'erreur de lecture.
     if (error is DioException && error.error is FileSystemException) {
-      return (key: null, dropped: false, lost: true);
+      final inner = error.error! as FileSystemException;
+      if (isTrackingPhotoMissing(inner, photoPath)) {
+        return (key: null, dropped: false, lost: true);
+      }
+      _warnUnreadable(inner);
+      rethrow;
     }
     final cause = unwrapDioError(error);
     if (isTrackingPhotoRefused(cause)) {

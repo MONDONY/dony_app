@@ -5,12 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late Directory base;
+  late Directory tmp;
   late TrackingQueuePhotoStore store;
 
   setUp(() async {
     base = await Directory.systemTemp.createTemp('queue_photo_store_');
+    tmp = await base.createTemp('tmp_');
     store = TrackingQueuePhotoStore(
       baseDirectory: () async => base,
+      temporaryDirectory: () async => tmp,
       now: () => DateTime.fromMicrosecondsSinceEpoch(42),
     );
   });
@@ -48,5 +51,39 @@ void main() {
     expect(copy.existsSync(), isFalse);
     await expectLater(store.remove(name), completes);
     await expectLater(store.remove(null), completes);
+  });
+
+  group('adoptLegacy (FLUTTER-F)', () {
+    test('chemin encore présent : copié', () async {
+      final source = File('${base.path}/old.jpg')..writeAsBytesSync([3]);
+      expect(await store.adoptLegacy(source.path), '42_old.jpg');
+    });
+
+    test('retrouvé par son nom dans le répertoire temporaire actuel', () async {
+      File('${tmp.path}/cam.jpg').writeAsBytesSync([4]);
+      final name = await store.adoptLegacy('/var/OLD-UUID/tmp/cam.jpg');
+      expect(name, '42_cam.jpg');
+      expect(File(await store.resolve(name!)).readAsBytesSync(), [4]);
+    });
+
+    test('retrouvé parmi les copies', () async {
+      final copy = File(await store.resolve('7_copie.jpg'))
+        ..writeAsBytesSync([5]);
+      expect(copy.existsSync(), isTrue);
+      expect(await store.adoptLegacy('/var/OLD/7_copie.jpg'), '7_copie.jpg');
+    });
+
+    test('introuvable : null', () async {
+      expect(await store.adoptLegacy('/var/OLD/absente.jpg'), isNull);
+      expect(await store.adoptLegacy('/var/OLD/'), isNull);
+    });
+
+    test('répertoire temporaire indisponible : null', () async {
+      final broken = TrackingQueuePhotoStore(
+        baseDirectory: () async => base,
+        temporaryDirectory: () async => throw StateError('no plugin'),
+      );
+      expect(await broken.adoptLegacy('/var/OLD/x.jpg'), isNull);
+    });
   });
 }
