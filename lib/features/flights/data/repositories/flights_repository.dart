@@ -7,6 +7,7 @@ import 'package:dony/features/flights/data/models/flight_alert_offers.dart';
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_defaults.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/data/models/flight_search_result.dart';
@@ -55,8 +56,11 @@ class FlightsRepository {
 
   Future<FlightDefaults> defaults() => _datasource.defaults();
 
-  Future<String> affiliateLink(FlightOffer offer, {required String source}) =>
-      _datasource.click(offer, source: source);
+  Future<String> affiliateLink(
+    FlightOffer offer, {
+    required String source,
+    FlightPassengers passengers = FlightPassengers.single,
+  }) => _datasource.click(offer, source: source, passengers: passengers);
 
   Future<List<FlightAlert>> alerts() => _datasource.alerts();
 

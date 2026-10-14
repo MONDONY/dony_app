@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/flights/bloc/flight_link_cubit.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_offer_card.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_ui.dart';
@@ -25,6 +26,7 @@ class FlightSimilarStaysSection extends StatelessWidget {
     required this.range,
     this.requestedDeparture,
     this.requestedReturn,
+    this.passengers = FlightPassengers.single,
   });
 
   final List<FlightOffer> offers;
@@ -35,6 +37,9 @@ class FlightSimilarStaysSection extends StatelessWidget {
   /// Dates de la recherche, pour mettre en évidence celles qui diffèrent.
   final FlightWhen? requestedDeparture;
   final FlightWhen? requestedReturn;
+
+  /// Passagers de la recherche : mention du prix et lien du partenaire.
+  final FlightPassengers passengers;
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +87,11 @@ class FlightSimilarStaysSection extends StatelessWidget {
               requestedDeparture: requestedDeparture,
               requestedReturn: requestedReturn,
               stayDays: offer.stayDays,
-              onOpen: () => context.read<FlightLinkCubit>().openSimilar(offer),
+              passengers: passengers,
+              onOpen: () => context.read<FlightLinkCubit>().openSimilar(
+                offer,
+                passengers: passengers,
+              ),
             ),
           ),
         ],

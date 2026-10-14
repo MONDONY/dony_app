@@ -1,6 +1,7 @@
 import 'package:dony/features/flights/data/datasources/flights_remote_datasource.dart';
 import 'package:dony/features/flights/data/models/flight_alert.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -112,6 +113,24 @@ void main() {
       'gate': 'Kiwi.com',
       'source': 'deal',
     });
+  });
+
+  test('clic : passagers envoyés seulement hors adulte seul', () async {
+    api.on('POST', '/flights/clicks', {'url': 'https://www.aviasales.com/x'});
+
+    await datasource.click(
+      FlightOffer.fromJson(_offerJson),
+      source: 'search',
+      passengers: const FlightPassengers(adults: 2, children: 1, infants: 1),
+    );
+    expect((api.last.data as Map)['passengers'], {
+      'adults': 2,
+      'children': 1,
+      'infants': 1,
+    });
+
+    await datasource.click(FlightOffer.fromJson(_offerJson), source: 'search');
+    expect((api.last.data as Map).containsKey('passengers'), isFalse);
   });
 
   test('alerte : périodes au jour, champs absents omis', () async {

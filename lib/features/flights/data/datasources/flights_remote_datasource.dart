@@ -4,6 +4,7 @@ import 'package:dony/features/flights/data/models/flight_alert_offers.dart';
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_defaults.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:dony/features/flights/data/models/flight_search_result.dart';
@@ -60,7 +61,15 @@ class FlightsRemoteDatasource {
   }
 
   /// Enregistre le clic et renvoie le lien affilié complet à ouvrir.
-  Future<String> click(FlightOffer offer, {required String source}) async {
+  ///
+  /// [passengers] part seulement s'il diffère d'un adulte seul : le back
+  /// réécrit alors le lien Aviasales (yadony-back #527) ; absent, il garde
+  /// le lien d'un adulte, comme avant.
+  Future<String> click(
+    FlightOffer offer, {
+    required String source,
+    FlightPassengers passengers = FlightPassengers.single,
+  }) async {
     final res = await _apiClient.dio.post<Map<String, dynamic>>(
       '/flights/clicks',
       data: {
@@ -72,6 +81,7 @@ class FlightsRemoteDatasource {
         'airlineCode': ?offer.airlineCode,
         'gate': ?offer.gate,
         'source': source,
+        if (!passengers.isSingle) 'passengers': passengers.toJson(),
       },
     );
     return res.data!['url'] as String;

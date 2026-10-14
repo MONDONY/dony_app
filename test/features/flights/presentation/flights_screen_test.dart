@@ -18,6 +18,7 @@ import 'package:dony/features/flights/data/datasources/flight_recent_store.dart'
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_defaults.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_recent_search.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
@@ -116,6 +117,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(const FlightSearchQuery());
     registerFallbackValue(offer('fallback'));
+    registerFallbackValue(FlightPassengers.single);
   });
 
   setUp(() {
@@ -521,6 +523,83 @@ void main() {
     await tester.tap(find.byKey(const Key('flights-summary-edit')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('flights-form')), findsOneWidget);
+  });
+
+  testWidgets('passagers : feuille, résumé, en-tête, prix et lien', (
+    tester,
+  ) async {
+    FlightPassengers? sent;
+    when(
+      () => repository.affiliateLink(
+        any(),
+        source: any(named: 'source'),
+        passengers: any(named: 'passengers'),
+      ),
+    ).thenAnswer((inv) async {
+      sent = inv.namedArguments[#passengers] as FlightPassengers;
+      throw Exception('offline');
+    });
+    await open(tester);
+    expect(
+      tester
+          .widget<Text>(find.byKey(const Key('flights-passengers-value')))
+          .data,
+      '1 adulte',
+    );
+
+    await tester.tap(find.byKey(const Key('flights-passengers')));
+    await tester.pumpAndSettle();
+    expect(find.text('Qui voyage ?'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('flight-passengers-adults-plus')));
+    await tester.tap(find.byKey(const Key('flight-passengers-children-plus')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('flight-passengers-validate')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<Text>(find.byKey(const Key('flights-passengers-value')))
+          .data,
+      '2 adultes, 1 enfant',
+    );
+
+    await tester.tap(find.byKey(const Key('flights-search-button')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<Text>(find.byKey(const Key('flights-summary-passengers')))
+          .data,
+      '3',
+    );
+    // Enfant dans la recherche : prix par adulte, pas de total estimé.
+    expect(find.byKey(const Key('flight-offer-per-adult')), findsWidgets);
+    expect(find.text('par adulte'), findsWidgets);
+    expect(find.text('Prix final sur Aviasales'), findsWidgets);
+
+    await tester.tap(find.byKey(const Key('flight-open-a')));
+    await tester.pumpAndSettle();
+    expect(sent, const FlightPassengers(adults: 2, children: 1));
+  });
+
+  testWidgets('adultes seuls : total estimé sous le prix par adulte', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.tap(find.byKey(const Key('flights-passengers')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('flight-passengers-adults-plus')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('flight-passengers-validate')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('flights-search-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('par adulte'), findsWidgets);
+    expect(
+      find.textContaining(RegExp(r'^≈ 862.€ pour 2 pers\.$')),
+      findsOneWidget,
+    );
+    expect(find.text('Prix final sur Aviasales'), findsNothing);
   });
 
   testWidgets('résultats : scarabée seul en haut, alerte par le bouton bas', (
@@ -1148,7 +1227,12 @@ void main() {
       verify(
         () => analytics.logEvent(
           'flights_offer_clicked',
-          properties: {'source': 'similar', 'stops': 0, 'round_trip': true},
+          properties: {
+            'source': 'similar',
+            'stops': 0,
+            'round_trip': true,
+            'passengers': 1,
+          },
         ),
       ).called(1);
       expect(tester.takeException(), isNull);

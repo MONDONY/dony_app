@@ -7,6 +7,7 @@ import 'package:dony/features/flights/data/datasources/flight_recent_store.dart'
 import 'package:dony/features/flights/data/models/flight_deal.dart';
 import 'package:dony/features/flights/data/models/flight_filters.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_recent_search.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
@@ -227,6 +228,7 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
         departure: departure,
         returnDate: returnDate,
         directOnly: state.query.directOnly,
+        passengers: state.query.passengers,
         roundTrip: state.query.roundTrip || returnDate != null,
       ),
     ),
@@ -234,6 +236,13 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
 
   void setDirectOnly(bool value) =>
       emit(state.copyWith(query: state.query.copyWith(directOnly: value)));
+
+  /// Feuille « Passagers » validée. Une composition hors des bornes du back
+  /// (jamais produite par la feuille) est ignorée.
+  void setPassengers(FlightPassengers passengers) {
+    if (!passengers.isValid) return;
+    emit(state.copyWith(query: state.query.copyWith(passengers: passengers)));
+  }
 
   Future<void> search({bool fromDeal = false}) async {
     final query = state.query;
@@ -268,6 +277,10 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
             'date_mode': _dateMode(query.departure),
             'from_deal': fromDeal,
             'count': result.offers.length,
+            'passengers': query.passengers.total,
+            'adults': query.passengers.adults,
+            'children': query.passengers.children,
+            'infants': query.passengers.infants,
           },
         ),
       );
@@ -361,6 +374,7 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
           returnDate: offer.returnAt == null
               ? null
               : FlightWhen.month(offer.returnAt!),
+          passengers: state.query.passengers,
         ),
       ),
     );
@@ -398,6 +412,7 @@ class FlightSearchCubit extends Cubit<FlightSearchState> {
           departure: month(q.departure),
           returnDate: month(q.returnDate),
           directOnly: q.directOnly,
+          passengers: q.passengers,
           roundTrip: q.roundTrip,
         ),
       ),

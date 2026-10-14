@@ -23,6 +23,7 @@ import 'package:dony/features/flights/presentation/widgets/flight_deal_card.dart
 import 'package:dony/features/flights/presentation/widgets/flight_filter_sheet.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_loading_view.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_offer_card.dart';
+import 'package:dony/features/flights/presentation/widgets/flight_passengers_sheet.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_recent_searches.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_results_parts.dart';
 import 'package:dony/features/flights/presentation/widgets/flight_search_form.dart';
@@ -109,6 +110,7 @@ Widget? _similar(FlightSearchState state, {double top = 0}) {
       range: result.similarStayRange,
       requestedDeparture: state.query.departure,
       requestedReturn: state.query.returnDate,
+      passengers: state.query.passengers,
     ),
   );
 }
@@ -206,6 +208,15 @@ class _FormView extends StatelessWidget {
     if (choice != null) cubit.setDates(choice.departure, choice.returnDate);
   }
 
+  Future<void> _pickPassengers(BuildContext context) async {
+    final cubit = context.read<FlightSearchCubit>();
+    final choice = await FlightPassengersSheet.show(
+      context,
+      initial: cubit.state.query.passengers,
+    );
+    if (choice != null) cubit.setPassengers(choice);
+  }
+
   /// Aller-retour sans date de retour : la feuille des dates s'ouvre sur le
   /// retour, puis la recherche part si la date est choisie.
   Future<void> _submit(BuildContext context) async {
@@ -277,6 +288,7 @@ class _FormView extends StatelessWidget {
                             _pickRoute(context, departure: departure),
                         onSwap: cubit.swap,
                         onPickDates: () => _pickDates(context),
+                        onPickPassengers: () => _pickPassengers(context),
                         onDirectChanged: cubit.setDirectOnly,
                       ),
                       Padding(
@@ -461,7 +473,7 @@ class _Loading extends StatelessWidget {
         roundTrip: q.isRoundTrip,
       ),
       FlightFormat.dates(l, q.departure, q.returnDate),
-      l.flightsPassengers(1),
+      l.flightsPassengers(q.passengers.total),
     ].join(' · ');
     return FlightLoadingView(
       routeChip: chip,
@@ -562,6 +574,7 @@ class _ResultsView extends StatelessWidget {
                 route: route,
                 dates: dates,
                 onBack: cubit.backToForm,
+                passengers: q.passengers.total,
               ),
               Expanded(
                 child: FlightEmptyResults(
@@ -581,6 +594,7 @@ class _ResultsView extends StatelessWidget {
                           context.read<FlightLinkCubit>().openAllAirlines(
                             state.result!,
                             from: 'empty',
+                            passengers: q.passengers,
                           );
                         },
                   liveSearchOpening: context.select<FlightLinkCubit, bool>(
@@ -620,8 +634,12 @@ class _ResultsView extends StatelessWidget {
               showDates: nearby,
               requestedDeparture: q.departure,
               requestedReturn: q.returnDate,
-              onOpen: () =>
-                  context.read<FlightLinkCubit>().open(offer, source: 'search'),
+              passengers: q.passengers,
+              onOpen: () => context.read<FlightLinkCubit>().open(
+                offer,
+                source: 'search',
+                passengers: q.passengers,
+              ),
             ),
           );
         }
@@ -642,6 +660,7 @@ class _ResultsView extends StatelessWidget {
                 onTap: () => context.read<FlightLinkCubit>().openAllAirlines(
                   state.result!,
                   from: 'results',
+                  passengers: q.passengers,
                 ),
               ),
             );
@@ -696,6 +715,7 @@ class _ResultsView extends StatelessWidget {
                   route: route,
                   dates: dates,
                   onBack: cubit.backToForm,
+                  passengers: q.passengers.total,
                 ),
                 FlightSortTabs(
                   summaries: summaries,

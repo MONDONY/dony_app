@@ -111,7 +111,7 @@ class _RecentRow extends StatelessWidget {
                     Text(
                       [
                         FlightFormat.dates(l, r.departure, r.returnDate),
-                        l.flightsPassengers(1),
+                        l.flightsPassengers(r.passengers.total),
                       ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

@@ -1,3 +1,4 @@
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
 import 'package:equatable/equatable.dart';
@@ -12,6 +13,7 @@ class FlightRecentSearch extends Equatable {
     this.returnDate,
     this.roundTrip = false,
     this.directOnly = false,
+    this.passengers = FlightPassengers.single,
     this.lowestPrice,
     this.currency,
     required this.searchedAt,
@@ -29,6 +31,7 @@ class FlightRecentSearch extends Equatable {
     returnDate: query.returnDate,
     roundTrip: query.isRoundTrip,
     directOnly: query.directOnly,
+    passengers: query.passengers,
     lowestPrice: lowestPrice,
     currency: currency,
     searchedAt: at,
@@ -51,6 +54,8 @@ class FlightRecentSearch extends Equatable {
       returnDate: returnDate,
       roundTrip: json['roundTrip'] as bool? ?? returnDate != null,
       directOnly: json['directOnly'] as bool? ?? false,
+      // Entrée d'avant le choix des passagers : un adulte.
+      passengers: FlightPassengers.tryParse(json['passengers']),
       lowestPrice: (json['lowestPrice'] as num?)?.toDouble(),
       currency: json['currency'] as String?,
       searchedAt: at,
@@ -63,18 +68,21 @@ class FlightRecentSearch extends Equatable {
   final FlightWhen? returnDate;
   final bool roundTrip;
   final bool directOnly;
+  final FlightPassengers passengers;
 
   /// Prix le plus bas reçu, `null` si la recherche n'a rien donné.
   final double? lowestPrice;
   final String? currency;
   final DateTime searchedAt;
 
-  /// Même trajet et mêmes dates : une seule entrée dans l'historique.
+  /// Même trajet, mêmes dates et mêmes passagers : une seule entrée dans
+  /// l'historique.
   String get dedupKey => [
     origin.code,
     destination.code,
     departure?.toQueryValue() ?? '',
     returnDate?.toQueryValue() ?? '',
+    passengers.key,
   ].join('|');
 
   FlightSearchQuery toQuery() => FlightSearchQuery(
@@ -83,6 +91,7 @@ class FlightRecentSearch extends Equatable {
     departure: departure,
     returnDate: returnDate,
     directOnly: directOnly,
+    passengers: passengers,
     roundTrip: roundTrip,
   );
 
@@ -93,6 +102,7 @@ class FlightRecentSearch extends Equatable {
     if (returnDate != null) 'returnDate': _whenJson(returnDate!),
     'roundTrip': roundTrip,
     'directOnly': directOnly,
+    'passengers': passengers.toJson(),
     'lowestPrice': ?lowestPrice,
     'currency': ?currency,
     'searchedAt': searchedAt.toIso8601String(),
@@ -131,6 +141,7 @@ class FlightRecentSearch extends Equatable {
     returnDate,
     roundTrip,
     directOnly,
+    passengers,
     lowestPrice,
     currency,
     searchedAt,

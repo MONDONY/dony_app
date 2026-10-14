@@ -5,6 +5,7 @@ import 'package:dony/features/flights/bloc/flight_search_cubit.dart';
 import 'package:dony/features/flights/data/datasources/flight_recent_store.dart';
 import 'package:dony/features/flights/data/models/flight_filters.dart';
 import 'package:dony/features/flights/data/models/flight_offer.dart';
+import 'package:dony/features/flights/data/models/flight_passengers.dart';
 import 'package:dony/features/flights/data/models/flight_place.dart';
 import 'package:dony/features/flights/data/models/flight_recent_search.dart';
 import 'package:dony/features/flights/data/models/flight_search_query.dart';
@@ -82,6 +83,82 @@ void main() {
       cubit.setRoute(origin: _lille, destination: _abidjan);
       expect(cubit.state.query.origin, _lille);
       expect(cubit.state.query.destination, _abidjan);
+    });
+  });
+
+  group('passagers', () {
+    const family = FlightPassengers(adults: 2, children: 1, infants: 1);
+
+    test('setPassengers garde le choix, ignore une composition invalide', () {
+      expect(cubit.state.query.passengers, FlightPassengers.single);
+      cubit.setPassengers(family);
+      expect(cubit.state.query.passengers, family);
+      cubit.setPassengers(const FlightPassengers(infants: 2));
+      expect(cubit.state.query.passengers, family);
+    });
+
+    test(
+      'les dates, l\'inversion et « tout le mois » gardent les passagers',
+      () async {
+        cubit
+          ..setPassengers(family)
+          ..setDates(FlightWhen.day(DateTime(2026, 12, 12)), null)
+          ..swap();
+        expect(cubit.state.query.passengers, family);
+        when(
+          () => repository.search(any()),
+        ).thenAnswer((_) async => _result([]));
+        route();
+        await cubit.searchWholeMonth();
+        expect(cubit.state.query.passengers, family);
+      },
+    );
+
+    test('la recherche trace les passagers et les mémorise', () async {
+      when(
+        () => repository.search(any()),
+      ).thenAnswer((_) async => _result([offer('a')]));
+      route();
+      cubit.setPassengers(family);
+
+      await cubit.search();
+
+      expect(cubit.state.recents.single.passengers, family);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.flightsSearchSubmitted,
+          properties: {
+            'round_trip': false,
+            'direct_only': false,
+            'date_mode': 'none',
+            'from_deal': false,
+            'count': 1,
+            'passengers': 4,
+            'adults': 2,
+            'children': 1,
+            'infants': 1,
+          },
+        ),
+      ).called(1);
+    });
+
+    test('rouvrir une recherche récente restaure ses passagers', () async {
+      final saved = FlightRecentSearch(
+        origin: _lille,
+        destination: _abidjan,
+        passengers: family,
+        searchedAt: DateTime(2026, 10, 9),
+      );
+      FlightSearchQuery? sent;
+      when(() => repository.search(any())).thenAnswer((inv) async {
+        sent = inv.positionalArguments.first as FlightSearchQuery;
+        return _result([offer('a')]);
+      });
+
+      await cubit.openRecent(saved);
+
+      expect(sent?.passengers, family);
+      expect(cubit.state.query.passengers, family);
     });
   });
 
