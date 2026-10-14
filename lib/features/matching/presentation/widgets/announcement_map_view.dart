@@ -471,8 +471,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
         // en affichage « Grille » à tort. Seule l'absence de TOUT prix dans
         // le cluster retombe sur la sentinelle `<= 0` (`_renderStackedPricePill`
         // affiche alors « Grille » plutôt qu'un faux montant).
+        // Un trajet tarifé à la grille seulement a un prix au kilo à 0 : il
+        // ne doit pas passer pour « le moins cher » de la pile (FLUTTER-PC).
         final itemsWithPrice = cluster.items.where(
-          (it) => it.announcement.senderPricePerKg != null,
+          (it) => (it.announcement.senderPricePerKg ?? 0) > 0,
         );
         final cheapestItem = itemsWithPrice.isEmpty
             ? cluster.items.first

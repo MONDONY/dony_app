@@ -114,7 +114,11 @@ double? _amount(String raw) {
 /// saisie n'est pas un prix acceptable.
 double? _parse(String raw) {
   final parsed = _amount(raw);
-  if (parsed == null || parsed <= 0 || parsed > maxUnitPriceActive) return null;
+  if (parsed == null ||
+      parsed < minGridItemPriceActive ||
+      parsed > maxUnitPriceActive) {
+    return null;
+  }
   return parsed;
 }
 
@@ -516,7 +520,7 @@ class _PriceStep extends StatelessWidget {
 }
 
 /// Nature du message d'écho, qui sert de clé d'animation.
-enum _EchoKind { invite, valid, tooHigh }
+enum _EchoKind { invite, valid, tooLow, tooHigh }
 
 /// Écho du montant réellement payé par l'expéditeur, recalculé à chaque touche.
 class _Echo extends StatelessWidget {
@@ -534,6 +538,10 @@ class _Echo extends StatelessWidget {
     final price = _parse(raw);
     final kind = amount != null && amount > maxUnitPriceActive
         ? _EchoKind.tooHigh
+        // Sous le plancher : un article à 8 F CFA trahit une saisie dans la
+        // mauvaise devise (5 € minimum, convertis dans la devise du profil).
+        : amount != null && amount > 0 && amount < minGridItemPriceActive
+        ? _EchoKind.tooLow
         : price == null
         ? _EchoKind.invite
         : _EchoKind.valid;
@@ -548,6 +556,12 @@ class _Echo extends StatelessWidget {
         ink = cs.error;
         message = l.priceGridMaxPriceMessage(
           formatPriceActive(maxUnitPriceActive),
+        );
+      case _EchoKind.tooLow:
+        background = cs.errorLight;
+        ink = cs.error;
+        message = l.priceGridMinPriceMessage(
+          formatPriceActive(minGridItemPriceActive),
         );
       case _EchoKind.invite:
         background = cs.surfaceContainerHighest;

@@ -357,6 +357,57 @@ void main() {
     });
 
     testWidgets(
+      'FLUTTER-PF : un rechargement garde la position de défilement',
+      (tester) async {
+        final many = [
+          for (var i = 0; i < 30; i++)
+            ConversationModel(
+              id: 'conv-$i',
+              bidId: 'bid-$i',
+              firestoreConversationId: 'conv_bid-$i',
+              otherParticipant: ParticipantModel(
+                id: 'uid-$i',
+                name: 'Personne $i',
+              ),
+              lastMessagePreview: 'Message $i',
+              lastMessageAt: DateTime.now(),
+            ),
+        ];
+        final states = StreamController<ConversationListState>.broadcast();
+        addTearDown(states.close);
+        when(() => bloc.state).thenReturn(ConversationListLoaded(many));
+        when(() => bloc.stream).thenAnswer((_) => states.stream);
+        await _pump(tester, bloc);
+        await tester.pumpAndSettle();
+
+        final list = find.byKey(
+          const PageStorageKey<String>('conversation-list'),
+        );
+        final listScrollable = find.descendant(
+          of: list,
+          matching: find.byType(Scrollable),
+        );
+        await tester.drag(list, const Offset(0, -900));
+        await tester.pumpAndSettle();
+        final scrollable = tester.state<ScrollableState>(listScrollable);
+        final offset = scrollable.position.pixels;
+        expect(offset, greaterThan(0));
+
+        // Rechargement silencieux au retour d'une conversation : nouvel état
+        // Loaded, la liste reste à la même position.
+        final reloaded = ConversationListLoaded([...many]);
+        when(() => bloc.state).thenReturn(reloaded);
+        states.add(reloaded);
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.state<ScrollableState>(listScrollable).position.pixels,
+          offset,
+        );
+      },
+    );
+
+    testWidgets(
       'après retour du chat (pop), recharge la liste pour refléter le '
       'dernier message envoyé/lu',
       (tester) async {

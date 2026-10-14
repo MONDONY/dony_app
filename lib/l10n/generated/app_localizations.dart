@@ -24173,6 +24173,12 @@ abstract class AppLocalizations {
   /// **'Maximum {max} par article.'**
   String priceGridMaxPriceMessage(String max);
 
+  /// Message d'écho quand le montant saisi est sous le plancher de 5 € converti dans la devise du profil, min déjà formaté (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Minimum {min} par article.'**
+  String priceGridMinPriceMessage(String min);
+
   /// Message d'écho invitant à saisir un montant (price_grid_item_form_sheet.dart).
   ///
   /// In fr, this message translates to:
@@ -29096,6 +29102,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce prix au kilo est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.'**
   String get errorPriceOutOfBoundsMessage;
+
+  /// Refus 422 price-grid/price-out-of-bounds d'un article de grille.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce prix d\'article est en dehors des limites autorisées : 5 € au moins, 500 € au plus, convertis dans votre devise.'**
+  String get errorPriceGridOutOfBoundsMessage;
 
   /// Champ devise de la feuille d'une étape : chaque étape a sa devise (FLUTTER-HP).
   ///

@@ -368,7 +368,10 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         ),
         // SliverToBoxAdapter garde les lignes épinglées montées quand elles
         // sortent de l'écran : un ListView les détruirait au défilement.
+        // La clé garde la position de défilement si la liste est reconstruite
+        // (retour d'une conversation, FLUTTER-PF).
         child: CustomScrollView(
+          key: const PageStorageKey<String>('conversation-list'),
           slivers: [
             SliverToBoxAdapter(child: _archivedRow(context, state)),
             SliverToBoxAdapter(child: _pinnedRows()),

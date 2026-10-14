@@ -654,9 +654,54 @@ void main() {
         blockEvents.notifyBlocked('uid-1');
         await Future<void>.delayed(const Duration(milliseconds: 50));
       },
+      // Le rechargement est silencieux (FLUTTER-PF) : pas de second Loading.
       expect: () => [
         isA<ConversationListLoading>(),
         isA<ConversationListLoaded>(),
+        isA<ConversationListLoaded>(),
+      ],
+      verify: (_) => verify(() => convRepo.getConversationPage()).called(2),
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
+      'FLUTTER-PF : un rechargement après une liste chargée n\'émet pas Loading',
+      build: () => ConversationListBloc(convRepo, firestoreRepo),
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        when(() => convRepo.getConversationPage()).thenAnswer(
+          (_) async => ConversationPage([
+            _conv,
+            _conv.copyWith(lastMessagePreview: 'Nouveau message'),
+          ]),
+        );
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>(),
+        isA<ConversationListLoaded>().having(
+          (s) => s.conversations.last.lastMessagePreview,
+          'dernier aperçu',
+          'Nouveau message',
+        ),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
+      'FLUTTER-PF : un rechargement raté garde la liste affichée',
+      build: () => ConversationListBloc(convRepo, firestoreRepo),
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        when(
+          () => convRepo.getConversationPage(),
+        ).thenThrow(Exception('hors ligne'));
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      },
+      expect: () => [
         isA<ConversationListLoading>(),
         isA<ConversationListLoaded>(),
       ],

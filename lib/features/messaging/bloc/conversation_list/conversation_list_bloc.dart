@@ -84,7 +84,13 @@ class ConversationListBloc
     ConversationsLoadRequested event,
     Emitter<ConversationListState> emit,
   ) async {
-    emit(const ConversationListLoading());
+    // Squelette au premier chargement seulement : ensuite (retour d'une
+    // conversation, onglet retapé, blocage), la liste reste affichée pendant
+    // le rechargement. L'émettre à chaque fois remplaçait la liste par le
+    // squelette et la ramenait tout en haut (FLUTTER-PF).
+    if (_loaded == null) {
+      emit(const ConversationListLoading());
+    }
     var listComplete = false;
     try {
       final page = await _repository.getConversationPage();
@@ -107,7 +113,12 @@ class ConversationListBloc
         ),
       );
     } catch (e) {
-      emit(ConversationListError(unwrapDioError(e)));
+      // Une liste déjà affichée reste à l'écran : un rechargement silencieux
+      // raté (hors ligne au retour d'une conversation) ne la remplace pas par
+      // un écran d'erreur.
+      if (_loaded == null) {
+        emit(ConversationListError(unwrapDioError(e)));
+      }
       return;
     }
 

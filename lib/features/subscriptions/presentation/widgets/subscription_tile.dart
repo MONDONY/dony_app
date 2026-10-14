@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/features/subscriptions/presentation/subscription_labels.dart';
@@ -255,7 +256,11 @@ class _LastTripLine extends StatelessWidget {
         ),
         Text(' · ', style: style),
         Text(
-          '$price/kg',
+          // Trajet tarifé à la grille seulement : prix au kilo à 0, jamais
+          // « 0 €/kg » (FLUTTER-PC).
+          last.gridOnly
+              ? gridPriceLabel(l, last.minGridUnitPriceDisplay, last.currency)
+              : '$price/kg',
           style: style?.copyWith(
             fontFeatures: const [FontFeature.tabularFigures()],
           ),

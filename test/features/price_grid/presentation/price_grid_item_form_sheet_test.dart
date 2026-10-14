@@ -315,6 +315,23 @@ void main() {
       expect(btn.onPressed, isNull);
     });
 
+    testWidgets('un article sous 5 € bloque et indique le minimum', (
+      tester,
+    ) async {
+      await _open(tester);
+      await tester.tap(find.text('Chaussures'));
+      await tester.pumpAndSettle();
+
+      await _type(tester, '4');
+
+      expect(find.textContaining('Minimum'), findsOneWidget);
+      expect(find.textContaining('5'), findsWidgets);
+      final btn = tester.widget<DonyButton>(
+        find.byKey(const Key('price-grid-submit')),
+      );
+      expect(btn.onPressed, isNull);
+    });
+
     testWidgets('le bouton reste inerte sans montant', (tester) async {
       await _open(tester);
       await tester.tap(find.text('Chaussures'));

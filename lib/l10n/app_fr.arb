@@ -16419,6 +16419,15 @@
       }
     }
   },
+  "priceGridMinPriceMessage": "Minimum {min} par article.",
+  "@priceGridMinPriceMessage": {
+    "description": "Message d'écho quand le montant saisi est sous le plancher de 5 € converti dans la devise du profil, min déjà formaté (price_grid_item_form_sheet.dart).",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
   "priceGridEnterAmountMessage": "Saisissez le montant que vous voulez toucher.",
   "@priceGridEnterAmountMessage": {
     "description": "Message d'écho invitant à saisir un montant (price_grid_item_form_sheet.dart)."
@@ -19806,6 +19815,8 @@
   "@errorPriceOutOfBoundsTitle": {"description": "Erreur price-out-of-bounds : prix au kilo hors des bornes de la devise (FLUTTER-GK)."},
   "errorPriceOutOfBoundsMessage": "Ce prix au kilo est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.",
   "@errorPriceOutOfBoundsMessage": {"description": "Erreur price-out-of-bounds : prix au kilo hors des bornes de la devise (FLUTTER-GK)."},
+  "errorPriceGridOutOfBoundsMessage": "Ce prix d'article est en dehors des limites autorisées : 5 € au moins, 500 € au plus, convertis dans votre devise.",
+  "@errorPriceGridOutOfBoundsMessage": {"description": "Refus 422 price-grid/price-out-of-bounds d'un article de grille."},
   "tripLegSheetCurrency": "Devise de l'étape",
   "@tripLegSheetCurrency": {"description": "Champ devise de la feuille d'une étape : chaque étape a sa devise (FLUTTER-HP)."},
   "tripLegSheetCurrencyHint": "Par défaut, celle du pays de départ. Le prix n'est pas converti si vous en changez.",

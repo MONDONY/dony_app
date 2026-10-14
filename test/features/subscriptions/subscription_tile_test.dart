@@ -74,6 +74,51 @@ void main() {
     expect(find.text('il y a 2 h'), findsOneWidget);
   });
 
+  testWidgets('FLUTTER-PC : dernier trajet à la grille, jamais « 0 €/kg »', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        _item(
+          last: LastAnnouncement(
+            announcementId: 'a1',
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            pricePerKg: 0,
+            publishedAt: now,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Grille tarifaire'), findsOneWidget);
+    expect(find.textContaining('/kg'), findsNothing);
+  });
+
+  testWidgets(
+    'dernier trajet à la grille, prix le plus bas servi : « dès X »',
+    (tester) async {
+      await tester.pumpWidget(
+        host(
+          _item(
+            last: LastAnnouncement(
+              announcementId: 'a1',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              pricePerKg: 0,
+              publishedAt: now,
+              pricingMode: 'MIXED',
+              minGridUnitPriceDisplay: 16.8,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.textContaining('dès 16,80'), findsOneWidget);
+      expect(find.textContaining('/kg'), findsNothing);
+    },
+  );
+
   testWidgets('le prix suit la devise de l\'annonce, pas l\'euro par défaut', (
     tester,
   ) async {

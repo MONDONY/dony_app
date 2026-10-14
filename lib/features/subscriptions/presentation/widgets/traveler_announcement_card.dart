@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -27,6 +28,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
     final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final gridOnly = announcement.gridOnly;
     final isFull = announcement.availableKg <= 0;
 
     return DonyCard(
@@ -50,10 +52,18 @@ class TravelerAnnouncementCard extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        formatPriceIn(
-                          netToSenderPrice(announcement.pricePerKg),
-                          announcement.currency,
-                        ),
+                        // Trajet tarifé à la grille seulement : son prix au
+                        // kilo vaut 0, jamais « 0 € /kg » (FLUTTER-PC).
+                        gridOnly
+                            ? gridPriceLabel(
+                                l,
+                                announcement.minGridUnitPriceDisplay,
+                                announcement.currency,
+                              )
+                            : formatPriceIn(
+                                netToSenderPrice(announcement.pricePerKg),
+                                announcement.currency,
+                              ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: tt.titleLarge?.copyWith(
@@ -63,11 +73,15 @@ class TravelerAnnouncementCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: DonySpacing.xxs),
-                    Text(
-                      '/kg',
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
+                    if (!gridOnly) ...[
+                      const SizedBox(width: DonySpacing.xxs),
+                      Text(
+                        '/kg',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

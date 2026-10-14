@@ -106,4 +106,40 @@ void main() {
       );
     });
   });
+
+  test(
+    'grille : mode et prix « dès X » lus, KG par défaut sur un ancien back',
+    () {
+      Map<String, dynamic> base() => {
+        'announcementId': 'ann-1',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'departureDate': '2026-07-10',
+        'travelerId': 't-1',
+        'travelerName': 'Awa S.',
+        'travelerInitials': 'AS',
+        'travelerRating': 4.7,
+        'availableKg': 12.0,
+        'pricePerKg': 0,
+      };
+      final grid = TripMatchModel.fromJson({
+        ...base(),
+        'pricingMode': 'MIXED',
+        'minGridUnitPriceDisplay': 16.8,
+      });
+      expect(grid.pricingMode, 'MIXED');
+      expect(grid.minGridUnitPriceDisplay, 16.8);
+      expect(grid.gridOnly, isTrue);
+
+      final legacy = TripMatchModel.fromJson(base());
+      expect(legacy.pricingMode, 'KG');
+      expect(legacy.minGridUnitPriceDisplay, isNull);
+      // Prix au kilo à 0 sur un ancien back : grille quand même.
+      expect(legacy.gridOnly, isTrue);
+      expect(
+        TripMatchModel.fromJson({...base(), 'pricePerKg': null}).gridOnly,
+        isFalse,
+      );
+    },
+  );
 }

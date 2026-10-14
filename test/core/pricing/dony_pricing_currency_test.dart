@@ -39,6 +39,22 @@ void main() {
     });
   });
 
+  group('minGridItemPriceFor — article de grille : 5 € au moins', () {
+    test('EUR 5, F CFA 3 280 (3 279,785 arrondi vers le haut), USD 5,40', () {
+      expect(minGridItemPriceFor(SupportedCurrency.eur), 5);
+      expect(minGridItemPriceFor(SupportedCurrency.xof), 3280);
+      expect(minGridItemPriceFor(SupportedCurrency.xaf), 3280);
+      expect(minGridItemPriceFor(SupportedCurrency.usd), 5.4);
+      expect(minGridItemPriceFor(SupportedCurrency.cad), 7.35);
+    });
+
+    test('toujours sous le plafond de la devise', () {
+      for (final c in SupportedCurrency.values) {
+        expect(minGridItemPriceFor(c), lessThan(maxUnitPriceFor(c)));
+      }
+    });
+  });
+
   group(
     'minUnitPriceFor — plancher 1 €/kg arrondi vers le haut (FLUTTER-GK)',
     () {

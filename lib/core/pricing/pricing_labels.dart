@@ -60,3 +60,18 @@ String? unitPriceBoundsError(
   ),
   null => null,
 };
+
+/// Prix d'un trajet tarifé à la grille sur une carte compacte (FLUTTER-PC) :
+/// « dès 15 € » quand le serveur sert le prix le plus bas de la grille
+/// ([minGridUnitPriceDisplay], net + commission, dans [currency]), sinon
+/// « Grille tarifaire ». Jamais « 0 € /kg ».
+String gridPriceLabel(
+  AppLocalizations l,
+  double? minGridUnitPriceDisplay,
+  String? currency,
+) {
+  final min = minGridUnitPriceDisplay;
+  return min != null && min > 0
+      ? l.tripPosterFromPrice(formatPriceIn(min, currency))
+      : l.listingPriceGridLabel;
+}
