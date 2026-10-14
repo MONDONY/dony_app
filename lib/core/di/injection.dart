@@ -236,6 +236,7 @@ import 'package:dony/features/recipients/data/datasources/recipient_invitation_d
 import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/data/pending_referral_code_store.dart';
 import 'package:dony/features/referral/data/referral_datasource.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
@@ -1392,6 +1393,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<ReferralBloc>(
     () => ReferralBloc(getIt<ReferralRepository>(), getIt<AnalyticsService>()),
     dispose: (b) => b.close(),
+  );
+  // Code parrain venu d'un lien d'invitation, en attente de l'inscription.
+  getIt.registerLazySingleton<PendingReferralCodeStore>(
+    PendingReferralCodeStore.new,
   );
 
   // Package request marketplace

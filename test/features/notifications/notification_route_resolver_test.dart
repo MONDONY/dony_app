@@ -688,6 +688,17 @@ void main() {
     });
   });
 
+  test('REFERRAL_REWARD_AVAILABLE ouvre l\'écran Parrainage', () {
+    expect(
+      resolveNotificationRoute('REFERRAL_REWARD_AVAILABLE', {
+        'invitationId': '0b6c2a52-1d2f-4a7e-9b1e-3c4d5e6f7a8b',
+        'route': '/profile/referral',
+      }),
+      '/profile/referral',
+    );
+    expect(isShellTabRoute('/profile/referral'), isFalse);
+  });
+
   test('FIRST_ACTION_REMINDER ouvre les premiers pas', () {
     expect(
       resolveNotificationRoute('FIRST_ACTION_REMINDER', {}),

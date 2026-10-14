@@ -472,7 +472,9 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `help_social_link_opened` | HelpCenterBloc._onExternalOpenRequested — réseau social ouvert (propriété enum `network`) |
 | `help_youtube_subscribe_tapped` | HelpCenterBloc._onExternalOpenRequested — chaîne YouTube ouverte (propriété contrôlée `source`) |
 | `help_config_load_failed` | HelpCenterBloc._emitFailure — échec non bloquant (propriété fermée `reason`: `fetch`/`parse`/`launch`) |
-| `referral_shared` | ReferralBloc._onShared() |
+| `referral_shared` | ReferralBloc._onShared() / _onLinkCopied() — écran Parrainage : propriété `channel` : `whatsapp` (WhatsApp ouvert par `wa.me`), `share_sheet` (feuille de partage système, y compris en repli quand WhatsApp ne s'ouvre pas), `copy_link` (bouton « Copier » du lien d'invitation). Jamais le code ni le lien |
+| `referral_reward_chosen` | ReferralBloc._onRewardChosen — récompense d'un filleul choisie dans la feuille « Choisissez votre récompense », acceptée par le serveur (`POST /me/referral/rewards/{invitationId}/choose`, yadony-back #528). Propriété `choice` : `WALLET_CREDIT` / `DISCOUNT_CODE`. Non émis sur un refus (409, 404, 422). Ni identifiant ni montant |
+| `referral_link_opened` | `handleReferralDeepLink` (`lib/app/referral_deep_link.dart`, appelé par `app.dart`) — lien d'invitation `yadony://referral?code=…` ouvert dans l'app (bouton « Ouvrir l'app » de `yadony.com/r/CODE`). Propriété `signed_in` : compte connecté (Parrainage s'ouvre, saisie pré-remplie si pas encore parrainé) ou non (code gardé pour l'étape « Parrainage » de l'inscription). Jamais le code |
 | `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
 | `phone_visibility_toggled` | PrivacySettingsBloc._onToggleHidePhone — bascule « Masquer mon numéro » confirmée par le serveur (propriété `hidden`) |
 | `user_blocked` | BlockedUsersBloc._onBlock — blocage confirmé par le serveur, depuis une fiche profil, un profil public ou une conversation. Aucune propriété : l'identité de la personne bloquée est sensible |

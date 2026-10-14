@@ -6,6 +6,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
@@ -287,7 +288,16 @@ class ProfileAdvantagesSection extends StatelessWidget {
                   l.profileReferralZeroInvited,
                   style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
-                onTap: () => context.push('/profile/referral'),
+                onTap: () async {
+                  await context.push('/profile/referral');
+                  if (!context.mounted) return;
+                  // Une récompense « crédit sur le solde » a pu être choisie :
+                  // la carte du solde et l'entrée « code parrain » se relisent.
+                  context.read<WalletBloc>().add(WalletRefreshRequested());
+                  context.read<ReferralBloc>().add(
+                    const ReferralLoadRequested(),
+                  );
+                },
               ),
               BlocBuilder<ReferralBloc, ReferralState>(
                 builder: (context, referralState) {

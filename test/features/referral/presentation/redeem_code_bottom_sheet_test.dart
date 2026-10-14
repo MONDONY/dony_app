@@ -225,4 +225,37 @@ void main() {
     expect(find.text('Apply'), findsOneWidget);
     expect(find.textContaining('invited by a friend'), findsOneWidget);
   });
+
+  // ── Code venu d'un lien d'invitation ─────────────────────────────────────────
+
+  testWidgets(
+    'initialCode : champ pré-rempli, bouton actif, rien envoyé sans tap',
+    (tester) async {
+      when(() => mockRepo.redeemCode(any())).thenAnswer((_) async {});
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => Scaffold(
+              body: ElevatedButton(
+                key: const Key('open-prefilled'),
+                onPressed: () =>
+                    RedeemCodeBottomSheet.show(ctx, initialCode: 'ABOU1890'),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('open-prefilled')));
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(TextField, 'ABOU1890'), findsOneWidget);
+      verifyNever(() => mockRepo.redeemCode(any()));
+
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockRepo.redeemCode('ABOU1890')).called(1);
+    },
+  );
 }

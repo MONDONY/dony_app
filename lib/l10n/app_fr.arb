@@ -262,6 +262,16 @@
   "errorSelfReferralMessage": "Vous ne pouvez pas utiliser votre propre code de parrainage.",
   "errorAlreadyReferredTitle": "Code déjà utilisé",
   "errorAlreadyReferredMessage": "Vous avez déjà utilisé un code de parrainage.",
+  "errorReferralInvitationNotFoundTitle": "Invitation introuvable",
+  "errorReferralInvitationNotFoundMessage": "Cette invitation n'existe plus. Actualisez la page Parrainage.",
+  "errorReferralRewardAlreadyChosenTitle": "Récompense déjà choisie",
+  "errorReferralRewardAlreadyChosenMessage": "Vous avez déjà choisi la récompense de cette invitation.",
+  "errorReferralRewardNotAvailableTitle": "Récompense pas encore disponible",
+  "errorReferralRewardNotAvailableMessage": "Elle se débloque quand le premier colis de votre filleul est livré.",
+  "errorReferralRewardChoiceInvalidTitle": "Choix impossible",
+  "errorReferralRewardChoiceInvalidMessage": "Cette récompense n'est pas proposée. Choisissez une autre option.",
+  "errorPromoNotOwnerTitle": "Code personnel",
+  "errorPromoNotOwnerMessage": "Ce code est réservé au compte qui l'a reçu en récompense de parrainage.",
   "errorUserNotFoundTitle": "Utilisateur introuvable",
   "errorUserNotFoundMessage": "Ce compte utilisateur n'existe plus.",
   "errorOfflineTitle": "Pas de connexion",
@@ -557,6 +567,8 @@
   "authReferralSuccessBody": "Votre ami sera récompensé dès que vous aurez effectué votre première livraison.",
   "authReferralSuccessFootnote": "Votre compte Yadony est prêt. Vous pouvez commencer à rechercher, envoyer ou suivre vos colis.",
   "authReferralContinueHome": "Continuer",
+  "authReferralPrefilledBody": "Votre code parrain est déjà rempli : la personne qui vous a invité sera récompensée à votre premier envoi.",
+  "authReferralPrefilledHint": "Code reconnu, venu de votre lien d'invitation",
   "authConsentTitle": "Une dernière chose",
   "authConsentBody": "Pour améliorer Yadony, on aimerait mesurer comment l'app est utilisée. C'est anonyme et facultatif.",
   "authConsentFootnote": "Jamais vos paiements, votre identité ou votre numéro. Vous pouvez changer d’avis dans Réglages.",
@@ -16460,17 +16472,9 @@
   "@referralScreenTitle": {
     "description": "Titre de l'AppBar (referral_screen.dart)."
   },
-  "referralStatInvited": "Invités",
-  "@referralStatInvited": {
-    "description": "Libellé de la stat « invités » (referral_screen.dart)."
-  },
   "referralStatSignedUp": "Inscrits",
   "@referralStatSignedUp": {
     "description": "Libellé de la stat « inscrits » (referral_screen.dart)."
-  },
-  "referralStatRewarded": "Récompensés",
-  "@referralStatRewarded": {
-    "description": "Libellé de la stat « récompensés » (referral_screen.dart)."
   },
   "referralVouchers": "{count, plural, =1{🎁 Vous avez un bon de -{percent}% sur votre prochaine commission} other{🎁 Vous avez {count} bons de -{percent}% sur vos prochaines commissions}}",
   "@referralVouchers": {
@@ -16504,47 +16508,13 @@
   },
   "referralHeroTitleDefault": "Invitez vos proches",
   "@referralHeroTitleDefault": {
-    "description": "Titre de la hero card sans pourcentage connu (referral_screen.dart)."
-  },
-  "referralHeroTitlePercent": "Invitez et gagnez -{percent}%",
-  "@referralHeroTitlePercent": {
-    "description": "Titre de la hero card avec pourcentage connu (referral_screen.dart).",
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
-  "referralHeroSubtitleDefault": "Vous recevez un bon de réduction sur votre prochaine commission dès la première livraison de votre invité.",
-  "@referralHeroSubtitleDefault": {
-    "description": "Sous-titre de la hero card sans pourcentage connu (referral_screen.dart)."
-  },
-  "referralHeroSubtitlePercent": "Vous recevez un bon de -{percent}% sur votre prochaine commission dès la première livraison de votre invité.",
-  "@referralHeroSubtitlePercent": {
-    "description": "Sous-titre de la hero card avec pourcentage connu (referral_screen.dart).",
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
-  "referralCodeBoxLabel": "Votre code de parrainage",
-  "@referralCodeBoxLabel": {
-    "description": "Libellé au-dessus du code affiché (referral_screen.dart)."
-  },
-  "referralCopyCodeSemantics": "Copier le code de parrainage",
-  "@referralCopyCodeSemantics": {
-    "description": "Libellé d'accessibilité du bouton de copie du code (referral_screen.dart)."
+    "description": "Surtitre de la carte bleue de l'écran Parrainage (referral_screen.dart)."
   },
   "referralCodeCopiedMessage": "Code copié !",
   "@referralCodeCopiedMessage": {
     "description": "Snackbar de confirmation de copie du code (referral_screen.dart)."
   },
-  "referralShareButtonLabel": "Partager mon code",
-  "@referralShareButtonLabel": {
-    "description": "Bouton sticky de partage (referral_screen.dart)."
-  },
-  "referralShareMessage": "Bonjour ! Utilisez mon code Yadony : {code} pour vous inscrire, ça m'aide à gagner une réduction sur ma prochaine commission. {url}",
+  "referralShareMessage": "Rejoignez-moi sur Yadony pour envoyer vos colis vers l'Afrique avec des voyageurs vérifiés. Mon code parrain : {code} {url}",
   "@referralShareMessage": {
     "description": "Texte réellement partagé via la feuille système, code et url non traduits (referral_screen.dart, construit par l'écran et transporté par ReferralShared jusqu'au bloc).",
     "placeholders": {
@@ -16576,6 +16546,268 @@
         "type": "String"
       }
     }
+  },
+  "referralHeroRewardTitle": "{amount} offerts ou -{percent} % sur votre prochain envoi",
+  "@referralHeroRewardTitle": {
+    "description": "Titre de la carte bleue de l'écran Parrainage : la récompense au choix du parrain, montant déjà formaté avec sa devise et pourcentage entier, servis par GET /me/referral avec repli 5 € / 5 % (referral_screen.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralHeroRewardBody": "Pour chaque proche qui fait son premier envoi avec Yadony. Vous choisissez votre récompense.",
+  "@referralHeroRewardBody": {
+    "description": "Texte sous le titre de la carte bleue de l'écran Parrainage (referral_screen.dart)."
+  },
+  "referralLinkLabel": "Votre lien d'invitation",
+  "@referralLinkLabel": {
+    "description": "Libellé de la carte du lien d'invitation, écran Parrainage (referral_screen.dart)."
+  },
+  "referralCopyLinkSemantics": "Copier le lien d'invitation",
+  "@referralCopyLinkSemantics": {
+    "description": "Libellé d'accessibilité du bouton Copier du lien d'invitation (referral_screen.dart)."
+  },
+  "referralLinkCopiedMessage": "Lien copié",
+  "@referralLinkCopiedMessage": {
+    "description": "Snackbar après la copie du lien d'invitation (referral_screen.dart)."
+  },
+  "referralCodeInlineLabel": "Code :",
+  "@referralCodeInlineLabel": {
+    "description": "Libellé devant le code parrain, sous le lien d'invitation ; le code suit en gras (referral_screen.dart)."
+  },
+  "referralRewardAvailableTitle": "Récompense disponible",
+  "@referralRewardAvailableTitle": {
+    "description": "Titre de la carte affichée pour chaque filleul dont la récompense attend un choix (referral_screen.dart)."
+  },
+  "referralRewardAvailableBody": "{name} a fait son premier envoi",
+  "@referralRewardAvailableBody": {
+    "description": "Sous-titre de la carte « Récompense disponible », name = nom court du filleul (« Awa D. ») (referral_screen.dart).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "referralRewardAvailableBodyAnonymous": "Un de vos filleuls a fait son premier envoi",
+  "@referralRewardAvailableBodyAnonymous": {
+    "description": "Sous-titre de la carte « Récompense disponible » quand le filleul n'a pas de nom affichable (referral_screen.dart)."
+  },
+  "referralChooseRewardButton": "Choisir ma récompense",
+  "@referralChooseRewardButton": {
+    "description": "Bouton de la carte « Récompense disponible », ouvre la feuille de choix (referral_screen.dart)."
+  },
+  "referralStatFirstDelivery": "1er envoi fait",
+  "@referralStatFirstDelivery": {
+    "description": "Compteur des filleuls dont le premier envoi est livré, et badge d'un filleul dans ce cas (referral_screen.dart)."
+  },
+  "referralStatEarned": "Gagnés",
+  "@referralStatEarned": {
+    "description": "Compteur du total des crédits de solde gagnés par parrainage (referral_screen.dart)."
+  },
+  "referralRefereesSectionTitle": "Vos filleuls",
+  "@referralRefereesSectionTitle": {
+    "description": "Titre de la section listant les filleuls, affiché en capitales (referral_screen.dart)."
+  },
+  "referralRefereeSignedUp": "Inscription le {date}",
+  "@referralRefereeSignedUp": {
+    "description": "Sous-texte d'un filleul : date d'inscription déjà formatée (referral_screen.dart).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "referralRefereeAnonymous": "Filleul",
+  "@referralRefereeAnonymous": {
+    "description": "Nom affiché d'un filleul sans nom connu (referral_screen.dart)."
+  },
+  "referralWalletCredited": "{amount} ajoutés à votre solde",
+  "@referralWalletCredited": {
+    "description": "Récompense « crédit sur le solde » obtenue : sous-texte d'un filleul et titre de la confirmation, montant déjà formaté avec sa devise (referral_screen.dart, referral_reward_sheets.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "referralRefereeCodeUsed": "Code utilisé",
+  "@referralRefereeCodeUsed": {
+    "description": "État d'un code de réduction obtenu en récompense et déjà utilisé (referral_screen.dart)."
+  },
+  "referralRefereeCodeExpired": "Code expiré",
+  "@referralRefereeCodeExpired": {
+    "description": "État d'un code de réduction obtenu en récompense et expiré (referral_screen.dart)."
+  },
+  "referralRefereeVoucherObtained": "Bon de commission obtenu",
+  "@referralRefereeVoucherObtained": {
+    "description": "Sous-texte d'un filleul récompensé par l'ancien bon de commission, attribué avant le choix de récompense (referral_screen.dart)."
+  },
+  "referralCopyCodeAction": "Copier le code",
+  "@referralCopyCodeAction": {
+    "description": "Libellé d'accessibilité du bouton de copie d'un code de réduction (referral_screen.dart, referral_reward_sheets.dart)."
+  },
+  "referralBadgeToChoose": "À choisir",
+  "@referralBadgeToChoose": {
+    "description": "Badge d'un filleul dont la récompense attend un choix (referral_screen.dart)."
+  },
+  "referralBadgeObtained": "Obtenue",
+  "@referralBadgeObtained": {
+    "description": "Badge d'un filleul dont la récompense est obtenue (referral_screen.dart)."
+  },
+  "referralBadgeNoShipmentYet": "Pas encore d'envoi",
+  "@referralBadgeNoShipmentYet": {
+    "description": "Badge d'un filleul inscrit sans premier envoi livré (referral_screen.dart)."
+  },
+  "referralRefereesEmpty": "Personne n'a encore utilisé votre lien. Partagez-le pour inviter vos proches.",
+  "@referralRefereesEmpty": {
+    "description": "Section des filleuls vide (referral_screen.dart)."
+  },
+  "referralRefereesError": "Impossible de charger vos filleuls.",
+  "@referralRefereesError": {
+    "description": "Échec du chargement de la liste des filleuls, suivi d'un bouton Réessayer (referral_screen.dart)."
+  },
+  "referralRefereesLoadMore": "Voir plus de filleuls",
+  "@referralRefereesLoadMore": {
+    "description": "Bouton qui charge la page suivante des filleuls (referral_screen.dart)."
+  },
+  "referralHowItWorksTitle": "Comment ça marche",
+  "@referralHowItWorksTitle": {
+    "description": "Titre de la section explicative, affiché en capitales (referral_screen.dart)."
+  },
+  "referralStepShareTitle": "Partagez votre lien",
+  "@referralStepShareTitle": {
+    "description": "Étape 1 de « Comment ça marche » (referral_screen.dart)."
+  },
+  "referralStepShareBody": "Par WhatsApp ou ailleurs. Votre code se remplit tout seul à l'inscription.",
+  "@referralStepShareBody": {
+    "description": "Texte de l'étape 1 de « Comment ça marche » (referral_screen.dart)."
+  },
+  "referralStepShipTitle": "Votre proche envoie un colis",
+  "@referralStepShipTitle": {
+    "description": "Étape 2 de « Comment ça marche » (referral_screen.dart)."
+  },
+  "referralStepShipBody": "La récompense se débloque quand son premier colis est livré.",
+  "@referralStepShipBody": {
+    "description": "Texte de l'étape 2 de « Comment ça marche » (referral_screen.dart)."
+  },
+  "referralStepChooseTitle": "Vous choisissez",
+  "@referralStepChooseTitle": {
+    "description": "Étape 3 de « Comment ça marche » (referral_screen.dart)."
+  },
+  "referralStepChooseBody": "{amount} sur votre solde Yadony, ou un code de -{percent} % sur votre prochain envoi (valable 6 mois).",
+  "@referralStepChooseBody": {
+    "description": "Texte de l'étape 3 de « Comment ça marche », montant déjà formaté avec sa devise (referral_screen.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralHaveCodeLink": "Vous avez un code parrain ? Saisissez-le",
+  "@referralHaveCodeLink": {
+    "description": "Lien en bas de l'écran Parrainage, ouvre la saisie d'un code parrain ; masqué si le compte a déjà été parrainé (referral_screen.dart)."
+  },
+  "referralChoiceTitle": "Choisissez votre récompense",
+  "@referralChoiceTitle": {
+    "description": "Titre de la feuille de choix de la récompense (referral_reward_sheets.dart)."
+  },
+  "referralChoiceSubtitle": "Merci d'avoir invité {name}. Ce choix est définitif.",
+  "@referralChoiceSubtitle": {
+    "description": "Sous-titre de la feuille de choix, name = nom court du filleul (referral_reward_sheets.dart).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "referralChoiceSubtitleAnonymous": "Merci pour votre invitation. Ce choix est définitif.",
+  "@referralChoiceSubtitleAnonymous": {
+    "description": "Sous-titre de la feuille de choix quand le filleul n'a pas de nom affichable (referral_reward_sheets.dart)."
+  },
+  "referralChoiceWalletTitle": "{amount} sur mon solde",
+  "@referralChoiceWalletTitle": {
+    "description": "Option « crédit sur le solde » de la feuille de choix, montant déjà formaté avec sa devise (referral_reward_sheets.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "referralChoiceWalletBody": "Ajoutés tout de suite. Utilisables sur tous vos prochains envois.",
+  "@referralChoiceWalletBody": {
+    "description": "Description de l'option « crédit sur le solde » (referral_reward_sheets.dart)."
+  },
+  "referralChoiceCodeTitle": "-{percent} % sur mon prochain envoi",
+  "@referralChoiceCodeTitle": {
+    "description": "Option « code de réduction » de la feuille de choix (referral_reward_sheets.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralChoiceCodeBody": "Un code personnel à saisir au paiement. Valable 6 mois, une fois.",
+  "@referralChoiceCodeBody": {
+    "description": "Description de l'option « code de réduction » (referral_reward_sheets.dart)."
+  },
+  "referralPercentBadge": "-{percent} %",
+  "@referralPercentBadge": {
+    "description": "Pastille de l'option « code de réduction » (referral_reward_sheets.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralChoiceWalletNote": "Le solde Yadony sert à payer vos envois. Il n'est pas retirable en espèces.",
+  "@referralChoiceWalletNote": {
+    "description": "Mention sous les options de la feuille de choix (referral_reward_sheets.dart)."
+  },
+  "referralChoiceWalletCta": "Recevoir {amount}",
+  "@referralChoiceWalletCta": {
+    "description": "Bouton de la feuille de choix quand le crédit sur le solde est sélectionné (referral_reward_sheets.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "referralChoiceCodeCta": "Recevoir mon code -{percent} %",
+  "@referralChoiceCodeCta": {
+    "description": "Bouton de la feuille de choix quand le code de réduction est sélectionné (referral_reward_sheets.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralCodeReadyTitle": "Votre code -{percent} % est prêt",
+  "@referralCodeReadyTitle": {
+    "description": "Titre de la confirmation après le choix du code de réduction (referral_reward_sheets.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralCodeReadyBody": "Saisissez-le au paiement de votre prochain envoi. Il est réservé à votre compte.",
+  "@referralCodeReadyBody": {
+    "description": "Texte de la confirmation après le choix du code de réduction (referral_reward_sheets.dart)."
+  },
+  "referralCodeSingleUse": "1 utilisation",
+  "@referralCodeSingleUse": {
+    "description": "Mention sous le code de réduction obtenu (referral_reward_sheets.dart)."
+  },
+  "referralWalletCreditedBody": "Le montant apparaît dans votre Portefeuille. Il sert à payer vos prochains envois.",
+  "@referralWalletCreditedBody": {
+    "description": "Texte de la confirmation après le choix du crédit sur le solde (referral_reward_sheets.dart)."
   },
   "errorReportReasonNotApplicableTitle": "Motif invalide",
   "@errorReportReasonNotApplicableTitle": {

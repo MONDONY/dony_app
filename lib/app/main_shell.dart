@@ -36,6 +36,7 @@ import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
+import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
@@ -214,6 +215,16 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           final authBloc = context.read<AuthBloc>();
           if (!authBloc.isClosed) {
             authBloc.add(const AuthProfileRefreshRequested());
+          }
+        }
+        if (refresh.referral) {
+          // Bloc partagé avec l'écran Parrainage : la carte « Récompense
+          // disponible » y apparaît, qu'il soit ouvert ou non.
+          final referralBloc = getIt<ReferralBloc>();
+          if (!referralBloc.isClosed) {
+            referralBloc.add(
+              const ReferralLoadRequested(includeReferees: true),
+            );
           }
         }
       });

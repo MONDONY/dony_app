@@ -352,6 +352,13 @@ abstract final class AnalyticsEvents {
   // Referral
   static const referralShared = 'referral_shared';
 
+  /// Récompense de parrainage choisie (propriété `choice` :
+  /// `WALLET_CREDIT` / `DISCOUNT_CODE`).
+  static const referralRewardChosen = 'referral_reward_chosen';
+
+  /// Lien d'invitation `yadony://referral?code=…` ouvert dans l'app.
+  static const referralLinkOpened = 'referral_link_opened';
+
   // Settings
   static const analyticsConsentChanged = 'analytics_consent_changed';
   static const accountDeletionRequested = 'account_deletion_requested';

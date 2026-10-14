@@ -200,6 +200,7 @@ import 'package:dony/features/recipients/presentation/screens/recipient_edit_scr
 import 'package:dony/features/recipients/presentation/screens/recipient_invitations_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/data/pending_referral_code_store.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
@@ -515,6 +516,9 @@ final appRouter = GoRouter(
         // sans lui, l'étape « Pays » regresserait sur cet écran (correction 1
         // de la revue finale du lot 2).
         child: ReferralCodeScreen(
+          // Code venu d'un lien d'invitation ouvert avant l'inscription :
+          // pré-rempli, jamais appliqué sans « Appliquer ».
+          pendingCodeStore: getIt<PendingReferralCodeStore>(),
           progress: readOnboardingProgress(
             context,
             // Hors décompte mais pas hors position : le parrainage vient
@@ -1699,7 +1703,14 @@ final appRouter = GoRouter(
       path: '/profile/referral',
       builder: (context, state) => BlocProvider.value(
         value: getIt<ReferralBloc>(),
-        child: const ReferralScreen(),
+        // `?code=` : lien d'invitation ouvert par un compte connecté
+        // (`yadony://referral?code=…`, voir `referral_deep_link.dart`).
+        child: ReferralScreen(
+          prefillCode: PendingReferralCodeStore.normalize(
+            state.uri.queryParameters['code'],
+          ),
+          pendingCodeStore: getIt<PendingReferralCodeStore>(),
+        ),
       ),
     ),
 

@@ -1422,6 +1422,40 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.info,
       icon: Icons.check_circle_outline_rounded,
     ),
+    // Récompense de parrainage au choix (yadony-back #528,
+    // `POST /me/referral/rewards/{invitationId}/choose`).
+    'referral-invitation-not-found': _Entry(
+      title: (l) => l.errorReferralInvitationNotFoundTitle,
+      message: (l) => l.errorReferralInvitationNotFoundMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.person_search_rounded,
+    ),
+    'referral-reward-already-chosen': _Entry(
+      title: (l) => l.errorReferralRewardAlreadyChosenTitle,
+      message: (l) => l.errorReferralRewardAlreadyChosenMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.check_circle_outline_rounded,
+    ),
+    'referral-reward-not-available': _Entry(
+      title: (l) => l.errorReferralRewardNotAvailableTitle,
+      message: (l) => l.errorReferralRewardNotAvailableMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.hourglass_empty_rounded,
+    ),
+    'referral-reward-choice-invalid': _Entry(
+      title: (l) => l.errorReferralRewardChoiceInvalidTitle,
+      message: (l) => l.errorReferralRewardChoiceInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    // Code de réduction personnel (récompense de parrainage) saisi au
+    // paiement par un autre compte que son titulaire.
+    'promo-not-owner': _Entry(
+      title: (l) => l.errorPromoNotOwnerTitle,
+      message: (l) => l.errorPromoNotOwnerMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_person_rounded,
+    ),
 
     // ─── Auth (parcours de connexion) ─────────────────────────────────
     'guest-session-failed': _Entry(

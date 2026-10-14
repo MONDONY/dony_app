@@ -118,13 +118,6 @@ abstract final class DonyColors {
   // Notation (ratings)
   static const starGold = Color(0xFFF59E0B);
 
-  // Parrainage — palette legacy conservée pour l'écran referral
-  static const referralGreen = Color(0xFF1A6B3C);
-  static const referralGreenDark = Color(0xFF134F2D);
-  static const referralGreenMid = Color(0xFF22A55C);
-  static const referralGreenAccent = Color(0xFF4CAF7D);
-  static const referralGreen50 = Color(0xFFE8F5EE);
-
   // Pro stats — dégradé dark mode carte statistiques voyageur
   static const proBg1 = Color(0xFF1A2744); // bleu nuit profond
   static const proBg2 = Color(0xFF0D1B35); // quasi-noir bleu
