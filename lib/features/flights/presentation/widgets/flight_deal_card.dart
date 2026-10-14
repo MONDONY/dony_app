@@ -53,6 +53,7 @@ class FlightDealCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: cs.surface,
               borderRadius: BorderRadius.circular(DonyRadius.card),
+              border: Border.all(color: cs.outline),
               boxShadow: DonyShadow.md,
             ),
             child: Column(
@@ -227,6 +228,7 @@ class FlightDealMiniCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: cs.surface,
               borderRadius: BorderRadius.circular(DonyRadius.card),
+              border: Border.all(color: cs.outline),
               boxShadow: DonyShadow.md,
             ),
             child: Column(
@@ -362,6 +364,7 @@ class FlightDealMiniCardSkeleton extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.card),
+          border: Border.all(color: cs.outline),
           boxShadow: DonyShadow.sm,
         ),
         child: const Column(

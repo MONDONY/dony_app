@@ -254,6 +254,9 @@ class _PublicRequestCard extends StatelessWidget {
     return Material(
       color: cs.surface,
       borderRadius: BorderRadius.circular(DonyRadius.card),
+      // Ombre en mode clair, comme les autres billets (FLUTTER-Q1).
+      elevation: Theme.of(context).brightness == Brightness.light ? 2 : 0,
+      shadowColor: cs.shadow,
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.card),
         onTap: () => context.push('/package-requests/${request.id}/public'),

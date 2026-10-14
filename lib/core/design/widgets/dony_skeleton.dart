@@ -213,7 +213,7 @@ class DonyTicketCardSkeleton extends StatelessWidget {
     return DonyShimmer(
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: cs.outlineVariant),
+          border: Border.all(color: cs.outline),
           borderRadius: BorderRadius.circular(DonyRadius.card),
         ),
         child: IntrinsicHeight(

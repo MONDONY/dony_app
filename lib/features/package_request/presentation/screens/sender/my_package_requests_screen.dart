@@ -501,8 +501,10 @@ class _RequestCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final accent = _accentColor(cs);
 
+    // Fond du thème, jamais blanc en dur : en mode sombre, le titre clair
+    // devenait illisible sur une carte blanche (FLUTTER-PZ).
     return Material(
-      color: Colors.white,
+      color: cs.surface,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.card),

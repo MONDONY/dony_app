@@ -185,4 +185,27 @@ void main() {
     );
     expect(find.byType(BilletPerforation), findsNothing);
   });
+
+  testWidgets('FLUTTER-Q1 : encoches de la perforation dessinées et cerclées', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: const Scaffold(
+          body: SizedBox(
+            width: 300,
+            child: BilletPerforation(notchColor: Colors.white),
+          ),
+        ),
+      ),
+    );
+    expect(
+      find.descendant(
+        of: find.byType(BilletPerforation),
+        matching: find.byType(CustomPaint),
+      ),
+      findsNWidgets(2),
+    );
+  });
 }

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// Ligne de perforation d'un billet : pointillés + deux encoches latérales.
@@ -37,14 +39,14 @@ class BilletPerforation extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Transform.translate(
               offset: const Offset(-8, 0),
-              child: _notch(notchColor),
+              child: _notch(notchColor, cs.outline, left: true),
             ),
           ),
           Align(
             alignment: Alignment.centerRight,
             child: Transform.translate(
               offset: const Offset(8, 0),
-              child: _notch(notchColor),
+              child: _notch(notchColor, cs.outline, left: false),
             ),
           ),
         ],
@@ -52,9 +54,44 @@ class BilletPerforation extends StatelessWidget {
     );
   }
 
-  Widget _notch(Color c) => Container(
+  // L'encoche est remplie du fond derrière le billet, puis cerclée côté
+  // intérieur seulement : sur une carte blanche posée sur le fond clair de
+  // l'app, une encoche sans trait ne se voyait pas (FLUTTER-Q1).
+  Widget _notch(Color fill, Color stroke, {required bool left}) => SizedBox(
     width: 16,
     height: 16,
-    decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+    child: CustomPaint(
+      painter: _NotchPainter(fill: fill, stroke: stroke, left: left),
+    ),
   );
+}
+
+class _NotchPainter extends CustomPainter {
+  _NotchPainter({required this.fill, required this.stroke, required this.left});
+
+  final Color fill;
+  final Color stroke;
+
+  /// Encoche du bord gauche : son demi-cercle intérieur est à droite.
+  final bool left;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    canvas.drawOval(rect, Paint()..color = fill);
+    canvas.drawArc(
+      rect.deflate(0.5),
+      left ? -math.pi / 2 : math.pi / 2,
+      math.pi,
+      false,
+      Paint()
+        ..color = stroke
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_NotchPainter old) =>
+      old.fill != fill || old.stroke != stroke || old.left != left;
 }

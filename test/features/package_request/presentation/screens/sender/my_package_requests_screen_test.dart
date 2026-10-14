@@ -69,8 +69,8 @@ void main() {
     }
   });
 
-  Widget wrap() => MaterialApp(
-    theme: AppTheme.light(),
+  Widget wrap({ThemeData? theme}) => MaterialApp(
+    theme: theme ?? AppTheme.light(),
     home: BlocProvider<PackageRequestBloc>.value(
       value: bloc,
       child: const Scaffold(body: MyPackageRequestsBody()),
@@ -155,6 +155,32 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Paris → Dakar'), findsWidgets);
     });
+
+    testWidgets(
+      'FLUTTER-PZ : en mode sombre, la carte prend le fond du thème, jamais blanc',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request()],
+          ),
+        );
+        final dark = AppTheme.dark();
+        await tester.pumpWidget(wrap(theme: dark));
+        await tester.pumpAndSettle();
+
+        final card = tester.widget<Material>(
+          find
+              .ancestor(
+                of: find.text('Paris → Dakar').first,
+                matching: find.byType(Material),
+              )
+              .first,
+        );
+        expect(card.color, dark.colorScheme.surface);
+        expect(card.color, isNot(Colors.white));
+      },
+    );
 
     testWidgets(
       'la barre de recherche est visible quand des demandes existent',

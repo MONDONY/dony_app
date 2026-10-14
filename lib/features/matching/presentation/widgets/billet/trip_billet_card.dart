@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_route.dart';
@@ -44,32 +45,46 @@ class TripBilletCard extends StatelessWidget {
     final trailing = this.trailing;
     final notch = notchColor ?? cs.surface;
 
-    // Le billet prend un ton juste au-dessus du fond pour que les encoches de
-    // la perforation se lisent.
+    // Billet blanc, bordé, avec un bandeau teinté en tête : sur le fond gris
+    // clair de l'app, l'ancien ton `surfaceContainerLow` était exactement
+    // celui de l'écran et le billet disparaissait (FLUTTER-Q1).
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    const radius = DonyRadius.card;
     return Container(
       key: const Key('trip-billet-card'),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: cs.outline),
+        boxShadow: isLight ? DonyShadow.md : null,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
+          Container(
+            key: const Key('trip-billet-header'),
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(radius - 1),
+              ),
+            ),
             padding: EdgeInsets.fromLTRB(
               DonySpacing.base,
+              trailing != null ? DonySpacing.xs : DonySpacing.sm,
               trailing != null ? DonySpacing.xs : DonySpacing.base,
-              trailing != null ? DonySpacing.xs : DonySpacing.base,
-              DonySpacing.sm,
+              trailing != null ? DonySpacing.xs : DonySpacing.sm,
             ),
             child: Row(
               children: [
+                DonyIcon('plane', size: 16, color: cs.onPrimaryContainer),
+                const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
                     l.listingHeroTripLabelCaps,
                     style: tt.bodySmall?.copyWith(
-                      color: cs.primary,
+                      color: cs.onPrimaryContainer,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
                     ),
@@ -79,6 +94,7 @@ class TripBilletCard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: DonySpacing.sm),
           BilletRoute(
             departureCity: announcement.departureCity,
             arrivalCity: announcement.arrivalCity,
@@ -100,13 +116,11 @@ class TripBilletCard extends StatelessWidget {
               spacing: DonySpacing.xs + 2,
               runSpacing: DonySpacing.xs,
               children: [
-                if (transportLabel != null)
-                  _BilletChip(label: transportLabel, background: notch),
+                if (transportLabel != null) _BilletChip(label: transportLabel),
                 if (announcement.stops != null)
                   _BilletChip(
                     key: const Key('detail-stops-chip'),
                     label: tripStopsBadgeLabel(l, announcement.stops!),
-                    background: notch,
                   ),
                 if (showKg)
                   _BilletChip(
@@ -115,7 +129,6 @@ class TripBilletCard extends StatelessWidget {
                         : l.listingKgAvailableLabel(
                             announcement.availableKg.toStringAsFixed(0),
                           ),
-                    background: notch,
                   ),
               ],
             ),
@@ -127,9 +140,8 @@ class TripBilletCard extends StatelessWidget {
 }
 
 class _BilletChip extends StatelessWidget {
-  const _BilletChip({super.key, required this.label, required this.background});
+  const _BilletChip({super.key, required this.label});
   final String label;
-  final Color background;
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +153,7 @@ class _BilletChip extends StatelessWidget {
         vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: background,
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(DonyRadius.xl),
       ),
       child: Text(label, style: tt.labelMedium?.copyWith(color: cs.onSurface)),
