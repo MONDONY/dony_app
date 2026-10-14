@@ -14409,7 +14409,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pickupAddressAddressSectionTitle => 'Adresse';
 
   @override
-  String get pickupAddressStreetFieldLabel => 'Rue et numéro';
+  String get pickupAddressStreetFieldLabel => 'Rechercher une adresse';
+
+  @override
+  String get pickupAddressStreetFieldHint => 'Ex : 12 rue de la Paix, Paris';
+
+  @override
+  String get pickupAddressCountryFieldLabel => 'Pays';
+
+  @override
+  String get pickupAddressCountryPickerTitle => 'Pays de l\'adresse';
 
   @override
   String get pickupAddressPostalFieldLabel => 'Code postal';
@@ -14483,11 +14492,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deliveryAddressCityFieldHint => 'Ex : Dakar, Abidjan, Bamako…';
 
   @override
-  String get deliveryAddressStreetFieldLabel => 'Rue, quartier';
+  String get deliveryAddressStreetFieldLabel => 'Rechercher une adresse';
 
   @override
   String get deliveryAddressStreetFieldHint =>
-      'Optionnel (ex : Rue 10, Almadies)';
+      'Rue, quartier ou lieu (ex : Almadies, Dakar)';
 
   @override
   String get deliveryAddressInstructionsSectionTitle => 'Instructions';

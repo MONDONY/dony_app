@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/country_flag.dart';
+import 'package:dony/core/currency/country_picker.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/widgets/address/address_country_tile.dart';
 import 'package:dony/core/widgets/address/address_default_toggle.dart';
 import 'package:dony/core/widgets/address/address_label_chips.dart';
 import 'package:dony/core/widgets/address/address_location_status.dart';
@@ -13,11 +16,16 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// Pays proposé à la création quand ni l'adresse ni le profil n'en donnent.
+const _kFallbackCountry = 'FR';
 
 /// Suggestions d'étiquette — préremplissent le champ libre, l'utilisateur
 /// enregistre ensuite la valeur affichée (donc traduite pour un anglophone).
@@ -42,9 +50,9 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
   final _streetCtrl = TextEditingController();
   final _postalCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
-  final _countryCtrl = TextEditingController(text: 'FR');
   final _floorCtrl = TextEditingController();
   final _instructionsCtrl = TextEditingController();
+  late String _country;
   double? _lat;
   double? _lng;
   bool _isDefault = false;
@@ -69,12 +77,32 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _country = _initialCountry();
+  }
+
+  /// Pays de résidence du profil s'il est chargé, sinon la France (départ le
+  /// plus fréquent). Lecture tolérante : l'écran peut être monté sans les
+  /// préférences (tests isolés). En édition, l'adresse chargée l'écrase.
+  String _initialCountry() {
+    final profile = context
+        .read<BusinessPrefsBloc?>()
+        ?.state
+        .country
+        ?.trim()
+        .toUpperCase();
+    return (profile != null && countryFlagEmoji(profile) != null)
+        ? profile
+        : _kFallbackCountry;
+  }
+
+  @override
   void dispose() {
     _labelCtrl.dispose();
     _streetCtrl.dispose();
     _postalCtrl.dispose();
     _cityCtrl.dispose();
-    _countryCtrl.dispose();
     _floorCtrl.dispose();
     _instructionsCtrl.dispose();
     super.dispose();
@@ -85,7 +113,10 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
     _streetCtrl.text = address.street;
     _postalCtrl.text = address.postalCode;
     _cityCtrl.text = address.city;
-    _countryCtrl.text = address.country;
+    final saved = address.country.trim().toUpperCase();
+    if (saved.isNotEmpty) {
+      _country = saved;
+    }
     _floorCtrl.text = address.floorApartment ?? '';
     _instructionsCtrl.text = address.instructions ?? '';
     _lat = address.latitude;
@@ -94,10 +125,16 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
   }
 
   /// Pré-remplissage depuis la suggestion résolue — ne remplace pas si null.
+  /// Le pays suit la recherche s'il est connu de l'app (FLUTTER-PE), sinon le
+  /// pays courant est gardé.
   void _onResolved(AddressData addr) {
+    final country = knownCountryCode(context.l10n, addr.country);
     setState(() {
       _lat = addr.lat;
       _lng = addr.lng;
+      if (country != null) {
+        _country = country;
+      }
       if (addr.city != null && addr.city!.isNotEmpty) {
         _cityCtrl.text = addr.city!;
       }
@@ -120,7 +157,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
           street: _streetCtrl.text.trim(),
           postalCode: _postalCtrl.text.trim(),
           city: _cityCtrl.text.trim(),
-          country: _countryCtrl.text.trim(),
+          country: _country,
           floorApartment: _floorCtrl.text.trim().isEmpty
               ? null
               : _floorCtrl.text.trim(),
@@ -139,7 +176,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
           street: _streetCtrl.text.trim(),
           postalCode: _postalCtrl.text.trim(),
           city: _cityCtrl.text.trim(),
-          country: _countryCtrl.text.trim(),
+          country: _country,
           floorApartment: _floorCtrl.text.trim().isEmpty
               ? null
               : _floorCtrl.text.trim(),
@@ -151,6 +188,17 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
           isDefault: _isDefault,
         ),
       );
+    }
+  }
+
+  Future<void> _pickCountry(BuildContext context) async {
+    final picked = await showCountryPicker(
+      context,
+      title: context.l10n.pickupAddressCountryPickerTitle,
+      selectedCode: _country,
+    );
+    if (picked != null && picked != _country && mounted) {
+      setState(() => _country = picked);
     }
   }
 
@@ -236,8 +284,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                         controller: _streetCtrl,
                         service: getIt<AddressAutocompleteService>(),
                         label: l.pickupAddressStreetFieldLabel,
-                        hint:
-                            '12 rue de la Paix', // i18n-ignore: exemple de saisie
+                        hint: l.pickupAddressStreetFieldHint,
                         prefixIcon: Icons.search_rounded,
                         prefixIconColor: cs.primary,
                         onChanged: (_) => setState(() {}),
@@ -248,6 +295,12 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                         }),
                       ),
                       AddressLocationStatus(state: _locationState),
+                      const SizedBox(height: DonySpacing.base),
+                      AddressCountryTile(
+                        countryCode: _country,
+                        label: l.pickupAddressCountryFieldLabel,
+                        onTap: () => _pickCountry(context),
+                      ),
                       const SizedBox(height: DonySpacing.base),
                       Row(
                         children: [

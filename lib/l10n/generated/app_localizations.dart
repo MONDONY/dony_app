@@ -23687,11 +23687,29 @@ abstract class AppLocalizations {
   /// **'Adresse'**
   String get pickupAddressAddressSectionTitle;
 
-  /// Libellé du champ rue (pickup_address_edit_screen.dart).
+  /// Libellé du champ de recherche d'adresse, qui remplit aussi ville, code postal et pays (pickup_address_edit_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Rue et numéro'**
+  /// **'Rechercher une adresse'**
   String get pickupAddressStreetFieldLabel;
+
+  /// Placeholder du champ de recherche d'adresse (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : 12 rue de la Paix, Paris'**
+  String get pickupAddressStreetFieldHint;
+
+  /// Libellé du champ pays, rempli par la recherche et modifiable (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get pickupAddressCountryFieldLabel;
+
+  /// Titre de la bottom sheet de choix du pays (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de l\'adresse'**
+  String get pickupAddressCountryPickerTitle;
 
   /// Libellé du champ code postal (pickup_address_edit_screen.dart).
   ///
@@ -23831,16 +23849,16 @@ abstract class AppLocalizations {
   /// **'Ex : Dakar, Abidjan, Bamako…'**
   String get deliveryAddressCityFieldHint;
 
-  /// Libellé du champ rue (delivery_address_edit_screen.dart).
+  /// Libellé du champ de recherche d'adresse, qui remplit aussi ville et pays ; le texte libre est gardé comme rue (delivery_address_edit_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Rue, quartier'**
+  /// **'Rechercher une adresse'**
   String get deliveryAddressStreetFieldLabel;
 
   /// Placeholder du champ rue (delivery_address_edit_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Optionnel (ex : Rue 10, Almadies)'**
+  /// **'Rue, quartier ou lieu (ex : Almadies, Dakar)'**
   String get deliveryAddressStreetFieldHint;
 
   /// Titre de section (delivery_address_edit_screen.dart).

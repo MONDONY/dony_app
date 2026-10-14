@@ -4,10 +4,13 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +28,24 @@ class _MockPickupAddressBloc
     implements PickupAddressBloc {}
 
 class _FakePickupAddressEvent extends Fake implements PickupAddressEvent {}
+
+class _MockBusinessPrefsBloc
+    extends MockBloc<BusinessPrefsEvent, BusinessPrefsState>
+    implements BusinessPrefsBloc {}
+
+Widget _wrapWithPrefs(PickupAddressBloc bloc, BusinessPrefsBloc prefs) =>
+    MaterialApp(
+      home: MediaQuery(
+        data: const MediaQueryData(size: Size(390, 844)),
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider<PickupAddressBloc>.value(value: bloc),
+            BlocProvider<BusinessPrefsBloc>.value(value: prefs),
+          ],
+          child: const PickupAddressEditScreen(),
+        ),
+      ),
+    );
 
 Widget _wrap(PickupAddressBloc bloc, {String? addressId}) => MaterialApp(
   home: MediaQuery(
@@ -222,7 +243,7 @@ void main() {
     // Le bouton est présent
     expect(find.text("Enregistrer l'adresse"), findsOneWidget);
 
-    // Les champs texte sont initialement vides (sauf country='FR' qui est caché)
+    // Les champs texte sont initialement vides (le pays n'est pas un champ texte)
     final textFields = tester
         .widgetList<EditableText>(find.byType(EditableText))
         .toList();
@@ -476,6 +497,156 @@ void main() {
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Office'), findsOneWidget);
     expect(find.text('Workshop'), findsOneWidget);
+    expect(find.text('Search for an address'), findsOneWidget);
+    expect(find.text('Country'), findsOneWidget);
     expect(find.text('Save address'), findsOneWidget);
+  });
+
+  // ── Pays réel (FLUTTER-PE) ───────────────────────────────────────────────
+
+  group('pays', () {
+    testWidgets('défaut sans profil : France, avec son drapeau', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pays'), findsOneWidget);
+      expect(find.text('France'), findsOneWidget);
+      expect(find.textContaining('🇫🇷'), findsOneWidget);
+    });
+
+    testWidgets('défaut : pays de résidence du profil', (tester) async {
+      final prefs = _MockBusinessPrefsBloc();
+      when(
+        () => prefs.state,
+      ).thenReturn(const BusinessPrefsState(country: 'BE'));
+
+      await tester.pumpWidget(_wrapWithPrefs(bloc, prefs));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Belgique'), findsOneWidget);
+    });
+
+    testWidgets('la résolution reprend pays, ville, code postal et '
+        'coordonnées, envoyés au serveur', (tester) async {
+      Map<String, dynamic>? sent;
+      when(() => repo.create(any())).thenAnswer((inv) async {
+        sent = inv.positionalArguments.first as Map<String, dynamic>;
+        return _makeAddress();
+      });
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(EditableText).at(0), 'Bureau');
+      await tester.enterText(find.byType(EditableText).at(1), 'Rue Neuve 1');
+      await tester.pump();
+      tester
+          .widget<AddressSuggestField>(find.byType(AddressSuggestField))
+          .onResolved!(
+        const AddressData(
+          label: 'Rue Neuve 1, Bruxelles',
+          lat: 50.85,
+          lng: 4.35,
+          street: 'Rue Neuve 1',
+          city: 'Bruxelles',
+          postalCode: '1000',
+          country: 'BE',
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Belgique'), findsOneWidget);
+      expect(find.text('France'), findsNothing);
+
+      await tester.tap(find.text("Enregistrer l'adresse"));
+      await tester.pumpAndSettle();
+
+      expect(sent, isNotNull);
+      expect(sent!['country'], 'BE');
+      expect(sent!['city'], 'Bruxelles');
+      expect(sent!['postalCode'], '1000');
+      expect(sent!['latitude'], 50.85);
+    });
+
+    testWidgets('pays inconnu de l\'app : le pays courant est gardé', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(EditableText).at(1), 'Marszałkowska');
+      await tester.pump();
+      tester
+          .widget<AddressSuggestField>(find.byType(AddressSuggestField))
+          .onResolved!(
+        const AddressData(
+          label: 'Marszałkowska, Varsovie',
+          lat: 52.23,
+          lng: 21.01,
+          city: 'Varsovie',
+          country: 'PL',
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('France'), findsOneWidget);
+    });
+
+    testWidgets('édition d\'une adresse hors catalogue (MA) : nom et drapeau', (
+      tester,
+    ) async {
+      const address = PickupAddress(
+        id: 'addr-ma',
+        label: 'Maison',
+        street: 'Rue 1',
+        postalCode: '20000',
+        city: 'Casablanca',
+        country: 'MA',
+        isDefault: false,
+      );
+      when(() => repo.getAll()).thenAnswer((_) async => [address]);
+      final editBloc = PickupAddressBloc(repo);
+      addTearDown(editBloc.close);
+
+      await tester.pumpWidget(_wrap(editBloc, addressId: 'addr-ma'));
+      editBloc.add(const PickupAddressLoaded());
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Maroc'), findsOneWidget);
+      expect(find.textContaining('🇲🇦'), findsOneWidget);
+    });
+
+    testWidgets('le sélecteur filtre par recherche et change le pays', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('France'));
+      await tester.pumpAndSettle();
+      expect(find.text("Pays de l'adresse"), findsOneWidget);
+
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(EditableText),
+        ),
+        'belg',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Belgique'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('Belgique'), findsOneWidget);
+    });
   });
 }
