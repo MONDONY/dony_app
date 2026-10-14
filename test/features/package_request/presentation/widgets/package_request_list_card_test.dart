@@ -65,6 +65,35 @@ void main() {
     ),
   );
 
+  testWidgets('FLUTTER-Q1 : billet ombré en mode clair, bordure franche', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
+    await tester.pumpAndSettle();
+    final material = tester.widget<Material>(
+      find
+          .descendant(
+            of: find.byType(PackageRequestListCard),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    expect(material.elevation, greaterThan(0));
+    final cs = AppTheme.light().colorScheme;
+    final bordered = tester
+        .widgetList<Container>(
+          find.descendant(
+            of: find.byType(PackageRequestListCard),
+            matching: find.byType(Container),
+          ),
+        )
+        .map((c) => c.decoration)
+        .whereType<BoxDecoration>()
+        .where((d) => d.border is Border)
+        .map((d) => (d.border! as Border).top.color);
+    expect(bordered, contains(cs.outline));
+  });
+
   group('audience (fil Rechercher, propriétaire seulement)', () {
     testWidgets('ma demande vue par 5 personnes → « 5 vues »', (tester) async {
       await tester.pumpWidget(

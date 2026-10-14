@@ -100,9 +100,14 @@ class PackageRequestListCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final accent = cs.warning;
 
+    // Bordure franche et ombre en mode clair : ce billet est posé sur la
+    // feuille blanche de l'accueil, où sa bordure pâle seule ne le
+    // détachait pas (FLUTTER-Q1).
     return Material(
           color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.card),
+          elevation: Theme.of(context).brightness == Brightness.light ? 2 : 0,
+          shadowColor: cs.shadow,
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
@@ -111,7 +116,7 @@ class PackageRequestListCard extends StatelessWidget {
                 border: Border.all(
                   color: isOwnRequest
                       ? cs.primary.withValues(alpha: 0.35)
-                      : cs.outlineVariant,
+                      : cs.outline,
                   width: isOwnRequest ? 1.5 : 1,
                 ),
                 borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -646,15 +651,20 @@ class MatchingRequestCard extends StatelessWidget {
         ? DateFormat.MMMd(l.localeName).format(depDate).toLowerCase()
         : '';
 
+    // Bordure franche et ombre en mode clair : ce billet est posé sur la
+    // feuille blanche de l'accueil, où sa bordure pâle seule ne le
+    // détachait pas (FLUTTER-Q1).
     return Material(
           color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.card),
+          elevation: Theme.of(context).brightness == Brightness.light ? 2 : 0,
+          shadowColor: cs.shadow,
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(color: cs.outlineVariant),
+                border: Border.all(color: cs.outline),
                 borderRadius: BorderRadius.circular(DonyRadius.card),
               ),
               child: IntrinsicHeight(

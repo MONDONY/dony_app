@@ -73,7 +73,14 @@ void main() {
         );
         final decoration = box.decoration as ShapeDecoration;
         expect(decoration.color, background);
-        expect(decoration.shape, const FlightTicketBorder());
+        expect(
+          decoration.shape,
+          FlightTicketBorder(
+            side: tone == FlightPriceTicketTone.neutral
+                ? BorderSide(color: cs.outline)
+                : BorderSide.none,
+          ),
+        );
         expect(
           find.text('x'),
           findsNWidgets(tone == FlightPriceTicketTone.create ? 0 : 1),
@@ -105,5 +112,55 @@ void main() {
     await tester.pumpWidget(_wrap(const AirlineLogo(code: 'AT', size: 24)));
     final regular = tester.widget<Text>(find.text('AT'));
     expect(regular.style?.fontSize, isNot(closeTo(9.6, 0.01)));
+  });
+
+  testWidgets('FLUTTER-Q1 : le ton neutre a un contour, les autres non', (
+    tester,
+  ) async {
+    final theme = AppTheme.light();
+    BorderSide sideOf(FlightPriceTicketTone tone) {
+      final box = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(FlightPriceTicket),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      final shape =
+          (box.decoration as ShapeDecoration).shape as FlightTicketBorder;
+      return shape.side;
+    }
+
+    for (final tone in FlightPriceTicketTone.values) {
+      await tester.pumpWidget(
+        _wrap(
+          FlightPriceTicket(tone: tone, label: '389 €'),
+          theme: theme,
+        ),
+      );
+      final side = sideOf(tone);
+      if (tone == FlightPriceTicketTone.neutral) {
+        expect(side.color, theme.colorScheme.outline);
+      } else {
+        expect(side, BorderSide.none);
+      }
+    }
+  });
+
+  test('FlightTicketBorder : le contour entre dans l\'égalité', () {
+    expect(
+      const FlightTicketBorder(side: BorderSide(width: 2)) ==
+          const FlightTicketBorder(),
+      isFalse,
+    );
+    expect(
+      const FlightTicketBorder(side: BorderSide(width: 2)).scale(2),
+      const FlightTicketBorder(
+        radius: 18,
+        notchRadius: 8,
+        side: BorderSide(width: 4),
+      ),
+    );
   });
 }

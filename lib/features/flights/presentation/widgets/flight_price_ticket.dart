@@ -18,10 +18,18 @@ enum FlightPriceTicketTone {
 /// milieu de chaque côté, comme les billets de Yadony. Dessiné, jamais une
 /// image : il suit la taille du contenu, le thème et le sens de lecture.
 class FlightTicketBorder extends ShapeBorder {
-  const FlightTicketBorder({this.radius = 9, this.notchRadius = 4});
+  const FlightTicketBorder({
+    this.radius = 9,
+    this.notchRadius = 4,
+    this.side = BorderSide.none,
+  });
 
   final double radius;
   final double notchRadius;
+
+  /// Contour, encoches comprises. Le ton neutre en a besoin : son gris pâle
+  /// sur la rangée blanche ne se détachait pas (FLUTTER-Q1).
+  final BorderSide side;
 
   @override
   EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
@@ -51,20 +59,30 @@ class FlightTicketBorder extends ShapeBorder {
   }
 
   @override
-  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {}
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    if (side.style == BorderStyle.none) return;
+    canvas.drawPath(
+      getOuterPath(rect.deflate(side.width / 2), textDirection: textDirection),
+      side.toPaint(),
+    );
+  }
 
   @override
-  ShapeBorder scale(double t) =>
-      FlightTicketBorder(radius: radius * t, notchRadius: notchRadius * t);
+  ShapeBorder scale(double t) => FlightTicketBorder(
+    radius: radius * t,
+    notchRadius: notchRadius * t,
+    side: side.scale(t),
+  );
 
   @override
   bool operator ==(Object other) =>
       other is FlightTicketBorder &&
       other.radius == radius &&
-      other.notchRadius == notchRadius;
+      other.notchRadius == notchRadius &&
+      other.side == side;
 
   @override
-  int get hashCode => Object.hash(radius, notchRadius);
+  int get hashCode => Object.hash(radius, notchRadius, side);
 }
 
 /// Étiquette de prix en forme de billet, à droite de la ligne « Alertes
@@ -101,7 +119,11 @@ class FlightPriceTicket extends StatelessWidget {
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: background,
-        shape: const FlightTicketBorder(),
+        shape: FlightTicketBorder(
+          side: tone == FlightPriceTicketTone.neutral
+              ? BorderSide(color: cs.outline)
+              : BorderSide.none,
+        ),
       ),
       child: CustomPaint(
         painter: _TicketPerforation(color: foreground.withValues(alpha: 0.35)),

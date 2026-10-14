@@ -195,14 +195,17 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                         width: boxWidth,
                         height: boxHeight,
                         decoration: BoxDecoration(
-                          color: DonyColors.ink800,
+                          // Couleur inverse du thème : encre foncée en clair,
+                          // case claire en sombre, où l'encre se fondait
+                          // dans le talon.
+                          color: cs.inverseSurface,
                           borderRadius: BorderRadius.circular(DonyRadius.md),
                         ),
                         alignment: Alignment.center,
                         child: Text(
                           digit,
                           style: tt.headlineLarge?.copyWith(
-                            color: Colors.white,
+                            color: cs.onInverseSurface,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0,
                             fontSize: fontSize,
