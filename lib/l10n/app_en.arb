@@ -5499,6 +5499,30 @@
   "@stripeAccountUnavailableBody": {
     "description": "Paragraphe d'explication de connect_unavailable_view.dart, partagé par PayoutOnboardingScreen et ConnectOnboardingIntroScreen."
   },
+  "stripeAccountUnavailableResidenceLabel": "Declared country of residence",
+  "@stripeAccountUnavailableResidenceLabel": {
+    "description": "Libellé au-dessus du pays de résidence déclaré (drapeau + nom) dans connect_unavailable_view.dart."
+  },
+  "stripeAccountUnavailableCountryBody": "Stripe doesn't open payment accounts for this country of residence yet. If you live in another country, such as France or the United States, update your country of residence: you'll then be able to turn on card payments.",
+  "@stripeAccountUnavailableCountryBody": {
+    "description": "Explication de connect_unavailable_view.dart quand le pays de résidence déclaré n'est pas couvert par Stripe et reste modifiable."
+  },
+  "stripeAccountUnavailableNoCountryBody": "Add your country of residence: it decides whether Stripe can open your card payment account, not the country you happen to be in.",
+  "@stripeAccountUnavailableNoCountryBody": {
+    "description": "Explication de connect_unavailable_view.dart quand aucun pays de résidence n'est renseigné."
+  },
+  "stripeAccountUnavailableCashNote": "Do you actually live there? You can keep carrying parcels and get paid in cash at drop-off, or by mobile money.",
+  "@stripeAccountUnavailableCashNote": {
+    "description": "Phrase secondaire de connect_unavailable_view.dart pour qui vit réellement dans un pays non couvert par Stripe."
+  },
+  "stripeAccountUnavailableLockedNote": "Your payment account has already been created in this country: to change your country of residence, contact support.",
+  "@stripeAccountUnavailableLockedNote": {
+    "description": "Phrase de connect_unavailable_view.dart quand le pays de résidence est verrouillé (compte Stripe déjà créé) : pas de bouton, seul le support peut le changer."
+  },
+  "stripeAccountUnavailableChangeCountryCta": "Update my country of residence",
+  "@stripeAccountUnavailableChangeCountryCta": {
+    "description": "Bouton principal de connect_unavailable_view.dart, ouvre Réglages › Préférences pour corriger le pays de résidence."
+  },
   "stripeAccountIdentityRequiredHeading": "Verify your identity\nfirst",
   "@stripeAccountIdentityRequiredHeading": {
     "description": "Titre sur deux lignes de identity_required_view.dart ; le saut de ligne fait partie de la valeur."

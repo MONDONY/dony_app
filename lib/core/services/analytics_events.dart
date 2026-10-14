@@ -390,6 +390,13 @@ abstract final class AnalyticsEvents {
   static const publishIntroStripeReminderTapped =
       'publish_intro_stripe_reminder_tapped';
 
+  /// Bouton « Modifier mon pays de résidence » de `ConnectUnavailableView`
+  /// (onboarding Connect et « Recevoir mes paiements ») : mène à Réglages ›
+  /// Préférences quand le pays de résidence déclaré n'est pas couvert par
+  /// Stripe ou n'est pas renseigné. Propriété `country_set` (bool).
+  static const connectUnavailableChangeCountryTapped =
+      'connect_unavailable_change_country_tapped';
+
   // Détail trajet (propriétaire)
   static const tripOwnerDetailOpened = 'trip_owner_detail_opened';
   static const tripAudienceLoaded = 'trip_audience_loaded';

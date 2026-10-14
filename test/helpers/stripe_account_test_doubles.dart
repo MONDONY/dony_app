@@ -34,7 +34,7 @@ MockStripeAccountBloc stubStripeAccountBloc({
 }
 
 /// Statut chargé dans un pays où Stripe n'ouvre pas de compte connecté :
-/// zones XOF et XAF, États-Unis, Canada.
+/// zones XOF et XAF (les États-Unis et le Canada sont couverts).
 const stripeCountryUnavailableState = StripeAccountReady(
   ConnectAccountStatus(status: 'NOT_CREATED', connectAvailableInCountry: false),
 );

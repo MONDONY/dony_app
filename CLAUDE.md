@@ -486,6 +486,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
 | `shipment_new_request_opened` | ShipmentListScreen et MesColisScreen — pill « Envoyer » du header ouvre le wizard de demande d'envoi |
 | `publish_intro_stripe_reminder_tapped` | PublishIntroScreen (trajet) — tap sur le rappel « Activez les paiements par carte » → onboarding Stripe Connect |
+| `connect_unavailable_change_country_tapped` | ConnectUnavailableView._changeCountry — bouton « Modifier mon pays de résidence » de l'écran « Pas encore disponible dans votre pays » (onboarding Stripe Connect et « Recevoir mes paiements »), qui ouvre Réglages › Préférences ; au retour, le statut Connect est redemandé et l'écran bascule sur le parcours normal si le nouveau pays est couvert. Propriété `country_set` : un pays de résidence était déjà renseigné. Absent quand le pays est verrouillé (compte Stripe créé) |
 | `trip_filter_applied` | TripFilterCubit.setFilter() — chips statut « Mes trajets » (Activités), propriété `status` |
 | `envoyer_envois` / `envoyer_demandes` | EnvoyerHubScreen `logScreen` au changement d'onglet (Envois / Demandes) |
 | `urgent_filter_toggled` | HomeScreen._onUrgentToggle — chip 🔥 Urgent (propriété `active`) |

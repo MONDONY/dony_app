@@ -3655,6 +3655,17 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'stripeAccountRejectedBannerCta': (l) => l.stripeAccountRejectedBannerCta,
   'stripeAccountUnavailableHeading': (l) => l.stripeAccountUnavailableHeading,
   'stripeAccountUnavailableBody': (l) => l.stripeAccountUnavailableBody,
+  'stripeAccountUnavailableResidenceLabel': (l) =>
+      l.stripeAccountUnavailableResidenceLabel,
+  'stripeAccountUnavailableCountryBody': (l) =>
+      l.stripeAccountUnavailableCountryBody,
+  'stripeAccountUnavailableNoCountryBody': (l) =>
+      l.stripeAccountUnavailableNoCountryBody,
+  'stripeAccountUnavailableCashNote': (l) => l.stripeAccountUnavailableCashNote,
+  'stripeAccountUnavailableLockedNote': (l) =>
+      l.stripeAccountUnavailableLockedNote,
+  'stripeAccountUnavailableChangeCountryCta': (l) =>
+      l.stripeAccountUnavailableChangeCountryCta,
   'stripeAccountIdentityRequiredHeading': (l) =>
       l.stripeAccountIdentityRequiredHeading,
   'stripeAccountIdentityRequiredBody': (l) =>
