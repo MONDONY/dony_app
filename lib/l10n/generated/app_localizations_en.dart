@@ -10060,6 +10060,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Stripe doesn\'t yet allow opening a payment account from your country. You can keep carrying parcels and get paid in cash, at drop-off.';
 
   @override
+  String get stripeAccountUnavailableResidenceLabel =>
+      'Declared country of residence';
+
+  @override
+  String get stripeAccountUnavailableCountryBody =>
+      'Stripe doesn\'t open payment accounts for this country of residence yet. If you live in another country, such as France or the United States, update your country of residence: you\'ll then be able to turn on card payments.';
+
+  @override
+  String get stripeAccountUnavailableNoCountryBody =>
+      'Add your country of residence: it decides whether Stripe can open your card payment account, not the country you happen to be in.';
+
+  @override
+  String get stripeAccountUnavailableCashNote =>
+      'Do you actually live there? You can keep carrying parcels and get paid in cash at drop-off, or by mobile money.';
+
+  @override
+  String get stripeAccountUnavailableLockedNote =>
+      'Your payment account has already been created in this country: to change your country of residence, contact support.';
+
+  @override
+  String get stripeAccountUnavailableChangeCountryCta =>
+      'Update my country of residence';
+
+  @override
   String get stripeAccountIdentityRequiredHeading =>
       'Verify your identity\nfirst';
 

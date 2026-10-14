@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -198,7 +200,92 @@ void main() {
           findsOneWidget,
         );
         expect(find.text('Compléter mon compte'), findsNothing);
-        expect(find.byType(DonyButton), findsNothing);
+        // Seul bouton proposé : corriger le pays de résidence, qui décide
+        // de la couverture Stripe.
+        expect(find.byType(DonyButton), findsOneWidget);
+        expect(find.text('Modifier mon pays de résidence'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'pays corrigé dans Préférences : au retour, le statut rafraîchi rend '
+      'le parcours normal sans redémarrage',
+      (tester) async {
+        // Statut piloté à la main : le rafraîchissement demandé au retour de
+        // Préférences pousse un statut « pays couvert », comme le ferait le
+        // serveur après la correction du pays de résidence.
+        final stripeBloc = MockStripeAccountBloc();
+        final controller = StreamController<StripeAccountState>.broadcast();
+        addTearDown(controller.close);
+        StripeAccountState current = const StripeAccountReady(
+          ConnectAccountStatus(
+            status: 'NOT_CREATED',
+            connectAvailableInCountry: false,
+          ),
+        );
+        when(() => stripeBloc.state).thenAnswer((_) => current);
+        when(() => stripeBloc.stream).thenAnswer((_) => controller.stream);
+        when(() => stripeBloc.isClosed).thenReturn(false);
+        when(
+          () => stripeBloc.add(const StripeAccountStatusRefreshed()),
+        ).thenAnswer((_) {
+          current = const StripeAccountReady(
+            ConnectAccountStatus(status: 'NOT_CREATED'),
+          );
+          controller.add(current);
+        });
+
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerConfig: GoRouter(
+              routes: [
+                GoRoute(
+                  path: '/',
+                  builder: (_, _) => MultiBlocProvider(
+                    providers: [
+                      BlocProvider<ConnectOnboardingBloc>.value(
+                        value: mockBloc,
+                      ),
+                      BlocProvider<StripeAccountBloc>.value(value: stripeBloc),
+                      BlocProvider<AuthBloc>.value(value: _authBloc()),
+                    ],
+                    child: const ConnectOnboardingIntroScreen(),
+                  ),
+                ),
+                GoRoute(
+                  path: '/settings/preferences',
+                  builder: (ctx, _) => Scaffold(
+                    body: TextButton(
+                      onPressed: () => ctx.pop(),
+                      child: const Text('PREFS'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+        await tester.pump(_kSettle);
+        expect(
+          find.text('Pas encore disponible\ndans votre pays'),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Modifier mon pays de résidence'));
+        await tester.pumpAndSettle();
+        expect(find.text('PREFS'), findsOneWidget);
+
+        await tester.tap(find.text('PREFS'));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => stripeBloc.add(const StripeAccountStatusRefreshed()),
+        ).called(1);
+        expect(
+          find.text('Pas encore disponible\ndans votre pays'),
+          findsNothing,
+        );
+        expect(find.text('Compléter mon compte'), findsOneWidget);
       },
     );
 

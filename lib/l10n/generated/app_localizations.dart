@@ -16661,6 +16661,42 @@ abstract class AppLocalizations {
   /// **'Stripe ne permet pas encore d\'ouvrir un compte de paiement depuis votre pays. Vous pouvez continuer à transporter des colis et à être payé en espèces, à la remise.'**
   String get stripeAccountUnavailableBody;
 
+  /// Libellé au-dessus du pays de résidence déclaré (drapeau + nom) dans connect_unavailable_view.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de résidence déclaré'**
+  String get stripeAccountUnavailableResidenceLabel;
+
+  /// Explication de connect_unavailable_view.dart quand le pays de résidence déclaré n'est pas couvert par Stripe et reste modifiable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stripe n\'ouvre pas encore de compte de paiement pour ce pays de résidence. Si vous vivez dans un autre pays, par exemple en France ou aux États-Unis, corrigez votre pays de résidence : vous pourrez alors activer les paiements par carte.'**
+  String get stripeAccountUnavailableCountryBody;
+
+  /// Explication de connect_unavailable_view.dart quand aucun pays de résidence n'est renseigné.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseignez votre pays de résidence : c\'est lui, et non le pays où vous vous trouvez, qui décide si Stripe peut ouvrir votre compte de paiement par carte.'**
+  String get stripeAccountUnavailableNoCountryBody;
+
+  /// Phrase secondaire de connect_unavailable_view.dart pour qui vit réellement dans un pays non couvert par Stripe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous vivez bien dans ce pays ? Vous pouvez continuer à transporter des colis et à être payé en espèces à la remise, ou par mobile money.'**
+  String get stripeAccountUnavailableCashNote;
+
+  /// Phrase de connect_unavailable_view.dart quand le pays de résidence est verrouillé (compte Stripe déjà créé) : pas de bouton, seul le support peut le changer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte de paiement est déjà créé dans ce pays : pour changer de pays de résidence, contactez le support.'**
+  String get stripeAccountUnavailableLockedNote;
+
+  /// Bouton principal de connect_unavailable_view.dart, ouvre Réglages › Préférences pour corriger le pays de résidence.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier mon pays de résidence'**
+  String get stripeAccountUnavailableChangeCountryCta;
+
   /// Titre sur deux lignes de identity_required_view.dart ; le saut de ligne fait partie de la valeur.
   ///
   /// In fr, this message translates to:

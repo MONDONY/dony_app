@@ -10127,6 +10127,30 @@ class AppLocalizationsFr extends AppLocalizations {
       'Stripe ne permet pas encore d\'ouvrir un compte de paiement depuis votre pays. Vous pouvez continuer à transporter des colis et à être payé en espèces, à la remise.';
 
   @override
+  String get stripeAccountUnavailableResidenceLabel =>
+      'Pays de résidence déclaré';
+
+  @override
+  String get stripeAccountUnavailableCountryBody =>
+      'Stripe n\'ouvre pas encore de compte de paiement pour ce pays de résidence. Si vous vivez dans un autre pays, par exemple en France ou aux États-Unis, corrigez votre pays de résidence : vous pourrez alors activer les paiements par carte.';
+
+  @override
+  String get stripeAccountUnavailableNoCountryBody =>
+      'Renseignez votre pays de résidence : c\'est lui, et non le pays où vous vous trouvez, qui décide si Stripe peut ouvrir votre compte de paiement par carte.';
+
+  @override
+  String get stripeAccountUnavailableCashNote =>
+      'Vous vivez bien dans ce pays ? Vous pouvez continuer à transporter des colis et à être payé en espèces à la remise, ou par mobile money.';
+
+  @override
+  String get stripeAccountUnavailableLockedNote =>
+      'Votre compte de paiement est déjà créé dans ce pays : pour changer de pays de résidence, contactez le support.';
+
+  @override
+  String get stripeAccountUnavailableChangeCountryCta =>
+      'Modifier mon pays de résidence';
+
+  @override
   String get stripeAccountIdentityRequiredHeading =>
       'Vérifiez votre identité\nd\'abord';
 
