@@ -14681,6 +14681,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String priceGridMinPriceMessage(String min) {
+    return 'Minimum $min par article.';
+  }
+
+  @override
   String get priceGridEnterAmountMessage =>
       'Saisissez le montant que vous voulez toucher.';
 
@@ -17865,6 +17870,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorPriceOutOfBoundsMessage =>
       'Ce prix au kilo est en dehors des limites autorisées dans la devise du trajet. Vérifiez le montant et la devise choisie.';
+
+  @override
+  String get errorPriceGridOutOfBoundsMessage =>
+      'Ce prix d\'article est en dehors des limites autorisées : 5 € au moins, 500 € au plus, convertis dans votre devise.';
 
   @override
   String get tripLegSheetCurrency => 'Devise de l\'étape';

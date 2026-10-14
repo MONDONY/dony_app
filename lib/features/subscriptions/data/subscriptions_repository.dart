@@ -22,6 +22,13 @@ class TravelerAnnouncement {
   final double availableKg;
   final String status;
   final String currency;
+
+  /// `KG` ou `MIXED` (grille). Absent d'un serveur antérieur : `KG`.
+  final String pricingMode;
+
+  /// Prix affiché expéditeur le plus bas de la grille (« dès X »), `null`
+  /// hors grille ou sur un serveur antérieur (yadony-back #526).
+  final double? minGridUnitPriceDisplay;
   const TravelerAnnouncement({
     required this.id,
     required this.departureCity,
@@ -31,7 +38,12 @@ class TravelerAnnouncement {
     required this.availableKg,
     required this.status,
     this.currency = 'EUR',
+    this.pricingMode = 'KG',
+    this.minGridUnitPriceDisplay,
   });
+
+  /// Trajet tarifé à la grille seulement : son prix au kilo vaut 0.
+  bool get gridOnly => pricingMode == 'MIXED' || pricePerKg <= 0;
 
   factory TravelerAnnouncement.fromJson(Map<String, dynamic> json) =>
       TravelerAnnouncement(
@@ -43,6 +55,9 @@ class TravelerAnnouncement {
         availableKg: (json['availableKg'] as num).toDouble(),
         status: json['status'] as String,
         currency: json['currency'] as String? ?? 'EUR',
+        pricingMode: json['pricingMode'] as String? ?? 'KG',
+        minGridUnitPriceDisplay: (json['minGridUnitPriceDisplay'] as num?)
+            ?.toDouble(),
       );
 }
 
@@ -60,6 +75,13 @@ class LastAnnouncement {
   /// auquel cas la carte se rabat sur l'ancienneté de la publication.
   final DateTime? departureDate;
   final DateTime publishedAt;
+
+  /// `KG` ou `MIXED` (grille). Absent d'un serveur antérieur : `KG`.
+  final String pricingMode;
+
+  /// Prix affiché expéditeur le plus bas de la grille (« dès X »), `null`
+  /// hors grille ou sur un serveur antérieur (yadony-back #526).
+  final double? minGridUnitPriceDisplay;
   const LastAnnouncement({
     required this.announcementId,
     required this.departureCity,
@@ -68,7 +90,12 @@ class LastAnnouncement {
     this.currency = 'EUR',
     this.departureDate,
     required this.publishedAt,
+    this.pricingMode = 'KG',
+    this.minGridUnitPriceDisplay,
   });
+
+  /// Trajet tarifé à la grille seulement : son prix au kilo vaut 0.
+  bool get gridOnly => pricingMode == 'MIXED' || pricePerKg <= 0;
 
   factory LastAnnouncement.fromJson(Map<String, dynamic> json) =>
       LastAnnouncement(
@@ -81,6 +108,9 @@ class LastAnnouncement {
             ? null
             : DateTime.parse(json['departureDate'] as String),
         publishedAt: DateTime.parse(json['publishedAt'] as String),
+        pricingMode: json['pricingMode'] as String? ?? 'KG',
+        minGridUnitPriceDisplay: (json['minGridUnitPriceDisplay'] as num?)
+            ?.toDouble(),
       );
 }
 

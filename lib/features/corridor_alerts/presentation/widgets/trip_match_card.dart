@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -164,7 +165,7 @@ class TripMatchCard extends StatelessWidget {
                                   // Prix au kilo à 0 = trajet tarifé à la
                                   // grille seulement, jamais « 0 €/kg »
                                   // (FLUTTER-PC).
-                                  (match.pricePerKg ?? 0) > 0
+                                  !match.gridOnly && match.pricePerKg != null
                                       ? Text.rich(
                                           TextSpan(
                                             style: tt.bodySmall?.copyWith(
@@ -187,9 +188,13 @@ class TripMatchCard extends StatelessWidget {
                                           ),
                                         )
                                       : Text(
-                                          match.pricePerKg == null
-                                              ? l.corridorAlertOpenPrice
-                                              : l.listingPriceGridLabel,
+                                          match.gridOnly
+                                              ? gridPriceLabel(
+                                                  l,
+                                                  match.minGridUnitPriceDisplay,
+                                                  match.currency,
+                                                )
+                                              : l.corridorAlertOpenPrice,
                                           style: tt.bodySmall?.copyWith(
                                             color: cs.onSurfaceVariant,
                                             fontWeight: FontWeight.w600,

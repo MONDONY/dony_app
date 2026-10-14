@@ -95,6 +95,30 @@ void main() {
     expect(find.textContaining('/kg'), findsNothing);
   });
 
+  testWidgets(
+    'dernier trajet à la grille, prix le plus bas servi : « dès X »',
+    (tester) async {
+      await tester.pumpWidget(
+        host(
+          _item(
+            last: LastAnnouncement(
+              announcementId: 'a1',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              pricePerKg: 0,
+              publishedAt: now,
+              pricingMode: 'MIXED',
+              minGridUnitPriceDisplay: 16.8,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.textContaining('dès 16,80'), findsOneWidget);
+      expect(find.textContaining('/kg'), findsNothing);
+    },
+  );
+
   testWidgets('le prix suit la devise de l\'annonce, pas l\'euro par défaut', (
     tester,
   ) async {

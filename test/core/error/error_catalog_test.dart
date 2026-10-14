@@ -61,6 +61,22 @@ void main() {
     }
   });
 
+  test(
+    'price-grid/price-out-of-bounds : article hors limites, 5 € au moins',
+    () {
+      final p = ErrorCatalog.lookup(
+        const NetworkException(
+          'ignored',
+          code: 'price-grid/price-out-of-bounds',
+        ),
+      );
+
+      expect(p.title, 'Prix hors limites');
+      expect(p.message, contains('5 €'));
+      expect(p.severity, ErrorSeverity.warning);
+    },
+  );
+
   group('ErrorCatalog — currency-mismatch', () {
     test('code dédié → message, sévérité et icône dédiés', () {
       const error = NetworkException('ignored', code: 'currency-mismatch');

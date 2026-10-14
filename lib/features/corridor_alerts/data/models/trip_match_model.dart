@@ -19,6 +19,8 @@ class TripMatchModel extends Equatable {
     this.currency = 'EUR',
     this.publishedAt,
     this.status,
+    this.pricingMode = 'KG',
+    this.minGridUnitPriceDisplay,
   });
 
   final String announcementId;
@@ -44,6 +46,18 @@ class TripMatchModel extends Equatable {
   /// `null` sur un backend antérieur, la capacité restante fait alors foi.
   final String? status;
 
+  /// `KG` ou `MIXED` (grille). Absent d'un serveur antérieur : `KG`.
+  final String pricingMode;
+
+  /// Prix affiché expéditeur le plus bas de la grille (« dès X »), `null`
+  /// hors grille ou sur un serveur antérieur (yadony-back #526).
+  final double? minGridUnitPriceDisplay;
+
+  /// Trajet tarifé à la grille seulement (prix au kilo à 0). Un prix absent
+  /// reste un « prix libre ».
+  bool get gridOnly =>
+      pricingMode == 'MIXED' || (pricePerKg != null && pricePerKg! <= 0);
+
   /// Trajet complet : plus aucun kilo à réserver. Il reste listé dans
   /// l'alerte tant que sa date n'est pas passée, mais n'est plus sélectionnable.
   bool get isFull => status == 'FULL' || availableKg <= 0;
@@ -66,6 +80,9 @@ class TripMatchModel extends Equatable {
         ? DateTime.parse(json['publishedAt'] as String)
         : null,
     status: json['status'] as String?,
+    pricingMode: json['pricingMode'] as String? ?? 'KG',
+    minGridUnitPriceDisplay: (json['minGridUnitPriceDisplay'] as num?)
+        ?.toDouble(),
   );
 
   @override
@@ -85,5 +102,7 @@ class TripMatchModel extends Equatable {
     currency,
     publishedAt,
     status,
+    pricingMode,
+    minGridUnitPriceDisplay,
   ];
 }

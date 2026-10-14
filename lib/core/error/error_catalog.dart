@@ -572,6 +572,14 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.price_change_outlined,
     ),
+    // Article de grille sous 5 € ou au-dessus de 500 €, dans la devise du
+    // profil (POST/PUT /travelers/me/price-grid).
+    'price-grid/price-out-of-bounds': _Entry(
+      title: (l) => l.errorPriceOutOfBoundsTitle,
+      message: (l) => l.errorPriceGridOutOfBoundsMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_outlined,
+    ),
     'trip-template/price-out-of-bounds': _Entry(
       title: (l) => l.errorPriceOutOfBoundsTitle,
       message: (l) => l.errorPriceOutOfBoundsMessage,

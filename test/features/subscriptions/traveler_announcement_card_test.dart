@@ -25,6 +25,8 @@ void main() {
     String arrivalCity = 'Dakar',
     double pricePerKg = 8,
     double availableKg = 5,
+    String pricingMode = 'KG',
+    double? minGrid,
     DateTime? departureDate,
     String status = 'ACTIVE',
     String currency = 'EUR',
@@ -37,6 +39,8 @@ void main() {
     availableKg: availableKg,
     status: status,
     currency: currency,
+    pricingMode: pricingMode,
+    minGridUnitPriceDisplay: minGrid,
   );
 
   testWidgets('affiche les villes départ et arrivée', (tester) async {
@@ -131,6 +135,23 @@ void main() {
       expect(find.textContaining('0 €'), findsNothing);
     },
   );
+
+  testWidgets('grille avec prix le plus bas servi : « dès X »', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        TravelerAnnouncementCard(
+          announcement: announcement(
+            pricePerKg: 0,
+            pricingMode: 'MIXED',
+            minGrid: 16.8,
+          ),
+          onReserve: () {},
+        ),
+      ),
+    );
+    expect(find.textContaining('dès 16,80'), findsOneWidget);
+    expect(find.text('/kg'), findsNothing);
+  });
 
   testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
     tester,

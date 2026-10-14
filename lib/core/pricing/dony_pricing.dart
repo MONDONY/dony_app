@@ -203,6 +203,25 @@ double minUnitPriceFor(SupportedCurrency currency) {
   return (scaled - 1e-9).ceilToDouble() / factor;
 }
 
+/// Plancher de référence, en euros, d'un article de grille tarifaire. Aligné
+/// sur `CurrencyBounds.MIN_GRID_ITEM_PRICE_EUR` côté backend : un article à
+/// 8 F CFA trahit une saisie dans la mauvaise devise.
+const double kMinGridItemPriceEur = 5;
+
+/// Plancher d'un article de grille dans [currency] : 5 €, arrondi vers le HAUT
+/// à la précision de la devise (3 280 F CFA, 5,40 USD), au taux du catalogue
+/// comme `CurrencyBounds` (même calcul que [minUnitPriceFor]).
+double minGridItemPriceFor(SupportedCurrency currency) {
+  final factor = math.pow(10, currency.minorUnit).toDouble();
+  final scaled = kMinGridItemPriceEur * currency.unitsPerEur * factor;
+  return (scaled - 1e-9).ceilToDouble() / factor;
+}
+
+/// Plancher d'un article de grille dans la devise active du profil, celle de
+/// la grille.
+double get minGridItemPriceActive =>
+    minGridItemPriceFor(ActiveCurrency.current ?? SupportedCurrency.eur);
+
 /// Borne franchie par un prix au kilo.
 enum UnitPriceBound { tooLow, tooHigh }
 
