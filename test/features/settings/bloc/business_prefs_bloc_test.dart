@@ -1,4 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/data/models/user_business_prefs_dto.dart';
@@ -11,6 +14,8 @@ class MockBusinessPrefsRepository extends Mock
     implements BusinessPrefsRepository {}
 
 class MockBox extends Mock implements Box<dynamic> {}
+
+class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 const _defaultDto = UserBusinessPrefsDto(
   weightUnit: 'kg',
@@ -401,6 +406,137 @@ void main() {
         verifyNever(() => mockRepo.fetchPrefs());
       },
     );
+
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'refus country-locked : le motif est exposé à l\'écran, plus de retour '
+      'silencieux',
+      setUp: () {
+        when(() => mockRepo.updatePrefs(any())).thenThrow(
+          const ValidationException('locked', code: 'country-locked'),
+        );
+      },
+      build: build,
+      seed: () => const BusinessPrefsState(country: 'FR'),
+      act: (bloc) => bloc.add(const CountryChanged('CA')),
+      expect: () => [
+        isA<BusinessPrefsState>().having(
+          (s) => s.countryChangeError,
+          'countryChangeError',
+          isNull,
+        ),
+        isA<BusinessPrefsState>()
+            .having((s) => s.country, 'country', 'FR')
+            .having((s) => s.hasSyncError, 'hasSyncError', isTrue)
+            .having(
+              (s) => s.countryChangeError?.code,
+              'countryChangeError.code',
+              'country-locked',
+            ),
+      ],
+    );
+
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'un réglage suivant efface le motif du refus avec hasSyncError',
+      build: build,
+      seed: () => const BusinessPrefsState(
+        country: 'FR',
+        hasSyncError: true,
+        countryChangeError: ValidationException('x', code: 'country-locked'),
+      ),
+      act: (bloc) => bloc.add(const WeightUnitChanged('lbs')),
+      verify: (bloc) {
+        expect(bloc.state.hasSyncError, isFalse);
+        expect(bloc.state.countryChangeError, isNull);
+      },
+    );
+
+    group('succès : compteur et analytics', () {
+      late MockAnalyticsService analytics;
+
+      setUp(() {
+        analytics = MockAnalyticsService();
+        when(
+          () => analytics.logEvent(any(), properties: any(named: 'properties')),
+        ).thenAnswer((_) async {});
+        when(() => mockRepo.updatePrefs(any())).thenAnswer(
+          (_) async => const UserBusinessPrefsDto(
+            weightUnit: 'kg',
+            currencyCode: 'XOF',
+            defaultPackageWeightKg: 23,
+            minBidPriceEur: 0,
+            country: 'SN',
+          ),
+        );
+      });
+
+      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+        'incrémente countrySavedCount et trace residence_country_changed '
+        'avec reset_payout_setup',
+        build: () => BusinessPrefsBloc(mockRepo, mockBox, analytics: analytics),
+        seed: () => const BusinessPrefsState(
+          country: 'FR',
+          countryChangeResetsPayoutSetup: true,
+        ),
+        act: (bloc) => bloc.add(const CountryChanged('SN')),
+        verify: (bloc) {
+          expect(bloc.state.countrySavedCount, 1);
+          expect(bloc.state.countryChangeResetsPayoutSetup, isFalse);
+          verify(
+            () => analytics.logEvent(
+              AnalyticsEvents.residenceCountryChanged,
+              properties: {'reset_payout_setup': true},
+            ),
+          ).called(1);
+        },
+      );
+
+      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+        'même pays renvoyé : aucun événement analytics',
+        build: () => BusinessPrefsBloc(mockRepo, mockBox, analytics: analytics),
+        seed: () => const BusinessPrefsState(country: 'SN'),
+        act: (bloc) => bloc.add(const CountryChanged('SN')),
+        verify: (bloc) {
+          expect(bloc.state.countrySavedCount, 1);
+          verifyNever(
+            () =>
+                analytics.logEvent(any(), properties: any(named: 'properties')),
+          );
+        },
+      );
+
+      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+        'une synchro ultérieure garde le compteur',
+        setUp: () {
+          when(
+            () => mockRepo.fetchPrefs(),
+          ).thenAnswer((_) async => _defaultDto);
+        },
+        build: build,
+        seed: () => const BusinessPrefsState(countrySavedCount: 3),
+        act: (bloc) => bloc.add(const BusinessPrefsSyncRequested()),
+        verify: (bloc) => expect(bloc.state.countrySavedCount, 3),
+      );
+
+      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+        'la synchro adopte countryChangeResetsPayoutSetup du serveur',
+        setUp: () {
+          when(() => mockRepo.fetchPrefs()).thenAnswer(
+            (_) async => const UserBusinessPrefsDto(
+              weightUnit: 'kg',
+              currencyCode: 'EUR',
+              defaultPackageWeightKg: 23,
+              minBidPriceEur: 0,
+              country: 'FR',
+              countryChangeResetsPayoutSetup: true,
+            ),
+          );
+        },
+        build: build,
+        act: (bloc) => bloc.add(const BusinessPrefsSyncRequested()),
+        verify: (bloc) =>
+            expect(bloc.state.countryChangeResetsPayoutSetup, isTrue),
+      );
+    });
   });
 
   group('events existants — WeightUnitChanged, CurrencyChanged', () {

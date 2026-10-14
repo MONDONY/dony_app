@@ -28,6 +28,13 @@ class UserBusinessPrefsDto {
   /// [toJson].
   final bool countryLocked;
 
+  /// Lecture seule (yadony-back #530) : changer de pays maintenant annulerait
+  /// une activation des paiements par carte (Stripe Connect) commencée mais
+  /// pas terminée. L'écran demande alors confirmation avant d'envoyer le
+  /// nouveau pays. Absent d'un backend plus ancien : `false`, comportement
+  /// historique. Jamais envoyé dans [toJson].
+  final bool countryChangeResetsPayoutSetup;
+
   /// Devise d'affichage (presentment, lot 8) : `'AUTO'` = suivre la devise
   /// active (comportement historique), sinon une des 7 devises. Jamais
   /// verrouillée par le solde, contrairement à [currencyCode] : elle ne pilote
@@ -45,6 +52,7 @@ class UserBusinessPrefsDto {
     this.currencyLocked = false,
     this.country,
     this.countryLocked = false,
+    this.countryChangeResetsPayoutSetup = false,
     this.displayCurrencyCode = 'AUTO',
   });
 
@@ -61,6 +69,7 @@ class UserBusinessPrefsDto {
     bool? currencyLocked,
     String? country,
     bool? countryLocked,
+    bool? countryChangeResetsPayoutSetup,
     String? displayCurrencyCode,
   }) => UserBusinessPrefsDto(
     weightUnit: weightUnit ?? this.weightUnit,
@@ -74,6 +83,8 @@ class UserBusinessPrefsDto {
     currencyLocked: currencyLocked ?? this.currencyLocked,
     country: country ?? this.country,
     countryLocked: countryLocked ?? this.countryLocked,
+    countryChangeResetsPayoutSetup:
+        countryChangeResetsPayoutSetup ?? this.countryChangeResetsPayoutSetup,
     displayCurrencyCode: displayCurrencyCode ?? this.displayCurrencyCode,
   );
 
@@ -89,6 +100,8 @@ class UserBusinessPrefsDto {
         currencyLocked: json['currencyLocked'] as bool? ?? false,
         country: json['country'] as String?,
         countryLocked: json['countryLocked'] as bool? ?? false,
+        countryChangeResetsPayoutSetup:
+            json['countryChangeResetsPayoutSetup'] as bool? ?? false,
         displayCurrencyCode: json['displayCurrencyCode'] as String? ?? 'AUTO',
       );
 

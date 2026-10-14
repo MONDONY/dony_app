@@ -6,6 +6,7 @@ import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -14,6 +15,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +46,12 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
 
     return Scaffold(
       appBar: DonyAppBar(title: l.prefsTitle),
-      body: BlocBuilder<BusinessPrefsBloc, BusinessPrefsState>(
+      body: BlocConsumer<BusinessPrefsBloc, BusinessPrefsState>(
+        listenWhen: (prev, curr) =>
+            (curr.countryChangeError != null &&
+                curr.countryChangeError != prev.countryChangeError) ||
+            curr.countrySavedCount != prev.countrySavedCount,
+        listener: _onCountryOutcome,
         builder: (context, state) =>
             ListView(
                   padding: const EdgeInsets.fromLTRB(
@@ -54,7 +61,10 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                     DonySpacing.huge,
                   ),
                   children: [
-                    if (state.hasSyncError) ...[
+                    // Un refus du pays a son propre message, plus précis
+                    // (snackbar) : le bandeau générique le doublerait.
+                    if (state.hasSyncError &&
+                        state.countryChangeError == null) ...[
                       _ErrorBanner(message: l.settingsSyncFailed),
                       const SizedBox(height: DonySpacing.lg),
                     ],
@@ -193,10 +203,31 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
 
 // ── Sélecteur de pays ────────────────────────────────────────────────────────
 
+/// Issue d'un changement de pays. Un refus (`country-locked`, hors ligne…)
+/// s'affiche avec son vrai motif au lieu d'un retour silencieux à l'ancien
+/// pays. Un succès redemande le statut Connect, qui dépend du pays côté
+/// serveur : les écrans d'activation des paiements par carte suivent le
+/// nouveau pays sans attendre un redémarrage.
+void _onCountryOutcome(BuildContext context, BusinessPrefsState state) {
+  final error = state.countryChangeError;
+  if (error != null) {
+    unawaited(ErrorPresenter.show(context, error));
+    return;
+  }
+  final stripeBloc = context.read<StripeAccountBloc?>();
+  if (stripeBloc != null && !stripeBloc.isClosed) {
+    stripeBloc.add(const StripeAccountStatusRefreshed());
+  }
+}
+
 /// Ouvre la liste des pays desservis et, si l'utilisateur en choisit un
 /// nouveau, envoie [CountryChanged] au [BusinessPrefsBloc]. La devise n'est
 /// jamais calculée ici : elle revient recalculée par le serveur dans la
 /// réponse du `PUT`.
+///
+/// Quand le serveur signale qu'une activation des paiements par carte est
+/// commencée mais pas terminée (`countryChangeResetsPayoutSetup`, yadony-back
+/// #530), changer de pays l'annule : l'utilisateur confirme d'abord.
 Future<void> _openCountryPicker(
   BuildContext context,
   BusinessPrefsState state,
@@ -212,7 +243,64 @@ Future<void> _openCountryPicker(
   if (selected == null || !context.mounted) {
     return;
   }
+  if (state.countryChangeResetsPayoutSetup && selected != state.country) {
+    final confirmed = await _confirmCountryChange(
+      context,
+      from: state.country,
+      to: selected,
+    );
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+  }
   bloc.add(CountryChanged(selected));
+}
+
+/// Prévient que le changement annule l'activation des paiements par carte
+/// commencée dans l'ancien pays, à relancer depuis le nouveau. Rend `true`
+/// seulement sur « Changer de pays ».
+Future<bool?> _confirmCountryChange(
+  BuildContext context, {
+  required String? from,
+  required String to,
+}) {
+  final l = context.l10n;
+  final tt = Theme.of(context).textTheme;
+  final cs = Theme.of(context).colorScheme;
+  final newName = countryName(l, to);
+  final body = CountryCatalog.byCode(from) != null
+      ? l.prefsCountryChangeConfirmBody(countryName(l, from!), newName)
+      : l.prefsCountryChangeConfirmBodyNoOrigin(newName);
+  return DonyBottomSheet.show<bool>(
+    context,
+    title: l.prefsCountryChangeConfirmTitle,
+    stickyBottom: Builder(
+      builder: (sheetContext) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            key: const Key('prefs-country-change-confirm'),
+            label: l.prefsCountryChangeConfirmCta,
+            onPressed: () => Navigator.of(sheetContext).pop(true),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          DonyButton(
+            key: const Key('prefs-country-change-cancel'),
+            label: l.commonCancel,
+            variant: DonyButtonVariant.ghost,
+            onPressed: () => Navigator.of(sheetContext).pop(false),
+          ),
+        ],
+      ),
+    ),
+    child: Column(
+      key: const Key('prefs-country-change-sheet'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(body, style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+      ],
+    ),
+  );
 }
 
 // ── Sélecteur de devise ──────────────────────────────────────────────────────
@@ -259,8 +347,9 @@ Future<void> _showCurrencyLockedSheet(
   );
 }
 
-/// Pourquoi le pays de résidence est figé (compte de paiement Stripe déjà
-/// créé, son pays est immuable) et qui peut le changer : le support.
+/// Pourquoi le pays de résidence est figé (paiements par carte déjà activés
+/// dans ce pays, ou compte de paiement déjà utilisé : son pays est immuable,
+/// yadony-back #530) et qui peut le changer : le support.
 Future<void> _showCountryLockedSheet(BuildContext context) {
   final l = context.l10n;
   final tt = Theme.of(context).textTheme;

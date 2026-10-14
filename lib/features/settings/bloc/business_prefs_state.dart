@@ -28,6 +28,22 @@ class BusinessPrefsState extends Equatable {
   /// renseigné par le serveur, jamais dérivé localement.
   final bool countryLocked;
 
+  /// Renseigné par le serveur (yadony-back #530) : changer de pays annulerait
+  /// une activation des paiements par carte commencée mais pas terminée.
+  /// L'écran demande confirmation avant d'envoyer [CountryChanged].
+  final bool countryChangeResetsPayoutSetup;
+
+  /// Raison du dernier refus d'enregistrer le pays (`country-locked`, hors
+  /// ligne…), affichée par l'écran via `ErrorPresenter` au lieu d'un retour
+  /// silencieux à l'ancien pays. Détail de [hasSyncError] : remettre
+  /// [hasSyncError] à `false` dans [copyWith] l'efface aussi.
+  final AppException? countryChangeError;
+
+  /// Nombre de changements de pays enregistrés par le serveur depuis le
+  /// démarrage. L'écran l'écoute pour redemander le statut Connect, qui
+  /// dépend du pays côté serveur.
+  final int countrySavedCount;
+
   /// Devise d'affichage (presentment, lot 8) : `'AUTO'` = suivre la devise
   /// active, sinon une des 7 devises. Jamais verrouillée : préférence purement
   /// visuelle, les montants transactionnels restent dans leur devise d'origine.
@@ -45,6 +61,9 @@ class BusinessPrefsState extends Equatable {
     this.currencyLocked = false,
     this.country,
     this.countryLocked = false,
+    this.countryChangeResetsPayoutSetup = false,
+    this.countryChangeError,
+    this.countrySavedCount = 0,
     this.displayCurrencyCode = 'AUTO',
   });
 
@@ -60,6 +79,9 @@ class BusinessPrefsState extends Equatable {
     bool? currencyLocked,
     String? Function()? countryGetter,
     bool? countryLocked,
+    bool? countryChangeResetsPayoutSetup,
+    AppException? countryChangeError,
+    int? countrySavedCount,
     String? displayCurrencyCode,
   }) => BusinessPrefsState(
     weightUnit: weightUnit ?? this.weightUnit,
@@ -76,6 +98,12 @@ class BusinessPrefsState extends Equatable {
     currencyLocked: currencyLocked ?? this.currencyLocked,
     country: countryGetter != null ? countryGetter() : country,
     countryLocked: countryLocked ?? this.countryLocked,
+    countryChangeResetsPayoutSetup:
+        countryChangeResetsPayoutSetup ?? this.countryChangeResetsPayoutSetup,
+    countryChangeError:
+        countryChangeError ??
+        (hasSyncError == false ? null : this.countryChangeError),
+    countrySavedCount: countrySavedCount ?? this.countrySavedCount,
     displayCurrencyCode: displayCurrencyCode ?? this.displayCurrencyCode,
   );
 
@@ -92,6 +120,9 @@ class BusinessPrefsState extends Equatable {
     currencyLocked,
     country,
     countryLocked,
+    countryChangeResetsPayoutSetup,
+    countryChangeError,
+    countrySavedCount,
     displayCurrencyCode,
   ];
 }
