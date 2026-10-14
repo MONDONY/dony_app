@@ -133,11 +133,13 @@ import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
@@ -563,6 +565,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       drafts: getIt<FormDraftStore>(),
       announcements: getIt<AnnouncementRepository>(),
       packageRequests: getIt<PackageRequestRepository>(),
+      templates: getIt<TripTemplateRepository>(),
       analytics: getIt<AnalyticsService>(),
     ),
   );
@@ -571,6 +574,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<FormDraftStore>(),
       getIt<AnalyticsService>(),
       kind,
+    ),
+  );
+  getIt.registerFactoryParam<TripSeriesCubit, AnnouncementModel, void>(
+    (announcement, _) => TripSeriesCubit(
+      announcement,
+      getIt<AnnouncementRepository>(),
+      getIt<TripTemplateRepository>(),
+      getIt<AnalyticsService>(),
     ),
   );
   getIt.registerFactory<TripGroupCubit>(

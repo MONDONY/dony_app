@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
+import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 
 AnnouncementModel tripFixture({
   String id = 'a1',
@@ -10,12 +11,15 @@ AnnouncementModel tripFixture({
   String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
   DateTime? updatedAt,
+  DateTime? departureDate,
+  String? seriesId,
 }) => AnnouncementModel.fromJson({
   'id': id,
   'travelerId': 't1',
   'departureCity': departureCity,
   'arrivalCity': arrivalCity,
-  'departureDate': DateTime(2026, 11, 20).toIso8601String(),
+  'departureDate': (departureDate ?? DateTime(2026, 11, 20)).toIso8601String(),
+  'seriesId': ?seriesId,
   'totalKg': 23,
   'availableKg': 23,
   'pricePerKg': 8.0,
@@ -59,4 +63,19 @@ PublishCommitments commitments({
     required: senderRequired,
     acceptedVersion: senderRequired ? null : version,
   ),
+);
+
+TripTemplate templateFixture({
+  String id = 'tpl-1',
+  String label = 'Paris → Dakar',
+}) => TripTemplate(
+  id: id,
+  label: label,
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  transportMode: 'PLANE',
+  capacityUnit: 'SUITCASE_23KG',
+  availableKg: 23,
+  pricePerKg: 8,
+  acceptedCategories: const [],
 );

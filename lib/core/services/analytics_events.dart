@@ -57,6 +57,12 @@ abstract final class AnalyticsEvents {
   static const publishDraftsSheetShown = 'publish_drafts_sheet_shown';
   static const publishDraftChosen = 'publish_draft_chosen';
 
+  /// Trajet récurrent par dates précises : calendrier ouvert depuis l'écran
+  /// de succès, série créée, modèle enregistré depuis le trajet.
+  static const tripSeriesOpened = 'trip_series_opened';
+  static const tripSeriesCreated = 'trip_series_created';
+  static const tripSeriesTemplateSaved = 'trip_series_template_saved';
+
   /// Voyage à plusieurs étapes (FLUTTER-4D) : étape ajoutée au formulaire.
   static const tripLegAdded = 'trip_leg_added';
 

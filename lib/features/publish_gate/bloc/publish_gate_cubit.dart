@@ -4,6 +4,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
@@ -13,6 +14,8 @@ import 'package:dony/features/publish_gate/bloc/publish_gate_state.dart';
 import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/data/models/publish_draft_entry.dart';
 import 'package:dony/features/publish_gate/data/repositories/publish_commitment_repository.dart';
+import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -20,6 +23,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 enum PublishDraftChoice {
   local('local'),
   server('server'),
+  series('series'),
+  template('template'),
   createNew('new'),
   dismissed('dismissed');
 
@@ -42,11 +47,13 @@ class PublishGateCubit extends Cubit<PublishGateState> {
     required FormDraftStore drafts,
     required AnnouncementRepository announcements,
     required PackageRequestRepository packageRequests,
+    required TripTemplateRepository templates,
     required AnalyticsService analytics,
   }) : _commitments = commitments,
        _drafts = drafts,
        _announcements = announcements,
        _packageRequests = packageRequests,
+       _templates = templates,
        _analytics = analytics,
        super(const PublishGateState());
 
@@ -55,6 +62,7 @@ class PublishGateCubit extends Cubit<PublishGateState> {
   final FormDraftStore _drafts;
   final AnnouncementRepository _announcements;
   final PackageRequestRepository _packageRequests;
+  final TripTemplateRepository _templates;
   final AnalyticsService _analytics;
 
   /// Nombre maximal de brouillons serveur proposés, les plus récents.
@@ -176,9 +184,10 @@ class PublishGateCubit extends Cubit<PublishGateState> {
     emit(state.copyWith(status: PublishGateStatus.checkingDrafts));
     final local = await _localDraft();
     final server = await _serverDrafts();
+    final templates = await _tripTemplates();
     if (isClosed) return;
     final drafts = [?local, ...server];
-    if (drafts.isNotEmpty) {
+    if (drafts.isNotEmpty || templates.isNotEmpty) {
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.publishDraftsSheetShown,
@@ -186,11 +195,18 @@ class PublishGateCubit extends Cubit<PublishGateState> {
             'role': role.wire.toLowerCase(),
             'local': local != null,
             'server_count': server.length,
+            'template_count': templates.length,
           },
         ),
       );
     }
-    emit(state.copyWith(status: PublishGateStatus.ready, drafts: drafts));
+    emit(
+      state.copyWith(
+        status: PublishGateStatus.ready,
+        drafts: drafts,
+        templates: templates,
+      ),
+    );
   }
 
   Future<LocalPublishDraft?> _localDraft() async {
@@ -223,12 +239,9 @@ class PublishGateCubit extends Cubit<PublishGateState> {
       switch (role) {
         case PublishCommitmentRole.traveler:
           final mine = await _announcements.getMyAnnouncements();
-          final drafts =
-              mine.announcements.where((a) => a.status == 'DRAFT').toList()
-                ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-          return [
-            for (final a in drafts.take(maxServerDrafts)) ServerTripDraft(a),
-          ];
+          return groupTripDrafts(
+            mine.announcements.where((a) => a.status == 'DRAFT'),
+          ).take(maxServerDrafts).toList();
         case PublishCommitmentRole.sender:
           final mine = await _packageRequests.findMine(size: 50);
           final drafts =
@@ -242,6 +255,50 @@ class PublishGateCubit extends Cubit<PublishGateState> {
       }
     } on Object catch (e) {
       debugPrint('PublishGateCubit: server drafts unavailable ($e)');
+      return const [];
+    }
+  }
+
+  /// Brouillons de trajet du serveur, ceux d'une même série regroupés sur
+  /// une ligne (trajet récurrent). Le plus récemment modifié d'abord.
+  @visibleForTesting
+  static List<PublishDraftEntry> groupTripDrafts(
+    Iterable<AnnouncementModel> drafts,
+  ) {
+    final bySeries = <String, List<AnnouncementModel>>{};
+    final entries = <(DateTime, PublishDraftEntry)>[];
+    for (final a in drafts) {
+      final series = a.seriesId;
+      if (series == null) {
+        entries.add((a.updatedAt, ServerTripDraft(a)));
+      } else {
+        bySeries.putIfAbsent(series, () => []).add(a);
+      }
+    }
+    for (final group in bySeries.values) {
+      group.sort((a, b) => a.departureDate.compareTo(b.departureDate));
+      final latest = group
+          .map((a) => a.updatedAt)
+          .reduce((a, b) => a.isAfter(b) ? a : b);
+      entries.add((
+        latest,
+        group.length == 1
+            ? ServerTripDraft(group.single)
+            : ServerTripDraftSeries(group),
+      ));
+    }
+    entries.sort((a, b) => b.$1.compareTo(a.$1));
+    return [for (final e in entries) e.$2];
+  }
+
+  /// Modèles de trajet, pour le voyageur seulement. Un échec n'empêche pas
+  /// de publier.
+  Future<List<TripTemplate>> _tripTemplates() async {
+    if (role != PublishCommitmentRole.traveler) return const [];
+    try {
+      return await _templates.getAll();
+    } on Object catch (e) {
+      debugPrint('PublishGateCubit: trip templates unavailable ($e)');
       return const [];
     }
   }

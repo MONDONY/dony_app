@@ -31831,6 +31831,216 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ville à choisir'**
   String get publishDraftNoCity;
+
+  /// Carte de l'écran de succès d'un trajet direct : proposer de le répéter à d'autres dates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous faites ce trajet souvent ?'**
+  String get tripSeriesCardTitle;
+
+  /// Texte de la carte « trajet récurrent ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez d\'autres dates : on prépare le même trajet pour chacune, avec les mêmes villes, kilos, prix et adresses.'**
+  String get tripSeriesCardBody;
+
+  /// Bouton de la carte, ouvre le calendrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendre ce trajet récurrent'**
+  String get tripSeriesCardCta;
+
+  /// Carte après création de la série.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 autre date ajoutée} other{{count} autres dates ajoutées}}'**
+  String tripSeriesCardDone(int count);
+
+  /// Titre de la feuille calendrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand refaites-vous ce trajet ?'**
+  String get tripSeriesSheetTitle;
+
+  /// Sous-titre de la feuille calendrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} → {to}, même heure de départ. Touchez les jours à ajouter.'**
+  String tripSeriesSheetSubtitle(String from, String to);
+
+  /// Légende du jour entouré (trajet d'origine).
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} : le trajet que vous venez de publier.'**
+  String tripSeriesSourceLegend(String date);
+
+  /// Plafond de dates atteint dans le calendrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'12 dates au maximum.'**
+  String get tripSeriesMaxHint;
+
+  /// Bouton du calendrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mois précédent'**
+  String get tripSeriesPrevMonth;
+
+  /// Bouton du calendrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mois suivant'**
+  String get tripSeriesNextMonth;
+
+  /// Bouton grisé tant qu'aucune date n'est cochée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez au moins une date'**
+  String get tripSeriesPickDates;
+
+  /// Bouton principal de la feuille calendrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Publier 1 trajet} other{Publier {count} trajets}}'**
+  String tripSeriesPublishCta(int count);
+
+  /// Bouton secondaire de la feuille calendrier.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Créer 1 brouillon} other{Créer {count} brouillons}}'**
+  String tripSeriesDraftCta(int count);
+
+  /// Refus draft-limit-reached.
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de brouillons atteinte. Publiez ou supprimez d\'abord un brouillon.'**
+  String get tripSeriesErrorDraftLimit;
+
+  /// Refus kyc-not-verified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre identité pour publier ces trajets, ou créez des brouillons.'**
+  String get tripSeriesErrorKyc;
+
+  /// Refus pro-limit-reached.
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de trajets du mois atteinte.'**
+  String get tripSeriesErrorProLimit;
+
+  /// Refus stripe-onboarding-incomplete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Configurez vos paiements par carte pour publier ces trajets, ou créez des brouillons.'**
+  String get tripSeriesErrorStripe;
+
+  /// Échec réseau ou refus inconnu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ajouter ces dates pour le moment. Réessayez.'**
+  String get tripSeriesErrorGeneric;
+
+  /// Badge de la feuille modèle après publication.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 trajet publié} other{{count} trajets publiés}}'**
+  String tripSeriesBadgePublished(int count);
+
+  /// Badge de la feuille modèle après création de brouillons.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 brouillon créé} other{{count} brouillons créés}}'**
+  String tripSeriesBadgeDrafts(int count);
+
+  /// Dates refusées par le serveur.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 date n\'a pas pu être ajoutée.} other{{count} dates n\'ont pas pu être ajoutées.}}'**
+  String tripSeriesSomeFailed(int count);
+
+  /// Titre de la feuille modèle.
+  ///
+  /// In fr, this message translates to:
+  /// **'En faire un modèle de trajet ?'**
+  String get tripTemplateOfferTitle;
+
+  /// Texte de la feuille modèle.
+  ///
+  /// In fr, this message translates to:
+  /// **'La prochaine fois, touchez « Publier un trajet » et retrouvez-le prêt : il ne restera qu\'à choisir la date.'**
+  String get tripTemplateOfferBody;
+
+  /// Champ de la feuille modèle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom du modèle'**
+  String get tripTemplateNameLabel;
+
+  /// Bouton de la feuille modèle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer le modèle'**
+  String get tripTemplateSaveCta;
+
+  /// Refus de la feuille modèle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non merci'**
+  String get tripTemplateSkip;
+
+  /// Message après enregistrement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèle enregistré'**
+  String get tripTemplateSaved;
+
+  /// Échec d'enregistrement du modèle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer le modèle. Réessayez.'**
+  String get tripTemplateSaveFailed;
+
+  /// Section des brouillons de la feuille « Publier un trajet ».
+  ///
+  /// In fr, this message translates to:
+  /// **'À terminer'**
+  String get publishSectionDrafts;
+
+  /// Section des modèles de la feuille « Publier un trajet ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes modèles'**
+  String get publishSectionTemplates;
+
+  /// Titre de la feuille quand il n'y a que des modèles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partir d\'un modèle ?'**
+  String get publishTemplatesTitle;
+
+  /// Sous-titre de la feuille quand il n'y a que des modèles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un modèle, il ne restera qu\'à choisir la date. Ou créez un nouveau trajet.'**
+  String get publishTemplatesSubtitle;
+
+  /// Action d'une ligne modèle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utiliser'**
+  String get publishTemplateUse;
+
+  /// Ligne groupant les brouillons d'une même série.
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} → {to} · {count} dates'**
+  String publishDraftSeriesTitle(String from, String to, int count);
+
+  /// Sous-titre de la ligne d'une série.
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillons prêts à publier'**
+  String get publishDraftSeriesStatus;
 }
 
 class _AppLocalizationsDelegate

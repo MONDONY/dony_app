@@ -27,11 +27,13 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart'
     show BidPaymentMethod;
 import 'package:dony/features/matching/data/models/trip_form_draft.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
@@ -62,6 +64,7 @@ import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -116,6 +119,12 @@ class _StaticHelpCenterSource implements HelpCenterConfigSource {
 }
 
 // ── Mock BLoCs ────────────────────────────────────────────────────────────────
+
+class _MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
+
+class _MockTripTemplateRepository extends Mock
+    implements TripTemplateRepository {}
 
 class _MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
@@ -509,6 +518,19 @@ void main() {
         when(() => b.stream).thenAnswer((_) => const Stream.empty());
         return b;
       });
+    }
+
+    // TripSeriesCubit — carte « Vous faites ce trajet souvent ? » de l'écran
+    // de succès d'une création.
+    if (!getIt.isRegistered<TripSeriesCubit>()) {
+      getIt.registerFactoryParam<TripSeriesCubit, AnnouncementModel, void>(
+        (a, _) => TripSeriesCubit(
+          a,
+          _MockAnnouncementRepository(),
+          _MockTripTemplateRepository(),
+          getIt<AnalyticsService>(),
+        ),
+      );
     }
 
     // CitySearchBloc factory — used by TrajetStep (CityAutocompleteField) in creation/edit mode
@@ -1685,6 +1707,37 @@ void main() {
       expect(find.text('Brouillon enregistré'), findsNothing);
     });
 
+    testWidgets('trajet direct créé : carte « Vous faites ce trajet '
+        'souvent ? » sur l\'écran de succès', (tester) async {
+      await emitCreated(
+        tester,
+        const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+      );
+      expect(find.byKey(const Key('trip-series-open')), findsOneWidget);
+      expect(find.text('Vous faites ce trajet souvent ?'), findsOneWidget);
+    });
+
+    testWidgets('trajet avec escales : pas de carte de trajet récurrent', (
+      tester,
+    ) async {
+      final states = StreamController<AnnouncementState>.broadcast();
+      addTearDown(states.close);
+      when(() => announcementBloc.stream).thenAnswer((_) => states.stream);
+
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      states.add(
+        AnnouncementTripCreated([
+          _makeFullAnnouncement(),
+          _makeFullAnnouncement(),
+        ]),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.byKey(const Key('trip-series-open')), findsNothing);
+    });
+
     testWidgets('création avec paiements à configurer : bouton « Configurer '
         'mes paiements » sur l\'écran de succès', (tester) async {
       await emitCreated(
@@ -2603,7 +2656,10 @@ void main() {
         // Tap le CTA — ne doit pas jeter (bug de contexte désactivé, fix
         // task 4 feb86b71) et doit préserver le contrat bool pour les 3
         // appelants (announcement_list_screen.dart, owner_action_grid.dart,
-        // trip_owner_detail_screen.dart).
+        // trip_owner_detail_screen.dart). La carte du trajet récurrent
+        // peut pousser le bouton sous la ligne de flottaison.
+        await tester.ensureVisible(find.text('Voir mon trajet'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Voir mon trajet'));
         await tester.pumpAndSettle();
 
@@ -4175,6 +4231,41 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Paris'), findsWidgets);
       expect(find.text('Dakar'), findsWidgets);
+    });
+
+    testWidgets('ouvert depuis « Mes modèles » : le modèle est appliqué', (
+      tester,
+    ) async {
+      registerCurrencyPreference('EUR');
+      await pumpScreen(
+        tester,
+        const CreateTripArgs(
+          template: TripTemplate(
+            id: 'tpl-1',
+            label: 'Navette',
+            departureCity: 'Abidjan',
+            departureCountryCode: 'CI',
+            arrivalCity: 'Lyon',
+            arrivalCountryCode: 'FR',
+            transportMode: 'PLANE',
+            capacityUnit: 'SUITCASE_23KG',
+            availableKg: 23,
+            pricePerKg: 8,
+            acceptedCategories: [],
+          ),
+        ),
+      );
+
+      final formBloc = BlocProvider.of<AnnouncementFormBloc>(
+        tester.element(find.byType(TrajetStep)),
+      );
+      expect(formBloc.state.departureCity, 'Abidjan');
+      expect(formBloc.state.arrivalCity, 'Lyon');
+      expect(formBloc.state.departureCountryCode, 'CI');
+      // Les dates restent à choisir.
+      expect(formBloc.state.departureDate, isNull);
+
+      await tester.pump(const Duration(seconds: 5));
     });
 
     testWidgets('reprise à une étape dont les précédentes sont incomplètes : '

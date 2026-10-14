@@ -19569,4 +19569,171 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get publishDraftNoCity => 'City to choose';
+
+  @override
+  String get tripSeriesCardTitle => 'Do you make this trip often?';
+
+  @override
+  String get tripSeriesCardBody =>
+      'Pick other dates: we set up the same trip for each one, with the same cities, kilos, price and addresses.';
+
+  @override
+  String get tripSeriesCardCta => 'Make this trip recurring';
+
+  @override
+  String tripSeriesCardDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more dates added',
+      one: '1 more date added',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripSeriesSheetTitle => 'When are you making this trip again?';
+
+  @override
+  String tripSeriesSheetSubtitle(String from, String to) {
+    return '$from to $to, same departure time. Tap the days to add.';
+  }
+
+  @override
+  String tripSeriesSourceLegend(String date) {
+    return '$date: the trip you just published.';
+  }
+
+  @override
+  String get tripSeriesMaxHint => '12 dates at most.';
+
+  @override
+  String get tripSeriesPrevMonth => 'Previous month';
+
+  @override
+  String get tripSeriesNextMonth => 'Next month';
+
+  @override
+  String get tripSeriesPickDates => 'Pick at least one date';
+
+  @override
+  String tripSeriesPublishCta(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Publish $count trips',
+      one: 'Publish 1 trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSeriesDraftCta(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Create $count drafts',
+      one: 'Create 1 draft',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripSeriesErrorDraftLimit =>
+      'Draft limit reached. Publish or delete a draft first.';
+
+  @override
+  String get tripSeriesErrorKyc =>
+      'Verify your identity to publish these trips, or create drafts.';
+
+  @override
+  String get tripSeriesErrorProLimit => 'Monthly trip limit reached.';
+
+  @override
+  String get tripSeriesErrorStripe =>
+      'Set up card payments to publish these trips, or create drafts.';
+
+  @override
+  String get tripSeriesErrorGeneric =>
+      'These dates couldn\'t be added right now. Try again.';
+
+  @override
+  String tripSeriesBadgePublished(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips published',
+      one: '1 trip published',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSeriesBadgeDrafts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count drafts created',
+      one: '1 draft created',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSeriesSomeFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dates couldn\'t be added.',
+      one: '1 date couldn\'t be added.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTemplateOfferTitle => 'Turn it into a trip template?';
+
+  @override
+  String get tripTemplateOfferBody =>
+      'Next time, tap “Publish a trip” and find it ready: you\'ll just pick the date.';
+
+  @override
+  String get tripTemplateNameLabel => 'Template name';
+
+  @override
+  String get tripTemplateSaveCta => 'Save template';
+
+  @override
+  String get tripTemplateSkip => 'No thanks';
+
+  @override
+  String get tripTemplateSaved => 'Template saved';
+
+  @override
+  String get tripTemplateSaveFailed =>
+      'The template couldn\'t be saved. Try again.';
+
+  @override
+  String get publishSectionDrafts => 'To finish';
+
+  @override
+  String get publishSectionTemplates => 'My templates';
+
+  @override
+  String get publishTemplatesTitle => 'Start from a template?';
+
+  @override
+  String get publishTemplatesSubtitle =>
+      'Pick a template and just choose the date. Or create a new trip.';
+
+  @override
+  String get publishTemplateUse => 'Use';
+
+  @override
+  String publishDraftSeriesTitle(String from, String to, int count) {
+    return '$from to $to · $count dates';
+  }
+
+  @override
+  String get publishDraftSeriesStatus => 'Drafts ready to publish';
 }

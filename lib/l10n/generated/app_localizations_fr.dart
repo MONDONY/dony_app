@@ -19703,4 +19703,171 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get publishDraftNoCity => 'Ville à choisir';
+
+  @override
+  String get tripSeriesCardTitle => 'Vous faites ce trajet souvent ?';
+
+  @override
+  String get tripSeriesCardBody =>
+      'Choisissez d\'autres dates : on prépare le même trajet pour chacune, avec les mêmes villes, kilos, prix et adresses.';
+
+  @override
+  String get tripSeriesCardCta => 'Rendre ce trajet récurrent';
+
+  @override
+  String tripSeriesCardDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count autres dates ajoutées',
+      one: '1 autre date ajoutée',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripSeriesSheetTitle => 'Quand refaites-vous ce trajet ?';
+
+  @override
+  String tripSeriesSheetSubtitle(String from, String to) {
+    return '$from → $to, même heure de départ. Touchez les jours à ajouter.';
+  }
+
+  @override
+  String tripSeriesSourceLegend(String date) {
+    return '$date : le trajet que vous venez de publier.';
+  }
+
+  @override
+  String get tripSeriesMaxHint => '12 dates au maximum.';
+
+  @override
+  String get tripSeriesPrevMonth => 'Mois précédent';
+
+  @override
+  String get tripSeriesNextMonth => 'Mois suivant';
+
+  @override
+  String get tripSeriesPickDates => 'Choisissez au moins une date';
+
+  @override
+  String tripSeriesPublishCta(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Publier $count trajets',
+      one: 'Publier 1 trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSeriesDraftCta(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Créer $count brouillons',
+      one: 'Créer 1 brouillon',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripSeriesErrorDraftLimit =>
+      'Limite de brouillons atteinte. Publiez ou supprimez d\'abord un brouillon.';
+
+  @override
+  String get tripSeriesErrorKyc =>
+      'Vérifiez votre identité pour publier ces trajets, ou créez des brouillons.';
+
+  @override
+  String get tripSeriesErrorProLimit => 'Limite de trajets du mois atteinte.';
+
+  @override
+  String get tripSeriesErrorStripe =>
+      'Configurez vos paiements par carte pour publier ces trajets, ou créez des brouillons.';
+
+  @override
+  String get tripSeriesErrorGeneric =>
+      'Impossible d\'ajouter ces dates pour le moment. Réessayez.';
+
+  @override
+  String tripSeriesBadgePublished(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trajets publiés',
+      one: '1 trajet publié',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSeriesBadgeDrafts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count brouillons créés',
+      one: '1 brouillon créé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripSeriesSomeFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dates n\'ont pas pu être ajoutées.',
+      one: '1 date n\'a pas pu être ajoutée.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripTemplateOfferTitle => 'En faire un modèle de trajet ?';
+
+  @override
+  String get tripTemplateOfferBody =>
+      'La prochaine fois, touchez « Publier un trajet » et retrouvez-le prêt : il ne restera qu\'à choisir la date.';
+
+  @override
+  String get tripTemplateNameLabel => 'Nom du modèle';
+
+  @override
+  String get tripTemplateSaveCta => 'Enregistrer le modèle';
+
+  @override
+  String get tripTemplateSkip => 'Non merci';
+
+  @override
+  String get tripTemplateSaved => 'Modèle enregistré';
+
+  @override
+  String get tripTemplateSaveFailed =>
+      'Impossible d\'enregistrer le modèle. Réessayez.';
+
+  @override
+  String get publishSectionDrafts => 'À terminer';
+
+  @override
+  String get publishSectionTemplates => 'Mes modèles';
+
+  @override
+  String get publishTemplatesTitle => 'Partir d\'un modèle ?';
+
+  @override
+  String get publishTemplatesSubtitle =>
+      'Choisissez un modèle, il ne restera qu\'à choisir la date. Ou créez un nouveau trajet.';
+
+  @override
+  String get publishTemplateUse => 'Utiliser';
+
+  @override
+  String publishDraftSeriesTitle(String from, String to, int count) {
+    return '$from → $to · $count dates';
+  }
+
+  @override
+  String get publishDraftSeriesStatus => 'Brouillons prêts à publier';
 }

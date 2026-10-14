@@ -10,6 +10,7 @@ import 'package:dony/features/publish_gate/bloc/publish_gate_state.dart';
 import 'package:dony/features/publish_gate/data/models/publish_commitments.dart';
 import 'package:dony/features/publish_gate/data/models/publish_draft_entry.dart';
 import 'package:dony/features/publish_gate/data/repositories/publish_commitment_repository.dart';
+import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -24,6 +25,8 @@ class _MockRequests extends Mock implements PackageRequestRepository {}
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
+class _MockTemplates extends Mock implements TripTemplateRepository {}
+
 void main() {
   setUpAll(() => registerFallbackValue(PublishCommitmentRole.traveler));
 
@@ -31,6 +34,7 @@ void main() {
   late _MockAnnouncements announcements;
   late _MockRequests requests;
   late _MockAnalytics analytics;
+  late _MockTemplates templates;
   late FormDraftStore store;
 
   setUp(() {
@@ -38,6 +42,8 @@ void main() {
     announcements = _MockAnnouncements();
     requests = _MockRequests();
     analytics = _MockAnalytics();
+    templates = _MockTemplates();
+    when(() => templates.getAll()).thenAnswer((_) async => const []);
     store = testFormDraftStore();
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
@@ -63,6 +69,7 @@ void main() {
     drafts: store,
     announcements: announcements,
     packageRequests: requests,
+    templates: templates,
     analytics: analytics,
   );
 
@@ -331,7 +338,12 @@ void main() {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.publishDraftsSheetShown,
-            properties: {'role': 'traveler', 'local': true, 'server_count': 5},
+            properties: {
+              'role': 'traveler',
+              'local': true,
+              'server_count': 5,
+              'template_count': 0,
+            },
           ),
         ).called(1);
       },
@@ -419,6 +431,120 @@ void main() {
       ),
     ).called(1);
     expect(local.props, isNotEmpty);
+  });
+
+  group('trajets récurrents et modèles', () {
+    test('groupTripDrafts : une série de brouillons tient sur une ligne', () {
+      final entries = PublishGateCubit.groupTripDrafts([
+        tripFixture(id: 'solo', updatedAt: DateTime.utc(2026, 10)),
+        tripFixture(
+          id: 's2',
+          seriesId: 'serie',
+          departureDate: DateTime(2026, 12, 4),
+          updatedAt: DateTime.utc(2026, 10, 3),
+        ),
+        tripFixture(
+          id: 's1',
+          seriesId: 'serie',
+          departureDate: DateTime(2026, 11, 27),
+          updatedAt: DateTime.utc(2026, 10, 2),
+        ),
+        tripFixture(
+          id: 'alone-in-series',
+          seriesId: 'autre',
+          updatedAt: DateTime.utc(2026, 9, 30),
+        ),
+      ]);
+
+      expect(entries, hasLength(3));
+      final series = entries.first as ServerTripDraftSeries;
+      expect(series.announcements.map((a) => a.id), ['s1', 's2']);
+      expect(series.date, DateTime(2026, 11, 27));
+      expect(series.departureCity, 'Paris');
+      expect(series.arrivalCity, 'Dakar');
+      expect(series.props, ['s1', 's2']);
+      expect((entries[1] as ServerTripDraft).announcement.id, 'solo');
+      expect(
+        (entries[2] as ServerTripDraft).announcement.id,
+        'alone-in-series',
+      );
+    });
+
+    test('voyageur : les modèles sont proposés, même sans brouillon', () async {
+      when(
+        () => commitmentRepo.fetch(),
+      ).thenAnswer((_) async => commitments(travelerRequired: false));
+      when(
+        () => templates.getAll(),
+      ).thenAnswer((_) async => [templateFixture()]);
+      final cubit = build(PublishCommitmentRole.traveler);
+
+      await cubit.start(kycVerified: true);
+
+      expect(cubit.state.drafts, isEmpty);
+      expect(cubit.state.templates.single.id, templateFixture().id);
+      expect(cubit.state.hasChoices, isTrue);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.publishDraftsSheetShown,
+          properties: {
+            'role': 'traveler',
+            'local': false,
+            'server_count': 0,
+            'template_count': 1,
+          },
+        ),
+      ).called(1);
+    });
+
+    test(
+      'modèles illisibles : rien de proposé, la publication reste ouverte',
+      () async {
+        when(
+          () => commitmentRepo.fetch(),
+        ).thenAnswer((_) async => commitments(travelerRequired: false));
+        when(
+          () => templates.getAll(),
+        ).thenThrow(const NetworkException('offline'));
+        final cubit = build(PublishCommitmentRole.traveler);
+
+        await cubit.start(kycVerified: true);
+
+        expect(cubit.state.status, PublishGateStatus.ready);
+        expect(cubit.state.hasChoices, isFalse);
+      },
+    );
+
+    test('expéditeur : les modèles de trajet ne sont pas lus', () async {
+      when(
+        () => commitmentRepo.fetch(),
+      ).thenAnswer((_) async => commitments(senderRequired: false));
+      final cubit = build(PublishCommitmentRole.sender);
+
+      await cubit.start(kycVerified: true);
+
+      verifyNever(() => templates.getAll());
+      expect(cubit.state.templates, isEmpty);
+    });
+
+    test('trackChoice : série et modèle', () {
+      build(PublishCommitmentRole.traveler)
+        ..trackChoice(PublishDraftChoice.series)
+        ..trackChoice(PublishDraftChoice.template);
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.publishDraftChosen,
+          properties: {'role': 'traveler', 'choice': 'series'},
+        ),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.publishDraftChosen,
+          properties: {'role': 'traveler', 'choice': 'template'},
+        ),
+      ).called(1);
+    });
   });
 
   test('PublishGateState.copyWith garde l\'erreur sans bumpError', () {

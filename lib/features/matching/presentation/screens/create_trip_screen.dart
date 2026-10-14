@@ -38,6 +38,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_currencies_confirm_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_legs_section.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_series/trip_series_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart'
@@ -73,12 +74,17 @@ class CreateTripArgs {
   /// brouillon local est rechargé dès l'ouverture, à l'étape où il en était.
   final TripFormDraft? resumeDraft;
 
+  /// Ouvert depuis « Mes modèles » de la feuille « Publier un trajet » : le
+  /// modèle est appliqué dès l'ouverture, les dates restent à choisir.
+  final TripTemplate? template;
+
   const CreateTripArgs({
     this.announcement,
     this.lockContext,
     this.negotiationBloc,
     this.lockCorridorAndDate = false,
     this.resumeDraft,
+    this.template,
   });
 }
 
@@ -461,6 +467,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           // depuis un autre fichier.
                           key: const Key('trip-form-content'),
                           announcement: args?.announcement,
+                          initialTemplate: args?.template,
                           lockContext: args?.lockContext,
                           lockCorridorAndDate:
                               args?.lockCorridorAndDate ?? false,
@@ -765,9 +772,13 @@ class _TripFormContent extends StatefulWidget {
   )?
   onDraftHandlersReady;
 
+  /// Modèle à appliquer dès l'ouverture (cf. `CreateTripArgs.template`).
+  final TripTemplate? initialTemplate;
+
   const _TripFormContent({
     super.key,
     this.announcement,
+    this.initialTemplate,
     this.lockContext,
     this.lockCorridorAndDate = false,
     this.canSubmitNotifier,
@@ -1070,6 +1081,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     widget.onSubmitReady?.call(_submit);
     widget.onPaymentMethodsReady?.call(_paymentMethods);
     widget.onDraftHandlersReady?.call(_draftSnapshot, _restoreDraft);
+    final initialTemplate = widget.initialTemplate;
+    if (initialTemplate != null && widget.announcement == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _applyTemplate(initialTemplate);
+      });
+    }
     _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
     _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
     _kgPriceEnabledNotifier.addListener(_syncCanSubmit);
@@ -2255,6 +2272,14 @@ class _TripFormContentState extends State<_TripFormContent> {
                       router.push('/announcements/${announcement.id}/trip');
                     },
                     analyticsContext: 'trip_published',
+                    // Trajet récurrent : un trajet direct tout juste créé
+                    // peut être répété à d'autres dates (yadony-back #525).
+                    extra:
+                        !isEdit &&
+                            state is! AnnouncementTripCreated &&
+                            announcement.tripGroupId == null
+                        ? TripSeriesCard(announcement: announcement)
+                        : null,
                     secondaryLabel: isEdit
                         ? null
                         : routeContext.l10n.tripPublishSuccessShareCta,
