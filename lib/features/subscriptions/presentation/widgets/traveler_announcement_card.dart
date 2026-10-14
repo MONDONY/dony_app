@@ -27,6 +27,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
     final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final gridOnly = announcement.pricePerKg <= 0;
     final isFull = announcement.availableKg <= 0;
 
     return DonyCard(
@@ -50,10 +51,14 @@ class TravelerAnnouncementCard extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        formatPriceIn(
-                          netToSenderPrice(announcement.pricePerKg),
-                          announcement.currency,
-                        ),
+                        // Trajet tarifé à la grille seulement : son prix au
+                        // kilo vaut 0, jamais « 0 € /kg » (FLUTTER-PC).
+                        gridOnly
+                            ? l.listingPriceGridLabel
+                            : formatPriceIn(
+                                netToSenderPrice(announcement.pricePerKg),
+                                announcement.currency,
+                              ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: tt.titleLarge?.copyWith(
@@ -63,11 +68,15 @@ class TravelerAnnouncementCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: DonySpacing.xxs),
-                    Text(
-                      '/kg',
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
+                    if (!gridOnly) ...[
+                      const SizedBox(width: DonySpacing.xxs),
+                      Text(
+                        '/kg',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

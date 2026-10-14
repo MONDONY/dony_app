@@ -115,6 +115,23 @@ void main() {
     expect(find.text('/kg'), findsOneWidget);
   });
 
+  testWidgets(
+    'FLUTTER-PC : trajet à la grille, « Grille tarifaire » sans /kg',
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          TravelerAnnouncementCard(
+            announcement: announcement(pricePerKg: 0),
+            onReserve: () {},
+          ),
+        ),
+      );
+      expect(find.text('Grille tarifaire'), findsOneWidget);
+      expect(find.text('/kg'), findsNothing);
+      expect(find.textContaining('0 €'), findsNothing);
+    },
+  );
+
   testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
     tester,
   ) async {

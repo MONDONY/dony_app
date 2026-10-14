@@ -255,7 +255,9 @@ class _LastTripLine extends StatelessWidget {
         ),
         Text(' · ', style: style),
         Text(
-          '$price/kg',
+          // Trajet tarifé à la grille seulement : prix au kilo à 0, jamais
+          // « 0 €/kg » (FLUTTER-PC).
+          last.pricePerKg <= 0 ? l.listingPriceGridLabel : '$price/kg',
           style: style?.copyWith(
             fontFeatures: const [FontFeature.tabularFigures()],
           ),

@@ -161,7 +161,10 @@ class TripMatchCard extends StatelessWidget {
                                   ],
                                   const SizedBox(height: DonySpacing.xs),
                                   // Prix/kg
-                                  match.pricePerKg != null
+                                  // Prix au kilo à 0 = trajet tarifé à la
+                                  // grille seulement, jamais « 0 €/kg »
+                                  // (FLUTTER-PC).
+                                  (match.pricePerKg ?? 0) > 0
                                       ? Text.rich(
                                           TextSpan(
                                             style: tt.bodySmall?.copyWith(
@@ -184,7 +187,9 @@ class TripMatchCard extends StatelessWidget {
                                           ),
                                         )
                                       : Text(
-                                          l.corridorAlertOpenPrice,
+                                          match.pricePerKg == null
+                                              ? l.corridorAlertOpenPrice
+                                              : l.listingPriceGridLabel,
                                           style: tt.bodySmall?.copyWith(
                                             color: cs.onSurfaceVariant,
                                             fontWeight: FontWeight.w600,

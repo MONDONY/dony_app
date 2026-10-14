@@ -119,6 +119,32 @@ void main() {
     expect(find.textContaining('€/kg'), findsWidgets);
   });
 
+  testWidgets('FLUTTER-PC : prix au kilo à 0, « Grille tarifaire »', (
+    tester,
+  ) async {
+    final trip = TripMatchModel(
+      announcementId: 'ann-g',
+      departureCity: 'Lyon',
+      arrivalCity: 'Abidjan',
+      departureDate: DateTime(2026, 8),
+      travelerId: 't-2',
+      travelerName: 'Kofi B.',
+      travelerInitials: 'KB',
+      travelerRating: 4.2,
+      availableKg: 8.0,
+      pricePerKg: 0,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(body: TripMatchCard(match: trip, index: 1)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Grille tarifaire'), findsOneWidget);
+    expect(find.textContaining('€/kg'), findsNothing);
+  });
+
   testWidgets('renders Prix libre when pricePerKg is null', (tester) async {
     final trip = TripMatchModel(
       announcementId: 'ann-2',
