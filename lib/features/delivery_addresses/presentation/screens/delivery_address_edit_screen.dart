@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/country_flag.dart';
+import 'package:dony/core/currency/country_picker.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/widgets/address/address_country_tile.dart';
 import 'package:dony/core/widgets/address/address_default_toggle.dart';
 import 'package:dony/core/widgets/address/address_label_chips.dart';
 import 'package:dony/core/widgets/address/address_location_status.dart';
@@ -14,6 +17,7 @@ import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dar
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -21,19 +25,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Liste fermée diaspora (spec §6) : (code, emoji). Le nom affiché passe par
-/// [countryName], jamais stocké en dur ici — la valeur enregistrée reste le
-/// code.
-const _kDestinationCountries = [
-  ('SN', '🇸🇳'),
-  ('CI', '🇨🇮'),
-  ('ML', '🇲🇱'),
-  ('CM', '🇨🇲'),
-  ('GN', '🇬🇳'),
-  ('BF', '🇧🇫'),
-  ('BJ', '🇧🇯'),
-  ('TG', '🇹🇬'),
-];
+/// Pays proposé à la création quand ni l'adresse ni le profil n'en donnent :
+/// destination la plus fréquente de la diaspora.
+const _kFallbackCountry = 'SN';
 
 /// Suggestions d'étiquette — préremplissent le champ libre, l'utilisateur
 /// enregistre ensuite la valeur affichée (donc traduite pour un anglophone).
@@ -58,7 +52,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
   final _streetCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
   final _instructionsCtrl = TextEditingController();
-  String _country = 'SN';
+  late String _country;
   double? _lat;
   double? _lng;
   bool _isDefault = false;
@@ -70,8 +64,20 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
   bool get _isValid =>
       _labelCtrl.text.trim().isNotEmpty && _cityCtrl.text.trim().isNotEmpty;
 
-  String get _countryFlag =>
-      _kDestinationCountries.firstWhere((c) => c.$1 == _country).$2;
+  /// Pays du profil (Réglages › pays de résidence) s'il est chargé, sinon
+  /// [_kFallbackCountry]. Lecture tolérante : l'écran peut être monté sans
+  /// les préférences (tests isolés). En édition, l'adresse chargée l'écrase.
+  String _initialCountry() {
+    final profile = context
+        .read<BusinessPrefsBloc?>()
+        ?.state
+        .country
+        ?.trim()
+        .toUpperCase();
+    return (profile != null && countryFlagEmoji(profile) != null)
+        ? profile
+        : _kFallbackCountry;
+  }
 
   AddressLocationState get _locationState {
     if (_streetCtrl.text.trim().isEmpty) {
@@ -83,6 +89,12 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _country = _initialCountry();
+  }
+
+  @override
   void dispose() {
     _labelCtrl.dispose();
     _streetCtrl.dispose();
@@ -91,16 +103,22 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
     super.dispose();
   }
 
-  /// Pré-remplissage depuis la suggestion résolue.
-  /// addr.country est intentionnellement ignoré — la liste pays est fermée (spec §6).
+  /// Une recherche suffit (retour FLUTTER-PE) : la suggestion choisie remplit
+  /// d'un coup la rue (déjà écrite par [AddressSuggestField], son libellé
+  /// court), la ville, le pays et les coordonnées. Le pays n'est repris que
+  /// s'il est connu de l'app (catalogue ou nom traduit) : sinon on garde le
+  /// pays courant, que l'utilisateur corrige au besoin.
   void _onResolved(AddressData addr) {
+    final country = knownCountryCode(context.l10n, addr.country);
     setState(() {
       _lat = addr.lat;
       _lng = addr.lng;
-      if (addr.city != null && addr.city!.isNotEmpty) {
-        _cityCtrl.text = addr.city!;
+      if (addr.city != null && addr.city!.trim().isNotEmpty) {
+        _cityCtrl.text = addr.city!.trim();
       }
-      // addr.country ignoré — liste fermée diaspora (spec §6)
+      if (country != null) {
+        _country = country;
+      }
     });
   }
 
@@ -150,35 +168,13 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
   }
 
   Future<void> _pickCountry(BuildContext context) async {
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    final picked = await DonyBottomSheet.show<String>(
+    final picked = await showCountryPicker(
       context,
-      title: l.deliveryAddressCountryPickerTitle,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: _kDestinationCountries.map((c) {
-          final isSelected = c.$1 == _country;
-          return ListTile(
-            leading: Text(c.$2, style: const TextStyle(fontSize: 24)),
-            title: Text(
-              countryName(l, c.$1),
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-            trailing: isSelected
-                ? DonyIcon('check', color: cs.secondary)
-                : null,
-            onTap: () => Navigator.of(context, rootNavigator: true).pop(c.$1),
-          );
-        }).toList(),
-      ),
+      title: context.l10n.deliveryAddressCountryPickerTitle,
+      selectedCode: _country,
     );
-    if (picked != null && picked != _country) {
-      setState(() {
-        _country = picked;
-      });
+    if (picked != null && picked != _country && mounted) {
+      setState(() => _country = picked);
     }
   }
 
@@ -272,58 +268,12 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                       ),
                       const SizedBox(height: DonySpacing.xl),
 
-                      // ── Pays ───────────────────────────────────────────
-                      AddressSectionLabel(l.deliveryAddressCountrySectionTitle),
-                      GestureDetector(
-                        onTap: () => _pickCountry(context),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: DonySpacing.base,
-                            vertical: DonySpacing.md,
-                          ),
-                          decoration: BoxDecoration(
-                            color: cs.surface,
-                            border: Border.all(color: cs.outline),
-                            borderRadius: BorderRadius.circular(DonyRadius.md),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                _countryFlag,
-                                style: const TextStyle(fontSize: 22),
-                              ),
-                              const SizedBox(width: DonySpacing.md),
-                              Expanded(
-                                child: Text(
-                                  countryName(l, _country),
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ),
-                              DonyIcon(
-                                'chevron-right',
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: DonySpacing.xl),
-
                       // ── Adresse ────────────────────────────────────────
+                      // Une seule recherche remplit rue, ville, pays et
+                      // position (FLUTTER-PE). Pays et ville restent
+                      // modifiables, la rue garde la saisie libre pour les
+                      // quartiers mal couverts par Google.
                       AddressSectionLabel(l.deliveryAddressAddressSectionTitle),
-                      DonyTextField(
-                        textInputAction: TextInputAction.done,
-                        controller: _cityCtrl,
-                        label: l.deliveryAddressCityFieldLabel,
-                        hint: l.deliveryAddressCityFieldHint,
-                        prefixWidget: DonyIcon(
-                          'building-2',
-                          size: 20,
-                          color: cs.secondary,
-                        ),
-                        onChanged: (_) => setState(() {}),
-                      ),
-                      const SizedBox(height: DonySpacing.base),
                       AddressSuggestField(
                         controller: _streetCtrl,
                         service: getIt<AddressAutocompleteService>(),
@@ -339,6 +289,25 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                         }),
                       ),
                       AddressLocationStatus(state: _locationState),
+                      const SizedBox(height: DonySpacing.base),
+                      AddressCountryTile(
+                        countryCode: _country,
+                        label: l.deliveryAddressCountrySectionTitle,
+                        onTap: () => _pickCountry(context),
+                      ),
+                      const SizedBox(height: DonySpacing.base),
+                      DonyTextField(
+                        textInputAction: TextInputAction.done,
+                        controller: _cityCtrl,
+                        label: l.deliveryAddressCityFieldLabel,
+                        hint: l.deliveryAddressCityFieldHint,
+                        prefixWidget: DonyIcon(
+                          'building-2',
+                          size: 20,
+                          color: cs.secondary,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
                       const SizedBox(height: DonySpacing.xl),
 
                       // ── Instructions ───────────────────────────────────

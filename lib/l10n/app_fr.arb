@@ -16046,9 +16046,21 @@
   "@pickupAddressAddressSectionTitle": {
     "description": "Titre de section (pickup_address_edit_screen.dart)."
   },
-  "pickupAddressStreetFieldLabel": "Rue et numéro",
+  "pickupAddressStreetFieldLabel": "Rechercher une adresse",
   "@pickupAddressStreetFieldLabel": {
-    "description": "Libellé du champ rue (pickup_address_edit_screen.dart)."
+    "description": "Libellé du champ de recherche d'adresse, qui remplit aussi ville, code postal et pays (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressStreetFieldHint": "Ex : 12 rue de la Paix, Paris",
+  "@pickupAddressStreetFieldHint": {
+    "description": "Placeholder du champ de recherche d'adresse (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressCountryFieldLabel": "Pays",
+  "@pickupAddressCountryFieldLabel": {
+    "description": "Libellé du champ pays, rempli par la recherche et modifiable (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressCountryPickerTitle": "Pays de l'adresse",
+  "@pickupAddressCountryPickerTitle": {
+    "description": "Titre de la bottom sheet de choix du pays (pickup_address_edit_screen.dart)."
   },
   "pickupAddressPostalFieldLabel": "Code postal",
   "@pickupAddressPostalFieldLabel": {
@@ -16142,11 +16154,11 @@
   "@deliveryAddressCityFieldHint": {
     "description": "Placeholder du champ ville (delivery_address_edit_screen.dart)."
   },
-  "deliveryAddressStreetFieldLabel": "Rue, quartier",
+  "deliveryAddressStreetFieldLabel": "Rechercher une adresse",
   "@deliveryAddressStreetFieldLabel": {
-    "description": "Libellé du champ rue (delivery_address_edit_screen.dart)."
+    "description": "Libellé du champ de recherche d'adresse, qui remplit aussi ville et pays ; le texte libre est gardé comme rue (delivery_address_edit_screen.dart)."
   },
-  "deliveryAddressStreetFieldHint": "Optionnel (ex : Rue 10, Almadies)",
+  "deliveryAddressStreetFieldHint": "Rue, quartier ou lieu (ex : Almadies, Dakar)",
   "@deliveryAddressStreetFieldHint": {
     "description": "Placeholder du champ rue (delivery_address_edit_screen.dart)."
   },

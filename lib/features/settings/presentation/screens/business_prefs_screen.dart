@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/currency/country_catalog.dart';
+import 'package:dony/core/currency/country_picker.dart';
 import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
@@ -201,11 +202,12 @@ Future<void> _openCountryPicker(
   BusinessPrefsState state,
 ) async {
   final bloc = context.read<BusinessPrefsBloc>();
-  final selected = await DonyBottomSheet.show<String>(
+  final selected = await showCountryPicker(
     context,
     title: context.l10n.prefsCountryLabel,
-    heightFraction: 0.85,
-    child: _CountryPickerList(selectedCode: state.country),
+    selectedCode: state.country,
+    showCurrency: true,
+    showFlag: false,
   );
   if (selected == null || !context.mounted) {
     return;
@@ -386,121 +388,6 @@ class _DisplayCurrencyPickerList extends StatelessWidget {
             showDivider: index < SupportedCurrency.values.length - 1,
           ),
         SizedBox(height: tt.bodySmall?.fontSize ?? 12),
-      ],
-    );
-  }
-}
-
-class _CountryPickerList extends StatefulWidget {
-  const _CountryPickerList({required this.selectedCode});
-
-  final String? selectedCode;
-
-  @override
-  State<_CountryPickerList> createState() => _CountryPickerListState();
-}
-
-class _CountryPickerListState extends State<_CountryPickerList> {
-  final _controller = TextEditingController();
-  List<CountryZoneGroup> _results = CountryCatalog.groupedSearch('');
-
-  // `l` n'est connu qu'à partir de `didChangeDependencies` (les délégués ne
-  // sont pas prêts en `initState`) : on le garde ici pour que la recherche
-  // trouve aussi le nom localisé, et on relance le calcul si la langue change.
-  AppLocalizations? _l;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_refreshResults);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _l = context.l10n;
-    _refreshResults();
-  }
-
-  void _refreshResults() {
-    final l = _l;
-    setState(() {
-      _results = CountryCatalog.groupedSearch(
-        _controller.text,
-        localizedName: l == null ? null : (c) => countryName(l, c.code),
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l = context.l10n;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        DonyTextField(
-          controller: _controller,
-          hint: l.prefsCountrySearchHint,
-          prefixIcon: Icons.search,
-        ),
-        const SizedBox(height: DonySpacing.md),
-        if (_results.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
-            child: Text(
-              l.prefsCountryNotFound,
-              textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          )
-        else
-          for (final group in _results) ...[
-            // Les pays sont groupés par zone : 38 entrées à plat seraient
-            // illisibles, et la zone explique la devise affichée dessous.
-            Semantics(
-              header: true,
-              container: true,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.base,
-                  DonySpacing.md,
-                  DonySpacing.base,
-                  DonySpacing.xs,
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    countryZoneLabel(l, group.zone).toUpperCase(),
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            for (final country in group.countries)
-              ListTile(
-                title: Text(countryName(l, country.code)),
-                subtitle: Text(
-                  '${country.currency.code} · ${country.currency.symbol}',
-                ),
-                trailing: widget.selectedCode == country.code
-                    ? DonyIcon('check', color: cs.primary)
-                    : null,
-                onTap: () => context.pop(country.code),
-              ),
-          ],
       ],
     );
   }

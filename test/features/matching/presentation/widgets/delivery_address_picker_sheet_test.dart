@@ -10,6 +10,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
+import 'package:dony/features/delivery_addresses/data/models/delivery_address.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
 import 'package:dony/features/matching/presentation/widgets/delivery_address_picker_sheet.dart';
@@ -411,6 +412,84 @@ void main() {
       await pump(tester);
 
       expect(find.text('🗺️  Delivery address'), findsOneWidget);
+    });
+  });
+
+  group('adresses enregistrées', () {
+    const saved = DeliveryAddress(
+      id: 'del-1',
+      label: 'Famille',
+      street: 'Rue 10',
+      city: 'Dakar',
+      country: 'SN',
+      latitude: 14.69,
+      longitude: -17.44,
+      isDefault: true,
+    );
+
+    void withSaved() {
+      when(() => bloc.state).thenReturn(
+        const DeliveryAddressState(
+          status: DeliveryAddressStatus.success,
+          addresses: [saved],
+        ),
+      );
+    }
+
+    testWidgets('le pays s\'affiche par son nom, jamais par son code', (
+      tester,
+    ) async {
+      withSaved();
+      await pump(tester);
+
+      expect(find.text('Rue 10, Dakar, Sénégal'), findsOneWidget);
+      expect(find.text('Rue 10, Dakar, SN'), findsNothing);
+    });
+
+    testWidgets('en anglais : nom du pays traduit', (tester) async {
+      useEnglish();
+      withSaved();
+      await pump(tester);
+
+      expect(find.text('Rue 10, Dakar, Senegal'), findsOneWidget);
+    });
+
+    testWidgets('confirmer rend rue, ville et pays avec les coordonnées', (
+      tester,
+    ) async {
+      withSaved();
+      getIt.registerFactory<DeliveryAddressBloc>(() => bloc);
+      tester.view.physicalSize = const Size(900, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      AddressData? result;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () async {
+                  result = await DeliveryAddressPickerSheet.show(context);
+                },
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirmer cette adresse'));
+      await tester.pumpAndSettle();
+
+      expect(result, isNotNull);
+      expect(result!.street, 'Rue 10');
+      expect(result!.city, 'Dakar');
+      expect(result!.country, 'SN');
+      expect(result!.lat, 14.69);
+      expect(result!.lng, -17.44);
     });
   });
 }

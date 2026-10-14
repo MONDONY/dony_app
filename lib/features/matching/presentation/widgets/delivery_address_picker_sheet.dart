@@ -15,6 +15,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
 import 'package:dony/features/matching/presentation/address_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_empty_state.dart';
+import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -552,8 +553,14 @@ class _DeliveryAddressPickerSheetState
                                     Navigator.of(context).pop(
                                       AddressData(
                                         label: _labelOf(address),
+                                        // AddressData exige des coordonnées
+                                        // (lat/lng non nulles) : une adresse
+                                        // sans position part encore en 0,0.
                                         lat: address.latitude ?? 0.0,
                                         lng: address.longitude ?? 0.0,
+                                        street: address.street,
+                                        city: address.city,
+                                        country: address.country,
                                       ),
                                     );
                                   },
@@ -1015,7 +1022,7 @@ class _DeliveryAddressRow extends StatelessWidget {
           if (address.street != null && address.street!.isNotEmpty)
             address.street!,
           address.city,
-          address.country,
+          countryName(context.l10n, address.country),
         ].join(', '),
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),

@@ -213,7 +213,13 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
     // Résout les coordonnées en arrière-plan (ferme la session Google).
     final token = _sessionToken ?? _getOrCreateSessionToken();
     try {
-      final addr = await widget.service.resolvePlace(s.placeId, token);
+      // Le nom du lieu choisi reste dans le libellé résolu, comme dans le
+      // sélecteur de la publication de trajet (FLUTTER-4F).
+      final addr = await widget.service.resolvePlace(
+        s.placeId,
+        token,
+        placeName: s.mainText,
+      );
       _sessionToken = null;
       _sessionTokenCreatedAt = null;
       if (!mounted) {
