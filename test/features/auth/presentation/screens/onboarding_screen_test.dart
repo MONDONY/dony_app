@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_logo.dart';
 import 'package:dony/core/design/widgets/dony_step_indicator.dart';
@@ -50,10 +51,14 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(
   ],
 );
 
-Future<void> _pump(WidgetTester tester, AuthBloc authBloc) async {
+Future<void> _pump(
+  WidgetTester tester,
+  AuthBloc authBloc, {
+  ThemeData? theme,
+}) async {
   await tester.pumpWidget(
     MaterialApp.router(
-      theme: AppTheme.light(),
+      theme: theme ?? AppTheme.light(),
       routerConfig: _buildRouter(authBloc),
     ),
   );
@@ -110,6 +115,19 @@ void main() {
     expect(find.text('Passer'), findsOneWidget);
     expect(find.byType(DonyButton), findsOneWidget);
     expect(_currentStep(tester), 0);
+  });
+
+  // `onPrimary` est noir en thème sombre : le texte posé sur la photo voilée
+  // doit rester blanc, quel que soit le thème.
+  testWidgets('thème sombre : le texte posé sur la photo reste blanc', (
+    tester,
+  ) async {
+    await _pump(tester, mockAuthBloc, theme: AppTheme.dark());
+
+    Color? colorOf(String text) =>
+        tester.widget<Text>(find.text(text)).style?.color;
+    expect(colorOf('Préparez votre envoi.'), DonyColors.textOnBrand);
+    expect(colorOf('Passer'), DonyColors.textOnBrand);
   });
 
   testWidgets('les CTA Suivant progressent vers les quatre pages', (

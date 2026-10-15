@@ -238,10 +238,9 @@ void main() {
       expectContrast(cs.onPrimary, cs.primary, 7, 'onPrimary sur primary');
     });
 
-    testWidgets('onPrimary reste blanc partout ailleurs', (tester) async {
+    testWidgets('onPrimary reste blanc en thème clair', (tester) async {
       for (final cs in [
         AppTheme.light().colorScheme,
-        AppTheme.dark().colorScheme,
         AppTheme.light(
           a11y: const A11yThemeOptions(highContrast: true),
         ).colorScheme,
@@ -249,19 +248,28 @@ void main() {
         expect(cs.onPrimary, DonyColors.textOnBrand);
       }
     });
+
+    testWidgets('onPrimary passe au noir en thème sombre', (tester) async {
+      // Blanc sur blueDark500 : 3.28:1. Noir : 6.39:1.
+      final cs = AppTheme.dark().colorScheme;
+      expect(cs.onPrimary, DonyColors.onBrandHcDark);
+      expectContrast(cs.onPrimary, cs.primary, 4.5, 'onPrimary sur primary');
+    });
   });
 
   group('DonyButton hors haut contraste', () {
-    /// Récupère le dégradé peint par le bouton.
-    LinearGradient gradient(WidgetTester tester) =>
-        (tester
-                        .widget<AnimatedContainer>(
-                          find.byType(AnimatedContainer).first,
-                        )
-                        .decoration!
-                    as BoxDecoration)
-                .gradient!
-            as LinearGradient;
+    /// Récupère l'aplat peint par le bouton (jamais de dégradé).
+    Color fill(WidgetTester tester) {
+      final decoration =
+          tester
+                  .widget<AnimatedContainer>(
+                    find.byType(AnimatedContainer).first,
+                  )
+                  .decoration!
+              as BoxDecoration;
+      expect(decoration.gradient, isNull, reason: 'couleur unie attendue');
+      return decoration.color!;
+    }
 
     Future<void> pumpVariant(
       WidgetTester tester,
@@ -292,20 +300,14 @@ void main() {
       DonyButtonVariant.accent,
     ];
 
-    testWidgets('le libellé est lisible sur chaque point du dégradé', (
-      tester,
-    ) async {
-      // Le libellé est mesuré contre le stop le moins favorable, pas contre la
-      // moyenne : le texte traverse tout le dégradé.
+    testWidgets('le libellé est lisible sur l\'aplat', (tester) async {
       for (final brightness in Brightness.values) {
         final fg = brightness == Brightness.light
             ? DonyColors.textOnBrand
             : DonyColors.onBrandHcDark;
         for (final variant in pleins) {
           await pumpVariant(tester, variant, brightness);
-          for (final stop in gradient(tester).colors) {
-            expectContrast(fg, stop, 4.5, '$variant / $brightness');
-          }
+          expectContrast(fg, fill(tester), 4.5, '$variant / $brightness');
         }
       }
     });
@@ -319,21 +321,20 @@ void main() {
       final fond = AppTheme.dark().scaffoldBackgroundColor;
       for (final variant in pleins) {
         await pumpVariant(tester, variant, Brightness.dark);
-        for (final stop in gradient(tester).colors) {
-          expectContrast(stop, fond, 3, '$variant sur fond sombre');
-        }
+        expectContrast(fill(tester), fond, 3, '$variant sur fond sombre');
       }
     });
   });
 
   group('DonyButton en haut contraste', () {
-    /// Récupère le dégradé peint par le bouton.
-    LinearGradient gradientOf(WidgetTester tester) {
+    /// Récupère l'aplat peint par le bouton (jamais de dégradé).
+    Color fillOf(WidgetTester tester) {
       final container = tester.widget<AnimatedContainer>(
         find.byType(AnimatedContainer).first,
       );
-      return (container.decoration! as BoxDecoration).gradient!
-          as LinearGradient;
+      final decoration = container.decoration! as BoxDecoration;
+      expect(decoration.gradient, isNull, reason: 'couleur unie attendue');
+      return decoration.color!;
     }
 
     Future<void> pump(
@@ -369,25 +370,18 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('garde son dégradé hors haut contraste', (tester) async {
+    testWidgets('garde l\'aplat de marque hors haut contraste', (tester) async {
       await pump(tester, highContrast: false, brightness: Brightness.light);
-      final colors = gradientOf(tester).colors;
-      expect(
-        colors.toSet().length,
-        greaterThan(1),
-        reason: 'le rendu normal doit rester dégradé',
-      );
+      expect(fillOf(tester), DonyColors.primary);
     });
 
     testWidgets('devient un aplat mesuré en haut contraste clair', (
       tester,
     ) async {
       await pump(tester, highContrast: true, brightness: Brightness.light);
-      final colors = gradientOf(tester).colors;
-      expect(colors.toSet().length, 1, reason: 'aplat attendu');
       expectContrast(
         DonyColors.textOnBrand,
-        colors.first,
+        fillOf(tester),
         7,
         'libellé sur aplat, HC clair',
       );
@@ -397,11 +391,9 @@ void main() {
       tester,
     ) async {
       await pump(tester, highContrast: true, brightness: Brightness.dark);
-      final colors = gradientOf(tester).colors;
-      expect(colors.toSet().length, 1, reason: 'aplat attendu');
       expectContrast(
         DonyColors.onBrandHcDark,
-        colors.first,
+        fillOf(tester),
         7,
         'libellé sur aplat, HC sombre',
       );
@@ -427,13 +419,7 @@ void main() {
             brightness: brightness,
             variant: variant,
           );
-          final colors = gradientOf(tester).colors;
-          expect(
-            colors.toSet().length,
-            1,
-            reason: '$variant / $brightness : aplat attendu',
-          );
-          expectContrast(fg, colors.first, 7, '$variant / $brightness');
+          expectContrast(fg, fillOf(tester), 7, '$variant / $brightness');
         }
       }
     });

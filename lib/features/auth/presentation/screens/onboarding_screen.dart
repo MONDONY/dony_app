@@ -253,33 +253,8 @@ class _ImageScrim extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            cs.scrim.withValues(alpha: isDark ? 0.58 : 0.44),
-            cs.scrim.withValues(alpha: isDark ? 0.16 : 0.08),
-            cs.scrim.withValues(alpha: isDark ? 0.34 : 0.24),
-            cs.scrim.withValues(alpha: isDark ? 0.88 : 0.76),
-          ],
-          stops: const [0, 0.34, 0.58, 1],
-        ),
-      ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.bottomCenter,
-            radius: 0.9,
-            colors: [
-              cs.primary.withValues(alpha: isDark ? 0.28 : 0.22),
-              Colors.transparent,
-            ],
-          ),
-        ),
-      ),
-    );
+    // Voile uni sur la photo : garde le texte lisible.
+    return ColoredBox(color: cs.scrim.withValues(alpha: isDark ? 0.62 : 0.5));
   }
 }
 
@@ -351,18 +326,20 @@ class _GlassButton extends StatelessWidget {
           onPressed: onPressed,
           style: TextButton.styleFrom(
             minimumSize: const Size(72, 44),
-            foregroundColor: cs.onPrimary,
+            foregroundColor: DonyColors.textOnBrand,
             backgroundColor: cs.primary.withValues(alpha: 0.72),
             padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(DonyRadius.full),
-              side: BorderSide(color: cs.onPrimary.withValues(alpha: 0.18)),
+              side: BorderSide(
+                color: DonyColors.textOnBrand.withValues(alpha: 0.18),
+              ),
             ),
           ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: cs.onPrimary,
+              color: DonyColors.textOnBrand,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -381,7 +358,6 @@ class _HeroCopy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     final titleSize = compact ? 26.0 : 31.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +370,7 @@ class _HeroCopy extends StatelessWidget {
           child: Text(
             data.title,
             style: tt.displayLarge?.copyWith(
-              color: cs.onPrimary,
+              color: DonyColors.textOnBrand,
               fontSize: titleSize,
               height: 1.04,
               fontWeight: FontWeight.w900,
@@ -415,7 +391,7 @@ class _HeroCopy extends StatelessWidget {
           child: Text(
             data.subtitle,
             style: tt.bodyLarge?.copyWith(
-              color: cs.onPrimary.withValues(alpha: 0.88),
+              color: DonyColors.textOnBrand.withValues(alpha: 0.88),
               fontSize: compact ? 13 : 14,
               height: 1.38,
               fontWeight: FontWeight.w600,
@@ -454,12 +430,14 @@ class _Eyebrow extends StatelessWidget {
           decoration: BoxDecoration(
             color: cs.primary.withValues(alpha: 0.70),
             borderRadius: BorderRadius.circular(DonyRadius.full),
-            border: Border.all(color: cs.onPrimary.withValues(alpha: 0.20)),
+            border: Border.all(
+              color: DonyColors.textOnBrand.withValues(alpha: 0.20),
+            ),
           ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: cs.onPrimary,
+              color: DonyColors.textOnBrand,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -830,18 +808,17 @@ class _LegalFooterState extends State<_LegalFooter> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final linkStyle = tt.bodySmall?.copyWith(
-      color: cs.onPrimary,
+      color: DonyColors.textOnBrand,
       decoration: TextDecoration.underline,
-      decorationColor: cs.onPrimary,
+      decorationColor: DonyColors.textOnBrand,
     );
     return Text.rich(
       TextSpan(
         text: l10n.authOnboardingLegalPrefix,
         style: tt.bodySmall?.copyWith(
-          color: cs.onPrimary.withValues(alpha: 0.78),
+          color: DonyColors.textOnBrand.withValues(alpha: 0.78),
           height: 1.3,
         ),
         children: [

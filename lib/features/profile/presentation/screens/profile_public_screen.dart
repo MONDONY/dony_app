@@ -666,12 +666,9 @@ class _HeroAvatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
+      // Terre cuite foncée fixe : le blanc des initiales y garde 4.5:1.
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [DonyColors.terra400, DonyColors.terra600],
-        ),
+        color: DonyColors.terra600,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,

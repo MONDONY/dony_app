@@ -3,8 +3,12 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-/// Carte héros d'un fil de négociation : dégradé de statut, montant mis en
-/// valeur, pastille de statut et progression des tours.
+/// Carte héros d'un fil de négociation : aplat de la couleur du statut,
+/// montant mis en valeur, pastille de statut et progression des tours.
+///
+/// Couleur unie, jamais de dégradé ni de halo décoratif (demande du
+/// propriétaire) : le fond est [background], choisi assez sombre par
+/// l'appelant pour porter le texte blanc.
 ///
 /// Partagée par les deux fils de prix (demande de colis et trajet). Elle ne
 /// connaît aucun modèle : chaque fil lui passe ses propres libellés et son
@@ -13,7 +17,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 class DonyNegoHeroCard extends StatelessWidget {
   const DonyNegoHeroCard({
     super.key,
-    required this.gradient,
+    required this.background,
     required this.shadowColor,
     required this.iconAsset,
     required this.caption,
@@ -34,7 +38,8 @@ class DonyNegoHeroCard extends StatelessWidget {
     ),
   });
 
-  final LinearGradient gradient;
+  /// Fond uni de la carte, sombre : le texte posé dessus est blanc.
+  final Color background;
 
   /// Couleur de l'ombre portée, celle du statut.
   final Color shadowColor;
@@ -72,7 +77,7 @@ class DonyNegoHeroCard extends StatelessWidget {
     return Container(
       margin: margin,
       decoration: BoxDecoration(
-        gradient: gradient,
+        color: background,
         borderRadius: BorderRadius.circular(DonyRadius.card),
         boxShadow: [
           BoxShadow(
@@ -82,109 +87,89 @@ class DonyNegoHeroCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
-        clipBehavior: Clip.antiAlias,
-        children: [
-          // Glow circle décoration top-right
-          Positioned(
-            top: -24,
-            right: -24,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.07),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(DonySpacing.base),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.base),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(DonySpacing.sm),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: DonyIcon(iconAsset, color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: DonySpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            caption,
-                            style: tt.bodyMedium!.copyWith(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white.withValues(alpha: 0.70),
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            amount,
-                            key: amountKey,
-                            style: tt.bodyMedium!.copyWith(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.5,
-                              height: 1.1,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _StatusBadge(label: badgeLabel),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(DonySpacing.sm),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: DonyIcon(iconAsset, color: Colors.white, size: 20),
                 ),
-                const SizedBox(height: 14),
-                _RoundProgress(
-                  label: roundLabel,
-                  roundsCount: roundsCount,
-                  max: maxRounds,
-                ),
-                if (warning != null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.20),
-                      // Concentric with parent card (DonyRadius.card - padding)
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      warning!,
-                      style: tt.bodyMedium?.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.amber.shade200,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        caption,
+                        style: tt.bodyMedium!.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white.withValues(alpha: 0.70),
+                          letterSpacing: 0.8,
+                        ),
                       ),
-                    ),
-                  ).animate().fadeIn(duration: 200.ms),
-                ],
-                if (turnLabel != null) ...[
-                  const SizedBox(height: 10),
-                  _TurnPill(label: turnLabel!, myTurn: myTurn),
-                ],
+                      const SizedBox(height: 2),
+                      Text(
+                        amount,
+                        key: amountKey,
+                        style: tt.bodyMedium!.copyWith(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                          height: 1.1,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _StatusBadge(label: badgeLabel),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 14),
+            _RoundProgress(
+              label: roundLabel,
+              roundsCount: roundsCount,
+              max: maxRounds,
+            ),
+            if (warning != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.20),
+                  // Concentric with parent card (DonyRadius.card - padding)
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  warning!,
+                  style: tt.bodyMedium?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.amber.shade200,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ).animate().fadeIn(duration: 200.ms),
+            ],
+            if (turnLabel != null) ...[
+              const SizedBox(height: 10),
+              _TurnPill(label: turnLabel!, myTurn: myTurn),
+            ],
+          ],
+        ),
       ),
     );
   }

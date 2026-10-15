@@ -420,8 +420,8 @@ class _RouteLine extends StatelessWidget {
   }
 }
 
-/// Cloche dans un carré arrondi en dégradé doux : verte quand un prix est
-/// trouvé, bleue sinon.
+/// Cloche dans un carré arrondi de teinte douce unie : verte quand un prix
+/// est trouvé, bleue sinon.
 class _BellIcon extends StatelessWidget {
   const _BellIcon({required this.hit});
 
@@ -439,11 +439,7 @@ class _BellIcon extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(DonyRadius.md),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [soft, Color.lerp(soft, strong, 0.12)!],
-        ),
+        color: soft,
       ),
       child: DonyIcon('bell', size: 18, color: strong),
     );

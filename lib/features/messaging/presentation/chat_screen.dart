@@ -2634,12 +2634,16 @@ class _TextContent extends StatelessWidget {
 
 /// Sélection dans sa propre bulle (fond `primary`, texte `onPrimary`) : le
 /// surlignage par défaut est lui aussi `primary`, le texte sélectionné
-/// disparaissait (Sentry FLUTTER-8E). Voile sombre sous le texte blanc, et
-/// poignées foncées, lisibles sur la bulle comme sur le fond clair du fil.
+/// disparaissait (Sentry FLUTTER-8E). Le voile prend le ton opposé au
+/// texte : sombre sous le texte blanc du thème clair, clair sous le texte
+/// noir du thème sombre (un voile noir y tombait à 3,35:1, le voile blanc
+/// monte à 10,6:1). Poignées en `onSurface`, lisibles sur le fond du fil.
 @visibleForTesting
 TextSelectionThemeData ownBubbleSelectionTheme(ColorScheme cs) {
   return TextSelectionThemeData(
-    selectionColor: Colors.black.withValues(alpha: 0.32),
+    selectionColor: cs.brightness == Brightness.dark
+        ? Colors.white.withValues(alpha: 0.4)
+        : Colors.black.withValues(alpha: 0.32),
     selectionHandleColor: cs.onSurface,
     cursorColor: cs.onPrimary,
   );

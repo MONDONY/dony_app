@@ -192,11 +192,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(DonySpacing.xl),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [cs.primary, cs.primary.withValues(alpha: 0.8)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: cs.primary,
                       borderRadius: BorderRadius.circular(DonyRadius.card),
                     ),
                     child: Column(
@@ -213,9 +209,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                         const SizedBox(height: DonySpacing.xs),
                         Text(
                           l.scanPointQrHint,
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onPrimary.withValues(alpha: 0.75),
-                          ),
+                          style: tt.bodySmall?.copyWith(color: cs.onPrimary),
                         ),
                       ],
                     ),
@@ -301,9 +295,11 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                         ? SizedBox(
                             width: 18,
                             height: 18,
+                            // Bouton désactivé pendant le chargement :
+                            // fond `surfaceContainerHighest`.
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: cs.onPrimary,
+                              color: cs.onSurfaceVariant,
                             ),
                           )
                         : Text(l.scanIdentifySubmit, style: tt.labelLarge),

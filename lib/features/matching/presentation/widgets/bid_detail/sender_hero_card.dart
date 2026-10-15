@@ -323,37 +323,35 @@ class _HeroShell extends StatelessWidget {
 
   final Widget? footer;
 
-  List<Color> _gradientColors(BuildContext context) {
+  /// Aplat uni de la carte et couleur de son texte. Les variantes bleues
+  /// suivent le thème ; les autres restent sombres dans les deux thèmes,
+  /// sous un texte blanc (≥ 4.5:1), comme les boutons `_HeroButton`.
+  (Color, Color) _colors(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    const white = Color(0xFFFFFFFF);
     switch (variant) {
       case SenderHeroVariant.wait:
-        return [DonyColors.ink600, DonyColors.ink800];
+        return (DonyColors.ink700, white);
       case SenderHeroVariant.pay:
-        return [DonyColors.terra500, DonyColors.terra700];
+        return (DonyColors.terra700, white);
       case SenderHeroVariant.info:
-        return [DonyColors.blue500, DonyColors.blue700];
-      case SenderHeroVariant.alert:
-        return [cs.error, DonyColors.ink800];
       case SenderHeroVariant.done:
-        return [DonyColors.blue600, DonyColors.blue800];
+        return (cs.primary, cs.onPrimary);
+      case SenderHeroVariant.alert:
+        return (DonyColors.danger700, white);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final colors = _gradientColors(context);
-    const white = Color(0xFFFFFFFF);
+    final (background, foreground) = _colors(context);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: colors,
-        ),
+        color: background,
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Column(
@@ -362,7 +360,7 @@ class _HeroShell extends StatelessWidget {
           Text(
             title,
             style: tt.titleLarge?.copyWith(
-              color: white,
+              color: foreground,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -370,7 +368,7 @@ class _HeroShell extends StatelessWidget {
           Text(
             subtitle,
             style: tt.bodySmall?.copyWith(
-              color: white.withValues(alpha: 0.85),
+              color: foreground.withValues(alpha: 0.85),
               height: 1.45,
             ),
           ),

@@ -78,69 +78,49 @@ abstract final class DonySnackbar {
 
     final resolvedIcon = icon ?? defaultIcon;
 
-    final content = Stack(
-      clipBehavior: Clip.none,
+    // Fond uni, sans reflet en dégradé (demande du propriétaire).
+    final content = Row(
       children: [
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.12),
-                  Colors.transparent,
-                ],
-                stops: const [0.0, 0.6],
-              ),
-              borderRadius: BorderRadius.circular(DonyRadius.md),
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.22),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.35),
+              width: 1.5,
             ),
           ),
+          alignment: Alignment.center,
+          child: Icon(resolvedIcon, color: fg, size: 18),
         ),
-        Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.22),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.35),
-                  width: 1.5,
+        const SizedBox(width: DonySpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (title != null && title.isNotEmpty) ...[
+                Text(
+                  title,
+                  style: tt.labelLarge?.copyWith(
+                    color: fg,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+              ],
+              Text(
+                message,
+                style: tt.bodySmall?.copyWith(
+                  color: title != null ? fg.withValues(alpha: 0.85) : fg,
+                  height: 1.35,
                 ),
               ),
-              alignment: Alignment.center,
-              child: Icon(resolvedIcon, color: fg, size: 18),
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (title != null && title.isNotEmpty) ...[
-                    Text(
-                      title,
-                      style: tt.labelLarge?.copyWith(
-                        color: fg,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                  ],
-                  Text(
-                    message,
-                    style: tt.bodySmall?.copyWith(
-                      color: title != null ? fg.withValues(alpha: 0.85) : fg,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

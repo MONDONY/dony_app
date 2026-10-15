@@ -36,7 +36,7 @@ import 'package:dony/core/design/design_system.dart';
 | `DonyColors.error`         | `#D9342B` | Erreurs |
 | `DonyColors.shadow`        | `#1A0A2540` | Ombre cards (ink800 @ 10%) |
 
-**Palettes primitives (pour const contexts et dégradés) :**
+**Palettes primitives (pour const contexts) :**
 `DonyColors.blue{50-900}`, `DonyColors.terra{50-900}`, `DonyColors.neutral{0-900}`, `DonyColors.sand{50-500}`, `DonyColors.ink{50-900}`
 
 **Aliases legacy** (deprecated, seront supprimés en Phase 5) :
@@ -115,7 +115,7 @@ L'app supporte le dark mode via `ThemeMode.system` — adaptation automatique au
 | `DonyColors.primary` | `cs.primary` |
 | `DonyColors.success`, `successLight` | `cs.success`, `cs.successLight` (extension) |
 
-`DonyColors.blue500`, `DonyColors.terra500`, etc. (palette primitive) restent autorisés en contexte `const` ou pour des dégradés — ils ne sont pas brightness-aware par design.
+`DonyColors.blue500`, `DonyColors.terra500`, etc. (palette primitive) restent autorisés en contexte `const` ou pour un aplat fixe identique dans les deux thèmes ; ils ne sont pas brightness-aware par design. Jamais de dégradé (voir `DARK_MODE.md`).
 
 ### Extension `DonyStatusColors`
 

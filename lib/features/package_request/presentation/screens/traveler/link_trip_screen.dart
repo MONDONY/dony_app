@@ -312,6 +312,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     return ValueListenableBuilder<AnnouncementModel?>(
       valueListenable: _selectedTripNotifier,
       builder: (context, selectedTrip, _) {
+        final cs = Theme.of(context).colorScheme;
         return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
             DonySpacing.lg,
@@ -326,11 +327,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
               Container(
                 padding: const EdgeInsets.all(DonySpacing.base),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [DonyColors.blue500, DonyColors.blue700],
-                  ),
+                  color: cs.primary,
                   borderRadius: BorderRadius.circular(DonyRadius.card),
                 ),
                 child: Column(
@@ -345,7 +342,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                       ),
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: cs.onPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -355,7 +352,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: cs.onPrimary,
                       ),
                     ),
                     Text(
@@ -366,7 +363,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                       ),
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: cs.onPrimary,
                       ),
                     ),
                   ],

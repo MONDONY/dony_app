@@ -538,12 +538,14 @@ void main() {
     expect(find.byKey(const Key('profile-residence-country')), findsNothing);
   });
 
-  testWidgets('hero has no blue gradient background', (tester) async {
+  testWidgets('hero sans dégradé : initiales sur un aplat terre cuite', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrapLoaded(profile: _profile));
     await tester.pump(const Duration(milliseconds: 600));
 
-    // Le bouton « S'abonner » (présent sur tout profil d'un autre) porte son
-    // propre dégradé de marque : seul le fond du hero est visé ici.
+    // Le bouton « S'abonner » (présent sur tout profil d'un autre) relève du
+    // design system : seul le contenu de l'écran est visé ici.
     final buttonContainers = tester
         .widgetList<Container>(
           find.descendant(
@@ -555,16 +557,21 @@ void main() {
     final containers = tester
         .widgetList<Container>(find.byType(Container))
         .where((c) => !buttonContainers.contains(c));
-    final hasBlueHeroGradient = containers.any((c) {
+    final hasGradient = containers.any((c) {
       final decoration = c.decoration;
-      if (decoration is! BoxDecoration ||
-          decoration.gradient is! LinearGradient) {
-        return false;
-      }
-      final colors = (decoration.gradient! as LinearGradient).colors;
-      return colors.contains(DonyColors.blue500);
+      return decoration is BoxDecoration && decoration.gradient != null;
     });
-    expect(hasBlueHeroGradient, isFalse);
+    expect(hasGradient, isFalse);
+
+    // Sans photo, les initiales reposent sur une couleur unie.
+    final initials = tester.widget<Container>(
+      find
+          .ancestor(of: find.text('FD'), matching: find.byType(Container))
+          .first,
+    );
+    final decoration = initials.decoration! as BoxDecoration;
+    expect(decoration.color, DonyColors.terra600);
+    expect(decoration.gradient, isNull);
   });
 
   testWidgets('no sticky bar container above the scroll area', (tester) async {

@@ -34,28 +34,38 @@ void main() {
       expect(textWidget.data, 'Pattern B');
     });
 
-    testWidgets('respects gradientStart / gradientEnd overrides', (
+    testWidgets('fond en aplat (pas de dégradé), override background', (
       tester,
     ) async {
       await tester.pumpWidget(
         _wrap(
           const DonyGlassDarkSheet(
-            gradientStart: Color(0xFF112233),
-            gradientEnd: Color(0xFF445566),
+            background: Color(0xFF112233),
             child: SizedBox(),
           ),
         ),
       );
-      expect(find.byType(DonyGlassDarkSheet), findsOneWidget);
+      final box = tester
+          .widgetList<Container>(
+            find.descendant(
+              of: find.byType(DonyGlassDarkSheet),
+              matching: find.byType(Container),
+            ),
+          )
+          .map((c) => c.decoration)
+          .whereType<BoxDecoration>()
+          .single;
+      expect(box.gradient, isNull);
+      expect(box.color, const Color(0xFF112233).withValues(alpha: 0.90));
     });
   });
 
   group('DonyGlassCard', () {
     testWidgets('renders with default opacity 0.62', (tester) async {
       await tester.pumpWidget(
-        _wrap(const DonyGlassCard(child: Text('Hello aurora'))),
+        _wrap(const DonyGlassCard(child: Text('Hello glass'))),
       );
-      expect(find.text('Hello aurora'), findsOneWidget);
+      expect(find.text('Hello glass'), findsOneWidget);
       expect(find.byType(BackdropFilter), findsOneWidget);
     });
 
@@ -185,61 +195,6 @@ void main() {
           .widgetList<SizedBox>(find.byType(SizedBox))
           .where((s) => s.width == double.infinity);
       expect(sizedBoxes.isEmpty, isTrue);
-    });
-  });
-
-  group('DonyAuroraBackground', () {
-    testWidgets('renders child', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          const DonyAuroraBackground(
-            variant: DonyAurora.green,
-            child: Text('Hub Envoyer'),
-          ),
-        ),
-      );
-      expect(find.text('Hub Envoyer'), findsOneWidget);
-    });
-
-    testWidgets('wraps in RepaintBoundary for perf', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          const DonyAuroraBackground(
-            variant: DonyAurora.pink,
-            child: SizedBox(),
-          ),
-        ),
-      );
-      expect(find.byType(RepaintBoundary), findsWidgets);
-    });
-
-    testWidgets('uses Stack to layer gradient + blobs + content', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrap(
-          const DonyAuroraBackground(
-            variant: DonyAurora.blue,
-            child: SizedBox(),
-          ),
-        ),
-      );
-      expect(find.byType(Stack), findsWidgets);
-    });
-
-    testWidgets('all 6 variants render without throwing', (tester) async {
-      for (final variant in DonyAurora.values) {
-        await tester.pumpWidget(
-          _wrap(
-            DonyAuroraBackground(variant: variant, child: Text(variant.name)),
-          ),
-        );
-        expect(
-          find.text(variant.name),
-          findsOneWidget,
-          reason: 'variant ${variant.name} should render its child',
-        );
-      }
     });
   });
 }

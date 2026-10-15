@@ -1,25 +1,21 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// Enveloppe un skeleton statique d'un pulse animé en boucle.
+/// Enveloppe un skeleton statique d'une pulsation d'opacité en boucle.
 ///
-/// Un seul contrôleur d'animation par card (posé ici, pas sur chaque
-/// [DonySkeletonBox]) — sinon une liste de skeletons instancie des dizaines
-/// de tickers simultanés. `AnimationController` manuel plutôt que
-/// `flutter_animate` : son `.animate()` programme toujours son premier
-/// `_play()` via `Future.delayed`, ce qui laisse un `Timer` réel en attente
-/// tant que ce délai n'a pas été purgé — un piège pour tout test qui ne fait
-/// qu'un `pump()` unique sur un écran en état de chargement. Démarrer le
-/// `repeat()` directement dans `didChangeDependencies` évite tout Timer.
+/// Pulsation et non reflet qui balaie : couleurs unies, pas de dégradé
+/// (demande du propriétaire). Un seul contrôleur d'animation par card (posé
+/// ici, pas sur chaque [DonySkeletonBox]) — sinon une liste de skeletons
+/// instancie des dizaines de tickers simultanés. `AnimationController` manuel
+/// plutôt que `flutter_animate` : son `.animate()` programme toujours son
+/// premier `_play()` via `Future.delayed`, ce qui laisse un `Timer` réel en
+/// attente tant que ce délai n'a pas été purgé — un piège pour tout test qui
+/// ne fait qu'un `pump()` unique sur un écran en état de chargement. Démarrer
+/// le `repeat()` directement dans `didChangeDependencies` évite tout Timer.
 class DonyShimmer extends StatefulWidget {
-  const DonyShimmer({super.key, required this.child, this.color});
+  const DonyShimmer({super.key, required this.child});
 
   final Widget child;
-
-  /// Couleur du reflet qui balaie le child. Par défaut `cs.onSurface` à
-  /// faible alpha — à surcharger (ex: blanc) sur fond coloré/dégradé, où le
-  /// reflet sombre par défaut resterait quasi invisible.
-  final Color? color;
 
   @override
   State<DonyShimmer> createState() => _DonyShimmerState();
@@ -29,8 +25,13 @@ class _DonyShimmerState extends State<DonyShimmer>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1100),
+    duration: const Duration(milliseconds: 900),
   );
+
+  late final Animation<double> _opacity = Tween<double>(
+    begin: 1,
+    end: 0.45,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
   @override
   void didChangeDependencies() {
@@ -38,7 +39,7 @@ class _DonyShimmerState extends State<DonyShimmer>
     if (MediaQuery.disableAnimationsOf(context)) {
       _controller.stop();
     } else if (!_controller.isAnimating) {
-      _controller.repeat();
+      _controller.repeat(reverse: true);
     }
   }
 
@@ -53,38 +54,10 @@ class _DonyShimmerState extends State<DonyShimmer>
     if (MediaQuery.disableAnimationsOf(context)) {
       return widget.child;
     }
-
-    final highlight =
-        widget.color ??
-        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.14);
     return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: _controller,
-        child: widget.child,
-        builder: (context, child) => ShaderMask(
-          blendMode: BlendMode.srcATop,
-          shaderCallback: (bounds) => LinearGradient(
-            colors: [Colors.transparent, highlight, Colors.transparent],
-            stops: const [0.35, 0.5, 0.65],
-            transform: _SlideGradientTransform(
-              dx: bounds.width * (_controller.value * 3 - 1),
-            ),
-          ).createShader(bounds),
-          child: child,
-        ),
-      ),
+      child: FadeTransition(opacity: _opacity, child: widget.child),
     );
   }
-}
-
-class _SlideGradientTransform extends GradientTransform {
-  const _SlideGradientTransform({required this.dx});
-
-  final double dx;
-
-  @override
-  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) =>
-      Matrix4.translationValues(dx, 0, 0);
 }
 
 /// Placeholder rectangulaire — remplace une ligne de texte ou un bloc de
@@ -103,7 +76,7 @@ class DonySkeletonBox extends StatelessWidget {
   final double radius;
 
   /// Couleur du bloc. Par défaut `cs.onSurface` à faible alpha — à surcharger
-  /// (ex: blanc) sur fond coloré/dégradé.
+  /// (ex: blanc) sur fond coloré.
   final Color? color;
 
   @override

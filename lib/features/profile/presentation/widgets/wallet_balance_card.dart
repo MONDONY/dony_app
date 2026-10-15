@@ -224,13 +224,12 @@ class _LoadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Blanc plutôt que le gris habituel de DonyShimmer : le fond est un
-    // dégradé bleu (_CardShell), où un reflet `cs.onSurface` serait invisible.
+    // Blocs blancs translucides plutôt que le gris habituel : le fond est un
+    // aplat bleu foncé (_CardShell), où un gris serait invisible.
     const boxColor = Color.fromRGBO(255, 255, 255, 0.18);
     return _CardShell(
       onTap: () => context.push('/payments/wallet'),
       child: const DonyShimmer(
-        color: Color.fromRGBO(255, 255, 255, 0.35),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -287,7 +286,7 @@ class _ErrorCard extends StatelessWidget {
   }
 }
 
-// ─── Coquille commune (dégradé, radius, shadow, tap) ────────────────────────
+// ─── Coquille commune (aplat, radius, shadow, tap) ──────────────────────────
 
 class _CardShell extends StatelessWidget {
   const _CardShell({required this.child, required this.onTap});
@@ -301,15 +300,13 @@ class _CardShell extends StatelessWidget {
           color: Colors.transparent,
           child: Ink(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [DonyColors.blue700, DonyColors.blue500],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              // Bleu foncé plutôt que `cs.primary` : les libellés blancs à 70 %
+              // y restent au-dessus de 4.5:1, dans les deux thèmes.
+              color: DonyColors.blue700,
               borderRadius: BorderRadius.circular(DonyRadius.card),
               boxShadow: [
                 BoxShadow(
-                  color: DonyColors.blue500.withValues(alpha: 0.28),
+                  color: DonyColors.blue700.withValues(alpha: 0.28),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),

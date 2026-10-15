@@ -790,7 +790,7 @@ Avant de naviguer vers un écran fils, se poser ces questions :
 
 ```dart
 const kGreenPrimary  = Color(0xFF1A6B3C);  // CTA, actifs
-const kGreenDark     = Color(0xFF134F2D);  // gradients, headers
+const kGreenDark     = Color(0xFF134F2D);  // headers
 const kGreenAccent   = Color(0xFF4CAF7D);  // accents secondaires
 const kGreenLight    = Color(0xFFE8F5EE);  // bg chips actifs
 const kBackground    = Color(0xFFF4F6F8);  // fond (jamais blanc pur)
@@ -822,7 +822,7 @@ const kSuccess       = Color(0xFF16A34A);
 - Respecter `MediaQuery.of(context).viewInsets.bottom`
 - Dialogs uniquement pour actions destructives irréversibles.
 
-**Couleurs :** jamais `0xFFFFFFFF` en fond → `kBackground`. Gradients uniquement sur hero cards/headers.
+**Couleurs :** jamais `0xFFFFFFFF` en fond → `kBackground`. **Jamais de dégradé** (`LinearGradient`, `RadialGradient`, `SweepGradient`, `ShaderMask` coloré), ni sur les boutons ni sur les cartes héros : uniquement des couleurs unies, demande du propriétaire pour ne pas faire « généré par IA ». Voir `lib/core/design/DARK_MODE.md`.
 
 **Espacement :** padding horizontal 20 pt. Entre sections 24–28 pt. Interne cards 16 pt.  
 Border radius : cards 16 · boutons 14 · chips 20 · inputs 12 · badges 8.

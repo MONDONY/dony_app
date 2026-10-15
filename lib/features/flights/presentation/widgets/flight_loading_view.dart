@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 // Couleurs primitives intentionnelles : l'écran d'attente est sombre dans
 // les deux thèmes (fond de nuit, texte blanc), comme une illustration.
 const _night = DonyColors.ink900;
-const _nightGlow = DonyColors.ink500;
 const _white = DonyColors.neutral0;
 
 /// Attente d'une recherche de billets : rappel du trajet, anneau terracotta
@@ -92,15 +91,7 @@ class _FlightLoadingViewState extends State<FlightLoadingView>
         Expanded(
           child: DecoratedBox(
             key: const Key('flights-loading'),
-            decoration: const BoxDecoration(
-              color: _night,
-              gradient: RadialGradient(
-                center: Alignment(0, -0.64),
-                radius: 1.1,
-                colors: [_nightGlow, _night],
-                stops: [0, 0.62],
-              ),
-            ),
+            decoration: const BoxDecoration(color: _night),
             child: LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(

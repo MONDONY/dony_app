@@ -249,7 +249,7 @@ void main() {
       await _drainAndDispose(tester, 500);
     });
 
-    testWidgets('withGlow=true rend un Stack avec RadialGradient', (
+    testWidgets('withGlow=true rend un disque uni, sans dégradé', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -264,6 +264,18 @@ void main() {
 
       expect(find.byType(Stack), findsWidgets);
       expect(find.byType(DonyMascotte), findsOneWidget);
+      final disc = tester
+          .widgetList<Container>(find.byType(Container))
+          .map((c) => c.decoration)
+          .whereType<BoxDecoration>()
+          .singleWhere((d) => d.shape == BoxShape.circle);
+      expect(disc.gradient, isNull);
+      expect(
+        disc.color,
+        Theme.of(
+          tester.element(find.byType(DonyMascotte)),
+        ).colorScheme.primaryContainer,
+      );
 
       await _drainAndDispose(tester, 500);
     });

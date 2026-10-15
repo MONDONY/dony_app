@@ -305,7 +305,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                               size: DonyAvatarSize.xl,
                                             ),
                                             if (isLoading && !_saving)
-                                              Positioned.fill(
+                                              const Positioned.fill(
                                                 child: ClipOval(
                                                   child: ColoredBox(
                                                     color: Colors.black38,
@@ -313,13 +313,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                                       child: SizedBox(
                                                         width: 28,
                                                         height: 28,
-                                                        child: CircularProgressIndicator(
-                                                          strokeWidth: 2.5,
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .onPrimary,
-                                                        ),
+                                                        // Voile noir sur la
+                                                        // photo : blanc fixe,
+                                                        // dans les deux thèmes.
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                              strokeWidth: 2.5,
+                                                              color: DonyColors
+                                                                  .textOnBrand,
+                                                            ),
                                                       ),
                                                     ),
                                                   ),

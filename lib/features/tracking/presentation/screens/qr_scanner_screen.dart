@@ -409,9 +409,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   ? SizedBox(
                       width: 16,
                       height: 16,
+                      // Bouton désactivé pendant le chargement : fond
+                      // neutre, pas `primary`.
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: cs.onPrimary,
+                        color: cs.onSurfaceVariant,
                       ),
                     )
                   : Text(l.commonConfirm, style: tt.labelLarge),

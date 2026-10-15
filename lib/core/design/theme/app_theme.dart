@@ -21,11 +21,13 @@ abstract final class AppTheme {
       primary: hc
           ? (isLight ? DonyColors.primaryHc : DonyColors.primaryHcDark)
           : (isLight ? DonyColors.primary : DonyColors.blueDark500),
-      // En haut contraste sombre, primary est un bleu clair : un libellé blanc
-      // n'y ferait que 2.04:1. Le noir y monte à 10.30:1.
-      onPrimary: hc && !isLight
-          ? DonyColors.onBrandHcDark
-          : DonyColors.textOnBrand,
+      // En thème sombre, primary est un bleu clair, pour rester lisible en
+      // lien et en icône sur le fond sombre (blueDark500 : 5.89:1 sur
+      // neutralDark0, 5.26:1 sur neutralDark100). Un libellé blanc n'y ferait
+      // que 3.28:1 (2.04:1 en haut contraste) : le libellé passe au noir,
+      // 6.39:1 (10.30:1 en haut contraste). Plus aucun dégradé n'utilise ce
+      // rôle (couleurs unies, demande du propriétaire), la bascule est sûre.
+      onPrimary: isLight ? DonyColors.textOnBrand : DonyColors.onBrandHcDark,
       primaryContainer: isLight
           ? DonyColors.primarySoft
           : DonyColors.blueDark50,
@@ -65,9 +67,8 @@ abstract final class AppTheme {
           : DonyColors.neutralDark200,
       error: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
       // Le rouge d'erreur du thème sombre est clair : un libellé blanc dessus
-      // ne fait que 3.55:1. Le noir y monte à 5.91:1. Contrairement à
-      // `onPrimary`, ce rôle n'est posé que sur des aplats d'erreur, jamais
-      // sur un dégradé, donc la bascule est sans risque.
+      // ne fait que 3.55:1. Le noir y monte à 5.91:1, même bascule que
+      // `onPrimary`.
       onError: isLight ? DonyColors.textOnBrand : DonyColors.onBrandHcDark,
       errorContainer: isLight ? DonyColors.danger50 : DonyColors.dangerDark50,
       onErrorContainer: isLight
@@ -163,11 +164,8 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: cs.primary,
-          // Pas `cs.onPrimary` : ce rôle sert aussi de texte sur des dégradés
-          // de marque allant du bleu très sombre au bleu clair, où le noir
-          // serait illisible. Ici le fond est l'aplat `cs.primary`, connu, et
-          // en thème sombre il est trop clair pour un libellé blanc (3.28:1).
-          foregroundColor: isLight ? cs.onPrimary : DonyColors.onBrandHcDark,
+          // Noir en thème sombre, blanc en clair : voir `onPrimary`.
+          foregroundColor: cs.onPrimary,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),

@@ -214,9 +214,10 @@ class _TrackNumberFieldState extends State<_TrackNumberField> {
                 ? SizedBox(
                     width: 18,
                     height: 18,
+                    // Bouton désactivé pendant le chargement : fond neutre.
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Theme.of(context).colorScheme.onPrimary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   )
                 : Text(l.suiviTrackSubmit),

@@ -19,7 +19,7 @@ void main() {
   group('DonyButton', () {
     // ─── Variants rendering ─────────────────────────────────────────────────
 
-    testWidgets('primary variant renders InkWell (gradient button)', (
+    testWidgets('primary variant renders InkWell (filled button)', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -55,7 +55,7 @@ void main() {
       expect(find.byType(TextButton), findsOneWidget);
     });
 
-    testWidgets('destructive variant renders InkWell (gradient button)', (
+    testWidgets('destructive variant renders InkWell (filled button)', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -71,7 +71,7 @@ void main() {
       expect(_inkWellIn(find.byType(DonyButton)), findsOneWidget);
     });
 
-    testWidgets('success variant renders InkWell (gradient button)', (
+    testWidgets('success variant renders InkWell (filled button)', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -241,7 +241,7 @@ void main() {
     // ─── Accent variant ─────────────────────────────────────────────────────
 
     testWidgets(
-      'DonyButtonVariant.accent renders with terracotta gradient background',
+      'DonyButtonVariant.accent renders with a solid terracotta background',
       (tester) async {
         await tester.pumpWidget(
           _wrap(
@@ -258,16 +258,12 @@ void main() {
           find.byType(AnimatedContainer),
         );
         final decoration = container.decoration as BoxDecoration;
-        final gradient = decoration.gradient as LinearGradient;
 
-        // Tokens et non littéraux : le dégradé accent est passé de terra500 à
-        // terra600/terra700 pour que le libellé blanc atteigne 4.5:1, terra500
-        // n'en donnant que 3.46:1. Un test qui fige une valeur hexadécimale
-        // casse à chaque ajustement de contraste sans rien prouver de plus.
-        expect(
-          gradient.colors,
-          containsAll(<Color>[DonyColors.terra600, DonyColors.terra700]),
-        );
+        // Couleur unie, jamais de dégradé (demande du propriétaire). Token et
+        // non littéral : terra600 porte le libellé blanc à 4.79:1, terra500
+        // n'en donnait que 3.46:1.
+        expect(decoration.gradient, isNull);
+        expect(decoration.color, DonyColors.terra600);
       },
     );
   });

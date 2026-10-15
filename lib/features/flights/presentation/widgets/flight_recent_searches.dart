@@ -165,13 +165,14 @@ class FlightCodeThumb extends StatelessWidget {
   final String code;
 
   // Couleurs primitives intentionnelles : illustration, pas un rôle de thème.
-  static const _gradients = <(Color, Color)>[
-    (DonyColors.terra400, DonyColors.terra600),
-    (DonyColors.success500, DonyColors.success700),
-    (DonyColors.blue400, DonyColors.blue600),
-    (DonyColors.ink400, DonyColors.ink600),
-    (DonyColors.terra600, DonyColors.terra800),
-    (DonyColors.sand500, DonyColors.terra700),
+  // Teintes foncées : le code blanc garde un contraste ≥ 4.5:1.
+  static const _tints = <Color>[
+    DonyColors.terra600,
+    DonyColors.success700,
+    DonyColors.blue600,
+    DonyColors.ink600,
+    DonyColors.terra800,
+    DonyColors.terra700,
   ];
 
   @override
@@ -181,7 +182,7 @@ class FlightCodeThumb extends StatelessWidget {
       0,
       (h, c) => (h * 31 + c) & 0x7fffffff,
     );
-    final (from, to) = _gradients[hash % _gradients.length];
+    final tint = _tints[hash % _tints.length];
     return ExcludeSemantics(
       child: Container(
         width: 46,
@@ -189,11 +190,7 @@ class FlightCodeThumb extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [from, to],
-          ),
+          color: tint,
         ),
         child: Text(
           code,

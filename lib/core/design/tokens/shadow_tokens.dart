@@ -20,7 +20,7 @@ abstract final class DonyShadow {
     BoxShadow(color: Color(0x290A2540), blurRadius: 48, offset: Offset(0, 24)),
   ];
 
-  // ─── Branded shadows — boutons gradient ────────────────────────────────────
+  // ─── Branded shadows — boutons pleins (aplat uni) ──────────────────────────
 
   // Primary blue (light)
   static const List<BoxShadow> brand = [

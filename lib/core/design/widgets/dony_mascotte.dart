@@ -1,6 +1,4 @@
 import 'package:dony/core/design/tokens/animation_tokens.dart';
-import 'package:dony/core/design/tokens/color_tokens.dart';
-import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -124,7 +122,7 @@ class DonyMascotte extends StatelessWidget {
 /// // Entrée standard
 /// DonyMascotteAnimated(type: DonyMascotteType.joyeux, size: DonyMascotteSize.lg)
 ///
-/// // Succès avec halo ambient
+/// // Succès, sur un disque de fond
 /// DonyMascotteAnimated(type: DonyMascotteType.securise, withGlow: true)
 /// ```
 class DonyMascotteAnimated extends StatelessWidget {
@@ -142,7 +140,8 @@ class DonyMascotteAnimated extends StatelessWidget {
   final double? customDimension;
   final BoxFit fit;
 
-  /// Halo radial ambient derrière la mascotte — réservé aux écrans success/KYC.
+  /// Disque uni (`cs.primaryContainer`) derrière la mascotte — réservé aux
+  /// écrans success/KYC.
   final bool withGlow;
 
   @override
@@ -177,9 +176,6 @@ class DonyMascotteAnimated extends StatelessWidget {
 
     final dim = customDimension ?? size.dimension;
     final cs = Theme.of(context).colorScheme;
-    final glowColor = cs.brightness == Brightness.light
-        ? DonyColors.primary.withValues(alpha: 0.15)
-        : DonyColors.blueDark500.withValues(alpha: 0.20);
 
     return SizedBox(
       width: dim * 1.4,
@@ -192,7 +188,9 @@ class DonyMascotteAnimated extends StatelessWidget {
             height: dim * 1.4,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: RadialGradient(colors: [glowColor, Colors.transparent]),
+              // Aplat discret, pas de halo en dégradé (demande du
+              // propriétaire : couleurs unies).
+              color: cs.primaryContainer,
             ),
           ),
           mascot,
@@ -310,43 +308,4 @@ class DonyMascotteAnimated extends StatelessWidget {
     ),
     DonyMascotteType.attente => _breathe(child, duration: 1200),
   };
-}
-
-/// Halo ambient — utilisé indépendamment autour d'un widget quelconque.
-///
-/// ```dart
-/// DonyGlowWrap(child: DonyMascotteAnimated(type: .securise))
-/// ```
-class DonyGlowWrap extends StatelessWidget {
-  const DonyGlowWrap({
-    super.key,
-    required this.child,
-    this.radius = DonySpacing.huge,
-  });
-
-  final Widget child;
-  final double radius;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final glowColor = cs.brightness == Brightness.light
-        ? DonyColors.primary.withValues(alpha: 0.14)
-        : DonyColors.blueDark500.withValues(alpha: 0.20);
-
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: radius * 2,
-          height: radius * 2,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(colors: [glowColor, Colors.transparent]),
-          ),
-        ),
-        child,
-      ],
-    );
-  }
 }

@@ -13,11 +13,7 @@ class CommissionCardPreview extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.deepPurple.shade700, Colors.indigo.shade400],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.deepPurple.shade700,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

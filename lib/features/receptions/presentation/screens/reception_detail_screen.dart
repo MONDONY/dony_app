@@ -320,18 +320,18 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-/// En-tête héros : dégradé, statut en grand, trajet. Le texte reste blanc
-/// sur un dégradé foncé, lisible dans les deux thèmes.
+/// En-tête héros : aplat foncé, statut en grand, trajet. Le texte reste blanc
+/// sur un fond foncé, lisible dans les deux thèmes.
 class _Hero extends StatelessWidget {
   const _Hero({
     super.key,
-    required this.colors,
+    required this.color,
     required this.eyebrow,
     required this.title,
     required this.children,
   });
 
-  final List<Color> colors;
+  final Color color;
   final Widget eyebrow;
   final String title;
   final List<Widget> children;
@@ -344,70 +344,32 @@ class _Hero extends StatelessWidget {
     final radius = BorderRadius.circular(DonyRadius.xl);
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: color,
         borderRadius: radius,
         boxShadow: [
           BoxShadow(
-            color: colors.last.withValues(alpha: 0.28),
+            color: color.withValues(alpha: 0.28),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: radius,
-        child: Stack(
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: colors,
-                  ),
-                ),
+            eyebrow,
+            const SizedBox(height: DonySpacing.md),
+            Text(
+              title,
+              style: tt.headlineMedium?.copyWith(
+                color: white,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
               ),
             ),
-            // Halo décoratif dans le coin : donne de la profondeur au
-            // dégradé sans charger le contenu.
-            Positioned(
-              top: -60,
-              right: -40,
-              child: IgnorePointer(
-                child: Container(
-                  width: 180,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        white.withValues(alpha: 0.18),
-                        white.withValues(alpha: 0),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(DonySpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  eyebrow,
-                  const SizedBox(height: DonySpacing.md),
-                  Text(
-                    title,
-                    style: tt.headlineMedium?.copyWith(
-                      color: white,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  ...children,
-                ],
-              ),
-            ),
+            ...children,
           ],
         ),
       ),
@@ -486,7 +448,7 @@ class _PendingContent extends StatelessWidget {
       children: [
         _Hero(
           key: const Key('reception-pending-hero'),
-          colors: const [DonyColors.ink500, DonyColors.ink800],
+          color: DonyColors.ink800,
           eyebrow: _HeroPill(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -606,9 +568,10 @@ class _ConfirmedContent extends StatelessWidget {
     final code = reception.confirmationCode;
     final instructions = reception.arrivalInstructions;
     final done = _doneSteps(reception.bidStatus);
-    final heroColors = reception.bidStatus == 'COMPLETED'
-        ? const [DonyColors.success500, DonyColors.success700]
-        : const [DonyColors.blue500, DonyColors.blue800];
+    // Teintes foncées : le blanc du héros y garde plus de 7:1.
+    final heroColor = reception.bidStatus == 'COMPLETED'
+        ? DonyColors.success700
+        : DonyColors.blue700;
 
     final details = <Widget>[
       // Avec un id, la ligne voyageur devient sa carte (photo + profil).
@@ -664,7 +627,7 @@ class _ConfirmedContent extends StatelessWidget {
       children: [
         _Hero(
           key: const Key('reception-step'),
-          colors: heroColors,
+          color: heroColor,
           eyebrow: _HeroPill(
             child: _HeroPillText(
               l.receptionStepCounter(
@@ -687,7 +650,7 @@ class _ConfirmedContent extends StatelessWidget {
               ),
             ],
             const SizedBox(height: DonySpacing.lg),
-            _ReceptionSteps(done: done, accent: heroColors.last),
+            _ReceptionSteps(done: done, accent: heroColor),
           ],
         ),
         // Colis livré : le destinataire note le voyageur (FLUTTER-CA), puis
@@ -747,7 +710,7 @@ class _ReceptionSteps extends StatelessWidget {
   /// Étapes faites (0 à 4).
   final int done;
 
-  /// Teinte du dégradé, reprise par la coche des étapes faites.
+  /// Teinte du héros, reprise par la coche des étapes faites.
   final Color accent;
 
   @override

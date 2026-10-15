@@ -83,8 +83,8 @@ void main() {
         ThreadStatusVariant.awaitingPayment.shadowColor,
       );
       expect(
-        ThreadStatusVariant.awaitingDeposit.gradient,
-        ThreadStatusVariant.awaitingPayment.gradient,
+        ThreadStatusVariant.awaitingDeposit.background,
+        ThreadStatusVariant.awaitingPayment.background,
       );
     });
 

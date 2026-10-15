@@ -53,14 +53,10 @@ class ChatPhotoPreviewScreen extends StatelessWidget {
               left: 0,
               right: 0,
               bottom: 0,
-              child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black87],
-                  ),
-                ),
+              // Aplat sombre uni sous les boutons : « Annuler » reste lisible
+              // (≥ 4.5:1) même sur une photo claire.
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: 0.6),
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
                     DonySpacing.lg,

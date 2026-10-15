@@ -527,14 +527,9 @@ class _HeroHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [DonyColors.blue900, DonyColors.blue700, DonyColors.blue500],
-          stops: [0.0, 0.55, 1.0],
-        ),
-      ),
+      // Bleu foncé uni, même teinte que la carte Solde du profil : le blanc
+      // des libellés y reste lisible dans les deux thèmes.
+      color: DonyColors.blue700,
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
