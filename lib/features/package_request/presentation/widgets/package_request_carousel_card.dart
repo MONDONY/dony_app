@@ -160,23 +160,14 @@ class _PhotoHero extends StatelessWidget {
               cs: cs,
             ),
 
-          // Gradient en bas → corridor + prix
+          // Bandeau uni en bas → corridor + prix, lisible sur toute photo
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(10, 24, 10, 8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.72),
-                  ],
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              color: Colors.black.withValues(alpha: 0.72),
               child: Row(
                 children: [
                   Expanded(

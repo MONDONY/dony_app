@@ -234,11 +234,9 @@ class _ProtectedNumberBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF134F2D), Color(0xFF1A6B3C)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        // Vert foncé fixe : le blanc à 85 % y reste au-dessus de 4.5:1 dans
+        // les deux thèmes, ce que le vert clair du thème sombre ne permet pas.
+        color: DonyColors.success700,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(

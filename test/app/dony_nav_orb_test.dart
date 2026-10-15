@@ -34,6 +34,19 @@ void main() {
       expect(box.height, 58);
     });
 
+    testWidgets('disque uni cs.primary, sans dégradé', (tester) async {
+      await tester.pumpWidget(host(DonyNavOrb(active: false, onTap: () {})));
+
+      final orb = tester.widget<AnimatedContainer>(
+        find.byType(AnimatedContainer),
+      );
+      final deco = orb.decoration! as BoxDecoration;
+      expect(deco.gradient, isNull);
+      expect(deco.color, DonyColors.primary);
+      final icon = tester.widget<DonyIcon>(find.byType(DonyIcon));
+      expect(icon.color, scheme.onPrimary);
+    });
+
     testWidgets('expose Semantics bouton + Suivi, sélectionné si actif', (
       tester,
     ) async {

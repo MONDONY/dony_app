@@ -149,38 +149,13 @@ class _LoginBackground extends StatelessWidget {
           semanticLabel: context.l10n.authMethodIllustrationLabel,
           opacity: AlwaysStoppedAnimation(isLight ? 0.32 : 1),
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: isLight
-                ? Theme.of(
-                    context,
-                  ).scaffoldBackgroundColor.withValues(alpha: 0.30)
-                : null,
-          ),
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isLight
-                  ? [
-                      cs.surface.withValues(alpha: 0.90),
-                      cs.primaryContainer.withValues(alpha: 0.62),
-                      cs.surface.withValues(alpha: 0.86),
-                      Theme.of(
-                        context,
-                      ).scaffoldBackgroundColor.withValues(alpha: 0.98),
-                    ]
-                  : [
-                      DonyColors.ink900.withValues(alpha: 0.36),
-                      DonyColors.ink900.withValues(alpha: 0.10),
-                      DonyColors.ink900.withValues(alpha: 0.62),
-                      DonyColors.ink900.withValues(alpha: 0.94),
-                    ],
-              stops: const [0, 0.32, 0.58, 1],
-            ),
-          ),
+        // Voile uni : lisibilité du contenu posé sur l'illustration.
+        ColoredBox(
+          color: isLight
+              ? Theme.of(
+                  context,
+                ).scaffoldBackgroundColor.withValues(alpha: 0.86)
+              : DonyColors.ink900.withValues(alpha: 0.72),
         ),
       ],
     );

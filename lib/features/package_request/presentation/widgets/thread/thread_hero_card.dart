@@ -39,39 +39,18 @@ enum ThreadStatusVariant {
     terminal => const Color(0xFF374151),
   };
 
-  LinearGradient get gradient => switch (this) {
-    open => const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [Color(0xFF0A2540), Color(0xFF1A3A6B)],
-    ),
-    awaitingTrip => const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [Color(0xFF78350F), Color(0xFFB5781E)],
-    ),
-    awaitingPayment || awaitingDeposit => const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [Color(0xFF4C1D95), Color(0xFF5B21B6)],
-    ),
+  /// Fond uni de la carte héros. Couleur unie, pas de dégradé (demande du
+  /// propriétaire) : on garde la teinte sombre de l'ancien dégradé, celle qui
+  /// porte le texte blanc au-dessus de 4.5:1.
+  Color get background => switch (this) {
+    open => DonyColors.ink800,
+    awaitingTrip => const Color(0xFF78350F),
+    awaitingPayment || awaitingDeposit => const Color(0xFF4C1D95),
     // Accord en espèces conclu mais rien n'est scellé : distinct du violet
     // « paiement carte » pour ne pas laisser croire que l'affaire est faite.
-    awaitingCommission => const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [Color(0xFF7C2D12), Color(0xFFC2410C)],
-    ),
-    accepted => const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [Color(0xFF14532D), Color(0xFF15803D)],
-    ),
-    terminal => const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [Color(0xFF1F2937), Color(0xFF6B7280)],
-    ),
+    awaitingCommission => const Color(0xFF7C2D12),
+    accepted => const Color(0xFF14532D),
+    terminal => const Color(0xFF1F2937),
   };
 
   String get iconAsset => switch (this) {
@@ -117,7 +96,7 @@ extension ThreadStatusVariantL10n on ThreadStatusVariant {
   };
 }
 
-/// Hero card du thread de négociation — gradient status, prix, badge, progress.
+/// Hero card du thread de négociation — aplat de statut, prix, badge, progress.
 ///
 /// Adaptateur du fil « demande de colis » sur [DonyNegoHeroCard], partagé avec
 /// le fil de prix d'un trajet.
@@ -143,7 +122,7 @@ class ThreadHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     return DonyNegoHeroCard(
-      gradient: statusVariant.gradient,
+      background: statusVariant.background,
       shadowColor: statusVariant.shadowColor,
       iconAsset: statusVariant.iconAsset,
       caption: statusVariant.priceLabel(l),

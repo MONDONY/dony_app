@@ -1,4 +1,5 @@
 import 'package:dony/core/config/flights_flag.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
@@ -52,6 +53,20 @@ FlightAlert _alert(
   matchCount: count,
   matchAirlineCodes: codes,
 );
+
+/// Fond de la cloche : un aplat uni, jamais un dégradé.
+void _expectSolidBell(
+  WidgetTester tester,
+  String key,
+  Color Function(ColorScheme) expected,
+) {
+  final finder = find.byKey(Key(key));
+  final box = tester.widget<Container>(finder);
+  final decoration = box.decoration! as BoxDecoration;
+  final cs = Theme.of(tester.element(finder)).colorScheme;
+  expect(decoration.gradient, isNull);
+  expect(decoration.color, expected(cs));
+}
 
 /// Texte affiché, espaces insécables ramenées à des espaces simples (le
 /// format des prix en met une avant « € »).
@@ -169,6 +184,11 @@ void main() {
 
     expect(find.byKey(const Key('hub-flight-alerts-hit')), findsOneWidget);
     expect(find.byKey(const Key('hub-flight-alerts-icon-hit')), findsOneWidget);
+    _expectSolidBell(
+      tester,
+      'hub-flight-alerts-icon-hit',
+      (cs) => cs.successLight,
+    );
     expect(find.text('Alertes prix vols'), findsOneWidget);
     expect(find.byKey(const Key('airline-logo-stack')), findsOneWidget);
     expect(find.text('Paris → Abidjan'), findsOneWidget);
@@ -247,6 +267,11 @@ void main() {
 
     expect(find.byKey(const Key('hub-flight-alerts-no_hit')), findsOneWidget);
     expect(find.byKey(const Key('hub-flight-alerts-icon')), findsOneWidget);
+    _expectSolidBell(
+      tester,
+      'hub-flight-alerts-icon',
+      (cs) => cs.primaryContainer,
+    );
     expect(find.text('2 alertes actives'), findsOneWidget);
     expect(find.byKey(const Key('hub-flight-alerts-ticket-neutral')), findsOne);
     expect(_text('412 €'), findsOneWidget);

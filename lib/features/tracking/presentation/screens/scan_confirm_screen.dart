@@ -586,7 +586,9 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
               },
               style: FilledButton.styleFrom(
                 backgroundColor: cs.warning,
-                foregroundColor: cs.onPrimary,
+                // Encre sombre fixe : l'ambre reste clair dans les deux
+                // thèmes (7,15:1 en clair, 8,63:1 en sombre).
+                foregroundColor: DonyColors.ink800,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(DonyRadius.lg),
                 ),

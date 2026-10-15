@@ -314,13 +314,7 @@ class _Photo extends StatelessWidget {
   Widget build(BuildContext context) {
     final photo = this.photo;
     const placeholder = DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [DonyColors.sand200, DonyColors.sand400],
-        ),
-      ),
+      decoration: BoxDecoration(color: DonyColors.sand200),
       child: Center(
         child: Icon(
           Icons.inventory_2_rounded,

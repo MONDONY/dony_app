@@ -254,6 +254,16 @@ void main() {
       expect(theirs, AppTheme.light().textSelectionTheme);
     });
 
+    // En sombre, `onPrimary` est noir : un voile noir sous le texte noir
+    // tombait à 3,35:1. Le voile devient clair.
+    test('ma bulle en thème sombre : voile clair sous le texte noir', () {
+      final cs = AppTheme.dark().colorScheme;
+      final theme = ownBubbleSelectionTheme(cs);
+      expect(theme.selectionColor, Colors.white.withValues(alpha: 0.4));
+      expect(theme.selectionHandleColor, cs.onSurface);
+      expect(theme.cursorColor, cs.onPrimary);
+    });
+
     testWidgets(
       'lecteur d\'écran : action « Copier le message » sur la bulle',
       (tester) async {

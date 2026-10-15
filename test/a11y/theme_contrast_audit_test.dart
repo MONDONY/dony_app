@@ -75,8 +75,12 @@ void main() {
       bg: (t) => t.colorScheme.surfaceContainerLow,
       min: Seuil.texte,
     ),
-    // `onPrimary` sur `primary` est traité à part, plus bas : la paire échoue
-    // encore en thème sombre et la dette est documentée plutôt que masquée.
+    (
+      nom: 'libellé sur primary',
+      fg: (t) => t.colorScheme.onPrimary,
+      bg: (t) => t.colorScheme.primary,
+      min: Seuil.texte,
+    ),
     (
       nom: 'libellé sur error',
       fg: (t) => t.colorScheme.onError,
@@ -245,32 +249,32 @@ void main() {
       expectContrast(cs.onPrimary, cs.primary, Seuil.texte, 'onPrimary clair');
     });
 
-    // Dette assumée et visible, plutôt qu'une exemption silencieuse : ce test
-    // apparaît « ignoré » à chaque exécution, avec sa raison.
-    //
-    // En thème sombre, `onPrimary` (blanc) sur `primary` ne fait que 3.28:1.
-    // Le noir y ferait 6.39:1, mais le rôle est utilisé 74 fois dans 32
-    // fichiers, dont plusieurs le posent sur des dégradés de marque allant du
-    // bleu très sombre au bleu clair, où le noir serait illisible. Le basculer
-    // sans reprendre ces dégradés déplacerait le défaut au lieu de le
-    // corriger.
-    //
-    // Les boutons pleins, eux, sont déjà réglés : `DonyButton` et
-    // `filledButtonTheme` assombrissent leur libellé en thème sombre sans
-    // passer par ce rôle.
-    testWidgets(
-      'thème sombre [DETTE CONNUE : 3.28:1, voir le commentaire ci-dessus]',
-      (tester) async {
-        final cs = AppTheme.dark().colorScheme;
-        expectContrast(
-          cs.onPrimary,
-          cs.primary,
-          Seuil.texte,
-          'onPrimary sombre',
-        );
-      },
-      skip: true,
-    );
+    // Ancienne dette soldée : le blanc ne faisait que 3.28:1 sur le bleu
+    // sombre. Plus de dégradé de marque (couleurs unies, demande du
+    // propriétaire), `onPrimary` passe au noir en thème sombre : 6.39:1.
+    testWidgets('thème sombre', (tester) async {
+      final cs = AppTheme.dark().colorScheme;
+      expectContrast(cs.onPrimary, cs.primary, Seuil.texte, 'onPrimary sombre');
+    });
+
+    // Contrepartie : primary reste assez clair pour se lire en lien ou en
+    // icône sur les fonds sombres.
+    testWidgets('primary lisible sur les fonds sombres', (tester) async {
+      final theme = AppTheme.dark();
+      final cs = theme.colorScheme;
+      expectContrast(
+        cs.primary,
+        theme.scaffoldBackgroundColor,
+        Seuil.texte,
+        'primary sur fond sombre',
+      );
+      expectContrast(
+        cs.primary,
+        cs.surface,
+        Seuil.texte,
+        'primary sur surface',
+      );
+    });
   });
 
   group('variante haut contraste', () {

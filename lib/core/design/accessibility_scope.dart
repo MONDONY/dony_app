@@ -26,9 +26,10 @@ class AccessibilityScope extends InheritedWidget {
   /// Le haut contraste est actif, système ou choix explicite déjà résolu.
   ///
   /// Le thème porte déjà la variante contrastée, donc presque aucun widget n'a
-  /// à lire ce drapeau. L'exception est [DonyButton], qui peint un dégradé au
-  /// lieu de lire `cs.primary` : sans ce drapeau il resterait sur ses couleurs
-  /// normales alors que tout le reste de l'écran a basculé.
+  /// à lire ce drapeau. L'exception est [DonyButton], dont les variantes
+  /// succès, danger et accent choisissent leur aplat dans les jetons : sans ce
+  /// drapeau elles resteraient sur leurs couleurs normales alors que tout le
+  /// reste de l'écran a basculé.
   final bool highContrast;
 
   /// Souligne les liens textuels, pour ne pas signaler un lien par la seule

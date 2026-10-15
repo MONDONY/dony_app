@@ -30,9 +30,7 @@ class LinkedTripCard extends StatelessWidget {
           vertical: DonySpacing.md,
         ),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1E293B), Color(0xFF0F2544)],
-          ),
+          color: DonyColors.ink800,
           borderRadius: BorderRadius.circular(DonyRadius.card),
           border: Border.all(color: DonyColors.starGold.withValues(alpha: 0.6)),
         ),

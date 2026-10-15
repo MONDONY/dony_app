@@ -24,29 +24,11 @@ class AuthFlowBackground extends StatelessWidget {
           opacity: AlwaysStoppedAnimation(isLight ? 0.24 : 0.48),
           semanticLabel: context.l10n.authFlowIllustrationLabel,
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isLight
-                  ? [
-                      cs.surface.withValues(alpha: 0.92),
-                      cs.primaryContainer.withValues(alpha: 0.70),
-                      Theme.of(
-                        context,
-                      ).scaffoldBackgroundColor.withValues(alpha: 0.96),
-                    ]
-                  : [
-                      DonyColors.ink900.withValues(alpha: 0.76),
-                      DonyColors.ink900.withValues(alpha: 0.64),
-                      Theme.of(
-                        context,
-                      ).scaffoldBackgroundColor.withValues(alpha: 0.98),
-                    ],
-              stops: const [0, 0.40, 1],
-            ),
-          ),
+        // Voile uni : lisibilité du formulaire posé sur l'illustration.
+        ColoredBox(
+          color: isLight
+              ? Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.9)
+              : DonyColors.ink900.withValues(alpha: 0.8),
         ),
       ],
     );

@@ -38,7 +38,7 @@ class DonyButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final DonyButtonVariant variant;
 
-  /// Rend le bouton d'un seul aplat, sans dégradé ni ombre colorée.
+  /// Rend le bouton sans ombre colorée (l'aplat, lui, est toujours uni).
   ///
   /// À réserver aux barres d'action fixes, où le halo du bouton plein déborde
   /// sur le contenu qui défile derrière et attire l'œil plus que le contenu
@@ -142,23 +142,17 @@ class _DonyButtonState extends State<DonyButton> {
         : const Size(120, 52);
     const padding = EdgeInsets.symmetric(horizontal: DonySpacing.base);
 
-    // Le haut contraste remplace le dégradé par un aplat mesuré. Sans cette
-    // bascule, le bouton garderait ses couleurs normales alors que tout le
-    // reste de l'écran a basculé, et son libellé descendrait à 2.6:1.
+    // Couleurs unies, jamais de dégradé (demande du propriétaire). Le haut
+    // contraste bascule sur des aplats mesurés à 7:1 : sans cette bascule, le
+    // bouton garderait ses couleurs normales alors que tout le reste de
+    // l'écran a basculé.
     final hc = context.a11y.highContrast;
     final onBrand = _onBrand(hc: hc, isLight: isLight);
 
     final button = switch (widget.variant) {
+      // cs.primary porte déjà sa variante haut contraste.
       DonyButtonVariant.primary => _GlowButton(
-        colors: (hc || widget.flat)
-            ? _flat(cs.primary)
-            : isLight
-            ? [const Color(0xFF1F6BF5), DonyColors.blue500, DonyColors.blue700]
-            : [
-                const Color(0xFF6699FF),
-                DonyColors.blueDark500,
-                DonyColors.blueDark700,
-              ],
+        color: cs.primary,
         shadows: widget.flat
             ? const []
             : (isLight ? DonyShadow.brand : DonyShadow.brandDark),
@@ -169,11 +163,11 @@ class _DonyButtonState extends State<DonyButton> {
         child: content,
       ),
       DonyButtonVariant.success => _GlowButton(
-        colors: hc
-            ? _flat(isLight ? DonyColors.successHc : DonyColors.successHcDark)
+        color: hc
+            ? (isLight ? DonyColors.successHc : DonyColors.successHcDark)
             : isLight
-            ? [const Color(0xFF0F8058), DonyColors.success700]
-            : [DonyColors.successDark500, const Color(0xFF22B882)],
+            ? DonyColors.success700
+            : DonyColors.successDark500,
         shadows: isLight ? DonyShadow.success : DonyShadow.successDark,
         foreground: onBrand,
         pressed: _pressed,
@@ -182,11 +176,11 @@ class _DonyButtonState extends State<DonyButton> {
         child: content,
       ),
       DonyButtonVariant.destructive => _GlowButton(
-        colors: hc
-            ? _flat(isLight ? DonyColors.dangerHc : DonyColors.dangerHcDark)
+        color: hc
+            ? (isLight ? DonyColors.dangerHc : DonyColors.dangerHcDark)
             : isLight
-            ? [DonyColors.danger500, DonyColors.danger700]
-            : [DonyColors.dangerDark500, const Color(0xFFD9453D)],
+            ? DonyColors.danger500
+            : DonyColors.dangerDark500,
         shadows: isLight ? DonyShadow.danger : DonyShadow.dangerDark,
         foreground: onBrand,
         pressed: _pressed,
@@ -195,11 +189,11 @@ class _DonyButtonState extends State<DonyButton> {
         child: content,
       ),
       DonyButtonVariant.accent => _GlowButton(
-        colors: hc
-            ? _flat(isLight ? DonyColors.accentHc : DonyColors.accentHcDark)
+        color: hc
+            ? (isLight ? DonyColors.accentHc : DonyColors.accentHcDark)
             : isLight
-            ? [DonyColors.terra600, DonyColors.terra700]
-            : [DonyColors.terraDark500, const Color(0xFFD9743F)],
+            ? DonyColors.terra600
+            : DonyColors.terraDark500,
         shadows: DonyShadow.accent, // pas de variante sombre du glow accent
         foreground: onBrand,
         pressed: _pressed,
@@ -267,10 +261,6 @@ class _DonyButtonState extends State<DonyButton> {
   }
 }
 
-/// Aplat uniforme : `_GlowButton` attend toujours un dégradé, deux fois la même
-/// couleur donne une surface unie sans dupliquer sa logique de rendu.
-List<Color> _flat(Color c) => [c, c];
-
 /// Couleur du libellé posé sur un aplat de marque.
 ///
 /// En haut contraste sombre les aplats sont clairs, donc le blanc n'y tient
@@ -285,11 +275,11 @@ List<Color> _flat(Color c) => [c, c];
 Color _onBrand({required bool hc, required bool isLight}) =>
     isLight ? DonyColors.textOnBrand : DonyColors.onBrandHcDark;
 
-/// Bouton avec dégradé + ombre colorée (glow).
-/// Utilisé pour primary, success, destructive.
+/// Bouton plein : aplat de couleur unie + ombre colorée (glow).
+/// Utilisé pour primary, success, destructive, accent.
 class _GlowButton extends StatelessWidget {
   const _GlowButton({
-    required this.colors,
+    required this.color,
     required this.shadows,
     required this.foreground,
     required this.pressed,
@@ -298,7 +288,7 @@ class _GlowButton extends StatelessWidget {
     required this.child,
   });
 
-  final List<Color> colors;
+  final Color color;
   final List<BoxShadow> shadows;
   final Color foreground;
   final bool pressed;
@@ -311,22 +301,18 @@ class _GlowButton extends StatelessWidget {
     final radius = BorderRadius.circular(DonyRadius.lg);
     final isDisabled = onPressed == null;
 
-    final gradientColors = isDisabled
-        ? colors.map((c) => c.withValues(alpha: 0.5)).toList()
+    final fill = isDisabled
+        ? color.withValues(alpha: 0.5)
         : pressed
-        ? colors.map((c) => Color.lerp(c, Colors.black, 0.08)!).toList()
-        : colors;
+        ? Color.lerp(color, Colors.black, 0.08)!
+        : color;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 120),
       height: 52,
       width: fullWidth ? double.infinity : null,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: fill,
         borderRadius: radius,
         boxShadow: (isDisabled || pressed) ? [] : shadows,
       ),

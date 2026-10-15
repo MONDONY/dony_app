@@ -283,9 +283,11 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
                         ? SizedBox(
                             width: 18,
                             height: 18,
+                            // Bouton désactivé pendant le chargement :
+                            // fond neutre, pas `primary`.
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: cs.onPrimary,
+                              color: cs.onSurfaceVariant,
                             ),
                           )
                         : Text(l.suiviNumberSubmit),

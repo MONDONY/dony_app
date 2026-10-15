@@ -301,13 +301,7 @@ class _ProfileHeader extends StatelessWidget {
         DonySpacing.lg,
         DonySpacing.lg,
       ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [cs.successLight, Theme.of(context).scaffoldBackgroundColor],
-        ),
-      ),
+      color: cs.successLight,
       child: Row(
         children: [
           // Avatar avec bordure blanche + ombre verte

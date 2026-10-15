@@ -334,7 +334,7 @@ class _ThreadBody extends StatelessWidget {
   }
 }
 
-/// Variante visuelle (dégradé, icône, pastille) du fil de trajet, reprise du
+/// Variante visuelle (fond, icône, pastille) du fil de trajet, reprise du
 /// fil « demande de colis » pour que les deux discussions de prix se lisent de
 /// la même façon.
 @visibleForTesting
@@ -373,7 +373,7 @@ class _TripNegoHero extends StatelessWidget {
     return DonyNegoHeroCard(
       key: const Key('nego-hero'),
       margin: EdgeInsets.zero,
-      gradient: variant.gradient,
+      background: variant.background,
       shadowColor: variant.shadowColor,
       iconAsset: variant.iconAsset,
       caption: isTraveler

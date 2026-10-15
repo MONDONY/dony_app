@@ -118,11 +118,6 @@ abstract final class DonyColors {
   // Notation (ratings)
   static const starGold = Color(0xFFF59E0B);
 
-  // Pro stats — dégradé dark mode carte statistiques voyageur
-  static const proBg1 = Color(0xFF1A2744); // bleu nuit profond
-  static const proBg2 = Color(0xFF0D1B35); // quasi-noir bleu
-  static const proBg3 = Color(0xFF1A3A6B); // bleu saphir
-
   // KYC badges — icônes de statut sur profil utilisateur
   static const kycBadgeBlue = Color(0xFF6FA8FF);
   static const kycBadgeGold = Color(0xFFF0B829);
@@ -148,12 +143,6 @@ abstract final class DonyColors {
   static const threadPillNeutralFg = Color(0xFF5F6673); // 5.44:1 sur #F3F4F6
   static const threadPillOrangeFg = Color(0xFF9A3412); // 6.37:1 sur #FFEDD5
 
-  // Dégradé hero (shipment_list) — fond bleu-sable/navy selon brightness
-  static const heroGradientDarkA = Color(0xFF080D18);
-  static const heroGradientDarkB = Color(0xFF0B0918);
-  static const heroGradientDarkC = Color(0xFF0E0C09);
-  static const heroGradientLightB = Color(0xFFF2F0FF);
-
   // ═══════════════════════════════════════════════════════════════
   // RÔLES SÉMANTIQUES — Raccourcis à préférer dans les widgets
   // ═══════════════════════════════════════════════════════════════
@@ -165,7 +154,7 @@ abstract final class DonyColors {
   // terra600 et non terra500 : le rôle accent porte du texte et reçoit du
   // texte blanc, deux usages qui exigent 4.5:1. terra500 n'en donnait que
   // 3.46:1, terra600 en donne 4.79:1. terra500 reste disponible comme
-  // primitive de palette, pour les dégradés décoratifs.
+  // primitive de palette, pour les aplats décoratifs sans texte.
   static const accent = terra600;
   static const accentSoft = terra50;
 
@@ -297,9 +286,9 @@ abstract final class DonyColors {
   static const borderDefaultHc = Color(0xFF5C5850); // bordure nettement visible
   static const primaryHc = Color(0xFF00368F); // bleu assombri, 9.1:1 sur blanc
 
-  // Fonds pleins des boutons en haut contraste. `DonyButton` peint un dégradé
-  // dont la partie la plus claire descend à 2.6:1 avec un libellé blanc ; en
-  // haut contraste il bascule sur ces aplats, dont le ratio est mesuré.
+  // Fonds pleins des boutons en haut contraste. `DonyButton` peint toujours
+  // un aplat (jamais de dégradé) ; en haut contraste il bascule sur ces
+  // aplats-ci, dont le ratio est mesuré à 7:1.
   static const successHc = Color(0xFF0A6446); // blanc dessus : 7.18:1
   static const dangerHc = Color(0xFFA81F18); // blanc dessus : 7.31:1
   static const accentHc = Color(0xFF7A3616); // blanc dessus : 8.87:1

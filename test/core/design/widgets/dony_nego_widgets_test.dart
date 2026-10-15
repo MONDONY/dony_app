@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-const _gradient = LinearGradient(
-  colors: [DonyColors.ink800, DonyColors.blue700],
-);
-
 Widget _wrap(Widget child, {ThemeData? theme}) => MaterialApp(
   theme: theme ?? AppTheme.light(),
   home: Scaffold(body: Center(child: child)),
@@ -19,7 +15,7 @@ DonyNegoHeroCard _hero({
   String? turnLabel,
   bool myTurn = false,
 }) => DonyNegoHeroCard(
-  gradient: _gradient,
+  background: DonyColors.ink800,
   shadowColor: DonyColors.blue500,
   iconAsset: 'handshake',
   caption: 'PRIX ACTUEL',
@@ -54,6 +50,17 @@ void main() {
       expect(find.text('42,00 €'), findsOneWidget);
       expect(find.text('EN COURS'), findsOneWidget);
       expect(find.text('Tour 2 sur 5'), findsOneWidget);
+    });
+
+    testWidgets('fond en couleur unie, sans dégradé', (tester) async {
+      await tester.pumpWidget(_wrap(_hero()));
+
+      final card = tester
+          .widgetList<Container>(find.byType(Container))
+          .map((c) => c.decoration)
+          .whereType<BoxDecoration>()
+          .firstWhere((d) => d.color == DonyColors.ink800);
+      expect(card.gradient, isNull);
     });
 
     testWidgets('la jauge compte autant de segments que de tours possibles', (

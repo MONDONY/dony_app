@@ -17,7 +17,6 @@ export 'package:dony/core/design/utils/dony_layout.dart';
 export 'package:dony/core/design/widgets/dony_app_bar.dart';
 export 'package:dony/core/design/widgets/dony_archived_row.dart';
 // Glassmorphism
-export 'package:dony/core/design/widgets/dony_aurora_background.dart';
 export 'package:dony/core/design/widgets/dony_avatar.dart';
 export 'package:dony/core/design/widgets/dony_back_circle.dart';
 export 'package:dony/core/design/widgets/dony_badge.dart';

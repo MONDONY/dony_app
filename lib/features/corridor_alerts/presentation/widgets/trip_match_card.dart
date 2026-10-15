@@ -65,16 +65,7 @@ class TripMatchCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Bande latérale bleue — identité « trajet »
-                Container(
-                  width: 6,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [accent, accent.withValues(alpha: 0.55)],
-                    ),
-                  ),
-                ),
+                Container(width: 6, color: accent),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(DonySpacing.md),

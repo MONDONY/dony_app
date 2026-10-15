@@ -15,11 +15,8 @@ class DonyHeroAvatar extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: size, maxHeight: size),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [cs.primaryContainer, const Color(0xFFDCEFE3)],
-        ),
+        // Couleur unie, pas de dégradé (demande du propriétaire).
+        color: cs.primaryContainer,
         boxShadow: [
           BoxShadow(
             color: cs.primary.withValues(alpha: 0.15),

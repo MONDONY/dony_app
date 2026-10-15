@@ -8,10 +8,10 @@ import 'package:flutter/material.dart';
 // Yadony Glassmorphism — 4 patterns canoniques
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-// Pattern A · DonyGlassOnBrand        — glass clair sur fond brand (gradient)
+// Pattern A · DonyGlassOnBrand        — glass clair sur fond brand (couleur unie)
 // Pattern B · DonyGlassDarkSheet      — glass sombre immersif (sheet hero)
-// Pattern C · DonyGlassCard           — glass clair flottant sur aurora
-// Pattern D · DonyGlassDarkFloating   — glass sombre flottant sur aurora
+// Pattern C · DonyGlassCard           — glass clair flottant sur fond coloré
+// Pattern D · DonyGlassDarkFloating   — glass sombre flottant sur fond coloré
 //
 // + DonyGlassChip, DonyGlassButton (atomes)
 //
@@ -23,7 +23,7 @@ import 'package:flutter/material.dart';
 
 // ─── Pattern A · DonyGlassOnBrand ──────────────────────────────────────────
 //
-// Existant : `profile_header.dart:294` (stats sur header gradient brand).
+// Existant : `profile_header.dart:294` (stats sur header brand).
 // Background: white α=0.15 · Blur: 5×5 · Border: white α=0.25 · Text: white.
 class DonyGlassOnBrand extends StatelessWidget {
   const DonyGlassOnBrand({
@@ -66,34 +66,32 @@ class DonyGlassOnBrand extends StatelessWidget {
 // ─── Pattern B · DonyGlassDarkSheet ────────────────────────────────────────
 //
 // Bottom sheet immersif (glass sombre plein écran ou quasi).
-// Background: gradient ink-900→blue-900 α=0.80-0.90 · Blur: 12×12 · Text: white.
+// Background: aplat ink-900 α=0.80-0.90 · Blur: 12×12 · Text: white.
+// Couleur unie, pas de dégradé (demande du propriétaire).
 class DonyGlassDarkSheet extends StatelessWidget {
   const DonyGlassDarkSheet({
     super.key,
     required this.child,
     this.padding,
     this.borderRadius,
-    this.gradientStart,
-    this.gradientEnd,
+    this.background,
     this.boxShadow,
   });
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final BorderRadius? borderRadius;
-  final Color? gradientStart;
-  final Color? gradientEnd;
+
+  /// Aplat du fond (défaut : bleu nuit de la marque).
+  final Color? background;
   final List<BoxShadow>? boxShadow;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final start =
-        gradientStart ??
+    final base =
+        background ??
         (isDark ? const Color(0xFF1A2744) : const Color(0xFF0A2540));
-    final end =
-        gradientEnd ??
-        (isDark ? const Color(0xFF0D1B35) : const Color(0xFF1A3A6B));
     final bgAlpha = isDark ? 0.80 : 0.90;
     final borderAlpha = isDark ? 0.10 : 0.18;
     final radius = borderRadius ?? BorderRadius.circular(DonyRadius.card);
@@ -105,14 +103,7 @@ class DonyGlassDarkSheet extends StatelessWidget {
         child: Container(
           padding: padding ?? const EdgeInsets.all(DonySpacing.xl),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                start.withValues(alpha: bgAlpha),
-                end.withValues(alpha: bgAlpha - 0.06),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: base.withValues(alpha: bgAlpha),
             borderRadius: radius,
             border: Border.all(
               color: Colors.white.withValues(alpha: borderAlpha),
@@ -121,7 +112,7 @@ class DonyGlassDarkSheet extends StatelessWidget {
                 boxShadow ??
                 [
                   BoxShadow(
-                    color: start.withValues(alpha: isDark ? 0.4 : 0.25),
+                    color: base.withValues(alpha: isDark ? 0.4 : 0.25),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -139,8 +130,8 @@ class DonyGlassDarkSheet extends StatelessWidget {
 
 // ─── Pattern C · DonyGlassCard ─────────────────────────────────────────────
 //
-// Glass clair flottant sur aurora multicolor.
-// Use cases : marketplace cards, listing cards, AppBar sur aurora.
+// Glass clair flottant sur fond coloré.
+// Use cases : marketplace cards, listing cards, AppBar sur fond coloré.
 // Background: white α=0.62 MIN · Blur: 14×14 · Border: white α=0.55 · Text: ink-900.
 class DonyGlassCard extends StatelessWidget {
   const DonyGlassCard({
@@ -152,7 +143,7 @@ class DonyGlassCard extends StatelessWidget {
   }) : assert(
          opacity >= 0.62,
          'DonyGlassCard.opacity must be >= 0.62 (AA contrast contract). ' // i18n-ignore
-         'Below 0.62, ink-900 text on saturated aurora becomes unreadable.', // i18n-ignore
+         'Below 0.62, ink-900 text on a saturated background becomes unreadable.', // i18n-ignore
        );
 
   final Widget child;
@@ -190,7 +181,7 @@ class DonyGlassCard extends StatelessWidget {
 
 // ─── Pattern D · DonyGlassDarkFloating ─────────────────────────────────────
 //
-// Glass sombre flottant sur aurora — hero cards (prix actuel négo), FAB.
+// Glass sombre flottant sur fond coloré — hero cards (prix actuel négo), FAB.
 // Background: ink-900 α=0.62 MIN · Blur: 14×14 · Border: white α=0.18 · Text: white.
 class DonyGlassDarkFloating extends StatelessWidget {
   const DonyGlassDarkFloating({
@@ -211,7 +202,7 @@ class DonyGlassDarkFloating extends StatelessWidget {
   final double opacity;
 
   /// Override the default ink-900 base — useful for status-themed hero
-  /// (e.g. amber gradient for AWAITING_TRIP, violet for AWAITING_PAYMENT).
+  /// (e.g. amber for AWAITING_TRIP, violet for AWAITING_PAYMENT).
   final Color? tint;
 
   @override

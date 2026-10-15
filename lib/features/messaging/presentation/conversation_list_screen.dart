@@ -784,7 +784,9 @@ class _SlidableTile extends StatelessWidget {
               );
             },
             backgroundColor: cs.warning,
-            foregroundColor: cs.onPrimary,
+            // Encre sombre fixe : l'ambre reste clair dans les deux thèmes
+            // (7,15:1 en clair, 8,63:1 en sombre ; le blanc n'y fait que 2,17:1).
+            foregroundColor: DonyColors.ink800,
             icon: Icons.archive_outlined,
             label: l.conversationArchiveAction,
           ),

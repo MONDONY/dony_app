@@ -222,7 +222,7 @@ void main() {
 
     final h = hero(tester);
     expect(h.badgeLabel, 'EN COURS');
-    expect(h.gradient, ThreadStatusVariant.open.gradient);
+    expect(h.background, ThreadStatusVariant.open.background);
     expect(h.myTurn, isTrue);
     expect(find.byKey(const Key('nego-hero-my-turn')), findsOneWidget);
     expect(find.text('À vous de jouer'), findsOneWidget);
@@ -283,7 +283,7 @@ void main() {
 
     final h = hero(tester);
     expect(h.badgeLabel, 'ACCEPTÉE');
-    expect(h.gradient, ThreadStatusVariant.accepted.gradient);
+    expect(h.background, ThreadStatusVariant.accepted.background);
     expect(h.turnLabel, isNull);
     expect(find.byKey(const Key('nego-hero-my-turn')), findsNothing);
     expect(find.byKey(const Key('nego-hero-their-turn')), findsNothing);
@@ -310,7 +310,7 @@ void main() {
 
     final h = hero(tester);
     expect(h.badgeLabel, 'TERMINÉ');
-    expect(h.gradient, ThreadStatusVariant.terminal.gradient);
+    expect(h.background, ThreadStatusVariant.terminal.background);
     expect(h.turnLabel, isNull);
     expect(find.text('REJETÉE'), findsOneWidget);
     expect(bubble(tester, 'm3').mine, isFalse);
