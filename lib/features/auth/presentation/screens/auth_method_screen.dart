@@ -117,8 +117,6 @@ class AuthMethodScreen extends StatelessWidget {
                             .animate()
                             .fadeIn(delay: 120.ms)
                             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                        const SizedBox(height: DonySpacing.base),
-                        const _CguFooter(),
                       ],
                     ),
                   ),
@@ -309,11 +307,37 @@ class _AuthActionsPanel extends StatefulWidget {
 class _AuthActionsPanelState extends State<_AuthActionsPanel> {
   final _pending = ValueNotifier<_PendingAuth?>(null);
 
+  /// Acceptation explicite des CGU avant toute création de compte ou
+  /// connexion (guideline Apple 1.2 : contenu publié par les utilisateurs).
+  /// La simple mention « En continuant vous acceptez… » ne suffit pas. Le
+  /// mode invité reste libre : il ne permet de rien publier.
+  final _terms = ValueNotifier<_TermsState>(_TermsState.unchecked);
+
+  /// Un `TapGestureRecognizer` se libère à la main : construit dans `build()`,
+  /// il fuirait à chaque reconstruction de l'écran.
+  late final TapGestureRecognizer _termsTap = TapGestureRecognizer()
+    ..onTap = () => unawaited(context.push('/legal/terms'));
+  late final TapGestureRecognizer _privacyTap = TapGestureRecognizer()
+    ..onTap = () => unawaited(context.push('/legal/privacy'));
+
   @override
   void dispose() {
     _pending.dispose();
+    _terms.dispose();
+    _termsTap.dispose();
+    _privacyTap.dispose();
     super.dispose();
   }
+
+  /// Lance [action] si les conditions sont acceptées ; sinon signale la case
+  /// à cocher plutôt que de griser des boutons qui sembleraient en panne.
+  VoidCallback _withTerms(VoidCallback action) => () {
+    if (_terms.value == _TermsState.accepted) {
+      action();
+    } else {
+      _terms.value = _TermsState.missing;
+    }
+  };
 
   static bool _isBusy(AuthState state) =>
       state is AuthLoading || state is AuthOAuthNewUser;
@@ -350,16 +374,38 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
               ),
               boxShadow: DonyShadow.lg,
             ),
-            child: ValueListenableBuilder<_PendingAuth?>(
-              valueListenable: _pending,
-              builder: (context, pending, _) {
-                final authState = context.watch<AuthBloc>().state;
-                final active = pending != null && _isBusy(authState)
-                    ? pending
-                    : null;
-                final locked = active != null;
-                return _buildActions(context, active: active, locked: locked);
-              },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ValueListenableBuilder<_TermsState>(
+                  valueListenable: _terms,
+                  builder: (context, terms, _) => _TermsCheckbox(
+                    state: terms,
+                    termsTap: _termsTap,
+                    privacyTap: _privacyTap,
+                    onChanged: (accepted) => _terms.value = accepted
+                        ? _TermsState.accepted
+                        : _TermsState.unchecked,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.md),
+                ValueListenableBuilder<_PendingAuth?>(
+                  valueListenable: _pending,
+                  builder: (context, pending, _) {
+                    final authState = context.watch<AuthBloc>().state;
+                    final active = pending != null && _isBusy(authState)
+                        ? pending
+                        : null;
+                    final locked = active != null;
+                    return _buildActions(
+                      context,
+                      active: active,
+                      locked: locked,
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),
@@ -384,7 +430,9 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _PhoneCta(
-                  onTap: locked ? null : () => context.push('/auth/phone'),
+                  onTap: locked
+                      ? null
+                      : _withTerms(() => context.push('/auth/phone')),
                 ),
                 const SizedBox(height: DonySpacing.sm),
               ],
@@ -398,9 +446,11 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
             isLoading: active == _PendingAuth.apple,
             onTap: locked
                 ? null
-                : () => _start(
-                    _PendingAuth.apple,
-                    const AuthAppleSignInRequested(),
+                : _withTerms(
+                    () => _start(
+                      _PendingAuth.apple,
+                      const AuthAppleSignInRequested(),
+                    ),
                   ),
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -410,9 +460,11 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
             isLoading: active == _PendingAuth.google,
             onTap: locked
                 ? null
-                : () => _start(
-                    _PendingAuth.google,
-                    const AuthGoogleSignInRequested(),
+                : _withTerms(
+                    () => _start(
+                      _PendingAuth.google,
+                      const AuthGoogleSignInRequested(),
+                    ),
                   ),
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -420,7 +472,7 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
         _SocialCta(
           iconAsset: 'mail',
           label: context.l10n.authMethodContinueWithEmail,
-          onTap: locked ? null : () => context.push('/auth/email'),
+          onTap: locked ? null : _withTerms(() => context.push('/auth/email')),
         ),
         const SizedBox(height: DonySpacing.md),
         const _OrDivider(),
@@ -434,6 +486,103 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
                   const AuthGuestSessionRequested(),
                 ),
         ),
+      ],
+    );
+  }
+}
+
+enum _TermsState { unchecked, accepted, missing }
+
+/// Case « J'accepte les CGU et la politique de confidentialité », avec la
+/// clause de tolérance zéro exigée par Apple. Les deux documents restent
+/// ouvrables depuis le libellé, avant toute création de compte : les
+/// relecteurs Apple et Google les ouvrent depuis cet écran (route publique
+/// `/legal/…`).
+class _TermsCheckbox extends StatelessWidget {
+  const _TermsCheckbox({
+    required this.state,
+    required this.termsTap,
+    required this.privacyTap,
+    required this.onChanged,
+  });
+
+  final _TermsState state;
+  final TapGestureRecognizer termsTap;
+  final TapGestureRecognizer privacyTap;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+    final accepted = state == _TermsState.accepted;
+    final missing = state == _TermsState.missing;
+    final linkStyle = tt.bodySmall?.copyWith(
+      color: cs.primary,
+      decoration: TextDecoration.underline,
+      decorationColor: cs.primary,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: () => onChanged(!accepted),
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Checkbox(
+                  value: accepted,
+                  onChanged: (value) => onChanged(value ?? false),
+                  isError: missing,
+                  semanticLabel: l10n.authTermsCheckboxSemantics,
+                ),
+              ),
+              const SizedBox(width: DonySpacing.xs),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: DonySpacing.sm),
+                  child: Text.rich(
+                    TextSpan(
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                      children: [
+                        TextSpan(text: l10n.authLegalPrefix),
+                        TextSpan(
+                          text: l10n.authLegalTermsLink,
+                          style: linkStyle,
+                          recognizer: termsTap,
+                        ),
+                        TextSpan(text: l10n.authLegalMiddle),
+                        TextSpan(
+                          text: l10n.authLegalPrivacyLink,
+                          style: linkStyle,
+                          recognizer: privacyTap,
+                        ),
+                        TextSpan(text: l10n.authLegalZeroTolerance),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (missing)
+          Padding(
+            padding: const EdgeInsets.only(left: 44 + DonySpacing.xs),
+            child: Text(
+              l10n.authTermsRequired,
+              style: tt.bodySmall?.copyWith(color: cs.error),
+            ),
+          ),
       ],
     );
   }
@@ -685,69 +834,6 @@ class _GuestCta extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Mention légale sous les boutons de connexion.
-///
-/// Les deux libellés étaient bleus et soulignés mais ne portaient aucun
-/// `recognizer` : ils avaient l'apparence d'un lien sans en être un. On
-/// demandait donc d'accepter des documents qu'aucun geste ne permettait
-/// d'ouvrir. Les relecteurs Apple et Google les ouvrent depuis cet écran,
-/// avant toute création de compte, d'où la route publique `/legal/…`.
-class _CguFooter extends StatefulWidget {
-  const _CguFooter();
-
-  @override
-  State<_CguFooter> createState() => _CguFooterState();
-}
-
-class _CguFooterState extends State<_CguFooter> {
-  /// Un `TapGestureRecognizer` se libère à la main : construit dans `build()`,
-  /// il fuirait à chaque reconstruction de l'écran.
-  late final TapGestureRecognizer _termsTap = TapGestureRecognizer()
-    ..onTap = () => unawaited(context.push('/legal/terms'));
-  late final TapGestureRecognizer _privacyTap = TapGestureRecognizer()
-    ..onTap = () => unawaited(context.push('/legal/privacy'));
-
-  @override
-  void dispose() {
-    _termsTap.dispose();
-    _privacyTap.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final linkStyle = tt.bodySmall?.copyWith(
-      color: cs.primary,
-      decoration: TextDecoration.underline,
-      decorationColor: cs.primary,
-    );
-    final l10n = context.l10n;
-    return Text.rich(
-      TextSpan(
-        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
-        children: [
-          TextSpan(text: l10n.authLegalPrefix),
-          TextSpan(
-            text: l10n.authLegalTermsLink,
-            style: linkStyle,
-            recognizer: _termsTap,
-          ),
-          TextSpan(text: l10n.authLegalMiddle),
-          TextSpan(
-            text: l10n.authLegalPrivacyLink,
-            style: linkStyle,
-            recognizer: _privacyTap,
-          ),
-          const TextSpan(text: '.'),
-        ],
-      ),
-      textAlign: TextAlign.center,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/app_orientations.dart';
 import 'package:dony/features/profile/presentation/screens/help_tutorial_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -344,7 +345,7 @@ void main() {
   group('restauration SystemChrome', () {
     for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
       test(
-        'restaure orientations et edge-to-edge sur ${platform.name}',
+        'restaure le portrait et edge-to-edge sur ${platform.name}',
         () async {
           final chrome = _RecordingSystemChrome();
           final restorer = FlutterHelpTutorialSystemUi(
@@ -354,7 +355,7 @@ void main() {
 
           await restorer.restore();
 
-          expect(chrome.orientations, DeviceOrientation.values);
+          expect(chrome.orientations, appOrientations);
           expect(chrome.uiModes, [SystemUiMode.edgeToEdge]);
           expect(
             chrome.overlayStyles.length,

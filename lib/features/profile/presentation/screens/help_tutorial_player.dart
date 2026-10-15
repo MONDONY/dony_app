@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/app_orientations.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -97,7 +98,7 @@ final class FlutterHelpTutorialSystemUi implements HelpTutorialSystemUi {
 
   @override
   Future<void> restore() async {
-    await systemChrome.setPreferredOrientations(DeviceOrientation.values);
+    await systemChrome.setPreferredOrientations(appOrientations);
     await systemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     if (platform == TargetPlatform.android) {
       systemChrome.setSystemUIOverlayStyle(

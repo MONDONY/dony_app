@@ -1,5 +1,6 @@
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_list_item.dart';
+import 'package:dony/features/ratings/presentation/widgets/report_rating_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,5 +28,19 @@ void main() {
     await tester.pumpWidget(wrap(RatingListItem(item: item)));
 
     expect(find.text('Oct 6, 2026'), findsOneWidget);
+  });
+
+  testWidgets('chaque avis porte le drapeau de signalement', (tester) async {
+    final reportable = RatingItem(
+      id: 'rating-1',
+      stars: 1,
+      comment: 'Inadmissible',
+      createdAt: DateTime(2026, 10, 6),
+      excluded: false,
+    );
+    await tester.pumpWidget(wrap(RatingListItem(item: reportable)));
+
+    expect(find.byType(ReportRatingButton), findsOneWidget);
+    expect(find.byTooltip('Signaler cet avis'), findsOneWidget);
   });
 }

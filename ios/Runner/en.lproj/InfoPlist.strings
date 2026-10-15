@@ -1,0 +1,14 @@
+/* iOS permission prompts, in English.
+   Keep every real use listed here, in fr.lproj and in Info.plist. */
+
+"NSCameraUsageDescription" = "Yadony uses the camera to scan parcel QR codes, take photos of your parcels, send photos in messages, verify your identity (photo of your ID and a selfie) and scan your bank card.";
+
+"NSFaceIDUsageDescription" = "Yadony uses Face ID to unlock the app and confirm your payments, if you turn this protection on.";
+
+"NSLocationWhenInUseUsageDescription" = "Yadony uses your location while you use the app to show trips and parcels near you, find the nearest airport and record where each parcel handover step takes place.";
+
+"NSMicrophoneUsageDescription" = "Yadony uses the microphone for audio calls with the sender, traveler or recipient of a parcel.";
+
+"NSPhotoLibraryAddUsageDescription" = "Yadony saves your parcel QR code and your listing posters to your photos, so you can find them offline or share them.";
+
+"NSPhotoLibraryUsageDescription" = "Yadony accesses your photos to attach parcel pictures, choose your profile photo and send photos in messages or to support.";

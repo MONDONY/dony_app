@@ -5,6 +5,7 @@ import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_state.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
+import 'package:dony/features/ratings/presentation/widgets/report_rating_button.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -488,6 +489,7 @@ class _ReviewItem extends StatelessWidget {
                       );
                     }),
                   ),
+                  ReportRatingButton(item: item),
                 ],
               ),
               // Commentaire

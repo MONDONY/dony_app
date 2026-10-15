@@ -15,6 +15,7 @@ import 'package:dony/features/profile/presentation/profile_labels.dart';
 import 'package:dony/features/profile/presentation/widgets/all_reviews_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_reliability_label.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
+import 'package:dony/features/ratings/presentation/widgets/report_rating_button.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
@@ -1369,6 +1370,7 @@ class _FlatReviewRow extends StatelessWidget {
               ],
             ),
           ),
+          ReportRatingButton(item: item),
         ],
       ),
     );

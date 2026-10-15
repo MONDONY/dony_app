@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
+import 'package:dony/features/ratings/presentation/widgets/report_rating_button.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -61,6 +62,7 @@ class RatingListItem extends StatelessWidget {
                       dateStr,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
+                    ReportRatingButton(item: item),
                   ],
                 ),
                 if (item.comment != null && item.comment!.isNotEmpty) ...[

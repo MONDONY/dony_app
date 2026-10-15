@@ -146,7 +146,11 @@ import stream_video_push_notification
     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
   ) {
-    if Auth.auth().canHandleNotification(userInfo) {
+    // Même garde que didRegisterForRemoteNotifications : une silent push reçue
+    // au démarrage à froid arrive avant `FirebaseApp.configure()` (fait depuis
+    // Dart), et `Auth.auth()` serait alors une erreur fatale. Elle ne peut pas
+    // être une vérification Firebase Auth en cours : FCM la traite.
+    if FirebaseApp.app() != nil, Auth.auth().canHandleNotification(userInfo) {
       completionHandler(.noData)
       return
     }

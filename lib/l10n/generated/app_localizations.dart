@@ -2345,7 +2345,7 @@ abstract class AppLocalizations {
   /// No description provided for @authLegalPrefix.
   ///
   /// In fr, this message translates to:
-  /// **'En continuant vous acceptez nos '**
+  /// **'J\'accepte les '**
   String get authLegalPrefix;
 
   /// No description provided for @authLegalTermsLink.
@@ -2357,7 +2357,7 @@ abstract class AppLocalizations {
   /// No description provided for @authLegalMiddle.
   ///
   /// In fr, this message translates to:
-  /// **' et notre '**
+  /// **' et la '**
   String get authLegalMiddle;
 
   /// No description provided for @authLegalPrivacyLink.
@@ -2365,6 +2365,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'politique de confidentialité'**
   String get authLegalPrivacyLink;
+
+  /// Fin de la case d'acceptation des CGU de l'écran de connexion, après le lien de la politique de confidentialité. Clause de tolérance zéro exigée par Apple (guideline 1.2), commence par le point final de la phrase précédente.
+  ///
+  /// In fr, this message translates to:
+  /// **'. Aucun contenu choquant ni comportement abusif n\'est toléré. Le contenu est supprimé et son auteur exclu.'**
+  String get authLegalZeroTolerance;
+
+  /// Erreur sous la case des CGU quand l'utilisateur touche une méthode de connexion sans l'avoir cochée (auth_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cochez la case pour accepter les conditions avant de continuer.'**
+  String get authTermsRequired;
+
+  /// Libellé d'accessibilité de la case d'acceptation des CGU (auth_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter les CGU et la politique de confidentialité'**
+  String get authTermsCheckboxSemantics;
 
   /// No description provided for @authEmailStepLabel.
   ///
@@ -3191,7 +3209,7 @@ abstract class AppLocalizations {
   /// No description provided for @authConsentBody.
   ///
   /// In fr, this message translates to:
-  /// **'Pour améliorer Yadony, on aimerait mesurer comment l\'app est utilisée. C\'est anonyme et facultatif.'**
+  /// **'Pour améliorer Yadony, on aimerait mesurer comment l\'app est utilisée. Ces statistiques sont liées à votre compte, jamais à votre nom, votre numéro ou votre e-mail. C\'est facultatif.'**
   String get authConsentBody;
 
   /// No description provided for @authConsentFootnote.
@@ -3665,7 +3683,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeEmptyParcelsSoon.
   ///
   /// In fr, this message translates to:
-  /// **'Demandes bientôt disponibles'**
+  /// **'Aucune demande d\'envoi pour le moment'**
   String get homeEmptyParcelsSoon;
 
   /// No description provided for @homeEmptyParcelsFilteredHint.
@@ -3677,7 +3695,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeEmptyParcelsSoonHint.
   ///
   /// In fr, this message translates to:
-  /// **'Vous pourrez bientôt consulter les demandes d\'envoi postées par les expéditeurs.'**
+  /// **'Les demandes publiées par les expéditeurs apparaîtront ici. Revenez un peu plus tard.'**
   String get homeEmptyParcelsSoonHint;
 
   /// No description provided for @homeTripsLoadError.
@@ -18395,6 +18413,12 @@ abstract class AppLocalizations {
   /// **'« {comment} »'**
   String ratingQuotedComment(String comment);
 
+  /// Infobulle du drapeau posé sur chaque avis affiché, ouvre l'écran de signalement avec la cible RATING (report_rating_button.dart, guideline Apple 1.2).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler cet avis'**
+  String get ratingReportTooltip;
+
   /// Mention sous un avis exclu du calcul de la moyenne (my_reviews_screen.dart, _ReviewItem).
   ///
   /// In fr, this message translates to:
@@ -19436,7 +19460,7 @@ abstract class AppLocalizations {
   /// Description de l'état vide (community_screen.dart, CommunityScreen).
   ///
   /// In fr, this message translates to:
-  /// **'Nos tutoriels et espaces communautaires seront bientôt disponibles ici.'**
+  /// **'Aucun tutoriel ni espace communautaire à afficher pour le moment.'**
   String get communityEmptyDescription;
 
   /// Titre de la section tutoriels (community_screen.dart, CommunityScreen).
@@ -20156,7 +20180,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ safety/delete_account (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Dans Paramètres → Données et compte → Supprimer mon compte, vous pouvez choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.'**
+  /// **'Dans l\'onglet Moi, ouvrez le menu ☰ puis « Supprimer mon compte ». Vous pouvez choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.'**
   String get faqSafetyDeleteAccountA;
 
   /// Titre de l'écran lecteur de tutoriel, dans ses 3 états (help_tutorial_screen.dart)
@@ -20948,7 +20972,7 @@ abstract class AppLocalizations {
   /// Sous-titre du consentement analytics (privacy_settings_screen.dart). Fusion de deux fragments concaténés.
   ///
   /// In fr, this message translates to:
-  /// **'Mesure anonyme de l\'usage pour améliorer l\'app. Jamais vos paiements ni votre identité.'**
+  /// **'Statistiques d\'usage liées à votre compte pour améliorer l\'app. Jamais vos paiements, votre nom ni votre numéro.'**
   String get privacyAnalyticsConsentSubtitle;
 
   /// Titre de la carte blocage (privacy_settings_screen.dart) et de l'AppBar (blocked_users_screen.dart) : même texte, même écran cible (R42).
@@ -28596,7 +28620,7 @@ abstract class AppLocalizations {
   /// Titre de la feuille ouverte par le trombone grisé : photos pas encore permises (FLUTTER-B4).
   ///
   /// In fr, this message translates to:
-  /// **'Photos bientôt disponibles'**
+  /// **'Photos disponibles après le paiement'**
   String get chatPhotoLockedTitle;
 
   /// Explication du trombone grisé (FLUTTER-B4).
@@ -29874,13 +29898,13 @@ abstract class AppLocalizations {
   /// Titre affiché quand le serveur ne fournit pas encore le suivi du séquestre (money_overview_screen.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
-  /// **'Bientôt disponible'**
+  /// **'Suivi indisponible'**
   String get moneyUnavailableTitle;
 
   /// Description affichée quand le serveur ne fournit pas encore le suivi du séquestre (money_overview_screen.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
-  /// **'Le suivi de l\'argent de vos colis sera bientôt disponible.'**
+  /// **'Le suivi de l\'argent de vos colis n\'est pas disponible pour le moment. Réessayez plus tard.'**
   String get moneyUnavailableBody;
 
   /// Indication d'accessibilité au tap sur une carte « Mon argent » (money_parcel_card.dart, FLUTTER-HV).

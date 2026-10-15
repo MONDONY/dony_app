@@ -15,10 +15,9 @@ class ForceUpdateScreen extends StatelessWidget {
   static const _androidStoreUrl =
       'https://play.google.com/store/apps/details?id=com.yadony.yadony';
 
-  // TODO(app-store): remplacer par le lien direct
-  // (https://apps.apple.com/app/idXXXXXXXXXX) une fois l'identifiant Apple
-  // connu, après la première publication sur l'App Store.
-  static const _iosStoreUrl = 'https://apps.apple.com/search?term=Yadony';
+  /// Fiche App Store directe (identifiant Apple de l'app dans App Store
+  /// Connect) : une recherche par nom pouvait proposer une autre app.
+  static const _iosStoreUrl = 'https://apps.apple.com/app/id6797821239';
 
   Future<void> _openStore() async {
     final isIOS = defaultTargetPlatform == TargetPlatform.iOS;

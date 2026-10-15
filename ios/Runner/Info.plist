@@ -101,21 +101,23 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<!-- Phrases de permission. Elles sont traduites dans
+	     en.lproj/InfoPlist.strings et fr.lproj/InfoPlist.strings : les valeurs
+	     ci-dessous ne servent que de repli. Chaque phrase doit citer TOUS les
+	     usages réels (guideline 5.1.1), à reporter dans les deux traductions. -->
 	<key>NSCameraUsageDescription</key>
-	<string>Yadony utilise l'appareil photo pour scanner les QR codes, photographier les colis et envoyer des photos dans la messagerie.</string>
+	<string>Yadony utilise l'appareil photo pour scanner les QR codes des colis, photographier vos colis, envoyer des photos dans la messagerie, vérifier votre identité (photo de votre pièce et selfie) et scanner votre carte bancaire.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Yadony utilise Face ID pour sécuriser vos paiements.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Yadony utilise votre position uniquement pendant que vous utilisez l'application, pour vous proposer les trajets depuis votre ville. Aucun suivi en arrière-plan.</string>
+	<string>Yadony utilise Face ID pour déverrouiller l'application et confirmer vos paiements, si vous activez cette protection.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Yadony utilise votre position pour trouver les trajets depuis votre ville.</string>
+	<string>Yadony utilise votre position pendant que vous utilisez l'application pour afficher les trajets et colis près de chez vous, trouver l'aéroport le plus proche et enregistrer le lieu de chaque étape de remise d'un colis.</string>
 	<!-- Appels audio Yadony (Stream Video). -->
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Yadony utilise le micro pour vos appels audio avec l'autre partie de votre colis.</string>
+	<string>Yadony utilise le micro pour vos appels audio avec l'expéditeur, le voyageur ou le destinataire d'un colis.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Yadony enregistre le QR code de votre colis dans vos photos pour que vous puissiez le retrouver hors ligne.</string>
+	<string>Yadony enregistre dans vos photos le QR code de votre colis et les affiches de vos annonces, pour les retrouver hors ligne ou les partager.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Yadony accède à vos photos pour joindre des images de colis et envoyer des photos dans la messagerie.</string>
+	<string>Yadony accède à vos photos pour joindre des images de colis, choisir votre photo de profil et envoyer des photos dans la messagerie ou au support.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

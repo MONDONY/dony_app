@@ -5,6 +5,7 @@ import 'package:dony/app/app.dart';
 import 'package:dony/app/initial_location.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/config/api_config.dart';
+import 'package:dony/core/config/app_orientations.dart';
 import 'package:dony/core/config/environment.dart';
 import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/config/pro_flag.dart';
@@ -58,6 +59,7 @@ Future<void> _bootstrap() async {
   // Edge-to-edge : l'app dessine derrière la barre nav Android.
   // systemNavigationBarColor transparent supprime le scrim noir par défaut.
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  await SystemChrome.setPreferredOrientations(appOrientations);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.transparent,
