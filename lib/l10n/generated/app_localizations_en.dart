@@ -481,6 +481,55 @@ class AppLocalizationsEn extends AppLocalizations {
       'This code has expired. Ask the sender to generate a new one.';
 
   @override
+  String get errorTopupCodeNotFoundTitle => 'Unknown code';
+
+  @override
+  String get errorTopupCodeNotFoundMessage =>
+      'This top-up code does not exist. Check the spelling.';
+
+  @override
+  String get errorTopupCodeExpiredTitle => 'Code expired';
+
+  @override
+  String get errorTopupCodeExpiredMessage =>
+      'This top-up code is no longer valid.';
+
+  @override
+  String get errorTopupCodeExhaustedTitle => 'Code used up';
+
+  @override
+  String get errorTopupCodeExhaustedMessage =>
+      'All uses of this code have already been taken.';
+
+  @override
+  String get errorTopupCodeAlreadyRedeemedTitle => 'Code already used';
+
+  @override
+  String get errorTopupCodeAlreadyRedeemedMessage =>
+      'You have already used this code on your account.';
+
+  @override
+  String get errorTopupCodeRevokedTitle => 'Code disabled';
+
+  @override
+  String get errorTopupCodeRevokedMessage =>
+      'This top-up code was disabled by the Yadony team.';
+
+  @override
+  String get errorTopupCodeTooManyAttemptsTitle => 'Too many attempts';
+
+  @override
+  String get errorTopupCodeTooManyAttemptsMessage =>
+      'Too many wrong codes. Try again in an hour.';
+
+  @override
+  String get errorWalletRefundPendingTitle => 'Refund in progress';
+
+  @override
+  String get errorWalletRefundPendingMessage =>
+      'A refund request is in progress for this currency. Try again once it is processed.';
+
+  @override
   String get errorCodeIncorrectTitle => 'Incorrect code';
 
   @override
@@ -9608,6 +9657,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletTxTypeReferral => 'Referral';
 
   @override
+  String get walletTxTypeTopUpCode => 'Top-up code';
+
+  @override
+  String get walletTxTypeAdminCredit => 'Yadony credit';
+
+  @override
+  String get walletTxTypeAdminDebit => 'Yadony adjustment';
+
+  @override
+  String get walletTxTypeForfeited => 'Credit lost (account deleted)';
+
+  @override
   String get walletTxDateTimePattern => 'MMM d · h:mm a';
 
   @override
@@ -9737,6 +9798,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walletTopupMethodMobileMoneySubtitle =>
       'Orange Money, MTN MoMo, Moov';
+
+  @override
+  String get walletTopupCodeTileTitle => 'I have a top-up code';
+
+  @override
+  String get walletTopupCodeTileSubtitle => 'Code provided by the Yadony team';
+
+  @override
+  String get walletTopupCodeSheetTitle => 'Top-up code';
+
+  @override
+  String get walletTopupCodeFieldLabel => 'Code';
+
+  @override
+  String get walletTopupCodeFieldHint => 'E.g. DAKAR2000';
+
+  @override
+  String get walletTopupCodeNotice =>
+      'This credit can only pay Yadony service fees. It cannot be refunded or withdrawn.';
+
+  @override
+  String get walletTopupCodeSubmit => 'Apply code';
+
+  @override
+  String walletTopupCodeSuccess(String amount) {
+    return '$amount added to your balance';
+  }
 
   @override
   String get walletTopupMethodTitle => 'Top up · Step 1/2';

@@ -914,6 +914,90 @@ abstract class AppLocalizations {
   /// **'Ce code a expiré. Demandez à l\'expéditeur d\'en générer un nouveau.'**
   String get errorCodeExpiredMessage;
 
+  /// Titre d'erreur topup-code-not-found (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code inconnu'**
+  String get errorTopupCodeNotFoundTitle;
+
+  /// Message d'erreur topup-code-not-found (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code de recharge n\'existe pas. Vérifiez l\'orthographe.'**
+  String get errorTopupCodeNotFoundMessage;
+
+  /// Titre d'erreur topup-code-expired (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code expiré'**
+  String get errorTopupCodeExpiredTitle;
+
+  /// Message d'erreur topup-code-expired (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code de recharge n\'est plus valable.'**
+  String get errorTopupCodeExpiredMessage;
+
+  /// Titre d'erreur topup-code-exhausted (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code épuisé'**
+  String get errorTopupCodeExhaustedTitle;
+
+  /// Message d'erreur topup-code-exhausted (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les utilisations de ce code ont déjà été prises.'**
+  String get errorTopupCodeExhaustedMessage;
+
+  /// Titre d'erreur topup-code-already-redeemed (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code déjà utilisé'**
+  String get errorTopupCodeAlreadyRedeemedTitle;
+
+  /// Message d'erreur topup-code-already-redeemed (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà utilisé ce code sur votre compte.'**
+  String get errorTopupCodeAlreadyRedeemedMessage;
+
+  /// Titre d'erreur topup-code-revoked (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code désactivé'**
+  String get errorTopupCodeRevokedTitle;
+
+  /// Message d'erreur topup-code-revoked (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code de recharge a été désactivé par l\'équipe Yadony.'**
+  String get errorTopupCodeRevokedMessage;
+
+  /// Titre d'erreur topup-code-too-many-attempts (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop d\'essais'**
+  String get errorTopupCodeTooManyAttemptsTitle;
+
+  /// Message d'erreur topup-code-too-many-attempts (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de codes incorrects. Réessayez dans une heure.'**
+  String get errorTopupCodeTooManyAttemptsMessage;
+
+  /// Titre d'erreur wallet-refund-pending (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde en cours de remboursement'**
+  String get errorWalletRefundPendingTitle;
+
+  /// Message d'erreur wallet-refund-pending (error_catalog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une demande de remboursement est en cours sur cette devise. Réessayez quand elle sera traitée.'**
+  String get errorWalletRefundPendingMessage;
+
   /// No description provided for @errorCodeIncorrectTitle.
   ///
   /// In fr, this message translates to:
@@ -15937,6 +16021,30 @@ abstract class AppLocalizations {
   /// **'Parrainage'**
   String get walletTxTypeReferral;
 
+  /// Libellé d'une transaction TOP_UP_CODE (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de recharge'**
+  String get walletTxTypeTopUpCode;
+
+  /// Libellé d'une transaction ADMIN_CREDIT (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crédit Yadony'**
+  String get walletTxTypeAdminCredit;
+
+  /// Libellé d'une transaction ADMIN_DEBIT (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajustement Yadony'**
+  String get walletTxTypeAdminDebit;
+
+  /// Libellé d'une transaction FORFEITED_ON_DELETION (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crédit perdu (compte supprimé)'**
+  String get walletTxTypeForfeited;
+
   /// Motif intl DateFormat, pas un texte. Date d'une ligne de transaction (wallet_screen.dart _TxTile).
   ///
   /// In fr, this message translates to:
@@ -16138,6 +16246,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Orange Money, MTN MoMo, Moov'**
   String get walletTopupMethodMobileMoneySubtitle;
+
+  /// Tuile de l'écran de choix de méthode qui ouvre la saisie d'un code de recharge (wallet_topup_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai un code de recharge'**
+  String get walletTopupCodeTileTitle;
+
+  /// Sous-titre de la tuile code de recharge (wallet_topup_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code fourni par l\'équipe Yadony'**
+  String get walletTopupCodeTileSubtitle;
+
+  /// Titre de la sheet de saisie d'un code de recharge (wallet_topup_code_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de recharge'**
+  String get walletTopupCodeSheetTitle;
+
+  /// Libellé du champ de saisie du code (wallet_topup_code_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code'**
+  String get walletTopupCodeFieldLabel;
+
+  /// Exemple dans le champ de saisie du code (wallet_topup_code_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. DAKAR2000'**
+  String get walletTopupCodeFieldHint;
+
+  /// Mention sous le champ de la sheet code de recharge (wallet_topup_code_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce crédit sert uniquement à payer les commissions Yadony. Il n\'est ni remboursable ni retirable.'**
+  String get walletTopupCodeNotice;
+
+  /// Bouton sticky de la sheet code de recharge (wallet_topup_code_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider le code'**
+  String get walletTopupCodeSubmit;
+
+  /// Snackbar après utilisation réussie d'un code de recharge, montant formaté avec sa devise (wallet_topup_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} ajoutés à votre solde'**
+  String walletTopupCodeSuccess(String amount);
 
   /// Titre de l'écran de choix de méthode de recharge (wallet_topup_method_screen.dart).
   ///
