@@ -1219,6 +1219,10 @@ PODS:
     - Firebase/Firestore (= 12.17.0)
     - firebase_core
     - Flutter
+  - cloud_functions (6.3.6):
+    - Firebase/Functions (= 12.17.0)
+    - firebase_core
+    - Flutter
   - connectivity_plus (0.0.1):
     - Flutter
   - CryptoSwift (1.10.0)
@@ -1232,6 +1236,9 @@ PODS:
   - Firebase/Firestore (12.17.0):
     - Firebase/CoreOnly
     - FirebaseFirestore (~> 12.17.0)
+  - Firebase/Functions (12.17.0):
+    - Firebase/CoreOnly
+    - FirebaseFunctions (~> 12.17.0)
   - Firebase/Messaging (12.17.0):
     - Firebase/CoreOnly
     - FirebaseMessaging (~> 12.17.0)
@@ -1294,6 +1301,14 @@ PODS:
     - gRPC-Core (~> 1.69.0)
     - leveldb-library (~> 1.22)
     - nanopb (~> 3.30910.0)
+  - FirebaseFunctions (12.17.0):
+    - FirebaseAppCheckInterop (~> 12.17.0)
+    - FirebaseAuthInterop (~> 12.17.0)
+    - FirebaseCore (~> 12.17.0)
+    - FirebaseCoreExtension (~> 12.17.0)
+    - FirebaseMessagingInterop (~> 12.17.0)
+    - FirebaseSharedSwift (~> 12.17.0)
+    - GTMSessionFetcher/Core (< 6.0, >= 3.4)
   - FirebaseInstallations (12.17.0):
     - FirebaseCore (~> 12.17.0)
     - GoogleUtilities/Environment (~> 8.1)
@@ -1308,6 +1323,7 @@ PODS:
     - GoogleUtilities/Reachability (~> 8.1)
     - GoogleUtilities/UserDefaults (~> 8.1)
     - nanopb (~> 3.30910.0)
+  - FirebaseMessagingInterop (12.17.0)
   - FirebaseRemoteConfig (12.17.0):
     - FirebaseABTesting (~> 12.17.0)
     - FirebaseCore (~> 12.17.0)
@@ -1638,6 +1654,7 @@ DEPENDENCIES:
   - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/darwin`)
   - battery_plus (from `.symlinks/plugins/battery_plus/ios`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
+  - cloud_functions (from `.symlinks/plugins/cloud_functions/ios`)
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
@@ -1694,8 +1711,10 @@ SPEC REPOS:
     - FirebaseCoreInternal
     - FirebaseFirestore
     - FirebaseFirestoreInternal
+    - FirebaseFunctions
     - FirebaseInstallations
     - FirebaseMessaging
+    - FirebaseMessagingInterop
     - FirebaseRemoteConfig
     - FirebaseRemoteConfigInterop
     - FirebaseSharedSwift
@@ -1740,6 +1759,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/battery_plus/ios"
   cloud_firestore:
     :path: ".symlinks/plugins/cloud_firestore/ios"
+  cloud_functions:
+    :path: ".symlinks/plugins/cloud_functions/ios"
   connectivity_plus:
     :path: ".symlinks/plugins/connectivity_plus/ios"
   device_info_plus:
@@ -1827,6 +1848,7 @@ SPEC CHECKSUMS:
   battery_plus: b42253f6d2dde71712f8c36fef456d99121c5977
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   cloud_firestore: 511375ce1aea4e819e2df382fb1a141015cb8c60
+  cloud_functions: 2830ef3170b23784800335888af15c6c856ced91
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   CryptoSwift: e2e7776512f250e66205955da748e7a4e4abffe0
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
@@ -1844,8 +1866,10 @@ SPEC CHECKSUMS:
   FirebaseCoreInternal: 3b310521b34a51ce3a6c605e4618b9aef8f6c112
   FirebaseFirestore: dfebd53ce603c93a8514102c9a0b688d2be2bfc2
   FirebaseFirestoreInternal: 99cccc955349efee1652cbe132cf206915e6923d
+  FirebaseFunctions: e2eb75689fe581f80f4a834cb9658b94e97d24a0
   FirebaseInstallations: bd8e80f51d4c8bdc6c872011dede0b800c5b49ea
   FirebaseMessaging: 313d69fe6529c8846813d1660b65d7d38bc16954
+  FirebaseMessagingInterop: d4e6a61aae51b00e5964bd1361cc1848c7bdad05
   FirebaseRemoteConfig: 620af2a359b53104b10434f188b40a3e275cfdcf
   FirebaseRemoteConfigInterop: 785e617ae4cbc778eea97dde952b88fb934e11ff
   FirebaseSharedSwift: 983820e9aa55d2acd6af77f9a1f252ba0afb3150
