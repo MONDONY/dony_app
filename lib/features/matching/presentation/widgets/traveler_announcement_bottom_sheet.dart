@@ -772,9 +772,10 @@ class _StatCardsRow extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: _StatCard(
-                // Jour et heure (Sentry FLUTTER-MY).
-                value: l.commonDateAtTime(
-                  DateFormat.MMMEd(l.localeName).format(deadline),
+                // Jour et heure (Sentry FLUTTER-MY), sur deux lignes : en une
+                // seule, la demi-largeur coupait l'heure (FLUTTER-Q2).
+                value: DateFormat.MMMEd(l.localeName).format(deadline),
+                secondary: l.tripPosterTileDeadlineTime(
                   DateFormat.jm(l.localeName).format(deadline),
                 ),
                 label: l.listingDepositDeadlineLabel,
@@ -792,12 +793,16 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.label,
     this.valueColor,
+    this.secondary,
     this.subtitle,
   });
 
   final String value;
   final String label;
   final Color? valueColor;
+
+  /// Complément de la valeur, sur sa propre ligne (l'heure de la date limite).
+  final String? secondary;
 
   /// Ligne discrète sous la valeur (équivalent « environ » multidevise).
   final String? subtitle;
@@ -826,6 +831,16 @@ class _StatCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          if (secondary != null)
+            Text(
+              secondary!,
+              style: tt.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: valueColor ?? cs.onSurface,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           const SizedBox(height: DonySpacing.xxs),
           Text(
             label,

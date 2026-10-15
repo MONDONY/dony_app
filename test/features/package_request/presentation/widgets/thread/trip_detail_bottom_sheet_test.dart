@@ -14,6 +14,7 @@ LinkedTripSummary _trip({
   String? pickupLabel,
   String? deliveryLabel,
   String? description,
+  int availableKg = 10,
 }) => LinkedTripSummary(
   announcementId: 'ann-1',
   departureCity: 'Paris',
@@ -23,24 +24,31 @@ LinkedTripSummary _trip({
   transportMode: mode ?? 'PLANE',
   pickupAddressLabel: pickupLabel,
   deliveryAddressLabel: deliveryLabel,
-  availableKg: 10,
+  availableKg: availableKg,
   description: description,
 );
 
-Widget _buildApp(LinkedTripSummary trip, {bool isSender = false}) =>
-    MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(
-        body: Builder(
-          builder: (ctx) => ElevatedButton(
-            key: const Key('open'),
-            onPressed: () =>
-                TripDetailBottomSheet.show(ctx, trip: trip, isSender: isSender),
-            child: const Text('Ouvrir'),
-          ),
+Widget _buildApp(
+  LinkedTripSummary trip, {
+  bool isSender = false,
+  double? parcelWeightKg,
+}) => MaterialApp(
+  theme: AppTheme.light(),
+  home: Scaffold(
+    body: Builder(
+      builder: (ctx) => ElevatedButton(
+        key: const Key('open'),
+        onPressed: () => TripDetailBottomSheet.show(
+          ctx,
+          trip: trip,
+          isSender: isSender,
+          parcelWeightKg: parcelWeightKg,
         ),
+        child: const Text('Ouvrir'),
       ),
-    );
+    ),
+  ),
+);
 
 void main() {
   group('TripDetailBottomSheet', () {
@@ -88,6 +96,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('10 kg'), findsOneWidget);
     });
+
+    testWidgets(
+      'parcel weight shown, empty trip capacity hidden (FLUTTER-Q3)',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildApp(_trip(availableKg: 0), parcelWeightKg: 4.5),
+        );
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+        expect(find.text('Poids du colis'), findsOneWidget);
+        expect(find.text('4,5 kg'), findsOneWidget);
+        expect(find.text('Poids disponible'), findsNothing);
+        expect(find.text('0 kg'), findsNothing);
+      },
+    );
 
     testWidgets('shows pickup address when provided', (tester) async {
       await tester.pumpWidget(_buildApp(_trip(pickupLabel: '10 rue Rivoli')));

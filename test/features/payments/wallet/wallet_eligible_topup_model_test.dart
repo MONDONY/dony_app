@@ -14,7 +14,8 @@ void main() {
       expect(model.id, 'tx-1');
       expect(model.amount, 30.00);
       expect(model.paymentRef, 'pi_111');
-      expect(model.createdAt, DateTime.parse('2026-08-20T10:00:00'));
+      // Horodatage UTC du back sans fuseau, rendu en heure locale (FLUTTER-Q7).
+      expect(model.createdAt, DateTime.utc(2026, 8, 20, 10).toLocal());
     });
 
     test('paymentRef nullable', () {

@@ -25665,6 +25665,12 @@ abstract class AppLocalizations {
   /// **'{step, select, DEPART{Photo et valider la récupération} TRANSIT{Photo et valider le transit} other{Photo et valider l\'arrivée}}'**
   String suiviPhotoAndValidate(String step);
 
+  /// Poids du colis négocié sur la carte du trajet lié (linked_trip_card.dart), poids déjà formaté avec son unité.
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis de {weight}'**
+  String negotiationLinkedTripParcelWeight(String weight);
+
   /// Titre du colis dans la feuille récapitulative (suivi_parcel_sheets.dart, _NumberRecap).
   ///
   /// In fr, this message translates to:

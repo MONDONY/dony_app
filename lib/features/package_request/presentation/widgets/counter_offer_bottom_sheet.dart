@@ -1,11 +1,13 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class CounterOfferBottomSheet {
   const CounterOfferBottomSheet._();
@@ -206,6 +208,24 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
               return null;
             },
           ),
+          // Le prix saisi est le net du voyageur : sans ce détail, l'expéditeur
+          // voyait son montant revenir majoré sans savoir que c'était la
+          // commission Yadony (FLUTTER-Q5).
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _priceCtrl,
+            builder: (_, value, _) {
+              final net = double.tryParse(value.text.replaceAll(',', '.'));
+              if (net == null || net <= 0) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: DonySpacing.md),
+                child: CounterOfferCommissionPreview(
+                  net: net,
+                  isTraveler: widget.isTraveler,
+                  currency: widget.currency,
+                ),
+              );
+            },
+          ),
           const SizedBox(height: DonySpacing.xl),
 
           // Label message
@@ -257,6 +277,88 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
+      ),
+    );
+  }
+}
+
+/// Détail du prix proposé : net du voyageur, commission Yadony et total payé
+/// par l'expéditeur, lu dans l'ordre qui concerne chaque rôle (même calcul que
+/// l'en-tête du fil, [PriceDisplay.grossFromNet]).
+@visibleForTesting
+class CounterOfferCommissionPreview extends StatelessWidget {
+  const CounterOfferCommissionPreview({
+    required this.net,
+    required this.isTraveler,
+    required this.currency,
+    super.key,
+  });
+
+  final double net;
+  final bool isTraveler;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final fee = PriceDisplay.feeFromNet(net);
+    final gross = PriceDisplay.grossFromNet(net);
+    final rate = NumberFormat(
+      '#0.##',
+      l.localeName,
+    ).format(PriceDisplay.previewRate * 100);
+    final commission = l.requestCreateCommissionLabel(rate);
+
+    Widget line(String label, String amount, {bool strong = false}) {
+      final style = (strong ? tt.titleSmall : tt.bodyMedium)?.copyWith(
+        color: strong ? cs.onSurface : cs.onSurfaceVariant,
+        fontWeight: strong ? FontWeight.w800 : FontWeight.w500,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      );
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Expanded(child: Text(label, style: style)),
+            const SizedBox(width: DonySpacing.sm),
+            Text(amount, style: style),
+          ],
+        ),
+      );
+    }
+
+    String money(double v) => PriceDisplay.money(v, currency);
+
+    return Container(
+      key: const Key('counter-offer-commission-preview'),
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: isTraveler
+            ? [
+                line(l.negotiationPriceBreakdownPaidBySender, money(gross)),
+                line(commission, '−${money(fee)}'),
+                line(
+                  l.negotiationPriceBreakdownYouReceive,
+                  money(net),
+                  strong: true,
+                ),
+              ]
+            : [
+                line(l.negotiationPriceBreakdownNetTraveler, money(net)),
+                line(commission, money(fee)),
+                line(
+                  l.negotiationPriceBreakdownTotalToSettle,
+                  money(gross),
+                  strong: true,
+                ),
+              ],
       ),
     );
   }

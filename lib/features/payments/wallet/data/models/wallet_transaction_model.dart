@@ -1,3 +1,5 @@
+import 'package:dony/core/utils/server_date_time.dart';
+
 class WalletTransactionModel {
   final String type;
   final double amount;
@@ -32,7 +34,7 @@ class WalletTransactionModel {
         currency: (json['currency'] as String?)?.toUpperCase(),
         balanceAfter: (json['balanceAfter'] as num).toDouble(),
         paymentRef: json['paymentRef'] as String?,
-        createdAt: DateTime.parse(json['createdAt'] as String),
+        createdAt: parseServerDateTime(json['createdAt'] as String).toLocal(),
         refundStatus: json['refundStatus'] as String?,
       );
 

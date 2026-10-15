@@ -106,9 +106,13 @@ class ThreadHeroCard extends StatelessWidget {
     required this.thread,
     required this.statusVariant,
     required this.isTraveler,
+    this.compact = false,
   });
 
   final NegotiationThread thread;
+
+  /// Version réduite, quand le fil défile ([DonyNegoHeroCard.compact]).
+  final bool compact;
   final ThreadStatusVariant statusVariant;
 
   /// Whether the current viewer is the traveler.
@@ -122,6 +126,7 @@ class ThreadHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     return DonyNegoHeroCard(
+      compact: compact,
       background: statusVariant.background,
       shadowColor: statusVariant.shadowColor,
       iconAsset: statusVariant.iconAsset,

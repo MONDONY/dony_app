@@ -117,6 +117,33 @@ void main() {
       final deco = pill.decoration! as BoxDecoration;
       expect(deco.color, Colors.white.withValues(alpha: 0.14));
     });
+
+    testWidgets('compact : une ligne, montant gardé, jauge masquée (Q6)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyNegoHeroCard(
+            compact: true,
+            background: DonyColors.ink800,
+            shadowColor: DonyColors.blue500,
+            iconAsset: 'handshake',
+            caption: 'À RÉGLER',
+            amount: r'$65.00',
+            badgeLabel: 'PAIEMENT',
+            roundLabel: 'Round 4/5',
+            roundsCount: 4,
+            maxRounds: 5,
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('nego-hero-compact')), findsOneWidget);
+      expect(find.textContaining(r'$65.00'), findsOneWidget);
+      expect(find.text('PAIEMENT'), findsOneWidget);
+      expect(find.text('Round 4/5'), findsNothing);
+      expect(_segments(tester), isEmpty);
+    });
   });
 
   group('DonyNegoBubble', () {

@@ -1,3 +1,5 @@
+import 'package:dony/core/utils/server_date_time.dart';
+
 class WalletRefundRequestModel {
   final String id;
   final String currency;
@@ -43,9 +45,11 @@ class WalletRefundRequestModel {
         amount: (json['amount'] as num).toDouble(),
         channel: json['channel'] as String,
         status: json['status'] as String,
-        requestedAt: DateTime.parse(json['requestedAt'] as String),
+        requestedAt: parseServerDateTime(
+          json['requestedAt'] as String,
+        ).toLocal(),
         resolvedAt: json['resolvedAt'] != null
-            ? DateTime.parse(json['resolvedAt'] as String)
+            ? parseServerDateTime(json['resolvedAt'] as String).toLocal()
             : null,
         feeAmount: (json['feeAmount'] as num?)?.toDouble(),
         netAmount: (json['netAmount'] as num?)?.toDouble(),

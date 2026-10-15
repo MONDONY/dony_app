@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/server_date_time.dart';
 import 'package:equatable/equatable.dart';
 
 enum NegotiationMessageKind {
@@ -40,7 +41,7 @@ class NegotiationMessage extends Equatable {
         kind: NegotiationMessageKind.fromJson(json['kind'] as String),
         proposedPriceEur: (json['proposedPriceEur'] as num?)?.toDouble(),
         body: json['body'] as String?,
-        createdAt: DateTime.parse(json['createdAt'] as String),
+        createdAt: parseServerDateTime(json['createdAt'] as String).toLocal(),
       );
 
   @override

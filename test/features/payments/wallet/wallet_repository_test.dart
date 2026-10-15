@@ -201,7 +201,10 @@ void main() {
       expect(result, hasLength(2));
       expect(result[0].status, 'PROCESSING');
       expect(result[0].isTerminal, isFalse);
-      expect(result[1].resolvedAt, DateTime.parse('2026-09-12T00:00:00.000Z'));
+      expect(
+        result[1].resolvedAt,
+        DateTime.parse('2026-09-12T00:00:00.000Z').toLocal(),
+      );
       expect(result[1].isSuccess, isTrue);
     });
 

@@ -1,3 +1,5 @@
+import 'package:dony/core/utils/server_date_time.dart';
+
 class WalletEligibleTopupModel {
   final String id;
   final double amount;
@@ -27,7 +29,7 @@ class WalletEligibleTopupModel {
         id: json['id'] as String,
         amount: (json['amount'] as num).toDouble(),
         paymentRef: json['paymentRef'] as String?,
-        createdAt: DateTime.parse(json['createdAt'] as String),
+        createdAt: parseServerDateTime(json['createdAt'] as String).toLocal(),
         originalAmount: (json['originalAmount'] as num?)?.toDouble(),
         feeAmount: (json['feeAmount'] as num?)?.toDouble(),
       );
