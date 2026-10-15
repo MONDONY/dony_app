@@ -486,6 +486,55 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce code a expiré. Demandez à l\'expéditeur d\'en générer un nouveau.';
 
   @override
+  String get errorTopupCodeNotFoundTitle => 'Code inconnu';
+
+  @override
+  String get errorTopupCodeNotFoundMessage =>
+      'Ce code de recharge n\'existe pas. Vérifiez l\'orthographe.';
+
+  @override
+  String get errorTopupCodeExpiredTitle => 'Code expiré';
+
+  @override
+  String get errorTopupCodeExpiredMessage =>
+      'Ce code de recharge n\'est plus valable.';
+
+  @override
+  String get errorTopupCodeExhaustedTitle => 'Code épuisé';
+
+  @override
+  String get errorTopupCodeExhaustedMessage =>
+      'Toutes les utilisations de ce code ont déjà été prises.';
+
+  @override
+  String get errorTopupCodeAlreadyRedeemedTitle => 'Code déjà utilisé';
+
+  @override
+  String get errorTopupCodeAlreadyRedeemedMessage =>
+      'Vous avez déjà utilisé ce code sur votre compte.';
+
+  @override
+  String get errorTopupCodeRevokedTitle => 'Code désactivé';
+
+  @override
+  String get errorTopupCodeRevokedMessage =>
+      'Ce code de recharge a été désactivé par l\'équipe Yadony.';
+
+  @override
+  String get errorTopupCodeTooManyAttemptsTitle => 'Trop d\'essais';
+
+  @override
+  String get errorTopupCodeTooManyAttemptsMessage =>
+      'Trop de codes incorrects. Réessayez dans une heure.';
+
+  @override
+  String get errorWalletRefundPendingTitle => 'Solde en cours de remboursement';
+
+  @override
+  String get errorWalletRefundPendingMessage =>
+      'Une demande de remboursement est en cours sur cette devise. Réessayez quand elle sera traitée.';
+
+  @override
   String get errorCodeIncorrectTitle => 'Code incorrect';
 
   @override
@@ -9672,6 +9721,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get walletTxTypeReferral => 'Parrainage';
 
   @override
+  String get walletTxTypeTopUpCode => 'Code de recharge';
+
+  @override
+  String get walletTxTypeAdminCredit => 'Crédit Yadony';
+
+  @override
+  String get walletTxTypeAdminDebit => 'Ajustement Yadony';
+
+  @override
+  String get walletTxTypeForfeited => 'Crédit perdu (compte supprimé)';
+
+  @override
   String get walletTxDateTimePattern => 'dd MMM · HH:mm';
 
   @override
@@ -9801,6 +9862,33 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get walletTopupMethodMobileMoneySubtitle =>
       'Orange Money, MTN MoMo, Moov';
+
+  @override
+  String get walletTopupCodeTileTitle => 'J\'ai un code de recharge';
+
+  @override
+  String get walletTopupCodeTileSubtitle => 'Code fourni par l\'équipe Yadony';
+
+  @override
+  String get walletTopupCodeSheetTitle => 'Code de recharge';
+
+  @override
+  String get walletTopupCodeFieldLabel => 'Code';
+
+  @override
+  String get walletTopupCodeFieldHint => 'Ex. DAKAR2000';
+
+  @override
+  String get walletTopupCodeNotice =>
+      'Ce crédit sert uniquement à payer les commissions Yadony. Il n\'est ni remboursable ni retirable.';
+
+  @override
+  String get walletTopupCodeSubmit => 'Valider le code';
+
+  @override
+  String walletTopupCodeSuccess(String amount) {
+    return '+$amount ajoutés à votre solde';
+  }
 
   @override
   String get walletTopupMethodTitle => 'Recharger · Étape 1/2';

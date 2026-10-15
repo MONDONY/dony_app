@@ -824,6 +824,10 @@ class _TxTile extends StatelessWidget {
     'COMMISSION_DEDUCTED' => l.walletTxTypeCommission, // i18n-ignore
     'REFUND' || 'SELF_REFUND_OUT' => l.walletTxTypeRefund, // i18n-ignore
     'REFERRAL_REWARD' => l.walletTxTypeReferral, // i18n-ignore
+    'TOP_UP_CODE' => l.walletTxTypeTopUpCode, // i18n-ignore
+    'ADMIN_CREDIT' => l.walletTxTypeAdminCredit, // i18n-ignore
+    'ADMIN_DEBIT' => l.walletTxTypeAdminDebit, // i18n-ignore
+    'FORFEITED_ON_DELETION' => l.walletTxTypeForfeited, // i18n-ignore
     _ => tx.type,
   };
 

@@ -130,6 +130,7 @@ const _sameInBothLanguages = <String>{
   'authOnboardingDestinationsEyebrow', // « Destinations » se dit pareil
   'negotiationParcelSheetPhotos', // « Photos » se dit pareil
   'negotiationParcelSheetDescription', // « Description » se dit pareil
+  'walletTopupCodeFieldLabel', // « Code » se dit pareil
   // Noms propres identiques en français et en anglais.
   'countryNameFr',
   'countryNameLu',

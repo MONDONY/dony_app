@@ -107,4 +107,14 @@ class WalletRemoteDatasource {
     final response = await _client.dio.get('/wallet/topup/$topupId/status');
     return response.data as Map<String, dynamic>;
   }
+
+  /// Utilise un code de recharge. Le texte saisi part brut : le serveur
+  /// normalise (majuscules, espaces retirés).
+  Future<Map<String, dynamic>> redeemTopupCode(String code) async {
+    final response = await _client.dio.post(
+      '/wallet/topup-codes/redeem',
+      data: {'code': code},
+    );
+    return response.data as Map<String, dynamic>;
+  }
 }

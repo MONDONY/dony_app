@@ -1615,4 +1615,31 @@ void main() {
       });
     }
   });
+
+  test('codes de recharge : titres dédiés', () {
+    expect(
+      ErrorCatalog.lookup(
+        const NetworkException('ignored', code: 'topup-code-exhausted'),
+      ).title,
+      'Code épuisé',
+    );
+    expect(
+      ErrorCatalog.lookup(
+        const NetworkException('ignored', code: 'topup-code-already-redeemed'),
+      ).title,
+      'Code déjà utilisé',
+    );
+    expect(
+      ErrorCatalog.lookup(
+        const RateLimitException('x', 'topup-code-too-many-attempts'),
+      ).title,
+      "Trop d'essais",
+    );
+    expect(
+      ErrorCatalog.lookup(
+        const ValidationException('x', code: 'wallet-refund-pending'),
+      ).title,
+      'Solde en cours de remboursement',
+    );
+  });
 }

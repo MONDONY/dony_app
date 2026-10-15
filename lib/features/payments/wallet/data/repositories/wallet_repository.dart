@@ -4,6 +4,7 @@ import 'package:dony/features/payments/wallet/data/datasources/wallet_remote_dat
 import 'package:dony/features/payments/wallet/data/models/wallet_eligible_topup_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_refund_request_model.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_topup_code_redemption_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 
@@ -152,6 +153,17 @@ class WalletRepository {
     try {
       final data = await _datasource.topupStatus(topupId);
       return WalletTopupStatusModel.fromJson(data);
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  /// Utilise un code de recharge (crédit non remboursable, réservé aux
+  /// commissions). Lève une [AppException] dont `code` porte le motif du refus.
+  Future<WalletTopupCodeRedemptionModel> redeemTopupCode(String code) async {
+    try {
+      final data = await _datasource.redeemTopupCode(code);
+      return WalletTopupCodeRedemptionModel.fromJson(data);
     } catch (e) {
       throw unwrapDioError(e);
     }

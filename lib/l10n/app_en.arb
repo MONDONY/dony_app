@@ -136,6 +136,62 @@
   "errorCodeNotGeneratedMessage": "No confirmation code has been generated for this delivery yet.",
   "errorCodeExpiredTitle": "Code expired",
   "errorCodeExpiredMessage": "This code has expired. Ask the sender to generate a new one.",
+  "errorTopupCodeNotFoundTitle": "Unknown code",
+  "@errorTopupCodeNotFoundTitle": {
+      "description": "Titre d'erreur topup-code-not-found (error_catalog.dart)."
+  },
+  "errorTopupCodeNotFoundMessage": "This top-up code does not exist. Check the spelling.",
+  "@errorTopupCodeNotFoundMessage": {
+      "description": "Message d'erreur topup-code-not-found (error_catalog.dart)."
+  },
+  "errorTopupCodeExpiredTitle": "Code expired",
+  "@errorTopupCodeExpiredTitle": {
+      "description": "Titre d'erreur topup-code-expired (error_catalog.dart)."
+  },
+  "errorTopupCodeExpiredMessage": "This top-up code is no longer valid.",
+  "@errorTopupCodeExpiredMessage": {
+      "description": "Message d'erreur topup-code-expired (error_catalog.dart)."
+  },
+  "errorTopupCodeExhaustedTitle": "Code used up",
+  "@errorTopupCodeExhaustedTitle": {
+      "description": "Titre d'erreur topup-code-exhausted (error_catalog.dart)."
+  },
+  "errorTopupCodeExhaustedMessage": "All uses of this code have already been taken.",
+  "@errorTopupCodeExhaustedMessage": {
+      "description": "Message d'erreur topup-code-exhausted (error_catalog.dart)."
+  },
+  "errorTopupCodeAlreadyRedeemedTitle": "Code already used",
+  "@errorTopupCodeAlreadyRedeemedTitle": {
+      "description": "Titre d'erreur topup-code-already-redeemed (error_catalog.dart)."
+  },
+  "errorTopupCodeAlreadyRedeemedMessage": "You have already used this code on your account.",
+  "@errorTopupCodeAlreadyRedeemedMessage": {
+      "description": "Message d'erreur topup-code-already-redeemed (error_catalog.dart)."
+  },
+  "errorTopupCodeRevokedTitle": "Code disabled",
+  "@errorTopupCodeRevokedTitle": {
+      "description": "Titre d'erreur topup-code-revoked (error_catalog.dart)."
+  },
+  "errorTopupCodeRevokedMessage": "This top-up code was disabled by the Yadony team.",
+  "@errorTopupCodeRevokedMessage": {
+      "description": "Message d'erreur topup-code-revoked (error_catalog.dart)."
+  },
+  "errorTopupCodeTooManyAttemptsTitle": "Too many attempts",
+  "@errorTopupCodeTooManyAttemptsTitle": {
+      "description": "Titre d'erreur topup-code-too-many-attempts (error_catalog.dart)."
+  },
+  "errorTopupCodeTooManyAttemptsMessage": "Too many wrong codes. Try again in an hour.",
+  "@errorTopupCodeTooManyAttemptsMessage": {
+      "description": "Message d'erreur topup-code-too-many-attempts (error_catalog.dart)."
+  },
+  "errorWalletRefundPendingTitle": "Refund in progress",
+  "@errorWalletRefundPendingTitle": {
+      "description": "Titre d'erreur wallet-refund-pending (error_catalog.dart)."
+  },
+  "errorWalletRefundPendingMessage": "A refund request is in progress for this currency. Try again once it is processed.",
+  "@errorWalletRefundPendingMessage": {
+      "description": "Message d'erreur wallet-refund-pending (error_catalog.dart)."
+  },
   "errorCodeIncorrectTitle": "Incorrect code",
   "errorCodeIncorrectMessage": "The code you entered is incorrect. Check with the sender.",
   "errorTripNotDepartedTitle": "Trip not departed yet",
@@ -4860,6 +4916,22 @@
   "@walletTxTypeReferral": {
     "description": "Libellé d'une transaction REFERRAL_REWARD (wallet_screen.dart _TxTile)."
   },
+  "walletTxTypeTopUpCode": "Top-up code",
+  "@walletTxTypeTopUpCode": {
+      "description": "Libellé d'une transaction TOP_UP_CODE (wallet_screen.dart _TxTile)."
+  },
+  "walletTxTypeAdminCredit": "Yadony credit",
+  "@walletTxTypeAdminCredit": {
+      "description": "Libellé d'une transaction ADMIN_CREDIT (wallet_screen.dart _TxTile)."
+  },
+  "walletTxTypeAdminDebit": "Yadony adjustment",
+  "@walletTxTypeAdminDebit": {
+      "description": "Libellé d'une transaction ADMIN_DEBIT (wallet_screen.dart _TxTile)."
+  },
+  "walletTxTypeForfeited": "Credit lost (account deleted)",
+  "@walletTxTypeForfeited": {
+      "description": "Libellé d'une transaction FORFEITED_ON_DELETION (wallet_screen.dart _TxTile)."
+  },
   "walletTxDateTimePattern": "MMM d · h:mm a",
   "@walletTxDateTimePattern": {
     "description": "Motif intl DateFormat, pas un texte. Date d'une ligne de transaction (wallet_screen.dart _TxTile)."
@@ -5056,6 +5128,43 @@
   "walletTopupMethodMobileMoneySubtitle": "Orange Money, MTN MoMo, Moov",
   "@walletTopupMethodMobileMoneySubtitle": {
     "description": "Sous-titre de la tuile mobile money : noms de marques, identique fr/en (wallet_topup_method_screen.dart _mobileMoneyMethod)."
+  },
+  "walletTopupCodeTileTitle": "I have a top-up code",
+  "@walletTopupCodeTileTitle": {
+      "description": "Tuile de l'écran de choix de méthode qui ouvre la saisie d'un code de recharge (wallet_topup_method_screen.dart)."
+  },
+  "walletTopupCodeTileSubtitle": "Code provided by the Yadony team",
+  "@walletTopupCodeTileSubtitle": {
+      "description": "Sous-titre de la tuile code de recharge (wallet_topup_method_screen.dart)."
+  },
+  "walletTopupCodeSheetTitle": "Top-up code",
+  "@walletTopupCodeSheetTitle": {
+      "description": "Titre de la sheet de saisie d'un code de recharge (wallet_topup_code_sheet.dart)."
+  },
+  "walletTopupCodeFieldLabel": "Code",
+  "@walletTopupCodeFieldLabel": {
+      "description": "Libellé du champ de saisie du code (wallet_topup_code_sheet.dart)."
+  },
+  "walletTopupCodeFieldHint": "E.g. DAKAR2000",
+  "@walletTopupCodeFieldHint": {
+      "description": "Exemple dans le champ de saisie du code (wallet_topup_code_sheet.dart)."
+  },
+  "walletTopupCodeNotice": "This credit can only pay Yadony service fees. It cannot be refunded or withdrawn.",
+  "@walletTopupCodeNotice": {
+      "description": "Mention sous le champ de la sheet code de recharge (wallet_topup_code_sheet.dart)."
+  },
+  "walletTopupCodeSubmit": "Apply code",
+  "@walletTopupCodeSubmit": {
+      "description": "Bouton sticky de la sheet code de recharge (wallet_topup_code_sheet.dart)."
+  },
+  "walletTopupCodeSuccess": "+{amount} added to your balance",
+  "@walletTopupCodeSuccess": {
+      "description": "Snackbar après utilisation réussie d'un code de recharge, montant formaté avec sa devise (wallet_topup_method_screen.dart).",
+      "placeholders": {
+          "amount": {
+              "type": "String"
+          }
+      }
   },
   "walletTopupMethodTitle": "Top up · Step 1/2",
   "@walletTopupMethodTitle": {

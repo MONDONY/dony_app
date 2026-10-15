@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -11,6 +12,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_ava
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_selection.dart';
+import 'package:dony/features/payments/wallet/presentation/widgets/wallet_topup_code_sheet.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -182,6 +184,22 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
     }
   }
 
+  Future<void> _onRedeemCode() async {
+    final redemption = await WalletTopupCodeSheet.show(context);
+    if (redemption == null || !mounted) return;
+    final amount = CurrencyFormatter.format(
+      redemption.amount,
+      SupportedCurrency.fromCodeOrDefault(redemption.currency),
+    );
+    DonySnackbar.show(
+      context,
+      message: context.l10n.walletTopupCodeSuccess(amount),
+      type: DonySnackbarType.success,
+    );
+    // Même contrat qu'une recharge : l'appelant rafraîchit le solde.
+    context.pop(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -320,6 +338,11 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                           .animate()
                           .fadeIn(duration: 200.ms)
                           .slideY(begin: 0.03, curve: Curves.easeOutCubic),
+                    const SizedBox(height: DonySpacing.lg),
+                    _CodeEntryTile(onTap: _onRedeemCode)
+                        .animate(delay: (60 * methods.length).ms)
+                        .fadeIn(duration: 250.ms)
+                        .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   ],
                 ),
               ),
@@ -664,6 +687,77 @@ class _MethodCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Tuile « J'ai un code de recharge » ──────────────────────────────────────
+
+/// Ouvre la saisie d'un code de recharge. Pas une méthode radio : le montant
+/// vient du code, donc pas d'écran de montant.
+class _CodeEntryTile extends StatelessWidget {
+  const _CodeEntryTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: l.walletTopupCodeTileTitle,
+      child: Material(
+        color: cs.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          side: BorderSide(color: cs.outline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.md + 2,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: DonySpacing.icon,
+                  height: DonySpacing.icon,
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  child: DonyIcon('gift', color: cs.onSurfaceVariant, size: 20),
+                ),
+                const SizedBox(width: DonySpacing.base),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.walletTopupCodeTileTitle,
+                        style: tt.titleLarge?.copyWith(fontSize: 15),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l.walletTopupCodeTileSubtitle,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 20),
+              ],
+            ),
           ),
         ),
       ),

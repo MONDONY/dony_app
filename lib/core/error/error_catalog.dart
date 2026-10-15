@@ -763,6 +763,48 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.dialpad_rounded,
     ),
+    'topup-code-not-found': _Entry(
+      title: (l) => l.errorTopupCodeNotFoundTitle,
+      message: (l) => l.errorTopupCodeNotFoundMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.search_off_rounded,
+    ),
+    'topup-code-expired': _Entry(
+      title: (l) => l.errorTopupCodeExpiredTitle,
+      message: (l) => l.errorTopupCodeExpiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.timer_off_rounded,
+    ),
+    'topup-code-exhausted': _Entry(
+      title: (l) => l.errorTopupCodeExhaustedTitle,
+      message: (l) => l.errorTopupCodeExhaustedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.inventory_2_outlined,
+    ),
+    'topup-code-already-redeemed': _Entry(
+      title: (l) => l.errorTopupCodeAlreadyRedeemedTitle,
+      message: (l) => l.errorTopupCodeAlreadyRedeemedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.check_circle_outline_rounded,
+    ),
+    'topup-code-revoked': _Entry(
+      title: (l) => l.errorTopupCodeRevokedTitle,
+      message: (l) => l.errorTopupCodeRevokedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'topup-code-too-many-attempts': _Entry(
+      title: (l) => l.errorTopupCodeTooManyAttemptsTitle,
+      message: (l) => l.errorTopupCodeTooManyAttemptsMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_bottom_rounded,
+    ),
+    'wallet-refund-pending': _Entry(
+      title: (l) => l.errorWalletRefundPendingTitle,
+      message: (l) => l.errorWalletRefundPendingMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_top_rounded,
+    ),
     'code-expired': _Entry(
       title: (l) => l.errorCodeExpiredTitle,
       message: (l) => l.errorCodeExpiredMessage,

@@ -286,6 +286,38 @@ void main() {
     },
   );
 
+  for (final (type, amount, label) in const [
+    ('TOP_UP_CODE', 2000.0, 'Code de recharge'),
+    ('ADMIN_CREDIT', 5.0, 'Crédit Yadony'),
+    ('ADMIN_DEBIT', -5.0, 'Ajustement Yadony'),
+    ('FORFEITED_ON_DELETION', -5.0, 'Crédit perdu (compte supprimé)'),
+  ]) {
+    testWidgets('libellé de $type', (tester) async {
+      final tx = WalletTransactionModel(
+        type: type,
+        amount: amount,
+        balanceAfter: 10.0,
+        createdAt: DateTime(2026, 10, 15, 10, 30),
+      );
+      final wallet = WalletModel(
+        balance: 10.0,
+        currency: 'EUR',
+        transactions: [tx],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text(label), findsOneWidget);
+      expect(find.text(type), findsNothing);
+    });
+  }
+
   testWidgets(
     'affiche le label Remboursement pour une transaction SELF_REFUND_OUT',
     (tester) async {

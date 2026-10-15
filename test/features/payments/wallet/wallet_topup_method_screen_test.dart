@@ -2,14 +2,17 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_topup_code_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_availability_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/datasources/wallet_remote_datasource.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_topup_code_redemption_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
@@ -77,6 +80,7 @@ void main() {
   late WalletRepository availabilityRepo;
   late MockAnalyticsBackend analyticsBackend;
   WalletTopupMethodSelection? capturedSelection;
+  Object? popResult;
 
   const catalog = MobileMoneyProviderCatalog(
     country: 'SN',
@@ -131,6 +135,13 @@ void main() {
     availabilityRepo = repo;
     analyticsBackend = MockAnalyticsBackend();
     capturedSelection = null;
+    popResult = null;
+    if (getIt.isRegistered<WalletTopupCodeCubit>()) {
+      getIt.unregister<WalletTopupCodeCubit>();
+    }
+    getIt.registerFactory<WalletTopupCodeCubit>(
+      () => WalletTopupCodeCubit(repo),
+    );
     when(
       () => repo.isMobileMoneyTopupAvailable(),
     ).thenAnswer((_) async => true);
@@ -170,15 +181,28 @@ void main() {
     );
   }
 
-  Widget buildHarness({ThemeData? theme}) {
+  Widget buildHarness({ThemeData? theme, bool withParent = false}) {
     final mmCubit = WalletTopupMobileMoneyCubit(
       repo,
       makeEnabledAnalytics(analyticsBackend),
     );
     addTearDown(mmCubit.close);
     final router = GoRouter(
-      initialLocation: '/payments/wallet/topup/method',
+      initialLocation: withParent ? '/' : '/payments/wallet/topup/method',
       routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => Scaffold(
+            body: TextButton(
+              onPressed: () async {
+                popResult = await context.push<bool>(
+                  '/payments/wallet/topup/method',
+                );
+              },
+              child: const Text('Ouvrir recharge'),
+            ),
+          ),
+        ),
         GoRoute(
           path: '/payments/wallet/topup/method',
           builder: (context, state) => wrapMethodScreen(mmCubit),
@@ -221,6 +245,55 @@ void main() {
       expect(find.byKey(const Key('contextual-tutorial-card')), findsOneWidget);
     },
   );
+
+  testWidgets('tuile code de recharge visible même sans mobile money', (
+    tester,
+  ) async {
+    when(
+      () => repo.isMobileMoneyTopupAvailable(),
+    ).thenAnswer((_) async => false);
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
+    expect(find.text("J'ai un code de recharge"), findsOneWidget);
+  });
+
+  testWidgets('code accepté : snackbar avec la devise du code puis retour', (
+    tester,
+  ) async {
+    DonySnackbar.clearDedup();
+    when(() => repo.redeemTopupCode(any())).thenAnswer(
+      (_) async => const WalletTopupCodeRedemptionModel(
+        amount: 2000,
+        currency: 'XOF',
+        balance: 2000,
+      ),
+    );
+    await tester.pumpWidget(buildHarness(withParent: true));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ouvrir recharge'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("J'ai un code de recharge"));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'DAKAR2000');
+    await tester.pump();
+    await tester.tap(find.text('Valider le code'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('+'), findsWidgets);
+    expect(find.textContaining('ajoutés à votre solde'), findsOneWidget);
+    expect(
+      (tester.widget(find.textContaining('ajoutés à votre solde')) as Text)
+          .data,
+      startsWith('+'),
+    );
+    expect(
+      find.textContaining('XOF').evaluate().isNotEmpty ||
+          find.textContaining('F CFA').evaluate().isNotEmpty,
+      isTrue,
+    );
+    expect(popResult, isTrue);
+    expect(find.text('Ouvrir recharge'), findsOneWidget);
+  });
 
   testWidgets('tuile mobile money visible et sélectionnable', (tester) async {
     await tester.pumpWidget(buildHarness());
