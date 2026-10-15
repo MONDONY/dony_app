@@ -466,6 +466,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'authLegalTermsLink': (l) => l.authLegalTermsLink,
   'authLegalMiddle': (l) => l.authLegalMiddle,
   'authLegalPrivacyLink': (l) => l.authLegalPrivacyLink,
+  'authLegalZeroTolerance': (l) => l.authLegalZeroTolerance,
+  'authTermsRequired': (l) => l.authTermsRequired,
+  'authTermsCheckboxSemantics': (l) => l.authTermsCheckboxSemantics,
   'authEmailStepLabel': (l) => l.authEmailStepLabel,
   'authEmailTitle': (l) => l.authEmailTitle,
   'authEmailBody': (l) => l.authEmailBody,
@@ -3999,6 +4002,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.ratingDistributionSemantics(intPlaceholderValue, intPlaceholderValue),
   'ratingQuotedComment': (l) =>
       l.ratingQuotedComment(placeholderMarker('comment')),
+  'ratingReportTooltip': (l) => l.ratingReportTooltip,
   'ratingExcludedNotice': (l) => l.ratingExcludedNotice,
   'cancellationReasonFlightCanceled': (l) => l.cancellationReasonFlightCanceled,
   'cancellationReasonPersonalEmergency': (l) =>
@@ -5462,6 +5466,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'suiviNumberRecapTitle': (l) => l.suiviNumberRecapTitle,
   'suiviPhotoAndValidate': (l) =>
       l.suiviPhotoAndValidate(placeholderMarker('step')),
+  'negotiationLinkedTripParcelWeight': (l) =>
+      l.negotiationLinkedTripParcelWeight(placeholderMarker('weight')),
   'suiviParcelOf': (l) => l.suiviParcelOf(placeholderMarker('parcel')),
   'suiviRecapTrip': (l) => l.suiviRecapTrip,
   'suiviRecapDone': (l) => l.suiviRecapDone,
@@ -7395,6 +7401,7 @@ const textParameters = <String, List<String>>{
   'suiviPhotoTitle': ['parcel'],
   'suiviPhotoRequiredFor': ['step'],
   'suiviPhotoAndValidate': ['step'],
+  'negotiationLinkedTripParcelWeight': ['weight'],
   'suiviParcelOf': ['parcel'],
   'suiviStepValidatedToast': ['step', 'parcel'],
   'suiviToastSendingIn': ['photo'],

@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.dart';
+import 'package:dony/features/ratings/presentation/widgets/report_rating_button.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -250,6 +251,7 @@ class _ReviewRow extends StatelessWidget {
                   ),
                 ),
               ),
+              ReportRatingButton(item: item),
             ],
           ),
 

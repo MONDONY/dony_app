@@ -1,5 +1,6 @@
 class RatingItem {
   const RatingItem({
+    this.id,
     required this.stars,
     this.comment,
     required this.createdAt,
@@ -10,6 +11,9 @@ class RatingItem {
     this.arrivalCity,
   });
 
+  /// Identifiant de l'avis, pour le signaler (cible `RATING`). Absent d'un
+  /// back antérieur à yadony-back #535 : l'avis n'est alors pas signalable.
+  final String? id;
   final int stars;
   final String? comment;
   final DateTime createdAt;
@@ -20,6 +24,7 @@ class RatingItem {
   final String? arrivalCity;
 
   factory RatingItem.fromJson(Map<String, dynamic> json) => RatingItem(
+    id: json['id'] as String?,
     stars: json['stars'] as int,
     comment: json['comment'] as String?,
     createdAt: DateTime.parse(json['createdAt'] as String),

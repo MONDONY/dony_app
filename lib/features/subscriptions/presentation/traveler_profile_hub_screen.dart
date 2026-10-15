@@ -5,6 +5,7 @@ import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
+import 'package:dony/features/ratings/presentation/widgets/report_rating_button.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_state.dart';
@@ -709,6 +710,7 @@ class _ReviewCard extends StatelessWidget {
                 DateFormat.yMd(context.l10n.localeName).format(item.createdAt),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
+              ReportRatingButton(item: item),
             ],
           ),
           if (item.comment != null && item.comment!.isNotEmpty) ...[

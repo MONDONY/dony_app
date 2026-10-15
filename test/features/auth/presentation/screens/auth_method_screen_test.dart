@@ -82,6 +82,130 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  Future<void> acceptTerms(WidgetTester tester) async {
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Checkbox));
+    await tester.pump();
+  }
+
+  // Guideline Apple 1.2 : l'utilisateur accepte explicitement les CGU, qui
+  // excluent tout contenu choquant ou comportement abusif, avant de créer
+  // un compte ou de se connecter. Une mention passive ne suffisait pas.
+  group('acceptation des CGU', () {
+    late MockAuthBloc bloc;
+
+    setUp(() {
+      bloc = MockAuthBloc();
+      when(() => bloc.state).thenReturn(const AuthInitial());
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+    });
+
+    tearDown(() => bloc.close());
+
+    testWidgets('affiche la clause de tolérance zéro', (tester) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.textContaining(
+          "Aucun contenu choquant ni comportement abusif n'est toléré",
+        ),
+        findsOneWidget,
+      );
+      expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
+    });
+
+    testWidgets('sans la case, Google ne part pas et la case est signalée', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Continuer avec Google'));
+      await tester.pump();
+
+      verifyNever(() => bloc.add(const AuthGoogleSignInRequested()));
+      expect(
+        find.text(
+          'Cochez la case pour accepter les conditions avant de continuer.',
+        ),
+        findsOneWidget,
+      );
+      expect(tester.widget<Checkbox>(find.byType(Checkbox)).isError, isTrue);
+    });
+
+    testWidgets('sans la case, le bouton e-mail ne navigue pas', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.ensureVisible(find.text('Continuer avec mon email'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continuer avec mon email'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AuthMethodScreen), findsOneWidget);
+      expect(
+        find.text(
+          'Cochez la case pour accepter les conditions avant de continuer.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('case cochée : Google part et l\'erreur disparaît', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Continuer avec Google'));
+      await tester.pump();
+      await acceptTerms(tester);
+
+      expect(
+        find.text(
+          'Cochez la case pour accepter les conditions avant de continuer.',
+        ),
+        findsNothing,
+      );
+      await tester.tap(find.text('Continuer avec Google'));
+      await tester.pump();
+
+      verify(() => bloc.add(const AuthGoogleSignInRequested())).called(1);
+    });
+
+    testWidgets('toucher le libellé coche puis décoche la case', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final label = find.textContaining('comportement abusif');
+      await tester.tap(label);
+      await tester.pump();
+      expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isTrue);
+
+      await tester.tap(label);
+      await tester.pump();
+      expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
+    });
+
+    testWidgets('le mode invité reste libre sans la case', (tester) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.ensureVisible(find.text('Parcourir sans compte'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Parcourir sans compte'));
+      await tester.pump();
+
+      verify(() => bloc.add(const AuthGuestSessionRequested())).called(1);
+    });
+  });
+
   // La mention légale était bleue et soulignée mais ne portait aucun
   // `recognizer` : rien n'écoutait le toucher. On demandait d'accepter des
   // documents qu'aucun geste ne permettait d'ouvrir, sur l'écran même que les
@@ -95,9 +219,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     // La mention vit sous la ligne de flottaison de la fenêtre de test.
-    await tester.ensureVisible(
-      find.textContaining('En continuant vous acceptez nos'),
-    );
+    await tester.ensureVisible(find.textContaining("J'accepte les"));
     await tester.pump(const Duration(milliseconds: 600));
 
     await tester.tapOnText(find.textRange.ofSubstring('CGU'));
@@ -116,9 +238,7 @@ void main() {
     await tester.pumpWidget(_app(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    await tester.ensureVisible(
-      find.textContaining('En continuant vous acceptez nos'),
-    );
+    await tester.ensureVisible(find.textContaining("J'accepte les"));
     await tester.pump(const Duration(milliseconds: 600));
 
     await tester.tapOnText(
@@ -354,10 +474,7 @@ void main() {
     expect(find.text('Continue with phone'), findsOneWidget);
     expect(find.text('Continue with email'), findsOneWidget);
     expect(find.text('Browse without an account'), findsOneWidget);
-    expect(
-      find.textContaining('By continuing, you agree to our'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('I accept the'), findsOneWidget);
   });
 
   // Rage clicks PostHog du 27/09 : pendant la connexion Google, Apple ou
@@ -412,6 +529,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       expect(find.byType(CircularProgressIndicator), findsNothing);
 
+      await acceptTerms(tester);
       await tester.tap(find.text('Continuer avec Google'));
       await emit(tester, const AuthLoading());
 
@@ -431,6 +549,7 @@ void main() {
       await tester.pumpWidget(_app(bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
+      await acceptTerms(tester);
       await tester.tap(find.text('Continuer avec Google'));
       await emit(tester, const AuthLoading());
       await emit(tester, const AuthInitial());
@@ -480,6 +599,7 @@ void main() {
       await tester.pumpWidget(_app(bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
+      await acceptTerms(tester);
       await tester.tap(find.text('Continuer avec Apple'));
       await emit(tester, const AuthLoading());
 

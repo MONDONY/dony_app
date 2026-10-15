@@ -437,10 +437,16 @@
   "authMethodGuestSemantics": "Parcourir sans compte. Accès limité à la recherche. Connexion requise pour publier, contacter, réserver ou payer.",
   "authMethodBrowseWithoutAccount": "Parcourir sans compte",
   "authMethodGuestNotice": "Accès limité : recherche uniquement. Connexion requise pour publier, contacter, réserver ou payer.",
-  "authLegalPrefix": "En continuant vous acceptez nos ",
+  "authLegalPrefix": "J'accepte les ",
   "authLegalTermsLink": "CGU",
-  "authLegalMiddle": " et notre ",
+  "authLegalMiddle": " et la ",
   "authLegalPrivacyLink": "politique de confidentialité",
+  "authLegalZeroTolerance": ". Aucun contenu choquant ni comportement abusif n'est toléré. Le contenu est supprimé et son auteur exclu.",
+  "@authLegalZeroTolerance": {"description": "Fin de la case d'acceptation des CGU de l'écran de connexion, après le lien de la politique de confidentialité. Clause de tolérance zéro exigée par Apple (guideline 1.2), commence par le point final de la phrase précédente."},
+  "authTermsRequired": "Cochez la case pour accepter les conditions avant de continuer.",
+  "@authTermsRequired": {"description": "Erreur sous la case des CGU quand l'utilisateur touche une méthode de connexion sans l'avoir cochée (auth_method_screen.dart)."},
+  "authTermsCheckboxSemantics": "Accepter les CGU et la politique de confidentialité",
+  "@authTermsCheckboxSemantics": {"description": "Libellé d'accessibilité de la case d'acceptation des CGU (auth_method_screen.dart)."},
   "authEmailStepLabel": "Email",
   "authEmailTitle": "Votre adresse email",
   "authEmailBody": "Saisissez votre adresse email pour recevoir un code de connexion.",
@@ -626,7 +632,7 @@
   "authReferralPrefilledBody": "Votre code parrain est déjà rempli : la personne qui vous a invité sera récompensée à votre premier envoi.",
   "authReferralPrefilledHint": "Code reconnu, venu de votre lien d'invitation",
   "authConsentTitle": "Une dernière chose",
-  "authConsentBody": "Pour améliorer Yadony, on aimerait mesurer comment l'app est utilisée. C'est anonyme et facultatif.",
+  "authConsentBody": "Pour améliorer Yadony, on aimerait mesurer comment l'app est utilisée. Ces statistiques sont liées à votre compte, jamais à votre nom, votre numéro ou votre e-mail. C'est facultatif.",
   "authConsentFootnote": "Jamais vos paiements, votre identité ou votre numéro. Vous pouvez changer d’avis dans Réglages.",
   "authConsentPointScreens": "Écrans visités et fonctionnalités utilisées",
   "authConsentPointGestures": "Gestes pour repérer ce qui bloque",
@@ -917,9 +923,9 @@
   "homeConnectionErrorTitle": "Connexion impossible",
   "homeRequestsLoadError": "Impossible de charger les demandes. Vérifiez votre connexion puis réessayez.",
   "homeEmptyParcelsFiltered": "Aucun colis avec ces filtres",
-  "homeEmptyParcelsSoon": "Demandes bientôt disponibles",
+  "homeEmptyParcelsSoon": "Aucune demande d'envoi pour le moment",
   "homeEmptyParcelsFilteredHint": "Modifiez ou supprimez vos filtres pour voir plus de demandes.",
-  "homeEmptyParcelsSoonHint": "Vous pourrez bientôt consulter les demandes d'envoi postées par les expéditeurs.",
+  "homeEmptyParcelsSoonHint": "Les demandes publiées par les expéditeurs apparaîtront ici. Revenez un peu plus tard.",
   "homeTripsLoadError": "Impossible de charger les trajets. Vérifiez votre connexion puis réessayez.",
   "homeEmptyTravelersNearby": "Aucun voyageur à proximité",
   "homeEmptyTravelersFiltered": "Aucun voyageur avec ces filtres",
@@ -12167,6 +12173,8 @@
       }
     }
   },
+  "ratingReportTooltip": "Signaler cet avis",
+  "@ratingReportTooltip": {"description": "Infobulle du drapeau posé sur chaque avis affiché, ouvre l'écran de signalement avec la cible RATING (report_rating_button.dart, guideline Apple 1.2)."},
   "ratingExcludedNotice": "Avis exclu du calcul",
   "@ratingExcludedNotice": {
     "description": "Mention sous un avis exclu du calcul de la moyenne (my_reviews_screen.dart, _ReviewItem)."
@@ -12889,7 +12897,7 @@
   "@communityEmptyTitle": {
     "description": "Titre de l'état vide (community_screen.dart, CommunityScreen)."
   },
-  "communityEmptyDescription": "Nos tutoriels et espaces communautaires seront bientôt disponibles ici.",
+  "communityEmptyDescription": "Aucun tutoriel ni espace communautaire à afficher pour le moment.",
   "@communityEmptyDescription": {
     "description": "Description de l'état vide (community_screen.dart, CommunityScreen)."
   },
@@ -13325,7 +13333,7 @@
   "@faqSafetyDeleteAccountQ": {
     "description": "Question FAQ safety/delete_account (faq_screen.dart)"
   },
-  "faqSafetyDeleteAccountA": "Dans Paramètres → Données et compte → Supprimer mon compte, vous pouvez choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.",
+  "faqSafetyDeleteAccountA": "Dans l'onglet Moi, ouvrez le menu ☰ puis « Supprimer mon compte ». Vous pouvez choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.",
   "@faqSafetyDeleteAccountA": {
     "description": "Réponse FAQ safety/delete_account (faq_screen.dart)"
   },
@@ -13908,7 +13916,7 @@
   "@privacyAnalyticsConsentLabel": {
     "description": "Libellé du consentement analytics (privacy_settings_screen.dart)"
   },
-  "privacyAnalyticsConsentSubtitle": "Mesure anonyme de l'usage pour améliorer l'app. Jamais vos paiements ni votre identité.",
+  "privacyAnalyticsConsentSubtitle": "Statistiques d'usage liées à votre compte pour améliorer l'app. Jamais vos paiements, votre nom ni votre numéro.",
   "@privacyAnalyticsConsentSubtitle": {
     "description": "Sous-titre du consentement analytics (privacy_settings_screen.dart). Fusion de deux fragments concaténés."
   },
@@ -19872,7 +19880,7 @@
   "@homePublishTripSubtitle": {"description": "Sous-titre du choix « Publier un trajet » de la feuille « + Publier »."},
   "chatAttachPhotoTooltip": "Envoyer une photo",
   "@chatAttachPhotoTooltip": {"description": "Trombone de la saisie du chat et titre de la feuille de choix galerie / appareil photo (FLUTTER-B4)."},
-  "chatPhotoLockedTitle": "Photos bientôt disponibles",
+  "chatPhotoLockedTitle": "Photos disponibles après le paiement",
   "@chatPhotoLockedTitle": {"description": "Titre de la feuille ouverte par le trombone grisé : photos pas encore permises (FLUTTER-B4)."},
   "chatPhotoLockedMessage": "Les photos seront disponibles une fois la demande acceptée et payée.",
   "@chatPhotoLockedMessage": {"description": "Explication du trombone grisé (FLUTTER-B4)."},
@@ -20296,9 +20304,9 @@
   "@moneyEmptyTitle": {"description": "Titre de l'état vide de « Mon argent » (money_overview_screen.dart, FLUTTER-HV)."},
   "moneyEmptyBody": "Quand un colis vous sera payé, vous verrez ici quand l'argent arrive.",
   "@moneyEmptyBody": {"description": "Description de l'état vide de « Mon argent » (money_overview_screen.dart, FLUTTER-HV)."},
-  "moneyUnavailableTitle": "Bientôt disponible",
+  "moneyUnavailableTitle": "Suivi indisponible",
   "@moneyUnavailableTitle": {"description": "Titre affiché quand le serveur ne fournit pas encore le suivi du séquestre (money_overview_screen.dart, FLUTTER-HV)."},
-  "moneyUnavailableBody": "Le suivi de l'argent de vos colis sera bientôt disponible.",
+  "moneyUnavailableBody": "Le suivi de l'argent de vos colis n'est pas disponible pour le moment. Réessayez plus tard.",
   "@moneyUnavailableBody": {"description": "Description affichée quand le serveur ne fournit pas encore le suivi du séquestre (money_overview_screen.dart, FLUTTER-HV)."},
   "moneyOpenParcelHint": "Ouvrir le colis",
   "@moneyOpenParcelHint": {"description": "Indication d'accessibilité au tap sur une carte « Mon argent » (money_parcel_card.dart, FLUTTER-HV)."},

@@ -16,6 +16,21 @@ void main() {
       expect(r.excluded, false);
     });
 
+    // L'id permet de signaler l'avis (cible RATING, yadony-back #535).
+    test('parse id, absent on an older backend', () {
+      final withId = RatingItem.fromJson({
+        'id': 'rating-1',
+        'stars': 4,
+        'createdAt': '2025-06-01T12:00:00',
+      });
+      final withoutId = RatingItem.fromJson({
+        'stars': 4,
+        'createdAt': '2025-06-01T12:00:00',
+      });
+      expect(withId.id, 'rating-1');
+      expect(withoutId.id, isNull);
+    });
+
     test('excluded defaults to false when absent', () {
       final r = RatingItem.fromJson({
         'stars': 3,

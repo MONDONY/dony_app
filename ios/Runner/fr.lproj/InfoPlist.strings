@@ -1,0 +1,14 @@
+/* Phrases des fenêtres de permission iOS, en français.
+   Garder chaque usage réel cité ici, dans en.lproj et dans Info.plist. */
+
+"NSCameraUsageDescription" = "Yadony utilise l'appareil photo pour scanner les QR codes des colis, photographier vos colis, envoyer des photos dans la messagerie, vérifier votre identité (photo de votre pièce et selfie) et scanner votre carte bancaire.";
+
+"NSFaceIDUsageDescription" = "Yadony utilise Face ID pour déverrouiller l'application et confirmer vos paiements, si vous activez cette protection.";
+
+"NSLocationWhenInUseUsageDescription" = "Yadony utilise votre position pendant que vous utilisez l'application pour afficher les trajets et colis près de chez vous, trouver l'aéroport le plus proche et enregistrer le lieu de chaque étape de remise d'un colis.";
+
+"NSMicrophoneUsageDescription" = "Yadony utilise le micro pour vos appels audio avec l'expéditeur, le voyageur ou le destinataire d'un colis.";
+
+"NSPhotoLibraryAddUsageDescription" = "Yadony enregistre dans vos photos le QR code de votre colis et les affiches de vos annonces, pour les retrouver hors ligne ou les partager.";
+
+"NSPhotoLibraryUsageDescription" = "Yadony accède à vos photos pour joindre des images de colis, choisir votre photo de profil et envoyer des photos dans la messagerie ou au support.";

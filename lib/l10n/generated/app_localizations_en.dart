@@ -1286,16 +1286,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Limited access: search only. Sign-in required to post, contact, book or pay.';
 
   @override
-  String get authLegalPrefix => 'By continuing, you agree to our ';
+  String get authLegalPrefix => 'I accept the ';
 
   @override
   String get authLegalTermsLink => 'Terms of Use';
 
   @override
-  String get authLegalMiddle => ' and our ';
+  String get authLegalMiddle => ' and the ';
 
   @override
   String get authLegalPrivacyLink => 'Privacy Policy';
+
+  @override
+  String get authLegalZeroTolerance =>
+      '. Objectionable content and abusive users are not tolerated. Such content is removed and its author banned.';
+
+  @override
+  String get authTermsRequired =>
+      'Tick the box to accept the terms before continuing.';
+
+  @override
+  String get authTermsCheckboxSemantics =>
+      'Accept the Terms of Use and Privacy Policy';
 
   @override
   String get authEmailStepLabel => 'Email';
@@ -1757,7 +1769,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authConsentBody =>
-      'To improve Yadony, we\'d like to measure how the app is used. It\'s anonymous and optional.';
+      'To improve Yadony, we\'d like to measure how the app is used. These statistics are linked to your account, never to your name, number or email. It\'s optional.';
 
   @override
   String get authConsentFootnote =>
@@ -2160,7 +2172,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeEmptyParcelsFiltered => 'No parcels match these filters';
 
   @override
-  String get homeEmptyParcelsSoon => 'Parcel requests coming soon';
+  String get homeEmptyParcelsSoon => 'No parcel requests yet';
 
   @override
   String get homeEmptyParcelsFilteredHint =>
@@ -2168,7 +2180,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeEmptyParcelsSoonHint =>
-      'Soon you\'ll be able to browse parcel requests posted by senders.';
+      'Requests posted by senders will appear here. Check back a little later.';
 
   @override
   String get homeTripsLoadError =>
@@ -11163,6 +11175,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get ratingReportTooltip => 'Report this review';
+
+  @override
   String get ratingExcludedNotice => 'Excluded from the average';
 
   @override
@@ -11728,7 +11743,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get communityEmptyDescription =>
-      'Our tutorials and community spaces will be available here soon.';
+      'No tutorials or community spaces to show right now.';
 
   @override
   String get communityTutorialsTitle => 'Video tutorials';
@@ -12148,7 +12163,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqSafetyDeleteAccountA =>
-      'In Settings → Data and account → Delete my account, you can choose a reversible 30-day pause or an immediate, permanent deletion. An ongoing transaction may temporarily block deletion.';
+      'In the Profile tab, open the ☰ menu, then “Delete my account”. You can choose a reversible 30-day pause or an immediate, permanent deletion. An ongoing transaction may temporarily block deletion.';
 
   @override
   String get helpTutorialScreenTitle => 'Video tutorial';
@@ -12619,7 +12634,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyAnalyticsConsentSubtitle =>
-      'Anonymous usage measurement to improve the app. Never your payments or your identity.';
+      'Usage statistics linked to your account to improve the app. Never your payments, your name or your number.';
 
   @override
   String get blockedUsersTitle => 'Blocked users';
@@ -17390,7 +17405,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatAttachPhotoTooltip => 'Send a photo';
 
   @override
-  String get chatPhotoLockedTitle => 'Photos coming soon';
+  String get chatPhotoLockedTitle => 'Photos available after payment';
 
   @override
   String get chatPhotoLockedMessage =>
@@ -18227,11 +18242,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'When a parcel is paid to you, you\'ll see here when the money arrives.';
 
   @override
-  String get moneyUnavailableTitle => 'Coming soon';
+  String get moneyUnavailableTitle => 'Tracking unavailable';
 
   @override
   String get moneyUnavailableBody =>
-      'Tracking the money for your parcels will be available soon.';
+      'Tracking the money for your parcels isn\'t available right now. Please try again later.';
 
   @override
   String get moneyOpenParcelHint => 'Open the parcel';
