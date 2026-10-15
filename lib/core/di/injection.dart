@@ -198,6 +198,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_topup_code_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_availability_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/data/datasources/wallet_remote_datasource.dart';
@@ -781,6 +782,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<WalletTopupMobileMoneyAvailabilityCubit>(
     () => WalletTopupMobileMoneyAvailabilityCubit(getIt<WalletRepository>()),
+  );
+  getIt.registerFactory<WalletTopupCodeCubit>(
+    () => WalletTopupCodeCubit(getIt<WalletRepository>()),
   );
 
   // Billing (abonnement PRO)
