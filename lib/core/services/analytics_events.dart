@@ -582,6 +582,10 @@ abstract final class AnalyticsEvents {
   static const receptionDeclined = 'reception_declined';
   static const receptionWithdrawn = 'reception_withdrawn';
   static const receptionTravelerRated = 'reception_traveler_rated';
+
+  // Lien yadony://colis/{id} de la page publique du QR colis : rôle résolu
+  // (`role` : sender/traveler/recipient/none). Jamais l'identifiant du colis.
+  static const parcelDeepLinkResolved = 'parcel_deep_link_resolved';
   static const screenFeedbackSubmitted = 'screen_feedback_submitted';
 
   // Trip matching (Colis sur mes trajets)
