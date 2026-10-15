@@ -580,6 +580,63 @@ void main() {
       expect(find.byKey(const Key('chat-participant-header')), findsNothing);
     });
 
+    testWidgets(
+      'fil purgé après livraison : vide, en lecture seule, bandeau de constat',
+      (tester) async {
+        when(() => bloc.state).thenReturn(const ChatReadOnly([]));
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            home: BlocProvider<ChatBloc>.value(
+              value: bloc,
+              child: const ChatScreen(
+                conversation: ConversationModel(
+                  id: 'conv-1',
+                  bidId: 'bid-1',
+                  firestoreConversationId: 'conv_bid-1',
+                  otherParticipant: _participant,
+                  messagesPurged: true,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('Messages supprimés'), findsOneWidget);
+        expect(
+          find.textContaining('ont été supprimés 3 jours après la livraison'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('a quitté cette conversation'),
+          findsNothing,
+        );
+        verify(
+          () => bloc.add(
+            any(
+              that: isA<ChatSubscribeRequested>().having(
+                (e) => e.isReadOnly,
+                'isReadOnly',
+                isTrue,
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets('fil ouvert : la règle des 3 jours est rappelée en tête', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await _pump(tester, bloc);
+      expect(
+        find.textContaining('supprimés 3 jours après la livraison du colis'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('signaler ouvre le formulaire avec la cible utilisateur', (
       tester,
     ) async {

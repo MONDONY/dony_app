@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/server_date_time.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 
@@ -114,6 +115,20 @@ class ConversationModel {
   /// pas encore rendu). Absent sur un ancien back : faux.
   final bool returnPending;
 
+  /// Livraison du colis (UTC), nulle tant qu'il n'est pas livré. Absente
+  /// sur un ancien back.
+  final DateTime? deliveredAt;
+
+  /// Date prévue d'effacement des messages et photos du fil (livraison
+  /// + 3 jours, UTC). Nulle tant que le colis n'est pas livré, ou sur un
+  /// ancien back : le bandeau donne alors la règle sans date.
+  final DateTime? messagesPurgeAt;
+
+  /// Messages et photos déjà effacés, 3 jours après la livraison : le fil
+  /// est vide et fermé à l'écriture (règles Firestore). Faux sur un ancien
+  /// back.
+  final bool messagesPurged;
+
   const ConversationModel({
     required this.id,
     required this.bidId,
@@ -137,7 +152,14 @@ class ConversationModel {
     this.mediaAllowed = false,
     this.parcelStatus,
     this.returnPending = false,
+    this.deliveredAt,
+    this.messagesPurgeAt,
+    this.messagesPurged = false,
   });
+
+  /// Plus rien ne peut s'écrire dans ce fil : l'autre partie l'a quitté, ou
+  /// ses messages ont été effacés après la livraison.
+  bool get isWriteClosed => readOnly || messagesPurged;
 
   /// Conversation séparée voyageur ↔ destinataire : l'expéditeur n'y est pas,
   /// le numéro n'y est jamais révélé.
@@ -214,6 +236,9 @@ class ConversationModel {
     mediaAllowed: mediaAllowed ?? this.mediaAllowed,
     parcelStatus: parcelStatus,
     returnPending: returnPending,
+    deliveredAt: deliveredAt,
+    messagesPurgeAt: messagesPurgeAt,
+    messagesPurged: messagesPurged,
   );
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
@@ -257,5 +282,17 @@ class ConversationModel {
           _ => null,
         },
         returnPending: json['returnPending'] == true,
+        deliveredAt: _serverDate(json['deliveredAt']),
+        messagesPurgeAt: _serverDate(json['messagesPurgeAt']),
+        messagesPurged: json['messagesPurged'] == true,
       );
+
+  static DateTime? _serverDate(Object? value) {
+    if (value is! String || value.trim().isEmpty) return null;
+    try {
+      return parseServerDateTime(value);
+    } on FormatException {
+      return null;
+    }
+  }
 }

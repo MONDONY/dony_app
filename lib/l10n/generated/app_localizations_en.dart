@@ -10347,6 +10347,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'The other person has left this conversation. You\'re in read-only mode.';
 
   @override
+  String get chatRetentionBannerRule =>
+      'Messages and photos in this conversation will be deleted 3 days after the parcel is delivered.';
+
+  @override
+  String chatRetentionBannerScheduled(String date) {
+    return 'Parcel delivered: messages and photos in this conversation will be deleted on $date.';
+  }
+
+  @override
+  String get chatRetentionBannerPurged =>
+      'Messages and photos in this conversation were deleted 3 days after the parcel was delivered.';
+
+  @override
+  String get chatMessagesPurgedEmptyTitle => 'Messages deleted';
+
+  @override
   String get chatLinkedTripLabel => 'Linked trip';
 
   @override

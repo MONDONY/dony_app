@@ -10416,6 +10416,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.';
 
   @override
+  String get chatRetentionBannerRule =>
+      'Les messages et les photos de cette conversation seront supprimés 3 jours après la livraison du colis.';
+
+  @override
+  String chatRetentionBannerScheduled(String date) {
+    return 'Colis livré : les messages et les photos de cette conversation seront supprimés le $date.';
+  }
+
+  @override
+  String get chatRetentionBannerPurged =>
+      'Les messages et les photos de cette conversation ont été supprimés 3 jours après la livraison du colis.';
+
+  @override
+  String get chatMessagesPurgedEmptyTitle => 'Messages supprimés';
+
+  @override
   String get chatLinkedTripLabel => 'Trajet lié';
 
   @override
