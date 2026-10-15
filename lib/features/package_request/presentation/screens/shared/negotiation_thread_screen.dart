@@ -444,9 +444,26 @@ class _LoadedViewState extends State<_LoadedView> {
   final _scrollController = ScrollController();
   int _lastMessageCount = 0;
 
+  /// La carte héros se réduit dès que le chat défile (FLUTTER-Q6).
+  final _heroCompact = ValueNotifier<bool>(false);
+
+  void _syncHeroCompact() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    // Hystérésis : réduite après 48 px de défilement, et seulement si le fil
+    // déborde nettement (sinon le gain de place ramène le défilement à 0 et
+    // la carte clignote) ; ne revient en grand qu'une fois tout en haut.
+    if (_heroCompact.value) {
+      if (position.pixels < 4) _heroCompact.value = false;
+    } else if (position.pixels > 48 && position.maxScrollExtent > 160) {
+      _heroCompact.value = true;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_syncHeroCompact);
     _lastMessageCount = widget.thread.messages.length;
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
@@ -473,6 +490,7 @@ class _LoadedViewState extends State<_LoadedView> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _heroCompact.dispose();
     super.dispose();
   }
 
@@ -489,10 +507,19 @@ class _LoadedViewState extends State<_LoadedView> {
 
     return Column(
       children: [
-        ThreadHeroCard(
-              thread: thread,
-              statusVariant: variant,
-              isTraveler: viewerUserId == thread.travelerId,
+        ValueListenableBuilder<bool>(
+              valueListenable: _heroCompact,
+              builder: (_, compact, _) => AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: ThreadHeroCard(
+                  thread: thread,
+                  statusVariant: variant,
+                  isTraveler: viewerUserId == thread.travelerId,
+                  compact: compact,
+                ),
+              ),
             )
             .animate()
             .fadeIn(duration: 220.ms)
@@ -550,9 +577,11 @@ class _LoadedViewState extends State<_LoadedView> {
         if (thread.linkedTrip != null)
           LinkedTripCard(
             trip: thread.linkedTrip!,
+            parcelWeightKg: thread.weightKg,
             onTap: () => TripDetailBottomSheet.show(
               context,
               trip: thread.linkedTrip!,
+              parcelWeightKg: thread.weightKg,
               isSender: viewerUserId != thread.travelerId,
               // Refus uniquement possible avant paiement
               onRefuse: thread.status == NegotiationThreadStatus.awaitingPayment

@@ -1,22 +1,45 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 
 /// Bandeau cliquable affiché entre le fil de messages et la CTA bar,
 /// uniquement quand le statut est [AWAITING_PAYMENT] et qu'un trajet est lié.
 class LinkedTripCard extends StatelessWidget {
-  const LinkedTripCard({required this.trip, required this.onTap, super.key});
+  const LinkedTripCard({
+    required this.trip,
+    required this.onTap,
+    this.parcelWeightKg,
+    super.key,
+  });
 
   final LinkedTripSummary trip;
   final VoidCallback onTap;
 
+  /// Poids du colis négocié. Le poids restant du trajet n'a pas sa place ici :
+  /// il vaut toujours 0 pour un trajet dédié, et tombe à 0 une fois le colis
+  /// réservé, ce qui laissait croire à l'expéditeur que son colis pesait 0 kg
+  /// (FLUTTER-Q3).
+  final double? parcelWeightKg;
+
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final icon = _iconForMode(trip.transportMode);
-    final date = trip.departureDate ?? '';
+    final parsed = DateTime.tryParse(trip.departureDate ?? '');
+    final weight = parcelWeightKg;
+    final meta = [
+      if (parsed != null)
+        DateFormat.MMMEd(l.localeName).format(parsed)
+      else if (trip.departureDate != null)
+        trip.departureDate!,
+      if (weight != null && weight > 0)
+        l.negotiationLinkedTripParcelWeight('${formatKg(l, weight)} kg'),
+    ].join(' · ');
 
     return GestureDetector(
       onTap: onTap,
@@ -51,17 +74,17 @@ class LinkedTripCard extends StatelessWidget {
                       color: DonyColors.neutral0,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    trip.isKgFree
-                        ? '$date · ${context.l10n.tripKgFree}'
-                        : '$date · ${trip.availableKg} kg',
-                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: DonyColors.neutral400,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                  if (meta.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      meta,
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: DonyColors.neutral400,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

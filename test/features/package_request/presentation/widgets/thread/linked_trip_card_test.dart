@@ -35,21 +35,27 @@ void main() {
       expect(find.text('Paris → Dakar'), findsOneWidget);
     });
 
-    testWidgets('displays date and availableKg', (tester) async {
+    testWidgets('formats the date and shows the parcel weight (FLUTTER-Q3)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           LinkedTripCard(
             trip: _trip(date: '2026-08-15'),
+            parcelWeightKg: 5,
             onTap: () {},
           ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining('2026-08-15'), findsOneWidget);
-      expect(find.textContaining('10 kg'), findsOneWidget);
+      expect(find.textContaining('2026-08-15'), findsNothing);
+      expect(find.text('sam. 15 août · Colis de 5 kg'), findsOneWidget);
+      // Le poids restant du trajet n'est plus affiché : il valait 0 pour un
+      // trajet dédié et laissait croire à un colis de 0 kg.
+      expect(find.textContaining('10 kg'), findsNothing);
     });
 
-    testWidgets('displays « Kg libre » for KG_FREE capacity', (tester) async {
+    testWidgets('date only when the parcel weight is unknown', (tester) async {
       await tester.pumpWidget(
         _wrap(
           LinkedTripCard(
@@ -59,8 +65,7 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining('Kg libre'), findsOneWidget);
-      expect(find.textContaining('10 kg'), findsNothing);
+      expect(find.text('sam. 15 août'), findsOneWidget);
     });
 
     testWidgets('displays plane icon for PLANE mode', (tester) async {
@@ -120,33 +125,29 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('shows null date as empty string', (tester) async {
+    testWidgets('no date: only the parcel weight', (tester) async {
       const trip = LinkedTripSummary(
         announcementId: 'ann-2',
         departureCity: 'Lyon',
         arrivalCity: 'Abidjan',
         transportMode: 'PLANE',
-        availableKg: 5,
+        availableKg: 0,
       );
-      await tester.pumpWidget(_wrap(LinkedTripCard(trip: trip, onTap: () {})));
+      await tester.pumpWidget(
+        _wrap(LinkedTripCard(trip: trip, parcelWeightKg: 5, onTap: () {})),
+      );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining('5 kg'), findsOneWidget);
+      expect(find.text('Colis de 5 kg'), findsOneWidget);
     });
 
-    testWidgets('en anglais : « Kg libre » devient « Flexible kg »', (
-      tester,
-    ) async {
+    testWidgets('en anglais : date et poids du colis traduits', (tester) async {
       useEnglish();
       await tester.pumpWidget(
-        _wrap(
-          LinkedTripCard(
-            trip: _trip(capacityUnit: 'KG_FREE'),
-            onTap: () {},
-          ),
-        ),
+        _wrap(LinkedTripCard(trip: _trip(), parcelWeightKg: 2.5, onTap: () {})),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining('Flexible kg'), findsOneWidget);
+      expect(find.textContaining('Sat, Aug 15'), findsOneWidget);
+      expect(find.textContaining('Parcel: 2.5 kg'), findsOneWidget);
     });
   });
 }

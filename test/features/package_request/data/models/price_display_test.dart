@@ -20,6 +20,18 @@ void main() {
       expect(PriceDisplay.grossFromNet(35), closeTo(39.20, 0.001));
     },
   );
+  test(
+    'grossFromNet arrondit la commission au centime comme le back (FLUTTER-Q4)',
+    () {
+      setDonyCommissionRate(0.0499);
+      // 70 × 4,99 % = 3,493 → 3,49 ; brut 73,49, comme PriceBreakdown.fromNet.
+      expect(PriceDisplay.feeFromNet(70), 3.49);
+      expect(PriceDisplay.grossFromNet(70), closeTo(73.49, 1e-9));
+      // 69,99 × 5 % = 3,4995 → 3,50 : arrondi au plus proche, demi vers le haut.
+      setDonyCommissionRate(0.05);
+      expect(PriceDisplay.grossFromNet(69.99), closeTo(73.49, 1e-9));
+    },
+  );
   test('format euros fr', () {
     expect(PriceDisplay.money(39.20), '39,20 €');
     expect(PriceDisplay.money(35), '35,00 €');

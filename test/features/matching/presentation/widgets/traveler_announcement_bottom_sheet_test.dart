@@ -348,20 +348,26 @@ void main() {
     },
   );
 
-  testWidgets('date limite de dépôt : l heure suit le jour (FLUTTER-MY)', (
-    tester,
-  ) async {
-    final deadline = DateTime(2026, 10, 6, 14, 5);
-    final a = _buildAnnouncement(kycVerified: true, handoverDeadline: deadline);
-    await tester.pumpWidget(_harness(announcement: a));
-    await tester.tap(find.text('Ouvrir'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'date limite de dépôt : le jour, puis l heure sur sa ligne (FLUTTER-MY, Q2)',
+    (tester) async {
+      final deadline = DateTime(2026, 10, 6, 14, 5);
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        handoverDeadline: deadline,
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
 
-    expect(
-      find.text('${DateFormat.MMMEd('fr').format(deadline)} à 14:05'),
-      findsOneWidget,
-    );
-  });
+      expect(
+        find.text(DateFormat.MMMEd('fr').format(deadline)),
+        findsOneWidget,
+      );
+      // En une seule ligne, la demi-largeur coupait l'heure (FLUTTER-Q2).
+      expect(find.text('à 14:05'), findsOneWidget);
+    },
+  );
 
   testWidgets('date limite de dépôt en anglais (ordre anglais)', (
     tester,

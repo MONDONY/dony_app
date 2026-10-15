@@ -8474,6 +8474,15 @@
       }
     }
   },
+  "negotiationLinkedTripParcelWeight": "Parcel: {weight}",
+  "@negotiationLinkedTripParcelWeight": {
+    "description": "Poids du colis négocié sur la carte du trajet lié (linked_trip_card.dart), poids déjà formaté avec son unité.",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
   "suiviParcelOf": "{parcel}'s parcel",
   "@suiviParcelOf": {
     "description": "Titre du colis dans la feuille récapitulative (suivi_parcel_sheets.dart, _NumberRecap).",

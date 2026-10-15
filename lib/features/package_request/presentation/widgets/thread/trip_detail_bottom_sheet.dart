@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -148,6 +149,7 @@ class TripDetailBottomSheet extends StatelessWidget {
     required this.trip,
     required this.isSender,
     this.onRefuse,
+    this.parcelWeightKg,
     super.key,
   });
 
@@ -155,11 +157,15 @@ class TripDetailBottomSheet extends StatelessWidget {
   final bool isSender;
   final void Function(String? reason)? onRefuse;
 
+  /// Poids du colis négocié (FLUTTER-Q3), voir [LinkedTripCard.parcelWeightKg].
+  final double? parcelWeightKg;
+
   static void show(
     BuildContext context, {
     required LinkedTripSummary trip,
     required bool isSender,
     void Function(String? reason)? onRefuse,
+    double? parcelWeightKg,
   }) {
     final l = context.l10n;
     DonyBottomSheet.show(
@@ -183,6 +189,7 @@ class TripDetailBottomSheet extends StatelessWidget {
         trip: trip,
         isSender: isSender,
         onRefuse: onRefuse,
+        parcelWeightKg: parcelWeightKg,
       ),
     );
   }
@@ -214,11 +221,20 @@ class TripDetailBottomSheet extends StatelessWidget {
             label: l.negotiationTripDepartureTimeLabel,
             value: trip.departureTime!,
           ),
-        _InfoRow(
-          icon: '⚖️',
-          label: l.negotiationTripAvailableWeightLabel,
-          value: trip.isKgFree ? l.tripKgFree : '${trip.availableKg} kg',
-        ),
+        if (parcelWeightKg != null && parcelWeightKg! > 0)
+          _InfoRow(
+            icon: '📦',
+            label: l.bidCreateWeightLabel,
+            value: '${formatKg(l, parcelWeightKg!)} kg',
+          ),
+        // Le restant d'un trajet dédié vaut toujours 0, et celui d'un trajet
+        // plein aussi : « 0 kg disponible » se lisait comme une erreur.
+        if (trip.isKgFree || trip.availableKg > 0)
+          _InfoRow(
+            icon: '⚖️',
+            label: l.negotiationTripAvailableWeightLabel,
+            value: trip.isKgFree ? l.tripKgFree : '${trip.availableKg} kg',
+          ),
         if (trip.pickupAddressLabel != null)
           _InfoRow(
             icon: '📍',

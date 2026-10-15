@@ -30,6 +30,7 @@ class DonyNegoHeroCard extends StatelessWidget {
     this.warning,
     this.turnLabel,
     this.myTurn = false,
+    this.compact = false,
     this.margin = const EdgeInsets.fromLTRB(
       DonySpacing.base,
       DonySpacing.md,
@@ -69,11 +70,17 @@ class DonyNegoHeroCard extends StatelessWidget {
   /// La main est à l'utilisateur : la pastille de tour passe au plein.
   final bool myTurn;
 
+  /// Version réduite sur une ligne (libellé, montant, pastille), montrée quand
+  /// le fil défile : la carte entière mangeait la zone du chat, mais le
+  /// montant doit rester sous les yeux (FLUTTER-Q6).
+  final bool compact;
+
   final EdgeInsetsGeometry margin;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    if (compact) return _compact(tt);
     return Container(
       margin: margin,
       decoration: BoxDecoration(
@@ -173,6 +180,54 @@ class DonyNegoHeroCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _compact(TextTheme tt) => Container(
+    key: const Key('nego-hero-compact'),
+    margin: margin,
+    padding: const EdgeInsets.symmetric(
+      horizontal: DonySpacing.base,
+      vertical: DonySpacing.sm,
+    ),
+    decoration: BoxDecoration(
+      color: background,
+      borderRadius: BorderRadius.circular(DonyRadius.card),
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '$caption  ',
+                  style: tt.bodyMedium!.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white.withValues(alpha: 0.70),
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                TextSpan(
+                  text: amount,
+                  style: tt.bodyMedium!.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            key: amountKey,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        _StatusBadge(label: badgeLabel),
+      ],
+    ),
+  );
 }
 
 class _StatusBadge extends StatelessWidget {

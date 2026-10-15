@@ -15544,6 +15544,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String negotiationLinkedTripParcelWeight(String weight) {
+    return 'Parcel: $weight';
+  }
+
+  @override
   String suiviParcelOf(String parcel) {
     return '$parcel\'s parcel';
   }

@@ -40,6 +40,7 @@ void main() {
     double currentPriceEur = 50,
     int roundsCount = 2,
     String currency = 'EUR',
+    bool isTraveler = false,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -55,6 +56,7 @@ void main() {
                 currentPriceEur: currentPriceEur,
                 roundsCount: roundsCount,
                 currency: currency,
+                isTraveler: isTraveler,
               ),
               child: const Text('Ouvrir'),
             ),
@@ -79,6 +81,37 @@ void main() {
       // isTraveler defaults to false → sender sees gross: 50 * 1.12 = 56 → "Vous payez 56,00 €"
       expect(find.textContaining('56'), findsWidgets);
       expect(find.textContaining('Round 2/5'), findsOneWidget);
+    });
+
+    testWidgets(
+      'expéditeur : la saisie détaille net, commission et total (FLUTTER-Q5)',
+      (tester) async {
+        await openSheet(tester);
+        expect(
+          find.byKey(const Key('counter-offer-commission-preview')),
+          findsNothing,
+        );
+        await tester.enterText(find.byType(TextFormField).first, '70');
+        await tester.pump();
+        expect(find.text('Net voyageur'), findsOneWidget);
+        expect(find.text('70,00\u00a0€'), findsOneWidget);
+        expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
+        expect(find.text('8,40\u00a0€'), findsOneWidget);
+        expect(find.text('Total à régler'), findsOneWidget);
+        expect(find.text('78,40\u00a0€'), findsOneWidget);
+      },
+    );
+
+    testWidgets('voyageur : le détail part du prix payé jusqu\'au net', (
+      tester,
+    ) async {
+      await openSheet(tester, isTraveler: true);
+      await tester.enterText(find.byType(TextFormField).first, '70');
+      await tester.pump();
+      expect(find.text('Prix payé par l\'expéditeur'), findsOneWidget);
+      expect(find.text('78,40\u00a0€'), findsOneWidget);
+      expect(find.text('−8,40\u00a0€'), findsOneWidget);
+      expect(find.text('Vous recevez'), findsOneWidget);
     });
 
     testWidgets('affiche le label "Votre prix proposé"', (tester) async {
