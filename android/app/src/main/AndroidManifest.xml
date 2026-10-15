@@ -142,6 +142,13 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="yadony" android:host="bids"/>
             </intent-filter>
+            <!-- Page publique du QR colis : bouton « Ouvrir dans Yadony ». -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="yadony" android:host="colis"/>
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>

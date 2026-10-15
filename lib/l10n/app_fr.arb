@@ -21401,5 +21401,13 @@
   "flightsPriceTotalFor": "{count, plural, other{≈ {total} pour {count} pers.}}",
   "@flightsPriceTotalFor": {"description": "Total estimé d'une offre pour plusieurs adultes.", "placeholders": {"count": {"type": "int"}, "total": {"type": "String"}}},
   "flightsPriceFinalOnPartner": "Prix final sur Aviasales",
-  "@flightsPriceFinalOnPartner": {"description": "Sous le prix d'une offre quand la recherche compte des enfants ou des bébés."}
+  "@flightsPriceFinalOnPartner": {"description": "Sous le prix d'une offre quand la recherche compte des enfants ou des bébés."},
+  "parcelLinkTitle": "Colis",
+  "@parcelLinkTitle": {"description": "Titre de l'écran ouvert par le lien yadony://colis/{id} (page publique du QR colis)."},
+  "parcelLinkNotLinkedTitle": "Ce colis n'est pas lié à votre compte",
+  "@parcelLinkNotLinkedTitle": {"description": "Lien colis : l'utilisateur n'est ni expéditeur, ni voyageur, ni destinataire du colis."},
+  "parcelLinkNotLinkedBody": "Si vous devez le récupérer, demandez à l'expéditeur d'indiquer votre numéro, ou écrivez au support.",
+  "@parcelLinkNotLinkedBody": {"description": "Explication sous parcelLinkNotLinkedTitle."},
+  "parcelLinkRetry": "Réessayer",
+  "@parcelLinkRetry": {"description": "Bouton qui relance la vérification du lien colis après une erreur."}
 }

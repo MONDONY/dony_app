@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/receptions/data/models/parcel_role.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 
 /// Colis à recevoir de l'utilisateur connecté (lot 2 destinataire).
@@ -22,6 +23,16 @@ class ReceptionRemoteDatasource {
   Future<Reception> fetchReception(String bidId) async {
     final response = await _apiClient.dio.get('/receptions/$bidId');
     return Reception.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Rôle de l'utilisateur sur un colis (lien `yadony://colis/{id}`) ; NONE
+  /// pour un colis inconnu, sans dire s'il existe.
+  Future<ParcelRole> fetchParcelRole(String bidId) async {
+    final response = await _apiClient.dio.get('/receptions/role/$bidId');
+    final data = response.data;
+    return parcelRoleFromJson(
+      data is Map<String, dynamic> ? data['role'] : null,
+    );
   }
 
   /// « Oui, c'est pour moi » : rend le colis à jour, idempotent.

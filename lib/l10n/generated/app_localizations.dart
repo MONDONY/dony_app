@@ -32719,6 +32719,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Prix final sur Aviasales'**
   String get flightsPriceFinalOnPartner;
+
+  /// Titre de l'écran ouvert par le lien yadony://colis/{id} (page publique du QR colis).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get parcelLinkTitle;
+
+  /// Lien colis : l'utilisateur n'est ni expéditeur, ni voyageur, ni destinataire du colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'est pas lié à votre compte'**
+  String get parcelLinkNotLinkedTitle;
+
+  /// Explication sous parcelLinkNotLinkedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous devez le récupérer, demandez à l\'expéditeur d\'indiquer votre numéro, ou écrivez au support.'**
+  String get parcelLinkNotLinkedBody;
+
+  /// Bouton qui relance la vérification du lien colis après une erreur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get parcelLinkRetry;
 }
 
 class _AppLocalizationsDelegate

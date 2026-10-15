@@ -224,6 +224,7 @@ import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/data/rating_prompt_tracker.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
+import 'package:dony/features/receptions/bloc/parcel_link_cubit.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/receptions/data/datasources/reception_remote_datasource.dart';
@@ -408,6 +409,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<ReceptionDetailCubit>(
     () => ReceptionDetailCubit(
+      getIt<ReceptionRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<ParcelLinkCubit>(
+    () => ParcelLinkCubit(
       getIt<ReceptionRepository>(),
       getIt<AnalyticsService>(),
     ),
