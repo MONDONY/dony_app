@@ -17,9 +17,11 @@ final _uuidPattern = RegExp(
 /// Identifiant du colis (bid) porté par un QR Yadony, ou `null` si le contenu
 /// lu n'en est pas un.
 ///
-/// Le QR encode l'URL publique de suivi `…/tracking/<bidId>` : on prend le
-/// segment qui suit `tracking` et on exige un UUID, pour qu'un QR quelconque
-/// (menu de restaurant, lien marketing) ne déclenche jamais rien.
+/// Le QR encode l'URL de la page publique du colis,
+/// `https://api.yadony.com/api/v1/tracking/<bidId>/scan` (scannée hors app,
+/// elle affiche la page publique). On prend le segment qui suit `tracking`
+/// et on exige un UUID, pour qu'un QR quelconque (menu de restaurant, lien
+/// marketing) ne déclenche jamais rien.
 String? extractBidIdFromQr(String raw) {
   final uri = Uri.tryParse(raw.trim());
   if (uri == null) return null;

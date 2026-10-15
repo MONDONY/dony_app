@@ -18,6 +18,18 @@ void main() {
       );
     });
 
+    test(
+      "URL réelle du QR collé sur le colis (…/api/v1/tracking/<id>/scan)",
+      () {
+        expect(
+          extractBidIdFromQr(
+            'https://api.yadony.com/api/v1/tracking/$_uuid/scan',
+          ),
+          _uuid,
+        );
+      },
+    );
+
     test('majuscules acceptées', () {
       final upper = _uuid.toUpperCase();
       expect(extractBidIdFromQr('https://yadony.com/tracking/$upper'), upper);
