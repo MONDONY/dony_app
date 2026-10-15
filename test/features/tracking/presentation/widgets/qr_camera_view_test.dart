@@ -19,7 +19,7 @@ void main() {
     });
 
     test(
-      "URL réelle du QR collé sur le colis (…/api/v1/tracking/<id>/scan)",
+      'URL réelle du QR collé sur le colis (…/api/v1/tracking/<id>/scan)',
       () {
         expect(
           extractBidIdFromQr(

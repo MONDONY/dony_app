@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/receptions/data/datasources/reception_remote_datasource.dart';
+import 'package:dony/features/receptions/data/models/parcel_role.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -165,6 +166,25 @@ void main() {
       expect(list.first.confirmationCode, '482913');
       expect(list.last.isPending, isTrue);
     });
+
+    test('GET /receptions/role/{id} : rôle du colis', () async {
+      when(
+        () => dio.get('/receptions/role/$_bidId'),
+      ).thenAnswer((_) async => _response({'role': 'RECIPIENT'}));
+
+      expect(await repository.getParcelRole(_bidId), ParcelRole.recipient);
+    });
+
+    test(
+      'GET /receptions/role/{id} : réponse inattendue, aucun rôle',
+      () async {
+        when(
+          () => dio.get('/receptions/role/$_bidId'),
+        ).thenAnswer((_) async => _response(['SENDER']));
+
+        expect(await repository.getParcelRole(_bidId), ParcelRole.none);
+      },
+    );
 
     test('GET /receptions : réponse inattendue, liste vide', () async {
       when(
