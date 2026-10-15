@@ -398,6 +398,32 @@ void main() {
     });
   });
 
+  group('redeemTopupCode', () {
+    test('POST /wallet/topup-codes/redeem avec le code brut', () async {
+      when(
+        () => mockDio.post<dynamic>(
+          '/wallet/topup-codes/redeem',
+          data: {'code': 'dakar 2000'},
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/topup-codes/redeem'),
+          statusCode: 200,
+          data: {
+            'amount': 2000,
+            'currency': 'XOF',
+            'balance': 3500,
+            'transactionId': 'tx-1',
+          },
+        ),
+      );
+
+      final data = await datasource.redeemTopupCode('dakar 2000');
+
+      expect(data['currency'], 'XOF');
+    });
+  });
+
   test('le datasource ne convertit rien : la DioException remonte telle '
       'quelle (le repository seul la traduit)', () async {
     when(() => mockDio.get<dynamic>('/wallet/balance')).thenThrow(
