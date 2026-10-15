@@ -81,4 +81,43 @@ void main() {
     expect: () => <WalletTopupCodeState>[],
     verify: (_) => verifyNever(() => repo.redeemTopupCode(any())),
   );
+
+  blocTest<WalletTopupCodeCubit, WalletTopupCodeState>(
+    '404 (route absente) : présenté comme service indisponible',
+    build: () {
+      when(
+        () => repo.redeemTopupCode(any()),
+      ).thenThrow(const NotFoundException());
+      return WalletTopupCodeCubit(repo);
+    },
+    act: (c) => c.submit('DAKAR2000'),
+    expect: () => [
+      isA<WalletTopupCodeSubmitting>(),
+      isA<WalletTopupCodeFailure>().having(
+        (s) => s.error,
+        'error',
+        isA<ServiceUnavailableException>(),
+      ),
+    ],
+  );
+
+  blocTest<WalletTopupCodeCubit, WalletTopupCodeState>(
+    'clearError() : retour à Idle après un échec',
+    build: () {
+      when(
+        () => repo.redeemTopupCode(any()),
+      ).thenThrow(const ValidationException('x', code: 'topup-code-exhausted'));
+      return WalletTopupCodeCubit(repo);
+    },
+    act: (c) async {
+      await c.submit('DAKAR2000');
+      c.clearError();
+      c.clearError();
+    },
+    expect: () => [
+      isA<WalletTopupCodeSubmitting>(),
+      isA<WalletTopupCodeFailure>(),
+      isA<WalletTopupCodeIdle>(),
+    ],
+  );
 }

@@ -279,7 +279,13 @@ void main() {
     await tester.tap(find.text('Valider le code'));
     await tester.pumpAndSettle();
 
+    expect(find.textContaining('+'), findsWidgets);
     expect(find.textContaining('ajoutés à votre solde'), findsOneWidget);
+    expect(
+      (tester.widget(find.textContaining('ajoutés à votre solde')) as Text)
+          .data,
+      startsWith('+'),
+    );
     expect(
       find.textContaining('XOF').evaluate().isNotEmpty ||
           find.textContaining('F CFA').evaluate().isNotEmpty,

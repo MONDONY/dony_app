@@ -66,19 +66,21 @@ class _WalletTopupCodeSheetState extends State<WalletTopupCodeSheet> {
   void initState() {
     super.initState();
     widget.onSubmitReady?.call(_submit);
-    _codeCtrl.addListener(_notifyValidity);
+    _codeCtrl.addListener(_onCodeChanged);
   }
 
   @override
   void dispose() {
-    _codeCtrl.removeListener(_notifyValidity);
+    _codeCtrl.removeListener(_onCodeChanged);
     _codeCtrl.dispose();
     widget.canSubmit.dispose();
     super.dispose();
   }
 
-  void _notifyValidity() {
+  void _onCodeChanged() {
     widget.canSubmit.value = _codeCtrl.text.trim().isNotEmpty;
+    // Le texte a changé : l'erreur précédente n'a plus lieu d'être.
+    context.read<WalletTopupCodeCubit>().clearError();
   }
 
   void _submit() {
@@ -88,38 +90,70 @@ class _WalletTopupCodeSheetState extends State<WalletTopupCodeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     return BlocListener<WalletTopupCodeCubit, WalletTopupCodeState>(
       listener: (context, state) {
         switch (state) {
           case WalletTopupCodeSuccess(:final redemption):
             Navigator.of(context).pop(redemption);
-          case WalletTopupCodeFailure(:final error):
-            ErrorPresenter.show(context, error);
-          case WalletTopupCodeIdle() || WalletTopupCodeSubmitting():
+          case WalletTopupCodeFailure() ||
+              WalletTopupCodeIdle() ||
+              WalletTopupCodeSubmitting():
             break;
         }
       },
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: DonySpacing.base),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DonyTextField(
-              controller: _codeCtrl,
-              label: l.walletTopupCodeFieldLabel,
-              hint: l.walletTopupCodeFieldHint,
-              textInputAction: TextInputAction.done,
-            ),
-            const SizedBox(height: DonySpacing.md),
-            Text(
-              l.walletTopupCodeNotice,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
+      child: BlocBuilder<WalletTopupCodeCubit, WalletTopupCodeState>(
+        buildWhen: (a, b) =>
+            (a is WalletTopupCodeSubmitting) !=
+            (b is WalletTopupCodeSubmitting),
+        builder: (context, state) => PopScope(
+          // Évite de fermer la sheet pendant l'envoi : le serveur créditerait
+          // sans retour ni snackbar pour l'utilisateur.
+          canPop: state is! WalletTopupCodeSubmitting,
+          child: _buildContent(context),
         ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.base),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DonyTextField(
+            controller: _codeCtrl,
+            label: l.walletTopupCodeFieldLabel,
+            hint: l.walletTopupCodeFieldHint,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submit(),
+          ),
+          BlocBuilder<WalletTopupCodeCubit, WalletTopupCodeState>(
+            builder: (context, state) {
+              if (state is! WalletTopupCodeFailure) {
+                return const SizedBox.shrink();
+              }
+              final p = ErrorPresenter.resolve(state.error, l10n: l);
+              return Padding(
+                padding: const EdgeInsets.only(top: DonySpacing.sm),
+                child: DonyStatusBanner(
+                  type: DonyStatusBannerType.error,
+                  iconAsset: 'circle-alert',
+                  title: p.title,
+                  message: p.message,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: DonySpacing.md),
+          Text(
+            l.walletTopupCodeNotice,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
       ),
     );
   }

@@ -16292,7 +16292,7 @@ abstract class AppLocalizations {
   /// Snackbar après utilisation réussie d'un code de recharge, montant formaté avec sa devise (wallet_topup_method_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{amount} ajoutés à votre solde'**
+  /// **'+{amount} ajoutés à votre solde'**
   String walletTopupCodeSuccess(String amount);
 
   /// Titre de l'écran de choix de méthode de recharge (wallet_topup_method_screen.dart).

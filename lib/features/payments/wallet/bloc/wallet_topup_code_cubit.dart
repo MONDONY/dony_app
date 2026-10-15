@@ -42,7 +42,21 @@ class WalletTopupCodeCubit extends Cubit<WalletTopupCodeState> {
       emit(WalletTopupCodeSuccess(redemption));
     } catch (e) {
       if (isClosed) return;
-      emit(WalletTopupCodeFailure(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      // Sur cette route, un code inconnu répond 422 : un 404 signifie que la
+      // route n'existe pas encore (back non déployé), pas « introuvable ».
+      emit(
+        WalletTopupCodeFailure(
+          error is NotFoundException
+              ? const ServiceUnavailableException()
+              : error,
+        ),
+      );
     }
+  }
+
+  /// Efface l'erreur affichée dès que l'utilisateur modifie le champ.
+  void clearError() {
+    if (state is WalletTopupCodeFailure) emit(const WalletTopupCodeIdle());
   }
 }

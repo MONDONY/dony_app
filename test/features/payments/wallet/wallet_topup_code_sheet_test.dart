@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_code_cubit.dart';
@@ -101,7 +103,75 @@ void main() {
     await tester.tap(find.text('Valider le code'));
     await tester.pumpAndSettle();
     expect(find.text('Valider le code'), findsOneWidget);
-    expect(find.text('Code déjà utilisé'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(WalletTopupCodeSheet),
+        matching: find.text('Code déjà utilisé'),
+      ),
+      findsOneWidget,
+    );
     expect(result, isNull);
+
+    // L'erreur disparaît dès que l'utilisateur modifie le champ.
+    await tester.enterText(find.byType(TextField), 'DAKAR20001');
+    await tester.pump();
+    expect(find.text('Code déjà utilisé'), findsNothing);
+  });
+
+  testWidgets('route absente (404) : message service indisponible', (
+    tester,
+  ) async {
+    when(
+      () => repo.redeemTopupCode(any()),
+    ).thenThrow(const NotFoundException());
+    await openSheet(tester);
+    await tester.enterText(find.byType(TextField), 'DAKAR2000');
+    await tester.pump();
+    await tester.tap(find.text('Valider le code'));
+    await tester.pumpAndSettle();
+    expect(find.text('Service indisponible'), findsWidgets);
+    expect(find.text('Introuvable'), findsNothing);
+    expect(find.text('Valider le code'), findsOneWidget);
+  });
+
+  testWidgets('clavier « terminé » valide le code', (tester) async {
+    when(() => repo.redeemTopupCode('dakar 2000')).thenAnswer(
+      (_) async => const WalletTopupCodeRedemptionModel(
+        amount: 2000,
+        currency: 'XOF',
+        balance: 3500,
+      ),
+    );
+    await openSheet(tester);
+    await tester.enterText(find.byType(TextField), 'dakar 2000');
+    await tester.pump();
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(result?.currency, 'XOF');
+  });
+
+  testWidgets('pendant l’envoi, le retour système est bloqué', (tester) async {
+    final completer = Completer<WalletTopupCodeRedemptionModel>();
+    when(() => repo.redeemTopupCode(any())).thenAnswer((_) => completer.future);
+    await openSheet(tester);
+    await tester.enterText(find.byType(TextField), 'DAKAR2000');
+    await tester.pump();
+    await tester.tap(find.text('Valider le code'));
+    await tester.pump();
+    final pop = tester.widget<PopScope>(
+      find.descendant(
+        of: find.byType(WalletTopupCodeSheet),
+        matching: find.byType(PopScope),
+      ),
+    );
+    expect(pop.canPop, isFalse);
+    completer.complete(
+      const WalletTopupCodeRedemptionModel(
+        amount: 2000,
+        currency: 'XOF',
+        balance: 3500,
+      ),
+    );
+    await tester.pumpAndSettle();
   });
 }

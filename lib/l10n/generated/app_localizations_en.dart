@@ -9823,7 +9823,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String walletTopupCodeSuccess(String amount) {
-    return '$amount added to your balance';
+    return '+$amount added to your balance';
   }
 
   @override

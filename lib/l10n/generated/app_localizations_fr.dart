@@ -9887,7 +9887,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String walletTopupCodeSuccess(String amount) {
-    return '$amount ajoutés à votre solde';
+    return '+$amount ajoutés à votre solde';
   }
 
   @override

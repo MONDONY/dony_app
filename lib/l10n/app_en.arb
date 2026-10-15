@@ -5157,7 +5157,7 @@
   "@walletTopupCodeSubmit": {
       "description": "Bouton sticky de la sheet code de recharge (wallet_topup_code_sheet.dart)."
   },
-  "walletTopupCodeSuccess": "{amount} added to your balance",
+  "walletTopupCodeSuccess": "+{amount} added to your balance",
   "@walletTopupCodeSuccess": {
       "description": "Snackbar après utilisation réussie d'un code de recharge, montant formaté avec sa devise (wallet_topup_method_screen.dart).",
       "placeholders": {
