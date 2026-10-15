@@ -37,6 +37,7 @@ import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:dony/features/messaging/presentation/chat_photo_viewer_screen.dart';
 import 'package:dony/features/messaging/presentation/widgets/chat_photo.dart';
+import 'package:dony/features/messaging/presentation/widgets/chat_retention_banner.dart';
 import 'package:dony/features/messaging/presentation/widgets/edit_message_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -131,7 +132,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ChatSubscribeRequested(
         widget.conversation.firestoreConversationId,
         currentUserUid: _myUid,
-        isReadOnly: widget.conversation.readOnly,
+        isReadOnly: widget.conversation.isWriteClosed,
         conversationId: widget.conversation.id,
         mediaAllowed: widget.conversation.mediaAllowed,
       ),
@@ -1040,6 +1041,9 @@ class _ChatScreenState extends State<ChatScreen> {
           );
           return Column(
             children: [
+              // Effacement des échanges 3 jours après la livraison : rappelé
+              // en tête de chaque fil, avant comme après la purge.
+              ChatRetentionBanner(conversation: conversation),
               if (conversation.tripLabel != null)
                 _TripBanner(
                   conversation: conversation,
@@ -1050,7 +1054,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   // bandeau mène à l'écran du colis qu'il va recevoir.
                   onTap: () => _navigate(trackingPathFor(conversation), null),
                 ),
-              if (isReadOnly) _ReadOnlyBanner(cs: cs, tt: tt),
+              if (isReadOnly && !conversation.messagesPurged)
+                _ReadOnlyBanner(cs: cs, tt: tt),
               if (conversation.bidStatus != null)
                 _BidStatusBanner(
                   status: conversation.bidStatus!,
@@ -1079,7 +1084,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ChatSubscribeRequested(
                             widget.conversation.firestoreConversationId,
                             currentUserUid: _myUid,
-                            isReadOnly: widget.conversation.readOnly,
+                            isReadOnly: widget.conversation.isWriteClosed,
                             conversationId: widget.conversation.id,
                             mediaAllowed: widget.conversation.mediaAllowed,
                           ),
@@ -1120,7 +1125,9 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                               const SizedBox(height: DonySpacing.md),
                               Text(
-                                l.chatEmptyStateTitle,
+                                conversation.messagesPurged
+                                    ? l.chatMessagesPurgedEmptyTitle
+                                    : l.chatEmptyStateTitle,
                                 style: tt.bodyMedium?.copyWith(
                                   color: cs.onSurfaceVariant,
                                 ),

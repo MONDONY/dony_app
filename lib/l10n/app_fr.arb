@@ -11219,6 +11219,27 @@
   "@chatReadOnlyBannerMessage": {
     "description": "Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner)."
   },
+  "chatRetentionBannerRule": "Les messages et les photos de cette conversation seront supprimés 3 jours après la livraison du colis.",
+  "@chatRetentionBannerRule": {
+    "description": "Bandeau en tête du chat : règle d'effacement des échanges après livraison"
+  },
+  "chatRetentionBannerScheduled": "Colis livré : les messages et les photos de cette conversation seront supprimés le {date}.",
+  "@chatRetentionBannerScheduled": {
+    "description": "Bandeau en tête du chat : date d'effacement des échanges (livraison + 3 jours)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatRetentionBannerPurged": "Les messages et les photos de cette conversation ont été supprimés 3 jours après la livraison du colis.",
+  "@chatRetentionBannerPurged": {
+    "description": "Bandeau en tête du chat : échanges déjà effacés"
+  },
+  "chatMessagesPurgedEmptyTitle": "Messages supprimés",
+  "@chatMessagesPurgedEmptyTitle": {
+    "description": "État vide d'un chat dont les messages ont été effacés après la livraison"
+  },
   "chatLinkedTripLabel": "Trajet lié",
   "@chatLinkedTripLabel": {
     "description": "Sur-titre du bandeau de trajet lié de chat_screen.dart (_TripBanner)."

@@ -17129,6 +17129,30 @@ abstract class AppLocalizations {
   /// **'Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.'**
   String get chatReadOnlyBannerMessage;
 
+  /// Bandeau en tête du chat : règle d'effacement des échanges après livraison
+  ///
+  /// In fr, this message translates to:
+  /// **'Les messages et les photos de cette conversation seront supprimés 3 jours après la livraison du colis.'**
+  String get chatRetentionBannerRule;
+
+  /// Bandeau en tête du chat : date d'effacement des échanges (livraison + 3 jours)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis livré : les messages et les photos de cette conversation seront supprimés le {date}.'**
+  String chatRetentionBannerScheduled(String date);
+
+  /// Bandeau en tête du chat : échanges déjà effacés
+  ///
+  /// In fr, this message translates to:
+  /// **'Les messages et les photos de cette conversation ont été supprimés 3 jours après la livraison du colis.'**
+  String get chatRetentionBannerPurged;
+
+  /// État vide d'un chat dont les messages ont été effacés après la livraison
+  ///
+  /// In fr, this message translates to:
+  /// **'Messages supprimés'**
+  String get chatMessagesPurgedEmptyTitle;
+
   /// Sur-titre du bandeau de trajet lié de chat_screen.dart (_TripBanner).
   ///
   /// In fr, this message translates to:
