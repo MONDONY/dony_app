@@ -10602,5 +10602,9 @@
   "flightsPassengersIncrease": "{category}, one more",
   "flightsPricePerAdult": "per adult",
   "flightsPriceTotalFor": "{count, plural, =1{≈ {total} for 1 person} other{≈ {total} for {count} people}}",
-  "flightsPriceFinalOnPartner": "Final price on Aviasales"
+  "flightsPriceFinalOnPartner": "Final price on Aviasales",
+  "parcelLinkTitle": "Parcel",
+  "parcelLinkNotLinkedTitle": "This parcel isn't linked to your account",
+  "parcelLinkNotLinkedBody": "If you need to collect it, ask the sender to add your phone number, or contact support.",
+  "parcelLinkRetry": "Try again"
 }

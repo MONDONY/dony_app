@@ -20304,4 +20304,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get flightsPriceFinalOnPartner => 'Prix final sur Aviasales';
+
+  @override
+  String get parcelLinkTitle => 'Colis';
+
+  @override
+  String get parcelLinkNotLinkedTitle =>
+      'Ce colis n\'est pas lié à votre compte';
+
+  @override
+  String get parcelLinkNotLinkedBody =>
+      'Si vous devez le récupérer, demandez à l\'expéditeur d\'indiquer votre numéro, ou écrivez au support.';
+
+  @override
+  String get parcelLinkRetry => 'Réessayer';
 }

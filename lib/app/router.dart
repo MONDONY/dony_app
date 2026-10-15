@@ -192,6 +192,8 @@ import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.da
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dart';
+import 'package:dony/features/receptions/bloc/parcel_link_cubit.dart';
+import 'package:dony/features/receptions/presentation/screens/parcel_link_screen.dart';
 import 'package:dony/features/receptions/presentation/screens/reception_detail_screen.dart';
 import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
@@ -1205,6 +1207,20 @@ final appRouter = GoRouter(
       path: '/receptions/:bidId',
       builder: (_, state) =>
           ReceptionDetailScreen(bidId: state.pathParameters['bidId']!),
+    ),
+
+    // ── Lien colis depuis la page publique du QR (yadony://colis/{id}) ─────
+    // Écran de transition : ouvre Réceptions ou la fiche du colis selon le
+    // rôle de l'utilisateur. Hors shell, derrière l'authentification.
+    GoRoute(
+      path: '/colis/:bidId',
+      builder: (_, state) {
+        final bidId = state.pathParameters['bidId']!;
+        return BlocProvider(
+          create: (_) => getIt<ParcelLinkCubit>()..load(bidId),
+          child: ParcelLinkScreen(bidId: bidId),
+        );
+      },
     ),
 
     // ── Billets d'avion : ancien onglet, désormais dans Activités ─────────

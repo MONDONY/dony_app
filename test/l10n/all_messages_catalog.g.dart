@@ -7005,6 +7005,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'flightsPriceTotalFor': (l) =>
       l.flightsPriceTotalFor(intPlaceholderValue, placeholderMarker('total')),
   'flightsPriceFinalOnPartner': (l) => l.flightsPriceFinalOnPartner,
+  'parcelLinkTitle': (l) => l.parcelLinkTitle,
+  'parcelLinkNotLinkedTitle': (l) => l.parcelLinkNotLinkedTitle,
+  'parcelLinkNotLinkedBody': (l) => l.parcelLinkNotLinkedBody,
+  'parcelLinkRetry': (l) => l.parcelLinkRetry,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

@@ -20171,4 +20171,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get flightsPriceFinalOnPartner => 'Final price on Aviasales';
+
+  @override
+  String get parcelLinkTitle => 'Parcel';
+
+  @override
+  String get parcelLinkNotLinkedTitle =>
+      'This parcel isn\'t linked to your account';
+
+  @override
+  String get parcelLinkNotLinkedBody =>
+      'If you need to collect it, ask the sender to add your phone number, or contact support.';
+
+  @override
+  String get parcelLinkRetry => 'Try again';
 }
