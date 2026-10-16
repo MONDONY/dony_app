@@ -1,0 +1,196 @@
+import 'package:dio/dio.dart';
+import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/assistant/data/assistant_models.dart';
+import 'package:dony/features/assistant/data/assistant_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockApiClient extends Mock implements ApiClient {}
+
+class MockDio extends Mock implements Dio {}
+
+void main() {
+  late MockApiClient api;
+  late MockDio dio;
+  late AssistantRepository repository;
+
+  setUp(() {
+    api = MockApiClient();
+    dio = MockDio();
+    when(() => api.dio).thenReturn(dio);
+    repository = AssistantRepository(api);
+  });
+
+  DioException error(int status) => DioException(
+    requestOptions: RequestOptions(path: '/assistant/ask'),
+    response: Response(
+      requestOptions: RequestOptions(path: '/assistant/ask'),
+      statusCode: status,
+    ),
+    type: DioExceptionType.badResponse,
+  );
+
+  test(
+    'envoie la question, la langue et l’historique, puis lit la réponse',
+    () async {
+      when(
+        () => dio.post('/assistant/ask', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/assistant/ask'),
+          data: {
+            'answer': 'Allez dans Moi.',
+            'answered': true,
+            'actions': [
+              {'route': '/profile/edit/phone', 'label': 'Changer mon numéro'},
+            ],
+            'sources': ['changer-numero'],
+            'provider': 'groq',
+            'remainingToday': 17,
+          },
+        ),
+      );
+      final answer = await repository.ask(
+        question: 'Où ?',
+        locale: 'fr',
+        history: const [AssistantHistoryTurn(role: 'user', text: 'bonjour')],
+      );
+      expect(answer.answer, 'Allez dans Moi.');
+      expect(answer.answered, isTrue);
+      expect(answer.provider, 'groq');
+      expect(
+        answer.actions.single,
+        const AssistantAction(
+          route: '/profile/edit/phone',
+          label: 'Changer mon numéro',
+        ),
+      );
+      expect(answer.remainingToday, 17);
+      final data =
+          verify(
+                () =>
+                    dio.post('/assistant/ask', data: captureAny(named: 'data')),
+              ).captured.single
+              as Map;
+      expect(data['question'], 'Où ?');
+      expect(data['locale'], 'fr');
+      expect(data['history'], [
+        {'role': 'user', 'text': 'bonjour'},
+      ]);
+    },
+  );
+
+  test('champs manquants tolérés', () {
+    final a = AssistantAnswer.fromJson(const {'answer': 'x'});
+    expect(a.answered, isFalse);
+    expect(a.actions, isEmpty);
+    expect(a.provider, 'none');
+    expect(a.remainingToday, 0);
+  });
+
+  test('action mal formée ignorée, pas d’exception', () {
+    final a = AssistantAnswer.fromJson(const {
+      'answer': 'x',
+      'actions': [
+        'pas une map',
+        {'route': '/home', 'label': 'Accueil'},
+      ],
+    });
+    expect(a.actions, const [
+      AssistantAction(route: '/home', label: 'Accueil'),
+    ]);
+  });
+
+  test('modèle d’historique sérialisé en JSON', () {
+    const turn = AssistantHistoryTurn(role: 'assistant', text: 'Bonjour');
+    expect(turn.toJson(), {'role': 'assistant', 'text': 'Bonjour'});
+  });
+
+  test('égalité par valeur des modèles (instances non const)', () {
+    // Valeurs calculées à l'exécution : les instances ne sont pas const, donc
+    // Equatable compare réellement les props au lieu de court-circuiter sur
+    // l'identité canonique des const.
+    final role = 'USER'.toLowerCase();
+    final salut = 'SALUT'.toLowerCase();
+    final autre = 'AUTRE'.toLowerCase();
+    final turnA = AssistantHistoryTurn(role: role, text: salut);
+    final turnB = AssistantHistoryTurn(role: role, text: salut);
+    final turnC = AssistantHistoryTurn(role: role, text: autre);
+    expect(turnA, turnB);
+    expect(turnA == turnC, isFalse);
+
+    final json = {
+      'answer': 'x',
+      'answered': true,
+      'actions': [
+        {'route': '/home', 'label': 'Accueil'},
+      ],
+      'provider': 'groq',
+      'remainingToday': 3,
+    };
+    final answerA = AssistantAnswer.fromJson(json);
+    final answerB = AssistantAnswer.fromJson(json);
+    final answerC = AssistantAnswer.fromJson({...json, 'remainingToday': 2});
+    expect(answerA, answerB);
+    expect(answerA == answerC, isFalse);
+  });
+
+  test('404 = assistant désactivé', () async {
+    when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(error(404));
+    expect(
+      () => repository.ask(question: 'q', locale: 'fr', history: const []),
+      throwsA(isA<AssistantDisabledException>()),
+    );
+  });
+
+  test(
+    '403 (invité ou compte sans identifiant) = assistant désactivé',
+    () async {
+      when(
+        () => dio.post(any(), data: any(named: 'data')),
+      ).thenThrow(error(403));
+      expect(
+        () => repository.ask(question: 'q', locale: 'fr', history: const []),
+        throwsA(isA<AssistantDisabledException>()),
+      );
+    },
+  );
+
+  test('429 = quota', () async {
+    when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(error(429));
+    expect(
+      () => repository.ask(question: 'q', locale: 'fr', history: const []),
+      throwsA(isA<AssistantQuotaExceededException>()),
+    );
+  });
+
+  test('autre erreur = réseau', () async {
+    when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(error(500));
+    expect(
+      () => repository.ask(question: 'q', locale: 'fr', history: const []),
+      throwsA(isA<AssistantNetworkException>()),
+    );
+  });
+
+  test('erreur sans réponse (hors ligne) = réseau', () async {
+    when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/assistant/ask'),
+        type: DioExceptionType.connectionError,
+      ),
+    );
+    expect(
+      () => repository.ask(question: 'q', locale: 'fr', history: const []),
+      throwsA(isA<AssistantNetworkException>()),
+    );
+  });
+
+  test('les exceptions partagent la hiérarchie AssistantException', () {
+    const AssistantException disabled = AssistantDisabledException();
+    const AssistantException quota = AssistantQuotaExceededException();
+    const AssistantException network = AssistantNetworkException();
+    expect(disabled, isA<AssistantException>());
+    expect(quota, isA<AssistantException>());
+    expect(network, isA<AssistantException>());
+  });
+}
