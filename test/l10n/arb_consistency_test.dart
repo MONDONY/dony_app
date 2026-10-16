@@ -252,6 +252,7 @@ const _sameInBothLanguages = <String>{
   'dsUrgent', // « 🔥 Urgent » se dit pareil (tâche J1)
   'feedbackKindBug', // « Bug » se dit pareil
   'feedbackKindSuggestion', // « Suggestion » se dit pareil
+  'settingsSectionAssistant', // « ASSISTANT » se dit pareil
 };
 
 void main() {
