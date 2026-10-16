@@ -12324,7 +12324,7 @@
   "@kycStatusPendingTitle": {
     "description": "Titre de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
   },
-  "kycStatusPendingBody": "Cela prend généralement moins d'une minute, parfois quelques minutes. Vous pouvez fermer cet écran, vous serez notifié du résultat.",
+  "kycStatusPendingBody": "Le résultat arrive en général tout de suite. Si une photo est illisible, vous serez invité à recommencer. Vous pouvez fermer cet écran, vous serez notifié du résultat.",
   "@kycStatusPendingBody": {
     "description": "Texte de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
   },
@@ -12388,7 +12388,7 @@
   "@kycRequiredVerifyAction": {
     "description": "Bouton principal de la feuille de vérification requise (kyc_required_bottom_sheet.dart)."
   },
-  "kycInfoDuration": "Vérification en 2 à 5 minutes",
+  "kycInfoDuration": "Environ 2 à 5 minutes pour scanner votre pièce et faire un selfie",
   "@kycInfoDuration": {
     "description": "Ligne d'info sur la durée de la vérification (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow)."
   },
@@ -13252,7 +13252,7 @@
   "@faqAnnouncementsPublishRequestQ": {
     "description": "Question FAQ announcements/publish_request (faq_screen.dart)"
   },
-  "faqAnnouncementsPublishRequestA": "Depuis Accueil ou Activités, choisissez \"Publier un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.",
+  "faqAnnouncementsPublishRequestA": "Depuis Accueil ou Activités, touchez \"Envoyer un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.",
   "@faqAnnouncementsPublishRequestA": {
     "description": "Réponse FAQ announcements/publish_request (faq_screen.dart)"
   },

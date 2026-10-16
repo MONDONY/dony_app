@@ -3755,6 +3755,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'chatSendRejected': (l) => l.chatSendRejected,
   'chatSendFailed': (l) => l.chatSendFailed,
   'chatReadOnlyBannerMessage': (l) => l.chatReadOnlyBannerMessage,
+  'chatRetentionBannerRule': (l) => l.chatRetentionBannerRule,
+  'chatRetentionBannerScheduled': (l) =>
+      l.chatRetentionBannerScheduled(placeholderMarker('date')),
+  'chatRetentionBannerPurged': (l) => l.chatRetentionBannerPurged,
+  'chatMessagesPurgedEmptyTitle': (l) => l.chatMessagesPurgedEmptyTitle,
   'chatLinkedTripLabel': (l) => l.chatLinkedTripLabel,
   'chatBidStatusAccepted': (l) => l.chatBidStatusAccepted,
   'chatBidStatusDeliveryConfirmed': (l) => l.chatBidStatusDeliveryConfirmed,
@@ -7015,6 +7020,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'parcelLinkNotLinkedTitle': (l) => l.parcelLinkNotLinkedTitle,
   'parcelLinkNotLinkedBody': (l) => l.parcelLinkNotLinkedBody,
   'parcelLinkRetry': (l) => l.parcelLinkRetry,
+  'maintenanceTitle': (l) => l.maintenanceTitle,
+  'maintenanceDefaultMessage': (l) => l.maintenanceDefaultMessage,
+  'maintenanceEstimatedEnd': (l) =>
+      l.maintenanceEstimatedEnd(placeholderMarker('time')),
+  'maintenanceAutoReopen': (l) => l.maintenanceAutoReopen,
+  'maintenanceRetry': (l) => l.maintenanceRetry,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7281,6 +7292,7 @@ const textParameters = <String, List<String>>{
   'chatReportUser': ['name'],
   'chatBlockUser': ['name'],
   'chatMessagingMutedUntil': ['date'],
+  'chatRetentionBannerScheduled': ['date'],
   'chatOpenParticipantProfileSemantics': ['name'],
   'conversationListEmptySearchDescription': ['query'],
   'scanStepRecorded': ['step'],
@@ -7571,4 +7583,5 @@ const textParameters = <String, List<String>>{
   'flightsPassengersDecrease': ['category'],
   'flightsPassengersIncrease': ['category'],
   'flightsPriceTotalFor': ['total'],
+  'maintenanceEstimatedEnd': ['time'],
 };

@@ -18638,7 +18638,7 @@ abstract class AppLocalizations {
   /// Texte de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent).
   ///
   /// In fr, this message translates to:
-  /// **'Cela prend généralement moins d\'une minute, parfois quelques minutes. Vous pouvez fermer cet écran, vous serez notifié du résultat.'**
+  /// **'Le résultat arrive en général tout de suite. Si une photo est illisible, vous serez invité à recommencer. Vous pouvez fermer cet écran, vous serez notifié du résultat.'**
   String get kycStatusPendingBody;
 
   /// Titre de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent).
@@ -18734,7 +18734,7 @@ abstract class AppLocalizations {
   /// Ligne d'info sur la durée de la vérification (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow).
   ///
   /// In fr, this message translates to:
-  /// **'Vérification en 2 à 5 minutes'**
+  /// **'Environ 2 à 5 minutes pour scanner votre pièce et faire un selfie'**
   String get kycInfoDuration;
 
   /// Ligne d'info sur la sécurité du processus (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow).
@@ -20060,7 +20060,7 @@ abstract class AppLocalizations {
   /// Réponse FAQ announcements/publish_request (faq_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Depuis Accueil ou Activités, choisissez \"Publier un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.'**
+  /// **'Depuis Accueil ou Activités, touchez \"Envoyer un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.'**
   String get faqAnnouncementsPublishRequestA;
 
   /// Question FAQ announcements/edit_request (faq_screen.dart)
