@@ -429,6 +429,50 @@ void main() {
   );
 
   blocTest<AssistantBloc, AssistantState>(
+    'retoucher le même pouce : ni nouvel état ni nouvel événement',
+    build: build,
+    seed: () => const AssistantState(
+      messages: [
+        AssistantMessage(
+          id: 3,
+          author: AssistantAuthor.assistant,
+          text: 'R',
+          feedback: 'up',
+        ),
+      ],
+    ),
+    act: (b) => b.add(const AssistantFeedbackGiven(3, up: true)),
+    expect: () => <AssistantState>[],
+    verify: (_) => verifyNever(
+      () => backend.capture(AnalyticsEvents.assistantFeedback, any()),
+    ),
+  );
+
+  blocTest<AssistantBloc, AssistantState>(
+    'changer d’avis (haut puis bas) : nouvel événement',
+    build: build,
+    seed: () => const AssistantState(
+      messages: [
+        AssistantMessage(
+          id: 3,
+          author: AssistantAuthor.assistant,
+          text: 'R',
+          feedback: 'up',
+        ),
+      ],
+    ),
+    act: (b) => b.add(const AssistantFeedbackGiven(3, up: false)),
+    verify: (b) {
+      expect(b.state.messages.single.feedback, 'down');
+      verify(
+        () => backend.capture(AnalyticsEvents.assistantFeedback, {
+          'value': 'down',
+        }),
+      ).called(1);
+    },
+  );
+
+  blocTest<AssistantBloc, AssistantState>(
     'pouce sur un message inconnu : ignoré',
     build: build,
     act: (b) => b.add(const AssistantFeedbackGiven(42, up: true)),
@@ -786,6 +830,23 @@ void main() {
       verify: (b) {
         expect(b.state.disabled, isTrue);
         expect(b.state.available, isFalse);
+      },
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'nouvelle conversation : « éteint » est gardé, la conversation vidée',
+      build: build,
+      seed: () => const AssistantState(
+        disabled: true,
+        messages: [
+          AssistantMessage(id: 1, author: AssistantAuthor.user, text: 'Q'),
+        ],
+      ),
+      act: (b) => b.add(const AssistantResetRequested()),
+      verify: (b) {
+        expect(b.state.disabled, isTrue);
+        expect(b.state.available, isFalse);
+        expect(b.state.messages, isEmpty);
       },
     );
 

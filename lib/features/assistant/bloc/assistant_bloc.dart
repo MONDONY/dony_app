@@ -273,9 +273,11 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     }
   }
 
+  /// Vide la conversation. La disponibilité (`available`) et « éteint »
+  /// (`disabled`) ne dépendent pas de la conversation : gardés tels quels.
   void _onReset(AssistantResetRequested event, Emitter<AssistantState> emit) {
     _epoch++;
-    emit(AssistantState(available: state.available));
+    emit(AssistantState(available: state.available, disabled: state.disabled));
   }
 
   /// Repart de zéro pour le compte suivant : conversation, escalade,
@@ -292,8 +294,11 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
   }
 
   void _onFeedback(AssistantFeedbackGiven event, Emitter<AssistantState> emit) {
-    if (!state.messages.any((m) => m.id == event.messageId)) return;
+    final message = state.messages.where((m) => m.id == event.messageId);
+    if (message.isEmpty) return;
     final value = event.up ? 'up' : 'down';
+    // Même pouce touché de nouveau : rien ne change, rien n'est réémis.
+    if (message.first.feedback == value) return;
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.assistantFeedback,
