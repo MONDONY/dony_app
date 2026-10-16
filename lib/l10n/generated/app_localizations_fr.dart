@@ -13417,6 +13417,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notificationMarkAllRead => 'Tout lire';
 
   @override
+  String get notificationSheetSettingsTooltip => 'Réglages des notifications';
+
+  @override
   String get notificationLoadErrorTitle => 'Erreur de chargement';
 
   @override

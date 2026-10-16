@@ -12,6 +12,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
 
+  /// Route GoRouter de l'écran (Réglages › Notifications), ouverte aussi
+  /// depuis l'en-tête du centre de notifications.
+  static const route = '/settings/notifications';
+
   @override
   State<NotificationSettingsScreen> createState() =>
       _NotificationSettingsScreenState();
