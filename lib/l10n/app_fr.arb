@@ -21438,5 +21438,15 @@
   "parcelLinkNotLinkedBody": "Si vous devez le récupérer, demandez à l'expéditeur d'indiquer votre numéro, ou écrivez au support.",
   "@parcelLinkNotLinkedBody": {"description": "Explication sous parcelLinkNotLinkedTitle."},
   "parcelLinkRetry": "Réessayer",
-  "@parcelLinkRetry": {"description": "Bouton qui relance la vérification du lien colis après une erreur."}
+  "@parcelLinkRetry": {"description": "Bouton qui relance la vérification du lien colis après une erreur."},
+  "maintenanceTitle": "Yadony est en maintenance",
+  "@maintenanceTitle": {"description": "Titre de l'écran de maintenance, affiché quand l'administrateur active le mode maintenance (maintenance_screen.dart)."},
+  "maintenanceDefaultMessage": "Nous améliorons l'application. Revenez un peu plus tard : vos colis, trajets et paiements sont en sécurité.",
+  "@maintenanceDefaultMessage": {"description": "Message par défaut de l'écran de maintenance, quand l'administrateur n'a pas écrit de message."},
+  "maintenanceEstimatedEnd": "Retour prévu vers {time}",
+  "@maintenanceEstimatedEnd": {"description": "Heure de retour estimée saisie par l'administrateur, en heure locale (ex. 14:30).", "placeholders": {"time": {"type": "String", "example": "14:30"}}},
+  "maintenanceAutoReopen": "Cette page se fermera toute seule dès que Yadony sera de nouveau disponible.",
+  "@maintenanceAutoReopen": {"description": "Précision sous le message de maintenance : l'écran disparaît seul à la réouverture."},
+  "maintenanceRetry": "Réessayer",
+  "@maintenanceRetry": {"description": "Bouton de l'écran de maintenance qui revérifie tout de suite si l'application est rouverte."}
 }

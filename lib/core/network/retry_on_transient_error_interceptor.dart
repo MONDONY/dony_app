@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/network/retry_policy.dart';
 
 /// Retente automatiquement une requête rejouable ayant échoué pour une cause
@@ -58,7 +59,11 @@ class RetryOnTransientErrorInterceptor extends Interceptor {
     // Un appelant qui gère déjà son propre retry avec backoff (ex. le
     // health-check du splash) passe ce flag pour éviter que les deux
     // boucles de retry se cumulent sans le savoir l'une de l'autre.
-    final skipRetry = err.requestOptions.extra['skipTransientRetry'] == true;
+    final skipRetry =
+        err.requestOptions.extra['skipTransientRetry'] == true ||
+        // Le 503 de maintenance dure tant que l'administrateur ne rouvre pas :
+        // le rejouer ne ferait que retarder l'écran de maintenance.
+        isMaintenanceResponse(err.response);
 
     final limit = isSlowTimeout ? maxSlowTimeoutRetries : maxRetries;
 

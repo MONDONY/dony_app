@@ -749,4 +749,16 @@ abstract final class AnalyticsEvents {
   static const flightsEmptySuggestionTapped = 'flights_empty_suggestion_tapped';
   static const flightsLocationUsed = 'flights_location_used';
   static const flightsAlertOffersViewed = 'flights_alert_offers_viewed';
+
+  // ── Mode maintenance ───────────────────────────────────────────────────
+  /// L'écran de maintenance recouvre l'app (propriété `source` : `status`
+  /// relecture de `/config/maintenance`, `api` 503 d'une requête).
+  static const maintenanceScreenShown = 'maintenance_screen_shown';
+
+  /// L'écran de maintenance se referme à la réouverture (propriété
+  /// `duration_s` : secondes passées dessus).
+  static const maintenanceEnded = 'maintenance_ended';
+
+  /// « Réessayer » touché sur l'écran de maintenance.
+  static const maintenanceRetryTapped = 'maintenance_retry_tapped';
 }

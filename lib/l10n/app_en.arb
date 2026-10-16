@@ -10640,5 +10640,10 @@
   "parcelLinkTitle": "Parcel",
   "parcelLinkNotLinkedTitle": "This parcel isn't linked to your account",
   "parcelLinkNotLinkedBody": "If you need to collect it, ask the sender to add your phone number, or contact support.",
-  "parcelLinkRetry": "Try again"
+  "parcelLinkRetry": "Try again",
+  "maintenanceTitle": "Yadony is under maintenance",
+  "maintenanceDefaultMessage": "We're improving the app. Please come back a little later: your parcels, trips and payments are safe.",
+  "maintenanceEstimatedEnd": "Expected back around {time}",
+  "maintenanceAutoReopen": "This page will close on its own as soon as Yadony is available again.",
+  "maintenanceRetry": "Try again"
 }

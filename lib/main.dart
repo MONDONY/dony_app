@@ -22,6 +22,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/app_update/data/services/app_update_service.dart';
 import 'package:dony/features/config/data/config_repository.dart';
+import 'package:dony/features/maintenance/bloc/maintenance_cubit.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -168,6 +169,11 @@ Future<void> _bootstrap() async {
   // splash. Le splash natif reste affiché jusqu'au premier frame de DonyApp,
   // qui appelle FlutterNativeSplash.remove().
   initialAppLocation = await resolveInitialLocation();
+
+  // Mode maintenance (back-office) : écoute Firestore + relecture de
+  // `/config/maintenance`, non bloquant. L'écran recouvre l'app dès la
+  // première réponse.
+  getIt<MaintenanceCubit>().start();
 
   runApp(const DonyApp());
 

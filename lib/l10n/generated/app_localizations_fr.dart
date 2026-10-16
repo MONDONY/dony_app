@@ -20354,4 +20354,23 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get parcelLinkRetry => 'Réessayer';
+
+  @override
+  String get maintenanceTitle => 'Yadony est en maintenance';
+
+  @override
+  String get maintenanceDefaultMessage =>
+      'Nous améliorons l\'application. Revenez un peu plus tard : vos colis, trajets et paiements sont en sécurité.';
+
+  @override
+  String maintenanceEstimatedEnd(String time) {
+    return 'Retour prévu vers $time';
+  }
+
+  @override
+  String get maintenanceAutoReopen =>
+      'Cette page se fermera toute seule dès que Yadony sera de nouveau disponible.';
+
+  @override
+  String get maintenanceRetry => 'Réessayer';
 }
