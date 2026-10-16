@@ -18,6 +18,10 @@ class AppPreferencesBloc
     on<LanguageChanged>(_onLanguageChanged);
     on<BiometricToggled>(_onBiometricToggled);
     on<AppLockBiometricToggled>(_onAppLockBiometricToggled);
+    on<AssistantBubbleToggled>(_onAssistantBubbleToggled);
+    on<AssistantBubbleMoved>(_onAssistantBubbleMoved);
+    on<AssistantBubbleReset>(_onAssistantBubbleReset);
+    on<AssistantHintDismissed>(_onAssistantHintDismissed);
   }
 
   void _onThemeChanged(ThemeChanged event, Emitter<AppPreferencesState> emit) {
@@ -55,6 +59,55 @@ class AppPreferencesBloc
     final updated = state.preferences.copyWith(
       appLockBiometricEnabled: !state.preferences.appLockBiometricEnabled,
     );
+    updated.writeToHive(_box);
+    emit(AppPreferencesState(preferences: updated));
+  }
+
+  void _onAssistantBubbleToggled(
+    AssistantBubbleToggled event,
+    Emitter<AppPreferencesState> emit,
+  ) {
+    final updated = state.preferences.copyWith(
+      assistantBubbleEnabled: event.enabled,
+    );
+    updated.writeToHive(_box);
+    emit(AppPreferencesState(preferences: updated));
+  }
+
+  void _onAssistantBubbleMoved(
+    AssistantBubbleMoved event,
+    Emitter<AppPreferencesState> emit,
+  ) {
+    final current = state.preferences;
+    // Un NaN venu du geste ne doit pas écraser la position connue.
+    final y = event.y.isNaN
+        ? current.assistantBubbleY
+        : UserPreferencesModel.normalizeBubbleY(event.y);
+    final updated = current.copyWith(
+      assistantBubbleSide: UserPreferencesModel.normalizeBubbleSide(event.side),
+      assistantBubbleY: y,
+    );
+    updated.writeToHive(_box);
+    emit(AppPreferencesState(preferences: updated));
+  }
+
+  void _onAssistantBubbleReset(
+    AssistantBubbleReset event,
+    Emitter<AppPreferencesState> emit,
+  ) {
+    final updated = state.preferences.copyWith(
+      assistantBubbleSide: UserPreferencesModel.kBubbleSideRight,
+      assistantBubbleY: UserPreferencesModel.kDefaultAssistantBubbleY,
+    );
+    updated.writeToHive(_box);
+    emit(AppPreferencesState(preferences: updated));
+  }
+
+  void _onAssistantHintDismissed(
+    AssistantHintDismissed event,
+    Emitter<AppPreferencesState> emit,
+  ) {
+    final updated = state.preferences.copyWith(assistantHintSeen: true);
     updated.writeToHive(_box);
     emit(AppPreferencesState(preferences: updated));
   }
