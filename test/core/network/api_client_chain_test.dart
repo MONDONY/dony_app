@@ -430,6 +430,24 @@ void main() {
         expect(context['inner_error_type'], 'HandshakeException');
       });
 
+      test(
+        'requête marquée skipErrorReport : jamais rapportée (FLUTTER-JW)',
+        () async {
+          final dio = build([500, 500, 500, 500]);
+
+          await expectLater(
+            dio.get<dynamic>(
+              '/actuator/health',
+              options: Options(extra: {ApiClient.skipErrorReportKey: true}),
+            ),
+            throwsA(appError<ServerException>()),
+          );
+          await flush();
+
+          expect(log.where((e) => e == 'report'), isEmpty);
+        },
+      );
+
       test('500 sur le compteur : toujours rapporté', () async {
         final dio = build([500, 500, 500, 500]);
 

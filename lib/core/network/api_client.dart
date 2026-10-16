@@ -52,6 +52,12 @@ class FirebaseAuthTokenSource implements AuthTokenSource {
 }
 
 class ApiClient {
+  /// Clé de `RequestOptions.extra` : `true` pour une requête dont l'échec est
+  /// attendu et déjà traité par l'appelant, jamais rapporté à Sentry. Cas
+  /// d'usage : la sonde de connectivité, dont le rôle est justement de
+  /// constater que l'API ne répond pas (FLUTTER-JW).
+  static const skipErrorReportKey = 'skipErrorReport';
+
   ApiClient({
     required String baseUrl,
     required DeviceIdService deviceIdService,
@@ -269,6 +275,7 @@ class _SentryErrorReportingInterceptor extends Interceptor {
   bool _shouldReport(DioException err) {
     final options = err.requestOptions;
     if (RetryPolicy.depthOf(options) > 0) return false;
+    if (options.extra[ApiClient.skipErrorReportKey] == true) return false;
     // Maintenance décidée depuis le back-office : pas une panne.
     if (isMaintenanceResponse(err.response)) return false;
     if (_transportTypes.contains(err.type)) return false;

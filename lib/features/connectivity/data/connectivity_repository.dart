@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/network/api_client.dart';
 
 /// Source des deux signaux bruts derrière le bandeau de connectivité global :
 /// - le statut réseau OS (wifi/données mobiles/aucun) via connectivity_plus ;
@@ -29,11 +30,19 @@ class ConnectivityRepository {
       results.any((r) => r != ConnectivityResult.none);
 
   /// true si l'API répond dans le délai imparti — false si timeout/erreur.
+  ///
+  /// L'échec est le signal attendu de la sonde : il n'est jamais rapporté à
+  /// Sentry ([ApiClient.skipErrorReportKey]). Sinon chaque bandeau « connexion
+  /// faible » ouvrait une erreur (FLUTTER-JW).
   Future<bool> isApiResponsive() async {
     try {
       await _dio.get(
         '/actuator/health',
-        options: Options(sendTimeout: pingTimeout, receiveTimeout: pingTimeout),
+        options: Options(
+          sendTimeout: pingTimeout,
+          receiveTimeout: pingTimeout,
+          extra: const {ApiClient.skipErrorReportKey: true},
+        ),
       );
       return true;
     } catch (_) {
