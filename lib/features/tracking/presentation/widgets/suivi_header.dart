@@ -20,7 +20,7 @@ class SuiviHeader extends StatelessWidget {
     required this.onDark,
     this.mode,
     this.onModeSelected,
-    this.torchOn,
+    this.torch,
   });
 
   final bool onDark;
@@ -30,14 +30,14 @@ class SuiviHeader extends StatelessWidget {
   final ValueChanged<SuiviMode>? onModeSelected;
 
   /// Lampe de la caméra ; `null` masque le bouton.
-  final ValueNotifier<bool>? torchOn;
+  final QrTorch? torch;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final fg = onDark ? DonyColors.neutral0 : cs.onSurface;
-    final torch = torchOn;
+    final lamp = torch;
     final current = mode;
 
     return Padding(
@@ -83,7 +83,7 @@ class SuiviHeader extends StatelessWidget {
                 ),
               ),
               if (current == SuiviMode.valider) SuiviHelpButton(onDark: onDark),
-              if (torch != null) QrTorchButton(torchOn: torch),
+              if (lamp != null) QrTorchButton(torch: lamp),
               DonyFeedbackButton(color: onDark ? DonyColors.neutral0 : null),
             ],
           ),

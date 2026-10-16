@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -43,13 +44,79 @@ String? bidIdFromCapture(BarcodeCapture capture) {
   return null;
 }
 
+/// État de la lampe tel que la caméra le rapporte.
+enum QrTorchStatus {
+  /// Caméra arrêtée ou en cours de démarrage : rien à piloter.
+  stopped,
+
+  /// La caméra tourne mais l'appareil n'a pas de lampe.
+  unavailable,
+
+  /// Lampe éteinte, prête à être allumée.
+  off,
+
+  /// Lampe allumée.
+  on,
+}
+
+/// Traduit l'état du lecteur en état de lampe affichable.
+@visibleForTesting
+QrTorchStatus qrTorchStatusOf(MobileScannerState state) {
+  if (!state.isInitialized) return QrTorchStatus.stopped;
+  // À l'arrêt, mobile_scanner garde `unavailable` pour un appareil sans
+  // lampe et repasse à `off` sinon : seul le premier cas est définitif.
+  if (state.torchState == TorchState.unavailable) {
+    return state.isRunning ? QrTorchStatus.unavailable : QrTorchStatus.stopped;
+  }
+  if (!state.isRunning) return QrTorchStatus.stopped;
+  return state.torchState == TorchState.on
+      ? QrTorchStatus.on
+      : QrTorchStatus.off;
+}
+
+/// Lampe des écrans caméra, partagée entre [QrCameraView], qui la pilote,
+/// et [QrTorchButton], qui l'affiche.
+///
+/// Sa valeur est l'état RÉEL rapporté par la caméra, jamais la demande de
+/// l'utilisateur : une demande ignorée (caméra à l'arrêt, appareil sans
+/// lampe) laissait le bouton croire la lampe allumée (FLUTTER-Q9).
+class QrTorch extends ValueNotifier<QrTorchStatus> {
+  QrTorch() : super(QrTorchStatus.stopped);
+
+  Future<void> Function()? _toggle;
+  bool _disposed = false;
+
+  bool get isOn => value == QrTorchStatus.on;
+
+  /// La lampe peut être allumée ou éteinte maintenant.
+  bool get canToggle => value == QrTorchStatus.on || value == QrTorchStatus.off;
+
+  /// Demande à la caméra d'inverser la lampe. Le bouton ne change d'état
+  /// qu'une fois la caméra revenue avec le nouvel état réel.
+  Future<void> toggle() async {
+    if (!canToggle) return;
+    await _toggle?.call();
+  }
+
+  void _report(QrTorchStatus status) {
+    if (!_disposed) value = status;
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _toggle = null;
+    super.dispose();
+  }
+}
+
 /// Flux caméra qui lit les QR Yadony et ne rend que l'identifiant du colis.
 ///
 /// Le contrôleur vit ici, démarré et arrêté à la main :
 /// - [paused] à `true` coupe la caméra (feuille dépliée, écran recouvert,
 ///   traitement d'un scan en cours) ; repassé à `false`, elle redémarre ;
 /// - l'app mise en arrière-plan coupe aussi la caméra ;
-/// - [torchOn] pilote la lampe.
+/// - [torch] pilote la lampe et reçoit son état réel.
 ///
 /// La permission caméra est demandée au premier démarrage, jamais avant :
 /// un écran qui ne monte pas ce widget n'ouvre pas la caméra.
@@ -58,7 +125,7 @@ class QrCameraView extends StatefulWidget {
     super.key,
     required this.onBidId,
     this.paused,
-    this.torchOn,
+    this.torch,
   });
 
   /// Appelé à chaque QR Yadony détecté tant que la caméra n'est pas en pause.
@@ -66,7 +133,7 @@ class QrCameraView extends StatefulWidget {
   final ValueChanged<String> onBidId;
 
   final ValueListenable<bool>? paused;
-  final ValueListenable<bool>? torchOn;
+  final QrTorch? torch;
 
   @override
   State<QrCameraView> createState() => _QrCameraViewState();
@@ -87,7 +154,8 @@ class _QrCameraViewState extends State<QrCameraView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.paused?.addListener(_sync);
-    widget.torchOn?.addListener(_syncTorch);
+    _controller.addListener(_reportTorch);
+    _attachTorch(widget.torch);
     // Le contrôleur ne démarre qu'une fois le widget MobileScanner attaché.
     WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
   }
@@ -100,9 +168,9 @@ class _QrCameraViewState extends State<QrCameraView>
       widget.paused?.addListener(_sync);
       _sync();
     }
-    if (oldWidget.torchOn != widget.torchOn) {
-      oldWidget.torchOn?.removeListener(_syncTorch);
-      widget.torchOn?.addListener(_syncTorch);
+    if (oldWidget.torch != widget.torch) {
+      _detachTorch(oldWidget.torch);
+      _attachTorch(widget.torch);
     }
   }
 
@@ -131,12 +199,44 @@ class _QrCameraViewState extends State<QrCameraView>
     }
   }
 
-  void _syncTorch() {
-    final wanted = widget.torchOn?.value ?? false;
+  void _attachTorch(QrTorch? torch) {
+    if (torch == null) return;
+    torch._toggle = _toggleTorch;
+    _reportTorch();
+  }
+
+  /// Rend la lampe à l'arrêt quand la caméra qui la pilotait s'en va.
+  /// Après l'image : écrire pendant le démontage rebâtirait le bouton alors
+  /// que l'arbre est verrouillé.
+  void _detachTorch(QrTorch? torch) {
+    if (torch == null || torch._toggle != _toggleTorch) return;
+    torch._toggle = null;
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => torch._report(QrTorchStatus.stopped),
+    );
+  }
+
+  Future<void> _toggleTorch() async {
+    if (_disposed) return;
     final value = _controller.value;
     if (!value.isRunning || value.torchState == TorchState.unavailable) return;
-    final isOn = value.torchState == TorchState.on;
-    if (wanted != isOn) unawaited(_controller.toggleTorch());
+    await _controller.toggleTorch();
+  }
+
+  /// Recopie l'état réel de la lampe, rapporté par la caméra.
+  void _reportTorch() {
+    final torch = widget.torch;
+    if (torch == null || _disposed) return;
+    final status = qrTorchStatusOf(_controller.value);
+    if (torch.value == status) return;
+    // Pendant une construction, un autre widget (le bouton) ne peut pas
+    // être rebâti : on attend la fin de l'image.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _reportTorch());
+      return;
+    }
+    torch._report(status);
   }
 
   void _onDetect(BarcodeCapture capture) {
@@ -178,7 +278,8 @@ class _QrCameraViewState extends State<QrCameraView>
     _foreignNotice.dispose();
     WidgetsBinding.instance.removeObserver(this);
     widget.paused?.removeListener(_sync);
-    widget.torchOn?.removeListener(_syncTorch);
+    _controller.removeListener(_reportTorch);
+    _detachTorch(widget.torch);
     unawaited(_controller.dispose());
     super.dispose();
   }
@@ -258,28 +359,86 @@ class _CameraUnavailable extends StatelessWidget {
   }
 }
 
-/// Bouton lampe des écrans caméra : bascule [torchOn], lu par [QrCameraView].
+/// Bouton lampe des écrans caméra, piloté par l'état réel de [torch].
+///
+/// Allumée : fond plein jaune et éclair sombre. Éteinte : fond translucide
+/// et éclair barré. Le libellé dit l'action proposée (« Allumer la lampe »,
+/// « Éteindre la lampe ») : l'état ne passe jamais par la seule couleur.
+/// Caméra à l'arrêt : bouton grisé ; appareil sans lampe : bouton masqué.
 class QrTorchButton extends StatelessWidget {
-  const QrTorchButton({super.key, required this.torchOn});
+  const QrTorchButton({super.key, required this.torch});
 
-  final ValueNotifier<bool> torchOn;
+  final QrTorch torch;
+
+  static const _duration = Duration(milliseconds: 180);
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: torchOn,
-      builder: (context, on, _) => IconButton(
-        tooltip: context.l10n.scanTorchToggleTooltip,
-        isSelected: on,
-        style: IconButton.styleFrom(
-          backgroundColor: DonyColors.neutral0.withValues(
-            alpha: on ? 0.28 : 0.12,
+    return ValueListenableBuilder<QrTorchStatus>(
+      valueListenable: torch,
+      builder: (context, status, _) {
+        if (status == QrTorchStatus.unavailable) {
+          return const SizedBox.shrink();
+        }
+        final l = context.l10n;
+        final on = status == QrTorchStatus.on;
+        final enabled = torch.canToggle;
+        final tooltip = switch (status) {
+          QrTorchStatus.on => l.scanTorchTurnOffTooltip,
+          QrTorchStatus.off => l.scanTorchTurnOnTooltip,
+          _ => l.scanTorchUnavailableTooltip,
+        };
+        final background = on
+            ? DonyColors.torchOn
+            : DonyColors.neutral0.withValues(alpha: enabled ? 0.12 : 0.06);
+
+        // Fond animé à part : AnimatedContainer reprend d'où il en est si
+        // l'état change en pleine transition, sans saut.
+        return AnimatedContainer(
+          key: const Key('qr-torch-button'),
+          duration: _duration,
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+          child: IconButton(
+            tooltip: tooltip,
+            isSelected: on,
+            style: IconButton.styleFrom(minimumSize: const Size(44, 44)),
+            onPressed: enabled
+                ? () {
+                    unawaited(HapticFeedback.selectionClick());
+                    unawaited(torch.toggle());
+                  }
+                : null,
+            icon: AnimatedSwitcher(
+              duration: _duration,
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: Tween<double>(begin: 0.25, end: 1).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: on
+                  ? const DonyIcon(
+                      'zap',
+                      key: ValueKey('torch-on'),
+                      color: DonyColors.neutral900,
+                      size: 20,
+                    )
+                  : DonyIcon(
+                      'zap-off',
+                      key: const ValueKey('torch-off'),
+                      color: DonyColors.neutral0.withValues(
+                        alpha: enabled ? 1 : 0.4,
+                      ),
+                      size: 20,
+                    ),
+            ),
           ),
-          minimumSize: const Size(44, 44),
-        ),
-        icon: const DonyIcon('zap', color: DonyColors.neutral0, size: 20),
-        onPressed: () => torchOn.value = !torchOn.value,
-      ),
+        );
+      },
     );
   }
 }

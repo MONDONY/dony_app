@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -87,56 +88,206 @@ void main() {
     expect(find.byType(Container), findsOneWidget);
   });
 
-  testWidgets('QrTorchButton bascule la lampe', (tester) async {
-    final torch = ValueNotifier(false);
+  group('qrTorchStatusOf', () {
+    const idle = MobileScannerState.uninitialized();
+    MobileScannerState running(TorchState torch) =>
+        idle.copyWith(isInitialized: true, isRunning: true, torchState: torch);
+
+    test('caméra jamais démarrée → à l\'arrêt', () {
+      expect(qrTorchStatusOf(idle), QrTorchStatus.stopped);
+    });
+
+    test('caméra en marche : état réel de la lampe', () {
+      expect(qrTorchStatusOf(running(TorchState.on)), QrTorchStatus.on);
+      expect(qrTorchStatusOf(running(TorchState.off)), QrTorchStatus.off);
+      expect(qrTorchStatusOf(running(TorchState.auto)), QrTorchStatus.off);
+      expect(
+        qrTorchStatusOf(running(TorchState.unavailable)),
+        QrTorchStatus.unavailable,
+      );
+    });
+
+    test('caméra arrêtée → à l\'arrêt, avec ou sans lampe', () {
+      expect(
+        qrTorchStatusOf(running(TorchState.off).copyWith(isRunning: false)),
+        QrTorchStatus.stopped,
+      );
+      expect(
+        qrTorchStatusOf(
+          running(TorchState.unavailable).copyWith(isRunning: false),
+        ),
+        QrTorchStatus.stopped,
+      );
+    });
+  });
+
+  group('QrTorchButton', () {
+    Future<_FakeTorch> pumpButton(
+      WidgetTester tester,
+      QrTorchStatus status,
+    ) async {
+      enableEnglish();
+      final torch = _FakeTorch()..value = status;
+      addTearDown(torch.dispose);
+      await tester.pumpWidget(
+        localizedApp(
+          Scaffold(
+            body: Center(child: QrTorchButton(torch: torch)),
+          ),
+          locale: AppL10n.en,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      return torch;
+    }
+
+    Color background(WidgetTester tester) =>
+        ((tester
+                    .widget<AnimatedContainer>(
+                      find.byKey(const Key('qr-torch-button')),
+                    )
+                    .decoration
+                as BoxDecoration?)
+            ?.color) ??
+        const Color(0x00000000);
+
+    testWidgets('éteinte : éclair barré, fond translucide, « Allumer »', (
+      tester,
+    ) async {
+      final torch = await pumpButton(tester, QrTorchStatus.off);
+      expect(find.byKey(const ValueKey('torch-off')), findsOneWidget);
+      expect(find.byKey(const ValueKey('torch-on')), findsNothing);
+      expect(find.byTooltip('Turn on the flashlight'), findsOneWidget);
+      expect(background(tester), isNot(DonyColors.torchOn));
+      expect(
+        tester.getSemantics(find.byType(IconButton)),
+        isSemantics(
+          tooltip: 'Turn on the flashlight',
+          isButton: true,
+          isEnabled: true,
+        ),
+      );
+
+      await tester.tap(find.byType(IconButton));
+      await tester.pump();
+      expect(torch.toggles, 1);
+    });
+
+    testWidgets('allumée : fond plein jaune, éclair, « Éteindre »', (
+      tester,
+    ) async {
+      final torch = await pumpButton(tester, QrTorchStatus.on);
+      expect(find.byKey(const ValueKey('torch-on')), findsOneWidget);
+      expect(find.byKey(const ValueKey('torch-off')), findsNothing);
+      expect(find.byTooltip('Turn off the flashlight'), findsOneWidget);
+      expect(background(tester), DonyColors.torchOn);
+      expect(
+        tester.widget<IconButton>(find.byType(IconButton)).isSelected,
+        isTrue,
+      );
+      expect(
+        tester.getSemantics(find.byType(IconButton)),
+        isSemantics(tooltip: 'Turn off the flashlight', isButton: true),
+      );
+
+      await tester.tap(find.byType(IconButton));
+      await tester.pump();
+      expect(torch.toggles, 1);
+    });
+
+    testWidgets('le bouton suit l\'état réel, pas le tap', (tester) async {
+      final torch = await pumpButton(tester, QrTorchStatus.off);
+      await tester.tap(find.byType(IconButton));
+      await tester.pump(const Duration(milliseconds: 300));
+      // La caméra n'a encore rien confirmé : toujours éteinte.
+      expect(find.byKey(const ValueKey('torch-off')), findsOneWidget);
+
+      torch.value = QrTorchStatus.on;
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const ValueKey('torch-on')), findsOneWidget);
+      expect(find.byTooltip('Turn off the flashlight'), findsOneWidget);
+    });
+
+    testWidgets('caméra à l\'arrêt : bouton désactivé', (tester) async {
+      final torch = await pumpButton(tester, QrTorchStatus.stopped);
+      expect(find.byTooltip('Flashlight unavailable'), findsOneWidget);
+      expect(
+        tester.widget<IconButton>(find.byType(IconButton)).onPressed,
+        isNull,
+      );
+      await tester.tap(find.byType(IconButton), warnIfMissed: false);
+      expect(torch.toggles, 0);
+    });
+
+    testWidgets('appareil sans lampe : bouton masqué', (tester) async {
+      await pumpButton(tester, QrTorchStatus.unavailable);
+      expect(find.byType(IconButton), findsNothing);
+    });
+
+    testWidgets('libellés français', (tester) async {
+      final torch = _FakeTorch()..value = QrTorchStatus.off;
+      addTearDown(torch.dispose);
+      await tester.pumpWidget(
+        localizedApp(Scaffold(body: QrTorchButton(torch: torch))),
+      );
+      expect(find.byTooltip('Allumer la lampe'), findsOneWidget);
+      torch.value = QrTorchStatus.on;
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byTooltip('Éteindre la lampe'), findsOneWidget);
+    });
+  });
+
+  test('QrTorch.toggle sans caméra attachée : sans effet', () async {
+    final torch = QrTorch()..value = QrTorchStatus.off;
     addTearDown(torch.dispose);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: QrTorchButton(torchOn: torch)),
-      ),
-    );
-    await tester.tap(find.byType(IconButton));
-    await tester.pump();
-    expect(torch.value, isTrue);
-    await tester.tap(find.byType(IconButton));
-    await tester.pump();
-    expect(torch.value, isFalse);
+    expect(torch.canToggle, isTrue);
+    await torch.toggle();
+    expect(torch.value, QrTorchStatus.off);
+    torch.value = QrTorchStatus.stopped;
+    expect(torch.canToggle, isFalse);
+    expect(torch.isOn, isFalse);
   });
 
   testWidgets('QrCameraView suit la pause et la lampe sans planter', (
     tester,
   ) async {
     final paused = ValueNotifier(true);
-    final torch = ValueNotifier(false);
+    final torch = QrTorch();
     addTearDown(paused.dispose);
     addTearDown(torch.dispose);
 
     await tester.pumpWidget(
       MaterialApp(
-        home: QrCameraView(onBidId: (_) {}, paused: paused, torchOn: torch),
+        home: QrCameraView(onBidId: (_) {}, paused: paused, torch: torch),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byType(MobileScanner), findsOneWidget);
 
     paused.value = false;
-    torch.value = true;
+    await torch.toggle();
     await tester.pump(const Duration(milliseconds: 600));
+    // Pas de vraie caméra en test : la lampe reste à l'arrêt.
+    expect(torch.value, QrTorchStatus.stopped);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump(const Duration(milliseconds: 600));
 
     // Nouveaux notifiers : l'écoute suit le widget.
     final paused2 = ValueNotifier(true);
-    final torch2 = ValueNotifier(false);
+    final torch2 = QrTorch();
     addTearDown(paused2.dispose);
     addTearDown(torch2.dispose);
     await tester.pumpWidget(
       MaterialApp(
-        home: QrCameraView(onBidId: (_) {}, paused: paused2, torchOn: torch2),
+        home: QrCameraView(onBidId: (_) {}, paused: paused2, torch: torch2),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));
+    // L'ancienne lampe n'est plus pilotée : remise à l'arrêt.
+    torch.value = QrTorchStatus.off;
+    await torch.toggle();
+    expect(torch.value, QrTorchStatus.off);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 2));
@@ -245,4 +396,13 @@ void main() {
       );
     });
   });
+}
+
+/// Lampe sans caméra : compte les demandes, l'état réel reste piloté
+/// par le test.
+class _FakeTorch extends QrTorch {
+  int toggles = 0;
+
+  @override
+  Future<void> toggle() async => toggles++;
 }
