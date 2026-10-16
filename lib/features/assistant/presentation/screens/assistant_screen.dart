@@ -35,6 +35,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
   final TextEditingController _input = TextEditingController();
   final ScrollController _scroll = ScrollController();
 
+  /// Incrémenté à chaque geste de l'utilisateur sur la liste : un défilement
+  /// vers la réponse lancé avant ce geste ne le ramène plus au bas.
+  int _userDragGeneration = 0;
+
   /// Actions inconnues déjà signalées (`<id du message>|<route>`) : une fois
   /// par message, pas à chaque reconstruction.
   final Set<String> _reportedUnmatched = {};
@@ -74,29 +78,33 @@ class _AssistantScreenState extends State<AssistantScreen> {
   void _scrollToEnd({bool animated = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scroll.hasClients) return;
+      final generation = _userDragGeneration;
       final end = _scroll.position.maxScrollExtent;
       if (animated && !MediaQuery.disableAnimationsOf(context)) {
         // L'étendue du bas n'est qu'estimée tant que ses éléments ne sont pas
         // construits : l'animation peut s'arrêter avant le vrai bas.
         _scroll
             .animateTo(end, duration: DonyDuration.base, curve: DonyCurve.enter)
-            .whenComplete(_settleAtEnd);
+            .whenComplete(() => _settleAtEnd(generation));
       } else {
         _scroll.jumpTo(end);
-        _settleAtEnd();
+        _settleAtEnd(generation);
       }
     });
   }
 
-  /// Recolle au bas réel du contenu (quelques passes : chaque saut construit
-  /// des éléments et affine l'étendue).
-  void _settleAtEnd([int attemptsLeft = 3]) {
+  /// Recolle au bas réel du contenu, en 3 passes au plus : chaque saut
+  /// construit des éléments et affine l'étendue. Abandonne dès que
+  /// l'utilisateur a touché la liste depuis le lancement ([generation]) : il
+  /// remonte lire, on ne le ramène pas au bas.
+  void _settleAtEnd(int generation, [int attemptsLeft = 2]) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scroll.hasClients) return;
+      if (generation != _userDragGeneration) return;
       final position = _scroll.position;
       if (position.pixels >= position.maxScrollExtent - 1) return;
       _scroll.jumpTo(position.maxScrollExtent);
-      if (attemptsLeft > 0) _settleAtEnd(attemptsLeft - 1);
+      if (attemptsLeft > 0) _settleAtEnd(generation, attemptsLeft - 1);
     });
   }
 
@@ -323,13 +331,20 @@ class _AssistantScreenState extends State<AssistantScreen> {
         }
       });
     }
-    return ListView.separated(
-      controller: _scroll,
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      itemCount: children.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (_, index) => children[index],
+    return NotificationListener<ScrollStartNotification>(
+      onNotification: (notification) {
+        // dragDetails n'est renseigné que pour un geste, jamais pour animateTo.
+        if (notification.dragDetails != null) _userDragGeneration++;
+        return false;
+      },
+      child: ListView.separated(
+        controller: _scroll,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        itemCount: children.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
+        itemBuilder: (_, index) => children[index],
+      ),
     );
   }
 }

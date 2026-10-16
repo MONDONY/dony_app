@@ -768,6 +768,44 @@ void main() {
   );
 
   testWidgets(
+    'geste pendant le défilement vers la réponse : pas ramené au bas',
+    (tester) async {
+      final controller = StreamController<AssistantState>();
+      addTearDown(controller.close);
+      final many = [
+        for (var i = 0; i < 50; i++)
+          AssistantMessage(
+            id: i * 2,
+            author: i.isEven ? AssistantAuthor.user : AssistantAuthor.assistant,
+            text: 'Message $i ${'mot ' * ((i * 7) % 45)}',
+          ),
+      ];
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: AssistantState(messages: many),
+      );
+      await pumpRaw(tester);
+      await tester.pumpAndSettle();
+      final answer = AssistantMessage(
+        id: 200,
+        author: AssistantAuthor.assistant,
+        text: 'Réponse finale ${'très longue ' * 40}',
+      );
+      controller.add(AssistantState(messages: [...many, answer]));
+      // Au milieu de l'animation vers le bas, l'utilisateur remonte la liste.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, 400));
+      await tester.pumpAndSettle();
+      final position = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      expect(position.pixels, lessThan(position.maxScrollExtent - 200));
+    },
+  );
+
+  testWidgets(
     'entrée jouée une fois : pas rejouée au retour dans la zone visible',
     (tester) async {
       final controller = StreamController<AssistantState>();
