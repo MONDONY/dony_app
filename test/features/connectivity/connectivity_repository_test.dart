@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/connectivity/data/connectivity_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -64,6 +65,27 @@ void main() {
         ),
       );
       expect(await repository.isApiResponsive(), isTrue);
+    });
+
+    test('le ping est exclu du reporting Sentry (FLUTTER-JW)', () async {
+      when(() => dio.get(any(), options: any(named: 'options'))).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/actuator/health'),
+          statusCode: 200,
+        ),
+      );
+
+      await repository.isApiResponsive();
+
+      final options =
+          verify(
+                () => dio.get(
+                  '/actuator/health',
+                  options: captureAny(named: 'options'),
+                ),
+              ).captured.single
+              as Options;
+      expect(options.extra?[ApiClient.skipErrorReportKey], isTrue);
     });
 
     test('false quand le ping time out', () async {
