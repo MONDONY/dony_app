@@ -562,6 +562,127 @@ void main() {
     verify(() => bloc.add(const AssistantEscalationHandled())).called(1);
   });
 
+  testWidgets('ticket créé pendant que l’écran était fermé : ouvert au '
+      'retour, une seule fois', (tester) async {
+    await pump(
+      tester,
+      const AssistantState(
+        messages: [_question],
+        escalationStatus: AssistantEscalationStatus.success,
+        escalatedTicketId: 't1',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('ticket t1'), findsOneWidget);
+    verify(() => bloc.add(const AssistantEscalationHandled())).called(1);
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(AssistantScreen), findsOneWidget);
+    expect(find.text('ticket t1'), findsNothing);
+  });
+
+  testWidgets('échec d’escalade survenu écran fermé : acquitté au retour', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const AssistantState(
+        messages: [_question],
+        escalationStatus: AssistantEscalationStatus.failure,
+      ),
+    );
+    await tester.pumpAndSettle();
+    verify(() => bloc.add(const AssistantEscalationHandled())).called(1);
+  });
+
+  group('deux écrans de l’assistant empilés', () {
+    const unknownAnswer = AssistantMessage(
+      id: 8,
+      author: AssistantAuthor.assistant,
+      text: 'Ailleurs.',
+      actions: [AssistantAction(route: '/autre-inconnue', label: 'Ailleurs')],
+    );
+
+    /// Empile deux écrans de l'assistant ; rend de quoi émettre un état.
+    Future<void Function(AssistantState)> stacked(WidgetTester tester) async {
+      final controller = StreamController<AssistantState>();
+      addTearDown(controller.close);
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: const AssistantState(messages: [_question]),
+      );
+      await pumpRaw(tester);
+      await tester.pumpAndSettle();
+      unawaited(router.push('/profile/edit/phone'));
+      await tester.pumpAndSettle();
+      unawaited(router.push('/assistant'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byType(AssistantScreen, skipOffstage: false),
+        findsNWidgets(2),
+      );
+      clearInteractions(bloc);
+      return controller.add;
+    }
+
+    testWidgets('escalade réussie : le ticket s’ouvre une seule fois', (
+      tester,
+    ) async {
+      final emit = await stacked(tester);
+      emit(
+        const AssistantState(
+          messages: [_question],
+          escalationStatus: AssistantEscalationStatus.success,
+          escalatedTicketId: 't1',
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('ticket t1'), findsOneWidget);
+      verify(() => bloc.add(const AssistantEscalationHandled())).called(1);
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(find.text('ticket t1'), findsNothing);
+      expect(find.byType(AssistantScreen), findsOneWidget);
+    });
+
+    testWidgets('action inconnue : signalée une seule fois', (tester) async {
+      final emit = await stacked(tester);
+      emit(const AssistantState(messages: [_question, unknownAnswer]));
+      await tester.pumpAndSettle();
+      verify(
+        () => bloc.add(
+          const AssistantActionTapped('/autre-inconnue', matched: false),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('écran unique recouvert par une autre page : le ticket '
+        's’ouvre quand même', (tester) async {
+      final controller = StreamController<AssistantState>();
+      addTearDown(controller.close);
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: const AssistantState(messages: [_question]),
+      );
+      await pumpRaw(tester);
+      await tester.pumpAndSettle();
+      unawaited(router.push('/profile/edit/phone'));
+      await tester.pumpAndSettle();
+      controller.add(
+        const AssistantState(
+          messages: [_question],
+          escalationStatus: AssistantEscalationStatus.success,
+          escalatedTicketId: 't1',
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('ticket t1'), findsOneWidget);
+      verify(() => bloc.add(const AssistantEscalationHandled())).called(1);
+    });
+  });
+
   testWidgets('échec de l’escalade : message d’erreur', (tester) async {
     whenListen(
       bloc,

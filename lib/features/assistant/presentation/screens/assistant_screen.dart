@@ -32,6 +32,18 @@ class AssistantScreen extends StatefulWidget {
 class _AssistantScreenState extends State<AssistantScreen> {
   static const _sources = {'bubble', 'messages_header'};
 
+  /// Écrans de l'assistant montés, du plus ancien au plus récent. Deux peuvent
+  /// être empilés (« Y aller » vers une fiche, puis l'icône de Messages ou un
+  /// lien) : ils écoutent le même BLoC, seul celui du dessus réagit à
+  /// l'escalade et signale les actions inconnues, sinon le ticket s'ouvrirait
+  /// deux fois et `assistant_action_unmatched` serait doublé.
+  ///
+  /// Pas `ModalRoute.isCurrent` : un écran unique recouvert par une fiche
+  /// poussée doit encore ouvrir le ticket, il ne sera pas remonté au retour.
+  static final List<_AssistantScreenState> _mounted = [];
+
+  bool get _isTopmost => _mounted.isNotEmpty && identical(_mounted.last, this);
+
   final TextEditingController _input = TextEditingController();
   final ScrollController _scroll = ScrollController();
 
@@ -55,6 +67,16 @@ class _AssistantScreenState extends State<AssistantScreen> {
   @override
   void initState() {
     super.initState();
+    _mounted.add(this);
+    // Escalade terminée pendant que l'écran était fermé : le BlocListener ne
+    // verra jamais ce changement. Acquittée tout de suite (le listener, monté
+    // ensuite, ne la reprendra pas), affichée après la première image.
+    final pending = context.read<AssistantBloc>().state;
+    if (_acknowledgeEscalation(pending)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showEscalationResult(context, pending);
+      });
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<AssistantBloc>().add(
@@ -68,6 +90,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   @override
   void dispose() {
+    _mounted.remove(this);
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -119,14 +142,28 @@ class _AssistantScreenState extends State<AssistantScreen> {
   }
 
   void _onEscalationChanged(BuildContext context, AssistantState state) {
-    final bloc = context.read<AssistantBloc>();
+    if (!_isTopmost) return;
+    if (_acknowledgeEscalation(state)) _showEscalationResult(context, state);
+  }
+
+  /// Acquitte une escalade terminée (succès ou échec) : vrai s'il y avait un
+  /// résultat à montrer.
+  bool _acknowledgeEscalation(AssistantState state) {
+    final done =
+        state.escalationStatus == AssistantEscalationStatus.success ||
+        state.escalationStatus == AssistantEscalationStatus.failure;
+    if (done) {
+      context.read<AssistantBloc>().add(const AssistantEscalationHandled());
+    }
+    return done;
+  }
+
+  void _showEscalationResult(BuildContext context, AssistantState state) {
     switch (state.escalationStatus) {
       case AssistantEscalationStatus.success:
         final ticketId = state.escalatedTicketId;
-        bloc.add(const AssistantEscalationHandled());
         if (ticketId != null) _navigate(context, '/support/tickets/$ticketId');
       case AssistantEscalationStatus.failure:
-        bloc.add(const AssistantEscalationHandled());
         DonySnackbar.show(
           context,
           message: context.l10n.assistantEscalationFailed,
@@ -325,7 +362,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
     ];
     if (toReport.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
+        // Écran recouvert par un autre écran de l'assistant : celui du dessus
+        // signale (une seule fois).
+        if (!mounted || !_isTopmost) return;
         final bloc = context.read<AssistantBloc>();
         for (final route in toReport) {
           bloc.add(AssistantActionTapped(route, matched: false));
