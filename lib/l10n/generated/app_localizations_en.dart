@@ -10798,7 +10798,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanQrPickerTitle => 'Scan the QR code';
 
   @override
-  String get scanTorchToggleTooltip => 'Turn the flashlight on or off';
+  String get scanTorchTurnOnTooltip => 'Turn on the flashlight';
+
+  @override
+  String get scanTorchTurnOffTooltip => 'Turn off the flashlight';
+
+  @override
+  String get scanTorchUnavailableTooltip => 'Flashlight unavailable';
 
   @override
   String get scanQrPickerHint => 'Point at the parcel\'s QR code';

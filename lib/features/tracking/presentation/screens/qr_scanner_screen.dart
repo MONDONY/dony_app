@@ -36,7 +36,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   /// Caméra coupée : QR détecté (feuille ouverte) ou saisie manuelle.
   final _pausedNotifier = ValueNotifier<bool>(false);
-  final _torchOn = ValueNotifier<bool>(false);
+  final _torch = QrTorch();
 
   /// Feuille de confirmation affichée : c'est elle qui se ferme sur
   /// QrScanSuccess / QrScanQueued et renvoie l'état en résultat ; l'écran
@@ -49,7 +49,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   void dispose() {
     _detectedNotifier.dispose();
     _pausedNotifier.dispose();
-    _torchOn.dispose();
+    _torch.dispose();
     super.dispose();
   }
 
@@ -163,7 +163,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               QrCameraView(
                 onBidId: _onBidId,
                 paused: _pausedNotifier,
-                torchOn: _torchOn,
+                torch: _torch,
               ),
 
               // Top bar (dark overlay)
@@ -197,7 +197,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         ),
                       ),
                       // Flash
-                      QrTorchButton(torchOn: _torchOn),
+                      QrTorchButton(torch: _torch),
                       const DonyFeedbackButton(color: DonyColors.white),
                     ],
                   ),

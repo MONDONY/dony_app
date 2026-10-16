@@ -17867,11 +17867,23 @@ abstract class AppLocalizations {
   /// **'Lire le QR code'**
   String get scanQrPickerTitle;
 
-  /// Tooltip du bouton lampe torche de qr_picker_screen.dart, distinct de scanTorchTooltip.
+  /// Tooltip et libellé d'accessibilité du bouton lampe des écrans caméra (QrTorchButton), lampe éteinte : l'action proposée est de l'allumer.
   ///
   /// In fr, this message translates to:
-  /// **'Activer ou couper la lampe'**
-  String get scanTorchToggleTooltip;
+  /// **'Allumer la lampe'**
+  String get scanTorchTurnOnTooltip;
+
+  /// Tooltip et libellé d'accessibilité du bouton lampe des écrans caméra (QrTorchButton), lampe allumée : l'action proposée est de l'éteindre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Éteindre la lampe'**
+  String get scanTorchTurnOffTooltip;
+
+  /// Tooltip du bouton lampe désactivé (QrTorchButton) : caméra arrêtée ou en cours de démarrage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lampe indisponible'**
+  String get scanTorchUnavailableTooltip;
 
   /// Texte d'aide de l'écran de lecture QR générique (qr_picker_screen.dart).
   ///

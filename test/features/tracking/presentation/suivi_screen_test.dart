@@ -42,6 +42,7 @@ import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
+import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
@@ -341,7 +342,7 @@ void main() {
     BuildContext context,
     ValueChanged<String> onBidId,
     ValueListenable<bool> paused,
-    ValueListenable<bool> torchOn,
+    QrTorch torch,
   ) {
     scan = onBidId;
     cameraPaused = paused;

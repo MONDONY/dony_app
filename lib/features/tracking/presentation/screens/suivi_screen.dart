@@ -43,15 +43,15 @@ typedef SuiviCameraBuilder =
       BuildContext context,
       ValueChanged<String> onBidId,
       ValueListenable<bool> paused,
-      ValueListenable<bool> torchOn,
+      QrTorch torch,
     );
 
 Widget _defaultCamera(
   BuildContext context,
   ValueChanged<String> onBidId,
   ValueListenable<bool> paused,
-  ValueListenable<bool> torchOn,
-) => QrCameraView(onBidId: onBidId, paused: paused, torchOn: torchOn);
+  QrTorch torch,
+) => QrCameraView(onBidId: onBidId, paused: paused, torch: torch);
 
 /// Onglet Suivi : un seul écran, deux usages.
 ///
@@ -159,7 +159,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
   final _sheetController = DraggableScrollableController();
   final _sheetExpanded = ValueNotifier<bool>(false);
   final _cameraPaused = ValueNotifier<bool>(false);
-  final _torchOn = ValueNotifier<bool>(false);
+  final _torch = QrTorch();
 
   /// Colis dont le QR vient d'être lu : coche verte et « QR reconnu »
   /// affichées un instant avant d'enchaîner. Sans ce retour, l'écran photo
@@ -251,7 +251,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
     _sheetController.dispose();
     _sheetExpanded.dispose();
     _cameraPaused.dispose();
-    _torchOn.dispose();
+    _torch.dispose();
     _recognized.dispose();
     super.dispose();
   }
@@ -712,7 +712,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
               onDark: true,
               mode: mode,
               onModeSelected: _selectMode,
-              torchOn: _torchOn,
+              torch: _torch,
             ),
           ),
           Expanded(
@@ -749,7 +749,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
                         context,
                         _onBidId,
                         _cameraPaused,
-                        _torchOn,
+                        _torch,
                       ),
                     ),
                     Positioned(
