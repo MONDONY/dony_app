@@ -21,10 +21,15 @@ void main() {
   });
 
   test('racines d’onglet dans le shell, fiches hors shell', () {
-    expect(assistantRouteInShell(appRouter, '/home'), isTrue);
-    expect(assistantRouteInShell(appRouter, '/messages'), isTrue);
-    expect(assistantRouteInShell(appRouter, '/profile'), isTrue);
-    expect(assistantRouteInShell(appRouter, '/support'), isFalse);
-    expect(assistantRouteInShell(appRouter, '/assistant'), isFalse);
+    expect(assistantRouteNeedsGo(appRouter, '/home'), isTrue);
+    expect(assistantRouteNeedsGo(appRouter, '/messages'), isTrue);
+    expect(assistantRouteNeedsGo(appRouter, '/profile'), isTrue);
+    expect(assistantRouteNeedsGo(appRouter, '/support'), isFalse);
+    expect(assistantRouteNeedsGo(appRouter, '/assistant'), isFalse);
+  });
+
+  test('routes à redirection de l’app (billets) : go', () {
+    expect(assistantRouteNeedsGo(appRouter, '/flights/alerts'), isTrue);
+    expect(assistantRouteNeedsGo(appRouter, '/flights'), isTrue);
   });
 }

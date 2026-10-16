@@ -164,10 +164,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
   }
 
   /// `go` pour une route du shell d'onglets (un `push` depuis `/assistant`,
-  /// hors shell, dupliquerait le shell), `push` sinon : le retour ramène à la
+  /// hors shell, dupliquerait le shell) ou qui porte une redirection (elle
+  /// peut mener à un onglet), `push` sinon : le retour ramène à la
   /// conversation.
   void _navigate(BuildContext context, String route) {
-    if (assistantRouteInShell(GoRouter.of(context), route)) {
+    if (assistantRouteNeedsGo(GoRouter.of(context), route)) {
       context.go(route);
     } else {
       context.push(route);

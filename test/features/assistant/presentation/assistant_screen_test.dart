@@ -31,6 +31,12 @@ const _homeAnswer = AssistantMessage(
   text: 'Retournez à l’accueil.',
   actions: [AssistantAction(route: '/home', label: 'Accueil')],
 );
+const _alertsAnswer = AssistantMessage(
+  id: 6,
+  author: AssistantAuthor.assistant,
+  text: 'Vos alertes prix.',
+  actions: [AssistantAction(route: '/flights/alerts', label: 'Mes alertes')],
+);
 const _question = AssistantMessage(
   id: 1,
   author: AssistantAuthor.user,
@@ -83,6 +89,13 @@ void main() {
         GoRoute(
           path: '/profile/edit/phone',
           builder: (_, _) => const Scaffold(body: Text('phone')),
+        ),
+        // Hors shell, mais redirigée vers un onglet (flag éteint), comme dans
+        // l'app.
+        GoRoute(
+          path: '/flights/alerts',
+          redirect: (_, _) async => '/home',
+          builder: (_, _) => const Scaffold(body: Text('alerts')),
         ),
         GoRoute(
           path: '/support/tickets/:id',
@@ -652,6 +665,23 @@ void main() {
       verify(
         () => bloc.add(const AssistantActionTapped('/home', matched: true)),
       ).called(1);
+    },
+  );
+
+  testWidgets(
+    'route hors shell redirigée vers un onglet : go, jamais push (le shell '
+    'ne se duplique pas)',
+    (tester) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, _alertsAnswer]),
+      );
+      await tester.tap(
+        find.byKey(const Key('assistant-action-/flights/alerts')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('home'), findsOneWidget);
+      expect(router.canPop(), isFalse);
     },
   );
 

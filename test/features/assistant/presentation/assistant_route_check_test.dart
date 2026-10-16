@@ -72,7 +72,7 @@ void main() {
     expect(assistantRouteExists(redirecting, '/ancienne'), isTrue);
   });
 
-  group('assistantRouteInShell', () {
+  group('assistantRouteNeedsGo', () {
     final shellRouter = GoRouter(
       routes: [
         StatefulShellRoute.indexedStack(
@@ -106,26 +106,45 @@ void main() {
           ],
         ),
         GoRoute(path: '/assistant', builder: (_, _) => const SizedBox()),
+        // Comme `/flights/alerts` : hors shell, mais redirigée vers un onglet
+        // quand le flag est éteint.
+        GoRoute(
+          path: '/alertes',
+          redirect: (_, _) => '/home',
+          builder: (_, _) => const SizedBox(),
+          routes: [
+            GoRoute(path: ':id/vols', builder: (_, _) => const SizedBox()),
+          ],
+        ),
+        // Comme `/flights` : redirection seule, sans écran.
+        GoRoute(path: '/ancien-onglet', redirect: (_, _) => '/messages'),
       ],
     );
 
     test('racine d’onglet et route sous une branche', () {
-      expect(assistantRouteInShell(shellRouter, '/home'), isTrue);
-      expect(assistantRouteInShell(shellRouter, '/messages'), isTrue);
-      expect(assistantRouteInShell(shellRouter, '/home/detail'), isTrue);
-      expect(assistantRouteInShell(shellRouter, '/home?x=1'), isTrue);
+      expect(assistantRouteNeedsGo(shellRouter, '/home'), isTrue);
+      expect(assistantRouteNeedsGo(shellRouter, '/messages'), isTrue);
+      expect(assistantRouteNeedsGo(shellRouter, '/home/detail'), isTrue);
+      expect(assistantRouteNeedsGo(shellRouter, '/home?x=1'), isTrue);
     });
 
     test('ShellRoute simple', () {
-      expect(assistantRouteInShell(shellRouter, '/dans-shell'), isTrue);
+      expect(assistantRouteNeedsGo(shellRouter, '/dans-shell'), isTrue);
+    });
+
+    test('route qui porte une redirection (elle-même ou un parent) : go, '
+        'même hors shell', () {
+      expect(assistantRouteNeedsGo(shellRouter, '/alertes'), isTrue);
+      expect(assistantRouteNeedsGo(shellRouter, '/alertes/a1/vols'), isTrue);
+      expect(assistantRouteNeedsGo(shellRouter, '/ancien-onglet'), isTrue);
     });
 
     test('route hors shell, inconnue ou invalide', () {
-      expect(assistantRouteInShell(shellRouter, '/assistant'), isFalse);
-      expect(assistantRouteInShell(shellRouter, '/nulle-part'), isFalse);
-      expect(assistantRouteInShell(shellRouter, 'home'), isFalse);
+      expect(assistantRouteNeedsGo(shellRouter, '/assistant'), isFalse);
+      expect(assistantRouteNeedsGo(shellRouter, '/nulle-part'), isFalse);
+      expect(assistantRouteNeedsGo(shellRouter, 'home'), isFalse);
       expect(
-        assistantRouteInShell(shellRouter, '//evil.example/home'),
+        assistantRouteNeedsGo(shellRouter, '//evil.example/home'),
         isFalse,
       );
     });
