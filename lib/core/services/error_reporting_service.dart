@@ -45,6 +45,10 @@ class SentryErrorReportingSink implements ErrorReportingSink {
     // Route normalisée (`/api/v1/bids/:id`) : une panne transitoire est
     // regroupée sans elle (empreinte [fingerprintKey]), elle reste filtrable.
     'endpoint',
+    // Échec Dio : `DioExceptionType.name` et type de l'erreur d'origine
+    // (`HandshakeException`, `SocketException`…), sans message (FLUTTER-QC).
+    'dio_type',
+    'inner_error_type',
     'stripe_code',
     'stripe_error_code',
     'decline_code',
@@ -162,8 +166,26 @@ class ErrorReportingService {
     return null;
   }
 
+  /// Empreinte commune d'un échec Dio SANS réponse HTTP, hors annulation,
+  /// SANS la route : `http-bad-certificate` pour un certificat refusé (qui
+  /// reste visible, en une seule issue), sinon `http-no-response-<type>`. Un
+  /// iPhone qui ne joignait plus l'API ouvrait ~26 issues, une par route
+  /// (FLUTTER-QC `/notifications/unread-count`, FLUTTER-K3
+  /// `/config/commission-rate`…). `null` si l'erreur a une réponse.
+  static String? noResponseFingerprint(Object error, int? statusCode) {
+    if (error is! DioException ||
+        statusCode != null ||
+        error.response != null ||
+        error.type == DioExceptionType.cancel) {
+      return null;
+    }
+    if (isCertificateFailure(error)) return 'http-bad-certificate';
+    return 'http-no-response-${error.type.name}';
+  }
+
   /// Empreinte imposée à l'événement : celle d'une panne transitoire
-  /// ([transientFingerprint]), sinon, pour un avertissement, une empreinte
+  /// ([transientFingerprint]), puis celle d'un échec sans réponse
+  /// ([noResponseFingerprint]), sinon, pour un avertissement, une empreinte
   /// stable `reported:<opération>:<type d'erreur>`. Sans elle, Sentry
   /// regroupait sous un même ticket des `ReportedError` d'opérations
   /// différentes, toutes nées au même endroit de ce service (FLUTTER-F).
@@ -174,6 +196,7 @@ class ErrorReportingService {
     int? statusCode,
   }) =>
       transientFingerprint(error, statusCode) ??
+      noResponseFingerprint(error, statusCode) ??
       (_isWarning(error) ? 'reported:$operation:${error.runtimeType}' : null);
 
   static bool _isWarning(Object error) =>
@@ -196,6 +219,10 @@ class ErrorReportingService {
       'operation': operation,
       'error_type': error.runtimeType.toString(),
       'status_code': ?effectiveStatusCode,
+      if (error is DioException) ...{
+        'dio_type': error.type.name,
+        'inner_error_type': originalErrorTypeOf(error),
+      },
       ..._safeContext(context),
       SentryErrorReportingSink.fingerprintKey: ?fingerprintFor(
         error,
@@ -227,7 +254,14 @@ class ErrorReportingService {
     // L'intercepteur HTTP passe la DioException brute ; l'AppException produite
     // par mapHttpError est dans `.error`. Sans ce cas, aucun code métier
     // n'atteignait Sentry et tout se regroupait sous « http.POST, DioException ».
-    DioException(:final error) when error is AppException => error.code,
+    DioException(:final error)
+        when error is AppException && error.code != null =>
+      error.code,
+    // Échec sans réponse ni code : le type Dio entre dans le titre de l'issue
+    // (et l'alerte Telegram), qui ne disait que « DioException » (FLUTTER-QC).
+    DioException(:final response, :final type)
+        when response == null && type != DioExceptionType.cancel =>
+      'no-response-${type.name}',
     FirebaseException(:final code) => code,
     _ => null,
   };

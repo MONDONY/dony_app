@@ -1,8 +1,9 @@
-import 'dart:io' show HttpException, SocketException;
+import 'dart:io' show HandshakeException, HttpException, SocketException;
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/report_severity.dart';
+import 'package:dony/core/network/transport_failure.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:flutter_test/flutter_test.dart';
@@ -599,4 +600,195 @@ void main() {
       expect(dropTransportFailureEvent(bare, Hint()), same(bare));
     });
   });
+
+  group(
+    'échec sans réponse : une issue par type, pas par route (FLUTTER-QC)',
+    () {
+      RequestOptions optionsFor(String path) => RequestOptions(path: path);
+
+      DioException noResponse(
+        DioExceptionType type, {
+        String path = '/api/v1/notifications/unread-count',
+        Object? error,
+      }) => DioException(
+        requestOptions: optionsFor(path),
+        type: type,
+        error: error,
+      );
+
+      for (final (type, expected) in [
+        (
+          DioExceptionType.connectionTimeout,
+          'http-no-response-connectionTimeout',
+        ),
+        (DioExceptionType.sendTimeout, 'http-no-response-sendTimeout'),
+        (DioExceptionType.receiveTimeout, 'http-no-response-receiveTimeout'),
+        (DioExceptionType.connectionError, 'http-no-response-connectionError'),
+        (DioExceptionType.unknown, 'http-no-response-unknown'),
+        (DioExceptionType.badCertificate, 'http-bad-certificate'),
+        (DioExceptionType.cancel, null),
+      ]) {
+        test('${type.name} sans réponse → $expected', () {
+          expect(
+            ErrorReportingService.noResponseFingerprint(noResponse(type), null),
+            expected,
+          );
+          expect(
+            ErrorReportingService.fingerprintFor(
+              noResponse(type),
+              operation: 'http.GET',
+            ),
+            expected,
+          );
+        });
+      }
+
+      test('même empreinte quelle que soit la route', () {
+        final prints = {
+          for (final path in [
+            '/api/v1/notifications/unread-count',
+            '/api/v1/config/commission-rate',
+            '/api/v1/users/me',
+          ])
+            ErrorReportingService.fingerprintFor(
+              noResponse(DioExceptionType.unknown, path: path),
+              operation: 'http.GET',
+            ),
+        };
+        expect(prints, {'http-no-response-unknown'});
+      });
+
+      test('certificat refusé en unknown (HandshakeException) : '
+          'http-bad-certificate', () {
+        expect(
+          ErrorReportingService.noResponseFingerprint(
+            noResponse(
+              DioExceptionType.unknown,
+              error: const HandshakeException(
+                'Handshake error: CERTIFICATE_VERIFY_FAILED',
+              ),
+            ),
+            null,
+          ),
+          'http-bad-certificate',
+        );
+      });
+
+      test(
+        'certificat refusé noté avant la conversion : http-bad-certificate',
+        () {
+          final err = noResponse(
+            DioExceptionType.unknown,
+            error: const HandshakeException('CERTIFICATE_VERIFY_FAILED'),
+          );
+          rememberOriginalError(err);
+          final converted = err.copyWith(error: const NetworkException('x'));
+          expect(
+            ErrorReportingService.noResponseFingerprint(converted, null),
+            'http-bad-certificate',
+          );
+        },
+      );
+
+      for (final status in [400, 418, 500]) {
+        test('avec réponse $status : empreinte inchangée', () {
+          final options = optionsFor('/api/v1/users/me');
+          final err = DioException(
+            requestOptions: options,
+            type: DioExceptionType.badResponse,
+            response: Response(requestOptions: options, statusCode: status),
+            error: const ServerException('x'),
+          );
+          expect(
+            ErrorReportingService.noResponseFingerprint(err, status),
+            isNull,
+          );
+          expect(
+            ErrorReportingService.fingerprintFor(
+              err,
+              operation: 'http.GET',
+              statusCode: status,
+            ),
+            isNull,
+          );
+        });
+      }
+
+      test('503 : empreinte transitoire conservée', () {
+        final options = optionsFor('/api/v1/users/me');
+        expect(
+          ErrorReportingService.fingerprintFor(
+            DioException(
+              requestOptions: options,
+              type: DioExceptionType.badResponse,
+              response: Response(requestOptions: options, statusCode: 503),
+            ),
+            operation: 'http.GET',
+            statusCode: 503,
+          ),
+          'http-transient-503',
+        );
+      });
+
+      test('annulation : jamais rapportée', () async {
+        final sink = _RecordingSink();
+        await ErrorReportingService(sink).report(
+          DioException(
+            requestOptions: optionsFor('/x'),
+            type: DioExceptionType.cancel,
+            error: const NetworkException('x', code: 'CANCELLED'),
+          ),
+          operation: 'http.GET',
+        );
+        expect(sink.error, isNull);
+      });
+
+      test('rapport : dio_type et inner_error_type en tags, type Dio dans le '
+          'titre, aucun message brut', () async {
+        final sink = _RecordingSink();
+        final err = noResponse(
+          DioExceptionType.unknown,
+          error: StateError('secret +33612345678'),
+        );
+        rememberOriginalError(err);
+        await ErrorReportingService(sink).report(
+          err.copyWith(error: const NetworkException('secret +33612345678')),
+          operation: 'http.GET',
+        );
+        final context = sink.context!;
+        expect(context['dio_type'], 'unknown');
+        expect(context['inner_error_type'], 'StateError');
+        expect(
+          context[SentryErrorReportingSink.fingerprintKey],
+          'http-no-response-unknown',
+        );
+        expect(
+          sink.error.toString(),
+          'ReportedError(http.GET, DioException, no-response-unknown)',
+        );
+        expect(context.values.join(' '), isNot(contains('+33612345678')));
+
+        final scope = Scope(SentryOptions());
+        await SentryErrorReportingSink.applyReportContext(scope, context);
+        expect(scope.tags, containsPair('dio_type', 'unknown'));
+        expect(scope.tags, containsPair('inner_error_type', 'StateError'));
+        expect(scope.fingerprint, ['http-no-response-unknown']);
+      });
+
+      test('code métier présent : il reste dans le titre', () async {
+        final sink = _RecordingSink();
+        await ErrorReportingService(sink).report(
+          DioException(
+            requestOptions: optionsFor('/x'),
+            error: const ServerException('x', 'boom'),
+          ),
+          operation: 'http.GET',
+        );
+        expect(
+          sink.error.toString(),
+          'ReportedError(http.GET, DioException, boom)',
+        );
+      });
+    },
+  );
 }

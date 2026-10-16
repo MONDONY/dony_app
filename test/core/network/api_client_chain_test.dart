@@ -377,6 +377,59 @@ void main() {
         expect(log.where((e) => e == 'report'), hasLength(1));
       });
 
+      test('FLUTTER-QC : erreur inattendue sans réponse sur plusieurs '
+          'routes, un seul report, type d\'origine en contexte', () async {
+        final dio = build([
+          for (var i = 0; i < 3; i++) _RawError(StateError('x')),
+        ]);
+
+        for (final path in [
+          '/notifications/unread-count',
+          '/config/commission-rate',
+          '/users/me',
+        ]) {
+          await expectLater(
+            dio.get<dynamic>(path),
+            throwsA(appError<NetworkException>()),
+          );
+        }
+        await flush();
+
+        expect(log.where((e) => e == 'report'), hasLength(1));
+        final context = sink.contexts.single;
+        expect(
+          context[SentryErrorReportingSink.fingerprintKey],
+          'http-no-response-unknown',
+        );
+        expect(context['dio_type'], 'unknown');
+        expect(context['inner_error_type'], 'StateError');
+        expect(context['endpoint'], '/api/v1/notifications/unread-count');
+      });
+
+      test('certificat refusé sur plusieurs routes : une issue '
+          'http-bad-certificate', () async {
+        const cert = HandshakeException(
+          'Handshake error: CERTIFICATE_VERIFY_FAILED',
+        );
+        final dio = build([const _RawError(cert), const _RawError(cert)]);
+
+        for (final path in ['/users/me', '/config/commission-rate']) {
+          await expectLater(
+            dio.get<dynamic>(path),
+            throwsA(isA<DioException>()),
+          );
+        }
+        await flush();
+
+        expect(log.where((e) => e == 'report'), hasLength(1));
+        final context = sink.contexts.single;
+        expect(
+          context[SentryErrorReportingSink.fingerprintKey],
+          'http-bad-certificate',
+        );
+        expect(context['inner_error_type'], 'HandshakeException');
+      });
+
       test('500 sur le compteur : toujours rapporté', () async {
         final dio = build([500, 500, 500, 500]);
 

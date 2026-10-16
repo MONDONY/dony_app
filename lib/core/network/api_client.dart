@@ -216,7 +216,9 @@ class ApiClient {
 ///  - une même panne (méthode, chemin normalisé, statut, code) part au plus
 ///    une fois par [throttleWindow] ; une panne transitoire (502/503/504) une
 ///    fois par statut, toutes routes confondues, sous l'empreinte
-///    `http-transient-<statut>` (la route reste en tag).
+///    `http-transient-<statut>` (la route reste en tag) ;
+///  - un échec sans réponse non classé, une fois par type d'échec, sous
+///    l'empreinte `http-no-response-<type>` ou `http-bad-certificate`.
 /// Rien d'autre que méthode, chemin normalisé et code ne part : ni corps, ni
 /// en-têtes, ni message brut (voir [ErrorReportingService]).
 class _SentryErrorReportingInterceptor extends Interceptor {
@@ -272,8 +274,17 @@ class _SentryErrorReportingInterceptor extends Interceptor {
       err,
       err.response?.statusCode,
     );
+    // Échec sans réponse non classé (certificat refusé, erreur `dart:io`
+    // inattendue) : une clé par type d'échec, toutes routes confondues. Un
+    // appareil qui ne joint plus l'API ouvrait ~26 issues, une par route
+    // (FLUTTER-QC, FLUTTER-K3).
+    final noResponse = ErrorReportingService.noResponseFingerprint(
+      err,
+      err.response?.statusCode,
+    );
     final key =
         transient ??
+        noResponse ??
         '${options.method.toUpperCase()} '
             '${ErrorReportingService.normalizeEndpoint(options.uri.path)} '
             '${err.response?.statusCode ?? err.type.name} '
@@ -444,6 +455,9 @@ class _AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
+    // Avant la conversion, qui remplace `err.error` : Sentry doit savoir de
+    // quelle erreur `dart:io` vient un échec sans réponse (FLUTTER-QC).
+    rememberOriginalError(err);
     final mapped = err.copyWith(error: mapHttpError(err));
     final options = err.requestOptions;
     if (err.response?.statusCode == 401 &&

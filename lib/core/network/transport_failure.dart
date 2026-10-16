@@ -1,4 +1,10 @@
-import 'dart:io' show HandshakeException, HttpException, SocketException;
+import 'dart:io'
+    show
+        HandshakeException,
+        HttpException,
+        OSError,
+        SocketException,
+        TlsException;
 
 import 'package:dio/dio.dart';
 
@@ -44,3 +50,57 @@ bool isTransportError(Object? error) => switch (error) {
 
 bool _isCertificateFailure(String text) =>
     text.toUpperCase().contains('CERTIFICATE');
+
+/// Clé de `RequestOptions.extra` : type de l'erreur levée par l'adaptateur,
+/// AVANT sa conversion en [AppException] par l'intercepteur d'authentification.
+/// Sans elle, Sentry ne voyait que la `NetworkException` convertie et un échec
+/// sans réponse restait impossible à diagnostiquer (FLUTTER-QC, FLUTTER-K3).
+const originalErrorTypeKey = '_originalErrorType';
+
+/// Clé de `RequestOptions.extra` : `true` si la requête a échoué parce que le
+/// certificat du serveur a été refusé (épinglage TLS, chaîne non reconnue).
+const certificateRejectedKey = '_certificateRejected';
+
+/// Note, sur les options de la requête, ce que la conversion en
+/// [AppException] va effacer : le type de l'erreur d'origine et un éventuel
+/// refus de certificat. Appelée avant la conversion, à chaque tentative : une
+/// relance remplace donc les valeurs de la tentative précédente.
+void rememberOriginalError(DioException err) {
+  err.requestOptions.extra
+    ..[originalErrorTypeKey] = describeErrorType(err.error)
+    ..[certificateRejectedKey] = _rejectsCertificate(err);
+}
+
+/// Type de l'erreur d'origine d'un échec Dio, pour Sentry : celui noté par
+/// [rememberOriginalError], sinon celui de `err.error`.
+String originalErrorTypeOf(DioException err) =>
+    err.requestOptions.extra[originalErrorTypeKey] as String? ??
+    describeErrorType(err.error);
+
+/// Le certificat du serveur a-t-il été refusé ? Un tel échec doit rester
+/// visible dans Sentry (épinglage TLS), mais en une seule issue.
+bool isCertificateFailure(DioException err) =>
+    err.response == null &&
+    (err.requestOptions.extra[certificateRejectedKey] == true ||
+        _rejectsCertificate(err));
+
+bool _rejectsCertificate(DioException err) {
+  if (err.response != null) return false;
+  if (err.type == DioExceptionType.badCertificate) return true;
+  final inner = err.error;
+  return err.type == DioExceptionType.unknown &&
+      inner is TlsException &&
+      _isCertificateFailure('${inner.message} ${inner.osError?.message ?? ''}');
+}
+
+/// Nom stable du type d'une erreur, sans son message. Les types `dart:io`
+/// attendus sont nommés en dur : le build obfusqué renomme `runtimeType`.
+String describeErrorType(Object? error) => switch (error) {
+  null => 'none',
+  HandshakeException() => 'HandshakeException',
+  TlsException() => 'TlsException',
+  SocketException() => 'SocketException',
+  HttpException() => 'HttpException',
+  OSError() => 'OSError',
+  _ => error.runtimeType.toString(),
+};
