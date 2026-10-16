@@ -5,7 +5,7 @@ const int kEscalationSubjectMax = 200;
 const int kEscalationMessageMax = 4000;
 
 /// Coupe [s] à [max] unités UTF-16 sans séparer une paire surrogate : si la
-/// coupe tombe après le premier moitié d'un emoji, on recule d'une unité.
+/// coupe tombe après la première moitié d'un emoji, on recule d'une unité.
 String _cut(String s, int max) {
   if (s.length <= max) return s;
   final lastKept = s.codeUnitAt(max - 1);
