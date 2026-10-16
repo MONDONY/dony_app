@@ -32791,6 +32791,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Réessayer'**
   String get parcelLinkRetry;
+
+  /// Titre de l'écran de maintenance, affiché quand l'administrateur active le mode maintenance (maintenance_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony est en maintenance'**
+  String get maintenanceTitle;
+
+  /// Message par défaut de l'écran de maintenance, quand l'administrateur n'a pas écrit de message.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous améliorons l\'application. Revenez un peu plus tard : vos colis, trajets et paiements sont en sécurité.'**
+  String get maintenanceDefaultMessage;
+
+  /// Heure de retour estimée saisie par l'administrateur, en heure locale (ex. 14:30).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour prévu vers {time}'**
+  String maintenanceEstimatedEnd(String time);
+
+  /// Précision sous le message de maintenance : l'écran disparaît seul à la réouverture.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette page se fermera toute seule dès que Yadony sera de nouveau disponible.'**
+  String get maintenanceAutoReopen;
+
+  /// Bouton de l'écran de maintenance qui revérifie tout de suite si l'application est rouverte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get maintenanceRetry;
 }
 
 class _AppLocalizationsDelegate

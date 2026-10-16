@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/app/system_back_dispatcher.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -56,7 +57,11 @@ void main() {
       child: Scaffold(body: Text(name)),
     );
 
-    Future<void> pumpApp(WidgetTester tester, String initial) async {
+    Future<void> pumpApp(
+      WidgetTester tester,
+      String initial, {
+      bool Function()? isLocked,
+    }) async {
       router = GoRouter(
         initialLocation: initial,
         routes: [
@@ -76,7 +81,10 @@ void main() {
           routerDelegate: router.routerDelegate,
           routeInformationParser: router.routeInformationParser,
           routeInformationProvider: router.routeInformationProvider,
-          backButtonDispatcher: SystemBackDispatcher.forRouter(router),
+          backButtonDispatcher: SystemBackDispatcher.forRouter(
+            router,
+            isLocked: isLocked,
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -133,6 +141,37 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(location(), '/auth/local');
+    });
+
+    // Mode maintenance : l'écran recouvre l'app, le retour ne dépile rien
+    // dessous et laisse le système fermer l'application.
+    testWidgets('verrouillé : ne dépile rien et rend la main au système', (
+      tester,
+    ) async {
+      final calls = <MethodCall>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          calls.add(call);
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await pumpApp(tester, '/announcements', isLocked: () => true);
+      unawaited(router.push('/detail'));
+      await tester.pumpAndSettle();
+      expect(find.text('detail'), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.text('detail'), findsOneWidget, reason: 'rien dépilé');
+      expect(calls.map((c) => c.method), contains('SystemNavigator.pop'));
     });
   });
 }

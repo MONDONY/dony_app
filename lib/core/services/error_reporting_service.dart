@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/report_severity.dart';
+import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/network/transport_failure.dart';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -146,6 +147,9 @@ class ErrorReportingService {
     'phone-otp-expired',
     'otp-invalid',
     'otp-expired',
+    // 503 du mode maintenance : décidé depuis le back-office, l'écran de
+    // maintenance l'explique (voir `MaintenanceCubit`).
+    kMaintenanceProblemCode,
   };
 
   /// Statuts d'une API momentanément indisponible (redémarrage, déploiement).

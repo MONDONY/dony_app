@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/accept_language_interceptor.dart';
+import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/network/offline_fast_fail_interceptor.dart';
 import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
@@ -60,6 +61,7 @@ class ApiClient {
     @visibleForTesting Connectivity? connectivity,
     @visibleForTesting RetrySleep? retrySleep,
     @visibleForTesting void Function(Breadcrumb)? breadcrumbSink,
+    MaintenanceSignal? maintenanceSignal,
   }) : _errorReporter = errorReporter {
     _dio = Dio(
       BaseOptions(
@@ -111,6 +113,11 @@ class ApiClient {
       _SentryBreadcrumbInterceptor(breadcrumbSink ?? _addSentryBreadcrumb),
     );
     _dio.interceptors.add(_AuthInterceptor(deviceIdService, tokenSource, _dio));
+    // Mode maintenance : le 503 `maintenance` affiche l'écran de maintenance
+    // (MaintenanceCubit) dès la première requête refusée.
+    if (maintenanceSignal != null) {
+      _dio.interceptors.add(MaintenanceInterceptor(maintenanceSignal));
+    }
 
     if (kDebugMode) {
       // Log only method/path/status. Bodies and headers contain Firebase
@@ -262,6 +269,8 @@ class _SentryErrorReportingInterceptor extends Interceptor {
   bool _shouldReport(DioException err) {
     final options = err.requestOptions;
     if (RetryPolicy.depthOf(options) > 0) return false;
+    // Maintenance décidée depuis le back-office : pas une panne.
+    if (isMaintenanceResponse(err.response)) return false;
     if (_transportTypes.contains(err.type)) return false;
     // Connexion perdue sans réponse, levée en `unknown` (socket coupée par
     // Android en arrière-plan) : même famille que les délais (FLUTTER-JQ).
