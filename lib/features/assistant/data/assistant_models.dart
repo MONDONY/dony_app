@@ -35,7 +35,7 @@ class AssistantAnswer extends Equatable {
   factory AssistantAnswer.fromJson(Map<String, dynamic> json) {
     final answer = json['answer'] as String;
     if (answer.trim().isEmpty) {
-      throw const FormatException('assistant: réponse vide');
+      throw const FormatException('assistant: empty answer');
     }
     return AssistantAnswer(
       answer: answer,
