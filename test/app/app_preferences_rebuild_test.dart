@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dony/app/app.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:flutter/widgets.dart';
@@ -88,4 +90,22 @@ void main() {
     await settle(tester);
     expect(builds, before + 2);
   });
+
+  test(
+    'app.dart branche bien cette règle sur le BlocBuilder des préférences',
+    () {
+      // `DonyApp` entier n'est pas montable en test : on vérifie le câblage dans
+      // le source, le comportement de la règle l'est ci-dessus.
+      final source = File('lib/app/app.dart').readAsStringSync();
+      expect(
+        source,
+        matches(
+          RegExp(
+            r'BlocBuilder<AppPreferencesBloc, AppPreferencesState>\(\s*'
+            r'buildWhen: appPreferencesNeedAppRebuild,',
+          ),
+        ),
+      );
+    },
+  );
 }

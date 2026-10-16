@@ -92,15 +92,27 @@ class _HideAssistantBubbleState extends State<HideAssistantBubble> {
   late final AssistantBubbleBlockers _blockers =
       widget.blockers ?? assistantBubbleBlockers;
 
+  bool _held = false;
+
+  /// Une branche du shell (`StatefulShellRoute.indexedStack`) reste montée hors
+  /// écran : elle ne bloque la bulle que tant que son `TickerMode` est actif,
+  /// critère que `SuiviScreen` utilise déjà pour couper la caméra.
   @override
-  void initState() {
-    super.initState();
-    _blockers.acquire();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final visible = TickerMode.valuesOf(context).enabled;
+    if (visible && !_held) {
+      _held = true;
+      _blockers.acquire();
+    } else if (!visible && _held) {
+      _held = false;
+      _blockers.release();
+    }
   }
 
   @override
   void dispose() {
-    _blockers.release();
+    if (_held) _blockers.release();
     super.dispose();
   }
 

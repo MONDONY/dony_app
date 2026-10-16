@@ -847,6 +847,89 @@ void main() {
       await b.close();
     });
 
+    test('résultat inconnu (réseau instable) : la valeur précédente est '
+        'gardée et le délai de 10 minutes n’est pas armé', () async {
+      var now = DateTime(2026, 10, 16, 12);
+      final results = <bool?>[true, null, null, false];
+      when(
+        () => repository.status(),
+      ).thenAnswer((_) async => results.removeAt(0));
+      final b = AssistantBloc(repository, support, analytics, clock: () => now);
+      b.add(const AssistantStatusRequested());
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.available, isTrue);
+      // Sonde non forcée 11 minutes plus tard : réseau KO, rien ne change.
+      now = now.add(const Duration(minutes: 11));
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.available, isTrue);
+      // Une minute après seulement : elle repart (le délai n'a pas été armé).
+      now = now.add(const Duration(minutes: 1));
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.available, isTrue);
+      verify(() => repository.status()).called(3);
+      // Réponse « non » : cette fois le délai est armé.
+      now = now.add(const Duration(minutes: 11));
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.available, isFalse);
+      now = now.add(const Duration(minutes: 1));
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      verify(() => repository.status()).called(1);
+      await b.close();
+    });
+
+    blocTest<AssistantBloc, AssistantState>(
+      'résultat inconnu sur une sonde forcée : indisponible (pas de résultat '
+      'd’un autre compte)',
+      build: () {
+        when(() => repository.status()).thenAnswer((_) async => null);
+        return build();
+      },
+      seed: () => const AssistantState(available: true),
+      act: (b) => b.add(const AssistantStatusRequested()),
+      verify: (b) => expect(b.state.available, isFalse),
+    );
+
+    test('une sonde forcée qui arrive pendant une sonde non forcée est '
+        'rejouée à la fin de celle-ci', () async {
+      final first = Completer<bool?>();
+      final calls = <bool>[];
+      when(() => repository.status()).thenAnswer((_) {
+        calls.add(true);
+        return calls.length == 1 ? first.future : Future<bool?>.value(true);
+      });
+      final b = build();
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantStatusRequested());
+      await Future<void>.delayed(Duration.zero);
+      expect(calls, hasLength(1), reason: 'une seule requête en vol');
+      first.complete(false);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(calls, hasLength(2));
+      expect(b.state.available, isTrue);
+      await b.close();
+    });
+
+    test('une sonde non forcée pendant une sonde en vol est ignorée', () async {
+      final first = Completer<bool?>();
+      when(() => repository.status()).thenAnswer((_) => first.future);
+      final b = build();
+      b.add(const AssistantStatusRequested());
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      first.complete(true);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      verify(() => repository.status()).called(1);
+      await b.close();
+    });
+
     blocTest<AssistantBloc, AssistantState>(
       'une sonde qui répond vrai efface un ancien « éteint »',
       build: () {

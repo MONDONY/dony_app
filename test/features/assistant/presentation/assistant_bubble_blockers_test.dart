@@ -73,4 +73,83 @@ void main() {
       contains(assistantModalObserver),
     );
   });
+
+  group('HideAssistantBubble dans un onglet du shell', () {
+    // Comme `StatefulShellRoute.indexedStack` : toutes les branches restent
+    // montées, chacune sous un `TickerMode` qui ne l'active que si elle est
+    // affichée.
+    Future<ValueNotifier<int>> pumpTabs(
+      WidgetTester tester,
+      AssistantBubbleBlockers blockers,
+    ) async {
+      final index = ValueNotifier<int>(0);
+      addTearDown(index.dispose);
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: ValueListenableBuilder<int>(
+            valueListenable: index,
+            builder: (_, current, _) => IndexedStack(
+              index: current,
+              children: [
+                for (var i = 0; i < 2; i++)
+                  TickerMode(
+                    enabled: i == current,
+                    child: i == 1
+                        ? HideAssistantBubble(
+                            blockers: blockers,
+                            child: const Text('camera'),
+                          )
+                        : const Text('accueil'),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+      return index;
+    }
+
+    testWidgets('l’onglet caméra bloque seulement tant qu’il est affiché', (
+      tester,
+    ) async {
+      final index = await pumpTabs(tester, blockers);
+      await tester.pump();
+      expect(blockers.active.value, isFalse, reason: 'onglet caméra caché');
+      index.value = 1;
+      await tester.pump();
+      await tester.pump();
+      expect(blockers.active.value, isTrue);
+      index.value = 0;
+      await tester.pump();
+      await tester.pump();
+      expect(
+        blockers.active.value,
+        isFalse,
+        reason: 'la branche reste montée hors écran, sans bloquer la bulle',
+      );
+      index.value = 1;
+      await tester.pump();
+      await tester.pump();
+      expect(blockers.active.value, isTrue);
+    });
+
+    testWidgets('démonté pendant qu’il bloque : relâche une seule fois', (
+      tester,
+    ) async {
+      final index = await pumpTabs(tester, blockers);
+      index.value = 1;
+      await tester.pump();
+      await tester.pump();
+      expect(blockers.active.value, isTrue);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      expect(blockers.active.value, isFalse);
+      // Un compteur resté trop bas serait ici négatif puis faussé.
+      blockers.acquire();
+      expect(blockers.active.value, isTrue);
+      blockers.release();
+      expect(blockers.active.value, isFalse);
+    });
+  });
 }

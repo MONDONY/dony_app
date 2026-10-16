@@ -38,16 +38,26 @@ class AssistantRepository {
   }
 
   /// Sonde `GET /assistant/status` : l'assistant est-il allumé pour ce compte ?
-  /// Ne lève jamais : tout échec vaut « non disponible ».
-  Future<bool> status() async {
+  ///
+  /// Trois issues, sans jamais lever :
+  /// - `true` : 200 `enabled: true` ;
+  /// - `false` : 200 `enabled: false`, 403 (invité), 404 (back ancien) ;
+  /// - `null` (inconnu) : hors ligne, délai dépassé, 5xx, corps illisible. Le
+  ///   BLoC garde alors la valeur précédente au lieu de cacher la bulle sur
+  ///   une panne réseau passagère.
+  Future<bool?> status() async {
     try {
       final response = await _api.dio.get('/assistant/status');
       final data = response.data;
-      return data is Map && data['enabled'] == true;
+      if (data is Map && data['enabled'] is bool) {
+        return data['enabled'] as bool;
+      }
+      return null;
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      return code == 403 || code == 404 ? false : null;
     } catch (_) {
-      // 403 (invité), 404 (back ancien ou assistant éteint), 5xx, hors ligne,
-      // corps illisible : la bulle reste cachée, jamais d'erreur affichée.
-      return false;
+      return null;
     }
   }
 

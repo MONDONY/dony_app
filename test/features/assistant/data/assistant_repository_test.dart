@@ -278,22 +278,33 @@ void main() {
       expect(await repository.status(), isFalse);
     });
 
-    test('500 : indisponible, sans exception', () async {
+    test('500 : inconnu (ni oui ni non), sans exception', () async {
       statusFails(error(500));
-      expect(await repository.status(), isFalse);
+      expect(await repository.status(), isNull);
     });
 
-    test('hors ligne : indisponible, sans exception', () async {
-      statusFails(
-        DioException(
-          requestOptions: RequestOptions(path: '/assistant/status'),
-          type: DioExceptionType.connectionError,
-        ),
-      );
-      expect(await repository.status(), isFalse);
+    test('délai dépassé ou hors ligne : inconnu, sans exception', () async {
+      for (final type in [
+        DioExceptionType.connectionError,
+        DioExceptionType.connectionTimeout,
+        DioExceptionType.receiveTimeout,
+      ]) {
+        statusFails(
+          DioException(
+            requestOptions: RequestOptions(path: '/assistant/status'),
+            type: type,
+          ),
+        );
+        expect(await repository.status(), isNull, reason: '$type');
+      }
     });
 
-    test('corps malformé : indisponible', () async {
+    test('erreur inattendue : inconnu', () async {
+      when(() => dio.get('/assistant/status')).thenThrow(StateError('boum'));
+      expect(await repository.status(), isNull);
+    });
+
+    test('corps illisible : inconnu', () async {
       for (final body in <Object?>[
         'oups',
         null,
@@ -303,7 +314,7 @@ void main() {
         [true],
       ]) {
         statusAnswers(body);
-        expect(await repository.status(), isFalse, reason: '$body');
+        expect(await repository.status(), isNull, reason: '$body');
       }
     });
   });

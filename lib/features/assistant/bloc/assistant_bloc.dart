@@ -60,32 +60,59 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
   int _epoch = 0;
 
   bool _probing = false;
+  bool _probingForced = false;
+
+  /// Une sonde forcée est arrivée pendant une sonde non forcée : rejouée à la
+  /// fin de celle-ci plutôt qu'ignorée.
+  bool _forcedPending = false;
   DateTime? _lastProbeAt;
 
   Future<void> _onStatus(
     AssistantStatusRequested event,
     Emitter<AssistantState> emit,
   ) async {
-    if (_probing) return;
-    final now = _clock();
-    final last = _lastProbeAt;
-    if (!event.force && last != null && now.difference(last) < statusInterval) {
+    if (_probing) {
+      if (event.force && !_probingForced) _forcedPending = true;
       return;
     }
+    var force = event.force;
     _probing = true;
-    _lastProbeAt = now;
-    // Entrée en session : le résultat d'un compte précédent ne compte plus.
-    if (event.force && state.available) {
-      emit(state.copyWith(available: false));
+    try {
+      while (true) {
+        final last = _lastProbeAt;
+        if (!force &&
+            last != null &&
+            _clock().difference(last) < statusInterval) {
+          return;
+        }
+        _probingForced = force;
+        await _probe(force, emit);
+        if (!_forcedPending) return;
+        _forcedPending = false;
+        force = true;
+      }
+    } finally {
+      _probing = false;
+      _probingForced = false;
     }
-    var enabled = false;
+  }
+
+  Future<void> _probe(bool force, Emitter<AssistantState> emit) async {
+    // Entrée en session : le résultat d'un compte précédent ne compte plus.
+    if (force && state.available) emit(state.copyWith(available: false));
+    bool? enabled;
     try {
       enabled = await _repository.status();
     } catch (_) {
-      // La sonde ne lève jamais : tout échec vaut « indisponible ».
-    } finally {
-      _probing = false;
+      // La sonde ne lève jamais : tout échec vaut « inconnu ».
     }
+    if (enabled == null) {
+      // Réseau instable, 5xx, corps illisible : on garde la valeur précédente
+      // (déjà fausse pour une sonde forcée) et on n'arme pas le délai, la
+      // prochaine sonde au retour au premier plan repart.
+      return;
+    }
+    _lastProbeAt = _clock();
     // La sonde fait foi : un « éteint » appris d'une question est levé si le
     // back répond de nouveau.
     emit(state.copyWith(available: enabled, disabled: enabled ? false : null));
