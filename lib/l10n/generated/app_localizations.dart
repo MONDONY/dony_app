@@ -22109,6 +22109,12 @@ abstract class AppLocalizations {
   /// **'Tout lire'**
   String get notificationMarkAllRead;
 
+  /// Tooltip et libellé d'accessibilité du bouton engrenage de l'en-tête du centre de notifications (notification_bottom_sheet.dart), qui ouvre Réglages › Notifications.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réglages des notifications'**
+  String get notificationSheetSettingsTooltip;
+
   /// Titre de l'état d'erreur du feed de notifications (notification_bottom_sheet.dart). Réutilisé tel quel par announcements_inbox_screen.dart (même feature, même texte, R42).
   ///
   /// In fr, this message translates to:

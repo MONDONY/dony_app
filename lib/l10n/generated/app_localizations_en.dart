@@ -13316,6 +13316,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationMarkAllRead => 'Read all';
 
   @override
+  String get notificationSheetSettingsTooltip => 'Notification settings';
+
+  @override
   String get notificationLoadErrorTitle => 'Loading error';
 
   @override

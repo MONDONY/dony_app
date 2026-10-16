@@ -181,7 +181,15 @@ void main() {
         NotificationLoaded(notifications: [_notif(type: type)], unreadCount: 1),
       );
       await pumpSheet(tester);
-      final icons = tester.widgetList<DonyIcon>(find.byType(DonyIcon)).toList();
+      // Dans la liste seulement : l'en-tête porte l'engrenage des réglages.
+      final icons = tester
+          .widgetList<DonyIcon>(
+            find.descendant(
+              of: find.byType(ListView),
+              matching: find.byType(DonyIcon),
+            ),
+          )
+          .toList();
       // La tuile porte aussi un chevron quand le type a une route : on ne
       // retient que la première icône, celle du carré de gauche.
       return icons.isEmpty ? null : icons.first.name;

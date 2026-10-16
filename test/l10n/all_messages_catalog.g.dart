@@ -4722,6 +4722,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'notificationSectionEarlier': (l) => l.notificationSectionEarlier,
   'notificationSheetTitle': (l) => l.notificationSheetTitle,
   'notificationMarkAllRead': (l) => l.notificationMarkAllRead,
+  'notificationSheetSettingsTooltip': (l) => l.notificationSheetSettingsTooltip,
   'notificationLoadErrorTitle': (l) => l.notificationLoadErrorTitle,
   'notificationLoadErrorDescription': (l) => l.notificationLoadErrorDescription,
   'notificationEmptyTitle': (l) => l.notificationEmptyTitle,

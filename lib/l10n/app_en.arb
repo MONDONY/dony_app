@@ -7651,6 +7651,7 @@
   "notificationSectionEarlier": "Earlier",
   "notificationSheetTitle": "Notifications",
   "notificationMarkAllRead": "Read all",
+  "notificationSheetSettingsTooltip": "Notification settings",
   "notificationLoadErrorTitle": "Loading error",
   "notificationLoadErrorDescription": "We couldn't load your notifications.",
   "notificationEmptyTitle": "No notifications",

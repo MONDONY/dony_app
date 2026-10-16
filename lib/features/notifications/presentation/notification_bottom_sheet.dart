@@ -11,6 +11,7 @@ import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/notifications/presentation/announcements_inbox_screen.dart';
 import 'package:dony/features/notifications/presentation/notification_detail_screen.dart';
+import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -234,6 +235,33 @@ class _NotificationBottomSheetState extends State<NotificationBottomSheet> {
                     }
                     return const SizedBox(height: 40);
                   },
+                ),
+                // Réglages des notifications à portée de la cloche
+                // (FLUTTER-QA) : le sheet se ferme, l'écran s'ouvre, et le
+                // retour ramène au sheet comme pour une notification. Le
+                // Builder donne un contexte SOUS le sheet : celui du State
+                // est le sheet lui-même, et _pushThenReturnToSheet n'y
+                // trouverait pas son ancêtre pour le rouvrir.
+                Builder(
+                  builder: (context) => IconButton(
+                    key: const Key('notification-sheet-settings'),
+                    tooltip: l.notificationSheetSettingsTooltip,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(44, 44),
+                    ),
+                    icon: DonyIcon(
+                      'settings',
+                      color: cs.onSurfaceVariant,
+                      size: 22,
+                    ),
+                    onPressed: () => unawaited(
+                      _pushThenReturnToSheet(
+                        context,
+                        GoRouter.of(context),
+                        NotificationSettingsScreen.route,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
