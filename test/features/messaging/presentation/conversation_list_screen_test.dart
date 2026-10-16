@@ -256,6 +256,17 @@ void main() {
       expect(find.byKey(icon), findsNothing);
     });
 
+    testWidgets(
+      'sans AssistantBloc enregistré, l\'icône est absente sans erreur',
+      (tester) async {
+        getIt.unregister<AssistantBloc>();
+        await _pump(tester, bloc);
+
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(icon), findsNothing);
+      },
+    );
+
     testWidgets('RB10 : apparaît quand la sonde répond, sans recharger', (
       tester,
     ) async {

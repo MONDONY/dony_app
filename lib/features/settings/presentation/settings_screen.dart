@@ -461,6 +461,7 @@ class _AssistantSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!getIt.isRegistered<AssistantBloc>()) return const SizedBox.shrink();
     return BlocSelector<AssistantBloc, AssistantState, bool>(
       bloc: getIt<AssistantBloc>(),
       selector: (state) => state.available && !state.disabled,

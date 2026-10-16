@@ -478,6 +478,7 @@ class _AssistantHeaderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!getIt.isRegistered<AssistantBloc>()) return const SizedBox.shrink();
     return BlocSelector<AssistantBloc, AssistantState, bool>(
       bloc: getIt<AssistantBloc>(),
       selector: (state) => state.available && !state.disabled,
@@ -539,9 +540,9 @@ class _MessagesHeader extends StatelessWidget {
               children: [
                 Text(l.conversationListTitle, style: tt.headlineLarge),
                 const Spacer(),
+                const _AssistantHeaderButton(),
                 // L'accès aux archives est la ligne « Archivées » en tête de
                 // liste (FLUTTER-FR), plus une icône d'en-tête.
-                const _AssistantHeaderButton(),
                 const DonyFeedbackButton(),
               ],
             ),

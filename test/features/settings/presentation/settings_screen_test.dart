@@ -314,6 +314,29 @@ void main() {
       );
     });
 
+    testWidgets(
+      'sans AssistantBloc enregistré, la section est absente sans erreur',
+      (tester) async {
+        getIt.unregister<AssistantBloc>();
+        addTearDown(
+          () => getIt.registerSingleton<AssistantBloc>(assistantBloc),
+        );
+        await tester.pumpWidget(_wrap());
+        await tester.pumpAndSettle();
+        await scrollToEnd(tester);
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('INFORMATIONS'), findsOneWidget);
+        expect(
+          find.byKey(
+            const Key('settings-assistant-bubble'),
+            skipOffstage: false,
+          ),
+          findsNothing,
+        );
+      },
+    );
+
     testWidgets('RB10 : la section apparaît quand la sonde répond', (
       tester,
     ) async {
