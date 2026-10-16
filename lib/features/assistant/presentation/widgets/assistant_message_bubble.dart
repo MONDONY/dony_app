@@ -20,20 +20,30 @@ const double _minTarget = 44;
 class AssistantEntrance extends StatelessWidget {
   const AssistantEntrance({
     super.key,
-    required this.animate,
+    required this.shouldAnimate,
     required this.child,
+    this.onEnd,
   });
 
-  final bool animate;
+  /// Évalué à chaque construction de l'élément (la liste recrée ceux qui
+  /// reviennent dans la zone visible), pas à la construction de la liste.
+  final bool Function() shouldAnimate;
   final Widget child;
+
+  /// Appelé à la fin de l'animation : l'écran retient que ce message a joué
+  /// son entrée et ne la rejoue pas s'il revient dans la zone visible.
+  final VoidCallback? onEnd;
 
   @override
   Widget build(BuildContext context) {
-    if (!animate || MediaQuery.disableAnimationsOf(context)) return child;
+    if (!shouldAnimate() || MediaQuery.disableAnimationsOf(context)) {
+      return child;
+    }
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
       duration: DonyDuration.base,
       curve: DonyCurve.enter,
+      onEnd: onEnd,
       builder: (context, t, child) => Opacity(
         opacity: t,
         child: Transform.translate(
@@ -259,6 +269,7 @@ class AssistantMessageBubble extends StatelessWidget {
     required this.onFeedback,
     required this.onTalkToHuman,
     this.onRetry,
+    this.liveRegion = false,
   });
 
   final AssistantMessage message;
@@ -269,6 +280,10 @@ class AssistantMessageBubble extends StatelessWidget {
 
   /// Non nul seulement sur le message d'erreur de la dernière question.
   final VoidCallback? onRetry;
+
+  /// Vrai pour une réponse arrivée pendant la session : le lecteur d'écran
+  /// l'annonce. Faux pour l'historique présent à l'ouverture.
+  final bool liveRegion;
 
   @override
   Widget build(BuildContext context) {
@@ -288,7 +303,13 @@ class AssistantMessageBubble extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(message.text, style: _bodyStyle(context, cs.onSurface)),
+              Semantics(
+                liveRegion: liveRegion,
+                child: Text(
+                  message.text,
+                  style: _bodyStyle(context, cs.onSurface),
+                ),
+              ),
               for (final action in actions) ...[
                 const SizedBox(height: 10),
                 _ActionButton(action: action, onTap: () => onAction(action)),
@@ -313,7 +334,13 @@ class AssistantMessageBubble extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.assistantError, style: _bodyStyle(context, cs.onSurface)),
+          Semantics(
+            liveRegion: liveRegion,
+            child: Text(
+              l.assistantError,
+              style: _bodyStyle(context, cs.onSurface),
+            ),
+          ),
           if (onRetry != null)
             TextButton(
               key: const Key('assistant-retry'),
@@ -403,35 +430,21 @@ class _Reactions extends StatelessWidget {
       child: Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          IconButton(
+          _Thumb(
             key: Key('assistant-thumb-up-${message.id}'),
-            tooltip: l.assistantThumbUp,
-            onPressed: () => onFeedback(true),
-            constraints: const BoxConstraints(
-              minWidth: _minTarget,
-              minHeight: _minTarget,
-            ),
-            icon: Icon(
-              up ? Icons.thumb_up_alt_rounded : Icons.thumb_up_alt_outlined,
-              size: 18,
-              color: up ? cs.primary : cs.onSurfaceVariant,
-            ),
+            label: l.assistantThumbUp,
+            selected: up,
+            icon: up ? Icons.thumb_up_alt_rounded : Icons.thumb_up_alt_outlined,
+            onTap: () => onFeedback(true),
           ),
-          IconButton(
+          _Thumb(
             key: Key('assistant-thumb-down-${message.id}'),
-            tooltip: l.assistantThumbDown,
-            onPressed: () => onFeedback(false),
-            constraints: const BoxConstraints(
-              minWidth: _minTarget,
-              minHeight: _minTarget,
-            ),
-            icon: Icon(
-              down
-                  ? Icons.thumb_down_alt_rounded
-                  : Icons.thumb_down_alt_outlined,
-              size: 18,
-              color: down ? cs.primary : cs.onSurfaceVariant,
-            ),
+            label: l.assistantThumbDown,
+            selected: down,
+            icon: down
+                ? Icons.thumb_down_alt_rounded
+                : Icons.thumb_down_alt_outlined,
+            onTap: () => onFeedback(false),
           ),
           TextButton(
             key: Key('assistant-human-${message.id}'),
@@ -447,6 +460,50 @@ class _Reactions extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Pouce de retour : bouton annoncé « sélectionné » quand c'est le choix fait.
+/// Le `Semantics` remplace celui de l'`IconButton` (`excludeSemantics`) pour
+/// ne porter qu'un nœud, avec l'état de sélection.
+class _Thumb extends StatelessWidget {
+  const _Thumb({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      enabled: true,
+      selected: selected,
+      label: label,
+      onTap: onTap,
+      excludeSemantics: true,
+      child: IconButton(
+        tooltip: label,
+        onPressed: onTap,
+        constraints: const BoxConstraints(
+          minWidth: _minTarget,
+          minHeight: _minTarget,
+        ),
+        icon: Icon(
+          icon,
+          size: 18,
+          color: selected ? cs.primary : cs.onSurfaceVariant,
+        ),
       ),
     );
   }

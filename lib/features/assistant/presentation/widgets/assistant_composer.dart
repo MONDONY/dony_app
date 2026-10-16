@@ -29,9 +29,14 @@ class Utf16LengthLimiter extends TextInputFormatter {
     // Un substitut haut en dernière position : sa moitié basse serait coupée.
     final last = text.codeUnitAt(end - 1);
     if (last >= 0xD800 && last <= 0xDBFF) end -= 1;
+    // Curseur : là où il était (après un collage au milieu), ramené à la coupe
+    // s'il tombait dans la partie supprimée.
+    final cursor = newValue.selection.baseOffset;
     return TextEditingValue(
       text: text.substring(0, end),
-      selection: TextSelection.collapsed(offset: end),
+      selection: TextSelection.collapsed(
+        offset: cursor < 0 || cursor > end ? end : cursor,
+      ),
     );
   }
 }

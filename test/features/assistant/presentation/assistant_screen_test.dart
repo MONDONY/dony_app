@@ -5,6 +5,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
 import 'package:dony/features/assistant/presentation/screens/assistant_screen.dart';
+import 'package:dony/features/assistant/presentation/widgets/assistant_composer.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +25,12 @@ const _answer = AssistantMessage(
     AssistantAction(route: '/inconnue', label: 'Perdu'),
   ],
 );
+const _homeAnswer = AssistantMessage(
+  id: 4,
+  author: AssistantAuthor.assistant,
+  text: 'Retournez à l’accueil.',
+  actions: [AssistantAction(route: '/home', label: 'Accueil')],
+);
 const _question = AssistantMessage(
   id: 1,
   author: AssistantAuthor.user,
@@ -32,6 +39,7 @@ const _question = AssistantMessage(
 
 void main() {
   late MockAssistantBloc bloc;
+  late GoRouter router;
 
   setUpAll(() {
     registerFallbackValue(const AssistantResetRequested());
@@ -47,7 +55,7 @@ void main() {
     ThemeData? theme,
     String initialLocation = '/assistant',
   }) async {
-    final router = GoRouter(
+    router = GoRouter(
       initialLocation: initialLocation,
       routes: [
         GoRoute(
@@ -58,6 +66,19 @@ void main() {
               source: state.uri.queryParameters['source'] ?? 'bubble',
             ),
           ),
+        ),
+        StatefulShellRoute.indexedStack(
+          builder: (_, _, shell) => shell,
+          branches: [
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/home',
+                  builder: (_, _) => const Scaffold(body: Text('home')),
+                ),
+              ],
+            ),
+          ],
         ),
         GoRoute(
           path: '/profile/edit/phone',
@@ -376,10 +397,16 @@ void main() {
       ),
     );
     final up = tester.widget<IconButton>(
-      find.byKey(const Key('assistant-thumb-up-2')),
+      find.descendant(
+        of: find.byKey(const Key('assistant-thumb-up-2')),
+        matching: find.byType(IconButton),
+      ),
     );
     final down = tester.widget<IconButton>(
-      find.byKey(const Key('assistant-thumb-down-2')),
+      find.descendant(
+        of: find.byKey(const Key('assistant-thumb-down-2')),
+        matching: find.byType(IconButton),
+      ),
     );
     expect((up.icon as Icon).icon, Icons.thumb_up_alt_rounded);
     expect((down.icon as Icon).icon, Icons.thumb_down_alt_outlined);
@@ -609,5 +636,318 @@ void main() {
     await tester.enterText(find.byKey(const Key('assistant-input')), 'a' * 470);
     await tester.pump();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'racine d’onglet : go, jamais push (le shell ne se duplique pas)',
+    (tester) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, _homeAnswer]),
+      );
+      await tester.tap(find.byKey(const Key('assistant-action-/home')));
+      await tester.pumpAndSettle();
+      expect(find.text('home'), findsOneWidget);
+      expect(router.canPop(), isFalse);
+      verify(
+        () => bloc.add(const AssistantActionTapped('/home', matched: true)),
+      ).called(1);
+    },
+  );
+
+  testWidgets('route hors shell : push, le retour ramène à l’assistant', (
+    tester,
+  ) async {
+    await pump(tester, const AssistantState(messages: [_question, _answer]));
+    await tester.tap(
+      find.byKey(const Key('assistant-action-/profile/edit/phone')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('phone'), findsOneWidget);
+    expect(router.canPop(), isTrue);
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(AssistantScreen), findsOneWidget);
+    expect(find.text('phone'), findsNothing);
+  });
+
+  group('Utf16LengthLimiter', () {
+    const limiter = Utf16LengthLimiter(kAssistantQuestionMax);
+    TextEditingValue format(String text, [int? cursor]) =>
+        limiter.formatEditUpdate(
+          TextEditingValue.empty,
+          TextEditingValue(
+            text: text,
+            selection: TextSelection.collapsed(offset: cursor ?? text.length),
+          ),
+        );
+
+    test('coupe avant une paire de substitution tronquée', () {
+      // 'a' + 300 emoji : l'unité 499 serait un substitut haut sans sa moitié.
+      final out = format('a${'😀' * 300}');
+      expect(out.text.length, 499);
+      final last = out.text.codeUnitAt(out.text.length - 1);
+      expect(
+        last >= 0xD800 && last <= 0xDBFF,
+        isFalse,
+        reason: 'substitut seul',
+      );
+      expect(out.text.runes.length, 1 + 249);
+    });
+
+    test('coupe pile à 500 quand la frontière est propre', () {
+      final out = format('😀' * 300);
+      expect(out.text.length, 500);
+      expect(out.text.runes.length, 250);
+    });
+
+    test('texte court : renvoyé tel quel', () {
+      expect(format('bonjour').text, 'bonjour');
+    });
+
+    test('collage au milieu : le curseur reste après le texte collé', () {
+      final pasted = '${'x' * 200}${'p' * 100}${'x' * 250}';
+      final out = format(pasted, 300);
+      expect(out.text.length, 500);
+      expect(out.text, '${'x' * 200}${'p' * 100}${'x' * 200}');
+      expect(out.selection, const TextSelection.collapsed(offset: 300));
+    });
+
+    test('curseur au-delà de la coupe : ramené à la fin', () {
+      final out = format('a' * 600, 600);
+      expect(out.selection, const TextSelection.collapsed(offset: 500));
+    });
+  });
+
+  testWidgets(
+    '50 messages de hauteurs variées : la réponse reçue est visible',
+    (tester) async {
+      final controller = StreamController<AssistantState>();
+      addTearDown(controller.close);
+      final many = [
+        for (var i = 0; i < 50; i++)
+          AssistantMessage(
+            id: i * 2,
+            author: i.isEven ? AssistantAuthor.user : AssistantAuthor.assistant,
+            text: 'Message $i ${'mot ' * ((i * 7) % 45)}',
+          ),
+      ];
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: AssistantState(messages: many),
+      );
+      await pumpRaw(tester);
+      await tester.pumpAndSettle();
+      // Remonté tout en haut : le bas du contenu n'est plus construit, son
+      // étendue n'est qu'estimée quand la réponse arrive.
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .jumpTo(0);
+      await tester.pumpAndSettle();
+      final answer = AssistantMessage(
+        id: 200,
+        author: AssistantAuthor.assistant,
+        text: 'Réponse finale ${'très longue ' * 40}',
+      );
+      controller.add(AssistantState(messages: [...many, answer]));
+      await tester.pumpAndSettle();
+      final composerTop = tester
+          .getTopLeft(find.byKey(const Key('assistant-input')))
+          .dy;
+      final bottom = tester
+          .getBottomLeft(find.textContaining('Réponse finale'))
+          .dy;
+      expect(bottom, lessThanOrEqualTo(composerTop));
+      final position = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      expect(position.pixels, closeTo(position.maxScrollExtent, 1));
+    },
+  );
+
+  testWidgets(
+    'entrée jouée une fois : pas rejouée au retour dans la zone visible',
+    (tester) async {
+      final controller = StreamController<AssistantState>();
+      addTearDown(controller.close);
+      final many = [
+        for (var i = 0; i < 40; i++)
+          AssistantMessage(
+            id: i * 2,
+            author: AssistantAuthor.user,
+            text: 'Message $i ${'mot ' * 12}',
+          ),
+      ];
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: AssistantState(messages: many),
+      );
+      await pumpRaw(tester);
+      await tester.pumpAndSettle();
+      const fresh = AssistantMessage(
+        id: 300,
+        author: AssistantAuthor.assistant,
+        text: 'Réponse fraîche',
+      );
+      controller.add(AssistantState(messages: [...many, fresh]));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 60));
+      // Fondu en cours : le nouveau message est bien animé.
+      expect(
+        find.ancestor(
+          of: find.text('Réponse fraîche'),
+          matching: find.byType(Opacity),
+        ),
+        findsOneWidget,
+      );
+      await tester.pumpAndSettle();
+      final position = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      position.jumpTo(0);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Réponse fraîche'),
+        findsNothing,
+        reason: 'sorti de la liste',
+      );
+      position.jumpTo(position.maxScrollExtent);
+      await tester.pump();
+      expect(find.text('Réponse fraîche'), findsOneWidget);
+      expect(
+        find.ancestor(
+          of: find.text('Réponse fraîche'),
+          matching: find.byType(Opacity),
+        ),
+        findsNothing,
+        reason: 'l’entrée ne se rejoue pas',
+      );
+    },
+  );
+
+  testWidgets('pouces annoncés comme boutons, le choisi « sélectionné »', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pump(
+      tester,
+      AssistantState(
+        messages: [
+          _question,
+          _answer.copyWith(feedback: 'up'),
+        ],
+      ),
+    );
+    expect(
+      tester.getSemantics(find.byKey(const Key('assistant-thumb-up-2'))),
+      matchesSemantics(
+        label: 'Réponse utile',
+        isButton: true,
+        isSelected: true,
+        hasSelectedState: true,
+        hasTapAction: true,
+        hasEnabledState: true,
+        isEnabled: true,
+      ),
+    );
+    expect(
+      tester.getSemantics(find.byKey(const Key('assistant-thumb-down-2'))),
+      matchesSemantics(
+        label: 'Réponse pas utile',
+        isButton: true,
+        hasSelectedState: true,
+        hasTapAction: true,
+        hasEnabledState: true,
+        isEnabled: true,
+      ),
+    );
+    handle.dispose();
+  });
+
+  testWidgets(
+    'seule une réponse arrivée pendant la session est une zone vivante',
+    (tester) async {
+      final handle = tester.ensureSemantics();
+      final controller = StreamController<AssistantState>();
+      addTearDown(controller.close);
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: const AssistantState(messages: [_question, _answer]),
+      );
+      await pumpRaw(tester);
+      bool isLive(String text) => tester
+          .getSemantics(find.text(text))
+          .getSemanticsData()
+          .flagsCollection
+          .isLiveRegion;
+      expect(
+        isLive('Allez dans Moi.'),
+        isFalse,
+        reason: 'historique à l’ouverture',
+      );
+      controller.add(
+        const AssistantState(
+          messages: [
+            _question,
+            _answer,
+            AssistantMessage(
+              id: 9,
+              author: AssistantAuthor.assistant,
+              text: 'Nouvelle réponse',
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(isLive('Nouvelle réponse'), isTrue);
+      expect(isLive('Allez dans Moi.'), isFalse);
+      handle.dispose();
+    },
+  );
+
+  testWidgets('AssistantOpened une seule fois malgré les reconstructions', (
+    tester,
+  ) async {
+    final controller = StreamController<AssistantState>();
+    addTearDown(controller.close);
+    whenListen(bloc, controller.stream, initialState: const AssistantState());
+    await pumpRaw(tester);
+    controller.add(const AssistantState(messages: [_question]));
+    await tester.pump();
+    controller.add(const AssistantState(messages: [_question, _answer]));
+    await tester.pump();
+    controller.add(
+      const AssistantState(messages: [_question, _answer], isSending: true),
+    );
+    await tester.pump();
+    verify(() => bloc.add(const AssistantOpened('bubble'))).called(1);
+  });
+
+  testWidgets('thème sombre : bulles aux couleurs du thème', (tester) async {
+    final dark = AppTheme.dark();
+    await pump(
+      tester,
+      const AssistantState(messages: [_question, _answer]),
+      theme: dark,
+    );
+    Color? bubbleColor(String text) {
+      final box = tester.widget<DecoratedBox>(
+        find
+            .ancestor(of: find.text(text), matching: find.byType(DecoratedBox))
+            .first,
+      );
+      return (box.decoration as BoxDecoration).color;
+    }
+
+    expect(bubbleColor('Où ?'), dark.colorScheme.primary);
+    expect(bubbleColor('Allez dans Moi.'), dark.colorScheme.surface);
+    expect(
+      tester.widget<Text>(find.text('Où ?')).style!.color,
+      dark.colorScheme.onPrimary,
+    );
   });
 }

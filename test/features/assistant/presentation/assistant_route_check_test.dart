@@ -56,4 +56,78 @@ void main() {
   test('chemin incomplet d’une route imbriquée', () {
     expect(assistantRouteExists(router, '/profile/edit'), isFalse);
   });
+
+  test('une redirection n’est pas suivie : la route reste existante', () {
+    final redirecting = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const SizedBox()),
+        GoRoute(
+          path: '/ancienne',
+          redirect: (_, _) => '/profile',
+          builder: (_, _) => const SizedBox(),
+        ),
+        GoRoute(path: '/profile', builder: (_, _) => const SizedBox()),
+      ],
+    );
+    expect(assistantRouteExists(redirecting, '/ancienne'), isTrue);
+  });
+
+  group('assistantRouteInShell', () {
+    final shellRouter = GoRouter(
+      routes: [
+        StatefulShellRoute.indexedStack(
+          builder: (_, _, shell) => shell,
+          branches: [
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/home',
+                  builder: (_, _) => const SizedBox(),
+                  routes: [
+                    GoRoute(
+                      path: 'detail',
+                      builder: (_, _) => const SizedBox(),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(path: '/messages', builder: (_, _) => const SizedBox()),
+              ],
+            ),
+          ],
+        ),
+        ShellRoute(
+          builder: (_, _, child) => child,
+          routes: [
+            GoRoute(path: '/dans-shell', builder: (_, _) => const SizedBox()),
+          ],
+        ),
+        GoRoute(path: '/assistant', builder: (_, _) => const SizedBox()),
+      ],
+    );
+
+    test('racine d’onglet et route sous une branche', () {
+      expect(assistantRouteInShell(shellRouter, '/home'), isTrue);
+      expect(assistantRouteInShell(shellRouter, '/messages'), isTrue);
+      expect(assistantRouteInShell(shellRouter, '/home/detail'), isTrue);
+      expect(assistantRouteInShell(shellRouter, '/home?x=1'), isTrue);
+    });
+
+    test('ShellRoute simple', () {
+      expect(assistantRouteInShell(shellRouter, '/dans-shell'), isTrue);
+    });
+
+    test('route hors shell, inconnue ou invalide', () {
+      expect(assistantRouteInShell(shellRouter, '/assistant'), isFalse);
+      expect(assistantRouteInShell(shellRouter, '/nulle-part'), isFalse);
+      expect(assistantRouteInShell(shellRouter, 'home'), isFalse);
+      expect(
+        assistantRouteInShell(shellRouter, '//evil.example/home'),
+        isFalse,
+      );
+    });
+  });
 }

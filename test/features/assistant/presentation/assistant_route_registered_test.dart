@@ -19,4 +19,12 @@ void main() {
     expect(assistantRouteExists(appRouter, '/support/tickets/abc'), isTrue);
     expect(assistantRouteExists(appRouter, '/route-inventee'), isFalse);
   });
+
+  test('racines d’onglet dans le shell, fiches hors shell', () {
+    expect(assistantRouteInShell(appRouter, '/home'), isTrue);
+    expect(assistantRouteInShell(appRouter, '/messages'), isTrue);
+    expect(assistantRouteInShell(appRouter, '/profile'), isTrue);
+    expect(assistantRouteInShell(appRouter, '/support'), isFalse);
+    expect(assistantRouteInShell(appRouter, '/assistant'), isFalse);
+  });
 }

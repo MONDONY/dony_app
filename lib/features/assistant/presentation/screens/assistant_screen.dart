@@ -43,6 +43,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
   /// ensuite jouent l'animation d'entrée.
   int? _baselineId;
 
+  /// Identifiants dont l'entrée est terminée. La liste détruit les éléments
+  /// qui sortent de la zone visible : sans cette mémoire, une bulle déjà
+  /// animée rejouerait son fondu en y revenant.
+  final Set<int> _entered = {};
+
   @override
   void initState() {
     super.initState();
@@ -71,14 +76,27 @@ class _AssistantScreenState extends State<AssistantScreen> {
       if (!mounted || !_scroll.hasClients) return;
       final end = _scroll.position.maxScrollExtent;
       if (animated && !MediaQuery.disableAnimationsOf(context)) {
-        _scroll.animateTo(
-          end,
-          duration: DonyDuration.base,
-          curve: DonyCurve.enter,
-        );
+        // L'étendue du bas n'est qu'estimée tant que ses éléments ne sont pas
+        // construits : l'animation peut s'arrêter avant le vrai bas.
+        _scroll
+            .animateTo(end, duration: DonyDuration.base, curve: DonyCurve.enter)
+            .whenComplete(_settleAtEnd);
       } else {
         _scroll.jumpTo(end);
+        _settleAtEnd();
       }
+    });
+  }
+
+  /// Recolle au bas réel du contenu (quelques passes : chaque saut construit
+  /// des éléments et affine l'étendue).
+  void _settleAtEnd([int attemptsLeft = 3]) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final position = _scroll.position;
+      if (position.pixels >= position.maxScrollExtent - 1) return;
+      _scroll.jumpTo(position.maxScrollExtent);
+      if (attemptsLeft > 0) _settleAtEnd(attemptsLeft - 1);
     });
   }
 
@@ -98,7 +116,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
       case AssistantEscalationStatus.success:
         final ticketId = state.escalatedTicketId;
         bloc.add(const AssistantEscalationHandled());
-        if (ticketId != null) context.push('/support/tickets/$ticketId');
+        if (ticketId != null) _navigate(context, '/support/tickets/$ticketId');
       case AssistantEscalationStatus.failure:
         bloc.add(const AssistantEscalationHandled());
         DonySnackbar.show(
@@ -134,7 +152,18 @@ class _AssistantScreenState extends State<AssistantScreen> {
     context.read<AssistantBloc>().add(
       AssistantActionTapped(action.route, matched: true),
     );
-    context.push(action.route);
+    _navigate(context, action.route);
+  }
+
+  /// `go` pour une route du shell d'onglets (un `push` depuis `/assistant`,
+  /// hors shell, dupliquerait le shell), `push` sinon : le retour ramène à la
+  /// conversation.
+  void _navigate(BuildContext context, String route) {
+    if (assistantRouteInShell(GoRouter.of(context), route)) {
+      context.go(route);
+    } else {
+      context.push(route);
+    }
   }
 
   @override
@@ -253,9 +282,13 @@ class _AssistantScreenState extends State<AssistantScreen> {
       for (final message in state.messages)
         AssistantEntrance(
           key: ValueKey(message.id),
-          animate: message.id > (_baselineId ?? -1),
+          shouldAnimate: () =>
+              message.id > (_baselineId ?? -1) &&
+              !_entered.contains(message.id),
+          onEnd: () => _entered.add(message.id),
           child: AssistantMessageBubble(
             message: message,
+            liveRegion: message.id > (_baselineId ?? -1),
             actions: _visibleActions(context, message, toReport),
             onAction: _openAction,
             onFeedback: (up) => context.read<AssistantBloc>().add(
