@@ -20367,4 +20367,102 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get assistantEscalationDefaultSubject =>
       'Question depuis l\'assistant';
+
+  @override
+  String get assistantTitle => 'Assistant Yadony';
+
+  @override
+  String get assistantBadge => 'IA';
+
+  @override
+  String get assistantSubtitle => 'Répond sur le fonctionnement de l\'app';
+
+  @override
+  String get assistantWelcome =>
+      'Bonjour ! Je suis l\'assistant de Yadony. Posez-moi une question sur l\'app : je vous explique et je vous emmène au bon écran.';
+
+  @override
+  String get assistantDisclaimer =>
+      'Je suis une IA et je peux me tromper. Pour votre compte, un colis ou un paiement, un membre de l\'équipe vous répond. Ne saisissez pas de données personnelles.';
+
+  @override
+  String get assistantSuggestionsTitle => 'Questions fréquentes';
+
+  @override
+  String get assistantSuggestion1 => 'Comment envoyer un colis ?';
+
+  @override
+  String get assistantSuggestion2 => 'Comment proposer un trajet ?';
+
+  @override
+  String get assistantSuggestion3 => 'Quand le voyageur est-il payé ?';
+
+  @override
+  String get assistantSuggestion4 => 'Comment vérifier mon identité ?';
+
+  @override
+  String get assistantInputHint => 'Posez votre question…';
+
+  @override
+  String get assistantSend => 'Envoyer';
+
+  @override
+  String assistantGoTo(String label) {
+    return 'Y aller : $label';
+  }
+
+  @override
+  String get assistantThumbUp => 'Réponse utile';
+
+  @override
+  String get assistantThumbDown => 'Réponse pas utile';
+
+  @override
+  String get assistantTalkToHuman => 'Parler à un humain';
+
+  @override
+  String get assistantEscalationTitle => 'Besoin qu\'on regarde votre compte ?';
+
+  @override
+  String get assistantEscalationBody =>
+      'L\'équipe Yadony reçoit votre question et cet échange. Vous retrouverez sa réponse dans Messages, conversation Yadony Support.';
+
+  @override
+  String get assistantEscalate => 'Écrire à l\'équipe';
+
+  @override
+  String get assistantEscalationFailed =>
+      'Le message n\'est pas parti. Réessayez.';
+
+  @override
+  String get assistantError =>
+      'Je n\'ai pas pu répondre. Vérifiez votre connexion.';
+
+  @override
+  String get assistantRetry => 'Réessayer';
+
+  @override
+  String get assistantQuota =>
+      'Vous avez posé beaucoup de questions aujourd\'hui. Réessayez demain, ou écrivez à l\'équipe.';
+
+  @override
+  String get assistantTyping => 'L\'assistant écrit';
+
+  @override
+  String get assistantMenu => 'Plus d\'options';
+
+  @override
+  String get assistantReset => 'Nouvelle conversation';
+
+  @override
+  String get assistantOpen => 'Ouvrir l\'assistant';
+
+  @override
+  String assistantCharCount(int count) {
+    return '$count/500';
+  }
+
+  @override
+  String get assistantUnavailable =>
+      'L\'assistant n\'est pas disponible pour le moment. Vous pouvez écrire à l\'équipe.';
 }

@@ -11,6 +11,8 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
 import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
+import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
+import 'package:dony/features/assistant/presentation/screens/assistant_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
@@ -2183,6 +2185,18 @@ final appRouter = GoRouter(
           child: LinkTripScreen(thread: thread, autoCreateDedicated: true),
         );
       },
+    ),
+    GoRoute(
+      path: '/assistant',
+      // Singleton : `.value` pour que le BLoC ne soit pas fermé à la sortie de
+      // l'écran (l'historique survit à la fermeture). `source` : `bubble` ou
+      // `messages_header` (analytics).
+      builder: (_, state) => BlocProvider<AssistantBloc>.value(
+        value: getIt<AssistantBloc>(),
+        child: AssistantScreen(
+          source: state.uri.queryParameters['source'] ?? 'bubble',
+        ),
+      ),
     ),
     GoRoute(
       path: '/support',

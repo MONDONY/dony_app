@@ -20233,4 +20233,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantEscalationDefaultSubject => 'Question from the assistant';
+
+  @override
+  String get assistantTitle => 'Yadony assistant';
+
+  @override
+  String get assistantBadge => 'AI';
+
+  @override
+  String get assistantSubtitle => 'Answers questions about the app';
+
+  @override
+  String get assistantWelcome =>
+      'Hello! I\'m the Yadony assistant. Ask me anything about the app: I\'ll explain and take you to the right screen.';
+
+  @override
+  String get assistantDisclaimer =>
+      'I\'m an AI and I can make mistakes. For your account, a parcel or a payment, a team member will answer. Don\'t share personal data.';
+
+  @override
+  String get assistantSuggestionsTitle => 'Frequent questions';
+
+  @override
+  String get assistantSuggestion1 => 'How do I send a parcel?';
+
+  @override
+  String get assistantSuggestion2 => 'How do I offer a trip?';
+
+  @override
+  String get assistantSuggestion3 => 'When is the traveller paid?';
+
+  @override
+  String get assistantSuggestion4 => 'How do I verify my identity?';
+
+  @override
+  String get assistantInputHint => 'Ask your question…';
+
+  @override
+  String get assistantSend => 'Send';
+
+  @override
+  String assistantGoTo(String label) {
+    return 'Go to: $label';
+  }
+
+  @override
+  String get assistantThumbUp => 'Helpful answer';
+
+  @override
+  String get assistantThumbDown => 'Not helpful';
+
+  @override
+  String get assistantTalkToHuman => 'Talk to a person';
+
+  @override
+  String get assistantEscalationTitle => 'Need us to look at your account?';
+
+  @override
+  String get assistantEscalationBody =>
+      'The Yadony team receives your question and this conversation. You\'ll find the answer in Messages, Yadony Support.';
+
+  @override
+  String get assistantEscalate => 'Write to the team';
+
+  @override
+  String get assistantEscalationFailed =>
+      'The message wasn\'t sent. Try again.';
+
+  @override
+  String get assistantError => 'I couldn\'t answer. Check your connection.';
+
+  @override
+  String get assistantRetry => 'Try again';
+
+  @override
+  String get assistantQuota =>
+      'You\'ve asked a lot of questions today. Try again tomorrow, or write to the team.';
+
+  @override
+  String get assistantTyping => 'The assistant is typing';
+
+  @override
+  String get assistantMenu => 'More options';
+
+  @override
+  String get assistantReset => 'New conversation';
+
+  @override
+  String get assistantOpen => 'Open the assistant';
+
+  @override
+  String assistantCharCount(int count) {
+    return '$count/500';
+  }
+
+  @override
+  String get assistantUnavailable =>
+      'The assistant isn\'t available right now. You can write to the team.';
 }
