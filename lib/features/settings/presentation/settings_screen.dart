@@ -10,6 +10,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/activation/presentation/widgets/intent_prompt_sheet.dart';
+import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/flight_alerts_pause_cubit.dart';
 import 'package:dony/features/settings/bloc/flights_visibility_cubit.dart';
@@ -166,6 +167,11 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ],
               ),
+
+              // ── ASSISTANT ──────────────────────────────────────────────
+              // Absente tant que la sonde n'a pas déclaré l'assistant
+              // disponible, et dès qu'il est coupé (RB10).
+              const _AssistantSection(),
 
               // ── INFORMATIONS ───────────────────────────────────────────
               SettingsSectionHeader(l.settingsSectionInformation),
@@ -444,6 +450,82 @@ class _FlightsVisibilityTile extends StatelessWidget {
       case FlightAlertsPausePhase.pausing:
         break;
     }
+  }
+}
+
+/// Section « Assistant » : interrupteur de la bulle flottante et remise à sa
+/// place. N'existe que si l'assistant est disponible et non coupé : sans lui,
+/// régler une bulle qui n'apparaîtra jamais n'aurait aucun sens.
+class _AssistantSection extends StatelessWidget {
+  const _AssistantSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<AssistantBloc, AssistantState, bool>(
+      bloc: getIt<AssistantBloc>(),
+      selector: (state) => state.available && !state.disabled,
+      builder: (context, visible) {
+        if (!visible) return const SizedBox.shrink();
+        final cs = Theme.of(context).colorScheme;
+        final l = context.l10n;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SettingsSectionHeader(l.settingsSectionAssistant),
+            SettingsFlatGroup(
+              children: [
+                BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
+                  buildWhen: (a, b) =>
+                      a.preferences.assistantBubbleEnabled !=
+                      b.preferences.assistantBubbleEnabled,
+                  builder: (context, state) {
+                    final enabled = state.preferences.assistantBubbleEnabled;
+                    void set(bool value) {
+                      context.read<AppPreferencesBloc>().add(
+                        AssistantBubbleToggled(value),
+                      );
+                      unawaited(
+                        getIt<AnalyticsService>().logEvent(
+                          AnalyticsEvents.assistantBubbleToggled,
+                          properties: {'enabled': value},
+                        ),
+                      );
+                    }
+
+                    return DonyListTile(
+                      key: const Key('settings-assistant-bubble'),
+                      iconAsset: 'sparkles',
+                      iconColor: cs.primary,
+                      iconBgColor: cs.primaryContainer,
+                      label: l.settingsAssistantBubbleLabel,
+                      subtitle: l.settingsAssistantBubbleSubtitle,
+                      trailing: Switch(
+                        key: const Key('settings-assistant-bubble-switch'),
+                        value: enabled,
+                        activeThumbColor: cs.primary,
+                        onChanged: set,
+                      ),
+                      onTap: () => set(!enabled),
+                    );
+                  },
+                ),
+                DonyListTile(
+                  key: const Key('settings-assistant-bubble-reset'),
+                  iconAsset: 'refresh-cw',
+                  iconColor: cs.primary,
+                  iconBgColor: cs.primaryContainer,
+                  label: l.settingsAssistantBubbleReset,
+                  showDivider: false,
+                  onTap: () => context.read<AppPreferencesBloc>().add(
+                    const AssistantBubbleReset(),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

@@ -355,7 +355,8 @@ abstract final class AnalyticsEvents {
   /// Quota quotidien atteint.
   static const assistantQuotaReached = 'assistant_quota_reached';
 
-  /// Bulle réduite ou agrandie.
+  /// Bulle de l'assistant allumée ou éteinte dans Réglages (propriété
+  /// `enabled`).
   static const assistantBubbleToggled = 'assistant_bubble_toggled';
 
   static const helpCenterOpened = 'help_center_opened';

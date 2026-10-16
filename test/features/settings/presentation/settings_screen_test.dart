@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
@@ -25,8 +28,16 @@ class _FakeAppPreferencesEvent extends Fake implements AppPreferencesEvent {}
 
 class MockAnalyticsService extends Mock implements AnalyticsService {}
 
+class _MockAssistantBloc extends MockBloc<AssistantEvent, AssistantState>
+    implements AssistantBloc {}
+
+/// Dernier `AppPreferencesBloc` moqué monté par [_wrap], pour y vérifier les
+/// événements envoyés par l'écran.
+late MockAppPreferencesBloc _prefsBloc;
+
 Widget _wrap({UserPreferencesModel? prefs}) {
   final mockBloc = MockAppPreferencesBloc();
+  _prefsBloc = mockBloc;
   final state = AppPreferencesState(
     preferences: prefs ?? const UserPreferencesModel(),
   );
@@ -127,6 +138,7 @@ void main() {
   late MockHiveService mockHive;
   late MockBox mockBox;
   late MockAnalyticsService mockAnalytics;
+  late _MockAssistantBloc assistantBloc;
 
   setUpAll(() {
     registerFallbackValue(_FakeAppPreferencesEvent());
@@ -146,9 +158,187 @@ void main() {
       () => mockAnalytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
     getIt.registerSingleton<AnalyticsService>(mockAnalytics);
+    // `AssistantBloc` est un singleton : l'écran le lit via `getIt` pour ne
+    // montrer la section « Assistant » que si la sonde l'a déclaré disponible.
+    assistantBloc = _MockAssistantBloc();
+    getIt.registerSingleton<AssistantBloc>(assistantBloc);
+    registerFallbackValue(const AssistantOpened('bubble'));
+  });
+
+  setUp(() {
+    when(
+      () => assistantBloc.state,
+    ).thenReturn(const AssistantState(available: true));
+    clearInteractions(mockAnalytics);
   });
 
   tearDownAll(() => getIt.reset());
+
+  group('SettingsScreen · section Assistant', () {
+    /// Descend en bas de la liste : les lignes du `ListView` ne sont
+    /// construites qu'à l'approche de l'écran.
+    Future<void> scrollToEnd(WidgetTester tester) async {
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -3000));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> showAssistantTile(WidgetTester tester, Key key) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      await scrollToEnd(tester);
+      expect(find.byKey(key), findsOneWidget);
+    }
+
+    testWidgets('interrupteur de la bulle : événement et analytics', (
+      tester,
+    ) async {
+      await showAssistantTile(
+        tester,
+        const Key('settings-assistant-bubble-switch'),
+      );
+      expect(find.text('ASSISTANT'), findsOneWidget);
+      expect(find.text("Bulle de l'assistant"), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const Key('settings-assistant-bubble-switch')),
+      );
+      await tester.pump();
+
+      verify(
+        () => _prefsBloc.add(const AssistantBubbleToggled(false)),
+      ).called(1);
+      verify(
+        () => mockAnalytics.logEvent(
+          AnalyticsEvents.assistantBubbleToggled,
+          properties: {'enabled': false},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('toucher la ligne bascule aussi la bulle', (tester) async {
+      await showAssistantTile(tester, const Key('settings-assistant-bubble'));
+
+      await tester.tap(find.byKey(const Key('settings-assistant-bubble')));
+      await tester.pump();
+
+      verify(
+        () => _prefsBloc.add(const AssistantBubbleToggled(false)),
+      ).called(1);
+    });
+
+    testWidgets("bulle éteinte : l'interrupteur la rallume", (tester) async {
+      await tester.pumpWidget(
+        _wrap(prefs: const UserPreferencesModel(assistantBubbleEnabled: false)),
+      );
+      await tester.pumpAndSettle();
+      await scrollToEnd(tester);
+      expect(
+        find.byKey(const Key('settings-assistant-bubble-switch')),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<Switch>(
+              find.byKey(const Key('settings-assistant-bubble-switch')),
+            )
+            .value,
+        isFalse,
+      );
+      await tester.tap(
+        find.byKey(const Key('settings-assistant-bubble-switch')),
+      );
+      await tester.pump();
+
+      verify(
+        () => _prefsBloc.add(const AssistantBubbleToggled(true)),
+      ).called(1);
+      verify(
+        () => mockAnalytics.logEvent(
+          AnalyticsEvents.assistantBubbleToggled,
+          properties: {'enabled': true},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('remettre la bulle à sa place', (tester) async {
+      await showAssistantTile(
+        tester,
+        const Key('settings-assistant-bubble-reset'),
+      );
+      expect(find.text('Remettre la bulle à sa place'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const Key('settings-assistant-bubble-reset')),
+      );
+      await tester.pump();
+
+      verify(() => _prefsBloc.add(const AssistantBubbleReset())).called(1);
+    });
+
+    testWidgets('RB10 : assistant non disponible, toute la section disparaît', (
+      tester,
+    ) async {
+      when(() => assistantBloc.state).thenReturn(const AssistantState());
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      await scrollToEnd(tester);
+
+      // Le bas de la liste est atteint : « INFORMATIONS » est là, pas
+      // « ASSISTANT ».
+      expect(find.text('INFORMATIONS'), findsOneWidget);
+      expect(find.text('ASSISTANT', skipOffstage: false), findsNothing);
+      for (final key in const [
+        'settings-assistant-bubble',
+        'settings-assistant-bubble-switch',
+        'settings-assistant-bubble-reset',
+      ]) {
+        expect(find.byKey(Key(key), skipOffstage: false), findsNothing);
+      }
+    });
+
+    testWidgets('RB10 : assistant coupé (disabled), la section disparaît', (
+      tester,
+    ) async {
+      when(
+        () => assistantBloc.state,
+      ).thenReturn(const AssistantState(available: true, disabled: true));
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      await scrollToEnd(tester);
+
+      expect(find.text('INFORMATIONS'), findsOneWidget);
+      expect(find.text('ASSISTANT', skipOffstage: false), findsNothing);
+      expect(
+        find.byKey(const Key('settings-assistant-bubble'), skipOffstage: false),
+        findsNothing,
+      );
+    });
+
+    testWidgets('RB10 : la section apparaît quand la sonde répond', (
+      tester,
+    ) async {
+      final probe = StreamController<AssistantState>.broadcast();
+      addTearDown(probe.close);
+      whenListen(
+        assistantBloc,
+        probe.stream,
+        initialState: const AssistantState(),
+      );
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      await scrollToEnd(tester);
+      expect(find.text('INFORMATIONS'), findsOneWidget);
+      expect(find.byKey(const Key('settings-assistant-bubble')), findsNothing);
+
+      probe.add(const AssistantState(available: true));
+      await tester.pumpAndSettle();
+      await scrollToEnd(tester);
+      expect(
+        find.byKey(const Key('settings-assistant-bubble')),
+        findsOneWidget,
+      );
+    });
+  });
 
   group('SettingsScreen', () {
     testWidgets('renders Paramètres title', (tester) async {

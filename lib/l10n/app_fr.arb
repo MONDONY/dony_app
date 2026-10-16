@@ -13562,6 +13562,22 @@
   "@settingsSectionInformation": {
     "description": "En-tête de section (settings_screen.dart)"
   },
+  "settingsSectionAssistant": "ASSISTANT",
+  "@settingsSectionAssistant": {
+    "description": "En-tête de section des réglages de l'assistant IA (settings_screen.dart). Section visible seulement si l'assistant est disponible."
+  },
+  "settingsAssistantBubbleLabel": "Bulle de l'assistant",
+  "@settingsAssistantBubbleLabel": {
+    "description": "Libellé de l'interrupteur qui affiche ou masque la bulle flottante de l'assistant (settings_screen.dart)"
+  },
+  "settingsAssistantBubbleSubtitle": "Visible sur tous les écrans. Éteinte, l'assistant reste accessible depuis l'en-tête de Messages.",
+  "@settingsAssistantBubbleSubtitle": {
+    "description": "Sous-titre de l'interrupteur de la bulle de l'assistant (settings_screen.dart)"
+  },
+  "settingsAssistantBubbleReset": "Remettre la bulle à sa place",
+  "@settingsAssistantBubbleReset": {
+    "description": "Ligne qui replace la bulle de l'assistant à sa position d'origine (settings_screen.dart)"
+  },
   "settingsTermsLabel": "CGU",
   "@settingsTermsLabel": {
     "description": "Libellé de la tuile de navigation vers les CGU (settings_screen.dart)"

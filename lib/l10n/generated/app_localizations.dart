@@ -20483,6 +20483,30 @@ abstract class AppLocalizations {
   /// **'INFORMATIONS'**
   String get settingsSectionInformation;
 
+  /// En-tête de section des réglages de l'assistant IA (settings_screen.dart). Section visible seulement si l'assistant est disponible.
+  ///
+  /// In fr, this message translates to:
+  /// **'ASSISTANT'**
+  String get settingsSectionAssistant;
+
+  /// Libellé de l'interrupteur qui affiche ou masque la bulle flottante de l'assistant (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bulle de l\'assistant'**
+  String get settingsAssistantBubbleLabel;
+
+  /// Sous-titre de l'interrupteur de la bulle de l'assistant (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Visible sur tous les écrans. Éteinte, l\'assistant reste accessible depuis l\'en-tête de Messages.'**
+  String get settingsAssistantBubbleSubtitle;
+
+  /// Ligne qui replace la bulle de l'assistant à sa position d'origine (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettre la bulle à sa place'**
+  String get settingsAssistantBubbleReset;
+
   /// Libellé de la tuile de navigation vers les CGU (settings_screen.dart)
   ///
   /// In fr, this message translates to:

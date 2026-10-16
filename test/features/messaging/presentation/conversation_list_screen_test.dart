@@ -5,6 +5,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
@@ -32,6 +33,9 @@ class _FakeConversationListEvent extends Fake
     implements ConversationListEvent {}
 
 class _MockSupportRepository extends Mock implements SupportRepository {}
+
+class _MockAssistantBloc extends MockBloc<AssistantEvent, AssistantState>
+    implements AssistantBloc {}
 
 const _participant = ParticipantModel(id: 'uid-1', name: 'Aïcha Bah');
 final _conv = ConversationModel(
@@ -87,6 +91,12 @@ GoRouter _buildRouter(ConversationListBloc bloc) => GoRouter(
       builder: (_, _) => const Scaffold(body: Text('Chat')),
     ),
     GoRoute(
+      path: '/assistant',
+      builder: (_, state) => Scaffold(
+        body: Text('ecran-assistant-${state.uri.queryParameters['source']}'),
+      ),
+    ),
+    GoRoute(
       path: '/support',
       builder: (_, _) => const Scaffold(body: Text('ecran-support')),
     ),
@@ -123,6 +133,7 @@ Future<void> _pump(WidgetTester tester, ConversationListBloc bloc) async {
 void main() {
   setUpAll(() async {
     registerFallbackValue(_FakeConversationListEvent());
+    registerFallbackValue(const AssistantOpened('bubble'));
     // ConversationTile formate l'heure du dernier message en français : sans
     // cette initialisation, toute tuile rendue lève LocaleDataException.
     await initializeDateFormatting('fr');
@@ -132,8 +143,17 @@ void main() {
   late _MockSupportRepository mockSupportRepository;
   late SupportUnreadCubit supportUnreadCubit;
   late SupportSummaryCubit supportSummaryCubit;
+  late _MockAssistantBloc assistantBloc;
 
   setUp(() {
+    // L'icône de l'assistant lit `AssistantBloc` (singleton) via `getIt` :
+    // visible seulement une fois la sonde `GET /assistant/status` positive.
+    assistantBloc = _MockAssistantBloc();
+    when(
+      () => assistantBloc.state,
+    ).thenReturn(const AssistantState(available: true));
+    if (getIt.isRegistered<AssistantBloc>()) getIt.unregister<AssistantBloc>();
+    getIt.registerSingleton<AssistantBloc>(assistantBloc);
     bloc = MockConversationListBloc();
     when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
 
@@ -172,6 +192,7 @@ void main() {
 
   tearDown(() async {
     await bloc.close();
+    if (getIt.isRegistered<AssistantBloc>()) getIt.unregister<AssistantBloc>();
     if (getIt.isRegistered<ConversationSelectionCubit>()) {
       getIt.unregister<ConversationSelectionCubit>();
     }
@@ -183,6 +204,79 @@ void main() {
     }
     await supportUnreadCubit.close();
     await supportSummaryCubit.close();
+  });
+
+  group('ConversationListScreen · icône assistant', () {
+    const icon = Key('messages-header-assistant');
+
+    setUp(() {
+      when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+    });
+
+    testWidgets('visible quand la sonde a déclaré l\'assistant disponible', (
+      tester,
+    ) async {
+      await _pump(tester, bloc);
+
+      expect(find.byKey(icon), findsOneWidget);
+      expect(find.byTooltip("Ouvrir l'assistant"), findsOneWidget);
+    });
+
+    testWidgets('toucher l\'icône ouvre /assistant avec la source', (
+      tester,
+    ) async {
+      await _pump(tester, bloc);
+
+      await tester.tap(find.byKey(icon));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ecran-assistant-messages_header'), findsOneWidget);
+      // C'est l'écran de l'assistant qui envoie `AssistantOpened` : l'icône
+      // ne le double pas.
+      verifyNever(() => assistantBloc.add(any()));
+    });
+
+    testWidgets('RB10 : absente tant que l\'assistant n\'est pas disponible', (
+      tester,
+    ) async {
+      when(() => assistantBloc.state).thenReturn(const AssistantState());
+      await _pump(tester, bloc);
+
+      expect(find.byKey(icon), findsNothing);
+    });
+
+    testWidgets('RB10 : absente quand l\'assistant est coupé (disabled)', (
+      tester,
+    ) async {
+      when(
+        () => assistantBloc.state,
+      ).thenReturn(const AssistantState(available: true, disabled: true));
+      await _pump(tester, bloc);
+
+      expect(find.byKey(icon), findsNothing);
+    });
+
+    testWidgets('RB10 : apparaît quand la sonde répond, sans recharger', (
+      tester,
+    ) async {
+      whenListen(
+        assistantBloc,
+        Stream.value(const AssistantState(available: true)),
+        initialState: const AssistantState(),
+      );
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: _buildRouter(bloc),
+        ),
+      );
+      expect(find.byKey(icon), findsNothing);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(icon), findsOneWidget);
+    });
   });
 
   group('ConversationListScreen', () {

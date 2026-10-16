@@ -12351,6 +12351,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionInformation => 'INFORMATION';
 
   @override
+  String get settingsSectionAssistant => 'ASSISTANT';
+
+  @override
+  String get settingsAssistantBubbleLabel => 'Assistant bubble';
+
+  @override
+  String get settingsAssistantBubbleSubtitle =>
+      'Shown on every screen. When off, the assistant stays available from the Messages header.';
+
+  @override
+  String get settingsAssistantBubbleReset => 'Reset bubble position';
+
+  @override
   String get settingsTermsLabel => 'Terms of Use';
 
   @override
