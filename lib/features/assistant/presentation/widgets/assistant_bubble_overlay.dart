@@ -47,6 +47,12 @@ String visibleRoutePath(GoRouter router) {
 /// C'est aussi elle qui lance la sonde : à l'entrée en session connectée, puis
 /// au retour au premier plan (au plus une fois toutes les 10 minutes, le BLoC
 /// y veille).
+///
+/// Et elle clôt la conversation quand le compte change : déconnexion, compte
+/// supprimé, session invitée ou passage direct d'un compte à un autre
+/// ([AssistantSessionEnded]). Le BLoC est un singleton de l'app : sans cela,
+/// l'échange d'un compte passerait au suivant. Un verrou PIN ou un
+/// rafraîchissement du même compte la gardent.
 class AssistantBubbleOverlay extends StatefulWidget {
   const AssistantBubbleOverlay({super.key, this.router, this.blockers});
 
@@ -63,6 +69,11 @@ class AssistantBubbleOverlay extends StatefulWidget {
 class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
   late final AssistantBloc _assistant = getIt<AssistantBloc>();
   late final ValueNotifier<bool> _signedIn;
+
+  /// Dernier compte connecté vu. Survit au verrou PIN et aux états de
+  /// passage (chargement, erreur) : seul un autre compte ou une fermeture de
+  /// session clôt la conversation.
+  String? _uid;
   StreamSubscription<AuthState>? _authSub;
   AppLifecycleListener? _lifecycle;
 
@@ -79,6 +90,7 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
     _signedIn = ValueNotifier<bool>(
       assistantSignedInAfter(auth.state, previous: false),
     );
+    _uid = auth.state.currentUserId;
     _authSub = auth.stream.listen(_onAuth);
     _lifecycle = AppLifecycleListener(onResume: _onResume);
     if (_signedIn.value) _assistant.add(const AssistantStatusRequested());
@@ -93,10 +105,27 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
   }
 
   void _onAuth(AuthState state) {
+    final uid = state.currentUserId;
+    final previousUid = _uid;
+    final switched = uid != null && previousUid != null && uid != previousUid;
+    final closed =
+        uid == null && previousUid != null && assistantSessionClosedBy(state);
+    if (uid != null) {
+      _uid = uid;
+    } else if (closed) {
+      _uid = null;
+    }
+    // Avant toute sonde : la sonde du compte suivant part d'un état vierge.
+    if (switched || closed) _assistant.add(const AssistantSessionEnded());
+
     final next = assistantSignedInAfter(state, previous: _signedIn.value);
-    if (next == _signedIn.value) return;
+    final entered = next && !_signedIn.value;
     _signedIn.value = next;
-    if (next) _assistant.add(const AssistantStatusRequested());
+    // Nouvelle session, ou autre compte sans déconnexion visible entre les
+    // deux : la disponibilité se redemande pour ce compte.
+    if (entered || (switched && next)) {
+      _assistant.add(const AssistantStatusRequested());
+    }
   }
 
   void _onResume() {

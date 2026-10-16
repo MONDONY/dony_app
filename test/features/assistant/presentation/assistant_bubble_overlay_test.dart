@@ -4,7 +4,10 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
+import 'package:dony/features/assistant/data/assistant_models.dart';
+import 'package:dony/features/assistant/data/assistant_repository.dart';
 import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_bubble_overlay.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -13,12 +16,15 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
+import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockAssistantBloc extends MockBloc<AssistantEvent, AssistantState>
     implements AssistantBloc {}
@@ -30,6 +36,10 @@ class _MockPrefsBloc extends MockBloc<AppPreferencesEvent, AppPreferencesState>
     implements AppPreferencesBloc {}
 
 class _FakeAppPreferencesEvent extends Fake implements AppPreferencesEvent {}
+
+class _MockAssistantRepository extends Mock implements AssistantRepository {}
+
+class _MockSupportRepository extends Mock implements SupportRepository {}
 
 const _bubbleKey = ValueKey('assistant-bubble');
 const _homeButtonKey = ValueKey('home-button');
@@ -46,6 +56,12 @@ final _user = UserModel.fromJson(const {
   'kycStatus': 'VERIFIED',
 });
 
+final _otherUser = UserModel.fromJson(const {
+  'id': 'u2',
+  'roles': ['SENDER'],
+  'kycStatus': 'VERIFIED',
+});
+
 void main() {
   late _MockAssistantBloc assistantBloc;
   late _MockAuthBloc authBloc;
@@ -56,6 +72,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(_FakeAppPreferencesEvent());
     registerFallbackValue(const AssistantResetRequested());
+    registerFallbackValue(<AssistantHistoryTurn>[]);
   });
 
   setUp(() {
@@ -637,6 +654,115 @@ void main() {
       await gesture.up();
       await tester.pumpAndSettle();
       expect(_homeBuilds, before);
+    });
+  });
+
+  group('changement de compte (vrai BLoC)', () {
+    late AssistantBloc real;
+    late _MockAssistantRepository repository;
+    late StreamController<AuthState> auth;
+    late AnalyticsService analytics;
+
+    setUp(() async {
+      repository = _MockAssistantRepository();
+      when(() => repository.status()).thenAnswer((_) async => true);
+      when(
+        () => repository.ask(
+          question: any(named: 'question'),
+          locale: any(named: 'locale'),
+          history: any(named: 'history'),
+        ),
+      ).thenAnswer(
+        (_) async => const AssistantAnswer(
+          answer: 'Réponse pour A',
+          answered: true,
+          actions: [],
+          provider: 'groq',
+          remainingToday: 3,
+        ),
+      );
+      analytics = makeEnabledAnalytics(MockAnalyticsBackend());
+      await analytics.onConfigured();
+      auth = StreamController<AuthState>.broadcast();
+      whenListen(authBloc, auth.stream, initialState: AuthAuthenticated(_user));
+      addTearDown(auth.close);
+    });
+
+    Future<void> settle(WidgetTester tester) async {
+      for (var i = 0; i < 5; i++) {
+        await tester.pump();
+      }
+    }
+
+    /// Le BLoC naît dans la zone du test : créé dans `setUp`, ses
+    /// microtâches échapperaient aux `pump`.
+    Future<void> askAsA(WidgetTester tester) async {
+      real = AssistantBloc(repository, _MockSupportRepository(), analytics);
+      addTearDown(real.close);
+      getIt.unregister<AssistantBloc>();
+      getIt.registerSingleton<AssistantBloc>(real);
+      await pump(tester);
+      real.add(const AssistantQuestionSubmitted('Question de A', locale: 'fr'));
+      await settle(tester);
+      expect(real.state.messages, hasLength(2));
+      expect(real.state.available, isTrue);
+    }
+
+    testWidgets('A, question, déconnexion, connexion de B : conversation '
+        'vierge', (tester) async {
+      await askAsA(tester);
+      auth.add(const AuthInitial());
+      await settle(tester);
+      auth.add(AuthAuthenticated(_otherUser));
+      await settle(tester);
+      expect(real.state.messages, isEmpty);
+      expect(real.state.isSending, isFalse);
+    });
+
+    testWidgets('A puis B sans déconnexion visible : conversation vierge et '
+        'nouvelle sonde pour B', (tester) async {
+      await askAsA(tester);
+      verify(() => repository.status()).called(1);
+      auth.add(AuthAuthenticated(_otherUser));
+      await settle(tester);
+      expect(real.state.messages, isEmpty);
+      verify(() => repository.status()).called(1);
+      expect(real.state.available, isTrue);
+    });
+
+    for (final end in <AuthState>[
+      const AuthAccountDeleted(),
+      const AuthGuestSessionReady(),
+    ]) {
+      testWidgets('$end : conversation vierge', (tester) async {
+        await askAsA(tester);
+        auth.add(end);
+        await settle(tester);
+        expect(real.state.messages, isEmpty);
+      });
+    }
+
+    testWidgets('verrou PIN puis déverrouillage du même compte : historique '
+        'conservé', (tester) async {
+      await askAsA(tester);
+      auth.add(const AuthLocked());
+      await settle(tester);
+      auth.add(AuthAuthenticated(_user));
+      await settle(tester);
+      expect(real.state.messages, hasLength(2));
+    });
+
+    testWidgets('rafraîchissement du même compte : historique conservé', (
+      tester,
+    ) async {
+      await askAsA(tester);
+      auth.add(const AuthLoading());
+      await settle(tester);
+      auth.add(AuthProfileUpdated(_user));
+      await settle(tester);
+      auth.add(AuthAuthenticated(_user));
+      await settle(tester);
+      expect(real.state.messages, hasLength(2));
     });
   });
 }

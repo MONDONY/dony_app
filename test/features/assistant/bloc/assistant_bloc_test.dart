@@ -944,4 +944,133 @@ void main() {
       },
     );
   });
+
+  group('fin de session (changement de compte)', () {
+    late Completer<AssistantAnswer> answerGate;
+    late Completer<SupportTicket> ticketGate;
+
+    blocTest<AssistantBloc, AssistantState>(
+      'réponse en vol puis fin de session : la réponse tardive est ignorée, '
+      'état vierge',
+      build: () {
+        answerGate = Completer<AssistantAnswer>();
+        askAny().thenAnswer((_) => answerGate.future);
+        return build();
+      },
+      seed: () => const AssistantState(
+        available: true,
+        quotaExceeded: true,
+        lastFailedQuestion: 'ancienne',
+        messages: [
+          AssistantMessage(id: 90, author: AssistantAuthor.user, text: 'A'),
+        ],
+      ),
+      act: (b) async {
+        b.add(const AssistantQuestionSubmitted('Question de A', locale: 'fr'));
+        await Future<void>.delayed(Duration.zero);
+        b.add(const AssistantSessionEnded());
+        await Future<void>.delayed(Duration.zero);
+        answerGate.complete(_answer);
+      },
+      wait: const Duration(milliseconds: 20),
+      verify: (b) {
+        expect(b.state, const AssistantState());
+        verifyNever(
+          () => backend.capture(AnalyticsEvents.assistantAnswerReceived, any()),
+        );
+      },
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'escalade en vol puis fin de session : pas de succès, aucun ticket '
+      'signalé au compte suivant',
+      build: () {
+        ticketGate = Completer<SupportTicket>();
+        when(
+          () => support.createTicket(
+            category: any(named: 'category'),
+            subject: any(named: 'subject'),
+            message: any(named: 'message'),
+          ),
+        ).thenAnswer((_) => ticketGate.future);
+        return build();
+      },
+      seed: () => const AssistantState(
+        available: true,
+        messages: [
+          AssistantMessage(id: 1, author: AssistantAuthor.user, text: 'Q'),
+        ],
+      ),
+      act: (b) async {
+        b.add(const AssistantEscalationRequested());
+        await Future<void>.delayed(Duration.zero);
+        b.add(const AssistantSessionEnded());
+        await Future<void>.delayed(Duration.zero);
+        ticketGate.complete(_ticket);
+      },
+      wait: const Duration(milliseconds: 20),
+      verify: (b) => expect(b.state, const AssistantState()),
+    );
+
+    test('sonde en vol puis fin de session : son résultat ne passe pas au '
+        'compte suivant', () async {
+      final gate = Completer<bool?>();
+      when(() => repository.status()).thenAnswer((_) => gate.future);
+      final b = build();
+      b.add(const AssistantStatusRequested());
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantSessionEnded());
+      await Future<void>.delayed(Duration.zero);
+      gate.complete(true);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.available, isFalse);
+      await b.close();
+    });
+
+    test('fin de session : le compte suivant sonde de nouveau, même moins de '
+        '10 minutes après', () async {
+      final now = DateTime(2026, 10, 16, 12);
+      when(() => repository.status()).thenAnswer((_) async => true);
+      final b = AssistantBloc(repository, support, analytics, clock: () => now);
+      b.add(const AssistantStatusRequested());
+      await Future<void>.delayed(Duration.zero);
+      verify(() => repository.status()).called(1);
+      b.add(const AssistantSessionEnded());
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.available, isFalse);
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      verify(() => repository.status()).called(1);
+      expect(b.state.available, isTrue);
+      await b.close();
+    });
+
+    test('fin de session : une sonde forcée en attente n’est pas rejouée '
+        'pour le compte suivant', () async {
+      final first = Completer<bool?>();
+      final calls = <bool>[];
+      when(() => repository.status()).thenAnswer((_) {
+        calls.add(true);
+        return calls.length == 1 ? first.future : Future<bool?>.value(true);
+      });
+      final b = build();
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantStatusRequested());
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantSessionEnded());
+      await Future<void>.delayed(Duration.zero);
+      first.complete(true);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(calls, hasLength(1));
+      expect(b.state.available, isFalse);
+      await b.close();
+    });
+
+    test('l’événement est comparable', () {
+      expect(const AssistantSessionEnded(), const AssistantSessionEnded());
+    });
+  });
 }

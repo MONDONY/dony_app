@@ -92,3 +92,11 @@ bool assistantSignedInAfter(AuthState state, {required bool previous}) {
     _ => previous,
   };
 }
+
+/// [state] ferme-t-il la session du compte (déconnexion, compte supprimé,
+/// session invitée) ? Un verrou PIN ([AuthLocked]) ne la ferme pas : c'est le
+/// même compte, sa conversation lui reste.
+bool assistantSessionClosedBy(AuthState state) => switch (state) {
+  AuthInitial() || AuthGuestSessionReady() || AuthAccountDeleted() => true,
+  _ => false,
+};

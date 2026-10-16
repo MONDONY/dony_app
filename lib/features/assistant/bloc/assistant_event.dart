@@ -90,3 +90,11 @@ final class AssistantStatusRequested extends AssistantEvent {
   @override
   List<Object?> get props => [force];
 }
+
+/// Fin de la session du compte (déconnexion, compte supprimé, session invitée,
+/// changement de compte) : la conversation, une réponse ou une escalade en vol
+/// et le résultat de la sonde ne passent jamais au compte suivant. Pas envoyé
+/// pour un verrou PIN (même compte).
+final class AssistantSessionEnded extends AssistantEvent {
+  const AssistantSessionEnded();
+}

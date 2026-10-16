@@ -33,6 +33,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     on<AssistantFeedbackGiven>(_onFeedback);
     on<AssistantActionTapped>(_onAction);
     on<AssistantEscalationRequested>(_onEscalation);
+    on<AssistantSessionEnded>(_onSessionEnded);
     on<AssistantEscalationHandled>(
       (_, emit) => emit(
         state.copyWith(
@@ -55,9 +56,16 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
   final AnalyticsService _analytics;
   int _nextId = 0;
 
-  /// Incrémenté à chaque « Nouvelle conversation » : une réponse qui arrive
-  /// après coup pour l'ancienne conversation est écartée.
+  /// Incrémenté à chaque « Nouvelle conversation » et à chaque fin de session :
+  /// une réponse qui arrive après coup pour l'ancienne conversation est
+  /// écartée.
   int _epoch = 0;
+
+  /// Incrémenté à chaque fin de session ([AssistantSessionEnded]) : une
+  /// escalade ou une sonde lancée pour le compte précédent n'émet plus rien.
+  /// Distinct de [_epoch] : le ticket créé reste signalé après une simple
+  /// « Nouvelle conversation ».
+  int _session = 0;
 
   bool _probing = false;
   bool _probingForced = false;
@@ -98,6 +106,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
   }
 
   Future<void> _probe(bool force, Emitter<AssistantState> emit) async {
+    final session = _session;
     // Entrée en session : le résultat d'un compte précédent ne compte plus.
     if (force && state.available) emit(state.copyWith(available: false));
     bool? enabled;
@@ -106,6 +115,8 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     } catch (_) {
       // La sonde ne lève jamais : tout échec vaut « inconnu ».
     }
+    // Réponse pour le compte précédent : le suivant sonde de son côté.
+    if (session != _session) return;
     if (enabled == null) {
       // Réseau instable, 5xx, corps illisible : on garde la valeur précédente
       // (déjà fausse pour une sonde forcée) et on n'arme pas le délai, la
@@ -267,6 +278,19 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     emit(AssistantState(available: state.available));
   }
 
+  /// Repart de zéro pour le compte suivant : conversation, escalade,
+  /// disponibilité, et délai de la sonde (le compte suivant sonde de nouveau).
+  void _onSessionEnded(
+    AssistantSessionEnded event,
+    Emitter<AssistantState> emit,
+  ) {
+    _epoch++;
+    _session++;
+    _lastProbeAt = null;
+    _forcedPending = false;
+    emit(const AssistantState());
+  }
+
   void _onFeedback(AssistantFeedbackGiven event, Emitter<AssistantState> emit) {
     if (!state.messages.any((m) => m.id == event.messageId)) return;
     final value = event.up ? 'up' : 'down';
@@ -304,6 +328,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     if (state.escalationStatus == AssistantEscalationStatus.sending) return;
     emit(state.copyWith(escalationStatus: AssistantEscalationStatus.sending));
     final epoch = _epoch;
+    final session = _session;
     final l = AppL10n.current;
     try {
       final subject = buildEscalationSubject(state.messages);
@@ -320,6 +345,9 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
             : subject,
         message: message.isEmpty ? null : message,
       );
+      // Le ticket appartient au compte précédent : rien n'est signalé (ni
+      // ouvert) au compte suivant.
+      if (session != _session) return;
       unawaited(_analytics.logEvent(AnalyticsEvents.assistantEscalated));
       // Même après « Nouvelle conversation » : le ticket existe, l'utilisateur
       // doit pouvoir le retrouver.
