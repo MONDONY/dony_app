@@ -10875,7 +10875,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanQrPickerTitle => 'Lire le QR code';
 
   @override
-  String get scanTorchToggleTooltip => 'Activer ou couper la lampe';
+  String get scanTorchTurnOnTooltip => 'Allumer la lampe';
+
+  @override
+  String get scanTorchTurnOffTooltip => 'Éteindre la lampe';
+
+  @override
+  String get scanTorchUnavailableTooltip => 'Lampe indisponible';
 
   @override
   String get scanQrPickerHint => 'Pointez vers le QR code du colis';

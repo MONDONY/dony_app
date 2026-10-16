@@ -118,6 +118,10 @@ abstract final class DonyColors {
   // Notation (ratings)
   static const starGold = Color(0xFFF59E0B);
 
+  // Lampe allumée des écrans caméra : fond plein, icône neutral900 dessus
+  // (contraste > 10:1), lisible sur le flux caméra clair comme sombre.
+  static const torchOn = Color(0xFFFBBF24);
+
   // KYC badges — icônes de statut sur profil utilisateur
   static const kycBadgeBlue = Color(0xFF6FA8FF);
   static const kycBadgeGold = Color(0xFFF0B829);

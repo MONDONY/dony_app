@@ -86,6 +86,7 @@ import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
+import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -805,7 +806,7 @@ Widget _suiviCamera(
   BuildContext _,
   ValueChanged<String> _,
   ValueListenable<bool> _,
-  ValueListenable<bool> _,
+  QrTorch _,
 ) => const ColoredBox(color: DonyColors.neutral900);
 
 const _suiviHelpConfigJson = '''

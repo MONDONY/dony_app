@@ -11722,9 +11722,17 @@
   "@scanQrPickerTitle": {
     "description": "Titre de l'écran de lecture QR générique (qr_picker_screen.dart)."
   },
-  "scanTorchToggleTooltip": "Activer ou couper la lampe",
-  "@scanTorchToggleTooltip": {
-    "description": "Tooltip du bouton lampe torche de qr_picker_screen.dart, distinct de scanTorchTooltip."
+  "scanTorchTurnOnTooltip": "Allumer la lampe",
+  "@scanTorchTurnOnTooltip": {
+    "description": "Tooltip et libellé d'accessibilité du bouton lampe des écrans caméra (QrTorchButton), lampe éteinte : l'action proposée est de l'allumer."
+  },
+  "scanTorchTurnOffTooltip": "Éteindre la lampe",
+  "@scanTorchTurnOffTooltip": {
+    "description": "Tooltip et libellé d'accessibilité du bouton lampe des écrans caméra (QrTorchButton), lampe allumée : l'action proposée est de l'éteindre."
+  },
+  "scanTorchUnavailableTooltip": "Lampe indisponible",
+  "@scanTorchUnavailableTooltip": {
+    "description": "Tooltip du bouton lampe désactivé (QrTorchButton) : caméra arrêtée ou en cours de démarrage."
   },
   "scanQrPickerHint": "Pointez vers le QR code du colis",
   "@scanQrPickerHint": {
