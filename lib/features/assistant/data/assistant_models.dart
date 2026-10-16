@@ -28,17 +28,34 @@ class AssistantAnswer extends Equatable {
     required this.remainingToday,
   });
 
+  /// Lève une `TypeError` sur une réponse malformée (texte absent, `actions`
+  /// qui n'est pas une liste, etc.) : le dépôt la convertit en
+  /// `AssistantNetworkException`.
   factory AssistantAnswer.fromJson(Map<String, dynamic> json) =>
       AssistantAnswer(
-        answer: json['answer'] as String? ?? '',
+        answer: json['answer'] as String,
         answered: json['answered'] as bool? ?? false,
-        actions: (json['actions'] as List<dynamic>? ?? const [])
-            .whereType<Map<String, dynamic>>()
-            .map(AssistantAction.fromJson)
-            .toList(),
+        actions: _parseActions(json['actions']),
         provider: json['provider'] as String? ?? 'none',
-        remainingToday: json['remainingToday'] as int? ?? 0,
+        remainingToday: (json['remainingToday'] as num?)?.toInt() ?? 0,
       );
+
+  /// Ignore les actions incomplètes (route ou libellé absent, non textuel ou
+  /// vide) sans rejeter les autres ni le texte de la réponse.
+  static List<AssistantAction> _parseActions(Object? raw) {
+    if (raw == null) return const [];
+    final list = raw as List<dynamic>;
+    final actions = <AssistantAction>[];
+    for (final item in list) {
+      if (item is! Map<String, dynamic>) continue;
+      final route = item['route'];
+      final label = item['label'];
+      if (route is! String || label is! String) continue;
+      if (route.trim().isEmpty || label.trim().isEmpty) continue;
+      actions.add(AssistantAction.fromJson(item));
+    }
+    return actions;
+  }
 
   final String answer;
   final bool answered;

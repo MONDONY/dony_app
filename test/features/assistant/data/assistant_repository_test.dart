@@ -21,35 +21,42 @@ void main() {
     repository = AssistantRepository(api);
   });
 
-  DioException error(int status) => DioException(
+  DioException error(int status, {Object? data}) => DioException(
     requestOptions: RequestOptions(path: '/assistant/ask'),
     response: Response(
       requestOptions: RequestOptions(path: '/assistant/ask'),
       statusCode: status,
+      data: data,
     ),
     type: DioExceptionType.badResponse,
   );
 
+  /// Fait répondre le dio mocké avec [data] en HTTP 200.
+  void respondWith(Object? data) {
+    when(() => dio.post('/assistant/ask', data: any(named: 'data'))).thenAnswer(
+      (_) async => Response(
+        requestOptions: RequestOptions(path: '/assistant/ask'),
+        data: data,
+      ),
+    );
+  }
+
+  Future<AssistantAnswer> ask() =>
+      repository.ask(question: 'q', locale: 'fr', history: const []);
+
   test(
     'envoie la question, la langue et l’historique, puis lit la réponse',
     () async {
-      when(
-        () => dio.post('/assistant/ask', data: any(named: 'data')),
-      ).thenAnswer(
-        (_) async => Response(
-          requestOptions: RequestOptions(path: '/assistant/ask'),
-          data: {
-            'answer': 'Allez dans Moi.',
-            'answered': true,
-            'actions': [
-              {'route': '/profile/edit/phone', 'label': 'Changer mon numéro'},
-            ],
-            'sources': ['changer-numero'],
-            'provider': 'groq',
-            'remainingToday': 17,
-          },
-        ),
-      );
+      respondWith({
+        'answer': 'Allez dans Moi.',
+        'answered': true,
+        'actions': [
+          {'route': '/profile/edit/phone', 'label': 'Changer mon numéro'},
+        ],
+        'sources': ['changer-numero'],
+        'provider': 'groq',
+        'remainingToday': 17,
+      });
       final answer = await repository.ask(
         question: 'Où ?',
         locale: 'fr',
@@ -88,14 +95,28 @@ void main() {
     expect(a.remainingToday, 0);
   });
 
-  test('action mal formée ignorée, pas d’exception', () {
+  test('remainingToday numérique non entier (17.0) lu comme 17', () {
+    final a = AssistantAnswer.fromJson(const {
+      'answer': 'x',
+      'remainingToday': 17.0,
+    });
+    expect(a.remainingToday, 17);
+  });
+
+  test('actions incomplètes ignorées, les autres et le texte gardés', () {
     final a = AssistantAnswer.fromJson(const {
       'answer': 'x',
       'actions': [
         'pas une map',
+        {'label': 'Sans route'},
+        {'route': '/sans-libelle'},
+        {'route': '', 'label': 'Route vide'},
+        {'route': '/vide', 'label': '   '},
+        {'route': 42, 'label': 'Route non textuelle'},
         {'route': '/home', 'label': 'Accueil'},
       ],
     });
+    expect(a.answer, 'x');
     expect(a.actions, const [
       AssistantAction(route: '/home', label: 'Accueil'),
     ]);
@@ -135,12 +156,24 @@ void main() {
     expect(answerA == answerC, isFalse);
   });
 
+  test('réponse malformée (corps texte HTML) = réseau, pas de TypeError', () {
+    respondWith('<html>502 Bad Gateway</html>');
+    expect(ask(), throwsA(isA<AssistantNetworkException>()));
+  });
+
+  test('réponse malformée (actions = 3) = réseau, pas de TypeError', () {
+    respondWith({'answer': 'x', 'actions': 3});
+    expect(ask(), throwsA(isA<AssistantNetworkException>()));
+  });
+
+  test('réponse malformée (answer absent) = réseau, pas de TypeError', () {
+    respondWith({'answered': true});
+    expect(ask(), throwsA(isA<AssistantNetworkException>()));
+  });
+
   test('404 = assistant désactivé', () async {
     when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(error(404));
-    expect(
-      () => repository.ask(question: 'q', locale: 'fr', history: const []),
-      throwsA(isA<AssistantDisabledException>()),
-    );
+    expect(ask(), throwsA(isA<AssistantDisabledException>()));
   });
 
   test(
@@ -149,27 +182,39 @@ void main() {
       when(
         () => dio.post(any(), data: any(named: 'data')),
       ).thenThrow(error(403));
-      expect(
-        () => repository.ask(question: 'q', locale: 'fr', history: const []),
-        throwsA(isA<AssistantDisabledException>()),
-      );
+      expect(ask(), throwsA(isA<AssistantDisabledException>()));
     },
   );
 
-  test('429 = quota', () async {
-    when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(error(429));
-    expect(
-      () => repository.ask(question: 'q', locale: 'fr', history: const []),
-      throwsA(isA<AssistantQuotaExceededException>()),
-    );
+  test('429 avec code assistant-quota-exceeded = quota', () async {
+    when(
+      () => dio.post(any(), data: any(named: 'data')),
+    ).thenThrow(error(429, data: {'code': 'assistant-quota-exceeded'}));
+    expect(ask(), throwsA(isA<AssistantQuotaExceededException>()));
+  });
+
+  test('429 sans code (limitation Nginx, corps HTML) = réseau', () async {
+    when(
+      () => dio.post(any(), data: any(named: 'data')),
+    ).thenThrow(error(429, data: '<html>429 Too Many Requests</html>'));
+    expect(ask(), throwsA(isA<AssistantNetworkException>()));
+  });
+
+  test('429 avec un autre code = réseau', () async {
+    when(
+      () => dio.post(any(), data: any(named: 'data')),
+    ).thenThrow(error(429, data: {'code': 'rate-limited'}));
+    expect(ask(), throwsA(isA<AssistantNetworkException>()));
+  });
+
+  test('422 (validation) = réseau', () async {
+    when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(error(422));
+    expect(ask(), throwsA(isA<AssistantNetworkException>()));
   });
 
   test('autre erreur = réseau', () async {
     when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(error(500));
-    expect(
-      () => repository.ask(question: 'q', locale: 'fr', history: const []),
-      throwsA(isA<AssistantNetworkException>()),
-    );
+    expect(ask(), throwsA(isA<AssistantNetworkException>()));
   });
 
   test('erreur sans réponse (hors ligne) = réseau', () async {
@@ -179,10 +224,17 @@ void main() {
         type: DioExceptionType.connectionError,
       ),
     );
-    expect(
-      () => repository.ask(question: 'q', locale: 'fr', history: const []),
-      throwsA(isA<AssistantNetworkException>()),
+    expect(ask(), throwsA(isA<AssistantNetworkException>()));
+  });
+
+  test('délai de réception dépassé = réseau', () async {
+    when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/assistant/ask'),
+        type: DioExceptionType.receiveTimeout,
+      ),
     );
+    expect(ask(), throwsA(isA<AssistantNetworkException>()));
   });
 
   test('les exceptions partagent la hiérarchie AssistantException', () {
