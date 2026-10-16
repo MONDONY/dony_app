@@ -9681,6 +9681,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletTxTypeForfeited => 'Credit lost (account deleted)';
 
   @override
+  String get walletTxOpenParcelHint => 'View parcel';
+
+  @override
   String get walletTxDateTimePattern => 'MMM d · h:mm a';
 
   @override

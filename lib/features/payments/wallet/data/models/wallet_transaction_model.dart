@@ -17,6 +17,12 @@ class WalletTransactionModel {
   /// cette recharge, s'il y en a un (cf. WalletSelfRefundService côté back).
   final String? refundStatus;
 
+  /// Colis (bid) sur lequel porte la ligne : commission prélevée,
+  /// remboursement, paiement d'un colis. `null` pour une ligne sans colis
+  /// (recharge, parrainage...) et avec un back antérieur au champ, qui ne
+  /// l'envoie pas : la ligne reste alors non cliquable.
+  final String? bidId;
+
   const WalletTransactionModel({
     required this.type,
     required this.amount,
@@ -25,6 +31,7 @@ class WalletTransactionModel {
     this.paymentRef,
     required this.createdAt,
     this.refundStatus,
+    this.bidId,
   });
 
   factory WalletTransactionModel.fromJson(Map<String, dynamic> json) =>
@@ -36,7 +43,12 @@ class WalletTransactionModel {
         paymentRef: json['paymentRef'] as String?,
         createdAt: parseServerDateTime(json['createdAt'] as String).toLocal(),
         refundStatus: json['refundStatus'] as String?,
+        bidId: _bidIdOf(json['bidId']),
       );
+
+  /// Tolérant : absent, `null`, vide ou d'un autre type → pas de colis.
+  static String? _bidIdOf(Object? raw) =>
+      raw is String && raw.trim().isNotEmpty ? raw.trim() : null;
 
   bool get isCredit => amount > 0;
   bool get isRefundProcessing =>

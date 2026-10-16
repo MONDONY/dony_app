@@ -399,6 +399,12 @@ abstract final class AnalyticsEvents {
   /// plusieurs devises sont remboursables. Propriété `currency` uniquement.
   static const walletRefundCurrencyChosen = 'wallet_refund_currency_chosen';
 
+  /// Ligne de l'historique du solde liée à un colis touchée (FLUTTER-QP) :
+  /// la fiche du colis s'ouvre. Propriété `type` : code serveur de la ligne
+  /// (`COMMISSION_DEDUCTED`, `REFUND`, `BID_PAYMENT`...). Ni montant ni
+  /// identifiant.
+  static const walletTxParcelOpened = 'wallet_tx_parcel_opened';
+
   /// Changement de portefeuille actif depuis l'écran Portefeuille
   /// (FLUTTER-8F). Propriétés `from` et `to` : codes devise, aucun montant.
   static const walletActiveCurrencySwitched = 'wallet_active_currency_switched';

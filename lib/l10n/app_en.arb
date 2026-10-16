@@ -4935,6 +4935,10 @@
   "@walletTxTypeForfeited": {
       "description": "Libellé d'une transaction FORFEITED_ON_DELETION (wallet_screen.dart _TxTile)."
   },
+  "walletTxOpenParcelHint": "View parcel",
+  "@walletTxOpenParcelHint": {
+    "description": "Indication d'accessibilité d'une ligne de l'historique du solde liée à un colis (bidId) : toucher la ligne ouvre la fiche du colis (wallet_screen.dart _TxTile, FLUTTER-QP)."
+  },
   "walletTxDateTimePattern": "MMM d · h:mm a",
   "@walletTxDateTimePattern": {
     "description": "Motif intl DateFormat, pas un texte. Date d'une ligne de transaction (wallet_screen.dart _TxTile)."

@@ -9745,6 +9745,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get walletTxTypeForfeited => 'Crédit perdu (compte supprimé)';
 
   @override
+  String get walletTxOpenParcelHint => 'Voir le colis';
+
+  @override
   String get walletTxDateTimePattern => 'dd MMM · HH:mm';
 
   @override

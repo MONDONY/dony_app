@@ -831,6 +831,25 @@ class _TxTile extends StatelessWidget {
     _ => tx.type,
   };
 
+  /// Ouvre la fiche du colis de la ligne (FLUTTER-QP), la même que « Mon
+  /// argent » : `/bids/{bidId}`, qui sert l'expéditeur comme le voyageur.
+  /// Au retour, le solde se recharge sans spinner : une action sur le colis
+  /// (annulation, remboursement) a pu le changer.
+  Future<void> _openParcel(BuildContext context, String bidId) async {
+    if (getIt.isRegistered<AnalyticsService>()) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.walletTxParcelOpened,
+          properties: {'type': tx.type},
+        ),
+      );
+    }
+    await context.push('/bids/$bidId');
+    if (context.mounted) {
+      context.read<WalletBloc>().add(WalletRefreshRequested());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -845,78 +864,94 @@ class _TxTile extends StatelessWidget {
     final lineCurrency = tx.currency == null
         ? currency
         : SupportedCurrency.fromCodeOrDefault(tx.currency);
+    final bidId = tx.bidId;
+
+    final card = DonyCard(
+      child: Row(
+        children: [
+          // Icon container
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: isRefundProcessing
+                  ? cs.warningLight
+                  : (isCredit ? DonyColors.blue50 : DonyColors.terra50),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: DonyIcon(
+              isRefundProcessing
+                  ? 'hourglass'
+                  : (isCredit ? 'arrow-down' : 'arrow-up'),
+              color: isRefundProcessing
+                  ? cs.warning
+                  : (isCredit ? cs.primary : DonyColors.terra500),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: DonySpacing.base),
+          // Label + date
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _label(l),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontSize: 14),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isRefundProcessing
+                      ? l.walletRefundProcessingNote
+                      : DateFormat(
+                          l.walletTxDateTimePattern,
+                          l.localeName,
+                        ).format(tx.createdAt),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: isRefundProcessing
+                        ? cs.warning
+                        : cs.onSurfaceVariant,
+                    fontWeight: isRefundProcessing ? FontWeight.w600 : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Amount
+          Text(
+            '$amountPrefix${CurrencyFormatter.format(tx.amount.abs(), lineCurrency)}',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: amountColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          // Ligne liée à un colis : chevron discret, la fiche s'ouvre.
+          if (bidId != null) ...[
+            const SizedBox(width: DonySpacing.xs),
+            DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 16),
+          ],
+        ],
+      ),
+    );
 
     return Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: DonySpacing.lg,
             vertical: DonySpacing.xs,
           ),
-          child: DonyCard(
-            child: Row(
-              children: [
-                // Icon container
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isRefundProcessing
-                        ? cs.warningLight
-                        : (isCredit ? DonyColors.blue50 : DonyColors.terra50),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
-                  child: DonyIcon(
-                    isRefundProcessing
-                        ? 'hourglass'
-                        : (isCredit ? 'arrow-down' : 'arrow-up'),
-                    color: isRefundProcessing
-                        ? cs.warning
-                        : (isCredit ? cs.primary : DonyColors.terra500),
-                    size: 20,
+          child: bidId == null
+              ? card
+              : Semantics(
+                  button: true,
+                  hint: l.walletTxOpenParcelHint,
+                  child: DonyPressable(
+                    key: ValueKey('wallet-tx-parcel-$bidId'),
+                    onTap: () => unawaited(_openParcel(context, bidId)),
+                    child: card,
                   ),
                 ),
-                const SizedBox(width: DonySpacing.base),
-                // Label + date
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _label(l),
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleLarge?.copyWith(fontSize: 14),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        isRefundProcessing
-                            ? l.walletRefundProcessingNote
-                            : DateFormat(
-                                l.walletTxDateTimePattern,
-                                l.localeName,
-                              ).format(tx.createdAt),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isRefundProcessing
-                              ? cs.warning
-                              : cs.onSurfaceVariant,
-                          fontWeight: isRefundProcessing
-                              ? FontWeight.w600
-                              : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Amount
-                Text(
-                  '$amountPrefix${CurrencyFormatter.format(tx.amount.abs(), lineCurrency)}',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: amountColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
         )
         .animate(delay: (60 * index).ms)
         .fadeIn(duration: 250.ms)
