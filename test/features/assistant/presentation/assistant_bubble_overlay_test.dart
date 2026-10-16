@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
+import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_bubble_overlay.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -31,6 +33,8 @@ class _FakeAppPreferencesEvent extends Fake implements AppPreferencesEvent {}
 
 const _bubbleKey = ValueKey('assistant-bubble');
 const _homeButtonKey = ValueKey('home-button');
+const _sheetButtonKey = ValueKey('sheet-button');
+const _dialogButtonKey = ValueKey('dialog-button');
 
 int _homeBuilds = 0;
 int _homeTaps = 0;
@@ -47,6 +51,7 @@ void main() {
   late _MockAuthBloc authBloc;
   late _MockPrefsBloc prefsBloc;
   late GoRouter router;
+  late AssistantBubbleBlockers blockers;
 
   setUpAll(() {
     registerFallbackValue(_FakeAppPreferencesEvent());
@@ -57,10 +62,13 @@ void main() {
     _homeBuilds = 0;
     _homeTaps = 0;
     _assistantSource = null;
+    blockers = AssistantBubbleBlockers();
     assistantBloc = _MockAssistantBloc();
     authBloc = _MockAuthBloc();
     prefsBloc = _MockPrefsBloc();
-    when(() => assistantBloc.state).thenReturn(const AssistantState());
+    when(
+      () => assistantBloc.state,
+    ).thenReturn(const AssistantState(available: true));
     when(() => authBloc.state).thenReturn(AuthAuthenticated(_user));
     when(() => prefsBloc.state).thenReturn(
       const AppPreferencesState(preferences: UserPreferencesModel()),
@@ -90,6 +98,7 @@ void main() {
     addTearDown(tester.view.reset);
     router = GoRouter(
       initialLocation: initialLocation,
+      observers: [AssistantModalObserver(blockers)],
       routes: [
         GoRoute(
           path: '/home',
@@ -98,10 +107,44 @@ void main() {
             return Scaffold(
               body: Align(
                 alignment: Alignment.topLeft,
-                child: TextButton(
-                  key: _homeButtonKey,
-                  onPressed: () => _homeTaps++,
-                  child: const Text('home'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton(
+                      key: _homeButtonKey,
+                      onPressed: () => _homeTaps++,
+                      child: const Text('home'),
+                    ),
+                    Builder(
+                      builder: (context) => TextButton(
+                        key: _sheetButtonKey,
+                        onPressed: () => unawaited(
+                          showModalBottomSheet<void>(
+                            context: context,
+                            useRootNavigator: true,
+                            builder: (_) => const SizedBox(
+                              height: 200,
+                              child: Text('sheet'),
+                            ),
+                          ),
+                        ),
+                        child: const Text('open-sheet'),
+                      ),
+                    ),
+                    Builder(
+                      builder: (context) => TextButton(
+                        key: _dialogButtonKey,
+                        onPressed: () => unawaited(
+                          showDialog<void>(
+                            context: context,
+                            builder: (_) =>
+                                const AlertDialog(content: Text('dialog')),
+                          ),
+                        ),
+                        child: const Text('open-dialog'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -113,6 +156,13 @@ void main() {
             _assistantSource = state.uri.queryParameters['source'];
             return const Scaffold(body: Text('assistant'));
           },
+        ),
+        GoRoute(
+          path: '/camera',
+          builder: (_, _) => HideAssistantBubble(
+            blockers: blockers,
+            child: const Scaffold(body: Text('camera')),
+          ),
         ),
         GoRoute(
           path: '/auth/phone',
@@ -141,7 +191,7 @@ void main() {
                 child: Stack(
                   children: [
                     Positioned.fill(child: child!),
-                    AssistantBubbleOverlay(router: router),
+                    AssistantBubbleOverlay(router: router, blockers: blockers),
                   ],
                 ),
               ),
@@ -151,6 +201,20 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+  }
+
+  /// Transitions de cycle de vie dans l'ordre exigé par Flutter.
+  void backgroundThenResume(WidgetTester tester) {
+    for (final state in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      tester.binding.handleAppLifecycleStateChanged(state);
+    }
   }
 
   Finder bubble() => find.byKey(_bubbleKey);
@@ -268,7 +332,7 @@ void main() {
       expect(visibleRoutePath(router), '/assistant');
       // L’écran envoie lui-même AssistantOpened : l’envoyer ici doublerait
       // l’événement `assistant_opened`.
-      verifyNever(() => assistantBloc.add(any()));
+      verifyNever(() => assistantBloc.add(any(that: isA<AssistantOpened>())));
     });
 
     testWidgets('le premier toucher consomme l’aide', (tester) async {
@@ -357,6 +421,185 @@ void main() {
       );
       await pump(tester);
       expect(tester.getRect(bubble()).left, closeTo(12, 0.5));
+    });
+  });
+
+  group('disponibilité (sonde)', () {
+    testWidgets('absente tant que la sonde n’a pas répondu vrai', (
+      tester,
+    ) async {
+      when(() => assistantBloc.state).thenReturn(const AssistantState());
+      await pump(tester);
+      expect(bubble(), findsNothing);
+    });
+
+    testWidgets('la sonde part à l’entrée en session connectée', (
+      tester,
+    ) async {
+      await pump(tester);
+      verify(
+        () => assistantBloc.add(const AssistantStatusRequested()),
+      ).called(1);
+    });
+
+    testWidgets('pas de sonde pour un invité', (tester) async {
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      await pump(tester);
+      verifyNever(
+        () => assistantBloc.add(any(that: isA<AssistantStatusRequested>())),
+      );
+    });
+
+    testWidgets('la connexion déclenche la sonde, une seule fois', (
+      tester,
+    ) async {
+      final auth = StreamController<AuthState>.broadcast();
+      addTearDown(() => unawaited(auth.close()));
+      whenListen(
+        authBloc,
+        auth.stream,
+        initialState: const AuthGuestSessionReady(),
+      );
+      await pump(tester);
+      auth.add(AuthAuthenticated(_user));
+      await tester.pumpAndSettle();
+      auth.add(AuthProfileUpdated(_user));
+      await tester.pumpAndSettle();
+      verify(
+        () => assistantBloc.add(const AssistantStatusRequested()),
+      ).called(1);
+    });
+
+    testWidgets('retour au premier plan : sonde non forcée', (tester) async {
+      await pump(tester);
+      clearInteractions(assistantBloc);
+      backgroundThenResume(tester);
+      await tester.pump();
+      verify(
+        () => assistantBloc.add(const AssistantStatusRequested(force: false)),
+      ).called(1);
+    });
+
+    testWidgets('retour au premier plan sans session : pas de sonde', (
+      tester,
+    ) async {
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      await pump(tester);
+      backgroundThenResume(tester);
+      await tester.pump();
+      verifyNever(
+        () => assistantBloc.add(any(that: isA<AssistantStatusRequested>())),
+      );
+    });
+  });
+
+  group('session', () {
+    testWidgets('chargement ou erreur d’une session ouverte : la bulle reste', (
+      tester,
+    ) async {
+      final auth = StreamController<AuthState>.broadcast();
+      addTearDown(() => unawaited(auth.close()));
+      whenListen(authBloc, auth.stream, initialState: AuthAuthenticated(_user));
+      await pump(tester);
+      expect(bubble(), findsOneWidget);
+      auth.add(const AuthLoading());
+      await tester.pumpAndSettle();
+      expect(bubble(), findsOneWidget);
+      auth.add(const AuthError(NetworkException('boum')));
+      await tester.pumpAndSettle();
+      expect(bubble(), findsOneWidget);
+    });
+
+    testWidgets('verrou PIN, compte supprimé ou invité : la bulle part', (
+      tester,
+    ) async {
+      final auth = StreamController<AuthState>.broadcast();
+      addTearDown(() => unawaited(auth.close()));
+      whenListen(authBloc, auth.stream, initialState: AuthAuthenticated(_user));
+      await pump(tester);
+      for (final state in <AuthState>[
+        const AuthLocked(),
+        const AuthAccountDeleted(),
+        const AuthGuestSessionReady(),
+      ]) {
+        auth.add(AuthAuthenticated(_user));
+        await tester.pumpAndSettle();
+        expect(bubble(), findsOneWidget);
+        auth.add(state);
+        await tester.pumpAndSettle();
+        expect(bubble(), findsNothing, reason: '$state');
+      }
+    });
+
+    testWidgets('chargement sans session : pas de bulle', (tester) async {
+      when(() => authBloc.state).thenReturn(const AuthLoading());
+      await pump(tester);
+      expect(bubble(), findsNothing);
+    });
+  });
+
+  group('feuilles, dialogues et écrans à caméra', () {
+    testWidgets('feuille ouverte : bulle masquée, fermée : de retour', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.tap(find.byKey(_sheetButtonKey));
+      await tester.pumpAndSettle();
+      expect(find.text('sheet'), findsOneWidget);
+      expect(bubble(), findsNothing);
+      await tester.tapAt(const Offset(200, 100));
+      await tester.pumpAndSettle();
+      expect(find.text('sheet'), findsNothing);
+      expect(bubble(), findsOneWidget);
+    });
+
+    testWidgets('dialogue ouvert : bulle masquée, fermé : de retour', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.tap(find.byKey(_dialogButtonKey));
+      await tester.pumpAndSettle();
+      expect(find.text('dialog'), findsOneWidget);
+      expect(bubble(), findsNothing);
+      await tester.tapAt(const Offset(10, 600));
+      await tester.pumpAndSettle();
+      expect(find.text('dialog'), findsNothing);
+      expect(bubble(), findsOneWidget);
+    });
+
+    testWidgets('écran qui se déclare plein écran : bulle masquée', (
+      tester,
+    ) async {
+      await pump(tester);
+      unawaited(router.push('/camera'));
+      await tester.pumpAndSettle();
+      expect(find.text('camera'), findsOneWidget);
+      expect(bubble(), findsNothing);
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(bubble(), findsOneWidget);
+    });
+  });
+
+  group('bulle d’aide', () {
+    testWidgets('fermée (et écrite) quand on change de route', (tester) async {
+      await pump(tester);
+      expect(find.textContaining('Une question sur l'), findsOneWidget);
+      router.go('/settings/security/change-pin');
+      await tester.pumpAndSettle();
+      router.go('/home');
+      await tester.pumpAndSettle();
+      verify(() => prefsBloc.add(const AssistantHintDismissed())).called(1);
+      expect(find.textContaining('Une question sur l'), findsNothing);
+      expect(bubble(), findsOneWidget);
+    });
+
+    testWidgets('masquée sans écriture tant qu’on reste sur l’écran', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.pump(const Duration(seconds: 1));
+      verifyNever(() => prefsBloc.add(any()));
     });
   });
 

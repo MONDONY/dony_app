@@ -18,8 +18,14 @@ part 'assistant_state.dart';
 /// Conversation éphémère avec l'assistant IA. Singleton de l'app : l'historique
 /// survit à la fermeture de l'écran, pas au redémarrage (rien n'est persisté).
 class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
-  AssistantBloc(this._repository, this._support, this._analytics)
-    : super(const AssistantState()) {
+  AssistantBloc(
+    this._repository,
+    this._support,
+    this._analytics, {
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now,
+       super(const AssistantState()) {
+    on<AssistantStatusRequested>(_onStatus);
     on<AssistantOpened>(_onOpened);
     on<AssistantQuestionSubmitted>(_onQuestion);
     on<AssistantRetryRequested>(_onRetry);
@@ -40,6 +46,10 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
   /// Nombre maximal de tours envoyés au back comme contexte.
   static const int _historyTurns = 12;
 
+  /// Intervalle minimal entre deux sondes non forcées (retour au premier plan).
+  static const Duration statusInterval = Duration(minutes: 10);
+
+  final DateTime Function() _clock;
   final AssistantRepository _repository;
   final SupportRepository _support;
   final AnalyticsService _analytics;
@@ -48,6 +58,38 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
   /// Incrémenté à chaque « Nouvelle conversation » : une réponse qui arrive
   /// après coup pour l'ancienne conversation est écartée.
   int _epoch = 0;
+
+  bool _probing = false;
+  DateTime? _lastProbeAt;
+
+  Future<void> _onStatus(
+    AssistantStatusRequested event,
+    Emitter<AssistantState> emit,
+  ) async {
+    if (_probing) return;
+    final now = _clock();
+    final last = _lastProbeAt;
+    if (!event.force && last != null && now.difference(last) < statusInterval) {
+      return;
+    }
+    _probing = true;
+    _lastProbeAt = now;
+    // Entrée en session : le résultat d'un compte précédent ne compte plus.
+    if (event.force && state.available) {
+      emit(state.copyWith(available: false));
+    }
+    var enabled = false;
+    try {
+      enabled = await _repository.status();
+    } catch (_) {
+      // La sonde ne lève jamais : tout échec vaut « indisponible ».
+    } finally {
+      _probing = false;
+    }
+    // La sonde fait foi : un « éteint » appris d'une question est levé si le
+    // back répond de nouveau.
+    emit(state.copyWith(available: enabled, disabled: enabled ? false : null));
+  }
 
   void _onOpened(AssistantOpened event, Emitter<AssistantState> emit) {
     unawaited(
@@ -162,7 +204,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
       emit(state.copyWith(isSending: false, quotaExceeded: true));
     } on AssistantDisabledException {
       if (epoch != _epoch) return;
-      emit(state.copyWith(isSending: false, disabled: true));
+      emit(state.copyWith(isSending: false, disabled: true, available: false));
     } catch (error, stackTrace) {
       // Réseau, ou toute exception inattendue : jamais bloqué en isSending.
       // Le dépôt ne lève que des AssistantException : tout le reste est un
@@ -195,7 +237,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
 
   void _onReset(AssistantResetRequested event, Emitter<AssistantState> emit) {
     _epoch++;
-    emit(const AssistantState());
+    emit(AssistantState(available: state.available));
   }
 
   void _onFeedback(AssistantFeedbackGiven event, Emitter<AssistantState> emit) {

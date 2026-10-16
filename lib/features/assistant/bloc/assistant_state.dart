@@ -56,6 +56,7 @@ final class AssistantState extends Equatable {
     this.isSending = false,
     this.quotaExceeded = false,
     this.disabled = false,
+    this.available = false,
     this.escalationStatus = AssistantEscalationStatus.idle,
     this.escalatedTicketId,
     this.lastFailedQuestion,
@@ -65,6 +66,10 @@ final class AssistantState extends Equatable {
   final bool isSending;
   final bool quotaExceeded;
   final bool disabled;
+
+  /// Résultat de la sonde `GET /assistant/status` : `false` tant qu'elle n'a
+  /// pas répondu `enabled: true` (bulle et icône cachées par défaut).
+  final bool available;
   final AssistantEscalationStatus escalationStatus;
   final String? escalatedTicketId;
 
@@ -78,6 +83,7 @@ final class AssistantState extends Equatable {
     bool? isSending,
     bool? quotaExceeded,
     bool? disabled,
+    bool? available,
     AssistantEscalationStatus? escalationStatus,
     String? escalatedTicketId,
     String? lastFailedQuestion,
@@ -88,6 +94,7 @@ final class AssistantState extends Equatable {
     isSending: isSending ?? this.isSending,
     quotaExceeded: quotaExceeded ?? this.quotaExceeded,
     disabled: disabled ?? this.disabled,
+    available: available ?? this.available,
     escalationStatus: escalationStatus ?? this.escalationStatus,
     escalatedTicketId: clearEscalatedTicketId
         ? null
@@ -103,6 +110,7 @@ final class AssistantState extends Equatable {
     isSending,
     quotaExceeded,
     disabled,
+    available,
     escalationStatus,
     escalatedTicketId,
     lastFailedQuestion,

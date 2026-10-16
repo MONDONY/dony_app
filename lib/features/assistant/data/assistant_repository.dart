@@ -37,6 +37,20 @@ class AssistantRepository {
     }
   }
 
+  /// Sonde `GET /assistant/status` : l'assistant est-il allumé pour ce compte ?
+  /// Ne lève jamais : tout échec vaut « non disponible ».
+  Future<bool> status() async {
+    try {
+      final response = await _api.dio.get('/assistant/status');
+      final data = response.data;
+      return data is Map && data['enabled'] == true;
+    } catch (_) {
+      // 403 (invité), 404 (back ancien ou assistant éteint), 5xx, hors ligne,
+      // corps illisible : la bulle reste cachée, jamais d'erreur affichée.
+      return false;
+    }
+  }
+
   AssistantException _mapError(DioException e) {
     // 404 : assistant éteint, ou back pas encore déployé (règle des PR
     // jumelles). 403 : invité ou compte sans identifiant, traité comme

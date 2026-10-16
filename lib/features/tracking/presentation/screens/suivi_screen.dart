@@ -5,6 +5,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -689,8 +690,13 @@ class _SuiviBodyState extends State<_SuiviBody> {
     );
   }
 
-  /// Caméra en haut, feuille persistante en dessous.
-  Widget _cameraLayout(SuiviMode mode, ScanHubLoaded? hub) {
+  /// Caméra en haut, feuille persistante en dessous. Même enveloppe dans les
+  /// deux modes : la mise en page garde sa place dans l'arbre. La bulle de
+  /// l'assistant se retire tant que la caméra est affichée.
+  Widget _cameraLayout(SuiviMode mode, ScanHubLoaded? hub) =>
+      HideAssistantBubble(child: _cameraScaffold(mode, hub));
+
+  Widget _cameraScaffold(SuiviMode mode, ScanHubLoaded? hub) {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final textScale = MediaQuery.textScalerOf(context).scale(1);

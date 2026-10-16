@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dony/l10n/l10n.dart';
@@ -19,8 +20,12 @@ const double _hintGap = 8;
 
 const double _hintMaxWidth = 260;
 
-/// Ressort court, quasi critique (dépassement < 1 %) : la bulle s'aimante en
-/// environ 250 ms sans jamais sortir de la zone, et reste interruptible.
+/// L'aide se ferme toute seule après ce délai.
+const Duration _hintTimeout = Duration(seconds: 8);
+
+/// Ressort court (amortissement 0,8, dépassement d'environ 1,5 %, écrêté à la
+/// zone) : la bulle s'aimante en moins de 300 ms sans jamais sortir de la
+/// zone, et reste interruptible.
 const _snapSpring = SpringDescription(mass: 1, stiffness: 900, damping: 48);
 
 /// Zone où le coin haut gauche de la bulle peut se poser.
@@ -167,11 +172,24 @@ class _AssistantBubbleState extends State<AssistantBubble>
     super.initState();
     _spring = AnimationController.unbounded(vsync: this)
       ..addListener(_onSpringTick);
+    _syncHintTimer();
+  }
+
+  Timer? _hintTimer;
+
+  void _syncHintTimer() {
+    if (widget.showHint) {
+      _hintTimer ??= Timer(_hintTimeout, () => widget.onHintDismissed());
+    } else {
+      _hintTimer?.cancel();
+      _hintTimer = null;
+    }
   }
 
   @override
   void didUpdateWidget(AssistantBubble oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _syncHintTimer();
     if (oldWidget.side != widget.side ||
         oldWidget.yFraction != widget.yFraction) {
       _side = widget.side;
@@ -181,6 +199,7 @@ class _AssistantBubbleState extends State<AssistantBubble>
 
   @override
   void dispose() {
+    _hintTimer?.cancel();
     _spring.dispose();
     _moving.dispose();
     _pressed.dispose();
@@ -197,7 +216,6 @@ class _AssistantBubbleState extends State<AssistantBubble>
     // Reprendre la bulle en pleine aimantation : le ressort s'arrête là où
     // elle est, sans saut.
     _spring.stop();
-    if (widget.showHint) widget.onHintDismissed();
     _dragging = true;
     _pressed.value = true;
     _dragOrigin = _moving.value ?? _zone.rest(_side, _y);
@@ -228,8 +246,9 @@ class _AssistantBubbleState extends State<AssistantBubble>
     final target = _zone.rest(side, y);
     _side = side;
     _y = y;
-    // Une seule écriture, au lâcher.
+    // Une seule écriture, au lâcher (position, puis fermeture de l'aide).
     widget.onMoved(side, y);
+    if (widget.showHint) widget.onHintDismissed();
     if (MediaQuery.disableAnimationsOf(context) || current == target) {
       _moving.value = null;
       return;
@@ -273,12 +292,20 @@ class _AssistantBubbleState extends State<AssistantBubble>
             children: [
               if (widget.showHint && moving == null)
                 _buildHint(context, constraints.biggest, position),
+              // Clé : sans elle, l'aide qui disparaît au début du glissement
+              // décale la bulle d'un rang dans le `Stack`, son sous-arbre est
+              // reconstruit et le geste en cours est perdu.
               Positioned(
+                key: const ValueKey('assistant-bubble-position'),
                 left: position.dx,
                 top: position.dy,
                 width: kAssistantBubbleSize,
                 height: kAssistantBubbleSize,
-                child: bubble!,
+                // Couche propre : le glissement ne repeint que la bulle.
+                child: RepaintBoundary(
+                  key: const ValueKey('assistant-bubble-layer'),
+                  child: bubble,
+                ),
               ),
             ],
           );

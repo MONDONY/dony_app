@@ -24,6 +24,7 @@ Future<void> _pumpBubble(
   ThemeData? theme,
   Locale locale = const Locale('fr'),
   bool disableAnimations = false,
+  double textScale = 1,
   void Function(String, double)? onMoved,
   VoidCallback? onTap,
   VoidCallback? onHintDismissed,
@@ -40,9 +41,10 @@ Future<void> _pumpBubble(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(
-          context,
-        ).copyWith(disableAnimations: disableAnimations),
+        data: MediaQuery.of(context).copyWith(
+          disableAnimations: disableAnimations,
+          textScaler: TextScaler.linear(textScale),
+        ),
         child: child!,
       ),
       home: Stack(
@@ -282,7 +284,7 @@ void main() {
       expect(_rect(tester).center.dx, closeTo(start.dx - 200, 25));
       await gesture.moveBy(const Offset(-900, 0));
       await tester.pump();
-      expect(_rect(tester).left, greaterThanOrEqualTo(0));
+      expect(_rect(tester).left, greaterThanOrEqualTo(kAssistantBubbleMargin));
       await gesture.up();
       await tester.pumpAndSettle();
     });
@@ -370,16 +372,82 @@ void main() {
       expect(taps, 0);
     });
 
-    testWidgets('commencer à déplacer la bulle ferme l’aide', (tester) async {
+    testWidgets('pendant le glissement l’aide se cache, elle se ferme au '
+        'lâcher seulement', (tester) async {
       var dismissed = 0;
       await _pumpBubble(
         tester,
         showHint: true,
         onHintDismissed: () => dismissed++,
       );
-      await tester.drag(_bubble, const Offset(-100, 0));
+      final gesture = await tester.startGesture(tester.getCenter(_bubble));
+      await gesture.moveBy(const Offset(-100, 0));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('assistant-hint')), findsNothing);
+      expect(dismissed, 0, reason: 'rien n’est écrit pendant le glissement');
+      await gesture.up();
       await tester.pumpAndSettle();
       expect(dismissed, 1);
+    });
+
+    testWidgets('fermée toute seule après 8 secondes', (tester) async {
+      var dismissed = 0;
+      await _pumpBubble(
+        tester,
+        showHint: true,
+        onHintDismissed: () => dismissed++,
+      );
+      await tester.pump(const Duration(seconds: 7));
+      expect(dismissed, 0);
+      await tester.pump(const Duration(seconds: 2));
+      expect(dismissed, 1);
+    });
+
+    testWidgets('pas de minuteur quand l’aide n’est pas demandée', (
+      tester,
+    ) async {
+      var dismissed = 0;
+      await _pumpBubble(tester, onHintDismissed: () => dismissed++);
+      await tester.pump(const Duration(seconds: 20));
+      expect(dismissed, 0);
+    });
+
+    testWidgets('le minuteur est annulé quand l’aide disparaît', (
+      tester,
+    ) async {
+      var dismissed = 0;
+      await _pumpBubble(
+        tester,
+        showHint: true,
+        onHintDismissed: () => dismissed++,
+      );
+      await tester.pump(const Duration(seconds: 3));
+      await _pumpBubble(tester, onHintDismissed: () => dismissed++);
+      await tester.pump(const Duration(seconds: 20));
+      expect(dismissed, 0);
+    });
+
+    testWidgets('texte à 150 %, l’aide reste dans l’écran', (tester) async {
+      for (final side in ['left', 'right']) {
+        for (final y in [0.0, 1.0]) {
+          await _pumpBubble(
+            tester,
+            showHint: true,
+            side: side,
+            y: y,
+            textScale: 1.5,
+          );
+          await tester.pump(const Duration(milliseconds: 300));
+          final card = tester.getRect(
+            find.byKey(const ValueKey('assistant-hint')),
+          );
+          expect(card.top, greaterThanOrEqualTo(0), reason: '$side $y');
+          expect(card.bottom, lessThanOrEqualTo(844), reason: '$side $y');
+          expect(card.left, greaterThanOrEqualTo(0), reason: '$side $y');
+          expect(card.right, lessThanOrEqualTo(390), reason: '$side $y');
+          expect(_rect(tester).size, const Size(56, 56));
+        }
+      }
     });
 
     testWidgets('l’aide reste dans l’écran, bulle à gauche ou à droite', (
@@ -409,6 +477,17 @@ void main() {
   });
 
   group('accessibilité et rendu', () {
+    testWidgets('la bulle a sa propre couche de rendu', (tester) async {
+      await _pumpBubble(tester);
+      expect(
+        find.ancestor(
+          of: _bubble,
+          matching: find.byKey(const ValueKey('assistant-bubble-layer')),
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('bouton étiqueté, cible d’au moins 44 px', (tester) async {
       final handle = tester.ensureSemantics();
       await _pumpBubble(tester);
@@ -445,15 +524,24 @@ void main() {
             find.descendant(of: _bubble, matching: find.byType(Icon)),
           );
           expect(icon.color, theme.colorScheme.onPrimary);
-          // Aucun dégradé ni ombre colorée dure dans l’arbre de la bulle et de l’aide.
+          // Aucun dégradé dans ce que la bulle et l’aide dessinent vraiment.
+          final scope = find.byType(AssistantBubble);
           for (final box in tester.widgetList<DecoratedBox>(
-            find.byType(DecoratedBox),
+            find.descendant(of: scope, matching: find.byType(DecoratedBox)),
           )) {
             final deco = box.decoration;
-            if (deco is BoxDecoration) {
-              expect(deco.gradient, isNull);
-            }
+            if (deco is BoxDecoration) expect(deco.gradient, isNull);
           }
+          for (final ink in tester.widgetList<Ink>(
+            find.descendant(of: scope, matching: find.byType(Ink)),
+          )) {
+            final deco = ink.decoration;
+            if (deco is BoxDecoration) expect(deco.gradient, isNull);
+          }
+          expect(
+            find.descendant(of: scope, matching: find.byType(ShaderMask)),
+            findsNothing,
+          );
           final hint = tester.widget<Material>(
             find.byKey(const ValueKey('assistant-hint')),
           );

@@ -67,6 +67,17 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
+/// Seuls le thème et la langue changent `MaterialApp.router` : le reste des
+/// préférences (position de la bulle de l'assistant écrite à chaque glissement,
+/// aide vue, unités…) ne doit pas reconstruire l'app entière.
+@visibleForTesting
+bool appPreferencesNeedAppRebuild(
+  AppPreferencesState previous,
+  AppPreferencesState next,
+) =>
+    previous.preferences.themeMode != next.preferences.themeMode ||
+    previous.preferences.languageCode != next.preferences.languageCode;
+
 class DonyApp extends StatefulWidget {
   const DonyApp({super.key});
 
@@ -310,6 +321,7 @@ class _DonyAppState extends State<DonyApp> {
       BlocProvider<ConnectivityCubit>.value(value: getIt<ConnectivityCubit>()),
     ],
     child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
+      buildWhen: appPreferencesNeedAppRebuild,
       builder: (context, prefsState) {
         final themeMode = switch (prefsState.preferences.themeMode) {
           'light' => ThemeMode.light,

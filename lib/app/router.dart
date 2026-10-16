@@ -12,6 +12,7 @@ import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
 import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
+import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/assistant/presentation/screens/assistant_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -351,7 +352,13 @@ final appRouter = GoRouter(
   initialLocation: initialAppLocation,
   // PosthogObserver : auto-capture des vues d'écran ($screen) à chaque
   // changement de route (no-op tant que le consentement n'est pas accordé).
-  observers: [SentryNavigatorObserver(), PosthogObserver()],
+  // `assistantModalObserver` : masque la bulle de l'assistant sous les
+  // feuilles et les dialogues du navigateur racine.
+  observers: [
+    SentryNavigatorObserver(),
+    PosthogObserver(),
+    assistantModalObserver,
+  ],
   redirect: (context, state) {
     // Prioritaire sur tout le reste (auth incluse) : une version qui plante
     // au premier statut de négociation inconnu ne doit jamais laisser

@@ -245,4 +245,66 @@ void main() {
     expect(quota, isA<AssistantException>());
     expect(network, isA<AssistantException>());
   });
+
+  group('status (sonde de disponibilité)', () {
+    void statusAnswers(Object? data) =>
+        when(() => dio.get('/assistant/status')).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(path: '/assistant/status'),
+            data: data,
+          ),
+        );
+
+    void statusFails(DioException e) =>
+        when(() => dio.get('/assistant/status')).thenThrow(e);
+
+    test('200 enabled true : disponible', () async {
+      statusAnswers({'enabled': true});
+      expect(await repository.status(), isTrue);
+    });
+
+    test('200 enabled false : indisponible', () async {
+      statusAnswers({'enabled': false});
+      expect(await repository.status(), isFalse);
+    });
+
+    test('403 (invité) : indisponible, sans exception', () async {
+      statusFails(error(403));
+      expect(await repository.status(), isFalse);
+    });
+
+    test('404 (back ancien) : indisponible, sans exception', () async {
+      statusFails(error(404));
+      expect(await repository.status(), isFalse);
+    });
+
+    test('500 : indisponible, sans exception', () async {
+      statusFails(error(500));
+      expect(await repository.status(), isFalse);
+    });
+
+    test('hors ligne : indisponible, sans exception', () async {
+      statusFails(
+        DioException(
+          requestOptions: RequestOptions(path: '/assistant/status'),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+      expect(await repository.status(), isFalse);
+    });
+
+    test('corps malformé : indisponible', () async {
+      for (final body in <Object?>[
+        'oups',
+        null,
+        <String, dynamic>{},
+        {'enabled': 'true'},
+        {'enabled': 1},
+        [true],
+      ]) {
+        statusAnswers(body);
+        expect(await repository.status(), isFalse, reason: '$body');
+      }
+    });
+  });
 }

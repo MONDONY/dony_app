@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -734,5 +736,129 @@ void main() {
         const AssistantEscalationHandled(),
       );
     });
+  });
+
+  group('sonde de disponibilité', () {
+    test('par défaut la bulle n’est pas disponible', () {
+      expect(build().state.available, isFalse);
+    });
+
+    blocTest<AssistantBloc, AssistantState>(
+      'la sonde qui répond vrai rend l’assistant disponible',
+      build: () {
+        when(() => repository.status()).thenAnswer((_) async => true);
+        return build();
+      },
+      act: (b) => b.add(const AssistantStatusRequested()),
+      expect: () => [
+        isA<AssistantState>().having((s) => s.available, 'available', true),
+      ],
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'la sonde qui répond faux (403, 404, éteint) laisse indisponible',
+      build: () {
+        when(() => repository.status()).thenAnswer((_) async => false);
+        return build();
+      },
+      act: (b) => b.add(const AssistantStatusRequested()),
+      verify: (b) => expect(b.state.available, isFalse),
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'une sonde qui lève est traitée comme indisponible',
+      build: () {
+        when(() => repository.status()).thenThrow(StateError('boum'));
+        return build();
+      },
+      act: (b) => b.add(const AssistantStatusRequested()),
+      verify: (b) => expect(b.state.available, isFalse),
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'un 404 sur une question repasse indisponible',
+      build: () {
+        askAny().thenThrow(const AssistantDisabledException());
+        return build();
+      },
+      seed: () => const AssistantState(available: true),
+      act: (b) => b.add(const AssistantQuestionSubmitted('Où ?', locale: 'fr')),
+      verify: (b) {
+        expect(b.state.disabled, isTrue);
+        expect(b.state.available, isFalse);
+      },
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'nouvelle conversation : la disponibilité est gardée',
+      build: build,
+      seed: () => const AssistantState(available: true),
+      act: (b) => b.add(const AssistantResetRequested()),
+      verify: (b) => expect(b.state.available, isTrue),
+    );
+
+    test('une sonde est ignorée tant qu’une autre est en vol', () async {
+      final gate = Completer<bool>();
+      when(() => repository.status()).thenAnswer((_) => gate.future);
+      final b = build();
+      b.add(const AssistantStatusRequested());
+      b.add(const AssistantStatusRequested());
+      await Future<void>.delayed(Duration.zero);
+      gate.complete(true);
+      await Future<void>.delayed(Duration.zero);
+      verify(() => repository.status()).called(1);
+      expect(b.state.available, isTrue);
+      await b.close();
+    });
+
+    blocTest<AssistantBloc, AssistantState>(
+      'une sonde forcée repart de « indisponible » (autre compte, ancien '
+      'résultat)',
+      build: () {
+        when(() => repository.status()).thenAnswer((_) async => true);
+        return build();
+      },
+      seed: () => const AssistantState(available: true),
+      act: (b) => b.add(const AssistantStatusRequested()),
+      expect: () => [
+        isA<AssistantState>().having((s) => s.available, 'available', false),
+        isA<AssistantState>().having((s) => s.available, 'available', true),
+      ],
+    );
+
+    test('retour au premier plan : au plus une sonde toutes les 10 minutes, '
+        'une sonde forcée passe toujours', () async {
+      var now = DateTime(2026, 10, 16, 12);
+      when(() => repository.status()).thenAnswer((_) async => true);
+      final b = AssistantBloc(repository, support, analytics, clock: () => now);
+      b.add(const AssistantStatusRequested());
+      await Future<void>.delayed(Duration.zero);
+      now = now.add(const Duration(minutes: 9));
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      verify(() => repository.status()).called(1);
+      now = now.add(const Duration(minutes: 2));
+      b.add(const AssistantStatusRequested(force: false));
+      await Future<void>.delayed(Duration.zero);
+      verify(() => repository.status()).called(1);
+      b.add(const AssistantStatusRequested());
+      await Future<void>.delayed(Duration.zero);
+      verify(() => repository.status()).called(1);
+      await b.close();
+    });
+
+    blocTest<AssistantBloc, AssistantState>(
+      'une sonde qui répond vrai efface un ancien « éteint »',
+      build: () {
+        when(() => repository.status()).thenAnswer((_) async => true);
+        return build();
+      },
+      seed: () => const AssistantState(disabled: true),
+      act: (b) => b.add(const AssistantStatusRequested()),
+      verify: (b) {
+        expect(b.state.disabled, isFalse);
+        expect(b.state.available, isTrue);
+      },
+    );
   });
 }

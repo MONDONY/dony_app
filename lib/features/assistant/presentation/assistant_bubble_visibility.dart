@@ -1,4 +1,5 @@
 import 'package:dony/app/deep_link_gate.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 
 /// Préfixes d'écrans où la bulle gênerait ou n'a pas de sens.
 const _excludedPrefixes = <String>[
@@ -21,6 +22,8 @@ const _excludedPrefixes = <String>[
   '/chat/',
   '/conversations/',
   '/support',
+  // Lecteur vidéo des tutoriels.
+  '/profile/help/tutorial/',
   // L'assistant lui-même.
   '/assistant',
 ];
@@ -39,21 +42,53 @@ const _excludedFragments = <String>[
 /// assistant et saisie du code PIN.
 bool isAssistantBubbleExcludedLocation(String path) {
   if (isDeepLinkGateLocation(path)) return true;
+  if (_isMoneyOverview(path)) return false;
   if (_excludedFragments.any(path.contains)) return true;
   return _excludedPrefixes.any(path.startsWith);
 }
 
+/// Portefeuille (solde, historique des remboursements) et « Mon argent » : des
+/// écrans de consultation, pas de paiement. La recharge
+/// (`/payments/wallet/topup/…`), le paiement et l'onboarding de versement
+/// restent exclus.
+bool _isMoneyOverview(String path) =>
+    path == '/payments/wallet' ||
+    path == '/payments/wallet/refunds' ||
+    path == '/payments/money' ||
+    path.startsWith('/payments/money/');
+
 /// La bulle s'affiche pour un compte connecté qui ne l'a pas masquée, tant que
-/// l'assistant est joignable, hors clavier ouvert et hors écrans exclus.
+/// la sonde `/assistant/status` a répondu « disponible » ([available], faux par
+/// défaut) et que l'assistant n'a pas répondu 404 ou 403 ([disabled]), hors clavier ouvert et hors écrans exclus.
 bool shouldShowAssistantBubble({
   required String path,
   required bool signedIn,
   required bool enabled,
   required bool disabled,
+  required bool available,
   required bool keyboardOpen,
 }) =>
+    path.isNotEmpty &&
     signedIn &&
     enabled &&
+    available &&
     !disabled &&
     !keyboardOpen &&
     !isAssistantBubbleExcludedLocation(path);
+
+/// Une session connectée (non invitée) est-elle ouverte après [state] ?
+///
+/// Seuls les états qui ferment la session masquent la bulle (initial, invité,
+/// compte supprimé, verrou PIN). `AuthLoading` et `AuthError` ne disent rien
+/// d'une session déjà ouverte (rafraîchissement du profil, échec d'une
+/// requête) : on garde la réponse précédente, sinon la bulle clignoterait.
+bool assistantSignedInAfter(AuthState state, {required bool previous}) {
+  if (state.currentUser != null) return true;
+  return switch (state) {
+    AuthInitial() ||
+    AuthGuestSessionReady() ||
+    AuthAccountDeleted() ||
+    AuthLocked() => false,
+    _ => previous,
+  };
+}

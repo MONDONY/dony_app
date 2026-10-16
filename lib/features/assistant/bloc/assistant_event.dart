@@ -78,3 +78,15 @@ final class AssistantEscalationRequested extends AssistantEvent {
 final class AssistantEscalationHandled extends AssistantEvent {
   const AssistantEscalationHandled();
 }
+
+/// Sonde de disponibilité. [force] : à l'entrée en session (réinitialise
+/// `available`) ; sinon (retour au premier plan) au plus une fois par
+/// [AssistantBloc.statusInterval].
+final class AssistantStatusRequested extends AssistantEvent {
+  const AssistantStatusRequested({this.force = true});
+
+  final bool force;
+
+  @override
+  List<Object?> get props => [force];
+}
