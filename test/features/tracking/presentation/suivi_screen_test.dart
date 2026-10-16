@@ -9,6 +9,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -604,6 +605,54 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await settle(tester);
   }
+
+  group('bulle de l\'assistant', () {
+    setUp(assistantBubbleBlockers.reset);
+    tearDown(assistantBubbleBlockers.reset);
+
+    testWidgets('caméra du mode Valider : la bulle est masquée', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      expect(find.byKey(const Key('fake-camera')), findsOneWidget);
+      expect(assistantBubbleBlockers.active.value, isTrue);
+    });
+
+    testWidgets('caméra du mode Suivre : la bulle est masquée aussi', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester, location: '/?mode=suivre');
+      expect(find.byKey(const Key('fake-camera')), findsOneWidget);
+      expect(assistantBubbleBlockers.active.value, isTrue);
+    });
+
+    testWidgets('expéditeur, sans caméra : la bulle reste visible', (
+      tester,
+    ) async {
+      await pump(tester, roles: ['SENDER']);
+      expect(find.byKey(const Key('fake-camera')), findsNothing);
+      expect(assistantBubbleBlockers.active.value, isFalse);
+    });
+
+    testWidgets('voyageur sans colis à valider, sans caméra du mode Valider '
+        'chargé : état léger, la bulle reste visible', (tester) async {
+      stubTrips([], {});
+      await pump(tester, location: '/?mode=valider');
+      expect(find.byKey(const Key('fake-camera')), findsNothing);
+      expect(assistantBubbleBlockers.active.value, isFalse);
+    });
+
+    testWidgets('la bulle revient quand l\'écran est quitté', (tester) async {
+      stubDefaultTrips();
+      await pump(tester);
+      expect(assistantBubbleBlockers.active.value, isTrue);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      expect(assistantBubbleBlockers.active.value, isFalse);
+    });
+  });
 
   group('expéditeur (non voyageur)', () {
     testWidgets('ni sélecteur ni caméra, Mes envois et bouton QR', (

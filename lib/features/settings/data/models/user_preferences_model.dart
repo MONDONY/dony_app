@@ -13,6 +13,11 @@ class UserPreferencesModel {
   static const String kLanguageSystem = 'system';
   static const Set<String> _languageCodes = {kLanguageSystem, 'fr', 'en'};
 
+  /// Bulle flottante de l'assistant : côtés possibles et hauteur par défaut.
+  static const String kBubbleSideLeft = 'left';
+  static const String kBubbleSideRight = 'right';
+  static const double kDefaultAssistantBubbleY = 0.65;
+
   final String themeMode;
   final String languageCode;
   final String weightUnit;
@@ -21,6 +26,10 @@ class UserPreferencesModel {
   final bool hidePhoneNumber;
   final bool biometricEnabled;
   final bool appLockBiometricEnabled;
+  final bool assistantBubbleEnabled;
+  final String assistantBubbleSide;
+  final double assistantBubbleY;
+  final bool assistantHintSeen;
 
   const UserPreferencesModel({
     // Thème clair par défaut : le sombre reste accessible, mais il se choisit
@@ -33,6 +42,10 @@ class UserPreferencesModel {
     this.hidePhoneNumber = false,
     this.biometricEnabled = false,
     this.appLockBiometricEnabled = true,
+    this.assistantBubbleEnabled = true,
+    this.assistantBubbleSide = kBubbleSideRight,
+    this.assistantBubbleY = kDefaultAssistantBubbleY,
+    this.assistantHintSeen = false,
   });
 
   UserPreferencesModel copyWith({
@@ -44,6 +57,10 @@ class UserPreferencesModel {
     bool? hidePhoneNumber,
     bool? biometricEnabled,
     bool? appLockBiometricEnabled,
+    bool? assistantBubbleEnabled,
+    String? assistantBubbleSide,
+    double? assistantBubbleY,
+    bool? assistantHintSeen,
   }) => UserPreferencesModel(
     themeMode: themeMode ?? this.themeMode,
     languageCode: languageCode ?? this.languageCode,
@@ -54,6 +71,11 @@ class UserPreferencesModel {
     biometricEnabled: biometricEnabled ?? this.biometricEnabled,
     appLockBiometricEnabled:
         appLockBiometricEnabled ?? this.appLockBiometricEnabled,
+    assistantBubbleEnabled:
+        assistantBubbleEnabled ?? this.assistantBubbleEnabled,
+    assistantBubbleSide: assistantBubbleSide ?? this.assistantBubbleSide,
+    assistantBubbleY: assistantBubbleY ?? this.assistantBubbleY,
+    assistantHintSeen: assistantHintSeen ?? this.assistantHintSeen,
   );
 
   factory UserPreferencesModel.fromHive(Box box) => UserPreferencesModel(
@@ -71,6 +93,25 @@ class UserPreferencesModel {
         box.get(HiveService.kBiometricEnabled, defaultValue: false) as bool,
     appLockBiometricEnabled:
         box.get(HiveService.kAppLockBiometric, defaultValue: true) as bool,
+    assistantBubbleEnabled: _readBool(
+      box,
+      HiveService.kAssistantBubbleEnabled,
+      defaultValue: true,
+    ),
+    assistantBubbleSide: normalizeBubbleSide(
+      box.get(HiveService.kAssistantBubbleSide, defaultValue: kBubbleSideRight),
+    ),
+    assistantBubbleY: normalizeBubbleY(
+      box.get(
+        HiveService.kAssistantBubbleY,
+        defaultValue: kDefaultAssistantBubbleY,
+      ),
+    ),
+    assistantHintSeen: _readBool(
+      box,
+      HiveService.kAssistantHintSeen,
+      defaultValue: false,
+    ),
   );
 
   void writeToHive(Box box) {
@@ -82,6 +123,25 @@ class UserPreferencesModel {
     box.put(HiveService.kHidePhoneNumber, hidePhoneNumber);
     box.put(HiveService.kBiometricEnabled, biometricEnabled);
     box.put(HiveService.kAppLockBiometric, appLockBiometricEnabled);
+    box.put(HiveService.kAssistantBubbleEnabled, assistantBubbleEnabled);
+    box.put(HiveService.kAssistantBubbleSide, assistantBubbleSide);
+    box.put(HiveService.kAssistantBubbleY, assistantBubbleY);
+    box.put(HiveService.kAssistantHintSeen, assistantHintSeen);
+  }
+
+  /// Côté de la bulle : seule la valeur `'left'` garde la gauche, tout le
+  /// reste (valeur inconnue, absente, non textuelle) retombe à droite.
+  static String normalizeBubbleSide(Object? raw) =>
+      raw == kBubbleSideLeft ? kBubbleSideLeft : kBubbleSideRight;
+
+  /// Hauteur de la bulle, toujours dans [0, 1]. Un nombre hors bornes est
+  /// ramené à la borne ; NaN ou une valeur d'un autre type (String, null…)
+  /// revient au défaut, sans jamais lever d'exception.
+  static double normalizeBubbleY(Object? raw) {
+    if (raw is! num) return kDefaultAssistantBubbleY;
+    final y = raw.toDouble();
+    if (y.isNaN) return kDefaultAssistantBubbleY;
+    return y.clamp(0.0, 1.0).toDouble();
   }
 
   static String _readLanguageCode(Box box) {
@@ -92,5 +152,10 @@ class UserPreferencesModel {
     return raw is String && _languageCodes.contains(raw)
         ? raw
         : kLanguageSystem;
+  }
+
+  static bool _readBool(Box box, String key, {required bool defaultValue}) {
+    final raw = box.get(key, defaultValue: defaultValue);
+    return raw is bool ? raw : defaultValue;
   }
 }

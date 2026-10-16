@@ -104,6 +104,7 @@ int _matchingBrace(String text, int openIndex) {
 /// Clés dont l'anglais est volontairement identique au français.
 /// Toute nouvelle entrée doit être justifiée en commentaire.
 const _sameInBothLanguages = <String>{
+  'assistantCharCount', // « {count}/500 » : chiffres seuls
   'moneyChannelMobileMoney', // nom de service, FLUTTER-P3
   'flightsRouteTitle', // « {origin} → {destination} » : le trajet, sans mot
   'flightsStopsDirect', // « Direct » se dit pareil
@@ -116,6 +117,7 @@ const _sameInBothLanguages = <String>{
   'flightsVia', // « via {gate} » se dit pareil
   'recipientNotifyRoute', // « (Paris → Dakar) » : seulement le trajet, sans mot
   'commonOk', // « OK » se dit pareil
+  'assistantTranscriptAssistant', // « Assistant » se dit pareil
   'tripStopsDirect', // « Direct » (vol direct) se dit pareil (FLUTTER-GE)
   'tripLegSheetCurrencyOption', // « {name} ({symbol}) » : sans mot (FLUTTER-HP)
   'tripLegSheetKgSuffix', // « kg » : unité (FLUTTER-HN)
@@ -250,6 +252,7 @@ const _sameInBothLanguages = <String>{
   'dsUrgent', // « 🔥 Urgent » se dit pareil (tâche J1)
   'feedbackKindBug', // « Bug » se dit pareil
   'feedbackKindSuggestion', // « Suggestion » se dit pareil
+  'settingsSectionAssistant', // « ASSISTANT » se dit pareil
 };
 
 void main() {

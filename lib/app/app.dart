@@ -20,6 +20,7 @@ import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
+import 'package:dony/features/assistant/presentation/widgets/assistant_bubble_overlay.dart';
 import 'package:dony/features/auth/account_reset_guard.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -67,6 +68,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+
+/// Seuls le thème et la langue changent `MaterialApp.router` : le reste des
+/// préférences (position de la bulle de l'assistant écrite à chaque glissement,
+/// aide vue, unités…) ne doit pas reconstruire l'app entière.
+@visibleForTesting
+bool appPreferencesNeedAppRebuild(
+  AppPreferencesState previous,
+  AppPreferencesState next,
+) =>
+    previous.preferences.themeMode != next.preferences.themeMode ||
+    previous.preferences.languageCode != next.preferences.languageCode;
 
 class DonyApp extends StatefulWidget {
   const DonyApp({super.key});
@@ -316,6 +328,7 @@ class _DonyAppState extends State<DonyApp> {
       BlocProvider<ConnectivityCubit>.value(value: getIt<ConnectivityCubit>()),
     ],
     child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
+      buildWhen: appPreferencesNeedAppRebuild,
       builder: (context, prefsState) {
         final themeMode = switch (prefsState.preferences.themeMode) {
           'light' => ThemeMode.light,
@@ -632,12 +645,23 @@ class _DonyAppState extends State<DonyApp> {
                                         appRouter.push(activeCallLocation),
                                       ),
                                     ),
+                                    // Bulle de l'assistant : au-dessus de
+                                    // toutes les routes, sous les bandeaux
+                                    // (connexion, appel en cours).
                                     Expanded(
-                                      child: LanguageSyncGate(
-                                        child: AnalyticsConsentGate(
-                                          child:
-                                              child ?? const SizedBox.shrink(),
-                                        ),
+                                      child: Stack(
+                                        children: [
+                                          Positioned.fill(
+                                            child: LanguageSyncGate(
+                                              child: AnalyticsConsentGate(
+                                                child:
+                                                    child ??
+                                                    const SizedBox.shrink(),
+                                              ),
+                                            ),
+                                          ),
+                                          const AssistantBubbleOverlay(),
+                                        ],
                                       ),
                                     ),
                                   ],

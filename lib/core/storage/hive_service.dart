@@ -96,6 +96,15 @@ class HiveService {
   static const String kBiometricEnabled = 'biometric_enabled'; // bool
   static const String kAppLockBiometric = 'app_lock_biometric'; // bool
 
+  // ── Assistant IA : bulle flottante ───────────────────────────────────────
+  static const String kAssistantBubbleEnabled =
+      'assistant_bubble_enabled'; // bool
+  static const String kAssistantBubbleSide =
+      'assistant_bubble_side'; // 'left' | 'right'
+  // Hauteur relative de la bulle, de 0 à 1. Lue bornée, voir UserPreferencesModel.
+  static const String kAssistantBubbleY = 'assistant_bubble_y'; // double
+  static const String kAssistantHintSeen = 'assistant_hint_seen'; // bool
+
   // ── Analytics (consentement RGPD opt-in) ─────────────────────────────────
   // null = pas encore demandé · true = accepté · false = refusé.
   static const String kAnalyticsConsent = 'analytics_consent'; // bool?

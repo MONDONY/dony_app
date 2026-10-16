@@ -252,5 +252,169 @@ void main() {
         ).called(1),
       );
     });
+
+    group('bulle de l’assistant', () {
+      test('valeurs par défaut de la bulle', () {
+        final bloc = AppPreferencesBloc(mockBox);
+        final prefs = bloc.state.preferences;
+        expect(prefs.assistantBubbleEnabled, isTrue);
+        expect(prefs.assistantBubbleSide, 'right');
+        expect(prefs.assistantBubbleY, 0.65);
+        expect(prefs.assistantHintSeen, isFalse);
+        bloc.close();
+      });
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'déplacer la bulle borne la hauteur et écrit dans Hive',
+        build: () => AppPreferencesBloc(mockBox),
+        act: (bloc) => bloc.add(const AssistantBubbleMoved('left', 1.4)),
+        expect: () => [
+          isA<AppPreferencesState>()
+              .having((s) => s.preferences.assistantBubbleSide, 'side', 'left')
+              .having((s) => s.preferences.assistantBubbleY, 'y', 1.0),
+        ],
+        verify: (_) {
+          verify(
+            () => mockBox.put(HiveService.kAssistantBubbleSide, 'left'),
+          ).called(1);
+          verify(
+            () => mockBox.put(HiveService.kAssistantBubbleY, 1.0),
+          ).called(1);
+        },
+      );
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'côté inconnu retombe à droite',
+        build: () => AppPreferencesBloc(mockBox),
+        act: (bloc) => bloc.add(const AssistantBubbleMoved('haut', 0.3)),
+        expect: () => [
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.assistantBubbleSide,
+            'side',
+            'right',
+          ),
+        ],
+      );
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'désactiver, réinitialiser, bulle d’aide vue',
+        build: () => AppPreferencesBloc(mockBox),
+        act: (bloc) => bloc
+          ..add(const AssistantBubbleToggled(false))
+          ..add(const AssistantBubbleMoved('left', 0.2))
+          ..add(const AssistantBubbleReset())
+          ..add(const AssistantHintDismissed()),
+        expect: () => [
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.assistantBubbleEnabled,
+            'off',
+            false,
+          ),
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.assistantBubbleSide,
+            'left',
+            'left',
+          ),
+          isA<AppPreferencesState>()
+              .having(
+                (s) => s.preferences.assistantBubbleSide,
+                'reset',
+                'right',
+              )
+              .having((s) => s.preferences.assistantBubbleY, 'y', 0.65),
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.assistantHintSeen,
+            'hint',
+            true,
+          ),
+        ],
+      );
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'une hauteur NaN ne remplace pas la hauteur courante',
+        build: () => AppPreferencesBloc(mockBox),
+        seed: () => const AppPreferencesState(
+          preferences: UserPreferencesModel(assistantBubbleY: 0.3),
+        ),
+        act: (bloc) => bloc.add(const AssistantBubbleMoved('left', double.nan)),
+        expect: () => [
+          isA<AppPreferencesState>()
+              .having((s) => s.preferences.assistantBubbleSide, 'side', 'left')
+              .having((s) => s.preferences.assistantBubbleY, 'y', 0.3),
+        ],
+      );
+
+      test('les événements de bulle exposent leurs props', () {
+        const moved = AssistantBubbleMoved('left', 0.2);
+        expect(moved.props, equals(['left', 0.2]));
+        const toggled = AssistantBubbleToggled(false);
+        expect(toggled.props, equals([false]));
+      });
+
+      group('lecture Hive : jamais de plantage, valeurs bornées', () {
+        void stubGet(String key, Object? value) => when(
+          () => mockBox.get(key, defaultValue: any(named: 'defaultValue')),
+        ).thenReturn(value);
+
+        test('hauteur hors bornes ramenée entre 0 et 1', () {
+          stubGet(HiveService.kAssistantBubbleY, 2.5);
+          expect(UserPreferencesModel.fromHive(mockBox).assistantBubbleY, 1.0);
+          stubGet(HiveService.kAssistantBubbleY, -3.0);
+          expect(UserPreferencesModel.fromHive(mockBox).assistantBubbleY, 0.0);
+          stubGet(HiveService.kAssistantBubbleY, double.infinity);
+          expect(UserPreferencesModel.fromHive(mockBox).assistantBubbleY, 1.0);
+        });
+
+        test('hauteur NaN revient au défaut 0.65', () {
+          stubGet(HiveService.kAssistantBubbleY, double.nan);
+          expect(UserPreferencesModel.fromHive(mockBox).assistantBubbleY, 0.65);
+        });
+
+        test('hauteur d’un mauvais type revient au défaut sans lever', () {
+          stubGet(HiveService.kAssistantBubbleY, 'haut');
+          expect(UserPreferencesModel.fromHive(mockBox).assistantBubbleY, 0.65);
+          stubGet(HiveService.kAssistantBubbleY, null);
+          expect(UserPreferencesModel.fromHive(mockBox).assistantBubbleY, 0.65);
+        });
+
+        test('hauteur entière lue comme nombre puis bornée', () {
+          stubGet(HiveService.kAssistantBubbleY, 1);
+          expect(UserPreferencesModel.fromHive(mockBox).assistantBubbleY, 1.0);
+          stubGet(HiveService.kAssistantBubbleY, 5);
+          expect(UserPreferencesModel.fromHive(mockBox).assistantBubbleY, 1.0);
+        });
+
+        test('côté inconnu, absent ou non textuel retombe à droite', () {
+          stubGet(HiveService.kAssistantBubbleSide, 'top');
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantBubbleSide,
+            'right',
+          );
+          stubGet(HiveService.kAssistantBubbleSide, 42);
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantBubbleSide,
+            'right',
+          );
+          stubGet(HiveService.kAssistantBubbleSide, 'left');
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantBubbleSide,
+            'left',
+          );
+        });
+
+        test('booléens d’un mauvais type retombent au défaut', () {
+          stubGet(HiveService.kAssistantBubbleEnabled, 'oui');
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantBubbleEnabled,
+            isTrue,
+          );
+          stubGet(HiveService.kAssistantHintSeen, 1);
+          expect(
+            UserPreferencesModel.fromHive(mockBox).assistantHintSeen,
+            isFalse,
+          );
+        });
+      });
+    });
   });
 }

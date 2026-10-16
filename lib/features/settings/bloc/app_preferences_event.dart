@@ -30,3 +30,30 @@ class BiometricToggled extends AppPreferencesEvent {
 class AppLockBiometricToggled extends AppPreferencesEvent {
   const AppLockBiometricToggled();
 }
+
+class AssistantBubbleToggled extends AppPreferencesEvent {
+  final bool enabled;
+  const AssistantBubbleToggled(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
+/// Déplacement de la bulle : le côté est normalisé (inconnu → droite) et la
+/// hauteur bornée entre 0 et 1 (NaN ignoré, la hauteur courante est gardée).
+class AssistantBubbleMoved extends AppPreferencesEvent {
+  final String side; // 'left' | 'right'
+  final double y; // 0 à 1
+  const AssistantBubbleMoved(this.side, this.y);
+
+  @override
+  List<Object?> get props => [side, y];
+}
+
+class AssistantBubbleReset extends AppPreferencesEvent {
+  const AssistantBubbleReset();
+}
+
+class AssistantHintDismissed extends AppPreferencesEvent {
+  const AssistantHintDismissed();
+}

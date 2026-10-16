@@ -20483,6 +20483,30 @@ abstract class AppLocalizations {
   /// **'INFORMATIONS'**
   String get settingsSectionInformation;
 
+  /// En-tête de section des réglages de l'assistant IA (settings_screen.dart). Section visible seulement si l'assistant est disponible.
+  ///
+  /// In fr, this message translates to:
+  /// **'ASSISTANT'**
+  String get settingsSectionAssistant;
+
+  /// Libellé de l'interrupteur qui affiche ou masque la bulle flottante de l'assistant (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bulle de l\'assistant'**
+  String get settingsAssistantBubbleLabel;
+
+  /// Sous-titre de l'interrupteur de la bulle de l'assistant (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Visible sur tous les écrans. Éteinte, l\'assistant reste accessible depuis l\'en-tête de Messages.'**
+  String get settingsAssistantBubbleSubtitle;
+
+  /// Ligne qui replace la bulle de l'assistant à sa position d'origine (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettre la bulle à sa place'**
+  String get settingsAssistantBubbleReset;
+
   /// Libellé de la tuile de navigation vers les CGU (settings_screen.dart)
   ///
   /// In fr, this message translates to:
@@ -32791,6 +32815,216 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Réessayer'**
   String get parcelLinkRetry;
+
+  /// Libellé de l'utilisateur dans l'échange copié dans le ticket support créé depuis l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous'**
+  String get assistantTranscriptYou;
+
+  /// Libellé de l'assistant dans l'échange copié dans le ticket support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assistant'**
+  String get assistantTranscriptAssistant;
+
+  /// Titre de l'échange ajouté sous la dernière question dans le ticket support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échange avec l\'assistant :'**
+  String get assistantTranscriptHeader;
+
+  /// Sujet du ticket quand l'utilisateur passe à un humain sans avoir posé de question.
+  ///
+  /// In fr, this message translates to:
+  /// **'Question depuis l\'assistant'**
+  String get assistantEscalationDefaultSubject;
+
+  /// Titre de l'écran de l'assistant IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assistant Yadony'**
+  String get assistantTitle;
+
+  /// Pastille « intelligence artificielle » à côté du titre de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'IA'**
+  String get assistantBadge;
+
+  /// Sous-titre de l'écran de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Répond sur le fonctionnement de l\'app'**
+  String get assistantSubtitle;
+
+  /// Premier message de l'assistant, affiché sur une conversation vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour ! Je suis l\'assistant de Yadony. Posez-moi une question sur l\'app : je vous explique et je vous emmène au bon écran.'**
+  String get assistantWelcome;
+
+  /// Mention IA obligatoire sous le message d'accueil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je suis une IA et je peux me tromper. Pour votre compte, un colis ou un paiement, un membre de l\'équipe vous répond. Ne saisissez pas de données personnelles.'**
+  String get assistantDisclaimer;
+
+  /// Titre de la liste de questions suggérées.
+  ///
+  /// In fr, this message translates to:
+  /// **'Questions fréquentes'**
+  String get assistantSuggestionsTitle;
+
+  /// Question suggérée 1 (envoi d'un colis).
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment envoyer un colis ?'**
+  String get assistantSuggestion1;
+
+  /// Question suggérée 2 (publication d'un trajet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment proposer un trajet ?'**
+  String get assistantSuggestion2;
+
+  /// Question suggérée 3 (paiement du voyageur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand le voyageur est-il payé ?'**
+  String get assistantSuggestion3;
+
+  /// Question suggérée 4 (vérification d'identité).
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment vérifier mon identité ?'**
+  String get assistantSuggestion4;
+
+  /// Indication du champ de saisie de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Posez votre question…'**
+  String get assistantInputHint;
+
+  /// Libellé accessible du bouton d'envoi de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get assistantSend;
+
+  /// Bouton d'action d'une réponse : ouvre l'écran proposé. {label} : nom de l'écran.
+  ///
+  /// In fr, this message translates to:
+  /// **'Y aller : {label}'**
+  String assistantGoTo(String label);
+
+  /// Libellé accessible du pouce levé sur une réponse de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse utile'**
+  String get assistantThumbUp;
+
+  /// Libellé accessible du pouce baissé sur une réponse de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse pas utile'**
+  String get assistantThumbDown;
+
+  /// Bouton sous une réponse : passe la conversation à l'équipe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parler à un humain'**
+  String get assistantTalkToHuman;
+
+  /// Titre de la carte de passage à l'équipe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Besoin qu\'on regarde votre compte ?'**
+  String get assistantEscalationTitle;
+
+  /// Corps de la carte de passage à l'équipe.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'équipe Yadony reçoit votre question et cet échange. Vous retrouverez sa réponse dans Messages, conversation Yadony Support.'**
+  String get assistantEscalationBody;
+
+  /// Bouton de la carte de passage à l'équipe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrire à l\'équipe'**
+  String get assistantEscalate;
+
+  /// Message affiché quand la création du ticket depuis l'assistant échoue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le message n\'est pas parti. Réessayez.'**
+  String get assistantEscalationFailed;
+
+  /// Message de panne affiché à la place d'une réponse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je n\'ai pas pu répondre. Vérifiez votre connexion.'**
+  String get assistantError;
+
+  /// Bouton qui renvoie la question restée sans réponse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get assistantRetry;
+
+  /// Message affiché quand le quota quotidien de questions est atteint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez posé beaucoup de questions aujourd\'hui. Réessayez demain, ou écrivez à l\'équipe.'**
+  String get assistantQuota;
+
+  /// Libellé accessible de l'indicateur de saisie de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'assistant écrit'**
+  String get assistantTyping;
+
+  /// Libellé accessible du menu de l'écran de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus d\'options'**
+  String get assistantMenu;
+
+  /// Entrée du menu qui vide la conversation avec l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle conversation'**
+  String get assistantReset;
+
+  /// Libellé accessible de la bulle et de l'icône qui ouvrent l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir l\'assistant'**
+  String get assistantOpen;
+
+  /// Compteur de caractères du champ de l'assistant (limite 500). {count} : caractères saisis.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count}/500'**
+  String assistantCharCount(int count);
+
+  /// Écran de l'assistant quand il est éteint ou que le compte n'y a pas accès.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'assistant n\'est pas disponible pour le moment. Vous pouvez écrire à l\'équipe.'**
+  String get assistantUnavailable;
+
+  /// Titre de la bulle d'aide montrée une seule fois à côté de la bulle flottante de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une question sur l\'app ?'**
+  String get assistantHintTitle;
+
+  /// Texte de la bulle d'aide de la bulle flottante : elle guide et peut être déplacée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je vous guide jusqu\'au bon écran. Glissez-moi où vous voulez.'**
+  String get assistantHintBody;
 
   /// Titre de l'écran de maintenance, affiché quand l'administrateur active le mode maintenance (maintenance_screen.dart).
   ///

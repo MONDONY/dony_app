@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
@@ -467,6 +468,42 @@ List<_ListItem> _buildGroupedItems(
 
 // ── Header : titre + recherche + pills ────────────────────────────────────────
 
+/// Entrée de l'assistant dans l'en-tête de Messages : reste là quand la bulle
+/// flottante est éteinte dans Réglages. Comme la bulle et la section des
+/// Réglages, elle n'existe que si l'assistant est disponible et non coupé
+/// (RB10). L'écran `/assistant` envoie lui-même `AssistantOpened` d'après le
+/// paramètre `source`.
+class _AssistantHeaderButton extends StatelessWidget {
+  const _AssistantHeaderButton();
+
+  @override
+  Widget build(BuildContext context) {
+    if (!getIt.isRegistered<AssistantBloc>()) return const SizedBox.shrink();
+    return BlocSelector<AssistantBloc, AssistantState, bool>(
+      bloc: getIt<AssistantBloc>(),
+      selector: (state) => state.available && !state.disabled,
+      builder: (context, visible) {
+        if (!visible) return const SizedBox.shrink();
+        final cs = Theme.of(context).colorScheme;
+        return Padding(
+          padding: const EdgeInsets.only(right: DonySpacing.xs),
+          child: IconButton(
+            key: const Key('messages-header-assistant'),
+            tooltip: context.l10n.assistantOpen,
+            style: IconButton.styleFrom(
+              backgroundColor: cs.primaryContainer,
+              foregroundColor: cs.primary,
+              fixedSize: const Size(kDonyMinTapTarget, kDonyMinTapTarget),
+            ),
+            icon: DonyIcon('sparkles', size: 22, color: cs.primary),
+            onPressed: () => context.push('/assistant?source=messages_header'),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _MessagesHeader extends StatelessWidget {
   final TextEditingController searchController;
   final ConversationFilter activeFilter;
@@ -503,6 +540,7 @@ class _MessagesHeader extends StatelessWidget {
               children: [
                 Text(l.conversationListTitle, style: tt.headlineLarge),
                 const Spacer(),
+                const _AssistantHeaderButton(),
                 // L'accès aux archives est la ligne « Archivées » en tête de
                 // liste (FLUTTER-FR), plus une icône d'en-tête.
                 const DonyFeedbackButton(),

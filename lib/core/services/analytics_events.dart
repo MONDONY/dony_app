@@ -328,6 +328,37 @@ abstract final class AnalyticsEvents {
   /// Image jointe à un message support uploadée avec succès. Aucune propriété
   /// (ni chemin, ni taille, ni contenu — PII).
   static const supportAttachmentAdded = 'support_attachment_added';
+
+  // Assistant IA (bulle in-app). Aucun texte de question ou de réponse ne
+  // part jamais dans les properties.
+  /// Bulle de l'assistant ouverte.
+  static const assistantOpened = 'assistant_opened';
+
+  /// Question envoyée au back.
+  static const assistantQuestionAsked = 'assistant_question_asked';
+
+  /// Réponse reçue du back.
+  static const assistantAnswerReceived = 'assistant_answer_received';
+
+  /// Bouton d'action d'une réponse touché.
+  static const assistantActionTapped = 'assistant_action_tapped';
+
+  /// Action proposée sans écran correspondant dans l'app.
+  static const assistantActionUnmatched = 'assistant_action_unmatched';
+
+  /// Retour donné sur une réponse.
+  static const assistantFeedback = 'assistant_feedback';
+
+  /// Demande de transfert vers le support humain.
+  static const assistantEscalated = 'assistant_escalated';
+
+  /// Quota quotidien atteint.
+  static const assistantQuotaReached = 'assistant_quota_reached';
+
+  /// Bulle de l'assistant allumée ou éteinte dans Réglages (propriété
+  /// `enabled`).
+  static const assistantBubbleToggled = 'assistant_bubble_toggled';
+
   static const helpCenterOpened = 'help_center_opened';
   static const helpTutorialOpened = 'help_tutorial_opened';
   static const helpTutorialPlayStarted = 'help_tutorial_play_started';
