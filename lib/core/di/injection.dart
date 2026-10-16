@@ -28,6 +28,7 @@ import 'package:dony/features/activation/data/activation_repository.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
 import 'package:dony/features/app_update/data/services/app_update_service.dart';
+import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/data/assistant_repository.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -1007,6 +1008,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Assistant IA (dépôt REST, pas de cache ni de temps réel)
   getIt.registerLazySingleton<AssistantRepository>(
     () => AssistantRepository(getIt<ApiClient>()),
+  );
+  // Singleton : la conversation survit à la fermeture de l'écran (en mémoire
+  // seulement, perdue au redémarrage de l'app).
+  getIt.registerLazySingleton<AssistantBloc>(
+    () => AssistantBloc(
+      getIt<AssistantRepository>(),
+      getIt<SupportRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Settings — Account Deletion

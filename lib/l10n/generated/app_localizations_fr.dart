@@ -20354,4 +20354,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get parcelLinkRetry => 'Réessayer';
+
+  @override
+  String get assistantTranscriptYou => 'Vous';
+
+  @override
+  String get assistantTranscriptAssistant => 'Assistant';
+
+  @override
+  String get assistantTranscriptHeader => 'Échange avec l\'assistant :';
+
+  @override
+  String get assistantEscalationDefaultSubject =>
+      'Question depuis l\'assistant';
 }

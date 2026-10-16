@@ -116,6 +116,7 @@ const _sameInBothLanguages = <String>{
   'flightsVia', // « via {gate} » se dit pareil
   'recipientNotifyRoute', // « (Paris → Dakar) » : seulement le trajet, sans mot
   'commonOk', // « OK » se dit pareil
+  'assistantTranscriptAssistant', // « Assistant » se dit pareil
   'tripStopsDirect', // « Direct » (vol direct) se dit pareil (FLUTTER-GE)
   'tripLegSheetCurrencyOption', // « {name} ({symbol}) » : sans mot (FLUTTER-HP)
   'tripLegSheetKgSuffix', // « kg » : unité (FLUTTER-HN)

@@ -21438,5 +21438,13 @@
   "parcelLinkNotLinkedBody": "Si vous devez le récupérer, demandez à l'expéditeur d'indiquer votre numéro, ou écrivez au support.",
   "@parcelLinkNotLinkedBody": {"description": "Explication sous parcelLinkNotLinkedTitle."},
   "parcelLinkRetry": "Réessayer",
-  "@parcelLinkRetry": {"description": "Bouton qui relance la vérification du lien colis après une erreur."}
+  "@parcelLinkRetry": {"description": "Bouton qui relance la vérification du lien colis après une erreur."},
+  "assistantTranscriptYou": "Vous",
+  "@assistantTranscriptYou": {"description": "Libellé de l'utilisateur dans l'échange copié dans le ticket support créé depuis l'assistant."},
+  "assistantTranscriptAssistant": "Assistant",
+  "@assistantTranscriptAssistant": {"description": "Libellé de l'assistant dans l'échange copié dans le ticket support."},
+  "assistantTranscriptHeader": "Échange avec l'assistant :",
+  "@assistantTranscriptHeader": {"description": "Titre de l'échange ajouté sous la dernière question dans le ticket support."},
+  "assistantEscalationDefaultSubject": "Question depuis l'assistant",
+  "@assistantEscalationDefaultSubject": {"description": "Sujet du ticket quand l'utilisateur passe à un humain sans avoir posé de question."}
 }

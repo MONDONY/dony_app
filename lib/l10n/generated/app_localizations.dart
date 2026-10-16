@@ -32791,6 +32791,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Réessayer'**
   String get parcelLinkRetry;
+
+  /// Libellé de l'utilisateur dans l'échange copié dans le ticket support créé depuis l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous'**
+  String get assistantTranscriptYou;
+
+  /// Libellé de l'assistant dans l'échange copié dans le ticket support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assistant'**
+  String get assistantTranscriptAssistant;
+
+  /// Titre de l'échange ajouté sous la dernière question dans le ticket support.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échange avec l\'assistant :'**
+  String get assistantTranscriptHeader;
+
+  /// Sujet du ticket quand l'utilisateur passe à un humain sans avoir posé de question.
+  ///
+  /// In fr, this message translates to:
+  /// **'Question depuis l\'assistant'**
+  String get assistantEscalationDefaultSubject;
 }
 
 class _AppLocalizationsDelegate

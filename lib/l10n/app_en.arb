@@ -10640,5 +10640,9 @@
   "parcelLinkTitle": "Parcel",
   "parcelLinkNotLinkedTitle": "This parcel isn't linked to your account",
   "parcelLinkNotLinkedBody": "If you need to collect it, ask the sender to add your phone number, or contact support.",
-  "parcelLinkRetry": "Try again"
+  "parcelLinkRetry": "Try again",
+  "assistantTranscriptYou": "You",
+  "assistantTranscriptAssistant": "Assistant",
+  "assistantTranscriptHeader": "Conversation with the assistant:",
+  "assistantEscalationDefaultSubject": "Question from the assistant"
 }

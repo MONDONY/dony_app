@@ -20221,4 +20221,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parcelLinkRetry => 'Try again';
+
+  @override
+  String get assistantTranscriptYou => 'You';
+
+  @override
+  String get assistantTranscriptAssistant => 'Assistant';
+
+  @override
+  String get assistantTranscriptHeader => 'Conversation with the assistant:';
+
+  @override
+  String get assistantEscalationDefaultSubject => 'Question from the assistant';
 }
