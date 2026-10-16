@@ -21504,5 +21504,9 @@
   "assistantCharCount": "{count}/500",
   "@assistantCharCount": {"description": "Compteur de caractères du champ de l'assistant (limite 500). {count} : caractères saisis.", "placeholders": {"count": {"type": "int"}}},
   "assistantUnavailable": "L'assistant n'est pas disponible pour le moment. Vous pouvez écrire à l'équipe.",
-  "@assistantUnavailable": {"description": "Écran de l'assistant quand il est éteint ou que le compte n'y a pas accès."}
+  "@assistantUnavailable": {"description": "Écran de l'assistant quand il est éteint ou que le compte n'y a pas accès."},
+  "assistantHintTitle": "Une question sur l'app ?",
+  "@assistantHintTitle": {"description": "Titre de la bulle d'aide montrée une seule fois à côté de la bulle flottante de l'assistant."},
+  "assistantHintBody": "Je vous guide jusqu'au bon écran. Glissez-moi où vous voulez.",
+  "@assistantHintBody": {"description": "Texte de la bulle d'aide de la bulle flottante : elle guide et peut être déplacée."}
 }

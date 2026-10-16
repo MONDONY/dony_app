@@ -20,6 +20,7 @@ import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
+import 'package:dony/features/assistant/presentation/widgets/assistant_bubble_overlay.dart';
 import 'package:dony/features/auth/account_reset_guard.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -621,11 +622,23 @@ class _DonyAppState extends State<DonyApp> {
                                       appRouter.push(activeCallLocation),
                                     ),
                                   ),
+                                  // Bulle de l'assistant : au-dessus de
+                                  // toutes les routes, sous les bandeaux
+                                  // (connexion, appel en cours).
                                   Expanded(
-                                    child: LanguageSyncGate(
-                                      child: AnalyticsConsentGate(
-                                        child: child ?? const SizedBox.shrink(),
-                                      ),
+                                    child: Stack(
+                                      children: [
+                                        Positioned.fill(
+                                          child: LanguageSyncGate(
+                                            child: AnalyticsConsentGate(
+                                              child:
+                                                  child ??
+                                                  const SizedBox.shrink(),
+                                            ),
+                                          ),
+                                        ),
+                                        const AssistantBubbleOverlay(),
+                                      ],
                                     ),
                                   ),
                                 ],

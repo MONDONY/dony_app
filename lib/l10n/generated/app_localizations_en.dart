@@ -20330,4 +20330,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get assistantUnavailable =>
       'The assistant isn\'t available right now. You can write to the team.';
+
+  @override
+  String get assistantHintTitle => 'A question about the app?';
+
+  @override
+  String get assistantHintBody =>
+      'I\'ll guide you to the right screen. Drag me anywhere.';
 }

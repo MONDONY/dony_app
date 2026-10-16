@@ -32989,6 +32989,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'assistant n\'est pas disponible pour le moment. Vous pouvez écrire à l\'équipe.'**
   String get assistantUnavailable;
+
+  /// Titre de la bulle d'aide montrée une seule fois à côté de la bulle flottante de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une question sur l\'app ?'**
+  String get assistantHintTitle;
+
+  /// Texte de la bulle d'aide de la bulle flottante : elle guide et peut être déplacée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je vous guide jusqu\'au bon écran. Glissez-moi où vous voulez.'**
+  String get assistantHintBody;
 }
 
 class _AppLocalizationsDelegate

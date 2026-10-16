@@ -10673,5 +10673,7 @@
   "assistantReset": "New conversation",
   "assistantOpen": "Open the assistant",
   "assistantCharCount": "{count}/500",
-  "assistantUnavailable": "The assistant isn't available right now. You can write to the team."
+  "assistantUnavailable": "The assistant isn't available right now. You can write to the team.",
+  "assistantHintTitle": "A question about the app?",
+  "assistantHintBody": "I'll guide you to the right screen. Drag me anywhere."
 }
