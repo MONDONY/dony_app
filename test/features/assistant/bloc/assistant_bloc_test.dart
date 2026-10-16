@@ -589,6 +589,90 @@ void main() {
     },
   );
 
+  blocTest<AssistantBloc, AssistantState>(
+    'une réponse réussie remet le quota à false',
+    build: () {
+      answers(_answer);
+      return build();
+    },
+    seed: () => const AssistantState(quotaExceeded: true),
+    act: (b) => b.add(const AssistantQuestionSubmitted('Q', locale: 'fr')),
+    skip: 1,
+    expect: () => [
+      isA<AssistantState>().having((s) => s.quotaExceeded, 'quota', false),
+    ],
+  );
+
+  blocTest<AssistantBloc, AssistantState>(
+    'reset pendant l’escalade : le ticket créé reste signalé',
+    build: () {
+      when(
+        () => support.createTicket(
+          category: any(named: 'category'),
+          subject: any(named: 'subject'),
+          message: any(named: 'message'),
+        ),
+      ).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        return _ticket;
+      });
+      return build();
+    },
+    seed: () => const AssistantState(
+      messages: [
+        AssistantMessage(id: 1, author: AssistantAuthor.user, text: 'Q'),
+      ],
+    ),
+    act: (b) async {
+      b.add(const AssistantEscalationRequested());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      b.add(const AssistantResetRequested());
+    },
+    wait: const Duration(milliseconds: 100),
+    skip: 1,
+    expect: () => [
+      const AssistantState(),
+      isA<AssistantState>()
+          .having(
+            (s) => s.escalationStatus,
+            'success',
+            AssistantEscalationStatus.success,
+          )
+          .having((s) => s.escalatedTicketId, 'ticket', 't1')
+          .having((s) => s.messages, 'vide', isEmpty),
+    ],
+  );
+
+  blocTest<AssistantBloc, AssistantState>(
+    'reset pendant l’escalade : un échec tardif est ignoré',
+    build: () {
+      when(
+        () => support.createTicket(
+          category: any(named: 'category'),
+          subject: any(named: 'subject'),
+          message: any(named: 'message'),
+        ),
+      ).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        throw Exception('boom');
+      });
+      return build();
+    },
+    seed: () => const AssistantState(
+      messages: [
+        AssistantMessage(id: 1, author: AssistantAuthor.user, text: 'Q'),
+      ],
+    ),
+    act: (b) async {
+      b.add(const AssistantEscalationRequested());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      b.add(const AssistantResetRequested());
+    },
+    wait: const Duration(milliseconds: 100),
+    skip: 1,
+    expect: () => [const AssistantState()],
+  );
+
   group('modèles', () {
     test('AssistantState.isEmpty et copyWith effaçables', () {
       const s = AssistantState(escalatedTicketId: 't', lastFailedQuestion: 'q');

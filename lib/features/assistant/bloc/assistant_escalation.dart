@@ -4,6 +4,15 @@ import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 const int kEscalationSubjectMax = 200;
 const int kEscalationMessageMax = 4000;
 
+/// Coupe [s] à [max] unités UTF-16 sans séparer une paire surrogate : si la
+/// coupe tombe après le premier moitié d'un emoji, on recule d'une unité.
+String _cut(String s, int max) {
+  if (s.length <= max) return s;
+  final lastKept = s.codeUnitAt(max - 1);
+  final splitsPair = lastKept >= 0xD800 && lastKept <= 0xDBFF;
+  return s.substring(0, splitsPair ? max - 1 : max);
+}
+
 AssistantMessage _noMessage() =>
     const AssistantMessage(id: -1, author: AssistantAuthor.user, text: '');
 
@@ -15,10 +24,7 @@ String buildEscalationSubject(List<AssistantMessage> messages) {
     (m) => m.author == AssistantAuthor.user,
     orElse: _noMessage,
   );
-  final text = first.text.trim();
-  return text.length > kEscalationSubjectMax
-      ? text.substring(0, kEscalationSubjectMax)
-      : text;
+  return _cut(first.text.trim(), kEscalationSubjectMax);
 }
 
 /// Dernière question, puis l'échange du plus récent au plus ancien, coupé à
@@ -37,12 +43,8 @@ String buildEscalationMessage(
     orElse: _noMessage,
   );
   final head = last.text.trim();
-  final buffer = StringBuffer(
-    head.length > kEscalationMessageMax
-        ? head.substring(0, kEscalationMessageMax)
-        : head,
-  );
   if (head.isEmpty) return '';
+  final buffer = StringBuffer(_cut(head, kEscalationMessageMax));
   final intro = '\n\n$header\n';
   if (buffer.length + intro.length >= kEscalationMessageMax) {
     return buffer.toString();

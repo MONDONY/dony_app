@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/assistant/bloc/assistant_escalation.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
 import 'package:dony/features/assistant/data/assistant_repository.dart';
@@ -141,6 +143,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
       emit(
         state.copyWith(
           isSending: false,
+          quotaExceeded: false,
           messages: [
             ...state.messages,
             AssistantMessage(
@@ -160,8 +163,17 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     } on AssistantDisabledException {
       if (epoch != _epoch) return;
       emit(state.copyWith(isSending: false, disabled: true));
-    } catch (_) {
+    } catch (error, stackTrace) {
       // Réseau, ou toute exception inattendue : jamais bloqué en isSending.
+      // Le dépôt ne lève que des AssistantException : tout le reste est un
+      // bug, remonté à Sentry sans changer ce que voit l'utilisateur.
+      if (error is! AssistantNetworkException) {
+        AppLog.error(
+          'assistant: exception inattendue',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
       if (epoch != _epoch) return;
       emit(
         state.copyWith(
@@ -222,6 +234,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
   ) async {
     if (state.escalationStatus == AssistantEscalationStatus.sending) return;
     emit(state.copyWith(escalationStatus: AssistantEscalationStatus.sending));
+    final epoch = _epoch;
     final l = AppL10n.current;
     try {
       final subject = buildEscalationSubject(state.messages);
@@ -239,13 +252,24 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
         message: message.isEmpty ? null : message,
       );
       unawaited(_analytics.logEvent(AnalyticsEvents.assistantEscalated));
+      // Même après « Nouvelle conversation » : le ticket existe, l'utilisateur
+      // doit pouvoir le retrouver.
       emit(
         state.copyWith(
           escalationStatus: AssistantEscalationStatus.success,
           escalatedTicketId: ticket.id,
         ),
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      // Un échec réseau est déjà remonté par ApiClient ; le reste est un bug.
+      if (error is! DioException) {
+        AppLog.error(
+          'assistant: escalade, exception inattendue',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
+      if (epoch != _epoch) return;
       emit(state.copyWith(escalationStatus: AssistantEscalationStatus.failure));
     }
   }

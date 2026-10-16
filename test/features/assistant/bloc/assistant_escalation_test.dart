@@ -95,4 +95,43 @@ void main() {
       '',
     );
   });
+
+  bool noLoneSurrogate(String s) {
+    final units = s.codeUnits;
+    for (var i = 0; i < units.length; i++) {
+      final high = units[i] >= 0xD800 && units[i] <= 0xDBFF;
+      final low = units[i] >= 0xDC00 && units[i] <= 0xDFFF;
+      if (high &&
+          (i + 1 >= units.length ||
+              !(units[i + 1] >= 0xDC00 && units[i + 1] <= 0xDFFF))) {
+        return false;
+      }
+      if (low &&
+          (i == 0 || !(units[i - 1] >= 0xD800 && units[i - 1] <= 0xDBFF))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  test('le sujet ne coupe jamais un emoji en deux', () {
+    final subject = buildEscalationSubject([u(1, '${'a' * 199}😀')]);
+    expect(subject.length, 199);
+    expect(noLoneSurrogate(subject), isTrue);
+    // Un emoji qui tient entièrement est conservé.
+    final fits = buildEscalationSubject([u(1, '${'a' * 198}😀')]);
+    expect(fits.length, 200);
+    expect(noLoneSurrogate(fits), isTrue);
+  });
+
+  test('le message ne coupe jamais un emoji en deux', () {
+    final msg = buildEscalationMessage(
+      [u(1, '${'a' * 3999}😀')],
+      youLabel: 'V',
+      assistantLabel: 'A',
+      header: 'H',
+    );
+    expect(msg.length, 3999);
+    expect(noLoneSurrogate(msg), isTrue);
+  });
 }
