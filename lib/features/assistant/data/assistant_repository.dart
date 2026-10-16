@@ -34,6 +34,10 @@ class AssistantRepository {
       // Réponse malformée (corps non JSON, champ de mauvais type) : le BLoC ne
       // reçoit jamais une TypeError brute, seulement une erreur typée.
       throw const AssistantNetworkException();
+    } on FormatException {
+      // Texte de réponse vide ou blanc : même chemin qu'une réponse
+      // malformée (« Réessayer »), jamais une bulle vide.
+      throw const AssistantNetworkException();
     }
   }
 

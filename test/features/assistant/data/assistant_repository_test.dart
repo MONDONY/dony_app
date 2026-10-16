@@ -171,6 +171,25 @@ void main() {
     expect(ask(), throwsA(isA<AssistantNetworkException>()));
   });
 
+  test('réponse vide (answer blanc) = réseau, pas de bulle vide', () {
+    for (final blank in ['', '   ', '\n\t ']) {
+      respondWith({'answer': blank, 'answered': true});
+      expect(
+        ask(),
+        throwsA(isA<AssistantNetworkException>()),
+        reason: 'answer=${blank.codeUnits}',
+      );
+    }
+  });
+
+  test('modèle : answer blanc refusé, texte entouré d’espaces gardé', () {
+    expect(
+      () => AssistantAnswer.fromJson(const {'answer': '  '}),
+      throwsFormatException,
+    );
+    expect(AssistantAnswer.fromJson(const {'answer': ' ok '}).answer, ' ok ');
+  });
+
   test('404 = assistant désactivé', () async {
     when(() => dio.post(any(), data: any(named: 'data'))).thenThrow(error(404));
     expect(ask(), throwsA(isA<AssistantDisabledException>()));

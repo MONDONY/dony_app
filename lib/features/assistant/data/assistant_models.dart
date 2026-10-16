@@ -29,16 +29,22 @@ class AssistantAnswer extends Equatable {
   });
 
   /// Lève une `TypeError` sur une réponse malformée (texte absent, `actions`
-  /// qui n'est pas une liste, etc.) : le dépôt la convertit en
+  /// qui n'est pas une liste, etc.) et une `FormatException` sur un texte vide
+  /// ou blanc (jamais de bulle vide) : le dépôt les convertit en
   /// `AssistantNetworkException`.
-  factory AssistantAnswer.fromJson(Map<String, dynamic> json) =>
-      AssistantAnswer(
-        answer: json['answer'] as String,
-        answered: json['answered'] as bool? ?? false,
-        actions: _parseActions(json['actions']),
-        provider: json['provider'] as String? ?? 'none',
-        remainingToday: (json['remainingToday'] as num?)?.toInt() ?? 0,
-      );
+  factory AssistantAnswer.fromJson(Map<String, dynamic> json) {
+    final answer = json['answer'] as String;
+    if (answer.trim().isEmpty) {
+      throw const FormatException('assistant: réponse vide');
+    }
+    return AssistantAnswer(
+      answer: answer,
+      answered: json['answered'] as bool? ?? false,
+      actions: _parseActions(json['actions']),
+      provider: json['provider'] as String? ?? 'none',
+      remainingToday: (json['remainingToday'] as num?)?.toInt() ?? 0,
+    );
+  }
 
   /// Ignore les actions incomplètes (route ou libellé absent, non textuel ou
   /// vide) sans rejeter les autres ni le texte de la réponse.
