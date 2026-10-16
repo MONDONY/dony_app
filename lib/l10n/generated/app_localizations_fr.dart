@@ -11374,7 +11374,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get kycStatusPendingBody =>
-      'Cela prend généralement moins d\'une minute, parfois quelques minutes. Vous pouvez fermer cet écran, vous serez notifié du résultat.';
+      'Le résultat arrive en général tout de suite. Si une photo est illisible, vous serez invité à recommencer. Vous pouvez fermer cet écran, vous serez notifié du résultat.';
 
   @override
   String get kycStatusTimedOutTitle =>
@@ -11428,7 +11428,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get kycRequiredVerifyAction => 'Vérifier mon identité';
 
   @override
-  String get kycInfoDuration => 'Vérification en 2 à 5 minutes';
+  String get kycInfoDuration =>
+      'Environ 2 à 5 minutes pour scanner votre pièce et faire un selfie';
 
   @override
   String get kycInfoSecureProcess => 'Processus de vérification sécurisé';
@@ -12164,7 +12165,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get faqAnnouncementsPublishRequestA =>
-      'Depuis Accueil ou Activités, choisissez \"Publier un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.';
+      'Depuis Accueil ou Activités, touchez \"Envoyer un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.';
 
   @override
   String get faqAnnouncementsEditRequestQ =>
@@ -20485,4 +20486,23 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get assistantHintBody =>
       'Je vous guide jusqu\'au bon écran. Glissez-moi où vous voulez.';
+
+  @override
+  String get maintenanceTitle => 'Yadony est en maintenance';
+
+  @override
+  String get maintenanceDefaultMessage =>
+      'Nous améliorons l\'application. Revenez un peu plus tard : vos colis, trajets et paiements sont en sécurité.';
+
+  @override
+  String maintenanceEstimatedEnd(String time) {
+    return 'Retour prévu vers $time';
+  }
+
+  @override
+  String get maintenanceAutoReopen =>
+      'Cette page se fermera toute seule dès que Yadony sera de nouveau disponible.';
+
+  @override
+  String get maintenanceRetry => 'Réessayer';
 }

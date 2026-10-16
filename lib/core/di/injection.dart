@@ -5,6 +5,7 @@ import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -112,6 +113,10 @@ import 'package:dony/features/incident_report/data/repositories/incident_report_
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/data/kyc_completion_tracker.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
+import 'package:dony/features/maintenance/bloc/maintenance_cubit.dart';
+import 'package:dony/features/maintenance/data/datasources/maintenance_live_datasource.dart';
+import 'package:dony/features/maintenance/data/datasources/maintenance_remote_datasource.dart';
+import 'package:dony/features/maintenance/data/repositories/maintenance_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -331,11 +336,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<ContactPickerService>(
     () => ContactPickerService(),
   );
+  // Pont réseau → mode maintenance : le 503 `maintenance` de n'importe quelle
+  // requête affiche l'écran de maintenance (MaintenanceCubit).
+  getIt.registerLazySingleton<MaintenanceSignal>(MaintenanceSignal.new);
   getIt.registerLazySingleton<ApiClient>(
     () => ApiClient(
       baseUrl: apiBaseUrl,
       deviceIdService: getIt<DeviceIdService>(),
       errorReporter: getIt<ErrorReportingService>(),
+      maintenanceSignal: getIt<MaintenanceSignal>(),
     ),
   );
 
@@ -923,6 +932,23 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
 
   // Config (commission rate)
+  // Mode maintenance : singleton global, écouté par MaintenanceGate (app.dart)
+  // et démarré dans main.dart.
+  getIt.registerLazySingleton<MaintenanceRepository>(
+    () => MaintenanceRepository(
+      MaintenanceRemoteDatasource(getIt<ApiClient>()),
+      MaintenanceLiveDatasource(FirebaseFirestore.instance),
+    ),
+  );
+  getIt.registerLazySingleton<MaintenanceCubit>(
+    () => MaintenanceCubit(
+      getIt<MaintenanceRepository>(),
+      getIt<MaintenanceSignal>(),
+      getIt<AnalyticsService>(),
+    ),
+    dispose: (c) => c.close(),
+  );
+
   getIt.registerLazySingleton<ConfigDatasource>(
     () => ConfigDatasource(getIt<ApiClient>()),
   );

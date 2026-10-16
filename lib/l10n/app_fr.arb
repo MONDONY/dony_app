@@ -12324,7 +12324,7 @@
   "@kycStatusPendingTitle": {
     "description": "Titre de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
   },
-  "kycStatusPendingBody": "Cela prend généralement moins d'une minute, parfois quelques minutes. Vous pouvez fermer cet écran, vous serez notifié du résultat.",
+  "kycStatusPendingBody": "Le résultat arrive en général tout de suite. Si une photo est illisible, vous serez invité à recommencer. Vous pouvez fermer cet écran, vous serez notifié du résultat.",
   "@kycStatusPendingBody": {
     "description": "Texte de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
   },
@@ -12388,7 +12388,7 @@
   "@kycRequiredVerifyAction": {
     "description": "Bouton principal de la feuille de vérification requise (kyc_required_bottom_sheet.dart)."
   },
-  "kycInfoDuration": "Vérification en 2 à 5 minutes",
+  "kycInfoDuration": "Environ 2 à 5 minutes pour scanner votre pièce et faire un selfie",
   "@kycInfoDuration": {
     "description": "Ligne d'info sur la durée de la vérification (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow)."
   },
@@ -13252,7 +13252,7 @@
   "@faqAnnouncementsPublishRequestQ": {
     "description": "Question FAQ announcements/publish_request (faq_screen.dart)"
   },
-  "faqAnnouncementsPublishRequestA": "Depuis Accueil ou Activités, choisissez \"Publier un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.",
+  "faqAnnouncementsPublishRequestA": "Depuis Accueil ou Activités, touchez \"Envoyer un colis\". Décrivez le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.",
   "@faqAnnouncementsPublishRequestA": {
     "description": "Réponse FAQ announcements/publish_request (faq_screen.dart)"
   },
@@ -21524,5 +21524,15 @@
   "assistantHintTitle": "Une question sur l'app ?",
   "@assistantHintTitle": {"description": "Titre de la bulle d'aide montrée une seule fois à côté de la bulle flottante de l'assistant."},
   "assistantHintBody": "Je vous guide jusqu'au bon écran. Glissez-moi où vous voulez.",
-  "@assistantHintBody": {"description": "Texte de la bulle d'aide de la bulle flottante : elle guide et peut être déplacée."}
+  "@assistantHintBody": {"description": "Texte de la bulle d'aide de la bulle flottante : elle guide et peut être déplacée."},
+  "maintenanceTitle": "Yadony est en maintenance",
+  "@maintenanceTitle": {"description": "Titre de l'écran de maintenance, affiché quand l'administrateur active le mode maintenance (maintenance_screen.dart)."},
+  "maintenanceDefaultMessage": "Nous améliorons l'application. Revenez un peu plus tard : vos colis, trajets et paiements sont en sécurité.",
+  "@maintenanceDefaultMessage": {"description": "Message par défaut de l'écran de maintenance, quand l'administrateur n'a pas écrit de message."},
+  "maintenanceEstimatedEnd": "Retour prévu vers {time}",
+  "@maintenanceEstimatedEnd": {"description": "Heure de retour estimée saisie par l'administrateur, en heure locale (ex. 14:30).", "placeholders": {"time": {"type": "String", "example": "14:30"}}},
+  "maintenanceAutoReopen": "Cette page se fermera toute seule dès que Yadony sera de nouveau disponible.",
+  "@maintenanceAutoReopen": {"description": "Précision sous le message de maintenance : l'écran disparaît seul à la réouverture."},
+  "maintenanceRetry": "Réessayer",
+  "@maintenanceRetry": {"description": "Bouton de l'écran de maintenance qui revérifie tout de suite si l'application est rouverte."}
 }

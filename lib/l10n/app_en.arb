@@ -6900,7 +6900,7 @@
   "@kycStatusPendingTitle": {
     "description": "Titre de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
   },
-  "kycStatusPendingBody": "This usually takes less than a minute, sometimes a few minutes. You can close this screen, you'll be notified of the result.",
+  "kycStatusPendingBody": "The result usually comes right away. If a photo is unreadable, you will be asked to try again. You can close this screen, you will be notified of the result.",
   "@kycStatusPendingBody": {
     "description": "Texte de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
   },
@@ -6964,7 +6964,7 @@
   "@kycRequiredVerifyAction": {
     "description": "Bouton principal de la feuille de vérification requise (kyc_required_bottom_sheet.dart)."
   },
-  "kycInfoDuration": "Verification takes 2 to 5 minutes",
+  "kycInfoDuration": "About 2 to 5 minutes to scan your ID and take a selfie",
   "@kycInfoDuration": {
     "description": "Ligne d'info sur la durée de la vérification (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow)."
   },
@@ -7245,7 +7245,7 @@
   "faqAnnouncementsPublishTripQ": "How do I post a trip as a traveler?",
   "faqAnnouncementsPublishTripA": "From Home or Activity, choose \"Post a trip\". Enter the departure city, the destination, the date and the available capacity.",
   "faqAnnouncementsPublishRequestQ": "How do I post a parcel request?",
-  "faqAnnouncementsPublishRequestA": "From Home or Activity, choose \"Post a parcel\". Describe the parcel, its estimated weight and the recipient. Matching travelers will then be able to make an offer.",
+  "faqAnnouncementsPublishRequestA": "From Home or Activity, tap \"Send a parcel\". Describe the parcel, its estimated weight and the recipient. Matching travelers will then be able to make an offer.",
   "faqAnnouncementsEditRequestQ": "Can I edit my request after posting it?",
   "faqAnnouncementsEditRequestA": "You can edit a request as long as no offer has been accepted. Once one is accepted, contact support if important information needs to be corrected.",
   "faqPaymentsPaymentTimingQ": "When am I charged?",
@@ -10679,5 +10679,10 @@
   "assistantCharCount": "{count}/500",
   "assistantUnavailable": "The assistant isn't available right now. You can write to the team.",
   "assistantHintTitle": "A question about the app?",
-  "assistantHintBody": "I'll guide you to the right screen. Drag me anywhere."
+  "assistantHintBody": "I'll guide you to the right screen. Drag me anywhere.",
+  "maintenanceTitle": "Yadony is under maintenance",
+  "maintenanceDefaultMessage": "We're improving the app. Please come back a little later: your parcels, trips and payments are safe.",
+  "maintenanceEstimatedEnd": "Expected back around {time}",
+  "maintenanceAutoReopen": "This page will close on its own as soon as Yadony is available again.",
+  "maintenanceRetry": "Try again"
 }

@@ -58,7 +58,12 @@ void main() {
       );
       expect(find.text('Processus de vérification sécurisé'), findsOneWidget);
       expect(find.text("Pièce d'identité + selfie requis"), findsOneWidget);
-      expect(find.text('Vérification en 2 à 5 minutes'), findsOneWidget);
+      expect(
+        find.text(
+          'Environ 2 à 5 minutes pour scanner votre pièce et faire un selfie',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('affiche les deux boutons d\'action', (tester) async {
@@ -91,7 +96,10 @@ void main() {
       expect(find.text('Required to post listings on Yadony'), findsOneWidget);
       expect(find.text('Secure verification process'), findsOneWidget);
       expect(find.text('ID document + selfie required'), findsOneWidget);
-      expect(find.text('Verification takes 2 to 5 minutes'), findsOneWidget);
+      expect(
+        find.text('About 2 to 5 minutes to scan your ID and take a selfie'),
+        findsOneWidget,
+      );
       expect(find.text('Start verification'), findsOneWidget);
       expect(find.text('Later'), findsOneWidget);
     });

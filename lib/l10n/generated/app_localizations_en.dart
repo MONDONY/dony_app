@@ -11307,7 +11307,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kycStatusPendingBody =>
-      'This usually takes less than a minute, sometimes a few minutes. You can close this screen, you\'ll be notified of the result.';
+      'The result usually comes right away. If a photo is unreadable, you will be asked to try again. You can close this screen, you will be notified of the result.';
 
   @override
   String get kycStatusTimedOutTitle =>
@@ -11360,7 +11360,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kycRequiredVerifyAction => 'Verify my identity';
 
   @override
-  String get kycInfoDuration => 'Verification takes 2 to 5 minutes';
+  String get kycInfoDuration =>
+      'About 2 to 5 minutes to scan your ID and take a selfie';
 
   @override
   String get kycInfoSecureProcess => 'Secure verification process';
@@ -12089,7 +12090,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqAnnouncementsPublishRequestA =>
-      'From Home or Activity, choose \"Post a parcel\". Describe the parcel, its estimated weight and the recipient. Matching travelers will then be able to make an offer.';
+      'From Home or Activity, tap \"Send a parcel\". Describe the parcel, its estimated weight and the recipient. Matching travelers will then be able to make an offer.';
 
   @override
   String get faqAnnouncementsEditRequestQ =>
@@ -20350,4 +20351,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get assistantHintBody =>
       'I\'ll guide you to the right screen. Drag me anywhere.';
+
+  @override
+  String get maintenanceTitle => 'Yadony is under maintenance';
+
+  @override
+  String get maintenanceDefaultMessage =>
+      'We\'re improving the app. Please come back a little later: your parcels, trips and payments are safe.';
+
+  @override
+  String maintenanceEstimatedEnd(String time) {
+    return 'Expected back around $time';
+  }
+
+  @override
+  String get maintenanceAutoReopen =>
+      'This page will close on its own as soon as Yadony is available again.';
+
+  @override
+  String get maintenanceRetry => 'Try again';
 }

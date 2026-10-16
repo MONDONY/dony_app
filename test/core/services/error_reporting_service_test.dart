@@ -451,6 +451,19 @@ void main() {
       });
     }
 
+    test('503 du mode maintenance : jamais rapporté', () async {
+      final sink = _RecordingSink();
+      await ErrorReportingService(sink).report(
+        DioException(
+          requestOptions: RequestOptions(path: '/announcements'),
+          error: const ServiceUnavailableException('x', 'maintenance'),
+        ),
+        operation: 'http.GET',
+        statusCode: 503,
+      );
+      expect(sink.error, isNull);
+    });
+
     test('un autre 400 reste rapporté', () async {
       final sink = _RecordingSink();
       await ErrorReportingService(sink).report(

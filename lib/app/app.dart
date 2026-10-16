@@ -38,6 +38,8 @@ import 'package:dony/features/connectivity/presentation/widgets/connectivity_ban
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/data/favorites_migration.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/maintenance/bloc/maintenance_cubit.dart';
+import 'package:dony/features/maintenance/presentation/maintenance_gate.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -127,7 +129,10 @@ class _DonyAppState extends State<DonyApp> {
 
   /// Retour Android : même repli que le bouton des écrans au lieu de fermer
   /// l'application quand la pile est vide.
-  final _backButtonDispatcher = SystemBackDispatcher.forRouter(appRouter);
+  final _backButtonDispatcher = SystemBackDispatcher.forRouter(
+    appRouter,
+    isLocked: () => getIt<MaintenanceCubit>().state.active,
+  );
 
   // go() est nécessaire pour activer le bon onglet du shell principal.
   // Toutes les autres routes utilisent push() pour empiler par-dessus l'état
@@ -174,6 +179,8 @@ class _DonyAppState extends State<DonyApp> {
         // Jeton FCM resté indisponible (FLUTTER-N1) : nouvel essai.
         getIt<FcmTokenRetry>().notifyRetryOpportunity();
         unawaited(getIt<NotificationService>().onAppResumed());
+        // Maintenance ouverte ou refermée pendant que l'app dormait.
+        unawaited(getIt<MaintenanceCubit>().check());
       },
     );
     appRouter.routerDelegate.addListener(_onRouterChanged);
@@ -614,46 +621,51 @@ class _DonyAppState extends State<DonyApp> {
                           // « Terminé » au-dessus des claviers sans touche de
                           // validation (pavé numérique, champs multilignes).
                           child: DonyKeyboardScope(
-                            // Capture d'écran du scarabée de signalement
-                            // ([DonyFeedbackButton]) : une seule frontière
-                            // de rendu pour toute l'app, quel que soit
-                            // l'écran affiché.
-                            child: RepaintBoundary(
-                              key: DonyFeedbackButton.appBoundaryKey,
-                              child: Column(
-                                children: [
-                                  // Bandeau réseau global : au-dessus de
-                                  // TOUTE route (shell ou pushée), jamais
-                                  // seulement les onglets du shell.
-                                  const ConnectivityBanner(),
-                                  // Appel en cours écran réduit : toucher
-                                  // la barre rouvre l'appel (FLUTTER-DG).
-                                  ActiveCallBanner(
-                                    holder: getIt<ActiveCallHolder>(),
-                                    onReturnToCall: () => unawaited(
-                                      appRouter.push(activeCallLocation),
+                            // Mode maintenance : recouvre toute l'app,
+                            // bandeaux compris, sans la démonter.
+                            child: MaintenanceGate(
+                              cubit: getIt<MaintenanceCubit>(),
+                              // Capture d'écran du scarabée de signalement
+                              // ([DonyFeedbackButton]) : une seule frontière
+                              // de rendu pour toute l'app, quel que soit
+                              // l'écran affiché.
+                              child: RepaintBoundary(
+                                key: DonyFeedbackButton.appBoundaryKey,
+                                child: Column(
+                                  children: [
+                                    // Bandeau réseau global : au-dessus de
+                                    // TOUTE route (shell ou pushée), jamais
+                                    // seulement les onglets du shell.
+                                    const ConnectivityBanner(),
+                                    // Appel en cours écran réduit : toucher
+                                    // la barre rouvre l'appel (FLUTTER-DG).
+                                    ActiveCallBanner(
+                                      holder: getIt<ActiveCallHolder>(),
+                                      onReturnToCall: () => unawaited(
+                                        appRouter.push(activeCallLocation),
+                                      ),
                                     ),
-                                  ),
-                                  // Bulle de l'assistant : au-dessus de
-                                  // toutes les routes, sous les bandeaux
-                                  // (connexion, appel en cours).
-                                  Expanded(
-                                    child: Stack(
-                                      children: [
-                                        Positioned.fill(
-                                          child: LanguageSyncGate(
-                                            child: AnalyticsConsentGate(
-                                              child:
-                                                  child ??
-                                                  const SizedBox.shrink(),
+                                    // Bulle de l'assistant : au-dessus de
+                                    // toutes les routes, sous les bandeaux
+                                    // (connexion, appel en cours).
+                                    Expanded(
+                                      child: Stack(
+                                        children: [
+                                          Positioned.fill(
+                                            child: LanguageSyncGate(
+                                              child: AnalyticsConsentGate(
+                                                child:
+                                                    child ??
+                                                    const SizedBox.shrink(),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        const AssistantBubbleOverlay(),
-                                      ],
+                                          const AssistantBubbleOverlay(),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

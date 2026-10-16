@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/accept_language_interceptor.dart';
+import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/network/offline_fast_fail_interceptor.dart';
 import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
@@ -51,6 +52,12 @@ class FirebaseAuthTokenSource implements AuthTokenSource {
 }
 
 class ApiClient {
+  /// Clé de `RequestOptions.extra` : `true` pour une requête dont l'échec est
+  /// attendu et déjà traité par l'appelant, jamais rapporté à Sentry. Cas
+  /// d'usage : la sonde de connectivité, dont le rôle est justement de
+  /// constater que l'API ne répond pas (FLUTTER-JW).
+  static const skipErrorReportKey = 'skipErrorReport';
+
   ApiClient({
     required String baseUrl,
     required DeviceIdService deviceIdService,
@@ -60,6 +67,7 @@ class ApiClient {
     @visibleForTesting Connectivity? connectivity,
     @visibleForTesting RetrySleep? retrySleep,
     @visibleForTesting void Function(Breadcrumb)? breadcrumbSink,
+    MaintenanceSignal? maintenanceSignal,
   }) : _errorReporter = errorReporter {
     _dio = Dio(
       BaseOptions(
@@ -111,6 +119,11 @@ class ApiClient {
       _SentryBreadcrumbInterceptor(breadcrumbSink ?? _addSentryBreadcrumb),
     );
     _dio.interceptors.add(_AuthInterceptor(deviceIdService, tokenSource, _dio));
+    // Mode maintenance : le 503 `maintenance` affiche l'écran de maintenance
+    // (MaintenanceCubit) dès la première requête refusée.
+    if (maintenanceSignal != null) {
+      _dio.interceptors.add(MaintenanceInterceptor(maintenanceSignal));
+    }
 
     if (kDebugMode) {
       // Log only method/path/status. Bodies and headers contain Firebase
@@ -262,6 +275,9 @@ class _SentryErrorReportingInterceptor extends Interceptor {
   bool _shouldReport(DioException err) {
     final options = err.requestOptions;
     if (RetryPolicy.depthOf(options) > 0) return false;
+    if (options.extra[ApiClient.skipErrorReportKey] == true) return false;
+    // Maintenance décidée depuis le back-office : pas une panne.
+    if (isMaintenanceResponse(err.response)) return false;
     if (_transportTypes.contains(err.type)) return false;
     // Connexion perdue sans réponse, levée en `unknown` (socket coupée par
     // Android en arrière-plan) : même famille que les délais (FLUTTER-JQ).
