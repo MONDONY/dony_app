@@ -7,7 +7,9 @@
 
 "NSLocationWhenInUseUsageDescription" = "Yadony uses your location while you use the app to show trips and parcels near you, find the nearest airport and record where each parcel handover step takes place.";
 
-"NSMicrophoneUsageDescription" = "Yadony uses the microphone for audio calls with the sender, traveler or recipient of a parcel.";
+"NSMicrophoneUsageDescription" = "Yadony uses the microphone for audio calls with the sender, traveler or recipient of a parcel, and to dictate a trip or a parcel request to the AI assistant.";
+
+"NSSpeechRecognitionUsageDescription" = "Yadony turns your voice into text with Apple speech recognition to fill in a trip or a parcel request with the AI assistant.";
 
 "NSPhotoLibraryAddUsageDescription" = "Yadony saves your parcel QR code and your listing posters to your photos, so you can find them offline or share them.";
 
