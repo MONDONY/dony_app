@@ -357,8 +357,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `kyc_started` | KycBloc._onSessionRequested() |
 | `kyc_completed` | KycBloc._onStatusRefreshed() — une fois par instance, et une fois par compte et par appareil (`KycCompletionTracker`, clé Hive par UID) : rouvrir l'écran de statut d'un compte déjà vérifié ne le réémet plus |
 | `kyc_failed` | KycBloc._onSessionRequested() |
-| `announcement_created` | AnnouncementBloc._onCreateRequested() |
-| `trip_group_created` | AnnouncementBloc._onTripCreateRequested() — voyage à plusieurs étapes (FLUTTER-4D), `leg_count`, `corridor` (villes), `is_draft`, `currency_count` (devises distinctes, chaque étape a la sienne, FLUTTER-HP) |
+| `announcement_created` | AnnouncementBloc._onCreateRequested() — propriété `from_ai` (bool) : formulaire rempli par « Créer avec l'IA » |
+| `trip_group_created` | AnnouncementBloc._onTripCreateRequested() — voyage à plusieurs étapes (FLUTTER-4D), `leg_count`, `corridor` (villes), `is_draft`, `currency_count` (devises distinctes, chaque étape a la sienne, FLUTTER-HP), `from_ai` (bool, première étape remplie par « Créer avec l'IA ») |
 | `form_draft_saved` | FormDraftCubit.save — saisie d'un formulaire de publication (trajet ou demande d'envoi) gardée en brouillon local, chiffré sur l'appareil, à n'importe quelle étape (propriétés `kind` : `trip`/`package_request`, `step` : 0 à 2, `source` : `exit_dialog` dialogue de sortie / `app_bar` bouton « Brouillon »). Non émis si le trousseau refuse l'écriture. Jamais le contenu |
 | `form_draft_discarded` | FormDraftCubit.discard — « Quitter sans enregistrer » du dialogue de sortie : la saisie et tout brouillon local de ce formulaire sont effacés (propriétés `kind`, `source: exit_dialog`) |
 | `publish_commitment_accepted` | PublishGateCubit.accept — case « J'ai lu et j'ai pris connaissance de mes engagements » cochée puis « Continuer » sur l'écran des engagements (`/trips/publish-intro`, `/parcels/send-intro`), acceptation enregistrée par le serveur (`PUT /auth/me/publish-commitments`, preuve dans `audit_log`). Une fois par rôle et par version du texte (propriété `role` : `traveler`/`sender`) |
@@ -552,6 +552,13 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `assistant_parcel_choices_shown` | AssistantBloc._ask — la réponse propose des colis à choisir (question sur l'un de ses colis sans dire lequel, `parcels` du back, yadony-back `feature/assistant-colis`). Propriétés `count` (colis proposés, 5 au plus) et `active_count` (colis en cours parmi eux). Jamais le numéro, le trajet ni l'identifiant |
 | `assistant_parcel_chosen` | AssistantBloc._onParcelChosen — colis touché parmi ceux proposés : la question est reposée avec son `parcelId`. Propriétés `role` (`SENDER`/`TRAVELER`/`RECIPIENT`), `active` (colis en cours) et `position` (place dans la liste, à partir de 0). Jamais le numéro, le trajet ni l'identifiant |
 | `assistant_bubble_toggled` | SettingsScreen (section Assistant, interrupteur « Bulle de l'assistant ») — bulle flottante allumée ou éteinte, préférence enregistrée sur l'appareil. Propriété `enabled` (bool). Émis depuis l'écran (préférence locale sans BLoC métier). Remettre la bulle à sa place ne l'émet pas |
+| `ai_form_draft_opened` | AiFormDraftBloc (événement `AiFormDraftOpened`) — feuille « Créer avec l'IA » ouverte. Propriété `kind` (`trip`/`package_request`), commune à tous les `ai_form_draft_*`. Jamais le texte dicté ou saisi |
+| `ai_form_draft_voice_used` | AiFormDraftBloc — un tour est parti de la dictée (et non du clavier). Propriété `kind` |
+| `ai_form_draft_turn` | AiFormDraftBloc — réponse reçue pour un tour. Propriétés `kind`, `turns`, `missing_count` |
+| `ai_form_draft_ready` | AiFormDraftBloc — tout est compris (`done`) ou limite de 8 tours. Propriétés `kind`, `turns`, `turn_limit` (bool) |
+| `ai_form_draft_applied` | AiFormDraftBloc — « Remplir le formulaire » (ou « Remplir avec ce qui est compris ») touché. Propriétés `kind`, `fields_count` |
+| `ai_form_draft_degraded` | AiFormDraftBloc — aucun fournisseur d'IA n'a répondu, ou l'assistant s'est éteint en cours de route. Propriété `kind` |
+| `ai_form_draft_quota_exceeded` | AiFormDraftBloc — quota quotidien des formulaires IA atteint (429 `assistant-form-draft-quota-exceeded`). Propriété `kind` |
 | `trip_matching_viewed` | PackageRequestSearchBloc._onFiltersChanged — chargement d'une recherche colis filtrée « Pour mes trajets » (propriété `count`) |
 | `package_match_alert_toggled` | NotificationPrefsBloc._onPackageMatchAlertToggled — ligne « Nouveaux colis compatibles » des réglages de notifications (propriété `enabled`) |
 | `announcements_inbox_opened` | AnnouncementsInboxBloc._onLoad — boîte « Annonces Yadony » chargée depuis la carte du sheet de notifications (propriétés `count`, `unread`), jamais le texte d'une annonce |
