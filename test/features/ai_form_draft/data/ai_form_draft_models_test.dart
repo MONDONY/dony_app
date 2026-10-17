@@ -24,7 +24,7 @@ void main() {
 
   group('AiFormDraftReply.fromJson', () {
     test('lit une réponse complète', () {
-      final reply = AiFormDraftReply.fromJson({
+      final reply = AiFormDraftReply.fromJson(const {
         'draft': {'departureCity': 'Paris', 'availableKg': 23},
         'understood': ['route', 'capacity'],
         'missing': ['departureDate'],
@@ -45,7 +45,7 @@ void main() {
     });
 
     test('valeurs absentes ou de mauvais type : défauts sûrs', () {
-      final reply = AiFormDraftReply.fromJson({
+      final reply = AiFormDraftReply.fromJson(const {
         'draft': 'pas un objet',
         'understood': 'route',
         'question': '   ',
@@ -79,7 +79,7 @@ void main() {
       'remainingToday non numérique : TypeError (le dépôt la convertit)',
       () {
         expect(
-          () => AiFormDraftReply.fromJson({'remainingToday': 'beaucoup'}),
+          () => AiFormDraftReply.fromJson(const {'remainingToday': 'beaucoup'}),
           throwsA(isA<TypeError>()),
         );
       },
