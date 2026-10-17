@@ -6996,6 +6996,14 @@
   "profileMoneyMobileMoneyPayout": "Mobile money payout",
   "profileMoneyMobileMoneyPayoutSubtitle": "CFA zone: Orange Money, MTN, Moov",
   "profileMoneyCashCommissionCard": "Cash service fee card",
+  "profileMoneyPreferences": "Preferences",
+  "@profileMoneyPreferences": {
+    "description": "Tuile de la section ARGENT, raccourci vers Paramètres › Préférences (profile_sections.dart, FLUTTER-R5)."
+  },
+  "profileMoneyPreferencesSubtitle": "Currency, country, units",
+  "@profileMoneyPreferencesSubtitle": {
+    "description": "Sous-titre de la tuile Préférences de la section ARGENT (profile_sections.dart, FLUTTER-R5)."
+  },
   "profileSectionReputation": "MY REPUTATION",
   "profileReputationPublicProfile": "My public profile",
   "profileReputationPublicProfileSubtitle": "What others see",

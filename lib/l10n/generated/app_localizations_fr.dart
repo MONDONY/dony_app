@@ -11477,6 +11477,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileMoneyCashCommissionCard => 'Carte commission espèces';
 
   @override
+  String get profileMoneyPreferences => 'Préférences';
+
+  @override
+  String get profileMoneyPreferencesSubtitle => 'Devise, pays, unités';
+
+  @override
   String get profileSectionReputation => 'MA RÉPUTATION';
 
   @override

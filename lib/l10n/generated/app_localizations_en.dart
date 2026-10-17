@@ -11407,6 +11407,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileMoneyCashCommissionCard => 'Cash service fee card';
 
   @override
+  String get profileMoneyPreferences => 'Preferences';
+
+  @override
+  String get profileMoneyPreferencesSubtitle => 'Currency, country, units';
+
+  @override
   String get profileSectionReputation => 'MY REPUTATION';
 
   @override

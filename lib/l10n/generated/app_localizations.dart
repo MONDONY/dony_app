@@ -18827,6 +18827,18 @@ abstract class AppLocalizations {
   /// **'Carte commission espèces'**
   String get profileMoneyCashCommissionCard;
 
+  /// Tuile de la section ARGENT, raccourci vers Paramètres › Préférences (profile_sections.dart, FLUTTER-R5).
+  ///
+  /// In fr, this message translates to:
+  /// **'Préférences'**
+  String get profileMoneyPreferences;
+
+  /// Sous-titre de la tuile Préférences de la section ARGENT (profile_sections.dart, FLUTTER-R5).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise, pays, unités'**
+  String get profileMoneyPreferencesSubtitle;
+
   /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileReputationSection).
   ///
   /// In fr, this message translates to:

@@ -12427,6 +12427,14 @@
   "@profileMoneyCashCommissionCard": {
     "description": "Tuile de la section ARGENT (profile_sections.dart)."
   },
+  "profileMoneyPreferences": "Préférences",
+  "@profileMoneyPreferences": {
+    "description": "Tuile de la section ARGENT, raccourci vers Paramètres › Préférences (profile_sections.dart, FLUTTER-R5)."
+  },
+  "profileMoneyPreferencesSubtitle": "Devise, pays, unités",
+  "@profileMoneyPreferencesSubtitle": {
+    "description": "Sous-titre de la tuile Préférences de la section ARGENT (profile_sections.dart, FLUTTER-R5)."
+  },
   "profileSectionReputation": "MA RÉPUTATION",
   "@profileSectionReputation": {
     "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileReputationSection)."
