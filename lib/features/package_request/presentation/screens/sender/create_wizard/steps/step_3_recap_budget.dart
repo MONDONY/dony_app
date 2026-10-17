@@ -8,6 +8,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/payment_setup_notice.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
@@ -302,10 +303,13 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 ],
 
                 // ── Budget ─────────────────────────────────────────────────
-                _FieldLabel(
-                  state.negotiable
-                      ? l10n.requestCreateBudgetLabelNegotiable
-                      : l10n.requestCreateBudgetLabelFixed,
+                AiFieldMark(
+                  fields: const ['totalBudget'],
+                  child: _FieldLabel(
+                    state.negotiable
+                        ? l10n.requestCreateBudgetLabelNegotiable
+                        : l10n.requestCreateBudgetLabelFixed,
+                  ),
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 _BudgetTotalInput(
@@ -463,7 +467,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 const SizedBox(height: DonySpacing.base),
 
                 // ── Modes de paiement ──────────────────────────────────────
-                _FieldLabel(l10n.requestCreatePaymentAcceptedLabel),
+                AiFieldMark(
+                  fields: const ['acceptedPaymentMethods'],
+                  child: _FieldLabel(l10n.requestCreatePaymentAcceptedLabel),
+                ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   l10n.requestCreatePaymentHint,

@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
@@ -204,18 +205,21 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             // ── Corridor départ → arrivée ──────────────────────────────────
             // Carte « billet » partagée avec la recherche et « Publier un
             // trajet » : un seul rendu du corridor dans toute l'app.
-            CityCorridorFields(
-              departureValue: _departureCity,
-              arrivalValue: _arrivalCity,
-              departureFieldKey: const Key('step1-departure-city'),
-              arrivalFieldKey: const Key('step1-arrival-city'),
-              departureError: _touched ? _departureError : null,
-              arrivalError: _touched ? _arrivalError : null,
-              onSwap: _swapCities,
-              onDepartureSelected: (city) => _setDeparture(city.name),
-              onDepartureCleared: () => _setDeparture(null),
-              onArrivalSelected: (city) => _setArrival(city.name),
-              onArrivalCleared: () => _setArrival(null),
+            AiFieldMark.overlay(
+              fields: const ['departureCity', 'arrivalCity'],
+              child: CityCorridorFields(
+                departureValue: _departureCity,
+                arrivalValue: _arrivalCity,
+                departureFieldKey: const Key('step1-departure-city'),
+                arrivalFieldKey: const Key('step1-arrival-city'),
+                departureError: _touched ? _departureError : null,
+                arrivalError: _touched ? _arrivalError : null,
+                onSwap: _swapCities,
+                onDepartureSelected: (city) => _setDeparture(city.name),
+                onDepartureCleared: () => _setDeparture(null),
+                onArrivalSelected: (city) => _setArrival(city.name),
+                onArrivalCleared: () => _setArrival(null),
+              ),
             ),
             const SizedBox(height: DonySpacing.base),
 
@@ -227,7 +231,10 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FieldLabel(l10n.requestCreateDateFieldLabel),
+                      AiFieldMark(
+                        fields: const ['desiredDate'],
+                        child: _FieldLabel(l10n.requestCreateDateFieldLabel),
+                      ),
                       const SizedBox(height: DonySpacing.xs),
                       _DatePickerField(
                         date: _date,
@@ -258,7 +265,12 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FieldLabel(l10n.requestCreateToleranceFieldLabel),
+                      AiFieldMark(
+                        fields: const ['dateToleranceDays'],
+                        child: _FieldLabel(
+                          l10n.requestCreateToleranceFieldLabel,
+                        ),
+                      ),
                       const SizedBox(height: DonySpacing.xs),
                       _ToleranceField(
                         tolerance: _tolerance,

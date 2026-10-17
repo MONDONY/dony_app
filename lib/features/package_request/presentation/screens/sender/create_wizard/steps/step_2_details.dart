@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
@@ -289,7 +290,10 @@ class Step2DetailsState extends State<Step2Details> {
             const SizedBox(height: DonySpacing.base),
 
             // ── Poids ──────────────────────────────────────────────────────
-            _FieldLabel(l10n.requestCreateWeightLabel),
+            AiFieldMark(
+              fields: const ['weightKg'],
+              child: _FieldLabel(l10n.requestCreateWeightLabel),
+            ),
             const SizedBox(height: DonySpacing.xs),
             _WeightInput(controller: _weightCtrl),
             Padding(
@@ -306,7 +310,10 @@ class Step2DetailsState extends State<Step2Details> {
             // occupaient ~900 px et repoussaient la description hors écran.
             // Même composant que la création de trajet. « Autre » fait partie
             // du catalogue : sa sélection déclenche une précision libre.
-            _FieldLabel(l10n.requestCreateContentLabel),
+            AiFieldMark(
+              fields: const ['categories'],
+              child: _FieldLabel(l10n.requestCreateContentLabel),
+            ),
             const SizedBox(height: DonySpacing.xs),
             Text(
               l10n.requestCreateContentHint,
