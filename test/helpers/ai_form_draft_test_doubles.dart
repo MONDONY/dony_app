@@ -3,6 +3,9 @@ import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_availability_cubi
 import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
 import 'package:dony/features/ai_form_draft/data/ai_form_draft_repository.dart';
 import 'package:dony/features/ai_form_draft/data/speech_service.dart';
+import 'package:dony/features/ai_form_draft/presentation/ai_form_draft_launcher.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 /// Dictée simulée : [emit] et [finish] jouent le rôle du plugin.
 class FakeSpeechService implements SpeechService {
@@ -76,4 +79,48 @@ void registerUnavailableAiFormDraft() {
       AiFormDraftAvailabilityCubit(FakeAiFormDraftRepository()),
     );
   }
+}
+
+/// Lanceur qui ne monte pas la feuille : rend [outcome] tout de suite.
+class FakeAiFormDraftLauncher implements AiFormDraftLauncher {
+  FakeAiFormDraftLauncher(this.outcome);
+
+  AiResolvedDraft? outcome;
+  final calls = <({AiFormKind kind, String? defaultCurrency})>[];
+
+  @override
+  Future<AiResolvedDraft?> open(
+    BuildContext context, {
+    required AiFormKind kind,
+    required String? defaultCurrency,
+    bool Function()? isCardReady,
+  }) async {
+    calls.add((kind: kind, defaultCurrency: defaultCurrency));
+    return outcome;
+  }
+}
+
+/// Allume (ou éteint) « Créer avec l'IA » pour un test d'écran et remplace le
+/// lanceur ; tout est rétabli à la fin du test.
+FakeAiFormDraftLauncher useAiFormDraft({
+  required bool enabled,
+  AiResolvedDraft? outcome,
+}) {
+  if (getIt.isRegistered<AiFormDraftAvailabilityCubit>()) {
+    getIt.unregister<AiFormDraftAvailabilityCubit>();
+  }
+  getIt.registerSingleton<AiFormDraftAvailabilityCubit>(
+    AiFormDraftAvailabilityCubit(FakeAiFormDraftRepository(enabled: enabled)),
+  );
+  if (getIt.isRegistered<AiFormDraftLauncher>()) {
+    getIt.unregister<AiFormDraftLauncher>();
+  }
+  final launcher = FakeAiFormDraftLauncher(outcome);
+  getIt.registerSingleton<AiFormDraftLauncher>(launcher);
+  addTearDown(() {
+    getIt.unregister<AiFormDraftLauncher>();
+    getIt.unregister<AiFormDraftAvailabilityCubit>();
+    registerUnavailableAiFormDraft();
+  });
+  return launcher;
 }
