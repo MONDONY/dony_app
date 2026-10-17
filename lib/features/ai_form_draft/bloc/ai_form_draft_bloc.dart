@@ -44,7 +44,10 @@ class AiFormDraftBloc extends Bloc<AiFormDraftEvent, AiFormDraftState> {
   /// Longueur maximale d'un message accepté par le serveur.
   static const int maxMessageLength = 1000;
 
+  // `asking` : « Remplir avec ce qui est compris » pendant le dialogue, pour
+  // corriger un seul champ après « Reparler » sans tout redire.
   static const _applicable = {
+    AiFormDraftStatus.asking,
     AiFormDraftStatus.ready,
     AiFormDraftStatus.degraded,
     AiFormDraftStatus.quotaExceeded,

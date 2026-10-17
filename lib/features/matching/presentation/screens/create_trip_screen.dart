@@ -352,7 +352,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     }
     restore(TripAiDraftMapper.toFormDraft(outcome.draft, base: snapshot()));
     _currentStepNotifier.value = 0;
-    _aiFilled.markFilled(outcome.filledFields);
+    // « Reparler » complète : les marques de la passe précédente restent.
+    _aiFilled.markFilled({..._aiFilled.state, ...outcome.filledFields});
     if (_formScrollController.hasClients) {
       unawaited(
         _formScrollController.animateTo(
@@ -949,6 +950,12 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Le voyageur ouvre son trajet aux propositions de prix des expéditeurs.
   final _negotiableNotifier = ValueNotifier<bool>(false);
   late final ValueNotifier<bool> _kgPriceEnabledNotifier;
+
+  /// Prix au kilo d'un brouillon restauré qui change de mode de tarification
+  /// (brouillon IA « grille + 10 €/kg », brouillon local) : le changement de
+  /// mode coupe l'interrupteur, ce qui effaçait le prix. Le listener du mode
+  /// réapplique cette valeur une fois, au lieu de couper.
+  bool? _pendingKgPriceEnabled;
   final _descriptionCtrl = TextEditingController();
   final _customAcceptedCtrl = TextEditingController();
   final _refusedCtrl = TextEditingController();
@@ -2311,6 +2318,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     return BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
       listenWhen: (prev, curr) => prev.pricingMode != curr.pricingMode,
       listener: (context, formState) {
+        final pending = _pendingKgPriceEnabled;
+        if (pending != null) {
+          _pendingKgPriceEnabled = null;
+          _kgPriceEnabledNotifier.value = pending;
+          return;
+        }
         if (formState.pricingMode == PricingMode.mixed) {
           _kgPriceEnabledNotifier.value = false;
         } else {
@@ -2719,11 +2732,13 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Comme pour un modèle : l'unité réécrit le kg à son maximum, le kg
     // saisi passe ensuite.
     if (kg != null) formBloc.add(AvailableKgChanged(kg));
-    formBloc.add(
-      AnnouncementPricingModeSetRequested(
-        d.pricingMode == 'MIXED' ? PricingMode.mixed : PricingMode.kg,
-      ),
-    );
+    final pricingMode = d.pricingMode == 'MIXED'
+        ? PricingMode.mixed
+        : PricingMode.kg;
+    _pendingKgPriceEnabled = formBloc.state.pricingMode != pricingMode
+        ? d.kgPriceEnabled
+        : null;
+    formBloc.add(AnnouncementPricingModeSetRequested(pricingMode));
 
     context.read<TripLegsCubit>().restore(d.legs);
     _updateCanContinueStep1();

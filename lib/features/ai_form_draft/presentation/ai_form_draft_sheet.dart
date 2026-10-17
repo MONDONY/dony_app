@@ -200,10 +200,32 @@ class AiFormDraftStickyBottom extends StatelessWidget {
               AiFormDraftStatus.listening ||
               AiFormDraftStatus.sending ||
               AiFormDraftStatus.asking:
-            return AiVoiceComposer(
-              enabled: state.status != AiFormDraftStatus.sending,
-              listening: state.status == AiFormDraftStatus.listening,
-              micUnavailable: state.micUnavailable,
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Pendant une question : remplir avec ce qui est déjà compris
+                // (par exemple après « Reparler » pour un seul champ).
+                if (state.status == AiFormDraftStatus.asking &&
+                    state.hasDraft) ...[
+                  DonyButton(
+                    key: const Key('ai-apply-partial'),
+                    label: l.aiFormDraftApplyPartial,
+                    variant: DonyButtonVariant.ghost,
+                    onPressed: () =>
+                        bloc.add(const AiFormDraftApplyRequested()),
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                ],
+                // Clé : le composer garde son état (saisie, mode écrit)
+                // quand le bouton apparaît au-dessus de lui.
+                AiVoiceComposer(
+                  key: const ValueKey('ai-composer'),
+                  enabled: state.status != AiFormDraftStatus.sending,
+                  listening: state.status == AiFormDraftStatus.listening,
+                  micUnavailable: state.micUnavailable,
+                ),
+              ],
             );
         }
       },

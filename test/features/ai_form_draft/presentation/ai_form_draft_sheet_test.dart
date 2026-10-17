@@ -145,12 +145,43 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const Key('ai-mic-start')), findsOneWidget);
+    // Le bouton « Remplir avec ce qui est compris » agrandit le pied de la
+    // feuille : sur l'écran de test, les réponses rapides passent sous le pli.
+    await tester.ensureVisible(find.byKey(const Key('ai-quick-reply-0')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('ai-quick-reply-0')));
     expect(added(), const [
       AiFormDraftOpened(),
       AiFormDraftQuickReplyTapped('Oui, 15 nov.'),
     ]);
     expect(receivedSession?.kind, AiFormKind.trip);
+  });
+
+  testWidgets(
+    'question avec un brouillon : « Remplir avec ce qui est compris »',
+    (tester) async {
+      withState(_asking);
+      await open(tester);
+      expect(find.byKey(const Key('ai-mic-start')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('ai-apply-partial')));
+      expect(added().last, const AiFormDraftApplyRequested());
+    },
+  );
+
+  testWidgets('question sans rien de compris : pas de remplissage partiel', (
+    tester,
+  ) async {
+    withState(
+      const AiFormDraftState(
+        kind: AiFormKind.trip,
+        status: AiFormDraftStatus.asking,
+        turns: 1,
+        question: 'D’où partez-vous ?',
+      ),
+    );
+    await open(tester);
+    expect(find.byKey(const Key('ai-apply-partial')), findsNothing);
+    expect(find.byKey(const Key('ai-mic-start')), findsOneWidget);
   });
 
   testWidgets('demande d’envoi, accueil : textes du kind', (tester) async {

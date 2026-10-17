@@ -26,6 +26,7 @@ import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_series_cubit.dart';
@@ -4689,6 +4690,49 @@ void main() {
 
       expect(launcher.calls, hasLength(2));
       expect(find.byKey(const Key('ai-filled-banner')), findsOneWidget);
+    });
+
+    testWidgets('« Reparler » qui ne remplit que l’heure garde les marques', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      final launcher = useAiFormDraft(enabled: true, outcome: outcome());
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      await tester.tap(find.byKey(const Key('ai-entry-cta')));
+      await settle(tester);
+      final marks = find.byKey(const Key('ai-field-mark')).evaluate().length;
+      expect(marks, greaterThan(1));
+
+      launcher.outcome = const AiResolvedDraft(
+        draft: {'departureTime': '16:00'},
+      );
+      await tester.tap(find.byKey(const Key('ai-talk-again')));
+      await settle(tester);
+
+      expect(find.text('16:00'), findsOneWidget);
+      expect(find.byKey(const Key('ai-field-mark')), findsNWidgets(marks));
+    });
+
+    testWidgets('grille + 10 €/kg : le prix au kilo dicté est gardé', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      useAiFormDraft(
+        enabled: true,
+        outcome: AiResolvedDraft(
+          draft: {...outcome().draft, 'pricingMode': 'MIXED'},
+        ),
+      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      await tester.tap(find.byKey(const Key('ai-entry-cta')));
+      await settle(tester);
+      await settle(tester);
+
+      final formBloc = BlocProvider.of<AnnouncementFormBloc>(
+        tester.element(find.byType(TrajetStep)),
+      );
+      expect(formBloc.state.pricingMode, PricingMode.mixed);
+      expect(formBloc.state.pricePerKg, 10);
     });
 
     testWidgets('feuille fermée sans remplir : le formulaire ne change pas', (

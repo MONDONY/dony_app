@@ -490,6 +490,26 @@ void main() {
   );
 
   blocTest<AiFormDraftBloc, AiFormDraftState>(
+    'remplir avec ce qui est compris pendant une question : brouillon résolu',
+    build: build,
+    seed: () => const AiFormDraftState(
+      kind: AiFormKind.trip,
+      status: AiFormDraftStatus.asking,
+      turns: 1,
+      draft: {'departureTime': '16:00', 'arrivalCity': null},
+    ),
+    act: (b) => b.add(const AiFormDraftApplyRequested()),
+    expect: () => [
+      _status(AiFormDraftStatus.applied).having(
+        (s) => s.resolved?.filledFields,
+        'filledFields',
+        {'departureTime'},
+      ),
+    ],
+    verify: (_) => expect(resolver.calls, hasLength(1)),
+  );
+
+  blocTest<AiFormDraftBloc, AiFormDraftState>(
     'remplir depuis le résumé : applied avec le brouillon résolu',
     build: build,
     seed: () => const AiFormDraftState(
