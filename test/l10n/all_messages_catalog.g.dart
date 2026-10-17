@@ -1866,6 +1866,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'listingBidStatusArrived': (l) => l.listingBidStatusArrived,
   'listingBidStatusPending': (l) => l.listingBidStatusPending,
   'listingBidStatusOfferSent': (l) => l.listingBidStatusOfferSent,
+  'listingOwnTripMessage': (l) => l.listingOwnTripMessage,
+  'listingOwnTripManageButton': (l) => l.listingOwnTripManageButton,
   'listingYourTripPill': (l) => l.listingYourTripPill,
   'listingProBadge': (l) => l.listingProBadge,
   'listingNoTravelersNearbyTitle': (l) => l.listingNoTravelersNearbyTitle,
@@ -2644,6 +2646,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidDetailGainCashAmount': (l) =>
       l.bidDetailGainCashAmount(placeholderMarker('amount')),
   'bidDetailGainCashNote': (l) => l.bidDetailGainCashNote,
+  'bidDetailGainCashGrossDetail': (l) => l.bidDetailGainCashGrossDetail(
+    placeholderMarker('commission'),
+    placeholderMarker('net'),
+  ),
   'bidDetailGainCashPill': (l) => l.bidDetailGainCashPill,
   'bidDetailGainReceivedTopLabel': (l) => l.bidDetailGainReceivedTopLabel,
   'bidDetailGainMobileMoneyPaidNote': (l) => l.bidDetailGainMobileMoneyPaidNote,
@@ -7382,6 +7388,7 @@ const textParameters = <String, List<String>>{
   'bidDetailTravelerWindowExpiredSubtitleWithWindow': ['window'],
   'bidDetailTravelerNoShowPendingSubtitleUntil': ['date', 'time'],
   'bidDetailGainCashAmount': ['amount'],
+  'bidDetailGainCashGrossDetail': ['commission', 'net'],
   'bidRejectionReasonShown': ['reason'],
   'bidDetailEscrowReleasedLabel': ['amount'],
   'bidDetailEscrowRefundedLabel': ['amount'],
