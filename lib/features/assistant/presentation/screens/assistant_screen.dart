@@ -319,6 +319,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
           l.assistantSuggestion2,
           l.assistantSuggestion3,
           l.assistantSuggestion4,
+          l.assistantSuggestion5,
         ].indexed)
           _SuggestionChip(
             key: Key('assistant-suggestion-${index + 1}'),
@@ -342,6 +343,17 @@ class _AssistantScreenState extends State<AssistantScreen> {
               AssistantFeedbackGiven(message.id, up: up),
             ),
             onTalkToHuman: _escalate,
+            onParcelChosen: identical(message, lastMessage) && !state.isSending
+                ? (parcel, label, position) =>
+                      context.read<AssistantBloc>().add(
+                        AssistantParcelChosen(
+                          parcel,
+                          label: label,
+                          position: position,
+                          locale: _locale,
+                        ),
+                      )
+                : null,
             onRetry:
                 message.isError &&
                     identical(message, lastMessage) &&

@@ -20409,7 +20409,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get assistantDisclaimer =>
-      'Je suis une IA et je peux me tromper. Pour votre compte, un colis ou un paiement, un membre de l\'équipe vous répond. Ne saisissez pas de données personnelles.';
+      'Je suis une IA et je peux me tromper. Je peux retrouver vos colis ; pour un paiement ou votre compte, un membre de l\'équipe vous répond. Ne saisissez pas de données personnelles.';
 
   @override
   String get assistantSuggestionsTitle => 'Questions fréquentes';
@@ -20425,6 +20425,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get assistantSuggestion4 => 'Comment vérifier mon identité ?';
+
+  @override
+  String get assistantSuggestion5 => 'Où est mon colis ?';
+
+  @override
+  String get assistantParcelChoices => 'Vos colis';
+
+  @override
+  String get assistantParcelFallback => 'Colis';
+
+  @override
+  String get assistantParcelRoleSender => 'Votre envoi';
+
+  @override
+  String get assistantParcelRoleTraveler => 'Vous le transportez';
+
+  @override
+  String get assistantParcelRoleRecipient => 'À recevoir';
+
+  @override
+  String get assistantParcelStatusPending => 'En attente du voyageur';
 
   @override
   String get assistantInputHint => 'Posez votre question…';

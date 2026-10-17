@@ -14,6 +14,7 @@ class AssistantRepository {
     required String question,
     required String locale,
     required List<AssistantHistoryTurn> history,
+    String? parcelId,
   }) async {
     final Response<dynamic> response;
     try {
@@ -23,6 +24,8 @@ class AssistantRepository {
           'question': question,
           'locale': locale,
           'history': history.map((t) => t.toJson()).toList(),
+          // Colis choisi plus tôt : le back revérifie l'accès à chaque question.
+          'parcelId': ?parcelId,
         },
       );
     } on DioException catch (e) {

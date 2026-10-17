@@ -1134,4 +1134,224 @@ void main() {
       expect(const AssistantSessionEnded(), const AssistantSessionEnded());
     });
   });
+
+  group('colis de l’utilisateur', () {
+    const parcel = AssistantParcelChoice(
+      parcelId: 'b1',
+      status: 'IN_TRANSIT',
+      role: 'SENDER',
+      active: true,
+      trackingNumber: 'DON-7K3M9QXA',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+    );
+    const ended = AssistantParcelChoice(
+      parcelId: 'b2',
+      status: 'COMPLETED',
+      role: 'TRAVELER',
+      active: false,
+    );
+    const choose = AssistantAnswer(
+      answer: 'Choisissez le colis concerné.',
+      answered: true,
+      actions: [],
+      provider: 'claude',
+      remainingToday: 18,
+      parcels: [parcel, ended],
+    );
+    const aboutParcel = AssistantAnswer(
+      answer: 'Il est en route.',
+      answered: true,
+      actions: [AssistantAction(route: '/bids/b1', label: 'Voir le colis')],
+      provider: 'claude',
+      remainingToday: 17,
+      parcelId: 'b1',
+    );
+
+    When<Future<AssistantAnswer>> askWith(String? parcelId) => when(
+      () => repository.ask(
+        question: any(named: 'question'),
+        locale: any(named: 'locale'),
+        history: any(named: 'history'),
+        parcelId: parcelId,
+      ),
+    );
+
+    Future<AssistantBloc> askedForChoice() async {
+      askWith(null).thenAnswer((_) async => choose);
+      final b = build();
+      b.add(
+        const AssistantQuestionSubmitted('Où est mon colis ?', locale: 'fr'),
+      );
+      await Future<void>.delayed(Duration.zero);
+      return b;
+    }
+
+    test(
+      'les colis proposés restent sur la réponse, sans colis suivi',
+      () async {
+        final b = await askedForChoice();
+        expect(b.state.messages.last.parcels, [parcel, ended]);
+        expect(b.state.parcelId, isNull);
+        verify(
+          () => backend.capture(AnalyticsEvents.assistantParcelChoicesShown, {
+            'count': 2,
+            'active_count': 1,
+          }),
+        ).called(1);
+        await b.close();
+      },
+    );
+
+    test('choisir un colis repose la question pour lui et le garde', () async {
+      final b = await askedForChoice();
+      askWith('b1').thenAnswer((_) async => aboutParcel);
+      b.add(
+        const AssistantParcelChosen(
+          parcel,
+          label: 'DON-7K3M9QXA · Paris → Dakar',
+          position: 0,
+          locale: 'fr',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      final captured = verify(
+        () => repository.ask(
+          question: 'Où est mon colis ?',
+          locale: 'fr',
+          history: captureAny(named: 'history'),
+          parcelId: 'b1',
+        ),
+      ).captured;
+      final history = captured.single as List<AssistantHistoryTurn>;
+      expect(history.map((t) => t.text), [
+        'Où est mon colis ?',
+        'Choisissez le colis concerné.',
+      ]);
+      expect(b.state.messages.map((m) => m.text).toList().sublist(2), [
+        'DON-7K3M9QXA · Paris → Dakar',
+        'Il est en route.',
+      ]);
+      expect(b.state.parcelId, 'b1');
+      verify(
+        () => backend.capture(AnalyticsEvents.assistantParcelChosen, {
+          'role': 'SENDER',
+          'active': true,
+          'position': 0,
+        }),
+      ).called(1);
+
+      // La question suivante parle du même colis.
+      b.add(const AssistantQuestionSubmitted('Et le code ?', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      verify(
+        () => repository.ask(
+          question: 'Et le code ?',
+          locale: 'fr',
+          history: any(named: 'history'),
+          parcelId: 'b1',
+        ),
+      ).called(1);
+      await b.close();
+    });
+
+    test('une réponse sans colis met fin au suivi', () async {
+      final b = await askedForChoice();
+      askWith('b1').thenAnswer((_) async => aboutParcel);
+      b.add(
+        const AssistantParcelChosen(
+          parcel,
+          label: 'DON-7K3M9QXA',
+          position: 0,
+          locale: 'fr',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      askWith('b1').thenAnswer((_) async => _answer);
+      b.add(const AssistantQuestionSubmitted('DON-ZZZZ9999', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.parcelId, isNull);
+      await b.close();
+    });
+
+    test('après un échec, « Réessayer » renvoie le colis choisi', () async {
+      final b = await askedForChoice();
+      askWith('b1').thenThrow(const AssistantNetworkException());
+      b.add(
+        const AssistantParcelChosen(
+          parcel,
+          label: 'DON-7K3M9QXA',
+          position: 0,
+          locale: 'fr',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.messages.last.isError, isTrue);
+      expect(b.state.parcelId, 'b1');
+      askWith('b1').thenAnswer((_) async => aboutParcel);
+      b.add(const AssistantRetryRequested(locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.messages.last.text, 'Il est en route.');
+      await b.close();
+    });
+
+    test('« Nouvelle conversation » oublie le colis', () async {
+      final b = await askedForChoice();
+      askWith('b1').thenAnswer((_) async => aboutParcel);
+      b.add(
+        const AssistantParcelChosen(
+          parcel,
+          label: 'DON-7K3M9QXA',
+          position: 0,
+          locale: 'fr',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantResetRequested());
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.parcelId, isNull);
+      expect(b.state.messages, isEmpty);
+      await b.close();
+    });
+
+    test('un colis qui n’est proposé par aucune réponse est ignoré', () async {
+      final b = build();
+      b.add(
+        const AssistantParcelChosen(
+          parcel,
+          label: 'DON-7K3M9QXA',
+          position: 0,
+          locale: 'fr',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.messages, isEmpty);
+      verifyNever(
+        () => repository.ask(
+          question: any(named: 'question'),
+          locale: any(named: 'locale'),
+          history: any(named: 'history'),
+          parcelId: any(named: 'parcelId'),
+        ),
+      );
+      await b.close();
+    });
+
+    test('l’événement de choix est comparable', () {
+      expect(
+        const AssistantParcelChosen(
+          parcel,
+          label: 'x',
+          position: 1,
+          locale: 'fr',
+        ),
+        const AssistantParcelChosen(
+          parcel,
+          label: 'x',
+          position: 1,
+          locale: 'fr',
+        ),
+      );
+    });
+  });
 }

@@ -84,8 +84,78 @@ void main() {
       expect(data['history'], [
         {'role': 'user', 'text': 'bonjour'},
       ]);
+      // Sans colis choisi, le champ n'est pas envoyé (back antérieur).
+      expect(data.containsKey('parcelId'), isFalse);
+      expect(answer.parcelId, isNull);
+      expect(answer.parcels, isEmpty);
     },
   );
+
+  test('envoie le colis choisi et lit les colis proposés', () async {
+    respondWith({
+      'answer': 'Choisissez le colis concerné.',
+      'answered': true,
+      'actions': [],
+      'provider': 'claude',
+      'remainingToday': 3,
+      'parcelId': 'b9',
+      'parcels': [
+        {
+          'parcelId': 'b1',
+          'trackingNumber': 'DON-7K3M9QXA',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Dakar',
+          'departureDate': '2026-10-20',
+          'status': 'IN_TRANSIT',
+          'role': 'SENDER',
+          'active': true,
+        },
+        {'parcelId': 'b2', 'status': 'COMPLETED', 'role': 'TRAVELER'},
+        {'parcelId': 'b3', 'role': 'SENDER'},
+        'pas un objet',
+      ],
+    });
+    final answer = await repository.ask(
+      question: 'Où est mon colis ?',
+      locale: 'fr',
+      history: const [],
+      parcelId: 'b9',
+    );
+    final data =
+        verify(
+              () => dio.post('/assistant/ask', data: captureAny(named: 'data')),
+            ).captured.single
+            as Map;
+    expect(data['parcelId'], 'b9');
+    expect(answer.parcelId, 'b9');
+    expect(answer.parcels, const [
+      AssistantParcelChoice(
+        parcelId: 'b1',
+        status: 'IN_TRANSIT',
+        role: 'SENDER',
+        active: true,
+        trackingNumber: 'DON-7K3M9QXA',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+      ),
+      AssistantParcelChoice(
+        parcelId: 'b2',
+        status: 'COMPLETED',
+        role: 'TRAVELER',
+        active: false,
+      ),
+    ]);
+  });
+
+  test('colis proposés absents ou d’un mauvais type : aucun choix', () {
+    final answer = AssistantAnswer.fromJson(const {
+      'answer': 'ok',
+      'answered': true,
+      'actions': <Object>[],
+      'parcels': 'x',
+    });
+    expect(answer.parcels, isEmpty);
+  });
 
   test('champs manquants tolérés', () {
     final a = AssistantAnswer.fromJson(const {'answer': 'x'});

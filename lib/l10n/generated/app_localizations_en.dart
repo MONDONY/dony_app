@@ -20275,7 +20275,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantDisclaimer =>
-      'I\'m an AI and I can make mistakes. For your account, a parcel or a payment, a team member will answer. Don\'t share personal data.';
+      'I\'m an AI and I can make mistakes. I can find your parcels; for a payment or your account, a team member will answer. Don\'t share personal data.';
 
   @override
   String get assistantSuggestionsTitle => 'Frequent questions';
@@ -20291,6 +20291,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantSuggestion4 => 'How do I verify my identity?';
+
+  @override
+  String get assistantSuggestion5 => 'Where is my parcel?';
+
+  @override
+  String get assistantParcelChoices => 'Your parcels';
+
+  @override
+  String get assistantParcelFallback => 'Parcel';
+
+  @override
+  String get assistantParcelRoleSender => 'Your shipment';
+
+  @override
+  String get assistantParcelRoleTraveler => 'You carry it';
+
+  @override
+  String get assistantParcelRoleRecipient => 'To receive';
+
+  @override
+  String get assistantParcelStatusPending => 'Awaiting the traveler';
 
   @override
   String get assistantInputHint => 'Ask your question…';

@@ -17,6 +17,61 @@ class AssistantAction extends Equatable {
   List<Object?> get props => [route, label];
 }
 
+/// Colis proposé quand la question porte sur l'un des siens sans dire lequel
+/// (yadony-back `feature/assistant-colis`). Le back ne propose que les colis
+/// dont l'utilisateur est l'expéditeur, le voyageur ou le destinataire.
+class AssistantParcelChoice extends Equatable {
+  const AssistantParcelChoice({
+    required this.parcelId,
+    required this.status,
+    required this.role,
+    required this.active,
+    this.trackingNumber,
+    this.departureCity,
+    this.arrivalCity,
+  });
+
+  /// Lève une `TypeError` si l'identifiant, le statut ou le rôle manque :
+  /// [AssistantAnswer] écarte alors ce colis sans rejeter la réponse.
+  factory AssistantParcelChoice.fromJson(Map<String, dynamic> json) =>
+      AssistantParcelChoice(
+        parcelId: json['parcelId'] as String,
+        status: json['status'] as String,
+        role: json['role'] as String,
+        active: json['active'] as bool? ?? false,
+        trackingNumber: json['trackingNumber'] as String?,
+        departureCity: json['departureCity'] as String?,
+        arrivalCity: json['arrivalCity'] as String?,
+      );
+
+  final String parcelId;
+
+  /// Nom du `BidStatus` du back (`IN_TRANSIT`, `COMPLETED`...).
+  final String status;
+
+  /// `SENDER`, `TRAVELER` ou `RECIPIENT`.
+  final String role;
+
+  /// En cours (ni livré, ni annulé, ni clos).
+  final bool active;
+
+  /// Absent quand le rôle ne le voit pas encore (voyageur avant la remise).
+  final String? trackingNumber;
+  final String? departureCity;
+  final String? arrivalCity;
+
+  @override
+  List<Object?> get props => [
+    parcelId,
+    status,
+    role,
+    active,
+    trackingNumber,
+    departureCity,
+    arrivalCity,
+  ];
+}
+
 /// Réponse de `POST /assistant/ask`. Le champ `sources` renvoyé par le back
 /// est ignoré à dessein : l'app ne l'affiche pas.
 class AssistantAnswer extends Equatable {
@@ -26,6 +81,8 @@ class AssistantAnswer extends Equatable {
     required this.actions,
     required this.provider,
     required this.remainingToday,
+    this.parcelId,
+    this.parcels = const [],
   });
 
   /// Lève une `TypeError` sur une réponse malformée (texte absent, `actions`
@@ -43,7 +100,25 @@ class AssistantAnswer extends Equatable {
       actions: _parseActions(json['actions']),
       provider: json['provider'] as String? ?? 'none',
       remainingToday: (json['remainingToday'] as num?)?.toInt() ?? 0,
+      parcelId: json['parcelId'] as String?,
+      parcels: _parseParcels(json['parcels']),
     );
+  }
+
+  /// Absent d'un back antérieur : aucun choix. Un colis incomplet est écarté
+  /// sans rejeter les autres.
+  static List<AssistantParcelChoice> _parseParcels(Object? raw) {
+    if (raw is! List) return const [];
+    final parcels = <AssistantParcelChoice>[];
+    for (final item in raw) {
+      if (item is! Map<String, dynamic>) continue;
+      try {
+        parcels.add(AssistantParcelChoice.fromJson(item));
+      } on TypeError {
+        continue;
+      }
+    }
+    return parcels;
   }
 
   /// Ignore les actions incomplètes (route ou libellé absent, non textuel ou
@@ -69,6 +144,12 @@ class AssistantAnswer extends Equatable {
   final String provider;
   final int remainingToday;
 
+  /// Colis dont parle la réponse : renvoyé avec les questions suivantes.
+  final String? parcelId;
+
+  /// Colis à choisir ; vide hors de ce cas.
+  final List<AssistantParcelChoice> parcels;
+
   @override
   List<Object?> get props => [
     answer,
@@ -76,6 +157,8 @@ class AssistantAnswer extends Equatable {
     actions,
     provider,
     remainingToday,
+    parcelId,
+    parcels,
   ];
 }
 

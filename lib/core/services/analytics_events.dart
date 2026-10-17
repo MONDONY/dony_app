@@ -355,6 +355,12 @@ abstract final class AnalyticsEvents {
   /// Quota quotidien atteint.
   static const assistantQuotaReached = 'assistant_quota_reached';
 
+  /// Colis proposés au choix sous une réponse (question sur l'un des siens).
+  static const assistantParcelChoicesShown = 'assistant_parcel_choices_shown';
+
+  /// Colis touché parmi ceux proposés : la question est reposée pour lui.
+  static const assistantParcelChosen = 'assistant_parcel_chosen';
+
   /// Bulle de l'assistant allumée ou éteinte dans Réglages (propriété
   /// `enabled`).
   static const assistantBubbleToggled = 'assistant_bubble_toggled';

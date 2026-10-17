@@ -269,6 +269,7 @@ class AssistantMessageBubble extends StatelessWidget {
     required this.onFeedback,
     required this.onTalkToHuman,
     this.onRetry,
+    this.onParcelChosen,
     this.liveRegion = false,
   });
 
@@ -277,6 +278,10 @@ class AssistantMessageBubble extends StatelessWidget {
   final ValueChanged<AssistantAction> onAction;
   final ValueChanged<bool> onFeedback;
   final VoidCallback onTalkToHuman;
+
+  /// Non nul seulement sur la dernière réponse, hors envoi en cours : les
+  /// colis proposés plus haut dans la conversation ne sont plus montrés.
+  final AssistantParcelChosenCallback? onParcelChosen;
 
   /// Non nul seulement sur le message d'erreur de la dernière question.
   final VoidCallback? onRetry;
@@ -314,6 +319,25 @@ class AssistantMessageBubble extends StatelessWidget {
                 const SizedBox(height: 10),
                 _ActionButton(action: action, onTap: () => onAction(action)),
               ],
+              if (onParcelChosen != null && message.parcels.isNotEmpty)
+                Semantics(
+                  container: true,
+                  label: context.l10n.assistantParcelChoices,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final (index, parcel)
+                          in message.parcels.indexed) ...[
+                        const SizedBox(height: 10),
+                        AssistantParcelButton(
+                          parcel: parcel,
+                          onTap: (label) =>
+                              onParcelChosen!(parcel, label, index),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
@@ -356,6 +380,129 @@ class AssistantMessageBubble extends StatelessWidget {
     );
   }
 }
+
+/// Colis touché parmi ceux proposés ; [label] est repris comme message de
+/// l'utilisateur, [position] sa place dans la liste.
+typedef AssistantParcelChosenCallback =
+    void Function(AssistantParcelChoice parcel, String label, int position);
+
+/// Un colis proposé : numéro (ou trajet), puis trajet, étape et rôle.
+class AssistantParcelButton extends StatelessWidget {
+  const AssistantParcelButton({
+    super.key,
+    required this.parcel,
+    required this.onTap,
+  });
+
+  final AssistantParcelChoice parcel;
+  final ValueChanged<String> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    final route = parcel.departureCity != null && parcel.arrivalCity != null
+        ? '${parcel.departureCity} → ${parcel.arrivalCity}'
+        : null;
+    final title = parcel.trackingNumber ?? route ?? l.assistantParcelFallback;
+    final details = [
+      if (parcel.trackingNumber != null && route != null) route,
+      ?assistantParcelStatusLabel(l, parcel.status),
+      ?_roleLabel(l, parcel.role),
+    ].join(' · ');
+    final label = parcel.trackingNumber != null && route != null
+        ? '$title · $route'
+        : title;
+    return DonyPressable(
+      key: Key('assistant-parcel-${parcel.parcelId}'),
+      onTap: () => onTap(label),
+      child: Semantics(
+        button: true,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            border: Border.all(color: cs.outline),
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: _minTarget),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.inventory_2_rounded,
+                    size: 20,
+                    color: parcel.active ? cs.primary : cs.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.labelLarge!
+                              .copyWith(
+                                color: cs.onSurface,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                        ),
+                        if (details.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            details,
+                            style: Theme.of(context).textTheme.bodySmall!
+                                .copyWith(color: cs.onSurfaceVariant),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String? _roleLabel(AppLocalizations l, String role) => switch (role) {
+    'SENDER' => l.assistantParcelRoleSender,
+    'TRAVELER' => l.assistantParcelRoleTraveler,
+    'RECIPIENT' => l.assistantParcelRoleRecipient,
+    _ => null,
+  };
+}
+
+/// Étape d'un colis proposé, avec les libellés des filtres d'envois ; `null`
+/// pour un statut inconnu de cette version de l'app.
+String? assistantParcelStatusLabel(AppLocalizations l, String status) =>
+    switch (status) {
+      'AWAITING_PAYMENT' => l.shipmentStatusAwaitingPaymentOption,
+      'PENDING' => l.assistantParcelStatusPending,
+      'PAYMENT_ESCROWED' => l.shipmentStatusPaidOption,
+      'ACCEPTED' => l.shipmentStatusToHandOverOption,
+      'HANDED_OVER' => l.shipmentStatusHandedOverOption,
+      'IN_TRANSIT' => l.shipmentStatusInTransitOption,
+      'ARRIVED' => l.shipmentStatusArrivedOption,
+      'COMPLETED' => l.shipmentStatusDeliveredOption,
+      'CANCELLED' => l.shipmentStatusCancelledOption,
+      'REJECTED' => l.shipmentStatusRejectedOption,
+      'PARCEL_REFUSED' => l.shipmentStatusParcelRefusedOption,
+      'NO_SHOW' => l.shipmentStatusNoShowOption,
+      'EXPIRED' => l.shipmentStatusExpiredOption,
+      _ => null,
+    };
 
 /// « Y aller : … » : bouton plein vers un écran de l'app.
 class _ActionButton extends StatelessWidget {
