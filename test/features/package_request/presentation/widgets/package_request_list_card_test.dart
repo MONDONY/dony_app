@@ -26,12 +26,13 @@ PackageRequestSearchItem _item({
   String? matchedTripId,
   DateTime? matchedTripDepartureDate,
   int? uniqueViewerCount,
+  bool flexibleDate = false,
 }) => PackageRequestSearchItem(
   id: 'pr1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: desiredDate ?? DateTime(2026, 6, 15),
-  dateToleranceDays: 2,
+  desiredDate: flexibleDate ? null : desiredDate ?? DateTime(2026, 6, 15),
+  dateToleranceDays: flexibleDate ? 0 : 2,
   weightKg: 5,
   parcelSize: size,
   categories: [categoryLabel],
@@ -422,6 +423,35 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.textContaining('Your trip on'), findsOneWidget);
       },
+    );
+  });
+
+  testWidgets('demande sans date : « Date flexible », sans crash', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(PackageRequestListCard(item: _item(flexibleDate: true))),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(
+      find.textContaining('Date flexible', findRichText: true),
+      findsWidgets,
+    );
+    expect(find.textContaining('null', findRichText: true), findsNothing);
+  });
+
+  testWidgets('demande sans date en anglais : « Flexible date »', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      wrap(PackageRequestListCard(item: _item(flexibleDate: true))),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Flexible date', findRichText: true),
+      findsWidgets,
     );
   });
 }

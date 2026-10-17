@@ -3823,24 +3823,21 @@ class AppLocalizationsFr extends AppLocalizations {
       'Choisissez une ville différente du départ';
 
   @override
-  String get requestCreateDateRequired => 'Date de départ obligatoire';
+  String get requestCreateDateOptionalLabel => 'Date (facultatif)';
+
+  @override
+  String get requestCreateNoDateHint =>
+      'Sans date, tous les voyageurs du trajet peuvent proposer. La demande reste visible 60 jours.';
+
+  @override
+  String get requestCreateClearDate => 'Effacer la date';
+
+  @override
+  String get requestDateFlexible => 'Date flexible';
 
   @override
   String get requestCreateToleranceExactHint =>
       'Seuls les voyageurs partant exactement ce jour-là pourront répondre.';
-
-  @override
-  String requestCreateToleranceGenericHint(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '± $count jours autour de votre date. Plus de souplesse, plus de voyageurs.',
-      one:
-          '± $count jour autour de votre date. Plus de souplesse, plus de voyageurs.',
-    );
-    return '$_temp0';
-  }
 
   @override
   String requestCreateToleranceRangeHint(String from, String to) {
@@ -6665,6 +6662,10 @@ class AppLocalizationsFr extends AppLocalizations {
   ) {
     return 'Entre le $start et le $end (demande du $desired ± $days j)';
   }
+
+  @override
+  String get negotiationMakeOfferTravelDateHintFlexible =>
+      'Date flexible : choisissez le jour de votre départ.';
 
   @override
   String negotiationMakeOfferTravelDateHintExact(String desired) {

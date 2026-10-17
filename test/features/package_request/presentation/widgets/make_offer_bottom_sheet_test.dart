@@ -136,6 +136,7 @@ void main() {
     double? displayPriceEur,
     DateTime? desiredDate,
     int dateToleranceDays = 3,
+    bool flexibleDate = false,
     void Function(Object? extra)? onTripsCreate,
   }) => MaterialApp.router(
     routerConfig: GoRouter(
@@ -153,7 +154,9 @@ void main() {
                 // Aligné sur `_sampleAnnouncement().departureDate` (12 juin
                 // 2026) pour que le trajet reste dans la fenêtre de tolérance
                 // de TripPickerSection.
-                desiredDate: desiredDate ?? DateTime(2026, 6, 12),
+                desiredDate: flexibleDate
+                    ? null
+                    : desiredDate ?? DateTime(2026, 6, 12),
                 dateToleranceDays: dateToleranceDays,
                 transportMode: TransportMode.plane,
                 initialDate: initialDate,
@@ -758,6 +761,31 @@ void main() {
       final picker = await openPicker(tester, find.text('Sélectionner…'));
       expect(picker.firstDate, day(10));
       expect(picker.lastDate, day(10));
+    });
+
+    testWidgets(
+      'demande sans date : aucune fenêtre imposée, aide « Date flexible »',
+      (tester) async {
+        await openSheet(tester, wrap(flexibleDate: true, dateToleranceDays: 0));
+        expect(tester.takeException(), isNull);
+        expect(
+          find.text('Date flexible : choisissez le jour de votre départ.'),
+          findsOneWidget,
+        );
+        final picker = await openPicker(tester, find.text('Sélectionner…'));
+        expect(picker.firstDate, today());
+        expect(picker.lastDate, day(365));
+        expect(picker.initialDate, day(1));
+      },
+    );
+
+    testWidgets('demande sans date : aide traduite en anglais', (tester) async {
+      useEnglish();
+      await openSheet(tester, wrap(flexibleDate: true, dateToleranceDays: 0));
+      expect(
+        find.text('Flexible date: pick the day you leave.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('aide sous le champ, en français', (tester) async {

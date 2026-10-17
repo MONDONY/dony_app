@@ -299,12 +299,15 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
   ) async {
     if (!_liveStatuses.contains(request.status)) return null;
     final tolerance = Duration(days: request.dateToleranceDays);
+    // Sans date (« Date flexible ») : tous les trajets du corridor, sans
+    // fenêtre de dates.
+    final desired = request.desiredDate;
     try {
       final trips = await _announcements.searchAnnouncements(
         departureCity: request.departureCity,
         arrivalCity: request.arrivalCity,
-        departureDateFrom: request.desiredDate.subtract(tolerance),
-        departureDateTo: request.desiredDate.add(tolerance),
+        departureDateFrom: desired?.subtract(tolerance),
+        departureDateTo: desired?.add(tolerance),
         minAvailableKg: request.weightKg,
       );
       final excluded = {

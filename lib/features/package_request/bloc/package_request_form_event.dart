@@ -21,8 +21,12 @@ class FormStep1Submitted extends PackageRequestFormEvent {
   });
   final String departureCity;
   final String arrivalCity;
-  final DateTime desiredDate;
-  final int dateToleranceDays;
+
+  /// Null : demande sans date (« Date flexible »).
+  final DateTime? desiredDate;
+
+  /// Null quand [desiredDate] l'est.
+  final int? dateToleranceDays;
   final TransportMode transportMode;
 
   @override
@@ -33,6 +37,12 @@ class FormStep1Submitted extends PackageRequestFormEvent {
     dateToleranceDays,
     transportMode,
   ];
+}
+
+/// Retire la date de départ (et sa souplesse) déjà choisie : la demande
+/// devient « Date flexible ».
+class FormDesiredDateCleared extends PackageRequestFormEvent {
+  const FormDesiredDateCleared();
 }
 
 class FormStep2Submitted extends PackageRequestFormEvent {

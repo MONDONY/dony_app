@@ -110,6 +110,40 @@ void main() {
   });
 
   group('LockedTripContext.travelDateWindow (FLUTTER-E7)', () {
+    test('sans date (« Date flexible ») : aujourd\'hui + 365 jours', () {
+      final w = LockedTripContext.travelDateWindow(
+        desiredDate: null,
+        toleranceDays: 0,
+        today: DateTime(2026, 7, 1, 18, 30),
+      );
+      expect(w.first, DateTime(2026, 7));
+      expect(w.last, DateTime(2027, 7));
+    });
+
+    test('contexte sans date : bornes nulles, fenêtre ouverte', () {
+      const ctx = LockedTripContext(
+        packageRequestId: 'pr-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        dateToleranceDays: 0,
+        weightKg: 5,
+        transportMode: TransportMode.plane,
+        agreedPriceEur: 40,
+      );
+      expect(ctx.desiredDate, isNull);
+      expect(ctx.earliestDate, isNull);
+      expect(ctx.latestDate, isNull);
+      final today = DateTime.now();
+      expect(
+        ctx.travelWindow.first,
+        DateTime(today.year, today.month, today.day),
+      );
+      expect(
+        ctx.travelWindow.last.difference(ctx.travelWindow.first).inDays,
+        greaterThanOrEqualTo(364),
+      );
+    });
+
     test('fenêtre = souhaitée ± tolérance quand elle est à venir', () {
       final w = LockedTripContext.travelDateWindow(
         desiredDate: DateTime(2026, 8, 15),

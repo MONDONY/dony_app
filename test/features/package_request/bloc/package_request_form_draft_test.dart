@@ -92,14 +92,17 @@ void main() {
       expect(back.transportMode, isNull);
     });
 
-    test('date passée : retirée, retour à la première étape', () {
+    test('date passée : retirée avec sa souplesse, étape conservée '
+        '(la date est facultative)', () {
       final json = PackageRequestFormDraft.encode(_full());
       final back = PackageRequestFormDraft.decode(
         json,
         now: DateTime(2026, 12),
       );
       expect(back.desiredDate, isNull);
-      expect(back.currentStep, 0);
+      expect(back.dateToleranceDays, isNull);
+      expect(back.currentStep, 2);
+      expect(back.departureCity, 'Paris');
     });
 
     test('lecture tolérante des valeurs inconnues', () {

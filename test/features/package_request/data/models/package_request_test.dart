@@ -171,4 +171,45 @@ void main() {
       );
     });
   });
+
+  group('date facultative (« Date flexible »)', () {
+    Map<String, dynamic> json() => {
+      'id': 'flex-1',
+      'senderId': 's',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'weightKg': 5,
+      'parcelSize': 'SMALL',
+      'status': 'OPEN',
+      'createdAt': '2026-05-10T10:00:00Z',
+    };
+
+    test('desiredDate et dateToleranceDays null : pas de crash', () {
+      final pr = PackageRequest.fromJson(
+        json()
+          ..['desiredDate'] = null
+          ..['dateToleranceDays'] = null,
+      );
+      expect(pr.desiredDate, isNull);
+      expect(pr.dateToleranceDays, 0);
+      expect(pr.hasFlexibleDate, isTrue);
+    });
+
+    test('clés absentes : même lecture', () {
+      final pr = PackageRequest.fromJson(json());
+      expect(pr.desiredDate, isNull);
+      expect(pr.dateToleranceDays, 0);
+    });
+
+    test('date présente : lecture inchangée', () {
+      final pr = PackageRequest.fromJson(
+        json()
+          ..['desiredDate'] = '2026-06-15'
+          ..['dateToleranceDays'] = 3,
+      );
+      expect(pr.desiredDate, DateTime(2026, 6, 15));
+      expect(pr.dateToleranceDays, 3);
+      expect(pr.hasFlexibleDate, isFalse);
+    });
+  });
 }

@@ -4,6 +4,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/widgets/poster/package_request_poster_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -26,12 +27,13 @@ PackageRequest request({
   String? pickup = 'Guillotière',
   String? delivery = 'Cocody',
   String currency = 'EUR',
+  bool flexibleDate = false,
 }) => PackageRequest(
   id: 'r1',
   senderId: 's1',
   departureCity: departureCity,
   arrivalCity: arrivalCity,
-  desiredDate: DateTime(2026, 10, 23),
+  desiredDate: flexibleDate ? null : DateTime(2026, 10, 23),
   dateToleranceDays: tolerance,
   weightKg: weightKg,
   parcelSize: ParcelSize.medium,
@@ -87,6 +89,24 @@ void main() {
     await _pump(tester, request(tolerance: 0));
 
     expect(find.text('Autour du vendredi 23 octobre'), findsOneWidget);
+  });
+
+  testWidgets('demande sans date : « Date flexible » (affiche et légende)', (
+    tester,
+  ) async {
+    await _pump(tester, request(flexibleDate: true));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Date flexible'), findsOneWidget);
+    expect(find.textContaining('Autour du'), findsNothing);
+  });
+
+  test('dateLabel sans date, en anglais : « Flexible date »', () {
+    final en = lookupAppLocalizations(const Locale('en'));
+    expect(
+      PackageRequestPosterCard.dateLabel(en, request(flexibleDate: true)),
+      'Flexible date',
+    );
   });
 
   testWidgets('poids, format et budget brut négociable', (tester) async {

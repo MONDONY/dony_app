@@ -307,9 +307,10 @@ class _PublicRequestCard extends StatelessWidget {
                 children: [
                   _Pill(
                     iconAsset: 'calendar',
-                    label:
-                        '${shortDayMonth(l, request.desiredDate)} '
-                        '${toleranceCompactLabel(l, request.dateToleranceDays)}',
+                    label: request.desiredDate == null
+                        ? l.requestDateFlexible
+                        : '${shortDayMonth(l, request.desiredDate!)} '
+                              '${toleranceCompactLabel(l, request.dateToleranceDays)}',
                   ),
                   _Pill(iconAsset: 'scale', label: '${request.weightKg} kg'),
                   if (request.categories.isNotEmpty)

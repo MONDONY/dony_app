@@ -758,9 +758,13 @@ String _timeAgo(AppLocalizations l, DateTime dt) {
 }
 
 String _buildDetails(AppLocalizations l, PackageRequest r) {
-  final date = DateFormat.MMMd(l.localeName).format(r.desiredDate);
+  final desired = r.desiredDate;
   final parts = [
-    '$date ${toleranceCompactLabel(l, r.dateToleranceDays)}',
+    if (desired == null)
+      l.requestDateFlexible
+    else
+      '${DateFormat.MMMd(l.localeName).format(desired)} '
+          '${toleranceCompactLabel(l, r.dateToleranceDays)}',
     '${r.weightKg.toStringAsFixed(0)} kg',
     if (r.categories.isNotEmpty)
       _shortCat(contentCategoryDisplayName(l, r.categories.first)),

@@ -102,10 +102,16 @@ class _Route extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    final date = DateFormat.MMMd(l.localeName).format(request.desiredDate);
-    final dateLabel = request.dateToleranceDays > 0
-        ? '$date ${l.requestCreateToleranceShort(request.dateToleranceDays)}'
-        : date;
+    final desired = request.desiredDate;
+    final String dateLabel;
+    if (desired == null) {
+      dateLabel = l.requestDateFlexible;
+    } else {
+      final date = DateFormat.MMMd(l.localeName).format(desired);
+      dateLabel = request.dateToleranceDays > 0
+          ? '$date ${l.requestCreateToleranceShort(request.dateToleranceDays)}'
+          : date;
+    }
     const codeStyle = TextStyle(
       fontSize: 30,
       fontWeight: FontWeight.w800,

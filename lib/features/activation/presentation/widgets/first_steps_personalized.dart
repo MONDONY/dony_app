@@ -154,7 +154,10 @@ class FirstStepsPersonalized extends StatelessWidget {
                         p.arrivalCity,
                       ),
                       detail: [
-                        dateFormat.format(p.desiredDate),
+                        if (p.desiredDate == null)
+                          l.requestDateFlexible
+                        else
+                          dateFormat.format(p.desiredDate!),
                         if (p.weightKg != null)
                           l.firstStepsPackageWeight(
                             p.weightKg!.toStringAsFixed(0),

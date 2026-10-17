@@ -54,6 +54,7 @@ DateTime get _desiredDate {
 
 PackageRequest _fakeRequest({
   PackageRequestStatus status = PackageRequestStatus.open,
+  bool flexibleDate = false,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
@@ -61,8 +62,8 @@ PackageRequest _fakeRequest({
   arrivalCity: 'Annemasse',
   // Relative à aujourd'hui : une date en dur finit par passer et la duplication
   // efface alors la date (clearDate=true), ce qui cassait le test « date future ».
-  desiredDate: _desiredDate,
-  dateToleranceDays: 2,
+  desiredDate: flexibleDate ? null : _desiredDate,
+  dateToleranceDays: flexibleDate ? 0 : 2,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
@@ -222,6 +223,12 @@ void main() {
         clearDateForDuplicate('duplicate', DateTime(2026, 12, 25), now: now),
         isFalse,
       );
+    });
+
+    test('demande sans date : seule la republication « vide » la date', () {
+      expect(clearDateForDuplicate('duplicate', null, now: now), isFalse);
+      expect(clearDateForDuplicate('similar', null, now: now), isFalse);
+      expect(clearDateForDuplicate('republish', null, now: now), isTrue);
     });
 
     test('publier une demande similaire suit la même règle de date passée', () {
@@ -858,6 +865,32 @@ void main() {
       expect(prefill.dateTo, DateTime(d.year, d.month, d.day + 2));
       expect(prefill.minWeightKg, isNull);
       expect(prefill.contentCategories, anyOf(isNull, isEmpty));
+    });
+
+    test('demande sans date : alerte sur tout le corridor, sans fenêtre', () {
+      final prefill = tripAlertPrefillFor(_fakeRequest(flexibleDate: true));
+      expect(prefill.departureCity, 'Divo');
+      expect(prefill.dateFrom, isNull);
+      expect(prefill.dateTo, isNull);
+    });
+  });
+
+  group('demande sans date', () {
+    testWidgets('le détail s\'affiche avec « Date flexible », sans crash', (
+      tester,
+    ) async {
+      when(
+        () => repo.getById('pr-1'),
+      ).thenAnswer((_) async => _fakeRequest(flexibleDate: true));
+      when(
+        () => repo.listThreadsForRequest('pr-1'),
+      ).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Date flexible'), findsWidgets);
     });
   });
 
