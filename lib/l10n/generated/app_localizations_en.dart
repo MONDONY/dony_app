@@ -20727,6 +20727,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiFormDraftMissingContent => 'Contents?';
 
   @override
+  String get aiFormDraftMissingBudget => 'Budget?';
+
+  @override
   String get aiFormDraftCorrectPrompt => 'What would you like to correct?';
 
   @override

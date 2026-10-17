@@ -60,6 +60,7 @@ class AiFormDraftSheetBody extends StatelessWidget {
             kind: state.kind,
             resolved: resolved,
             turnLimitReached: state.turnLimitReached,
+            fallbackCurrency: context.read<AiFormDraftBloc>().defaultCurrency,
           );
         }
         final kind = state.kind;
@@ -72,6 +73,9 @@ class AiFormDraftSheetBody extends StatelessWidget {
                 understood: state.understood,
                 missing: state.missing,
                 draft: state.draft,
+                fallbackCurrency: context
+                    .read<AiFormDraftBloc>()
+                    .defaultCurrency,
               ),
               const SizedBox(height: DonySpacing.md),
             ],

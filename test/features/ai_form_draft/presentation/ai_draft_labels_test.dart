@@ -86,6 +86,30 @@ void main() {
     );
   });
 
+  test('puces manquantes de la demande d’envoi : toutes les clés du back', () {
+    // Clés `missing` possibles du schéma serveur de la demande d'envoi ;
+    // `budget` reste tant que ni totalBudget ni budgetDeclined ne sont dits.
+    expect(
+      aiMissingChipLabels(fr, const [
+        'departureCity',
+        'arrivalCity',
+        'desiredDate',
+        'weightKg',
+        'categories',
+        'paymentMethod',
+        'budget',
+      ]),
+      [
+        fr.aiFormDraftMissingRoute,
+        fr.aiFormDraftMissingDate,
+        fr.aiFormDraftMissingWeight,
+        fr.aiFormDraftMissingContent,
+        fr.aiFormDraftMissingPayment,
+        fr.aiFormDraftMissingBudget,
+      ],
+    );
+  });
+
   test('puces manquantes : une par information, sans doublon', () {
     expect(
       aiMissingChipLabels(fr, const [
@@ -150,6 +174,52 @@ void main() {
     ]);
     expect(lines.first.$2, contains(fr.aiFormDraftSummaryTolerance(3)));
     expect(lines[1].$2, '5 kg · ${fr.parcelSizeMedium}');
+  });
+
+  test('résumé sans devise dite : devise du formulaire, pas l’euro', () {
+    const draft = {'pricePerKg': 2000, 'totalBudget': 30000};
+    final trip = aiSummaryLines(
+      fr,
+      AiFormKind.trip,
+      draft,
+      fallbackCurrency: 'XOF',
+    );
+    expect(
+      trip.single.$2,
+      fr.tripPosterPricePerKg(
+        CurrencyFormatter.format(2000, SupportedCurrency.xof, compact: true),
+      ),
+    );
+    expect(
+      aiUnderstoodChipLabel(
+        fr,
+        AiFormKind.trip,
+        'price',
+        draft,
+        fallbackCurrency: 'XOF',
+      ),
+      trip.single.$2,
+    );
+    final parcel = aiSummaryLines(
+      fr,
+      AiFormKind.packageRequest,
+      draft,
+      fallbackCurrency: 'XOF',
+    );
+    expect(
+      aiUnderstoodChipLabel(
+        fr,
+        AiFormKind.packageRequest,
+        'budget',
+        draft,
+        fallbackCurrency: 'XOF',
+      ),
+      parcel.single.$2,
+    );
+    expect(
+      parcel.single.$2,
+      CurrencyFormatter.format(30000, SupportedCurrency.xof, compact: true),
+    );
   });
 
   test('résumé sans données : aucune ligne', () {

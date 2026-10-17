@@ -10798,6 +10798,7 @@
   "aiFormDraftMissingPayment": "Payment?",
   "aiFormDraftMissingWeight": "Weight?",
   "aiFormDraftMissingContent": "Contents?",
+  "aiFormDraftMissingBudget": "Budget?",
   "aiFormDraftCorrectPrompt": "What would you like to correct?",
   "aiFormDraftQuestionFallback": "Could you tell me more?",
   "aiFormDraftReadyTitle": "All set",

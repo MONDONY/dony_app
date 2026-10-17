@@ -46,8 +46,9 @@ String? aiUnderstoodChipLabel(
   AppLocalizations l,
   AiFormKind kind,
   String key,
-  Map<String, Object?> draft,
-) {
+  Map<String, Object?> draft, {
+  String? fallbackCurrency,
+}) {
   switch (key) {
     case 'route':
       return aiRouteLabel(draft);
@@ -65,7 +66,7 @@ String? aiUnderstoodChipLabel(
     case 'weight':
       return _weight(l, draft['weightKg']);
     case 'price':
-      return _price(l, draft);
+      return _price(l, draft, fallbackCurrency);
     case 'grid':
       return l.aiFormDraftChipGrid;
     case 'direct':
@@ -76,7 +77,7 @@ String? aiUnderstoodChipLabel(
     case 'content':
       return _categories(l, draft);
     case 'budget':
-      return _budget(draft);
+      return _budget(draft, fallbackCurrency);
     case 'payment':
       return aiPaymentLabel(l, kind, draft);
   }
@@ -110,6 +111,8 @@ List<String> aiMissingChipLabels(AppLocalizations l, List<String> missing) {
         add(l.aiFormDraftMissingWeight);
       case 'categories':
         add(l.aiFormDraftMissingContent);
+      case 'budget' || 'totalBudget':
+        add(l.aiFormDraftMissingBudget);
     }
   }
   return labels;
@@ -130,11 +133,15 @@ String aiWarningText(
 };
 
 /// Lignes (libellé, valeur) du résumé « C'est tout bon ».
+///
+/// [fallbackCurrency] : devise du formulaire, quand l'IA n'en a pas dit
+/// (sinon un prix en francs CFA s'afficherait en euros).
 List<(String, String)> aiSummaryLines(
   AppLocalizations l,
   AiFormKind kind,
-  Map<String, Object?> draft,
-) {
+  Map<String, Object?> draft, {
+  String? fallbackCurrency,
+}) {
   final lines = <(String, String)>[];
   void add(String label, String? value) {
     if (value != null && value.isNotEmpty) lines.add((label, value));
@@ -152,7 +159,7 @@ List<(String, String)> aiSummaryLines(
         ]),
       );
       add(l.aiFormDraftSummaryCapacity, _weight(l, draft['availableKg']));
-      add(l.aiFormDraftSummaryPrice, _price(l, draft));
+      add(l.aiFormDraftSummaryPrice, _price(l, draft, fallbackCurrency));
       if (draft['pricingMode'] == 'MIXED') {
         add(l.aiFormDraftSummaryGrid, l.aiFormDraftSummaryGridValue);
       }
@@ -171,7 +178,7 @@ List<(String, String)> aiSummaryLines(
         _join([_weight(l, draft['weightKg']), _parcelSize(l, draft)]),
       );
       add(l.aiFormDraftSummaryContent, _categories(l, draft));
-      add(l.aiFormDraftSummaryBudget, _budget(draft));
+      add(l.aiFormDraftSummaryBudget, _budget(draft, fallbackCurrency));
   }
   add(l.aiFormDraftSummaryPayment, aiPaymentLabel(l, kind, draft));
   return lines;
@@ -203,22 +210,31 @@ String? _date(AppLocalizations l, Object? raw, {bool long = false}) {
 String? _weight(AppLocalizations l, Object? raw) =>
     raw is num ? formatWeightKg(l, raw.toDouble()) : null;
 
-SupportedCurrency _currency(Map<String, Object?> draft) =>
+SupportedCurrency _currency(Map<String, Object?> draft, String? fallback) =>
     SupportedCurrency.fromCode(_text(draft['currency'])) ??
+    SupportedCurrency.fromCode(fallback) ??
     SupportedCurrency.eur;
 
-String? _price(AppLocalizations l, Map<String, Object?> draft) {
+String? _price(
+  AppLocalizations l,
+  Map<String, Object?> draft,
+  String? fallback,
+) {
   final price = draft['pricePerKg'];
   if (price is! num || price <= 0) return null;
   return l.tripPosterPricePerKg(
-    CurrencyFormatter.format(price, _currency(draft), compact: true),
+    CurrencyFormatter.format(price, _currency(draft, fallback), compact: true),
   );
 }
 
-String? _budget(Map<String, Object?> draft) {
+String? _budget(Map<String, Object?> draft, String? fallback) {
   final budget = draft['totalBudget'];
   if (budget is! num) return null;
-  return CurrencyFormatter.format(budget, _currency(draft), compact: true);
+  return CurrencyFormatter.format(
+    budget,
+    _currency(draft, fallback),
+    compact: true,
+  );
 }
 
 String? _categories(AppLocalizations l, Map<String, Object?> draft) {
