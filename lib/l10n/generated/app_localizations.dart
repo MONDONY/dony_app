@@ -33511,6 +33511,390 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Une erreur est survenue. Réessayez.'**
   String get gpProErrorGeneric;
+
+  /// Titre de la carte d'entrée « Créer avec l'IA » en haut du formulaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dites-le, on remplit pour vous'**
+  String get aiFormDraftEntryTitle;
+
+  /// Texte de la carte d'entrée IA du formulaire trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez votre trajet à voix haute. L\'IA prépare le formulaire, vous vérifiez avant de publier.'**
+  String get aiFormDraftEntryBodyTrip;
+
+  /// Texte de la carte d'entrée IA de la demande d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez votre envoi à voix haute. L\'IA prépare le formulaire, vous vérifiez avant de publier.'**
+  String get aiFormDraftEntryBodyPackage;
+
+  /// Bouton de la carte d'entrée IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer avec l\'IA'**
+  String get aiFormDraftEntryCta;
+
+  /// Titre de la feuille de dialogue IA, formulaire trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un trajet avec l\'IA'**
+  String get aiFormDraftSheetTitleTrip;
+
+  /// Titre de la feuille de dialogue IA, demande d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer avec l\'IA'**
+  String get aiFormDraftSheetTitlePackage;
+
+  /// Premier message de l'IA, formulaire trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Racontez-moi votre trajet : d\'où vous partez, où vous allez, quand, combien de kilos, votre prix et comment vous voulez être payé.'**
+  String get aiFormDraftWelcomeTrip;
+
+  /// Premier message de l'IA, demande d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Racontez-moi votre envoi : d\'où à où, vers quelle date, le poids, ce qu\'il contient, votre budget et comment vous payez.'**
+  String get aiFormDraftWelcomePackage;
+
+  /// Bouton pendant la dictée : un appui arrête l'écoute et envoie le texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'écoute… appuyez pour envoyer'**
+  String get aiFormDraftListening;
+
+  /// Libellé de la bulle en pointillés qui affiche la dictée en cours.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transcription en direct'**
+  String get aiFormDraftLiveTranscript;
+
+  /// Indication du champ de saisie écrite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre réponse'**
+  String get aiFormDraftInputHint;
+
+  /// Libellé accessible du bouton d'envoi de la saisie écrite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get aiFormDraftSend;
+
+  /// Bouton qui démarre la dictée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parler'**
+  String get aiFormDraftMicStart;
+
+  /// Libellé accessible du bouton qui passe à la saisie écrite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrire'**
+  String get aiFormDraftKeyboard;
+
+  /// Micro refusé ou reconnaissance vocale indisponible : seule la saisie écrite reste.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez le micro dans les réglages pour parler.'**
+  String get aiFormDraftMicUnavailable;
+
+  /// Titre de l'encart des informations comprises par l'IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà compris'**
+  String get aiFormDraftUnderstoodTitle;
+
+  /// Puce « Déjà compris » : les articles de la grille de prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ma grille'**
+  String get aiFormDraftChipGrid;
+
+  /// Puce « Déjà compris » : vol direct.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans escale'**
+  String get aiFormDraftChipDirect;
+
+  /// Puce « Déjà compris » : flexibilité de la date en jours.
+  ///
+  /// In fr, this message translates to:
+  /// **'± {days} j'**
+  String aiFormDraftChipTolerance(int days);
+
+  /// Puce d'une information requise manquante : villes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet ?'**
+  String get aiFormDraftMissingRoute;
+
+  /// Puce d'une information requise manquante : date.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date ?'**
+  String get aiFormDraftMissingDate;
+
+  /// Puce d'une information requise manquante : heure de départ.
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure ?'**
+  String get aiFormDraftMissingTime;
+
+  /// Puce d'une information requise manquante : mode de transport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport ?'**
+  String get aiFormDraftMissingTransport;
+
+  /// Puce d'une information requise manquante : kilos disponibles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Kilos ?'**
+  String get aiFormDraftMissingCapacity;
+
+  /// Puce d'une information requise manquante : prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix ?'**
+  String get aiFormDraftMissingPrice;
+
+  /// Puce d'une information requise manquante : moyen de paiement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement ?'**
+  String get aiFormDraftMissingPayment;
+
+  /// Puce d'une information requise manquante : poids du colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids ?'**
+  String get aiFormDraftMissingWeight;
+
+  /// Puce d'une information requise manquante : contenu du colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu ?'**
+  String get aiFormDraftMissingContent;
+
+  /// Message de l'IA après « Corriger quelque chose ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Que voulez-vous corriger ?'**
+  String get aiFormDraftCorrectPrompt;
+
+  /// Question affichée si le serveur n'en renvoie aucune alors que le dialogue continue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pouvez-vous préciser ?'**
+  String get aiFormDraftQuestionFallback;
+
+  /// Titre du résumé quand l'IA a tout compris.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est tout bon'**
+  String get aiFormDraftReadyTitle;
+
+  /// Texte du résumé, formulaire trajet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voici votre trajet. Je remplis le formulaire, vous vérifiez chaque étape avant de publier.'**
+  String get aiFormDraftReadyBodyTrip;
+
+  /// Texte du résumé, demande d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voici votre demande. Je remplis le formulaire, vous vérifiez chaque étape avant de publier.'**
+  String get aiFormDraftReadyBodyPackage;
+
+  /// Résumé après 8 échanges sans tout comprendre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je remplis avec ce que j\'ai compris, complétez le reste dans le formulaire.'**
+  String get aiFormDraftTurnLimit;
+
+  /// Ligne du résumé : jour, heure et transport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get aiFormDraftSummaryDeparture;
+
+  /// Ligne du résumé : date d'envoi souhaitée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date souhaitée'**
+  String get aiFormDraftSummaryDesiredDate;
+
+  /// Valeur de la date souhaitée. {date} : jour en toutes lettres.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vers le {date}'**
+  String aiFormDraftSummaryAround(String date);
+
+  /// Flexibilité de la date dans le résumé.
+  ///
+  /// In fr, this message translates to:
+  /// **'{days, plural, =0{date exacte} =1{à 1 jour près} other{à {days} jours près}}'**
+  String aiFormDraftSummaryTolerance(int days);
+
+  /// Ligne du résumé : kilos disponibles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité'**
+  String get aiFormDraftSummaryCapacity;
+
+  /// Ligne du résumé : prix au kilo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix'**
+  String get aiFormDraftSummaryPrice;
+
+  /// Ligne du résumé : tarification par la grille.
+  ///
+  /// In fr, this message translates to:
+  /// **'Articles'**
+  String get aiFormDraftSummaryGrid;
+
+  /// Valeur de la ligne Articles du résumé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ma grille de prix'**
+  String get aiFormDraftSummaryGridValue;
+
+  /// Ligne du résumé : moyens de paiement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get aiFormDraftSummaryPayment;
+
+  /// Ligne du résumé : poids et taille du colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get aiFormDraftSummaryParcel;
+
+  /// Ligne du résumé : catégories du colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu'**
+  String get aiFormDraftSummaryContent;
+
+  /// Ligne du résumé : budget total.
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget'**
+  String get aiFormDraftSummaryBudget;
+
+  /// Rappel du résumé de la demande d'envoi : l'IA ne remplit pas les photos.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez une photo de votre colis à l\'étape 2 : les voyageurs répondent plus vite.'**
+  String get aiFormDraftSummaryPhotoHint;
+
+  /// Bouton du résumé qui revient au dialogue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Corriger quelque chose'**
+  String get aiFormDraftCorrect;
+
+  /// Bouton du résumé qui remplit le formulaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplir le formulaire'**
+  String get aiFormDraftApply;
+
+  /// Bouton quand l'IA ne répond plus ou que le quota est atteint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplir avec ce qui est compris'**
+  String get aiFormDraftApplyPartial;
+
+  /// Quota quotidien des formulaires IA atteint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez beaucoup utilisé l\'IA aujourd\'hui, réessayez demain ou remplissez le formulaire.'**
+  String get aiFormDraftQuotaMessage;
+
+  /// Aucun fournisseur d'IA n'a répondu.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'IA ne répond pas pour le moment.'**
+  String get aiFormDraftDegradedMessage;
+
+  /// Erreur réseau pendant un tour du dialogue IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'La connexion a échoué. Vérifiez votre réseau puis réessayez.'**
+  String get aiFormDraftNetworkError;
+
+  /// Bouton qui renvoie le même tour après une erreur réseau.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get aiFormDraftRetry;
+
+  /// Avertissement du résumé : ville de départ introuvable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je n\'ai pas reconnu la ville de départ : choisissez-la dans le formulaire.'**
+  String get aiFormDraftWarningDepartureUnknown;
+
+  /// Avertissement du résumé : ville d'arrivée introuvable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je n\'ai pas reconnu la ville d\'arrivée : choisissez-la dans le formulaire.'**
+  String get aiFormDraftWarningArrivalUnknown;
+
+  /// Avertissement : grille demandée mais vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez pas encore de grille : j\'ai mis le prix au kilo.'**
+  String get aiFormDraftWarningNoGrid;
+
+  /// Avertissement : carte demandée, paiements par carte non configurés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour être payé par carte, terminez la configuration de vos paiements. Je vous le rappelle à l\'étape Prix.'**
+  String get aiFormDraftWarningCardNotConfigured;
+
+  /// Avertissement : carte demandée dans une devise sans carte (franc CFA).
+  ///
+  /// In fr, this message translates to:
+  /// **'La carte n\'est pas proposée dans cette devise : choisissez un autre moyen de paiement.'**
+  String get aiFormDraftWarningCardCurrency;
+
+  /// Avertissement : mobile money demandé hors zone CFA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le mobile money n\'est proposé qu\'en franc CFA : je ne l\'ai pas coché.'**
+  String get aiFormDraftWarningMobileMoney;
+
+  /// Avertissement : un autre mode que l'avion a été dit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Seul l\'avion est proposé pour le moment : le trajet sera publié en avion.'**
+  String get aiFormDraftWarningPlaneOnly;
+
+  /// Avertissement : budget hors des bornes du formulaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce budget sort des montants acceptés : saisissez-le à l\'étape 3.'**
+  String get aiFormDraftWarningBudget;
+
+  /// Bandeau du formulaire après remplissage par l'IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rempli par l\'IA. Vérifiez chaque champ avant de publier.'**
+  String get aiFormDraftFilledBanner;
+
+  /// Bouton du bandeau qui rouvre le dialogue IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reparler'**
+  String get aiFormDraftTalkAgain;
 }
 
 class _AppLocalizationsDelegate

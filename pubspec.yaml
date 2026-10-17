@@ -139,6 +139,9 @@ dependencies:
   # Idem : vérifie/demande la permission micro avant un appel, sans passer par
   # le SDK WebRTC (cf. stream_call_gateway.dart, ensureMicrophone).
   permission_handler: ^12.0.3
+  # Dictée du parcours « Créer avec l'IA ». Version figée : la 7.5.0 passe au
+  # Kotlin intégré d'AGP, que android.builtInKotlin=false désactive ici.
+  speech_to_text: 7.4.0
   shared_preferences: ^2.5.5
   smart_auth: ^3.2.0
   stream_video_flutter: ^1.6.0

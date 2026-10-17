@@ -94,6 +94,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
             'available_kg': event.availableKg,
             'price_per_kg': event.pricePerKg,
             'is_draft': event.saveAsDraft,
+            'from_ai': event.fromAi,
           },
         ),
       );
@@ -373,6 +374,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
               ...legs.map((l) => l.arrivalCity),
             ].join('→'),
             'is_draft': event.first.saveAsDraft,
+            'from_ai': event.first.fromAi,
             // Voyage publié dans plusieurs devises (FLUTTER-HP).
             'currency_count': {
               event.first.currency ?? '',

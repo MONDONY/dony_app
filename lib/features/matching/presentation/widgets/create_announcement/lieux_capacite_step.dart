@@ -3,6 +3,7 @@
 // lieux ; swap CapacitySelector → CapacityControl pour la partie capacité.
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
@@ -120,9 +121,12 @@ class LieuxCapaciteStep extends StatelessWidget {
         const SizedBox(height: DonySpacing.xxl),
 
         // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────────────
-        CaSectionLabel(
-          label: l.tripPublishCapacityAvailableLabel,
-          iconAsset: 'luggage',
+        AiFieldMark(
+          fields: const ['availableKg', 'capacityUnit'],
+          child: CaSectionLabel(
+            label: l.tripPublishCapacityAvailableLabel,
+            iconAsset: 'luggage',
+          ),
         ),
         const SizedBox(height: DonySpacing.base),
         // Trajet dédié : capacité fixée par la demande → affichage verrouillé.

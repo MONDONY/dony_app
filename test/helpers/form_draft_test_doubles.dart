@@ -2,6 +2,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
 
+import 'ai_form_draft_test_doubles.dart';
 import 'mock_analytics_backend.dart';
 
 /// Trousseau en mémoire pour les brouillons locaux. [failWrites] simule un
@@ -44,6 +45,9 @@ FormDraftStore testFormDraftStore({
 /// [store] ou un trousseau en mémoire. Sans effet s'il l'est déjà. Rend le
 /// magasin utilisé, pour lire ou préparer les brouillons du test.
 FormDraftStore registerTestFormDraftCubit({FormDraftStore? store}) {
+  // Les écrans de publication lisent la disponibilité de « Créer avec l'IA »
+  // en création : éteinte par défaut dans les tests.
+  registerUnavailableAiFormDraft();
   final effective = store ?? testFormDraftStore();
   if (!getIt.isRegistered<FormDraftCubit>()) {
     getIt.registerFactoryParam<FormDraftCubit, FormDraftKind, void>(

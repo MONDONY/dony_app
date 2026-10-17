@@ -7,7 +7,9 @@
 
 "NSLocationWhenInUseUsageDescription" = "Yadony utilise votre position pendant que vous utilisez l'application pour afficher les trajets et colis près de chez vous, trouver l'aéroport le plus proche et enregistrer le lieu de chaque étape de remise d'un colis.";
 
-"NSMicrophoneUsageDescription" = "Yadony utilise le micro pour vos appels audio avec l'expéditeur, le voyageur ou le destinataire d'un colis.";
+"NSMicrophoneUsageDescription" = "Yadony utilise le micro pour vos appels audio avec l'expéditeur, le voyageur ou le destinataire d'un colis, et pour dicter un trajet ou une demande d'envoi à l'assistant IA.";
+
+"NSSpeechRecognitionUsageDescription" = "Yadony convertit votre voix en texte avec la reconnaissance vocale d'Apple pour remplir un trajet ou une demande d'envoi avec l'assistant IA.";
 
 "NSPhotoLibraryAddUsageDescription" = "Yadony enregistre dans vos photos le QR code de votre colis et les affiches de vos annonces, pour les retrouver hors ligne ou les partager.";
 

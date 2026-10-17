@@ -49,6 +49,13 @@ void main() {
       AnalyticsEvents.referralShared,
       AnalyticsEvents.analyticsConsentChanged,
       AnalyticsEvents.accountDeletionRequested,
+      AnalyticsEvents.aiFormDraftOpened,
+      AnalyticsEvents.aiFormDraftVoiceUsed,
+      AnalyticsEvents.aiFormDraftTurn,
+      AnalyticsEvents.aiFormDraftReady,
+      AnalyticsEvents.aiFormDraftApplied,
+      AnalyticsEvents.aiFormDraftDegraded,
+      AnalyticsEvents.aiFormDraftQuotaExceeded,
       AnalyticsEvents.blocError,
     ];
     for (final e in events) {

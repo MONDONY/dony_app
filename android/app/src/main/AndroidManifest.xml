@@ -1,7 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- Appels audio Yadony (Stream Video) : micro et sortie audio (haut-parleur). -->
+    <!-- Appels audio Yadony (Stream Video) : micro et sortie audio (haut-parleur).
+         Le micro sert aussi à la dictée de « Créer avec l'IA » (speech_to_text). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <!-- Partage d'écran du SDK d'appel jamais utilisé : on retire son service
@@ -186,6 +187,13 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+
+        <!-- Dictée de « Créer avec l'IA » (speech_to_text) : depuis Android 11,
+             le service de reconnaissance vocale doit être déclaré pour être
+             visible, sinon SpeechRecognizer est toujours indisponible. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
         </intent>
 
         <!-- Depuis Android 11 (API 30), une app ne voit plus les autres paquets sans

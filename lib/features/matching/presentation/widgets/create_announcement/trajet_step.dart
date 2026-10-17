@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
@@ -296,55 +297,61 @@ class TrajetStep extends StatelessWidget {
                   ),
                 ),
               ] else
-                CityCorridorFields(
-                  departureValue: departureCityNotifier.value,
-                  arrivalValue: arrivalCityNotifier.value,
-                  departureFieldKey: const Key('departureCityField'),
-                  arrivalFieldKey: const Key('arrivalCityField'),
-                  requiredLabels: true,
-                  departureError: departureCityError,
-                  arrivalError: arrivalCityError,
-                  departureCityBloc: departureCityBloc,
-                  arrivalCityBloc: arrivalCityBloc,
-                  onDepartureSelected: (CityModel city) {
-                    // Code pays d'abord : le listener du city notifier (sync
-                    // vers le form bloc) lit la valeur courante.
-                    departureCountryCodeNotifier?.value = city.countryCode;
-                    departureCityNotifier.value = city.name;
-                  },
-                  onArrivalSelected: (CityModel city) {
-                    arrivalCountryCodeNotifier?.value = city.countryCode;
-                    arrivalCityNotifier.value = city.name;
-                  },
-                  onDepartureCleared: () {
-                    departureCityNotifier.value = null;
-                    departureCountryCodeNotifier?.value = null;
-                  },
-                  onArrivalCleared: () {
-                    arrivalCityNotifier.value = null;
-                    arrivalCountryCodeNotifier?.value = null;
-                  },
-                  onSwap: _swapCities,
+                AiFieldMark.overlay(
+                  fields: const ['departureCity', 'arrivalCity'],
+                  child: CityCorridorFields(
+                    departureValue: departureCityNotifier.value,
+                    arrivalValue: arrivalCityNotifier.value,
+                    departureFieldKey: const Key('departureCityField'),
+                    arrivalFieldKey: const Key('arrivalCityField'),
+                    requiredLabels: true,
+                    departureError: departureCityError,
+                    arrivalError: arrivalCityError,
+                    departureCityBloc: departureCityBloc,
+                    arrivalCityBloc: arrivalCityBloc,
+                    onDepartureSelected: (CityModel city) {
+                      // Code pays d'abord : le listener du city notifier (sync
+                      // vers le form bloc) lit la valeur courante.
+                      departureCountryCodeNotifier?.value = city.countryCode;
+                      departureCityNotifier.value = city.name;
+                    },
+                    onArrivalSelected: (CityModel city) {
+                      arrivalCountryCodeNotifier?.value = city.countryCode;
+                      arrivalCityNotifier.value = city.name;
+                    },
+                    onDepartureCleared: () {
+                      departureCityNotifier.value = null;
+                      departureCountryCodeNotifier?.value = null;
+                    },
+                    onArrivalCleared: () {
+                      arrivalCityNotifier.value = null;
+                      arrivalCountryCodeNotifier?.value = null;
+                    },
+                    onSwap: _swapCities,
+                  ),
                 ),
               const SizedBox(height: DonySpacing.sm),
               // ── Heure de départ (obligatoire, D1) — DonyTextField.tappable ───
-              DonyTextField.tappable(
-                key: const Key('departureTimeField'),
-                label: l.tripPublishDepartureTimeLabel,
-                requiredLabel: true,
-                value: departureTimeNotifier.value != null
-                    ? '${departureTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${departureTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
-                    : null,
-                prefixIcon: DonyIcons.time,
-                prefixIconColor: Theme.of(context).colorScheme.primary,
-                // Obligatoire (D1) : pas de bouton clear, on garde le chevron.
-                trailing: Icon(
-                  DonyIcons.chevron,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              AiFieldMark.overlay(
+                fields: const ['departureTime'],
+                child: DonyTextField.tappable(
+                  key: const Key('departureTimeField'),
+                  label: l.tripPublishDepartureTimeLabel,
+                  requiredLabel: true,
+                  value: departureTimeNotifier.value != null
+                      ? '${departureTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${departureTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
+                      : null,
+                  prefixIcon: DonyIcons.time,
+                  prefixIconColor: Theme.of(context).colorScheme.primary,
+                  // Obligatoire (D1) : pas de bouton clear, on garde le chevron.
+                  trailing: Icon(
+                    DonyIcons.chevron,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  errorText: departureTimeError,
+                  onTap: () => onSelectDepartureTime(),
                 ),
-                errorText: departureTimeError,
-                onTap: () => onSelectDepartureTime(),
               ),
               const SizedBox(height: DonySpacing.sm),
               // ── Heure d'arrivée (optionnel) — DonyTextField.tappable ───
@@ -385,29 +392,32 @@ class TrajetStep extends StatelessWidget {
               ],
               const SizedBox(height: DonySpacing.sm),
               // ── Date de départ * — DonyTextField.tappable ─────────────
-              DonyTextField.tappable(
-                key: const Key('departureDateField'),
-                label: l.tripPublishDepartureDateLabel,
-                value: departureDateNotifier.value != null
-                    ? DateFormat.yMMMEd(
-                        l.localeName,
-                      ).format(departureDateNotifier.value!)
-                    : null,
-                prefixIcon: DonyIcons.date,
-                prefixIconColor: Theme.of(context).colorScheme.primary,
-                trailing: DonyIcon(
-                  lockDate ? 'lock' : 'chevron-right',
-                  size: lockDate ? 16 : 18,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              AiFieldMark.overlay(
+                fields: const ['departureDate'],
+                child: DonyTextField.tappable(
+                  key: const Key('departureDateField'),
+                  label: l.tripPublishDepartureDateLabel,
+                  value: departureDateNotifier.value != null
+                      ? DateFormat.yMMMEd(
+                          l.localeName,
+                        ).format(departureDateNotifier.value!)
+                      : null,
+                  prefixIcon: DonyIcons.date,
+                  prefixIconColor: Theme.of(context).colorScheme.primary,
+                  trailing: DonyIcon(
+                    lockDate ? 'lock' : 'chevron-right',
+                    size: lockDate ? 16 : 18,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  requiredLabel: true,
+                  errorText: departureDateError,
+                  onTap: lockDate
+                      ? () => _showLocked(
+                          context,
+                          l.tripPublishFieldLockedDateMessage,
+                        )
+                      : () => onSelectDate(),
                 ),
-                requiredLabel: true,
-                errorText: departureDateError,
-                onTap: lockDate
-                    ? () => _showLocked(
-                        context,
-                        l.tripPublishFieldLockedDateMessage,
-                      )
-                    : () => onSelectDate(),
               ),
               // ── Feedback informatif « sera signalé urgent » ────────────
               // Non-bloquant : n'affecte jamais la soumission du formulaire.
@@ -438,7 +448,10 @@ class TrajetStep extends StatelessWidget {
           builder: (context, mode, _) => supportsStops(mode)
               ? Padding(
                   padding: const EdgeInsets.only(top: DonySpacing.base),
-                  child: StopsChips(notifier: stopsNotifier!),
+                  child: AiFieldMark.overlay(
+                    fields: const ['direct'],
+                    child: StopsChips(notifier: stopsNotifier!),
+                  ),
                 ).animate().fadeIn(delay: 80.ms)
               : const SizedBox.shrink(),
         ),

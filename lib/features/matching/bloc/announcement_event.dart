@@ -42,6 +42,9 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   /// retombe sur la devise du portefeuille du créateur.
   final String? currency;
 
+  /// Formulaire rempli par « Créer avec l'IA » (propriété analytics `from_ai`).
+  final bool fromAi;
+
   AnnouncementCreateRequested({
     required this.departureCity,
     required this.arrivalCity,
@@ -67,6 +70,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     this.negotiable = false,
     this.saveAsDraft = false,
     this.currency,
+    this.fromAi = false,
   });
 }
 
