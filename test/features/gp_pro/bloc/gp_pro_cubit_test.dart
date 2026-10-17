@@ -473,6 +473,33 @@ void main() {
       },
       seed: ready,
       act: (c) => c.submit(commercialName: '  '),
+      verify: (_) {
+        verify(
+          () => repository.apply(
+            frequency: GpProFrequency.twiceAMonth,
+            documentIds: ['d1'],
+            source: GpProSource.profile,
+          ),
+        ).called(1);
+      },
+      // Analytics vérifiés ci-dessous.
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'nom blanc : analytics sans nom',
+      build: () {
+        when(
+          () => repository.apply(
+            frequency: any(named: 'frequency'),
+            commercialName: any(named: 'commercialName'),
+            documentIds: any(named: 'documentIds'),
+            source: any(named: 'source'),
+          ),
+        ).thenAnswer((_) async => pending);
+        return build();
+      },
+      seed: ready,
+      act: (c) => c.submit(commercialName: '  '),
       verify: (_) => verify(
         () => analytics.logEvent(
           AnalyticsEvents.gpProApplicationSubmitted,
@@ -630,7 +657,7 @@ void main() {
       '404 : rechargement sans event',
       build: () {
         when(() => repository.cancel()).thenThrow(
-          const GpProException('gp-pro-no-open-application', status: 404),
+          const GpProException('gp-pro-application-not-found', status: 404),
         );
         stubStatus(none);
         return build();
@@ -676,6 +703,183 @@ void main() {
       },
       act: (c) => c.cancel(),
       verify: (c) => expect(c.state.errorCode, 'unknown'),
+    );
+  });
+
+  group('fix round 1', () {
+    const open = GpProCubitState(load: GpProLoadStatus.ready, status: pending);
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'rattachement échoué puis retrait : removeDocument appelé',
+      build: () {
+        when(
+          () => repository.uploadDocument(
+            filePath: '/tmp/a.jpg',
+            type: GpProDocType.other,
+          ),
+        ).thenAnswer(
+          (_) async => const GpProDocument(id: 'd1', type: GpProDocType.other),
+        );
+        when(
+          () => repository.attachDocuments(['d1']),
+        ).thenThrow(const GpProException('network'));
+        when(() => repository.removeDocument('d1')).thenAnswer((_) async {});
+        return build();
+      },
+      seed: () => open,
+      act: (c) async {
+        await c.addPiece(filePath: '/tmp/a.jpg', type: GpProDocType.other);
+        expect(c.state.pieces.single.remoteId, 'd1');
+        await c.removePiece(c.state.pieces.single.localId);
+      },
+      verify: (c) {
+        verify(() => repository.removeDocument('d1')).called(1);
+        expect(c.state.pieces, isEmpty);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'deux 503 successifs : deux émissions portant errorCode',
+      build: () {
+        when(() => repository.removeDocument('d1')).thenThrow(
+          const GpProException(
+            'gp-pro-document-storage-unavailable',
+            status: 503,
+          ),
+        );
+        return build();
+      },
+      seed: () => GpProCubitState(pieces: [piece('p0', remoteId: 'd1')]),
+      act: (c) async {
+        await c.removePiece('p0');
+        await c.removePiece('p0');
+      },
+      expect: () => [
+        isA<GpProCubitState>().having((s) => s.errorCode, 'e', isNotNull),
+        isA<GpProCubitState>().having((s) => s.errorCode, 'e', isNull),
+        isA<GpProCubitState>().having((s) => s.errorCode, 'e', isNotNull),
+      ],
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'retrait d\'une pièce rattachée : documentCount décrémenté',
+      build: () {
+        when(() => repository.removeDocument('d1')).thenAnswer((_) async {});
+        return build();
+      },
+      seed: () => GpProCubitState(
+        load: GpProLoadStatus.ready,
+        status: const GpProStatus(
+          state: GpProState.pending,
+          documentCount: 2,
+          documents: [
+            GpProDocument(id: 'd1', type: GpProDocType.other),
+            GpProDocument(id: 'd2', type: GpProDocType.other),
+          ],
+        ),
+        pieces: [piece('p0', remoteId: 'd1')],
+      ),
+      act: (c) => c.removePiece('p0'),
+      verify: (c) {
+        expect(c.state.status!.documentCount, 1);
+        expect(c.state.status!.documents!.single.id, 'd2');
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'retrait sans liste de documents : décrément plancher à 0',
+      build: () {
+        when(() => repository.removeDocument('d1')).thenAnswer((_) async {});
+        return build();
+      },
+      seed: () => GpProCubitState(
+        load: GpProLoadStatus.ready,
+        status: pending,
+        pieces: [piece('p0', remoteId: 'd1')],
+      ),
+      act: (c) => c.removePiece('p0'),
+      verify: (c) => expect(c.state.status!.documentCount, 0),
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'restart sans demande ouverte : pièces non rattachées supprimées (erreurs ignorées)',
+      build: () {
+        when(
+          () => repository.removeDocument('d1'),
+        ).thenAnswer((_) async => throw StateError('x'));
+        when(() => repository.removeDocument('d2')).thenAnswer((_) async {});
+        return build();
+      },
+      seed: () => GpProCubitState(
+        load: GpProLoadStatus.ready,
+        status: rejected,
+        pieces: [
+          piece('p0', remoteId: 'd1'),
+          piece('p1', remoteId: 'd2'),
+          piece('p2', status: GpProUploadStatus.failed),
+        ],
+      ),
+      act: (c) => c.restart(),
+      verify: (c) {
+        verify(() => repository.removeDocument('d1')).called(1);
+        verify(() => repository.removeDocument('d2')).called(1);
+        expect(c.state.pieces, isEmpty);
+        expect(c.state.restarting, isTrue);
+      },
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'restart avec demande ouverte : aucune suppression',
+      build: build,
+      seed: () => GpProCubitState(
+        load: GpProLoadStatus.ready,
+        status: pending,
+        pieces: [piece('p0', remoteId: 'd1')],
+      ),
+      act: (c) => c.restart(),
+      verify: (_) => verifyNever(() => repository.removeDocument(any())),
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'addPiece ignoré pendant submitting',
+      build: build,
+      seed: () => const GpProCubitState(submitting: true),
+      act: (c) => c.addPiece(filePath: '/tmp/a.jpg', type: GpProDocType.other),
+      expect: () => <GpProCubitState>[],
+      verify: (_) => verifyNever(
+        () => repository.uploadDocument(
+          filePath: any(named: 'filePath'),
+          type: any(named: 'type'),
+        ),
+      ),
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'load réussi vide errorCode',
+      build: () {
+        stubStatus(none);
+        return build();
+      },
+      seed: () => const GpProCubitState(
+        load: GpProLoadStatus.ready,
+        errorCode: 'network',
+      ),
+      act: (c) => c.load(),
+      verify: (c) => expect(c.state.errorCode, isNull),
+    );
+
+    blocTest<GpProCubit, GpProCubitState>(
+      'pièce failed avec remoteId conservée par un rechargement',
+      build: () {
+        stubStatus(const GpProStatus(state: GpProState.pending, documents: []));
+        return build();
+      },
+      seed: () => GpProCubitState(
+        load: GpProLoadStatus.ready,
+        pieces: [piece('p0', status: GpProUploadStatus.failed, remoteId: 'd1')],
+      ),
+      act: (c) => c.load(),
+      verify: (c) => expect(c.state.pieces.single.remoteId, 'd1'),
     );
   });
 }

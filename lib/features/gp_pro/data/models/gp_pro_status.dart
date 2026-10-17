@@ -127,6 +127,17 @@ class GpProStatus extends Equatable {
   final String? reason;
   final DateTime? decidedAt;
 
+  GpProStatus copyWith({int? documentCount, List<GpProDocument>? documents}) =>
+      GpProStatus(
+        state: state,
+        travelFrequency: travelFrequency,
+        commercialName: commercialName,
+        documentCount: documentCount ?? this.documentCount,
+        documents: documents ?? this.documents,
+        reason: reason,
+        decidedAt: decidedAt,
+      );
+
   /// Demande en cours : on peut la compléter ou l'annuler, pas en ouvrir une
   /// seconde.
   bool get isOpen =>

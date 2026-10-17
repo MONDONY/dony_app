@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_state.dart';
 import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
@@ -36,6 +37,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
           load: GpProLoadStatus.ready,
           status: status,
           pieces: _merge(status),
+          clearError: true,
         ),
       );
       if (!_openedLogged) {
@@ -49,7 +51,8 @@ class GpProCubit extends Cubit<GpProCubitState> {
       }
     } on GpProUnavailableException {
       emit(state.copyWith(load: GpProLoadStatus.unavailable));
-    } catch (_) {
+    } catch (e) {
+      AppLog.warn('gp_pro_load_failed', data: {'code': _code(e)});
       emit(state.copyWith(load: GpProLoadStatus.failure));
     }
   }
@@ -61,8 +64,9 @@ class GpProCubit extends Cubit<GpProCubitState> {
     required String filePath,
     required GpProDocType type,
   }) async {
-    if (!state.canAddPiece) return;
+    if (!state.canAddPiece || state.submitting) return;
     final localId = 'p${_counter++}';
+    String? uploadedId;
     emit(
       state.copyWith(
         clearError: true,
@@ -77,6 +81,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
         filePath: filePath,
         type: type,
       );
+      uploadedId = doc.id;
       var status = state.status;
       if (status != null && status.isOpen) {
         status = await _repository.attachDocuments([doc.id]);
@@ -104,7 +109,10 @@ class GpProCubit extends Cubit<GpProCubitState> {
           pieces: _replace(
             state.pieces,
             localId,
-            (p) => p.copyWith(status: GpProUploadStatus.failed),
+            (p) => p.copyWith(
+              remoteId: uploadedId,
+              status: GpProUploadStatus.failed,
+            ),
           ),
           errorCode: _code(e),
         ),
@@ -117,13 +125,34 @@ class GpProCubit extends Cubit<GpProCubitState> {
     if (index < 0) return;
     final piece = state.pieces[index];
     final remoteId = piece.remoteId;
-    if (piece.status == GpProUploadStatus.failed || remoteId == null) {
+    if (remoteId == null) {
       emit(state.copyWith(pieces: _without(localId)));
       return;
     }
+    emit(state.copyWith(clearError: true));
     try {
       await _repository.removeDocument(remoteId);
-      emit(state.copyWith(pieces: _without(localId), clearError: true));
+      final status = state.status;
+      final attached =
+          status != null &&
+          status.isOpen &&
+          (status.documents?.any((d) => d.id == remoteId) ??
+              piece.status == GpProUploadStatus.ready);
+      emit(
+        state.copyWith(
+          pieces: _without(localId),
+          status: attached
+              ? status.copyWith(
+                  documentCount: status.documentCount > 0
+                      ? status.documentCount - 1
+                      : 0,
+                  documents: status.documents
+                      ?.where((d) => d.id != remoteId)
+                      .toList(),
+                )
+              : null,
+        ),
+      );
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.gpProDocumentRemoved,
@@ -204,9 +233,25 @@ class GpProCubit extends Cubit<GpProCubitState> {
   }
 
   /// « Refaire une demande » après un refus ou une révocation.
-  void restart() => emit(
-    GpProCubitState(load: state.load, status: state.status, restarting: true),
-  );
+  void restart() {
+    if (!(state.status?.isOpen ?? false)) {
+      // Un document non rattaché compte dans la limite du back pendant 24 h :
+      // on le supprime au mieux, sans bloquer ni signaler d'erreur.
+      for (final p in state.pieces) {
+        final id = p.remoteId;
+        if (id != null) unawaited(_discard(id));
+      }
+    }
+    emit(
+      GpProCubitState(load: state.load, status: state.status, restarting: true),
+    );
+  }
+
+  Future<void> _discard(String id) async {
+    try {
+      await _repository.removeDocument(id);
+    } catch (_) {}
+  }
 
   /// Pièces affichées reconstruites depuis `status.documents`. Les pièces
   /// locales en cours ou en échec sont conservées ; sans liste (back plus
@@ -234,6 +279,7 @@ class GpProCubit extends Cubit<GpProCubitState> {
       for (final p in current)
         // Prêtes mais pas encore rattachées (aucune demande ouverte) : gardées.
         if (p.remoteId == null ||
+            p.status == GpProUploadStatus.failed ||
             (!serverIds.contains(p.remoteId) && !status.isOpen))
           p,
     ];
