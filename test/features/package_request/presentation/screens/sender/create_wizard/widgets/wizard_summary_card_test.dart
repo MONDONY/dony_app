@@ -62,4 +62,25 @@ void main() {
     expect(find.textContaining('±2j'), findsNothing);
     expect(find.text('Vêtements & tissus'), findsNothing);
   });
+
+  testWidgets('sans date : « Date flexible », jamais un tiret', (tester) async {
+    const state = PackageRequestFormState(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      transportMode: TransportMode.plane,
+      weightKg: 5,
+    );
+    await tester.pumpWidget(_wrap(const WizardSummaryCard(state: state)));
+    expect(find.text('Date flexible'), findsOneWidget);
+  });
+
+  testWidgets('sans date, en anglais : « Flexible date »', (tester) async {
+    useEnglish();
+    const state = PackageRequestFormState(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+    );
+    await tester.pumpWidget(_wrap(const WizardSummaryCard(state: state)));
+    expect(find.text('Flexible date'), findsOneWidget);
+  });
 }

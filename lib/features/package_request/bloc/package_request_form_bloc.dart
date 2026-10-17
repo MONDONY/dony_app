@@ -36,6 +36,7 @@ class PackageRequestFormBloc
              : const PackageRequestFormState(),
        ) {
     on<FormStep1Submitted>(_onStep1);
+    on<FormDesiredDateCleared>(_onDesiredDateCleared);
     on<FormStep2Submitted>(_onStep2);
     on<FormStep3Submitted>(_onStep3);
     on<FormStepBack>(_onStepBack);
@@ -139,16 +140,25 @@ class PackageRequestFormBloc
       (v == null || v.trim().isEmpty) ? null : v.trim();
 
   void _onStep1(FormStep1Submitted e, Emitter<PackageRequestFormState> emit) {
+    final hasDate = e.desiredDate != null;
     emit(
       state.copyWith(
         currentStep: 1,
         departureCity: e.departureCity,
         arrivalCity: e.arrivalCity,
         desiredDate: e.desiredDate,
-        dateToleranceDays: e.dateToleranceDays,
+        dateToleranceDays: hasDate ? e.dateToleranceDays : null,
+        clearDesiredDate: !hasDate,
         transportMode: e.transportMode,
       ),
     );
+  }
+
+  void _onDesiredDateCleared(
+    FormDesiredDateCleared e,
+    Emitter<PackageRequestFormState> emit,
+  ) {
+    emit(state.copyWith(clearDesiredDate: true));
   }
 
   void _onStep2(FormStep2Submitted e, Emitter<PackageRequestFormState> emit) {
@@ -201,8 +211,10 @@ class PackageRequestFormBloc
           editingId,
           departureCity: state.departureCity!,
           arrivalCity: state.arrivalCity!,
-          desiredDate: state.desiredDate!,
-          dateToleranceDays: state.dateToleranceDays!,
+          desiredDate: state.desiredDate,
+          dateToleranceDays: state.desiredDate == null
+              ? null
+              : state.dateToleranceDays ?? 0,
           weightKg: state.weightKg!,
           categories: state.categories,
           parcelSize: state.parcelSize!,
@@ -221,8 +233,10 @@ class PackageRequestFormBloc
         saved = await _repository.create(
           departureCity: state.departureCity!,
           arrivalCity: state.arrivalCity!,
-          desiredDate: state.desiredDate!,
-          dateToleranceDays: state.dateToleranceDays!,
+          desiredDate: state.desiredDate,
+          dateToleranceDays: state.desiredDate == null
+              ? null
+              : state.dateToleranceDays ?? 0,
           weightKg: state.weightKg!,
           categories: state.categories,
           parcelSize: state.parcelSize!,

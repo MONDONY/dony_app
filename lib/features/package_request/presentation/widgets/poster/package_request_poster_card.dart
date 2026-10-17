@@ -45,9 +45,12 @@ class PackageRequestPosterCard extends StatelessWidget {
 
   static DateFormat dayFormat(String locale) => DateFormat.MMMMEEEEd(locale);
 
-  /// « Autour du vendredi 24 octobre, à 3 jours près ».
+  /// « Autour du vendredi 24 octobre, à 3 jours près », ou « Date flexible »
+  /// pour une demande sans date.
   static String dateLabel(AppLocalizations l, PackageRequest r) {
-    final day = dayFormat(l.localeName).format(r.desiredDate);
+    final desired = r.desiredDate;
+    if (desired == null) return l.requestDateFlexible;
+    final day = dayFormat(l.localeName).format(desired);
     return r.dateToleranceDays > 0
         ? l.requestPosterDateTolerance(r.dateToleranceDays, day)
         : l.requestPosterDate(day);

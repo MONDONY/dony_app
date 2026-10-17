@@ -2154,7 +2154,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     final initial =
         _departureDateNotifier.value ??
         (_isLocked
-            ? widget.lockContext!.desiredDate
+            ? widget.lockContext!.desiredDate ??
+                  today.add(const Duration(days: 1))
             : today.add(const Duration(days: 1)));
     final picked = await showDatePicker(
       context: context,

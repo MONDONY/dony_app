@@ -16,13 +16,14 @@ PackageRequest _req({
   Set<PaymentMethod> methods = const {PaymentMethod.stripe, PaymentMethod.cash},
   bool negotiable = true,
   List<String> categories = const ['Cosmétiques & parfums'],
+  bool flexibleDate = false,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 's',
   departureCity: 'Divo',
   arrivalCity: 'Annemasse',
-  desiredDate: DateTime(2026, 9, 27),
-  dateToleranceDays: 2,
+  desiredDate: flexibleDate ? null : DateTime(2026, 9, 27),
+  dateToleranceDays: flexibleDate ? 0 : 2,
   weightKg: 2,
   parcelSize: ParcelSize.small,
   transportMode: TransportMode.plane,
@@ -73,6 +74,21 @@ void main() {
       findsOneWidget,
     );
     semantics.dispose();
+  });
+
+  testWidgets('demande sans date : « Date flexible »', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        RequestTicketCard(
+          request: _req(flexibleDate: true),
+          statusPill: const Text('En ligne'),
+          metaLabel: 'meta',
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.text('Date flexible'), findsOneWidget);
+    expect(find.textContaining('null'), findsNothing);
   });
 
   testWidgets('sans photo : vignette colis ; prix ferme', (tester) async {

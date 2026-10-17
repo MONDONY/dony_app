@@ -117,7 +117,7 @@ class WizardSummaryCard extends StatelessWidget {
       : s.categories.map((c) => contentCategoryDisplayName(l, c)).join(', ');
 }
 
-/// Date souhaitée et sa tolérance, en un libellé.
+/// Date souhaitée et sa tolérance, en un libellé (« Date flexible » sans date).
 ///
 /// Le récap de l'étape 3 et l'aperçu qui s'ouvre par-dessus rendaient la même
 /// donnée avec deux motifs différents, à deux secondes d'intervalle.
@@ -136,7 +136,8 @@ String formatDesiredDate(
   int? toleranceDays, {
   bool long = false,
 }) {
-  if (date == null) return '-';
+  // Demande sans date : « Date flexible », jamais un tiret ni « null ».
+  if (date == null) return l.requestDateFlexible;
   final locale = l.localeName;
   final f = long
       ? DateFormat.yMMMMd(locale).format(date)

@@ -251,6 +251,33 @@ void main() {
     expect(find.text('Colis p1'), findsOneWidget);
   });
 
+  testWidgets('voyageur avec un colis sans date : « Date flexible »', (
+    tester,
+  ) async {
+    when(() => activation.state).thenReturn(
+      const ActivationLoaded(
+        ActivationStatus(
+          intent: UserIntent.traveler,
+          destinationCountry: 'SN',
+          firstActionDone: false,
+          kind: OpportunityKind.packages,
+          total: 1,
+          packages: [
+            ActivationPackage(
+              id: 'p2',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              weightKg: 3,
+            ),
+          ],
+        ),
+      ),
+    );
+    await pump(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('Date flexible'), findsOneWidget);
+  });
+
   testWidgets('voyageur sans colis : CTA publier mon trajet', (tester) async {
     when(() => activation.state).thenReturn(
       const ActivationLoaded(

@@ -55,11 +55,9 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     return null;
   }
 
-  String? get _dateError =>
-      _date == null ? context.l10n.requestCreateDateRequired : null;
-
-  bool get _isComplete =>
-      _departureError == null && _arrivalError == null && _dateError == null;
+  /// La date est facultative (retour testeur du 05/10) : « Continuer » ne
+  /// dépend que du trajet.
+  bool get _isComplete => _departureError == null && _arrivalError == null;
 
   /// Recalcule l'état du bouton et, si l'utilisateur a déjà agi, les messages.
   void _sync({bool markTouched = false}) {
@@ -95,7 +93,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     return _departureCity != s.departureCity ||
         _arrivalCity != s.arrivalCity ||
         _date != s.desiredDate ||
-        _tolerance != (s.dateToleranceDays ?? 2);
+        (_date != null && _tolerance != (s.dateToleranceDays ?? 2));
   }
 
   /// Saisie de l'étape au format du brouillon local
@@ -104,18 +102,16 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     'departureCity': _departureCity,
     'arrivalCity': _arrivalCity,
     'desiredDate': PackageRequestFormDraft.encodeDate(_date),
-    'dateToleranceDays': _tolerance,
+    'dateToleranceDays': _date == null ? null : _tolerance,
     'transportMode': transportModeToWire(_transportMode),
   };
 
   /// Formule la tolérance en dates concrètes plutôt qu'en nombre de jours.
   String _toleranceHint() {
     final l10n = context.l10n;
+    if (_date == null) return l10n.requestCreateNoDateHint;
     if (_tolerance == 0) {
       return l10n.requestCreateToleranceExactHint;
-    }
-    if (_date == null) {
-      return l10n.requestCreateToleranceGenericHint(_tolerance);
     }
     final f = DateFormat.MMMd(l10n.localeName);
     final from = f.format(_date!.subtract(Duration(days: _tolerance)));
@@ -130,6 +126,13 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
 
   void _setArrival(String? city) {
     _arrivalCity = city;
+    _sync(markTouched: true);
+  }
+
+  /// Retire la date choisie : la demande devient « Date flexible ».
+  void _clearDate() {
+    _date = null;
+    context.read<PackageRequestFormBloc>().add(const FormDesiredDateCleared());
     _sync(markTouched: true);
   }
 
@@ -152,8 +155,8 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
       FormStep1Submitted(
         departureCity: _departureCity!,
         arrivalCity: _arrivalCity!,
-        desiredDate: _date!,
-        dateToleranceDays: _tolerance,
+        desiredDate: _date,
+        dateToleranceDays: _date == null ? null : _tolerance,
         transportMode: _transportMode,
       ),
     );
@@ -233,7 +236,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                     children: [
                       AiFieldMark(
                         fields: const ['desiredDate'],
-                        child: _FieldLabel(l10n.requestCreateDateFieldLabel),
+                        child: _FieldLabel(l10n.requestCreateDateOptionalLabel),
                       ),
                       const SizedBox(height: DonySpacing.xs),
                       _DatePickerField(
@@ -242,7 +245,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                           _date = d;
                           _sync(markTouched: true);
                         },
-                        errorText: _touched ? _dateError : null,
+                        onCleared: _clearDate,
                       ),
                       // ── Feedback informatif « sera signalée urgente » ──
                       // Non-bloquant : n'affecte jamais la soumission.
@@ -272,8 +275,12 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                         ),
                       ),
                       const SizedBox(height: DonySpacing.xs),
+                      // Sans date, la souplesse n'a pas de sens : le champ
+                      // est grisé et inactif.
                       _ToleranceField(
+                        key: const Key('step1-tolerance'),
                         tolerance: _tolerance,
+                        enabled: _date != null,
                         onChanged: (t) {
                           _tolerance = t;
                           _sync(markTouched: true);
@@ -290,6 +297,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
               padding: const EdgeInsets.only(top: DonySpacing.xs),
               child: Text(
                 _toleranceHint(),
+                key: const Key('step1-date-hint'),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
@@ -387,11 +395,13 @@ class _DatePickerField extends StatelessWidget {
   const _DatePickerField({
     required this.date,
     required this.onChanged,
-    this.errorText,
+    required this.onCleared,
   });
   final DateTime? date;
   final ValueChanged<DateTime> onChanged;
-  final String? errorText;
+
+  /// Bouton × : retire la date déjà choisie.
+  final VoidCallback onCleared;
 
   @override
   Widget build(BuildContext context) {
@@ -401,70 +411,18 @@ class _DatePickerField extends StatelessWidget {
     final dateText = date == null
         ? l10n.requestCreateDateFieldLabel
         : _formatPickedDate(date!, l10n.localeName);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          onTap: () async {
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: date ?? DateTime.now().add(const Duration(days: 7)),
-              firstDate: DateTime.now(),
-              lastDate: DateTime.now().add(const Duration(days: 90)),
-            );
-            if (picked != null) onChanged(picked);
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.md,
-              vertical: DonySpacing.md + 2,
-            ),
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(
-                color: errorText != null ? cs.error : cs.outline,
-              ),
-            ),
-            child: Row(
-              children: [
-                const Text('📆', style: TextStyle(fontSize: 14)),
-                const SizedBox(width: DonySpacing.xs),
-                Flexible(
-                  child: Text(
-                    dateText,
-                    overflow: TextOverflow.ellipsis,
-                    style: tt.bodyMedium?.copyWith(
-                      color: date == null ? cs.onSurfaceVariant : cs.onSurface,
-                      fontWeight: date == null
-                          ? FontWeight.w500
-                          : FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        DonyFieldError(message: errorText, textKey: const Key('date-error')),
-      ],
-    );
-  }
-}
-
-class _ToleranceField extends StatelessWidget {
-  const _ToleranceField({required this.tolerance, required this.onChanged});
-  final int tolerance;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     return InkWell(
+      key: const Key('step1-date-field'),
       borderRadius: BorderRadius.circular(DonyRadius.md),
-      onTap: () => _openSheet(context),
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: date ?? DateTime.now().add(const Duration(days: 7)),
+          firstDate: DateTime.now(),
+          lastDate: DateTime.now().add(const Duration(days: 90)),
+        );
+        if (picked != null) onChanged(picked);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.md,
@@ -475,10 +433,79 @@ class _ToleranceField extends StatelessWidget {
           borderRadius: BorderRadius.circular(DonyRadius.md),
           border: Border.all(color: cs.outline),
         ),
+        child: Row(
+          children: [
+            const Text('📆', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: DonySpacing.xs),
+            Flexible(
+              child: Text(
+                dateText,
+                overflow: TextOverflow.ellipsis,
+                style: tt.bodyMedium?.copyWith(
+                  color: date == null ? cs.onSurfaceVariant : cs.onSurface,
+                  fontWeight: date == null ? FontWeight.w500 : FontWeight.w700,
+                ),
+              ),
+            ),
+            if (date != null) ...[
+              const Spacer(),
+              Semantics(
+                button: true,
+                label: l10n.requestCreateClearDate,
+                child: InkResponse(
+                  key: const Key('step1-date-clear'),
+                  onTap: onCleared,
+                  radius: 18,
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: DonyIcon('x', size: 16, color: cs.onSurfaceVariant),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ToleranceField extends StatelessWidget {
+  const _ToleranceField({
+    super.key,
+    required this.tolerance,
+    required this.onChanged,
+    this.enabled = true,
+  });
+  final int tolerance;
+  final ValueChanged<int> onChanged;
+
+  /// Faux sans date choisie : champ grisé, sans action.
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(DonyRadius.md),
+      onTap: enabled ? () => _openSheet(context) : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.md + 2,
+        ),
+        decoration: BoxDecoration(
+          color: enabled
+              ? cs.surface
+              : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: cs.outline),
+        ),
         child: Text(
-          context.l10n.requestCreateToleranceShort(tolerance),
+          enabled ? context.l10n.requestCreateToleranceShort(tolerance) : '-',
           style: tt.bodyMedium?.copyWith(
-            color: cs.onSurface,
+            color: enabled ? cs.onSurface : cs.onSurfaceVariant,
             fontWeight: FontWeight.w700,
           ),
         ),

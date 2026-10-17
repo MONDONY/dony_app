@@ -103,6 +103,10 @@ class PackageRequestFormState extends Equatable {
     String? arrivalCity,
     DateTime? desiredDate,
     int? dateToleranceDays,
+    // Même pattern que clearTotalBudgetEur : la date est facultative et doit
+    // pouvoir être retirée. Efface aussi la souplesse, qui n'a pas de sens
+    // sans date.
+    bool clearDesiredDate = false,
     TransportMode? transportMode,
     double? weightKg,
     ParcelSize? parcelSize,
@@ -141,8 +145,10 @@ class PackageRequestFormState extends Equatable {
     currentStep: currentStep ?? this.currentStep,
     departureCity: departureCity ?? this.departureCity,
     arrivalCity: arrivalCity ?? this.arrivalCity,
-    desiredDate: desiredDate ?? this.desiredDate,
-    dateToleranceDays: dateToleranceDays ?? this.dateToleranceDays,
+    desiredDate: clearDesiredDate ? null : desiredDate ?? this.desiredDate,
+    dateToleranceDays: clearDesiredDate
+        ? null
+        : dateToleranceDays ?? this.dateToleranceDays,
     transportMode: transportMode ?? this.transportMode,
     weightKg: weightKg ?? this.weightKg,
     parcelSize: parcelSize ?? this.parcelSize,

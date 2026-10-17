@@ -1409,4 +1409,194 @@ void main() {
       bloc.close();
     });
   });
+
+  // ── Date facultative (« Date flexible ») ─────────────────────────────────
+  group('date facultative', () {
+    void stubCreate(PackageRequest answer) => when(
+      () => repo.create(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        desiredDate: any(named: 'desiredDate'),
+        dateToleranceDays: any(named: 'dateToleranceDays'),
+        weightKg: any(named: 'weightKg'),
+        parcelSize: any(named: 'parcelSize'),
+        transportMode: any(named: 'transportMode'),
+        categories: any(named: 'categories'),
+        negotiable: any(named: 'negotiable'),
+        acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+        totalBudgetEur: any(named: 'totalBudgetEur'),
+        description: any(named: 'description'),
+        photoKeys: any(named: 'photoKeys'),
+        pickupNeighborhood: any(named: 'pickupNeighborhood'),
+        deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+      ),
+    ).thenAnswer((_) async => answer);
+
+    blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+      'sans date : repo.create reçoit desiredDate et dateToleranceDays null',
+      build: () {
+        stubCreate(fakeRequest);
+        return makeBloc(repo);
+      },
+      act: (bloc) => bloc
+        ..add(
+          const FormStep1Submitted(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: null,
+            dateToleranceDays: null,
+            transportMode: TransportMode.plane,
+          ),
+        )
+        ..add(
+          const FormStep2Submitted(
+            weightKg: 5,
+            parcelSize: ParcelSize.small,
+            categories: ['Vêtements'],
+          ),
+        )
+        ..add(const FormStep3Submitted(targetPriceEur: 25)),
+      verify: (_) {
+        verify(
+          () => repo.create(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: null,
+            dateToleranceDays: null,
+            weightKg: 5,
+            parcelSize: ParcelSize.small,
+            transportMode: TransportMode.plane,
+            categories: const ['Vêtements'],
+            negotiable: true,
+            acceptedPaymentMethods: {PaymentMethod.stripe},
+            totalBudgetEur: 25,
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+      'étape 1 sans date après une date : date et souplesse effacées',
+      build: () => makeBloc(repo),
+      act: (bloc) => bloc
+        ..add(
+          FormStep1Submitted(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: DateTime(2026, 6, 15),
+            dateToleranceDays: 3,
+            transportMode: TransportMode.plane,
+          ),
+        )
+        ..add(
+          const FormStep1Submitted(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: null,
+            dateToleranceDays: 3,
+            transportMode: TransportMode.plane,
+          ),
+        ),
+      skip: 1,
+      expect: () => [
+        isA<PackageRequestFormState>()
+            .having((s) => s.desiredDate, 'desiredDate', isNull)
+            .having((s) => s.dateToleranceDays, 'dateToleranceDays', isNull)
+            .having((s) => s.currentStep, 'currentStep', 1),
+      ],
+    );
+
+    blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+      'FormDesiredDateCleared retire la date et la souplesse',
+      build: () => PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: fakeRequest,
+      ),
+      act: (bloc) => bloc.add(const FormDesiredDateCleared()),
+      expect: () => [
+        isA<PackageRequestFormState>()
+            .having((s) => s.desiredDate, 'desiredDate', isNull)
+            .having((s) => s.dateToleranceDays, 'dateToleranceDays', isNull)
+            .having((s) => s.departureCity, 'departureCity', 'Paris'),
+      ],
+    );
+
+    test('copyWith(clearDesiredDate) prime sur une date passée', () {
+      final s = PackageRequestFormState(
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+      ).copyWith(desiredDate: DateTime(2026, 7), clearDesiredDate: true);
+      expect(s.desiredDate, isNull);
+      expect(s.dateToleranceDays, isNull);
+    });
+
+    final flexibleRequest = PackageRequest(
+      id: 'r-flex',
+      senderId: 's-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      dateToleranceDays: 0,
+      weightKg: 5,
+      parcelSize: ParcelSize.small,
+      transportMode: TransportMode.plane,
+      categories: const ['Vêtements'],
+      status: PackageRequestStatus.open,
+      createdAt: DateTime(2026, 5, 10),
+    );
+
+    blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+      'édition d\'une demande sans date : repo.update reçoit null',
+      build: () {
+        when(
+          () => repo.update(
+            any(),
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            desiredDate: any(named: 'desiredDate'),
+            dateToleranceDays: any(named: 'dateToleranceDays'),
+            weightKg: any(named: 'weightKg'),
+            parcelSize: any(named: 'parcelSize'),
+            transportMode: any(named: 'transportMode'),
+            categories: any(named: 'categories'),
+            negotiable: any(named: 'negotiable'),
+            acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+            totalBudgetEur: any(named: 'totalBudgetEur'),
+            description: any(named: 'description'),
+            photoUrl: any(named: 'photoUrl'),
+            pickupNeighborhood: any(named: 'pickupNeighborhood'),
+            deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          ),
+        ).thenAnswer((_) async => flexibleRequest);
+        return PackageRequestFormBloc(
+          repo,
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+          editing: flexibleRequest,
+        );
+      },
+      act: (bloc) => bloc.add(const FormStep3Submitted(targetPriceEur: 25)),
+      verify: (_) {
+        verify(
+          () => repo.update(
+            'r-flex',
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: null,
+            dateToleranceDays: null,
+            weightKg: any(named: 'weightKg'),
+            parcelSize: any(named: 'parcelSize'),
+            transportMode: any(named: 'transportMode'),
+            categories: any(named: 'categories'),
+            negotiable: any(named: 'negotiable'),
+            acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+            totalBudgetEur: any(named: 'totalBudgetEur'),
+            description: any(named: 'description'),
+            photoUrl: any(named: 'photoUrl'),
+            pickupNeighborhood: any(named: 'pickupNeighborhood'),
+            deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          ),
+        ).called(1);
+      },
+    );
+  });
 }

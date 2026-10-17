@@ -2714,22 +2714,25 @@
   "@requestCreateArrivalSameAsDeparture": {
     "description": "Erreur de validation : ville d'arrivée identique au départ (step_1_trajet_colis.dart)"
   },
-  "requestCreateDateRequired": "Date de départ obligatoire",
-  "@requestCreateDateRequired": {
-    "description": "Erreur de validation : date de départ manquante (step_1_trajet_colis.dart)"
+  "requestCreateDateOptionalLabel": "Date (facultatif)",
+  "@requestCreateDateOptionalLabel": {
+    "description": "Libellé du champ date de départ, facultatif (step_1_trajet_colis.dart)"
+  },
+  "requestCreateNoDateHint": "Sans date, tous les voyageurs du trajet peuvent proposer. La demande reste visible 60 jours.",
+  "@requestCreateNoDateHint": {
+    "description": "Aide sous la date quand aucune date n'est choisie (step_1_trajet_colis.dart)"
+  },
+  "requestCreateClearDate": "Effacer la date",
+  "@requestCreateClearDate": {
+    "description": "Bouton × pour retirer la date choisie, libellé d'accessibilité (step_1_trajet_colis.dart)"
+  },
+  "requestDateFlexible": "Date flexible",
+  "@requestDateFlexible": {
+    "description": "Libellé d'une demande de colis sans date de départ (cartes, détail, affiche)"
   },
   "requestCreateToleranceExactHint": "Seuls les voyageurs partant exactement ce jour-là pourront répondre.",
   "@requestCreateToleranceExactHint": {
     "description": "Explication de la tolérance de date quand elle vaut 0 (step_1_trajet_colis.dart)"
-  },
-  "requestCreateToleranceGenericHint": "{count, plural, =1{± {count} jour autour de votre date. Plus de souplesse, plus de voyageurs.} other{± {count} jours autour de votre date. Plus de souplesse, plus de voyageurs.}}",
-  "@requestCreateToleranceGenericHint": {
-    "description": "Explication de la tolérance de date avant sélection d'une date de départ (step_1_trajet_colis.dart)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "requestCreateToleranceRangeHint": "Les voyageurs partant du {from} au {to} pourront répondre.",
   "@requestCreateToleranceRangeHint": {
@@ -6381,6 +6384,10 @@
       "desired": {"type": "String"},
       "days": {"type": "int"}
     }
+  },
+  "negotiationMakeOfferTravelDateHintFlexible": "Date flexible : choisissez le jour de votre départ.",
+  "@negotiationMakeOfferTravelDateHintFlexible": {
+    "description": "Aide sous le champ date quand la demande n'a pas de date de départ (make_offer_bottom_sheet.dart)"
   },
   "negotiationMakeOfferTravelDateHintExact": "Le {desired} uniquement (date de la demande, sans tolérance)",
   "@negotiationMakeOfferTravelDateHintExact": {

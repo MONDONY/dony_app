@@ -410,4 +410,56 @@ void main() {
     expect(find.text("Can't load your trips"), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
   });
+
+  testWidgets(
+    'demande sans date : aucun filtre de dates, tout trajet actif du corridor',
+    (tester) async {
+      when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (
+          announcements: [
+            _announcement(
+              id: 'near',
+              status: 'ACTIVE',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              departureDate: DateTime(2026, 9),
+            ),
+            _announcement(
+              id: 'far',
+              status: 'ACTIVE',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              departureDate: DateTime(2027, 3, 20),
+            ),
+            _announcement(
+              id: 'other-corridor',
+              status: 'ACTIVE',
+              departureCity: 'Lyon',
+              arrivalCity: 'Dakar',
+            ),
+          ],
+          totalElements: 3,
+        ),
+      );
+
+      await tester.pumpWidget(
+        _harness(
+          TripPickerSection(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: null,
+            dateToleranceDays: 0,
+            weightKg: 10,
+            onSelected: (_) {},
+            onCreateDedicated: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('trip-tile-0')), findsOneWidget);
+      expect(find.byKey(const Key('trip-tile-1')), findsOneWidget);
+      expect(find.byKey(const Key('trip-tile-2')), findsNothing);
+    },
+  );
 }

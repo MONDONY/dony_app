@@ -407,7 +407,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     // Le modèle de détail n'expose pas de champ `urgent` (backend ne l'envoie
     // pas ici) — repli local sur le seuil d'urgence, comme documenté dans
     // dony_urgency.dart.
-    final isUrgent = isUrgentDate(r.desiredDate);
+    final isUrgent = r.desiredDate != null && isUrgentDate(r.desiredDate!);
     final isGuest = currentUserId == null;
     // Seul un voyageur sur le point de faire une offre est concerné : ni le
     // visiteur, ni le propriétaire, ni celui qui a déjà une offre en cours.
@@ -516,10 +516,12 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
                     child: Text(
-                      l.requestPublicDesiredDate(
-                        shortDayMonthYear(l, r.desiredDate),
-                        toleranceCompactLabel(l, r.dateToleranceDays),
-                      ),
+                      r.desiredDate == null
+                          ? l.requestDateFlexible
+                          : l.requestPublicDesiredDate(
+                              shortDayMonthYear(l, r.desiredDate!),
+                              toleranceCompactLabel(l, r.dateToleranceDays),
+                            ),
                       style: tt.bodyMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),

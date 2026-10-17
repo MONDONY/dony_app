@@ -1117,9 +1117,11 @@
   "requestCreateDepartureRequired": "Departure city required",
   "requestCreateArrivalRequired": "Arrival city required",
   "requestCreateArrivalSameAsDeparture": "Choose a different city from the departure",
-  "requestCreateDateRequired": "Departure date required",
+  "requestCreateDateOptionalLabel": "Date (optional)",
+  "requestCreateNoDateHint": "Without a date, every traveler on this route can make an offer. Your request stays visible for 60 days.",
+  "requestCreateClearDate": "Clear date",
+  "requestDateFlexible": "Flexible date",
   "requestCreateToleranceExactHint": "Only travelers leaving on that exact day will be able to respond.",
-  "requestCreateToleranceGenericHint": "{count, plural, =1{± {count} day around your date. More flexibility, more travelers.} other{± {count} days around your date. More flexibility, more travelers.}}",
   "requestCreateToleranceRangeHint": "Travelers leaving between {from} and {to} will be able to respond.",
   "requestCreateAirplaneOnlyMode": "only mode available",
   "requestCreateTrajetSectionLabel": "TRIP",
@@ -3008,6 +3010,7 @@
     "description": "Label majuscule du champ date (make_offer_bottom_sheet.dart)"
   },
   "negotiationMakeOfferTravelDateHint": "Between {start} and {end} (requested {desired} ± {days} d)",
+  "negotiationMakeOfferTravelDateHintFlexible": "Flexible date: pick the day you leave.",
   "negotiationMakeOfferTravelDateHintExact": "{desired} only (requested date, no flexibility)",
   "negotiationMakeOfferSelectDatePlaceholder": "Select…",
   "@negotiationMakeOfferSelectDatePlaceholder": {

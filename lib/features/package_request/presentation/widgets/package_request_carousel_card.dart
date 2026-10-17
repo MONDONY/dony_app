@@ -350,8 +350,11 @@ class _InfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final dateStr = DateFormat.MMMd(l.localeName).format(item.desiredDate);
-    final toleranceStr = item.dateToleranceDays > 0
+    final desired = item.desiredDate;
+    final dateStr = desired == null
+        ? l.requestDateFlexible
+        : DateFormat.MMMd(l.localeName).format(desired);
+    final toleranceStr = desired != null && item.dateToleranceDays > 0
         ? ' ${toleranceCompactLabel(l, item.dateToleranceDays)}'
         : '';
     final rawName = item.sender.displayName;

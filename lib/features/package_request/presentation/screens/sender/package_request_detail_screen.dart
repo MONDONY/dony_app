@@ -244,11 +244,13 @@ class _DetailBody extends StatelessWidget {
 @visibleForTesting
 CorridorAlertDraft tripAlertPrefillFor(PackageRequest request) {
   final tolerance = Duration(days: request.dateToleranceDays);
+  // Sans date (« Date flexible ») : alerte sur tout le trajet, sans fenêtre.
+  final desired = request.desiredDate;
   return CorridorAlertDraft(
     departureCity: request.departureCity,
     arrivalCity: request.arrivalCity,
-    dateFrom: request.desiredDate.subtract(tolerance),
-    dateTo: request.desiredDate.add(tolerance),
+    dateFrom: desired?.subtract(tolerance),
+    dateTo: desired?.add(tolerance),
     direction: AlertDirection.senderWantsTrips,
   );
 }
@@ -269,10 +271,12 @@ Future<void> _edit(BuildContext context, PackageRequestDetailLoaded s) async {
 /// pour un fuseau africain).
 bool clearDateForDuplicate(
   String source,
-  DateTime desiredDate, {
+  DateTime? desiredDate, {
   DateTime? now,
 }) {
   if (source == 'republish') return true;
+  // Demande sans date : rien à vider.
+  if (desiredDate == null) return false;
   final today = (now ?? DateTime.now()).toLocal();
   final desiredDay = DateTime(
     desiredDate.toLocal().year,

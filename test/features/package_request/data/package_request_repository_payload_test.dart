@@ -126,6 +126,84 @@ void main() {
     });
   });
 
+  group('date facultative (« Date flexible »)', () {
+    test(
+      'create avec date : format yyyy-MM-dd et souplesse inchangés',
+      () async {
+        api.on('POST', '/package-requests', _prJson);
+
+        await repo.create(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          weightKg: 5,
+          parcelSize: ParcelSize.small,
+          transportMode: TransportMode.plane,
+          categories: const [],
+          negotiable: true,
+          acceptedPaymentMethods: {PaymentMethod.stripe},
+        );
+
+        final body = api.last.data as Map<String, dynamic>;
+        expect(body['desiredDate'], '2026-06-15');
+        expect(body['dateToleranceDays'], 2);
+      },
+    );
+
+    test('create sans date : desiredDate et dateToleranceDays à null', () async {
+      api.on('POST', '/package-requests', {
+        ..._prJson,
+        'desiredDate': null,
+        'dateToleranceDays': null,
+      });
+
+      final created = await repo.create(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: null,
+        // Une souplesse résiduelle n'a pas de sens sans date : jamais envoyée.
+        dateToleranceDays: 2,
+        weightKg: 5,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
+        categories: const [],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+      );
+
+      final body = api.last.data as Map<String, dynamic>;
+      expect(body.containsKey('desiredDate'), isTrue);
+      expect(body['desiredDate'], isNull);
+      expect(body['dateToleranceDays'], isNull);
+      expect(created.desiredDate, isNull);
+    });
+
+    test('update sans date : null explicite pour retirer la date', () async {
+      api.on('PUT', '/package-requests/pr-1', _prJson);
+
+      await repo.update(
+        'pr-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: null,
+        dateToleranceDays: null,
+        weightKg: 5,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
+        categories: const [],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+      );
+
+      final body = api.last.data as Map<String, dynamic>;
+      expect(body.containsKey('desiredDate'), isTrue);
+      expect(body['desiredDate'], isNull);
+      expect(body.containsKey('dateToleranceDays'), isTrue);
+      expect(body['dateToleranceDays'], isNull);
+    });
+  });
+
   group('uploadPhoto', () {
     late Directory dir;
 

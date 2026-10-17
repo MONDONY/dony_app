@@ -105,8 +105,8 @@ class PackageRequestRepository {
   Future<PackageRequest> create({
     required String departureCity,
     required String arrivalCity,
-    required DateTime desiredDate,
-    required int dateToleranceDays,
+    required DateTime? desiredDate,
+    required int? dateToleranceDays,
     required double weightKg,
     required ParcelSize parcelSize,
     required TransportMode transportMode,
@@ -128,8 +128,10 @@ class PackageRequestRepository {
       data: {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
-        'desiredDate': desiredDate.toIso8601String().substring(0, 10),
-        'dateToleranceDays': dateToleranceDays,
+        // Sans date (« Date flexible ») : les deux clés partent à null,
+        // explicitement, pour qu'une édition puisse retirer une date.
+        'desiredDate': desiredDate?.toIso8601String().substring(0, 10),
+        'dateToleranceDays': desiredDate == null ? null : dateToleranceDays,
         'weightKg': weightKg,
         'parcelSize': parcelSize.wireName,
         'transportMode': transportModeToWire(transportMode),
@@ -160,8 +162,8 @@ class PackageRequestRepository {
     String id, {
     required String departureCity,
     required String arrivalCity,
-    required DateTime desiredDate,
-    required int dateToleranceDays,
+    required DateTime? desiredDate,
+    required int? dateToleranceDays,
     required double weightKg,
     required ParcelSize parcelSize,
     required TransportMode transportMode,
@@ -181,8 +183,10 @@ class PackageRequestRepository {
       data: {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
-        'desiredDate': desiredDate.toIso8601String().substring(0, 10),
-        'dateToleranceDays': dateToleranceDays,
+        // Sans date (« Date flexible ») : les deux clés partent à null,
+        // explicitement, pour qu'une édition puisse retirer une date.
+        'desiredDate': desiredDate?.toIso8601String().substring(0, 10),
+        'dateToleranceDays': desiredDate == null ? null : dateToleranceDays,
         'weightKg': weightKg,
         'parcelSize': parcelSize.wireName,
         'transportMode': transportModeToWire(transportMode),

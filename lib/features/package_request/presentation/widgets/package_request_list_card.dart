@@ -333,10 +333,11 @@ class _RouteMeta extends StatelessWidget {
     final l = context.l10n;
     final depFlag = cityFlag(item.departureCity);
     final arrFlag = cityFlag(item.arrivalCity);
-    final dateStr = DateFormat.MMMd(
-      l.localeName,
-    ).format(item.desiredDate).toLowerCase();
-    final tol = item.dateToleranceDays > 0
+    final desired = item.desiredDate;
+    final dateStr = desired == null
+        ? l.requestDateFlexible
+        : DateFormat.MMMd(l.localeName).format(desired).toLowerCase();
+    final tol = desired != null && item.dateToleranceDays > 0
         ? ' ${toleranceCompactLabel(l, item.dateToleranceDays)}'
         : '';
     final parts = <String>[

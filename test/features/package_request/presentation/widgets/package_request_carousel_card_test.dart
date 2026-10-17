@@ -12,12 +12,13 @@ PackageRequestSearchItem _item({
   double? targetPrice = 35,
   String? displayName = 'Amina',
   List<String> categories = const ['Vêtements'],
+  bool flexibleDate = false,
 }) => PackageRequestSearchItem(
   id: 'pr-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 10, 6),
-  dateToleranceDays: 3,
+  desiredDate: flexibleDate ? null : DateTime(2026, 10, 6),
+  dateToleranceDays: flexibleDate ? 0 : 3,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
   categories: categories,
@@ -96,4 +97,20 @@ void main() {
       expect(find.text('Vêtements & tissus'), findsNothing);
     },
   );
+
+  testWidgets('demande sans date : « Date flexible », sans crash', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        PackageRequestCarouselCard(item: _item(flexibleDate: true), index: 0),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(
+      find.textContaining('Date flexible', findRichText: true),
+      findsWidgets,
+    );
+  });
 }

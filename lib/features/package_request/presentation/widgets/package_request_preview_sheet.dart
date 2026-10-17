@@ -83,18 +83,12 @@ class _PreviewBody extends StatelessWidget {
           '${s.departureCity} → ${s.arrivalCity}',
           style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
         ),
-        if (s.desiredDate != null) ...[
-          const SizedBox(height: DonySpacing.xs),
-          Text(
-            formatDesiredDate(
-              l,
-              s.desiredDate,
-              s.dateToleranceDays,
-              long: true,
-            ),
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ],
+        const SizedBox(height: DonySpacing.xs),
+        // Sans date : « Date flexible » (formatDesiredDate).
+        Text(
+          formatDesiredDate(l, s.desiredDate, s.dateToleranceDays, long: true),
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
         const SizedBox(height: DonySpacing.base),
 
         // L'aperçu s'arrêtait au corridor, à la date et au prix : l'expéditeur

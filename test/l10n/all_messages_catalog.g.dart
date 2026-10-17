@@ -1345,10 +1345,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestCreateArrivalRequired': (l) => l.requestCreateArrivalRequired,
   'requestCreateArrivalSameAsDeparture': (l) =>
       l.requestCreateArrivalSameAsDeparture,
-  'requestCreateDateRequired': (l) => l.requestCreateDateRequired,
+  'requestCreateDateOptionalLabel': (l) => l.requestCreateDateOptionalLabel,
+  'requestCreateNoDateHint': (l) => l.requestCreateNoDateHint,
+  'requestCreateClearDate': (l) => l.requestCreateClearDate,
+  'requestDateFlexible': (l) => l.requestDateFlexible,
   'requestCreateToleranceExactHint': (l) => l.requestCreateToleranceExactHint,
-  'requestCreateToleranceGenericHint': (l) =>
-      l.requestCreateToleranceGenericHint(intPlaceholderValue),
   'requestCreateToleranceRangeHint': (l) => l.requestCreateToleranceRangeHint(
     placeholderMarker('from'),
     placeholderMarker('to'),
@@ -2356,6 +2357,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
         placeholderMarker('desired'),
         intPlaceholderValue,
       ),
+  'negotiationMakeOfferTravelDateHintFlexible': (l) =>
+      l.negotiationMakeOfferTravelDateHintFlexible,
   'negotiationMakeOfferTravelDateHintExact': (l) =>
       l.negotiationMakeOfferTravelDateHintExact(placeholderMarker('desired')),
   'negotiationMakeOfferSelectDatePlaceholder': (l) =>

@@ -31,7 +31,9 @@ class TripPickerSection extends StatefulWidget {
 
   final String departureCity;
   final String arrivalCity;
-  final DateTime desiredDate;
+
+  /// Null : demande « Date flexible », aucun filtre de dates.
+  final DateTime? desiredDate;
   final int dateToleranceDays;
   final double weightKg;
 
@@ -107,12 +109,10 @@ class TripPickerSectionState extends State<TripPickerSection> {
       final myTrips = await getIt<AnnouncementRepository>()
           .getMyAnnouncements();
       String cityKey(String city) => city.split(',').first.toLowerCase().trim();
-      final dateFrom = widget.desiredDate.subtract(
-        Duration(days: widget.dateToleranceDays),
-      );
-      final dateTo = widget.desiredDate.add(
-        Duration(days: widget.dateToleranceDays),
-      );
+      final desired = widget.desiredDate;
+      final tolerance = Duration(days: widget.dateToleranceDays);
+      final dateFrom = desired?.subtract(tolerance);
+      final dateTo = desired?.add(tolerance);
       final matching = myTrips.announcements.where((ann) {
         // Seuls les trajets encore ACTIFS avec assez de capacité disponible
         // peuvent porter ce colis. Un trajet COMPLETED / IN_PROGRESS / CANCELLED
@@ -126,17 +126,18 @@ class TripPickerSectionState extends State<TripPickerSection> {
             cityKey(ann.departureCity) == cityKey(widget.departureCity) &&
             cityKey(ann.arrivalCity) == cityKey(widget.arrivalCity);
         final d = ann.departureDate;
+        // Demande sans date : tout trajet actif du corridor convient.
         final dateMatch =
-            !DateTime(
-              d.year,
-              d.month,
-              d.day,
-            ).isBefore(DateTime(dateFrom.year, dateFrom.month, dateFrom.day)) &&
-            !DateTime(
-              d.year,
-              d.month,
-              d.day,
-            ).isAfter(DateTime(dateTo.year, dateTo.month, dateTo.day));
+            dateFrom == null ||
+            dateTo == null ||
+            !DateTime(d.year, d.month, d.day).isBefore(
+                  DateTime(dateFrom.year, dateFrom.month, dateFrom.day),
+                ) &&
+                !DateTime(
+                  d.year,
+                  d.month,
+                  d.day,
+                ).isAfter(DateTime(dateTo.year, dateTo.month, dateTo.day));
         return linkable && currencyMatch && corridorMatch && dateMatch;
       }).toList();
       if (mounted) {
