@@ -79,7 +79,7 @@ class ActivationPackage extends Equatable {
     required this.id,
     required this.departureCity,
     required this.arrivalCity,
-    required this.desiredDate,
+    this.desiredDate,
     this.weightKg,
   });
 
@@ -88,14 +88,16 @@ class ActivationPackage extends Equatable {
         id: json['id'] as String,
         departureCity: json['departureCity'] as String? ?? '',
         arrivalCity: json['arrivalCity'] as String? ?? '',
-        desiredDate: _toDate(json['desiredDate']),
+        desiredDate: DateTime.tryParse(json['desiredDate'] as String? ?? ''),
         weightKg: _toDouble(json['weightKg']),
       );
 
   final String id;
   final String departureCity;
   final String arrivalCity;
-  final DateTime desiredDate;
+
+  /// Null : demande « Date flexible ».
+  final DateTime? desiredDate;
   final double? weightKg;
 
   @override

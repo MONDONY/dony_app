@@ -166,7 +166,7 @@ void main() {
       final desiredDate = DateTime.now().add(const Duration(days: 2));
       final json = _baseJson()..['desiredDate'] = desiredDate.toIso8601String();
       final item = PackageRequestSearchItem.fromJson(json);
-      expect(item.isUrgent, isUrgentDate(item.desiredDate));
+      expect(item.isUrgent, isUrgentDate(item.desiredDate!));
     });
 
     test('urgent participates in equality (props)', () {
@@ -287,6 +287,40 @@ void main() {
         0,
       );
       expect(SenderPublicProfile.guest('Awa').incidentCount, 0);
+    });
+  });
+
+  group('date facultative (« Date flexible »)', () {
+    test('desiredDate et dateToleranceDays null : pas de crash', () {
+      final item = PackageRequestSearchItem.fromJson(
+        _baseJson()
+          ..['desiredDate'] = null
+          ..['dateToleranceDays'] = null,
+      );
+      expect(item.desiredDate, isNull);
+      expect(item.dateToleranceDays, 0);
+      expect(item.hasFlexibleDate, isTrue);
+      // Sans date ni drapeau serveur, jamais urgente.
+      expect(item.isUrgent, isFalse);
+    });
+
+    test('clés absentes : même lecture', () {
+      final item = PackageRequestSearchItem.fromJson(
+        _baseJson()
+          ..remove('desiredDate')
+          ..remove('dateToleranceDays'),
+      );
+      expect(item.desiredDate, isNull);
+      expect(item.dateToleranceDays, 0);
+    });
+
+    test('le drapeau urgent du serveur prime même sans date', () {
+      final item = PackageRequestSearchItem.fromJson(
+        _baseJson()
+          ..['desiredDate'] = null
+          ..['urgent'] = true,
+      );
+      expect(item.isUrgent, isTrue);
     });
   });
 }

@@ -35,13 +35,14 @@ PackageRequest _req({
   double? targetPriceEur = 35,
   double? grossPriceEur,
   List<String> categories = const ['Vêtements'],
+  bool flexibleDate = false,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: desiredDate ?? DateTime(2026, 8),
-  dateToleranceDays: 3,
+  desiredDate: flexibleDate ? null : desiredDate ?? DateTime(2026, 8),
+  dateToleranceDays: flexibleDate ? 0 : 3,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
@@ -80,6 +81,17 @@ void main() {
     expect(find.text('Vêtements'), findsOneWidget);
     expect(find.text('5 kg'), findsOneWidget);
     expect(find.text('Proposer mon trajet'), findsOneWidget);
+  });
+
+  testWidgets('demande sans date : « Date flexible », jamais urgente', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(_req(flexibleDate: true)));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Date flexible'), findsOneWidget);
+    expect(find.textContaining('null'), findsNothing);
+    expect(find.textContaining('Urgent'), findsNothing);
   });
 
   testWidgets('photos → carousel avec compteur', (tester) async {

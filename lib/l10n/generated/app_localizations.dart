@@ -6437,23 +6437,35 @@ abstract class AppLocalizations {
   /// **'Choisissez une ville différente du départ'**
   String get requestCreateArrivalSameAsDeparture;
 
-  /// Erreur de validation : date de départ manquante (step_1_trajet_colis.dart)
+  /// Libellé du champ date de départ, facultatif (step_1_trajet_colis.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Date de départ obligatoire'**
-  String get requestCreateDateRequired;
+  /// **'Date (facultatif)'**
+  String get requestCreateDateOptionalLabel;
+
+  /// Aide sous la date quand aucune date n'est choisie (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans date, tous les voyageurs du trajet peuvent proposer. La demande reste visible 60 jours.'**
+  String get requestCreateNoDateHint;
+
+  /// Bouton × pour retirer la date choisie, libellé d'accessibilité (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer la date'**
+  String get requestCreateClearDate;
+
+  /// Libellé d'une demande de colis sans date de départ (cartes, détail, affiche)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date flexible'**
+  String get requestDateFlexible;
 
   /// Explication de la tolérance de date quand elle vaut 0 (step_1_trajet_colis.dart)
   ///
   /// In fr, this message translates to:
   /// **'Seuls les voyageurs partant exactement ce jour-là pourront répondre.'**
   String get requestCreateToleranceExactHint;
-
-  /// Explication de la tolérance de date avant sélection d'une date de départ (step_1_trajet_colis.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{± {count} jour autour de votre date. Plus de souplesse, plus de voyageurs.} other{± {count} jours autour de votre date. Plus de souplesse, plus de voyageurs.}}'**
-  String requestCreateToleranceGenericHint(int count);
 
   /// Explication de la tolérance de date une fois une date de départ choisie (step_1_trajet_colis.dart)
   ///
@@ -11021,6 +11033,12 @@ abstract class AppLocalizations {
     String desired,
     int days,
   );
+
+  /// Aide sous le champ date quand la demande n'a pas de date de départ (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date flexible : choisissez le jour de votre départ.'**
+  String get negotiationMakeOfferTravelDateHintFlexible;
 
   /// Aide sous le champ date quand la demande n'a pas de tolérance : seul le jour souhaité est permis — make_offer_bottom_sheet.dart (FLUTTER-E7)
   ///

@@ -12,7 +12,7 @@ class LockedTripContext extends Equatable {
     required this.packageRequestId,
     required this.departureCity,
     required this.arrivalCity,
-    required this.desiredDate,
+    this.desiredDate,
     required this.dateToleranceDays,
     required this.weightKg,
     required this.transportMode,
@@ -34,7 +34,9 @@ class LockedTripContext extends Equatable {
   final String packageRequestId;
   final String departureCity;
   final String arrivalCity;
-  final DateTime desiredDate;
+
+  /// Null : demande sans date (« Date flexible »), aucune fenêtre imposée.
+  final DateTime? desiredDate;
   final int dateToleranceDays;
   final double weightKg;
   final TransportMode transportMode;
@@ -60,9 +62,13 @@ class LockedTripContext extends Equatable {
   /// (boucle refuseTrip) : le formulaire part de [desiredDate].
   final DateTime? preferredDate;
 
-  DateTime get earliestDate =>
-      desiredDate.subtract(Duration(days: dateToleranceDays));
-  DateTime get latestDate => desiredDate.add(Duration(days: dateToleranceDays));
+  /// Null quand la demande n'a pas de date.
+  DateTime? get earliestDate =>
+      desiredDate?.subtract(Duration(days: dateToleranceDays));
+
+  /// Null quand la demande n'a pas de date.
+  DateTime? get latestDate =>
+      desiredDate?.add(Duration(days: dateToleranceDays));
 
   /// Fenêtre où la date de voyage est acceptée, pour ce contexte.
   ({DateTime first, DateTime last}) get travelWindow => travelDateWindow(
@@ -77,13 +83,23 @@ class LockedTripContext extends Equatable {
   /// jours calendaires (sans heure). Une fenêtre déjà entièrement passée se
   /// réduit à aujourd'hui plutôt que de donner un `lastDate` antérieur au
   /// `firstDate`, qui ferait échouer `showDatePicker`.
+  ///
+  /// Sans [desiredDate] (demande « Date flexible »), aucune contrainte de la
+  /// demande : de aujourd'hui à [flexibleWindowDays] jours, comme un trajet
+  /// ordinaire.
   static ({DateTime first, DateTime last}) travelDateWindow({
-    required DateTime desiredDate,
+    required DateTime? desiredDate,
     required int toleranceDays,
     DateTime? today,
   }) {
     final now = today ?? DateTime.now();
     final day = DateTime(now.year, now.month, now.day);
+    if (desiredDate == null) {
+      return (
+        first: day,
+        last: DateTime(day.year, day.month, day.day + flexibleWindowDays),
+      );
+    }
     // Arithmétique calendaire (et non `Duration`) : un passage à l'heure
     // d'été ne doit pas décaler la borne d'un jour.
     final earliest = DateTime(
@@ -99,6 +115,10 @@ class LockedTripContext extends Equatable {
     final first = earliest.isBefore(day) ? day : earliest;
     return (first: first, last: latest.isBefore(first) ? first : latest);
   }
+
+  /// Étendue de la fenêtre d'une demande sans date : celle du calendrier de
+  /// création d'un trajet.
+  static const int flexibleWindowDays = 365;
 
   /// Ramène [date] dans [window] (jour calendaire, sans heure).
   static DateTime clampToWindow(

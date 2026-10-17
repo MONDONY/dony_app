@@ -60,6 +60,21 @@ void main() {
     });
   });
 
+  group('ActivationPackage sans date', () {
+    test(
+      'desiredDate null ou absente : « Date flexible », pas aujourd\'hui',
+      () {
+        final a = ActivationPackage.fromJson(const {
+          'id': 'p1',
+          'desiredDate': null,
+        });
+        final b = ActivationPackage.fromJson(const {'id': 'p2'});
+        expect(a.desiredDate, isNull);
+        expect(b.desiredDate, isNull);
+      },
+    );
+  });
+
   group('ActivationStatus', () {
     test('compare aussi les listes de trajets et de colis', () {
       final json = {

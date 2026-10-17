@@ -159,4 +159,9 @@ void main() {
     expect(find.text('October 6, 2026 ±2d'), findsOneWidget);
     expect(find.textContaining('±2j'), findsNothing);
   });
+
+  testWidgets('sans date : « Date flexible » sous le corridor', (tester) async {
+    await pumpAndOpen(tester, onConfirm: () {});
+    expect(find.text('Date flexible'), findsOneWidget);
+  });
 }

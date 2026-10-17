@@ -17,7 +17,7 @@ class PackageRequestSearchItem extends Equatable {
     this.departureLng,
     this.arrivalLat,
     this.arrivalLng,
-    required this.desiredDate,
+    this.desiredDate,
     required this.dateToleranceDays,
     required this.weightKg,
     required this.parcelSize,
@@ -50,8 +50,17 @@ class PackageRequestSearchItem extends Equatable {
   final double? departureLng;
   final double? arrivalLat;
   final double? arrivalLng;
-  final DateTime desiredDate;
+
+  /// Date de départ souhaitée. Null : demande sans date (« Date flexible »),
+  /// tous les voyageurs du trajet peuvent proposer.
+  final DateTime? desiredDate;
+
+  /// Souplesse autour de [desiredDate], en jours. 0 quand la demande n'a pas
+  /// de date (le back renvoie alors null).
   final int dateToleranceDays;
+
+  /// Vrai quand la demande n'a pas de date de départ.
+  bool get hasFlexibleDate => desiredDate == null;
   final double weightKg;
   final ParcelSize parcelSize;
   final List<String> categories;
@@ -91,7 +100,8 @@ class PackageRequestSearchItem extends Equatable {
 
   /// Urgence effective : la valeur backend prime ; repli sur le calcul local
   /// depuis [desiredDate] uniquement si absente (ancien backend).
-  bool get isUrgent => urgent ?? isUrgentDate(desiredDate);
+  bool get isUrgent =>
+      urgent ?? (desiredDate != null && isUrgentDate(desiredDate!));
 
   /// Score de compatibilité (0 à 100) entre cette demande et le trajet retenu.
   /// Renvoyé par le serveur uniquement quand la recherche porte le filtre
@@ -140,8 +150,8 @@ class PackageRequestSearchItem extends Equatable {
     departureLng: (json['departureLng'] as num?)?.toDouble(),
     arrivalLat: (json['arrivalLat'] as num?)?.toDouble(),
     arrivalLng: (json['arrivalLng'] as num?)?.toDouble(),
-    desiredDate: DateTime.parse(json['desiredDate'] as String),
-    dateToleranceDays: json['dateToleranceDays'] as int,
+    desiredDate: DateTime.tryParse(json['desiredDate'] as String? ?? ''),
+    dateToleranceDays: (json['dateToleranceDays'] as num?)?.toInt() ?? 0,
     weightKg: (json['weightKg'] as num).toDouble(),
     parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
     categories: splitContentCategoryLabels(json['contentCategory'] as String?),

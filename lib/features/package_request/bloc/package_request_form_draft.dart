@@ -64,18 +64,20 @@ abstract final class PackageRequestFormDraft {
     ...stepInput,
   };
 
-  /// État du formulaire à la reprise. Une date souhaitée passée est retirée
-  /// et ramène à la première étape, où elle se choisit.
+  /// État du formulaire à la reprise. La date étant facultative, une date
+  /// souhaitée passée est seulement retirée (avec sa souplesse) : la demande
+  /// devient « Date flexible » sans renvoyer à la première étape.
   static PackageRequestFormState decode(
     Map<String, dynamic> json, {
     DateTime? now,
   }) {
     final today = _dateOnly(now ?? DateTime.now());
     var date = decodeDate(json['desiredDate']);
-    var step = ((json['step'] as num?)?.toInt() ?? 0).clamp(0, 2);
+    var tolerance = (json['dateToleranceDays'] as num?)?.toInt();
+    final step = ((json['step'] as num?)?.toInt() ?? 0).clamp(0, 2);
     if (date != null && date.isBefore(today)) {
       date = null;
-      step = 0;
+      tolerance = null;
     }
     final methods = <PaymentMethod>{
       for (final w in _strings(json['acceptedPaymentMethods']))
@@ -87,7 +89,7 @@ abstract final class PackageRequestFormDraft {
       departureCity: json['departureCity'] as String?,
       arrivalCity: json['arrivalCity'] as String?,
       desiredDate: date,
-      dateToleranceDays: (json['dateToleranceDays'] as num?)?.toInt(),
+      dateToleranceDays: tolerance,
       transportMode: transportModeFromWire(json['transportMode'] as String?),
       weightKg: (json['weightKg'] as num?)?.toDouble(),
       parcelSize: size == null

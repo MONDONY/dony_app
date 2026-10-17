@@ -60,6 +60,46 @@ void main() {
     ),
   );
 
+  PackageRequest editingReq({DateTime? date, int tolerance = 2}) =>
+      PackageRequest(
+        id: 'r-edit',
+        senderId: 's-1',
+        departureCity: 'Lyon',
+        arrivalCity: 'Bamako',
+        desiredDate: date,
+        dateToleranceDays: tolerance,
+        weightKg: 8,
+        parcelSize: ParcelSize.medium,
+        transportMode: TransportMode.plane,
+        categories: const ['Vêtements'],
+        status: PackageRequestStatus.open,
+        createdAt: DateTime(2026, 5, 10),
+      );
+
+  Widget wrapEditing(
+    PackageRequest req, {
+    GlobalKey<Step1TrajetColisState>? key,
+    ValueNotifier<bool>? canContinue,
+  }) => MaterialApp(
+    theme: AppTheme.light(),
+    home: BlocProvider(
+      create: (_) => PackageRequestFormBloc(
+        packageRepo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: req,
+      ),
+      child: Scaffold(
+        body: Step1TrajetColis(key: key, canContinueNotifier: canContinue),
+      ),
+    ),
+  );
+
+  PackageRequestFormBloc blocOf(WidgetTester tester) => tester
+      .element(find.byType(Step1TrajetColis))
+      .read<PackageRequestFormBloc>();
+
+  final farDate = DateTime.now().add(const Duration(days: 30));
+
   group('Step1TrajetColis', () {
     testWidgets('rend le label section + titre + avion verrouillé', (
       tester,
@@ -82,8 +122,10 @@ void main() {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.text('DÉPART'), findsOneWidget);
       expect(find.text('ARRIVÉE'), findsOneWidget);
-      // 'Date' apparaît 2 fois : label + placeholder du DatePickerField (date == null).
-      expect(find.text('Date'), findsNWidgets(2));
+      // La date est facultative : le libellé le dit, le champ vide garde
+      // « Date » en placeholder.
+      expect(find.text('Date (facultatif)'), findsOneWidget);
+      expect(find.text('Date'), findsOneWidget);
       // « Tolérance » nommait le réglage ; « Souplesse » nomme ce qu'il fait.
       expect(find.text('Souplesse'), findsOneWidget);
       expect(find.text('Tolérance'), findsNothing);
@@ -111,21 +153,127 @@ void main() {
         key.currentState!.submit();
         await tester.pump();
 
-        // Les messages se révèlent sous les champs concernés.
-        expect(find.text('Date de départ obligatoire'), findsOneWidget);
+        // Les messages se révèlent sous les champs concernés ; la date,
+        // facultative, n'en a plus.
+        expect(find.text('Date de départ obligatoire'), findsNothing);
         expect(canContinue.value, isFalse);
       },
     );
 
-    testWidgets('la souplesse est expliquée en dates, pas en jours', (
+    testWidgets('sans date : aide « 60 jours » et souplesse inactive', (
       tester,
     ) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       await tester.pump();
       expect(
-        find.textContaining('Plus de souplesse, plus de voyageurs'),
+        find.text(
+          'Sans date, tous les voyageurs du trajet peuvent proposer. '
+          'La demande reste visible 60 jours.',
+        ),
         findsOneWidget,
       );
+      expect(find.text('± 2 j'), findsNothing);
+      expect(find.byKey(const Key('step1-date-clear')), findsNothing);
+
+      // Champ souplesse grisé : aucun choix ne s'ouvre.
+      await tester.tap(find.byKey(const Key('step1-tolerance')));
+      await tester.pumpAndSettle();
+      expect(find.text('Date exacte'), findsNothing);
+    });
+
+    testWidgets('sans date : aide traduite en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrap(const Step1TrajetColis()));
+      await tester.pump();
+      expect(find.text('Date (optional)'), findsOneWidget);
+      expect(
+        find.textContaining('every traveler on this route can make an offer'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('avec une date, la souplesse est expliquée en dates', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrapEditing(editingReq(date: farDate)));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Les voyageurs partant du'), findsOneWidget);
+      expect(find.textContaining('60 jours'), findsNothing);
+    });
+
+    testWidgets('trajet rempli sans date : Continuer actif, envoi sans date', (
+      tester,
+    ) async {
+      final key = GlobalKey<Step1TrajetColisState>();
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+
+      await tester.pumpWidget(
+        wrapEditing(editingReq(), key: key, canContinue: canContinue),
+      );
+      await tester.pumpAndSettle();
+      expect(canContinue.value, isTrue);
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+
+      final state = blocOf(tester).state;
+      expect(state.currentStep, 1);
+      expect(state.departureCity, 'Lyon');
+      expect(state.desiredDate, isNull);
+      expect(state.dateToleranceDays, isNull);
+      expect(key.currentState!.draftInput['desiredDate'], isNull);
+      expect(key.currentState!.draftInput['dateToleranceDays'], isNull);
+    });
+
+    testWidgets('le bouton × efface la date choisie', (tester) async {
+      final key = GlobalKey<Step1TrajetColisState>();
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+
+      await tester.pumpWidget(
+        wrapEditing(
+          editingReq(date: farDate, tolerance: 3),
+          key: key,
+          canContinue: canContinue,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('± 3 j'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('step1-date-clear')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('step1-date-clear')), findsNothing);
+      expect(find.text('± 3 j'), findsNothing);
+      expect(find.textContaining('60 jours'), findsOneWidget);
+      expect(canContinue.value, isTrue);
+      final state = blocOf(tester).state;
+      expect(state.desiredDate, isNull);
+      expect(state.dateToleranceDays, isNull);
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+      expect(blocOf(tester).state.currentStep, 1);
+      expect(blocOf(tester).state.desiredDate, isNull);
+    });
+
+    testWidgets('trajet rempli avec date : envoi date + souplesse', (
+      tester,
+    ) async {
+      final key = GlobalKey<Step1TrajetColisState>();
+      await tester.pumpWidget(
+        wrapEditing(editingReq(date: farDate, tolerance: 3), key: key),
+      );
+      await tester.pumpAndSettle();
+
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
+
+      final state = blocOf(tester).state;
+      expect(state.currentStep, 1);
+      expect(state.desiredDate, farDate);
+      expect(state.dateToleranceDays, 3);
     });
 
     // Le lieu de remise n'est plus demandé à la publication : il se convient
@@ -299,7 +447,7 @@ void main() {
     testWidgets(
       'la feuille de tolérance liste les options en jours (français)',
       (tester) async {
-        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pumpWidget(wrapEditing(editingReq(date: farDate)));
         await tester.pumpAndSettle();
 
         // Tolérance par défaut = 2 jours : pill compact « ± 2 j ».
@@ -317,7 +465,7 @@ void main() {
       'anglais',
       (tester) async {
         useEnglish();
-        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pumpWidget(wrapEditing(editingReq(date: farDate)));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('± 2 d'));
@@ -331,59 +479,21 @@ void main() {
       },
     );
 
-    // requestCreateToleranceGenericHint corrige un accord faux : l'ancien
-    // texte disait toujours « jours », y compris pour une tolérance de 1
-    // (« ± 1 jours »). Le nouveau message ICU accorde correctement.
-    testWidgets(
-      'le hint générique de tolérance accorde jour/jours (± 1 jour, ± 3 '
-      'jours)',
-      (tester) async {
-        await tester.pumpWidget(wrap(const Step1TrajetColis()));
-        await tester.pumpAndSettle();
+    testWidgets('date exacte : seul le jour choisi est permis', (tester) async {
+      await tester.pumpWidget(wrapEditing(editingReq(date: farDate)));
+      await tester.pumpAndSettle();
 
-        // Bascule sur une tolérance de 1 jour (singulier) via la feuille.
-        await tester.tap(find.text('± 2 j'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('± 1 jour'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('± 2 j'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Date exacte'));
+      await tester.pumpAndSettle();
 
-        expect(
-          find.textContaining('± 1 jour autour de votre date'),
-          findsOneWidget,
-        );
-        expect(find.textContaining('± 1 jours'), findsNothing);
-
-        // Puis une tolérance de 3 jours (pluriel).
-        await tester.tap(find.text('± 1 j'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('± 3 jours'));
-        await tester.pumpAndSettle();
-
-        expect(
-          find.textContaining('± 3 jours autour de votre date'),
-          findsOneWidget,
-        );
-      },
-    );
-
-    testWidgets(
-      'le hint générique de tolérance est traduit en anglais (± 3 days)',
-      (tester) async {
-        useEnglish();
-        await tester.pumpWidget(wrap(const Step1TrajetColis()));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('± 2 d'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('± 3 days'));
-        await tester.pumpAndSettle();
-
-        expect(
-          find.textContaining('± 3 days around your date'),
-          findsOneWidget,
-        );
-        expect(find.textContaining('autour de votre date'), findsNothing);
-      },
-    );
+      expect(
+        find.text(
+          'Seuls les voyageurs partant exactement ce jour-là pourront répondre.',
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }

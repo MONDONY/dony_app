@@ -33,7 +33,7 @@ class MakeOfferBottomSheet {
     required double weightKg,
     required String departureCity,
     required String arrivalCity,
-    required DateTime desiredDate,
+    required DateTime? desiredDate,
     required int dateToleranceDays,
     required TransportMode transportMode,
     DateTime? initialDate,
@@ -189,7 +189,8 @@ class _MakeOfferContent extends StatefulWidget {
   /// Fenêtre de dates de la demande — sert à filtrer `TripPickerSection` et à
   /// borner la création d'un trajet dédié. Distincte de [initialDate] (date
   /// pré-remplie du champ "DATE DE VOYAGE", propre au voyageur).
-  final DateTime requestDesiredDate;
+  /// Null : demande « Date flexible », la date de voyage est libre.
+  final DateTime? requestDesiredDate;
   final int requestDateToleranceDays;
   final TransportMode transportMode;
   final PriceEstimate? estimate;
@@ -351,7 +352,11 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   String _travelWindowHint(AppLocalizations l) {
     final window = _travelWindow;
     final fmt = DateFormat.yMMMd(l.localeName);
-    final desired = fmt.format(widget.requestDesiredDate);
+    final desiredDate = widget.requestDesiredDate;
+    if (desiredDate == null) {
+      return l.negotiationMakeOfferTravelDateHintFlexible;
+    }
+    final desired = fmt.format(desiredDate);
     if (widget.requestDateToleranceDays <= 0) {
       return l.negotiationMakeOfferTravelDateHintExact(desired);
     }
@@ -539,7 +544,9 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                       final picked = await showDatePicker(
                         context: ctx,
                         initialDate: _clampDate(
-                          date ?? widget.requestDesiredDate,
+                          date ??
+                              widget.requestDesiredDate ??
+                              DateTime.now().add(const Duration(days: 1)),
                         ),
                         firstDate: window.first,
                         lastDate: window.last,

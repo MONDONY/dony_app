@@ -160,6 +160,43 @@ void main() {
     ).called(1),
   );
 
+  blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
+    'load : demande sans date, trajets cherchés sans fenêtre de dates',
+    build: () {
+      when(() => requests.getById('pr-1')).thenAnswer(
+        (_) async => PackageRequest(
+          id: 'pr-1',
+          senderId: 'sender-1',
+          departureCity: 'Divo',
+          arrivalCity: 'Annemasse',
+          dateToleranceDays: 0,
+          weightKg: 2,
+          parcelSize: ParcelSize.small,
+          transportMode: TransportMode.plane,
+          status: PackageRequestStatus.open,
+          createdAt: DateTime.utc(2026, 9, 17, 6, 25),
+        ),
+      );
+      return build();
+    },
+    act: (c) => c.load(),
+    skip: 1,
+    expect: () => [
+      isA<PackageRequestDetailLoaded>().having(
+        (s) => s.compatibleTrips!.map((t) => t.id),
+        'trips',
+        ['a-1', 'a-2'],
+      ),
+    ],
+    verify: (_) => verify(
+      () => announcements.searchAnnouncements(
+        departureCity: 'Divo',
+        arrivalCity: 'Annemasse',
+        minAvailableKg: 2,
+      ),
+    ).called(1),
+  );
+
   test(
     'load : fermé pendant l appel (retour arrière), aucune erreur (FLUTTER-B0)',
     () async {

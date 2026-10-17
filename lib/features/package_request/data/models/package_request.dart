@@ -27,7 +27,7 @@ class PackageRequest extends Equatable {
     required this.senderId,
     required this.departureCity,
     required this.arrivalCity,
-    required this.desiredDate,
+    this.desiredDate,
     required this.dateToleranceDays,
     required this.weightKg,
     required this.parcelSize,
@@ -58,8 +58,17 @@ class PackageRequest extends Equatable {
   final String senderId;
   final String departureCity;
   final String arrivalCity;
-  final DateTime desiredDate;
+
+  /// Date de départ souhaitée. Null : demande sans date (« Date flexible »),
+  /// tous les voyageurs du trajet peuvent proposer.
+  final DateTime? desiredDate;
+
+  /// Souplesse autour de [desiredDate], en jours. 0 quand la demande n'a pas
+  /// de date (le back renvoie alors null).
   final int dateToleranceDays;
+
+  /// Vrai quand la demande n'a pas de date de départ.
+  bool get hasFlexibleDate => desiredDate == null;
   final double weightKg;
   final ParcelSize parcelSize;
   final TransportMode transportMode;
@@ -149,8 +158,8 @@ class PackageRequest extends Equatable {
       senderId: json['senderId'] as String? ?? '',
       departureCity: json['departureCity'] as String,
       arrivalCity: json['arrivalCity'] as String,
-      desiredDate: DateTime.parse(json['desiredDate'] as String),
-      dateToleranceDays: json['dateToleranceDays'] as int,
+      desiredDate: DateTime.tryParse(json['desiredDate'] as String? ?? ''),
+      dateToleranceDays: (json['dateToleranceDays'] as num?)?.toInt() ?? 0,
       weightKg: (json['weightKg'] as num).toDouble(),
       parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
       transportMode:

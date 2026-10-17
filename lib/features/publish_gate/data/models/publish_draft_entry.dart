@@ -83,7 +83,7 @@ class ServerRequestDraft extends PublishDraftEntry {
   @override
   String get arrivalCity => request.arrivalCity;
   @override
-  DateTime get date => request.desiredDate;
+  DateTime? get date => request.desiredDate;
 
   @override
   List<Object?> get props => [request.id];

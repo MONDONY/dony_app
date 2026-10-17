@@ -19,12 +19,13 @@ class _MockBloc
 PackageRequestSearchItem _item({
   List<String> categories = const [],
   double? targetPriceEur = 30,
+  bool flexibleDate = false,
 }) => PackageRequestSearchItem(
   id: 'r-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 10, 6),
-  dateToleranceDays: 3,
+  desiredDate: flexibleDate ? null : DateTime(2026, 10, 6),
+  dateToleranceDays: flexibleDate ? 0 : 3,
   weightKg: 5,
   parcelSize: ParcelSize.small,
   categories: categories,
@@ -199,5 +200,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No request matches your filter'), findsOneWidget);
+  });
+
+  testWidgets('résultat sans date : « Date flexible », sans crash', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(
+      PackageRequestSearchState(
+        status: SearchStatus.loaded,
+        results: [_item(flexibleDate: true)],
+      ),
+    );
+    when(
+      () => bloc.stream,
+    ).thenAnswer((_) => const Stream<PackageRequestSearchState>.empty());
+
+    await tester.pumpWidget(wrap());
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Date flexible'), findsOneWidget);
   });
 }
