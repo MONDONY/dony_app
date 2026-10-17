@@ -18595,6 +18595,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sender canceled this request before payment.';
 
   @override
+  String get billetTeamCancelledTitle => 'Cancelled by the Yadony team';
+
+  @override
+  String get billetTeamCancelledTravelerUnavailableSender =>
+      'The traveler cannot be reached.';
+
+  @override
+  String get billetTeamCancelledTravelerUnavailableTraveler =>
+      'The team could not reach you.';
+
+  @override
+  String get billetTeamCancelledRefundSender =>
+      'If you paid in the app, your payment is refunded.';
+
+  @override
+  String get billetTeamCancelledContactHint =>
+      'To find out more, contact support.';
+
+  @override
+  String billetTeamCancelledSupportSubject(String number) {
+    return 'Parcel $number cancelled by the team';
+  }
+
+  @override
+  String get billetTeamCancelledSupportMessage =>
+      'Hello, my parcel was cancelled by the Yadony team. I would like to know more.';
+
+  @override
   String get errorPaymentAlreadyAuthorizedTitle => 'Payment already confirmed';
 
   @override

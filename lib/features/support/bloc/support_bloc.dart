@@ -129,7 +129,10 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.supportTicketCreated,
-          properties: {'category': event.category},
+          properties: {
+            'category': event.category,
+            if (event.origin != null) 'origin': event.origin!,
+          },
         ),
       );
       emit(

@@ -18731,6 +18731,34 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'expéditeur a annulé cette demande avant le paiement.';
 
   @override
+  String get billetTeamCancelledTitle => 'Annulé par l\'équipe Yadony';
+
+  @override
+  String get billetTeamCancelledTravelerUnavailableSender =>
+      'Le voyageur est injoignable.';
+
+  @override
+  String get billetTeamCancelledTravelerUnavailableTraveler =>
+      'L\'équipe n\'a pas réussi à vous joindre.';
+
+  @override
+  String get billetTeamCancelledRefundSender =>
+      'Si vous avez payé dans l\'app, votre paiement vous est remboursé.';
+
+  @override
+  String get billetTeamCancelledContactHint =>
+      'Pour en savoir plus, contactez le support.';
+
+  @override
+  String billetTeamCancelledSupportSubject(String number) {
+    return 'Colis $number annulé par l\'équipe';
+  }
+
+  @override
+  String get billetTeamCancelledSupportMessage =>
+      'Bonjour, mon colis a été annulé par l\'équipe Yadony. J\'aimerais en savoir plus.';
+
+  @override
   String get errorPaymentAlreadyAuthorizedTitle => 'Paiement déjà validé';
 
   @override

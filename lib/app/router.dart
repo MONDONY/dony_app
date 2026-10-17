@@ -244,6 +244,7 @@ import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/presentation/mes_abonnements_screen.dart';
 import 'package:dony/features/subscriptions/presentation/traveler_profile_hub_screen.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/screens/support_home_screen.dart';
 import 'package:dony/features/support/presentation/screens/support_ticket_detail_screen.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
@@ -2226,9 +2227,16 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/support',
-      builder: (_, _) => BlocProvider(
+      // `extra` : demande préremplie (colis annulé par l'équipe, FLUTTER-R4).
+      // Toute autre valeur est ignorée : l'écran s'ouvre comme d'habitude.
+      builder: (_, state) => BlocProvider(
         create: (_) => getIt<SupportBloc>()..add(const SupportHomeRequested()),
-        child: const SupportHomeScreen(),
+        child: SupportHomeScreen(
+          draft: switch (state.extra) {
+            final SupportTicketDraft draft => draft,
+            _ => null,
+          },
+        ),
       ),
     ),
     GoRoute(

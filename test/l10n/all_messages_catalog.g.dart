@@ -6493,6 +6493,17 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.billetCancelledBeforePaymentSender,
   'billetCancelledBeforePaymentTraveler': (l) =>
       l.billetCancelledBeforePaymentTraveler,
+  'billetTeamCancelledTitle': (l) => l.billetTeamCancelledTitle,
+  'billetTeamCancelledTravelerUnavailableSender': (l) =>
+      l.billetTeamCancelledTravelerUnavailableSender,
+  'billetTeamCancelledTravelerUnavailableTraveler': (l) =>
+      l.billetTeamCancelledTravelerUnavailableTraveler,
+  'billetTeamCancelledRefundSender': (l) => l.billetTeamCancelledRefundSender,
+  'billetTeamCancelledContactHint': (l) => l.billetTeamCancelledContactHint,
+  'billetTeamCancelledSupportSubject': (l) =>
+      l.billetTeamCancelledSupportSubject(placeholderMarker('number')),
+  'billetTeamCancelledSupportMessage': (l) =>
+      l.billetTeamCancelledSupportMessage,
   'errorPaymentAlreadyAuthorizedTitle': (l) =>
       l.errorPaymentAlreadyAuthorizedTitle,
   'errorPaymentAlreadyAuthorizedMessage': (l) =>
@@ -7706,6 +7717,7 @@ const textParameters = <String, List<String>>{
   'moneyShortAuto': ['date'],
   'moneyShortRefunded': ['date'],
   'moneyTripSemantics': ['route', 'parcels', 'counters'],
+  'billetTeamCancelledSupportSubject': ['number'],
   'tripPosterHeroDeparture': ['day'],
   'tripPosterHeroDepartureAt': ['day', 'time'],
   'tripPosterHeroArrival': ['when'],

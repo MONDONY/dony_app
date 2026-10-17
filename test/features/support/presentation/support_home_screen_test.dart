@@ -29,15 +29,16 @@ const _ticket = SupportTicket(
   status: SupportTicketStatuses.waitingUser,
 );
 
-Widget _harness(SupportBloc bloc) {
+Widget _harness(SupportBloc bloc, {SupportTicketDraft? draft}) {
   final router = GoRouter(
     initialLocation: '/support',
+    initialExtra: draft,
     routes: [
       GoRoute(
         path: '/support',
-        builder: (_, _) => BlocProvider<SupportBloc>.value(
+        builder: (_, state) => BlocProvider<SupportBloc>.value(
           value: bloc,
-          child: const SupportHomeScreen(),
+          child: SupportHomeScreen(draft: state.extra as SupportTicketDraft?),
         ),
       ),
       GoRoute(
@@ -523,6 +524,126 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+  });
+  group('demande préremplie (FLUTTER-R4)', () {
+    const draft = SupportTicketDraft(
+      category: 'PACKAGE',
+      subject: "Colis YAD-0042 annulé par l'équipe",
+      message: "Bonjour, mon colis a été annulé par l'équipe Yadony.",
+      origin: 'team_cancelled_parcel',
+    );
+
+    setUpAll(() {
+      registerFallbackValue(const SupportHomeRequested());
+    });
+
+    String fieldText(WidgetTester tester, String label) => tester
+        .widget<TextField>(find.widgetWithText(TextField, label))
+        .controller!
+        .text;
+
+    testWidgets('la sheet s’ouvre seule, préremplie, sans rien envoyer', (
+      tester,
+    ) async {
+      stubState(const SupportState(homeStatus: SupportViewStatus.ready));
+
+      await tester.pumpWidget(_harness(bloc, draft: draft));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Catégorie'), findsOneWidget);
+      final chip = tester.widget<ChoiceChip>(
+        find.widgetWithText(ChoiceChip, 'Colis'),
+      );
+      expect(chip.selected, isTrue);
+      expect(fieldText(tester, 'Sujet'), draft.subject);
+      expect(fieldText(tester, 'Message'), draft.message);
+      // Rien ne part sans un geste de l'utilisateur.
+      verifyNever(
+        () => bloc.add(any(that: isA<SupportTicketCreateRequested>())),
+      );
+    });
+
+    testWidgets('message modifié puis « Envoyer » : la saisie part au BLoC', (
+      tester,
+    ) async {
+      stubState(const SupportState(homeStatus: SupportViewStatus.ready));
+
+      await tester.pumpWidget(_harness(bloc, draft: draft));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Message'),
+        'Le voyageur ne répond plus, que faire ?',
+      );
+      await tester.pump();
+      await tester.tap(find.text('Envoyer'));
+      await tester.pump();
+
+      verify(
+        () => bloc.add(
+          const SupportTicketCreateRequested(
+            category: 'PACKAGE',
+            subject: "Colis YAD-0042 annulé par l'équipe",
+            message: 'Le voyageur ne répond plus, que faire ?',
+            origin: 'team_cancelled_parcel',
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('message vidé : « Envoyer » se désactive', (tester) async {
+      stubState(const SupportState(homeStatus: SupportViewStatus.ready));
+
+      await tester.pumpWidget(_harness(bloc, draft: draft));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.widgetWithText(TextField, 'Message'), ' ');
+      await tester.pump();
+      await tester.tap(find.text('Envoyer'));
+      await tester.pump();
+
+      verifyNever(
+        () => bloc.add(any(that: isA<SupportTicketCreateRequested>())),
+      );
+    });
+
+    testWidgets('catégorie inconnue : aucune puce cochée, envoi bloqué', (
+      tester,
+    ) async {
+      stubState(const SupportState(homeStatus: SupportViewStatus.ready));
+
+      await tester.pumpWidget(
+        _harness(
+          bloc,
+          draft: const SupportTicketDraft(
+            category: 'UNKNOWN',
+            subject: 'Mon colis',
+            message: 'Bonjour',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final chips = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip));
+      expect(chips.where((c) => c.selected), isEmpty);
+      // Sujet et message restent préremplis : seule la catégorie manque.
+      expect(fieldText(tester, 'Sujet'), 'Mon colis');
+      await tester.tap(find.text('Envoyer'));
+      await tester.pump();
+      verifyNever(
+        () => bloc.add(any(that: isA<SupportTicketCreateRequested>())),
+      );
+    });
+
+    testWidgets('sans brouillon : la sheet ne s’ouvre pas d’elle-même', (
+      tester,
+    ) async {
+      stubState(const SupportState(homeStatus: SupportViewStatus.ready));
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Catégorie'), findsNothing);
     });
   });
 }
