@@ -44,6 +44,25 @@ class AssistantRepository {
     }
   }
 
+  /// Explication de l'écran [screen] (motif de route) : `null` si aucune fiche
+  /// ne l'explique (204), si le back est ancien (404) ou injoignable. Ne lève
+  /// jamais : l'assistant s'ouvre alors comme avant.
+  Future<AssistantScreenIntro?> screen(String screen, String locale) async {
+    try {
+      final response = await _api.dio.get(
+        '/assistant/screen',
+        queryParameters: {'path': screen, 'locale': locale},
+      );
+      final data = response.data;
+      if (response.statusCode == 204 || data is! Map<String, dynamic>) {
+        return null;
+      }
+      return AssistantScreenIntro.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Sonde `GET /assistant/status` : l'assistant est-il allumé pour ce compte ?
   ///
   /// Trois issues, sans jamais lever :

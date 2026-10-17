@@ -1561,4 +1561,54 @@ void main() {
       expect(find.byKey(const Key('assistant-quota-warning')), findsNothing);
     });
   });
+
+  group('explication de l’écran', () {
+    const intro = AssistantMessage(
+      id: 2,
+      author: AssistantAuthor.assistant,
+      text: 'Vous êtes sur Mes colis.',
+      suggestions: ['Comment annuler un envoi ?', 'Où est mon colis ?'],
+      screen: '/envois',
+    );
+
+    testWidgets('ses questions s’affichent et s’envoient d’un toucher', (
+      tester,
+    ) async {
+      await pump(tester, const AssistantState(messages: [intro]));
+      expect(find.text('Vous êtes sur Mes colis.'), findsOneWidget);
+      expect(
+        find.byKey(const Key('assistant-screen-question-2')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('assistant-screen-question-1')));
+      await tester.pump();
+      verify(
+        () => bloc.add(
+          const AssistantQuestionSubmitted(
+            'Comment annuler un envoi ?',
+            locale: 'fr',
+            fromSuggestion: true,
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('masquées pendant un envoi et sous une réponse plus ancienne', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [intro], isSending: true),
+      );
+      expect(
+        find.byKey(const Key('assistant-screen-question-1')),
+        findsNothing,
+      );
+      await pump(tester, const AssistantState(messages: [intro, _question]));
+      expect(
+        find.byKey(const Key('assistant-screen-question-1')),
+        findsNothing,
+      );
+    });
+  });
 }

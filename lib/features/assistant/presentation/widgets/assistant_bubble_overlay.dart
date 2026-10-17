@@ -29,6 +29,30 @@ String visibleRoutePath(GoRouter router) {
   return list.uri.path;
 }
 
+/// Écrans d'un colis : l'assistant ouvert depuis eux parle de ce colis.
+const _parcelScreens = {'/bids/:bidId', '/receptions/:bidId'};
+
+/// Adresse de l'assistant ouvert depuis la bulle : l'écran affiché (motif de
+/// route, comme dans PostHog, ex. `/bids/:bidId`) pour qu'il l'explique, et le
+/// colis de cet écran. Jamais de donnée de l'utilisateur : un motif et un
+/// identifiant, revérifié par le back.
+@visibleForTesting
+String assistantLocationFrom(GoRouter router) {
+  final config = router.routerDelegate.currentConfiguration;
+  final query = <String, String>{'source': 'bubble'};
+  if (config.isNotEmpty) {
+    final last = config.last;
+    final list = last is ImperativeRouteMatch ? last.matches : config;
+    final screen = list.fullPath;
+    if (screen.isNotEmpty) query['screen'] = screen;
+    final bidId = list.pathParameters['bidId'];
+    if (_parcelScreens.contains(screen) && bidId != null && bidId.isNotEmpty) {
+      query['parcel'] = bidId;
+    }
+  }
+  return Uri(path: '/assistant', queryParameters: query).toString();
+}
+
 /// Couche de la bulle flottante de l'assistant, montée une seule fois dans le
 /// `builder` de `MaterialApp.router` (voir `app.dart`), au-dessus de toutes
 /// les routes.
@@ -227,7 +251,7 @@ class _AssistantBubbleOverlayState extends State<AssistantBubbleOverlay> {
         // `AssistantOpened('bubble')` part de l'écran lui-même, à partir de
         // `?source=` : l'envoyer ici doublerait l'événement
         // `assistant_opened`.
-        unawaited(router.push('/assistant?source=bubble'));
+        unawaited(router.push(assistantLocationFrom(router)));
       },
       onMoved: (side, y) => prefs.add(AssistantBubbleMoved(side, y)),
       onHintDismissed: () => _closeHint(prefs),

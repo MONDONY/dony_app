@@ -89,6 +89,23 @@ final class AssistantParcelChosen extends AssistantEvent {
   List<Object?> get props => [choice, label, position, locale];
 }
 
+/// Assistant ouvert depuis la bulle sur l'écran [screen] (motif de route) :
+/// son explication s'ajoute à la conversation. [parcelId] : colis de cet écran.
+final class AssistantScreenOpened extends AssistantEvent {
+  const AssistantScreenOpened(
+    this.screen, {
+    required this.locale,
+    this.parcelId,
+  });
+
+  final String screen;
+  final String locale;
+  final String? parcelId;
+
+  @override
+  List<Object?> get props => [screen, locale, parcelId];
+}
+
 /// « Parler à un humain » : crée un ticket support avec l'échange.
 final class AssistantEscalationRequested extends AssistantEvent {
   const AssistantEscalationRequested();

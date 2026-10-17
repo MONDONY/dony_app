@@ -9,6 +9,8 @@ class AssistantMessage extends Equatable {
     required this.text,
     this.actions = const [],
     this.parcels = const [],
+    this.suggestions = const [],
+    this.screen,
     this.answered = true,
     this.feedback,
     this.isError = false,
@@ -21,6 +23,12 @@ class AssistantMessage extends Equatable {
 
   /// Colis proposés au choix sous la réponse (question sur l'un des siens).
   final List<AssistantParcelChoice> parcels;
+
+  /// Questions à toucher sous l'explication d'un écran.
+  final List<String> suggestions;
+
+  /// Écran (motif de route) qu'explique ce message, s'il en explique un.
+  final String? screen;
   final bool answered;
 
   /// `up` ou `down`, `null` tant que l'utilisateur n'a pas voté.
@@ -36,6 +44,8 @@ class AssistantMessage extends Equatable {
     text: text,
     actions: actions,
     parcels: parcels,
+    suggestions: suggestions,
+    screen: screen,
     answered: answered,
     feedback: feedback ?? this.feedback,
     isError: isError,
@@ -48,6 +58,8 @@ class AssistantMessage extends Equatable {
     text,
     actions,
     parcels,
+    suggestions,
+    screen,
     answered,
     feedback,
     isError,
