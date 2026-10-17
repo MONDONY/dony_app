@@ -95,6 +95,10 @@ class CreateTripArgs {
   });
 }
 
+/// Index de l'étape Prix & conditions, la dernière du formulaire, en tête de
+/// laquelle se choisit la devise du trajet (FLUTTER-RA).
+const int _kPriceStep = 2;
+
 class CreateTripScreen extends StatefulWidget {
   final CreateTripArgs? args;
 
@@ -373,11 +377,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   }
 
   /// « Modifier » de la ligne Devise du récapitulatif (FLUTTER-NN) : ferme
-  /// l'aperçu, remonte en tête du formulaire où se trouve la bannière de
-  /// devise, puis ouvre directement son sélecteur. Création seulement : en
-  /// modification ou en trajet dédié la devise est figée.
+  /// l'aperçu, revient à l'étape Prix & conditions dont l'encart de devise
+  /// ouvre l'étape (FLUTTER-RA), remonte en tête du formulaire, puis ouvre
+  /// directement son sélecteur. Création seulement : en modification ou en
+  /// trajet dédié la devise est figée.
   Future<void> _changeCurrencyFromPreview(BuildContext formContext) async {
     Navigator.of(formContext, rootNavigator: true).pop();
+    _currentStepNotifier.value = _kPriceStep;
     if (_formScrollController.hasClients) {
       await _formScrollController.animateTo(
         0,
@@ -517,16 +523,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           context: TutorialContext.tripPublish,
                         ),
                         const SizedBox(height: DonySpacing.base),
-                        if (!isEdit && !isLocked) ...[
-                          CurrencySelectionBanner(
-                            currencyNotifier: _currencyNotifier,
-                          ),
-                          const SizedBox(height: DonySpacing.base),
-                        ] else if (isEdit && !isLocked)
-                          _EditCurrencySection(
-                            editableNotifier: _currencyEditableNotifier,
-                            currencyNotifier: _currencyNotifier,
-                          ),
+                        // L'encart de devise vit en tête de l'étape Prix &
+                        // conditions, juste avant les prix (FLUTTER-RA) : il
+                        // n'a rien à faire à l'étape des villes et dates.
                         _TripFormContent(
                           // Réservé aux tests : cf. `handoverDeadlineForTest`
                           // sur `_TripFormContentState`, atteint via ce Key
@@ -2973,6 +2972,19 @@ class _TripFormContentState extends State<_TripFormContent> {
   // ── Step 2 — Prix & Conditions ───────────────────────────────────────────────
   List<Widget> _buildStep2(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
+      // Devise du trajet, juste avant les prix qu'elle exprime (FLUTTER-RA).
+      // Création : sélecteur libre ; modification : selon `currencyEditable` ;
+      // trajet dédié : devise de la demande, rien à choisir.
+      if (!_isEdit && !_isLocked) ...[
+        CurrencySelectionBanner(currencyNotifier: widget.currencyNotifier),
+        const SizedBox(height: DonySpacing.base),
+      ] else if (_isEdit &&
+          !_isLocked &&
+          widget.currencyEditableNotifier != null)
+        _EditCurrencySection(
+          editableNotifier: widget.currencyEditableNotifier!,
+          currencyNotifier: widget.currencyNotifier,
+        ),
       BlocBuilder<MobileMoneyAccountBloc, MobileMoneyAccountState>(
         builder: (context, mobileMoneyState) {
           final mobileMoneyAccountActive = mobileMoneyAccountActiveFrom(

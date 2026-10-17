@@ -17,7 +17,6 @@ import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.d
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 class AcceptOfferBottomSheet {
   const AcceptOfferBottomSheet._();
@@ -278,7 +277,6 @@ class AcceptOfferBottomSheet {
                   final fallbackGross =
                       grossPriceEur ?? PriceDisplay.grossFromNet(priceEur);
                   final netEur = quote?.netEur ?? priceEur;
-                  final rate = quote?.rate ?? PriceDisplay.previewRate;
                   final commissionEur =
                       quote?.commissionEur ?? (fallbackGross - priceEur);
                   final totalEur = quote?.totalEur ?? fallbackGross;
@@ -286,7 +284,6 @@ class AcceptOfferBottomSheet {
                   return _NegotiationPriceBreakdown(
                     isTraveler: isTraveler,
                     netEur: netEur,
-                    rate: rate,
                     commissionEur: commissionEur,
                     totalEur: totalEur,
                     promoApplied: promoApplied,
@@ -329,7 +326,6 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
   const _NegotiationPriceBreakdown({
     required this.isTraveler,
     required this.netEur,
-    required this.rate,
     required this.commissionEur,
     required this.totalEur,
     required this.promoApplied,
@@ -339,7 +335,6 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
 
   final bool isTraveler;
   final double netEur;
-  final double rate;
   final double commissionEur;
   final double totalEur;
   final bool promoApplied;
@@ -358,7 +353,6 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
         ? originalTotal! - totalEur
         : 0.0;
     final hasRealSavings = savings > 0.005;
-    final ratePct = _ratePercentLabel(l, rate);
 
     final rows = <Widget>[];
     if (isTraveler) {
@@ -374,7 +368,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
         _line(
           tt,
           cs,
-          l.requestCreateCommissionLabel(ratePct),
+          l.requestCreateCommissionLabel,
           '−${PriceDisplay.money(commissionEur, currency)}',
         ),
       );
@@ -391,7 +385,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
         _line(
           tt,
           cs,
-          l.requestCreateCommissionLabel(ratePct),
+          l.requestCreateCommissionLabel,
           PriceDisplay.money(commissionEur, currency),
         ),
       );
@@ -518,11 +512,4 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
       ),
     ],
   );
-
-  /// Libellé pourcentage à la langue effective : entier si rond, sinon 1
-  /// décimale (virgule en français, point en anglais).
-  String _ratePercentLabel(AppLocalizations l, double rate) {
-    final pct = rate * 100;
-    return NumberFormat('#0.#', l.localeName).format(pct);
-  }
 }

@@ -95,7 +95,7 @@ void main() {
         await tester.pump();
         expect(find.text('Net voyageur'), findsOneWidget);
         expect(find.text('70,00\u00a0€'), findsOneWidget);
-        expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
+        expect(find.text('Commission Yadony'), findsOneWidget);
         expect(find.text('8,40\u00a0€'), findsOneWidget);
         expect(find.text('Total à régler'), findsOneWidget);
         expect(find.text('78,40\u00a0€'), findsOneWidget);

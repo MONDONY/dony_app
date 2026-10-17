@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -28,7 +27,7 @@ class CommissionCardEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.md),
           Text(
-            l.commissionCardEmptyBody(commissionPercentLabel(l)),
+            l.commissionCardEmptyBody,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),

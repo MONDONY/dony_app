@@ -26,7 +26,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
   });
 
-  testWidgets('en anglais : titre, corps avec le taux et bouton traduits', (
+  testWidgets('en anglais : titre, corps sans taux et bouton traduits', (
     tester,
   ) async {
     useEnglish();
@@ -38,7 +38,7 @@ void main() {
 
     expect(find.text('No card registered'), findsOneWidget);
     expect(
-      find.textContaining("we'll charge our service fee (5%)"),
+      find.textContaining("we'll charge our service fee on for each parcel"),
       findsOneWidget,
     );
     expect(find.text('Add a card'), findsOneWidget);

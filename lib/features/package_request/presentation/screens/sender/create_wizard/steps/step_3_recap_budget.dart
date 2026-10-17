@@ -28,7 +28,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 /// Étape 3 / 3 — Budget & photo (match maquette `v3/expéditeur_publie`).
 ///
@@ -766,14 +765,12 @@ class _BudgetBreakdown extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
 
-    final rate = quote?.rate ?? PriceDisplay.previewRate;
     final netBase = PriceDisplay.netFromGross(budgetEur);
     final commissionEur = quote?.commissionEur ?? (budgetEur - netBase);
     final net = quote?.netEur ?? netBase;
     final promoApplied = quote?.promoApplied ?? false;
     final boost = promoApplied ? net - netBase : 0.0;
     final hasRealBoost = boost > 0.005;
-    final ratePct = _ratePercentLabel(l10n, rate);
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -795,7 +792,7 @@ class _BudgetBreakdown extends StatelessWidget {
           _line(
             tt,
             cs,
-            l10n.requestCreateCommissionLabel(ratePct),
+            l10n.requestCreateCommissionLabel,
             CurrencyFormatter.formatOrPlain(commissionEur, currency),
           ),
           if (hasRealBoost) ...[
@@ -855,13 +852,6 @@ class _BudgetBreakdown extends StatelessWidget {
       ),
     ],
   );
-
-  /// Libellé pourcentage à la langue effective : entier si rond, sinon 1
-  /// décimale (virgule en français, point en anglais).
-  String _ratePercentLabel(AppLocalizations l10n, double rate) {
-    final pct = rate * 100;
-    return NumberFormat('#0.#', l10n.localeName).format(pct);
-  }
 }
 
 // ─── Negotiable toggle ────────────────────────────────────────────────────────

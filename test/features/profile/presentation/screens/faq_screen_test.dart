@@ -225,6 +225,21 @@ void main() {
     },
   );
 
+  // FLUTTER-R6 : la question ne cite plus le taux de commission.
+  testWidgets('question commission sans taux', (tester) async {
+    await tester.pumpWidget(_wrap());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.enterText(
+      find.byKey(const Key('faq-search-field')),
+      'commission',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Pourquoi une commission ?'), findsOneWidget);
+    expect(find.textContaining('% ?'), findsNothing);
+  });
+
   testWidgets('shows an empty state for a search without result', (
     tester,
   ) async {

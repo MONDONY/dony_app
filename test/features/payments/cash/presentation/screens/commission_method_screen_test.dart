@@ -202,7 +202,7 @@ void main() {
     ).called(1);
   });
 
-  testWidgets('en anglais : texte de débit avec le taux courant (12%)', (
+  testWidgets('en anglais : texte de débit sans taux (FLUTTER-R6)', (
     tester,
   ) async {
     useEnglish();
@@ -217,7 +217,11 @@ void main() {
     await tester.pump();
 
     expect(find.text('Service fee card'), findsOneWidget);
-    expect(find.textContaining('charged the service fee (12%'), findsOneWidget);
+    expect(
+      find.textContaining('charged the service fee (min.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('%'), findsNothing);
     expect(find.text('Replace card'), findsOneWidget);
     expect(find.text('Delete card'), findsOneWidget);
   });

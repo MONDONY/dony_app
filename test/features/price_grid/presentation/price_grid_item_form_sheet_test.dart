@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
@@ -296,6 +297,16 @@ void main() {
       await _type(tester, '15');
 
       expect(find.textContaining('L\'expéditeur paiera'), findsOneWidget);
+      // FLUTTER-R6 : le montant de la commission, plus son taux.
+      expect(
+        find.text(
+          'L\'expéditeur paiera ${formatPriceActive(netToSenderPrice(15))}, '
+          'dont ${formatPriceActive(netToSenderPrice(15) - 15)} de commission '
+          'Yadony.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('%'), findsNothing);
     });
 
     testWidgets('un montant hors plafond bloque et l\'explique', (

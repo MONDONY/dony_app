@@ -5,7 +5,6 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -121,11 +120,8 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                   // jamais celle de la langue de l'app.
                   (ActiveCurrency.current ?? SupportedCurrency.eur) ==
                           SupportedCurrency.eur
-                      ? l.commissionCardDebitNoticeMin(
-                          commissionPercentLabel(l),
-                          formatPriceIn(1, 'EUR'),
-                        )
-                      : l.commissionCardDebitNotice(commissionPercentLabel(l)),
+                      ? l.commissionCardDebitNoticeMin(formatPriceIn(1, 'EUR'))
+                      : l.commissionCardDebitNotice,
                   style: Theme.of(ctx).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: DonySpacing.xl),

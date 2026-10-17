@@ -4976,11 +4976,11 @@ abstract class AppLocalizations {
   /// **'Vous touchez {travelerNet} · l\'expéditeur paie {senderTotal}'**
   String tripPublishPriceEstimateLine(String travelerNet, String senderTotal);
 
-  /// Note sous l'aperçu de grille en mode mixte, percent déjà formaté
+  /// Note sous l'aperçu de grille en mode mixte, sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Yadony ajoute {percent} % sur chaque article et sur le prix au kilo'**
-  String tripPublishGridCommissionNotice(String percent);
+  /// **'Yadony ajoute sa commission sur chaque article et sur le prix au kilo'**
+  String get tripPublishGridCommissionNotice;
 
   /// Titre du toggle d'ouverture aux propositions de prix des expéditeurs
   ///
@@ -5225,11 +5225,11 @@ abstract class AppLocalizations {
   /// **'Modifier ma grille'**
   String get tripPublishGridSheetEditCta;
 
-  /// Note sous la liste d'articles de la feuille de grille complète
+  /// Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Prix payés par l\'expéditeur, commission Yadony de {percent} % comprise.'**
-  String tripPublishGridSheetCommissionNote(String percent);
+  /// **'Prix payés par l\'expéditeur, commission Yadony comprise.'**
+  String get tripPublishGridSheetCommissionNote;
 
   /// Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette
   ///
@@ -6737,11 +6737,11 @@ abstract class AppLocalizations {
   /// **'Entre {min} et {max}'**
   String requestCreateBudgetRange(String min, String max);
 
-  /// Libellé de la ligne commission de la décomposition du budget (step_3_recap_budget.dart)
+  /// Libellé de la ligne commission d'une décomposition de prix, le montant s'affiche à côté (step_3_recap_budget.dart, accept_offer_bottom_sheet.dart, counter_offer_bottom_sheet.dart). Sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Commission Yadony ({rate} %)'**
-  String requestCreateCommissionLabel(String rate);
+  /// **'Commission Yadony'**
+  String get requestCreateCommissionLabel;
 
   /// Libellé de la ligne de bonus promo dans la décomposition du budget (step_3_recap_budget.dart)
   ///
@@ -15294,17 +15294,17 @@ abstract class AppLocalizations {
   /// **'Envoi de votre colis'**
   String get paymentContextDefault;
 
-  /// Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros, fixe quelle que soit la langue.
+  /// Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros. Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Cette carte sera débitée de la commission ({percent} %, min. {min}) à chaque colis en espèces accepté.'**
-  String commissionCardDebitNoticeMin(String percent, String min);
+  /// **'Cette carte sera débitée de la commission (min. {min}) à chaque colis en espèces accepté.'**
+  String commissionCardDebitNoticeMin(String min);
 
-  /// Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros.
+  /// Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros. Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Cette carte sera débitée de la commission ({percent} %) à chaque colis en espèces accepté.'**
-  String commissionCardDebitNotice(String percent);
+  /// **'Cette carte sera débitée de la commission à chaque colis en espèces accepté.'**
+  String get commissionCardDebitNotice;
 
   /// Titre de l'AppBar de l'écran Carte commission (commission_method_screen.dart).
   ///
@@ -15354,11 +15354,11 @@ abstract class AppLocalizations {
   /// **'Aucune carte enregistrée'**
   String get commissionCardEmptyTitle;
 
-  /// Corps de l'état vide de la carte commission (commission_card_empty_state.dart).
+  /// Corps de l'état vide de la carte commission (commission_card_empty_state.dart). Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ({percent} %) à chaque colis accepté.'**
-  String commissionCardEmptyBody(String percent);
+  /// **'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission à chaque colis accepté.'**
+  String get commissionCardEmptyBody;
 
   /// Bouton d'ajout de la carte commission (commission_card_empty_state.dart).
   ///
@@ -18845,6 +18845,18 @@ abstract class AppLocalizations {
   /// **'Carte commission espèces'**
   String get profileMoneyCashCommissionCard;
 
+  /// Tuile de la section ARGENT, raccourci vers Paramètres › Préférences (profile_sections.dart, FLUTTER-R5).
+  ///
+  /// In fr, this message translates to:
+  /// **'Préférences'**
+  String get profileMoneyPreferences;
+
+  /// Sous-titre de la tuile Préférences de la section ARGENT (profile_sections.dart, FLUTTER-R5).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise, pays, unités'**
+  String get profileMoneyPreferencesSubtitle;
+
   /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileReputationSection).
   ///
   /// In fr, this message translates to:
@@ -20141,11 +20153,11 @@ abstract class AppLocalizations {
   /// **'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.'**
   String get faqPaymentsRefundA;
 
-  /// Question FAQ payments/commission, percent déjà formaté par commissionPercentLabel (faq_screen.dart)
+  /// Question FAQ payments/commission (faq_screen.dart), sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Pourquoi une commission de {percent} % ?'**
-  String faqPaymentsCommissionQ(String percent);
+  /// **'Pourquoi une commission ?'**
+  String get faqPaymentsCommissionQ;
 
   /// Réponse FAQ payments/commission (faq_screen.dart)
   ///
@@ -24467,11 +24479,11 @@ abstract class AppLocalizations {
   /// **'Ma grille de prix'**
   String get priceGridScreenTitle;
 
-  /// Note de commission en pied de liste, percent déjà formaté par commissionPercentLabel (price_grid_screen.dart).
+  /// Note de commission en pied de liste (price_grid_screen.dart), sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Yadony ajoute {percent} % au prix que vous saisissez. Vous encaissez exactement votre montant.'**
-  String priceGridCommissionNotice(String percent);
+  /// **'Yadony ajoute sa commission au prix que vous saisissez. Vous encaissez exactement votre montant.'**
+  String get priceGridCommissionNotice;
 
   /// Bouton de bascule en mode réorganisation (price_grid_screen.dart).
   ///
@@ -24605,11 +24617,11 @@ abstract class AppLocalizations {
   /// **'Saisissez le montant que vous voulez toucher.'**
   String get priceGridEnterAmountMessage;
 
-  /// Message d'écho annonçant le montant payé par l'expéditeur, paid déjà formaté et percent déjà formaté par commissionPercentLabel (price_grid_item_form_sheet.dart).
+  /// Message d'écho annonçant le montant payé par l'expéditeur et la commission comprise, montants déjà formatés dans la devise active (price_grid_item_form_sheet.dart). Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur paiera {paid}, commission Yadony de {percent} % comprise.'**
-  String priceGridSenderWillPayMessage(String paid, String percent);
+  /// **'L\'expéditeur paiera {paid}, dont {fee} de commission Yadony.'**
+  String priceGridSenderWillPayMessage(String paid, String fee);
 
   /// Titre de l'AppBar (referral_screen.dart).
   ///

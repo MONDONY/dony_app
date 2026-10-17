@@ -855,7 +855,7 @@
   "tripPublishPriceSelectPrompt": "Select a price to see the estimate",
   "tripPublishUnlimitedCapacityEstimateNote": "Unlimited capacity: estimate based on demand",
   "tripPublishPriceEstimateLine": "You get {travelerNet} · the sender pays {senderTotal}",
-  "tripPublishGridCommissionNotice": "Yadony adds {percent}% to every item and to the price per kilo",
+  "tripPublishGridCommissionNotice": "Yadony adds its service fee to every item and to the price per kilo",
   "tripPublishNegotiableToggleTitle": "I accept price proposals",
   "tripPublishNegotiableToggleSubtitle": "Senders will be able to propose an amount, and you're always free to decline",
   "tripPublishPaymentMethodsSectionLabel": "Accepted payment methods",
@@ -916,7 +916,7 @@
   "tripPublishGridSheetTitle": "Your price grid",
   "tripPublishGridSheetSubtitle": "Valid on all your trips",
   "tripPublishGridSheetEditCta": "Edit my grid",
-  "tripPublishGridSheetCommissionNote": "Prices paid by the sender, Yadony service fee of {percent}% included.",
+  "tripPublishGridSheetCommissionNote": "Prices paid by the sender, Yadony service fee included.",
   "tripPublishGridEmptyTitle": "Your grid is empty",
   "tripPublishGridEmptySubtitle": "Add at least one item so senders can book item by item.",
   "tripPublishGridComposeCta": "Build my grid",
@@ -1167,7 +1167,7 @@
   "requestCreateBudgetInputHint": "E.g. 40.00",
   "requestCreateBudgetEmpty": "Enter a budget",
   "requestCreateBudgetRange": "Between {min} and {max}",
-  "requestCreateCommissionLabel": "Yadony service fee ({rate}%)",
+  "requestCreateCommissionLabel": "Yadony service fee",
   "requestCreatePromoBoostLabel": "Thanks to the promo code, the traveler gets",
   "requestCreateTravelerReceivesLabel": "The traveler will receive",
   "requestCreateCurrencySemanticLabel": "Request currency: {name}, {code}. Button, change the currency.",
@@ -4519,25 +4519,18 @@
     }
   },
   "paymentContextDefault": "Your parcel shipment",
-  "commissionCardDebitNoticeMin": "This card will be charged the service fee ({percent}%, min. {min}) for each cash parcel you accept.",
+  "commissionCardDebitNoticeMin": "This card will be charged the service fee (min. {min}) for each cash parcel you accept.",
   "@commissionCardDebitNoticeMin": {
-    "description": "Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros, fixe quelle que soit la langue.",
+    "description": "Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros. Sans taux (FLUTTER-R6).",
     "placeholders": {
-      "percent": {
-        "type": "String"
-      },
       "min": {
         "type": "String"
       }
     }
   },
-  "commissionCardDebitNotice": "This card will be charged the service fee ({percent}%) for each cash parcel you accept.",
+  "commissionCardDebitNotice": "This card will be charged the service fee for each cash parcel you accept.",
   "@commissionCardDebitNotice": {
-    "placeholders": {
-      "percent": {
-        "type": "String"
-      }
-    }
+    "description": "Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros. Sans taux (FLUTTER-R6)."
   },
 
   "commissionCardScreenTitle": "Service fee card",
@@ -4549,13 +4542,9 @@
   "commissionCardDeleteConfirmMessage": "Delete this card? You won't be able to accept cash parcels until you register a new one.",
 
   "commissionCardEmptyTitle": "No card registered",
-  "commissionCardEmptyBody": "To accept cash payments, register a card we'll charge our service fee ({percent}%) on for each parcel you accept.",
+  "commissionCardEmptyBody": "To accept cash payments, register a card we'll charge our service fee on for each parcel you accept.",
   "@commissionCardEmptyBody": {
-    "placeholders": {
-      "percent": {
-        "type": "String"
-      }
-    }
+    "description": "Corps de l'état vide de la carte commission (commission_card_empty_state.dart). Sans taux (FLUTTER-R6)."
   },
   "commissionCardAddButton": "Add a card",
 
@@ -7027,6 +7016,14 @@
   "profileMoneyMobileMoneyPayout": "Mobile money payout",
   "profileMoneyMobileMoneyPayoutSubtitle": "CFA zone: Orange Money, MTN, Moov",
   "profileMoneyCashCommissionCard": "Cash service fee card",
+  "profileMoneyPreferences": "Preferences",
+  "@profileMoneyPreferences": {
+    "description": "Tuile de la section ARGENT, raccourci vers Paramètres › Préférences (profile_sections.dart, FLUTTER-R5)."
+  },
+  "profileMoneyPreferencesSubtitle": "Currency, country, units",
+  "@profileMoneyPreferencesSubtitle": {
+    "description": "Sous-titre de la tuile Préférences de la section ARGENT (profile_sections.dart, FLUTTER-R5)."
+  },
   "profileSectionReputation": "MY REPUTATION",
   "profileReputationPublicProfile": "My public profile",
   "profileReputationPublicProfileSubtitle": "What others see",
@@ -7285,7 +7282,7 @@
   "faqPaymentsPaymentTimingA": "For a card payment, the funds are held and secured when the offer is accepted, then released as the delivery progresses. For cash and Mobile Money, follow the instructions shown when you choose your payment method.",
   "faqPaymentsRefundQ": "How does the refund work if I cancel?",
   "faqPaymentsRefundA": "The refund depends on the payment method and when the cancellation happens. A card payment is credited back to the original method after processing. For Mobile Money, the timing depends on the operator. In cash, Yadony doesn't hold the funds and can't process the refund automatically.",
-  "faqPaymentsCommissionQ": "Why is there a {percent}% service fee?",
+  "faqPaymentsCommissionQ": "Why is there a service fee?",
   "faqPaymentsCommissionA": "The service fee covers payment costs, support, fraud prevention and the development of the platform.",
   "faqPaymentsPaymentSecurityQ": "Are payments secure?",
   "faqPaymentsPaymentSecurityA": "Online payments are processed by the providers listed in the app. Yadony doesn't store your full card details. A cash payment isn't held and secured: never pay outside the process set up in the app.",
@@ -8081,7 +8078,7 @@
   "recipientSectionSaveToggleTitle": "Save this recipient",
   "recipientSectionSaveToggleSubtitle": "Will be added to \"My recipients\" for your next shipments",
   "priceGridScreenTitle": "My price list",
-  "priceGridCommissionNotice": "Yadony adds {percent}% to the price you enter. You receive your exact amount.",
+  "priceGridCommissionNotice": "Yadony adds its service fee to the price you enter. You receive your exact amount.",
   "priceGridReorderButton": "Reorder",
   "priceGridAddLabelButton": "New label",
   "priceGridEmptyTitle": "No labels yet",
@@ -8104,7 +8101,7 @@
   "priceGridMaxPriceMessage": "Maximum {max} per item.",
   "priceGridMinPriceMessage": "At least {min} per item.",
   "priceGridEnterAmountMessage": "Enter the amount you want to receive.",
-  "priceGridSenderWillPayMessage": "The sender will pay {paid}, including Yadony's {percent}% service fee.",
+  "priceGridSenderWillPayMessage": "The sender will pay {paid}, including {fee} Yadony service fee.",
   "referralScreenTitle": "Referral",
   "referralStatSignedUp": "Signed up",
   "referralVouchers": "{count, plural, =1{🎁 You have a {percent}% voucher on your next service fee} other{🎁 You have {count} {percent}% vouchers on your next service fees}}",

@@ -163,6 +163,10 @@ Widget _buildTestHarness({
     GoRoute(path: '/auth/method', builder: (_, _) => stub('AuthMethod')),
     GoRoute(path: '/settings', builder: (_, _) => stub('Settings')),
     GoRoute(path: '/settings/data', builder: (_, _) => stub('DataSettings')),
+    GoRoute(
+      path: '/settings/preferences',
+      builder: (_, _) => stub('PreferencesScreen'),
+    ),
     GoRoute(path: '/profile/public', builder: (_, _) => stub('PublicProfile')),
     GoRoute(path: '/profile/reviews', builder: (_, _) => stub('Reviews')),
     GoRoute(path: '/disputes', builder: (_, _) => stub('Disputes')),
@@ -505,6 +509,7 @@ void main() {
           'Recevoir mes paiements',
           'Versement mobile money',
           'Carte commission espèces',
+          'Préférences',
         ]) {
           await _scrollTo(tester, find.text(label));
           expect(find.text(label), findsOneWidget, reason: label);
@@ -687,6 +692,22 @@ void main() {
         expect(find.text('PaymentsOnboarding'), findsNothing);
       },
     );
+
+    // FLUTTER-R5 : raccourci vers Préférences (devise, pays, unités) dans la
+    // section ARGENT, au lieu de Moi › ☰ › Paramètres › Préférences.
+    testWidgets('« Préférences » de la section ARGENT ouvre Préférences', (
+      tester,
+    ) async {
+      await pumpWith(tester, _dualRoleUser);
+      final row = find.byKey(const Key('profile-money-preferences'));
+      await _scrollTo(tester, row);
+      expect(find.text('Devise, pays, unités'), findsOneWidget);
+
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+
+      expect(find.text('PreferencesScreen'), findsOneWidget);
+    });
 
     testWidgets('« Solde » (carte portefeuille) ouvre Wallet', (tester) async {
       await pumpWith(tester, _dualRoleUser);
