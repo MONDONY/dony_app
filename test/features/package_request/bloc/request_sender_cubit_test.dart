@@ -65,6 +65,23 @@ void main() {
   );
 
   blocTest<RequestSenderCubit, RequestSenderState>(
+    'profil gpPro → le résumé porte gpPro vrai',
+    setUp: () => when(() => repo.getProfilePublic('u-1')).thenAnswer(
+      (_) async => ProfilePublicModel.fromJson({
+        'userId': 'u-1',
+        'displayName': 'Awa Diop',
+        'gpPro': true,
+      }),
+    ),
+    build: build,
+    act: (c) => c.load('u-1', canRead: true),
+    expect: () => [
+      isA<RequestSenderLoading>(),
+      isA<RequestSenderLoaded>().having((s) => s.sender.gpPro, 'gpPro', isTrue),
+    ],
+  );
+
+  blocTest<RequestSenderCubit, RequestSenderState>(
     '404 (profil masqué) → ligne absente',
     setUp: () => when(
       () => repo.getProfilePublic(any()),
