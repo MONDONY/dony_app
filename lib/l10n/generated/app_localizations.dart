@@ -16063,6 +16063,12 @@ abstract class AppLocalizations {
   /// **'Crédit perdu (compte supprimé)'**
   String get walletTxTypeForfeited;
 
+  /// Indication d'accessibilité d'une ligne de l'historique du solde liée à un colis (bidId) : toucher la ligne ouvre la fiche du colis (wallet_screen.dart _TxTile, FLUTTER-QP).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le colis'**
+  String get walletTxOpenParcelHint;
+
   /// Motif intl DateFormat, pas un texte. Date d'une ligne de transaction (wallet_screen.dart _TxTile).
   ///
   /// In fr, this message translates to:

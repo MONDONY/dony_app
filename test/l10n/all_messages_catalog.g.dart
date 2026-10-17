@@ -3513,6 +3513,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'walletTxTypeAdminCredit': (l) => l.walletTxTypeAdminCredit,
   'walletTxTypeAdminDebit': (l) => l.walletTxTypeAdminDebit,
   'walletTxTypeForfeited': (l) => l.walletTxTypeForfeited,
+  'walletTxOpenParcelHint': (l) => l.walletTxOpenParcelHint,
   'walletTxDateTimePattern': (l) => l.walletTxDateTimePattern,
   'walletRefundProcessingNote': (l) => l.walletRefundProcessingNote,
   'walletRateUnavailable': (l) => l.walletRateUnavailable,
