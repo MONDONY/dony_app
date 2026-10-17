@@ -2,10 +2,11 @@
 const _accented =
     'àâäáãåçéèêëíìîïñóòôöõúùûüýÿ'; // i18n-ignore : table de translittération
 const _plain = 'aaaaaaceeeeiiiinooooouuuuyy';
+// Table de translittération, pas un texte affiché.
 const _ligatures = {
-  'œ': 'oe',
-  'æ': 'ae',
-}; // i18n-ignore : table de translittération
+  'œ': 'oe', // i18n-ignore
+  'æ': 'ae', // i18n-ignore
+};
 
 final _separators = RegExp(r"[\s\-'’]+");
 
