@@ -1,8 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_state.dart';
-import 'package:dony/features/gp_pro/data/models/gp_pro_status.dart';
-import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_labels.dart';
+import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_frequency_chips.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_pieces_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -56,14 +55,9 @@ class _GpProFormState extends State<GpProForm> {
         const SizedBox(height: DonySpacing.sm),
         BlocBuilder<GpProCubit, GpProCubitState>(
           buildWhen: (p, c) => p.frequency != c.frequency,
-          builder: (context, state) => DonyChipGroup<GpProFrequency>(
-            options: GpProFrequency.values,
-            labelBuilder: l.gpProFrequency,
-            selected: {?state.frequency},
-            onChanged: (selection) {
-              if (selection.isEmpty) return;
-              context.read<GpProCubit>().selectFrequency(selection.first);
-            },
+          builder: (context, state) => GpProFrequencyChips(
+            selected: state.frequency,
+            onChanged: context.read<GpProCubit>().selectFrequency,
           ),
         ),
         const SizedBox(height: DonySpacing.lg),

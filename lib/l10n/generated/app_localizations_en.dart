@@ -20477,6 +20477,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gpProCommercialNameLabel => 'Business name (optional)';
 
   @override
+  String get gpProSignupCheckbox => 'I\'m a GP (regular traveler or business)';
+
+  @override
+  String get gpProSignupDocsHint =>
+      'You can add supporting documents later from your profile.';
+
+  @override
   String get gpProPiecesTitle => 'Supporting documents (optional)';
 
   @override

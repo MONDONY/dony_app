@@ -62,6 +62,7 @@ import 'package:dony/features/flights/presentation/flight_alerts_screen.dart';
 import 'package:dony/features/flights/presentation/flight_city_picker_screen.dart';
 import 'package:dony/features/flights/presentation/flights_screen.dart';
 import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_signup_cubit.dart';
 import 'package:dony/features/gp_pro/presentation/screens/gp_pro_screen.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
@@ -464,9 +465,14 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: intentStepRoute,
-      builder: (context, state) => BlocProvider(
-        create: (_) =>
-            getIt<IntentCubit>(param1: (intent: null, destination: null)),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) =>
+                getIt<IntentCubit>(param1: (intent: null, destination: null)),
+          ),
+          BlocProvider(create: (_) => getIt<GpProSignupCubit>()),
+        ],
         child: IntentStepScreen(
           progress: readOnboardingProgress(
             context,

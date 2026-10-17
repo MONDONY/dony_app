@@ -10727,6 +10727,8 @@
   "gpProFrequencyMonthly": "Once a month",
   "gpProFrequencyLessOften": "Less often",
   "gpProCommercialNameLabel": "Business name (optional)",
+  "gpProSignupCheckbox": "I'm a GP (regular traveler or business)",
+  "gpProSignupDocsHint": "You can add supporting documents later from your profile.",
   "gpProPiecesTitle": "Supporting documents (optional)",
   "gpProPiecesHint": "They help the team review your application. Images only, up to 4.",
   "gpProPiecesPrivacy": "Your documents are only used to review your application. They are deleted as soon as we have decided.",

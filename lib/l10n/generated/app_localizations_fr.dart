@@ -20612,6 +20612,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gpProCommercialNameLabel => 'Nom commercial (facultatif)';
 
   @override
+  String get gpProSignupCheckbox =>
+      'Je suis GP (voyageur régulier ou entreprise)';
+
+  @override
+  String get gpProSignupDocsHint =>
+      'Vous pourrez ajouter des justificatifs plus tard depuis votre profil.';
+
+  @override
   String get gpProPiecesTitle => 'Justificatifs (facultatif)';
 
   @override

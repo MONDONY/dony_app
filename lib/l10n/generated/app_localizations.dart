@@ -33254,6 +33254,18 @@ abstract class AppLocalizations {
   /// **'Nom commercial (facultatif)'**
   String get gpProCommercialNameLabel;
 
+  /// Inscription, étape intention : case « Je suis GP » (voyageur ou les deux).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je suis GP (voyageur régulier ou entreprise)'**
+  String get gpProSignupCheckbox;
+
+  /// Inscription : précise que les justificatifs GP Pro se joignent depuis le profil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez ajouter des justificatifs plus tard depuis votre profil.'**
+  String get gpProSignupDocsHint;
+
   /// Formulaire GP Pro : titre de la section des justificatifs, facultatifs.
   ///
   /// In fr, this message translates to:
