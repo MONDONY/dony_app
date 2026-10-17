@@ -20634,4 +20634,230 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpProErrorGeneric => 'Something went wrong. Try again.';
+
+  @override
+  String get aiFormDraftEntryTitle => 'Say it, we fill it in for you';
+
+  @override
+  String get aiFormDraftEntryBodyTrip =>
+      'Describe your trip out loud. The AI prepares the form, you check it before publishing.';
+
+  @override
+  String get aiFormDraftEntryBodyPackage =>
+      'Describe your parcel out loud. The AI prepares the form, you check it before publishing.';
+
+  @override
+  String get aiFormDraftEntryCta => 'Create with AI';
+
+  @override
+  String get aiFormDraftSheetTitleTrip => 'Create a trip with AI';
+
+  @override
+  String get aiFormDraftSheetTitlePackage => 'Send with AI';
+
+  @override
+  String get aiFormDraftWelcomeTrip =>
+      'Tell me about your trip: where you leave from, where you are going, when, how many kilos, your price and how you want to be paid.';
+
+  @override
+  String get aiFormDraftWelcomePackage =>
+      'Tell me about your parcel: from where to where, around which date, its weight, what is inside, your budget and how you pay.';
+
+  @override
+  String get aiFormDraftListening => 'Listening… tap to send';
+
+  @override
+  String get aiFormDraftLiveTranscript => 'Live transcript';
+
+  @override
+  String get aiFormDraftInputHint => 'Your answer';
+
+  @override
+  String get aiFormDraftSend => 'Send';
+
+  @override
+  String get aiFormDraftMicStart => 'Speak';
+
+  @override
+  String get aiFormDraftKeyboard => 'Type';
+
+  @override
+  String get aiFormDraftMicUnavailable =>
+      'Turn on the microphone in settings to speak.';
+
+  @override
+  String get aiFormDraftUnderstoodTitle => 'Understood so far';
+
+  @override
+  String get aiFormDraftChipGrid => 'My grid';
+
+  @override
+  String get aiFormDraftChipDirect => 'Non-stop';
+
+  @override
+  String aiFormDraftChipTolerance(int days) {
+    return '± $days d';
+  }
+
+  @override
+  String get aiFormDraftMissingRoute => 'Route?';
+
+  @override
+  String get aiFormDraftMissingDate => 'Date?';
+
+  @override
+  String get aiFormDraftMissingTime => 'Time?';
+
+  @override
+  String get aiFormDraftMissingTransport => 'Transport?';
+
+  @override
+  String get aiFormDraftMissingCapacity => 'Kilos?';
+
+  @override
+  String get aiFormDraftMissingPrice => 'Price?';
+
+  @override
+  String get aiFormDraftMissingPayment => 'Payment?';
+
+  @override
+  String get aiFormDraftMissingWeight => 'Weight?';
+
+  @override
+  String get aiFormDraftMissingContent => 'Contents?';
+
+  @override
+  String get aiFormDraftCorrectPrompt => 'What would you like to correct?';
+
+  @override
+  String get aiFormDraftQuestionFallback => 'Could you tell me more?';
+
+  @override
+  String get aiFormDraftReadyTitle => 'All set';
+
+  @override
+  String get aiFormDraftReadyBodyTrip =>
+      'Here is your trip. I fill in the form, you check each step before publishing.';
+
+  @override
+  String get aiFormDraftReadyBodyPackage =>
+      'Here is your request. I fill in the form, you check each step before publishing.';
+
+  @override
+  String get aiFormDraftTurnLimit =>
+      'I will fill in what I understood, complete the rest in the form.';
+
+  @override
+  String get aiFormDraftSummaryDeparture => 'Departure';
+
+  @override
+  String get aiFormDraftSummaryDesiredDate => 'Preferred date';
+
+  @override
+  String aiFormDraftSummaryAround(String date) {
+    return 'Around $date';
+  }
+
+  @override
+  String aiFormDraftSummaryTolerance(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'give or take $days days',
+      one: 'give or take 1 day',
+      zero: 'exact date',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiFormDraftSummaryCapacity => 'Capacity';
+
+  @override
+  String get aiFormDraftSummaryPrice => 'Price';
+
+  @override
+  String get aiFormDraftSummaryGrid => 'Items';
+
+  @override
+  String get aiFormDraftSummaryGridValue => 'My price grid';
+
+  @override
+  String get aiFormDraftSummaryPayment => 'Payment';
+
+  @override
+  String get aiFormDraftSummaryParcel => 'Parcel';
+
+  @override
+  String get aiFormDraftSummaryContent => 'Contents';
+
+  @override
+  String get aiFormDraftSummaryBudget => 'Your budget';
+
+  @override
+  String get aiFormDraftSummaryPhotoHint =>
+      'Add a photo of your parcel in step 2: travelers reply faster.';
+
+  @override
+  String get aiFormDraftCorrect => 'Correct something';
+
+  @override
+  String get aiFormDraftApply => 'Fill in the form';
+
+  @override
+  String get aiFormDraftApplyPartial => 'Fill in what was understood';
+
+  @override
+  String get aiFormDraftQuotaMessage =>
+      'You have used the AI a lot today. Try again tomorrow or fill in the form.';
+
+  @override
+  String get aiFormDraftDegradedMessage =>
+      'The AI is not responding right now.';
+
+  @override
+  String get aiFormDraftNetworkError =>
+      'Connection failed. Check your network and try again.';
+
+  @override
+  String get aiFormDraftRetry => 'Try again';
+
+  @override
+  String get aiFormDraftWarningDepartureUnknown =>
+      'I did not recognize the departure city: pick it in the form.';
+
+  @override
+  String get aiFormDraftWarningArrivalUnknown =>
+      'I did not recognize the arrival city: pick it in the form.';
+
+  @override
+  String get aiFormDraftWarningNoGrid =>
+      'You do not have a price grid yet: I used the price per kilo.';
+
+  @override
+  String get aiFormDraftWarningCardNotConfigured =>
+      'To get paid by card, finish setting up your payments. I will remind you at the Price step.';
+
+  @override
+  String get aiFormDraftWarningCardCurrency =>
+      'Card is not available in this currency: choose another payment method.';
+
+  @override
+  String get aiFormDraftWarningMobileMoney =>
+      'Mobile money is only available in CFA francs: I did not select it.';
+
+  @override
+  String get aiFormDraftWarningPlaneOnly =>
+      'Only plane trips are available for now: the trip will be published as a plane trip.';
+
+  @override
+  String get aiFormDraftWarningBudget =>
+      'This budget is outside the accepted amounts: enter it in step 3.';
+
+  @override
+  String get aiFormDraftFilledBanner =>
+      'Filled in by AI. Check each field before publishing.';
+
+  @override
+  String get aiFormDraftTalkAgain => 'Talk again';
 }

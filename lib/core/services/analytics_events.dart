@@ -374,6 +374,31 @@ abstract final class AnalyticsEvents {
   /// `enabled`).
   static const assistantBubbleToggled = 'assistant_bubble_toggled';
 
+  // ── Formulaires remplis par l'IA (trajet, demande d'envoi) ─────────────────
+  // Propriété `kind` sur chacun : `trip` ou `package_request`. Jamais le texte
+  // saisi ou dicté.
+
+  /// Feuille « Créer avec l'IA » ouverte.
+  static const aiFormDraftOpened = 'ai_form_draft_opened';
+
+  /// Un tour a été envoyé depuis la dictée (et non le clavier).
+  static const aiFormDraftVoiceUsed = 'ai_form_draft_voice_used';
+
+  /// Réponse reçue pour un tour. Propriétés `turns`, `missing_count`.
+  static const aiFormDraftTurn = 'ai_form_draft_turn';
+
+  /// Tout est compris (ou limite de tours). Propriétés `turns`, `turn_limit`.
+  static const aiFormDraftReady = 'ai_form_draft_ready';
+
+  /// « Remplir le formulaire » touché. Propriété `fields_count`.
+  static const aiFormDraftApplied = 'ai_form_draft_applied';
+
+  /// Aucun fournisseur n'a répondu, ou l'assistant est éteint en cours de route.
+  static const aiFormDraftDegraded = 'ai_form_draft_degraded';
+
+  /// Quota quotidien des formulaires atteint (HTTP 429).
+  static const aiFormDraftQuotaExceeded = 'ai_form_draft_quota_exceeded';
+
   static const helpCenterOpened = 'help_center_opened';
   static const helpTutorialOpened = 'help_tutorial_opened';
   static const helpTutorialPlayStarted = 'help_tutorial_play_started';
