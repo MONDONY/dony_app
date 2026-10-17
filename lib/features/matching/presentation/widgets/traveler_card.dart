@@ -370,7 +370,7 @@ class TravelerCard extends StatelessWidget {
                       spacing: DonySpacing.xxs,
                       runSpacing: DonySpacing.xxs,
                       children: [
-                        if (isGpPro) const _KycBadge(),
+                        if (isGpPro) const GpProBadge(surface: 'trip_card'),
                         if (isProAccount) const _ProBadge(),
                         if (announcement.isUrgent) const DonyUrgentBadge(),
                         // Escales (FLUTTER-GE) : rien si non renseignées.
@@ -801,47 +801,6 @@ class _ProBadge extends StatelessWidget {
               fontWeight: FontWeight.w700,
               color: cs.warning,
               letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _KycBadge extends StatelessWidget {
-  const _KycBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: cs.successLight,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: cs.success,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: DonySpacing.xxs),
-          Text(
-            context.l10n.listingIdentityBadge,
-            style: tt.labelSmall?.copyWith(
-              color: cs.success,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],

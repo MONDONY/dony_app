@@ -98,11 +98,7 @@ class VoyageurCard extends StatelessWidget {
                           ],
                           if (bid.travelerGpPro) ...[
                             const SizedBox(width: DonySpacing.xs),
-                            MiniChip(
-                              label: l.listingKiloProChip,
-                              color: DonyColors.amberDark,
-                              bg: DonyColors.amberLight,
-                            ),
+                            const GpProBadge(surface: 'traveler_card'),
                           ],
                         ],
                       ),

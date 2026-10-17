@@ -149,11 +149,7 @@ class VoyageurContactCard extends StatelessWidget {
                               bg: cs.primaryContainer,
                             ),
                           if (bid.travelerGpPro)
-                            MiniChip(
-                              label: l.listingKiloProChip,
-                              color: DonyColors.amberDark,
-                              bg: DonyColors.amberLight,
-                            ),
+                            const GpProBadge(surface: 'traveler_contact'),
                         ],
                       ),
                       // Note + trajets

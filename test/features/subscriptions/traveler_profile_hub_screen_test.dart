@@ -460,7 +460,7 @@ void main() {
 
   // ─── Test 11: PRO + KiloPro badges in header ─────────────────────────────
 
-  testWidgets('profil PRO + KiloPro → badges PRO et Kilo Pro dans le header', (
+  testWidgets('profil PRO + KiloPro → badges PRO et GP Pro dans le header', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(400, 900));
@@ -492,7 +492,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Compte PRO'), findsOneWidget);
-    expect(find.text('Kilo Pro'), findsOneWidget);
+    expect(find.text('GP Pro'), findsOneWidget);
   });
 
   // ─── Test 12: S'abonner button tap → HubSubscribePressed ─────────────────

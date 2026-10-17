@@ -888,7 +888,7 @@ void main() {
     );
   });
 
-  // ── VoyageurContactCard — badges KYC / Kilo Pro ───────────────────────────
+  // ── VoyageurContactCard — badges KYC / GP Pro ───────────────────────────
   group('VoyageurContactCard badges', () {
     late _MockConversationOpenBloc bloc;
 
@@ -905,12 +905,20 @@ void main() {
       expect(find.text('Identité'), findsOneWidget);
     });
 
-    testWidgets('travelerGpPro=true → badge Kilo Pro visible', (tester) async {
+    testWidgets('travelerGpPro=true → badge GP Pro visible', (tester) async {
       final bid = _bid(travelerGpPro: true, travelerName: 'Oumar');
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.text('Kilo Pro'), findsOneWidget);
+      expect(find.byType(GpProBadge), findsOneWidget);
+    });
+
+    testWidgets('travelerGpPro=false → pas de badge GP Pro', (tester) async {
+      final bid = _bid(travelerName: 'Oumar');
+
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+
+      expect(find.byType(GpProBadge), findsNothing);
     });
 
     testWidgets(

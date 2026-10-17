@@ -372,11 +372,7 @@ class _ProfileHeader extends StatelessWidget {
                         iconColor: cs.warning,
                       ),
                     if (traveler.gpPro)
-                      _ProfileBadge(
-                        iconAsset: 'package',
-                        label: context.l10n.listingKiloProChip,
-                        iconColor: cs.warning,
-                      ),
+                      const GpProBadge(surface: 'traveler_sheet'),
                     if (traveler.kycVerified)
                       _ProfileBadge(
                         iconAsset: 'badge-check',

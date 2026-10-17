@@ -142,11 +142,7 @@ class ExpediteurContactCard extends StatelessWidget {
                               bg: cs.primaryContainer,
                             ),
                           if (bid.senderGpPro)
-                            MiniChip(
-                              label: l.listingKiloProChip,
-                              color: DonyColors.amberDark,
-                              bg: DonyColors.amberLight,
-                            ),
+                            const GpProBadge(surface: 'sender_contact'),
                         ],
                       ),
                       // Nombre d'envois

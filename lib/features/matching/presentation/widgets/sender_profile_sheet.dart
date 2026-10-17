@@ -207,13 +207,7 @@ class _SenderProfileSheet extends StatelessWidget {
                                 textColor: cs.warning,
                               ),
                             if (bid.senderGpPro)
-                              _SheetBadge(
-                                iconAsset: 'star',
-                                label: context.l10n.listingKiloProChip,
-                                iconColor: DonyColors.amberDark,
-                                bgColor: DonyColors.amberLight,
-                                textColor: DonyColors.amberDark,
-                              ),
+                              const GpProBadge(surface: 'sender_sheet'),
                             if (bid.senderKycVerified)
                               _SheetBadge(
                                 iconAsset: 'badge-check',

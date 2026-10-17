@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
@@ -28,6 +29,12 @@ const _travelerFull = TravelerProfile(
   totalTrips: 12,
   kycVerified: true,
   isProAccount: true,
+);
+
+const _travelerGpPro = TravelerProfile(
+  id: 't3',
+  displayName: 'Oumar D.',
+  gpPro: true,
 );
 
 const _travelerMinimal = TravelerProfile(id: 't2', displayName: 'Fatou D.');
@@ -107,6 +114,18 @@ void main() {
     ) async {
       await _openSheet(tester, _travelerFull);
       expect(find.text('Identité vérifiée'), findsOneWidget);
+    });
+
+    testWidgets('affiche le badge GP Pro seulement quand gpPro = true', (
+      tester,
+    ) async {
+      await _openSheet(tester, _travelerGpPro);
+      expect(find.byType(GpProBadge), findsOneWidget);
+    });
+
+    testWidgets('pas de badge GP Pro quand gpPro = false', (tester) async {
+      await _openSheet(tester, _travelerFull);
+      expect(find.byType(GpProBadge), findsNothing);
     });
 
     testWidgets('affiche le texte masqué si phoneNumber est null', (

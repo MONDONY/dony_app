@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
@@ -34,6 +35,7 @@ BidModel _bid({
   bool senderPhoneAvailable = false,
   bool senderKycVerified = false,
   bool senderIsProAccount = false,
+  bool senderGpPro = false,
   int? senderTotalShipments,
 }) => BidModel(
   id: 'b1',
@@ -44,6 +46,7 @@ BidModel _bid({
   senderPhoneAvailable: senderPhoneAvailable,
   senderKycVerified: senderKycVerified,
   senderIsProAccount: senderIsProAccount,
+  senderGpPro: senderGpPro,
   senderTotalShipments: senderTotalShipments,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
@@ -115,6 +118,16 @@ void main() {
 
     expect(find.text('Compte PRO'), findsOneWidget);
     expect(find.text('Identité vérifiée'), findsOneWidget);
+  });
+
+  testWidgets('badge GP Pro présent seulement si senderGpPro', (tester) async {
+    await _openSheet(tester, _bid(senderName: 'Fatou S.', senderGpPro: true));
+    expect(find.byType(GpProBadge), findsOneWidget);
+  });
+
+  testWidgets('pas de badge GP Pro sans senderGpPro', (tester) async {
+    await _openSheet(tester, _bid(senderName: 'Fatou S.'));
+    expect(find.byType(GpProBadge), findsNothing);
   });
 
   testWidgets('libellé Envois de la stat', (tester) async {

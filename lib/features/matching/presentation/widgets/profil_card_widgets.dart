@@ -1,7 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// Badge compact (KYC / Kilo Pro) utilisé dans les cartes profil.
+/// Badge compact (identité vérifiée) utilisé dans les cartes profil.
 class MiniChip extends StatelessWidget {
   final String label;
   final Color color;
