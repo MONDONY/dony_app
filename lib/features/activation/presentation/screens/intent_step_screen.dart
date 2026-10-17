@@ -115,23 +115,28 @@ class IntentStepScreen extends StatelessWidget {
                       ),
                     ),
                     BlocBuilder<IntentCubit, IntentFormState>(
-                      builder: (context, state) => AuthFlowActions(
-                        primary: DonyButton(
-                          key: const Key('intent-continue'),
-                          label: l.intentContinue,
-                          isLoading: state.status == IntentFormStatus.saving,
-                          onPressed:
-                              state.isValid &&
-                                  context
-                                      .watch<GpProSignupCubit>()
-                                      .state
-                                      .isComplete
-                              ? () => context.read<IntentCubit>().submit(
-                                  IntentSource.signup,
-                                )
-                              : null,
-                        ),
-                      ),
+                      builder: (context, state) =>
+                          BlocBuilder<GpProSignupCubit, GpProSignupState>(
+                            // Pas de reconstruction à chaque frappe du nom.
+                            buildWhen: (p, c) =>
+                                p.isCompleteFor(state.intent) !=
+                                c.isCompleteFor(state.intent),
+                            builder: (context, gp) => AuthFlowActions(
+                              primary: DonyButton(
+                                key: const Key('intent-continue'),
+                                label: l.intentContinue,
+                                isLoading:
+                                    state.status == IntentFormStatus.saving,
+                                onPressed:
+                                    state.isValid &&
+                                        gp.isCompleteFor(state.intent)
+                                    ? () => context.read<IntentCubit>().submit(
+                                        IntentSource.signup,
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          ),
                     ),
                     SizedBox(height: MediaQuery.paddingOf(context).bottom),
                   ],

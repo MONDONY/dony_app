@@ -25,6 +25,11 @@ class GpProSignupState extends Equatable {
   /// Case décochée, ou cochée avec la fréquence (obligatoire) choisie.
   bool get isComplete => !checked || frequency != null;
 
+  /// Comme [isComplete], mais la case ne compte que si l'intention montre la
+  /// section (voyageur ou les deux) : en « Expéditeur » elle est masquée.
+  bool isCompleteFor(UserIntent? intent) =>
+      intent == null || intent == UserIntent.sender || isComplete;
+
   GpProSignupState copyWith({
     bool? checked,
     GpProFrequency? frequency,

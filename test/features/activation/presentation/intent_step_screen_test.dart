@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
@@ -223,6 +224,33 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('intent-continue')));
       verify(() => cubit.submit(IntentSource.signup)).called(1);
+      await states.close();
+    });
+
+    testWidgets('bascule sur « Expéditeur » : « Continuer » se réactive', (
+      tester,
+    ) async {
+      final cubit = _MockIntentCubit();
+      when(() => cubit.submit(any())).thenAnswer((_) async {});
+      final states = StreamController<IntentFormState>();
+      await pump(tester, cubit, states, intent: UserIntent.traveler);
+      await tester.tap(checkbox);
+      await tester.pumpAndSettle();
+      final button = find.byKey(const Key('intent-continue'));
+      expect(tester.widget<DonyButton>(button).onPressed, isNull);
+
+      states.add(
+        const IntentFormState(intent: UserIntent.sender, destination: 'SN'),
+      );
+      await tester.pumpAndSettle();
+      expect(checkbox, findsNothing);
+      expect(tester.widget<DonyButton>(button).onPressed, isNotNull);
+
+      states.add(
+        const IntentFormState(intent: UserIntent.traveler, destination: 'SN'),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.widget<DonyButton>(button).onPressed, isNull);
       await states.close();
     });
 

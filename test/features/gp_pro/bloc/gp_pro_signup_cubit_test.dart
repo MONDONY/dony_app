@@ -61,6 +61,14 @@ void main() {
       );
     });
 
+    test('isCompleteFor ignore la case hors voyageur / les deux', () {
+      const s = GpProSignupState(checked: true);
+      expect(s.isCompleteFor(null), isTrue);
+      expect(s.isCompleteFor(UserIntent.sender), isTrue);
+      expect(s.isCompleteFor(UserIntent.traveler), isFalse);
+      expect(s.isCompleteFor(UserIntent.both), isFalse);
+    });
+
     blocTest<GpProSignupCubit, GpProSignupState>(
       'toggle, fréquence et nom alimentent l\'état',
       build: build,
