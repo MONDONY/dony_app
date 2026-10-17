@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
 import 'package:dony/features/ai_form_draft/data/ai_text_fold.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -37,6 +38,10 @@ abstract final class PackageRequestAiDraftMapper {
     );
     final budget = ai['totalBudget'];
     final negotiable = ai['negotiable'];
+    final aiCurrency = SupportedCurrency.fromCode(_text(ai['currency']));
+    final currency = aiCurrency ?? base.currency;
+    final currencyChanged =
+        base.currency != null && currency != null && currency != base.currency;
     return base.copyWith(
       currentStep: 0,
       departureCity: _text(ai['departureCity']),
@@ -52,9 +57,57 @@ abstract final class PackageRequestAiDraftMapper {
       categories: categories.isEmpty ? null : categories,
       description: _text(ai['description']),
       negotiable: negotiable is bool ? negotiable : null,
-      acceptedPaymentMethods: methods.isEmpty ? null : methods,
+      acceptedPaymentMethods: _methodsIn(currency, methods, base),
       totalBudgetEur: budget is num ? budget.toDouble() : null,
-      currency: SupportedCurrency.fromCode(_text(ai['currency'])),
+      // Un budget de la passe précédente, saisi dans une autre devise,
+      // deviendrait faux (60 € → 60 FCFA) : il est retiré.
+      clearTotalBudgetEur: budget is! num && currencyChanged,
+      currency: aiCurrency,
+    );
+  }
+
+  /// Moyens de paiement possibles dans [currency], comme
+  /// `PackageRequestFormBloc._onCurrencyChanged` : la devise posée par l'IA ne
+  /// passe pas par cet événement, la carte seule partirait en franc CFA.
+  static Set<PaymentMethod>? _methodsIn(
+    SupportedCurrency? currency,
+    Set<PaymentMethod> asked,
+    PackageRequestFormState base,
+  ) {
+    if (currency == null) return asked.isEmpty ? null : asked;
+    final allowed = PaymentMethod.selectableIn(currency);
+    final enteringCfa =
+        currency.isMobileMoneyEligible &&
+        !(base.currency?.isMobileMoneyEligible ?? false);
+    final candidate = asked.isNotEmpty
+        ? asked
+        : enteringCfa
+        ? allowed.toSet()
+        : base.acceptedPaymentMethods;
+    final next = candidate.where(allowed.contains).toSet();
+    if (next.isEmpty) next.add(PaymentMethod.cash);
+    return next;
+  }
+
+  /// [state] complété par la saisie de l'étape 1 pas encore validée
+  /// (`Step1TrajetColisState.draftInput`) : l'étape ne remonte villes, date et
+  /// tolérance au bloc qu'à « Continuer ». Sans cela, le brouillon IA,
+  /// appliqué sur l'état du bloc, effacerait une ville choisie à l'écran ou
+  /// une correction faite avant « Reparler ». Une valeur effacée à l'écran
+  /// (nulle) garde celle du bloc.
+  static PackageRequestFormState withStep1Input(
+    PackageRequestFormState state,
+    Map<String, dynamic>? input,
+  ) {
+    if (input == null || input.isEmpty) return state;
+    final departure = input['departureCity'];
+    final arrival = input['arrivalCity'];
+    final tolerance = input['dateToleranceDays'];
+    return state.copyWith(
+      departureCity: departure is String ? departure : null,
+      arrivalCity: arrival is String ? arrival : null,
+      desiredDate: PackageRequestFormDraft.decodeDate(input['desiredDate']),
+      dateToleranceDays: tolerance is int ? tolerance : null,
     );
   }
 

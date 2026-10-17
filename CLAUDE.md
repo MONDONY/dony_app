@@ -399,8 +399,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `suivi_step_validated` | SuiviValidationCubit._send() — étape DEPART/TRANSIT validée depuis l'onglet Suivi, envoyée (ou mise dans la file hors ligne) une fois passé le délai d'annulation de 5 s, ou aussitôt si l'onglet ou l'app est quitté (propriétés `step` : `DEPART`/`TRANSIT`, `method` : `qr` QR lu, `manual` numéro saisi dans la feuille ou bouton « Valider le départ » d'une ligne colis). Jamais l'identifiant ni le numéro du colis |
 | `suivi_step_undone` | SuiviValidationCubit.undo() — « Annuler » touché sur le bandeau d'une validation rapide pendant le délai : rien n'est envoyé (propriété `step`) |
 | `delivery_confirmed` | ReceptionConfirmScreen._confirm() |
-| `package_request_created` | PackageRequestFormBloc |
-| `package_request_updated` | PackageRequestFormBloc._onStep3() (mode édition) |
+| `package_request_created` | PackageRequestFormBloc — propriétés `corridor`, `negotiable`, `payment_methods`, `from_ai` (bool : formulaire rempli par « Créer avec l'IA ») |
+| `package_request_updated` | PackageRequestFormBloc._onStep3() (mode édition) — mêmes propriétés ; `from_ai` reste `false` (pas de carte IA en édition) |
 | `package_request_published` | PackageRequestDetailCubit.publish() — bouton « Publier » de la barre fixe de « Ma demande » (écran ou sheet), brouillon → OPEN |
 | `package_request_unpublished` | PackageRequestDetailCubit.unpublish() — entrée « Dépublier » du menu « … » de « Ma demande » (OPEN → brouillon) |
 | `package_request_cancelled` | PackageRequestDetailCubit.cancel() — annulation confirmée par le serveur depuis le menu « … » ; l'écran reste ouvert sur l'état « Annulée » |

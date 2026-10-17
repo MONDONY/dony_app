@@ -193,7 +193,10 @@ class _PackageRequestCreateScreenState
       FormDraftRestored(
         PackageRequestAiDraftMapper.toFormState(
           outcome.draft,
-          base: bloc.state,
+          base: PackageRequestAiDraftMapper.withStep1Input(
+            bloc.state,
+            _step1Key.currentState?.draftInput,
+          ),
           catalogLabels: [for (final c in fallbackCatalog) c.label],
         ),
         fromAi: true,

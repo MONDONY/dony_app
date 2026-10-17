@@ -142,4 +142,68 @@ void main() {
     expect(s.currency, SupportedCurrency.xof);
     expect(s.draftRevision, 4);
   });
+
+  group('devise posée par l’IA', () {
+    test('franc CFA sans moyen dit : jamais la carte seule', () {
+      final s = map(const {'currency': 'XOF'});
+      expect(s.currency, SupportedCurrency.xof);
+      expect(s.acceptedPaymentMethods, isNot(contains(PaymentMethod.stripe)));
+      expect(
+        s.acceptedPaymentMethods,
+        PaymentMethod.selectableIn(SupportedCurrency.xof).toSet(),
+      );
+    });
+
+    test('franc CFA avec la carte demandée : moyen non vide, sans carte', () {
+      final s = map(const {
+        'currency': 'XOF',
+        'acceptedPaymentMethods': ['STRIPE'],
+      });
+      expect(s.acceptedPaymentMethods, isNotEmpty);
+      expect(s.acceptedPaymentMethods, isNot(contains(PaymentMethod.stripe)));
+    });
+
+    test('devise changée sans budget dit : l’ancien budget est retiré', () {
+      const base = PackageRequestFormState(
+        totalBudgetEur: 60,
+        currency: SupportedCurrency.eur,
+      );
+      final s = map(const {'currency': 'XOF'}, base: base);
+      expect(s.totalBudgetEur, isNull);
+      final same = map(const {'currency': 'EUR'}, base: base);
+      expect(same.totalBudgetEur, 60);
+    });
+  });
+
+  group('saisie de l’étape 1 non validée', () {
+    test('villes, date et tolérance saisies à l’écran priment sur le bloc', () {
+      const state = PackageRequestFormState(
+        departureCity: 'Lyon',
+        arrivalCity: 'Dakar',
+        dateToleranceDays: 3,
+      );
+      final base = PackageRequestAiDraftMapper.withStep1Input(state, const {
+        'departureCity': 'Paris',
+        'arrivalCity': 'Abidjan',
+        'desiredDate': '2026-12-05',
+        'dateToleranceDays': 1,
+        'transportMode': 'PLANE',
+      });
+      expect(base.departureCity, 'Paris');
+      expect(base.arrivalCity, 'Abidjan');
+      expect(base.desiredDate, DateTime(2026, 12, 5));
+      expect(base.dateToleranceDays, 1);
+      // « Reparler » qui ne dit que le poids garde l'arrivée corrigée.
+      final s = map(const {'weightKg': 7}, base: base);
+      expect(s.arrivalCity, 'Abidjan');
+    });
+
+    test('sans saisie locale : l’état du bloc tel quel', () {
+      const state = PackageRequestFormState(departureCity: 'Lyon');
+      expect(
+        PackageRequestAiDraftMapper.withStep1Input(state, null),
+        same(state),
+      );
+    });
+  });
 }
