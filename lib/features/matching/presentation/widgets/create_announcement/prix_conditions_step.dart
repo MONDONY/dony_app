@@ -9,6 +9,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -238,9 +239,12 @@ class PrixConditionsStep extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CaSectionLabel(
-                    label: l.tripPublishPricePerKgSectionLabel,
-                    iconAsset: 'tag',
+                  AiFieldMark(
+                    fields: const ['pricePerKg', 'pricingMode'],
+                    child: CaSectionLabel(
+                      label: l.tripPublishPricePerKgSectionLabel,
+                      iconAsset: 'tag',
+                    ),
                   ),
                   const SizedBox(height: DonySpacing.md),
                   // ── Toggle "Tarif au kilo" (MIXED uniquement) ─────────────
@@ -574,9 +578,12 @@ class PrixConditionsStep extends StatelessWidget {
         // Masqué dans le flux trajet dédié : le mode de paiement est déjà fixé
         // par la négociation (lockContext.paymentMethod).
         if (showPaymentMethods) ...[
-          CaSectionLabel(
-            label: l.tripPublishPaymentMethodsSectionLabel,
-            iconAsset: 'banknote',
+          AiFieldMark(
+            fields: const ['cardEnabled', 'cashEnabled', 'mobileMoneyEnabled'],
+            child: CaSectionLabel(
+              label: l.tripPublishPaymentMethodsSectionLabel,
+              iconAsset: 'banknote',
+            ),
           ),
           const SizedBox(height: DonySpacing.sm),
           BlocBuilder<StripeAccountBloc, StripeAccountState>(

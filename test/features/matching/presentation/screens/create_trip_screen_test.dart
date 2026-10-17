@@ -10,6 +10,7 @@ import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
+import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -75,6 +76,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/ai_form_draft_test_doubles.dart';
 import '../../../../helpers/currency_test_doubles.dart';
 import '../../../../helpers/form_draft_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -4576,6 +4578,131 @@ void main() {
       await pumpScreen(tester, CreateTripArgs(announcement: ann));
 
       expect(find.byKey(const Key('trip-save-draft')), findsNothing);
+    });
+  });
+
+  // ── Group: Créer avec l'IA (formulaires IA) ───────────────────────────────
+
+  group('CreateTripScreen — Créer avec l’IA', () {
+    final departure = isoDate(DateTime.now().add(const Duration(days: 30)));
+
+    AiResolvedDraft outcome() => AiResolvedDraft(
+      draft: {
+        'departureCity': 'Paris',
+        'departureCountryCode': 'FR',
+        'arrivalCity': 'Abidjan',
+        'arrivalCountryCode': 'CI',
+        'departureDate': departure,
+        'departureTime': '15:00',
+        'transportMode': 'PLANE',
+        'direct': true,
+        'availableKg': 23,
+        'capacityUnit': 'SUITCASE_23KG',
+        'pricingMode': 'KG',
+        'pricePerKg': 10,
+        'currency': 'EUR',
+        'cardEnabled': true,
+        'cashEnabled': true,
+      },
+    );
+
+    Future<void> settle(WidgetTester tester) async {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    testWidgets('carte visible en création quand formDraftEnabled', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      useAiFormDraft(enabled: true);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      expect(find.byKey(const Key('ai-entry-cta')), findsOneWidget);
+    });
+
+    testWidgets('carte absente si formDraftEnabled est faux ou absent', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      useAiFormDraft(enabled: false);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      expect(find.byKey(const Key('ai-entry-cta')), findsNothing);
+    });
+
+    testWidgets('carte absente en modification', (tester) async {
+      setupViewport(tester);
+      useAiFormDraft(enabled: true);
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(
+            args: CreateTripArgs(announcement: _makeAnnouncement()),
+          ),
+        ),
+      );
+      expect(find.byKey(const Key('ai-entry-cta')), findsNothing);
+    });
+
+    testWidgets('carte absente en reprise de brouillon', (tester) async {
+      setupViewport(tester);
+      useAiFormDraft(enabled: true);
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          const CreateTripScreen(
+            args: CreateTripArgs(resumeDraft: TripFormDraft()),
+          ),
+        ),
+      );
+      expect(find.byKey(const Key('ai-entry-cta')), findsNothing);
+    });
+
+    testWidgets(
+      '« Créer avec l’IA » remplit le formulaire : bandeau, marques',
+      (tester) async {
+        setupViewport(tester);
+        final launcher = useAiFormDraft(enabled: true, outcome: outcome());
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+        await tester.tap(find.byKey(const Key('ai-entry-cta')));
+        await settle(tester);
+
+        expect(launcher.calls.single.kind, AiFormKind.trip);
+        expect(launcher.calls.single.defaultCurrency, isNotNull);
+        expect(find.byKey(const Key('ai-filled-banner')), findsOneWidget);
+        expect(find.byKey(const Key('ai-entry-cta')), findsNothing);
+        // Heure de départ remplie dans son champ, marque « IA » posée.
+        expect(find.text('15:00'), findsOneWidget);
+        expect(find.byKey(const Key('ai-field-mark')), findsWidgets);
+      },
+    );
+
+    testWidgets('« Reparler » rouvre le dialogue', (tester) async {
+      setupViewport(tester);
+      final launcher = useAiFormDraft(enabled: true, outcome: outcome());
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      await tester.tap(find.byKey(const Key('ai-entry-cta')));
+      await settle(tester);
+
+      await tester.tap(find.byKey(const Key('ai-talk-again')));
+      await settle(tester);
+
+      expect(launcher.calls, hasLength(2));
+      expect(find.byKey(const Key('ai-filled-banner')), findsOneWidget);
+    });
+
+    testWidgets('feuille fermée sans remplir : le formulaire ne change pas', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      useAiFormDraft(enabled: true);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      await tester.tap(find.byKey(const Key('ai-entry-cta')));
+      await settle(tester);
+
+      expect(find.byKey(const Key('ai-filled-banner')), findsNothing);
+      expect(find.byKey(const Key('ai-entry-cta')), findsOneWidget);
+      expect(find.byKey(const Key('ai-field-mark')), findsNothing);
     });
   });
 }

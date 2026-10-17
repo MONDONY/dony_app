@@ -12,6 +12,13 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/ai_form_draft/bloc/ai_filled_fields_cubit.dart';
+import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_availability_cubit.dart';
+import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
+import 'package:dony/features/ai_form_draft/data/trip_ai_draft_mapper.dart';
+import 'package:dony/features/ai_form_draft/presentation/ai_form_draft_launcher.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_entry_card.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_filled_banner.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
@@ -170,6 +177,19 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   TripFormDraft Function()? _draftSnapshot;
   void Function(TripFormDraft)? _restoreDraft;
 
+  /// « Créer avec l'IA » : création libre seulement, ni modification, ni
+  /// trajet dédié, ni reprise de brouillon, ni modèle appliqué (spec §2.1).
+  late final AiFormDraftAvailabilityCubit? _aiAvailability =
+      widget.args?.announcement == null &&
+          widget.args?.lockContext == null &&
+          widget.args?.resumeDraft == null &&
+          widget.args?.template == null
+      ? getIt<AiFormDraftAvailabilityCubit>()
+      : null;
+
+  /// Champs remplis par l'IA : marque « IA », bandeau, propriété `from_ai`.
+  final AiFilledFieldsCubit _aiFilled = AiFilledFieldsCubit();
+
   @override
   void initState() {
     super.initState();
@@ -218,6 +238,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         if (mounted) _resumeLocalDraft(resumeDraft);
       });
     }
+    final aiAvailability = _aiAvailability;
+    if (aiAvailability != null) unawaited(aiAvailability.refresh());
   }
 
   @override
@@ -232,6 +254,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _currencyEditableNotifier.dispose();
     _formScrollController.dispose();
     unawaited(_draftCubit?.close());
+    unawaited(_aiFilled.close());
     super.dispose();
   }
 
@@ -313,6 +336,41 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _currentStepNotifier.value = step;
   }
 
+  /// Ouvre « Créer avec l'IA » puis applique le brouillon par le chemin de
+  /// reprise de brouillon, posé sur la saisie courante, à l'étape 1.
+  Future<void> _openAiDraft() async {
+    final outcome = await getIt<AiFormDraftLauncher>().open(
+      context,
+      kind: AiFormKind.trip,
+      defaultCurrency: _currencyNotifier.value.code,
+      isCardReady: _isCardReady,
+    );
+    final snapshot = _draftSnapshot;
+    final restore = _restoreDraft;
+    if (!mounted || outcome == null || snapshot == null || restore == null) {
+      return;
+    }
+    restore(TripAiDraftMapper.toFormDraft(outcome.draft, base: snapshot()));
+    _currentStepNotifier.value = 0;
+    _aiFilled.markFilled(outcome.filledFields);
+    if (_formScrollController.hasClients) {
+      unawaited(
+        _formScrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        ),
+      );
+    }
+  }
+
+  /// Même règle que la ligne « Carte bancaire » du formulaire : onboarding
+  /// Stripe Connect terminé.
+  bool _isCardReady() {
+    final state = getIt<StripeAccountBloc>().state;
+    return state is StripeAccountReady && state.accountStatus.isComplete;
+  }
+
   /// « Modifier » de la ligne Devise du récapitulatif (FLUTTER-NN) : ferme
   /// l'aperçu, remonte en tête du formulaire où se trouve la bannière de
   /// devise, puis ouvre directement son sélecteur. Création seulement : en
@@ -366,6 +424,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       ),
       // Étapes supplémentaires d'un voyage (FLUTTER-4D), en création seulement.
       BlocProvider<TripLegsCubit>(create: (_) => getIt<TripLegsCubit>()),
+      BlocProvider<AiFilledFieldsCubit>.value(value: _aiFilled),
       BlocProvider<TripTemplateBloc>(
         create: (_) =>
             getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
@@ -446,6 +505,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (_aiAvailability case final availability?)
+                          _AiTripEntry(
+                            availability: availability,
+                            filled: _aiFilled,
+                            currentStepNotifier: _currentStepNotifier,
+                            onOpen: () => unawaited(_openAiDraft()),
+                          ),
                         const ContextualTutorialCard(
                           context: TutorialContext.tripPublish,
                         ),
@@ -1937,6 +2003,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         negotiable: _negotiableNotifier.value,
         saveAsDraft: saveAsDraft,
         currency: _currency.code,
+        fromAi: context.read<AiFilledFieldsCubit>().isFromAi,
       );
       // Voyage à plusieurs étapes (FLUTTER-4D) : toutes les étapes partent
       // ensemble, en une transaction côté serveur.
@@ -3203,4 +3270,41 @@ class _EditCurrencySection extends StatelessWidget {
       },
     );
   }
+}
+
+/// Carte « Créer avec l'IA », puis bandeau « Rempli par l'IA » avec
+/// « Reparler » une fois le formulaire rempli. Étape 1 seulement.
+class _AiTripEntry extends StatelessWidget {
+  const _AiTripEntry({
+    required this.availability,
+    required this.filled,
+    required this.currentStepNotifier,
+    required this.onOpen,
+  });
+
+  final AiFormDraftAvailabilityCubit availability;
+  final AiFilledFieldsCubit filled;
+  final ValueListenable<int> currentStepNotifier;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<int>(
+    valueListenable: currentStepNotifier,
+    builder: (context, step, _) {
+      if (step != 0) return const SizedBox.shrink();
+      return BlocBuilder<AiFilledFieldsCubit, Set<String>>(
+        bloc: filled,
+        builder: (context, fields) => fields.isNotEmpty
+            ? Padding(
+                padding: const EdgeInsets.only(bottom: DonySpacing.base),
+                child: AiFilledBanner(onTalkAgain: onOpen),
+              )
+            : AiEntryGate(
+                availability: availability,
+                padding: const EdgeInsets.only(bottom: DonySpacing.base),
+                child: AiEntryCard(kind: AiFormKind.trip, onPressed: onOpen),
+              ),
+      );
+    },
+  );
 }
