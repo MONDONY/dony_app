@@ -1,4 +1,5 @@
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,9 @@ import 'package:flutter_test/flutter_test.dart';
 BidModel _bid({
   required String status,
   double? total = 48,
+  double? senderTotal,
   BidPaymentMethod method = BidPaymentMethod.stripe,
+  String currency = 'EUR',
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -15,7 +18,9 @@ BidModel _bid({
   status: status,
   weightKg: 5,
   totalAmountEur: total,
+  totalSenderAmountEur: senderTotal,
   paymentMethod: method,
+  currency: currency,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -52,13 +57,101 @@ void main() {
     expect(find.textContaining('annulé'), findsOneWidget);
   });
 
-  testWidgets('Cash → encaissement en espèces', (tester) async {
+  testWidgets('Cash sans brut (ancien back) → net + note historique', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(status: 'ACCEPTED', method: BidPaymentMethod.cash),
     );
     expect(find.text('VOUS ENCAISSEZ'), findsOneWidget);
-    expect(find.textContaining('espèces'), findsOneWidget);
+    expect(find.text('${formatPriceIn(48, 'EUR')} en espèces'), findsOneWidget);
+    expect(find.text('Commission Yadony prélevée séparément.'), findsOneWidget);
+    expect(find.textContaining('Vous gardez'), findsNothing);
+  });
+
+  // FLUTTER-R8 : en espèces, l'expéditeur remet le BRUT au voyageur ; la
+  // commission est prélevée à part. Afficher le net laissait croire que
+  // l'expéditeur payait moins que ce qu'il remet réellement.
+  testWidgets('Cash avec brut → brut encaissé + détail commission et net', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'ACCEPTED',
+        method: BidPaymentMethod.cash,
+        senderTotal: 50.4,
+      ),
+    );
+    expect(
+      find.text('${formatPriceIn(50.4, 'EUR')} en espèces'),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'Dont ${formatPriceIn(2.4, 'EUR')} de commission Yadony, prélevée sur '
+        'votre solde ou votre carte. Vous gardez ${formatPriceIn(48, 'EUR')}.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Commission Yadony prélevée séparément.'), findsNothing);
+  });
+
+  testWidgets('Cash avec brut en XOF → montants dans la devise du colis', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'ACCEPTED',
+        method: BidPaymentMethod.cash,
+        total: 20000,
+        senderTotal: 21000,
+        currency: 'XOF',
+      ),
+    );
+    expect(
+      find.text('${formatPriceIn(21000, 'XOF')} en espèces'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Vous gardez ${formatPriceIn(20000, 'XOF')}'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Dont ${formatPriceIn(1000, 'XOF')} de commission'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Cash avec brut égal au net → pas de ligne de détail', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(status: 'ACCEPTED', method: BidPaymentMethod.cash, senderTotal: 48),
+    );
+    expect(find.text('${formatPriceIn(48, 'EUR')} en espèces'), findsOneWidget);
+    expect(find.textContaining('Vous gardez'), findsNothing);
+    expect(find.text('Commission Yadony prélevée séparément.'), findsOneWidget);
+  });
+
+  testWidgets('Stripe avec brut → toujours le net, sans détail espèces', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'ACCEPTED', senderTotal: 50.4));
+    expect(find.text(formatPriceIn(48, 'EUR')), findsOneWidget);
+    expect(find.textContaining('Vous gardez'), findsNothing);
+    expect(find.textContaining('espèces'), findsNothing);
+  });
+
+  test('travelerCashGrossAmount : brut sinon repli sur le net', () {
+    expect(
+      travelerCashGrossAmount(_bid(status: 'ACCEPTED', senderTotal: 50)),
+      50,
+    );
+    expect(travelerCashGrossAmount(_bid(status: 'ACCEPTED')), 48);
   });
 
   // Un paiement mobile money était présenté comme un encaissement en espèces.

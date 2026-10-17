@@ -65,10 +65,50 @@ void main() {
       );
     });
 
-    test('autres erreurs : pas passagères', () {
+    // FLUTTER-QB : sur iOS, `getToken` lève `[firebase_messaging/unknown]`
+    // sans aucun marqueur Android dans le message.
+    test('code unknown sans message (iOS) : passager', () {
       expect(
         isTransientFcmTokenError(
           FirebaseException(plugin: 'firebase_messaging', code: 'unknown'),
+        ),
+        isTrue,
+      );
+      expect(
+        isTransientFcmTokenError(
+          FirebaseException(
+            plugin: 'firebase_messaging',
+            code: 'unknown',
+            message: 'The operation couldn’t be completed.',
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('code unknown iOS : réessayé par fetch', () async {
+      var calls = 0;
+      final token = await retry.fetch(() async {
+        if (++calls < 2) {
+          throw FirebaseException(
+            plugin: 'firebase_messaging',
+            code: 'unknown',
+          );
+        }
+        return 'tok';
+      });
+
+      expect(token, 'tok');
+      expect(calls, 2);
+    });
+
+    test('autres erreurs : pas passagères', () {
+      expect(
+        isTransientFcmTokenError(
+          FirebaseException(
+            plugin: 'firebase_messaging',
+            code: 'apns-token-not-set',
+          ),
         ),
         isFalse,
       );

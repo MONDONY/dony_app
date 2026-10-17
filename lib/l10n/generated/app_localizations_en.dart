@@ -5383,6 +5383,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingBidStatusOfferSent => 'Offer sent';
 
   @override
+  String get listingOwnTripMessage =>
+      'This is your trip: you can\'t send yourself a request.';
+
+  @override
+  String get listingOwnTripManageButton => 'Manage my trip';
+
+  @override
   String get listingYourTripPill => 'Your trip';
 
   @override
@@ -7234,6 +7241,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailGainCashNote => 'Yadony service fee charged separately.';
+
+  @override
+  String bidDetailGainCashGrossDetail(String commission, String net) {
+    return 'Includes $commission Yadony service fee, charged to your balance or card. You keep $net.';
+  }
 
   @override
   String get bidDetailGainCashPill => 'CASH';

@@ -253,10 +253,12 @@ class BidModel {
   @JsonKey(name: 'totalNetAmountEur')
   final double? totalAmountEur;
 
-  /// Montant total payé par l'EXPÉDITEUR : net voyageur + commission Yadony pour un
-  /// paiement Stripe, égal au net pour le cash (la commission est alors prélevée
-  /// au voyageur). À afficher côté expéditeur (« payé / séquestré / remboursé »)
-  /// au lieu de [totalAmountEur] qui est le net reçu par le voyageur.
+  /// Montant total payé par l'EXPÉDITEUR : net voyageur + commission Yadony,
+  /// quel que soit le moyen de paiement. En espèces aussi : l'expéditeur remet ce
+  /// brut au voyageur en main propre, et la commission est ensuite prélevée à
+  /// part sur le solde ou la carte du voyageur (FLUTTER-R8). À afficher côté
+  /// expéditeur (« payé / séquestré / remboursé ») et pour l'encaissement en
+  /// espèces du voyageur, au lieu de [totalAmountEur] qui est le net voyageur.
   final double? totalSenderAmountEur;
 
   /// Code promo entré par l'expéditeur à la création du bid (nullable).

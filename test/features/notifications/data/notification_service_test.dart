@@ -697,15 +697,17 @@ void main() {
   });
 
   group('NotificationService.uploadCurrentToken', () {
-    // Service dont getToken() lève FirebaseException(unknown), avec une sonde
-    // de connectivité au choix (null = considéré en ligne).
+    // Service dont getToken() lève une FirebaseException non passagère, avec
+    // une sonde de connectivité au choix (null = considéré en ligne). Le code
+    // `unknown` est désormais traité comme passager (FLUTTER-QB) et couvert
+    // par le groupe « jeton FCM indisponible passagèrement » plus bas.
     NotificationService failingTokenService(
       _RecordingErrorSink sink, {
       Future<bool> Function()? hasConnection,
     }) {
       final fcm = MockFirebaseMessaging();
       when(() => fcm.getToken()).thenThrow(
-        FirebaseException(plugin: 'firebase_messaging', code: 'unknown'),
+        FirebaseException(plugin: 'firebase_messaging', code: 'internal-error'),
       );
       return NotificationService(
         apiClient,
@@ -843,6 +845,28 @@ void main() {
         'notifications.fcm_token_unavailable_transient',
       );
       expect(sink.contexts.single['_level'], 'warning');
+    });
+
+    // FLUTTER-QB : l'échec iOS `[firebase_messaging/unknown]`, sans message,
+    // suit le même chemin que l'échec Android : réessayé, puis un seul
+    // avertissement, jamais l'erreur `resolve_fcm_token`.
+    test('iOS unknown sans message : réessayé puis avertissement', () async {
+      when(() => fcm.getToken()).thenThrow(
+        FirebaseException(plugin: 'firebase_messaging', code: 'unknown'),
+      );
+      service = build();
+      addTearDown(service.dispose);
+
+      await service.uploadCurrentToken();
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => fcm.getToken(),
+      ).called(FcmTokenRetry.defaultBackoff.length + 1);
+      expect(
+        sink.contexts.single['operation'],
+        'notifications.fcm_token_unavailable_transient',
+      );
     });
 
     test('hors ligne : aucune remontée', () async {
