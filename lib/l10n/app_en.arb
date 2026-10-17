@@ -10696,6 +10696,7 @@
   "assistantMenu": "More options",
   "assistantReset": "New conversation",
   "assistantOpen": "Open the assistant",
+  "assistantQuotaWarning": "{count, plural, =0{That was your last question for today. Try again tomorrow, or write to the team.} =1{You have 1 question left today. After that, the team can take over.} other{You have {count} questions left today. After that, the team can take over.}}",
   "assistantCharCount": "{count}/500",
   "assistantUnavailable": "The assistant isn't available right now. You can write to the team.",
   "assistantHintTitle": "A question about the app?",

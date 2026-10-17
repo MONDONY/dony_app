@@ -20370,6 +20370,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assistantOpen => 'Open the assistant';
 
   @override
+  String assistantQuotaWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'You have $count questions left today. After that, the team can take over.',
+      one:
+          'You have 1 question left today. After that, the team can take over.',
+      zero:
+          'That was your last question for today. Try again tomorrow, or write to the team.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String assistantCharCount(int count) {
     return '$count/500';
   }

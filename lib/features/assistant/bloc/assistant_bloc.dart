@@ -15,6 +15,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 part 'assistant_event.dart';
 part 'assistant_state.dart';
 
+/// À partir de ce nombre de questions restantes, l'utilisateur est prévenu
+/// (2 : dès la 18e question avec la limite de 20 du back).
+const int kAssistantQuotaWarnAt = 2;
+
 /// Conversation éphémère avec l'assistant IA. Singleton de l'app : l'historique
 /// survit à la fermeture de l'écran, pas au redémarrage (rien n'est persisté).
 class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
@@ -273,6 +277,14 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
           },
         ),
       );
+      if (answer.remainingToday <= kAssistantQuotaWarnAt) {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.assistantQuotaWarningShown,
+            properties: {'remaining': answer.remainingToday},
+          ),
+        );
+      }
       if (answer.parcels.isNotEmpty) {
         unawaited(
           _analytics.logEvent(
@@ -288,6 +300,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
         state.copyWith(
           isSending: false,
           quotaExceeded: false,
+          remainingToday: answer.remainingToday,
           // La réponse fait foi : sans colis, la conversation n'en suit plus.
           parcelId: answer.parcelId,
           clearParcelId: answer.parcelId == null,
@@ -307,7 +320,13 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     } on AssistantQuotaExceededException {
       if (epoch != _epoch) return;
       unawaited(_analytics.logEvent(AnalyticsEvents.assistantQuotaReached));
-      emit(state.copyWith(isSending: false, quotaExceeded: true));
+      emit(
+        state.copyWith(
+          isSending: false,
+          quotaExceeded: true,
+          remainingToday: 0,
+        ),
+      );
     } on AssistantDisabledException {
       if (epoch != _epoch) return;
       emit(state.copyWith(isSending: false, disabled: true, available: false));
@@ -345,7 +364,13 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
   /// (`disabled`) ne dépendent pas de la conversation : gardés tels quels.
   void _onReset(AssistantResetRequested event, Emitter<AssistantState> emit) {
     _epoch++;
-    emit(AssistantState(available: state.available, disabled: state.disabled));
+    emit(
+      AssistantState(
+        available: state.available,
+        disabled: state.disabled,
+        remainingToday: state.remainingToday,
+      ),
+    );
   }
 
   /// Repart de zéro pour le compte suivant : conversation, escalade,

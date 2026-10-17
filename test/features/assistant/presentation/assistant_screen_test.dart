@@ -1491,4 +1491,74 @@ void main() {
       expect(find.text('Colis'), findsOneWidget);
     });
   });
+
+  group('approche de la limite', () {
+    const reply = AssistantMessage(
+      id: 2,
+      author: AssistantAuthor.assistant,
+      text: 'Allez dans Moi.',
+    );
+
+    testWidgets('aucun décompte loin de la limite', (tester) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, reply], remainingToday: 17),
+      );
+      expect(find.byKey(const Key('assistant-quota-warning')), findsNothing);
+      expect(find.textContaining('17'), findsNothing);
+    });
+
+    testWidgets('prévenu dès qu’il reste 2 questions', (tester) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, reply], remainingToday: 2),
+      );
+      expect(
+        find.text(
+          'Il vous reste 2 questions aujourd’hui. Ensuite, l’équipe peut '
+                  'prendre le relais.'
+              .replaceAll('’', "'"),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('dernière question utilisée, en anglais', (tester) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, reply], remainingToday: 0),
+        locale: const Locale('en'),
+      );
+      expect(
+        find.text(
+          'That was your last question for today. Try again tomorrow, or '
+          'write to the team.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('pas d’avertissement pendant un envoi ni une fois bloqué', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const AssistantState(
+          messages: [_question, reply],
+          remainingToday: 1,
+          isSending: true,
+        ),
+      );
+      expect(find.byKey(const Key('assistant-quota-warning')), findsNothing);
+      await pump(
+        tester,
+        const AssistantState(
+          messages: [_question, reply],
+          remainingToday: 0,
+          quotaExceeded: true,
+        ),
+      );
+      expect(find.byKey(const Key('assistant-quota-warning')), findsNothing);
+    });
+  });
 }

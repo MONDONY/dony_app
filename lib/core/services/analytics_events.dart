@@ -355,6 +355,9 @@ abstract final class AnalyticsEvents {
   /// Quota quotidien atteint.
   static const assistantQuotaReached = 'assistant_quota_reached';
 
+  /// Avertissement d'approche de la limite quotidienne affiché sous une réponse.
+  static const assistantQuotaWarningShown = 'assistant_quota_warning_shown';
+
   /// Colis proposés au choix sous une réponse (question sur l'un des siens).
   static const assistantParcelChoicesShown = 'assistant_parcel_choices_shown';
 

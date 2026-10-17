@@ -294,6 +294,17 @@ class _AssistantScreenState extends State<AssistantScreen> {
     final l = context.l10n;
     final toReport = <String>[];
     final lastMessage = state.messages.isEmpty ? null : state.messages.last;
+    // Prévenu à l'approche de la limite (dès la 18e question sur 20), sous la
+    // dernière réponse : pas de décompte permanent.
+    final remaining = state.remainingToday;
+    final showQuotaWarning =
+        !state.quotaExceeded &&
+        !state.isSending &&
+        remaining != null &&
+        remaining <= kAssistantQuotaWarnAt &&
+        lastMessage != null &&
+        lastMessage.author == AssistantAuthor.assistant &&
+        !lastMessage.isError;
     final showEscalation =
         state.quotaExceeded ||
         (lastMessage != null &&
@@ -366,6 +377,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
           ),
         ),
       if (state.isSending) const AssistantTypingBubble(),
+      if (showQuotaWarning)
+        AssistantNoticeBubble(
+          key: const Key('assistant-quota-warning'),
+          text: l.assistantQuotaWarning(state.remainingToday!),
+        ),
       if (state.quotaExceeded) AssistantNoticeBubble(text: l.assistantQuota),
       if (showEscalation)
         AssistantEscalationCard(

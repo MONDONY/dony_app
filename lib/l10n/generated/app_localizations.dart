@@ -33068,6 +33068,12 @@ abstract class AppLocalizations {
   /// **'Ouvrir l\'assistant'**
   String get assistantOpen;
 
+  /// Avertissement sous la réponse de l'assistant quand il reste 2 questions ou moins aujourd'hui (pas de décompte permanent).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{C\'était votre dernière question pour aujourd\'hui. Réessayez demain, ou écrivez à l\'équipe.} =1{Il vous reste 1 question aujourd\'hui. Ensuite, l\'équipe peut prendre le relais.} other{Il vous reste {count} questions aujourd\'hui. Ensuite, l\'équipe peut prendre le relais.}}'**
+  String assistantQuotaWarning(int count);
+
   /// Compteur de caractères du champ de l'assistant (limite 500). {count} : caractères saisis.
   ///
   /// In fr, this message translates to:

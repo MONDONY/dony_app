@@ -363,7 +363,8 @@ void main() {
       b.add(const AssistantResetRequested());
     },
     skip: 2,
-    expect: () => [const AssistantState()],
+    // La limite est par jour : le nombre restant survit à la conversation.
+    expect: () => [const AssistantState(remainingToday: 17)],
   );
 
   blocTest<AssistantBloc, AssistantState>(
@@ -1352,6 +1353,68 @@ void main() {
           locale: 'fr',
         ),
       );
+    });
+  });
+
+  group('approche de la limite', () {
+    AssistantAnswer withRemaining(int n) => AssistantAnswer(
+      answer: 'ok',
+      answered: true,
+      actions: const [],
+      provider: 'claude',
+      remainingToday: n,
+    );
+
+    test('garde le nombre restant, sans prévenir loin de la limite', () async {
+      answers(withRemaining(17));
+      final b = build();
+      b.add(const AssistantQuestionSubmitted('q', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.remainingToday, 17);
+      verifyNever(
+        () =>
+            backend.capture(AnalyticsEvents.assistantQuotaWarningShown, any()),
+      );
+      await b.close();
+    });
+
+    test('prévient dès qu’il reste 2 questions, et le garde après une '
+        'nouvelle conversation', () async {
+      answers(withRemaining(2));
+      final b = build();
+      b.add(const AssistantQuestionSubmitted('q', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      verify(
+        () => backend.capture(AnalyticsEvents.assistantQuotaWarningShown, {
+          'remaining': 2,
+        }),
+      ).called(1);
+      b.add(const AssistantResetRequested());
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.messages, isEmpty);
+      expect(b.state.remainingToday, 2);
+      await b.close();
+    });
+
+    test('quota atteint : plus aucune question', () async {
+      askAny().thenThrow(const AssistantQuotaExceededException());
+      final b = build();
+      b.add(const AssistantQuestionSubmitted('q', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.remainingToday, 0);
+      expect(b.state.quotaExceeded, isTrue);
+      await b.close();
+    });
+
+    test('fin de session : oublié pour le compte suivant', () async {
+      answers(withRemaining(1));
+      final b = build();
+      b.add(const AssistantQuestionSubmitted('q', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantSessionEnded());
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.remainingToday, isNull);
+      await b.close();
     });
   });
 }
