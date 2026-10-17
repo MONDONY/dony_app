@@ -1139,4 +1139,167 @@ void main() {
       dark.colorScheme.onPrimary,
     );
   });
+  group('clavier (FLUTTER-QT)', () {
+    final long = [
+      for (var i = 0; i < 30; i++)
+        AssistantMessage(
+          id: i * 2,
+          author: i.isEven ? AssistantAuthor.user : AssistantAuthor.assistant,
+          text: 'Message $i ${'mot ' * ((i * 5) % 30)}',
+        ),
+    ];
+    const lastText = 'Dernier message';
+    final messages = [
+      ...long,
+      const AssistantMessage(
+        id: 100,
+        author: AssistantAuthor.assistant,
+        text: lastText,
+      ),
+    ];
+
+    ScrollPosition position(WidgetTester tester) =>
+        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+
+    double composerTop(WidgetTester tester) =>
+        tester.getTopLeft(find.byKey(const Key('assistant-input'))).dy;
+
+    double lastBottom(WidgetTester tester) =>
+        tester.getBottomLeft(find.text(lastText)).dy;
+
+    /// Hauteur du clavier en pixels logiques, appliquée comme iOS le fait :
+    /// une valeur nouvelle à chaque image de l'animation.
+    Future<void> setKeyboard(WidgetTester tester, double logical) async {
+      tester.view.viewInsets = FakeViewPadding(
+        bottom: logical * tester.view.devicePixelRatio,
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
+    Future<void> animateKeyboard(
+      WidgetTester tester, {
+      required double from,
+      required double to,
+      void Function()? onFrame,
+    }) async {
+      const steps = 8;
+      for (var i = 1; i <= steps; i++) {
+        await setKeyboard(tester, from + (to - from) * i / steps);
+        onFrame?.call();
+      }
+    }
+
+    Future<void> pumpLong(WidgetTester tester) async {
+      addTearDown(tester.view.reset);
+      whenListen(
+        bloc,
+        const Stream<AssistantState>.empty(),
+        initialState: AssistantState(messages: messages),
+      );
+      await pumpRaw(tester);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('assistant-input')));
+      await tester.pump();
+    }
+
+    testWidgets(
+      'ouverture au bas de la liste : le dernier message reste visible à '
+      'chaque image',
+      (tester) async {
+        await pumpLong(tester);
+        final p = position(tester);
+        expect(p.pixels, closeTo(p.maxScrollExtent, 1));
+        await animateKeyboard(
+          tester,
+          from: 0,
+          to: 300,
+          onFrame: () {
+            expect(p.pixels, closeTo(p.maxScrollExtent, 1));
+            expect(lastBottom(tester), lessThanOrEqualTo(composerTop(tester)));
+          },
+        );
+        await tester.pumpAndSettle();
+        expect(p.pixels, closeTo(p.maxScrollExtent, 1));
+        expect(find.text(lastText), findsOneWidget);
+        expect(lastBottom(tester), lessThanOrEqualTo(composerTop(tester)));
+        expect(tester.takeException(), isNull);
+      },
+      variant: const TargetPlatformVariant({
+        TargetPlatform.iOS,
+        TargetPlatform.android,
+      }),
+    );
+
+    testWidgets('utilisateur remonté pour lire : pas ramené au bas', (
+      tester,
+    ) async {
+      await pumpLong(tester);
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, 400));
+      await tester.pumpAndSettle();
+      final p = position(tester);
+      final before = p.pixels;
+      expect(before, lessThan(p.maxScrollExtent - 200));
+      await animateKeyboard(tester, from: 0, to: 300);
+      await tester.pumpAndSettle();
+      expect(p.pixels, closeTo(before, 0.5));
+    });
+
+    testWidgets(
+      'fermeture au bas : pas de saut, le dernier message reste collé au '
+      'composeur',
+      (tester) async {
+        await pumpLong(tester);
+        await animateKeyboard(tester, from: 0, to: 300);
+        await tester.pumpAndSettle();
+        final p = position(tester);
+        final gap = composerTop(tester) - lastBottom(tester);
+        await animateKeyboard(
+          tester,
+          from: 300,
+          to: 0,
+          onFrame: () {
+            // Jamais au-delà du bas (pas de rebond à rattraper) et l'écart
+            // au composeur ne bouge pas.
+            expect(p.pixels, lessThanOrEqualTo(p.maxScrollExtent + 0.5));
+            expect(p.pixels, closeTo(p.maxScrollExtent, 1));
+            expect(composerTop(tester) - lastBottom(tester), closeTo(gap, 1));
+          },
+        );
+        await tester.pumpAndSettle();
+        expect(composerTop(tester) - lastBottom(tester), closeTo(gap, 1));
+      },
+      variant: const TargetPlatformVariant({
+        TargetPlatform.iOS,
+        TargetPlatform.android,
+      }),
+    );
+
+    testWidgets('fermeture après être remonté : la position ne bouge pas', (
+      tester,
+    ) async {
+      await pumpLong(tester);
+      await animateKeyboard(tester, from: 0, to: 300);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, 400));
+      await tester.pumpAndSettle();
+      final p = position(tester);
+      final before = p.pixels;
+      await animateKeyboard(tester, from: 300, to: 0);
+      await tester.pumpAndSettle();
+      expect(p.pixels, closeTo(before, 0.5));
+    });
+
+    testWidgets('accueil sans message : le clavier s’ouvre sans erreur', (
+      tester,
+    ) async {
+      addTearDown(tester.view.reset);
+      await pump(tester, const AssistantState());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('assistant-input')));
+      await animateKeyboard(tester, from: 0, to: 300);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('assistant-input')), findsOneWidget);
+    });
+  });
 }

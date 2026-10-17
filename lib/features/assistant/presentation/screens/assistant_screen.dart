@@ -5,6 +5,7 @@ import 'package:dony/features/assistant/presentation/widgets/assistant_composer.
 import 'package:dony/features/assistant/presentation/widgets/assistant_escalation_card.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_message_bubble.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_route_check.dart';
+import 'package:dony/features/assistant/presentation/widgets/assistant_stick_to_bottom_physics.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -379,6 +380,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
       },
       child: ListView.separated(
         controller: _scroll,
+        // Clavier qui s'ouvre ou se ferme : le bas reste collé au composeur
+        // si l'utilisateur y était (FLUTTER-QT).
+        physics: const AssistantStickToBottomPhysics(),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         itemCount: children.length,
