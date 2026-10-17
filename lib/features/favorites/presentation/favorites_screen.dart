@@ -9,6 +9,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
@@ -143,6 +144,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 class _TripsTab extends StatelessWidget {
   const _TripsTab();
 
+  /// Son propre trajet mis en favori ouvre l'écran propriétaire, jamais la
+  /// feuille expéditeur qui proposait « Faire une demande » sur son propre
+  /// trajet (FLUTTER-R9). Même règle que l'accueil (`_onTravelerCardTap`).
+  void _openTrip(BuildContext context, AnnouncementModel trip) {
+    final currentUserId = context.read<AuthBloc>().state.currentUserId;
+    if (currentUserId != null && trip.travelerId == currentUserId) {
+      context.push('/announcements/${trip.id}/trip', extra: trip);
+      return;
+    }
+    showTravelerAnnouncementSheet(context, announcement: trip);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<FavoriteTripsCubit, FavoriteTripsState>(
@@ -187,10 +200,7 @@ class _TripsTab extends StatelessWidget {
                 final trip = trips[index];
                 return TripCard(
                   announcement: trip,
-                  onTap: () => showTravelerAnnouncementSheet(
-                    context,
-                    announcement: trip,
-                  ),
+                  onTap: () => _openTrip(context, trip),
                   index: index,
                   showFavorite: true,
                 );

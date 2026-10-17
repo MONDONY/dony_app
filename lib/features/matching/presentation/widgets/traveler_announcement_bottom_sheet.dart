@@ -161,9 +161,14 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
   // Trajet complet d'un autre voyageur (FLUTTER-JH) : ni demande ni
   // négociation, mais « Me prévenir si de la place se libère ». Le cubit vit
   // dans le `wrapper`, le bouton dans le `stickyBottom`.
+  // Son propre trajet (ouvert depuis un point d'entrée qui ne teste pas la
+  // propriété, FLUTTER-R9) : ni demande, ni proposition de prix, ni signet.
+  // Le back refuse de toute façon une demande sur son propre trajet.
+  final estProprietaire =
+      lecteurId != null && lecteurId == announcement.travelerId;
   final offersSpaceAlert =
       announcement.isFull &&
-      lecteurId != announcement.travelerId &&
+      !estProprietaire &&
       getIt.isRegistered<TripSpaceAlertCubit>();
   final hasSession =
       getIt.isRegistered<FirebaseSessionProbe>() &&
@@ -202,6 +207,24 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
           },
     stickyBottom: Builder(
       builder: (innerCtx) {
+        if (estProprietaire) {
+          return _OwnTripFooter(
+            onManage: () {
+              final navigator = Navigator.of(innerCtx, rootNavigator: true);
+              final location = '/announcements/${announcement.id}/trip';
+              if (returnsNavigation) {
+                navigator.pop(
+                  TravelerSheetRoute(location, extra: announcement),
+                );
+                return;
+              }
+              navigator.pop();
+              if (context.mounted) {
+                context.push(location, extra: announcement);
+              }
+            },
+          );
+        }
         // Le viewer a déjà un colis sur ce trajet : on n'autorise pas une
         // nouvelle demande (le back la refuserait). On l'oriente vers son colis.
         if (hasActiveBid) {
@@ -418,7 +441,7 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
     ),
     child: _TravelerAnnouncementContent(
       announcement: announcement,
-      avecFavori: favoris != null,
+      avecFavori: favoris != null && !estProprietaire,
       lecteurId: lecteurId,
       returnsNavigation: returnsNavigation,
     ),
@@ -450,6 +473,50 @@ void _openExistingTripRequest(
     case ExistingTripNegotiation(:final bidId):
       DonySnackbar.show(context, message: l.listingAlreadyNegotiatingMessage);
       unawaited(context.push('/bids/$bidId/negotiation'));
+  }
+}
+
+/// Pied de la feuille quand le lecteur est le voyageur du trajet : il ne peut
+/// pas s'envoyer de demande, on l'oriente vers l'écran de gestion du trajet.
+class _OwnTripFooter extends StatelessWidget {
+  const _OwnTripFooter({required this.onManage});
+
+  final VoidCallback onManage;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return Column(
+      key: const Key('own-trip-footer'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              DonyIcon('info', size: 16, color: cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.xs),
+              Flexible(
+                child: Text(
+                  l.listingOwnTripMessage,
+                  textAlign: TextAlign.center,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+        ),
+        DonyButton(
+          key: const Key('manage-own-trip-btn'),
+          label: l.listingOwnTripManageButton,
+          iconAsset: 'plane',
+          onPressed: onManage,
+        ),
+      ],
+    );
   }
 }
 

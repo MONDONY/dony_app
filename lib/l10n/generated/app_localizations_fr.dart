@@ -5412,6 +5412,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingBidStatusOfferSent => 'Offre envoyée';
 
   @override
+  String get listingOwnTripMessage =>
+      'C\'est votre trajet : vous ne pouvez pas vous envoyer de demande.';
+
+  @override
+  String get listingOwnTripManageButton => 'Gérer mon trajet';
+
+  @override
   String get listingYourTripPill => 'Votre trajet';
 
   @override
@@ -7276,6 +7283,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailGainCashNote => 'Commission Yadony prélevée séparément.';
+
+  @override
+  String bidDetailGainCashGrossDetail(String commission, String net) {
+    return 'Dont $commission de commission Yadony, prélevée sur votre solde ou votre carte. Vous gardez $net.';
+  }
 
   @override
   String get bidDetailGainCashPill => 'ESPÈCES';

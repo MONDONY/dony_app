@@ -4748,6 +4748,14 @@
   "@listingBidStatusOfferSent": {
     "description": "Chip d'une offre de prix encore ouverte (NEGOTIATING) sur une carte voyageur (traveler_card.dart, FLUTTER-GC)"
   },
+  "listingOwnTripMessage": "C'est votre trajet : vous ne pouvez pas vous envoyer de demande.",
+  "@listingOwnTripMessage": {
+    "description": "Pied de la feuille trajet quand le lecteur en est le voyageur (traveler_announcement_bottom_sheet.dart, FLUTTER-R9)"
+  },
+  "listingOwnTripManageButton": "Gérer mon trajet",
+  "@listingOwnTripManageButton": {
+    "description": "Bouton vers l'ecran de gestion de son propre trajet, pied de la feuille trajet (FLUTTER-R9)"
+  },
   "listingYourTripPill": "Votre trajet",
   "@listingYourTripPill": {
     "description": "Pill signalant que l'annonce appartient au voyageur courant (traveler_card.dart)"
@@ -7177,6 +7185,18 @@
   "bidDetailGainCashNote": "Commission Yadony prélevée séparément.",
   "@bidDetailGainCashNote": {
     "description": "Note, paiement en especes (traveler_gain_card.dart)"
+  },
+  "bidDetailGainCashGrossDetail": "Dont {commission} de commission Yadony, prélevée sur votre solde ou votre carte. Vous gardez {net}.",
+  "@bidDetailGainCashGrossDetail": {
+    "description": "Detail sous le brut encaisse en especes : commission prelevee a part et net garde par le voyageur (traveler_gain_card.dart, FLUTTER-R8)",
+    "placeholders": {
+      "commission": {
+        "type": "String"
+      },
+      "net": {
+        "type": "String"
+      }
+    }
   },
   "bidDetailGainCashPill": "ESPÈCES",
   "@bidDetailGainCashPill": {

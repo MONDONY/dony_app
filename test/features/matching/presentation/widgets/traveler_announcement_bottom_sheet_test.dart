@@ -219,6 +219,14 @@ Widget _harness({
             const Scaffold(body: Center(child: Text('Bid détail'))),
       ),
       GoRoute(
+        path: '/announcements/:id/trip',
+        builder: (context, state) => Scaffold(
+          body: Center(
+            child: Text('Écran trajet ${state.pathParameters['id']}'),
+          ),
+        ),
+      ),
+      GoRoute(
         path: '/bids/:bidId/negotiation',
         builder: (context, state) =>
             const Scaffold(body: Center(child: Text('Fil négo'))),
@@ -1683,6 +1691,87 @@ void main() {
   }
 
   // ── FLUTTER-JH : trajet complet, « Me prévenir si de la place se libère » ──
+
+  // FLUTTER-R9 : son propre trajet ouvert dans la feuille expéditeur (depuis
+  // un point d'entrée qui ne teste pas la propriété, ex. Favoris) proposait
+  // « Faire une demande », « Proposer un prix » et le signet.
+  group('son propre trajet (FLUTTER-R9)', () {
+    late FavoriteIdsCubit cubit;
+
+    setUp(() => cubit = FavoriteIdsCubit(_MockFavoriteRepository()));
+    tearDown(() => cubit.close());
+
+    AuthState proprietaire(AnnouncementModel a) => AuthAuthenticated(
+      UserModel(
+        id: a.travelerId,
+        roles: const [],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+      ),
+    );
+
+    testWidgets('ni demande, ni négociation, ni signet', (tester) async {
+      final a = _buildAnnouncement(negotiable: true);
+      await tester.pumpWidget(
+        _harness(announcement: a, authState: proprietaire(a), favorites: cubit),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Faire une demande'), findsNothing);
+      expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
+      expect(find.byType(FavoriteHeartButton), findsNothing);
+      expect(find.byKey(const Key('own-trip-footer')), findsOneWidget);
+      expect(
+        find.text(
+          "C'est votre trajet : vous ne pouvez pas vous envoyer de demande.",
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('« Gérer mon trajet » mène à l\'écran propriétaire', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement();
+      await tester.pumpWidget(
+        _harness(announcement: a, authState: proprietaire(a)),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('manage-own-trip-btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Écran trajet ${a.id}'), findsOneWidget);
+    });
+
+    testWidgets('trajet d\'un tiers : demande et signet toujours là', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(negotiable: true);
+      await tester.pumpWidget(_harness(announcement: a, favorites: cubit));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Faire une demande'), findsOneWidget);
+      expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
+      expect(find.byType(FavoriteHeartButton), findsOneWidget);
+      expect(find.byKey(const Key('own-trip-footer')), findsNothing);
+    });
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      final a = _buildAnnouncement();
+      await tester.pumpWidget(
+        _harness(announcement: a, authState: proprietaire(a)),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Manage my trip'), findsOneWidget);
+    });
+  });
 
   group('trajet complet avec alerte de place', () {
     late _MockTripSpaceAlertRepository repo;

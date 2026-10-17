@@ -186,6 +186,7 @@ class NotificationService {
     this._fcmOverride,
     this._hasConnection,
     this._tokenRetryOverride,
+    this._localNotificationsOverride,
   ]);
 
   /// `true` dans le doute : la sonde ne doit jamais faire perdre une remontée.
@@ -200,7 +201,11 @@ class NotificationService {
   // late: deferred until initialize() so tests can instantiate this class without Firebase
   late final FirebaseMessaging _fcm =
       _fcmOverride ?? FirebaseMessaging.instance;
-  final _localNotifications = FlutterLocalNotificationsPlugin();
+
+  /// Injecté en test uniquement ; `null` en production.
+  final FlutterLocalNotificationsPlugin? _localNotificationsOverride;
+  late final FlutterLocalNotificationsPlugin _localNotifications =
+      _localNotificationsOverride ?? FlutterLocalNotificationsPlugin();
 
   // Broadcasts the GoRouter path to navigate to when a notification is tapped
   final _navigationController = StreamController<String>.broadcast();
@@ -316,6 +321,29 @@ class NotificationService {
 
     // App opened from background notification tap
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+
+    // FLUTTER-R7 : sur iOS, le seul délégué `UNUserNotificationCenter` est
+    // celui de firebase_messaging. Sans ces options, il répond « aucune
+    // présentation » au premier plan, y compris pour une notification
+    // locale : ni bannière ni son. Avec elles, le système affiche lui-même la
+    // push, d'où l'absence de notification locale sur iOS dans
+    // [_handleForegroundMessage]. Sans effet sur Android.
+    try {
+      await _fcm.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    } catch (e, stackTrace) {
+      unawaited(
+        _errorReporter?.report(
+          e,
+          operation: 'notifications.foreground_presentation_options',
+          stackTrace: stackTrace,
+          context: {'feature': 'notifications', 'channel': 'fcm'},
+        ),
+      );
+    }
 
     // App launched from terminated state via notification
     final initialMessage = await _fcm.getInitialMessage();
@@ -881,6 +909,11 @@ class NotificationService {
       Map<String, dynamic>.unmodifiable(message.data),
     );
     if (_handleSupportForeground(message.data)) return;
+    // iOS : la bannière est présentée par le système grâce aux options posées
+    // dans [initialize] (FLUTTER-R7). Une notification locale en plus la
+    // doublerait. Conséquence acceptée : la bannière d'un message support
+    // n'est plus tue sur iOS pendant la lecture du ticket.
+    if (defaultTargetPlatform == TargetPlatform.iOS) return;
     final notification = message.notification;
     if (notification == null) return;
 
@@ -907,6 +940,10 @@ class NotificationService {
       payload: _routeForMessage(message.data),
     );
   }
+
+  @visibleForTesting
+  void testHandleForegroundMessage(RemoteMessage message) =>
+      _handleForegroundMessage(message);
 
   void _handleNotificationTap(RemoteMessage message) {
     _ackIfCritical(message.data);

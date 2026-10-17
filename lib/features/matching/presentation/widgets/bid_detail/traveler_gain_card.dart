@@ -16,6 +16,14 @@ double? travelerNetAmount(BidModel bid) {
   return null;
 }
 
+/// Brut remis en main propre au voyageur pour un colis payé en espèces : la
+/// part de l'expéditeur ([BidModel.totalSenderAmountEur], commission comprise).
+/// En espèces, la commission n'est pas déduite de l'argent remis : elle est
+/// prélevée à part sur le solde ou la carte du voyageur (FLUTTER-R8). Repli sur
+/// le net pour un ancien back qui n'envoie pas ce champ.
+double? travelerCashGrossAmount(BidModel bid) =>
+    bid.totalSenderAmountEur ?? travelerNetAmount(bid);
+
 /// Montant net formaté dans la devise du bid, ou `—`.
 String travelerAmountLabel(BidModel bid) {
   final a = travelerNetAmount(bid);
@@ -49,9 +57,24 @@ class TravelerGainCard extends StatelessWidget {
 
     if (isCash) {
       topLabel = l.bidDetailGainCashTopLabel;
-      amountText = l.bidDetailGainCashAmount(amount);
+      final net = travelerNetAmount(bid);
+      final gross = travelerCashGrossAmount(bid);
+      final commission = (net != null && gross != null) ? gross - net : null;
+      // L'expéditeur remet le brut ; la commission part à part. Sans brut
+      // distinct du net (ancien back), on garde l'affichage historique.
+      if (gross != null && commission != null && commission > 0.004) {
+        amountText = l.bidDetailGainCashAmount(
+          formatPriceIn(gross, bid.currency),
+        );
+        note = l.bidDetailGainCashGrossDetail(
+          formatPriceIn(commission, bid.currency),
+          formatPriceIn(net!, bid.currency),
+        );
+      } else {
+        amountText = l.bidDetailGainCashAmount(amount);
+        note = l.bidDetailGainCashNote;
+      }
       amountColor = cs.onSurface;
-      note = l.bidDetailGainCashNote;
       pill = _Pill(
         label: l.bidDetailGainCashPill,
         fg: cs.onSurface,

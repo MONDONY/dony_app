@@ -8973,6 +8973,18 @@ abstract class AppLocalizations {
   /// **'Offre envoyée'**
   String get listingBidStatusOfferSent;
 
+  /// Pied de la feuille trajet quand le lecteur en est le voyageur (traveler_announcement_bottom_sheet.dart, FLUTTER-R9)
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est votre trajet : vous ne pouvez pas vous envoyer de demande.'**
+  String get listingOwnTripMessage;
+
+  /// Bouton vers l'ecran de gestion de son propre trajet, pied de la feuille trajet (FLUTTER-R9)
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer mon trajet'**
+  String get listingOwnTripManageButton;
+
   /// Pill signalant que l'annonce appartient au voyageur courant (traveler_card.dart)
   ///
   /// In fr, this message translates to:
@@ -11999,6 +12011,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Commission Yadony prélevée séparément.'**
   String get bidDetailGainCashNote;
+
+  /// Detail sous le brut encaisse en especes : commission prelevee a part et net garde par le voyageur (traveler_gain_card.dart, FLUTTER-R8)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dont {commission} de commission Yadony, prélevée sur votre solde ou votre carte. Vous gardez {net}.'**
+  String bidDetailGainCashGrossDetail(String commission, String net);
 
   /// Pastille, paiement en especes (traveler_gain_card.dart)
   ///

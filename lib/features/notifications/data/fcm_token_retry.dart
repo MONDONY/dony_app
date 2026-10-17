@@ -9,9 +9,14 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 /// FCM (FLUTTER-N1 : `[firebase_messaging/unknown] java.io.IOException: FCM
 /// Registration failed!`). Le même appel réussit quelques secondes ou un
 /// lancement plus tard : ce n'est pas un défaut de l'app.
+///
+/// Sur iOS, le même échec passager arrive en `[firebase_messaging/unknown]`
+/// sans aucun des marqueurs Android dans le message (FLUTTER-QB) : le code
+/// `unknown` suffit donc à le classer passager.
 bool isTransientFcmTokenError(Object error) {
   if (error is! FirebaseException) return false;
   if (error.plugin != 'firebase_messaging') return false;
+  if (error.code == 'unknown') return true;
   final message = error.message ?? '';
   return _transientMarkers.any(message.contains);
 }
