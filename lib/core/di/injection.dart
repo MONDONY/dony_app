@@ -104,6 +104,7 @@ import 'package:dony/features/flights/data/datasources/flight_locator.dart';
 import 'package:dony/features/flights/data/datasources/flight_recent_store.dart';
 import 'package:dony/features/flights/data/datasources/flights_remote_datasource.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
 import 'package:dony/features/gp_pro/data/datasources/gp_pro_remote_datasource.dart';
 import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/home/data/datasources/search_parse_datasource.dart';
@@ -842,6 +843,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<GpProRepository>(
     () => GpProRepository(getIt<GpProRemoteDatasource>()),
+  );
+  getIt.registerFactory<GpProCubit>(
+    () => GpProCubit(getIt(), getIt<AnalyticsService>()),
   );
 
   // Signalement d'incident
