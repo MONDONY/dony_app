@@ -3767,6 +3767,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'chatSystemViewTracking': (l) => l.chatSystemViewTracking,
   'chatMessageDeleted': (l) => l.chatMessageDeleted,
   'chatMessageCopied': (l) => l.chatMessageCopied,
+  'chatOpenGpProParticipantProfileSemantics': (l) =>
+      l.chatOpenGpProParticipantProfileSemantics(placeholderMarker('name')),
   'chatOpenParticipantProfileSemantics': (l) =>
       l.chatOpenParticipantProfileSemantics(placeholderMarker('name')),
   'chatLocationMessageLabel': (l) => l.chatLocationMessageLabel,
@@ -7407,6 +7409,7 @@ const textParameters = <String, List<String>>{
   'chatBlockUser': ['name'],
   'chatMessagingMutedUntil': ['date'],
   'chatRetentionBannerScheduled': ['date'],
+  'chatOpenGpProParticipantProfileSemantics': ['name'],
   'chatOpenParticipantProfileSemantics': ['name'],
   'conversationListEmptySearchDescription': ['query'],
   'scanStepRecorded': ['step'],

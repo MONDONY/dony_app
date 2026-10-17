@@ -54,10 +54,13 @@ class IntentStepScreen extends StatelessWidget {
             state.status == IntentFormStatus.error) {
           // La demande GP Pro ne bloque jamais l'inscription : le cubit avale
           // ses erreurs, on poursuit dans tous les cas.
-          await context.read<GpProSignupCubit>().submitIfChecked(state.intent);
-          if (context.mounted) {
-            context.go(args.next, extra: args.nextExtra);
-          }
+          // Sans attendre : la navigation ne dépend pas du réseau. L'appel
+          // repository et l'event analytics vont au bout même écran fermé
+          // (seul l'emit final du cubit est protégé par isClosed).
+          unawaited(
+            context.read<GpProSignupCubit>().submitIfChecked(state.intent),
+          );
+          context.go(args.next, extra: args.nextExtra);
         }
       },
       child: Scaffold(

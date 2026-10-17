@@ -17213,6 +17213,12 @@ abstract class AppLocalizations {
   /// **'Message copié'**
   String get chatMessageCopied;
 
+  /// Nom accessible de l'en-tête du chat quand le correspondant est GP Pro (le badge n'est pas interactif dans l'en-tête, chat_screen.dart _ParticipantHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le profil de {name}, GP Pro'**
+  String chatOpenGpProParticipantProfileSemantics(String name);
+
   /// Nom accessible de l'en-tête du chat (avatar + nom) qui ouvre le profil public du correspondant (chat_screen.dart _ParticipantHeader).
   ///
   /// In fr, this message translates to:

@@ -11274,6 +11274,13 @@
   "@chatMessageCopied": {
     "description": "Toast après la copie d'un message par appui long sur sa bulle (chat_screen.dart _TextContent)."
   },
+  "chatOpenGpProParticipantProfileSemantics": "Voir le profil de {name}, GP Pro",
+  "@chatOpenGpProParticipantProfileSemantics": {
+    "description": "Nom accessible de l'en-tête du chat quand le correspondant est GP Pro (le badge n'est pas interactif dans l'en-tête, chat_screen.dart _ParticipantHeader).",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "chatOpenParticipantProfileSemantics": "Voir le profil de {name}",
   "@chatOpenParticipantProfileSemantics": {
     "description": "Nom accessible de l'en-tête du chat (avatar + nom) qui ouvre le profil public du correspondant (chat_screen.dart _ParticipantHeader).",

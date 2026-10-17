@@ -811,7 +811,9 @@ class _ChatScreenState extends State<ChatScreen> {
         // profil n'existe plus.
         title: _ParticipantHeader(
           enabled: participant.id.isNotEmpty && !conversation.readOnly,
-          semanticsLabel: l.chatOpenParticipantProfileSemantics(displayName),
+          semanticsLabel: participant.gpPro
+              ? l.chatOpenGpProParticipantProfileSemantics(displayName)
+              : l.chatOpenParticipantProfileSemantics(displayName),
           onTap: () => _navigate(
             '/profile/public',
             ProfilePublicArgs(userId: participant.id),
@@ -849,6 +851,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           const GpProBadge(
                             size: GpProBadgeSize.compact,
                             surface: 'chat',
+                            // Le tap appartient à l'en-tête (profil) ; le
+                            // libellé de l'en-tête annonce GP Pro.
+                            interactive: false,
                           ),
                         ],
                       ],

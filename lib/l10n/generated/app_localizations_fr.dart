@@ -10453,6 +10453,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatMessageCopied => 'Message copié';
 
   @override
+  String chatOpenGpProParticipantProfileSemantics(String name) {
+    return 'Voir le profil de $name, GP Pro';
+  }
+
+  @override
   String chatOpenParticipantProfileSemantics(String name) {
     return 'Voir le profil de $name';
   }

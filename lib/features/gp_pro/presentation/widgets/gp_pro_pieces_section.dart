@@ -96,8 +96,11 @@ class GpProPiecesSection extends StatelessWidget {
             for (final piece in state.pieces) ...[
               _PieceRow(
                 piece: piece,
-                onRemove: () =>
-                    context.read<GpProCubit>().removePiece(piece.localId),
+                // Pas de retrait pendant l'envoi de la demande.
+                onRemove: state.submitting
+                    ? null
+                    : () =>
+                          context.read<GpProCubit>().removePiece(piece.localId),
               ),
               const SizedBox(height: DonySpacing.sm),
             ],
@@ -227,7 +230,7 @@ class _PieceRow extends StatelessWidget {
   const _PieceRow({required this.piece, required this.onRemove});
 
   final GpProPiece piece;
-  final VoidCallback onRemove;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -313,7 +316,7 @@ class _PieceRow extends StatelessWidget {
                 ),
               ),
             )
-          else
+          else if (onRemove != null)
             Semantics(
               button: true,
               container: true,

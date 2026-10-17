@@ -55,6 +55,7 @@ GpProCubitState _ready(
   String? reason,
   String? commercialName,
   bool restarting = false,
+  bool submitting = false,
   String? errorCode,
 }) => GpProCubitState(
   load: GpProLoadStatus.ready,
@@ -67,6 +68,7 @@ GpProCubitState _ready(
   frequency: frequency,
   pieces: pieces,
   restarting: restarting,
+  submitting: submitting,
   errorCode: errorCode,
 );
 
@@ -257,6 +259,30 @@ void main() {
       expect(find.text('Billet ou carte d\'embarquement'), findsOneWidget);
       await tester.tap(find.bySemanticsLabel(l.gpProRemovePiece));
       verify(() => cubit.removePiece('r-1')).called(1);
+    });
+
+    testWidgets('envoi en cours : plus de retrait possible', (tester) async {
+      // Le bouton d'envoi anime un indicateur sans fin : pas de pumpAndSettle.
+      when(() => cubit.state).thenReturn(
+        _ready(
+          GpProState.none,
+          frequency: GpProFrequency.monthly,
+          submitting: true,
+          pieces: const [
+            GpProPiece(
+              localId: 'r-1',
+              type: GpProDocType.travelProof,
+              remoteId: '1',
+              status: GpProUploadStatus.ready,
+            ),
+          ],
+        ),
+      );
+      await tester.pumpWidget(host());
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Billet ou carte d\'embarquement'), findsOneWidget);
+      expect(find.bySemanticsLabel(l.gpProRemovePiece), findsNothing);
+      verifyNever(() => cubit.removePiece(any()));
     });
 
     testWidgets('pièce en échec : message d\'échec', (tester) async {

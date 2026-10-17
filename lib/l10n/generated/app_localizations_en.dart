@@ -10384,6 +10384,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMessageCopied => 'Message copied';
 
   @override
+  String chatOpenGpProParticipantProfileSemantics(String name) {
+    return 'View $name\'s profile, GP Pro';
+  }
+
+  @override
   String chatOpenParticipantProfileSemantics(String name) {
     return 'View $name\'s profile';
   }
@@ -20559,7 +20564,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpProAwaitingKycBody =>
-      'Your application will be sent as soon as your identity is verified';
+      'Your application will be sent as soon as your identity is verified.';
 
   @override
   String get gpProActiveTitle => 'You\'re a GP Pro';

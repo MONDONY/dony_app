@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_info_sheet.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/compatible_traveler_card.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,7 @@ Future<void> _pump(
   WidgetTester tester,
   TravelerInviteState state, {
   VoidCallback? onInvite,
+  VoidCallback? onTap,
   bool gpPro = false,
 }) => tester.pumpWidget(
   MaterialApp(
@@ -41,6 +43,7 @@ Future<void> _pump(
         requestWeightKg: 2,
         inviteState: state,
         onInvite: onInvite,
+        onTap: onTap,
       ),
     ),
   ),
@@ -67,6 +70,21 @@ void main() {
     expect(find.byType(GpProBadge), findsOneWidget);
     await _pump(tester, TravelerInviteState.idle);
     expect(find.byType(GpProBadge), findsNothing);
+  });
+
+  testWidgets('tap sur le badge : déclenche le onTap de la carte', (
+    tester,
+  ) async {
+    var taps = 0;
+    await _pump(
+      tester,
+      TravelerInviteState.idle,
+      gpPro: true,
+      onTap: () => taps++,
+    );
+    await tester.tap(find.byType(GpProBadge));
+    expect(taps, 1);
+    expect(find.byType(GpProInfoSheet), findsNothing);
   });
 
   testWidgets('états Invité, envoi en cours, masqué', (tester) async {

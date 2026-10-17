@@ -287,6 +287,43 @@ void main() {
       await states.close();
     });
 
+    testWidgets('apply qui ne répond jamais : navigation immédiate', (
+      tester,
+    ) async {
+      final never = Completer<GpProStatus>();
+      when(
+        () => gpRepo.apply(
+          frequency: any(named: 'frequency'),
+          commercialName: any(named: 'commercialName'),
+          documentIds: any(named: 'documentIds'),
+          source: any(named: 'source'),
+        ),
+      ).thenAnswer((_) => never.future);
+      final cubit = _MockIntentCubit();
+      final states = StreamController<IntentFormState>();
+      await pump(tester, cubit, states, intent: UserIntent.traveler);
+      await tester.tap(checkbox);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Chaque semaine'));
+      await tester.pumpAndSettle();
+      states.add(
+        const IntentFormState(
+          intent: UserIntent.traveler,
+          destination: 'SN',
+          status: IntentFormStatus.saved,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Parrainage'), findsOneWidget);
+      verify(
+        () => gpRepo.apply(
+          frequency: GpProFrequency.weekly,
+          source: GpProSource.signup,
+        ),
+      ).called(1);
+      await states.close();
+    });
+
     testWidgets('échec GP Pro : l\'inscription continue quand même', (
       tester,
     ) async {

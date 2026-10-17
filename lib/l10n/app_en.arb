@@ -5887,6 +5887,7 @@
   "@chatMessageCopied": {
     "description": "Toast après la copie d'un message par appui long sur sa bulle (chat_screen.dart _TextContent)."
   },
+  "chatOpenGpProParticipantProfileSemantics": "View {name}'s profile, GP Pro",
   "chatOpenParticipantProfileSemantics": "View {name}'s profile",
   "@chatOpenParticipantProfileSemantics": {
     "description": "Nom accessible de l'en-tête du chat (avatar + nom) qui ouvre le profil public du correspondant (chat_screen.dart _ParticipantHeader).",
@@ -10752,7 +10753,7 @@
   "gpProPendingTitle": "Under review",
   "gpProPendingBody": "The Yadony team is reviewing your application. You'll be notified as soon as they decide.",
   "gpProAwaitingKycTitle": "Waiting for your identity",
-  "gpProAwaitingKycBody": "Your application will be sent as soon as your identity is verified",
+  "gpProAwaitingKycBody": "Your application will be sent as soon as your identity is verified.",
   "gpProActiveTitle": "You're a GP Pro",
   "gpProActiveBody": "Your badge shows next to your name on your trips, your profile and your conversations.",
   "gpProRejectedTitle": "Declined",

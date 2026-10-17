@@ -81,6 +81,7 @@ class CompatibleTravelerCard extends StatelessWidget {
                               const GpProBadge(
                                 size: GpProBadgeSize.compact,
                                 surface: 'compatible_traveler',
+                                interactive: false,
                               ),
                             ],
                             if (trip.traveler?.averageRating != null) ...[
