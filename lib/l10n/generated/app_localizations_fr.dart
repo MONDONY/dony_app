@@ -11652,6 +11652,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileMenuExportDataSubtitle => 'Export RGPD au format JSON';
 
   @override
+  String get profileMenuGpPro => 'Devenir GP Pro';
+
+  @override
   String get profileLogoutAction => 'Se déconnecter';
 
   @override

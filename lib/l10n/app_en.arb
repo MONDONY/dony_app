@@ -7082,6 +7082,7 @@
   "profileMenuAccountSection": "My account",
   "profileMenuExportData": "Download my data",
   "profileMenuExportDataSubtitle": "GDPR export in JSON format",
+  "profileMenuGpPro": "Become a GP Pro",
   "profileLogoutAction": "Sign out",
   "profileMenuDeleteAccount": "Delete my account",
   "profileMenuDeleteAccountSubtitle": "30-day withdrawal period",

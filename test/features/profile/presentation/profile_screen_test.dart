@@ -200,6 +200,7 @@ Widget _buildTestHarness({
       builder: (_, _) => stub('RecipientInvitations'),
     ),
     GoRoute(path: '/profile/edit', builder: (_, _) => stub('EditProfile')),
+    GoRoute(path: '/profile/gp-pro', builder: (_, _) => stub('GpPro')),
   ];
 
   return MaterialApp.router(
@@ -1160,6 +1161,7 @@ void main() {
         'DataSettings',
         AnalyticsEvents.profileMenuExportOpened,
       ),
+      ('profile-menu-gp-pro', 'GpPro', AnalyticsEvents.profileMenuGpProOpened),
     ]) {
       testWidgets('« ${nav.$1} » ouvre ${nav.$2} et trace ${nav.$3}', (
         tester,

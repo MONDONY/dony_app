@@ -12683,6 +12683,10 @@
   "@profileMenuExportDataSubtitle": {
     "description": "Sous-titre de l'entrée « Télécharger mes données » (profile_menu_sheet.dart)."
   },
+  "profileMenuGpPro": "Devenir GP Pro",
+  "@profileMenuGpPro": {
+    "description": "Entrée de la feuille de menu (profile_menu_sheet.dart) vers la demande GP Pro."
+  },
   "profileLogoutAction": "Se déconnecter",
   "@profileLogoutAction": {
     "description": "Entrée « Se déconnecter » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé pour le bouton de confirmation (profile_screen.dart, même feature, même texte)."

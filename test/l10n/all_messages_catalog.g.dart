@@ -4141,6 +4141,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'profileMenuAccountSection': (l) => l.profileMenuAccountSection,
   'profileMenuExportData': (l) => l.profileMenuExportData,
   'profileMenuExportDataSubtitle': (l) => l.profileMenuExportDataSubtitle,
+  'profileMenuGpPro': (l) => l.profileMenuGpPro,
   'profileLogoutAction': (l) => l.profileLogoutAction,
   'profileMenuDeleteAccount': (l) => l.profileMenuDeleteAccount,
   'profileMenuDeleteAccountSubtitle': (l) => l.profileMenuDeleteAccountSubtitle,

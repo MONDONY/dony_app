@@ -11581,6 +11581,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileMenuExportDataSubtitle => 'GDPR export in JSON format';
 
   @override
+  String get profileMenuGpPro => 'Become a GP Pro';
+
+  @override
   String get profileLogoutAction => 'Sign out';
 
   @override

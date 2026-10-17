@@ -15,6 +15,7 @@ enum ProfileMenuAction {
   editProfile,
   settings,
   exportData,
+  gpPro,
   logout,
   deleteAccount,
 }
@@ -90,6 +91,13 @@ class _ProfileMenuContent extends StatelessWidget {
           subtitle: l.profileMenuExportDataSubtitle,
           color: cs.primary,
           action: ProfileMenuAction.exportData,
+        ),
+        _MenuTile(
+          itemKey: const Key('profile-menu-gp-pro'),
+          iconAsset: 'luggage',
+          label: l.profileMenuGpPro,
+          color: cs.primary,
+          action: ProfileMenuAction.gpPro,
         ),
         _MenuTile(
           itemKey: const Key('profile-menu-logout'),

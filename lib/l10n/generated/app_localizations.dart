@@ -19151,6 +19151,12 @@ abstract class AppLocalizations {
   /// **'Export RGPD au format JSON'**
   String get profileMenuExportDataSubtitle;
 
+  /// Entrée de la feuille de menu (profile_menu_sheet.dart) vers la demande GP Pro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Devenir GP Pro'**
+  String get profileMenuGpPro;
+
   /// Entrée « Se déconnecter » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé pour le bouton de confirmation (profile_screen.dart, même feature, même texte).
   ///
   /// In fr, this message translates to:

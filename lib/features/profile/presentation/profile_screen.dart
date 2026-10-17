@@ -107,6 +107,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       case ProfileMenuAction.exportData:
         _logEvent(AnalyticsEvents.profileMenuExportOpened);
         unawaited(context.push('/settings/data'));
+      case ProfileMenuAction.gpPro:
+        _logEvent(AnalyticsEvents.profileMenuGpProOpened);
+        unawaited(context.push('/profile/gp-pro'));
       case ProfileMenuAction.logout:
         _logEvent(AnalyticsEvents.profileMenuLogoutTapped);
         await _confirmLogout();
