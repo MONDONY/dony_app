@@ -33121,6 +33121,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Réessayer'**
   String get maintenanceRetry;
+
+  /// Libellé du badge GP Pro (voyageur régulier accordé par l'équipe Yadony), à côté du nom d'un voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'GP Pro'**
+  String get gpProBadgeLabel;
+
+  /// Texte lu par les lecteurs d'écran pour le badge GP Pro (version pastille ou libellé).
+  ///
+  /// In fr, this message translates to:
+  /// **'Badge GP Pro, voyageur régulier vérifié par Yadony'**
+  String get gpProBadgeSemantics;
+
+  /// Titre de la feuille qui explique le badge GP Pro, ouverte en touchant le badge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Qu\'est-ce qu\'un GP Pro ?'**
+  String get gpProInfoTitle;
+
+  /// Corps de la feuille d'explication du badge GP Pro : badge accordé par l'équipe, distinct de l'abonnement PRO et de l'identité vérifiée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.'**
+  String get gpProInfoBody;
 }
 
 class _AppLocalizationsDelegate

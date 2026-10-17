@@ -21564,5 +21564,13 @@
   "maintenanceAutoReopen": "Cette page se fermera toute seule dès que Yadony sera de nouveau disponible.",
   "@maintenanceAutoReopen": {"description": "Précision sous le message de maintenance : l'écran disparaît seul à la réouverture."},
   "maintenanceRetry": "Réessayer",
-  "@maintenanceRetry": {"description": "Bouton de l'écran de maintenance qui revérifie tout de suite si l'application est rouverte."}
+  "@maintenanceRetry": {"description": "Bouton de l'écran de maintenance qui revérifie tout de suite si l'application est rouverte."},
+  "gpProBadgeLabel": "GP Pro",
+  "@gpProBadgeLabel": {"description": "Libellé du badge GP Pro (voyageur régulier accordé par l'équipe Yadony), à côté du nom d'un voyageur."},
+  "gpProBadgeSemantics": "Badge GP Pro, voyageur régulier vérifié par Yadony",
+  "@gpProBadgeSemantics": {"description": "Texte lu par les lecteurs d'écran pour le badge GP Pro (version pastille ou libellé)."},
+  "gpProInfoTitle": "Qu'est-ce qu'un GP Pro ?",
+  "@gpProInfoTitle": {"description": "Titre de la feuille qui explique le badge GP Pro, ouverte en touchant le badge."},
+  "gpProInfoBody": "Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l'équipe Yadony. Ce badge est différent de l'abonnement PRO et de l'identité vérifiée : il n'est ni payant ni automatique.",
+  "@gpProInfoBody": {"description": "Corps de la feuille d'explication du badge GP Pro : badge accordé par l'équipe, distinct de l'abonnement PRO et de l'identité vérifiée."}
 }

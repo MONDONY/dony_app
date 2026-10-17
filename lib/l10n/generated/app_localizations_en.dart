@@ -20403,4 +20403,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maintenanceRetry => 'Try again';
+
+  @override
+  String get gpProBadgeLabel => 'GP Pro';
+
+  @override
+  String get gpProBadgeSemantics =>
+      'GP Pro badge, regular traveler verified by Yadony';
+
+  @override
+  String get gpProInfoTitle => 'What is a GP Pro?';
+
+  @override
+  String get gpProInfoBody =>
+      'A GP Pro is a regular traveler or a business whose application was reviewed and accepted by the Yadony team. This badge is different from the PRO subscription and from verified identity: it is neither paid nor automatic.';
 }

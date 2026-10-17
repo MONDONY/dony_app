@@ -20538,4 +20538,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get maintenanceRetry => 'Réessayer';
+
+  @override
+  String get gpProBadgeLabel => 'GP Pro';
+
+  @override
+  String get gpProBadgeSemantics =>
+      'Badge GP Pro, voyageur régulier vérifié par Yadony';
+
+  @override
+  String get gpProInfoTitle => 'Qu\'est-ce qu\'un GP Pro ?';
+
+  @override
+  String get gpProInfoBody =>
+      'Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.';
 }

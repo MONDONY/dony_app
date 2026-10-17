@@ -7077,6 +7077,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.maintenanceEstimatedEnd(placeholderMarker('time')),
   'maintenanceAutoReopen': (l) => l.maintenanceAutoReopen,
   'maintenanceRetry': (l) => l.maintenanceRetry,
+  'gpProBadgeLabel': (l) => l.gpProBadgeLabel,
+  'gpProBadgeSemantics': (l) => l.gpProBadgeSemantics,
+  'gpProInfoTitle': (l) => l.gpProInfoTitle,
+  'gpProInfoBody': (l) => l.gpProInfoBody,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui

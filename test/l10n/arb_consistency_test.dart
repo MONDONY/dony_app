@@ -134,6 +134,7 @@ const _sameInBothLanguages = <String>{
   'negotiationParcelSheetDescription', // « Description » se dit pareil
   'walletTopupCodeFieldLabel', // « Code » se dit pareil
   // Noms propres identiques en français et en anglais.
+  'gpProBadgeLabel', // « GP Pro » : nom du badge, identique dans les deux langues
   'countryNameFr',
   'countryNameLu',
   'countryNamePt',
