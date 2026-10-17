@@ -8,6 +8,7 @@ class AssistantMessage extends Equatable {
     required this.author,
     required this.text,
     this.actions = const [],
+    this.parcels = const [],
     this.answered = true,
     this.feedback,
     this.isError = false,
@@ -17,6 +18,9 @@ class AssistantMessage extends Equatable {
   final AssistantAuthor author;
   final String text;
   final List<AssistantAction> actions;
+
+  /// Colis proposés au choix sous la réponse (question sur l'un des siens).
+  final List<AssistantParcelChoice> parcels;
   final bool answered;
 
   /// `up` ou `down`, `null` tant que l'utilisateur n'a pas voté.
@@ -31,6 +35,7 @@ class AssistantMessage extends Equatable {
     author: author,
     text: text,
     actions: actions,
+    parcels: parcels,
     answered: answered,
     feedback: feedback ?? this.feedback,
     isError: isError,
@@ -42,6 +47,7 @@ class AssistantMessage extends Equatable {
     author,
     text,
     actions,
+    parcels,
     answered,
     feedback,
     isError,
@@ -60,6 +66,7 @@ final class AssistantState extends Equatable {
     this.escalationStatus = AssistantEscalationStatus.idle,
     this.escalatedTicketId,
     this.lastFailedQuestion,
+    this.parcelId,
   });
 
   final List<AssistantMessage> messages;
@@ -76,6 +83,10 @@ final class AssistantState extends Equatable {
   /// Dernière question restée sans réponse, rejouée par « Réessayer ».
   final String? lastFailedQuestion;
 
+  /// Colis dont parle la conversation, renvoyé au back avec chaque question
+  /// tant que ses réponses le confirment. Jamais gardé hors de la conversation.
+  final String? parcelId;
+
   bool get isEmpty => messages.isEmpty;
 
   AssistantState copyWith({
@@ -87,8 +98,10 @@ final class AssistantState extends Equatable {
     AssistantEscalationStatus? escalationStatus,
     String? escalatedTicketId,
     String? lastFailedQuestion,
+    String? parcelId,
     bool clearEscalatedTicketId = false,
     bool clearLastFailedQuestion = false,
+    bool clearParcelId = false,
   }) => AssistantState(
     messages: messages ?? this.messages,
     isSending: isSending ?? this.isSending,
@@ -102,6 +115,7 @@ final class AssistantState extends Equatable {
     lastFailedQuestion: clearLastFailedQuestion
         ? null
         : (lastFailedQuestion ?? this.lastFailedQuestion),
+    parcelId: clearParcelId ? null : (parcelId ?? this.parcelId),
   );
 
   @override
@@ -114,5 +128,6 @@ final class AssistantState extends Equatable {
     escalationStatus,
     escalatedTicketId,
     lastFailedQuestion,
+    parcelId,
   ];
 }

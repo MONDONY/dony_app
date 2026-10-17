@@ -6,6 +6,7 @@ import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
 import 'package:dony/features/assistant/presentation/screens/assistant_screen.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_composer.dart';
+import 'package:dony/features/assistant/presentation/widgets/assistant_message_bubble.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1003,8 +1004,12 @@ void main() {
         findsNothing,
         reason: 'sorti de la liste',
       );
-      position.jumpTo(position.maxScrollExtent);
-      await tester.pump();
+      // L'étendue d'une liste paresseuse n'est qu'estimée : elle se corrige
+      // une fois la fin construite, d'où un second saut.
+      for (var i = 0; i < 3; i++) {
+        position.jumpTo(position.maxScrollExtent);
+        await tester.pump();
+      }
       expect(find.text('Réponse fraîche'), findsOneWidget);
       expect(
         find.ancestor(
@@ -1300,6 +1305,190 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.byKey(const Key('assistant-input')), findsOneWidget);
+    });
+  });
+
+  group('colis proposés', () {
+    const parcel = AssistantParcelChoice(
+      parcelId: 'b1',
+      status: 'IN_TRANSIT',
+      role: 'SENDER',
+      active: true,
+      trackingNumber: 'DON-7K3M9QXA',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+    );
+    const noNumber = AssistantParcelChoice(
+      parcelId: 'b2',
+      status: 'ACCEPTED',
+      role: 'TRAVELER',
+      active: true,
+      departureCity: 'Lyon',
+      arrivalCity: 'Bamako',
+    );
+    const choose = AssistantMessage(
+      id: 2,
+      author: AssistantAuthor.assistant,
+      text: 'Choisissez le colis concerné.',
+      parcels: [parcel, noNumber],
+    );
+
+    setUpAll(() {
+      registerFallbackValue(
+        const AssistantParcelChosen(
+          parcel,
+          label: '',
+          position: 0,
+          locale: 'fr',
+        ),
+      );
+    });
+
+    testWidgets('chaque colis montre son numéro ou son trajet, son étape et '
+        'son rôle', (tester) async {
+      await pump(tester, const AssistantState(messages: [_question, choose]));
+      expect(find.text('DON-7K3M9QXA'), findsOneWidget);
+      expect(
+        find.text('Paris → Dakar · En transit · Votre envoi'),
+        findsOneWidget,
+      );
+      expect(find.text('Lyon → Bamako'), findsOneWidget);
+      expect(find.text('À remettre · Vous le transportez'), findsOneWidget);
+      expect(
+        tester.getSize(find.byKey(const Key('assistant-parcel-b1'))).height,
+        greaterThanOrEqualTo(44),
+      );
+    });
+
+    testWidgets('toucher un colis le transmet au BLoC', (tester) async {
+      await pump(tester, const AssistantState(messages: [_question, choose]));
+      await tester.tap(find.byKey(const Key('assistant-parcel-b2')));
+      await tester.pump();
+      verify(
+        () => bloc.add(
+          const AssistantParcelChosen(
+            noNumber,
+            label: 'Lyon → Bamako',
+            position: 1,
+            locale: 'fr',
+          ),
+        ),
+      ).called(1);
+      await tester.tap(find.byKey(const Key('assistant-parcel-b1')));
+      await tester.pump();
+      verify(
+        () => bloc.add(
+          const AssistantParcelChosen(
+            parcel,
+            label: 'DON-7K3M9QXA · Paris → Dakar',
+            position: 0,
+            locale: 'fr',
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('masqués sur une réponse plus ancienne et pendant un envoi', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const AssistantState(
+          messages: [
+            _question,
+            choose,
+            AssistantMessage(
+              id: 3,
+              author: AssistantAuthor.user,
+              text: 'autre chose',
+            ),
+          ],
+        ),
+      );
+      expect(find.byKey(const Key('assistant-parcel-b1')), findsNothing);
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, choose], isSending: true),
+      );
+      expect(find.byKey(const Key('assistant-parcel-b1')), findsNothing);
+    });
+
+    testWidgets('anglais', (tester) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, choose]),
+        locale: const Locale('en'),
+      );
+      expect(
+        find.text('Paris → Dakar · In transit · Your shipment'),
+        findsOneWidget,
+      );
+      expect(find.text('Drop-off due · You carry it'), findsOneWidget);
+    });
+
+    testWidgets('« Où est mon colis ? » fait partie des suggestions', (
+      tester,
+    ) async {
+      await pump(tester, const AssistantState());
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('assistant-suggestion-5')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(const Key('assistant-suggestion-5')), findsOneWidget);
+      expect(find.text('Où est mon colis ?'), findsOneWidget);
+    });
+
+    test('libellés de toutes les étapes, rien pour une étape inconnue', () {
+      final l = lookupAppLocalizations(const Locale('fr'));
+      for (final status in [
+        'AWAITING_PAYMENT',
+        'PENDING',
+        'PAYMENT_ESCROWED',
+        'ACCEPTED',
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'ARRIVED',
+        'COMPLETED',
+        'CANCELLED',
+        'REJECTED',
+        'PARCEL_REFUSED',
+        'NO_SHOW',
+        'EXPIRED',
+      ]) {
+        expect(
+          assistantParcelStatusLabel(l, status),
+          isNotNull,
+          reason: status,
+        );
+      }
+      expect(assistantParcelStatusLabel(l, 'NEGOTIATING'), isNull);
+    });
+
+    testWidgets('colis sans numéro ni trajet : titre générique', (
+      tester,
+    ) async {
+      const bare = AssistantParcelChoice(
+        parcelId: 'b3',
+        status: 'UNKNOWN',
+        role: 'OTHER',
+        active: false,
+      );
+      await pump(
+        tester,
+        const AssistantState(
+          messages: [
+            _question,
+            AssistantMessage(
+              id: 2,
+              author: AssistantAuthor.assistant,
+              text: 'Choisissez.',
+              parcels: [bare],
+            ),
+          ],
+        ),
+      );
+      expect(find.text('Colis'), findsOneWidget);
     });
   });
 }

@@ -32891,7 +32891,7 @@ abstract class AppLocalizations {
   /// Mention IA obligatoire sous le message d'accueil.
   ///
   /// In fr, this message translates to:
-  /// **'Je suis une IA et je peux me tromper. Pour votre compte, un colis ou un paiement, un membre de l\'équipe vous répond. Ne saisissez pas de données personnelles.'**
+  /// **'Je suis une IA et je peux me tromper. Je peux retrouver vos colis ; pour un paiement ou votre compte, un membre de l\'équipe vous répond. Ne saisissez pas de données personnelles.'**
   String get assistantDisclaimer;
 
   /// Titre de la liste de questions suggérées.
@@ -32923,6 +32923,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Comment vérifier mon identité ?'**
   String get assistantSuggestion4;
+
+  /// Question suggérée 5 : l'assistant propose alors les colis de l'utilisateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Où est mon colis ?'**
+  String get assistantSuggestion5;
+
+  /// Libellé d'accessibilité du groupe de colis proposés au choix sous une réponse de l'assistant.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos colis'**
+  String get assistantParcelChoices;
+
+  /// Titre d'un colis proposé par l'assistant quand ni son numéro de suivi ni son trajet ne sont connus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get assistantParcelFallback;
+
+  /// Rôle de l'utilisateur sur un colis proposé par l'assistant : il l'envoie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre envoi'**
+  String get assistantParcelRoleSender;
+
+  /// Rôle de l'utilisateur sur un colis proposé par l'assistant : il est le voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous le transportez'**
+  String get assistantParcelRoleTraveler;
+
+  /// Rôle de l'utilisateur sur un colis proposé par l'assistant : il en est le destinataire.
+  ///
+  /// In fr, this message translates to:
+  /// **'À recevoir'**
+  String get assistantParcelRoleRecipient;
+
+  /// Étape d'un colis proposé par l'assistant : demande envoyée, le voyageur n'a pas encore répondu.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du voyageur'**
+  String get assistantParcelStatusPending;
 
   /// Indication du champ de saisie de l'assistant.
   ///

@@ -32,6 +32,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     on<AssistantResetRequested>(_onReset);
     on<AssistantFeedbackGiven>(_onFeedback);
     on<AssistantActionTapped>(_onAction);
+    on<AssistantParcelChosen>(_onParcelChosen);
     on<AssistantEscalationRequested>(_onEscalation);
     on<AssistantSessionEnded>(_onSessionEnded);
     on<AssistantEscalationHandled>(
@@ -188,19 +189,70 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
         : turns;
   }
 
+  /// Repose la question qui a amené le choix, pour le colis touché. La
+  /// question est le dernier message de l'utilisateur avant la réponse qui
+  /// proposait ce colis.
+  Future<void> _onParcelChosen(
+    AssistantParcelChosen event,
+    Emitter<AssistantState> emit,
+  ) async {
+    if (state.isSending || state.disabled) return;
+    final index = state.messages.indexWhere(
+      (m) => m.parcels.contains(event.choice),
+    );
+    if (index < 0) return;
+    String? question;
+    for (var i = index - 1; i >= 0 && question == null; i--) {
+      final m = state.messages[i];
+      if (m.author == AssistantAuthor.user) question = m.text;
+    }
+    if (question == null) return;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.assistantParcelChosen,
+        properties: {
+          'role': event.choice.role,
+          'active': event.choice.active,
+          'position': event.position,
+        },
+      ),
+    );
+    final history = _historyFrom(state.messages);
+    final messages = [
+      ...state.messages,
+      AssistantMessage(
+        id: _nextId++,
+        author: AssistantAuthor.user,
+        text: event.label,
+      ),
+    ];
+    await _ask(
+      question,
+      event.locale,
+      history,
+      messages,
+      emit,
+      parcelId: event.choice.parcelId,
+    );
+  }
+
+  /// [parcelId] : colis choisi à l'instant, sinon celui de la conversation.
+  /// Gardé dans l'état dès l'envoi, pour que « Réessayer » le renvoie.
   Future<void> _ask(
     String question,
     String locale,
     List<AssistantHistoryTurn> history,
     List<AssistantMessage> messages,
-    Emitter<AssistantState> emit,
-  ) async {
+    Emitter<AssistantState> emit, {
+    String? parcelId,
+  }) async {
     final epoch = _epoch;
     emit(
       state.copyWith(
         messages: messages,
         isSending: true,
         clearLastFailedQuestion: true,
+        parcelId: parcelId,
       ),
     );
     try {
@@ -208,6 +260,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
         question: question,
         locale: locale,
         history: history,
+        parcelId: state.parcelId,
       );
       if (epoch != _epoch) return;
       unawaited(
@@ -220,10 +273,24 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
           },
         ),
       );
+      if (answer.parcels.isNotEmpty) {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.assistantParcelChoicesShown,
+            properties: {
+              'count': answer.parcels.length,
+              'active_count': answer.parcels.where((p) => p.active).length,
+            },
+          ),
+        );
+      }
       emit(
         state.copyWith(
           isSending: false,
           quotaExceeded: false,
+          // La réponse fait foi : sans colis, la conversation n'en suit plus.
+          parcelId: answer.parcelId,
+          clearParcelId: answer.parcelId == null,
           messages: [
             ...state.messages,
             AssistantMessage(
@@ -231,6 +298,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
               author: AssistantAuthor.assistant,
               text: answer.answer,
               actions: answer.actions,
+              parcels: answer.parcels,
               answered: answer.answered,
             ),
           ],

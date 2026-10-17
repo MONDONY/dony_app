@@ -69,6 +69,26 @@ final class AssistantActionTapped extends AssistantEvent {
   List<Object?> get props => [route, matched];
 }
 
+/// Colis choisi sous une réponse : la question qui l'a amené est reposée pour
+/// ce colis. [label] est le texte du bouton, affiché comme message de
+/// l'utilisateur ; [position] sa place dans la liste (analytics).
+final class AssistantParcelChosen extends AssistantEvent {
+  const AssistantParcelChosen(
+    this.choice, {
+    required this.label,
+    required this.position,
+    required this.locale,
+  });
+
+  final AssistantParcelChoice choice;
+  final String label;
+  final int position;
+  final String locale;
+
+  @override
+  List<Object?> get props => [choice, label, position, locale];
+}
+
 /// « Parler à un humain » : crée un ticket support avec l'échange.
 final class AssistantEscalationRequested extends AssistantEvent {
   const AssistantEscalationRequested();
