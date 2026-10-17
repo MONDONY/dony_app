@@ -30399,6 +30399,48 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur a annulé cette demande avant le paiement.'**
   String get billetCancelledBeforePaymentTraveler;
 
+  /// Titre du talon d'un colis annulé par l'équipe depuis l'admin (billet_talon.dart, rejectionReason TEAM_*, FLUTTER-R4).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulé par l\'équipe Yadony'**
+  String get billetTeamCancelledTitle;
+
+  /// Motif montré à l'expéditeur, rejectionReason TEAM_TRAVELER_UNAVAILABLE.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur est injoignable.'**
+  String get billetTeamCancelledTravelerUnavailableSender;
+
+  /// Motif montré au voyageur, rejectionReason TEAM_TRAVELER_UNAVAILABLE.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'équipe n\'a pas réussi à vous joindre.'**
+  String get billetTeamCancelledTravelerUnavailableTraveler;
+
+  /// Ligne de remboursement montrée à l'expéditeur d'un colis annulé par l'équipe (hors espèces) : l'app ne sait pas si le paiement avait eu lieu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous avez payé dans l\'app, votre paiement vous est remboursé.'**
+  String get billetTeamCancelledRefundSender;
+
+  /// Ligne neutre d'un colis annulé par l'équipe sans motif public (TEAM_CANCELLED).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour en savoir plus, contactez le support.'**
+  String get billetTeamCancelledContactHint;
+
+  /// Sujet prérempli du ticket support ouvert depuis un colis annulé par l'équipe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis {number} annulé par l\'équipe'**
+  String billetTeamCancelledSupportSubject(String number);
+
+  /// Message d'amorce prérempli, modifiable, du ticket support ouvert depuis un colis annulé par l'équipe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour, mon colis a été annulé par l\'équipe Yadony. J\'aimerais en savoir plus.'**
+  String get billetTeamCancelledSupportMessage;
+
   /// Titre de l'erreur 409 payment-already-authorized (annulation avant paiement refusée).
   ///
   /// In fr, this message translates to:

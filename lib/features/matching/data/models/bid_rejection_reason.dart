@@ -23,3 +23,29 @@ enum BidRejectionReason {
     return null;
   }
 }
+
+/// Marqueurs posés par yadony-back dans `BidModel.rejectionReason` quand
+/// l'équipe Yadony annule un colis depuis l'admin (FLUTTER-R4, yadony-back
+/// #567). Volontairement hors de [BidRejectionReason] : ses valeurs alimentent
+/// le choix du voyageur au refus, où ces motifs n'ont rien à faire.
+///
+/// Seul « voyageur injoignable » est montré tel quel ; les autres motifs de
+/// l'équipe restent internes et arrivent sous [cancelled]. Un colis annulé par
+/// l'équipe avant ce marqueur garde un `rejectionReason` nul : l'app affiche
+/// alors le message terminal habituel.
+enum TeamCancellationReason {
+  travelerUnavailable('TEAM_TRAVELER_UNAVAILABLE'),
+  cancelled('TEAM_CANCELLED');
+
+  const TeamCancellationReason(this.code);
+
+  final String code;
+
+  /// Le marqueur reconnu, ou `null` (autre motif, ancien back, absent).
+  static TeamCancellationReason? fromCode(String? code) {
+    for (final r in values) {
+      if (r.code == code) return r;
+    }
+    return null;
+  }
+}

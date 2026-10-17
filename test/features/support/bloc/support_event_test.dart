@@ -20,14 +20,17 @@ void main() {
       SupportTicketCreateRequested make({
         String category = 'PAYMENT',
         String message = 'Bonjour',
+        String? origin,
       }) => SupportTicketCreateRequested(
         category: category,
         subject: 'Remboursement',
         message: message,
+        origin: origin,
       );
       expectValueEquality(make, [
         make(category: 'DELIVERY'),
         make(message: 'Rebonjour'),
+        make(origin: 'team_cancelled_parcel'),
       ]);
     });
 

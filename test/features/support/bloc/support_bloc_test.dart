@@ -186,6 +186,39 @@ void main() {
       await bloc.close();
     });
 
+    test(
+      'demande préremplie (FLUTTER-R4) : origine tracée, jamais envoyée au back',
+      () async {
+        when(
+          () => repository.createTicket(
+            category: 'PACKAGE',
+            subject: "Colis YAD-1 annulé par l'équipe",
+            message: 'Bonjour.',
+          ),
+        ).thenAnswer((_) async => _ticket);
+        final bloc = buildBloc();
+
+        bloc.add(
+          const SupportTicketCreateRequested(
+            category: 'PACKAGE',
+            subject: "Colis YAD-1 annulé par l'équipe",
+            message: 'Bonjour.',
+            origin: 'team_cancelled_parcel',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        verify(
+          () => backend.capture(AnalyticsEvents.supportTicketCreated, {
+            'category': 'PACKAGE',
+            'origin': 'team_cancelled_parcel',
+          }),
+        ).called(1);
+        expect(bloc.state.createdTicketId, _ticket.id);
+        await bloc.close();
+      },
+    );
+
     blocTest<SupportBloc, SupportState>(
       'remonte le detail RFC 7807 du backend en cas de refus',
       build: () {

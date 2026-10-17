@@ -1,6 +1,8 @@
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/value_equality.dart';
+
 void main() {
   group('SupportPredefinedReply.fromJson', () {
     test('lit les quatre champs', () {
@@ -110,5 +112,20 @@ void main() {
       expect(a.hashCode, b.hashCode);
       expect(a, isNot(const SupportSummaryTicket(id: 't1')));
     });
+  });
+
+  test('SupportTicketDraft : égalité de valeur, origine comprise', () {
+    SupportTicketDraft make({String subject = 'Sujet', String? origin}) =>
+        // ignore: prefer_const_constructors
+        SupportTicketDraft(
+          category: 'PACKAGE',
+          subject: subject,
+          message: 'Bonjour',
+          origin: origin,
+        );
+    expectValueEquality(make, [
+      make(subject: 'Autre'),
+      make(origin: 'team_cancelled_parcel'),
+    ]);
   });
 }

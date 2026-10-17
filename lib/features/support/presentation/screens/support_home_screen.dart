@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
@@ -70,11 +72,24 @@ String? supportErrorMessage(AppLocalizations l, SupportState state) {
 /// prédéfinies) et création d'un nouveau ticket via bottom sheet. Avec au
 /// moins une conversation, elles passent en tête et « Nouvelle demande »
 /// reste fixé en bas ; sans conversation, l'assistant reste en tête.
+///
+/// Avec un [draft] (route `/support`, `extra`), la sheet de création s'ouvre
+/// d'elle-même, préremplie : l'utilisateur relit, modifie, puis envoie.
 class SupportHomeScreen extends StatelessWidget {
-  const SupportHomeScreen({super.key});
+  const SupportHomeScreen({super.key, this.draft});
+
+  /// Demande préremplie à proposer dès l'ouverture (FLUTTER-R4).
+  final SupportTicketDraft? draft;
 
   @override
   Widget build(BuildContext context) {
+    final scaffold = _buildScaffold(context);
+    final pending = draft;
+    if (pending == null) return scaffold;
+    return _DraftSheetLauncher(draft: pending, child: scaffold);
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -130,6 +145,33 @@ class SupportHomeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Ouvre une seule fois, après la première frame, la sheet de création
+/// préremplie avec [draft]. Le [State] garantit qu'une reconstruction de
+/// l'écran (retour d'un fil, rechargement) ne la rouvre pas.
+class _DraftSheetLauncher extends StatefulWidget {
+  const _DraftSheetLauncher({required this.draft, required this.child});
+
+  final SupportTicketDraft draft;
+  final Widget child;
+
+  @override
+  State<_DraftSheetLauncher> createState() => _DraftSheetLauncherState();
+}
+
+class _DraftSheetLauncherState extends State<_DraftSheetLauncher> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_openCreateTicketSheet(context, draft: widget.draft));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Conversations dans l'ordre d'affichage : non résolues d'abord, puis par
@@ -476,11 +518,22 @@ class _TicketPreviewLine extends StatelessWidget {
 /// se replie à ce moment rebâtit les champs, et des contrôleurs déjà disposés
 /// faisaient planter la frame (Sentry FLUTTER-18, puis 17/19/1A en cascade).
 /// Le [State] n'est disposé qu'au retrait effectif de la route.
-Future<void> _openCreateTicketSheet(BuildContext context) {
+///
+/// Un [draft] préremplit catégorie, sujet et message ; le bouton est alors
+/// actif d'emblée si les trois sont renseignés, sans attendre une saisie.
+Future<void> _openCreateTicketSheet(
+  BuildContext context, {
+  SupportTicketDraft? draft,
+}) {
   final bloc = context.read<SupportBloc>();
   final title = context.l10n.supportContactCta;
   final sendLabel = context.l10n.commonSend;
-  final canSubmit = ValueNotifier<bool>(false);
+  final canSubmit = ValueNotifier<bool>(
+    draft != null &&
+        _CreateTicketForm.knownCategory(draft) != null &&
+        draft.subject.trim().isNotEmpty &&
+        draft.message.trim().isNotEmpty,
+  );
   VoidCallback? submit;
 
   return DonyBottomSheet.show<void>(
@@ -500,6 +553,7 @@ Future<void> _openCreateTicketSheet(BuildContext context) {
     child: _CreateTicketForm(
       canSubmit: canSubmit,
       onSubmitReady: (fn) => submit = fn,
+      draft: draft,
     ),
   ).whenComplete(canSubmit.dispose);
 }
@@ -508,7 +562,18 @@ class _CreateTicketForm extends StatefulWidget {
   const _CreateTicketForm({
     required this.canSubmit,
     required this.onSubmitReady,
+    this.draft,
   });
+
+  /// Catégorie du brouillon si elle figure parmi les puces, sinon `null` :
+  /// une catégorie inconnue ne présélectionne rien, l'utilisateur choisit.
+  static String? knownCategory(SupportTicketDraft? draft) {
+    final category = draft?.category;
+    return SupportLabels.categoryCodes.contains(category) ? category : null;
+  }
+
+  /// Valeurs de départ des champs (FLUTTER-R4), toutes modifiables.
+  final SupportTicketDraft? draft;
 
   /// Validité du formulaire, lue par le bouton du `stickyBottom`.
   final ValueNotifier<bool> canSubmit;
@@ -522,9 +587,15 @@ class _CreateTicketForm extends StatefulWidget {
 }
 
 class _CreateTicketFormState extends State<_CreateTicketForm> {
-  final subjectController = TextEditingController();
-  final messageController = TextEditingController();
-  final selectedCategory = ValueNotifier<String?>(null);
+  late final subjectController = TextEditingController(
+    text: widget.draft?.subject,
+  );
+  late final messageController = TextEditingController(
+    text: widget.draft?.message,
+  );
+  late final selectedCategory = ValueNotifier<String?>(
+    _CreateTicketForm.knownCategory(widget.draft),
+  );
 
   @override
   void initState() {
@@ -555,6 +626,7 @@ class _CreateTicketFormState extends State<_CreateTicketForm> {
         category: selectedCategory.value!,
         subject: subjectController.text.trim(),
         message: messageController.text.trim(),
+        origin: widget.draft?.origin,
       ),
     );
   }

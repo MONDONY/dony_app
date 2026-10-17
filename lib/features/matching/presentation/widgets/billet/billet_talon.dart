@@ -11,6 +11,7 @@ import 'package:dony/features/matching/presentation/widgets/billet/talon_blocked
 import 'package:dony/features/matching/presentation/widgets/billet/talon_code_renewal_request_block.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
+import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -181,6 +182,30 @@ class _CancelledBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Annulation décidée par l'équipe (FLUTTER-R4) : motif et contact du
+    // support en tête. Le retour du colis ou les trajets alternatifs, s'il y
+    // en a, restent proposés dessous. Un ancien back laisse le marqueur nul.
+    final team = TeamCancellationReason.fromCode(bid.rejectionReason);
+    if (team == null) return _buildDefault(context);
+    final teamBlock = _TeamCancelledBlock(
+      bid: bid,
+      isSender: isSender,
+      reason: team,
+    );
+    final hasFollowUp =
+        bid.isParcelReturned || bid.isAwaitingReturn || _showRematch;
+    if (!hasFollowUp) return teamBlock;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        teamBlock,
+        const SizedBox(height: DonySpacing.sm),
+        _buildDefault(context),
+      ],
+    );
+  }
+
+  Widget _buildDefault(BuildContext context) {
     if (bid.isParcelReturned) {
       if (!_showRematch) return const _ReturnedBlock();
       return Column(
@@ -322,6 +347,125 @@ class _CancelledBeforePaymentLine extends StatelessWidget {
         style: tt.bodyMedium?.copyWith(
           color: cs.onSurface,
           fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// any / CANCELLED par l'équipe Yadony (FLUTTER-R4, yadony-back #567) :
+/// « Annulé par l'équipe Yadony », le motif public s'il y en a un, puis
+/// « Contacter le support », qui ouvre une demande préremplie sur ce colis.
+///
+/// Le remboursement n'est jamais affirmé : l'app ne sait pas si le paiement a
+/// eu lieu (carte pas encore payée, par exemple). La ligne reste au
+/// conditionnel, et disparaît pour un colis payé en espèces, hors de l'app.
+class _TeamCancelledBlock extends StatelessWidget {
+  final BidModel bid;
+  final bool isSender;
+  final TeamCancellationReason reason;
+
+  const _TeamCancelledBlock({
+    required this.bid,
+    required this.isSender,
+    required this.reason,
+  });
+
+  String _detail(AppLocalizations l) {
+    final paidInApp = bid.paymentMethod != BidPaymentMethod.cash;
+    if (!isSender) {
+      return switch (reason) {
+        TeamCancellationReason.travelerUnavailable =>
+          l.billetTeamCancelledTravelerUnavailableTraveler,
+        TeamCancellationReason.cancelled => l.billetTeamCancelledContactHint,
+      };
+    }
+    return switch (reason) {
+      TeamCancellationReason.travelerUnavailable when paidInApp =>
+        '${l.billetTeamCancelledTravelerUnavailableSender} '
+            '${l.billetTeamCancelledRefundSender}',
+      TeamCancellationReason.travelerUnavailable =>
+        l.billetTeamCancelledTravelerUnavailableSender,
+      TeamCancellationReason.cancelled when paidInApp =>
+        l.billetTeamCancelledRefundSender,
+      TeamCancellationReason.cancelled => l.billetTeamCancelledContactHint,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return Column(
+      key: const Key('billet-team-cancelled'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: DonySpacing.sm),
+        DonyIcon('shield', size: 22, color: cs.onSurfaceVariant),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          l.billetTeamCancelledTitle,
+          textAlign: TextAlign.center,
+          style: tt.titleSmall?.copyWith(
+            color: cs.onSurface,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          _detail(l),
+          key: const Key('billet-team-cancelled-detail'),
+          textAlign: TextAlign.center,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        _TeamSupportCta(bid: bid),
+      ],
+    );
+  }
+}
+
+/// « Contacter le support » : ouvre `/support` avec une demande préremplie
+/// (catégorie Colis, sujet portant le numéro du colis, message d'amorce).
+/// L'utilisateur relit et modifie avant d'envoyer : aucun ticket n'est créé
+/// sans qu'il touche « Envoyer ».
+class _TeamSupportCta extends StatelessWidget {
+  final BidModel bid;
+
+  const _TeamSupportCta({required this.bid});
+
+  /// Numéro de suivi, sinon le début de l'identifiant (lisible par l'équipe).
+  String get _parcelNumber {
+    final tracking = bid.trackingNumber?.trim();
+    if (tracking != null && tracking.isNotEmpty) return tracking;
+    final id = bid.id;
+    return (id.length > 8 ? id.substring(0, 8) : id).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return OutlinedButton.icon(
+      key: const Key('billet-team-support-cta'),
+      onPressed: () => context.push(
+        '/support',
+        extra: SupportTicketDraft(
+          category: 'PACKAGE',
+          subject: l.billetTeamCancelledSupportSubject(_parcelNumber),
+          message: l.billetTeamCancelledSupportMessage,
+          origin: 'team_cancelled_parcel',
+        ),
+      ),
+      icon: DonyIcon('headset', size: 20, color: cs.primary),
+      label: Text(l.supportContactCta, textAlign: TextAlign.center),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: cs.primary,
+        side: BorderSide(color: cs.primary),
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
         ),
       ),
     );

@@ -242,3 +242,27 @@ int _optionalInt(Object? value) => value is num ? value.toInt() : 0;
 
 DateTime? _optionalDate(Object? value) =>
     value is String ? DateTime.tryParse(value) : null;
+
+/// Demande de support préremplie, passée en `extra` de la route `/support`
+/// (FLUTTER-R4 : colis annulé par l'équipe). L'écran ouvre alors la sheet de
+/// création avec ces valeurs, que l'utilisateur relit et modifie : rien ne
+/// part sans qu'il touche « Envoyer ».
+class SupportTicketDraft extends Equatable {
+  const SupportTicketDraft({
+    required this.category,
+    required this.subject,
+    required this.message,
+    this.origin,
+  });
+
+  /// Code de catégorie backend (`PACKAGE`, `PAYMENT`…).
+  final String category;
+  final String subject;
+  final String message;
+
+  /// Écran d'où vient la demande, transmis à l'analytics (jamais au back).
+  final String? origin;
+
+  @override
+  List<Object?> get props => [category, subject, message, origin];
+}

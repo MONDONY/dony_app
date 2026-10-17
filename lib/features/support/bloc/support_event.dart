@@ -18,14 +18,19 @@ final class SupportTicketCreateRequested extends SupportEvent {
     required this.category,
     required this.subject,
     required this.message,
+    this.origin,
   });
 
   final String category;
   final String subject;
   final String message;
 
+  /// Écran d'origine d'une demande préremplie ([SupportTicketDraft.origin]),
+  /// pour l'analytics seulement. `null` pour une demande saisie de zéro.
+  final String? origin;
+
   @override
-  List<Object?> get props => [category, subject, message];
+  List<Object?> get props => [category, subject, message, origin];
 }
 
 /// Charge le détail d'un ticket (fil de messages complet).
