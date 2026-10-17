@@ -83,7 +83,10 @@ class ExpediteurCard extends StatelessWidget {
                           ],
                           if (bid.senderGpPro) ...[
                             const SizedBox(width: DonySpacing.xs),
-                            const GpProBadge(surface: 'sender_card'),
+                            const GpProBadge(
+                              surface: 'sender_card',
+                              interactive: false,
+                            ),
                           ],
                         ],
                       ),

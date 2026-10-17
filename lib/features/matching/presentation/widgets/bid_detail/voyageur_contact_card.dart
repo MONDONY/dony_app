@@ -125,7 +125,7 @@ class VoyageurContactCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Nom + badges — Wrap : un nom long + deux badges (KYC +
-                      // Kilo Pro) ne tiennent pas sur une ligne dans la colonne
+                      // GP Pro) ne tiennent pas sur une ligne dans la colonne
                       // étroite ; le Wrap fait passer les chips à la ligne au
                       // lieu d'un RenderFlex overflow. Le nom (maxLines 1 +
                       // ellipsis) est borné par la largeur du Wrap.
@@ -149,7 +149,10 @@ class VoyageurContactCard extends StatelessWidget {
                               bg: cs.primaryContainer,
                             ),
                           if (bid.travelerGpPro)
-                            const GpProBadge(surface: 'traveler_contact'),
+                            const GpProBadge(
+                              surface: 'traveler_contact',
+                              interactive: false,
+                            ),
                         ],
                       ),
                       // Note + trajets

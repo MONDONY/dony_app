@@ -370,7 +370,11 @@ class TravelerCard extends StatelessWidget {
                       spacing: DonySpacing.xxs,
                       runSpacing: DonySpacing.xxs,
                       children: [
-                        if (isGpPro) const GpProBadge(surface: 'trip_card'),
+                        if (isGpPro)
+                          const GpProBadge(
+                            surface: 'trip_card',
+                            interactive: false,
+                          ),
                         if (isProAccount) const _ProBadge(),
                         if (announcement.isUrgent) const DonyUrgentBadge(),
                         // Escales (FLUTTER-GE) : rien si non renseignées.

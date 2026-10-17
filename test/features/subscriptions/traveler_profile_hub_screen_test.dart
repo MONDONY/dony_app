@@ -495,6 +495,39 @@ void main() {
     expect(find.text('GP Pro'), findsOneWidget);
   });
 
+  testWidgets('profil sans gpPro → pas de « GP Pro » dans le header', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    when(() => profileBloc.state).thenReturn(
+      ProfilePublicLoaded(
+        profile: const ProfilePublicModel(
+          userId: 'u1',
+          displayName: 'Ibou Simple',
+          kycVerified: true,
+          isProAccount: true,
+          gpPro: false,
+          completedBidsCount: 100,
+          averageRating: 4.9,
+          ratingCount: 50,
+          memberSince: '2023-01',
+          badges: [],
+        ),
+        recentRatings: _fakeRatings(),
+      ),
+    );
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
+
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('GP Pro'), findsNothing);
+  });
+
   // ─── Test 12: S'abonner button tap → HubSubscribePressed ─────────────────
 
   testWidgets("tap S'abonner → bloc.add(HubSubscribePressed)", (tester) async {

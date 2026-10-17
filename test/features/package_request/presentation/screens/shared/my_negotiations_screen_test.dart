@@ -299,6 +299,27 @@ void main() {
     });
   });
 
+  group('_NegoCard largeur du nom', () {
+    testWidgets(
+      'nom long sans badge : occupe plus de la moitié de la largeur',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          NegotiationListState(
+            status: NegotiationListStatus.loaded,
+            threads: [
+              _thread(travelerName: List.filled(12, 'Abdoulaye').join(' ')),
+            ],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        final name = tester.getSize(find.byKey(const Key('nego-card-name')));
+        final card = tester.getSize(find.byType(Scaffold).first);
+        expect(name.width, greaterThan(card.width / 2));
+      },
+    );
+  });
+
   group('_NegoCard badge GP Pro', () {
     for (final gpPro in [true, false]) {
       testWidgets('travelerGpPro=$gpPro', (tester) async {

@@ -98,7 +98,10 @@ class VoyageurCard extends StatelessWidget {
                           ],
                           if (bid.travelerGpPro) ...[
                             const SizedBox(width: DonySpacing.xs),
-                            const GpProBadge(surface: 'traveler_card'),
+                            const GpProBadge(
+                              surface: 'traveler_card',
+                              interactive: false,
+                            ),
                           ],
                         ],
                       ),

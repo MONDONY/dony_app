@@ -900,26 +900,32 @@ class _NegoCard extends StatelessWidget {
                 verified: (thread.travelerTripsCount ?? 0) > 0,
               ),
               const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  name,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.bodySmall?.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurfaceVariant,
-                  ),
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        key: const Key('nego-card-name'),
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.bodySmall?.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    if (thread.travelerGpPro) ...[
+                      const SizedBox(width: 4),
+                      const GpProBadge(
+                        size: GpProBadgeSize.compact,
+                        surface: 'my_negotiations',
+                        interactive: false,
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              if (thread.travelerGpPro) ...[
-                const SizedBox(width: 4),
-                const GpProBadge(
-                  size: GpProBadgeSize.compact,
-                  surface: 'my_negotiations',
-                  interactive: false,
-                ),
-              ],
-              const Spacer(),
               const SizedBox(width: 6),
               const _SourcePill(kind: NegoEntryKind.request),
               const SizedBox(width: 4),
