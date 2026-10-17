@@ -13,6 +13,7 @@ class UnderstoodChips extends StatelessWidget {
     required this.understood,
     required this.missing,
     required this.draft,
+    this.fallbackCurrency,
   });
 
   final AiFormKind kind;
@@ -20,13 +21,23 @@ class UnderstoodChips extends StatelessWidget {
   final List<String> missing;
   final Map<String, Object?> draft;
 
+  /// Devise du formulaire, quand l'IA n'en a pas dit.
+  final String? fallbackCurrency;
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final known = [
-      for (final key in understood) ?aiUnderstoodChipLabel(l, kind, key, draft),
+      for (final key in understood)
+        ?aiUnderstoodChipLabel(
+          l,
+          kind,
+          key,
+          draft,
+          fallbackCurrency: fallbackCurrency,
+        ),
     ];
     final unknown = aiMissingChipLabels(l, missing);
     return Container(

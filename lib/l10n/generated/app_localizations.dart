@@ -33680,6 +33680,12 @@ abstract class AppLocalizations {
   /// **'Contenu ?'**
   String get aiFormDraftMissingContent;
 
+  /// Puce d'une information requise manquante : budget de la demande d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget ?'**
+  String get aiFormDraftMissingBudget;
+
   /// Message de l'IA après « Corriger quelque chose ».
   ///
   /// In fr, this message translates to:

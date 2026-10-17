@@ -57,6 +57,10 @@ class AiFormDraftBloc extends Bloc<AiFormDraftEvent, AiFormDraftState> {
   final AiFormDraftRepository _repository;
   final AnalyticsService _analytics;
   final AiFormDraftSession _session;
+
+  /// Devise du formulaire à l'ouverture : celle du résumé et des puces quand
+  /// l'IA n'en a pas dit.
+  String? get defaultCurrency => _session.defaultCurrency;
   final DateTime Function() _clock;
   final String Function() _locale;
   bool _applying = false;

@@ -9,7 +9,15 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/ai_form_draft/bloc/ai_filled_fields_cubit.dart';
+import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_availability_cubit.dart';
+import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
+import 'package:dony/features/ai_form_draft/data/package_request_ai_draft_mapper.dart';
+import 'package:dony/features/ai_form_draft/presentation/ai_form_draft_launcher.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_entry_card.dart';
+import 'package:dony/features/ai_form_draft/presentation/widgets/ai_filled_banner.dart';
 import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_draft.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -151,6 +159,52 @@ class _PackageRequestCreateScreenState
   /// formulaire de publication est ouvert, et ce getter était réévalué
   /// jusque dans un `itemBuilder` (lookup GetIt + lecture Hive par ligne).
   late final SupportedCurrency? _activeCurrency = ActiveCurrency.current;
+
+  /// « Créer avec l'IA » : création seulement, ni édition, ni duplication, ni
+  /// reprise de brouillon (spec §2.2).
+  late final AiFormDraftAvailabilityCubit? _aiAvailability =
+      widget.initial == null &&
+          widget.duplicating == null &&
+          widget.resuming == null
+      ? getIt<AiFormDraftAvailabilityCubit>()
+      : null;
+
+  /// Champs remplis par l'IA : marque « IA » et bandeau.
+  final AiFilledFieldsCubit _aiFilled = AiFilledFieldsCubit();
+
+  @override
+  void initState() {
+    super.initState();
+    final aiAvailability = _aiAvailability;
+    if (aiAvailability != null) unawaited(aiAvailability.refresh());
+  }
+
+  /// Ouvre « Créer avec l'IA » puis applique le brouillon par
+  /// `FormDraftRestored`, posé sur l'état courant, à l'étape 1.
+  Future<void> _openAiDraft(BuildContext formContext) async {
+    final bloc = formContext.read<PackageRequestFormBloc>();
+    final outcome = await getIt<AiFormDraftLauncher>().open(
+      formContext,
+      kind: AiFormKind.packageRequest,
+      defaultCurrency: (bloc.state.currency ?? _activeCurrency)?.code,
+    );
+    if (!mounted || outcome == null || bloc.isClosed) return;
+    bloc.add(
+      FormDraftRestored(
+        PackageRequestAiDraftMapper.toFormState(
+          outcome.draft,
+          base: PackageRequestAiDraftMapper.withStep1Input(
+            bloc.state,
+            _step1Key.currentState?.draftInput,
+          ),
+          catalogLabels: [for (final c in fallbackCatalog) c.label],
+        ),
+        fromAi: true,
+      ),
+    );
+    // « Reparler » complète : les marques de la passe précédente restent.
+    _aiFilled.markFilled({..._aiFilled.state, ...outcome.filledFields});
+  }
 
   /// Vrai quand l'étape courante a tous ses champs obligatoires renseignés.
   ///
@@ -302,6 +356,7 @@ class _PackageRequestCreateScreenState
   void dispose() {
     _canContinueNotifier.dispose();
     unawaited(_draftCubit?.close());
+    unawaited(_aiFilled.close());
     super.dispose();
   }
 
@@ -351,6 +406,7 @@ class _PackageRequestCreateScreenState
               getIt<MobileMoneyAccountBloc>()
                 ..add(const MobileMoneyAccountRequested()),
         ),
+        BlocProvider<AiFilledFieldsCubit>.value(value: _aiFilled),
         if (_draftCubit != null)
           BlocProvider<FormDraftCubit>.value(value: _draftCubit),
       ],
@@ -617,6 +673,31 @@ class _PackageRequestCreateScreenState
                   header: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (_aiAvailability case final availability?)
+                        BlocBuilder<AiFilledFieldsCubit, Set<String>>(
+                          bloc: _aiFilled,
+                          builder: (_, fields) => fields.isNotEmpty
+                              ? Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: DonySpacing.base,
+                                  ),
+                                  child: AiFilledBanner(
+                                    onTalkAgain: () =>
+                                        unawaited(_openAiDraft(context)),
+                                  ),
+                                )
+                              : AiEntryGate(
+                                  availability: availability,
+                                  padding: const EdgeInsets.only(
+                                    bottom: DonySpacing.base,
+                                  ),
+                                  child: AiEntryCard(
+                                    kind: AiFormKind.packageRequest,
+                                    onPressed: () =>
+                                        unawaited(_openAiDraft(context)),
+                                  ),
+                                ),
+                        ),
                       const ContextualTutorialCard(
                         context: TutorialContext.requestPublish,
                       ),

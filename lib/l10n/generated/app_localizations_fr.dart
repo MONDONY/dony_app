@@ -20864,6 +20864,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiFormDraftMissingContent => 'Contenu ?';
 
   @override
+  String get aiFormDraftMissingBudget => 'Budget ?';
+
+  @override
   String get aiFormDraftCorrectPrompt => 'Que voulez-vous corriger ?';
 
   @override

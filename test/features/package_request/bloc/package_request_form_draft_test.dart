@@ -178,7 +178,7 @@ void main() {
       expect(bloc.state.departureCity, 'Paris');
       expect(bloc.state.currentStep, 2);
       expect(bloc.state.draftRevision, 1);
-      expect(FormDraftRestored(_full()).props, [_full()]);
+      expect(FormDraftRestored(_full()).props, [_full(), false]);
       await bloc.close();
     },
   );

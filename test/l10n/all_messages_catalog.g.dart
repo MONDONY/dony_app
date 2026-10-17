@@ -7172,6 +7172,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'aiFormDraftMissingPayment': (l) => l.aiFormDraftMissingPayment,
   'aiFormDraftMissingWeight': (l) => l.aiFormDraftMissingWeight,
   'aiFormDraftMissingContent': (l) => l.aiFormDraftMissingContent,
+  'aiFormDraftMissingBudget': (l) => l.aiFormDraftMissingBudget,
   'aiFormDraftCorrectPrompt': (l) => l.aiFormDraftCorrectPrompt,
   'aiFormDraftQuestionFallback': (l) => l.aiFormDraftQuestionFallback,
   'aiFormDraftReadyTitle': (l) => l.aiFormDraftReadyTitle,

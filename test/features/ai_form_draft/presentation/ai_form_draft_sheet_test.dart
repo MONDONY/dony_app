@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_bloc.dart';
 import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
@@ -270,6 +272,29 @@ void main() {
       ]);
     });
   }
+
+  testWidgets('résumé et puces sans devise dite : devise du formulaire', (
+    tester,
+  ) async {
+    when(() => bloc.defaultCurrency).thenReturn('XOF');
+    withState(
+      const AiFormDraftState(
+        kind: AiFormKind.packageRequest,
+        status: AiFormDraftStatus.ready,
+        turns: 2,
+        draft: {'totalBudget': 30000},
+        understood: ['budget'],
+        resolved: AiResolvedDraft(draft: {'totalBudget': 30000}),
+      ),
+    );
+    await open(tester, kind: AiFormKind.packageRequest);
+    expect(
+      find.text(
+        CurrencyFormatter.format(30000, SupportedCurrency.xof, compact: true),
+      ),
+      findsWidgets,
+    );
+  });
 
   testWidgets('limite de tours : pas de « Corriger »', (tester) async {
     withState(

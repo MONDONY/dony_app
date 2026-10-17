@@ -21756,6 +21756,8 @@
   "@aiFormDraftMissingWeight": {"description": "Puce d'une information requise manquante : poids du colis."},
   "aiFormDraftMissingContent": "Contenu ?",
   "@aiFormDraftMissingContent": {"description": "Puce d'une information requise manquante : contenu du colis."},
+  "aiFormDraftMissingBudget": "Budget ?",
+  "@aiFormDraftMissingBudget": {"description": "Puce d'une information requise manquante : budget de la demande d'envoi."},
   "aiFormDraftCorrectPrompt": "Que voulez-vous corriger ?",
   "@aiFormDraftCorrectPrompt": {"description": "Message de l'IA après « Corriger quelque chose »."},
   "aiFormDraftQuestionFallback": "Pouvez-vous préciser ?",

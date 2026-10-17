@@ -12,11 +12,15 @@ class DraftSummary extends StatelessWidget {
     required this.kind,
     required this.resolved,
     this.turnLimitReached = false,
+    this.fallbackCurrency,
   });
 
   final AiFormKind kind;
   final AiResolvedDraft resolved;
   final bool turnLimitReached;
+
+  /// Devise du formulaire, quand l'IA n'en a pas dit.
+  final String? fallbackCurrency;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +53,12 @@ class DraftSummary extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
-        for (final (label, value) in aiSummaryLines(l, kind, resolved.draft))
+        for (final (label, value) in aiSummaryLines(
+          l,
+          kind,
+          resolved.draft,
+          fallbackCurrency: fallbackCurrency,
+        ))
           Padding(
             padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
             child: Row(

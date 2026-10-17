@@ -80,11 +80,14 @@ class FormReset extends PackageRequestFormEvent {
 
 /// Reprise d'un brouillon local : [draft] remplace la saisie, étape comprise.
 class FormDraftRestored extends PackageRequestFormEvent {
-  const FormDraftRestored(this.draft);
+  const FormDraftRestored(this.draft, {this.fromAi = false});
   final PackageRequestFormState draft;
 
+  /// Brouillon rempli par « Créer avec l'IA » (propriété analytics `from_ai`).
+  final bool fromAi;
+
   @override
-  List<Object?> get props => [draft];
+  List<Object?> get props => [draft, fromAi];
 }
 
 class PackageRequestNegotiableToggled extends PackageRequestFormEvent {
