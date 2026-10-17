@@ -4858,10 +4858,6 @@
   "@listingQuickFiltersTitle": {
     "description": "Titre de section des chips de filtres rapides (search_form_bottom_sheet.dart)"
   },
-  "listingKiloProChip": "Kilo Pro",
-  "@listingKiloProChip": {
-    "description": "Chip de filtre voyageur Kilo Pro (search_form_bottom_sheet.dart)"
-  },
   "listingRatingChip": "Note ≥ 4.5",
   "@listingRatingChip": {
     "description": "Chip de filtre note minimale (search_form_bottom_sheet.dart)"

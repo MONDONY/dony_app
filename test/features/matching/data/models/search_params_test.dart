@@ -12,7 +12,7 @@ void main() {
       expect(params.arrivalCity, 'Dakar');
       expect(params.weightKg, 6);
       expect(params.maxPricePerKg, 25);
-      expect(params.kiloProOnly, isFalse);
+      expect(params.gpProOnly, isFalse);
       expect(params.ratingFilter, isFalse);
       expect(params.weekendFilter, isFalse);
       expect(params.priceFilter, isFalse);
@@ -39,7 +39,7 @@ void main() {
         date: date,
         weightKg: 10,
         maxPricePerKg: 15,
-        kiloProOnly: true,
+        gpProOnly: true,
         ratingFilter: true,
         weekendFilter: true,
         priceFilter: true,
@@ -54,7 +54,7 @@ void main() {
       expect(params.date, date);
       expect(params.weightKg, 10);
       expect(params.maxPricePerKg, 15);
-      expect(params.kiloProOnly, isTrue);
+      expect(params.gpProOnly, isTrue);
       expect(params.ratingFilter, isTrue);
       expect(params.weekendFilter, isTrue);
       expect(params.priceFilter, isTrue);

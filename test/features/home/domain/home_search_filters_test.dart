@@ -57,6 +57,7 @@ void main() {
         weightMin: 5,
         weightMax: 20,
         matchingMyTrips: true,
+        gpProOnly: true,
       );
       expect(f.activeKeys, {
         'departure',
@@ -64,6 +65,7 @@ void main() {
         'price',
         'weight',
         'matching_my_trips',
+        'gp_pro',
       });
     });
 
@@ -122,7 +124,7 @@ void main() {
 
     test('les filtres spécifiques ne comptent que dans leur mode', () {
       const f = HomeSearchFilters(
-        kiloProOnly: true, // trajets
+        gpProOnly: true, // trajets
         minRating: 4.5, // trajets
         parcelSize: ParcelSize.medium, // colis
       );
@@ -136,7 +138,7 @@ void main() {
         '`search_submitted`)', () {
       const f = HomeSearchFilters(
         departureCity: 'Paris', // commun
-        kiloProOnly: true, // trajets
+        gpProOnly: true, // trajets
         minRating: 4.5, // trajets
         parcelSize: ParcelSize.medium, // colis
       );
@@ -217,7 +219,7 @@ void main() {
         maxPricePerKg: 15,
         weightMin: 6,
         weightMax: 20,
-        kiloProOnly: true,
+        gpProOnly: true,
         minRating: 4.5,
         weekendOnly: true,
         kycVerifiedOnly: true,
@@ -237,7 +239,7 @@ void main() {
       expect(q.maxPricePerKg, 15); // maxPricePerKg
       expect(q.minAvailableKg, 6); // weightMin
       expect(q.maxAvailableKg, 20); // weightMax
-      expect(q.kiloProOnly, true); // kiloProOnly
+      expect(q.gpProOnly, true); // gpProOnly
       expect(q.minRating, 4.5); // minRating
       expect(q.weekendOnly, true); // weekendOnly
       expect(q.kycVerifiedOnly, true); // kycVerifiedOnly
@@ -249,7 +251,7 @@ void main() {
       const f = HomeSearchFilters();
 
       final q = f.toAnnouncementQuery();
-      expect(q.kiloProOnly, isNull);
+      expect(q.gpProOnly, isNull);
       expect(q.weekendOnly, isNull);
       expect(q.kycVerifiedOnly, isNull);
       expect(q.urgent, isNull);

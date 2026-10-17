@@ -110,7 +110,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   late final ValueNotifier<DateTime?> _dateNotifier;
   late final ValueNotifier<double> _weightKgNotifier;
   late final ValueNotifier<double> _maxPricePerKgNotifier;
-  late final ValueNotifier<bool> _kiloProOnlyNotifier;
+  late final ValueNotifier<bool> _gpProOnlyNotifier;
   late final ValueNotifier<bool> _ratingFilterNotifier;
   late final ValueNotifier<bool> _weekendFilterNotifier;
   late final ValueNotifier<bool> _priceFilterNotifier;
@@ -129,7 +129,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     _dateNotifier = ValueNotifier<DateTime?>(p?.date);
     _weightKgNotifier = ValueNotifier<double>(p?.weightKg ?? 6);
     _maxPricePerKgNotifier = ValueNotifier<double>(p?.maxPricePerKg ?? 25);
-    _kiloProOnlyNotifier = ValueNotifier<bool>(p?.kiloProOnly ?? false);
+    _gpProOnlyNotifier = ValueNotifier<bool>(p?.gpProOnly ?? false);
     _ratingFilterNotifier = ValueNotifier<bool>(p?.ratingFilter ?? false);
     _weekendFilterNotifier = ValueNotifier<bool>(p?.weekendFilter ?? false);
     _priceFilterNotifier = ValueNotifier<bool>(p?.priceFilter ?? false);
@@ -152,7 +152,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     _dateNotifier,
     _weightKgNotifier,
     _maxPricePerKgNotifier,
-    _kiloProOnlyNotifier,
+    _gpProOnlyNotifier,
     _ratingFilterNotifier,
     _weekendFilterNotifier,
     _priceFilterNotifier,
@@ -176,7 +176,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     _dateNotifier.dispose();
     _weightKgNotifier.dispose();
     _maxPricePerKgNotifier.dispose();
-    _kiloProOnlyNotifier.dispose();
+    _gpProOnlyNotifier.dispose();
     _ratingFilterNotifier.dispose();
     _weekendFilterNotifier.dispose();
     _priceFilterNotifier.dispose();
@@ -195,7 +195,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
         date: _dateNotifier.value,
         weightKg: _weightKgNotifier.value,
         maxPricePerKg: _maxPricePerKgNotifier.value,
-        kiloProOnly: _kiloProOnlyNotifier.value,
+        gpProOnly: _gpProOnlyNotifier.value,
         ratingFilter: _ratingFilterNotifier.value,
         weekendFilter: _weekendFilterNotifier.value,
         priceFilter: _priceFilterNotifier.value,
@@ -219,7 +219,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     _dateNotifier.value = null;
     _weightKgNotifier.value = 6;
     _maxPricePerKgNotifier.value = 25;
-    _kiloProOnlyNotifier.value = false;
+    _gpProOnlyNotifier.value = false;
     _ratingFilterNotifier.value = false;
     _weekendFilterNotifier.value = false;
     _priceFilterNotifier.value = false;
@@ -234,7 +234,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     if (_dateNotifier.value != null) count++;
     if (_weightKgNotifier.value != 6) count++;
     if (_priceFilterNotifier.value) count++;
-    if (_kiloProOnlyNotifier.value) count++;
+    if (_gpProOnlyNotifier.value) count++;
     if (_ratingFilterNotifier.value) count++;
     if (_weekendFilterNotifier.value) count++;
     if (_transportModeNotifier.value != null) count++;
@@ -256,7 +256,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
         _dateNotifier,
         _weightKgNotifier,
         _maxPricePerKgNotifier,
-        _kiloProOnlyNotifier,
+        _gpProOnlyNotifier,
         _ratingFilterNotifier,
         _weekendFilterNotifier,
         _priceFilterNotifier,
@@ -359,10 +359,10 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               runSpacing: DonySpacing.sm,
               children: [
                 QuickChip(
-                  label: l.listingKiloProChip,
+                  label: l.gpProBadgeLabel,
                   iconAsset: 'award',
-                  active: _kiloProOnlyNotifier.value,
-                  onChanged: (v) => _kiloProOnlyNotifier.value = v,
+                  active: _gpProOnlyNotifier.value,
+                  onChanged: (v) => _gpProOnlyNotifier.value = v,
                 ),
                 QuickChip(
                   label: l.listingRatingChip,

@@ -171,7 +171,6 @@ const _sameInBothLanguages = <String>{
   'requestCreateRecapTransport', // « Transport » se dit pareil
   'listingProBadge', // « PRO » se dit pareil
   'listingRowLabelNote', // « Note » se dit pareil
-  'listingKiloProChip', // nom de fonctionnalité, identique en anglais
   'listingRowLabelDate', // « Date » se dit pareil
   'bidCreateMobileMoneySubtitle', // « Orange Money, Wave, MTN » : noms de marque
   'suiviRecentScanStepByQr', // gabarit identique, « QR » se dit pareil

@@ -101,7 +101,7 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   final double? minAvailableKg;
   final double? maxAvailableKg;
   final double? maxPricePerKg;
-  final bool? kiloProOnly;
+  final bool? gpProOnly;
   final double? minRating;
   final bool? weekendOnly;
   final TransportMode? transportMode;
@@ -132,7 +132,7 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.minAvailableKg,
     this.maxAvailableKg,
     this.maxPricePerKg,
-    this.kiloProOnly,
+    this.gpProOnly,
     this.minRating,
     this.weekendOnly,
     this.transportMode,

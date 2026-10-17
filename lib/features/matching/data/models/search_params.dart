@@ -7,7 +7,7 @@ class SearchParams {
   final DateTime? date;
   final double weightKg;
   final double maxPricePerKg;
-  final bool kiloProOnly;
+  final bool gpProOnly;
   final bool ratingFilter;
   final bool weekendFilter;
   final bool priceFilter;
@@ -22,7 +22,7 @@ class SearchParams {
     this.date,
     this.weightKg = 6,
     this.maxPricePerKg = 25,
-    this.kiloProOnly = false,
+    this.gpProOnly = false,
     this.ratingFilter = false,
     this.weekendFilter = false,
     this.priceFilter = false,

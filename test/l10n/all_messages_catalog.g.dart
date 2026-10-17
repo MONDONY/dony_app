@@ -1890,7 +1890,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'listingResetFiltersButton': (l) => l.listingResetFiltersButton,
   'listingSearchButton': (l) => l.listingSearchButton(intPlaceholderValue),
   'listingQuickFiltersTitle': (l) => l.listingQuickFiltersTitle,
-  'listingKiloProChip': (l) => l.listingKiloProChip,
   'listingRatingChip': (l) => l.listingRatingChip,
   'listingWeekendChip': (l) => l.listingWeekendChip,
   'listingContentContainsTitle': (l) => l.listingContentContainsTitle,

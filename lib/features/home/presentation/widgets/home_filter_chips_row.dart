@@ -38,7 +38,7 @@ class HomeFilterChipsRow extends StatelessWidget {
     required this.onCapacityClear,
     required this.onPriceTap,
     required this.onPriceClear,
-    required this.onKiloProToggle,
+    required this.onGpProToggle,
     required this.onMaxWeightTap,
     required this.onMaxWeightClear,
     required this.onParcelSizeTap,
@@ -63,7 +63,7 @@ class HomeFilterChipsRow extends StatelessWidget {
   final VoidCallback onCapacityClear;
   final VoidCallback onPriceTap;
   final VoidCallback onPriceClear;
-  final VoidCallback onKiloProToggle;
+  final VoidCallback onGpProToggle;
 
   // Colis
   final VoidCallback onMaxWeightTap;
@@ -186,9 +186,9 @@ class HomeFilterChipsRow extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
-              label: 'Kilo Pro', // i18n-ignore
-              isActive: filters.kiloProOnly,
-              onTap: onKiloProToggle,
+              label: l.gpProBadgeLabel,
+              isActive: filters.gpProOnly,
+              onTap: onGpProToggle,
             ),
           ] else ...[
             // Raccourci le plus utile du mode Colis : il vient donc en premier,

@@ -122,7 +122,7 @@ void main() {
             'maxWeight': 15,
             'maxPricePerKg': 8.5,
             'urgent': true,
-            'kiloProOnly': true,
+            'gpProOnly': true,
             'kycVerifiedOnly': true,
             'minRating': 4.5,
             'weekendOnly': true,
@@ -161,7 +161,7 @@ void main() {
         expect(applied.urgentOnly, isTrue);
 
         // C3 : les 6 champs jusque-là jamais mappés.
-        expect(applied.kiloProOnly, isTrue);
+        expect(applied.gpProOnly, isTrue);
         expect(applied.kycVerifiedOnly, isTrue);
         expect(applied.minRating, 4.5);
         expect(applied.weekendOnly, isTrue);
@@ -203,6 +203,31 @@ void main() {
 
       expect(applied.maxWeight, 12);
       expect(applied.weightMax, isNull);
+    });
+
+    group('filtre GP Pro', () {
+      HomeSearchFilters apply(Map<String, dynamic> filters) =>
+          SearchParseResult.fromJson({
+            'filters': filters,
+            'recognized': [],
+            'unresolved': [],
+            'ignored': [],
+          }).applyTo(const HomeSearchFilters());
+
+      test('gpProOnly: true active le filtre', () {
+        expect(apply({'gpProOnly': true}).gpProOnly, isTrue);
+      });
+
+      test('ancien back : kiloProOnly seul active le filtre', () {
+        expect(apply({'kiloProOnly': true}).gpProOnly, isTrue);
+      });
+
+      test('gpProOnly: false prime sur kiloProOnly: true', () {
+        expect(
+          apply({'gpProOnly': false, 'kiloProOnly': true}).gpProOnly,
+          isFalse,
+        );
+      });
     });
   });
 }

@@ -1559,7 +1559,6 @@
   "listingResetFiltersButton": "Reset",
   "listingSearchButton": "{count, plural, =0{Search} =1{Search · {count} filter} other{Search · {count} filters}}",
   "listingQuickFiltersTitle": "QUICK FILTERS",
-  "listingKiloProChip": "Kilo Pro",
   "listingRatingChip": "Rating ≥ 4.5",
   "listingWeekendChip": "Weekend",
   "listingContentContainsTitle": "MY PARCEL CONTAINS",

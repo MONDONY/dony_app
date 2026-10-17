@@ -1732,12 +1732,12 @@ void main() {
 
     testWidgets('les chips spécifiques changent avec le mode', (tester) async {
       await pumpHome(tester);
-      expect(find.text('Kilo Pro'), findsOneWidget);
+      expect(find.text('GP Pro'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Kilo Pro'), findsNothing);
+      expect(find.text('GP Pro'), findsNothing);
       expect(find.text('Taille'), findsOneWidget);
     });
 
@@ -1774,7 +1774,7 @@ void main() {
             minAvailableKg: any(named: 'minAvailableKg'),
             maxAvailableKg: any(named: 'maxAvailableKg'),
             maxPricePerKg: any(named: 'maxPricePerKg'),
-            kiloProOnly: any(named: 'kiloProOnly'),
+            gpProOnly: any(named: 'gpProOnly'),
             minRating: any(named: 'minRating'),
             weekendOnly: any(named: 'weekendOnly'),
             transportMode: any(named: 'transportMode'),
@@ -2517,7 +2517,7 @@ void main() {
           minAvailableKg: any(named: 'minAvailableKg'),
           maxAvailableKg: any(named: 'maxAvailableKg'),
           maxPricePerKg: any(named: 'maxPricePerKg'),
-          kiloProOnly: any(named: 'kiloProOnly'),
+          gpProOnly: any(named: 'gpProOnly'),
           minRating: any(named: 'minRating'),
           weekendOnly: any(named: 'weekendOnly'),
           transportMode: any(named: 'transportMode'),
@@ -2553,7 +2553,7 @@ void main() {
             minAvailableKg: any(named: 'minAvailableKg'),
             maxAvailableKg: any(named: 'maxAvailableKg'),
             maxPricePerKg: any(named: 'maxPricePerKg'),
-            kiloProOnly: any(named: 'kiloProOnly'),
+            gpProOnly: any(named: 'gpProOnly'),
             minRating: any(named: 'minRating'),
             weekendOnly: any(named: 'weekendOnly'),
             transportMode: any(named: 'transportMode'),
@@ -2632,7 +2632,7 @@ void main() {
             minAvailableKg: any(named: 'minAvailableKg'),
             maxAvailableKg: any(named: 'maxAvailableKg'),
             maxPricePerKg: any(named: 'maxPricePerKg'),
-            kiloProOnly: any(named: 'kiloProOnly'),
+            gpProOnly: any(named: 'gpProOnly'),
             minRating: any(named: 'minRating'),
             weekendOnly: any(named: 'weekendOnly'),
             transportMode: any(named: 'transportMode'),

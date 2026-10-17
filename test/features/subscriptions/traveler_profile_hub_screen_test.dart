@@ -458,9 +458,9 @@ void main() {
     },
   );
 
-  // ─── Test 11: PRO + KiloPro badges in header ─────────────────────────────
+  // ─── Test 11: PRO + GP Pro badges in header ─────────────────────────────
 
-  testWidgets('profil PRO + KiloPro → badges PRO et GP Pro dans le header', (
+  testWidgets('profil PRO + GP Pro → badges PRO et GP Pro dans le header', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(400, 900));

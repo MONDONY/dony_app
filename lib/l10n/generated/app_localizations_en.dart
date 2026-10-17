@@ -5477,9 +5477,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingQuickFiltersTitle => 'QUICK FILTERS';
 
   @override
-  String get listingKiloProChip => 'Kilo Pro';
-
-  @override
   String get listingRatingChip => 'Rating ≥ 4.5';
 
   @override

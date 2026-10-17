@@ -338,10 +338,10 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         runSpacing: DonySpacing.sm,
         children: [
           QuickChip(
-            label: 'Kilo Pro', // i18n-ignore
+            label: l.gpProBadgeLabel,
             iconAsset: 'award',
-            active: f.kiloProOnly,
-            onChanged: (v) => _update(f.copyWith(kiloProOnly: v)),
+            active: f.gpProOnly,
+            onChanged: (v) => _update(f.copyWith(gpProOnly: v)),
           ),
           QuickChip(
             label: l.homeComposerMinRating,

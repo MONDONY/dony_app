@@ -247,7 +247,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       minAvailableKg: event.minAvailableKg,
       maxAvailableKg: event.maxAvailableKg,
       maxPricePerKg: event.maxPricePerKg,
-      kiloProOnly: event.kiloProOnly,
+      gpProOnly: event.gpProOnly,
       minRating: event.minRating,
       weekendOnly: event.weekendOnly,
       transportMode: event.transportMode,

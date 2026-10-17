@@ -9093,12 +9093,6 @@ abstract class AppLocalizations {
   /// **'FILTRES RAPIDES'**
   String get listingQuickFiltersTitle;
 
-  /// Chip de filtre voyageur Kilo Pro (search_form_bottom_sheet.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Kilo Pro'**
-  String get listingKiloProChip;
-
   /// Chip de filtre note minimale (search_form_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:

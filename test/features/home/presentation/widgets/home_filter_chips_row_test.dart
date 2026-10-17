@@ -18,6 +18,7 @@ Widget _wrap({
   int? activeTrips = 2,
   VoidCallback? onMatchingMyTripsToggle,
   VoidCallback? onMatchingMyTripsBlocked,
+  VoidCallback? onGpProToggle,
 }) => MaterialApp(
   home: Scaffold(
     body: HomeFilterChipsRow(
@@ -33,7 +34,7 @@ Widget _wrap({
       onCapacityClear: () {},
       onPriceTap: () {},
       onPriceClear: () {},
-      onKiloProToggle: () {},
+      onGpProToggle: onGpProToggle ?? () {},
       onMaxWeightTap: () {},
       onMaxWeightClear: () {},
       onParcelSizeTap: () {},
@@ -52,6 +53,7 @@ void main() {
 
   group('pastille « Pour mes trajets »', _matchingMyTripsChipTests);
   group('traductions', _translationTests);
+  group('puce GP Pro', _gpProChipTests);
   group('date personnalisée', _customDateChipTests);
 }
 
@@ -108,7 +110,7 @@ void _translationTests() {
     expect(find.text('Kilos'), findsOneWidget);
     expect(find.text('Prix'), findsOneWidget);
     expect(find.text('🔥 Urgent'), findsOneWidget);
-    expect(find.text('Kilo Pro'), findsOneWidget);
+    expect(find.text('GP Pro'), findsOneWidget);
   });
 
   testWidgets('en anglais : aucune date posée, la puce dit « Any date »', (
@@ -236,5 +238,18 @@ void _matchingMyTripsChipTests() {
       find.byKey(const Key('chip-row-matching-my-trips')),
     );
     expect(chip.isActive, isTrue);
+  });
+}
+
+void _gpProChipTests() {
+  testWidgets('la puce « GP Pro » bascule le filtre au tap', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      _wrap(mode: SearchMode.trips, onGpProToggle: () => taps++),
+    );
+
+    await tester.tap(find.text('GP Pro'));
+
+    expect(taps, 1);
   });
 }
