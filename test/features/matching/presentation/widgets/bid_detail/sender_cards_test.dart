@@ -55,7 +55,7 @@ BidModel _bid({
   double? travelerAverageRating,
   int? travelerTotalTrips,
   bool travelerKycVerified = false,
-  bool travelerKiloPro = false,
+  bool travelerGpPro = false,
   double? weightKg,
   String? contentCategory,
   String? description,
@@ -86,7 +86,7 @@ BidModel _bid({
   travelerAverageRating: travelerAverageRating,
   travelerTotalTrips: travelerTotalTrips,
   travelerKycVerified: travelerKycVerified,
-  travelerKiloPro: travelerKiloPro,
+  travelerGpPro: travelerGpPro,
   weightKg: weightKg,
   contentCategory: contentCategory,
   description: description,
@@ -905,10 +905,8 @@ void main() {
       expect(find.text('Identité'), findsOneWidget);
     });
 
-    testWidgets('travelerKiloPro=true → badge Kilo Pro visible', (
-      tester,
-    ) async {
-      final bid = _bid(travelerKiloPro: true, travelerName: 'Oumar');
+    testWidgets('travelerGpPro=true → badge Kilo Pro visible', (tester) async {
+      final bid = _bid(travelerGpPro: true, travelerName: 'Oumar');
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 

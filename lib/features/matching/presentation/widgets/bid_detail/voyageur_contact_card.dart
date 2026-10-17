@@ -148,7 +148,7 @@ class VoyageurContactCard extends StatelessWidget {
                               color: cs.primary,
                               bg: cs.primaryContainer,
                             ),
-                          if (bid.travelerKiloPro)
+                          if (bid.travelerGpPro)
                             MiniChip(
                               label: l.listingKiloProChip,
                               color: DonyColors.amberDark,

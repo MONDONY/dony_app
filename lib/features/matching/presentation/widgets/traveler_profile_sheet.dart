@@ -371,7 +371,7 @@ class _ProfileHeader extends StatelessWidget {
                         label: context.l10n.profileSheetProBadge,
                         iconColor: cs.warning,
                       ),
-                    if (traveler.kiloPro)
+                    if (traveler.gpPro)
                       _ProfileBadge(
                         iconAsset: 'package',
                         label: context.l10n.listingKiloProChip,

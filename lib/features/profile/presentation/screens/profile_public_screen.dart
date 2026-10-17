@@ -513,9 +513,7 @@ class _ProfileHero extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          if (profile.kycVerified ||
-              profile.isProAccount ||
-              profile.isKiloPro) ...[
+          if (profile.kycVerified || profile.isProAccount || profile.gpPro) ...[
             const SizedBox(height: DonySpacing.xs),
             Wrap(
               alignment: WrapAlignment.center,
@@ -527,7 +525,7 @@ class _ProfileHero extends StatelessWidget {
                 if (profile.isProAccount)
                   _HeroPill(label: l.profilePublicProBadge),
                 // Nom propre affiché tel quel dans les deux langues.
-                if (profile.isKiloPro)
+                if (profile.gpPro)
                   const _HeroPill(label: 'Kilo Pro'), // i18n-ignore
               ],
             ),

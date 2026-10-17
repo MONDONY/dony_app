@@ -23,7 +23,7 @@ AnnouncementModel _makeAnn({
   String arrivalCity = 'Dakar',
   String? departureFlag,
   String? arrivalFlag,
-  bool kiloPro = false,
+  bool gpPro = false,
   bool isProAccount = false,
   bool kycVerified = false,
   DateTime? departureDate,
@@ -61,7 +61,7 @@ AnnouncementModel _makeAnn({
     displayName: 'Mamadou Diallo',
     averageRating: 4.8,
     totalTrips: 5,
-    kiloPro: kiloPro,
+    gpPro: gpPro,
     isProAccount: isProAccount,
     kycVerified: kycVerified,
   ),
@@ -275,11 +275,11 @@ void main() {
       },
     );
 
-    testWidgets('shows KYC badge when kiloPro is true', (tester) async {
+    testWidgets('shows KYC badge when gpPro is true', (tester) async {
       await tester.pumpWidget(
         _wrap(
           TravelerCard(
-            announcement: _makeAnn(kiloPro: true),
+            announcement: _makeAnn(gpPro: true),
             index: 0,
             isOwnAnnouncement: false,
             onTap: () {},

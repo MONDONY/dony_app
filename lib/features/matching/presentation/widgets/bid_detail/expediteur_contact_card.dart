@@ -141,7 +141,7 @@ class ExpediteurContactCard extends StatelessWidget {
                               color: cs.primary,
                               bg: cs.primaryContainer,
                             ),
-                          if (bid.senderKiloPro)
+                          if (bid.senderGpPro)
                             MiniChip(
                               label: l.listingKiloProChip,
                               color: DonyColors.amberDark,

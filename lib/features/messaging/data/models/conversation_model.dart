@@ -18,6 +18,9 @@ class ParticipantModel {
 
   final bool kycVerified;
 
+  /// L'interlocuteur détient le badge GP Pro (yadony-back #560).
+  final bool gpPro;
+
   const ParticipantModel({
     required this.id,
     required this.name,
@@ -25,6 +28,7 @@ class ParticipantModel {
     this.phoneAvailable = false,
     this.role,
     this.kycVerified = false,
+    this.gpPro = false,
   });
 
   factory ParticipantModel.fromJson(Map<String, dynamic> json) =>
@@ -35,6 +39,7 @@ class ParticipantModel {
         phoneAvailable: json['phoneAvailable'] as bool? ?? false,
         role: json['role'] as String?,
         kycVerified: json['kycVerified'] as bool? ?? false,
+        gpPro: json['gpPro'] as bool? ?? false,
       );
 
   /// L'interlocuteur est le destinataire du colis : le back sert

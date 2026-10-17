@@ -63,7 +63,7 @@ ProfilePublicModel _profile({String displayName = 'Awa Diop'}) =>
       displayName: displayName,
       kycVerified: true,
       isProAccount: false,
-      isKiloPro: false,
+      gpPro: false,
       completedBidsCount: 4,
       averageRating: 4.6,
       ratingCount: 12,

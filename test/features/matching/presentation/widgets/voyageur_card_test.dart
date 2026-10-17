@@ -20,7 +20,7 @@ BidModel _bid({
   String? travelerName,
   int? travelerTotalTrips,
   bool travelerKycVerified = false,
-  bool travelerKiloPro = false,
+  bool travelerGpPro = false,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -30,7 +30,7 @@ BidModel _bid({
   travelerName: travelerName,
   travelerTotalTrips: travelerTotalTrips,
   travelerKycVerified: travelerKycVerified,
-  travelerKiloPro: travelerKiloPro,
+  travelerGpPro: travelerGpPro,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -75,7 +75,7 @@ void main() {
       _bid(
         travelerName: 'Moussa D.',
         travelerKycVerified: true,
-        travelerKiloPro: true,
+        travelerGpPro: true,
       ),
     );
 

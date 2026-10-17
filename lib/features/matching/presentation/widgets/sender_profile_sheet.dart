@@ -190,7 +190,7 @@ class _SenderProfileSheet extends StatelessWidget {
                           ),
                         ),
                       if (bid.senderIsProAccount ||
-                          bid.senderKiloPro ||
+                          bid.senderGpPro ||
                           bid.senderKycVerified) ...[
                         const SizedBox(height: DonySpacing.sm),
                         Wrap(
@@ -206,7 +206,7 @@ class _SenderProfileSheet extends StatelessWidget {
                                 bgColor: cs.warningLight,
                                 textColor: cs.warning,
                               ),
-                            if (bid.senderKiloPro)
+                            if (bid.senderGpPro)
                               _SheetBadge(
                                 iconAsset: 'star',
                                 label: context.l10n.listingKiloProChip,

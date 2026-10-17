@@ -11,7 +11,7 @@ BidModel _bid({
   String? senderName,
   int? senderTotalShipments,
   bool senderKycVerified = false,
-  bool senderKiloPro = false,
+  bool senderGpPro = false,
   int? senderIncidentCount,
 }) => BidModel(
   id: 'b1',
@@ -21,7 +21,7 @@ BidModel _bid({
   senderName: senderName,
   senderTotalShipments: senderTotalShipments,
   senderKycVerified: senderKycVerified,
-  senderKiloPro: senderKiloPro,
+  senderGpPro: senderGpPro,
   senderIncidentCount: senderIncidentCount,
   createdAt: DateTime(2026, 10, 6),
   updatedAt: DateTime(2026, 10, 6),
@@ -65,11 +65,7 @@ void main() {
   ) async {
     await _pump(
       tester,
-      _bid(
-        senderName: 'Aïcha D.',
-        senderKycVerified: true,
-        senderKiloPro: true,
-      ),
+      _bid(senderName: 'Aïcha D.', senderKycVerified: true, senderGpPro: true),
     );
 
     expect(find.text('Identité'), findsOneWidget);

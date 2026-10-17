@@ -9,7 +9,7 @@ void main() {
         'displayName': 'A',
         'kycVerified': true,
         'isProAccount': false,
-        'isKiloPro': false,
+        'gpPro': false,
         'completedBidsCount': 0,
         'averageRating': 0.0,
         'ratingCount': 0,

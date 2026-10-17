@@ -131,7 +131,7 @@ class TravelerCard extends StatelessWidget {
     final traveler = announcement.traveler;
     final rating = traveler?.averageRating;
     final totalTrips = traveler?.totalTrips;
-    final isKiloPro = traveler?.kiloPro ?? false;
+    final isGpPro = traveler?.gpPro ?? false;
     final isProAccount = traveler?.isProAccount ?? false;
     final dateStr = DateFormat.MMMEd(
       l.localeName,
@@ -360,7 +360,7 @@ class TravelerCard extends StatelessWidget {
                   // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
                   // ils disposent de toute la largeur de la carte et s'alignent de
                   // façon identique dans les deux vues.
-                  if (isKiloPro ||
+                  if (isGpPro ||
                       isProAccount ||
                       announcement.isUrgent ||
                       announcement.stops != null) ...[
@@ -370,7 +370,7 @@ class TravelerCard extends StatelessWidget {
                       spacing: DonySpacing.xxs,
                       runSpacing: DonySpacing.xxs,
                       children: [
-                        if (isKiloPro) const _KycBadge(),
+                        if (isGpPro) const _KycBadge(),
                         if (isProAccount) const _ProBadge(),
                         if (announcement.isUrgent) const DonyUrgentBadge(),
                         // Escales (FLUTTER-GE) : rien si non renseignées.

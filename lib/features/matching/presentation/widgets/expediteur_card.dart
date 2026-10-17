@@ -81,7 +81,7 @@ class ExpediteurCard extends StatelessWidget {
                               bg: cs.primaryContainer,
                             ),
                           ],
-                          if (bid.senderKiloPro) ...[
+                          if (bid.senderGpPro) ...[
                             const SizedBox(width: DonySpacing.xs),
                             MiniChip(
                               label: l.listingKiloProChip,

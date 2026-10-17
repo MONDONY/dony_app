@@ -60,7 +60,7 @@ class TravelerProfile {
   final String? phoneNumber;
   final double? averageRating;
   final int? totalTrips;
-  final bool kiloPro;
+  final bool gpPro;
   final bool isProAccount;
   final bool kycVerified;
 
@@ -78,7 +78,7 @@ class TravelerProfile {
     this.phoneNumber,
     this.averageRating,
     this.totalTrips,
-    this.kiloPro = false,
+    this.gpPro = false,
     this.isProAccount = false,
     this.kycVerified = false,
     this.avatarUrl,

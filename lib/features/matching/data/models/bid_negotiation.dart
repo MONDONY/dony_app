@@ -183,6 +183,9 @@ class BidNegotiation {
   /// reste en brut comme avant.
   final double? commissionRate;
 
+  /// L'autre partie détient le badge GP Pro (yadony-back #560).
+  final bool counterpartyGpPro;
+
   const BidNegotiation({
     required this.bidId,
     required this.announcementId,
@@ -214,6 +217,7 @@ class BidNegotiation {
     this.archived = false,
     this.commissionDueBy,
     this.commissionRate,
+    this.counterpartyGpPro = false,
   });
 
   factory BidNegotiation.fromJson(Map<String, dynamic> json) => BidNegotiation(
@@ -257,6 +261,7 @@ class BidNegotiation {
     archived: json['archived'] as bool? ?? false,
     commissionDueBy: _asDate(json['commissionDueBy']),
     commissionRate: _asDouble(json['commissionRate']),
+    counterpartyGpPro: json['counterpartyGpPro'] as bool? ?? false,
   );
 
   /// Le voyageur contre-propose en net : il connaît le taux du fil.

@@ -17,7 +17,7 @@ const _profile = ProfilePublicModel(
   avatarUrl: 'https://cdn.example/a.jpg',
   kycVerified: true,
   isProAccount: false,
-  isKiloPro: false,
+  gpPro: false,
   completedBidsCount: 3,
   averageRating: 4.5,
   ratingCount: 8,

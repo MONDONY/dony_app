@@ -225,6 +225,7 @@ class SenderPublicProfile extends Equatable {
     required this.kycVerified,
     this.avatarUrl,
     this.incidentCount = 0,
+    this.gpPro = false,
   });
 
   final String id;
@@ -244,6 +245,9 @@ class SenderPublicProfile extends Equatable {
   /// confirmées (FLUTTER-E0/E6). `0` sur un back antérieur.
   final int incidentCount;
 
+  /// Badge GP Pro de l'expéditeur (yadony-back #560). `false` sur un back antérieur.
+  final bool gpPro;
+
   factory SenderPublicProfile.fromJson(Map<String, dynamic> json) =>
       SenderPublicProfile(
         id: json['id'] as String,
@@ -253,6 +257,7 @@ class SenderPublicProfile extends Equatable {
         kycVerified: json['kycVerified'] as bool,
         avatarUrl: json['avatarUrl'] as String?,
         incidentCount: (json['incidentCount'] as num?)?.toInt() ?? 0,
+        gpPro: json['gpPro'] as bool? ?? false,
       );
 
   factory SenderPublicProfile.guest(String? displayName) => SenderPublicProfile(
@@ -272,5 +277,6 @@ class SenderPublicProfile extends Equatable {
     kycVerified,
     avatarUrl,
     incidentCount,
+    gpPro,
   ];
 }

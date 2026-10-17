@@ -26,7 +26,7 @@ final _fullJson = {
     'phoneNumber': '+33612345678',
     'averageRating': 4.8,
     'totalTrips': 15,
-    'kiloPro': true,
+    'gpPro': true,
   },
   'createdAt': '2024-05-01T00:00:00.000Z',
   'updatedAt': '2024-05-20T00:00:00.000Z',
@@ -103,7 +103,7 @@ void main() {
       expect(model.bidsCount, 3);
       expect(model.traveler, isNotNull);
       expect(model.traveler!.displayName, 'Ibrahima Ba');
-      expect(model.traveler!.kiloPro, isTrue);
+      expect(model.traveler!.gpPro, isTrue);
     });
 
     test('handles minimal JSON with optionals null', () {
@@ -155,22 +155,22 @@ void main() {
         'phoneNumber': '+221770000000',
         'averageRating': 4.5,
         'totalTrips': 8,
-        'kiloPro': false,
+        'gpPro': false,
       };
       final p = TravelerProfile.fromJson(json);
       expect(p.id, 'tp-99');
       expect(p.averageRating, 4.5);
       expect(p.totalTrips, 8);
-      expect(p.kiloPro, isFalse);
+      expect(p.gpPro, isFalse);
     });
 
     test('toJson round-trips correctly', () {
-      final json = {'id': 'tp-1', 'displayName': 'Test User', 'kiloPro': true};
+      final json = {'id': 'tp-1', 'displayName': 'Test User', 'gpPro': true};
       final p = TravelerProfile.fromJson(json);
       final out = p.toJson();
       expect(out['id'], 'tp-1');
       expect(out['displayName'], 'Test User');
-      expect(out['kiloPro'], isTrue);
+      expect(out['gpPro'], isTrue);
     });
   });
 
