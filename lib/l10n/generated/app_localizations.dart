@@ -30561,6 +30561,12 @@ abstract class AppLocalizations {
   /// **'Identité du voyageur vérifiée'**
   String get tripPosterCaptionVerified;
 
+  /// Ligne de la légende de l'affiche quand le voyageur a le badge GP Pro
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur GP Pro, régulier reconnu par Yadony'**
+  String get tripPosterCaptionGpPro;
+
   /// Pastille de l'en-tête de l'affiche de demande d'envoi
   ///
   /// In fr, this message translates to:

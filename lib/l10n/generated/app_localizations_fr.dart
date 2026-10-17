@@ -18826,6 +18826,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPosterCaptionVerified => 'Identité du voyageur vérifiée';
 
   @override
+  String get tripPosterCaptionGpPro =>
+      'Voyageur GP Pro, régulier reconnu par Yadony';
+
+  @override
   String get requestPosterBadge => 'Cherche un voyageur';
 
   @override

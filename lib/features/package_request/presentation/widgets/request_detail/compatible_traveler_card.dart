@@ -76,6 +76,13 @@ class CompatibleTravelerCard extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            if (trip.traveler?.gpPro ?? false) ...[
+                              const SizedBox(width: 4),
+                              const GpProBadge(
+                                size: GpProBadgeSize.compact,
+                                surface: 'compatible_traveler',
+                              ),
+                            ],
                             if (trip.traveler?.averageRating != null) ...[
                               const SizedBox(width: 4),
                               DonyIcon('star', size: 13, color: cs.warning),

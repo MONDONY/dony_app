@@ -90,6 +90,7 @@ BidNegotiation _thread({
   BidPaymentMethod? paymentMethod,
   int round = 1,
   String? counterpartyId,
+  bool counterpartyGpPro = false,
   DateTime? commissionDueBy,
   double? commissionRate,
   List<BidNegotiationMessage> messages = const [
@@ -130,6 +131,7 @@ BidNegotiation _thread({
   photoUrls: const ['https://example.test/photo-1.jpg'],
   counterpartyName: 'Mamadou Diallo',
   counterpartyId: counterpartyId,
+  counterpartyGpPro: counterpartyGpPro,
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   messages: messages,
@@ -464,6 +466,25 @@ void main() {
 
     expect(find.byKey(const Key('profile-public-route')), findsOneWidget);
     expect(find.text('user-42'), findsOneWidget);
+  });
+
+  testWidgets('badge GP Pro de la contrepartie dans la carte du trajet', (
+    tester,
+  ) async {
+    await pumpScreen(
+      tester,
+      BidNegotiationLoaded(_thread(netEur: 37, counterpartyGpPro: true)),
+    );
+
+    expect(find.byType(GpProBadge), findsOneWidget);
+  });
+
+  testWidgets('pas de badge GP Pro quand la contrepartie ne l\'est pas', (
+    tester,
+  ) async {
+    await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
+
+    expect(find.byType(GpProBadge), findsNothing);
   });
 
   testWidgets('G8 : sans identifiant (ancien serveur), la carte reste inerte', (

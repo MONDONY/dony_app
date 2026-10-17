@@ -900,7 +900,7 @@ class _NegoCard extends StatelessWidget {
                 verified: (thread.travelerTripsCount ?? 0) > 0,
               ),
               const SizedBox(width: 6),
-              Expanded(
+              Flexible(
                 child: Text(
                   name,
                   overflow: TextOverflow.ellipsis,
@@ -911,6 +911,15 @@ class _NegoCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (thread.travelerGpPro) ...[
+                const SizedBox(width: 4),
+                const GpProBadge(
+                  size: GpProBadgeSize.compact,
+                  surface: 'my_negotiations',
+                  interactive: false,
+                ),
+              ],
+              const Spacer(),
               const SizedBox(width: 6),
               const _SourcePill(kind: NegoEntryKind.request),
               const SizedBox(width: 4),

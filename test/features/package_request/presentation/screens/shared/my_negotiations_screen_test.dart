@@ -94,6 +94,7 @@ NegotiationThread _thread({
   String? departureCity = 'Paris',
   String? arrivalCity = 'Dakar',
   double? weightKg = 5,
+  bool travelerGpPro = false,
 }) => NegotiationThread(
   id: 't-1',
   packageRequestId: 'pr-1',
@@ -121,6 +122,7 @@ NegotiationThread _thread({
   departureCity: departureCity,
   arrivalCity: arrivalCity,
   weightKg: weightKg,
+  travelerGpPro: travelerGpPro,
 );
 
 void main() {
@@ -295,6 +297,22 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Mamadou Diallo'), findsOneWidget);
     });
+  });
+
+  group('_NegoCard badge GP Pro', () {
+    for (final gpPro in [true, false]) {
+      testWidgets('travelerGpPro=$gpPro', (tester) async {
+        when(() => bloc.state).thenReturn(
+          NegotiationListState(
+            status: NegotiationListStatus.loaded,
+            threads: [_thread(travelerGpPro: gpPro)],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(find.byType(GpProBadge), gpPro ? findsOneWidget : findsNothing);
+      });
+    }
   });
 
   group('_NegoCard', () {

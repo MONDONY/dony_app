@@ -6532,6 +6532,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPosterFooterTitle': (l) => l.tripPosterFooterTitle,
   'tripPosterFooterSubtitle': (l) => l.tripPosterFooterSubtitle,
   'tripPosterCaptionVerified': (l) => l.tripPosterCaptionVerified,
+  'tripPosterCaptionGpPro': (l) => l.tripPosterCaptionGpPro,
   'requestPosterBadge': (l) => l.requestPosterBadge,
   'requestPosterEyebrow': (l) => l.requestPosterEyebrow,
   'requestPosterDate': (l) => l.requestPosterDate(placeholderMarker('day')),

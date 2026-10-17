@@ -494,6 +494,36 @@ void main() {
       expect(find.text('Vérifié'), findsNothing);
     });
 
+    testWidgets('affiche la pastille GP Pro quand gpPro est vrai', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _announcement(
+          extra: {
+            'traveler': {'id': 't1', 'displayName': 'Awa', 'gpPro': true},
+          },
+        ),
+      );
+
+      expect(find.text('GP Pro'), findsOneWidget);
+      // Image partagée : la pastille n'est pas interactive.
+      expect(find.byType(GpProBadge), findsNothing);
+    });
+
+    testWidgets('pas de pastille GP Pro quand gpPro est faux', (tester) async {
+      await _pump(
+        tester,
+        _announcement(
+          extra: {
+            'traveler': {'id': 't1', 'displayName': 'Awa'},
+          },
+        ),
+      );
+
+      expect(find.text('GP Pro'), findsNothing);
+    });
+
     testWidgets('liste les moyens de paiement acceptés', (tester) async {
       await _pump(
         tester,

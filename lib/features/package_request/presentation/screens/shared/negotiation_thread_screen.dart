@@ -349,6 +349,9 @@ class _PartnerTitle extends StatelessWidget {
         ? thread.senderPhotoUrl
         : thread.travelerPhotoUrl;
     final String? partnerId = iAmTraveler ? thread.senderId : thread.travelerId;
+    final bool partnerGpPro = iAmTraveler
+        ? thread.senderGpPro
+        : thread.travelerGpPro;
 
     String meta = '';
     if (rating != null) {
@@ -372,15 +375,31 @@ class _PartnerTitle extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: tt.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: cs.onSurface,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                  ),
+                  if (partnerGpPro) ...[
+                    const SizedBox(width: DonySpacing.xs),
+                    // En-tête déjà cliquable vers le profil : repère seul.
+                    const GpProBadge(
+                      size: GpProBadgeSize.compact,
+                      surface: 'negotiation_thread',
+                      interactive: false,
+                    ),
+                  ],
+                ],
               ),
               if (meta.isNotEmpty)
                 Text(

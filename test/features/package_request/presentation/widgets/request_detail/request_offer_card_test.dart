@@ -8,24 +8,28 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
 
-NegotiationThread _t(NegotiationThreadStatus s, {bool myTurn = false}) =>
-    NegotiationThread(
-      id: 't',
-      packageRequestId: 'pr',
-      travelerId: 'tr',
-      travelerTravelDate: DateTime(2026, 9, 26),
-      travelerAvailableKg: 8,
-      status: s,
-      currentPriceEur: 25,
-      roundsCount: 1,
-      lastActivityAt: DateTime(2026, 9, 17),
-      createdAt: DateTime(2026, 9, 17),
-      messages: const [],
-      travelerName: 'Awa K.',
-      travelerRating: 4.9,
-      isMyTurn: myTurn,
-      grossPriceEur: 28,
-    );
+NegotiationThread _t(
+  NegotiationThreadStatus s, {
+  bool myTurn = false,
+  bool gpPro = false,
+}) => NegotiationThread(
+  id: 't',
+  packageRequestId: 'pr',
+  travelerId: 'tr',
+  travelerTravelDate: DateTime(2026, 9, 26),
+  travelerAvailableKg: 8,
+  status: s,
+  currentPriceEur: 25,
+  roundsCount: 1,
+  lastActivityAt: DateTime(2026, 9, 17),
+  createdAt: DateTime(2026, 9, 17),
+  messages: const [],
+  travelerName: 'Awa K.',
+  travelerRating: 4.9,
+  isMyTurn: myTurn,
+  grossPriceEur: 28,
+  travelerGpPro: gpPro,
+);
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
@@ -116,6 +120,26 @@ void main() {
     expect(find.text('Répondre'), findsOneWidget);
     await tester.tap(find.byType(RequestOfferCard));
     expect(taps, 1);
+  });
+
+  testWidgets('badge GP Pro seulement si le voyageur est GP Pro', (
+    tester,
+  ) async {
+    Future<void> pump(bool gpPro) => tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: RequestOfferCard(
+            thread: _t(NegotiationThreadStatus.open, gpPro: gpPro),
+            firmPrice: false,
+          ),
+        ),
+      ),
+    );
+    await pump(true);
+    expect(find.byType(GpProBadge), findsOneWidget);
+    await pump(false);
+    expect(find.byType(GpProBadge), findsNothing);
   });
 
   testWidgets('écran traduit en anglais : CTA et légende de prix', (

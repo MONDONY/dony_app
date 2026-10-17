@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -22,6 +23,7 @@ SenderPublicProfile _sender({
   double averageRating = 4.8,
   int totalRatings = 12,
   int incidentCount = 0,
+  bool gpPro = false,
 }) => SenderPublicProfile(
   id: 'sender-1',
   displayName: 'Fatou Diallo',
@@ -29,6 +31,7 @@ SenderPublicProfile _sender({
   totalRatings: totalRatings,
   kycVerified: kycVerified,
   incidentCount: incidentCount,
+  gpPro: gpPro,
 );
 
 UserModel _fakeUser(String id) => UserModel(
@@ -74,6 +77,20 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
       expect(find.text('1 annulation ou absence'), findsOneWidget);
+    });
+
+    testWidgets('badge GP Pro affiché quand gpPro est vrai', (tester) async {
+      await tester.pumpWidget(_buildApp(_sender(gpPro: true)));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.byType(GpProBadge), findsOneWidget);
+    });
+
+    testWidgets('pas de badge GP Pro par défaut', (tester) async {
+      await tester.pumpWidget(_buildApp(_sender()));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.byType(GpProBadge), findsNothing);
     });
 
     testWidgets('fiabilité masquée à zéro', (tester) async {

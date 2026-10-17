@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -512,6 +513,31 @@ class _TravelerRow extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   l.tripPosterVerified,
+                  style: text.labelSmall?.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: PosterPalette.paper,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (traveler.gpPro) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: PosterPalette.paper.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(DonyRadius.full),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const DonyIcon('luggage', size: 12, color: PosterPalette.paper),
+                const SizedBox(width: 4),
+                Text(
+                  l.gpProBadgeLabel,
                   style: text.labelSmall?.copyWith(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,

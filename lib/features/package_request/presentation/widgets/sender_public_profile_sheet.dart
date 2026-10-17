@@ -124,6 +124,10 @@ class _SenderPublicProfileContent extends StatelessWidget {
               ],
             ),
           ],
+          if (sender.gpPro) ...[
+            const SizedBox(height: DonySpacing.xs),
+            const GpProBadge(surface: 'sender_public_profile'),
+          ],
           if (SenderReliabilityLabel.isVisible(sender.incidentCount)) ...[
             const SizedBox(height: DonySpacing.sm),
             SenderReliabilityLabel(count: sender.incidentCount),

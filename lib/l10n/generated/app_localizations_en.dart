@@ -18690,6 +18690,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPosterCaptionVerified => 'Traveler\'s identity verified';
 
   @override
+  String get tripPosterCaptionGpPro =>
+      'GP Pro traveler, a regular recognised by Yadony';
+
+  @override
   String get requestPosterBadge => 'Looking for a traveler';
 
   @override

@@ -20555,6 +20555,8 @@
   "@tripPosterFooterSubtitle": {"description": "Sous-titre du pied de l'affiche de trajet"},
   "tripPosterCaptionVerified": "Identité du voyageur vérifiée",
   "@tripPosterCaptionVerified": {"description": "Ligne de la légende de l'affiche quand le voyageur est vérifié"},
+  "tripPosterCaptionGpPro": "Voyageur GP Pro, régulier reconnu par Yadony",
+  "@tripPosterCaptionGpPro": {"description": "Ligne de la légende de l'affiche quand le voyageur a le badge GP Pro"},
   "requestPosterBadge": "Cherche un voyageur",
   "@requestPosterBadge": {"description": "Pastille de l'en-tête de l'affiche de demande d'envoi"},
   "requestPosterEyebrow": "Colis à transporter",

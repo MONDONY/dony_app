@@ -71,6 +71,17 @@ MessageModel _makeMsg({
   sentAt: sentAt ?? DateTime(2026, 4, 29, 10),
 );
 
+const _gpProConversation = ConversationModel(
+  id: 'conv-gp',
+  bidId: 'bid-gp',
+  firestoreConversationId: 'conv_bid-gp',
+  otherParticipant: ParticipantModel(
+    id: 'uid-gp',
+    name: 'Oumar Sow',
+    gpPro: true,
+  ),
+);
+
 Future<void> _pump(WidgetTester tester, ChatBloc bloc) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -783,6 +794,31 @@ void main() {
         );
       },
     );
+  });
+
+  group('badge GP Pro dans l\'en-tête', () {
+    testWidgets('interlocuteur GP Pro → badge compact affiché', (tester) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider<ChatBloc>.value(
+            value: bloc,
+            child: const ChatScreen(conversation: _gpProConversation),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(GpProBadge), findsOneWidget);
+    });
+
+    testWidgets('interlocuteur ordinaire → pas de badge', (tester) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await _pump(tester, bloc);
+
+      expect(find.byType(GpProBadge), findsNothing);
+    });
   });
 
   group('conversation voyageur ↔ destinataire (lot 3C)', () {

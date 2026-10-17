@@ -74,6 +74,8 @@ NegotiationThread _thread({
   double? grossPriceEur,
   String? senderName,
   String? senderId,
+  bool travelerGpPro = false,
+  bool senderGpPro = false,
 }) => NegotiationThread(
   id: 't-1',
   packageRequestId: 'pr-1',
@@ -93,6 +95,8 @@ NegotiationThread _thread({
   linkedTrip: linkedTrip,
   senderName: senderName,
   senderId: senderId,
+  travelerGpPro: travelerGpPro,
+  senderGpPro: senderGpPro,
 );
 
 const _sampleLinkedTrip = LinkedTripSummary(
@@ -197,6 +201,48 @@ void main() {
       child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
     );
   }
+
+  group('badge GP Pro de la contrepartie', () {
+    testWidgets('côté expéditeur : lit travelerGpPro', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(travelerGpPro: true)));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.byType(GpProBadge), findsOneWidget);
+    });
+
+    testWidgets('côté expéditeur : senderGpPro seul n\'affiche rien', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(senderGpPro: true)));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.byType(GpProBadge), findsNothing);
+    });
+
+    testWidgets('côté voyageur : lit senderGpPro', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(senderGpPro: true)));
+      await tester.pumpWidget(wrap(viewerUserId: 'tr-1'));
+      await tester.pumpAndSettle();
+      expect(find.byType(GpProBadge), findsOneWidget);
+    });
+
+    testWidgets('côté voyageur : travelerGpPro seul n\'affiche rien', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(travelerGpPro: true)));
+      await tester.pumpWidget(wrap(viewerUserId: 'tr-1'));
+      await tester.pumpAndSettle();
+      expect(find.byType(GpProBadge), findsNothing);
+    });
+  });
 
   group('NegotiationThreadScreen', () {
     testWidgets(
