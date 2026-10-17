@@ -20421,4 +20421,190 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gpProInfoBody =>
       'A GP Pro is a regular traveler or a business whose application was reviewed and accepted by the Yadony team. This badge is different from the PRO subscription and from verified identity: it is neither paid nor automatic.';
+
+  @override
+  String get gpProScreenTitle => 'GP Pro';
+
+  @override
+  String get gpProFailureTitle => 'Couldn\'t load your GP Pro status';
+
+  @override
+  String get gpProFailureBody => 'Check your connection, then try again.';
+
+  @override
+  String get gpProUnavailableTitle => 'Coming soon';
+
+  @override
+  String get gpProUnavailableBody =>
+      'GP Pro applications are coming very soon.';
+
+  @override
+  String get gpProIntroTitle => 'Become a GP Pro';
+
+  @override
+  String get gpProIntroBody =>
+      'Do you travel often, on your own or for your business? Apply for the GP Pro badge. The Yadony team reviews every application.';
+
+  @override
+  String get gpProKycTitle => 'Verify your identity first';
+
+  @override
+  String get gpProKycBody =>
+      'The GP Pro badge is for travelers with a verified identity. Verify yours, then come back to apply.';
+
+  @override
+  String get gpProKycCta => 'Verify my identity';
+
+  @override
+  String get gpProFrequencyLabel => 'How often do you travel?';
+
+  @override
+  String get gpProFrequencyWeekly => 'Every week';
+
+  @override
+  String get gpProFrequencyTwiceAMonth => 'Twice a month';
+
+  @override
+  String get gpProFrequencyMonthly => 'Once a month';
+
+  @override
+  String get gpProFrequencyLessOften => 'Less often';
+
+  @override
+  String get gpProCommercialNameLabel => 'Business name (optional)';
+
+  @override
+  String get gpProPiecesTitle => 'Supporting documents (optional)';
+
+  @override
+  String get gpProPiecesHint =>
+      'They help the team review your application. Images only, up to 4.';
+
+  @override
+  String get gpProPiecesPrivacy =>
+      'Your documents are only used to review your application. They are deleted as soon as we have decided.';
+
+  @override
+  String get gpProAddPiece => 'Add a document';
+
+  @override
+  String get gpProPieceTypeTitle => 'Which document?';
+
+  @override
+  String get gpProPieceSourceTitle => 'Add an image';
+
+  @override
+  String get gpProDocTypeBusinessRegistration =>
+      'Business registration (Kbis, SIRET, NINEA, RCCM…)';
+
+  @override
+  String get gpProDocTypeTravelProof => 'Ticket or boarding pass';
+
+  @override
+  String get gpProDocTypeSocialProfile => 'Social media screenshot';
+
+  @override
+  String get gpProDocTypeOther => 'Other document';
+
+  @override
+  String get gpProPieceUploading => 'Uploading…';
+
+  @override
+  String get gpProPieceReady => 'Added';
+
+  @override
+  String get gpProPieceFailed => 'Upload failed, remove it';
+
+  @override
+  String get gpProRemovePiece => 'Remove this document';
+
+  @override
+  String get gpProSubmit => 'Send my application';
+
+  @override
+  String get gpProCancel => 'Cancel my application';
+
+  @override
+  String get gpProCancelDialogTitle => 'Cancel your application?';
+
+  @override
+  String get gpProCancelDialogBody =>
+      'Your application and documents will be deleted. You can apply again later.';
+
+  @override
+  String get gpProCancelDialogConfirm => 'Cancel application';
+
+  @override
+  String get gpProCancelDialogKeep => 'Keep my application';
+
+  @override
+  String get gpProRestart => 'Apply again';
+
+  @override
+  String get gpProPendingTitle => 'Under review';
+
+  @override
+  String get gpProPendingBody =>
+      'The Yadony team is reviewing your application. You\'ll be notified as soon as they decide.';
+
+  @override
+  String get gpProAwaitingKycTitle => 'Waiting for your identity';
+
+  @override
+  String get gpProAwaitingKycBody =>
+      'Your application will be sent as soon as your identity is verified';
+
+  @override
+  String get gpProActiveTitle => 'You\'re a GP Pro';
+
+  @override
+  String get gpProActiveBody =>
+      'Your badge shows next to your name on your trips, your profile and your conversations.';
+
+  @override
+  String get gpProRejectedTitle => 'Declined';
+
+  @override
+  String get gpProRejectedBody =>
+      'Your application wasn\'t accepted. You can apply again.';
+
+  @override
+  String get gpProRevokedTitle => 'Removed';
+
+  @override
+  String get gpProRevokedBody =>
+      'The Yadony team removed your GP Pro badge. You can apply again.';
+
+  @override
+  String gpProReason(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get gpProSummaryFrequency => 'Frequency';
+
+  @override
+  String get gpProSummaryCommercialName => 'Business name';
+
+  @override
+  String get gpProErrorNetwork =>
+      'Can\'t connect. Check your network, then try again.';
+
+  @override
+  String get gpProErrorTooManyDocuments => 'Up to 4 documents per application.';
+
+  @override
+  String get gpProErrorDocumentInvalid =>
+      'This document isn\'t accepted. Send an image of 5 MB or less.';
+
+  @override
+  String get gpProErrorStorageUnavailable =>
+      'Documents are temporarily unavailable. Try again later.';
+
+  @override
+  String get gpProErrorKycRequired =>
+      'Verify your identity first to send your application.';
+
+  @override
+  String get gpProErrorGeneric => 'Something went wrong. Try again.';
 }

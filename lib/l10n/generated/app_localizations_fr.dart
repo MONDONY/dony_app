@@ -20556,4 +20556,191 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get gpProInfoBody =>
       'Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.';
+
+  @override
+  String get gpProScreenTitle => 'GP Pro';
+
+  @override
+  String get gpProFailureTitle => 'Impossible de charger votre statut GP Pro';
+
+  @override
+  String get gpProFailureBody => 'Vérifiez votre connexion, puis réessayez.';
+
+  @override
+  String get gpProUnavailableTitle => 'Bientôt disponible';
+
+  @override
+  String get gpProUnavailableBody =>
+      'La demande de badge GP Pro arrive très bientôt.';
+
+  @override
+  String get gpProIntroTitle => 'Devenir GP Pro';
+
+  @override
+  String get gpProIntroBody =>
+      'Vous voyagez souvent, seul ou pour votre entreprise ? Demandez le badge GP Pro. L\'équipe Yadony examine chaque demande.';
+
+  @override
+  String get gpProKycTitle => 'Vérifiez d\'abord votre identité';
+
+  @override
+  String get gpProKycBody =>
+      'Le badge GP Pro est réservé aux voyageurs dont l\'identité est vérifiée. Vérifiez la vôtre, puis revenez faire votre demande.';
+
+  @override
+  String get gpProKycCta => 'Vérifier mon identité';
+
+  @override
+  String get gpProFrequencyLabel => 'À quelle fréquence voyagez-vous ?';
+
+  @override
+  String get gpProFrequencyWeekly => 'Chaque semaine';
+
+  @override
+  String get gpProFrequencyTwiceAMonth => 'Deux fois par mois';
+
+  @override
+  String get gpProFrequencyMonthly => 'Une fois par mois';
+
+  @override
+  String get gpProFrequencyLessOften => 'Moins souvent';
+
+  @override
+  String get gpProCommercialNameLabel => 'Nom commercial (facultatif)';
+
+  @override
+  String get gpProPiecesTitle => 'Justificatifs (facultatif)';
+
+  @override
+  String get gpProPiecesHint =>
+      'Ils aident l\'équipe à examiner votre demande. Images seulement, 4 au plus.';
+
+  @override
+  String get gpProPiecesPrivacy =>
+      'Vos documents servent uniquement à examiner votre demande. Ils sont supprimés dès que nous avons décidé.';
+
+  @override
+  String get gpProAddPiece => 'Ajouter un justificatif';
+
+  @override
+  String get gpProPieceTypeTitle => 'Quel justificatif ?';
+
+  @override
+  String get gpProPieceSourceTitle => 'Ajouter une image';
+
+  @override
+  String get gpProDocTypeBusinessRegistration =>
+      'Registre d\'entreprise (Kbis, SIRET, NINEA, RCCM…)';
+
+  @override
+  String get gpProDocTypeTravelProof => 'Billet ou carte d\'embarquement';
+
+  @override
+  String get gpProDocTypeSocialProfile => 'Capture d\'un réseau social';
+
+  @override
+  String get gpProDocTypeOther => 'Autre document';
+
+  @override
+  String get gpProPieceUploading => 'Envoi en cours…';
+
+  @override
+  String get gpProPieceReady => 'Ajouté';
+
+  @override
+  String get gpProPieceFailed => 'Échec de l\'envoi, retirez-le';
+
+  @override
+  String get gpProRemovePiece => 'Retirer ce justificatif';
+
+  @override
+  String get gpProSubmit => 'Envoyer ma demande';
+
+  @override
+  String get gpProCancel => 'Annuler ma demande';
+
+  @override
+  String get gpProCancelDialogTitle => 'Annuler votre demande ?';
+
+  @override
+  String get gpProCancelDialogBody =>
+      'Votre demande et vos justificatifs seront supprimés. Vous pourrez en faire une nouvelle plus tard.';
+
+  @override
+  String get gpProCancelDialogConfirm => 'Annuler la demande';
+
+  @override
+  String get gpProCancelDialogKeep => 'Garder ma demande';
+
+  @override
+  String get gpProRestart => 'Refaire une demande';
+
+  @override
+  String get gpProPendingTitle => 'En cours d\'examen';
+
+  @override
+  String get gpProPendingBody =>
+      'L\'équipe Yadony examine votre demande. Vous serez prévenu dès qu\'elle aura décidé.';
+
+  @override
+  String get gpProAwaitingKycTitle => 'En attente de votre identité';
+
+  @override
+  String get gpProAwaitingKycBody =>
+      'Votre demande partira dès que votre identité sera vérifiée';
+
+  @override
+  String get gpProActiveTitle => 'Vous êtes GP Pro';
+
+  @override
+  String get gpProActiveBody =>
+      'Votre badge apparaît à côté de votre nom sur vos trajets, votre profil et vos conversations.';
+
+  @override
+  String get gpProRejectedTitle => 'Refusée';
+
+  @override
+  String get gpProRejectedBody =>
+      'Votre demande n\'a pas été acceptée. Vous pouvez en faire une nouvelle.';
+
+  @override
+  String get gpProRevokedTitle => 'Retiré';
+
+  @override
+  String get gpProRevokedBody =>
+      'L\'équipe Yadony a retiré votre badge GP Pro. Vous pouvez faire une nouvelle demande.';
+
+  @override
+  String gpProReason(String reason) {
+    return 'Motif : $reason';
+  }
+
+  @override
+  String get gpProSummaryFrequency => 'Fréquence';
+
+  @override
+  String get gpProSummaryCommercialName => 'Nom commercial';
+
+  @override
+  String get gpProErrorNetwork =>
+      'Connexion impossible. Vérifiez votre réseau, puis réessayez.';
+
+  @override
+  String get gpProErrorTooManyDocuments =>
+      '4 justificatifs au plus par demande.';
+
+  @override
+  String get gpProErrorDocumentInvalid =>
+      'Ce justificatif n\'est pas accepté. Envoyez une image de 5 Mo au plus.';
+
+  @override
+  String get gpProErrorStorageUnavailable =>
+      'Les justificatifs sont momentanément indisponibles. Réessayez plus tard.';
+
+  @override
+  String get gpProErrorKycRequired =>
+      'Vérifiez d\'abord votre identité pour envoyer votre demande.';
+
+  @override
+  String get gpProErrorGeneric => 'Une erreur est survenue. Réessayez.';
 }

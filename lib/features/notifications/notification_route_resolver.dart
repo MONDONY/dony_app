@@ -251,6 +251,11 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // Un filleul a fait son premier envoi : la récompense est à choisir sur
     // l'écran Parrainage (yadony-back #528).
     'REFERRAL_REWARD_AVAILABLE' => '/profile/referral',
+    // Décision de l'équipe sur la demande GP Pro (yadony-back #560) : l'écran
+    // GP Pro montre le badge, le motif d'un refus ou d'un retrait.
+    'GP_PRO_APPROVED' ||
+    'GP_PRO_REJECTED' ||
+    'GP_PRO_REVOKED' => '/profile/gp-pro',
 
     // Message de l'équipe support → détail du ticket si l'id est valide,
     // sinon la liste des tickets.

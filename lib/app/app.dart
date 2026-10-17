@@ -264,6 +264,8 @@ class _DonyAppState extends State<DonyApp> {
     '/flights/alerts',
     // Récompense de parrainage à choisir (REFERRAL_REWARD_AVAILABLE).
     '/profile/referral',
+    // Décision sur la demande GP Pro (GP_PRO_APPROVED/REJECTED/REVOKED).
+    '/profile/gp-pro',
   };
 
   void _handleDeepLink(Uri uri) {

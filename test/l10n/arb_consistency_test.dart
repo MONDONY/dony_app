@@ -135,6 +135,7 @@ const _sameInBothLanguages = <String>{
   'walletTopupCodeFieldLabel', // « Code » se dit pareil
   // Noms propres identiques en français et en anglais.
   'gpProBadgeLabel', // « GP Pro » : nom du badge, identique dans les deux langues
+  'gpProScreenTitle', // « GP Pro » : titre de l'écran, nom du badge
   'countryNameFr',
   'countryNameLu',
   'countryNamePt',
