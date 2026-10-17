@@ -931,34 +931,27 @@ void main() {
   // ── Group: Form structure ─────────────────────────────────────────────────────
 
   group('CreateTripScreen — Form structure', () {
-    testWidgets('bandeau devise EUR avant le premier champ du trajet', (
-      tester,
-    ) async {
+    // FLUTTER-RA : la devise se choisit en tête de l'étape Prix &
+    // conditions, plus dès l'étape Trajet. L'encart est monté (étape masquée
+    // par Offstage) mais invisible tant qu'on n'y est pas.
+    testWidgets('bandeau devise absent de l\'étape Trajet, monté dans '
+        'l\'étape Prix', (tester) async {
       setupViewport(tester);
       registerCurrencyPreference('EUR');
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
+      expect(find.byKey(const Key('trip-currency-selector-row')), findsNothing);
       expect(
-        find.byKey(const Key('trip-currency-selector-row')),
-        findsOneWidget,
-      );
-      expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
-      expect(
-        find.bySemanticsLabel(
-          'Devise de publication : Euro, EUR. Les utilisateurs dans une '
-          'autre devise voient un prix converti. Le paiement reste dans '
-          'cette devise. Bouton, modifier la devise.',
+        find.byKey(
+          const Key('trip-currency-selector-row'),
+          skipOffstage: false,
         ),
         findsOneWidget,
       );
       expect(
-        tester
-            .getTopLeft(find.byKey(const Key('trip-currency-selector-row')))
-            .dy,
-        lessThan(
-          tester.getTopLeft(find.byKey(const Key('departureCityField'))).dy,
-        ),
+        find.text('Publié en Euro (EUR)', skipOffstage: false),
+        findsOneWidget,
       );
     });
 
@@ -968,7 +961,10 @@ void main() {
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-      expect(find.text('Publié en Dollar canadien (CAD)'), findsOneWidget);
+      expect(
+        find.text('Publié en Dollar canadien (CAD)', skipOffstage: false),
+        findsOneWidget,
+      );
     });
 
     testWidgets('bandeau devise absent en mode édition', (tester) async {
@@ -983,56 +979,14 @@ void main() {
         ),
       );
 
-      expect(find.byKey(const Key('trip-currency-selector-row')), findsNothing);
-    });
-
-    testWidgets('bandeau devise reste lisible avec texte agrandi', (
-      tester,
-    ) async {
-      setupViewport(tester);
-      tester.platformDispatcher.textScaleFactorTestValue = 2;
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-
-      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
       expect(
-        find.byKey(const Key('trip-currency-selector-row')),
-        findsOneWidget,
+        find.byKey(
+          const Key('trip-currency-selector-row'),
+          skipOffstage: false,
+        ),
+        findsNothing,
       );
-      expect(tester.takeException(), isNull);
     });
-
-    testWidgets(
-      'tap sur le bandeau devise ouvre le sélecteur avec l\'avertissement '
-      'sur les moyens de paiement, et le choix se répercute sur le bandeau',
-      (tester) async {
-        setupViewport(tester);
-        registerCurrencyPreference('EUR');
-
-        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
-
-        await tester.tap(find.byKey(const Key('trip-currency-selector-row')));
-        await tester.pumpAndSettle();
-
-        // Le sélecteur partagé (Tâche 12) s'ouvre, avec l'avertissement sur
-        // les moyens de paiement qui découlent de la devise.
-        expect(find.text('Choisir une devise'), findsOneWidget);
-        expect(
-          find.byKey(const Key('currency-payment-methods-notice')),
-          findsOneWidget,
-        );
-
-        // Choisir Dollar américain (USD) et confirmer.
-        await tester.tap(find.text('Dollar américain (USD)'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('currency-selector-confirm')));
-        await tester.pumpAndSettle();
-
-        // Le bandeau reflète la nouvelle devise choisie pour l'annonce.
-        expect(find.text('Publié en Dollar américain (USD)'), findsOneWidget);
-        expect(find.text('Publié en Euro (EUR)'), findsNothing);
-      },
-    );
 
     testWidgets('stepper header est présent à l\'étape 0', (tester) async {
       setupViewport(tester);
@@ -1480,7 +1434,10 @@ void main() {
           const TimeOfDay(hour: 6, minute: 30),
         );
         expect(step.arrivalDayOffsetNotifier?.value, 1);
-        expect(find.text('Publié en Franc CFA Ouest (XOF)'), findsOneWidget);
+        expect(
+          find.text('Publié en Franc CFA Ouest (XOF)', skipOffstage: false),
+          findsOneWidget,
+        );
 
         // Étape 1 : adresses de remise/livraison — LieuxCapaciteStep reste
         // monté en Offstage tant que le step 1 n'est pas affiché.
@@ -1563,7 +1520,10 @@ void main() {
       expect(prix.negotiableNotifier.value, isFalse);
       expect(prix.descriptionCtrl.text, isEmpty);
       expect(prix.refusedTypesNotifier.value, isEmpty);
-      expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
+      expect(
+        find.text('Publié en Euro (EUR)', skipOffstage: false),
+        findsOneWidget,
+      );
 
       await tester.pump(const Duration(seconds: 5));
     });
@@ -1826,11 +1786,16 @@ void main() {
         );
       }
 
-      Future<void> goToStep2AndSubmit(WidgetTester tester) async {
+      // L'encart de devise est en tête de l'étape Prix & conditions
+      // (FLUTTER-RA) : on y va avant de le chercher.
+      Future<void> goToPriceStep(WidgetTester tester) async {
         await tester.tap(find.text('Continuer'));
         await tester.pump(const Duration(milliseconds: 600));
         await tester.tap(find.text('Continuer'));
         await tester.pump(const Duration(milliseconds: 600));
+      }
+
+      Future<void> submit(WidgetTester tester) async {
         await tester.tap(find.byKey(const Key('create-announcement-submit')));
         await tester.pump(const Duration(milliseconds: 600));
       }
@@ -1842,6 +1807,7 @@ void main() {
       testWidgets('champ absent (ancien back) : devise figée, sans rien '
           'ajouter, PUT sans currency', (tester) async {
         await pumpEdit(tester);
+        await goToPriceStep(tester);
         expect(
           find.byKey(const Key('trip-currency-selector-row')),
           findsNothing,
@@ -1850,12 +1816,13 @@ void main() {
           find.byKey(const Key('trip-edit-currency-locked-hint')),
           findsNothing,
         );
-        await goToStep2AndSubmit(tester);
+        await submit(tester);
         expect(sentUpdate().currency, isNull);
       });
 
       testWidgets('false : devise figée avec explication', (tester) async {
         await pumpEdit(tester, currencyEditable: false);
+        await goToPriceStep(tester);
         expect(
           find.byKey(const Key('trip-currency-selector-row')),
           findsNothing,
@@ -1870,16 +1837,23 @@ void main() {
 
       testWidgets('true, devise inchangée : PUT sans currency', (tester) async {
         await pumpEdit(tester, currencyEditable: true);
+        // Rien à l'étape Trajet, l'encart vient avec les prix (FLUTTER-RA).
+        expect(
+          find.byKey(const Key('trip-currency-selector-row')),
+          findsNothing,
+        );
+        await goToPriceStep(tester);
         expect(
           find.byKey(const Key('trip-currency-selector-row')),
           findsOneWidget,
         );
-        await goToStep2AndSubmit(tester);
+        await submit(tester);
         expect(sentUpdate().currency, isNull);
       });
 
       testWidgets('true, devise changée : PUT avec currency', (tester) async {
         await pumpEdit(tester, currencyEditable: true);
+        await goToPriceStep(tester);
         await tester.tap(find.byKey(const Key('trip-currency-selector-row')));
         await tester.pumpAndSettle();
         await tester.tap(find.textContaining('(USD)'));
@@ -1887,7 +1861,7 @@ void main() {
         await tester.tap(find.byKey(const Key('currency-selector-confirm')));
         await tester.pumpAndSettle();
 
-        await goToStep2AndSubmit(tester);
+        await submit(tester);
         expect(sentUpdate().currency, 'USD');
       });
 
@@ -1899,6 +1873,7 @@ void main() {
         when(() => announcementBloc.stream).thenAnswer((_) => states.stream);
 
         await pumpEdit(tester, currencyEditable: true);
+        await goToPriceStep(tester);
         expect(
           find.byKey(const Key('trip-currency-selector-row')),
           findsOneWidget,
@@ -4347,6 +4322,172 @@ void main() {
 
         expect(find.text('Post a trip'), findsOneWidget);
         expect(find.text('Publier un trajet'), findsNothing);
+      },
+    );
+  });
+
+  // ── Encart de devise à l'étape Prix & conditions (FLUTTER-RA) ────────────
+  // La reprise d'un brouillon local ouvre le formulaire de création à
+  // l'étape où il s'était arrêté : le moyen le plus court d'atteindre les
+  // étapes 2 et 3 sans tout ressaisir.
+  group('CreateTripScreen — encart de devise à l\'étape Prix (FLUTTER-RA)', () {
+    setUp(() {
+      if (getIt.isRegistered<FormDraftCubit>()) {
+        getIt.unregister<FormDraftCubit>();
+      }
+      registerTestFormDraftCubit(
+        store: testFormDraftStore(storage: InMemoryFormDraftStorage()),
+      );
+      DonySnackbar.clearDedup();
+    });
+
+    TripFormDraft draftAt(int step, {int priceOption = -1}) {
+      final day = DateUtils.dateOnly(
+        DateTime.now().add(const Duration(days: 30)),
+      );
+      return TripFormDraft(
+        step: step,
+        currency: 'EUR',
+        departureCity: 'Paris',
+        departureCountryCode: 'FR',
+        arrivalCity: 'Dakar',
+        arrivalCountryCode: 'SN',
+        departureDate: day,
+        departureTime: '10:00',
+        handoverDeadline: day.subtract(const Duration(days: 1)),
+        transportMode: 'PLANE',
+        priceOption: priceOption,
+        cashEnabled: priceOption >= 0,
+        // Les deux adresses ouvrent l'étape 3 à la reprise.
+        pickupAddress: const AddressData(
+          label: 'Gare de Lyon',
+          lat: 48.844,
+          lng: 2.374,
+        ),
+        deliveryAddress: const AddressData(
+          label: 'Plateau',
+          lat: 14.67,
+          lng: -17.43,
+        ),
+      );
+    }
+
+    Future<void> pumpAt(
+      WidgetTester tester,
+      int step, {
+      int priceOption = -1,
+    }) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      registerCurrencyPreference('EUR');
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(
+            args: CreateTripArgs(
+              resumeDraft: draftAt(step, priceOption: priceOption),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      for (var i = 0; i < 3; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+    }
+
+    final row = find.byKey(const Key('trip-currency-selector-row'));
+
+    testWidgets('étape 1 (Trajet) : pas d\'encart', (tester) async {
+      await pumpAt(tester, 0);
+      expect(find.byType(TrajetStep), findsOneWidget);
+      expect(row, findsNothing);
+    });
+
+    testWidgets('étape 2 (Lieux & capacité) : pas d\'encart', (tester) async {
+      await pumpAt(tester, 1);
+      expect(find.text('Trajet ✓'), findsOneWidget);
+      expect(find.byType(PrixConditionsStep), findsNothing);
+      expect(row, findsNothing);
+    });
+
+    testWidgets('étape 3 (Prix & conditions) : encart en tête, avant les '
+        'prix', (tester) async {
+      await pumpAt(tester, 2);
+      expect(find.byType(PrixConditionsStep), findsOneWidget);
+      expect(row, findsOneWidget);
+      expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(
+          'Devise de publication : Euro, EUR. Les utilisateurs dans une '
+          'autre devise voient un prix converti. Le paiement reste dans '
+          'cette devise. Bouton, modifier la devise.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(row).dy,
+        lessThan(tester.getTopLeft(find.byType(PrixConditionsStep)).dy),
+      );
+    });
+
+    testWidgets('« Modifier » de la devise dans l\'aperçu ramène à '
+        'l\'encart de l\'étape Prix et ouvre le sélecteur', (tester) async {
+      // Un prix choisi : l'aperçu ne s'ouvre qu'avec un prix valide.
+      await pumpAt(tester, 2, priceOption: 0);
+      final preview = tester.widget<DonyButton>(
+        find.byKey(const Key('create-announcement-preview')),
+      );
+      expect(preview.onPressed, isNotNull);
+      await tester.tap(find.byKey(const Key('create-announcement-preview')));
+      await tester.pumpAndSettle();
+      final change = find.byKey(const Key('preview-currency-change'));
+      await tester.scrollUntilVisible(
+        change,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(change);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choisir une devise'), findsOneWidget);
+      expect(find.byType(PrixConditionsStep), findsOneWidget);
+      expect(row, findsOneWidget);
+    });
+
+    testWidgets('étape 3 : encart lisible avec texte agrandi', (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pumpAt(tester, 2);
+      expect(row, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'étape 3 : le tap ouvre le sélecteur avec l\'avertissement sur les '
+      'moyens de paiement, et le choix se répercute sur l\'encart',
+      (tester) async {
+        await pumpAt(tester, 2);
+
+        await tester.tap(row);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Choisir une devise'), findsOneWidget);
+        expect(
+          find.byKey(const Key('currency-payment-methods-notice')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Dollar américain (USD)'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('currency-selector-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Publié en Dollar américain (USD)'), findsOneWidget);
+        expect(find.text('Publié en Euro (EUR)'), findsNothing);
       },
     );
   });
