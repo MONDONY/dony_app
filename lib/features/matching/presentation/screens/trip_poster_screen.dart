@@ -195,6 +195,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
       if (delivery != null) '🏁 ${l.tripPosterCaptionPickup(delivery)}',
       if (payment.isNotEmpty) '💳 ${l.tripPosterCaptionPayment(payment)}',
       if (a.traveler?.kycVerified ?? false) '✅ ${l.tripPosterCaptionVerified}',
+      if (a.traveler?.gpPro ?? false) '🧳 ${l.tripPosterCaptionGpPro}',
       '',
       l.tripPosterCaptionCta,
       _urlFor(channel),

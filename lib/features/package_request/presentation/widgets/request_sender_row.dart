@@ -107,15 +107,31 @@ class _SenderRowContent extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            name,
-                            key: const Key('request-sender-name'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: tt.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: cs.onSurface,
-                            ),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  name,
+                                  key: const Key('request-sender-name'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: cs.onSurface,
+                                  ),
+                                ),
+                              ),
+                              // Ligne déjà cliquable : le badge n'y est
+                              // qu'un repère, la feuille de profil l'explique.
+                              if (sender.gpPro) ...[
+                                const SizedBox(width: DonySpacing.xs),
+                                const GpProBadge(
+                                  size: GpProBadgeSize.compact,
+                                  surface: 'request_sender',
+                                  interactive: false,
+                                ),
+                              ],
+                            ],
                           ),
                           const SizedBox(height: 2),
                           if (sender.totalRatings > 0)

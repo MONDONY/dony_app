@@ -811,7 +811,9 @@ class _ChatScreenState extends State<ChatScreen> {
         // profil n'existe plus.
         title: _ParticipantHeader(
           enabled: participant.id.isNotEmpty && !conversation.readOnly,
-          semanticsLabel: l.chatOpenParticipantProfileSemantics(displayName),
+          semanticsLabel: participant.gpPro
+              ? l.chatOpenGpProParticipantProfileSemantics(displayName)
+              : l.chatOpenParticipantProfileSemantics(displayName),
           onTap: () => _navigate(
             '/profile/public',
             ProfilePublicArgs(userId: participant.id),
@@ -830,14 +832,31 @@ class _ChatScreenState extends State<ChatScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      displayName,
-                      style: tt.titleLarge?.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            displayName,
+                            style: tt.titleLarge?.copyWith(
+                              color: cs.onSurface,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (participant.gpPro) ...[
+                          const SizedBox(width: DonySpacing.xs),
+                          const GpProBadge(
+                            size: GpProBadgeSize.compact,
+                            surface: 'chat',
+                            // Le tap appartient à l'en-tête (profil) ; le
+                            // libellé de l'en-tête annonce GP Pro.
+                            interactive: false,
+                          ),
+                        ],
+                      ],
                     ),
                     if (participant.role != null &&
                         participant.role!.isNotEmpty)

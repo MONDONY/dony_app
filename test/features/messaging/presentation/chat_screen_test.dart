@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -12,6 +13,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
+import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_info_sheet.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
@@ -36,6 +38,7 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/map_backed_box.dart';
 import '../../../helpers/mock_analytics_backend.dart';
@@ -69,6 +72,17 @@ MessageModel _makeMsg({
   body: body,
   type: type,
   sentAt: sentAt ?? DateTime(2026, 4, 29, 10),
+);
+
+const _gpProConversation = ConversationModel(
+  id: 'conv-gp',
+  bidId: 'bid-gp',
+  firestoreConversationId: 'conv_bid-gp',
+  otherParticipant: ParticipantModel(
+    id: 'uid-gp',
+    name: 'Oumar Sow',
+    gpPro: true,
+  ),
 );
 
 Future<void> _pump(WidgetTester tester, ChatBloc bloc) async {
@@ -783,6 +797,85 @@ void main() {
         );
       },
     );
+  });
+
+  group('badge GP Pro dans l\'en-tête', () {
+    testWidgets('interlocuteur GP Pro → badge compact affiché', (tester) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider<ChatBloc>.value(
+            value: bloc,
+            child: const ChatScreen(conversation: _gpProConversation),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(GpProBadge), findsOneWidget);
+    });
+
+    testWidgets('tap sur le badge : ouvre le profil, pas la feuille GP Pro', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      String? pushedPath;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider<ChatBloc>.value(
+            value: bloc,
+            child: ChatScreen(
+              conversation: _gpProConversation,
+              onNavigate: (path, extra) => pushedPath = path,
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final badge = tester.widget<GpProBadge>(find.byType(GpProBadge));
+      expect(badge.interactive, isFalse);
+      await tester.tap(find.byType(GpProBadge));
+      await tester.pump();
+      expect(pushedPath, '/profile/public');
+      expect(find.byType(GpProInfoSheet), findsNothing);
+    });
+
+    testWidgets('libellé de l\'en-tête : annonce GP Pro seulement si GP Pro', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider<ChatBloc>.value(
+            value: bloc,
+            child: const ChatScreen(conversation: _gpProConversation),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(
+        find.bySemanticsLabel('Voir le profil de Oumar Sow, GP Pro'),
+        findsOneWidget,
+      );
+
+      await _pump(tester, bloc);
+      expect(
+        find.bySemanticsLabel('Voir le profil de Modibo Coulibaly'),
+        findsOneWidget,
+      );
+      expect(find.bySemanticsLabel(RegExp('GP Pro')), findsNothing);
+    });
+
+    testWidgets('interlocuteur ordinaire → pas de badge', (tester) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await _pump(tester, bloc);
+
+      expect(find.byType(GpProBadge), findsNothing);
+    });
   });
 
   group('conversation voyageur ↔ destinataire (lot 3C)', () {

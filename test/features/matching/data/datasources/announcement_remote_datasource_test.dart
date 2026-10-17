@@ -483,6 +483,28 @@ void main() {
       expect(captured['urgent'], true);
     });
 
+    test('envoie gpProOnly=true et jamais kiloProOnly', () async {
+      when(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+
+      await datasource.searchAnnouncements(gpProOnly: true);
+
+      final captured =
+          verify(
+                () => mockDio.get(
+                  '/announcements',
+                  queryParameters: captureAny(named: 'queryParameters'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured['gpProOnly'], true);
+      expect(captured.containsKey('kiloProOnly'), isFalse);
+    });
+
     // FLUTTER-GD / FLUTTER-G0.
     test('envoie maxStops et paymentMethods, jamais une liste vide', () async {
       when(

@@ -94,6 +94,7 @@ NegotiationThread _thread({
   String? departureCity = 'Paris',
   String? arrivalCity = 'Dakar',
   double? weightKg = 5,
+  bool travelerGpPro = false,
 }) => NegotiationThread(
   id: 't-1',
   packageRequestId: 'pr-1',
@@ -121,6 +122,7 @@ NegotiationThread _thread({
   departureCity: departureCity,
   arrivalCity: arrivalCity,
   weightKg: weightKg,
+  travelerGpPro: travelerGpPro,
 );
 
 void main() {
@@ -295,6 +297,43 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Mamadou Diallo'), findsOneWidget);
     });
+  });
+
+  group('_NegoCard largeur du nom', () {
+    testWidgets(
+      'nom long sans badge : occupe plus de la moitié de la largeur',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          NegotiationListState(
+            status: NegotiationListStatus.loaded,
+            threads: [
+              _thread(travelerName: List.filled(12, 'Abdoulaye').join(' ')),
+            ],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        final name = tester.getSize(find.byKey(const Key('nego-card-name')));
+        final card = tester.getSize(find.byType(Scaffold).first);
+        expect(name.width, greaterThan(card.width / 2));
+      },
+    );
+  });
+
+  group('_NegoCard badge GP Pro', () {
+    for (final gpPro in [true, false]) {
+      testWidgets('travelerGpPro=$gpPro', (tester) async {
+        when(() => bloc.state).thenReturn(
+          NegotiationListState(
+            status: NegotiationListStatus.loaded,
+            threads: [_thread(travelerGpPro: gpPro)],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(find.byType(GpProBadge), gpPro ? findsOneWidget : findsNothing);
+      });
+    }
   });
 
   group('_NegoCard', () {

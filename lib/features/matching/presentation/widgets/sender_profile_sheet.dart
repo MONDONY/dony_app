@@ -190,7 +190,7 @@ class _SenderProfileSheet extends StatelessWidget {
                           ),
                         ),
                       if (bid.senderIsProAccount ||
-                          bid.senderKiloPro ||
+                          bid.senderGpPro ||
                           bid.senderKycVerified) ...[
                         const SizedBox(height: DonySpacing.sm),
                         Wrap(
@@ -206,14 +206,8 @@ class _SenderProfileSheet extends StatelessWidget {
                                 bgColor: cs.warningLight,
                                 textColor: cs.warning,
                               ),
-                            if (bid.senderKiloPro)
-                              _SheetBadge(
-                                iconAsset: 'star',
-                                label: context.l10n.listingKiloProChip,
-                                iconColor: DonyColors.amberDark,
-                                bgColor: DonyColors.amberLight,
-                                textColor: DonyColors.amberDark,
-                              ),
+                            if (bid.senderGpPro)
+                              const GpProBadge(surface: 'sender_sheet'),
                             if (bid.senderKycVerified)
                               _SheetBadge(
                                 iconAsset: 'badge-check',

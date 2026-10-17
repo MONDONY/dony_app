@@ -131,6 +131,14 @@ class RequestOfferCard extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            if (t.travelerGpPro) ...[
+                              const SizedBox(width: 4),
+                              const GpProBadge(
+                                size: GpProBadgeSize.compact,
+                                surface: 'request_offer',
+                                interactive: false,
+                              ),
+                            ],
                             if (t.travelerRating != null) ...[
                               const SizedBox(width: 4),
                               DonyIcon('star', size: 13, color: cs.warning),

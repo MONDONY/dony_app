@@ -81,6 +81,8 @@ class NegotiationThread extends Equatable {
     this.commissionDeadline,
     this.depositExpiresAt,
     this.archived = false,
+    this.travelerGpPro = false,
+    this.senderGpPro = false,
   });
 
   final String id;
@@ -172,6 +174,10 @@ class NegotiationThread extends Equatable {
   /// d'un backend antérieur : `false`, aucun fil n'y est alors archivé.
   final bool archived;
 
+  /// Badges GP Pro du voyageur et de l'expéditeur (yadony-back #560).
+  final bool travelerGpPro;
+  final bool senderGpPro;
+
   /// Vrai quand un règlement est resté suspendu à une authentification forte
   /// 3DS. Le voyageur a basculé vers son application bancaire et l'OS a pu tuer
   /// yadony entre-temps : à sa prochaine tentative il faut confirmer le
@@ -247,6 +253,8 @@ class NegotiationThread extends Equatable {
         : DateTime.parse(json['commissionDeadline'] as String),
     depositExpiresAt: _parseUtc(json['depositExpiresAt'] as String?),
     archived: json['archived'] as bool? ?? false,
+    travelerGpPro: json['travelerGpPro'] as bool? ?? false,
+    senderGpPro: json['senderGpPro'] as bool? ?? false,
   );
 
   /// Force l'UTC sur un `LocalDateTime` back sans suffixe de zone (ex.
@@ -302,5 +310,7 @@ class NegotiationThread extends Equatable {
     commissionDeadline,
     depositExpiresAt,
     archived,
+    travelerGpPro,
+    senderGpPro,
   ];
 }

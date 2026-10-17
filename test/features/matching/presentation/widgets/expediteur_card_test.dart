@@ -1,4 +1,5 @@
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/expediteur_card.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,7 @@ BidModel _bid({
   String? senderName,
   int? senderTotalShipments,
   bool senderKycVerified = false,
-  bool senderKiloPro = false,
+  bool senderGpPro = false,
   int? senderIncidentCount,
 }) => BidModel(
   id: 'b1',
@@ -21,7 +22,7 @@ BidModel _bid({
   senderName: senderName,
   senderTotalShipments: senderTotalShipments,
   senderKycVerified: senderKycVerified,
-  senderKiloPro: senderKiloPro,
+  senderGpPro: senderGpPro,
   senderIncidentCount: senderIncidentCount,
   createdAt: DateTime(2026, 10, 6),
   updatedAt: DateTime(2026, 10, 6),
@@ -60,20 +61,20 @@ void main() {
     expect(find.text('4 envois'), findsOneWidget);
   });
 
-  testWidgets('badges identité et Kilo Pro réutilisent les clés listing', (
-    tester,
-  ) async {
+  testWidgets('sans senderGpPro : pas de badge GP Pro', (tester) async {
+    await _pump(tester, _bid(senderName: 'Aïcha D.'));
+
+    expect(find.byType(GpProBadge), findsNothing);
+  });
+
+  testWidgets('badges identité et GP Pro', (tester) async {
     await _pump(
       tester,
-      _bid(
-        senderName: 'Aïcha D.',
-        senderKycVerified: true,
-        senderKiloPro: true,
-      ),
+      _bid(senderName: 'Aïcha D.', senderKycVerified: true, senderGpPro: true),
     );
 
     expect(find.text('Identité'), findsOneWidget);
-    expect(find.text('Kilo Pro'), findsOneWidget);
+    expect(find.byType(GpProBadge), findsOneWidget);
   });
 
   testWidgets('date de soumission formatée dd/mm/yyyy en français', (

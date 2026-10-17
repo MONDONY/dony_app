@@ -52,7 +52,7 @@ const _profile = ProfilePublicModel(
   displayName: 'Fatou Diallo',
   kycVerified: true,
   isProAccount: false,
-  isKiloPro: false,
+  gpPro: false,
   completedBidsCount: 12,
   averageRating: 4.8,
   ratingCount: 7,
@@ -71,7 +71,7 @@ ProfilePublicModel profileWith({
     displayName: 'Fatou Diallo',
     kycVerified: true,
     isProAccount: false,
-    isKiloPro: false,
+    gpPro: false,
     completedBidsCount: 12,
     averageRating: 4.8,
     ratingCount: 7,
@@ -89,7 +89,7 @@ const _profileOneReview = ProfilePublicModel(
   displayName: 'Fatou Diallo',
   kycVerified: false,
   isProAccount: false,
-  isKiloPro: false,
+  gpPro: false,
   completedBidsCount: 3,
   averageRating: 4.5,
   ratingCount: 1,
@@ -102,7 +102,7 @@ const _profileTwelveReviews = ProfilePublicModel(
   displayName: 'Fatou Diallo',
   kycVerified: false,
   isProAccount: false,
-  isKiloPro: false,
+  gpPro: false,
   completedBidsCount: 3,
   averageRating: 4.5,
   ratingCount: 12,
@@ -287,7 +287,7 @@ void main() {
       displayName: 'abou D.',
       kycVerified: false,
       isProAccount: false,
-      isKiloPro: false,
+      gpPro: false,
       completedBidsCount: 5,
       averageRating: 0,
       ratingCount: 0,
@@ -312,6 +312,62 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('abou D.'), findsWidgets); // in app bar
+  });
+
+  testWidgets('GP Pro et Compte PRO : deux badges distincts', (tester) async {
+    const proProfile = ProfilePublicModel(
+      userId: _userId,
+      displayName: 'Oumar D.',
+      kycVerified: false,
+      isProAccount: true,
+      gpPro: true,
+      completedBidsCount: 5,
+      averageRating: 0,
+      ratingCount: 0,
+      memberSince: 'janv. 2025',
+      badges: [],
+    );
+    const loadedState = ProfilePublicLoaded(
+      profile: proProfile,
+      recentRatings: RatingSummary(
+        averageRating: 0,
+        ratingCount: 0,
+        distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+        ratings: [],
+        page: 0,
+        totalPages: 0,
+      ),
+    );
+    when(() => bloc.state).thenReturn(loadedState);
+    when(() => bloc.stream).thenAnswer((_) => Stream.value(loadedState));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(GpProBadge), findsOneWidget);
+    expect(find.text('GP Pro'), findsOneWidget);
+    expect(find.text('PRO'), findsOneWidget);
+  });
+
+  testWidgets('pas de badge GP Pro quand gpPro est faux', (tester) async {
+    const loadedState = ProfilePublicLoaded(
+      profile: _profile,
+      recentRatings: RatingSummary(
+        averageRating: 0,
+        ratingCount: 0,
+        distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+        ratings: [],
+        page: 0,
+        totalPages: 0,
+      ),
+    );
+    when(() => bloc.state).thenReturn(loadedState);
+    when(() => bloc.stream).thenAnswer((_) => Stream.value(loadedState));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(GpProBadge), findsNothing);
   });
 
   testWidgets('title is "Profil" when viewing another user while loading', (
@@ -349,7 +405,7 @@ void main() {
       displayName: 'Fatou Diallo',
       kycVerified: true,
       isProAccount: false,
-      isKiloPro: false,
+      gpPro: false,
       completedBidsCount: 12,
       averageRating: 4.8,
       ratingCount: 7,
@@ -399,7 +455,7 @@ void main() {
           displayName: 'Fatou Diallo',
           kycVerified: true,
           isProAccount: false,
-          isKiloPro: false,
+          gpPro: false,
           completedBidsCount: 12,
           averageRating: 4.8,
           ratingCount: 7,
@@ -434,7 +490,7 @@ void main() {
           displayName: 'Fatou Diallo',
           kycVerified: true,
           isProAccount: false,
-          isKiloPro: false,
+          gpPro: false,
           completedBidsCount: 12,
           averageRating: 4.8,
           ratingCount: 7,
@@ -1149,7 +1205,7 @@ void main() {
         avatarUrl: 'https://example.com/avatar.jpg',
         kycVerified: true,
         isProAccount: false,
-        isKiloPro: false,
+        gpPro: false,
         completedBidsCount: 12,
         averageRating: 4.8,
         ratingCount: 7,
@@ -1207,7 +1263,7 @@ void main() {
         displayName: 'Fatou Diallo',
         kycVerified: true,
         isProAccount: false,
-        isKiloPro: false,
+        gpPro: false,
         completedBidsCount: 12,
         averageRating: 4.8,
         ratingCount: 7,
@@ -1263,7 +1319,7 @@ void main() {
         displayName: 'Fatou Diallo',
         kycVerified: true,
         isProAccount: true,
-        isKiloPro: false,
+        gpPro: false,
         completedBidsCount: 3,
         averageRating: 4.5,
         ratingCount: 1,

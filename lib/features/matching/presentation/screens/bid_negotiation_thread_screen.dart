@@ -437,11 +437,26 @@ class _TripContextCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.titleLarge?.copyWith(color: cs.onSurface),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.titleLarge?.copyWith(color: cs.onSurface),
+                      ),
+                    ),
+                    if (negotiation.counterpartyGpPro) ...[
+                      const SizedBox(width: DonySpacing.xs),
+                      GpProBadge(
+                        size: GpProBadgeSize.compact,
+                        surface: 'bid_negotiation',
+                        // Carte cliquable vers le profil quand l'id est connu.
+                        interactive: (negotiation.counterpartyId ?? '').isEmpty,
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(

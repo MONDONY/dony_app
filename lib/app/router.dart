@@ -61,6 +61,9 @@ import 'package:dony/features/flights/presentation/flight_alert_offers_screen.da
 import 'package:dony/features/flights/presentation/flight_alerts_screen.dart';
 import 'package:dony/features/flights/presentation/flight_city_picker_screen.dart';
 import 'package:dony/features/flights/presentation/flights_screen.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_cubit.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_signup_cubit.dart';
+import 'package:dony/features/gp_pro/presentation/screens/gp_pro_screen.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
@@ -462,9 +465,14 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: intentStepRoute,
-      builder: (context, state) => BlocProvider(
-        create: (_) =>
-            getIt<IntentCubit>(param1: (intent: null, destination: null)),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) =>
+                getIt<IntentCubit>(param1: (intent: null, destination: null)),
+          ),
+          BlocProvider(create: (_) => getIt<GpProSignupCubit>()),
+        ],
         child: IntentStepScreen(
           progress: readOnboardingProgress(
             context,
@@ -1733,6 +1741,15 @@ final appRouter = GoRouter(
           ),
           pendingCodeStore: getIt<PendingReferralCodeStore>(),
         ),
+      ),
+    ),
+
+    // ── GP Pro : demande et statut du badge (hors shell) ──────────────
+    GoRoute(
+      path: '/profile/gp-pro',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<GpProCubit>()..load(),
+        child: const GpProScreen(),
       ),
     ),
 

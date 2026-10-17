@@ -37,7 +37,7 @@ ProfilePublicModel _fakeProfile({String displayName = 'Ibrahima D'}) =>
       displayName: displayName,
       kycVerified: true,
       isProAccount: false,
-      isKiloPro: false,
+      gpPro: false,
       completedBidsCount: 12,
       averageRating: 4.7,
       ratingCount: 8,
@@ -458,9 +458,9 @@ void main() {
     },
   );
 
-  // ─── Test 11: PRO + KiloPro badges in header ─────────────────────────────
+  // ─── Test 11: PRO + GP Pro badges in header ─────────────────────────────
 
-  testWidgets('profil PRO + KiloPro → badges PRO et Kilo Pro dans le header', (
+  testWidgets('profil PRO + GP Pro → badges PRO et GP Pro dans le header', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(400, 900));
@@ -473,7 +473,7 @@ void main() {
           displayName: 'Ibou Pro',
           kycVerified: true,
           isProAccount: true,
-          isKiloPro: true,
+          gpPro: true,
           completedBidsCount: 100,
           averageRating: 4.9,
           ratingCount: 50,
@@ -492,7 +492,40 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Compte PRO'), findsOneWidget);
-    expect(find.text('Kilo Pro'), findsOneWidget);
+    expect(find.text('GP Pro'), findsOneWidget);
+  });
+
+  testWidgets('profil sans gpPro → pas de « GP Pro » dans le header', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    when(() => profileBloc.state).thenReturn(
+      ProfilePublicLoaded(
+        profile: const ProfilePublicModel(
+          userId: 'u1',
+          displayName: 'Ibou Simple',
+          kycVerified: true,
+          isProAccount: true,
+          gpPro: false,
+          completedBidsCount: 100,
+          averageRating: 4.9,
+          ratingCount: 50,
+          memberSince: '2023-01',
+          badges: [],
+        ),
+        recentRatings: _fakeRatings(),
+      ),
+    );
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
+
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('GP Pro'), findsNothing);
   });
 
   // ─── Test 12: S'abonner button tap → HubSubscribePressed ─────────────────
@@ -581,7 +614,7 @@ void main() {
           displayName: 'Nouveau Voyageur',
           kycVerified: false,
           isProAccount: false,
-          isKiloPro: false,
+          gpPro: false,
           completedBidsCount: 0,
           averageRating: 0.0,
           ratingCount: 0,
@@ -704,7 +737,7 @@ void main() {
             displayName: 'Ibou Pro',
             kycVerified: true,
             isProAccount: true,
-            isKiloPro: false,
+            gpPro: false,
             completedBidsCount: 12,
             averageRating: 4.7,
             ratingCount: 8,
@@ -807,7 +840,7 @@ void main() {
           displayName: 'New Traveler',
           kycVerified: false,
           isProAccount: false,
-          isKiloPro: false,
+          gpPro: false,
           completedBidsCount: 0,
           averageRating: 0.0,
           ratingCount: 0,

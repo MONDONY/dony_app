@@ -73,5 +73,6 @@ export 'package:dony/core/design/widgets/dony_text_field.dart';
 export 'package:dony/core/design/widgets/dony_trip_card.dart';
 export 'package:dony/core/design/widgets/dony_urgent_badge.dart';
 export 'package:dony/core/design/widgets/dony_user_card.dart';
+export 'package:dony/core/design/widgets/gp_pro_badge.dart';
 // Form controls
 export 'package:dony/core/design/widgets/required_label.dart';

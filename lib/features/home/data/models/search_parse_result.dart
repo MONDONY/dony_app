@@ -91,7 +91,7 @@ class SearchParseResult {
   /// Pose les filtres compris par-dessus ceux déjà réglés au doigt.
   ///
   /// Un champ absent de la réponse n'écrase rien : l'utilisateur qui a réglé
-  /// « Kilo Pro » puis dicte une ville doit garder son Kilo Pro.
+  /// « GP Pro » puis dicte une ville doit garder son GP Pro.
   HomeSearchFilters applyTo(HomeSearchFilters base) {
     var out = base;
 
@@ -128,7 +128,11 @@ class SearchParseResult {
 
     if (filters['urgent'] == true) out = out.copyWith(urgentOnly: true);
 
-    if (filters['kiloProOnly'] == true) out = out.copyWith(kiloProOnly: true);
+    // Le back accepte encore l'ancien nom `kiloProOnly` : le premier non nul
+    // gagne (`gpProOnly: false` + `kiloProOnly: true` reste inactif).
+    if ((filters['gpProOnly'] ?? filters['kiloProOnly']) == true) {
+      out = out.copyWith(gpProOnly: true);
+    }
 
     if (filters['kycVerifiedOnly'] == true) {
       out = out.copyWith(kycVerifiedOnly: true);

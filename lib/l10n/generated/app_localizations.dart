@@ -9093,12 +9093,6 @@ abstract class AppLocalizations {
   /// **'FILTRES RAPIDES'**
   String get listingQuickFiltersTitle;
 
-  /// Chip de filtre voyageur Kilo Pro (search_form_bottom_sheet.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Kilo Pro'**
-  String get listingKiloProChip;
-
   /// Chip de filtre note minimale (search_form_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -17219,6 +17213,12 @@ abstract class AppLocalizations {
   /// **'Message copié'**
   String get chatMessageCopied;
 
+  /// Nom accessible de l'en-tête du chat quand le correspondant est GP Pro (le badge n'est pas interactif dans l'en-tête, chat_screen.dart _ParticipantHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le profil de {name}, GP Pro'**
+  String chatOpenGpProParticipantProfileSemantics(String name);
+
   /// Nom accessible de l'en-tête du chat (avatar + nom) qui ouvre le profil public du correspondant (chat_screen.dart _ParticipantHeader).
   ///
   /// In fr, this message translates to:
@@ -19150,6 +19150,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Export RGPD au format JSON'**
   String get profileMenuExportDataSubtitle;
+
+  /// Entrée de la feuille de menu (profile_menu_sheet.dart) vers la demande GP Pro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Devenir GP Pro'**
+  String get profileMenuGpPro;
 
   /// Entrée « Se déconnecter » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé pour le bouton de confirmation (profile_screen.dart, même feature, même texte).
   ///
@@ -30561,6 +30567,12 @@ abstract class AppLocalizations {
   /// **'Identité du voyageur vérifiée'**
   String get tripPosterCaptionVerified;
 
+  /// Ligne de la légende de l'affiche quand le voyageur a le badge GP Pro
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur GP Pro, régulier reconnu par Yadony'**
+  String get tripPosterCaptionGpPro;
+
   /// Pastille de l'en-tête de l'affiche de demande d'envoi
   ///
   /// In fr, this message translates to:
@@ -33127,6 +33139,378 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Réessayer'**
   String get maintenanceRetry;
+
+  /// Libellé du badge GP Pro (voyageur régulier accordé par l'équipe Yadony), à côté du nom d'un voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'GP Pro'**
+  String get gpProBadgeLabel;
+
+  /// Texte lu par les lecteurs d'écran pour le badge GP Pro (version pastille ou libellé).
+  ///
+  /// In fr, this message translates to:
+  /// **'Badge GP Pro, voyageur régulier vérifié par Yadony'**
+  String get gpProBadgeSemantics;
+
+  /// Titre de la feuille qui explique le badge GP Pro, ouverte en touchant le badge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Qu\'est-ce qu\'un GP Pro ?'**
+  String get gpProInfoTitle;
+
+  /// Corps de la feuille d'explication du badge GP Pro : badge accordé par l'équipe, distinct de l'abonnement PRO et de l'identité vérifiée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un GP Pro est un voyageur régulier ou une entreprise dont la demande a été examinée puis acceptée par l\'équipe Yadony. Ce badge est différent de l\'abonnement PRO et de l\'identité vérifiée : il n\'est ni payant ni automatique.'**
+  String get gpProInfoBody;
+
+  /// Titre de l'écran /profile/gp-pro (demande et statut du badge GP Pro).
+  ///
+  /// In fr, this message translates to:
+  /// **'GP Pro'**
+  String get gpProScreenTitle;
+
+  /// Écran GP Pro : titre de l'état d'erreur de chargement, avec bouton Réessayer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger votre statut GP Pro'**
+  String get gpProFailureTitle;
+
+  /// Écran GP Pro : description de l'état d'erreur de chargement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre connexion, puis réessayez.'**
+  String get gpProFailureBody;
+
+  /// Écran GP Pro : le serveur ne propose pas encore GP Pro (version plus ancienne).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bientôt disponible'**
+  String get gpProUnavailableTitle;
+
+  /// Écran GP Pro : description de l'état « Bientôt disponible ».
+  ///
+  /// In fr, this message translates to:
+  /// **'La demande de badge GP Pro arrive très bientôt.'**
+  String get gpProUnavailableBody;
+
+  /// Écran GP Pro, aucune demande : titre de l'encart d'introduction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Devenir GP Pro'**
+  String get gpProIntroTitle;
+
+  /// Écran GP Pro, aucune demande : texte de l'encart d'introduction (badge accordé après examen par l'équipe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous voyagez souvent, seul ou pour votre entreprise ? Demandez le badge GP Pro. L\'équipe Yadony examine chaque demande.'**
+  String get gpProIntroBody;
+
+  /// Écran GP Pro sans identité vérifiée : titre de l'encart qui mène au parcours de vérification.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez d\'abord votre identité'**
+  String get gpProKycTitle;
+
+  /// Écran GP Pro sans identité vérifiée : explication.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le badge GP Pro est réservé aux voyageurs dont l\'identité est vérifiée. Vérifiez la vôtre, puis revenez faire votre demande.'**
+  String get gpProKycBody;
+
+  /// Écran GP Pro : bouton qui ouvre le parcours de vérification d'identité.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get gpProKycCta;
+
+  /// Formulaire GP Pro : question de la fréquence de voyage (obligatoire).
+  ///
+  /// In fr, this message translates to:
+  /// **'À quelle fréquence voyagez-vous ?'**
+  String get gpProFrequencyLabel;
+
+  /// Fréquence de voyage GP Pro : WEEKLY.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque semaine'**
+  String get gpProFrequencyWeekly;
+
+  /// Fréquence de voyage GP Pro : TWICE_A_MONTH.
+  ///
+  /// In fr, this message translates to:
+  /// **'Deux fois par mois'**
+  String get gpProFrequencyTwiceAMonth;
+
+  /// Fréquence de voyage GP Pro : MONTHLY.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une fois par mois'**
+  String get gpProFrequencyMonthly;
+
+  /// Fréquence de voyage GP Pro : LESS_OFTEN.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moins souvent'**
+  String get gpProFrequencyLessOften;
+
+  /// Formulaire GP Pro : libellé flottant du nom commercial, 80 caractères au plus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom commercial (facultatif)'**
+  String get gpProCommercialNameLabel;
+
+  /// Inscription, étape intention : case « Je suis GP » (voyageur ou les deux).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je suis GP (voyageur régulier ou entreprise)'**
+  String get gpProSignupCheckbox;
+
+  /// Inscription : précise que les justificatifs GP Pro se joignent depuis le profil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez ajouter des justificatifs plus tard depuis votre profil.'**
+  String get gpProSignupDocsHint;
+
+  /// Formulaire GP Pro : titre de la section des justificatifs, facultatifs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Justificatifs (facultatif)'**
+  String get gpProPiecesTitle;
+
+  /// Formulaire GP Pro : aide sous le titre des justificatifs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ils aident l\'équipe à examiner votre demande. Images seulement, 4 au plus.'**
+  String get gpProPiecesHint;
+
+  /// Phrase RGPD fixée par le spec, sous les justificatifs GP Pro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos documents servent uniquement à examiner votre demande. Ils sont supprimés dès que nous avons décidé.'**
+  String get gpProPiecesPrivacy;
+
+  /// Formulaire GP Pro : bouton d'ajout d'un justificatif.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un justificatif'**
+  String get gpProAddPiece;
+
+  /// Feuille de choix du type de justificatif GP Pro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quel justificatif ?'**
+  String get gpProPieceTypeTitle;
+
+  /// Feuille de choix de la source de l'image (appareil photo ou galerie) d'un justificatif GP Pro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une image'**
+  String get gpProPieceSourceTitle;
+
+  /// Type de justificatif GP Pro : BUSINESS_REGISTRATION.
+  ///
+  /// In fr, this message translates to:
+  /// **'Registre d\'entreprise (Kbis, SIRET, NINEA, RCCM…)'**
+  String get gpProDocTypeBusinessRegistration;
+
+  /// Type de justificatif GP Pro : TRAVEL_PROOF.
+  ///
+  /// In fr, this message translates to:
+  /// **'Billet ou carte d\'embarquement'**
+  String get gpProDocTypeTravelProof;
+
+  /// Type de justificatif GP Pro : SOCIAL_PROFILE.
+  ///
+  /// In fr, this message translates to:
+  /// **'Capture d\'un réseau social'**
+  String get gpProDocTypeSocialProfile;
+
+  /// Type de justificatif GP Pro : OTHER.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre document'**
+  String get gpProDocTypeOther;
+
+  /// Justificatif GP Pro en cours d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi en cours…'**
+  String get gpProPieceUploading;
+
+  /// Justificatif GP Pro envoyé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouté'**
+  String get gpProPieceReady;
+
+  /// Justificatif GP Pro dont l'envoi a échoué : il peut être retiré.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échec de l\'envoi, retirez-le'**
+  String get gpProPieceFailed;
+
+  /// Libellé d'accessibilité du bouton de retrait d'un justificatif GP Pro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer ce justificatif'**
+  String get gpProRemovePiece;
+
+  /// Écran GP Pro : bouton d'envoi de la demande (barre fixe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer ma demande'**
+  String get gpProSubmit;
+
+  /// Écran GP Pro : bouton d'annulation d'une demande ouverte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler ma demande'**
+  String get gpProCancel;
+
+  /// Dialogue de confirmation de l'annulation d'une demande GP Pro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler votre demande ?'**
+  String get gpProCancelDialogTitle;
+
+  /// Dialogue d'annulation GP Pro : conséquence.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande et vos justificatifs seront supprimés. Vous pourrez en faire une nouvelle plus tard.'**
+  String get gpProCancelDialogBody;
+
+  /// Dialogue d'annulation GP Pro : bouton destructif.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la demande'**
+  String get gpProCancelDialogConfirm;
+
+  /// Dialogue d'annulation GP Pro : bouton pour garder la demande.
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder ma demande'**
+  String get gpProCancelDialogKeep;
+
+  /// Écran GP Pro, demande refusée ou badge retiré : bouton qui rouvre le formulaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refaire une demande'**
+  String get gpProRestart;
+
+  /// Écran GP Pro : statut PENDING (sans délai annoncé).
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours d\'examen'**
+  String get gpProPendingTitle;
+
+  /// Écran GP Pro : explication du statut PENDING, sans délai.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'équipe Yadony examine votre demande. Vous serez prévenu dès qu\'elle aura décidé.'**
+  String get gpProPendingBody;
+
+  /// Écran GP Pro : statut AWAITING_KYC.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de votre identité'**
+  String get gpProAwaitingKycTitle;
+
+  /// Écran GP Pro : phrase fixée par le spec pour le statut AWAITING_KYC.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande partira dès que votre identité sera vérifiée'**
+  String get gpProAwaitingKycBody;
+
+  /// Écran GP Pro : statut ACTIVE.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes GP Pro'**
+  String get gpProActiveTitle;
+
+  /// Écran GP Pro : explication du badge actif.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre badge apparaît à côté de votre nom sur vos trajets, votre profil et vos conversations.'**
+  String get gpProActiveBody;
+
+  /// Écran GP Pro : statut REJECTED (demande refusée).
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusée'**
+  String get gpProRejectedTitle;
+
+  /// Écran GP Pro : explication du statut REJECTED.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande n\'a pas été acceptée. Vous pouvez en faire une nouvelle.'**
+  String get gpProRejectedBody;
+
+  /// Écran GP Pro : statut REVOKED (badge retiré).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retiré'**
+  String get gpProRevokedTitle;
+
+  /// Écran GP Pro : explication du statut REVOKED.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'équipe Yadony a retiré votre badge GP Pro. Vous pouvez faire une nouvelle demande.'**
+  String get gpProRevokedBody;
+
+  /// Écran GP Pro : motif de refus ou de retrait saisi par l'équipe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif : {reason}'**
+  String gpProReason(String reason);
+
+  /// Écran GP Pro : libellé de la fréquence déclarée dans la demande.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fréquence'**
+  String get gpProSummaryFrequency;
+
+  /// Écran GP Pro : libellé du nom commercial déclaré dans la demande.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom commercial'**
+  String get gpProSummaryCommercialName;
+
+  /// Écran GP Pro : erreur réseau.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion impossible. Vérifiez votre réseau, puis réessayez.'**
+  String get gpProErrorNetwork;
+
+  /// Écran GP Pro : 422 gp-pro-too-many-documents.
+  ///
+  /// In fr, this message translates to:
+  /// **'4 justificatifs au plus par demande.'**
+  String get gpProErrorTooManyDocuments;
+
+  /// Écran GP Pro : 422 gp-pro-document-invalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce justificatif n\'est pas accepté. Envoyez une image de 5 Mo au plus.'**
+  String get gpProErrorDocumentInvalid;
+
+  /// Écran GP Pro : 503 gp-pro-document-storage-unavailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les justificatifs sont momentanément indisponibles. Réessayez plus tard.'**
+  String get gpProErrorStorageUnavailable;
+
+  /// Écran GP Pro : 422 gp-pro-kyc-required.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez d\'abord votre identité pour envoyer votre demande.'**
+  String get gpProErrorKycRequired;
+
+  /// Écran GP Pro : erreur inconnue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue. Réessayez.'**
+  String get gpProErrorGeneric;
 }
 
 class _AppLocalizationsDelegate

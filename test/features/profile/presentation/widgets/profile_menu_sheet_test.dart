@@ -43,6 +43,7 @@ void main() {
     ('profile-menu-edit', ProfileMenuAction.editProfile),
     ('profile-menu-settings', ProfileMenuAction.settings),
     ('profile-menu-export', ProfileMenuAction.exportData),
+    ('profile-menu-gp-pro', ProfileMenuAction.gpPro),
     ('profile-menu-logout', ProfileMenuAction.logout),
     ('profile-menu-delete', ProfileMenuAction.deleteAccount),
   ]) {
@@ -87,6 +88,7 @@ void main() {
     expect(find.text('Paramètres'), findsOneWidget);
     expect(find.text('Mon compte'), findsOneWidget);
     expect(find.text('Télécharger mes données'), findsOneWidget);
+    expect(find.text('Devenir GP Pro'), findsOneWidget);
     expect(find.text('Export RGPD au format JSON'), findsOneWidget);
     expect(find.text('Se déconnecter'), findsOneWidget);
     expect(find.text('Supprimer mon compte'), findsOneWidget);

@@ -64,7 +64,7 @@ void main() {
         minAvailableKg: any(named: 'minAvailableKg'),
         maxAvailableKg: any(named: 'maxAvailableKg'),
         maxPricePerKg: any(named: 'maxPricePerKg'),
-        kiloProOnly: any(named: 'kiloProOnly'),
+        gpProOnly: any(named: 'gpProOnly'),
         minRating: any(named: 'minRating'),
         weekendOnly: any(named: 'weekendOnly'),
         transportMode: any(named: 'transportMode'),
@@ -367,7 +367,7 @@ void main() {
           minAvailableKg: any(named: 'minAvailableKg'),
           maxAvailableKg: any(named: 'maxAvailableKg'),
           maxPricePerKg: any(named: 'maxPricePerKg'),
-          kiloProOnly: any(named: 'kiloProOnly'),
+          gpProOnly: any(named: 'gpProOnly'),
           minRating: any(named: 'minRating'),
           weekendOnly: any(named: 'weekendOnly'),
           transportMode: any(named: 'transportMode'),
@@ -458,7 +458,7 @@ void main() {
     seed: () => const SearchComposerState(
       filters: HomeSearchFilters(
         arrivalCity: 'Dakar', // commun : doit être effacé
-        kiloProOnly: true, // propre à trips : doit être effacé
+        gpProOnly: true, // propre à trips : doit être effacé
         maxWeight: 25, // propre à colis : doit survivre
       ),
     ),
@@ -466,7 +466,7 @@ void main() {
     wait: const Duration(milliseconds: 600),
     verify: (bloc) {
       expect(bloc.state.filters.arrivalCity, isNull);
-      expect(bloc.state.filters.kiloProOnly, isFalse);
+      expect(bloc.state.filters.gpProOnly, isFalse);
       expect(
         bloc.state.filters.maxWeight,
         25,

@@ -740,4 +740,20 @@ void main() {
       isNot(contains('admin')),
     );
   });
+
+  test('GP_PRO_APPROVED/REJECTED/REVOKED ouvrent l\'écran GP Pro', () {
+    for (final type in [
+      'GP_PRO_APPROVED',
+      'GP_PRO_REJECTED',
+      'GP_PRO_REVOKED',
+    ]) {
+      expect(
+        resolveNotificationRoute(type, {'route': 'profile/gp-pro'}),
+        '/profile/gp-pro',
+        reason: type,
+      );
+      expect(resolveNotificationRoute(type, {}), '/profile/gp-pro');
+    }
+    expect(isShellTabRoute('/profile/gp-pro'), isFalse);
+  });
 }

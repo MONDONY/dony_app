@@ -62,6 +62,7 @@ class RequestSenderCubit extends Cubit<RequestSenderState> {
             kycVerified: p.kycVerified,
             avatarUrl: p.avatarUrl,
             incidentCount: p.senderIncidentCount,
+            gpPro: p.gpPro,
           ),
         ),
       );

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
@@ -6,6 +8,8 @@ import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/activation/presentation/widgets/intent_form.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/features/gp_pro/bloc/gp_pro_signup_cubit.dart';
+import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_signup_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,15 +43,23 @@ class IntentStepScreen extends StatelessWidget {
     final hPadding = DonyLayout.hPadding(context);
     return BlocListener<IntentCubit, IntentFormState>(
       listenWhen: (p, c) => p.status != c.status,
-      listener: (context, state) {
+      listener: (context, state) async {
         // Une erreur n'empêche jamais de finir l'inscription : l'intention
         // sera redemandée sur l'accueil (comptes sans intention).
         if (state.status == IntentFormStatus.saved) {
           // Les premiers pas, plus loin, s'afficheront déjà personnalisés.
-          getItSafe<ActivationCubit>()?.load();
+          unawaited(getItSafe<ActivationCubit>()?.load() ?? Future.value());
         }
         if (state.status == IntentFormStatus.saved ||
             state.status == IntentFormStatus.error) {
+          // La demande GP Pro ne bloque jamais l'inscription : le cubit avale
+          // ses erreurs, on poursuit dans tous les cas.
+          // Sans attendre : la navigation ne dépend pas du réseau. L'appel
+          // repository et l'event analytics vont au bout même écran fermé
+          // (seul l'emit final du cubit est protégé par isClosed).
+          unawaited(
+            context.read<GpProSignupCubit>().submitIfChecked(state.intent),
+          );
           context.go(args.next, extra: args.nextExtra);
         }
       },
@@ -82,22 +94,52 @@ class IntentStepScreen extends StatelessWidget {
                     const SizedBox(height: DonySpacing.xs),
                     Text(l.intentSubtitle, style: text.bodyMedium),
                     const SizedBox(height: DonySpacing.lg),
-                    const Expanded(
-                      child: SingleChildScrollView(child: IntentForm()),
-                    ),
-                    BlocBuilder<IntentCubit, IntentFormState>(
-                      builder: (context, state) => AuthFlowActions(
-                        primary: DonyButton(
-                          key: const Key('intent-continue'),
-                          label: l.intentContinue,
-                          isLoading: state.status == IntentFormStatus.saving,
-                          onPressed: state.isValid
-                              ? () => context.read<IntentCubit>().submit(
-                                  IntentSource.signup,
-                                )
-                              : null,
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const IntentForm(),
+                            BlocBuilder<IntentCubit, IntentFormState>(
+                              buildWhen: (p, c) => p.intent != c.intent,
+                              builder: (context, state) =>
+                                  state.intent == UserIntent.traveler ||
+                                      state.intent == UserIntent.both
+                                  ? const Padding(
+                                      padding: EdgeInsets.only(
+                                        top: DonySpacing.base,
+                                      ),
+                                      child: GpProSignupSection(),
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
+                    BlocBuilder<IntentCubit, IntentFormState>(
+                      builder: (context, state) =>
+                          BlocBuilder<GpProSignupCubit, GpProSignupState>(
+                            // Pas de reconstruction à chaque frappe du nom.
+                            buildWhen: (p, c) =>
+                                p.isCompleteFor(state.intent) !=
+                                c.isCompleteFor(state.intent),
+                            builder: (context, gp) => AuthFlowActions(
+                              primary: DonyButton(
+                                key: const Key('intent-continue'),
+                                label: l.intentContinue,
+                                isLoading:
+                                    state.status == IntentFormStatus.saving,
+                                onPressed:
+                                    state.isValid &&
+                                        gp.isCompleteFor(state.intent)
+                                    ? () => context.read<IntentCubit>().submit(
+                                        IntentSource.signup,
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          ),
                     ),
                     SizedBox(height: MediaQuery.paddingOf(context).bottom),
                   ],

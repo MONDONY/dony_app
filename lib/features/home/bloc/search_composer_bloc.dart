@@ -226,7 +226,7 @@ class SearchComposerBloc
       return common.copyWith(
         clearMaxPricePerKg: true,
         clearWeight: true,
-        kiloProOnly: false,
+        gpProOnly: false,
         clearMinRating: true,
         weekendOnly: false,
         clearTransportMode: true,
@@ -264,7 +264,7 @@ class SearchComposerBloc
           minAvailableKg: q.minAvailableKg,
           maxAvailableKg: q.maxAvailableKg,
           maxPricePerKg: q.maxPricePerKg,
-          kiloProOnly: q.kiloProOnly,
+          gpProOnly: q.gpProOnly,
           minRating: q.minRating,
           weekendOnly: q.weekendOnly,
           transportMode: q.transportMode,

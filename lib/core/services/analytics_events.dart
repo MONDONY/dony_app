@@ -807,4 +807,26 @@ abstract final class AnalyticsEvents {
 
   /// « Réessayer » touché sur l'écran de maintenance.
   static const maintenanceRetryTapped = 'maintenance_retry_tapped';
+
+  // ── GP Pro (badge de voyageur régulier accordé par l'admin) ────────────
+  /// Écran de candidature GP Pro ouvert.
+  static const gpProApplicationOpened = 'gp_pro_application_opened';
+
+  /// Candidature GP Pro envoyée.
+  static const gpProApplicationSubmitted = 'gp_pro_application_submitted';
+
+  /// Candidature GP Pro en attente annulée par le voyageur.
+  static const gpProApplicationCancelled = 'gp_pro_application_cancelled';
+
+  /// Pièce jointe ajoutée à la candidature.
+  static const gpProDocumentAdded = 'gp_pro_document_added';
+
+  /// Pièce jointe retirée de la candidature.
+  static const gpProDocumentRemoved = 'gp_pro_document_removed';
+
+  /// Badge GP Pro touché (propriété `surface` : écran d'origine).
+  static const gpProBadgeTapped = 'gp_pro_badge_tapped';
+
+  /// Entrée GP Pro du menu de l'onglet Moi.
+  static const profileMenuGpProOpened = 'profile_menu_gp_pro_opened';
 }

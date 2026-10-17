@@ -227,10 +227,10 @@ class _TrustMarks extends StatelessWidget {
           color: cs.primary,
           bold: true,
         ),
-      if (profile.isKiloPro)
+      if (profile.gpPro)
         _Mark(
-          icon: 'package',
-          label: 'Kilo Pro', // i18n-ignore
+          icon: 'luggage',
+          label: l.gpProBadgeLabel,
           color: cs.onSurfaceVariant,
         ),
       if (profile.kycVerified)

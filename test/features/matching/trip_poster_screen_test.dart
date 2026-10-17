@@ -24,6 +24,7 @@ AnnouncementModel _announcement({
   String capacityUnit = 'SUITCASE_23KG',
   String? pickupLabel,
   String? deliveryLabel,
+  Map<String, dynamic> extra = const {},
 }) => AnnouncementModel.fromJson({
   'id': 'a1',
   'travelerId': 't1',
@@ -46,6 +47,7 @@ AnnouncementModel _announcement({
   'status': 'ACTIVE',
   'createdAt': DateTime(2026, 8).toIso8601String(),
   'updatedAt': DateTime(2026, 8).toIso8601String(),
+  ...extra,
 });
 
 Map<String, dynamic> _gridItem(String label, double display) => {
@@ -269,6 +271,33 @@ void main() {
     final caption = copied.single;
     expect(caption, contains('Remise : 12 rue de Tombouctou, 75018 Paris'));
     expect(caption, contains('Récupération : Sacré-Cœur 3, Dakar'));
+  });
+
+  testWidgets('la légende mentionne GP Pro seulement pour un voyageur GP Pro', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      announcement: _announcement(
+        extra: {
+          'traveler': {'id': 't1', 'displayName': 'Awa', 'gpPro': true},
+        },
+      ),
+    );
+    await _tapAction(tester, 'Copier la légende');
+    expect(copied.single, contains('GP Pro'));
+
+    copied.clear();
+    await _pump(
+      tester,
+      announcement: _announcement(
+        extra: {
+          'traveler': {'id': 't1', 'displayName': 'Awa'},
+        },
+      ),
+    );
+    await _tapAction(tester, 'Copier la légende');
+    expect(copied.single, isNot(contains('GP Pro')));
   });
 
   testWidgets('la légende dit Kg libre quand la capacité est non bornée', (

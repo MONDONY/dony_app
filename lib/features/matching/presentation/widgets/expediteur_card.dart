@@ -81,12 +81,11 @@ class ExpediteurCard extends StatelessWidget {
                               bg: cs.primaryContainer,
                             ),
                           ],
-                          if (bid.senderKiloPro) ...[
+                          if (bid.senderGpPro) ...[
                             const SizedBox(width: DonySpacing.xs),
-                            MiniChip(
-                              label: l.listingKiloProChip,
-                              color: DonyColors.amberDark,
-                              bg: DonyColors.amberLight,
+                            const GpProBadge(
+                              surface: 'sender_card',
+                              interactive: false,
                             ),
                           ],
                         ],

@@ -100,18 +100,18 @@ void main() {
         'phoneNumber': '+22177000000',
         'averageRating': 4.8,
         'totalTrips': 12,
-        'kiloPro': true,
+        'gpPro': true,
       };
       final p = TravelerProfile.fromJson(json);
       expect(p.id, 'tp-99');
       expect(p.displayName, 'Fatou Sow');
       expect(p.averageRating, 4.8);
       expect(p.totalTrips, 12);
-      expect(p.kiloPro, isTrue);
+      expect(p.gpPro, isTrue);
     });
 
     test('parses with optional fields null', () {
-      final json = {'id': 'tp-1', 'kiloPro': false};
+      final json = {'id': 'tp-1', 'gpPro': false};
       final p = TravelerProfile.fromJson(json);
       expect(p.displayName, isNull);
       expect(p.phoneNumber, isNull);
@@ -123,7 +123,7 @@ void main() {
     test('parses avatarUrl when present', () {
       final json = {
         'id': 'tp-100',
-        'kiloPro': false,
+        'gpPro': false,
         'avatarUrl': 'https://cdn.dony.app/avatars/tp-100.jpg',
       };
       final p = TravelerProfile.fromJson(json);
@@ -131,7 +131,7 @@ void main() {
     });
 
     test('avatarUrl is null when absent', () {
-      final json = {'id': 'tp-101', 'kiloPro': false};
+      final json = {'id': 'tp-101', 'gpPro': false};
       final p = TravelerProfile.fromJson(json);
       expect(p.avatarUrl, isNull);
     });
@@ -139,7 +139,7 @@ void main() {
     test('toJson includes avatarUrl', () {
       final json = {
         'id': 'tp-102',
-        'kiloPro': false,
+        'gpPro': false,
         'avatarUrl': 'https://cdn.dony.app/avatars/tp-102.jpg',
       };
       final p = TravelerProfile.fromJson(json);

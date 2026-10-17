@@ -125,7 +125,7 @@ class BidModel {
   final int? senderIncidentCount;
   final bool senderKycVerified;
   final bool senderIsProAccount;
-  final bool senderKiloPro;
+  final bool senderGpPro;
   final double? weightKg;
   // Nullable for the same reason — request.description is optional.
   final String? description;
@@ -212,7 +212,7 @@ class BidModel {
   final bool travelerPhoneAvailable;
   final bool travelerKycVerified;
   final bool travelerIsProAccount;
-  final bool travelerKiloPro;
+  final bool travelerGpPro;
   final int? travelerTotalTrips;
   final double? travelerAverageRating;
   final bool senderHasRated;
@@ -305,7 +305,7 @@ class BidModel {
     this.senderIncidentCount,
     this.senderKycVerified = false,
     this.senderIsProAccount = false,
-    this.senderKiloPro = false,
+    this.senderGpPro = false,
     this.weightKg,
     this.description,
     this.contentCategory,
@@ -343,7 +343,7 @@ class BidModel {
     this.travelerPhoneAvailable = false,
     this.travelerKycVerified = false,
     this.travelerIsProAccount = false,
-    this.travelerKiloPro = false,
+    this.travelerGpPro = false,
     this.travelerTotalTrips,
     this.travelerAverageRating,
     this.senderHasRated = false,

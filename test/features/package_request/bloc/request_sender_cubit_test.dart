@@ -17,7 +17,7 @@ const _profile = ProfilePublicModel(
   avatarUrl: 'https://cdn.example/a.jpg',
   kycVerified: true,
   isProAccount: false,
-  isKiloPro: false,
+  gpPro: false,
   completedBidsCount: 3,
   averageRating: 4.5,
   ratingCount: 8,
@@ -61,6 +61,23 @@ void main() {
           .having((s) => s.sender.kycVerified, 'kyc', isTrue)
           .having((s) => s.sender.avatarUrl, 'avatar', isNotNull)
           .having((s) => s.sender.incidentCount, 'incidents', 1),
+    ],
+  );
+
+  blocTest<RequestSenderCubit, RequestSenderState>(
+    'profil gpPro → le résumé porte gpPro vrai',
+    setUp: () => when(() => repo.getProfilePublic('u-1')).thenAnswer(
+      (_) async => ProfilePublicModel.fromJson({
+        'userId': 'u-1',
+        'displayName': 'Awa Diop',
+        'gpPro': true,
+      }),
+    ),
+    build: build,
+    act: (c) => c.load('u-1', canRead: true),
+    expect: () => [
+      isA<RequestSenderLoading>(),
+      isA<RequestSenderLoaded>().having((s) => s.sender.gpPro, 'gpPro', isTrue),
     ],
   );
 

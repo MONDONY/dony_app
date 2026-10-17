@@ -56,7 +56,7 @@ class AnnouncementQuery {
     this.minAvailableKg,
     this.maxAvailableKg,
     this.maxPricePerKg,
-    this.kiloProOnly,
+    this.gpProOnly,
     this.minRating,
     this.weekendOnly,
     this.transportMode,
@@ -77,7 +77,7 @@ class AnnouncementQuery {
   final double? minAvailableKg;
   final double? maxAvailableKg;
   final double? maxPricePerKg;
-  final bool? kiloProOnly;
+  final bool? gpProOnly;
   final double? minRating;
   final bool? weekendOnly;
   final TransportMode? transportMode;
@@ -117,7 +117,7 @@ class HomeSearchFilters {
     this.maxPricePerKg,
     this.weightMin,
     this.weightMax,
-    this.kiloProOnly = false,
+    this.gpProOnly = false,
     this.minRating,
     this.weekendOnly = false,
     this.transportMode,
@@ -150,7 +150,7 @@ class HomeSearchFilters {
   /// [maxWeight] : sémantiques opposées, jamais propagées l'une vers l'autre.
   final double? weightMin;
   final double? weightMax;
-  final bool kiloProOnly;
+  final bool gpProOnly;
   final double? minRating;
   final bool weekendOnly;
   final TransportMode? transportMode;
@@ -234,7 +234,7 @@ class HomeSearchFilters {
       date: customDate,
       weightKg: weightMin ?? 6,
       maxPricePerKg: maxPricePerKg ?? 25,
-      kiloProOnly: kiloProOnly,
+      gpProOnly: gpProOnly,
       ratingFilter: minRating != null,
       weekendFilter: weekendOnly,
       priceFilter: maxPricePerKg != null,
@@ -279,7 +279,7 @@ class HomeSearchFilters {
       minAvailableKg: weightMin,
       maxAvailableKg: weightMax,
       maxPricePerKg: maxPricePerKg,
-      kiloProOnly: kiloProOnly ? true : null,
+      gpProOnly: gpProOnly ? true : null,
       minRating: minRating,
       weekendOnly: weekendOnly ? true : null,
       transportMode: transportMode,
@@ -333,7 +333,7 @@ class HomeSearchFilters {
     if (datePreset != DonyDatePreset.none) 'date',
     if (urgentOnly) 'urgent',
     if (nearMeActive) 'near_me',
-    if (kiloProOnly) 'kilo_pro',
+    if (gpProOnly) 'gp_pro',
     if (minRating != null) 'rating',
     if (weightMin != null || weightMax != null) 'weight',
     if (maxPricePerKg != null) 'price',
@@ -368,7 +368,7 @@ class HomeSearchFilters {
 
   int get _tripsOnlyActiveCount {
     var n = 0;
-    if (kiloProOnly) {
+    if (gpProOnly) {
       n++;
     }
     if (minRating != null) {
@@ -460,7 +460,7 @@ class HomeSearchFilters {
     double? maxPricePerKg,
     double? weightMin,
     double? weightMax,
-    bool? kiloProOnly,
+    bool? gpProOnly,
     double? minRating,
     bool? weekendOnly,
     TransportMode? transportMode,
@@ -504,7 +504,7 @@ class HomeSearchFilters {
           : (maxPricePerKg ?? this.maxPricePerKg),
       weightMin: clearWeight ? null : (weightMin ?? this.weightMin),
       weightMax: clearWeight ? null : (weightMax ?? this.weightMax),
-      kiloProOnly: kiloProOnly ?? this.kiloProOnly,
+      gpProOnly: gpProOnly ?? this.gpProOnly,
       minRating: clearMinRating ? null : (minRating ?? this.minRating),
       weekendOnly: weekendOnly ?? this.weekendOnly,
       transportMode: clearTransportMode

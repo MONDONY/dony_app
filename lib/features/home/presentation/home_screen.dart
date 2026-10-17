@@ -679,7 +679,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         minAvailableKg: q.minAvailableKg,
         maxAvailableKg: q.maxAvailableKg,
         maxPricePerKg: q.maxPricePerKg,
-        kiloProOnly: q.kiloProOnly,
+        gpProOnly: q.gpProOnly,
         minRating: q.minRating,
         weekendOnly: q.weekendOnly,
         transportMode: q.transportMode,
@@ -780,7 +780,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
           minAvailableKg: q.minAvailableKg,
           maxAvailableKg: q.maxAvailableKg,
           maxPricePerKg: q.maxPricePerKg,
-          kiloProOnly: q.kiloProOnly,
+          gpProOnly: q.gpProOnly,
           minRating: q.minRating,
           weekendOnly: q.weekendOnly,
           transportMode: q.transportMode,
@@ -1314,7 +1314,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       );
     }
     next = next.copyWith(
-      kiloProOnly: result.kiloProOnly,
+      gpProOnly: result.gpProOnly,
       weekendOnly: result.weekendFilter,
       kycVerifiedOnly: result.kycVerifiedOnly,
     );
@@ -1823,7 +1823,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
           ? common.copyWith(
               clearMaxPricePerKg: true,
               clearWeight: true,
-              kiloProOnly: false,
+              gpProOnly: false,
               clearMinRating: true,
               weekendOnly: false,
               clearTransportMode: true,
@@ -1915,9 +1915,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
       onPriceTap: _showPriceSheet,
       onPriceClear: () =>
           _onFiltersChanged(_filters.copyWith(clearMaxPricePerKg: true)),
-      onKiloProToggle: () => _onFiltersChanged(
-        _filters.copyWith(kiloProOnly: !_filters.kiloProOnly),
-      ),
+      onGpProToggle: () =>
+          _onFiltersChanged(_filters.copyWith(gpProOnly: !_filters.gpProOnly)),
       onMaxWeightTap: () async {
         final result = await _showMaxWeightSheet(context);
         if (result == null || !mounted) return;

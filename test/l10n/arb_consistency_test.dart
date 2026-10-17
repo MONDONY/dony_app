@@ -134,6 +134,8 @@ const _sameInBothLanguages = <String>{
   'negotiationParcelSheetDescription', // « Description » se dit pareil
   'walletTopupCodeFieldLabel', // « Code » se dit pareil
   // Noms propres identiques en français et en anglais.
+  'gpProBadgeLabel', // « GP Pro » : nom du badge, identique dans les deux langues
+  'gpProScreenTitle', // « GP Pro » : titre de l'écran, nom du badge
   'countryNameFr',
   'countryNameLu',
   'countryNamePt',
@@ -169,7 +171,6 @@ const _sameInBothLanguages = <String>{
   'requestCreateRecapTransport', // « Transport » se dit pareil
   'listingProBadge', // « PRO » se dit pareil
   'listingRowLabelNote', // « Note » se dit pareil
-  'listingKiloProChip', // nom de fonctionnalité, identique en anglais
   'listingRowLabelDate', // « Date » se dit pareil
   'bidCreateMobileMoneySubtitle', // « Orange Money, Wave, MTN » : noms de marque
   'suiviRecentScanStepByQr', // gabarit identique, « QR » se dit pareil

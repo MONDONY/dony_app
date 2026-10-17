@@ -1,4 +1,5 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -23,7 +24,7 @@ AnnouncementModel _makeAnn({
   String arrivalCity = 'Dakar',
   String? departureFlag,
   String? arrivalFlag,
-  bool kiloPro = false,
+  bool gpPro = false,
   bool isProAccount = false,
   bool kycVerified = false,
   DateTime? departureDate,
@@ -61,7 +62,7 @@ AnnouncementModel _makeAnn({
     displayName: 'Mamadou Diallo',
     averageRating: 4.8,
     totalTrips: 5,
-    kiloPro: kiloPro,
+    gpPro: gpPro,
     isProAccount: isProAccount,
     kycVerified: kycVerified,
   ),
@@ -275,11 +276,13 @@ void main() {
       },
     );
 
-    testWidgets('shows KYC badge when kiloPro is true', (tester) async {
+    testWidgets('affiche GP Pro, sans « Identité », quand gpPro est vrai', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           TravelerCard(
-            announcement: _makeAnn(kiloPro: true),
+            announcement: _makeAnn(gpPro: true),
             index: 0,
             isOwnAnnouncement: false,
             onTap: () {},
@@ -287,7 +290,24 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Identité'), findsOneWidget);
+      expect(find.byType(GpProBadge), findsOneWidget);
+      expect(find.text('GP Pro'), findsOneWidget);
+      expect(find.text('Identité'), findsNothing);
+    });
+
+    testWidgets('pas de badge GP Pro quand gpPro est faux', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(GpProBadge), findsNothing);
     });
 
     testWidgets('shows PRO badge when isProAccount is true', (tester) async {

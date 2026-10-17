@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/voyageur_card.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -20,7 +21,7 @@ BidModel _bid({
   String? travelerName,
   int? travelerTotalTrips,
   bool travelerKycVerified = false,
-  bool travelerKiloPro = false,
+  bool travelerGpPro = false,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -30,7 +31,7 @@ BidModel _bid({
   travelerName: travelerName,
   travelerTotalTrips: travelerTotalTrips,
   travelerKycVerified: travelerKycVerified,
-  travelerKiloPro: travelerKiloPro,
+  travelerGpPro: travelerGpPro,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -67,20 +68,24 @@ void main() {
     expect(find.textContaining('· 3 trajets'), findsOneWidget);
   });
 
-  testWidgets('badges identité et Kilo Pro réutilisent les clés listing', (
-    tester,
-  ) async {
+  testWidgets('sans travelerGpPro : pas de badge GP Pro', (tester) async {
+    await _pump(tester, _bid(travelerName: 'Moussa D.'));
+
+    expect(find.byType(GpProBadge), findsNothing);
+  });
+
+  testWidgets('badges identité et GP Pro', (tester) async {
     await _pump(
       tester,
       _bid(
         travelerName: 'Moussa D.',
         travelerKycVerified: true,
-        travelerKiloPro: true,
+        travelerGpPro: true,
       ),
     );
 
     expect(find.text('Identité'), findsOneWidget);
-    expect(find.text('Kilo Pro'), findsOneWidget);
+    expect(find.byType(GpProBadge), findsOneWidget);
   });
 
   testWidgets('en anglais : étiquette de rôle et repli traduits', (

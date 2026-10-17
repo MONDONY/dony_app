@@ -5,7 +5,7 @@ class ProfilePublicModel {
     this.avatarUrl,
     required this.kycVerified,
     required this.isProAccount,
-    required this.isKiloPro,
+    required this.gpPro,
     required this.completedBidsCount,
     required this.averageRating,
     required this.ratingCount,
@@ -29,7 +29,7 @@ class ProfilePublicModel {
   final String? avatarUrl;
   final bool kycVerified;
   final bool isProAccount;
-  final bool isKiloPro;
+  final bool gpPro;
   final int completedBidsCount;
   final double averageRating;
   final int ratingCount;
@@ -74,7 +74,7 @@ class ProfilePublicModel {
       avatarUrl: json['avatarUrl'] as String?,
       kycVerified: json['kycVerified'] as bool? ?? false,
       isProAccount: json['isProAccount'] as bool? ?? false,
-      isKiloPro: json['isKiloPro'] as bool? ?? false,
+      gpPro: json['gpPro'] as bool? ?? false,
       completedBidsCount: json['completedBidsCount'] as int? ?? 0,
       averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
       ratingCount: json['ratingCount'] as int? ?? 0,
