@@ -56,15 +56,54 @@ void main() {
     expect(find.text(l.gpProInfoTitle), findsNothing);
   });
 
-  testWidgets('zone tactile >= 44x44 en full et compact', (tester) async {
-    await tester.pumpWidget(subject());
-    final full = tester.getSize(find.byType(GpProBadge));
-    expect(full.height, greaterThanOrEqualTo(44));
-    expect(full.width, greaterThanOrEqualTo(44));
-
+  testWidgets('layout = taille visuelle, zone tactile élargie à 44 pt', (
+    tester,
+  ) async {
     await tester.pumpWidget(subject(size: GpProBadgeSize.compact));
-    final compact = tester.getSize(find.byType(GpProBadge));
-    expect(compact.height, greaterThanOrEqualTo(44));
-    expect(compact.width, greaterThanOrEqualTo(44));
+    final box = tester.getRect(find.byType(GpProBadge));
+    expect(box.size, const Size(16, 16));
+
+    // 13 pt hors du visuel : dans la zone de 44 pt, le tap ouvre la feuille.
+    await tester.tapAt(box.centerLeft - const Offset(13, 0));
+    await tester.pumpAndSettle();
+    expect(find.text(l.gpProInfoTitle), findsOneWidget);
+  });
+
+  testWidgets('tap au-delà de 44 pt : ignoré', (tester) async {
+    await tester.pumpWidget(subject(size: GpProBadgeSize.compact));
+    final box = tester.getRect(find.byType(GpProBadge));
+    await tester.tapAt(box.centerLeft - const Offset(30, 0));
+    await tester.pumpAndSettle();
+    expect(find.text(l.gpProInfoTitle), findsNothing);
+  });
+
+  testWidgets('full : hauteur de layout inférieure à 44, zone tactile 44', (
+    tester,
+  ) async {
+    await tester.pumpWidget(subject());
+    final box = tester.getRect(find.byType(GpProBadge));
+    expect(box.height, lessThan(44));
+    await tester.tapAt(box.topCenter - const Offset(0, 10));
+    await tester.pumpAndSettle();
+    expect(find.text(l.gpProInfoTitle), findsOneWidget);
+  });
+
+  testWidgets('action tap exposée seulement si interactive', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(subject());
+    expect(
+      tester.getSemantics(find.bySemanticsLabel(l.gpProBadgeSemantics)),
+      matchesSemantics(
+        label: l.gpProBadgeSemantics,
+        isButton: true,
+        hasTapAction: true,
+      ),
+    );
+    await tester.pumpWidget(subject(interactive: false));
+    expect(
+      tester.getSemantics(find.bySemanticsLabel(l.gpProBadgeSemantics)),
+      matchesSemantics(label: l.gpProBadgeSemantics),
+    );
+    handle.dispose();
   });
 }

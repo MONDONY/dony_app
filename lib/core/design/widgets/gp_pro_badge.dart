@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/gp_pro/presentation/widgets/gp_pro_info_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 /// Taille du badge GP Pro : pilule avec libellé ou pastille icône seule.
 enum GpProBadgeSize { compact, full }
@@ -76,22 +77,74 @@ class GpProBadge extends StatelessWidget {
             ),
           );
 
-    final hit = ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: _minTap, minHeight: _minTap),
-      child: Center(widthFactor: 1, heightFactor: 1, child: visual),
-    );
+    void open() => GpProInfoSheet.show(context, surface: surface);
 
-    return Semantics(
+    final semantic = Semantics(
       label: l.gpProBadgeSemantics,
       button: interactive,
+      onTap: interactive ? open : null,
       excludeSemantics: true,
       child: interactive
           ? GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => GpProInfoSheet.show(context, surface: surface),
-              child: hit,
+              onTap: open,
+              child: visual,
             )
-          : hit,
+          : visual,
     );
+    // Doit envelopper Semantics : un parent de taille stricte filtrerait les
+    // touchers hors cadre avant qu'ils n'arrivent à la zone élargie.
+    return interactive
+        ? _ExpandedHitArea(minSize: _minTap, child: semantic)
+        : semantic;
+  }
+}
+
+/// Étend la zone tactile de [child] jusqu'à [minSize] sans changer sa taille
+/// de layout : les touchers hors du cadre mais dans la zone élargie sont
+/// ramenés au bord le plus proche avant d'être transmis à l'enfant.
+class _ExpandedHitArea extends SingleChildRenderObjectWidget {
+  const _ExpandedHitArea({required this.minSize, super.child});
+
+  final double minSize;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderExpandedHitArea(minSize);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderExpandedHitArea renderObject,
+  ) => renderObject.minSize = minSize;
+}
+
+class _RenderExpandedHitArea extends RenderProxyBox {
+  _RenderExpandedHitArea(this.minSize);
+
+  double minSize;
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    final dx = ((minSize - size.width) / 2).clamp(0.0, double.infinity);
+    final dy = ((minSize - size.height) / 2).clamp(0.0, double.infinity);
+    final zone = Offset.zero & size;
+    final expanded = Rect.fromLTRB(
+      zone.left - dx,
+      zone.top - dy,
+      zone.right + dx,
+      zone.bottom + dy,
+    );
+    if (!expanded.contains(position)) return false;
+    final clamped = Offset(
+      position.dx.clamp(0.0, size.width),
+      position.dy.clamp(0.0, size.height),
+    );
+    // Juste à l'intérieur du bord, pour passer le contrôle `contains`.
+    final inside = Offset(
+      clamped.dx.clamp(0.0, size.width - 0.01),
+      clamped.dy.clamp(0.0, size.height - 0.01),
+    );
+    return super.hitTest(result, position: inside);
   }
 }
