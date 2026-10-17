@@ -104,6 +104,8 @@ import 'package:dony/features/flights/data/datasources/flight_locator.dart';
 import 'package:dony/features/flights/data/datasources/flight_recent_store.dart';
 import 'package:dony/features/flights/data/datasources/flights_remote_datasource.dart';
 import 'package:dony/features/flights/data/repositories/flights_repository.dart';
+import 'package:dony/features/gp_pro/data/datasources/gp_pro_remote_datasource.dart';
+import 'package:dony/features/gp_pro/data/repositories/gp_pro_repository.dart';
 import 'package:dony/features/home/data/datasources/search_parse_datasource.dart';
 import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
@@ -832,6 +834,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<CancellationRepository>(),
       getIt<AnalyticsService>(),
     ),
+  );
+
+  // GP Pro (badge accordé par l'admin après une demande)
+  getIt.registerLazySingleton<GpProRemoteDatasource>(
+    () => GpProRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<GpProRepository>(
+    () => GpProRepository(getIt<GpProRemoteDatasource>()),
   );
 
   // Signalement d'incident
