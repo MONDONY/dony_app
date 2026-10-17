@@ -40,10 +40,10 @@ class PackageRequestFormBloc
     on<FormStep3Submitted>(_onStep3);
     on<FormStepBack>(_onStepBack);
     on<FormReset>((_, emit) => emit(const PackageRequestFormState()));
-    on<FormDraftRestored>(
-      (e, emit) =>
-          emit(e.draft.copyWith(draftRevision: state.draftRevision + 1)),
-    );
+    on<FormDraftRestored>((e, emit) {
+      if (e.fromAi) _fromAi = true;
+      emit(e.draft.copyWith(draftRevision: state.draftRevision + 1));
+    });
     on<PackageRequestNegotiableToggled>(
       (e, emit) => emit(state.copyWith(negotiable: e.value)),
     );
@@ -69,6 +69,9 @@ class PackageRequestFormBloc
 
   final PackageRequestRepository _repository;
   final AnalyticsService _analytics;
+
+  /// Le formulaire a été rempli par « Créer avec l'IA » (`from_ai`).
+  bool _fromAi = false;
 
   /// Construit l'état initial pré-rempli pour l'édition. Le budget est reconverti
   /// net → brut (l'utilisateur saisit/voit le brut, le backend stocke le net).
@@ -262,6 +265,7 @@ class PackageRequestFormBloc
             'payment_methods': state.acceptedPaymentMethods
                 .map((m) => m.wireName)
                 .toList(),
+            'from_ai': _fromAi,
           },
         ),
       );
