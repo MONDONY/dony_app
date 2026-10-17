@@ -2927,9 +2927,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String tripPublishGridCommissionNotice(String percent) {
-    return 'Yadony ajoute $percent % sur chaque article et sur le prix au kilo';
-  }
+  String get tripPublishGridCommissionNotice =>
+      'Yadony ajoute sa commission sur chaque article et sur le prix au kilo';
 
   @override
   String get tripPublishNegotiableToggleTitle =>
@@ -3088,9 +3087,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishGridSheetEditCta => 'Modifier ma grille';
 
   @override
-  String tripPublishGridSheetCommissionNote(String percent) {
-    return 'Prix payés par l\'expéditeur, commission Yadony de $percent % comprise.';
-  }
+  String get tripPublishGridSheetCommissionNote =>
+      'Prix payés par l\'expéditeur, commission Yadony comprise.';
 
   @override
   String get tripPublishGridEmptyTitle => 'Votre grille est vide';
@@ -4017,9 +4015,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String requestCreateCommissionLabel(String rate) {
-    return 'Commission Yadony ($rate %)';
-  }
+  String get requestCreateCommissionLabel => 'Commission Yadony';
 
   @override
   String get requestCreatePromoBoostLabel =>
@@ -9262,14 +9258,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get paymentContextDefault => 'Envoi de votre colis';
 
   @override
-  String commissionCardDebitNoticeMin(String percent, String min) {
-    return 'Cette carte sera débitée de la commission ($percent %, min. $min) à chaque colis en espèces accepté.';
+  String commissionCardDebitNoticeMin(String min) {
+    return 'Cette carte sera débitée de la commission (min. $min) à chaque colis en espèces accepté.';
   }
 
   @override
-  String commissionCardDebitNotice(String percent) {
-    return 'Cette carte sera débitée de la commission ($percent %) à chaque colis en espèces accepté.';
-  }
+  String get commissionCardDebitNotice =>
+      'Cette carte sera débitée de la commission à chaque colis en espèces accepté.';
 
   @override
   String get commissionCardScreenTitle => 'Carte commission';
@@ -9299,9 +9294,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commissionCardEmptyTitle => 'Aucune carte enregistrée';
 
   @override
-  String commissionCardEmptyBody(String percent) {
-    return 'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ($percent %) à chaque colis accepté.';
-  }
+  String get commissionCardEmptyBody =>
+      'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission à chaque colis accepté.';
 
   @override
   String get commissionCardAddButton => 'Ajouter une carte';
@@ -12205,9 +12199,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.';
 
   @override
-  String faqPaymentsCommissionQ(String percent) {
-    return 'Pourquoi une commission de $percent % ?';
-  }
+  String get faqPaymentsCommissionQ => 'Pourquoi une commission ?';
 
   @override
   String get faqPaymentsCommissionA =>
@@ -14842,9 +14834,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get priceGridScreenTitle => 'Ma grille de prix';
 
   @override
-  String priceGridCommissionNotice(String percent) {
-    return 'Yadony ajoute $percent % au prix que vous saisissez. Vous encaissez exactement votre montant.';
-  }
+  String get priceGridCommissionNotice =>
+      'Yadony ajoute sa commission au prix que vous saisissez. Vous encaissez exactement votre montant.';
 
   @override
   String get priceGridReorderButton => 'Réordonner';
@@ -14930,8 +14921,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Saisissez le montant que vous voulez toucher.';
 
   @override
-  String priceGridSenderWillPayMessage(String paid, String percent) {
-    return 'L\'expéditeur paiera $paid, commission Yadony de $percent % comprise.';
+  String priceGridSenderWillPayMessage(String paid, String fee) {
+    return 'L\'expéditeur paiera $paid, dont $fee de commission Yadony.';
   }
 
   @override

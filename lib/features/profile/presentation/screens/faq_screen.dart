@@ -91,7 +91,7 @@ class _FaqScreenState extends State<FaqScreen> {
         ),
         _FaqItem(
           id: 'commission',
-          q: l.faqPaymentsCommissionQ(commissionPercentLabel(l)),
+          q: l.faqPaymentsCommissionQ,
           a: l.faqPaymentsCommissionA,
         ),
         _FaqItem(

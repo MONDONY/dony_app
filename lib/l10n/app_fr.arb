@@ -1560,14 +1560,9 @@
       }
     }
   },
-  "tripPublishGridCommissionNotice": "Yadony ajoute {percent} % sur chaque article et sur le prix au kilo",
+  "tripPublishGridCommissionNotice": "Yadony ajoute sa commission sur chaque article et sur le prix au kilo",
   "@tripPublishGridCommissionNotice": {
-    "description": "Note sous l'aperçu de grille en mode mixte, percent déjà formaté",
-    "placeholders": {
-      "percent": {
-        "type": "String"
-      }
-    }
+    "description": "Note sous l'aperçu de grille en mode mixte, sans taux (FLUTTER-R6)"
   },
   "tripPublishNegotiableToggleTitle": "J'accepte les propositions de prix",
   "@tripPublishNegotiableToggleTitle": {
@@ -1761,14 +1756,9 @@
   "@tripPublishGridSheetEditCta": {
     "description": "Bouton sticky de la feuille de grille complète"
   },
-  "tripPublishGridSheetCommissionNote": "Prix payés par l'expéditeur, commission Yadony de {percent} % comprise.",
+  "tripPublishGridSheetCommissionNote": "Prix payés par l'expéditeur, commission Yadony comprise.",
   "@tripPublishGridSheetCommissionNote": {
-    "description": "Note sous la liste d'articles de la feuille de grille complète",
-    "placeholders": {
-      "percent": {
-        "type": "String"
-      }
-    }
+    "description": "Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)"
   },
   "tripPublishGridEmptyTitle": "Votre grille est vide",
   "@tripPublishGridEmptyTitle": {
@@ -2960,14 +2950,9 @@
       }
     }
   },
-  "requestCreateCommissionLabel": "Commission Yadony ({rate} %)",
+  "requestCreateCommissionLabel": "Commission Yadony",
   "@requestCreateCommissionLabel": {
-    "description": "Libellé de la ligne commission de la décomposition du budget (step_3_recap_budget.dart)",
-    "placeholders": {
-      "rate": {
-        "type": "String"
-      }
-    }
+    "description": "Libellé de la ligne commission d'une décomposition de prix, le montant s'affiche à côté (step_3_recap_budget.dart, accept_offer_bottom_sheet.dart, counter_offer_bottom_sheet.dart). Sans taux (FLUTTER-R6)"
   },
   "requestCreatePromoBoostLabel": "Grâce au code promo, le voyageur touche",
   "@requestCreatePromoBoostLabel": {
@@ -9631,26 +9616,18 @@
   "@paymentContextDefault": {
     "description": "Libellé de contexte de la feuille de paiement quand aucun destinataire n'est connu (payment_screen.dart)."
   },
-  "commissionCardDebitNoticeMin": "Cette carte sera débitée de la commission ({percent} %, min. {min}) à chaque colis en espèces accepté.",
+  "commissionCardDebitNoticeMin": "Cette carte sera débitée de la commission (min. {min}) à chaque colis en espèces accepté.",
   "@commissionCardDebitNoticeMin": {
-    "description": "Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros, fixe quelle que soit la langue.",
+    "description": "Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros. Sans taux (FLUTTER-R6).",
     "placeholders": {
-      "percent": {
-        "type": "String"
-      },
       "min": {
         "type": "String"
       }
     }
   },
-  "commissionCardDebitNotice": "Cette carte sera débitée de la commission ({percent} %) à chaque colis en espèces accepté.",
+  "commissionCardDebitNotice": "Cette carte sera débitée de la commission à chaque colis en espèces accepté.",
   "@commissionCardDebitNotice": {
-    "description": "Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros.",
-    "placeholders": {
-      "percent": {
-        "type": "String"
-      }
-    }
+    "description": "Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros. Sans taux (FLUTTER-R6)."
   },
 
   "commissionCardScreenTitle": "Carte commission",
@@ -9686,14 +9663,9 @@
   "@commissionCardEmptyTitle": {
     "description": "Titre de l'état vide de la carte commission (commission_card_empty_state.dart)."
   },
-  "commissionCardEmptyBody": "Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ({percent} %) à chaque colis accepté.",
+  "commissionCardEmptyBody": "Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission à chaque colis accepté.",
   "@commissionCardEmptyBody": {
-    "description": "Corps de l'état vide de la carte commission (commission_card_empty_state.dart).",
-    "placeholders": {
-      "percent": {
-        "type": "String"
-      }
-    }
+    "description": "Corps de l'état vide de la carte commission (commission_card_empty_state.dart). Sans taux (FLUTTER-R6)."
   },
   "commissionCardAddButton": "Ajouter une carte",
   "@commissionCardAddButton": {
@@ -13299,12 +13271,9 @@
   "@faqPaymentsRefundA": {
     "description": "Réponse FAQ payments/refund (faq_screen.dart)"
   },
-  "faqPaymentsCommissionQ": "Pourquoi une commission de {percent} % ?",
+  "faqPaymentsCommissionQ": "Pourquoi une commission ?",
   "@faqPaymentsCommissionQ": {
-    "description": "Question FAQ payments/commission, percent déjà formaté par commissionPercentLabel (faq_screen.dart)",
-    "placeholders": {
-      "percent": {"type": "String"}
-    }
+    "description": "Question FAQ payments/commission (faq_screen.dart), sans taux (FLUTTER-R6)"
   },
   "faqPaymentsCommissionA": "La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.",
   "@faqPaymentsCommissionA": {
@@ -16544,14 +16513,9 @@
   "@priceGridScreenTitle": {
     "description": "Titre de l'AppBar (price_grid_screen.dart)."
   },
-  "priceGridCommissionNotice": "Yadony ajoute {percent} % au prix que vous saisissez. Vous encaissez exactement votre montant.",
+  "priceGridCommissionNotice": "Yadony ajoute sa commission au prix que vous saisissez. Vous encaissez exactement votre montant.",
   "@priceGridCommissionNotice": {
-    "description": "Note de commission en pied de liste, percent déjà formaté par commissionPercentLabel (price_grid_screen.dart).",
-    "placeholders": {
-      "percent": {
-        "type": "String"
-      }
-    }
+    "description": "Note de commission en pied de liste (price_grid_screen.dart), sans taux (FLUTTER-R6)."
   },
   "priceGridReorderButton": "Réordonner",
   "@priceGridReorderButton": {
@@ -16682,14 +16646,14 @@
   "@priceGridEnterAmountMessage": {
     "description": "Message d'écho invitant à saisir un montant (price_grid_item_form_sheet.dart)."
   },
-  "priceGridSenderWillPayMessage": "L'expéditeur paiera {paid}, commission Yadony de {percent} % comprise.",
+  "priceGridSenderWillPayMessage": "L'expéditeur paiera {paid}, dont {fee} de commission Yadony.",
   "@priceGridSenderWillPayMessage": {
-    "description": "Message d'écho annonçant le montant payé par l'expéditeur, paid déjà formaté et percent déjà formaté par commissionPercentLabel (price_grid_item_form_sheet.dart).",
+    "description": "Message d'écho annonçant le montant payé par l'expéditeur et la commission comprise, montants déjà formatés dans la devise active (price_grid_item_form_sheet.dart). Sans taux (FLUTTER-R6).",
     "placeholders": {
       "paid": {
         "type": "String"
       },
-      "percent": {
+      "fee": {
         "type": "String"
       }
     }

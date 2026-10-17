@@ -1,6 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -207,10 +206,7 @@ void main() {
     await tester.pumpWidget(host());
     await tester.pump();
 
-    expect(
-      find.text(_l.commissionCardDebitNotice(commissionPercentLabel(_l))),
-      findsOneWidget,
-    );
+    expect(find.text(_l.commissionCardDebitNotice), findsOneWidget);
   });
 
   testWidgets(

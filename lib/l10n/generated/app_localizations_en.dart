@@ -2915,9 +2915,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String tripPublishGridCommissionNotice(String percent) {
-    return 'Yadony adds $percent% to every item and to the price per kilo';
-  }
+  String get tripPublishGridCommissionNotice =>
+      'Yadony adds its service fee to every item and to the price per kilo';
 
   @override
   String get tripPublishNegotiableToggleTitle => 'I accept price proposals';
@@ -3073,9 +3072,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishGridSheetEditCta => 'Edit my grid';
 
   @override
-  String tripPublishGridSheetCommissionNote(String percent) {
-    return 'Prices paid by the sender, Yadony service fee of $percent% included.';
-  }
+  String get tripPublishGridSheetCommissionNote =>
+      'Prices paid by the sender, Yadony service fee included.';
 
   @override
   String get tripPublishGridEmptyTitle => 'Your grid is empty';
@@ -3996,9 +3994,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String requestCreateCommissionLabel(String rate) {
-    return 'Yadony service fee ($rate%)';
-  }
+  String get requestCreateCommissionLabel => 'Yadony service fee';
 
   @override
   String get requestCreatePromoBoostLabel =>
@@ -9204,14 +9200,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentContextDefault => 'Your parcel shipment';
 
   @override
-  String commissionCardDebitNoticeMin(String percent, String min) {
-    return 'This card will be charged the service fee ($percent%, min. $min) for each cash parcel you accept.';
+  String commissionCardDebitNoticeMin(String min) {
+    return 'This card will be charged the service fee (min. $min) for each cash parcel you accept.';
   }
 
   @override
-  String commissionCardDebitNotice(String percent) {
-    return 'This card will be charged the service fee ($percent%) for each cash parcel you accept.';
-  }
+  String get commissionCardDebitNotice =>
+      'This card will be charged the service fee for each cash parcel you accept.';
 
   @override
   String get commissionCardScreenTitle => 'Service fee card';
@@ -9240,9 +9235,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commissionCardEmptyTitle => 'No card registered';
 
   @override
-  String commissionCardEmptyBody(String percent) {
-    return 'To accept cash payments, register a card we\'ll charge our service fee ($percent%) on for each parcel you accept.';
-  }
+  String get commissionCardEmptyBody =>
+      'To accept cash payments, register a card we\'ll charge our service fee on for each parcel you accept.';
 
   @override
   String get commissionCardAddButton => 'Add a card';
@@ -12129,9 +12123,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The refund depends on the payment method and when the cancellation happens. A card payment is credited back to the original method after processing. For Mobile Money, the timing depends on the operator. In cash, Yadony doesn\'t hold the funds and can\'t process the refund automatically.';
 
   @override
-  String faqPaymentsCommissionQ(String percent) {
-    return 'Why is there a $percent% service fee?';
-  }
+  String get faqPaymentsCommissionQ => 'Why is there a service fee?';
 
   @override
   String get faqPaymentsCommissionA =>
@@ -14740,9 +14732,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get priceGridScreenTitle => 'My price list';
 
   @override
-  String priceGridCommissionNotice(String percent) {
-    return 'Yadony adds $percent% to the price you enter. You receive your exact amount.';
-  }
+  String get priceGridCommissionNotice =>
+      'Yadony adds its service fee to the price you enter. You receive your exact amount.';
 
   @override
   String get priceGridReorderButton => 'Reorder';
@@ -14828,8 +14819,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter the amount you want to receive.';
 
   @override
-  String priceGridSenderWillPayMessage(String paid, String percent) {
-    return 'The sender will pay $paid, including Yadony\'s $percent% service fee.';
+  String priceGridSenderWillPayMessage(String paid, String fee) {
+    return 'The sender will pay $paid, including $fee Yadony service fee.';
   }
 
   @override

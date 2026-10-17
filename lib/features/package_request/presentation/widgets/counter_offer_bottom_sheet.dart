@@ -7,7 +7,6 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 class CounterOfferBottomSheet {
   const CounterOfferBottomSheet._();
@@ -305,11 +304,7 @@ class CounterOfferCommissionPreview extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final fee = PriceDisplay.feeFromNet(net);
     final gross = PriceDisplay.grossFromNet(net);
-    final rate = NumberFormat(
-      '#0.##',
-      l.localeName,
-    ).format(PriceDisplay.previewRate * 100);
-    final commission = l.requestCreateCommissionLabel(rate);
+    final commission = l.requestCreateCommissionLabel;
 
     Widget line(String label, String amount, {bool strong = false}) {
       final style = (strong ? tt.titleSmall : tt.bodyMedium)?.copyWith(

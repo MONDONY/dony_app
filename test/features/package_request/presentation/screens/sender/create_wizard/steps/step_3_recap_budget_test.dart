@@ -584,27 +584,28 @@ void main() {
       );
     });
 
-    group('commission au taux décimal — virgule fr, point en', () {
-      // Décimale au point en anglais (avant ce correctif, la virgule
-      // française restait figée par un `toStringAsFixed(1).replaceFirst('.',
-      // ',')`).
+    // FLUTTER-R6 : le taux de commission n'est plus affiché, seul son
+    // montant, à droite du libellé.
+    group('commission sans taux, montant seul', () {
       setUp(() => setDonyCommissionRate(0.125));
       tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
-      testWidgets('fr : « Commission Yadony (12,5 %) »', (tester) async {
+      testWidgets('fr : « Commission Yadony », sans pourcentage', (
+        tester,
+      ) async {
         const seed = PackageRequestFormState(totalBudgetEur: 40);
         await tester.pumpWidget(
           wrap(const Step3RecapBudget(), seed: seed, useMock: true),
         );
         await tester.pump();
 
-        expect(
-          find.textContaining('Commission Yadony (12,5 %)'),
-          findsOneWidget,
-        );
+        expect(find.text('Commission Yadony'), findsOneWidget);
+        expect(find.textContaining('12,5'), findsNothing);
       });
 
-      testWidgets('en : « Yadony service fee (12.5%) »', (tester) async {
+      testWidgets('en : « Yadony service fee », sans pourcentage', (
+        tester,
+      ) async {
         useEnglish();
         const seed = PackageRequestFormState(totalBudgetEur: 40);
         await tester.pumpWidget(
@@ -612,10 +613,8 @@ void main() {
         );
         await tester.pump();
 
-        expect(
-          find.textContaining('Yadony service fee (12.5%)'),
-          findsOneWidget,
-        );
+        expect(find.text('Yadony service fee'), findsOneWidget);
+        expect(find.textContaining('12.5'), findsNothing);
       });
     });
   });

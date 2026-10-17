@@ -534,9 +534,7 @@ class PrixConditionsStep extends StatelessWidget {
                       borderRadius: BorderRadius.circular(DonyRadius.sm),
                     ),
                     child: Text(
-                      l.tripPublishGridCommissionNotice(
-                        commissionPercentLabel(l),
-                      ),
+                      l.tripPublishGridCommissionNotice,
                       style: tt.bodySmall?.copyWith(color: cs.primary),
                     ),
                   ),
