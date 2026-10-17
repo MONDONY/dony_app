@@ -20,12 +20,12 @@ class QrPickerScreen extends StatefulWidget {
 
 class _QrPickerScreenState extends State<QrPickerScreen> {
   final ValueNotifier<bool> _detected = ValueNotifier(false);
-  final ValueNotifier<bool> _torchOn = ValueNotifier(false);
+  final QrTorch _torch = QrTorch();
 
   @override
   void dispose() {
     _detected.dispose();
-    _torchOn.dispose();
+    _torch.dispose();
     super.dispose();
   }
 
@@ -49,11 +49,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            QrCameraView(
-              onBidId: _onBidId,
-              paused: _detected,
-              torchOn: _torchOn,
-            ),
+            QrCameraView(onBidId: _onBidId, paused: _detected, torch: _torch),
             // Top bar
             Positioned(
               top: 0,
@@ -82,7 +78,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                         ),
                       ),
                     ),
-                    QrTorchButton(torchOn: _torchOn),
+                    QrTorchButton(torch: _torch),
                     const DonyFeedbackButton(color: DonyColors.neutral0),
                   ],
                 ),

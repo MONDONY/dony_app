@@ -17873,11 +17873,23 @@ abstract class AppLocalizations {
   /// **'Lire le QR code'**
   String get scanQrPickerTitle;
 
-  /// Tooltip du bouton lampe torche de qr_picker_screen.dart, distinct de scanTorchTooltip.
+  /// Tooltip et libellé d'accessibilité du bouton lampe des écrans caméra (QrTorchButton), lampe éteinte : l'action proposée est de l'allumer.
   ///
   /// In fr, this message translates to:
-  /// **'Activer ou couper la lampe'**
-  String get scanTorchToggleTooltip;
+  /// **'Allumer la lampe'**
+  String get scanTorchTurnOnTooltip;
+
+  /// Tooltip et libellé d'accessibilité du bouton lampe des écrans caméra (QrTorchButton), lampe allumée : l'action proposée est de l'éteindre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Éteindre la lampe'**
+  String get scanTorchTurnOffTooltip;
+
+  /// Tooltip du bouton lampe désactivé (QrTorchButton) : caméra arrêtée ou en cours de démarrage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lampe indisponible'**
+  String get scanTorchUnavailableTooltip;
 
   /// Texte d'aide de l'écran de lecture QR générique (qr_picker_screen.dart).
   ///
@@ -22114,6 +22126,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Tout lire'**
   String get notificationMarkAllRead;
+
+  /// Tooltip et libellé d'accessibilité du bouton engrenage de l'en-tête du centre de notifications (notification_bottom_sheet.dart), qui ouvre Réglages › Notifications.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réglages des notifications'**
+  String get notificationSheetSettingsTooltip;
 
   /// Titre de l'état d'erreur du feed de notifications (notification_bottom_sheet.dart). Réutilisé tel quel par announcements_inbox_screen.dart (même feature, même texte, R42).
   ///

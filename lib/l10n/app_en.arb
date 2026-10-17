@@ -6333,9 +6333,17 @@
   "@scanQrPickerTitle": {
     "description": "Titre de l'écran de lecture QR générique (qr_picker_screen.dart)."
   },
-  "scanTorchToggleTooltip": "Turn the flashlight on or off",
-  "@scanTorchToggleTooltip": {
-    "description": "Tooltip du bouton lampe torche de qr_picker_screen.dart, distinct de scanTorchTooltip."
+  "scanTorchTurnOnTooltip": "Turn on the flashlight",
+  "@scanTorchTurnOnTooltip": {
+    "description": "Tooltip et libellé d'accessibilité du bouton lampe des écrans caméra (QrTorchButton), lampe éteinte : l'action proposée est de l'allumer."
+  },
+  "scanTorchTurnOffTooltip": "Turn off the flashlight",
+  "@scanTorchTurnOffTooltip": {
+    "description": "Tooltip et libellé d'accessibilité du bouton lampe des écrans caméra (QrTorchButton), lampe allumée : l'action proposée est de l'éteindre."
+  },
+  "scanTorchUnavailableTooltip": "Flashlight unavailable",
+  "@scanTorchUnavailableTooltip": {
+    "description": "Tooltip du bouton lampe désactivé (QrTorchButton) : caméra arrêtée ou en cours de démarrage."
   },
   "scanQrPickerHint": "Point at the parcel's QR code",
   "@scanQrPickerHint": {
@@ -7655,6 +7663,7 @@
   "notificationSectionEarlier": "Earlier",
   "notificationSheetTitle": "Notifications",
   "notificationMarkAllRead": "Read all",
+  "notificationSheetSettingsTooltip": "Notification settings",
   "notificationLoadErrorTitle": "Loading error",
   "notificationLoadErrorDescription": "We couldn't load your notifications.",
   "notificationEmptyTitle": "No notifications",
