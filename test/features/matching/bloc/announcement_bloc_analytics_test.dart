@@ -113,6 +113,62 @@ void main() {
           'available_kg': 10.0,
           'price_per_kg': 15.0,
           'is_draft': false,
+          'from_ai': false,
+        }),
+      ).called(1);
+    },
+  );
+
+  test(
+    'announcement_created porte from_ai quand l’IA a rempli le trajet',
+    () async {
+      when(
+        () => repo.createAnnouncement(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
+          description: any(named: 'description'),
+          acceptedContentTypes: any(named: 'acceptedContentTypes'),
+          refusedTypes: any(named: 'refusedTypes'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          capacityUnit: any(named: 'capacityUnit'),
+          pricingMode: any(named: 'pricingMode'),
+          handoverDeadline: any(named: 'handoverDeadline'),
+        ),
+      ).thenAnswer((_) async => fakeAnnouncement());
+
+      final bloc = makeBloc();
+      bloc.add(
+        AnnouncementCreateRequested(
+          departureCity: 'Paris',
+          arrivalCity: 'Abidjan',
+          departureDate: DateTime(2026, 11, 15),
+          pickupAddress: fakeAddress,
+          deliveryAddress: fakeAddress,
+          availableKg: 23,
+          pricePerKg: 10,
+          transportMode: TransportMode.plane,
+          handoverDeadline: DateTime(2026, 11, 14, 18),
+          fromAi: true,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is AnnouncementCreated);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.announcementCreated, {
+          'corridor': 'Paris→Abidjan',
+          'available_kg': 23.0,
+          'price_per_kg': 10.0,
+          'is_draft': false,
+          'from_ai': true,
         }),
       ).called(1);
     },
