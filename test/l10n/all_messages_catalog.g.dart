@@ -1010,8 +1010,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('travelerNet'),
     placeholderMarker('senderTotal'),
   ),
-  'tripPublishGridCommissionNotice': (l) =>
-      l.tripPublishGridCommissionNotice(placeholderMarker('percent')),
+  'tripPublishGridCommissionNotice': (l) => l.tripPublishGridCommissionNotice,
   'tripPublishNegotiableToggleTitle': (l) => l.tripPublishNegotiableToggleTitle,
   'tripPublishNegotiableToggleSubtitle': (l) =>
       l.tripPublishNegotiableToggleSubtitle,
@@ -1080,7 +1079,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripPublishGridSheetSubtitle': (l) => l.tripPublishGridSheetSubtitle,
   'tripPublishGridSheetEditCta': (l) => l.tripPublishGridSheetEditCta,
   'tripPublishGridSheetCommissionNote': (l) =>
-      l.tripPublishGridSheetCommissionNote(placeholderMarker('percent')),
+      l.tripPublishGridSheetCommissionNote,
   'tripPublishGridEmptyTitle': (l) => l.tripPublishGridEmptyTitle,
   'tripPublishGridEmptySubtitle': (l) => l.tripPublishGridEmptySubtitle,
   'tripPublishGridComposeCta': (l) => l.tripPublishGridComposeCta,
@@ -1416,8 +1415,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
     placeholderMarker('min'),
     placeholderMarker('max'),
   ),
-  'requestCreateCommissionLabel': (l) =>
-      l.requestCreateCommissionLabel(placeholderMarker('rate')),
+  'requestCreateCommissionLabel': (l) => l.requestCreateCommissionLabel,
   'requestCreatePromoBoostLabel': (l) => l.requestCreatePromoBoostLabel,
   'requestCreateTravelerReceivesLabel': (l) =>
       l.requestCreateTravelerReceivesLabel,
@@ -3323,12 +3321,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'paymentContextRecipient': (l) =>
       l.paymentContextRecipient(placeholderMarker('name')),
   'paymentContextDefault': (l) => l.paymentContextDefault,
-  'commissionCardDebitNoticeMin': (l) => l.commissionCardDebitNoticeMin(
-    placeholderMarker('percent'),
-    placeholderMarker('min'),
-  ),
-  'commissionCardDebitNotice': (l) =>
-      l.commissionCardDebitNotice(placeholderMarker('percent')),
+  'commissionCardDebitNoticeMin': (l) =>
+      l.commissionCardDebitNoticeMin(placeholderMarker('min')),
+  'commissionCardDebitNotice': (l) => l.commissionCardDebitNotice,
   'commissionCardScreenTitle': (l) => l.commissionCardScreenTitle,
   'commissionCardLoadError': (l) => l.commissionCardLoadError,
   'paymentNotConfirmedSnackbar': (l) => l.paymentNotConfirmedSnackbar,
@@ -3338,8 +3333,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'commissionCardDeleteConfirmMessage': (l) =>
       l.commissionCardDeleteConfirmMessage,
   'commissionCardEmptyTitle': (l) => l.commissionCardEmptyTitle,
-  'commissionCardEmptyBody': (l) =>
-      l.commissionCardEmptyBody(placeholderMarker('percent')),
+  'commissionCardEmptyBody': (l) => l.commissionCardEmptyBody,
   'commissionCardAddButton': (l) => l.commissionCardAddButton,
   'commissionCardExpiredMessage': (l) => l.commissionCardExpiredMessage,
   'commissionCardExpiringMessage': (l) =>
@@ -4080,6 +4074,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'profileMoneyMobileMoneyPayoutSubtitle': (l) =>
       l.profileMoneyMobileMoneyPayoutSubtitle,
   'profileMoneyCashCommissionCard': (l) => l.profileMoneyCashCommissionCard,
+  'profileMoneyPreferences': (l) => l.profileMoneyPreferences,
+  'profileMoneyPreferencesSubtitle': (l) => l.profileMoneyPreferencesSubtitle,
   'profileSectionReputation': (l) => l.profileSectionReputation,
   'profileReputationPublicProfile': (l) => l.profileReputationPublicProfile,
   'profileReputationPublicProfileSubtitle': (l) =>
@@ -4322,8 +4318,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'faqPaymentsPaymentTimingA': (l) => l.faqPaymentsPaymentTimingA,
   'faqPaymentsRefundQ': (l) => l.faqPaymentsRefundQ,
   'faqPaymentsRefundA': (l) => l.faqPaymentsRefundA,
-  'faqPaymentsCommissionQ': (l) =>
-      l.faqPaymentsCommissionQ(placeholderMarker('percent')),
+  'faqPaymentsCommissionQ': (l) => l.faqPaymentsCommissionQ,
   'faqPaymentsCommissionA': (l) => l.faqPaymentsCommissionA,
   'faqPaymentsPaymentSecurityQ': (l) => l.faqPaymentsPaymentSecurityQ,
   'faqPaymentsPaymentSecurityA': (l) => l.faqPaymentsPaymentSecurityA,
@@ -5186,8 +5181,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'recipientSectionSaveToggleSubtitle': (l) =>
       l.recipientSectionSaveToggleSubtitle,
   'priceGridScreenTitle': (l) => l.priceGridScreenTitle,
-  'priceGridCommissionNotice': (l) =>
-      l.priceGridCommissionNotice(placeholderMarker('percent')),
+  'priceGridCommissionNotice': (l) => l.priceGridCommissionNotice,
   'priceGridReorderButton': (l) => l.priceGridReorderButton,
   'priceGridAddLabelButton': (l) => l.priceGridAddLabelButton,
   'priceGridEmptyTitle': (l) => l.priceGridEmptyTitle,
@@ -5221,7 +5215,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'priceGridEnterAmountMessage': (l) => l.priceGridEnterAmountMessage,
   'priceGridSenderWillPayMessage': (l) => l.priceGridSenderWillPayMessage(
     placeholderMarker('paid'),
-    placeholderMarker('percent'),
+    placeholderMarker('fee'),
   ),
   'referralScreenTitle': (l) => l.referralScreenTitle,
   'referralStatSignedUp': (l) => l.referralStatSignedUp,
@@ -7251,14 +7245,12 @@ const textParameters = <String, List<String>>{
   'tripPublishIntroVerifyCallout': ['identity', 'path'],
   'tripPublishIntroVerifyHint': ['continueLabel'],
   'tripPublishPriceEstimateLine': ['travelerNet', 'senderTotal'],
-  'tripPublishGridCommissionNotice': ['percent'],
   'tripPublishCashOnlyBannerNoConnectCountry': ['country'],
   'tripPublishCardCurrencyUnavailableNotice': ['currency'],
   'tripPublishMobileMoneyCurrencyNotice': ['accountCurrency', 'tripCurrency'],
   'tripPublishMobileMoneyCurrencyNoticeGeneric': ['tripCurrency'],
   'tripPublishSwitchCurrencyCta': ['currency'],
   'tripPublishGridPreviewConvertedNote': ['currency'],
-  'tripPublishGridSheetCommissionNote': ['percent'],
   'tripPublishCurrencySemanticsLabel': ['currencyName', 'currencyCode'],
   'tripPublishCurrencyBannerTitle': ['currencyName', 'currencyCode'],
   'addressGpsPosition': ['lat', 'lng'],
@@ -7285,7 +7277,6 @@ const textParameters = <String, List<String>>{
   'requestTimeOn': ['verb', 'date'],
   'requestCreateToleranceRangeHint': ['from', 'to'],
   'requestCreateBudgetRange': ['min', 'max'],
-  'requestCreateCommissionLabel': ['rate'],
   'requestCreateCurrencySemanticLabel': ['name', 'code'],
   'requestDetailCashCommissionTitle': ['name'],
   'requestTravelerAddingTrip': ['name'],
@@ -7427,9 +7418,7 @@ const textParameters = <String, List<String>>{
   'bidCreateMaxWeightLabel': ['maxKg'],
   'paymentMethodsSemantics': ['wallet'],
   'paymentContextRecipient': ['name'],
-  'commissionCardDebitNoticeMin': ['percent', 'min'],
-  'commissionCardDebitNotice': ['percent'],
-  'commissionCardEmptyBody': ['percent'],
+  'commissionCardDebitNoticeMin': ['min'],
   'commissionCardExpiringMessage': ['date'],
   'commissionCardExpiryLabel': ['date'],
   'paymentPayButtonLabel': ['price'],
@@ -7498,7 +7487,6 @@ const textParameters = <String, List<String>>{
   'profilePublicReportUserAction': ['name'],
   'profilePublicBlockUserAction': ['name'],
   'profilePublicRatingLine': ['rating', 'memberSince'],
-  'faqPaymentsCommissionQ': ['percent'],
   'faqSafetyLostParcelA': ['cap'],
   'helpTutorialPlayerSemanticsLabel': ['title'],
   'helpContextualCardSemanticsLabel': ['title'],
@@ -7554,7 +7542,6 @@ const textParameters = <String, List<String>>{
   'addressesDeleteConfirmMessage': ['label'],
   'recipientDeleteConfirmMessage': ['name'],
   'recipientPhoneInvalidFormat': ['example'],
-  'priceGridCommissionNotice': ['percent'],
   'priceGridDragHandleSemantics': ['label'],
   'priceGridYouReceive': ['net'],
   'priceGridItemSemantics': ['label', 'paid', 'net'],
@@ -7562,7 +7549,7 @@ const textParameters = <String, List<String>>{
   'priceGridAddCustomLabel': ['query'],
   'priceGridMaxPriceMessage': ['max'],
   'priceGridMinPriceMessage': ['min'],
-  'priceGridSenderWillPayMessage': ['paid', 'percent'],
+  'priceGridSenderWillPayMessage': ['paid', 'fee'],
   'referralVoucherExpiresLabel': ['date'],
   'referralShareMessage': ['code', 'url'],
   'referralRedeemCodeHint': ['example'],
