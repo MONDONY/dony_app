@@ -7067,6 +7067,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'assistantMenu': (l) => l.assistantMenu,
   'assistantReset': (l) => l.assistantReset,
   'assistantOpen': (l) => l.assistantOpen,
+  'assistantQuotaWarning': (l) => l.assistantQuotaWarning(intPlaceholderValue),
   'assistantCharCount': (l) => l.assistantCharCount(intPlaceholderValue),
   'assistantUnavailable': (l) => l.assistantUnavailable,
   'assistantHintTitle': (l) => l.assistantHintTitle,

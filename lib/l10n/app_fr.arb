@@ -21547,6 +21547,8 @@
   "@assistantReset": {"description": "Entrée du menu qui vide la conversation avec l'assistant."},
   "assistantOpen": "Ouvrir l'assistant",
   "@assistantOpen": {"description": "Libellé accessible de la bulle et de l'icône qui ouvrent l'assistant."},
+  "assistantQuotaWarning": "{count, plural, =0{C'était votre dernière question pour aujourd'hui. Réessayez demain, ou écrivez à l'équipe.} =1{Il vous reste 1 question aujourd'hui. Ensuite, l'équipe peut prendre le relais.} other{Il vous reste {count} questions aujourd'hui. Ensuite, l'équipe peut prendre le relais.}}",
+  "@assistantQuotaWarning": {"description": "Avertissement sous la réponse de l'assistant quand il reste 2 questions ou moins aujourd'hui (pas de décompte permanent).", "placeholders": {"count": {"type": "int"}}},
   "assistantCharCount": "{count}/500",
   "@assistantCharCount": {"description": "Compteur de caractères du champ de l'assistant (limite 500). {count} : caractères saisis.", "placeholders": {"count": {"type": "int"}}},
   "assistantUnavailable": "L'assistant n'est pas disponible pour le moment. Vous pouvez écrire à l'équipe.",

@@ -67,6 +67,7 @@ final class AssistantState extends Equatable {
     this.escalatedTicketId,
     this.lastFailedQuestion,
     this.parcelId,
+    this.remainingToday,
   });
 
   final List<AssistantMessage> messages;
@@ -87,6 +88,12 @@ final class AssistantState extends Equatable {
   /// tant que ses réponses le confirment. Jamais gardé hors de la conversation.
   final String? parcelId;
 
+  /// Questions encore permises aujourd'hui, lu dans la dernière réponse du
+  /// back ; `null` avant la première. Jamais affiché tel quel : sert à
+  /// prévenir à l'approche de la limite. Gardé après « Nouvelle
+  /// conversation » : la limite est par jour, pas par conversation.
+  final int? remainingToday;
+
   bool get isEmpty => messages.isEmpty;
 
   AssistantState copyWith({
@@ -99,6 +106,7 @@ final class AssistantState extends Equatable {
     String? escalatedTicketId,
     String? lastFailedQuestion,
     String? parcelId,
+    int? remainingToday,
     bool clearEscalatedTicketId = false,
     bool clearLastFailedQuestion = false,
     bool clearParcelId = false,
@@ -116,6 +124,7 @@ final class AssistantState extends Equatable {
         ? null
         : (lastFailedQuestion ?? this.lastFailedQuestion),
     parcelId: clearParcelId ? null : (parcelId ?? this.parcelId),
+    remainingToday: remainingToday ?? this.remainingToday,
   );
 
   @override
@@ -129,5 +138,6 @@ final class AssistantState extends Equatable {
     escalatedTicketId,
     lastFailedQuestion,
     parcelId,
+    remainingToday,
   ];
 }
