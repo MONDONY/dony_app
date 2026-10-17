@@ -407,4 +407,65 @@ void main() {
       }
     });
   });
+
+  group('screen (explication de l’écran)', () {
+    void screenResponds(int status, Object? data) {
+      when(
+        () => dio.get(
+          '/assistant/screen',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/assistant/screen'),
+          statusCode: status,
+          data: data,
+        ),
+      );
+    }
+
+    test('200 : explication, questions et actions', () async {
+      screenResponds(200, {
+        'id': 'ecran-mes-colis',
+        'title': 'L’écran Mes colis',
+        'explanation': 'Vous êtes sur Mes colis.',
+        'questions': ['Comment annuler ?', '', 3],
+        'actions': [
+          {'route': '/tracking', 'label': 'Ouvrir le suivi'},
+        ],
+      });
+      final intro = await repository.screen('/envois', 'fr');
+      expect(intro!.explanation, 'Vous êtes sur Mes colis.');
+      expect(intro.questions, ['Comment annuler ?']);
+      expect(intro.actions.single.route, '/tracking');
+      final query =
+          verify(
+                () => dio.get(
+                  '/assistant/screen',
+                  queryParameters: captureAny(named: 'queryParameters'),
+                ),
+              ).captured.single
+              as Map;
+      expect(query, {'path': '/envois', 'locale': 'fr'});
+    });
+
+    test('204, corps vide ou malformé : rien à expliquer', () async {
+      screenResponds(204, '');
+      expect(await repository.screen('/x', 'fr'), isNull);
+      screenResponds(200, {'explanation': '  '});
+      expect(await repository.screen('/x', 'fr'), isNull);
+      screenResponds(200, {'questions': []});
+      expect(await repository.screen('/x', 'fr'), isNull);
+    });
+
+    test('404 (back ancien) ou hors ligne : rien, sans lever', () async {
+      when(
+        () => dio.get(
+          '/assistant/screen',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenThrow(error(404));
+      expect(await repository.screen('/x', 'fr'), isNull);
+    });
+  });
 }

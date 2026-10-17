@@ -49,6 +49,8 @@ const _dialogButtonKey = ValueKey('dialog-button');
 int _homeBuilds = 0;
 int _homeTaps = 0;
 String? _assistantSource;
+String? _assistantScreen;
+String? _assistantParcel;
 
 final _user = UserModel.fromJson(const {
   'id': 'u1',
@@ -79,6 +81,8 @@ void main() {
     _homeBuilds = 0;
     _homeTaps = 0;
     _assistantSource = null;
+    _assistantScreen = null;
+    _assistantParcel = null;
     blockers = AssistantBubbleBlockers();
     assistantBloc = _MockAssistantBloc();
     authBloc = _MockAuthBloc();
@@ -171,8 +175,24 @@ void main() {
           path: '/assistant',
           builder: (_, state) {
             _assistantSource = state.uri.queryParameters['source'];
+            _assistantScreen = state.uri.queryParameters['screen'];
+            _assistantParcel = state.uri.queryParameters['parcel'];
             return const Scaffold(body: Text('assistant'));
           },
+        ),
+        GoRoute(
+          path: '/bids/:bidId',
+          builder: (_, _) => const Scaffold(body: Text('bid')),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (_, _) => const Scaffold(body: Text('profile')),
+          routes: [
+            GoRoute(
+              path: 'edit',
+              builder: (_, _) => const Scaffold(body: Text('edit')),
+            ),
+          ],
         ),
         GoRoute(
           path: '/camera',
@@ -763,6 +783,43 @@ void main() {
       auth.add(AuthAuthenticated(_user));
       await settle(tester);
       expect(real.state.messages, hasLength(2));
+    });
+  });
+
+  group('écran d’origine transmis à l’assistant', () {
+    testWidgets('accueil : le motif de l’écran, sans colis', (tester) async {
+      await pump(tester);
+      await tester.tap(bubble());
+      await tester.pumpAndSettle();
+      expect(_assistantSource, 'bubble');
+      expect(_assistantScreen, '/home');
+      expect(_assistantParcel, isNull);
+    });
+
+    testWidgets('fiche d’un colis : le motif et le colis', (tester) async {
+      await pump(tester, initialLocation: '/bids/b42');
+      await tester.tap(bubble());
+      await tester.pumpAndSettle();
+      expect(_assistantScreen, '/bids/:bidId');
+      expect(_assistantParcel, 'b42');
+    });
+
+    testWidgets('écran poussé et route imbriquée : le chemin complet', (
+      tester,
+    ) async {
+      await pump(tester);
+      unawaited(router.push('/profile/edit'));
+      await tester.pumpAndSettle();
+      expect(
+        assistantLocationFrom(router),
+        '/assistant?source=bubble&screen=%2Fprofile%2Fedit',
+      );
+      unawaited(router.push('/bids/b9'));
+      await tester.pumpAndSettle();
+      expect(
+        assistantLocationFrom(router),
+        '/assistant?source=bubble&screen=%2Fbids%2F%3AbidId&parcel=b9',
+      );
     });
   });
 }

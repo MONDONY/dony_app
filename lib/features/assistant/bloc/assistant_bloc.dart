@@ -37,6 +37,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     on<AssistantFeedbackGiven>(_onFeedback);
     on<AssistantActionTapped>(_onAction);
     on<AssistantParcelChosen>(_onParcelChosen);
+    on<AssistantScreenOpened>(_onScreenOpened);
     on<AssistantEscalationRequested>(_onEscalation);
     on<AssistantSessionEnded>(_onSessionEnded);
     on<AssistantEscalationHandled>(
@@ -191,6 +192,52 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
     return turns.length > _historyTurns
         ? turns.sublist(turns.length - _historyTurns)
         : turns;
+  }
+
+  /// Ajoute l'explication de l'écran d'où vient l'utilisateur, écrite dans une
+  /// fiche du back (ni IA, ni quota). Pas de doublon si la dernière réponse
+  /// explique déjà cet écran. Sur la fiche d'un colis, ce colis devient le
+  /// sujet de la conversation (le back revérifie l'accès à chaque question).
+  Future<void> _onScreenOpened(
+    AssistantScreenOpened event,
+    Emitter<AssistantState> emit,
+  ) async {
+    if (state.disabled) return;
+    final parcelId = event.parcelId;
+    if (parcelId != null && parcelId.isNotEmpty && !state.isSending) {
+      emit(state.copyWith(parcelId: parcelId));
+    }
+    final last = state.messages.isEmpty ? null : state.messages.last;
+    if (last != null && last.screen == event.screen) return;
+    final epoch = _epoch;
+    final session = _session;
+    final intro = await _repository.screen(event.screen, event.locale);
+    if (epoch != _epoch || session != _session) return;
+    unawaited(
+      _analytics.logEvent(
+        intro == null
+            ? AnalyticsEvents.assistantScreenUnexplained
+            : AnalyticsEvents.assistantScreenExplained,
+        properties: {'screen': event.screen},
+      ),
+    );
+    // Une question partie entre-temps : l'explication arriverait après elle.
+    if (intro == null || state.isSending) return;
+    emit(
+      state.copyWith(
+        messages: [
+          ...state.messages,
+          AssistantMessage(
+            id: _nextId++,
+            author: AssistantAuthor.assistant,
+            text: intro.explanation,
+            actions: intro.actions,
+            suggestions: intro.questions,
+            screen: event.screen,
+          ),
+        ],
+      ),
+    );
   }
 
   /// Repose la question qui a amené le choix, pour le colis touché. La

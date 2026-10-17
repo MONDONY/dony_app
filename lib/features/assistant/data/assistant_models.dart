@@ -162,6 +162,46 @@ class AssistantAnswer extends Equatable {
   ];
 }
 
+/// Explication d'un écran, lue dans une fiche du back (`GET /assistant/screen`),
+/// sans fournisseur d'IA ni quota.
+class AssistantScreenIntro extends Equatable {
+  const AssistantScreenIntro({
+    required this.explanation,
+    this.questions = const [],
+    this.actions = const [],
+  });
+
+  /// Lève une `TypeError` ou une `FormatException` sur une réponse malformée :
+  /// le dépôt la traite comme « rien à expliquer ».
+  factory AssistantScreenIntro.fromJson(Map<String, dynamic> json) {
+    final explanation = json['explanation'] as String;
+    if (explanation.trim().isEmpty) {
+      throw const FormatException('assistant: empty explanation');
+    }
+    final questions = json['questions'];
+    return AssistantScreenIntro(
+      explanation: explanation,
+      questions: questions is List
+          ? [
+              for (final q in questions)
+                if (q is String && q.trim().isNotEmpty) q,
+            ]
+          : const [],
+      actions: AssistantAnswer.fromJson({
+        'answer': explanation,
+        'actions': json['actions'],
+      }).actions,
+    );
+  }
+
+  final String explanation;
+  final List<String> questions;
+  final List<AssistantAction> actions;
+
+  @override
+  List<Object?> get props => [explanation, questions, actions];
+}
+
 /// Un tour de la conversation envoyé au back comme contexte.
 class AssistantHistoryTurn extends Equatable {
   const AssistantHistoryTurn({required this.role, required this.text});

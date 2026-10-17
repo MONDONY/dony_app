@@ -355,6 +355,12 @@ abstract final class AnalyticsEvents {
   /// Quota quotidien atteint.
   static const assistantQuotaReached = 'assistant_quota_reached';
 
+  /// Explication de l'écran d'origine affichée à l'ouverture de l'assistant.
+  static const assistantScreenExplained = 'assistant_screen_explained';
+
+  /// Assistant ouvert depuis un écran qu'aucune fiche n'explique encore.
+  static const assistantScreenUnexplained = 'assistant_screen_unexplained';
+
   /// Avertissement d'approche de la limite quotidienne affiché sous une réponse.
   static const assistantQuotaWarningShown = 'assistant_quota_warning_shown';
 

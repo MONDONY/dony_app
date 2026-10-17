@@ -21,10 +21,21 @@ import 'package:go_router/go_router.dart';
 /// des actions déjà signalées vivent dans le `State`, l'affichage suit le BLoC
 /// et le `ValueListenableBuilder` du composeur.
 class AssistantScreen extends StatefulWidget {
-  const AssistantScreen({super.key, this.source = 'bubble'});
+  const AssistantScreen({
+    super.key,
+    this.source = 'bubble',
+    this.screen,
+    this.parcelId,
+  });
 
   /// D'où l'écran est ouvert : `bubble` ou `messages_header` (analytics).
   final String source;
+
+  /// Écran d'où la bulle a ouvert l'assistant (motif de route) : il l'explique.
+  final String? screen;
+
+  /// Colis de cet écran (fiche colis, réception) : sujet de la conversation.
+  final String? parcelId;
 
   @override
   State<AssistantScreen> createState() => _AssistantScreenState();
@@ -85,6 +96,16 @@ class _AssistantScreenState extends State<AssistantScreen> {
           _sources.contains(widget.source) ? widget.source : 'bubble',
         ),
       );
+      final screen = widget.screen;
+      if (widget.source == 'bubble' && screen != null && screen.isNotEmpty) {
+        context.read<AssistantBloc>().add(
+          AssistantScreenOpened(
+            screen,
+            parcelId: widget.parcelId,
+            locale: _locale,
+          ),
+        );
+      }
       _scrollToEnd(animated: false);
     });
   }
@@ -376,6 +397,14 @@ class _AssistantScreenState extends State<AssistantScreen> {
                 : null,
           ),
         ),
+      // Questions de l'écran expliqué, sous la dernière réponse seulement.
+      if (lastMessage != null && !state.isSending)
+        for (final (index, text) in lastMessage.suggestions.indexed)
+          _SuggestionChip(
+            key: Key('assistant-screen-question-${index + 1}'),
+            text: text,
+            onTap: () => _send(text, fromSuggestion: true),
+          ),
       if (state.isSending) const AssistantTypingBubble(),
       if (showQuotaWarning)
         AssistantNoticeBubble(

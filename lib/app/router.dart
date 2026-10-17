@@ -2219,6 +2219,8 @@ final appRouter = GoRouter(
         value: getIt<AssistantBloc>(),
         child: AssistantScreen(
           source: state.uri.queryParameters['source'] ?? 'bubble',
+          screen: state.uri.queryParameters['screen'],
+          parcelId: state.uri.queryParameters['parcel'],
         ),
       ),
     ),

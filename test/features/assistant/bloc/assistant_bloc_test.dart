@@ -1417,4 +1417,113 @@ void main() {
       await b.close();
     });
   });
+
+  group('explication de l’écran d’origine', () {
+    const intro = AssistantScreenIntro(
+      explanation: 'Vous êtes sur Mes colis.',
+      questions: ['Comment annuler un envoi ?'],
+      actions: [AssistantAction(route: '/tracking', label: 'Ouvrir le suivi')],
+    );
+
+    test(
+      'ajoute l’explication et ses questions, sans question au back',
+      () async {
+        when(
+          () => repository.screen('/envois', 'fr'),
+        ).thenAnswer((_) async => intro);
+        final b = build();
+        b.add(const AssistantScreenOpened('/envois', locale: 'fr'));
+        await Future<void>.delayed(Duration.zero);
+        final m = b.state.messages.single;
+        expect(m.author, AssistantAuthor.assistant);
+        expect(m.text, 'Vous êtes sur Mes colis.');
+        expect(m.suggestions, ['Comment annuler un envoi ?']);
+        expect(m.actions.single.route, '/tracking');
+        expect(m.screen, '/envois');
+        verify(
+          () => backend.capture(AnalyticsEvents.assistantScreenExplained, {
+            'screen': '/envois',
+          }),
+        ).called(1);
+        verifyNever(
+          () => repository.ask(
+            question: any(named: 'question'),
+            locale: any(named: 'locale'),
+            history: any(named: 'history'),
+            parcelId: any(named: 'parcelId'),
+          ),
+        );
+
+        // Rouvert depuis le même écran : pas de doublon.
+        b.add(const AssistantScreenOpened('/envois', locale: 'fr'));
+        await Future<void>.delayed(Duration.zero);
+        expect(b.state.messages, hasLength(1));
+        verify(() => repository.screen('/envois', 'fr')).called(1);
+        await b.close();
+      },
+    );
+
+    test('écran sans fiche : rien de plus, mais mesuré', () async {
+      when(() => repository.screen(any(), any())).thenAnswer((_) async => null);
+      final b = build();
+      b.add(const AssistantScreenOpened('/inconnu', locale: 'en'));
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.messages, isEmpty);
+      verify(
+        () => backend.capture(AnalyticsEvents.assistantScreenUnexplained, {
+          'screen': '/inconnu',
+        }),
+      ).called(1);
+      await b.close();
+    });
+
+    test('fiche d’un colis : ce colis devient le sujet', () async {
+      when(() => repository.screen(any(), any())).thenAnswer((_) async => null);
+      final b = build();
+      b.add(
+        const AssistantScreenOpened(
+          '/bids/:bidId',
+          locale: 'fr',
+          parcelId: 'b42',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.parcelId, 'b42');
+      await b.close();
+    });
+
+    test('assistant éteint : rien n’est demandé', () async {
+      askAny().thenThrow(const AssistantDisabledException());
+      final b = build();
+      b.add(const AssistantQuestionSubmitted('q', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantScreenOpened('/envois', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      verifyNever(() => repository.screen(any(), any()));
+      await b.close();
+    });
+
+    test('réponse arrivée après une fin de session : écartée', () async {
+      final pending = Completer<AssistantScreenIntro?>();
+      when(
+        () => repository.screen(any(), any()),
+      ).thenAnswer((_) => pending.future);
+      final b = build();
+      b.add(const AssistantScreenOpened('/envois', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantSessionEnded());
+      await Future<void>.delayed(Duration.zero);
+      pending.complete(intro);
+      await Future<void>.delayed(Duration.zero);
+      expect(b.state.messages, isEmpty);
+      await b.close();
+    });
+
+    test('l’événement est comparable', () {
+      expect(
+        const AssistantScreenOpened('/a', locale: 'fr', parcelId: 'x'),
+        const AssistantScreenOpened('/a', locale: 'fr', parcelId: 'x'),
+      );
+    });
+  });
 }
