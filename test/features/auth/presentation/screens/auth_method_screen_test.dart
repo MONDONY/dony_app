@@ -255,6 +255,12 @@ void main() {
     final bloc = MockAuthBloc();
     when(() => bloc.state).thenReturn(const AuthInitial());
     when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+    // Hauteur d'un téléphone : sous 660 pt (iPhone SE), le sous-titre est
+    // retiré pour garder tout le panneau visible (FLUTTER-RG).
+    tester.view
+      ..devicePixelRatio = 3
+      ..physicalSize = const Size(390 * 3, 844 * 3);
+    addTearDown(tester.view.reset);
 
     await tester.pumpWidget(_app(bloc));
     await tester.pump(const Duration(milliseconds: 600));

@@ -52,7 +52,6 @@ class AuthMethodScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final h = DonyLayout.hPadding(context);
-    final media = MediaQuery.of(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -80,46 +79,60 @@ class AuthMethodScreen extends StatelessWidget {
             SafeArea(
               child: DonyLayout.constrained(
                 context,
-                SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    h,
-                    DonySpacing.base,
-                    h,
-                    DonySpacing.xl + media.padding.bottom,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight:
-                          media.size.height -
-                          media.padding.top -
-                          media.padding.bottom -
-                          DonySpacing.xl,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _LoginTopBar(),
-                        SizedBox(
-                          height: (media.size.height * 0.24).clamp(
-                            126.0,
-                            220.0,
+                // FLUTTER-RG : tout le panneau (téléphone, Apple, Google,
+                // e-mail et « Parcourir sans compte ») tient à l'écran dès
+                // l'arrivée, iPhone SE compris. L'espace libre se place entre
+                // la barre du haut et l'accroche (Spacer) au lieu d'une hauteur
+                // fixe ; la densité suit la hauteur disponible. Le défilement
+                // reste en secours (très petit écran, grande police).
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final density = _LoginDensity.forHeight(
+                      constraints.maxHeight,
+                    );
+                    return CustomScrollView(
+                      slivers: [
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            h,
+                            density.topPadding,
+                            h,
+                            density.bottomPadding,
+                          ),
+                          sliver: SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const _LoginTopBar(),
+                                const Spacer(),
+                                SizedBox(height: density.introGap),
+                                _LoginIntro(density: density)
+                                    .animate()
+                                    .fadeIn(delay: 60.ms)
+                                    .slideY(
+                                      begin: 0.04,
+                                      curve: Curves.easeOutCubic,
+                                    ),
+                                SizedBox(height: density.introGap),
+                                _AuthActionsPanel(
+                                      showAppleButton: _showAppleButton,
+                                      showGoogleButton: _showGoogleButton,
+                                      density: density,
+                                    )
+                                    .animate()
+                                    .fadeIn(delay: 120.ms)
+                                    .slideY(
+                                      begin: 0.04,
+                                      curve: Curves.easeOutCubic,
+                                    ),
+                              ],
+                            ),
                           ),
                         ),
-                        const _LoginIntro()
-                            .animate()
-                            .fadeIn(delay: 60.ms)
-                            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                        const SizedBox(height: DonySpacing.lg),
-                        _AuthActionsPanel(
-                              showAppleButton: _showAppleButton,
-                              showGoogleButton: _showGoogleButton,
-                            )
-                            .animate()
-                            .fadeIn(delay: 120.ms)
-                            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                       ],
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -128,6 +141,77 @@ class AuthMethodScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Densité de l'écran selon la hauteur disponible (zone sûre déduite).
+///
+/// - large (≥ 820 pt, iPhone Pro Max) : l'écran d'origine ;
+/// - compacte (iPhone 12/13/14, 763 pt) : titre plus court, boutons de 48 ;
+/// - serrée (< 660 pt, iPhone SE 647 pt) : sans le sous-titre, boutons de 44,
+///   la cible tactile minimale.
+@immutable
+class _LoginDensity {
+  const _LoginDensity({
+    required this.titleSize,
+    required this.showSubtitle,
+    required this.introGap,
+    required this.panelPadding,
+    required this.gap,
+    required this.primaryHeight,
+    required this.buttonHeight,
+    required this.topPadding,
+    required this.bottomPadding,
+  });
+
+  factory _LoginDensity.forHeight(double height) {
+    if (height >= 820) {
+      return const _LoginDensity(
+        titleSize: 32,
+        showSubtitle: true,
+        introGap: DonySpacing.lg,
+        panelPadding: DonySpacing.base,
+        gap: DonySpacing.sm,
+        primaryHeight: 56,
+        buttonHeight: 52,
+        topPadding: DonySpacing.base,
+        bottomPadding: DonySpacing.xl,
+      );
+    }
+    if (height >= 660) {
+      return const _LoginDensity(
+        titleSize: 26,
+        showSubtitle: true,
+        introGap: DonySpacing.base,
+        panelPadding: DonySpacing.md,
+        gap: DonySpacing.sm,
+        primaryHeight: 48,
+        buttonHeight: 48,
+        topPadding: DonySpacing.sm,
+        bottomPadding: DonySpacing.md,
+      );
+    }
+    return const _LoginDensity(
+      titleSize: 24,
+      showSubtitle: false,
+      introGap: DonySpacing.md,
+      panelPadding: DonySpacing.md,
+      gap: DonySpacing.xs + DonySpacing.xxs,
+      primaryHeight: 44,
+      buttonHeight: 44,
+      topPadding: DonySpacing.xs,
+      bottomPadding: DonySpacing.sm,
+    );
+  }
+
+  final double titleSize;
+  final bool showSubtitle;
+  final double introGap;
+  final double panelPadding;
+  final double gap;
+  final double primaryHeight;
+  final double buttonHeight;
+  final double topPadding;
+  final double bottomPadding;
 }
 
 class _LoginBackground extends StatelessWidget {
@@ -245,7 +329,9 @@ class _SecureBadge extends StatelessWidget {
 }
 
 class _LoginIntro extends StatelessWidget {
-  const _LoginIntro();
+  const _LoginIntro({required this.density});
+
+  final _LoginDensity density;
 
   @override
   Widget build(BuildContext context) {
@@ -260,19 +346,23 @@ class _LoginIntro extends StatelessWidget {
           style: tt.displayLarge?.copyWith(
             color: isLight ? cs.onSurface : DonyColors.neutral0,
             fontWeight: FontWeight.w900,
+            fontSize: density.titleSize,
             height: 1.05,
           ),
         ),
-        const SizedBox(height: DonySpacing.sm),
-        Text(
-          context.l10n.authMethodSubtitle,
-          style: tt.bodyLarge?.copyWith(
-            color: isLight
-                ? cs.onSurfaceVariant
-                : DonyColors.neutral0.withValues(alpha: 0.84),
-            height: 1.45,
+        if (density.showSubtitle) ...[
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            context.l10n.authMethodSubtitle,
+            style: (density.titleSize < 32 ? tt.bodyMedium : tt.bodyLarge)
+                ?.copyWith(
+                  color: isLight
+                      ? cs.onSurfaceVariant
+                      : DonyColors.neutral0.withValues(alpha: 0.84),
+                  height: 1.4,
+                ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -286,10 +376,12 @@ class _AuthActionsPanel extends StatefulWidget {
   const _AuthActionsPanel({
     required this.showAppleButton,
     required this.showGoogleButton,
+    required this.density,
   });
 
   final bool showAppleButton;
   final bool showGoogleButton;
+  final _LoginDensity density;
 
   @override
   State<_AuthActionsPanel> createState() => _AuthActionsPanelState();
@@ -361,7 +453,7 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
-            padding: const EdgeInsets.all(DonySpacing.base),
+            padding: EdgeInsets.all(widget.density.panelPadding),
             decoration: BoxDecoration(
               color: isLight
                   ? cs.surface.withValues(alpha: 0.94)
@@ -389,7 +481,7 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
                         : _TermsState.unchecked,
                   ),
                 ),
-                const SizedBox(height: DonySpacing.md),
+                SizedBox(height: widget.density.gap),
                 ValueListenableBuilder<_PendingAuth?>(
                   valueListenable: _pending,
                   builder: (context, pending, _) {
@@ -418,6 +510,8 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
     required _PendingAuth? active,
     required bool locked,
   }) {
+    final d = widget.density;
+    final gap = SizedBox(height: d.gap);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -430,11 +524,12 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _PhoneCta(
+                  height: d.primaryHeight,
                   onTap: locked
                       ? null
                       : _withTerms(() => context.push('/auth/phone')),
                 ),
-                const SizedBox(height: DonySpacing.sm),
+                gap,
               ],
             );
           },
@@ -443,6 +538,7 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
           _SocialCta(
             iconAsset: 'apple',
             label: context.l10n.authMethodContinueWithApple,
+            height: d.buttonHeight,
             isLoading: active == _PendingAuth.apple,
             onTap: locked
                 ? null
@@ -453,10 +549,11 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
                     ),
                   ),
           ),
-          const SizedBox(height: DonySpacing.sm),
+          gap,
         ],
         if (widget.showGoogleButton) ...[
           _GoogleCta(
+            height: d.buttonHeight,
             isLoading: active == _PendingAuth.google,
             onTap: locked
                 ? null
@@ -467,17 +564,21 @@ class _AuthActionsPanelState extends State<_AuthActionsPanel> {
                     ),
                   ),
           ),
-          const SizedBox(height: DonySpacing.sm),
+          gap,
         ],
         _SocialCta(
           iconAsset: 'mail',
           label: context.l10n.authMethodContinueWithEmail,
+          height: d.buttonHeight,
           onTap: locked ? null : _withTerms(() => context.push('/auth/email')),
         ),
-        const SizedBox(height: DonySpacing.md),
+        gap,
         const _OrDivider(),
-        const SizedBox(height: DonySpacing.md),
+        gap,
         _GuestCta(
+          key: const Key('auth-guest-cta'),
+          buttonHeight: d.buttonHeight,
+          compact: d.primaryHeight < 56,
           isLoading: active == _PendingAuth.guest,
           onTap: locked
               ? null
@@ -607,13 +708,14 @@ class _CtaSpinner extends StatelessWidget {
 }
 
 class _PhoneCta extends StatelessWidget {
-  const _PhoneCta({required this.onTap});
+  const _PhoneCta({required this.onTap, required this.height});
   final VoidCallback? onTap;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 56,
+      height: height,
       child: DonyButton(
         label: context.l10n.authMethodContinueWithPhone,
         onPressed: onTap,
@@ -627,18 +729,20 @@ class _SocialCta extends StatelessWidget {
     required this.iconAsset,
     required this.label,
     required this.onTap,
+    required this.height,
     this.isLoading = false,
   });
   final String iconAsset;
   final String label;
   final VoidCallback? onTap;
+  final double height;
   final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return SizedBox(
-      height: 52,
+      height: height,
       child: OutlinedButton.icon(
         // Désactivé mais pas grisé pendant son propre chargement : le
         // spinner doit rester lisible.
@@ -661,15 +765,20 @@ class _SocialCta extends StatelessWidget {
 }
 
 class _GoogleCta extends StatelessWidget {
-  const _GoogleCta({required this.onTap, this.isLoading = false});
+  const _GoogleCta({
+    required this.onTap,
+    required this.height,
+    this.isLoading = false,
+  });
   final VoidCallback? onTap;
+  final double height;
   final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return SizedBox(
-      height: 52,
+      height: height,
       child: OutlinedButton(
         onPressed: isLoading ? () {} : onTap,
         style: OutlinedButton.styleFrom(
@@ -787,9 +896,17 @@ class _OrDivider extends StatelessWidget {
 }
 
 class _GuestCta extends StatelessWidget {
-  const _GuestCta({required this.onTap, this.isLoading = false});
+  const _GuestCta({
+    super.key,
+    required this.onTap,
+    required this.buttonHeight,
+    required this.compact,
+    this.isLoading = false,
+  });
 
   final VoidCallback? onTap;
+  final double buttonHeight;
+  final bool compact;
   final bool isLoading;
 
   @override
@@ -800,7 +917,7 @@ class _GuestCta extends StatelessWidget {
       button: true,
       label: context.l10n.authMethodGuestSemantics,
       child: Container(
-        padding: const EdgeInsets.all(DonySpacing.md),
+        padding: EdgeInsets.all(compact ? DonySpacing.sm : DonySpacing.md),
         decoration: BoxDecoration(
           color: cs.primaryContainer.withValues(
             alpha: cs.brightness == Brightness.light ? 0.62 : 0.10,
@@ -815,14 +932,17 @@ class _GuestCta extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DonyButton(
-              label: context.l10n.authMethodBrowseWithoutAccount,
-              iconAsset: 'search',
-              variant: DonyButtonVariant.secondary,
-              isLoading: isLoading,
-              onPressed: onTap,
+            SizedBox(
+              height: buttonHeight,
+              child: DonyButton(
+                label: context.l10n.authMethodBrowseWithoutAccount,
+                iconAsset: 'search',
+                variant: DonyButtonVariant.secondary,
+                isLoading: isLoading,
+                onPressed: onTap,
+              ),
             ),
-            const SizedBox(height: DonySpacing.sm),
+            SizedBox(height: compact ? DonySpacing.xs + 2 : DonySpacing.sm),
             Text(
               context.l10n.authMethodGuestNotice,
               textAlign: TextAlign.center,
