@@ -72,6 +72,66 @@ class AssistantParcelChoice extends Equatable {
   ];
 }
 
+/// Nature d'une question proposée sous une réponse.
+enum AssistantSuggestionKind {
+  /// Question de suite, sur le même sujet que la question posée.
+  followUp,
+
+  /// Autre partie de l'app à découvrir.
+  discovery,
+}
+
+/// Question à toucher sous la dernière réponse (`suggestions` de
+/// `POST /assistant/ask`, yadony-back `feature/assistant-suggestions`).
+class AssistantSuggestion extends Equatable {
+  const AssistantSuggestion({required this.text, required this.kind});
+
+  /// Au plus 2 questions de suite puis 1 découverte, dans cet ordre.
+  static const int maxFollowUps = 2;
+  static const int maxDiscoveries = 1;
+
+  /// Contrat tolérant : absent, `null`, mal formé, texte vide ou `kind`
+  /// inconnu donnent moins de suggestions, jamais une réponse rejetée.
+  static List<AssistantSuggestion> parseList(Object? raw) {
+    if (raw is! List) return const [];
+    final followUps = <AssistantSuggestion>[];
+    final discoveries = <AssistantSuggestion>[];
+    final seen = <String>{};
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final text = item['text'];
+      if (text is! String) continue;
+      final trimmed = text.trim();
+      if (trimmed.isEmpty || !seen.add(trimmed.toLowerCase())) continue;
+      switch (item['kind']) {
+        case 'FOLLOW_UP' when followUps.length < maxFollowUps:
+          followUps.add(
+            AssistantSuggestion(
+              text: trimmed,
+              kind: AssistantSuggestionKind.followUp,
+            ),
+          );
+        case 'DISCOVERY' when discoveries.length < maxDiscoveries:
+          discoveries.add(
+            AssistantSuggestion(
+              text: trimmed,
+              kind: AssistantSuggestionKind.discovery,
+            ),
+          );
+      }
+    }
+    return [...followUps, ...discoveries];
+  }
+
+  final String text;
+  final AssistantSuggestionKind kind;
+
+  bool get isDiscovery => kind == AssistantSuggestionKind.discovery;
+
+  @override
+  List<Object?> get props => [text, kind];
+}
+
 /// Réponse de `POST /assistant/ask`. Le champ `sources` renvoyé par le back
 /// est ignoré à dessein : l'app ne l'affiche pas.
 class AssistantAnswer extends Equatable {
@@ -83,6 +143,7 @@ class AssistantAnswer extends Equatable {
     required this.remainingToday,
     this.parcelId,
     this.parcels = const [],
+    this.suggestions = const [],
   });
 
   /// Lève une `TypeError` sur une réponse malformée (texte absent, `actions`
@@ -102,6 +163,7 @@ class AssistantAnswer extends Equatable {
       remainingToday: (json['remainingToday'] as num?)?.toInt() ?? 0,
       parcelId: json['parcelId'] as String?,
       parcels: _parseParcels(json['parcels']),
+      suggestions: AssistantSuggestion.parseList(json['suggestions']),
     );
   }
 
@@ -150,6 +212,9 @@ class AssistantAnswer extends Equatable {
   /// Colis à choisir ; vide hors de ce cas.
   final List<AssistantParcelChoice> parcels;
 
+  /// Questions proposées sous la réponse ; vide sur un back antérieur.
+  final List<AssistantSuggestion> suggestions;
+
   @override
   List<Object?> get props => [
     answer,
@@ -159,6 +224,7 @@ class AssistantAnswer extends Equatable {
     remainingToday,
     parcelId,
     parcels,
+    suggestions,
   ];
 }
 

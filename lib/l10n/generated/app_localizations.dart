@@ -33278,7 +33278,7 @@ abstract class AppLocalizations {
   /// **'Indisponible pour le moment'**
   String get gpProUnavailableTitle;
 
-  /// Écran GP Pro : description de l'état « Bientôt disponible ».
+  /// Écran GP Pro : description de l'état indisponible (back sans GP Pro).
   ///
   /// In fr, this message translates to:
   /// **'La demande de badge GP Pro n\'est pas accessible pour le moment. Réessayez plus tard.'**
@@ -33746,12 +33746,6 @@ abstract class AppLocalizations {
   /// **'Parler'**
   String get aiFormDraftMicStart;
 
-  /// Libellé accessible du bouton qui passe à la saisie écrite.
-  ///
-  /// In fr, this message translates to:
-  /// **'Écrire'**
-  String get aiFormDraftKeyboard;
-
   /// Micro refusé ou reconnaissance vocale indisponible : seule la saisie écrite reste.
   ///
   /// In fr, this message translates to:
@@ -34057,6 +34051,48 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Reparler'**
   String get aiFormDraftTalkAgain;
+
+  /// Légende sous le gros bouton micro de l'assistant, au repos (FLUTTER-RE).
+  ///
+  /// In fr, this message translates to:
+  /// **'Touchez pour parler'**
+  String get assistantMicStart;
+
+  /// Légende sous le bouton micro de l'assistant pendant la dictée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je vous écoute… Touchez pour envoyer'**
+  String get assistantMicListening;
+
+  /// Infobulle et libellé d'accessibilité du bouton micro de l'assistant, au repos.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poser ma question à voix haute'**
+  String get assistantMicTooltipStart;
+
+  /// Infobulle et libellé d'accessibilité du bouton micro de l'assistant pendant la dictée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrêter et envoyer ma question'**
+  String get assistantMicTooltipStop;
+
+  /// Remplace le bouton micro de l'assistant quand la permission est refusée ou la dictée indisponible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Micro indisponible : écrivez votre question.'**
+  String get assistantMicUnavailable;
+
+  /// Titre des questions proposées sous la dernière réponse de l'assistant (FLUTTER-RD).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourriez aussi demander'**
+  String get assistantNextQuestionsTitle;
+
+  /// Libellé d'accessibilité de la puce « découverte » sous la dernière réponse de l'assistant. {text} : la question proposée.
+  ///
+  /// In fr, this message translates to:
+  /// **'À découvrir dans Yadony : {text}'**
+  String assistantDiscoverySemantics(String text);
 }
 
 class _AppLocalizationsDelegate

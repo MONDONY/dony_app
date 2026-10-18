@@ -1,5 +1,4 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/ai_form_draft/bloc/ai_form_draft_bloc.dart';
 import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
@@ -119,10 +118,10 @@ void main() {
     expect(added(), const [AiFormDraftMicStopped()]);
   });
 
-  testWidgets('clavier : le texte part et le champ se vide', (tester) async {
+  testWidgets('champ écrit : le texte part et le champ se vide', (
+    tester,
+  ) async {
     await pump(tester);
-    await tester.tap(find.byKey(const Key('ai-switch-keyboard')));
-    await tester.pump();
     await tester.enterText(
       find.byKey(const Key('ai-text-input')),
       ' 23 kilos ',
@@ -139,9 +138,23 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('ai-send')));
     verifyNever(() => bloc.add(const AiFormDraftTextSubmitted('')));
-    await tester.tap(find.byKey(const Key('ai-switch-voice')));
-    await tester.pump();
-    expect(find.byKey(const Key('ai-mic-start')), findsOneWidget);
+  });
+
+  testWidgets('gros micro rond (≥ 64 pt) centré au-dessus du champ', (
+    tester,
+  ) async {
+    tester.view
+      ..devicePixelRatio = 3
+      ..physicalSize = const Size(390 * 3, 844 * 3);
+    addTearDown(tester.view.reset);
+    await pump(tester);
+    final disc = tester.getRect(find.byKey(const Key('ai-mic-disc')));
+    final input = tester.getRect(find.byKey(const Key('ai-text-input')));
+    expect(disc.width, greaterThanOrEqualTo(64));
+    expect(disc.height, greaterThanOrEqualTo(64));
+    expect(disc.center.dx, closeTo(390 / 2, 1));
+    expect(disc.bottom, lessThanOrEqualTo(input.top));
+    expect(find.text('Touchez pour parler'), findsOneWidget);
   });
 
   testWidgets('micro indisponible : message et saisie écrite seule', (
@@ -151,15 +164,68 @@ void main() {
     expect(find.byKey(const Key('ai-mic-unavailable')), findsOneWidget);
     expect(find.text(fr.aiFormDraftMicUnavailable), findsOneWidget);
     expect(find.byKey(const Key('ai-text-input')), findsOneWidget);
-    expect(find.byKey(const Key('ai-switch-voice')), findsNothing);
+    expect(find.byKey(const Key('ai-mic-start')), findsNothing);
   });
 
-  testWidgets('envoi en cours : boutons inactifs', (tester) async {
+  testWidgets('envoi en cours : micro grisé, rien ne démarre', (tester) async {
     await pump(tester, enabled: false);
-    final mic = tester.widget<DonyButton>(
-      find.byKey(const Key('ai-mic-start')),
+    await tester.tap(find.byKey(const Key('ai-mic-start')));
+    await tester.pump();
+    expect(speech.startCount, 0);
+    expect(
+      tester.widget<IconButton>(find.byKey(const Key('ai-send'))).onPressed,
+      isNull,
     );
-    expect(mic.onPressed, isNull);
+  });
+
+  testWidgets('pendant l’écoute : disque rouge et icône stop', (tester) async {
+    await pump(tester, listening: true);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byIcon(Icons.stop_rounded), findsOneWidget);
+    final disc = tester.widget<AnimatedContainer>(
+      find.byKey(const Key('ai-mic-disc')),
+    );
+    final decoration = disc.decoration! as BoxDecoration;
+    expect(
+      decoration.color,
+      Theme.of(
+        tester.element(find.byKey(const Key('ai-mic-disc'))),
+      ).colorScheme.error,
+    );
+  });
+
+  testWidgets('clavier ouvert : le micro s’efface, le champ reste', (
+    tester,
+  ) async {
+    tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+    addTearDown(tester.view.reset);
+    await pump(tester);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const Key('ai-mic-start')), findsNothing);
+    expect(find.byKey(const Key('ai-text-input')), findsOneWidget);
+  });
+
+  testWidgets('clavier ouvert pendant l’écoute : le stop reste accessible', (
+    tester,
+  ) async {
+    tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+    addTearDown(tester.view.reset);
+    await pump(tester, listening: true);
+    expect(find.byKey(const Key('ai-mic-stop')), findsOneWidget);
+  });
+
+  testWidgets('animations réduites : micro affiché, écoute possible', (
+    tester,
+  ) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await pump(tester, listening: true);
+    await tester.pump();
+    expect(find.byIcon(Icons.stop_rounded), findsOneWidget);
+    await tester.tap(find.byKey(const Key('ai-mic-stop')));
+    await tester.pump();
+    expect(speech.stopCount, 1);
   });
 
   testWidgets('démontage : la dictée est arrêtée', (tester) async {

@@ -10,6 +10,7 @@ class AssistantMessage extends Equatable {
     this.actions = const [],
     this.parcels = const [],
     this.suggestions = const [],
+    this.nextQuestions = const [],
     this.screen,
     this.answered = true,
     this.feedback,
@@ -26,6 +27,10 @@ class AssistantMessage extends Equatable {
 
   /// Questions à toucher sous l'explication d'un écran.
   final List<String> suggestions;
+
+  /// Questions de suite et découverte proposées par le back sous une réponse.
+  /// Affichées sous la dernière réponse seulement.
+  final List<AssistantSuggestion> nextQuestions;
 
   /// Écran (motif de route) qu'explique ce message, s'il en explique un.
   final String? screen;
@@ -45,6 +50,7 @@ class AssistantMessage extends Equatable {
     actions: actions,
     parcels: parcels,
     suggestions: suggestions,
+    nextQuestions: nextQuestions,
     screen: screen,
     answered: answered,
     feedback: feedback ?? this.feedback,
@@ -59,6 +65,7 @@ class AssistantMessage extends Equatable {
     actions,
     parcels,
     suggestions,
+    nextQuestions,
     screen,
     answered,
     feedback,

@@ -22,14 +22,28 @@ final class AssistantQuestionSubmitted extends AssistantEvent {
     this.text, {
     required this.locale,
     this.fromSuggestion = false,
+    this.suggestionKind,
+    this.fromVoice = false,
   });
 
   final String text;
   final String locale;
   final bool fromSuggestion;
 
+  /// Puce touchée sous une réponse : question de suite ou découverte.
+  final AssistantSuggestionKind? suggestionKind;
+
+  /// Question dictée au micro plutôt que tapée.
+  final bool fromVoice;
+
   @override
-  List<Object?> get props => [text, locale, fromSuggestion];
+  List<Object?> get props => [
+    text,
+    locale,
+    fromSuggestion,
+    suggestionKind,
+    fromVoice,
+  ];
 }
 
 /// Renvoie la dernière question restée sans réponse (erreur réseau).

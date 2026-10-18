@@ -20894,9 +20894,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiFormDraftMicStart => 'Parler';
 
   @override
-  String get aiFormDraftKeyboard => 'Écrire';
-
-  @override
   String get aiFormDraftMicUnavailable =>
       'Activez le micro dans les réglages pour parler.';
 
@@ -21078,4 +21075,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiFormDraftTalkAgain => 'Reparler';
+
+  @override
+  String get assistantMicStart => 'Touchez pour parler';
+
+  @override
+  String get assistantMicListening => 'Je vous écoute… Touchez pour envoyer';
+
+  @override
+  String get assistantMicTooltipStart => 'Poser ma question à voix haute';
+
+  @override
+  String get assistantMicTooltipStop => 'Arrêter et envoyer ma question';
+
+  @override
+  String get assistantMicUnavailable =>
+      'Micro indisponible : écrivez votre question.';
+
+  @override
+  String get assistantNextQuestionsTitle => 'Vous pourriez aussi demander';
+
+  @override
+  String assistantDiscoverySemantics(String text) {
+    return 'À découvrir dans Yadony : $text';
+  }
 }

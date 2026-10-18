@@ -1,7 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/ai_consent_service.dart';
 import 'package:dony/core/widgets/ai_consent_sheet.dart';
+import 'package:dony/core/widgets/dony_mic_button.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
+import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_composer.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_escalation_card.dart';
@@ -17,7 +19,8 @@ import 'package:go_router/go_router.dart';
 ///
 /// À fournir avec `BlocProvider.value(value: getIt<AssistantBloc>())` : le BLoC
 /// est un singleton qui garde l'historique, un `create` le fermerait à la
-/// sortie de l'écran.
+/// sortie de l'écran. La dictée, elle, vit avec l'écran :
+/// `BlocProvider(create: (_) => getIt<AssistantVoiceCubit>())`.
 ///
 /// Pas de `setState` : le contrôleur de saisie, le défilement et l'ensemble
 /// des actions déjà signalées vivent dans le `State`, l'affichage suit le BLoC
@@ -165,13 +168,103 @@ class _AssistantScreenState extends State<AssistantScreen> {
     });
   }
 
-  void _send(String text, {bool fromSuggestion = false}) {
+  void _send(
+    String text, {
+    bool fromSuggestion = false,
+    AssistantSuggestionKind? suggestionKind,
+    bool fromVoice = false,
+  }) {
     context.read<AssistantBloc>().add(
       AssistantQuestionSubmitted(
         text,
         locale: _locale,
         fromSuggestion: fromSuggestion,
+        suggestionKind: suggestionKind,
+        fromVoice: fromVoice,
       ),
+    );
+  }
+
+  /// Le texte dicté s'affiche dans le champ pendant l'écoute ; la question
+  /// part à la fin de la dictée, par le même chemin qu'une question tapée.
+  /// Une réponse encore en route : le texte reste dans le champ, à envoyer.
+  void _onVoiceChanged(BuildContext context, AssistantVoiceState voice) {
+    final text = voice.listening ? voice.transcript : voice.completedText;
+    if (voice.listening) {
+      if (text.isEmpty) return;
+      _input.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+      return;
+    }
+    if (context.read<AssistantBloc>().state.isSending) {
+      _input.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+      return;
+    }
+    _input.clear();
+    _send(text, fromVoice: true);
+  }
+
+  void _toggleMic() {
+    FocusScope.of(context).unfocus();
+    context.read<AssistantVoiceCubit>().toggle(
+      localeId: _locale == 'en' ? 'en_US' : 'fr_FR',
+    );
+  }
+
+  /// Gros micro centré au-dessus de la barre de saisie. Clavier ouvert, il
+  /// s'efface pour laisser le champ visible (sauf pendant une dictée, qu'il
+  /// doit pouvoir arrêter).
+  Widget _micDock(BuildContext context, AssistantState state) {
+    // Lu sur la vue : le Scaffold retire le clavier des marges de son corps.
+    final keyboardOpen = View.of(context).viewInsets.bottom > 0;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return BlocBuilder<AssistantVoiceCubit, AssistantVoiceState>(
+      builder: (context, voice) {
+        final cs = Theme.of(context).colorScheme;
+        final Widget child;
+        if (keyboardOpen && !voice.listening) {
+          child = const SizedBox(width: double.infinity);
+        } else if (voice.status == AssistantVoiceStatus.unavailable) {
+          child = Padding(
+            key: const Key('assistant-mic-unavailable'),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Text(
+              context.l10n.assistantMicUnavailable,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall!.copyWith(color: cs.onSurfaceVariant),
+            ),
+          );
+        } else {
+          child = Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: DonyMicButton(
+              listening: voice.listening,
+              enabled: !state.isSending,
+              onTap: _toggleMic,
+            ),
+          );
+        }
+        final dock = SizedBox(
+          key: const Key('assistant-mic-dock'),
+          width: double.infinity,
+          child: child,
+        );
+        // Animations réduites : la place change d'un coup.
+        if (reduceMotion) return dock;
+        return AnimatedSize(
+          duration: DonyDuration.base,
+          curve: DonyCurve.enter,
+          alignment: Alignment.bottomCenter,
+          child: dock,
+        );
+      },
     );
   }
 
@@ -261,6 +354,12 @@ class _AssistantScreenState extends State<AssistantScreen> {
             listenWhen: (p, c) => p.escalationStatus != c.escalationStatus,
             listener: _onEscalationChanged,
           ),
+          BlocListener<AssistantVoiceCubit, AssistantVoiceState>(
+            listenWhen: (p, c) =>
+                (c.listening && p.transcript != c.transcript) ||
+                p.completed != c.completed,
+            listener: _onVoiceChanged,
+          ),
           BlocListener<AssistantBloc, AssistantState>(
             listenWhen: (p, c) =>
                 p.messages.length != c.messages.length ||
@@ -279,6 +378,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
             return Column(
               children: [
                 Expanded(child: _conversation(context, state, cs)),
+                _micDock(context, state),
                 AssistantComposer(
                   controller: _input,
                   busy: state.isSending,
@@ -417,6 +517,39 @@ class _AssistantScreenState extends State<AssistantScreen> {
             text: text,
             onTap: () => _send(text, fromSuggestion: true),
           ),
+      // Questions de suite et découverte proposées par le back, sous la
+      // dernière réponse seulement, jamais pendant qu'une réponse arrive.
+      if (lastMessage != null &&
+          !state.isSending &&
+          lastMessage.author == AssistantAuthor.assistant &&
+          !lastMessage.isError &&
+          lastMessage.nextQuestions.isNotEmpty) ...[
+        Padding(
+          key: const Key('assistant-next-questions-title'),
+          padding: const EdgeInsets.only(left: 4, top: 4),
+          child: Text(
+            l.assistantNextQuestionsTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge!.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+        for (final (index, suggestion) in lastMessage.nextQuestions.indexed)
+          _SuggestionChip(
+            key: Key(
+              suggestion.isDiscovery
+                  ? 'assistant-discovery'
+                  : 'assistant-follow-up-${index + 1}',
+            ),
+            text: suggestion.text,
+            discovery: suggestion.isDiscovery,
+            onTap: () => _send(
+              suggestion.text,
+              fromSuggestion: true,
+              suggestionKind: suggestion.kind,
+            ),
+          ),
+      ],
       if (state.isSending) const AssistantTypingBubble(),
       if (showQuotaWarning)
         AssistantNoticeBubble(
@@ -462,39 +595,63 @@ class _AssistantScreenState extends State<AssistantScreen> {
   }
 }
 
+/// Question à toucher. [discovery] : autre partie de l'app à découvrir,
+/// distinguée par une boussole et un fond clair bordé (couleurs unies).
 class _SuggestionChip extends StatelessWidget {
-  const _SuggestionChip({super.key, required this.text, required this.onTap});
+  const _SuggestionChip({
+    super.key,
+    required this.text,
+    required this.onTap,
+    this.discovery = false,
+  });
 
   final String text;
   final VoidCallback onTap;
+  final bool discovery;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final style = Theme.of(context).textTheme.labelLarge!.copyWith(
+      color: discovery ? cs.onSurface : cs.onPrimaryContainer,
+    );
     return Align(
       alignment: Alignment.centerLeft,
       child: DonyPressable(
         onTap: onTap,
         child: Semantics(
           button: true,
+          label: discovery
+              ? context.l10n.assistantDiscoverySemantics(text)
+              : null,
+          excludeSemantics: discovery,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: cs.primaryContainer,
+              color: discovery ? cs.surface : cs.primaryContainer,
               borderRadius: BorderRadius.circular(22),
+              border: discovery
+                  ? Border.all(color: cs.primary.withValues(alpha: 0.45))
+                  : null,
             ),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 44),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                child: Text(
-                  text,
-                  style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                    color: cs.onPrimaryContainer,
-                  ),
-                ),
+                padding: EdgeInsets.fromLTRB(discovery ? 12 : 16, 10, 16, 10),
+                child: discovery
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.explore_rounded,
+                            key: const Key('assistant-discovery-icon'),
+                            size: 18,
+                            color: cs.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(child: Text(text, style: style)),
+                        ],
+                      )
+                    : Text(text, style: style),
               ),
             ),
           ),
