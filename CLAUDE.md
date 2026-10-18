@@ -248,6 +248,8 @@ Exception : si un écran a plusieurs états visuels distincts qui valent la pein
 
 **Paiement : un seul émetteur.** `payment_sheet_opened`, `payment_initiated`, `payment_succeeded`, `payment_cancelled` et `payment_failed` partent de `PaymentSheetBloc`, avec le moyen réel (`wallet`/`paypal`/`card`), `context` (`PaymentSheetConfig.analyticsContext`, à poser à chaque nouvel appel), `currency` et `amount_bracket` (`analyticsAmountBracket`). Ne jamais réémettre `payment_succeeded` ailleurs : il était compté deux fois et toujours en `card`.
 
+**Tout mouvement d'argent → `payment_succeeded` / `payment_failed`**, pas seulement Stripe : mobile money d'un colis, recharges (carte, mobile money, code), commission d'un accord en espèces. Valeurs de `method` dans `AnalyticsPaymentMethod` (`card`, `platform_pay` = Apple/Google Pay, `paypal`, `mobile_money`, `voucher`, `wallet_balance` = solde Yadony, `cash`), de `context` dans `AnalyticsPaymentContext`, raison d'échec dans `reason` + `error_code`. Jamais `wallet` seul (ambigu), jamais de majuscules, jamais `payment_method` ni `provider` à la place de `method` (`provider` reste l'opérateur mobile money). Recharges : `wallet_topup_started/completed/failed/cancelled` ; remboursements : `wallet_refund_requested/failed` avec `method` de retour (`analyticsRefundMethod`).
+
 **Les échecs se tracent aussi.** Un handler qui `catch` puis émet un état d'erreur n'atteint jamais `bloc_error` : il envoie son propre événement d'échec avec `error_code` (`AppException.code`, `unknown` sans code), comme `negotiation_action_failed`, `bid_submit_failed`, `package_request_submit_failed` ou `announcement_submit_failed`.
 
 ### Scarabée de signalement — sur chaque écran

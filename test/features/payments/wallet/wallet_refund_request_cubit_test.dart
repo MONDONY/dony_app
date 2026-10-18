@@ -59,7 +59,14 @@ void main() {
       verify(
         () => analytics.logEvent(
           AnalyticsEvents.walletRefundRequested,
-          properties: {'source': 'wallet'},
+          properties: {
+            'source': 'wallet',
+            'currency': 'EUR',
+            'method': 'unknown',
+            'amount_bracket': '20-50',
+            'status': 'PROCESSING',
+            'transaction_count': 1,
+          },
         ),
       ).called(1);
     },
@@ -108,8 +115,45 @@ void main() {
     ],
     verify: (_) {
       verifyNever(
-        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+        () => analytics.logEvent(
+          AnalyticsEvents.walletRefundRequested,
+          properties: any(named: 'properties'),
+        ),
       );
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.walletRefundFailed,
+          properties: {
+            'source': 'wallet',
+            'currency': 'EUR',
+            'error_code': 'unknown',
+          },
+        ),
+      ).called(1);
     },
   );
+
+  test('analyticsRefundMethod : rail → moyen de retour', () {
+    for (final (rail, method) in [
+      ('STRIPE', 'card'),
+      ('PAWAPAY', 'mobile_money'),
+      ('MANUAL', 'manual'),
+      (null, 'unknown'),
+    ]) {
+      final props = walletRefundAnalyticsProperties(
+        WalletRefundRequestModel(
+          id: 'r',
+          currency: 'XOF',
+          amount: 5000,
+          channel: 'AUTOMATIC',
+          status: 'REFUNDED',
+          requestedAt: DateTime(2026, 10, 18),
+          rail: rail,
+        ),
+        source: 'wallet',
+      );
+      expect(props['method'], method);
+      expect(props, isNot(contains('transaction_count')));
+    }
+  });
 }

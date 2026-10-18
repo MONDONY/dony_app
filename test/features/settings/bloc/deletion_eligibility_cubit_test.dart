@@ -227,7 +227,11 @@ void main() {
         verify(
           () => mockAnalytics.logEvent(
             AnalyticsEvents.walletRefundRequested,
-            properties: {'source': 'account_deletion'},
+            properties: {
+              'source': 'account_deletion',
+              'currency': 'CAD',
+              'amount_bracket': '20-50',
+            },
           ),
         ).called(1);
       },

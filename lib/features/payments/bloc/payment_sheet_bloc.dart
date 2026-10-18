@@ -125,12 +125,20 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         event,
         properties: {
           ..._baseProperties,
-          if (method != null) 'method': method.name,
+          if (method != null) 'method': _methodName(method),
           ...extra,
         },
       ),
     );
   }
+
+  /// Nom PostHog d'un moyen : `wallet` désigne ici Apple Pay / Google Pay,
+  /// à ne pas confondre avec le solde Yadony (`wallet_balance`).
+  static String _methodName(PaymentMethodKind method) => switch (method) {
+    PaymentMethodKind.wallet => AnalyticsPaymentMethod.platformPay,
+    PaymentMethodKind.paypal => AnalyticsPaymentMethod.paypal,
+    PaymentMethodKind.card => AnalyticsPaymentMethod.card,
+  };
 
   /// Nom PostHog d'une raison d'échec (`authentication_failed`…).
   static String _reasonName(PaymentSheetFailureReason reason) =>

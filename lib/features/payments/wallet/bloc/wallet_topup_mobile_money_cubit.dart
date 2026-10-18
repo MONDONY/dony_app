@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
@@ -30,6 +31,9 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   final DateTime Function() _now;
 
   Timer? _pollTimer;
+
+  /// Montant de la recharge en cours, pour la tranche envoyée à l'issue.
+  double? _amount;
 
   /// Incrémenté à chaque [initiate] : identifie la « session » de recharge
   /// courante. Une réponse réseau (initiation ou sondage) qui résout après
@@ -124,6 +128,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
         ? current.selectedProvider
         : null;
     emit(const WalletTopupMobileMoneyInitiating());
+    _amount = amount;
     try {
       final topup = await _repository.topupMobileMoney(
         amount: amount,
@@ -147,8 +152,49 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
       startPolling();
     } catch (e) {
       if (isClosed || generation != _generation) return;
-      emit(WalletTopupMobileMoneyError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      _logOutcome(
+        AnalyticsEvents.walletTopupFailed,
+        reason: 'initiate_failed',
+        errorCode: error.code ?? 'unknown',
+      );
+      emit(WalletTopupMobileMoneyError(error));
     }
+  }
+
+  /// Issue d'une recharge mobile money : `wallet_topup_completed` ou
+  /// `wallet_topup_failed`, doublés de `payment_succeeded` /
+  /// `payment_failed` (`context: wallet_topup`) pour lire tous les moyens
+  /// dans un même tableau. Sans eux, un refus de l'opérateur ou une
+  /// expiration n'atteignait jamais PostHog.
+  void _logOutcome(
+    String topupEvent, {
+    String? currency,
+    String? provider,
+    String? reason,
+    String? errorCode,
+  }) {
+    final amount = _amount;
+    final properties = <String, Object>{
+      'method': AnalyticsPaymentMethod.mobileMoney,
+      'currency': ?currency,
+      if (amount != null) 'amount_bracket': analyticsAmountBracket(amount),
+      'provider': ?provider,
+      'reason': ?reason,
+      'error_code': ?errorCode,
+    };
+    unawaited(_analytics.logEvent(topupEvent, properties: properties));
+    unawaited(
+      _analytics.logEvent(
+        topupEvent == AnalyticsEvents.walletTopupCompleted
+            ? AnalyticsEvents.paymentSucceeded
+            : AnalyticsEvents.paymentFailed,
+        properties: {
+          ...properties,
+          'context': AnalyticsPaymentContext.walletTopup,
+        },
+      ),
+    );
   }
 
   /// Démarre le sondage périodique du statut. Sans effet hors de
@@ -175,6 +221,16 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   void reset() {
     stopPolling();
     _generation++;
+    // Abandon d'une recharge déjà lancée (« autre numéro ») : on la compte
+    // pour ne pas la confondre avec une attente sans fin.
+    if (state is WalletTopupMobileMoneyAwaiting) {
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.walletTopupCancelled,
+          properties: {'method': AnalyticsPaymentMethod.mobileMoney},
+        ),
+      );
+    }
     if (isClosed) return;
     emit(const WalletTopupMobileMoneyIdle());
   }
@@ -197,6 +253,12 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
           const WalletTopupMobileMoneyFailed(
             reason: WalletTopupFailureReason.expired,
           ),
+        );
+        _logOutcome(
+          AnalyticsEvents.walletTopupFailed,
+          currency: current.topup.currency,
+          provider: current.topup.provider,
+          reason: 'expired',
         );
       }
       return;
@@ -222,6 +284,11 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
               },
             ),
           );
+          _logOutcome(
+            AnalyticsEvents.walletTopupCompleted,
+            currency: status.currency,
+            provider: status.provider,
+          );
         case 'FAILED': // i18n-ignore
           stopPolling();
           emit(
@@ -229,6 +296,13 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
               reason: WalletTopupFailureReason.refused,
               operatorMessage: _presentableFailure(status.failureReason),
             ),
+          );
+          // Le motif de l'opérateur est un texte libre : jamais envoyé.
+          _logOutcome(
+            AnalyticsEvents.walletTopupFailed,
+            currency: status.currency,
+            provider: status.provider,
+            reason: 'declined',
           );
         default:
         // PENDING : rien à faire, le prochain tick relira le statut.

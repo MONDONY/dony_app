@@ -222,7 +222,7 @@ void main() {
     );
 
     blocTest<WalletTopupMobileMoneyCubit, WalletTopupMobileMoneyState>(
-      'initiate() erreur réseau : état Error, aucun event analytics',
+      'initiate() erreur réseau : état Error, échec tracé, pas d\'initiation',
       build: () {
         when(
           () => repo.topupMobileMoney(
@@ -240,8 +240,22 @@ void main() {
       ],
       verify: (_) {
         verifyNever(
-          () => analytics.logEvent(any(), properties: any(named: 'properties')),
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupMobileMoneyInitiated,
+            properties: any(named: 'properties'),
+          ),
         );
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupFailed,
+            properties: {
+              'method': 'mobile_money',
+              'amount_bracket': '>100',
+              'reason': 'initiate_failed',
+              'error_code': 'unknown',
+            },
+          ),
+        ).called(1);
       },
     );
   });
@@ -365,6 +379,25 @@ void main() {
             properties: {'provider': 'ORANGE_SEN', 'currency': 'XOF'},
           ),
         ).called(1);
+        // Famille commune des recharges et des paiements, tous moyens.
+        const completed = {
+          'method': 'mobile_money',
+          'currency': 'XOF',
+          'amount_bracket': '>100',
+          'provider': 'ORANGE_SEN',
+        };
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupCompleted,
+            properties: completed,
+          ),
+        ).called(1);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.paymentSucceeded,
+            properties: {...completed, 'context': 'wallet_topup'},
+          ),
+        ).called(1);
 
         unawaited(cubit.close());
       });
@@ -408,6 +441,26 @@ void main() {
             properties: any(named: 'properties'),
           ),
         );
+        // Refus de l'opérateur : tracé, sans jamais son motif (texte libre).
+        const failed = {
+          'method': 'mobile_money',
+          'currency': 'XOF',
+          'amount_bracket': '>100',
+          'provider': 'ORANGE_SEN',
+          'reason': 'declined',
+        };
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupFailed,
+            properties: failed,
+          ),
+        ).called(1);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.paymentFailed,
+            properties: {...failed, 'context': 'wallet_topup'},
+          ),
+        ).called(1);
 
         unawaited(cubit.close());
       });
@@ -476,6 +529,15 @@ void main() {
               .having((s) => s.operatorMessage, 'operatorMessage', isNull),
         );
         expect(async.periodicTimerCount, 0);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupFailed,
+            properties: any(
+              named: 'properties',
+              that: containsPair('reason', 'expired'),
+            ),
+          ),
+        ).called(1);
 
         unawaited(cubit.close());
       });

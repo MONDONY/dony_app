@@ -8,6 +8,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
@@ -105,7 +106,14 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         return;
       }
       unawaited(
-        getIt<AnalyticsService>().logEvent(AnalyticsEvents.walletTopupStarted),
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.walletTopupStarted,
+          properties: {
+            'method': _isMobileMoney
+                ? AnalyticsPaymentMethod.mobileMoney
+                : AnalyticsPaymentMethod.card,
+          },
+        ),
       );
     });
     // Le mobile money n'AFFICHE jamais la devise du wallet (c'est celle du
@@ -259,10 +267,22 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         // Le backend ne déclare pas PayPal sur le PaymentIntent de recharge
         // wallet — le bouton PayPal reste donc masqué (dégradation propre).
         paymentMethodTypes: const [],
-        analyticsContext: 'wallet_topup',
+        analyticsContext: AnalyticsPaymentContext.walletTopup,
       ),
       contextLabel: l.walletTopupPaymentContextLabel,
       onSuccess: () {
+        // Recharge carte réellement payée (le solde est crédité ensuite par
+        // le webhook Stripe).
+        unawaited(
+          getIt<AnalyticsService>().logEvent(
+            AnalyticsEvents.walletTopupCompleted,
+            properties: {
+              'method': AnalyticsPaymentMethod.card,
+              'currency': _currency.code,
+              'amount_bracket': analyticsAmountBracket(_amount),
+            },
+          ),
+        );
         if (!context.mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute(
