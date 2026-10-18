@@ -1,4 +1,5 @@
 import 'package:dony/core/config/pro_flag.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -19,4 +20,16 @@ void main() {
     expect(proEnabledListenable.value, isTrue);
     expect(notified, isTrue);
   });
+
+  test(
+    'jamais ouvert sur iOS, même si le serveur l\'active (App Store 3.1.1)',
+    () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+      setProEnabled(true);
+
+      expect(proEnabledListenable.value, isFalse);
+    },
+  );
 }

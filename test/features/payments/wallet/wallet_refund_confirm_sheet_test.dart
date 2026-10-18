@@ -331,7 +331,7 @@ void main() {
         find.text(
           'Cette recharge n\'a jamais servi : les frais du prestataire de '
           'paiement sont retenus. Ils sont annulés dès qu\'une recharge a '
-          'payé un envoi.',
+          'servi à régler une commission.',
         ),
         findsOneWidget,
       );

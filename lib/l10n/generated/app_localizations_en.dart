@@ -9621,7 +9621,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletRefundAbsorbedByFees =>
-      'This balance can\'t be refunded: the payment provider\'s fees absorb it entirely. It stays usable to pay for your shipments.';
+      'This balance can\'t be refunded: the payment provider\'s fees absorb it entirely. It stays usable to pay the Yadony commission on your cash-paid requests.';
 
   @override
   String get walletEmptyTransactions => 'No transactions yet';
@@ -9929,7 +9929,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletRefundFeeRetainedNotice =>
-      'This top-up was never used: the payment provider\'s fees are withheld. They\'re canceled as soon as a top-up pays for a shipment.';
+      'This top-up was never used: the payment provider\'s fees are withheld. They\'re canceled as soon as a top-up has paid a commission.';
 
   @override
   String get walletRefundCurrencyTitle => 'Which currency to refund?';
@@ -13076,7 +13076,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String prefsCurrencyLockedSheetBody(String currency) {
-    return 'Your wallet still holds money in $currency: until it is back to zero, the currency can\'t change, so your balance is never converted without you. To unlock it, use this balance for a shipment, or request a refund from the wallet. Currency choice reopens as soon as the balance is zero.';
+    return 'Your wallet still holds money in $currency: until it is back to zero, the currency can\'t change, so your balance is never converted without you. To unlock it, use this balance to pay commissions, or request a refund from the wallet. Currency choice reopens as soon as the balance is zero.';
   }
 
   @override
@@ -15038,7 +15038,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referralChoiceWalletBody =>
-      'Added right away. Usable on all your next shipments.';
+      'Added right away. Usable to pay the Yadony commission on your cash-paid requests.';
 
   @override
   String referralChoiceCodeTitle(int percent) {
@@ -15056,7 +15056,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referralChoiceWalletNote =>
-      'Your Yadony balance pays for your shipments. It can\'t be withdrawn as cash.';
+      'Your Yadony balance pays the Yadony commission on cash-paid requests. It can\'t be withdrawn as cash.';
 
   @override
   String referralChoiceWalletCta(String amount) {
@@ -15082,7 +15082,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referralWalletCreditedBody =>
-      'The amount shows in your Wallet. Use it to pay for your next shipments.';
+      'The amount shows in your Wallet. Use it to pay the Yadony commission on your cash-paid requests.';
 
   @override
   String get errorReportReasonNotApplicableTitle => 'Invalid reason';
@@ -20491,11 +20491,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gpProFailureBody => 'Check your connection, then try again.';
 
   @override
-  String get gpProUnavailableTitle => 'Coming soon';
+  String get gpProUnavailableTitle => 'Unavailable for now';
 
   @override
   String get gpProUnavailableBody =>
-      'GP Pro applications are coming very soon.';
+      'GP Pro badge applications can\'t be reached right now. Please try again later.';
 
   @override
   String get gpProIntroTitle => 'Become a GP Pro';

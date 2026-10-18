@@ -15970,7 +15970,7 @@ abstract class AppLocalizations {
   /// Bandeau affiché quand le net remboursable est nul (wallet_screen.dart _LoadedView).
   ///
   /// In fr, this message translates to:
-  /// **'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour payer vos envois.'**
+  /// **'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour régler la commission Yadony de vos demandes payées en espèces.'**
   String get walletRefundAbsorbedByFees;
 
   /// État vide de la liste des transactions (wallet_screen.dart _LoadedView).
@@ -16472,7 +16472,7 @@ abstract class AppLocalizations {
   /// Bandeau d'avertissement quand des frais sont retenus sur une recharge jamais utilisée (wallet_refund_confirm_sheet.dart _ConfirmContent).
   ///
   /// In fr, this message translates to:
-  /// **'Cette recharge n\'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu\'une recharge a payé un envoi.'**
+  /// **'Cette recharge n\'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu\'une recharge a servi à régler une commission.'**
   String get walletRefundFeeRetainedNotice;
 
   /// Titre de la sheet de choix de la devise à rembourser (wallet_refund_currency_sheet.dart).
@@ -21740,7 +21740,7 @@ abstract class AppLocalizations {
   /// Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).
   ///
   /// In fr, this message translates to:
-  /// **'Votre portefeuille contient encore de l\'argent en {currency} : tant qu\'il n\'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour un envoi, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.'**
+  /// **'Votre portefeuille contient encore de l\'argent en {currency} : tant qu\'il n\'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour régler des commissions, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.'**
   String prefsCurrencyLockedSheetBody(String currency);
 
   /// Bouton de la feuille de devise verrouillée vers le portefeuille (business_prefs_screen.dart _showCurrencyLockedSheet).
@@ -24944,7 +24944,7 @@ abstract class AppLocalizations {
   /// Description de l'option « crédit sur le solde » (referral_reward_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ajoutés tout de suite. Utilisables sur tous vos prochains envois.'**
+  /// **'Ajoutés tout de suite. Utilisables pour régler la commission Yadony de vos demandes payées en espèces.'**
   String get referralChoiceWalletBody;
 
   /// Option « code de réduction » de la feuille de choix (referral_reward_sheets.dart).
@@ -24968,7 +24968,7 @@ abstract class AppLocalizations {
   /// Mention sous les options de la feuille de choix (referral_reward_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le solde Yadony sert à payer vos envois. Il n\'est pas retirable en espèces.'**
+  /// **'Le solde Yadony sert à régler la commission Yadony des demandes payées en espèces. Il n\'est pas retirable en espèces.'**
   String get referralChoiceWalletNote;
 
   /// Bouton de la feuille de choix quand le crédit sur le solde est sélectionné (referral_reward_sheets.dart).
@@ -25004,7 +25004,7 @@ abstract class AppLocalizations {
   /// Texte de la confirmation après le choix du crédit sur le solde (referral_reward_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le montant apparaît dans votre Portefeuille. Il sert à payer vos prochains envois.'**
+  /// **'Le montant apparaît dans votre Portefeuille. Il sert à régler la commission Yadony de vos demandes payées en espèces.'**
   String get referralWalletCreditedBody;
 
   /// Titre du refus 422 `reason-not-applicable` (ReportService.java, error_catalog.dart) : le motif choisi ne s'applique pas au type de cible signalée.
@@ -33275,13 +33275,13 @@ abstract class AppLocalizations {
   /// Écran GP Pro : le serveur ne propose pas encore GP Pro (version plus ancienne).
   ///
   /// In fr, this message translates to:
-  /// **'Bientôt disponible'**
+  /// **'Indisponible pour le moment'**
   String get gpProUnavailableTitle;
 
   /// Écran GP Pro : description de l'état « Bientôt disponible ».
   ///
   /// In fr, this message translates to:
-  /// **'La demande de badge GP Pro arrive très bientôt.'**
+  /// **'La demande de badge GP Pro n\'est pas accessible pour le moment. Réessayez plus tard.'**
   String get gpProUnavailableBody;
 
   /// Écran GP Pro, aucune demande : titre de l'encart d'introduction.

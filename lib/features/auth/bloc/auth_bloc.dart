@@ -9,6 +9,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/apple_token_revoker.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,6 +56,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   /// donc à un autre compte que celui créé à l'inscription. Ce jeton est le
   /// seul moyen de les réclamer ensuite.
   String? _pendingGuestIdToken;
+
+  /// Nom transmis par Sign in with Apple, en attente de la création du compte.
+  ({String first, String last})? _pendingAppleName;
 
   AuthBloc(
     this._authRepository,
@@ -474,14 +478,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      final user = await _authRepository.registerWithEmail(email: event.email);
+      var user = await _authRepository.registerWithEmail(email: event.email);
       await _refreshIdTokenAfterRegistration();
       await _claimGuestData();
       await _localAuthService.clearPin();
       await _clearHiveAccountData();
+      user = await _saveAppleName(user);
       emit(AuthNewAccountAuthenticated(user));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  /// Guideline Apple 4.8 : le nom donné par Sign in with Apple est enregistré
+  /// dès la création du compte, l'étape « Vos informations » ne le redemande
+  /// donc pas. Un échec garde le compte créé : l'étape le demandera.
+  Future<UserModel> _saveAppleName(UserModel user) async {
+    final name = _pendingAppleName;
+    _pendingAppleName = null;
+    if (name == null) return user;
+    try {
+      return await _authRepository.updateProfile(
+        firstName: name.first.isEmpty ? null : name.first,
+        lastName: name.last.isEmpty ? null : name.last,
+      );
+    } catch (_) {
+      return user;
     }
   }
 
@@ -524,7 +546,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final appleCredential = await _appleSignIn([
         AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
       ]);
+      // Apple ne donne le nom qu'à la première autorisation.
+      final first = appleCredential.givenName?.trim() ?? '';
+      final last = appleCredential.familyName?.trim() ?? '';
+      _pendingAppleName = first.isEmpty && last.isEmpty
+          ? null
+          : (first: first, last: last);
       final oauthCredential = OAuthProvider('apple.com').credential(
         idToken: appleCredential.identityToken,
         accessToken: appleCredential.authorizationCode,

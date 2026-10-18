@@ -141,14 +141,14 @@ void main() {
       verify(() => cubit.load()).called(1);
     });
 
-    testWidgets('unavailable (back ancien) : « Bientôt disponible »', (
+    testWidgets('unavailable (back ancien) : indisponible pour le moment', (
       tester,
     ) async {
       await pump(
         tester,
         const GpProCubitState(load: GpProLoadStatus.unavailable),
       );
-      expect(find.text('Bientôt disponible'), findsOneWidget);
+      expect(find.text('Indisponible pour le moment'), findsOneWidget);
       await tester.tap(find.text(l.commonRetry));
       verify(() => cubit.load()).called(1);
     });
