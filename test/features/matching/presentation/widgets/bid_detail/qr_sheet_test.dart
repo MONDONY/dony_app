@@ -248,7 +248,7 @@ void main() {
   // ── Test 7: tap 'Enregistrer' → Gal failure → snackbar erreur ────────────────
 
   testWidgets(
-    'état TrackingQrLoaded → tap "Enregistrer" → Gal erreur → snackbar erreur',
+    'état TrackingQrLoaded → tap "Enregistrer" → accès refusé → renvoi aux Réglages',
     (tester) async {
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -285,7 +285,52 @@ void main() {
       await tester.tap(find.text('Enregistrer'));
       await tester.pumpAndSettle();
 
+      // Accès refusé (YADONY-FLUTTER-PROD-T) : renvoi aux Réglages.
+      expect(
+        find.textContaining('Autorisez Yadony à ajouter des photos'),
+        findsOneWidget,
+      );
+      expect(find.text('Ouvrir les Réglages'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'état TrackingQrLoaded → tap "Enregistrer" → erreur inattendue → snackbar générique',
+    (tester) async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+      const galChannel = MethodChannel('gal');
+      messenger.setMockMethodCallHandler(galChannel, (call) async {
+        if (call.method == 'requestAccess') return true;
+        if (call.method == 'putImageBytes') {
+          throw PlatformException(code: 'UNEXPECTED', message: 'boom');
+        }
+        return null;
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(galChannel, null));
+
+      final bloc = _MockTrackingBloc();
+      const qr = QrCodeModel(
+        bidId: 'bid-1',
+        scanUrl: 'https://dony.app/track/bid-1',
+        qrCodeBase64: _tinyPngB64,
+      );
+      whenListen<TrackingState>(
+        bloc,
+        Stream<TrackingState>.fromIterable([TrackingQrLoaded(qr)]),
+        initialState: TrackingQrLoaded(qr),
+      );
+
+      await tester.pumpWidget(_host(bloc));
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Enregistrer'));
+      await tester.pumpAndSettle();
+
       expect(find.textContaining("Impossible d'enregistrer"), findsOneWidget);
+      expect(find.text('Ouvrir les Réglages'), findsNothing);
     },
   );
 

@@ -5771,6 +5771,24 @@ abstract class AppLocalizations {
   /// **'Affiche enregistrée dans votre galerie'**
   String get tripPosterSaveSuccess;
 
+  /// Enregistrement dans la galerie refusé par le système (accès aux photos refusé, iOS ne redemande plus) : renvoi aux Réglages (gallery_save_service.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Autorisez Yadony à ajouter des photos dans Réglages, puis réessayez.'**
+  String get gallerySaveAccessDenied;
+
+  /// Action du message d'accès aux photos refusé : ouvre les réglages de Yadony
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les Réglages'**
+  String get gallerySaveOpenSettings;
+
+  /// Enregistrement dans la galerie impossible faute d'espace de stockage
+  ///
+  /// In fr, this message translates to:
+  /// **'Espace insuffisant sur le téléphone pour enregistrer l\'image.'**
+  String get gallerySaveNotEnoughSpace;
+
   /// Confirmation après copie de la légende de l'affiche (trip_poster_screen.dart)
   ///
   /// In fr, this message translates to:

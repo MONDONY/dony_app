@@ -2204,6 +2204,18 @@
   "@tripPosterSaveSuccess": {
     "description": "Message de succès de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
   },
+  "gallerySaveAccessDenied": "Autorisez Yadony à ajouter des photos dans Réglages, puis réessayez.",
+  "@gallerySaveAccessDenied": {
+    "description": "Enregistrement dans la galerie refusé par le système (accès aux photos refusé, iOS ne redemande plus) : renvoi aux Réglages (gallery_save_service.dart)"
+  },
+  "gallerySaveOpenSettings": "Ouvrir les Réglages",
+  "@gallerySaveOpenSettings": {
+    "description": "Action du message d'accès aux photos refusé : ouvre les réglages de Yadony"
+  },
+  "gallerySaveNotEnoughSpace": "Espace insuffisant sur le téléphone pour enregistrer l'image.",
+  "@gallerySaveNotEnoughSpace": {
+    "description": "Enregistrement dans la galerie impossible faute d'espace de stockage"
+  },
   "tripPosterCaptionCopied": "Légende copiée",
   "@tripPosterCaptionCopied": {
     "description": "Confirmation après copie de la légende de l'affiche (trip_poster_screen.dart)"

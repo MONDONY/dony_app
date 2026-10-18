@@ -3403,6 +3403,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPosterSaveSuccess => 'Poster saved to your gallery';
 
   @override
+  String get gallerySaveAccessDenied =>
+      'Allow Yadony to add photos in Settings, then try again.';
+
+  @override
+  String get gallerySaveOpenSettings => 'Open Settings';
+
+  @override
+  String get gallerySaveNotEnoughSpace =>
+      'Not enough storage on your phone to save the image.';
+
+  @override
   String get tripPosterCaptionCopied => 'Caption copied';
 
   @override

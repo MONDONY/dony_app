@@ -8,6 +8,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/gallery_save_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -19,7 +20,6 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -296,22 +296,17 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     final l = context.l10n;
     final failureMessage = l.tripPosterSaveError;
     return _withPoster(failureMessage, (bytes) async {
-      // gal expose hasAccess()/requestAccess() mais ne les appelle jamais
-      // lui-même avant d'écrire — putImageBytes écrit directement. Sans
-      // cette demande explicite, WRITE_EXTERNAL_STORAGE (permission
-      // dangereuse depuis l'API 23, déclarée avec maxSdkVersion=28) reste
-      // accordée nulle part sur Android 7-9 (API 24-28), et l'écriture y
-      // échoue toujours. requestAccess() ne réaffiche pas la boîte si
-      // l'accès est déjà accordé — no-op sur API 29+, où gal le considère de
-      // toute façon déjà acquis hors album.
-      if (!await Gal.requestAccess()) {
-        _notify(failureMessage, DonySnackbarType.error);
-        return;
-      }
-      await Gal.putImageBytes(
+      final gallery = GallerySaveService.resolve();
+      final outcome = await gallery.save(
         bytes,
         name: 'yadony_affiche_${widget.announcement.id}.png',
+        context: 'trip_poster',
       );
+      if (!mounted) return;
+      if (!outcome.isSaved) {
+        gallery.notifyFailure(context, outcome, fallback: failureMessage);
+        return;
+      }
       unawaited(
         getItSafe<AnalyticsService>()?.logEvent(
           AnalyticsEvents.tripPosterShared,
@@ -337,16 +332,17 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
       await Clipboard.setData(
         ClipboardData(text: _captionFor(PosterShareChannel.group)),
       );
-      // Même garde que [_saveToGallery] : gal n'appelle jamais requestAccess
-      // lui-même avant d'écrire.
-      if (!await Gal.requestAccess()) {
-        _notify(failureMessage, DonySnackbarType.error);
-        return;
-      }
-      await Gal.putImageBytes(
+      final gallery = GallerySaveService.resolve();
+      final outcome = await gallery.save(
         bytes,
         name: 'yadony_affiche_${widget.announcement.id}.png',
+        context: 'trip_poster_group',
       );
+      if (!mounted) return;
+      if (!outcome.isSaved) {
+        gallery.notifyFailure(context, outcome, fallback: failureMessage);
+        return;
+      }
       prepared = true;
     });
     // La feuille s'ouvre une fois les boutons rendus à leur état normal : le

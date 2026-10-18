@@ -7,6 +7,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/gallery_save_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
@@ -17,7 +18,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gal/gal.dart';
 import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screen_brightness/screen_brightness.dart';
@@ -214,45 +214,33 @@ class _QrSheetStickyBottom extends StatelessWidget {
   ) async {
     saving.value = true;
     final l = context.l10n;
-    void notifyFailure() {
-      if (context.mounted) {
-        DonySnackbar.show(
-          context,
-          message: l.bidDetailQrSaveErrorSnackbar,
-          type: DonySnackbarType.error,
-        );
-      }
-    }
-
     try {
-      // gal expose hasAccess()/requestAccess() mais ne les appelle jamais
-      // lui-même avant d'écrire — putImageBytes écrit directement. Sans cette
-      // demande explicite, WRITE_EXTERNAL_STORAGE (permission dangereuse
-      // depuis l'API 23, déclarée avec maxSdkVersion=28) reste accordée
-      // nulle part sur Android 7-9 (API 24-28), et l'écriture y échoue
-      // toujours. requestAccess() ne réaffiche pas la boîte si l'accès est
-      // déjà accordé — no-op sur API 29+, où gal le considère de toute façon
-      // déjà acquis hors album.
-      if (!await Gal.requestAccess()) {
-        notifyFailure();
+      final gallery = GallerySaveService.resolve();
+      final outcome = await gallery.save(
+        imageBytes,
+        name: 'qr_dony.png',
+        context: 'bid_qr',
+      );
+      if (!context.mounted) return;
+      if (!outcome.isSaved) {
+        gallery.notifyFailure(
+          context,
+          outcome,
+          fallback: l.bidDetailQrSaveErrorSnackbar,
+        );
         return;
       }
-      await Gal.putImageBytes(imageBytes, name: 'qr_dony.png');
       unawaited(
         getItSafe<AnalyticsService>()?.logEvent(
           AnalyticsEvents.bidQrDownloaded,
           properties: {'action': 'save'},
         ),
       );
-      if (context.mounted) {
-        DonySnackbar.show(
-          context,
-          message: l.bidDetailQrSavedSnackbar,
-          type: DonySnackbarType.success,
-        );
-      }
-    } catch (_) {
-      notifyFailure();
+      DonySnackbar.show(
+        context,
+        message: l.bidDetailQrSavedSnackbar,
+        type: DonySnackbarType.success,
+      );
     } finally {
       // Guard against use-after-dispose: the notifier is disposed when the
       // sheet closes; if the user dismissed while this await was in flight
