@@ -228,9 +228,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
     FocusScope.of(context).unfocus();
     final voice = context.read<AssistantVoiceCubit>();
     if (!voice.state.busy) _lastSentText = null;
-    voice.toggle(
-      localeId: _locale == 'en' ? 'en_US' : 'fr_FR',
-    );
+    voice.toggle(localeId: _locale == 'en' ? 'en_US' : 'fr_FR');
   }
 
   /// Gros micro centré au-dessus de la barre de saisie. Clavier ouvert, il

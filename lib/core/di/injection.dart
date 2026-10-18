@@ -18,6 +18,7 @@ import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/core/services/gallery_save_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
@@ -471,6 +472,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
 
   getIt.registerLazySingleton<ExternalUrlLauncher>(() => ExternalUrlLauncher());
+
+  getIt.registerLazySingleton<GallerySaveService>(
+    () => const GallerySaveService(),
+  );
 
   // Auth
   getIt.registerLazySingleton<AuthRemoteDatasource>(

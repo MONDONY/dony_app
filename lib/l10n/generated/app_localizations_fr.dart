@@ -3421,6 +3421,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPosterSaveSuccess => 'Affiche enregistrée dans votre galerie';
 
   @override
+  String get gallerySaveAccessDenied =>
+      'Autorisez Yadony à ajouter des photos dans Réglages, puis réessayez.';
+
+  @override
+  String get gallerySaveOpenSettings => 'Ouvrir les Réglages';
+
+  @override
+  String get gallerySaveNotEnoughSpace =>
+      'Espace insuffisant sur le téléphone pour enregistrer l\'image.';
+
+  @override
   String get tripPosterCaptionCopied => 'Légende copiée';
 
   @override

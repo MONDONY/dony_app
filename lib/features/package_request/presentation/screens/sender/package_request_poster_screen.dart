@@ -9,6 +9,7 @@ import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/gallery_save_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart'
@@ -22,7 +23,6 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -235,13 +235,17 @@ class _PackageRequestPosterScreenState
     final l = context.l10n;
     final failureMessage = l.tripPosterSaveError;
     return _withPoster(failureMessage, (bytes) async {
-      // gal n'appelle jamais requestAccess() lui-même avant d'écrire : sans
-      // cette demande, l'écriture échoue toujours sur Android 7 à 9.
-      if (!await Gal.requestAccess()) {
-        _notify(failureMessage, DonySnackbarType.error);
+      final gallery = GallerySaveService.resolve();
+      final outcome = await gallery.save(
+        bytes,
+        name: _fileName,
+        context: 'package_request_poster',
+      );
+      if (!mounted) return;
+      if (!outcome.isSaved) {
+        gallery.notifyFailure(context, outcome, fallback: failureMessage);
         return;
       }
-      await Gal.putImageBytes(bytes, name: _fileName);
       _track(AnalyticsEvents.packageRequestPosterShared, 'save');
       _notify(l.tripPosterSaveSuccess, DonySnackbarType.success);
     });

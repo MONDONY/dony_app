@@ -1765,11 +1765,7 @@ void main() {
           const AssistantQuestionSubmitted('Comment payer', locale: 'fr'),
         ),
       ).called(1);
-      verifyNever(
-        () => bloc.add(
-          any(that: isA<AssistantQuestionSubmitted>()),
-        ),
-      );
+      verifyNever(() => bloc.add(any(that: isA<AssistantQuestionSubmitted>())));
     });
 
     testWidgets('puce touchée pendant l’écoute : dictée annulée, champ vidé', (
@@ -1782,7 +1778,9 @@ void main() {
       await tester.pump();
       speech.emit('Bonjour');
       await tester.pump();
-      await tester.ensureVisible(find.byKey(const Key('assistant-suggestion-1')));
+      await tester.ensureVisible(
+        find.byKey(const Key('assistant-suggestion-1')),
+      );
       await tester.tap(find.byKey(const Key('assistant-suggestion-1')));
       await tester.pump();
       speech.emit('Bonjour Yadony', isFinal: true);
@@ -1801,47 +1799,50 @@ void main() {
           ),
         ),
       ).called(1);
-      verifyNever(
-        () => bloc.add(
-          any(that: isA<AssistantQuestionSubmitted>()),
-        ),
-      );
+      verifyNever(() => bloc.add(any(that: isA<AssistantQuestionSubmitted>())));
     });
 
-    testWidgets('même question dictée après un envoi : elle repart (garde-fou remis à zéro)', (
-      tester,
-    ) async {
-      await phone(tester);
-      await pump(tester, const AssistantState(messages: [_question, _answer]));
-      await tester.enterText(
-        find.byKey(const Key('assistant-input')),
-        'Où est mon colis ?',
-      );
-      await tester.pump();
-      await tester.tap(find.byKey(const Key('assistant-send')));
-      await tester.pump();
-      verify(
-        () => bloc.add(
-          const AssistantQuestionSubmitted('Où est mon colis ?', locale: 'fr'),
-        ),
-      ).called(1);
-      // Nouvelle dictée : le garde-fou est remis à zéro, la même question
-      // dictée volontairement repart.
-      await tester.tap(find.byKey(const Key('assistant-mic')));
-      await tester.pump();
-      await tester.pump();
-      speech.emit('Où est mon colis ?', isFinal: true);
-      await tester.pump();
-      verify(
-        () => bloc.add(
-          const AssistantQuestionSubmitted(
-            'Où est mon colis ?',
-            locale: 'fr',
-            fromVoice: true,
+    testWidgets(
+      'même question dictée après un envoi : elle repart (garde-fou remis à zéro)',
+      (tester) async {
+        await phone(tester);
+        await pump(
+          tester,
+          const AssistantState(messages: [_question, _answer]),
+        );
+        await tester.enterText(
+          find.byKey(const Key('assistant-input')),
+          'Où est mon colis ?',
+        );
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('assistant-send')));
+        await tester.pump();
+        verify(
+          () => bloc.add(
+            const AssistantQuestionSubmitted(
+              'Où est mon colis ?',
+              locale: 'fr',
+            ),
           ),
-        ),
-      ).called(1);
-    });
+        ).called(1);
+        // Nouvelle dictée : le garde-fou est remis à zéro, la même question
+        // dictée volontairement repart.
+        await tester.tap(find.byKey(const Key('assistant-mic')));
+        await tester.pump();
+        await tester.pump();
+        speech.emit('Où est mon colis ?', isFinal: true);
+        await tester.pump();
+        verify(
+          () => bloc.add(
+            const AssistantQuestionSubmitted(
+              'Où est mon colis ?',
+              locale: 'fr',
+              fromVoice: true,
+            ),
+          ),
+        ).called(1);
+      },
+    );
 
     testWidgets('puce touchée : le champ saisi est vidé', (tester) async {
       await pump(tester, const AssistantState());

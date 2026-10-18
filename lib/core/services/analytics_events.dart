@@ -931,6 +931,11 @@ abstract final class AnalyticsEvents {
   static const tripPosterShared = 'trip_poster_shared';
   static const tripPosterLinkCopied = 'trip_poster_link_copied';
 
+  /// Échec d'un enregistrement dans la galerie (affiche de trajet ou de
+  /// demande, QR code du colis), YADONY-FLUTTER-PROD-T. Propriétés `context`,
+  /// `stage` (`request_access`/`write`) et `error_code`.
+  static const gallerySaveFailed = 'gallery_save_failed';
+
   // Affiche de demande d'envoi — jumelle de l'affiche de trajet, côté
   // expéditeur : il la poste pour trouver un voyageur sur son axe.
   static const packageRequestPosterOpened = 'package_request_poster_opened';
