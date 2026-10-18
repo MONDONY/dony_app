@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_refusal_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -112,6 +113,24 @@ class _TravelerOptionsSheet extends StatelessWidget {
               },
             ),
             const SizedBox(height: DonySpacing.sm),
+
+            // ── Le colis ne correspond pas (même fenêtre que l'annulation) ──
+            // Refus à l'inspection : l'expéditeur est remboursé et prévenu, le
+            // voyageur n'est pas pénalisé, contrairement à l'annulation.
+            if (_canCancel(bid)) ...[
+              _OptionTile(
+                iconAsset: 'triangle-alert',
+                iconColor: cs.error,
+                iconBg: cs.errorLight,
+                label: l.bidDetailRefuseParcelLabel,
+                subtitle: l.bidDetailRefuseParcelSubtitle,
+                onTap: () {
+                  context.pop();
+                  openParcelRefusalSheet(outerContext, bid);
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
 
             // ── Annuler ce transport (ACCEPTED / HANDED_OVER avant départ) ──
             // Le voyageur renonce à transporter CE colis (pas tout son trajet).

@@ -7565,6 +7565,104 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sender will be refunded automatically';
 
   @override
+  String get bidDetailRefuseParcelLabel => 'The parcel doesn\'t match';
+
+  @override
+  String get bidDetailRefuseParcelSubtitle =>
+      'Refuse it with no penalty, the sender is refunded';
+
+  @override
+  String get parcelRefusalTitle => 'Refuse the parcel';
+
+  @override
+  String get parcelRefusalIntro =>
+      'The parcel doesn\'t match what the sender declared? Refuse it: you don\'t carry it and you get no penalty.';
+
+  @override
+  String get parcelRefusalDeclaredTitle => 'Declared by the sender';
+
+  @override
+  String parcelRefusalDeclaredWeight(String weight) {
+    return 'Weight: $weight kg';
+  }
+
+  @override
+  String get parcelRefusalReasonLabel => 'What\'s wrong';
+
+  @override
+  String get parcelRefusalReasonContentMismatch =>
+      'Content differs from the declaration';
+
+  @override
+  String get parcelRefusalReasonContentMismatchHint =>
+      'E.g. a phone declared as 1 kg of clothes';
+
+  @override
+  String get parcelRefusalReasonOverweight => 'Heavier than declared';
+
+  @override
+  String get parcelRefusalReasonProhibited => 'Prohibited item';
+
+  @override
+  String get parcelRefusalReasonProhibitedHint =>
+      'Or content you refuse on this trip';
+
+  @override
+  String get parcelRefusalReasonOther => 'Other reason';
+
+  @override
+  String get parcelRefusalDetailsLabel => 'Details';
+
+  @override
+  String get parcelRefusalDetailsHint => 'What you noticed (optional)';
+
+  @override
+  String get parcelRefusalDetailsRequiredHint => 'Explain what you noticed';
+
+  @override
+  String get parcelRefusalPhotoLabel => 'Photo of the parcel';
+
+  @override
+  String get parcelRefusalPhotoHelp =>
+      'Required: it serves as proof if you disagree.';
+
+  @override
+  String get parcelRefusalTakePhoto => 'Take a photo';
+
+  @override
+  String get parcelRefusalRetakePhoto => 'Retake the photo';
+
+  @override
+  String get parcelRefusalRemovePhoto => 'Remove the photo';
+
+  @override
+  String get parcelRefusalPhotoFailed =>
+      'This photo couldn\'t be read. Try again.';
+
+  @override
+  String get parcelRefusalConsequences =>
+      'The sender is notified and fully refunded. Repeated refusals suspend their account.';
+
+  @override
+  String get parcelRefusalCashNotice =>
+      'Cash payment: give back any money the sender already handed you. The Yadony commission already paid is not refunded.';
+
+  @override
+  String get parcelRefusalHandedOverNotice =>
+      'You already scanned this parcel: give it back to the sender on the spot.';
+
+  @override
+  String get parcelRefusalSubmit => 'Refuse the parcel';
+
+  @override
+  String get parcelRefusalSuccess =>
+      'Parcel refused. The sender is notified and refunded.';
+
+  @override
+  String get parcelRefusalSuccessCash =>
+      'Parcel refused. The sender is notified.';
+
+  @override
   String get bidDetailPayByMobileMoney => 'Pay by mobile money';
 
   @override

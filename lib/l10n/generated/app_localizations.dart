@@ -12594,6 +12594,174 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur sera remboursé automatiquement'**
   String get bidDetailCancelTransportAcceptedSubtitle;
 
+  /// Tuile d'options voyageur : refuser un colis non conforme (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis ne correspond pas'**
+  String get bidDetailRefuseParcelLabel;
+
+  /// Sous-titre de la tuile refus du colis (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusez-le sans pénalité, l\'expéditeur est remboursé'**
+  String get bidDetailRefuseParcelSubtitle;
+
+  /// Titre de la feuille de refus d'un colis non conforme (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser le colis'**
+  String get parcelRefusalTitle;
+
+  /// Introduction de la feuille de refus (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis ne correspond pas à ce que l\'expéditeur a déclaré ? Refusez-le : vous ne le transportez pas et vous n\'êtes pas pénalisé.'**
+  String get parcelRefusalIntro;
+
+  /// Titre de l'encart qui rappelle la déclaration (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Déclaré par l\'expéditeur'**
+  String get parcelRefusalDeclaredTitle;
+
+  /// Poids déclaré (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids : {weight} kg'**
+  String parcelRefusalDeclaredWeight(String weight);
+
+  /// Libellé du choix du motif (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce qui ne va pas'**
+  String get parcelRefusalReasonLabel;
+
+  /// Motif : contenu non conforme (parcel_refusal_sheet.dart). Envoyé au serveur, lu par l'expéditeur : garder court
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu différent de la déclaration'**
+  String get parcelRefusalReasonContentMismatch;
+
+  /// Exemple sous le motif contenu non conforme (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. un téléphone déclaré comme 1 kg de vêtements'**
+  String get parcelRefusalReasonContentMismatchHint;
+
+  /// Motif : poids supérieur (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids supérieur à la déclaration'**
+  String get parcelRefusalReasonOverweight;
+
+  /// Motif : objet interdit (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Objet interdit'**
+  String get parcelRefusalReasonProhibited;
+
+  /// Précision sous le motif objet interdit (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ou un contenu que vous refusez sur ce trajet'**
+  String get parcelRefusalReasonProhibitedHint;
+
+  /// Motif : autre (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre raison'**
+  String get parcelRefusalReasonOther;
+
+  /// Libellé du champ de précisions (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisions'**
+  String get parcelRefusalDetailsLabel;
+
+  /// Indication du champ de précisions, facultatif (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que vous avez constaté (facultatif)'**
+  String get parcelRefusalDetailsHint;
+
+  /// Indication du champ de précisions, obligatoire pour Autre raison (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Expliquez ce que vous avez constaté'**
+  String get parcelRefusalDetailsRequiredHint;
+
+  /// Titre de la section photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo du colis'**
+  String get parcelRefusalPhotoLabel;
+
+  /// Aide de la section photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligatoire : elle sert de preuve en cas de désaccord.'**
+  String get parcelRefusalPhotoHelp;
+
+  /// Bouton prise de photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre une photo'**
+  String get parcelRefusalTakePhoto;
+
+  /// Bouton pour reprendre la photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la photo'**
+  String get parcelRefusalRetakePhoto;
+
+  /// Infobulle du bouton retirer la photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer la photo'**
+  String get parcelRefusalRemovePhoto;
+
+  /// Snackbar photo illisible (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette photo n\'a pas pu être lue. Réessayez.'**
+  String get parcelRefusalPhotoFailed;
+
+  /// Encart des conséquences du refus (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur est prévenu et remboursé intégralement. Des refus répétés suspendent son compte.'**
+  String get parcelRefusalConsequences;
+
+  /// Encart espèces de la feuille de refus (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. La commission Yadony déjà réglée n\'est pas remboursée.'**
+  String get parcelRefusalCashNotice;
+
+  /// Encart colis déjà remis (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà scanné ce colis : rendez-le à l\'expéditeur sur place.'**
+  String get parcelRefusalHandedOverNotice;
+
+  /// Bouton de confirmation du refus (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser le colis'**
+  String get parcelRefusalSubmit;
+
+  /// Snackbar refus confirmé (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis refusé. L\'expéditeur est prévenu et remboursé.'**
+  String get parcelRefusalSuccess;
+
+  /// Snackbar refus confirmé, paiement en espèces (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis refusé. L\'expéditeur est prévenu.'**
+  String get parcelRefusalSuccessCash;
+
   /// Bouton AWAITING_PAYMENT mobile money (sender_sticky_bar.dart)
   ///
   /// In fr, this message translates to:

@@ -38,6 +38,30 @@ void main() {
     verify(() => ds.uploadBidPhoto('/tmp/a.jpg')).called(1);
   });
 
+  test('uploadRefusalPhoto et refuseParcel passent au datasource', () async {
+    when(
+      () => ds.uploadRefusalPhoto(any(), any()),
+    ).thenAnswer((_) async => 'tracking/bid-001/r.jpg');
+    when(
+      () => ds.refuseParcel(
+        any(),
+        reason: any(named: 'reason'),
+        photoKey: any(named: 'photoKey'),
+      ),
+    ).thenAnswer((_) async => _bid());
+
+    expect(
+      await repo.uploadRefusalPhoto('bid-001', '/tmp/r.jpg'),
+      'tracking/bid-001/r.jpg',
+    );
+    await repo.refuseParcel('bid-001', reason: 'Objet interdit', photoKey: 'k');
+
+    verify(() => ds.uploadRefusalPhoto('bid-001', '/tmp/r.jpg')).called(1);
+    verify(
+      () => ds.refuseParcel('bid-001', reason: 'Objet interdit', photoKey: 'k'),
+    ).called(1);
+  });
+
   test('createBid forwards photoKeys to datasource', () async {
     when(
       () => ds.createBid(
