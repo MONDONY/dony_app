@@ -94,27 +94,11 @@ class IntentStepScreen extends StatelessWidget {
                     const SizedBox(height: DonySpacing.xs),
                     Text(l.intentSubtitle, style: text.bodyMedium),
                     const SizedBox(height: DonySpacing.lg),
-                    Expanded(
+                    const Expanded(
                       child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const IntentForm(),
-                            BlocBuilder<IntentCubit, IntentFormState>(
-                              buildWhen: (p, c) => p.intent != c.intent,
-                              builder: (context, state) =>
-                                  state.intent == UserIntent.traveler ||
-                                      state.intent == UserIntent.both
-                                  ? const Padding(
-                                      padding: EdgeInsets.only(
-                                        top: DonySpacing.base,
-                                      ),
-                                      child: GpProSignupSection(),
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                          ],
-                        ),
+                        // GP Pro juste sous les cartes, avant les pays : un
+                        // voyageur la voit sans défiler.
+                        child: IntentForm(belowIntents: _GpProSlot()),
                       ),
                     ),
                     BlocBuilder<IntentCubit, IntentFormState>(
@@ -149,6 +133,39 @@ class IntentStepScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Section GP Pro de l'inscription, montrée pour « Voyageur » et « Les
+/// deux ». Elle se déplie sous les cartes au lieu d'apparaître d'un bloc.
+class _GpProSlot extends StatelessWidget {
+  const _GpProSlot();
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return BlocBuilder<IntentCubit, IntentFormState>(
+      buildWhen: (p, c) => p.intent != c.intent,
+      builder: (context, state) {
+        final visible =
+            state.intent == UserIntent.traveler ||
+            state.intent == UserIntent.both;
+        return AnimatedSize(
+          duration: reduceMotion ? Duration.zero : DonyDuration.base,
+          curve: DonyCurve.enter,
+          alignment: Alignment.topCenter,
+          child: visible
+              ? const Padding(
+                  padding: EdgeInsets.only(
+                    top: DonySpacing.xs,
+                    bottom: DonySpacing.sm,
+                  ),
+                  child: GpProSignupSection(),
+                )
+              : const SizedBox(width: double.infinity),
+        );
+      },
     );
   }
 }

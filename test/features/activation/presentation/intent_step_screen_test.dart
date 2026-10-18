@@ -62,11 +62,13 @@ void main() {
     StreamController<IntentFormState> states, {
     IntentStepArgs args = const IntentStepArgs(next: '/auth/referral-code'),
     UserIntent intent = UserIntent.sender,
+    Size size = const Size(800, 2400),
+    double devicePixelRatio = 1,
   }) async {
-    // Écran haut : la section GP Pro doit tenir sans défilement.
+    // Écran haut par défaut : la section GP Pro doit tenir sans défilement.
     tester.view
-      ..physicalSize = const Size(800, 2400)
-      ..devicePixelRatio = 1;
+      ..physicalSize = size
+      ..devicePixelRatio = devicePixelRatio;
     addTearDown(tester.view.reset);
     whenListen(
       cubit,
@@ -185,6 +187,46 @@ void main() {
 
   group('GP Pro', () {
     final checkbox = find.byKey(const Key('gp-pro-signup-checkbox'));
+
+    testWidgets('téléphone 390 × 844 : après « Voyageur », la case GP Pro '
+        'est visible sans défiler, entre les cartes et les pays '
+        '(YADONY-FLUTTER-PROD-G)', (tester) async {
+      final states = StreamController<IntentFormState>();
+      await pump(
+        tester,
+        _MockIntentCubit(),
+        states,
+        size: const Size(390 * 3, 844 * 3),
+        devicePixelRatio: 3,
+      );
+      expect(checkbox, findsNothing);
+      states.add(
+        const IntentFormState(intent: UserIntent.traveler, destination: 'SN'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(checkbox, findsOneWidget);
+      final box = tester.getRect(checkbox);
+      // Dans la fenêtre, au-dessus du bouton « Continuer », sans défilement.
+      expect(box.top, greaterThanOrEqualTo(0));
+      expect(
+        box.bottom,
+        lessThanOrEqualTo(
+          tester.getRect(find.byKey(const Key('intent-continue'))).top,
+        ),
+      );
+      expect(checkbox.hitTestable(), findsOneWidget);
+      // Ordre : cartes → GP Pro → pays.
+      final lastCard = tester.getRect(
+        find.byKey(const Key('intent-option-both')),
+      );
+      final firstCountry = tester.getRect(
+        find.byKey(const Key('intent-destination-SN')),
+      );
+      expect(lastCard.bottom, lessThan(box.top));
+      expect(box.bottom, lessThan(firstCountry.top));
+      await states.close();
+    });
 
     testWidgets('absente pour « Expéditeur »', (tester) async {
       final states = StreamController<IntentFormState>();
