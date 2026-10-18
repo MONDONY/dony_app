@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
@@ -249,16 +250,22 @@ class MobileMoneyPaymentBloc
           properties: {'scope': scope.analyticsName},
         ),
       );
+      _logPayment(AnalyticsEvents.paymentSucceeded, next.status, scope);
     } else if (next is MobileMoneyPaymentDepositFailed && !wasFailed) {
+      final failureCode = next.status.deposit?.failureCode ?? '';
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.mobileMoneyFailed,
           properties: {
-            'failure_code': next.status.deposit?.failureCode ?? '',
+            'failure_code': failureCode,
             'scope': scope.analyticsName,
           },
         ),
       );
+      _logPayment(AnalyticsEvents.paymentFailed, next.status, scope, {
+        'reason': 'declined',
+        'error_code': failureCode.isEmpty ? 'unknown' : failureCode,
+      });
     } else if (next is MobileMoneyPaymentExpired && !wasExpired) {
       unawaited(
         _analytics.logEvent(
@@ -266,7 +273,39 @@ class MobileMoneyPaymentBloc
           properties: {'scope': scope.analyticsName},
         ),
       );
+      _logPayment(AnalyticsEvents.paymentFailed, next.status, scope, {
+        'reason': 'expired',
+      });
     }
+  }
+
+  /// Issue d'un paiement mobile money d'un colis dans la famille commune
+  /// `payment_succeeded` / `payment_failed` (`method: mobile_money`), pour
+  /// lire tous les moyens dans un même tableau. Les événements
+  /// `mobile_money_*` restent émis à côté.
+  void _logPayment(
+    String event,
+    MobileMoneyPaymentStatus status,
+    MobileMoneyScope scope, [
+    Map<String, Object> extra = const {},
+  ]) {
+    final amount = status.amount;
+    final provider = status.deposit?.providerLabel;
+    unawaited(
+      _analytics.logEvent(
+        event,
+        properties: {
+          'method': AnalyticsPaymentMethod.mobileMoney,
+          'context': scope is BidMobileMoneyScope
+              ? AnalyticsPaymentContext.bid
+              : AnalyticsPaymentContext.negotiation,
+          'currency': status.currency,
+          if (amount != null) 'amount_bracket': analyticsAmountBracket(amount),
+          'provider': ?provider,
+          ...extra,
+        },
+      ),
+    );
   }
 
   /// Émet l'erreur à l'écran et la trace en `mobile_money_failed` : un

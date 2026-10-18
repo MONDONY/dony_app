@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
@@ -99,17 +100,13 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
             currencyCode: event.currencyCode,
           );
           if (clientSecret != null) {
+            // `wallet_topup_completed` part au succès réel du paiement
+            // (écran de montant) : émis ici, il comptait une recharge dès la
+            // création du PaymentIntent, avant tout paiement, et avec le
+            // montant exact.
             emit(WalletTopupStripeReady(clientSecret));
-            unawaited(
-              _analytics.logEvent(
-                AnalyticsEvents.walletTopupCompleted,
-                properties: {
-                  'amount': event.amount,
-                  'method': event.paymentMethod,
-                },
-              ),
-            );
           } else {
+            _logTopupFailed('empty_response');
             emit(
               WalletError(
                 const NetworkException(
@@ -120,7 +117,24 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
           }
       }
     } catch (e) {
-      emit(WalletError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      _logTopupFailed(error.code ?? 'unknown');
+      emit(WalletError(error));
     }
+  }
+
+  /// Recharge carte refusée avant même la feuille de paiement (création du
+  /// PaymentIntent) : sans événement, elle disparaissait du tunnel.
+  void _logTopupFailed(String errorCode) {
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.walletTopupFailed,
+        properties: {
+          'method': AnalyticsPaymentMethod.card,
+          'reason': 'intent_failed',
+          'error_code': errorCode,
+        },
+      ),
+    );
   }
 }

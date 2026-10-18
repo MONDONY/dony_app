@@ -24,21 +24,58 @@ void main() {
     return WalletBloc(repo, a);
   }
 
-  test('wallet_topup_completed fires on WalletTopupStripeReady', () async {
+  test(
+    'WalletTopupStripeReady : aucune recharge comptée avant le paiement',
+    () async {
+      when(
+        () => repo.topupStripe(amount: any(named: 'amount')),
+      ).thenAnswer((_) async => 'cs_test_secret');
+
+      final bloc = makeBloc();
+      bloc.add(WalletTopupRequested(amount: 50.0, paymentMethod: 'STRIPE'));
+      await bloc.stream.firstWhere((s) => s is WalletTopupStripeReady);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.walletTopupCompleted, any()),
+      );
+    },
+  );
+
+  test('création du PaymentIntent refusée : wallet_topup_failed', () async {
     when(
       () => repo.topupStripe(amount: any(named: 'amount')),
-    ).thenAnswer((_) async => 'cs_test_secret');
+    ).thenThrow(Exception('réseau'));
 
     final bloc = makeBloc();
     bloc.add(WalletTopupRequested(amount: 50.0, paymentMethod: 'STRIPE'));
-    await bloc.stream.firstWhere((s) => s is WalletTopupStripeReady);
+    await bloc.stream.firstWhere((s) => s is WalletError);
     await Future<void>.delayed(Duration.zero);
 
     verify(
-      () => backend.capture(AnalyticsEvents.walletTopupCompleted, {
-        'amount': 50.0,
-        'method': 'STRIPE',
+      () => backend.capture(AnalyticsEvents.walletTopupFailed, {
+        'method': 'card',
+        'reason': 'intent_failed',
+        'error_code': 'unknown',
       }),
+    ).called(1);
+  });
+
+  test('réponse vide : wallet_topup_failed empty_response', () async {
+    when(
+      () => repo.topupStripe(amount: any(named: 'amount')),
+    ).thenAnswer((_) async => null);
+
+    final bloc = makeBloc();
+    bloc.add(WalletTopupRequested(amount: 50.0, paymentMethod: 'STRIPE'));
+    await bloc.stream.firstWhere((s) => s is WalletError);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(
+      () => backend.capture(
+        AnalyticsEvents.walletTopupFailed,
+        any(that: containsPair('error_code', 'empty_response')),
+      ),
     ).called(1);
   });
 

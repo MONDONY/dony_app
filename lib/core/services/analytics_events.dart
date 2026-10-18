@@ -112,7 +112,13 @@ abstract final class AnalyticsEvents {
   // communes : `context` (`bid`, `trip_negotiation`, `negotiation`, `escrow`,
   // `wallet_topup`), `currency`, `amount_bracket` (voir
   // `analyticsAmountBracket`), et `method` (`wallet`/`paypal`/`card`) dès
-  // qu'un moyen est choisi. Jamais de montant exact.
+  // qu'un moyen est choisi (`AnalyticsPaymentMethod` : `platform_pay` pour
+  // Apple Pay / Google Pay). Jamais de montant exact.
+  //
+  // `payment_succeeded` / `payment_failed` couvrent TOUS les mouvements
+  // d'argent lancés depuis l'app, pas seulement Stripe : mobile money d'un
+  // colis, recharges (carte, mobile money, code), commission d'un accord en
+  // espèces. Se lisent par `method` × `context`.
 
   /// Feuille de paiement ouverte et moyens résolus. Propriétés en plus :
   /// `wallet_available`, `paypal_available`.
@@ -304,6 +310,13 @@ abstract final class AnalyticsEvents {
   /// `error_code`, `thread_id`.
   static const negotiationActionFailed = 'negotiation_action_failed';
 
+  /// Règlement de la commission d'un accord en espèces en échec. Propriétés
+  /// `thread_id`, `method` (`wallet_balance`/`card`), `reason`
+  /// (`server_refused`, `authentication_failed`, `insufficient_balance`,
+  /// `declined`), `error_code`. Doublé d'un `payment_failed`
+  /// (`context: commission`).
+  static const negotiationCommissionFailed = 'negotiation_commission_failed';
+
   /// Traveler blocked at trip-linking because no payment method they can
   /// honor overlaps the sender's accepted set (422 `payment-method/*`).
   /// Property `reason`: `no_card` / `no_cash_funds` / `none`.
@@ -366,8 +379,25 @@ abstract final class AnalyticsEvents {
   static const conversationsBatchDeleted = 'conversations_batch_deleted';
 
   // Wallet
+  // Recharges du solde. Propriété `method` : `card`, `mobile_money`,
+  // `voucher` (code). Chaque issue est doublée d'un `payment_succeeded` /
+  // `payment_failed` (`context: wallet_topup`) ; la carte l'a via la feuille
+  // de paiement.
+
+  /// Écran de montant ouvert. Propriété `method`.
   static const walletTopupStarted = 'wallet_topup_started';
+
+  /// Recharge payée. Propriétés `method`, `currency`, `amount_bracket`,
+  /// `provider` (mobile money). Partait avant à la création du PaymentIntent.
   static const walletTopupCompleted = 'wallet_topup_completed';
+
+  /// Recharge en échec. Propriétés `method`, `reason` (`intent_failed`,
+  /// `initiate_failed`, `declined`, `expired`, `code_rejected`),
+  /// `error_code`, `currency`, `provider`.
+  static const walletTopupFailed = 'wallet_topup_failed';
+
+  /// Recharge mobile money abandonnée en attente (« autre numéro »).
+  static const walletTopupCancelled = 'wallet_topup_cancelled';
 
   /// Recharge mobile money initiée (dépôt pawaPay lancé, avant confirmation).
   /// Propriétés `provider` et `currency` uniquement : jamais le montant, ni
@@ -541,6 +571,10 @@ abstract final class AnalyticsEvents {
   static const analyticsConsentChanged = 'analytics_consent_changed';
   static const accountDeletionRequested = 'account_deletion_requested';
   static const walletRefundRequested = 'wallet_refund_requested';
+
+  /// Demande de remboursement du solde refusée. Propriétés `source`,
+  /// `currency` (depuis le portefeuille), `error_code`.
+  static const walletRefundFailed = 'wallet_refund_failed';
 
   /// Devise choisie dans la sheet « Quelle devise rembourser ? » quand
   /// plusieurs devises sont remboursables. Propriété `currency` uniquement.
@@ -873,6 +907,10 @@ abstract final class AnalyticsEvents {
 
   /// Création d'offre refusée. Propriétés `payment_method`, `error_code`.
   static const bidSubmitFailed = 'bid_submit_failed';
+
+  /// Acceptation d'une offre en espèces refusée (commission). Propriétés
+  /// `bid_id`, `method` (`wallet_balance`/`card`), `reason`, `error_code`.
+  static const bidAcceptFailed = 'bid_accept_failed';
   static const tripNegotiationPaymentStarted =
       'trip_negotiation_payment_started';
 

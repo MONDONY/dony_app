@@ -41,7 +41,10 @@ void main() {
     await bloc.stream.firstWhere((s) => s is BidAccepted);
     await Future<void>.delayed(Duration.zero);
     verify(
-      () => backend.capture(AnalyticsEvents.bidAccepted, {'bid_id': 'bid1'}),
+      () => backend.capture(AnalyticsEvents.bidAccepted, {
+        'bid_id': 'bid1',
+        'method': 'wallet_balance',
+      }),
     ).called(1);
   });
 

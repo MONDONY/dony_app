@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -132,18 +133,36 @@ class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
           ),
         );
       }
+      // Une demande par devise : un événement par demande, pour lire
+      // chaque remboursement par devise et moyen de retour.
+      for (final request in requests) {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.walletRefundRequested,
+            properties: {
+              'source': 'account_deletion',
+              'currency': request.currency,
+              'amount_bracket': analyticsAmountBracket(request.amount),
+            },
+          ),
+        );
+      }
+    } catch (e) {
+      final error = unwrapDioError(e);
       unawaited(
         _analytics.logEvent(
-          AnalyticsEvents.walletRefundRequested,
-          properties: const {'source': 'account_deletion'},
+          AnalyticsEvents.walletRefundFailed,
+          properties: {
+            'source': 'account_deletion',
+            'error_code': error.code ?? 'unknown',
+          },
         ),
       );
-    } catch (e) {
       if (!isClosed) {
         emit(
           state.copyWith(
             isRequestingWalletRefund: false,
-            walletRefundError: unwrapDioError(e),
+            walletRefundError: error,
           ),
         );
       }

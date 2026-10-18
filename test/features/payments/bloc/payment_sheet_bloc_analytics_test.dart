@@ -76,7 +76,7 @@ void main() {
     });
   });
 
-  test('wallet réussi : initiated puis succeeded en `wallet`', () async {
+  test('wallet réussi : initiated puis succeeded en `platform_pay`', () async {
     when(
       () => gateway.confirmPlatformPay(
         clientSecret: any(named: 'clientSecret'),
@@ -92,10 +92,10 @@ void main() {
 
     expect(
       capturedFor(AnalyticsEvents.paymentInitiated),
-      containsPair('method', 'wallet'),
+      containsPair('method', 'platform_pay'),
     );
     final succeeded = capturedFor(AnalyticsEvents.paymentSucceeded);
-    expect(succeeded, containsPair('method', 'wallet'));
+    expect(succeeded, containsPair('method', 'platform_pay'));
     expect(succeeded, containsPair('context', 'bid'));
     expect(succeeded, isNot(contains('amount')));
   });

@@ -811,7 +811,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => WalletTopupMobileMoneyAvailabilityCubit(getIt<WalletRepository>()),
   );
   getIt.registerFactory<WalletTopupCodeCubit>(
-    () => WalletTopupCodeCubit(getIt<WalletRepository>()),
+    () => WalletTopupCodeCubit(
+      getIt<WalletRepository>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
   );
 
   // Billing (abonnement PRO)

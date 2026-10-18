@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
@@ -57,12 +58,63 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
     return true;
   }
 
+  /// Moyen et devise de la commission du bid en cours d'acceptation.
+  String _commissionMethod = AnalyticsPaymentMethod.walletBalance;
+  String? _commissionCurrency;
+
+  /// Commission d'une offre en espèces dans la famille commune
+  /// `payment_succeeded` / `payment_failed` (`context: commission`). Les
+  /// échecs n'étaient pas tracés, ni le succès après une 3DS.
+  void _logCommission(
+    String event,
+    String bidId, [
+    Map<String, Object> extra = const {},
+  ]) {
+    final currency = _commissionCurrency;
+    unawaited(
+      _analytics?.logEvent(
+        event,
+        properties: {
+          'method': _commissionMethod,
+          'context': AnalyticsPaymentContext.commission,
+          'bid_id': bidId,
+          'currency': ?currency,
+          ...extra,
+        },
+      ),
+    );
+  }
+
+  void _logAccepted(String bidId) {
+    unawaited(
+      _analytics?.logEvent(
+        AnalyticsEvents.bidAccepted,
+        properties: {'bid_id': bidId, 'method': _commissionMethod},
+      ),
+    );
+    _logCommission(AnalyticsEvents.paymentSucceeded, bidId);
+  }
+
+  /// Acceptation refusée. Propriétés `bid_id`, `method`, `reason`,
+  /// `error_code`, plus le `payment_failed` correspondant.
+  void _logAcceptFailed(String bidId, String reason, String errorCode) {
+    final extra = {'reason': reason, 'error_code': errorCode};
+    unawaited(
+      _analytics?.logEvent(
+        AnalyticsEvents.bidAcceptFailed,
+        properties: {'bid_id': bidId, 'method': _commissionMethod, ...extra},
+      ),
+    );
+    _logCommission(AnalyticsEvents.paymentFailed, bidId, extra);
+  }
+
   void _emitServerRefusal(
     Object err,
     String bidId,
     Emitter<BidAcceptanceState> emit,
   ) {
     final appErr = unwrapDioError(err);
+    _logAcceptFailed(bidId, 'server_refused', appErr.code ?? 'unknown');
     final definitive = definitiveRefusalCodes.contains(appErr.code);
     if (definitive) _refusals[bidId] = appErr;
     emit(
@@ -82,6 +134,8 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
     if (_replayRefusal(e.bidId, emit)) return;
     emit(BidAccepting());
     final fundingCurrency = e.fundingCurrency;
+    _commissionMethod = AnalyticsPaymentMethod.walletBalance;
+    _commissionCurrency = fundingCurrency;
     if (fundingCurrency != null) {
       unawaited(
         _analytics?.logEvent(
@@ -111,6 +165,8 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
   ) async {
     if (_replayRefusal(e.bidId, emit)) return;
     emit(BidAccepting());
+    _commissionMethod = AnalyticsPaymentMethod.card;
+    _commissionCurrency = null;
     try {
       final r = await _repo.acceptBidWithCommission(
         e.bidId,
@@ -130,13 +186,9 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
   ) async {
     switch (r.status) {
       case AcceptanceStatus.accepted:
+        _commissionCurrency ??= r.currency;
         emit(BidAccepted());
-        unawaited(
-          _analytics?.logEvent(
-            AnalyticsEvents.bidAccepted,
-            properties: {'bid_id': bidId},
-          ),
-        );
+        _logAccepted(bidId);
         return;
       case AcceptanceStatus.requires3ds:
         try {
@@ -151,7 +203,21 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
                     cardDeclined: true,
                   ),
           );
+          if (c.accepted) {
+            _logAccepted(bidId);
+          } else {
+            _logAcceptFailed(
+              bidId,
+              'authentication_failed',
+              'commission/confirm-failed',
+            );
+          }
         } on StripeException {
+          _logAcceptFailed(
+            bidId,
+            'authentication_failed',
+            'commission/3ds-interrupted',
+          );
           emit(
             BidFailed(
               reason: BidFailureReason.bankAuthInterrupted,
@@ -161,6 +227,11 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
         }
         return;
       case AcceptanceStatus.insufficientWallet:
+        _logAcceptFailed(
+          bidId,
+          'insufficient_balance',
+          'commission/insufficient-wallet',
+        );
         emit(
           BidWalletInsufficient(
             availableBalance: r.availableBalance ?? 0,
@@ -175,6 +246,7 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
         );
         return;
       case AcceptanceStatus.failed:
+        _logAcceptFailed(bidId, 'declined', 'commission/failed');
         emit(
           BidFailed(
             serverMessage: r.error,

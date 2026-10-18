@@ -1094,6 +1094,12 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         }
       }
       final fundingCurrency = e.useCard ? null : e.fundingCurrency;
+      _commissionMethod = e.useCard
+          ? AnalyticsPaymentMethod.card
+          : AnalyticsPaymentMethod.walletBalance;
+      _commissionCurrency =
+          fundingCurrency ??
+          (current is NegotiationLoaded ? current.thread.currency : null);
       if (fundingCurrency != null) {
         unawaited(
           _analytics.logEvent(
@@ -1109,8 +1115,45 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       await _handleCommissionResponse(response, e.threadId, emit);
     } catch (err) {
-      _emitCommissionFailure(err, e.threadId, emit);
+      _emitCommissionFailure(err, e.threadId, emit, settling: true);
     }
+  }
+
+  /// Moyen et devise du règlement de commission en cours, pour tracer son
+  /// issue. Une reprise de 3DS interrompue passe forcément par la carte.
+  String _commissionMethod = AnalyticsPaymentMethod.card;
+  String? _commissionCurrency;
+
+  /// Commission d'un accord en espèces dans la famille commune
+  /// `payment_succeeded` / `payment_failed` (`context: commission`) : le
+  /// règlement réussi était tracé sans son moyen, les échecs (refus, 3DS
+  /// interrompue, solde insuffisant) pas du tout.
+  void _logCommissionPayment(
+    String event,
+    String threadId, [
+    Map<String, Object> extra = const {},
+  ]) {
+    final currency = _commissionCurrency;
+    _log(event, {
+      'method': _commissionMethod,
+      'context': AnalyticsPaymentContext.commission,
+      'thread_id': threadId,
+      'currency': ?currency,
+      ...extra,
+    });
+  }
+
+  void _logCommissionFailed(String threadId, String reason, String errorCode) {
+    _log(AnalyticsEvents.negotiationCommissionFailed, {
+      'thread_id': threadId,
+      'method': _commissionMethod,
+      'reason': reason,
+      'error_code': errorCode,
+    });
+    _logCommissionPayment(AnalyticsEvents.paymentFailed, threadId, {
+      'reason': reason,
+      'error_code': errorCode,
+    });
   }
 
   /// Codes que le serveur renvoie quand la course est perdue : la demande est
@@ -1127,9 +1170,19 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   void _emitCommissionFailure(
     Object err,
     String threadId,
-    Emitter<NegotiationState> emit,
-  ) {
+    Emitter<NegotiationState> emit, {
+    bool settling = false,
+  }) {
     final failure = unwrapDioError(err);
+    if (settling) {
+      _logCommissionFailed(
+        threadId,
+        'server_refused',
+        failure.code ?? 'unknown',
+      );
+    } else {
+      _logActionFailed('decline_commission', failure, threadId: threadId);
+    }
     emit(NegotiationError(failure));
     if (_commissionRaceLostCodes.contains(failure.code)) {
       add(NegotiationFetchRequested(threadId));
@@ -1145,9 +1198,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.negotiationCommissionSettled,
-        properties: {'thread_id': threadId},
+        properties: {'thread_id': threadId, 'method': _commissionMethod},
       ),
     );
+    _logCommissionPayment(AnalyticsEvents.paymentSucceeded, threadId);
   }
 
   /// Mirrors `BidAcceptanceBloc._handleResponse`, scoped to a negotiation
@@ -1170,6 +1224,11 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
           if (c.accepted) {
             _emitCommissionSettled(threadId, emit);
           } else {
+            _logCommissionFailed(
+              threadId,
+              'authentication_failed',
+              'commission/confirm-failed',
+            );
             emit(
               NegotiationError(
                 ValidationException(
@@ -1186,6 +1245,11 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
             );
           }
         } on StripeException {
+          _logCommissionFailed(
+            threadId,
+            'authentication_failed',
+            'commission/3ds-interrupted',
+          );
           emit(
             const NegotiationError(
               ValidationException(
@@ -1197,6 +1261,11 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         }
         return;
       case AcceptanceStatus.insufficientWallet:
+        _logCommissionFailed(
+          threadId,
+          'insufficient_balance',
+          'commission/insufficient-wallet',
+        );
         emit(
           NegotiationCommissionInsufficientWallet(
             availableBalance: r.availableBalance ?? 0,
@@ -1211,6 +1280,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         );
         return;
       case AcceptanceStatus.failed:
+        _logCommissionFailed(threadId, 'declined', 'commission/failed');
         emit(
           NegotiationError(
             ValidationException(
@@ -1243,7 +1313,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       await _repository.declineCommission(e.threadId);
       unawaited(
-        _analytics.logEvent(AnalyticsEvents.negotiationCommissionDeclined),
+        _analytics.logEvent(
+          AnalyticsEvents.negotiationCommissionDeclined,
+          properties: {'thread_id': e.threadId},
+        ),
       );
       emit(NegotiationCommissionDeclined(e.threadId));
     } catch (err) {
