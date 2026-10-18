@@ -91,8 +91,25 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         gridItems: event.gridItems,
       );
       emit(BidCheckoutReady(response));
+      // Offre carte créée en attente de paiement : sans cet événement, une
+      // offre carte abandonnée avant de payer n'apparaissait nulle part
+      // (`bid_submitted` ne couvrait que les autres moyens).
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.bidCheckoutStarted,
+          properties: {
+            'announcement_id': event.announcementId,
+            'bid_id': response.bidId,
+            'weight_kg': event.weightKg,
+            'currency': response.currency,
+            'payment_method': 'card',
+          },
+        ),
+      );
     } catch (e) {
-      emit(BidError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      _logSubmitFailed('card', error);
+      emit(BidError(error));
     } finally {
       _checkoutInProgress = false;
     }
@@ -126,12 +143,29 @@ class BidBloc extends Bloc<BidEvent, BidState> {
             'announcement_id': bid.announcementId,
             'weight_kg': bid.weightKg ?? 0.0,
             'price_per_kg': bid.pricePerKg ?? 0.0,
+            'payment_method': event.paymentMethod.name,
           },
         ),
       );
     } catch (e) {
-      emit(BidError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      _logSubmitFailed(event.paymentMethod.name, error);
+      emit(BidError(error));
     }
+  }
+
+  /// Envoi d'offre refusé (prix sous le minimum, limite, réseau…). Propriétés
+  /// `payment_method` et `error_code` (`unknown` sans code métier).
+  void _logSubmitFailed(String paymentMethod, AppException error) {
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.bidSubmitFailed,
+        properties: {
+          'payment_method': paymentMethod,
+          'error_code': error.code ?? 'unknown',
+        },
+      ),
+    );
   }
 
   Future<void> _onListRequested(

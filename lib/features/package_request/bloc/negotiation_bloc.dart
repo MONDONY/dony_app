@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
@@ -583,6 +582,30 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     );
   }
 
+  /// Propriétés d'un fil, pour relier dans PostHog l'offre, la contre-offre,
+  /// l'acceptation et le paiement d'un même fil, et compter les tours. Sans
+  /// elles, chaque événement de négociation était orphelin.
+  static Map<String, Object> _threadProps(NegotiationThread thread) => {
+    'thread_id': thread.id,
+    'request_id': thread.packageRequestId,
+    'round': thread.roundsCount,
+    'currency': thread.currency,
+  };
+
+  void _log(String event, [Map<String, Object> properties = const {}]) =>
+      unawaited(_analytics.logEvent(event, properties: properties));
+
+  /// Échec d'une action de négociation refusée par le serveur ou le réseau :
+  /// sans lui, seul un bandeau d'erreur en gardait la trace. Propriétés
+  /// `action`, `error_code` (`unknown` sans code métier) et `thread_id`
+  /// quand le fil existe déjà.
+  void _logActionFailed(String action, AppException error, {String? threadId}) =>
+      _log(AnalyticsEvents.negotiationActionFailed, {
+        'action': action,
+        'error_code': error.code ?? 'unknown',
+        'thread_id': ?threadId,
+      });
+
   /// `negotiation_checkout_completed` : le serveur a validé le `/checkout`.
   ///
   /// Le paiement Stripe lui-même est compté par `payment_succeeded`, émis par
@@ -598,11 +621,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       _analytics.logEvent(
         AnalyticsEvents.negotiationCheckoutCompleted,
         properties: {
-          'thread_id': thread.id,
+          ..._threadProps(thread),
           'payment_method': e.paymentIntentId.startsWith('pi_')
               ? 'card'
               : 'cash',
-          'currency': thread.currency,
         },
       ),
     );
@@ -640,26 +662,23 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
       if (e.isFirmPrice) {
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.firmPriceTaken,
-            properties: {'request_id': e.packageRequestId},
-          ),
-        );
+        _log(AnalyticsEvents.firmPriceTaken, {
+          'request_id': e.packageRequestId,
+        });
       } else {
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.negotiationOfferMade,
-            properties: {
-              'amount_bracket': analyticsAmountBracket(e.proposedPriceEur),
-              'currency': ActiveCurrency.current?.code ?? 'unknown',
-              'context': 'sender',
-            },
-          ),
-        );
+        // `context: 'start'` : c'est le voyageur qui ouvre le fil sur la
+        // demande (l'ancien `sender` était trompeur). La devise est celle du
+        // fil, figée à la création, plus celle active dans l'app.
+        _log(AnalyticsEvents.negotiationOfferMade, {
+          ..._threadProps(thread),
+          'amount_bracket': analyticsAmountBracket(e.proposedPriceEur),
+          'context': 'start',
+        });
       }
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      _logActionFailed('start', appErr);
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -680,26 +699,23 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
       if (e.isFirmPrice) {
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.firmPriceTaken,
-            properties: {'request_id': e.packageRequestId},
-          ),
-        );
+        _log(AnalyticsEvents.firmPriceTaken, {
+          'request_id': e.packageRequestId,
+        });
       } else {
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.negotiationOfferMade,
-            properties: {
-              'amount_bracket': analyticsAmountBracket(e.proposedPriceEur),
-              'currency': ActiveCurrency.current?.code ?? 'unknown',
-              'context': 'sender',
-            },
-          ),
-        );
+        // `context: 'start'` : c'est le voyageur qui ouvre le fil sur la
+        // demande (l'ancien `sender` était trompeur). La devise est celle du
+        // fil, figée à la création, plus celle active dans l'app.
+        _log(AnalyticsEvents.negotiationOfferMade, {
+          ..._threadProps(thread),
+          'amount_bracket': analyticsAmountBracket(e.proposedPriceEur),
+          'context': 'start',
+        });
       }
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      _logActionFailed('start', appErr);
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -720,18 +736,15 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.negotiationOfferMade,
-          properties: {
-            'amount_bracket': analyticsAmountBracket(e.proposedPriceEur),
-            'currency': ActiveCurrency.current?.code ?? 'unknown',
-            'context': 'counter',
-          },
-        ),
-      );
+      _log(AnalyticsEvents.negotiationOfferMade, {
+        ..._threadProps(thread),
+        'amount_bracket': analyticsAmountBracket(e.proposedPriceEur),
+        'context': 'counter',
+      });
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      _logActionFailed('counter', appErr, threadId: e.threadId);
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -748,17 +761,14 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       final thread = await _repository.accept(e.threadId, body: e.body);
       emit(NegotiationLoaded(thread));
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.negotiationOfferAccepted,
-          properties: {
-            'amount_bracket': analyticsAmountBracket(thread.currentPriceEur),
-            'currency': thread.currency,
-          },
-        ),
-      );
+      _log(AnalyticsEvents.negotiationOfferAccepted, {
+        ..._threadProps(thread),
+        'amount_bracket': analyticsAmountBracket(thread.currentPriceEur),
+      });
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      _logActionFailed('accept', appErr, threadId: e.threadId);
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -774,9 +784,18 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     }
     try {
       await _repository.reject(e.threadId, reason: e.reason);
+      // Aucun refus n'était tracé côté colis. Le motif saisi n'est jamais
+      // envoyé (texte libre), seulement sa présence.
+      _log(AnalyticsEvents.negotiationOfferRejected, {
+        if (current is NegotiationLoaded) ..._threadProps(current.thread),
+        'thread_id': e.threadId,
+        'has_reason': (e.reason ?? '').trim().isNotEmpty,
+      });
       emit(NegotiationRejected(e.threadId));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      _logActionFailed('reject', appErr, threadId: e.threadId);
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -792,7 +811,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     }
     try {
       await _repository.cancel(e.threadId, reason: e.reason);
-      unawaited(_analytics.logEvent(AnalyticsEvents.negotiationCancelled));
+      _log(AnalyticsEvents.negotiationCancelled, {
+        if (current is NegotiationLoaded) ..._threadProps(current.thread),
+        'thread_id': e.threadId,
+      });
       emit(NegotiationRejected(e.threadId, cancelled: true));
     } catch (err) {
       final appErr = unwrapDioError(err);
@@ -843,19 +865,36 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         useCardForCommission: e.useCardForCommission,
       );
       emit(NegotiationLoaded(thread));
+      _logTripLinked(thread, 'existing', e.paymentMethod);
     } catch (err) {
       final appErr = unwrapDioError(err);
-      final blockReason = _paymentBlockReason(appErr);
-      if (blockReason != null) {
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.tripLinkPaymentBlocked,
-            properties: {'reason': blockReason},
-          ),
-        );
-      }
+      _logTripLinkFailure('existing', appErr, e.threadId);
       emit(NegotiationError(appErr));
     }
+  }
+
+  /// Trajet lié à un fil : la négociation passe à l'étape paiement.
+  /// Propriété `mode` : `existing` (trajet déjà publié), `changed` (trajet
+  /// remplacé) ou `dedicated` (trajet créé pour ce colis).
+  void _logTripLinked(
+    NegotiationThread thread,
+    String mode,
+    PaymentMethod? paymentMethod,
+  ) => _log(AnalyticsEvents.negotiationTripLinked, {
+    ..._threadProps(thread),
+    'mode': mode,
+    if (paymentMethod != null) 'payment_method': paymentMethod.wireName,
+  });
+
+  /// Échec du lien de trajet : `trip_link_payment_blocked` quand aucun moyen
+  /// de paiement ne convient, `negotiation_action_failed` sinon.
+  void _logTripLinkFailure(String mode, AppException error, String threadId) {
+    final blockReason = _paymentBlockReason(error);
+    if (blockReason != null) {
+      _log(AnalyticsEvents.tripLinkPaymentBlocked, {'reason': blockReason});
+      return;
+    }
+    _logActionFailed('trip_link_$mode', error, threadId: threadId);
   }
 
   Future<void> _onChangeTrip(
@@ -874,8 +913,11 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         travelerAnnouncementId: e.travelerAnnouncementId,
       );
       emit(NegotiationLoaded(thread));
+      _logTripLinked(thread, 'changed', null);
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      _logTripLinkFailure('changed', appErr, e.threadId);
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -905,17 +947,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         useCardForCommission: e.useCardForCommission,
       );
       emit(NegotiationLoaded(thread));
+      _logTripLinked(thread, 'dedicated', e.paymentMethod);
     } catch (err) {
       final appErr = unwrapDioError(err);
-      final blockReason = _paymentBlockReason(appErr);
-      if (blockReason != null) {
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.tripLinkPaymentBlocked,
-            properties: {'reason': blockReason},
-          ),
-        );
-      }
+      _logTripLinkFailure('dedicated', appErr, e.threadId);
       emit(NegotiationError(appErr));
     }
   }
@@ -993,8 +1028,11 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       final thread = await _repository.refuseTrip(e.threadId, reason: e.reason);
       emit(NegotiationLoaded(thread));
+      _log(AnalyticsEvents.negotiationTripRefused, _threadProps(thread));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      _logActionFailed('refuse_trip', appErr, threadId: e.threadId);
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -1010,7 +1048,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     }
     try {
       final thread = await _repository.nudge(e.threadId);
-      unawaited(_analytics.logEvent(AnalyticsEvents.negotiationNudgeSent));
+      _log(AnalyticsEvents.negotiationNudgeSent, _threadProps(thread));
       emit(NegotiationNudgeSent(thread));
     } catch (err) {
       emit(NegotiationNudgeError(unwrapDioError(err)));
@@ -1230,6 +1268,9 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     }
     try {
       await _repository.cancelMobileMoneyDeposit(e.threadId);
+      _log(AnalyticsEvents.negotiationDepositCancelled, {
+        'thread_id': e.threadId,
+      });
       // Pas d'état dédié : le serveur a ramené le fil en AWAITING_PAYMENT, on
       // le recharge tel quel et la barre CTA redevient « Compléter & payer ».
       add(NegotiationFetchRequested(e.threadId));

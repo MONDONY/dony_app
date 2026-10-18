@@ -444,6 +444,26 @@ void main() {
       ],
     );
 
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'cancel trace trip_negotiation_cancelled avec le fil',
+      build: () {
+        when(
+          () => repo.cancel('bid1'),
+        ).thenAnswer((_) async => _thread(status: 'CANCELLED'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationCancelRequested('bid1')),
+      wait: const Duration(milliseconds: 1),
+      verify: (_) {
+        verify(
+          () => backend.capture(
+            AnalyticsEvents.tripNegotiationCancelled,
+            any(that: containsPair('bid_id', isA<String>())),
+          ),
+        ).called(1);
+      },
+    );
+
     // FLUTTER-EQ : l'annulation depuis l'état d'attente peut croiser une
     // réponse de l'autre partie (fil déjà clos côté serveur) : l'erreur doit
     // remonter telle quelle à l'écran, sans fil marqué annulé.

@@ -247,6 +247,28 @@ abstract final class AnalyticsEvents {
   /// disparaissait du tunnel. Propriétés `thread_id`, `error_code`.
   static const negotiationCheckoutFailed = 'negotiation_checkout_failed';
 
+  // Négociation colis ↔ voyageur. Tous les événements du fil portent
+  // `thread_id`, `request_id`, `round` (tours déjà joués) et `currency` (devise
+  // du fil) pour relier offre → acceptation → trajet → paiement.
+
+  /// Offre refusée (côté colis). Propriété `has_reason`, jamais le motif.
+  static const negotiationOfferRejected = 'negotiation_offer_rejected';
+
+  /// Trajet lié au fil. Propriété `mode` : `existing`, `changed`,
+  /// `dedicated` ; `payment_method` quand il est choisi à cette étape.
+  static const negotiationTripLinked = 'negotiation_trip_linked';
+
+  /// L'expéditeur refuse le trajet proposé par le voyageur.
+  static const negotiationTripRefused = 'negotiation_trip_refused';
+
+  /// Dépôt mobile money en vol annulé par l'expéditeur.
+  static const negotiationDepositCancelled = 'negotiation_deposit_cancelled';
+
+  /// Action de négociation en échec. Propriétés `action` (`start`,
+  /// `counter`, `accept`, `reject`, `refuse_trip`, `trip_link_<mode>`),
+  /// `error_code`, `thread_id`.
+  static const negotiationActionFailed = 'negotiation_action_failed';
+
   /// Traveler blocked at trip-linking because no payment method they can
   /// honor overlaps the sender's accepted set (422 `payment-method/*`).
   /// Property `reason`: `no_card` / `no_cash_funds` / `none`.
@@ -804,6 +826,18 @@ abstract final class AnalyticsEvents {
   static const tripNegotiationCountered = 'trip_negotiation_countered';
   static const tripNegotiationAccepted = 'trip_negotiation_accepted';
   static const tripNegotiationRejected = 'trip_negotiation_rejected';
+
+  /// Offre retirée sur le fil de négociation d'un trajet. Propriétés
+  /// `bid_id`, `round`, `actor`.
+  static const tripNegotiationCancelled = 'trip_negotiation_cancelled';
+
+  /// Offre carte créée, en attente de paiement (`/bids/checkout`).
+  /// Propriétés `announcement_id`, `bid_id`, `weight_kg`, `currency`,
+  /// `payment_method`.
+  static const bidCheckoutStarted = 'bid_checkout_started';
+
+  /// Création d'offre refusée. Propriétés `payment_method`, `error_code`.
+  static const bidSubmitFailed = 'bid_submit_failed';
   static const tripNegotiationPaymentStarted =
       'trip_negotiation_payment_started';
 

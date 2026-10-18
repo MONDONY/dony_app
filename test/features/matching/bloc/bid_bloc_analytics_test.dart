@@ -3,6 +3,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -89,10 +90,121 @@ void main() {
           'announcement_id': 'ann1',
           'weight_kg': 5.0,
           'price_per_kg': 12.0,
+          'payment_method': 'stripe',
         }),
       ).called(1);
     },
   );
+
+  test('bid_submit_failed : moyen et code métier', () async {
+    when(
+      () => repo.createBid(
+        announcementId: any(named: 'announcementId'),
+        weightKg: any(named: 'weightKg'),
+        description: any(named: 'description'),
+        contentCategory: any(named: 'contentCategory'),
+        recipientName: any(named: 'recipientName'),
+        recipientPhone: any(named: 'recipientPhone'),
+        paymentMethod: any(named: 'paymentMethod'),
+        phoneNumber: any(named: 'phoneNumber'),
+        countryCode: any(named: 'countryCode'),
+        gridItems: any(named: 'gridItems'),
+      ),
+    ).thenThrow(
+      const ValidationException('Prix trop bas', code: 'bid-below-min-price'),
+    );
+
+    final bloc = makeBloc();
+    bloc.add(
+      BidCreateRequested(
+        announcementId: 'ann1',
+        weightKg: 5.0,
+        description: 'test',
+        contentCategory: 'OTHER',
+        recipientName: 'Test',
+        recipientPhone: '+221700000000',
+        paymentMethod: BidPaymentMethod.cash,
+      ),
+    );
+    await bloc.stream.firstWhere((s) => s is BidError);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(
+      () => backend.capture(AnalyticsEvents.bidSubmitFailed, {
+        'payment_method': 'cash',
+        'error_code': 'bid-below-min-price',
+      }),
+    ).called(1);
+    verifyNever(() => backend.capture(AnalyticsEvents.bidSubmitted, any()));
+  });
+
+  group('offre carte (checkout)', () {
+    When<Future<BidCheckoutResponseModel>> stubCheckout() => when(
+      () => repo.checkoutBid(
+        announcementId: any(named: 'announcementId'),
+        weightKg: any(named: 'weightKg'),
+        description: any(named: 'description'),
+        contentCategory: any(named: 'contentCategory'),
+        recipientName: any(named: 'recipientName'),
+        recipientPhone: any(named: 'recipientPhone'),
+        photoKeys: any(named: 'photoKeys'),
+        gridItems: any(named: 'gridItems'),
+      ),
+    );
+
+    BidCheckoutRequested request() => BidCheckoutRequested(
+      announcementId: 'ann1',
+      weightKg: 3.0,
+      description: 'test',
+      contentCategory: 'OTHER',
+      recipientName: 'Test',
+      recipientPhone: '+221700000000',
+    );
+
+    test('bid_checkout_started : offre carte en attente de paiement', () async {
+      stubCheckout().thenAnswer(
+        (_) async => BidCheckoutResponseModel(
+          bidId: 'bid9',
+          clientSecret: 'pi_9_secret_x',
+          publishableKey: 'pk_test',
+          expiresAt: DateTime(2026, 10, 18),
+          currency: 'XOF',
+          paymentMethodTypes: const ['card'],
+        ),
+      );
+
+      final bloc = makeBloc();
+      bloc.add(request());
+      await bloc.stream.firstWhere((s) => s is BidCheckoutReady);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.bidCheckoutStarted, {
+          'announcement_id': 'ann1',
+          'bid_id': 'bid9',
+          'weight_kg': 3.0,
+          'currency': 'XOF',
+          'payment_method': 'card',
+        }),
+      ).called(1);
+    });
+
+    test('checkout refusé : bid_submit_failed en card', () async {
+      stubCheckout().thenThrow(Exception('réseau'));
+
+      final bloc = makeBloc();
+      bloc.add(request());
+      await bloc.stream.firstWhere((s) => s is BidError);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.bidSubmitFailed, {
+          'payment_method': 'card',
+          'error_code': 'unknown',
+        }),
+      ).called(1);
+    });
+  });
 
   test(
     'bid_cancelled_before_payment fires with rail and fallback=false',

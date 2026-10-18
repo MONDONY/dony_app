@@ -203,6 +203,18 @@ class BidNegotiationBloc
     try {
       final thread = await _repository.cancel(event.bidId);
       _emitLoaded(thread, BidNegotiationAction.cancelled, emit);
+      // Le retrait de l'offre côté trajet n'était pas tracé, contrairement au
+      // refus : la fin du fil restait invisible.
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.tripNegotiationCancelled,
+          properties: {
+            'bid_id': thread.bidId,
+            'round': thread.round,
+            'actor': thread.viewerRole,
+          },
+        ),
+      );
     } catch (e) {
       _emitError(e, emit);
     }

@@ -279,7 +279,17 @@ void main() {
         ),
       ),
       expect: () => [isA<NegotiationLoading>(), isA<NegotiationError>()],
-      verify: (_) => verifyNever(() => backend.capture(any(), any())),
+      verify: (_) {
+        verify(
+          () => backend.capture(AnalyticsEvents.negotiationActionFailed, {
+            'action': 'start',
+            'error_code': 'SERVER_ERROR',
+          }),
+        ).called(1);
+        verifyNever(
+          () => backend.capture(AnalyticsEvents.negotiationOfferMade, any()),
+        );
+      },
     );
 
     blocTest<NegotiationBloc, NegotiationState>(
