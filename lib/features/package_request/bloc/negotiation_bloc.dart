@@ -599,12 +599,15 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   /// sans lui, seul un bandeau d'erreur en gardait la trace. Propriétés
   /// `action`, `error_code` (`unknown` sans code métier) et `thread_id`
   /// quand le fil existe déjà.
-  void _logActionFailed(String action, AppException error, {String? threadId}) =>
-      _log(AnalyticsEvents.negotiationActionFailed, {
-        'action': action,
-        'error_code': error.code ?? 'unknown',
-        'thread_id': ?threadId,
-      });
+  void _logActionFailed(
+    String action,
+    AppException error, {
+    String? threadId,
+  }) => _log(AnalyticsEvents.negotiationActionFailed, {
+    'action': action,
+    'error_code': error.code ?? 'unknown',
+    'thread_id': ?threadId,
+  });
 
   /// `negotiation_checkout_completed` : le serveur a validé le `/checkout`.
   ///
@@ -629,7 +632,6 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       ),
     );
   }
-
 
   Future<void> _onFetch(
     NegotiationFetchRequested e,

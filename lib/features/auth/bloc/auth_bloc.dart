@@ -107,6 +107,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     return super.close();
   }
 
+  /// Dernières propriétés de personne envoyées, pour ne pas renvoyer un
+  /// `$set` identique à chaque rafraîchissement du profil.
+  Map<String, Object>? _lastPersonProperties;
+
+  /// Pose les propriétés de personne PostHog dès qu'un profil est chargé ou
+  /// rafraîchi, quel que soit le chemin (démarrage, OTP, Google/Apple,
+  /// rafraîchissement) : `identify` ne portait que l'UID.
+  @override
+  void onChange(Change<AuthState> change) {
+    super.onChange(change);
+    final user = switch (change.nextState) {
+      AuthAuthenticated(:final user) => user,
+      AuthProfileUpdated(:final user) => user,
+      _ => null,
+    };
+    final analytics = _analytics;
+    if (user == null || analytics == null) return;
+    final properties = personAnalyticsProperties(user);
+    if (_mapEquals(properties, _lastPersonProperties)) return;
+    _lastPersonProperties = properties;
+    unawaited(analytics.setPersonProperties(properties));
+  }
+
+  static bool _mapEquals(Map<String, Object> a, Map<String, Object>? b) =>
+      b != null &&
+      a.length == b.length &&
+      a.entries.every((e) => b[e.key] == e.value);
+
   Future<void> _clearHiveAccountData() async {
     await Hive.box(HiveService.userPrefsBox).clear();
     await Hive.box<Map>(HiveService.offlineQueueBox).clear();
@@ -817,3 +845,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     return const NetworkException('Auth error', code: 'auth-generic-error');
   }
 }
+
+/// Propriétés de personne PostHog d'un profil, sans PII : `roles`
+/// (`sender`, `traveler`, `both`, `none`), `kyc_status`, `is_kyc_verified`,
+/// `is_pro`, `country` et `preferred_language` quand ils sont connus.
+Map<String, Object> personAnalyticsProperties(UserModel user) => {
+  'roles': switch ((user.isSender, user.isTraveler)) {
+    (true, true) => 'both',
+    (true, false) => 'sender',
+    (false, true) => 'traveler',
+    (false, false) => 'none',
+  },
+  'kyc_status': user.kycStatus,
+  'is_kyc_verified': user.isKycVerified,
+  'is_pro': user.isProAccount,
+  'country': ?user.country,
+  'preferred_language': ?user.preferredLanguage,
+};

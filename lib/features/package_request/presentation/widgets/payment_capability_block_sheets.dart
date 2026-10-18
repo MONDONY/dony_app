@@ -212,6 +212,7 @@ Future<void> showCardCapabilityRequiredSheet(BuildContext context) async {
 
   await DonyBottomSheet.show<void>(
     context,
+    analyticsName: 'negotiation/payment-blocked',
     title: title,
     child: child,
     stickyBottom: stickyBottom,

@@ -25,6 +25,7 @@ abstract final class RejectReasonSheet {
     final selected = ValueNotifier<BidRejectionReason?>(null);
     return DonyBottomSheet.show<BidRejectionReason>(
       context,
+      analyticsName: 'bid/reject-reason',
       title: l.bidDetailDeclineRequestTitle,
       subtitle: l.bidDetailDeclineRequestSubtitle,
       isDanger: true,

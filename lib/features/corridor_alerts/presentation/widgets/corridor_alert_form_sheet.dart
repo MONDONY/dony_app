@@ -48,6 +48,7 @@ abstract final class CorridorAlertFormSheet {
 
     return DonyBottomSheet.show<bool>(
       context,
+      analyticsName: 'corridor-alert/form',
       title: alert == null
           ? l.corridorAlertCreateAction
           : l.corridorAlertEditTitle,

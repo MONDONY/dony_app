@@ -36,6 +36,7 @@ Future<void> showCommissionSettlementSheet(
   final l = context.l10n;
   return DonyBottomSheet.show<void>(
     context,
+    analyticsName: 'negotiation/commission-settlement',
     title: l.negotiationCommissionSettlementTitle,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,

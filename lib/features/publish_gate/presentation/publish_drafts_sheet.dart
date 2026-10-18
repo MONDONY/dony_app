@@ -45,6 +45,7 @@ abstract final class PublishDraftsSheet {
     final isTrip = role == PublishCommitmentRole.traveler;
     return DonyBottomSheet.show<PublishDraftsSheetResult>(
       context,
+      analyticsName: 'publish/drafts',
       title: drafts.isEmpty
           ? l10n.publishTemplatesTitle
           : isTrip
