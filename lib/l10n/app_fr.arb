@@ -10236,7 +10236,7 @@
       }
     }
   },
-  "walletRefundAbsorbedByFees": "Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l'absorbent entièrement. Il reste utilisable pour payer vos envois.",
+  "walletRefundAbsorbedByFees": "Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l'absorbent entièrement. Il reste utilisable pour régler la commission Yadony de vos demandes payées en espèces.",
   "@walletRefundAbsorbedByFees": {
     "description": "Bandeau affiché quand le net remboursable est nul (wallet_screen.dart _LoadedView)."
   },
@@ -10687,7 +10687,7 @@
       }
     }
   },
-  "walletRefundFeeRetainedNotice": "Cette recharge n'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu'une recharge a payé un envoi.",
+  "walletRefundFeeRetainedNotice": "Cette recharge n'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu'une recharge a servi à régler une commission.",
   "@walletRefundFeeRetainedNotice": {
     "description": "Bandeau d'avertissement quand des frais sont retenus sur une recharge jamais utilisée (wallet_refund_confirm_sheet.dart _ConfirmContent)."
   },
@@ -14412,7 +14412,7 @@
     }
   },
 
-  "prefsCurrencyLockedSheetBody": "Votre portefeuille contient encore de l'argent en {currency} : tant qu'il n'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour un envoi, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.",
+  "prefsCurrencyLockedSheetBody": "Votre portefeuille contient encore de l'argent en {currency} : tant qu'il n'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour régler des commissions, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.",
   "@prefsCurrencyLockedSheetBody": {
     "description": "Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).",
     "placeholders": {
@@ -16965,7 +16965,7 @@
       }
     }
   },
-  "referralChoiceWalletBody": "Ajoutés tout de suite. Utilisables sur tous vos prochains envois.",
+  "referralChoiceWalletBody": "Ajoutés tout de suite. Utilisables pour régler la commission Yadony de vos demandes payées en espèces.",
   "@referralChoiceWalletBody": {
     "description": "Description de l'option « crédit sur le solde » (referral_reward_sheets.dart)."
   },
@@ -16991,7 +16991,7 @@
       }
     }
   },
-  "referralChoiceWalletNote": "Le solde Yadony sert à payer vos envois. Il n'est pas retirable en espèces.",
+  "referralChoiceWalletNote": "Le solde Yadony sert à régler la commission Yadony des demandes payées en espèces. Il n'est pas retirable en espèces.",
   "@referralChoiceWalletNote": {
     "description": "Mention sous les options de la feuille de choix (referral_reward_sheets.dart)."
   },
@@ -17030,7 +17030,7 @@
   "@referralCodeSingleUse": {
     "description": "Mention sous le code de réduction obtenu (referral_reward_sheets.dart)."
   },
-  "referralWalletCreditedBody": "Le montant apparaît dans votre Portefeuille. Il sert à payer vos prochains envois.",
+  "referralWalletCreditedBody": "Le montant apparaît dans votre Portefeuille. Il sert à régler la commission Yadony de vos demandes payées en espèces.",
   "@referralWalletCreditedBody": {
     "description": "Texte de la confirmation après le choix du crédit sur le solde (referral_reward_sheets.dart)."
   },
@@ -21603,10 +21603,10 @@
   "@gpProFailureTitle": {"description": "Écran GP Pro : titre de l'état d'erreur de chargement, avec bouton Réessayer."},
   "gpProFailureBody": "Vérifiez votre connexion, puis réessayez.",
   "@gpProFailureBody": {"description": "Écran GP Pro : description de l'état d'erreur de chargement."},
-  "gpProUnavailableTitle": "Bientôt disponible",
+  "gpProUnavailableTitle": "Indisponible pour le moment",
   "@gpProUnavailableTitle": {"description": "Écran GP Pro : le serveur ne propose pas encore GP Pro (version plus ancienne)."},
-  "gpProUnavailableBody": "La demande de badge GP Pro arrive très bientôt.",
-  "@gpProUnavailableBody": {"description": "Écran GP Pro : description de l'état « Bientôt disponible »."},
+  "gpProUnavailableBody": "La demande de badge GP Pro n'est pas accessible pour le moment. Réessayez plus tard.",
+  "@gpProUnavailableBody": {"description": "Écran GP Pro : description de l'état indisponible (back sans GP Pro)."},
   "gpProIntroTitle": "Devenir GP Pro",
   "@gpProIntroTitle": {"description": "Écran GP Pro, aucune demande : titre de l'encart d'introduction."},
   "gpProIntroBody": "Vous voyagez souvent, seul ou pour votre entreprise ? Demandez le badge GP Pro. L'équipe Yadony examine chaque demande.",

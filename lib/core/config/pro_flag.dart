@@ -20,6 +20,11 @@ ValueListenable<bool> get proEnabledListenable => _proEnabledNotifier;
 
 /// Met à jour le flag au démarrage avec la valeur backend
 /// (`GET /config/pro-enabled`).
+///
+/// Jamais ouvert sur iOS : l'abonnement PRO se souscrit sur le web, sans
+/// achat intégré, ce que l'App Store refuse (règle 3.1.1). Le réglage du
+/// back-office ne doit pas pouvoir l'exposer par erreur.
 void setProEnabled(bool enabled) {
-  _proEnabledNotifier.value = enabled;
+  _proEnabledNotifier.value =
+      enabled && defaultTargetPlatform != TargetPlatform.iOS;
 }

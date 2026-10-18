@@ -55,6 +55,14 @@ class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
 class MockGoogleSignInAuthentication extends Mock
     implements GoogleSignInAuthentication {}
 
+/// Première autorisation Apple : le nom est transmis.
+class _NamedAppleCredential extends FakeAppleCredential {
+  @override
+  String? get givenName => ' Awa ';
+  @override
+  String? get familyName => 'Koné';
+}
+
 // Apple fake
 class FakeAppleCredential extends Fake
     implements AuthorizationCredentialAppleID {
@@ -1087,6 +1095,83 @@ void main() {
         ),
       ],
     );
+
+    group('nom transmis par Apple (guideline 4.8)', () {
+      late List<AppleIDAuthorizationScopes> requestedScopes;
+
+      AuthBloc newUserBloc(AuthorizationCredentialAppleID credential) {
+        final user = MockFirebaseUser()..emailValue = 'nom@icloud.com';
+        when(
+          () => mockFirebaseAuth.signInWithCredential(any()),
+        ).thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(user);
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(),
+            ),
+          ),
+        );
+        when(
+          () => mockRepo.registerWithEmail(email: 'nom@icloud.com'),
+        ).thenAnswer((_) async => testUser);
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleSignIn: (scopes) async {
+            requestedScopes = scopes;
+            return credential;
+          },
+          appleTokenRevoker: _inertAppleTokenRevoker,
+        );
+      }
+
+      Future<void> signInThenRegister(AuthBloc bloc) async {
+        bloc.add(const AuthAppleSignInRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        bloc.add(const AuthRegisterWithEmailRequested(email: 'nom@icloud.com'));
+      }
+
+      blocTest<AuthBloc, AuthState>(
+        'demande le nom et l’enregistre à la création du compte',
+        build: () {
+          when(
+            () => mockRepo.updateProfile(firstName: 'Awa', lastName: 'Koné'),
+          ).thenAnswer((_) async => testUser);
+          return newUserBloc(_NamedAppleCredential());
+        },
+        act: signInThenRegister,
+        wait: const Duration(milliseconds: 80),
+        verify: (_) {
+          expect(
+            requestedScopes,
+            contains(AppleIDAuthorizationScopes.fullName),
+          );
+          verify(
+            () => mockRepo.updateProfile(firstName: 'Awa', lastName: 'Koné'),
+          ).called(1);
+        },
+      );
+
+      blocTest<AuthBloc, AuthState>(
+        'sans nom transmis (connexions suivantes) : rien n’est envoyé',
+        build: () => newUserBloc(FakeAppleCredential()),
+        act: signInThenRegister,
+        wait: const Duration(milliseconds: 80),
+        verify: (_) {
+          verifyNever(
+            () => mockRepo.updateProfile(
+              firstName: any(named: 'firstName'),
+              lastName: any(named: 'lastName'),
+            ),
+          );
+        },
+      );
+    });
 
     blocTest<AuthBloc, AuthState>(
       'émet [Loading, AuthError] quand backend répond 500',

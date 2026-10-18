@@ -9683,7 +9683,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletRefundAbsorbedByFees =>
-      'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour payer vos envois.';
+      'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour régler la commission Yadony de vos demandes payées en espèces.';
 
   @override
   String get walletEmptyTransactions => 'Aucune transaction pour l\'instant';
@@ -9992,7 +9992,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletRefundFeeRetainedNotice =>
-      'Cette recharge n\'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu\'une recharge a payé un envoi.';
+      'Cette recharge n\'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu\'une recharge a servi à régler une commission.';
 
   @override
   String get walletRefundCurrencyTitle => 'Quelle devise rembourser ?';
@@ -13165,7 +13165,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String prefsCurrencyLockedSheetBody(String currency) {
-    return 'Votre portefeuille contient encore de l\'argent en $currency : tant qu\'il n\'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour un envoi, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.';
+    return 'Votre portefeuille contient encore de l\'argent en $currency : tant qu\'il n\'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour régler des commissions, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.';
   }
 
   @override
@@ -15141,7 +15141,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get referralChoiceWalletBody =>
-      'Ajoutés tout de suite. Utilisables sur tous vos prochains envois.';
+      'Ajoutés tout de suite. Utilisables pour régler la commission Yadony de vos demandes payées en espèces.';
 
   @override
   String referralChoiceCodeTitle(int percent) {
@@ -15159,7 +15159,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get referralChoiceWalletNote =>
-      'Le solde Yadony sert à payer vos envois. Il n\'est pas retirable en espèces.';
+      'Le solde Yadony sert à régler la commission Yadony des demandes payées en espèces. Il n\'est pas retirable en espèces.';
 
   @override
   String referralChoiceWalletCta(String amount) {
@@ -15185,7 +15185,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get referralWalletCreditedBody =>
-      'Le montant apparaît dans votre Portefeuille. Il sert à payer vos prochains envois.';
+      'Le montant apparaît dans votre Portefeuille. Il sert à régler la commission Yadony de vos demandes payées en espèces.';
 
   @override
   String get errorReportReasonNotApplicableTitle => 'Motif invalide';
@@ -20625,11 +20625,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gpProFailureBody => 'Vérifiez votre connexion, puis réessayez.';
 
   @override
-  String get gpProUnavailableTitle => 'Bientôt disponible';
+  String get gpProUnavailableTitle => 'Indisponible pour le moment';
 
   @override
   String get gpProUnavailableBody =>
-      'La demande de badge GP Pro arrive très bientôt.';
+      'La demande de badge GP Pro n\'est pas accessible pour le moment. Réessayez plus tard.';
 
   @override
   String get gpProIntroTitle => 'Devenir GP Pro';
