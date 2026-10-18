@@ -259,6 +259,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         // Le backend ne déclare pas PayPal sur le PaymentIntent de recharge
         // wallet — le bouton PayPal reste donc masqué (dégradation propre).
         paymentMethodTypes: const [],
+        analyticsContext: 'wallet_topup',
       ),
       contextLabel: l.walletTopupPaymentContextLabel,
       onSuccess: () {

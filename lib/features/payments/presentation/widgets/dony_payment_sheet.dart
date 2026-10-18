@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
@@ -38,6 +39,9 @@ abstract final class DonyPaymentSheet {
                     repository: getIt<PaymentRepository>(),
                     config: config,
                     errorReporter: getIt<ErrorReportingService>(),
+                    analytics: getIt.isRegistered<AnalyticsService>()
+                        ? getIt<AnalyticsService>()
+                        : null,
                   ))
               ..add(const PaymentSheetStarted()),
         child: child,

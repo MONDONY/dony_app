@@ -138,17 +138,9 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
   ) async {
     final current = state;
     if (current is PaymentSheetReady) {
+      // `payment_succeeded` est émis par la feuille de paiement, avec le vrai
+      // moyen : le renvoyer ici le comptait deux fois.
       emit(PaymentEscrowPending(current.amount));
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.paymentSucceeded,
-          properties: {
-            'method': 'card',
-            'amount': current.amount,
-            'payment_id': current.paymentId,
-          },
-        ),
-      );
     }
   }
 

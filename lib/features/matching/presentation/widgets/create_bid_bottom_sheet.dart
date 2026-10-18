@@ -1869,6 +1869,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         amountEur: state.amountEur,
         currencyCode: state.currencyCode,
         paymentMethodTypes: state.paymentMethodTypes,
+        analyticsContext: 'bid',
       ),
       contextLabel: context.l10n.bidCreateShipmentToLabel(
         widget.announcement.arrivalCity,

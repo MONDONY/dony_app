@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/commission_funding_alternative.dart';
@@ -582,47 +583,31 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     );
   }
 
-  /// `payment_succeeded` d'un paiement carte finalisé au checkout.
+  /// `negotiation_checkout_completed` : le serveur a validé le `/checkout`.
   ///
-  /// Ce flux n'émettait rien : seul `PaymentBloc` (écran `/payments/pay`)
-  /// comptait les paiements réussis, si bien que les tableaux de bord
-  /// sous-estimaient les paiements aboutis. Un accord en espèces passe aussi par
+  /// Le paiement Stripe lui-même est compté par `payment_succeeded`, émis par
+  /// la feuille de paiement avec le vrai moyen ; cet événement-ci clôt le
+  /// tunnel négociation → paiement. Un accord en espèces passe aussi par
   /// `/checkout`, avec une sentinelle à la place du PaymentIntent : seul un
-  /// identifiant Stripe (`pi_…`) témoigne d'un encaissement.
-  void _logCheckoutPaymentSucceeded(
+  /// identifiant Stripe (`pi_…`) témoigne d'un encaissement carte.
+  void _logCheckoutCompleted(
     NegotiationCheckoutRequested e,
     NegotiationThread thread,
   ) {
-    if (!e.paymentIntentId.startsWith('pi_')) {
-      return;
-    }
     unawaited(
       _analytics.logEvent(
-        AnalyticsEvents.paymentSucceeded,
+        AnalyticsEvents.negotiationCheckoutCompleted,
         properties: {
-          'method': 'card',
-          'context': 'negotiation',
+          'thread_id': thread.id,
+          'payment_method': e.paymentIntentId.startsWith('pi_')
+              ? 'card'
+              : 'cash',
           'currency': thread.currency,
-          'payment_id': e.paymentIntentId,
         },
       ),
     );
   }
 
-  /// Tranche de montant pour l'analytics, sans PII et **sans symbole monétaire**.
-  ///
-  /// Les bornes s'entendaient auparavant en euros et portaient le « € » dans leur
-  /// libellé, alors qu'elles s'appliquaient au montant brut quelle que soit la
-  /// devise : une proposition de 5 000 XOF, soit environ 7,60 €, atterrissait
-  /// dans « >100€ » et faussait toute lecture des données. La tranche est donc
-  /// neutre et la devise est envoyée à côté, ce qui permet de segmenter
-  /// correctement sans jamais convertir de montant.
-  static String _amountBracket(double amount) {
-    if (amount < 20) return '<20';
-    if (amount < 50) return '20-50';
-    if (amount < 100) return '50-100';
-    return '>100';
-  }
 
   Future<void> _onFetch(
     NegotiationFetchRequested e,
@@ -666,7 +651,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
           _analytics.logEvent(
             AnalyticsEvents.negotiationOfferMade,
             properties: {
-              'amount_bracket': _amountBracket(e.proposedPriceEur),
+              'amount_bracket': analyticsAmountBracket(e.proposedPriceEur),
               'currency': ActiveCurrency.current?.code ?? 'unknown',
               'context': 'sender',
             },
@@ -706,7 +691,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
           _analytics.logEvent(
             AnalyticsEvents.negotiationOfferMade,
             properties: {
-              'amount_bracket': _amountBracket(e.proposedPriceEur),
+              'amount_bracket': analyticsAmountBracket(e.proposedPriceEur),
               'currency': ActiveCurrency.current?.code ?? 'unknown',
               'context': 'sender',
             },
@@ -739,7 +724,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         _analytics.logEvent(
           AnalyticsEvents.negotiationOfferMade,
           properties: {
-            'amount_bracket': _amountBracket(e.proposedPriceEur),
+            'amount_bracket': analyticsAmountBracket(e.proposedPriceEur),
             'currency': ActiveCurrency.current?.code ?? 'unknown',
             'context': 'counter',
           },
@@ -767,7 +752,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         _analytics.logEvent(
           AnalyticsEvents.negotiationOfferAccepted,
           properties: {
-            'amount_bracket': _amountBracket(thread.currentPriceEur),
+            'amount_bracket': analyticsAmountBracket(thread.currentPriceEur),
             'currency': thread.currency,
           },
         ),
@@ -953,7 +938,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
       _logCheckoutPaymentMethodSelected(e.paymentMethod);
-      _logCheckoutPaymentSucceeded(e, thread);
+      _logCheckoutCompleted(e, thread);
     } catch (err) {
       final appErr = unwrapDioError(err);
       // Course gagnée par le webhook Stripe : `payment_intent.amount_capturable_updated`
@@ -970,7 +955,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
               thread.status == NegotiationThreadStatus.awaitingCommission) {
             emit(NegotiationLoaded(thread));
             _logCheckoutPaymentMethodSelected(e.paymentMethod);
-            _logCheckoutPaymentSucceeded(e, thread);
+            _logCheckoutCompleted(e, thread);
             return;
           }
           // FLUTTER-F9 : le fil n'attend plus de paiement sans avoir été payé
@@ -982,6 +967,15 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
           // Re-fetch échoué → on retombe sur l'erreur d'origine ci-dessous.
         }
       }
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.negotiationCheckoutFailed,
+          properties: {
+            'thread_id': e.threadId,
+            'error_code': appErr.code ?? 'unknown',
+          },
+        ),
+      );
       emit(NegotiationError(appErr));
     }
   }

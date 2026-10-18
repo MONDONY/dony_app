@@ -1253,4 +1253,119 @@ void main() {
       );
     });
   });
+
+  // Expirations et échecs d'appel : ils n'atteignaient jamais PostHog, seuls
+  // les dépôts refusés par l'opérateur y figuraient.
+  group('analytics expiration et erreurs', () {
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'passage à Expired : mobile_money_expired une seule fois',
+      build: () {
+        when(
+          () => repository.getStatus(scope),
+        ).thenAnswer((_) async => statusNearDeadline);
+        return bloc(now: () => deadline.add(const Duration(minutes: 1)));
+      },
+      act: (b) => b
+        ..add(const MobileMoneyStatusPolled(scope: scope))
+        ..add(const MobileMoneyStatusPolled(scope: scope)),
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyExpired,
+            properties: {'scope': 'bid'},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'initiation refusée : mobile_money_failed stage initiate avec le code',
+      build: () {
+        when(
+          () => repository.initiate(
+            scope,
+            phoneNumber: null,
+            provider: 'WAVE_CIV',
+          ),
+        ).thenThrow(
+          const ValidationException(
+            'Numéro invalide',
+            code: 'mobile-money/invalid-msisdn',
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(
+        const MobileMoneyPaymentInitiateRequested(
+          scope: scope,
+          provider: 'WAVE_CIV',
+        ),
+      ),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentError>(),
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyFailed,
+            properties: {
+              'failure_code': 'mobile-money/invalid-msisdn',
+              'stage': 'initiate',
+              'scope': 'bid',
+            },
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'ouverture en échec : stage open, code unknown sans code métier',
+      build: () {
+        when(
+          () => repository.getStatus(negotiationScope),
+        ).thenThrow(Exception('réseau'));
+        return bloc();
+      },
+      act: (b) =>
+          b.add(const MobileMoneyPaymentOpened(scope: negotiationScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentError>(),
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyFailed,
+            properties: {
+              'failure_code': 'unknown',
+              'stage': 'open',
+              'scope': 'negotiation',
+            },
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'sondage en échec avant tout affichage : stage poll',
+      build: () {
+        when(() => repository.getStatus(scope)).thenThrow(Exception('réseau'));
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
+      expect: () => [isA<MobileMoneyPaymentError>()],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyFailed,
+            properties: any(
+              named: 'properties',
+              that: containsPair('stage', 'poll'),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+  });
 }

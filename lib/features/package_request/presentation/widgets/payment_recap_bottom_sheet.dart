@@ -146,6 +146,7 @@ class PaymentRecapBottomSheet {
                               amountEur: init.amountEur,
                               currencyCode: init.currencyCode,
                               paymentMethodTypes: init.paymentMethodTypes,
+                              analyticsContext: 'negotiation',
                             ),
                             contextLabel: isCash
                                 ? lb.negotiationPaymentRecapContextConfirm

@@ -197,6 +197,7 @@ class _BidNegotiationThreadScreenState
         amountEur: state.amountEur,
         currencyCode: state.currencyCode,
         paymentMethodTypes: state.paymentMethodTypes,
+        analyticsContext: 'trip_negotiation',
       ),
       contextLabel: context.l10n.negotiationThreadPaymentContextLabel,
       onSuccess: () async {

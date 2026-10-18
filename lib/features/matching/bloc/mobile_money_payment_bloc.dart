@@ -71,7 +71,7 @@ class MobileMoneyPaymentBloc
         await _initiateAndEmit(scope, event.phoneNumber, null, emit);
       }
     } catch (e) {
-      emit(MobileMoneyPaymentError(unwrapDioError(e)));
+      _emitError(emit, e, event.scope, 'open');
     }
   }
 
@@ -102,7 +102,7 @@ class MobileMoneyPaymentBloc
       // protection propre, cet appel pouvant lui-même échouer (réseau,
       // 422...). Sans ce filet, l'écran resterait figé sur
       // ChooseOperator(isLoadingCatalog: true) sans bandeau ni reprise.
-      emit(MobileMoneyPaymentError(unwrapDioError(e)));
+      _emitError(emit, e, event.scope, 'providers');
     }
   }
 
@@ -172,7 +172,7 @@ class MobileMoneyPaymentBloc
         emit,
       );
     } catch (e) {
-      emit(MobileMoneyPaymentError(unwrapDioError(e)));
+      _emitError(emit, e, event.scope, 'initiate');
     }
   }
 
@@ -194,7 +194,7 @@ class MobileMoneyPaymentBloc
       // pu être affiché (Initial/Loading), il faut bien sortir du spinner.
       if (state is MobileMoneyPaymentInitial ||
           state is MobileMoneyPaymentLoading) {
-        emit(MobileMoneyPaymentError(unwrapDioError(e)));
+        _emitError(emit, e, event.scope, 'poll');
       }
     }
   }
@@ -240,6 +240,7 @@ class MobileMoneyPaymentBloc
   ) {
     final wasEscrowed = state is MobileMoneyPaymentEscrowed;
     final wasFailed = state is MobileMoneyPaymentDepositFailed;
+    final wasExpired = state is MobileMoneyPaymentExpired;
     emit(next);
     if (next is MobileMoneyPaymentEscrowed && !wasEscrowed) {
       unawaited(
@@ -258,7 +259,39 @@ class MobileMoneyPaymentBloc
           },
         ),
       );
+    } else if (next is MobileMoneyPaymentExpired && !wasExpired) {
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.mobileMoneyExpired,
+          properties: {'scope': scope.analyticsName},
+        ),
+      );
     }
+  }
+
+  /// Émet l'erreur à l'écran et la trace en `mobile_money_failed` : un
+  /// échec d'appel (réseau, 422 à l'initiation) n'atteignait jamais PostHog,
+  /// seuls les dépôts refusés par l'opérateur y figuraient. Propriétés
+  /// `failure_code` (code métier, `unknown` sans code), `stage` (`open`,
+  /// `providers`, `initiate`, `poll`) et `scope`.
+  void _emitError(
+    Emitter<MobileMoneyPaymentState> emit,
+    Object error,
+    MobileMoneyScope scope,
+    String stage,
+  ) {
+    final appError = unwrapDioError(error);
+    emit(MobileMoneyPaymentError(appError));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.mobileMoneyFailed,
+        properties: {
+          'failure_code': appError.code ?? 'unknown',
+          'stage': stage,
+          'scope': scope.analyticsName,
+        },
+      ),
+    );
   }
 
   /// Traduit un statut serveur en état d'écran. Ordre de priorité : un

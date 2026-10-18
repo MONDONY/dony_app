@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
@@ -24,11 +27,18 @@ class PaymentSheetConfig extends Equatable {
   /// le SDK flutter_stripe ne les expose pas via retrievePaymentIntent.
   final List<String> paymentMethodTypes;
 
+  /// Parcours d'origine, envoyé en propriété `context` des événements de
+  /// paiement (`bid`, `trip_negotiation`, `negotiation`, `escrow`,
+  /// `wallet_topup`) : sans lui, un paiement d'offre et une recharge du
+  /// solde étaient indiscernables dans PostHog.
+  final String analyticsContext;
+
   const PaymentSheetConfig({
     required this.clientSecret,
     required this.amountEur,
     this.currencyCode = 'EUR',
     required this.paymentMethodTypes,
+    this.analyticsContext = 'unknown',
   });
 
   /// Le clientSecret est de la forme `pi_xxx_secret_yyy`.
@@ -40,6 +50,7 @@ class PaymentSheetConfig extends Equatable {
     amountEur,
     currencyCode,
     paymentMethodTypes,
+    analyticsContext,
   ];
 
   SupportedCurrency get currency =>
@@ -50,6 +61,7 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   final PaymentGateway _gateway;
   final PaymentRepository _repository;
   final ErrorReportingService? _errorReporter;
+  final AnalyticsService? _analytics;
   final PaymentSheetConfig config;
 
   PaymentSheetBloc({
@@ -57,9 +69,11 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     required PaymentRepository repository,
     required this.config,
     ErrorReportingService? errorReporter,
+    AnalyticsService? analytics,
   }) : _gateway = gateway,
        _repository = repository,
        _errorReporter = errorReporter,
+       _analytics = analytics,
        super(const PaymentSheetLoading()) {
     on<PaymentSheetStarted>(_onStarted);
     on<PaymentSheetWalletPressed>(_onWalletPressed);
@@ -78,12 +92,69 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
       walletAvailable = await _gateway.isPlatformPaySupported();
     } catch (_) {}
 
+    final paypalAvailable = config.paymentMethodTypes.contains('paypal');
     emit(
       PaymentSheetResolved(
         walletAvailable: walletAvailable,
-        paypalAvailable: config.paymentMethodTypes.contains('paypal'),
+        paypalAvailable: paypalAvailable,
       ),
     );
+    _log(AnalyticsEvents.paymentSheetOpened, {
+      'wallet_available': walletAvailable,
+      'paypal_available': paypalAvailable,
+    });
+  }
+
+  /// Propriétés communes à tous les événements de paiement, sans montant
+  /// exact (voir [analyticsAmountBracket]).
+  Map<String, Object> get _baseProperties => {
+    'context': config.analyticsContext,
+    'currency': config.currencyCode,
+    'amount_bracket': analyticsAmountBracket(config.amountEur),
+  };
+
+  void _log(
+    String event, [
+    Map<String, Object> extra = const {},
+    PaymentMethodKind? method,
+  ]) {
+    final analytics = _analytics;
+    if (analytics == null) return;
+    unawaited(
+      analytics.logEvent(
+        event,
+        properties: {
+          ..._baseProperties,
+          if (method != null) 'method': method.name,
+          ...extra,
+        },
+      ),
+    );
+  }
+
+  /// Nom PostHog d'une raison d'échec (`authentication_failed`…).
+  static String _reasonName(PaymentSheetFailureReason reason) =>
+      switch (reason) {
+        PaymentSheetFailureReason.cardUnavailable => 'card_unavailable',
+        PaymentSheetFailureReason.declined => 'declined',
+        PaymentSheetFailureReason.authenticationFailed =>
+          'authentication_failed',
+        PaymentSheetFailureReason.sheetUnavailable => 'sheet_unavailable',
+        PaymentSheetFailureReason.generic => 'generic',
+      };
+
+  /// Émet l'échec à l'écran et le trace, puis ré-arme le bouton.
+  void _fail(
+    Emitter<PaymentSheetState> emit,
+    PaymentSheetFailure failure,
+    PaymentSheetResolved ready,
+    PaymentMethodKind method,
+  ) {
+    emit(failure);
+    _log(AnalyticsEvents.paymentFailed, {
+      'reason': _reasonName(failure.reason),
+    }, method);
+    emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
   }
 
   Future<void> _onWalletPressed(
@@ -170,19 +241,24 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     final ready = _currentReady;
     if (ready == null) return;
     emit(PaymentSheetProcessing(ready: ready, method: method));
+    _log(AnalyticsEvents.paymentInitiated, const {}, method);
     try {
       await action();
       emit(PaymentSheetSuccess(method: method));
+      _log(AnalyticsEvents.paymentSucceeded, const {}, method);
     } on PaymentCancelledException {
       emit(ready); // annulation silencieuse — la sheet reste prête
+      _log(AnalyticsEvents.paymentCancelled, const {}, method);
     } on _EphemeralKeyUnavailableException {
-      emit(
+      _fail(
+        emit,
         PaymentSheetFailure(
           reason: PaymentSheetFailureReason.cardUnavailable,
           ready: ready,
         ),
+        ready,
+        method,
       );
-      emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
     } on _SheetOpenFailedException catch (e, stackTrace) {
       _reportStripeFailure(
         e.cause,
@@ -190,12 +266,10 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         method,
         operation: 'payment.stripe_init',
       );
-      emit(_failureFor(e.cause, ready, opening: true));
-      emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
+      _fail(emit, _failureFor(e.cause, ready, opening: true), ready, method);
     } on PaymentConfirmationException catch (e, stackTrace) {
       _reportStripeFailure(e, stackTrace, method);
-      emit(_failureFor(e, ready));
-      emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
+      _fail(emit, _failureFor(e, ready), ready, method);
     } catch (error, stackTrace) {
       // Dernier filet : une erreur non mappée par le gateway n'a pas de
       // message montrable (toString technique), on reste générique.
@@ -207,13 +281,15 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
           context: {'feature': 'payments', 'method': method.name},
         ),
       );
-      emit(
+      _fail(
+        emit,
         PaymentSheetFailure(
           reason: PaymentSheetFailureReason.generic,
           ready: ready,
         ),
+        ready,
+        method,
       );
-      emit(ready);
     }
   }
 

@@ -30,7 +30,9 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  test('compte le paiement carte de l\'offre et confirme au serveur', () async {
+  // `payment_succeeded` part de la feuille de paiement (PaymentSheetBloc),
+  // avec le vrai moyen : la confirmation serveur ne le recompte plus.
+  test('confirme au serveur sans recompter le paiement', () async {
     when(
       () => repo.confirmPayment('bid-1'),
     ).thenAnswer((_) async => _FakeBid());
@@ -39,22 +41,20 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     verify(() => repo.confirmPayment('bid-1')).called(1);
-    final captured = verify(
-      () => backend.capture(AnalyticsEvents.paymentSucceeded, captureAny()),
-    ).captured;
-    expect(captured.single, containsPair('context', 'bid'));
-    expect(captured.single, containsPair('bid_id', 'bid-1'));
+    verifyNever(
+      () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
+    );
   });
 
-  test('le paiement reste compté quand la confirmation échoue', () async {
+  test('un échec de confirmation ne remonte pas à l\'appelant', () async {
     // Stripe a encaissé : l'échec du filet client ne change rien au paiement.
     when(() => repo.confirmPayment('bid-1')).thenThrow(Exception('réseau'));
 
-    await confirmBidPaymentSafely('bid-1');
+    await expectLater(confirmBidPaymentSafely('bid-1'), completes);
     await Future<void>.delayed(Duration.zero);
 
-    verify(
+    verifyNever(
       () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
-    ).called(1);
+    );
   });
 }

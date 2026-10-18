@@ -84,9 +84,39 @@ abstract final class AnalyticsEvents {
   static const incidentReported = 'incident_reported';
 
   // Payments
+  //
+  // Émis par `PaymentSheetBloc`, seul point de passage des paiements Stripe
+  // (carte, Apple Pay / Google Pay, PayPal) : avant, `payment_succeeded`
+  // partait de trois appelants avec `method: 'card'` écrit en dur, deux fois
+  // pour `/payments/pay`, et `payment_failed` ne partait jamais. Propriétés
+  // communes : `context` (`bid`, `trip_negotiation`, `negotiation`, `escrow`,
+  // `wallet_topup`), `currency`, `amount_bracket` (voir
+  // `analyticsAmountBracket`), et `method` (`wallet`/`paypal`/`card`) dès
+  // qu'un moyen est choisi. Jamais de montant exact.
+
+  /// Feuille de paiement ouverte et moyens résolus. Propriétés en plus :
+  /// `wallet_available`, `paypal_available`.
+  static const paymentSheetOpened = 'payment_sheet_opened';
+
+  /// Tap sur un moyen de paiement, avant la confirmation Stripe.
   static const paymentInitiated = 'payment_initiated';
+
+  /// Paiement autorisé par Stripe.
   static const paymentSucceeded = 'payment_succeeded';
+
+  /// Annulation par l'utilisateur (feuille native fermée, 3DS abandonné).
+  static const paymentCancelled = 'payment_cancelled';
+
+  /// Échec. Propriété `reason` : `declined`, `authentication_failed` (3-D
+  /// Secure), `sheet_unavailable`, `card_unavailable`, `generic`.
   static const paymentFailed = 'payment_failed';
+
+  /// Biométrie ou PIN refusé avant un paiement (`requirePaymentAuth`).
+  static const paymentAuthDenied = 'payment_auth_denied';
+
+  /// Paiement mobile money en attente arrivé à expiration sans validation.
+  /// Propriété `scope`.
+  static const mobileMoneyExpired = 'mobile_money_expired';
   static const mobileMoneyAwaiting = 'mobile_money_awaiting';
 
   // Activation des versements (Stripe Connect). Sans eux, l'étape paiements de
@@ -205,6 +235,17 @@ abstract final class AnalyticsEvents {
       'commission_funding_currency_chosen';
   static const firmPriceTaken = 'firm_price_taken';
   static const paymentMethodSelected = 'payment_method_selected';
+
+  /// `/checkout` d'un fil de négociation colis accepté par le serveur : la
+  /// mise en relation est payée (carte) ou réglée en espèces. Propriétés
+  /// `thread_id`, `payment_method` (`card`/`cash`), `currency`. Le paiement
+  /// Stripe lui-même est compté par `payment_succeeded`.
+  static const negotiationCheckoutCompleted = 'negotiation_checkout_completed';
+
+  /// `/checkout` refusé par le serveur alors que le paiement Stripe a pu
+  /// aboutir : sans cet événement, l'utilisateur payé mais non confirmé
+  /// disparaissait du tunnel. Propriétés `thread_id`, `error_code`.
+  static const negotiationCheckoutFailed = 'negotiation_checkout_failed';
 
   /// Traveler blocked at trip-linking because no payment method they can
   /// honor overlaps the sender's accepted set (422 `payment-method/*`).
