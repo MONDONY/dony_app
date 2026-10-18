@@ -134,9 +134,7 @@ void main() {
   });
 
   test('clé éphémère indisponible : reason card_unavailable', () async {
-    when(
-      () => repository.createEphemeralKey(),
-    ).thenThrow(Exception('réseau'));
+    when(() => repository.createEphemeralKey()).thenThrow(Exception('réseau'));
     final bloc = await openSheet();
 
     bloc.add(const PaymentSheetCardPressed());
@@ -176,9 +174,7 @@ void main() {
   });
 
   test('sans consentement : aucun événement', () async {
-    when(
-      () => gateway.confirmPayPal(any()),
-    ).thenAnswer((_) async {});
+    when(() => gateway.confirmPayPal(any())).thenAnswer((_) async {});
     final bloc = await openSheet(enabled: false);
 
     bloc.add(const PaymentSheetPayPalPressed());
@@ -189,9 +185,7 @@ void main() {
   });
 
   test('sans AnalyticsService injecté : la feuille fonctionne', () async {
-    when(
-      () => gateway.confirmPayPal(any()),
-    ).thenAnswer((_) async {});
+    when(() => gateway.confirmPayPal(any())).thenAnswer((_) async {});
     final bloc = PaymentSheetBloc(
       gateway: gateway,
       repository: repository,
@@ -200,10 +194,7 @@ void main() {
     await bloc.stream.firstWhere((s) => s is PaymentSheetResolved);
 
     bloc.add(const PaymentSheetPayPalPressed());
-    await expectLater(
-      bloc.stream,
-      emitsThrough(isA<PaymentSheetSuccess>()),
-    );
+    await expectLater(bloc.stream, emitsThrough(isA<PaymentSheetSuccess>()));
   });
 
   test('contexte par défaut `unknown`', () {

@@ -511,9 +511,8 @@ void main() {
 
       expect(captured, isFalse);
       verify(
-        () => backend.capture(AnalyticsEvents.paymentAuthDenied, {
-          'step': 'pin',
-        }),
+        () =>
+            backend.capture(AnalyticsEvents.paymentAuthDenied, {'step': 'pin'}),
       ).called(1);
     });
 

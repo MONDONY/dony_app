@@ -58,39 +58,42 @@ void main() {
       verify(() => backend.capture(event, captureAny())).captured.single
           as Map<String, Object>;
 
-  test('offre de départ : identité du fil, devise du fil, context start', () async {
-    when(
-      () => repo.start(
-        packageRequestId: any(named: 'packageRequestId'),
-        proposedPriceEur: any(named: 'proposedPriceEur'),
-        travelerTravelDate: any(named: 'travelerTravelDate'),
-        travelerAvailableKg: any(named: 'travelerAvailableKg'),
-        travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
-        body: any(named: 'body'),
-      ),
-    ).thenAnswer((_) async => _thread(rounds: 1));
-    final bloc = await makeBloc();
+  test(
+    'offre de départ : identité du fil, devise du fil, context start',
+    () async {
+      when(
+        () => repo.start(
+          packageRequestId: any(named: 'packageRequestId'),
+          proposedPriceEur: any(named: 'proposedPriceEur'),
+          travelerTravelDate: any(named: 'travelerTravelDate'),
+          travelerAvailableKg: any(named: 'travelerAvailableKg'),
+          travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => _thread(rounds: 1));
+      final bloc = await makeBloc();
 
-    bloc.add(
-      NegotiationStartRequested(
-        packageRequestId: 'pr-1',
-        proposedPriceEur: 30,
-        travelerTravelDate: DateTime(2026, 6, 15),
-        travelerAvailableKg: 10,
-      ),
-    );
-    await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
-    await settle();
+      bloc.add(
+        NegotiationStartRequested(
+          packageRequestId: 'pr-1',
+          proposedPriceEur: 30,
+          travelerTravelDate: DateTime(2026, 6, 15),
+          travelerAvailableKg: 10,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
+      await settle();
 
-    expect(captured(AnalyticsEvents.negotiationOfferMade), {
-      'thread_id': 't-1',
-      'request_id': 'pr-1',
-      'round': 1,
-      'currency': 'XOF',
-      'amount_bracket': '20-50',
-      'context': 'start',
-    });
-  });
+      expect(captured(AnalyticsEvents.negotiationOfferMade), {
+        'thread_id': 't-1',
+        'request_id': 'pr-1',
+        'round': 1,
+        'currency': 'XOF',
+        'amount_bracket': '20-50',
+        'context': 'start',
+      });
+    },
+  );
 
   test('contre-offre en échec : negotiation_action_failed', () async {
     when(
@@ -265,9 +268,7 @@ void main() {
   });
 
   test('dépôt annulé : negotiation_deposit_cancelled', () async {
-    when(
-      () => repo.cancelMobileMoneyDeposit('t-1'),
-    ).thenAnswer((_) async {});
+    when(() => repo.cancelMobileMoneyDeposit('t-1')).thenAnswer((_) async {});
     when(() => repo.getById('t-1')).thenAnswer((_) async => _thread());
     final bloc = await makeBloc();
 

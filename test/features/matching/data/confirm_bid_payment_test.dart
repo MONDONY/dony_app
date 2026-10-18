@@ -41,9 +41,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     verify(() => repo.confirmPayment('bid-1')).called(1);
-    verifyNever(
-      () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
-    );
+    verifyNever(() => backend.capture(AnalyticsEvents.paymentSucceeded, any()));
   });
 
   test('un échec de confirmation ne remonte pas à l\'appelant', () async {
@@ -53,8 +51,6 @@ void main() {
     await expectLater(confirmBidPaymentSafely('bid-1'), completes);
     await Future<void>.delayed(Duration.zero);
 
-    verifyNever(
-      () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
-    );
+    verifyNever(() => backend.capture(AnalyticsEvents.paymentSucceeded, any()));
   });
 }
