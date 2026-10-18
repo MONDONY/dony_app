@@ -77,6 +77,7 @@ class MakeOfferBottomSheet {
       final l = context.l10n;
       await DonyBottomSheet.show<void>(
         context,
+        analyticsName: 'negotiation/make-offer',
         title: isFirmPrice
             ? l.requestPublicTakePackageCta
             : l.negotiationMakeOfferTitle,

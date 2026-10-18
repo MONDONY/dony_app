@@ -24,30 +24,23 @@ void main() {
     return PaymentBloc(repo, a);
   }
 
-  test(
-    'payment_succeeded fires on PaymentSheetCompleted when state is PaymentSheetReady',
-    () async {
-      final bloc = makeBloc();
-      bloc.emit(
-        const PaymentSheetReady(
-          clientSecret: 'cs_test',
-          amount: 45.0,
-          commissionAmount: 5.0,
-          paymentId: 'pay_1',
-        ),
-      );
-      bloc.add(const PaymentSheetCompleted());
-      await bloc.stream.firstWhere((s) => s is PaymentEscrowPending);
-      await Future<void>.delayed(Duration.zero);
-      verify(
-        () => backend.capture(AnalyticsEvents.paymentSucceeded, {
-          'method': 'card',
-          'amount': 45.0,
-          'payment_id': 'pay_1',
-        }),
-      ).called(1);
-    },
-  );
+  // `payment_succeeded` part de la feuille de paiement (PaymentSheetBloc) :
+  // le réémettre ici le comptait deux fois sur /payments/pay.
+  test('PaymentSheetCompleted ne recompte pas payment_succeeded', () async {
+    final bloc = makeBloc();
+    bloc.emit(
+      const PaymentSheetReady(
+        clientSecret: 'cs_test',
+        amount: 45.0,
+        commissionAmount: 5.0,
+        paymentId: 'pay_1',
+      ),
+    );
+    bloc.add(const PaymentSheetCompleted());
+    await bloc.stream.firstWhere((s) => s is PaymentEscrowPending);
+    await Future<void>.delayed(Duration.zero);
+    verifyNever(() => backend.capture(AnalyticsEvents.paymentSucceeded, any()));
+  });
 
   test('payment_failed fires on PaymentFailed event', () async {
     final bloc = makeBloc();

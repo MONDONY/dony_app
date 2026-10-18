@@ -6,6 +6,8 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -177,6 +179,22 @@ class _PackageRequestCreateScreenState
     super.initState();
     final aiAvailability = _aiAvailability;
     if (aiAvailability != null) unawaited(aiAvailability.refresh());
+    // Entrée du tunnel de création, comme `trip_create_started` côté trajet :
+    // sans elle, on voyait les demandes créées, jamais les formulaires ouverts.
+    if (widget.initial == null && getIt.isRegistered<AnalyticsService>()) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.packageRequestCreateStarted,
+          properties: {
+            'source': widget.duplicating != null
+                ? 'duplicate'
+                : widget.resuming != null
+                ? 'draft'
+                : 'new',
+          },
+        ),
+      );
+    }
   }
 
   /// Ouvre « Créer avec l'IA » puis applique le brouillon par

@@ -1,4 +1,7 @@
 import 'package:dony/core/design/accessibility_scope.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -9,6 +12,7 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockLocalAuthService extends Mock implements LocalAuthService {}
 
@@ -468,5 +472,66 @@ void main() {
         verifyNever(() => authService.isBiometricAvailable());
       },
     );
+  });
+
+  // Un refus de biométrie ou de PIN ne laissait qu'un snackbar : dans
+  // PostHog, il ressemblait à un abandon du paiement.
+  group('requirePaymentAuth — payment_auth_denied', () {
+    late MockAnalyticsBackend backend;
+
+    setUp(() async {
+      await getIt.reset();
+      backend = MockAnalyticsBackend();
+      final analytics = makeEnabledAnalytics(backend);
+      await analytics.onConfigured();
+      getIt.registerSingleton<AnalyticsService>(analytics);
+      when(
+        () => userPrefs.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(false);
+    });
+
+    tearDown(() => getIt.reset());
+
+    testWidgets('PIN refusé → false et step pin', (tester) async {
+      bool? captured;
+      await tester.pumpWidget(
+        _buildApp(
+          authService: authService,
+          userPrefs: userPrefs,
+          pinRouteResult: false,
+          onResult: (r) => captured = r,
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('trigger')));
+      await tester.pumpAndSettle();
+
+      expect(captured, isFalse);
+      verify(
+        () =>
+            backend.capture(AnalyticsEvents.paymentAuthDenied, {'step': 'pin'}),
+      ).called(1);
+    });
+
+    testWidgets('PIN accepté → aucun événement de refus', (tester) async {
+      await tester.pumpWidget(
+        _buildApp(
+          authService: authService,
+          userPrefs: userPrefs,
+          pinRouteResult: true,
+          onResult: (_) {},
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('trigger')));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.paymentAuthDenied, any()),
+      );
+    });
   });
 }

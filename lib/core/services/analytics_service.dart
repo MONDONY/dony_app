@@ -234,6 +234,15 @@ class AnalyticsService {
     await _backend.identify(userId, properties);
   }
 
+  /// Met à jour les propriétés de la personne courante (`$set`), sur
+  /// l'identifiant déjà posé par [identify] : sans elles, aucun tunnel ne se
+  /// segmentait par rôle, statut KYC, pays ou offre PRO. Jamais de PII
+  /// (nom, téléphone, email).
+  Future<void> setPersonProperties(Map<String, Object> properties) async {
+    if (!isEnabled || properties.isEmpty) return;
+    await _backend.capture(r'$set', {r'$set': properties});
+  }
+
   /// Une fois par installation : un téléphone dont le SDK porte déjà l'UID
   /// sans que `$identify` soit parti (identify en opt-out, cf.
   /// [_storeConsent]) ne s'identifiera plus jamais tout seul. `reset()` lui

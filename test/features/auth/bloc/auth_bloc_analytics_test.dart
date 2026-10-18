@@ -222,4 +222,84 @@ void main() {
       );
     });
   });
+
+  // `identify` ne portait que l'UID : aucun tunnel ne se segmentait par rôle,
+  // KYC, pays ou offre PRO.
+  group('propriétés de personne (\$set)', () {
+    test('profil chargé : \$set rôles, KYC, PRO, pays, langue', () async {
+      const user = UserModel(
+        id: 'u1',
+        phoneNumber: '+33600000000',
+        roles: ['SENDER', 'TRAVELER'],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+        country: 'FR',
+        preferredLanguage: 'fr',
+      );
+      when(() => repo.getProfile()).thenAnswer((_) async => user);
+      final bloc = makeBloc();
+      bloc.add(const AuthCheckRequested());
+      await bloc.stream.firstWhere((s) => s is AuthAuthenticated);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(r'$set', {
+          r'$set': {
+            'roles': 'both',
+            'kyc_status': 'VERIFIED',
+            'is_kyc_verified': true,
+            'is_pro': false,
+            'country': 'FR',
+            'preferred_language': 'fr',
+          },
+        }),
+      ).called(1);
+    });
+
+    test('profil rafraîchi identique : pas de second \$set', () async {
+      when(() => repo.getProfile()).thenAnswer((_) async => fakeUser);
+      final bloc = makeBloc();
+      bloc.add(const AuthCheckRequested());
+      await bloc.stream.firstWhere((s) => s is AuthAuthenticated);
+      bloc.add(const AuthProfileRefreshRequested());
+      await bloc.stream.firstWhere((s) => s is AuthProfileUpdated);
+      await Future<void>.delayed(Duration.zero);
+
+      final captured = verify(
+        () => backend.capture(r'$set', captureAny()),
+      ).captured;
+      expect(captured, hasLength(1));
+      expect(
+        (captured.single as Map)[r'$set'],
+        isNot(contains('preferred_language')),
+      );
+    });
+
+    test('personAnalyticsProperties : rôles none et traveler', () {
+      expect(
+        personAnalyticsProperties(
+          const UserModel(
+            id: 'u2',
+            phoneNumber: '+33600000001',
+            roles: [],
+            kycStatus: 'NOT_STARTED',
+            status: 'ACTIVE',
+          ),
+        )['roles'],
+        'none',
+      );
+      expect(
+        personAnalyticsProperties(
+          const UserModel(
+            id: 'u3',
+            phoneNumber: '+33600000002',
+            roles: ['TRAVELER'],
+            kycStatus: 'NOT_STARTED',
+            status: 'ACTIVE',
+          ),
+        )['roles'],
+        'traveler',
+      );
+    });
+  });
 }

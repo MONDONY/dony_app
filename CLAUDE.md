@@ -244,6 +244,12 @@ Exception : si un écran a plusieurs états visuels distincts qui valent la pein
 
 **Route imbriquée (path relatif, enfant d'une `GoRoute`) → `name:` obligatoire, égal au chemin complet** (ex. `path: 'preferences'` sous `/settings` → `name: '/settings/preferences'`). go_router nomme la page `state.name ?? state.path`, et `state.path` d'un enfant n'est que son segment : sans `name`, PostHog reçoit `preferences`, `new` ou `:id`, sans parent. Le test `test/app/router_screen_names_test.dart` fait échouer toute route imbriquée non nommée.
 
+**Feuille du bas qui porte une étape de parcours → `analyticsName:` dans `DonyBottomSheet.show`** (ex. `analyticsName: 'negotiation/accept-offer'`). La route prend le nom `/sheet/<analyticsName>` et `posthogRouteFilter` (`lib/core/services/analytics_route_filter.dart`) la laisse remonter en `$screen` : le filtre par défaut du SDK ne garde que les `PageRoute`, une feuille sans nom reste invisible. Les feuilles de confort (menus, aperçus) restent sans nom.
+
+**Paiement : un seul émetteur.** `payment_sheet_opened`, `payment_initiated`, `payment_succeeded`, `payment_cancelled` et `payment_failed` partent de `PaymentSheetBloc`, avec le moyen réel (`wallet`/`paypal`/`card`), `context` (`PaymentSheetConfig.analyticsContext`, à poser à chaque nouvel appel), `currency` et `amount_bracket` (`analyticsAmountBracket`). Ne jamais réémettre `payment_succeeded` ailleurs : il était compté deux fois et toujours en `card`.
+
+**Les échecs se tracent aussi.** Un handler qui `catch` puis émet un état d'erreur n'atteint jamais `bloc_error` : il envoie son propre événement d'échec avec `error_code` (`AppException.code`, `unknown` sans code), comme `negotiation_action_failed`, `bid_submit_failed`, `package_request_submit_failed` ou `announcement_submit_failed`.
+
 ### Scarabée de signalement — sur chaque écran
 
 `DonyFeedbackButton` (🐞, `lib/core/design/widgets/dony_feedback_button.dart`) envoie à Sentry un message + la capture automatique de l'écran + jusqu'à 4 captures choisies par le testeur (galerie ou appareil photo, via `DonyMediaService`). La capture automatique passe par le `RepaintBoundary` global posé dans `app.dart` (`DonyFeedbackButton.appBoundaryKey`) : **aucun écran n'a besoin de son propre `RepaintBoundary`**.
@@ -321,6 +327,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 - [ ] La route est dans `router.dart` → screen tracking automatique ✅
 - [ ] Si l'écran a un état d'intention (ouverture = début d'un funnel) → `addPostFrameCallback` + `logEvent` dans `initState`
 - [ ] Si l'écran contient un formulaire de soumission → event dans le BLoC après succès
+- [ ] … et un event d'échec avec `error_code` dans le `catch`
+- [ ] Feuille du bas d'un parcours → `analyticsName:`
 - [ ] Si l'écran contient des actions secondaires (filtres, tri, partage) → event dans le BLoC ou widget selon le cas
 - [ ] Nom d'event ajouté dans `AnalyticsEvents`
 - [ ] Aucune PII dans les properties

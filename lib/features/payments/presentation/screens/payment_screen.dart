@@ -4,8 +4,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
@@ -89,6 +87,7 @@ class PaymentScreen extends StatelessWidget {
         amountEur: total,
         currencyCode: state.currencyCode,
         paymentMethodTypes: state.paymentMethodTypes,
+        analyticsContext: 'escrow',
       ),
       contextLabel: contextLabel,
       onSuccess: () async {
@@ -145,12 +144,9 @@ class _PaymentSummaryView extends StatelessWidget {
       );
       return;
     }
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.paymentInitiated,
-        properties: {'method': 'card', 'amount': _total},
-      ),
-    );
+    // `payment_initiated` part de la feuille de paiement, au tap sur le
+    // moyen réellement choisi (il partait ici avec `method: 'card'` en dur et
+    // le montant exact).
     context.read<PaymentBloc>().add(PaymentInitiated(bid.id));
   }
 

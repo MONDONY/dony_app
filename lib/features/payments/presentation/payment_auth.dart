@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:dony/core/design/accessibility_scope.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -36,6 +41,7 @@ Future<bool> requirePaymentAuth(
     message: l.paymentAuthConfirmMessage,
   );
   if (!confirmed) {
+    _logAuthDenied('confirmation');
     return false;
   }
 
@@ -62,5 +68,20 @@ Future<bool> requirePaymentAuth(
     authenticated = pinResult ?? false;
   }
 
+  if (!authenticated) _logAuthDenied(biometricPref ? 'biometric_pin' : 'pin');
   return authenticated;
+}
+
+/// Trace un paiement arrêté avant tout appel Stripe : sans lui, un refus de
+/// biométrie ou de PIN ne laissait qu'un snackbar et ressemblait, dans
+/// PostHog, à un abandon. Propriété `step` : `confirmation` (dialogue
+/// d'accessibilité), `biometric_pin` ou `pin`.
+void _logAuthDenied(String step) {
+  if (!getIt.isRegistered<AnalyticsService>()) return;
+  unawaited(
+    getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.paymentAuthDenied,
+      properties: {'step': step},
+    ),
+  );
 }

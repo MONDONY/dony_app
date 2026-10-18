@@ -326,7 +326,7 @@ void main() {
 
   // ── payment_succeeded — checkout carte ────────────────────────────────────
 
-  group('payment_succeeded (checkout)', () {
+  group('negotiation_checkout_completed (checkout)', () {
     test('fires for a card checkout (Stripe PaymentIntent)', () async {
       when(
         () => repo.checkout(
@@ -349,11 +349,19 @@ void main() {
       await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
       await Future<void>.delayed(Duration.zero);
 
+      // Le paiement Stripe est compté par la feuille de paiement : le
+      // checkout ne le recompte plus, il clôt le tunnel de négociation.
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
+      );
       final captured = verify(
-        () => backend.capture(AnalyticsEvents.paymentSucceeded, captureAny()),
+        () => backend.capture(
+          AnalyticsEvents.negotiationCheckoutCompleted,
+          captureAny(),
+        ),
       ).captured;
-      expect(captured.single, containsPair('context', 'negotiation'));
-      expect(captured.single, containsPair('payment_id', 'pi_1'));
+      expect(captured.single, containsPair('payment_method', 'card'));
+      expect(captured.single, containsPair('thread_id', isA<String>()));
     });
 
     test('does not fire for a cash agreement (sentinel, no payment)', () async {
@@ -381,6 +389,13 @@ void main() {
       verifyNever(
         () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
       );
+      final captured = verify(
+        () => backend.capture(
+          AnalyticsEvents.negotiationCheckoutCompleted,
+          captureAny(),
+        ),
+      ).captured;
+      expect(captured.single, containsPair('payment_method', 'cash'));
     });
 
     test('fires on the webhook-race recovery path', () async {
@@ -407,8 +422,41 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verify(
-        () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
+        () => backend.capture(
+          AnalyticsEvents.negotiationCheckoutCompleted,
+          any(),
+        ),
       ).called(1);
+    });
+
+    test('negotiation_checkout_failed on a server refusal', () async {
+      when(
+        () => repo.checkout(
+          't-1',
+          paymentIntentId: 'pi_1',
+          paymentMethod: PaymentMethod.stripe,
+        ),
+      ).thenThrow(const ConflictException('thread/expired'));
+
+      final bloc = makeBloc();
+      bloc.add(
+        const NegotiationCheckoutRequested(
+          threadId: 't-1',
+          paymentIntentId: 'pi_1',
+          paymentMethod: PaymentMethod.stripe,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is NegotiationError);
+      await Future<void>.delayed(Duration.zero);
+
+      final captured = verify(
+        () => backend.capture(
+          AnalyticsEvents.negotiationCheckoutFailed,
+          captureAny(),
+        ),
+      ).captured;
+      expect(captured.single, containsPair('thread_id', 't-1'));
+      expect(captured.single, contains('error_code'));
     });
   });
 

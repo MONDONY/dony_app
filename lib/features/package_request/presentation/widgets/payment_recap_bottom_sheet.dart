@@ -74,6 +74,7 @@ class PaymentRecapBottomSheet {
     final l = context.l10n;
     await DonyBottomSheet.show<void>(
       context,
+      analyticsName: 'negotiation/payment-recap',
       title: isCash
           ? l.negotiationPaymentRecapConfirmAgreementTitle
           : isMobileMoney
@@ -146,6 +147,7 @@ class PaymentRecapBottomSheet {
                               amountEur: init.amountEur,
                               currencyCode: init.currencyCode,
                               paymentMethodTypes: init.paymentMethodTypes,
+                              analyticsContext: 'negotiation',
                             ),
                             contextLabel: isCash
                                 ? lb.negotiationPaymentRecapContextConfirm

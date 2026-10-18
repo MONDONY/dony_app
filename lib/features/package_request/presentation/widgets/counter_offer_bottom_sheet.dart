@@ -25,6 +25,7 @@ class CounterOfferBottomSheet {
 
     return DonyBottomSheet.show<void>(
       context,
+      analyticsName: 'negotiation/counter-offer',
       title: context.l10n.negotiationCounterOfferTitle,
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<VoidCallback?>(

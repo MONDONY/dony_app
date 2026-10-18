@@ -17,6 +17,7 @@ class RejectBottomSheet {
 
     return DonyBottomSheet.show<void>(
       context,
+      analyticsName: 'negotiation/reject',
       title: context.l10n.negotiationRejectTitle,
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       child: _RejectContent(

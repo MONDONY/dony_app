@@ -40,7 +40,27 @@ abstract final class AnalyticsEvents {
   static const kycProviderWebviewScreen = '/kyc/verify/webview';
 
   // Announcements
+  /// Trajet créé. Propriétés : `corridor`, `available_kg`, `price_per_kg`,
+  /// `is_draft`, `from_ai`, `currency`, `transport_mode`, `negotiable`,
+  /// `payment_methods`, `pricing_mode`, `stops` (avion seulement).
   static const announcementCreated = 'announcement_created';
+
+  /// Brouillon de trajet publié. Propriétés `announcement_id`, `currency`.
+  static const announcementPublished = 'announcement_published';
+
+  /// Trajet modifié. Propriétés `announcement_id`, `currency`.
+  static const announcementUpdated = 'announcement_updated';
+
+  /// Création, publication ou modification de trajet refusée. Propriétés
+  /// `action`, `error_code` (`draft-limit-reached`, `pro-limit-reached`,
+  /// `kyc-not-verified`, `unsupported`…), `is_draft`.
+  static const announcementSubmitFailed = 'announcement_submit_failed';
+
+  /// Modèle de trajet créé, modifié ou supprimé. Propriété `action`.
+  static const tripTemplateSaved = 'trip_template_saved';
+
+  /// Trajet récurrent créé, modifié ou supprimé. Propriété `action`.
+  static const tripRecurrenceSaved = 'trip_recurrence_saved';
   static const announcementViewed = 'announcement_viewed';
   static const surplusOpened = 'surplus_opened';
   static const tripCreateStarted = 'trip_create_started';
@@ -84,9 +104,39 @@ abstract final class AnalyticsEvents {
   static const incidentReported = 'incident_reported';
 
   // Payments
+  //
+  // Émis par `PaymentSheetBloc`, seul point de passage des paiements Stripe
+  // (carte, Apple Pay / Google Pay, PayPal) : avant, `payment_succeeded`
+  // partait de trois appelants avec `method: 'card'` écrit en dur, deux fois
+  // pour `/payments/pay`, et `payment_failed` ne partait jamais. Propriétés
+  // communes : `context` (`bid`, `trip_negotiation`, `negotiation`, `escrow`,
+  // `wallet_topup`), `currency`, `amount_bracket` (voir
+  // `analyticsAmountBracket`), et `method` (`wallet`/`paypal`/`card`) dès
+  // qu'un moyen est choisi. Jamais de montant exact.
+
+  /// Feuille de paiement ouverte et moyens résolus. Propriétés en plus :
+  /// `wallet_available`, `paypal_available`.
+  static const paymentSheetOpened = 'payment_sheet_opened';
+
+  /// Tap sur un moyen de paiement, avant la confirmation Stripe.
   static const paymentInitiated = 'payment_initiated';
+
+  /// Paiement autorisé par Stripe.
   static const paymentSucceeded = 'payment_succeeded';
+
+  /// Annulation par l'utilisateur (feuille native fermée, 3DS abandonné).
+  static const paymentCancelled = 'payment_cancelled';
+
+  /// Échec. Propriété `reason` : `declined`, `authentication_failed` (3-D
+  /// Secure), `sheet_unavailable`, `card_unavailable`, `generic`.
   static const paymentFailed = 'payment_failed';
+
+  /// Biométrie ou PIN refusé avant un paiement (`requirePaymentAuth`).
+  static const paymentAuthDenied = 'payment_auth_denied';
+
+  /// Paiement mobile money en attente arrivé à expiration sans validation.
+  /// Propriété `scope`.
+  static const mobileMoneyExpired = 'mobile_money_expired';
   static const mobileMoneyAwaiting = 'mobile_money_awaiting';
 
   // Activation des versements (Stripe Connect). Sans eux, l'étape paiements de
@@ -138,6 +188,21 @@ abstract final class AnalyticsEvents {
   static const suiviStepUndone = 'suivi_step_undone';
 
   // Package Request
+  /// Formulaire de demande d'envoi ouvert (création). Propriété `source` :
+  /// `new`, `duplicate`, `draft`.
+  static const packageRequestCreateStarted = 'package_request_create_started';
+
+  /// Étape 1 ou 2 du formulaire validée. Propriétés `step`, `editing`, et
+  /// `transport_mode`/`has_date` (étape 1) ou `parcel_size`/`categories_count`
+  /// (étape 2). L'étape 3 se lit dans `package_request_created`.
+  static const packageRequestStepCompleted = 'package_request_step_completed';
+
+  /// Soumission refusée. Propriétés `error_code`, `is_draft`, `editing`.
+  static const packageRequestSubmitFailed = 'package_request_submit_failed';
+
+  /// Propriétés : `corridor`, `negotiable`, `payment_methods`, `from_ai`,
+  /// `is_draft`, `currency`, `budget_bracket`, `transport_mode`,
+  /// `parcel_size`, `has_photos`, `has_promo_code`.
   static const packageRequestCreated = 'package_request_created';
   static const packageRequestUpdated = 'package_request_updated';
 
@@ -205,6 +270,39 @@ abstract final class AnalyticsEvents {
       'commission_funding_currency_chosen';
   static const firmPriceTaken = 'firm_price_taken';
   static const paymentMethodSelected = 'payment_method_selected';
+
+  /// `/checkout` d'un fil de négociation colis accepté par le serveur : la
+  /// mise en relation est payée (carte) ou réglée en espèces. Propriétés
+  /// `thread_id`, `payment_method` (`card`/`cash`), `currency`. Le paiement
+  /// Stripe lui-même est compté par `payment_succeeded`.
+  static const negotiationCheckoutCompleted = 'negotiation_checkout_completed';
+
+  /// `/checkout` refusé par le serveur alors que le paiement Stripe a pu
+  /// aboutir : sans cet événement, l'utilisateur payé mais non confirmé
+  /// disparaissait du tunnel. Propriétés `thread_id`, `error_code`.
+  static const negotiationCheckoutFailed = 'negotiation_checkout_failed';
+
+  // Négociation colis ↔ voyageur. Tous les événements du fil portent
+  // `thread_id`, `request_id`, `round` (tours déjà joués) et `currency` (devise
+  // du fil) pour relier offre → acceptation → trajet → paiement.
+
+  /// Offre refusée (côté colis). Propriété `has_reason`, jamais le motif.
+  static const negotiationOfferRejected = 'negotiation_offer_rejected';
+
+  /// Trajet lié au fil. Propriété `mode` : `existing`, `changed`,
+  /// `dedicated` ; `payment_method` quand il est choisi à cette étape.
+  static const negotiationTripLinked = 'negotiation_trip_linked';
+
+  /// L'expéditeur refuse le trajet proposé par le voyageur.
+  static const negotiationTripRefused = 'negotiation_trip_refused';
+
+  /// Dépôt mobile money en vol annulé par l'expéditeur.
+  static const negotiationDepositCancelled = 'negotiation_deposit_cancelled';
+
+  /// Action de négociation en échec. Propriétés `action` (`start`,
+  /// `counter`, `accept`, `reject`, `refuse_trip`, `trip_link_<mode>`),
+  /// `error_code`, `thread_id`.
+  static const negotiationActionFailed = 'negotiation_action_failed';
 
   /// Traveler blocked at trip-linking because no payment method they can
   /// honor overlaps the sender's accepted set (422 `payment-method/*`).
@@ -763,6 +861,18 @@ abstract final class AnalyticsEvents {
   static const tripNegotiationCountered = 'trip_negotiation_countered';
   static const tripNegotiationAccepted = 'trip_negotiation_accepted';
   static const tripNegotiationRejected = 'trip_negotiation_rejected';
+
+  /// Offre retirée sur le fil de négociation d'un trajet. Propriétés
+  /// `bid_id`, `round`, `actor`.
+  static const tripNegotiationCancelled = 'trip_negotiation_cancelled';
+
+  /// Offre carte créée, en attente de paiement (`/bids/checkout`).
+  /// Propriétés `announcement_id`, `bid_id`, `weight_kg`, `currency`,
+  /// `payment_method`.
+  static const bidCheckoutStarted = 'bid_checkout_started';
+
+  /// Création d'offre refusée. Propriétés `payment_method`, `error_code`.
+  static const bidSubmitFailed = 'bid_submit_failed';
   static const tripNegotiationPaymentStarted =
       'trip_negotiation_payment_started';
 

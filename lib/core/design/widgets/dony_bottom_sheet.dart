@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/services/analytics_route_filter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -29,11 +30,19 @@ abstract final class DonyBottomSheet {
     double? heightFraction,
     Widget Function(Widget)? wrapper,
     bool showFeedback = false,
+    String? analyticsName,
   }) {
     final screenHeight = MediaQuery.of(context).size.height;
     return showModalBottomSheet<T>(
       context: context,
       useRootNavigator: true,
+      // Nom de route `/sheet/<analyticsName>` : `posthogRouteFilter` ne suit
+      // que les feuilles nommées ainsi, qui remontent alors en `$screen`.
+      // Sans nom, une feuille reste invisible dans PostHog (paiement,
+      // acceptation d'offre, contre-offre… n'y apparaissaient jamais).
+      routeSettings: analyticsName == null
+          ? null
+          : RouteSettings(name: '$kAnalyticsSheetRoutePrefix$analyticsName'),
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       enableDrag: enableDrag,

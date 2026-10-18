@@ -79,6 +79,7 @@ class AcceptOfferBottomSheet {
     final l = context.l10n;
     await DonyBottomSheet.show<void>(
       context,
+      analyticsName: 'negotiation/accept-offer',
       title: isCheckout
           ? l.negotiationPaySecurelyTitle
           : l.negotiationAcceptOfferTitle,
@@ -161,6 +162,7 @@ class AcceptOfferBottomSheet {
                               amountEur: init.amountEur,
                               currencyCode: init.currencyCode,
                               paymentMethodTypes: init.paymentMethodTypes,
+                              analyticsContext: 'negotiation',
                             ),
                             contextLabel: isTraveler
                                 ? lb.negotiationAcceptOfferPaymentContextTraveler

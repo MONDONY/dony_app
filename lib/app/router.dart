@@ -5,6 +5,7 @@ import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_route_filter.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -360,7 +361,7 @@ final appRouter = GoRouter(
   // feuilles et les dialogues du navigateur racine.
   observers: [
     SentryNavigatorObserver(),
-    PosthogObserver(),
+    PosthogObserver(routeFilter: posthogRouteFilter),
     assistantModalObserver,
   ],
   redirect: (context, state) {
