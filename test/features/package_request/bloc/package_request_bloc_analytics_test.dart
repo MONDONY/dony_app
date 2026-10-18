@@ -99,12 +99,20 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verify(
-        () => backend.capture(AnalyticsEvents.packageRequestCreated, {
-          'corridor': 'Paris→Dakar',
-          'negotiable': true,
-          'payment_methods': ['STRIPE'],
-          'from_ai': false,
-        }),
+        () => backend.capture(
+          AnalyticsEvents.packageRequestCreated,
+          any(
+            that: allOf([
+              containsPair('corridor', 'Paris→Dakar'),
+              containsPair('negotiable', true),
+              containsPair('payment_methods', ['STRIPE']),
+              containsPair('from_ai', false),
+              contains('is_draft'),
+              contains('currency'),
+              contains('budget_bracket'),
+            ]),
+          ),
+        ),
       ).called(1);
     },
   );
@@ -163,12 +171,20 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verify(
-        () => backend.capture(AnalyticsEvents.packageRequestCreated, {
-          'corridor': 'Paris→Dakar',
-          'negotiable': true,
-          'payment_methods': ['STRIPE'],
-          'from_ai': true,
-        }),
+        () => backend.capture(
+          AnalyticsEvents.packageRequestCreated,
+          any(
+            that: allOf([
+              containsPair('corridor', 'Paris→Dakar'),
+              containsPair('negotiable', true),
+              containsPair('payment_methods', ['STRIPE']),
+              containsPair('from_ai', true),
+              contains('is_draft'),
+              contains('currency'),
+              contains('budget_bracket'),
+            ]),
+          ),
+        ),
       ).called(1);
     },
   );

@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -108,13 +109,21 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verify(
-        () => backend.capture(AnalyticsEvents.announcementCreated, {
-          'corridor': 'Paris→Dakar',
-          'available_kg': 10.0,
-          'price_per_kg': 15.0,
-          'is_draft': false,
-          'from_ai': false,
-        }),
+        () => backend.capture(
+          AnalyticsEvents.announcementCreated,
+          any(
+            that: allOf([
+              containsPair('corridor', 'Paris→Dakar'),
+              containsPair('available_kg', 10.0),
+              containsPair('price_per_kg', 15.0),
+              containsPair('is_draft', false),
+              containsPair('from_ai', false),
+              contains('currency'),
+              contains('transport_mode'),
+              contains('negotiable'),
+            ]),
+          ),
+        ),
       ).called(1);
     },
   );
@@ -163,13 +172,21 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verify(
-        () => backend.capture(AnalyticsEvents.announcementCreated, {
-          'corridor': 'Paris→Abidjan',
-          'available_kg': 23.0,
-          'price_per_kg': 10.0,
-          'is_draft': false,
-          'from_ai': true,
-        }),
+        () => backend.capture(
+          AnalyticsEvents.announcementCreated,
+          any(
+            that: allOf([
+              containsPair('corridor', 'Paris→Abidjan'),
+              containsPair('available_kg', 23.0),
+              containsPair('price_per_kg', 10.0),
+              containsPair('is_draft', false),
+              containsPair('from_ai', true),
+              contains('currency'),
+              contains('transport_mode'),
+              contains('negotiable'),
+            ]),
+          ),
+        ),
       ).called(1);
     },
   );
@@ -242,5 +259,51 @@ void main() {
     await bloc.stream.firstWhere((s) => s is AnnouncementCreated);
     await Future<void>.delayed(Duration.zero);
     verifyNever(() => backend.capture(any(), any()));
+  });
+
+  // Brouillon publié et échecs : le tunnel « bloqué par le KYC, la limite de
+  // brouillons ou l'offre PRO » était invisible.
+  group('publication et échecs', () {
+    test('brouillon publié : announcement_published', () async {
+      when(
+        () => repo.publishAnnouncement('ann1'),
+      ).thenAnswer((_) async => fakeAnnouncement());
+
+      final bloc = makeBloc();
+      bloc.add(AnnouncementPublishRequested('ann1'));
+      await bloc.stream.firstWhere((s) => s is AnnouncementPublished);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(
+          AnalyticsEvents.announcementPublished,
+          any(that: containsPair('announcement_id', 'ann1')),
+        ),
+      ).called(1);
+    });
+
+    test(
+      'publication bloquée par le KYC : announcement_submit_failed',
+      () async {
+        when(
+          () => repo.publishAnnouncement('ann1'),
+        ).thenThrow(const ForbiddenException('KYC', 'kyc-not-verified'));
+
+        final bloc = makeBloc();
+        bloc.add(AnnouncementPublishRequested('ann1'));
+        await bloc.stream.firstWhere((s) => s is AnnouncementKycRequired);
+        await Future<void>.delayed(Duration.zero);
+
+        verify(
+          () => backend.capture(AnalyticsEvents.announcementSubmitFailed, {
+            'action': 'publish',
+            'error_code': 'kyc-not-verified',
+          }),
+        ).called(1);
+        verifyNever(
+          () => backend.capture(AnalyticsEvents.announcementPublished, any()),
+        );
+      },
+    );
   });
 }

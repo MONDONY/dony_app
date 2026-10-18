@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -152,6 +153,27 @@ class PackageRequestFormBloc
         transportMode: e.transportMode,
       ),
     );
+    _logStepCompleted(1, {
+      'transport_mode': e.transportMode.name,
+      'has_date': hasDate,
+    });
+  }
+
+  /// Étape du formulaire validée : sans cet événement, l'abandon par étape
+  /// ne se reconstruisait pas (seul `form_draft_saved` en gardait une trace,
+  /// quand l'utilisateur enregistrait). Propriétés `step` (1, 2), `editing`
+  /// et des choix sans PII de l'étape.
+  void _logStepCompleted(int step, Map<String, Object> extra) {
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.packageRequestStepCompleted,
+        properties: {
+          'step': step,
+          'editing': state.editingRequestId != null,
+          ...extra,
+        },
+      ),
+    );
   }
 
   void _onDesiredDateCleared(
@@ -171,6 +193,10 @@ class PackageRequestFormBloc
         description: e.description,
       ),
     );
+    _logStepCompleted(2, {
+      'parcel_size': e.parcelSize.wireName,
+      'categories_count': e.categories.length,
+    });
   }
 
   Future<void> _onStep3(
@@ -280,11 +306,34 @@ class PackageRequestFormBloc
                 .map((m) => m.wireName)
                 .toList(),
             'from_ai': _fromAi,
+            // Un brouillon partait sous le même nom qu'une publication :
+            // seul `success_screen_viewed.context` permettait de les séparer.
+            'is_draft': saved.status == PackageRequestStatus.draft,
+            'currency': saved.currency,
+            'budget_bracket': analyticsAmountBracket(totalBudgetEur),
+            if (state.transportMode != null)
+              'transport_mode': state.transportMode!.name,
+            if (state.parcelSize != null)
+              'parcel_size': state.parcelSize!.wireName,
+            'has_photos': (e.photoKeys ?? const []).isNotEmpty,
+            'has_promo_code': _blankToNull(state.promoCode) != null,
           },
         ),
       );
     } catch (err) {
       final error = unwrapDioError(err);
+      // Soumission refusée (limite de brouillons, KYC, réseau…) : l'échec
+      // n'était visible qu'à l'écran.
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.packageRequestSubmitFailed,
+          properties: {
+            'error_code': error.code ?? 'unknown',
+            'is_draft': e.saveAsDraft,
+            'editing': state.editingRequestId != null,
+          },
+        ),
+      );
       if (error is ForbiddenException && error.code == 'draft-limit-reached') {
         emit(
           state.copyWith(

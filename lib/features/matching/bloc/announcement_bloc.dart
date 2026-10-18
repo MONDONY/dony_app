@@ -95,6 +95,12 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
             'price_per_kg': event.pricePerKg,
             'is_draft': event.saveAsDraft,
             'from_ai': event.fromAi,
+            'currency': announcement.currency,
+            'transport_mode': event.transportMode.name,
+            'negotiable': event.negotiable,
+            'payment_methods': event.acceptedPaymentMethods,
+            'pricing_mode': event.pricingMode,
+            if (event.stops != null) 'stops': event.stops!.name,
           },
         ),
       );
@@ -104,6 +110,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       // sinon `pro-limit-reached` tombait dans le cas générique et l'utilisateur
       // ne voyait qu'un vague « Action non autorisée » au lieu de l'invite PRO.
       final error = unwrapDioError(e);
+      _logTripFailed('create', error, isDraft: event.saveAsDraft);
       if (error is ForbiddenException && error.code == 'draft-limit-reached') {
         emit(AnnouncementDraftLimitReached(error));
       } else if (error is ForbiddenException &&
@@ -113,6 +120,24 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         emit(AnnouncementError(error));
       }
     }
+  }
+
+  /// Création, publication ou modification d'un trajet refusée : le tunnel
+  /// « bloqué par la limite de brouillons, le KYC ou l'offre PRO » était
+  /// invisible. Propriétés `action` (`create`, `create_group`, `publish`,
+  /// `update`), `error_code` (`unknown` sans code métier) et `is_draft`
+  /// quand il s'applique.
+  void _logTripFailed(String action, AppException error, {bool? isDraft}) {
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.announcementSubmitFailed,
+        properties: {
+          'action': action,
+          'error_code': error.code ?? 'unknown',
+          'is_draft': ?isDraft,
+        },
+      ),
+    );
   }
 
   Future<void> _onPublishRequested(
@@ -125,8 +150,19 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     try {
       final announcement = await _repository.publishAnnouncement(event.id);
       emit(AnnouncementPublished(announcement));
+      // Brouillon → publié : seul `success_screen_viewed` le couvrait.
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.announcementPublished,
+          properties: {
+            'announcement_id': announcement.id,
+            'currency': announcement.currency,
+          },
+        ),
+      );
     } catch (e) {
       final error = unwrapDioError(e);
+      _logTripFailed('publish', error);
       if (error is ForbiddenException && error.code == 'kyc-not-verified') {
         emit(AnnouncementKycRequired(error));
       } else if (error is ForbiddenException &&
@@ -360,6 +396,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         buildTripPayloads(event.first, event.legs),
       );
       if (legs.isEmpty) {
+        _logTripFailed(
+          'create_group',
+          const NetworkException('', code: 'unsupported'),
+        );
         emit(AnnouncementTripUnsupported());
         return;
       }
@@ -387,6 +427,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       );
     } catch (e) {
       final error = unwrapDioError(e);
+      _logTripFailed('create_group', error, isDraft: event.first.saveAsDraft);
       // Backend antérieur à FLUTTER-4D : la route n'existe pas (404), ou
       // `/announcements/{id}` capte « trips » en identifiant (405).
       if (error is NotFoundException ||
@@ -470,8 +511,18 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         currency: event.currency,
       );
       emit(AnnouncementUpdated(announcement));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.announcementUpdated,
+          properties: {
+            'announcement_id': announcement.id,
+            'currency': announcement.currency,
+          },
+        ),
+      );
     } catch (e) {
       final unwrapped = unwrapDioError(e);
+      _logTripFailed('update', unwrapped);
       if (unwrapped.code == 'currency-locked') {
         // Une demande est arrivée entre l'ouverture du formulaire et
         // l'enregistrement (FLUTTER-KV) : code propre au trajet, le

@@ -1358,7 +1358,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => TripTemplateRepository(getIt<TripTemplateDatasource>()),
   );
   getIt.registerFactory<TripTemplateBloc>(
-    () => TripTemplateBloc(getIt<TripTemplateRepository>()),
+    () => TripTemplateBloc(
+      getIt<TripTemplateRepository>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerLazySingleton<TripRecurrenceDatasource>(
     () => TripRecurrenceDatasource(getIt<ApiClient>()),
@@ -1367,7 +1370,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => TripRecurrenceRepository(getIt<TripRecurrenceDatasource>()),
   );
   getIt.registerFactory<TripRecurrenceBloc>(
-    () => TripRecurrenceBloc(getIt<TripRecurrenceRepository>()),
+    () => TripRecurrenceBloc(
+      getIt<TripRecurrenceRepository>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
   );
 
   // Address book — Recipients

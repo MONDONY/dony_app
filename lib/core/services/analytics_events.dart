@@ -40,7 +40,27 @@ abstract final class AnalyticsEvents {
   static const kycProviderWebviewScreen = '/kyc/verify/webview';
 
   // Announcements
+  /// Trajet créé. Propriétés : `corridor`, `available_kg`, `price_per_kg`,
+  /// `is_draft`, `from_ai`, `currency`, `transport_mode`, `negotiable`,
+  /// `payment_methods`, `pricing_mode`, `stops` (avion seulement).
   static const announcementCreated = 'announcement_created';
+
+  /// Brouillon de trajet publié. Propriétés `announcement_id`, `currency`.
+  static const announcementPublished = 'announcement_published';
+
+  /// Trajet modifié. Propriétés `announcement_id`, `currency`.
+  static const announcementUpdated = 'announcement_updated';
+
+  /// Création, publication ou modification de trajet refusée. Propriétés
+  /// `action`, `error_code` (`draft-limit-reached`, `pro-limit-reached`,
+  /// `kyc-not-verified`, `unsupported`…), `is_draft`.
+  static const announcementSubmitFailed = 'announcement_submit_failed';
+
+  /// Modèle de trajet créé, modifié ou supprimé. Propriété `action`.
+  static const tripTemplateSaved = 'trip_template_saved';
+
+  /// Trajet récurrent créé, modifié ou supprimé. Propriété `action`.
+  static const tripRecurrenceSaved = 'trip_recurrence_saved';
   static const announcementViewed = 'announcement_viewed';
   static const surplusOpened = 'surplus_opened';
   static const tripCreateStarted = 'trip_create_started';
@@ -168,6 +188,21 @@ abstract final class AnalyticsEvents {
   static const suiviStepUndone = 'suivi_step_undone';
 
   // Package Request
+  /// Formulaire de demande d'envoi ouvert (création). Propriété `source` :
+  /// `new`, `duplicate`, `draft`.
+  static const packageRequestCreateStarted = 'package_request_create_started';
+
+  /// Étape 1 ou 2 du formulaire validée. Propriétés `step`, `editing`, et
+  /// `transport_mode`/`has_date` (étape 1) ou `parcel_size`/`categories_count`
+  /// (étape 2). L'étape 3 se lit dans `package_request_created`.
+  static const packageRequestStepCompleted = 'package_request_step_completed';
+
+  /// Soumission refusée. Propriétés `error_code`, `is_draft`, `editing`.
+  static const packageRequestSubmitFailed = 'package_request_submit_failed';
+
+  /// Propriétés : `corridor`, `negotiable`, `payment_methods`, `from_ai`,
+  /// `is_draft`, `currency`, `budget_bracket`, `transport_mode`,
+  /// `parcel_size`, `has_photos`, `has_promo_code`.
   static const packageRequestCreated = 'package_request_created';
   static const packageRequestUpdated = 'package_request_updated';
 
