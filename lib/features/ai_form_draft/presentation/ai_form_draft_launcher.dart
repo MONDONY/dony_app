@@ -1,4 +1,6 @@
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/ai_consent_service.dart';
+import 'package:dony/core/widgets/ai_consent_sheet.dart';
 import 'package:dony/features/ai_form_draft/data/ai_city_resolver.dart';
 import 'package:dony/features/ai_form_draft/data/ai_form_draft_models.dart';
 import 'package:dony/features/ai_form_draft/data/package_request_ai_draft_resolver.dart';
@@ -15,12 +17,23 @@ class AiFormDraftLauncher {
   const AiFormDraftLauncher();
 
   /// [isCardReady] : paiements par carte du voyageur prêts (trajet seulement).
+  ///
+  /// Rend `null` sans ouvrir la feuille si l'utilisateur refuse l'envoi à
+  /// l'IA tierce.
   Future<AiResolvedDraft?> open(
     BuildContext context, {
     required AiFormKind kind,
     required String? defaultCurrency,
     bool Function()? isCardReady,
-  }) {
+  }) async {
+    final consented = await AiConsentSheet.ensure(
+      context,
+      entry: switch (kind) {
+        AiFormKind.trip => AiConsentEntry.formTrip,
+        AiFormKind.packageRequest => AiConsentEntry.formPackageRequest,
+      },
+    );
+    if (!consented || !context.mounted) return null;
     final cities = AiCityResolver(getIt<CityRepository>());
     final AiDraftResolver resolver = switch (kind) {
       AiFormKind.trip => TripAiDraftResolver(

@@ -20689,6 +20689,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiFormDraftEntryCta => 'Create with AI';
 
   @override
+  String get aiConsentTitle => 'AI assistant: your consent';
+
+  @override
+  String get aiConsentIntro =>
+      'The assistant and “Create with AI” rely on an artificial intelligence provider outside Yadony. Before you use them for the first time, here is what is sent to it.';
+
+  @override
+  String get aiConsentPointSent =>
+      'Your question and the current conversation, or the text you dictate or type to fill in a form.';
+
+  @override
+  String get aiConsentPointParcel =>
+      'If you ask about a parcel: its trip, its step and the payment status.';
+
+  @override
+  String get aiConsentPointNotSent =>
+      'Never your name, phone number, email or your parcels\' tracking numbers.';
+
+  @override
+  String get aiConsentPointProvider =>
+      'Current provider: Anthropic (Claude model), in the United States. Your messages are therefore transferred outside the European Union.';
+
+  @override
+  String get aiConsentPointStorage =>
+      'Yadony does not keep your conversations. Do not write personal data in them.';
+
+  @override
+  String get aiConsentRefuseNote =>
+      'If you decline, nothing is sent and you can still write to the Yadony team from support.';
+
+  @override
+  String get aiConsentPrivacyLink => 'Read the privacy policy';
+
+  @override
+  String get aiConsentAccept => 'Accept and continue';
+
+  @override
+  String get aiConsentDecline => 'Decline';
+
+  @override
   String get aiFormDraftSheetTitleTrip => 'Create a trip with AI';
 
   @override

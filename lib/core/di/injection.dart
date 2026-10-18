@@ -8,6 +8,7 @@ import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/services/ai_consent_service.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/app_badge_service.dart';
@@ -328,6 +329,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<HiveService>(),
       remote: getIt<AnalyticsConsentRemote>(),
     ),
+  );
+  getIt.registerLazySingleton<AiConsentService>(
+    () => AiConsentService(getIt<HiveService>(), getIt<AnalyticsService>()),
   );
   DonyFeedbackButton.registerAnalyticsResolver(() => getIt<AnalyticsService>());
   getIt.registerLazySingleton<ActiveRoleCubit>(

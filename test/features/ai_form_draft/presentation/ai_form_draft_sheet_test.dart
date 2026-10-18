@@ -17,6 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/ai_consent_test_helpers.dart';
 import '../../../helpers/ai_form_draft_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
@@ -388,6 +389,7 @@ void main() {
   testWidgets('lanceur : construit la session du kind et rend le résultat', (
     tester,
   ) async {
+    useAiConsent();
     getIt.registerSingleton<CityRepository>(_MockCityRepository());
     getIt.registerSingleton<PriceGridRepository>(_MockPriceGridRepository());
     final states = StreamController<AiFormDraftState>();
@@ -423,5 +425,26 @@ void main() {
       ),
     );
     expect(receivedSession?.kind, AiFormKind.packageRequest);
+  });
+
+  testWidgets('lanceur : refus de l’accord IA, rien n’est ouvert', (
+    tester,
+  ) async {
+    useAiConsent(granted: false);
+    getIt.registerSingleton<CityRepository>(_MockCityRepository());
+    getIt.registerSingleton<PriceGridRepository>(_MockPriceGridRepository());
+    await open(
+      tester,
+      opener: (context) => const AiFormDraftLauncher().open(
+        context,
+        kind: AiFormKind.trip,
+        defaultCurrency: 'XOF',
+      ),
+    );
+    await tester.tap(find.byKey(const Key('ai-consent-decline')));
+    await tester.pumpAndSettle();
+
+    expect(await result, isNull);
+    expect(receivedSession, isNull);
   });
 }

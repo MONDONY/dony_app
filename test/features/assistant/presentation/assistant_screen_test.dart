@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/ai_consent_test_helpers.dart';
+
 class MockAssistantBloc extends MockBloc<AssistantEvent, AssistantState>
     implements AssistantBloc {}
 
@@ -53,6 +55,7 @@ void main() {
   });
 
   setUp(() {
+    useAiConsent();
     bloc = MockAssistantBloc();
   });
 
@@ -1609,6 +1612,31 @@ void main() {
         find.byKey(const Key('assistant-screen-question-1')),
         findsNothing,
       );
+    });
+  });
+
+  group('accord IA (Apple 5.1.2(i))', () {
+    testWidgets('refus : aucune ouverture envoyée au bloc', (tester) async {
+      useAiConsent(granted: false);
+      await pump(tester, const AssistantState());
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('ai-consent-accept')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('ai-consent-decline')));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => bloc.add(any(that: isA<AssistantOpened>())));
+    });
+
+    testWidgets('accord : l’assistant s’ouvre normalement', (tester) async {
+      useAiConsent(granted: false);
+      await pump(tester, const AssistantState());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('ai-consent-accept')));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(const AssistantOpened('bubble'))).called(1);
     });
   });
 }

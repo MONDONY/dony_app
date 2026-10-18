@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/services/ai_consent_service.dart';
+import 'package:dony/core/widgets/ai_consent_sheet.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_composer.dart';
@@ -89,8 +91,18 @@ class _AssistantScreenState extends State<AssistantScreen> {
         if (mounted) _showEscalationResult(context, pending);
       });
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      // Apple 5.1.2(i) : aucune question ne part à l'IA tierce sans accord.
+      final consented = await AiConsentSheet.ensure(
+        context,
+        entry: AiConsentEntry.assistant,
+      );
+      if (!mounted) return;
+      if (!consented) {
+        if (context.canPop()) context.pop();
+        return;
+      }
       context.read<AssistantBloc>().add(
         AssistantOpened(
           _sources.contains(widget.source) ? widget.source : 'bubble',
