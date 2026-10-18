@@ -17531,17 +17531,29 @@ abstract class AppLocalizations {
   /// **'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.'**
   String get conversationListEmptyDescription;
 
-  /// Pastille de filtre « Tous » de conversation_list_screen.dart.
+  /// Messages, filtre « En cours » vide alors que des conversations existent (toutes terminées et lues)
   ///
   /// In fr, this message translates to:
-  /// **'Tous'**
-  String get conversationFilterAll;
+  /// **'Aucune conversation en cours'**
+  String get conversationListEmptyActiveTitle;
 
-  /// Pastille de filtre « Non lus » de conversation_list_screen.dart.
+  /// Explication sous le titre du filtre « En cours » vide
   ///
   /// In fr, this message translates to:
-  /// **'Non lus'**
-  String get conversationFilterUnread;
+  /// **'Les conversations des colis livrés ou annulés, une fois lues, sont rangées dans « Terminés ».'**
+  String get conversationListEmptyActiveDescription;
+
+  /// Messages, filtre « Terminés » vide
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune conversation terminée'**
+  String get conversationListEmptyDoneTitle;
+
+  /// Explication sous le titre du filtre « Terminés » vide
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand un colis est livré ou annulé, sa conversation arrive ici une fois lue.'**
+  String get conversationListEmptyDoneDescription;
 
   /// Pastille de filtre « En cours » de conversation_list_screen.dart.
   ///

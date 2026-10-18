@@ -177,7 +177,7 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 50));
         b.add(
           const ConversationFilterChanged(
-            filter: ConversationFilter.unread,
+            filter: ConversationFilter.done,
             searchQuery: 'test',
           ),
         );
@@ -185,10 +185,11 @@ void main() {
       expect: () => [
         isA<ConversationListLoading>(),
         isA<ConversationListLoaded>()
-            .having((s) => s.filter, 'filter', ConversationFilter.all)
+            // « En cours » par défaut (YADONY-FLUTTER-PROD-W).
+            .having((s) => s.filter, 'filter', ConversationFilter.active)
             .having((s) => s.searchQuery, 'searchQuery', ''),
         isA<ConversationListLoaded>()
-            .having((s) => s.filter, 'filter', ConversationFilter.unread)
+            .having((s) => s.filter, 'filter', ConversationFilter.done)
             .having((s) => s.searchQuery, 'searchQuery', 'test'),
       ],
     );
@@ -254,7 +255,7 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 50));
         b.add(
           const ConversationFilterChanged(
-            filter: ConversationFilter.unread,
+            filter: ConversationFilter.done,
             searchQuery: '',
           ),
         );
@@ -267,12 +268,12 @@ void main() {
         isA<ConversationListLoaded>().having(
           (s) => s.filter,
           'filter',
-          ConversationFilter.unread,
+          ConversationFilter.done,
         ),
         isA<ConversationListLoaded>().having(
           (s) => s.filter,
           'filter',
-          ConversationFilter.unread,
+          ConversationFilter.done,
         ),
       ],
     );
@@ -317,10 +318,11 @@ void main() {
       },
       expect: () => [
         isA<ConversationListLoading>(),
+        // « En cours » par défaut : le fil livré et lu est déjà rangé.
         isA<ConversationListLoaded>().having(
           (s) => s.displayed.length,
-          'all',
-          2,
+          'en cours par défaut',
+          1,
         ),
         isA<ConversationListLoaded>()
             .having((s) => s.displayed.length, 'active only', 1)
@@ -333,7 +335,8 @@ void main() {
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
-      'ConversationFilter.active garde un colis remis, en route ou arrivé',
+      'ConversationFilter.active garde un colis remis, en route, arrivé ou une '
+      'offre en attente',
       build: () {
         when(
           () => convRepo.getArchivedConversations(),
@@ -376,13 +379,14 @@ void main() {
         isA<ConversationListLoaded>().having(
           (s) => s.displayed.map((c) => c.id).toList(),
           'en cours',
-          ['accepted', 'transit', 'arrived'],
+          // Offre en attente sans bidStatus : pas terminée, donc en cours.
+          ['accepted', 'transit', 'arrived', 'pending'],
         ),
       ],
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
-      'ConversationFilter.done ne montre que les conversations DELIVERY_CONFIRMED',
+      'ConversationFilter.done ne montre que les conversations terminées et lues',
       build: () {
         when(
           () => convRepo.getArchivedConversations(),
@@ -422,9 +426,9 @@ void main() {
       expect: () => [
         isA<ConversationListLoading>(),
         isA<ConversationListLoaded>().having(
-          (s) => s.displayed.length,
-          'all',
-          2,
+          (s) => s.displayed.single.bidStatus,
+          'en cours par défaut',
+          'BID_ACCEPTED',
         ),
         isA<ConversationListLoaded>()
             .having((s) => s.displayed.length, 'done only', 1)
@@ -502,7 +506,7 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 50));
         b.add(
           const ConversationFilterChanged(
-            filter: ConversationFilter.unread,
+            filter: ConversationFilter.done,
             searchQuery: '',
           ),
         );
@@ -515,12 +519,12 @@ void main() {
         isA<ConversationListLoaded>().having(
           (s) => s.filter,
           'filter',
-          ConversationFilter.unread,
+          ConversationFilter.done,
         ),
         isA<ConversationListLoaded>().having(
           (s) => s.filter,
           'filter',
-          ConversationFilter.unread,
+          ConversationFilter.done,
         ),
       ],
     );
@@ -744,6 +748,73 @@ void main() {
       final bloc = ConversationListBloc(convRepo, firestoreRepo);
       expect(bloc.state, isA<ConversationListInitial>());
       bloc.close();
+    });
+  });
+
+  // YADONY-FLUTTER-PROD-W : deux filtres, « En cours » et « Terminés ».
+  group('ConversationFilter — En cours / Terminés', () {
+    ConversationModel conv({
+      String? bidStatus,
+      String? parcelStatus,
+      bool unread = false,
+      bool returnPending = false,
+    }) => ConversationModel(
+      id: 'c',
+      bidId: 'b',
+      firestoreConversationId: 'conv_b',
+      otherParticipant: _participant,
+      bidStatus: bidStatus,
+      parcelStatus: parcelStatus,
+      hasUnread: unread,
+      unreadCount: unread ? 1 : 0,
+      returnPending: returnPending,
+    );
+
+    void expectIn(ConversationModel c, ConversationFilter filter) {
+      expect(filter.matches(c), isTrue, reason: '${filter.name} attendu');
+      final other = ConversationFilter.values.firstWhere((f) => f != filter);
+      expect(other.matches(c), isFalse, reason: 'jamais dans les deux');
+    }
+
+    test('annulé et lu → Terminés', () {
+      expectIn(conv(bidStatus: 'TRIP_CANCELLED'), ConversationFilter.done);
+    });
+
+    test('livré et lu → Terminés', () {
+      expectIn(conv(bidStatus: 'DELIVERY_CONFIRMED'), ConversationFilter.done);
+    });
+
+    test('livré mais non lu → En cours', () {
+      expectIn(
+        conv(bidStatus: 'DELIVERY_CONFIRMED', unread: true),
+        ConversationFilter.active,
+      );
+    });
+
+    test('offre en attente sans bidStatus → En cours', () {
+      expectIn(conv(), ConversationFilter.active);
+    });
+
+    test('colis en route, même lu → En cours', () {
+      expectIn(conv(bidStatus: 'IN_TRANSIT'), ConversationFilter.active);
+    });
+
+    test('retour de colis en cours → En cours', () {
+      expectIn(
+        conv(bidStatus: 'TRIP_CANCELLED', returnPending: true),
+        ConversationFilter.active,
+      );
+    });
+
+    test('repli sur parcelStatus → Terminés', () {
+      expectIn(conv(parcelStatus: 'COMPLETED'), ConversationFilter.done);
+    });
+
+    test('« En cours » est le filtre par défaut', () {
+      expect(
+        const ConversationListLoaded([]).filter,
+        ConversationFilter.active,
+      );
     });
   });
 }

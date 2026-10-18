@@ -10558,10 +10558,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your conversations will appear here\nonce an offer is accepted.';
 
   @override
-  String get conversationFilterAll => 'All';
+  String get conversationListEmptyActiveTitle => 'No active conversations';
 
   @override
-  String get conversationFilterUnread => 'Unread';
+  String get conversationListEmptyActiveDescription =>
+      'Conversations about delivered or cancelled parcels move to “Done” once read.';
+
+  @override
+  String get conversationListEmptyDoneTitle => 'No finished conversations';
+
+  @override
+  String get conversationListEmptyDoneDescription =>
+      'When a parcel is delivered or cancelled, its conversation moves here once read.';
 
   @override
   String get conversationFilterActive => 'Active';
