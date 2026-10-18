@@ -1283,10 +1283,11 @@ void main() {
         // Livrés ou annulés et lus : rangés dans « Terminés »
         // (YADONY-FLUTTER-PROD-W).
         when(() => bloc.state).thenReturn(
-          ConversationListLoaded(
-            [_conv, delivered, cancelled],
-            filter: ConversationFilter.done,
-          ),
+          ConversationListLoaded([
+            _conv,
+            delivered,
+            cancelled,
+          ], filter: ConversationFilter.done),
         );
         await _pump(tester, bloc);
 
