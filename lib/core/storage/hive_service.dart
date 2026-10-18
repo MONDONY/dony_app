@@ -104,6 +104,10 @@ class HiveService {
   // Hauteur relative de la bulle, de 0 à 1. Lue bornée, voir UserPreferencesModel.
   static const String kAssistantBubbleY = 'assistant_bubble_y'; // double
   static const String kAssistantHintSeen = 'assistant_hint_seen'; // bool
+  // Accord pour l'envoi de questions et de textes dictés à un fournisseur d'IA
+  // tiers (Apple 5.1.2(i)). Vidé avec la box à la déconnexion : chaque compte
+  // donne le sien.
+  static const String kAiConsentGranted = 'ai_consent_granted'; // bool
 
   // ── Analytics (consentement RGPD opt-in) ─────────────────────────────────
   // null = pas encore demandé · true = accepté · false = refusé.

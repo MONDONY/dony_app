@@ -20825,6 +20825,46 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiFormDraftEntryCta => 'Créer avec l\'IA';
 
   @override
+  String get aiConsentTitle => 'Assistant IA : votre accord';
+
+  @override
+  String get aiConsentIntro =>
+      'L\'assistant et « Créer avec l\'IA » s\'appuient sur un fournisseur d\'intelligence artificielle extérieur à Yadony. Avant la première utilisation, voici ce qui lui est envoyé.';
+
+  @override
+  String get aiConsentPointSent =>
+      'Votre question et la conversation en cours, ou le texte que vous dictez ou saisissez pour remplir un formulaire.';
+
+  @override
+  String get aiConsentPointParcel =>
+      'Si vous demandez où en est un colis : son trajet, son étape et l\'état du paiement.';
+
+  @override
+  String get aiConsentPointNotSent =>
+      'Jamais votre nom, votre numéro de téléphone, votre e-mail ni le numéro de suivi de vos colis.';
+
+  @override
+  String get aiConsentPointProvider =>
+      'Fournisseur actuel : Anthropic (modèle Claude), aux États-Unis. Vos messages sont donc transférés hors de l\'Union européenne.';
+
+  @override
+  String get aiConsentPointStorage =>
+      'Yadony ne conserve pas vos conversations. N\'y écrivez pas de données personnelles.';
+
+  @override
+  String get aiConsentRefuseNote =>
+      'Si vous refusez, rien n\'est envoyé et vous pouvez toujours écrire à l\'équipe Yadony depuis le support.';
+
+  @override
+  String get aiConsentPrivacyLink => 'Lire la politique de confidentialité';
+
+  @override
+  String get aiConsentAccept => 'Accepter et continuer';
+
+  @override
+  String get aiConsentDecline => 'Refuser';
+
+  @override
   String get aiFormDraftSheetTitleTrip => 'Créer un trajet avec l\'IA';
 
   @override

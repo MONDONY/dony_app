@@ -33626,6 +33626,72 @@ abstract class AppLocalizations {
   /// **'Créer avec l\'IA'**
   String get aiFormDraftEntryCta;
 
+  /// Titre de la feuille d'accord avant le premier envoi à une IA tierce (Apple 5.1.2(i)).
+  ///
+  /// In fr, this message translates to:
+  /// **'Assistant IA : votre accord'**
+  String get aiConsentTitle;
+
+  /// Introduction de la feuille d'accord IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'assistant et « Créer avec l\'IA » s\'appuient sur un fournisseur d\'intelligence artificielle extérieur à Yadony. Avant la première utilisation, voici ce qui lui est envoyé.'**
+  String get aiConsentIntro;
+
+  /// Point : données envoyées à l'IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre question et la conversation en cours, ou le texte que vous dictez ou saisissez pour remplir un formulaire.'**
+  String get aiConsentPointSent;
+
+  /// Point : faits d'un colis envoyés à l'IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous demandez où en est un colis : son trajet, son étape et l\'état du paiement.'**
+  String get aiConsentPointParcel;
+
+  /// Point : données jamais envoyées à l'IA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais votre nom, votre numéro de téléphone, votre e-mail ni le numéro de suivi de vos colis.'**
+  String get aiConsentPointNotSent;
+
+  /// Point : fournisseur d'IA tiers nommé et transfert hors UE.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fournisseur actuel : Anthropic (modèle Claude), aux États-Unis. Vos messages sont donc transférés hors de l\'Union européenne.'**
+  String get aiConsentPointProvider;
+
+  /// Point : conservation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony ne conserve pas vos conversations. N\'y écrivez pas de données personnelles.'**
+  String get aiConsentPointStorage;
+
+  /// Conséquence d'un refus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous refusez, rien n\'est envoyé et vous pouvez toujours écrire à l\'équipe Yadony depuis le support.'**
+  String get aiConsentRefuseNote;
+
+  /// Bouton qui ouvre la politique de confidentialité dans le navigateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire la politique de confidentialité'**
+  String get aiConsentPrivacyLink;
+
+  /// Bouton principal : accord donné.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter et continuer'**
+  String get aiConsentAccept;
+
+  /// Bouton secondaire : refus, rien n'est envoyé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser'**
+  String get aiConsentDecline;
+
   /// Titre de la feuille de dialogue IA, formulaire trajet.
   ///
   /// In fr, this message translates to:

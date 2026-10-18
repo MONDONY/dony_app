@@ -399,6 +399,15 @@ abstract final class AnalyticsEvents {
   /// Quota quotidien des formulaires atteint (HTTP 429).
   static const aiFormDraftQuotaExceeded = 'ai_form_draft_quota_exceeded';
 
+  // ── Accord avant l'envoi à une IA tierce (Apple 5.1.2(i)) ──────────────────
+  // Propriété `entry` : `assistant`, `form_trip` ou `form_package_request`.
+
+  /// Feuille d'accord affichée avant le premier usage de l'IA.
+  static const aiConsentShown = 'ai_consent_shown';
+
+  /// Réponse à cette feuille. Propriété `granted` (fermer la feuille = refus).
+  static const aiConsentAnswered = 'ai_consent_answered';
+
   static const helpCenterOpened = 'help_center_opened';
   static const helpTutorialOpened = 'help_tutorial_opened';
   static const helpTutorialPlayStarted = 'help_tutorial_play_started';
