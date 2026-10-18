@@ -155,7 +155,12 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
         AnalyticsEvents.assistantQuestionAsked,
         properties: {
           'locale': event.locale,
-          'suggestion': event.fromSuggestion,
+          'suggestion': event.fromSuggestion || event.suggestionKind != null,
+          if (event.suggestionKind case final kind?)
+            'suggestion_kind': kind == AssistantSuggestionKind.discovery
+                ? 'discovery'
+                : 'follow_up',
+          'voice': event.fromVoice,
         },
       ),
     );
@@ -321,6 +326,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
             'answered': answer.answered,
             'provider': answer.provider,
             'actions_count': answer.actions.length,
+            'suggestions_count': answer.suggestions.length,
           },
         ),
       );
@@ -359,6 +365,7 @@ class AssistantBloc extends Bloc<AssistantEvent, AssistantState> {
               text: answer.answer,
               actions: answer.actions,
               parcels: answer.parcels,
+              nextQuestions: answer.suggestions,
               answered: answer.answered,
             ),
           ],

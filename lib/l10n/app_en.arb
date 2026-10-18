@@ -10872,5 +10872,12 @@
   "aiFormDraftWarningPlaneOnly": "Only plane trips are available for now: the trip will be published as a plane trip.",
   "aiFormDraftWarningBudget": "This budget is outside the accepted amounts: enter it in step 3.",
   "aiFormDraftFilledBanner": "Filled in by AI. Check each field before publishing.",
-  "aiFormDraftTalkAgain": "Talk again"
+  "aiFormDraftTalkAgain": "Talk again",
+  "assistantMicStart": "Tap to speak",
+  "assistantMicListening": "Listening… Tap to send",
+  "assistantMicTooltipStart": "Ask your question out loud",
+  "assistantMicTooltipStop": "Stop and send my question",
+  "assistantMicUnavailable": "Microphone unavailable: type your question.",
+  "assistantNextQuestionsTitle": "You could also ask",
+  "assistantDiscoverySemantics": "Discover in Yadony: {text}"
 }

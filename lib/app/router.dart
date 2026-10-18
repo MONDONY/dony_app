@@ -12,6 +12,7 @@ import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
 import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
+import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
 import 'package:dony/features/assistant/presentation/assistant_bubble_blockers.dart';
 import 'package:dony/features/assistant/presentation/screens/assistant_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -2216,8 +2217,14 @@ final appRouter = GoRouter(
       // Singleton : `.value` pour que le BLoC ne soit pas fermé à la sortie de
       // l'écran (l'historique survit à la fermeture). `source` : `bubble` ou
       // `messages_header` (analytics).
-      builder: (_, state) => BlocProvider<AssistantBloc>.value(
-        value: getIt<AssistantBloc>(),
+      builder: (_, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider<AssistantBloc>.value(value: getIt<AssistantBloc>()),
+          // Dictée : une instance par écran, arrêtée à la fermeture.
+          BlocProvider<AssistantVoiceCubit>(
+            create: (_) => getIt<AssistantVoiceCubit>(),
+          ),
+        ],
         child: AssistantScreen(
           source: state.uri.queryParameters['source'] ?? 'bubble',
           screen: state.uri.queryParameters['screen'],

@@ -7161,6 +7161,17 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'aiFormDraftEntryBodyTrip': (l) => l.aiFormDraftEntryBodyTrip,
   'aiFormDraftEntryBodyPackage': (l) => l.aiFormDraftEntryBodyPackage,
   'aiFormDraftEntryCta': (l) => l.aiFormDraftEntryCta,
+  'aiConsentTitle': (l) => l.aiConsentTitle,
+  'aiConsentIntro': (l) => l.aiConsentIntro,
+  'aiConsentPointSent': (l) => l.aiConsentPointSent,
+  'aiConsentPointParcel': (l) => l.aiConsentPointParcel,
+  'aiConsentPointNotSent': (l) => l.aiConsentPointNotSent,
+  'aiConsentPointProvider': (l) => l.aiConsentPointProvider,
+  'aiConsentPointStorage': (l) => l.aiConsentPointStorage,
+  'aiConsentRefuseNote': (l) => l.aiConsentRefuseNote,
+  'aiConsentPrivacyLink': (l) => l.aiConsentPrivacyLink,
+  'aiConsentAccept': (l) => l.aiConsentAccept,
+  'aiConsentDecline': (l) => l.aiConsentDecline,
   'aiFormDraftSheetTitleTrip': (l) => l.aiFormDraftSheetTitleTrip,
   'aiFormDraftSheetTitlePackage': (l) => l.aiFormDraftSheetTitlePackage,
   'aiFormDraftWelcomeTrip': (l) => l.aiFormDraftWelcomeTrip,
@@ -7227,6 +7238,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'aiFormDraftWarningBudget': (l) => l.aiFormDraftWarningBudget,
   'aiFormDraftFilledBanner': (l) => l.aiFormDraftFilledBanner,
   'aiFormDraftTalkAgain': (l) => l.aiFormDraftTalkAgain,
+  'assistantMicStart': (l) => l.assistantMicStart,
+  'assistantMicListening': (l) => l.assistantMicListening,
+  'assistantMicTooltipStart': (l) => l.assistantMicTooltipStart,
+  'assistantMicTooltipStop': (l) => l.assistantMicTooltipStop,
+  'assistantMicUnavailable': (l) => l.assistantMicUnavailable,
+  'assistantNextQuestionsTitle': (l) => l.assistantNextQuestionsTitle,
+  'assistantDiscoverySemantics': (l) =>
+      l.assistantDiscoverySemantics(placeholderMarker('text')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7784,4 +7803,5 @@ const textParameters = <String, List<String>>{
   'maintenanceEstimatedEnd': ['time'],
   'gpProReason': ['reason'],
   'aiFormDraftSummaryAround': ['date'],
+  'assistantDiscoverySemantics': ['text'],
 };

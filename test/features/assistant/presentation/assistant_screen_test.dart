@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
+import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
 import 'package:dony/features/assistant/presentation/screens/assistant_screen.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_composer.dart';
@@ -15,6 +16,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/ai_consent_test_helpers.dart';
+import '../../../helpers/ai_form_draft_test_doubles.dart';
 
 class MockAssistantBloc extends MockBloc<AssistantEvent, AssistantState>
     implements AssistantBloc {}
@@ -49,6 +51,7 @@ const _question = AssistantMessage(
 void main() {
   late MockAssistantBloc bloc;
   late GoRouter router;
+  late FakeSpeechService speech;
 
   setUpAll(() {
     registerFallbackValue(const AssistantResetRequested());
@@ -57,6 +60,7 @@ void main() {
   setUp(() {
     useAiConsent();
     bloc = MockAssistantBloc();
+    speech = FakeSpeechService();
   });
 
   Future<void> pumpRaw(
@@ -65,13 +69,26 @@ void main() {
     ThemeData? theme,
     String initialLocation = '/assistant',
   }) async {
+    // Le gros micro prend une centaine de points sous la conversation : la
+    // vue de test par défaut (800 × 600) est agrandie pour garder visibles
+    // les éléments que vérifient les tests. Un test qui choisit sa taille
+    // (téléphone) la garde.
+    if (tester.view.physicalSize == const Size(2400, 1800)) {
+      tester.view.physicalSize = const Size(2400, 3000);
+      addTearDown(tester.view.resetPhysicalSize);
+    }
     router = GoRouter(
       initialLocation: initialLocation,
       routes: [
         GoRoute(
           path: '/assistant',
-          builder: (context, state) => BlocProvider<AssistantBloc>.value(
-            value: bloc,
+          builder: (context, state) => MultiBlocProvider(
+            providers: [
+              BlocProvider<AssistantBloc>.value(value: bloc),
+              BlocProvider<AssistantVoiceCubit>(
+                create: (_) => AssistantVoiceCubit(speech),
+              ),
+            ],
             child: AssistantScreen(
               source: state.uri.queryParameters['source'] ?? 'bubble',
             ),
@@ -1637,6 +1654,284 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => bloc.add(const AssistantOpened('bubble'))).called(1);
+    });
+  });
+
+  // FLUTTER-RE : gros micro rond, centré en bas, au-dessus de la saisie.
+  group('micro', () {
+    Future<void> phone(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+    }
+
+    testWidgets('centré en bas, juste au-dessus de la barre de saisie, '
+        'cible ≥ 64 pt', (tester) async {
+      await phone(tester);
+      await pump(tester, const AssistantState(messages: [_question, _answer]));
+      final mic = find.byKey(const Key('assistant-mic-disc'));
+      expect(mic, findsOneWidget);
+      final micRect = tester.getRect(mic);
+      final input = tester.getRect(find.byKey(const Key('assistant-input')));
+      expect(micRect.width, greaterThanOrEqualTo(64));
+      expect(micRect.height, greaterThanOrEqualTo(64));
+      expect(micRect.center.dx, closeTo(390 / 2, 1));
+      expect(micRect.bottom, lessThanOrEqualTo(input.top));
+      expect(input.top - micRect.bottom, lessThan(48));
+      // Dans le tiers bas de l'écran, à portée de pouce.
+      expect(micRect.top, greaterThan(844 * 2 / 3));
+      expect(find.text('Touchez pour parler'), findsOneWidget);
+    });
+
+    testWidgets('toucher : la dictée démarre en français ; le texte reconnu '
+        's’affiche puis part comme une question', (tester) async {
+      await phone(tester);
+      await pump(tester, const AssistantState(messages: [_question, _answer]));
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      expect(speech.startCount, 1);
+      expect(speech.lastLocaleId, 'fr_FR');
+      await tester.pump();
+      expect(find.text('Je vous écoute… Touchez pour envoyer'), findsOneWidget);
+      speech.emit('Où est mon colis');
+      await tester.pump();
+      expect(find.text('Où est mon colis'), findsOneWidget);
+      speech.emit('Où est mon colis ?', isFinal: true);
+      await tester.pump();
+      verify(
+        () => bloc.add(
+          const AssistantQuestionSubmitted(
+            'Où est mon colis ?',
+            locale: 'fr',
+            fromVoice: true,
+          ),
+        ),
+      ).called(1);
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('assistant-input')),
+      );
+      expect(field.controller!.text, isEmpty);
+    });
+
+    testWidgets('pendant l’écoute, un toucher arrête et envoie', (
+      tester,
+    ) async {
+      await phone(tester);
+      await pump(tester, const AssistantState());
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      await tester.pump();
+      speech.emit('Combien ça coûte');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      expect(speech.stopCount, 1);
+      verify(
+        () => bloc.add(
+          const AssistantQuestionSubmitted(
+            'Combien ça coûte',
+            locale: 'fr',
+            fromVoice: true,
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('anglais : dictée en en_US', (tester) async {
+      await phone(tester);
+      await pump(tester, const AssistantState(), locale: const Locale('en'));
+      expect(find.text('Tap to speak'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      expect(speech.lastLocaleId, 'en_US');
+    });
+
+    testWidgets('réponse en route : micro grisé, aucun démarrage', (
+      tester,
+    ) async {
+      await phone(tester);
+      await pump(
+        tester,
+        const AssistantState(messages: [_question], isSending: true),
+      );
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      expect(speech.startCount, 0);
+    });
+
+    testWidgets('micro refusé : message à la place du bouton', (tester) async {
+      await phone(tester);
+      speech.available = false;
+      await pump(tester, const AssistantState());
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('assistant-mic')), findsNothing);
+      expect(
+        find.text('Micro indisponible : écrivez votre question.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('clavier ouvert : le micro s’efface, le champ reste visible', (
+      tester,
+    ) async {
+      await phone(tester);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 336 * 3);
+      await pump(tester, const AssistantState(messages: [_question, _answer]));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('assistant-mic')), findsNothing);
+      expect(find.byKey(const Key('assistant-input')), findsOneWidget);
+    });
+
+    testWidgets('animations réduites : le micro s’affiche et écoute', (
+      tester,
+    ) async {
+      await phone(tester);
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      await pump(tester, const AssistantState());
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byIcon(Icons.stop_rounded), findsOneWidget);
+    });
+  });
+
+  // FLUTTER-RD : 2 questions de suite + 1 découverte sous la dernière réponse.
+  group('questions proposées', () {
+    const suggested = AssistantMessage(
+      id: 2,
+      author: AssistantAuthor.assistant,
+      text: 'Payez par carte ou en espèces.',
+      nextQuestions: [
+        AssistantSuggestion(
+          text: 'Comment être remboursé ?',
+          kind: AssistantSuggestionKind.followUp,
+        ),
+        AssistantSuggestion(
+          text: 'Puis-je payer en mobile money ?',
+          kind: AssistantSuggestionKind.followUp,
+        ),
+        AssistantSuggestion(
+          text: 'Que sont les alertes de trajet ?',
+          kind: AssistantSuggestionKind.discovery,
+        ),
+      ],
+    );
+
+    testWidgets('puces sous la dernière réponse, découverte distincte', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, suggested]),
+      );
+      expect(find.text('Vous pourriez aussi demander'), findsOneWidget);
+      expect(find.byKey(const Key('assistant-follow-up-1')), findsOneWidget);
+      expect(find.byKey(const Key('assistant-follow-up-2')), findsOneWidget);
+      expect(find.byKey(const Key('assistant-discovery')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('assistant-discovery')),
+          matching: find.byKey(const Key('assistant-discovery-icon')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('assistant-follow-up-1')),
+          matching: find.byIcon(Icons.explore_rounded),
+        ),
+        findsNothing,
+      );
+      final answerBottom = tester.getRect(find.text(suggested.text)).bottom;
+      expect(
+        tester.getRect(find.byKey(const Key('assistant-follow-up-1'))).top,
+        greaterThan(answerBottom),
+      );
+      expect(
+        tester.getSize(find.byKey(const Key('assistant-discovery'))).height,
+        greaterThanOrEqualTo(44),
+      );
+      expect(
+        find.bySemanticsLabel(
+          'À découvrir dans Yadony : Que sont les alertes de trajet ?',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('toucher une puce envoie sa question', (tester) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, suggested]),
+      );
+      await tester.tap(find.byKey(const Key('assistant-follow-up-2')));
+      verify(
+        () => bloc.add(
+          const AssistantQuestionSubmitted(
+            'Puis-je payer en mobile money ?',
+            locale: 'fr',
+            fromSuggestion: true,
+            suggestionKind: AssistantSuggestionKind.followUp,
+          ),
+        ),
+      ).called(1);
+      await tester.ensureVisible(find.byKey(const Key('assistant-discovery')));
+      await tester.tap(find.byKey(const Key('assistant-discovery')));
+      verify(
+        () => bloc.add(
+          const AssistantQuestionSubmitted(
+            'Que sont les alertes de trajet ?',
+            locale: 'fr',
+            fromSuggestion: true,
+            suggestionKind: AssistantSuggestionKind.discovery,
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('masquées sur une ancienne réponse et pendant le chargement', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const AssistantState(
+          messages: [
+            _question,
+            suggested,
+            AssistantMessage(id: 3, author: AssistantAuthor.user, text: 'Ok'),
+            AssistantMessage(
+              id: 4,
+              author: AssistantAuthor.assistant,
+              text: 'Autre réponse.',
+            ),
+          ],
+        ),
+      );
+      expect(find.byKey(const Key('assistant-follow-up-1')), findsNothing);
+      expect(find.byKey(const Key('assistant-discovery')), findsNothing);
+      expect(find.text('Vous pourriez aussi demander'), findsNothing);
+
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, suggested], isSending: true),
+      );
+      expect(find.byKey(const Key('assistant-follow-up-1')), findsNothing);
+      expect(find.byKey(const Key('assistant-discovery')), findsNothing);
+    });
+
+    testWidgets('anglais', (tester) async {
+      await pump(
+        tester,
+        const AssistantState(messages: [_question, suggested]),
+        locale: const Locale('en'),
+      );
+      expect(find.text('You could also ask'), findsOneWidget);
     });
   });
 }

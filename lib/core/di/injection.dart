@@ -29,9 +29,11 @@ import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/data/activation_repository.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
+import 'package:dony/features/ai_form_draft/data/speech_service.dart';
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
 import 'package:dony/features/app_update/data/services/app_update_service.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
+import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
 import 'package:dony/features/assistant/data/assistant_repository.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -1066,6 +1068,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<SupportRepository>(),
       getIt<AnalyticsService>(),
     ),
+  );
+  // Dictée de l'écran de l'assistant : une instance par écran. Le
+  // SpeechService (singleton) est enregistré avec les formulaires IA.
+  getIt.registerFactory<AssistantVoiceCubit>(
+    () => AssistantVoiceCubit(getIt<SpeechService>()),
   );
 
   // Formulaires remplis par l'IA (trajet, demande d'envoi)

@@ -94,6 +94,7 @@ void main() {
         () => backend.capture(AnalyticsEvents.assistantQuestionAsked, {
           'locale': 'fr',
           'suggestion': false,
+          'voice': false,
         }),
       ).called(1);
       verify(
@@ -101,6 +102,7 @@ void main() {
           'answered': true,
           'provider': 'groq',
           'actions_count': 1,
+          'suggestions_count': 0,
         }),
       ).called(1);
     },
@@ -123,6 +125,7 @@ void main() {
       () => backend.capture(AnalyticsEvents.assistantQuestionAsked, {
         'locale': 'en',
         'suggestion': true,
+        'voice': false,
       }),
     ).called(1),
   );
@@ -1525,5 +1528,156 @@ void main() {
         const AssistantScreenOpened('/a', locale: 'fr', parcelId: 'x'),
       );
     });
+  });
+
+  // FLUTTER-RD : questions de suite et découverte sous la dernière réponse.
+  group('suggestions de la réponse', () {
+    const withSuggestions = AssistantAnswer(
+      answer: 'Payez par carte ou en espèces.',
+      answered: true,
+      actions: [],
+      provider: 'claude',
+      remainingToday: 15,
+      suggestions: [
+        AssistantSuggestion(
+          text: 'Comment être remboursé ?',
+          kind: AssistantSuggestionKind.followUp,
+        ),
+        AssistantSuggestion(
+          text: 'Que sont les alertes de trajet ?',
+          kind: AssistantSuggestionKind.discovery,
+        ),
+      ],
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'stockées sur le dernier message, comptées dans l’analytics',
+      build: () {
+        answers(withSuggestions);
+        return build();
+      },
+      act: (b) => b.add(
+        const AssistantQuestionSubmitted('Comment payer ?', locale: 'fr'),
+      ),
+      skip: 1,
+      expect: () => [
+        isA<AssistantState>().having(
+          (s) => s.messages.last.nextQuestions,
+          'nextQuestions',
+          withSuggestions.suggestions,
+        ),
+      ],
+      verify: (_) => verify(
+        () => backend.capture(AnalyticsEvents.assistantAnswerReceived, {
+          'answered': true,
+          'provider': 'claude',
+          'actions_count': 0,
+          'suggestions_count': 2,
+        }),
+      ).called(1),
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'la question de l’utilisateur ne porte jamais de suggestion',
+      build: () {
+        answers(withSuggestions);
+        return build();
+      },
+      act: (b) => b.add(
+        const AssistantQuestionSubmitted('Comment payer ?', locale: 'fr'),
+      ),
+      verify: (b) {
+        expect(b.state.messages.first.author, AssistantAuthor.user);
+        expect(b.state.messages.first.nextQuestions, isEmpty);
+      },
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'puce touchée : nouvelle question envoyée, type de puce mesuré',
+      build: () {
+        answers(withSuggestions);
+        return build();
+      },
+      act: (b) async {
+        b.add(
+          const AssistantQuestionSubmitted('Comment payer ?', locale: 'fr'),
+        );
+        await Future<void>.delayed(Duration.zero);
+        b.add(
+          const AssistantQuestionSubmitted(
+            'Que sont les alertes de trajet ?',
+            locale: 'fr',
+            fromSuggestion: true,
+            suggestionKind: AssistantSuggestionKind.discovery,
+          ),
+        );
+      },
+      verify: (b) {
+        final texts = b.state.messages.map((m) => m.text).toList();
+        expect(texts, [
+          'Comment payer ?',
+          'Payez par carte ou en espèces.',
+          'Que sont les alertes de trajet ?',
+          'Payez par carte ou en espèces.',
+        ]);
+        verify(
+          () => repository.ask(
+            question: 'Que sont les alertes de trajet ?',
+            locale: 'fr',
+            history: any(named: 'history'),
+          ),
+        ).called(1);
+        verify(
+          () => backend.capture(AnalyticsEvents.assistantQuestionAsked, {
+            'locale': 'fr',
+            'suggestion': true,
+            'suggestion_kind': 'discovery',
+            'voice': false,
+          }),
+        ).called(1);
+      },
+    );
+
+    blocTest<AssistantBloc, AssistantState>(
+      'question de suite et question dictée : mesurées',
+      build: () {
+        answers(_answer);
+        return build();
+      },
+      act: (b) async {
+        b.add(
+          const AssistantQuestionSubmitted(
+            'Et ensuite ?',
+            locale: 'fr',
+            suggestionKind: AssistantSuggestionKind.followUp,
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        b.add(
+          const AssistantQuestionSubmitted(
+            'Question dictée',
+            locale: 'fr',
+            fromVoice: true,
+          ),
+        );
+      },
+      verify: (_) {
+        verify(
+          () => backend.capture(AnalyticsEvents.assistantQuestionAsked, {
+            'locale': 'fr',
+            'suggestion': true,
+            'suggestion_kind': 'follow_up',
+            'voice': false,
+          }),
+        ).called(1);
+        verify(
+          () => backend.capture(AnalyticsEvents.assistantQuestionAsked, {
+            'locale': 'fr',
+            'suggestion': false,
+            'voice': true,
+          }),
+        ).called(1);
+      },
+    );
   });
 }

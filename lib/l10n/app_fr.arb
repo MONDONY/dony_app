@@ -21864,5 +21864,19 @@
   "aiFormDraftFilledBanner": "Rempli par l'IA. Vérifiez chaque champ avant de publier.",
   "@aiFormDraftFilledBanner": {"description": "Bandeau du formulaire après remplissage par l'IA."},
   "aiFormDraftTalkAgain": "Reparler",
-  "@aiFormDraftTalkAgain": {"description": "Bouton du bandeau qui rouvre le dialogue IA."}
+  "@aiFormDraftTalkAgain": {"description": "Bouton du bandeau qui rouvre le dialogue IA."},
+  "assistantMicStart": "Touchez pour parler",
+  "@assistantMicStart": {"description": "Légende sous le gros bouton micro de l'assistant, au repos (FLUTTER-RE)."},
+  "assistantMicListening": "Je vous écoute… Touchez pour envoyer",
+  "@assistantMicListening": {"description": "Légende sous le bouton micro de l'assistant pendant la dictée."},
+  "assistantMicTooltipStart": "Poser ma question à voix haute",
+  "@assistantMicTooltipStart": {"description": "Infobulle et libellé d'accessibilité du bouton micro de l'assistant, au repos."},
+  "assistantMicTooltipStop": "Arrêter et envoyer ma question",
+  "@assistantMicTooltipStop": {"description": "Infobulle et libellé d'accessibilité du bouton micro de l'assistant pendant la dictée."},
+  "assistantMicUnavailable": "Micro indisponible : écrivez votre question.",
+  "@assistantMicUnavailable": {"description": "Remplace le bouton micro de l'assistant quand la permission est refusée ou la dictée indisponible."},
+  "assistantNextQuestionsTitle": "Vous pourriez aussi demander",
+  "@assistantNextQuestionsTitle": {"description": "Titre des questions proposées sous la dernière réponse de l'assistant (FLUTTER-RD)."},
+  "assistantDiscoverySemantics": "À découvrir dans Yadony : {text}",
+  "@assistantDiscoverySemantics": {"description": "Libellé d'accessibilité de la puce « découverte » sous la dernière réponse de l'assistant. {text} : la question proposée.", "placeholders": {"text": {"type": "String"}}}
 }
