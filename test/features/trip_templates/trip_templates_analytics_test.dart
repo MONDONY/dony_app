@@ -84,7 +84,7 @@ void main() {
     await analytics.onConfigured();
     final bloc = TripRecurrenceBloc(repo, analytics: analytics);
 
-    bloc.add(TripRecurrenceDeleted('r1'));
+    bloc.add(const TripRecurrenceDeleted('r1'));
     await bloc.stream.firstWhere(
       (s) => s.status == TripRecurrenceStatus.success,
     );

@@ -1,3 +1,7 @@
+// Mocktail exige le jeu exact d'arguments nommés de l'appel réel
+// (`submitTrip(..., useCardForCommission: ...)` les passe tous) : les stubs
+// répètent donc la valeur par défaut.
+// ignore_for_file: avoid_redundant_argument_values
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
