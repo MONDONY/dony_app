@@ -1737,6 +1737,126 @@ void main() {
       ).called(1);
     });
 
+    testWidgets('envoyer pendant l’écoute : la dictée s’annule, le champ reste '
+        'vide après le résultat final, une seule question part '
+        '(YADONY-FLUTTER-PROD-X)', (tester) async {
+      await phone(tester);
+      await pump(tester, const AssistantState(messages: [_question, _answer]));
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      await tester.pump();
+      speech.emit('Comment payer');
+      await tester.pump();
+      expect(find.text('Comment payer'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('assistant-send')));
+      await tester.pump();
+      expect(speech.cancelCount, 1);
+      // Le moteur de reconnaissance livre encore son résultat final.
+      speech
+        ..emit('Comment payer ?', isFinal: true)
+        ..finish();
+      await tester.pump();
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('assistant-input')),
+      );
+      expect(field.controller!.text, isEmpty);
+      verify(
+        () => bloc.add(
+          const AssistantQuestionSubmitted('Comment payer', locale: 'fr'),
+        ),
+      ).called(1);
+      verifyNever(
+        () => bloc.add(
+          any(that: isA<AssistantQuestionSubmitted>()),
+        ),
+      );
+    });
+
+    testWidgets('puce touchée pendant l’écoute : dictée annulée, champ vidé', (
+      tester,
+    ) async {
+      await phone(tester);
+      await pump(tester, const AssistantState());
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      await tester.pump();
+      speech.emit('Bonjour');
+      await tester.pump();
+      await tester.ensureVisible(find.byKey(const Key('assistant-suggestion-1')));
+      await tester.tap(find.byKey(const Key('assistant-suggestion-1')));
+      await tester.pump();
+      speech.emit('Bonjour Yadony', isFinal: true);
+      await tester.pump();
+      expect(speech.cancelCount, 1);
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('assistant-input')),
+      );
+      expect(field.controller!.text, isEmpty);
+      verify(
+        () => bloc.add(
+          const AssistantQuestionSubmitted(
+            'Comment envoyer un colis ?',
+            locale: 'fr',
+            fromSuggestion: true,
+          ),
+        ),
+      ).called(1);
+      verifyNever(
+        () => bloc.add(
+          any(that: isA<AssistantQuestionSubmitted>()),
+        ),
+      );
+    });
+
+    testWidgets('même question dictée après un envoi : elle repart (garde-fou remis à zéro)', (
+      tester,
+    ) async {
+      await phone(tester);
+      await pump(tester, const AssistantState(messages: [_question, _answer]));
+      await tester.enterText(
+        find.byKey(const Key('assistant-input')),
+        'Où est mon colis ?',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('assistant-send')));
+      await tester.pump();
+      verify(
+        () => bloc.add(
+          const AssistantQuestionSubmitted('Où est mon colis ?', locale: 'fr'),
+        ),
+      ).called(1);
+      // Nouvelle dictée : le garde-fou est remis à zéro, la même question
+      // dictée volontairement repart.
+      await tester.tap(find.byKey(const Key('assistant-mic')));
+      await tester.pump();
+      await tester.pump();
+      speech.emit('Où est mon colis ?', isFinal: true);
+      await tester.pump();
+      verify(
+        () => bloc.add(
+          const AssistantQuestionSubmitted(
+            'Où est mon colis ?',
+            locale: 'fr',
+            fromVoice: true,
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('puce touchée : le champ saisi est vidé', (tester) async {
+      await pump(tester, const AssistantState());
+      await tester.enterText(
+        find.byKey(const Key('assistant-input')),
+        'brouillon',
+      );
+      await tester.tap(find.byKey(const Key('assistant-suggestion-1')));
+      await tester.pump();
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('assistant-input')),
+      );
+      expect(field.controller!.text, isEmpty);
+    });
+
     testWidgets('anglais : dictée en en_US', (tester) async {
       await phone(tester);
       await pump(tester, const AssistantState(), locale: const Locale('en'));

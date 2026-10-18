@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/ai_consent_service.dart';
 import 'package:dony/core/widgets/ai_consent_sheet.dart';
@@ -62,6 +64,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
   bool get _isTopmost => _mounted.isNotEmpty && identical(_mounted.last, this);
 
   final TextEditingController _input = TextEditingController();
+
+  /// Dernière question envoyée, vidée au début de chaque nouvelle dictée.
+  String? _lastSentText;
   final ScrollController _scroll = ScrollController();
 
   /// Incrémenté à chaque geste de l'utilisateur sur la liste : un défilement
@@ -174,6 +179,13 @@ class _AssistantScreenState extends State<AssistantScreen> {
     AssistantSuggestionKind? suggestionKind,
     bool fromVoice = false,
   }) {
+    // Envoi pendant une dictée (bouton ou puce, YADONY-FLUTTER-PROD-X) : la
+    // dictée s'annule sans rien envoyer, sinon son résultat final réécrivait
+    // la question dans le champ ou la renvoyait une seconde fois.
+    final voice = context.read<AssistantVoiceCubit>();
+    if (!fromVoice && voice.state.busy) unawaited(voice.cancel());
+    _lastSentText = text.trim();
+    _input.clear();
     context.read<AssistantBloc>().add(
       AssistantQuestionSubmitted(
         text,
@@ -190,6 +202,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
   /// Une réponse encore en route : le texte reste dans le champ, à envoyer.
   void _onVoiceChanged(BuildContext context, AssistantVoiceState voice) {
     final text = voice.listening ? voice.transcript : voice.completedText;
+    // Une dictée qui se termine sur la question tout juste envoyée : elle est
+    // déjà partie, ni la remettre dans le champ ni l'envoyer en double.
+    if (!voice.listening && text.trim() == _lastSentText) return;
     if (voice.listening) {
       if (text.isEmpty) return;
       _input.value = TextEditingValue(
@@ -211,7 +226,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   void _toggleMic() {
     FocusScope.of(context).unfocus();
-    context.read<AssistantVoiceCubit>().toggle(
+    final voice = context.read<AssistantVoiceCubit>();
+    if (!voice.state.busy) _lastSentText = null;
+    voice.toggle(
       localeId: _locale == 'en' ? 'en_US' : 'fr_FR',
     );
   }
