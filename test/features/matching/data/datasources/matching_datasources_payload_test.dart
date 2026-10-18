@@ -65,6 +65,55 @@ void main() {
       },
     );
 
+    test(
+      'uploadRefusalPhoto envoie la photo et le bidId au stockage de suivi',
+      () async {
+        final dir = Directory.systemTemp.createTempSync('refus_photo');
+        addTearDown(() => dir.deleteSync(recursive: true));
+        final file = File('${dir.path}/r.jpg')..writeAsBytesSync([1, 2]);
+        api.on('POST', '/storage/upload/tracking', {
+          'key': 'tracking/bid-001/r.jpg',
+          'url': 'https://r2/x',
+        });
+
+        expect(
+          await ds.uploadRefusalPhoto('bid-001', file.path),
+          'tracking/bid-001/r.jpg',
+        );
+        final form = api.last.data as FormData;
+        expect(form.files.single.value.filename, 'refus.jpg');
+        expect(form.fields.single.key, 'bidId');
+        expect(form.fields.single.value, 'bid-001');
+      },
+    );
+
+    test('refuseParcel envoie le motif et la clé de la photo', () async {
+      api.on('POST', '/bids/bid-001/refuse-parcel', {
+        ..._bidJson,
+        'status': 'PARCEL_REFUSED',
+      });
+
+      final bid = await ds.refuseParcel(
+        'bid-001',
+        reason: 'Objet interdit',
+        photoKey: 'tracking/bid-001/r.jpg',
+      );
+
+      expect(bid.status, 'PARCEL_REFUSED');
+      expect(api.last.data, {
+        'reason': 'Objet interdit',
+        'refusalPhotoUrl': 'tracking/bid-001/r.jpg',
+      });
+    });
+
+    test('refuseParcel sans photo n\'envoie pas de clé', () async {
+      api.on('POST', '/bids/bid-001/refuse-parcel', _bidJson);
+
+      await ds.refuseParcel('bid-001', reason: 'Autre raison');
+
+      expect(api.last.data, {'reason': 'Autre raison'});
+    });
+
     test('checkoutBid ajoute photoKeys et gridItems quand fournis', () async {
       api.on('POST', '/bids/checkout', {
         'bidId': 'bid-001',

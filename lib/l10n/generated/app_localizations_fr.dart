@@ -7608,6 +7608,107 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'expéditeur sera remboursé automatiquement';
 
   @override
+  String get bidDetailRefuseParcelLabel => 'Le colis ne correspond pas';
+
+  @override
+  String get bidDetailRefuseParcelSubtitle =>
+      'Refusez-le sans pénalité, l\'expéditeur est remboursé';
+
+  @override
+  String get parcelRefusalTitle => 'Refuser le colis';
+
+  @override
+  String get parcelRefusalIntro =>
+      'Le colis ne correspond pas à ce que l\'expéditeur a déclaré ? Refusez-le : vous ne le transportez pas et vous n\'êtes pas pénalisé.';
+
+  @override
+  String get parcelRefusalDeclaredTitle => 'Déclaré par l\'expéditeur';
+
+  @override
+  String parcelRefusalDeclaredWeight(String weight) {
+    return 'Poids : $weight kg';
+  }
+
+  @override
+  String get parcelRefusalReasonLabel => 'Ce qui ne va pas';
+
+  @override
+  String get parcelRefusalReasonContentMismatch =>
+      'Contenu différent de la déclaration';
+
+  @override
+  String get parcelRefusalReasonContentMismatchHint =>
+      'Ex. un téléphone déclaré comme 1 kg de vêtements';
+
+  @override
+  String get parcelRefusalReasonOverweight =>
+      'Poids supérieur à la déclaration';
+
+  @override
+  String get parcelRefusalReasonProhibited => 'Objet interdit';
+
+  @override
+  String get parcelRefusalReasonProhibitedHint =>
+      'Ou un contenu que vous refusez sur ce trajet';
+
+  @override
+  String get parcelRefusalReasonOther => 'Autre raison';
+
+  @override
+  String get parcelRefusalDetailsLabel => 'Précisions';
+
+  @override
+  String get parcelRefusalDetailsHint =>
+      'Ce que vous avez constaté (facultatif)';
+
+  @override
+  String get parcelRefusalDetailsRequiredHint =>
+      'Expliquez ce que vous avez constaté';
+
+  @override
+  String get parcelRefusalPhotoLabel => 'Photo du colis';
+
+  @override
+  String get parcelRefusalPhotoHelp =>
+      'Obligatoire : elle sert de preuve en cas de désaccord.';
+
+  @override
+  String get parcelRefusalTakePhoto => 'Prendre une photo';
+
+  @override
+  String get parcelRefusalRetakePhoto => 'Reprendre la photo';
+
+  @override
+  String get parcelRefusalRemovePhoto => 'Retirer la photo';
+
+  @override
+  String get parcelRefusalPhotoFailed =>
+      'Cette photo n\'a pas pu être lue. Réessayez.';
+
+  @override
+  String get parcelRefusalConsequences =>
+      'L\'expéditeur est prévenu et remboursé intégralement. Des refus répétés suspendent son compte.';
+
+  @override
+  String get parcelRefusalCashNotice =>
+      'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. La commission Yadony déjà réglée n\'est pas remboursée.';
+
+  @override
+  String get parcelRefusalHandedOverNotice =>
+      'Vous avez déjà scanné ce colis : rendez-le à l\'expéditeur sur place.';
+
+  @override
+  String get parcelRefusalSubmit => 'Refuser le colis';
+
+  @override
+  String get parcelRefusalSuccess =>
+      'Colis refusé. L\'expéditeur est prévenu et remboursé.';
+
+  @override
+  String get parcelRefusalSuccessCash =>
+      'Colis refusé. L\'expéditeur est prévenu.';
+
+  @override
   String get bidDetailPayByMobileMoney => 'Payer par mobile money';
 
   @override

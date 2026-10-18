@@ -417,6 +417,16 @@ abstract final class AnalyticsEvents {
   static const cancellationInitiated = 'cancellation_initiated';
   static const bidCancelled = 'bid_cancelled';
   static const bidCancelledBeforePayment = 'bid_cancelled_before_payment';
+
+  /// Colis non conforme refusé par le voyageur à la remise
+  /// (`POST /bids/{id}/refuse-parcel`), confirmé par le serveur. Propriétés
+  /// `reason` (code fermé de [ParcelRefusalReason]), `status` (statut avant
+  /// le refus), `payment_method`. Jamais le détail saisi.
+  static const parcelRefused = 'parcel_refused';
+
+  /// Refus du colis impossible (photo non envoyée, statut changé, trajet
+  /// parti). Propriétés `reason`, `error_code`.
+  static const parcelRefusalFailed = 'parcel_refusal_failed';
   static const rematchAccepted = 'rematch_accepted';
   static const rematchAlternativesOpened = 'rematch_alternatives_opened';
   static const noShowReportedBySender = 'no_show_reported_by_sender';

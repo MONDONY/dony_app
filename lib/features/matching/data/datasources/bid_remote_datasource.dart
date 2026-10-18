@@ -256,6 +256,38 @@ class BidRemoteDatasource {
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Photo du colis refusé, déposée avec les photos de suivi du voyageur
+  /// (`POST /storage/upload/tracking`, réservé au voyageur du trajet). Rend
+  /// la clé à transmettre à [refuseParcel].
+  Future<String> uploadRefusalPhoto(String bidId, String filePath) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: 'refus.jpg'),
+      'bidId': bidId,
+    });
+    final response = await _apiClient.dio.post(
+      '/storage/upload/tracking',
+      data: formData,
+    );
+    return (response.data as Map<String, dynamic>)['key'] as String;
+  }
+
+  /// Le voyageur refuse un colis non conforme à la remise
+  /// (`POST /bids/{bidId}/refuse-parcel`), depuis ACCEPTED ou HANDED_OVER
+  /// avant le départ. Le serveur passe le colis en PARCEL_REFUSED, rembourse
+  /// l'expéditeur (carte, mobile money) et le prévient. Erreurs : 422
+  /// `invalid-bid-status`, 409 `parcel-refusal-locked` (trajet parti).
+  Future<BidModel> refuseParcel(
+    String bidId, {
+    required String reason,
+    String? photoKey,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/bids/$bidId/refuse-parcel',
+      data: {'reason': reason, 'refusalPhotoUrl': ?photoKey},
+    );
+    return BidModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   /// L'expéditeur change de destinataire jusqu'à la remise (ACCEPTED,
   /// HANDED_OVER, IN_TRANSIT, ARRIVED). Un numéro différent renouvelle le
   /// lien de suivi et le code de retrait côté serveur ; le bid renvoyé porte

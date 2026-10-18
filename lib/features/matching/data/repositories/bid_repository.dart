@@ -112,6 +112,15 @@ class BidRepository {
   Future<BidModel> cancelBid(String bidId, {String? reason}) =>
       _datasource.cancelBid(bidId, reason: reason);
 
+  Future<String> uploadRefusalPhoto(String bidId, String filePath) =>
+      _datasource.uploadRefusalPhoto(bidId, filePath);
+
+  Future<BidModel> refuseParcel(
+    String bidId, {
+    required String reason,
+    String? photoKey,
+  }) => _datasource.refuseParcel(bidId, reason: reason, photoKey: photoKey);
+
   Future<BidModel> changeRecipient(
     String bidId, {
     required String recipientName,
