@@ -202,7 +202,9 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(const Key('reschedule-summary')),
-        matching: find.textContaining('${departure.day + 1}'),
+        // Jour suivi d'une espace (« 22 oct. ») : un départ à 22:00 la
+        // veille contient aussi « 22 », dans l'heure.
+        matching: find.textContaining(RegExp('\\b${departure.day + 1} ')),
       ),
       findsOneWidget,
     );
