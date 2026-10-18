@@ -33746,12 +33746,6 @@ abstract class AppLocalizations {
   /// **'Parler'**
   String get aiFormDraftMicStart;
 
-  /// Libellé accessible du bouton qui passe à la saisie écrite.
-  ///
-  /// In fr, this message translates to:
-  /// **'Écrire'**
-  String get aiFormDraftKeyboard;
-
   /// Micro refusé ou reconnaissance vocale indisponible : seule la saisie écrite reste.
   ///
   /// In fr, this message translates to:

@@ -203,7 +203,8 @@ void main() {
         partialText: 'Je voyage de Paris',
       ),
     );
-    await open(tester);
+    // Halo du micro qui respire pendant l'écoute : animation sans fin.
+    await open(tester, settle: false);
     expect(find.text(fr.aiFormDraftLiveTranscript), findsOneWidget);
     expect(find.text('Je voyage de Paris'), findsOneWidget);
     expect(find.byKey(const Key('ai-mic-stop')), findsOneWidget);

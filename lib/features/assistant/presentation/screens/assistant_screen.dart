@@ -1,13 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/ai_consent_service.dart';
 import 'package:dony/core/widgets/ai_consent_sheet.dart';
+import 'package:dony/core/widgets/dony_mic_button.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/bloc/assistant_voice_cubit.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_composer.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_escalation_card.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_message_bubble.dart';
-import 'package:dony/features/assistant/presentation/widgets/assistant_mic_button.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_route_check.dart';
 import 'package:dony/features/assistant/presentation/widgets/assistant_stick_to_bottom_physics.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -244,7 +244,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
         } else {
           child = Padding(
             padding: const EdgeInsets.only(bottom: 6),
-            child: AssistantMicButton(
+            child: DonyMicButton(
               listening: voice.listening,
               enabled: !state.isSending,
               onTap: _toggleMic,

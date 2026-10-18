@@ -21761,8 +21761,6 @@
   "@aiFormDraftSend": {"description": "Libellé accessible du bouton d'envoi de la saisie écrite."},
   "aiFormDraftMicStart": "Parler",
   "@aiFormDraftMicStart": {"description": "Bouton qui démarre la dictée."},
-  "aiFormDraftKeyboard": "Écrire",
-  "@aiFormDraftKeyboard": {"description": "Libellé accessible du bouton qui passe à la saisie écrite."},
   "aiFormDraftMicUnavailable": "Activez le micro dans les réglages pour parler.",
   "@aiFormDraftMicUnavailable": {"description": "Micro refusé ou reconnaissance vocale indisponible : seule la saisie écrite reste."},
   "aiFormDraftUnderstoodTitle": "Déjà compris",

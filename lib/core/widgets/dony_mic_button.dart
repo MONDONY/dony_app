@@ -2,18 +2,26 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-/// Gros bouton micro rond de l'assistant, centré juste au-dessus de la barre
-/// de saisie, à portée de pouce (FLUTTER-RE).
+/// Gros bouton micro rond, centré juste au-dessus d'une barre de saisie, à
+/// portée de pouce (FLUTTER-RE) : écran de l'assistant et feuille « Créer
+/// avec l'IA » (trajet, demande d'envoi).
 ///
 /// Au repos : micro sur fond plein. Pendant la dictée : carré « arrêter » et
 /// halo qui respire doucement ; un toucher arrête et envoie à tout moment.
 /// Le halo reste fixe quand l'utilisateur a réduit les animations.
-class AssistantMicButton extends StatefulWidget {
-  const AssistantMicButton({
+class DonyMicButton extends StatefulWidget {
+  const DonyMicButton({
     super.key,
     required this.listening,
     required this.enabled,
     required this.onTap,
+    this.tapKey = const Key('assistant-mic'),
+    this.discKey = const Key('assistant-mic-disc'),
+    this.captionKey = const Key('assistant-mic-caption'),
+    this.idleCaption,
+    this.listeningCaption,
+    this.idleTooltip,
+    this.listeningTooltip,
   });
 
   /// Diamètre du bouton, au-dessus de la cible minimale de 44 pt.
@@ -25,11 +33,22 @@ class AssistantMicButton extends StatefulWidget {
   final bool enabled;
   final VoidCallback onTap;
 
+  /// Clés de la zone tactile, du disque et de la légende (tests).
+  final Key tapKey;
+  final Key discKey;
+  final Key captionKey;
+
+  /// Textes propres à l'écran ; ceux de l'assistant par défaut.
+  final String? idleCaption;
+  final String? listeningCaption;
+  final String? idleTooltip;
+  final String? listeningTooltip;
+
   @override
-  State<AssistantMicButton> createState() => _AssistantMicButtonState();
+  State<DonyMicButton> createState() => _DonyMicButtonState();
 }
 
-class _AssistantMicButtonState extends State<AssistantMicButton>
+class _DonyMicButtonState extends State<DonyMicButton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _halo = AnimationController(
     vsync: this,
@@ -43,7 +62,7 @@ class _AssistantMicButtonState extends State<AssistantMicButton>
   }
 
   @override
-  void didUpdateWidget(covariant AssistantMicButton oldWidget) {
+  void didUpdateWidget(covariant DonyMicButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.listening != widget.listening) _syncHalo();
   }
@@ -77,8 +96,8 @@ class _AssistantMicButtonState extends State<AssistantMicButton>
     final listening = widget.listening;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final label = listening
-        ? l.assistantMicTooltipStop
-        : l.assistantMicTooltipStart;
+        ? widget.listeningTooltip ?? l.assistantMicTooltipStop
+        : widget.idleTooltip ?? l.assistantMicTooltipStart;
     final button = Tooltip(
       message: label,
       child: Semantics(
@@ -90,7 +109,7 @@ class _AssistantMicButtonState extends State<AssistantMicButton>
           onTap: widget.enabled ? widget.onTap : () {},
           enableHaptic: widget.enabled,
           child: SizedBox.square(
-            dimension: AssistantMicButton.size + 20,
+            dimension: DonyMicButton.size + 20,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -105,8 +124,8 @@ class _AssistantMicButtonState extends State<AssistantMicButton>
                           ? Duration.zero
                           : DonyDuration.micro,
                       child: Container(
-                        width: AssistantMicButton.size + 6 + 14 * t,
-                        height: AssistantMicButton.size + 6 + 14 * t,
+                        width: DonyMicButton.size + 6 + 14 * t,
+                        height: DonyMicButton.size + 6 + 14 * t,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: cs.primary.withValues(alpha: 0.16),
@@ -116,11 +135,11 @@ class _AssistantMicButtonState extends State<AssistantMicButton>
                   },
                 ),
                 AnimatedContainer(
-                  key: const Key('assistant-mic-disc'),
+                  key: widget.discKey,
                   duration: reduceMotion ? Duration.zero : DonyDuration.base,
                   curve: DonyCurve.enter,
-                  width: AssistantMicButton.size,
-                  height: AssistantMicButton.size,
+                  width: DonyMicButton.size,
+                  height: DonyMicButton.size,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: widget.enabled
@@ -156,10 +175,12 @@ class _AssistantMicButtonState extends State<AssistantMicButton>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        KeyedSubtree(key: const Key('assistant-mic'), child: button),
+        KeyedSubtree(key: widget.tapKey, child: button),
         Text(
-          listening ? l.assistantMicListening : l.assistantMicStart,
-          key: const Key('assistant-mic-caption'),
+          listening
+              ? widget.listeningCaption ?? l.assistantMicListening
+              : widget.idleCaption ?? l.assistantMicStart,
+          key: widget.captionKey,
           textAlign: TextAlign.center,
           style: tt.labelMedium?.copyWith(
             color: listening ? cs.error : cs.onSurfaceVariant,

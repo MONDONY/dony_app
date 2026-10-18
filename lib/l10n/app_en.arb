@@ -10821,7 +10821,6 @@
   "aiFormDraftInputHint": "Your answer",
   "aiFormDraftSend": "Send",
   "aiFormDraftMicStart": "Speak",
-  "aiFormDraftKeyboard": "Type",
   "aiFormDraftMicUnavailable": "Turn on the microphone in settings to speak.",
   "aiFormDraftUnderstoodTitle": "Understood so far",
   "aiFormDraftChipGrid": "My grid",

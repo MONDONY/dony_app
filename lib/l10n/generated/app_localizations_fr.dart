@@ -20894,9 +20894,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiFormDraftMicStart => 'Parler';
 
   @override
-  String get aiFormDraftKeyboard => 'Écrire';
-
-  @override
   String get aiFormDraftMicUnavailable =>
       'Activez le micro dans les réglages pour parler.';
 

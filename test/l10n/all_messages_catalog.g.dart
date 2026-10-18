@@ -7181,7 +7181,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'aiFormDraftInputHint': (l) => l.aiFormDraftInputHint,
   'aiFormDraftSend': (l) => l.aiFormDraftSend,
   'aiFormDraftMicStart': (l) => l.aiFormDraftMicStart,
-  'aiFormDraftKeyboard': (l) => l.aiFormDraftKeyboard,
   'aiFormDraftMicUnavailable': (l) => l.aiFormDraftMicUnavailable,
   'aiFormDraftUnderstoodTitle': (l) => l.aiFormDraftUnderstoodTitle,
   'aiFormDraftChipGrid': (l) => l.aiFormDraftChipGrid,
