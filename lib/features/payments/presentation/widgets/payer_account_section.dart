@@ -9,6 +9,7 @@ import 'package:dony/features/payments/presentation/widgets/mobile_money_network
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -115,12 +116,7 @@ class _AccountCard extends StatelessWidget {
                 countries: countries,
                 initialUpcoming: state.unavailableCountry,
                 onSelected: cubit.selectCountry,
-                onUpcomingMatch: (code) {
-                  if (cubit.state.unavailableCountry != code) {
-                    cubit.selectCountry(code);
-                  }
-                },
-                onUpcomingLost: () {
+                onCleared: () {
                   if (cubit.state.unavailableCountry != null) {
                     cubit.clearCountry();
                   }
@@ -340,9 +336,11 @@ class _OperatorPill extends StatelessWidget {
 
 /// Champ numéro, préfixé de l'indicatif du pays.
 ///
-/// La saisie brute part telle quelle au cubit (jamais la valeur qu'il a
-/// recomposée). Le champ reprend [localNumber] seulement quand ses chiffres
-/// diffèrent de la saisie : numéro mémorisé, indicatif collé retiré.
+/// Chiffres groupés par deux (« 07 48 84 08 56 »). La saisie part telle
+/// qu'affichée au cubit, qui la normalise (jamais la valeur qu'il a
+/// recomposée). Le champ reprend [localNumber], groupé, seulement quand ses
+/// chiffres diffèrent de la saisie : numéro mémorisé, indicatif collé
+/// retiré.
 class _NumberRow extends StatefulWidget {
   const _NumberRow({
     required this.countryCode,
@@ -364,15 +362,17 @@ class _NumberRow extends StatefulWidget {
 
 class _NumberRowState extends State<_NumberRow> {
   late final TextEditingController _controller = TextEditingController(
-    text: widget.localNumber,
+    text: _groupPhonePairs(widget.localNumber),
   );
+
+  static final _formatter = _PhonePairsFormatter();
 
   static String _digits(String value) => value.replaceAll(RegExp(r'\D'), '');
 
   @override
   void didUpdateWidget(covariant _NumberRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final wanted = widget.localNumber;
+    final wanted = _groupPhonePairs(widget.localNumber);
     if (_digits(_controller.text) != _digits(wanted)) {
       _controller.value = TextEditingValue(
         text: wanted,
@@ -403,6 +403,7 @@ class _NumberRowState extends State<_NumberRow> {
         keyboardType: TextInputType.phone,
         textInputAction: TextInputAction.done,
         onChanged: widget.onChanged,
+        inputFormatters: [_formatter],
         prefixWidget: phone == null
             ? null
             : Padding(
@@ -431,6 +432,67 @@ class _NumberRowState extends State<_NumberRow> {
               )
             : null,
       ),
+    );
+  }
+}
+
+/// Chiffres groupés par deux, séparés d'une espace (« 0748840856 » donne
+/// « 07 48 84 08 56 »). Une valeur internationale (`+`, `00`) reste telle
+/// quelle : le cubit en retire l'indicatif, puis le champ la regroupe.
+String _groupPhonePairs(String value) {
+  final trimmed = value.trimLeft();
+  if (trimmed.startsWith('+') || trimmed.startsWith('00')) return value;
+  final digits = value.replaceAll(RegExp(r'\D'), '');
+  final buffer = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && i.isEven) buffer.write(' ');
+    buffer.write(digits[i]);
+  }
+  return buffer.toString();
+}
+
+/// Regroupe la saisie du numéro par deux chiffres en gardant le curseur
+/// derrière le même chiffre. Effacer l'espace devant le curseur retire le
+/// chiffre qui la précède, sinon l'espace reviendrait aussitôt.
+class _PhonePairsFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    final trimmed = text.trimLeft();
+    if (trimmed.startsWith('+') || trimmed.startsWith('00')) return newValue;
+
+    final cursor = newValue.selection.isValid
+        ? newValue.selection.extentOffset.clamp(0, text.length)
+        : text.length;
+    var digits = text.replaceAll(RegExp(r'\D'), '');
+    var digitsBeforeCursor = text
+        .substring(0, cursor)
+        .replaceAll(RegExp(r'\D'), '')
+        .length;
+
+    final oldDigits = oldValue.text.replaceAll(RegExp(r'\D'), '');
+    final removedSeparatorOnly =
+        text.length < oldValue.text.length && digits == oldDigits;
+    if (removedSeparatorOnly && digitsBeforeCursor > 0) {
+      digits =
+          digits.substring(0, digitsBeforeCursor - 1) +
+          digits.substring(digitsBeforeCursor);
+      digitsBeforeCursor -= 1;
+    }
+
+    final formatted = _groupPhonePairs(digits);
+    var offset = 0;
+    var seen = 0;
+    while (offset < formatted.length && seen < digitsBeforeCursor) {
+      if (formatted[offset] != ' ') seen++;
+      offset++;
+    }
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: offset),
     );
   }
 }

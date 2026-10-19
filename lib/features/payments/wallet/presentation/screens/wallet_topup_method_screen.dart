@@ -172,11 +172,26 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
       return mobileMoneyState is WalletTopupMobileMoneyProvidersReady &&
           mobileMoneyState.selectedProvider != null;
     }
-    return payer.canProceed &&
-        payer.country != null &&
-        payer.operator != null &&
-        payer.e164 != null;
+    return _payerComplete(payer);
   }
+
+  /// Pays, opérateur et numéro reconnu : de quoi passer au montant.
+  static bool _payerComplete(PayerAccountState payer) =>
+      payer.canProceed &&
+      payer.country != null &&
+      payer.operator != null &&
+      payer.e164 != null;
+
+  /// Le bouton du bas et le choix entre ancien et nouveau bloc ne dépendent
+  /// que de ces valeurs : la frappe du numéro ne reconstruit pas l'écran.
+  static bool _payerChangesScreen(
+    PayerAccountState previous,
+    PayerAccountState current,
+  ) =>
+      previous.status != current.status ||
+      previous.unavailableCountry != current.unavailableCountry ||
+      (previous.country == null) != (current.country == null) ||
+      _payerComplete(previous) != _payerComplete(current);
 
   /// Pays « Bientôt » retenu : le bouton du bas propose la carte bancaire.
   bool _offersCard(PayerAccountState payer) =>
@@ -190,12 +205,11 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
     setState(() => _selected = 'STRIPE');
   }
 
-  Future<void> _onNext(
-    WalletTopupMobileMoneyState mobileMoneyState,
-    PayerAccountState payer,
-  ) async {
+  Future<void> _onNext(WalletTopupMobileMoneyState mobileMoneyState) async {
     final selected = _selected;
     if (selected == null) return;
+    // Lu au toucher : l'écran ne se reconstruit pas à chaque frappe.
+    final payer = context.read<PayerAccountCubit>().state;
 
     final WalletTopupMethodSelection selection;
     if (selected != 'MOBILE_MONEY') {
@@ -253,18 +267,14 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = context.l10n;
     // La tuile mobile money n'existe que si le backend déployé sert ce rail
     // (sonde lancée à l'ouverture de la route) : sur une prod gelée avant le
     // lot 2, l'écran reste celui d'avant, carte bancaire seule.
-    final mobileMoneyAvailable = context
+    // `null` tant que la sonde n'a pas répondu : la place de la ligne est
+    // réservée pour que les lignes suivantes ne sautent pas à la réponse.
+    final mobileMoneyAvailability = context
         .watch<WalletTopupMobileMoneyAvailabilityCubit>()
         .state;
-    // Mobile money en tête (maquettes v3), puis la carte bancaire.
-    final methods = [
-      if (mobileMoneyAvailable) _mobileMoneyMethod(l),
-      _cardMethod(l),
-    ];
 
     return BlocConsumer<
       WalletTopupMobileMoneyCubit,
@@ -307,9 +317,10 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
       },
       builder: (context, mobileMoneyState) {
         return BlocBuilder<PayerAccountCubit, PayerAccountState>(
+          buildWhen: _payerChangesScreen,
           builder: (context, payer) => _buildScaffold(
             context,
-            methods: methods,
+            mobileMoneyAvailability: mobileMoneyAvailability,
             mobileMoneyState: mobileMoneyState,
             payer: payer,
           ),
@@ -330,7 +341,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
 
   Widget _buildScaffold(
     BuildContext context, {
-    required List<_MethodDef> methods,
+    required bool? mobileMoneyAvailability,
     required WalletTopupMobileMoneyState mobileMoneyState,
     required PayerAccountState payer,
   }) {
@@ -340,14 +351,25 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
     final legacyPayer = payer.status == PayerAccountStatus.legacy;
     final offersCard = _offersCard(payer);
 
-    final rows = <Widget>[
-      for (final m in methods)
-        _MethodCard(
-          def: m,
-          isSelected: _selected == m.value,
-          onTap: () => setState(() => _selected = m.value),
-        ),
-      _CodeEntryTile(onTap: _onRedeemCode),
+    _MethodCard methodRow(_MethodDef m) => _MethodCard(
+      def: m,
+      isSelected: _selected == m.value,
+      onTap: () => setState(() => _selected = m.value),
+    );
+
+    // Mobile money en tête (maquettes v3), puis la carte bancaire et le
+    // code. Chaque ligne garde sa clé : une ligne qui apparaît ne rejoue
+    // pas l'entrée des autres.
+    final rows = <(Key, Widget)>[
+      if (mobileMoneyAvailability == null)
+        (
+          const ValueKey('MOBILE_MONEY-pending'),
+          _PendingMethodRow(child: methodRow(_mobileMoneyMethod(l))),
+        )
+      else if (mobileMoneyAvailability)
+        (const ValueKey('MOBILE_MONEY'), methodRow(_mobileMoneyMethod(l))),
+      (const ValueKey('STRIPE'), methodRow(_cardMethod(l))),
+      (const ValueKey('CODE'), _CodeEntryTile(onTap: _onRedeemCode)),
     ];
 
     return Scaffold(
@@ -418,7 +440,10 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                               height: 1,
                               indent: DonySpacing.base + _kRowIconSize,
                             ),
-                          _enter(context, rows[i], i),
+                          KeyedSubtree(
+                            key: rows[i].$1,
+                            child: _enter(context, rows[i].$2, i),
+                          ),
                         ],
                       ],
                     ),
@@ -468,7 +493,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                 : DonyButton(
                     label: l.walletTopupMethodNextCta,
                     onPressed: _canProceed(mobileMoneyState, payer)
-                        ? () => _onNext(mobileMoneyState, payer)
+                        ? () => _onNext(mobileMoneyState)
                         : null,
                   ),
           ),
@@ -804,6 +829,72 @@ class _MethodCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Place réservée de la ligne mobile money pendant la sonde : la vraie
+/// ligne, invisible, donne la hauteur exacte, et une silhouette immobile
+/// l'occupe. Ni toucher ni lecture d'écran.
+class _PendingMethodRow extends StatelessWidget {
+  const _PendingMethodRow({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    Widget bar(double width, double height) => Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(height / 2),
+      ),
+    );
+    return ExcludeSemantics(
+      child: IgnorePointer(
+        child: Stack(
+          children: [
+            Visibility(
+              visible: false,
+              maintainSize: true,
+              maintainAnimation: true,
+              maintainState: true,
+              child: child,
+            ),
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: _kRowIconSize,
+                      height: _kRowIconSize,
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerHighest,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        bar(110, 12),
+                        const SizedBox(height: DonySpacing.sm),
+                        bar(160, 10),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

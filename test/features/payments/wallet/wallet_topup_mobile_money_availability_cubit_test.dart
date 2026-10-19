@@ -13,14 +13,14 @@ void main() {
 
   setUp(() => repo = _MockWalletRepository());
 
-  test('état initial : indisponible tant que la sonde n\'a pas répondu', () {
+  test('état initial : inconnu (null) tant que la sonde n\'a pas répondu', () {
     final cubit = WalletTopupMobileMoneyAvailabilityCubit(repo);
     addTearDown(cubit.close);
 
-    expect(cubit.state, isFalse);
+    expect(cubit.state, isNull);
   });
 
-  blocTest<WalletTopupMobileMoneyAvailabilityCubit, bool>(
+  blocTest<WalletTopupMobileMoneyAvailabilityCubit, bool?>(
     'sonde réussie : disponible',
     build: () {
       when(
@@ -32,7 +32,7 @@ void main() {
     expect: () => [true],
   );
 
-  blocTest<WalletTopupMobileMoneyAvailabilityCubit, bool>(
+  blocTest<WalletTopupMobileMoneyAvailabilityCubit, bool?>(
     'sonde en échec (prod gelée avant le lot 2) : reste indisponible, aucune '
     'erreur remontée',
     build: () {

@@ -1277,6 +1277,42 @@ void main() {
       await tester.pumpAndSettle();
     });
 
+    testWidgets('moyenRows_keepTheirPlace_whenProbeAnswers', (tester) async {
+      final probe = Completer<bool>();
+      when(
+        () => repo.isMobileMoneyTopupAvailable(),
+      ).thenAnswer((_) => probe.future);
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      // Sonde en cours : la place de la ligne mobile money est réservée,
+      // la carte bancaire reste utilisable.
+      expect(
+        find.byKey(const ValueKey('MOBILE_MONEY-pending')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('STRIPE')), findsOneWidget);
+      final cardTop = tester.getTopLeft(find.text('Carte bancaire')).dy;
+      final codeTop = tester
+          .getTopLeft(find.text("J'ai un code de recharge"))
+          .dy;
+
+      probe.complete(true);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('MOBILE_MONEY')), findsOneWidget);
+      expect(find.byKey(const ValueKey('MOBILE_MONEY-pending')), findsNothing);
+      expect(tester.getTopLeft(find.text('Carte bancaire')).dy, cardTop);
+      expect(
+        tester.getTopLeft(find.text("J'ai un code de recharge")).dy,
+        codeTop,
+      );
+      // Laisse jouer l'entrée de la nouvelle ligne (minuteur de départ).
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('methodScreen_darkTheme_rendersWithoutOverflow', (
       tester,
     ) async {

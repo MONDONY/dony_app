@@ -734,6 +734,33 @@ void main() {
       });
     });
 
+    test('phoneChanged_partialDialCode_staysIdle', () {
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+
+        // Indicatif +225 en cours de frappe : rien n'est encore faux.
+        for (final raw in ['+', '+2', '+22']) {
+          cubit.phoneChanged(raw);
+          expect(cubit.state.recognition, RecognitionStatus.idle, reason: raw);
+          expect(cubit.state.e164, isNull, reason: raw);
+        }
+        async.elapse(const Duration(seconds: 2));
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.idle);
+        verifyNever(() => repo.topupProviders(any()));
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyNumberUnrecognized,
+            properties: any(named: 'properties'),
+          ),
+        );
+      });
+    });
+
     test('phoneChanged_staleResponseIgnored', () {
       fakeAsync((async) {
         // Créés dans la zone factice, sinon leurs continuations lui échappent.

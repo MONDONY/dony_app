@@ -253,6 +253,21 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     }
 
     final composed = _compose(phone, normalized);
+    if (composed.international &&
+        phone.dialCode.length > composed.e164.length &&
+        phone.dialCode.startsWith(composed.e164)) {
+      // Indicatif du pays en cours de frappe (« +2 », « +22 » pour +225) :
+      // rien n'est encore faux, pas de « non reconnu » qui clignote.
+      emit(
+        state.copyWith(
+          localNumber: normalized.replaceAll('+', ''),
+          e164: null,
+          recognition: RecognitionStatus.idle,
+          switchedFrom: null,
+        ),
+      );
+      return;
+    }
     if (composed.international && !composed.e164.startsWith(phone.dialCode)) {
       // Numéro d'un autre pays que celui choisi : aucun opérateur d'ici ne
       // peut le servir, inutile d'interroger pawaPay.

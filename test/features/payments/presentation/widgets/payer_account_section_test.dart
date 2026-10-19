@@ -59,10 +59,13 @@ void main() {
   }
 
   group('pays', () {
-    testWidgets('countryField_typingFiltersAndShowsUpcomingAsDisabled', (
+    testWidgets('countryField_tapUpcoming_showsUnavailableNotice', (
       tester,
     ) async {
-      await pumpWith(tester, kPayerReady);
+      final controller = stubPayerAccount(cubit, kPayerReady);
+      addTearDown(controller.close);
+      await tester.pumpWidget(harness());
+      await tester.pumpAndSettle();
 
       expect(find.text('COMPTE QUI PAIE'), findsOneWidget);
       expect(find.byKey(const Key('mm-country-field')), findsOneWidget);
@@ -74,16 +77,23 @@ void main() {
       expect(find.text('Bientôt'), findsOneWidget);
       expect(find.text('Mobile money pas encore disponible'), findsOneWidget);
       expect(find.text('Sénégal'), findsNothing);
-      // Seul résultat, et « Bientôt » : l'écran passe à l'état du pays pas
-      // encore ouvert, sans que la ligne soit choisie.
-      verify(() => cubit.selectCountry('ML')).called(1);
+      // La frappe seule ne choisit rien : aucun événement ne part.
+      verifyNever(() => cubit.selectCountry(any()));
+      verifyNever(() => cubit.clearCountry());
 
       await tester.tap(find.text('Mali'));
       await tester.pumpAndSettle();
+      verify(() => cubit.selectCountry('ML')).called(1);
 
-      verifyNever(() => cubit.selectCountry(any()));
-      expect(find.text('Mal'), findsOneWidget, reason: 'saisie inchangée');
-      expect(find.text('Mali'), findsOneWidget, reason: 'liste encore ouverte');
+      controller.add(kPayerReady.copyWith(unavailableCountry: 'ML'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'En attendant, rechargez par carte bancaire ou avec un code de '
+          'recharge.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets(
@@ -105,6 +115,7 @@ void main() {
         await tester.pumpAndSettle();
 
         verify(() => cubit.selectCountry('CI')).called(1);
+        verifyNever(() => cubit.clearCountry());
       },
     );
 
@@ -126,7 +137,7 @@ void main() {
       verifyNever(() => cubit.selectCountry(any()));
     });
 
-    testWidgets("la saisie d'un pays « Bientôt » qui change efface l'état", (
+    testWidgets('countryField_clearedQuery_leavesUpcomingState', (
       tester,
     ) async {
       final controller = stubPayerAccount(
@@ -147,9 +158,14 @@ void main() {
         findsOneWidget,
       );
 
+      // Modifier la saisie sans rien choisir ne change pas l'état.
       await tester.enterText(find.byKey(const Key('mm-country-field')), 'S');
       await tester.pumpAndSettle();
+      verifyNever(() => cubit.clearCountry());
 
+      // Vider le champ revient à l'état normal.
+      await tester.enterText(find.byKey(const Key('mm-country-field')), '');
+      await tester.pumpAndSettle();
       verify(() => cubit.clearCountry()).called(1);
     });
 
@@ -225,6 +241,41 @@ void main() {
       verify(() => cubit.phoneChanged('07 48 84 08 56')).called(1);
     });
 
+    testWidgets('numberField_groupsDigitsByTwo', (tester) async {
+      await pumpWith(
+        tester,
+        kPayerReady.copyWith(country: kCoteDIvoire, operator: kOrangeCiv),
+      );
+
+      await tester.enterText(
+        find.byKey(const Key('mm-number-field')),
+        '0748840856',
+      );
+      await tester.pump();
+
+      expect(find.text('07 48 84 08 56'), findsOneWidget);
+      verify(() => cubit.phoneChanged('07 48 84 08 56')).called(1);
+
+      final field = tester.widget<EditableText>(
+        find.descendant(
+          of: find.byKey(const Key('mm-number-field')),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(field.controller.selection.baseOffset, '07 48 84 08 56'.length);
+
+      // Effacer l'espace devant le curseur retire le chiffre qui le précède.
+      tester.testTextInput.updateEditingValue(
+        const TextEditingValue(
+          text: '07 4884 08 56',
+          selection: TextSelection.collapsed(offset: 5),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('07 48 40 85 6'), findsOneWidget);
+      expect(field.controller.selection.baseOffset, 4);
+    });
+
     testWidgets(
       'affiche le numéro rendu par le cubit sans jamais le lui renvoyer',
       (tester) async {
@@ -256,7 +307,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('0748840856'), findsOneWidget);
+        expect(find.text('07 48 84 08 56'), findsOneWidget);
         verifyNever(() => cubit.phoneChanged(any()));
       },
     );
@@ -264,7 +315,7 @@ void main() {
     testWidgets('numéro mémorisé : le champ démarre prérempli', (tester) async {
       await pumpWith(tester, kPayerRecognized);
 
-      expect(find.text('0748840856'), findsOneWidget);
+      expect(find.text('07 48 84 08 56'), findsOneWidget);
       verifyNever(() => cubit.phoneChanged(any()));
     });
   });

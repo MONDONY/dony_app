@@ -11,11 +11,10 @@ import 'package:flutter/material.dart';
 ///
 /// Propose les pays servis ([MobileMoneyCountries.available]) puis ceux
 /// annoncés ([MobileMoneyCountries.upcoming]), filtrés dès la première
-/// lettre sur le nom français de référence ou le nom traduit. Un pays
-/// « Bientôt » se voit mais ne se choisit pas : quand la recherche n'en
-/// trouve plus qu'un, [onUpcomingMatch] prévient l'appelant (bouton du bas
-/// « Recharger par carte »), et [onUpcomingLost] dès que ce n'est plus le
-/// cas. Aucune correspondance : texte « pas disponible pour ce pays ».
+/// lettre sur le nom français de référence ou le nom traduit. Seul un
+/// toucher choisit un pays ([onSelected]), servi ou « Bientôt » : la frappe
+/// ne choisit rien. Champ vidé : [onCleared]. Aucune correspondance : texte
+/// « pas disponible pour ce pays ».
 ///
 /// Valeurs manipulées : codes ISO alpha-2 en majuscules.
 class MobileMoneyCountryField extends StatefulWidget {
@@ -23,21 +22,17 @@ class MobileMoneyCountryField extends StatefulWidget {
     super.key,
     required this.countries,
     required this.onSelected,
-    required this.onUpcomingMatch,
-    required this.onUpcomingLost,
+    required this.onCleared,
     this.initialUpcoming,
   });
 
   final MobileMoneyCountries countries;
 
-  /// Pays servi choisi dans la liste.
+  /// Pays touché dans la liste, servi ou « Bientôt ».
   final ValueChanged<String> onSelected;
 
-  /// La recherche ne trouve plus qu'un pays, et il est « Bientôt ».
-  final ValueChanged<String> onUpcomingMatch;
-
-  /// La recherche ne se résume plus à un seul pays « Bientôt ».
-  final VoidCallback onUpcomingLost;
+  /// Le champ vient d'être vidé.
+  final VoidCallback onCleared;
 
   /// Pays « Bientôt » déjà retenu (retour sur l'écran) : la recherche
   /// reprend son nom pour que la note et le bouton gardent leur sens.
@@ -94,17 +89,9 @@ class _MobileMoneyCountryFieldState extends State<MobileMoneyCountryField> {
     final query = _controller.text;
     if (query == _lastQuery) return;
     _lastQuery = query;
-    final options = _optionsFor(query);
-    _notFound.value = query.trim().isNotEmpty && options.isEmpty;
-    final onlyUpcoming =
-        query.trim().isNotEmpty &&
-        options.length == 1 &&
-        _isUpcoming(options.single);
-    if (onlyUpcoming) {
-      widget.onUpcomingMatch(options.single);
-    } else {
-      widget.onUpcomingLost();
-    }
+    final empty = query.trim().isEmpty;
+    _notFound.value = !empty && _optionsFor(query).isEmpty;
+    if (empty) widget.onCleared();
   }
 
   /// Pays servis puis pays « Bientôt », chacun trié par nom affiché.
@@ -165,9 +152,7 @@ class _MobileMoneyCountryFieldState extends State<MobileMoneyCountryField> {
           focusNode: _focusNode,
           displayStringForOption: (code) => countryName(l, code),
           optionsBuilder: (value) => _optionsFor(value.text),
-          onSelected: (code) {
-            if (!_isUpcoming(code)) widget.onSelected(code);
-          },
+          onSelected: widget.onSelected,
           fieldViewBuilder: (context, controller, focusNode, onSubmitted) =>
               DonyTextField(
                 key: const Key('mm-country-field'),
@@ -294,11 +279,11 @@ class _OptionRow extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final name = countryName(l, code);
     return Semantics(
-      button: !upcoming,
-      enabled: !upcoming,
+      button: true,
       child: InkWell(
-        // Un pays « Bientôt » se lit mais ne se choisit pas.
-        onTap: upcoming ? null : onTap,
+        // Un pays « Bientôt » se choisit aussi : l'écran propose alors la
+        // carte bancaire ou le code de recharge.
+        onTap: onTap,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: kDonyMinTapTarget + 8),
           child: Padding(
