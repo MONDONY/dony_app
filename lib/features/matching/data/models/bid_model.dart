@@ -2,6 +2,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
+import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -296,6 +297,25 @@ class BidModel {
   /// du trajet). Nul pour une demande sortie de la course ou un back antérieur.
   final AddressData? deliveryAddress;
 
+  /// Dernier supplément de prix du colis : la demande en cours, sinon la
+  /// dernière close (encart « refusé / expiré »). Nul sans supplément ou sur
+  /// un back antérieur : rien ne s'affiche.
+  final BidSupplement? supplement;
+
+  /// Le voyageur peut demander un supplément maintenant (interrupteur actif,
+  /// colis dans la fenêtre, aucune demande en cours, plafond non atteint,
+  /// rail pris en charge). Seule source de vérité de la tuile « Demander un
+  /// supplément » ; `false` côté expéditeur et sur un back antérieur.
+  @JsonKey(defaultValue: false)
+  final bool supplementRequestAllowed;
+
+  /// Total payé par l'expéditeur, supplément payé compris. Nul sans
+  /// supplément payé ou sur un back antérieur.
+  final double? totalSenderAmountWithSupplementEur;
+
+  /// Net du voyageur, supplément payé compris. Toujours nul côté expéditeur.
+  final double? totalNetAmountWithSupplementEur;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -376,6 +396,10 @@ class BidModel {
     this.reschedule,
     this.handoverAddress,
     this.deliveryAddress,
+    this.supplement,
+    this.supplementRequestAllowed = false,
+    this.totalSenderAmountWithSupplementEur,
+    this.totalNetAmountWithSupplementEur,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>
