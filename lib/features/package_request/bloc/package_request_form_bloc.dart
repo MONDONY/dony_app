@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -10,7 +12,6 @@ import 'package:dony/features/package_request/bloc/package_request_form_state.da
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
-import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -75,12 +76,22 @@ class PackageRequestFormBloc
   /// Le formulaire a été rempli par « Créer avec l'IA » (`from_ai`).
   bool _fromAi = false;
 
-  /// Construit l'état initial pré-rempli pour l'édition. Le budget est reconverti
-  /// net → brut (l'utilisateur saisit/voit le brut, le backend stocke le net).
+  /// Construit l'état initial pré-rempli pour l'édition. L'utilisateur
+  /// saisit et voit le brut, le backend stocke le net : le brut servi par le
+  /// serveur ([PackageRequest.grossPriceEur]) prime, sinon le net est
+  /// reconverti sur la grille figée de la demande quand l'app la connaît,
+  /// à défaut sur la grille en vigueur (taux unique sans grille).
   static PackageRequestFormState _prefilledFrom(PackageRequest r) {
-    final gross = r.targetPriceEur != null
-        ? PriceDisplay.grossFromNet(r.targetPriceEur!)
-        : null;
+    final net = r.targetPriceEur;
+    final gross =
+        r.grossPriceEur ??
+        (net != null
+            ? senderPriceForNet(
+                net,
+                r.currency,
+                grid: CommissionGridStore.byId(r.commissionGridId),
+              ).gross
+            : null);
     return PackageRequestFormState(
       editingRequestId: r.id,
       departureCity: r.departureCity,
@@ -107,6 +118,7 @@ class PackageRequestFormBloc
       // « Mobile money » sur une demande EUR (ou « Carte » sur une XOF) qui
       // sera silencieusement retirée au PUT (restrictToCurrency côté back).
       currency: SupportedCurrency.fromCodeOrDefault(r.currency),
+      commissionGridId: r.commissionGridId,
     );
   }
 

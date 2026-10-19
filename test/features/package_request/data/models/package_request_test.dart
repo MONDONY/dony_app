@@ -212,4 +212,26 @@ void main() {
       expect(pr.hasFlexibleDate, isFalse);
     });
   });
+
+  group('commissionGridId (grille figée à la création)', () {
+    Map<String, dynamic> json() => {
+      'id': '1',
+      'senderId': 's',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'weightKg': 5,
+      'parcelSize': 'SMALL',
+      'status': 'OPEN',
+      'createdAt': '2026-10-19T10:00:00Z',
+    };
+
+    test('lu quand le back le sert', () {
+      final pr = PackageRequest.fromJson(json()..['commissionGridId'] = 'g-1');
+      expect(pr.commissionGridId, 'g-1');
+    });
+
+    test('absent (back antérieur, demande d avant la grille) : null', () {
+      expect(PackageRequest.fromJson(json()).commissionGridId, isNull);
+    });
+  });
 }

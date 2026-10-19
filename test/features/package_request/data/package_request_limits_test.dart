@@ -2,6 +2,8 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/commission_grid_test_doubles.dart';
+
 /// Fix post-revue Tâche 13 : les bornes de budget colis reproduisaient
 /// exactement le bug corrigé côté trajet (`maxUnitPriceFor`,
 /// `dony_pricing_currency_test.dart`) — des constantes figées en euros
@@ -78,6 +80,95 @@ void main() {
       expect(
         PackageRequestLimits.isBudgetValid(10, SupportedCurrency.xof),
         isFalse,
+      );
+    });
+  });
+
+  // Commission par paliers : un budget qui ne couvre pas les frais de service
+  // minimum de la grille est refusé par le back (422
+  // `budget-below-commission-minimum`), le formulaire le refuse avant.
+  group('isBudgetValid — frais de service minimum de la grille', () {
+    test('1,00 € : faux sous grille (le minimum EUR vaut 1,00 €)', () {
+      useTestCommissionGrid();
+      expect(
+        PackageRequestLimits.isBudgetValid(1.0, SupportedCurrency.eur),
+        isFalse,
+      );
+      expect(
+        PackageRequestLimits.isBelowCommissionMinimum(
+          1.0,
+          SupportedCurrency.eur,
+        ),
+        isTrue,
+      );
+    });
+
+    test('1,00 € : vrai sans grille (taux unique, comportement actuel)', () {
+      expect(
+        PackageRequestLimits.isBudgetValid(1.0, SupportedCurrency.eur),
+        isTrue,
+      );
+      expect(
+        PackageRequestLimits.isBelowCommissionMinimum(
+          1.0,
+          SupportedCurrency.eur,
+        ),
+        isFalse,
+      );
+    });
+
+    test('1,01 € : vrai sous grille (net 0,01 €, frais 1,00 €)', () {
+      useTestCommissionGrid();
+      expect(
+        PackageRequestLimits.isBudgetValid(1.01, SupportedCurrency.eur),
+        isTrue,
+      );
+      expect(
+        PackageRequestLimits.netForBudget(1.01, SupportedCurrency.eur),
+        closeTo(0.01, 1e-9),
+      );
+    });
+
+    test('la grille passée en paramètre prime sur la grille en vigueur', () {
+      // Aucune grille en vigueur, mais la grille figée de la demande éditée.
+      expect(
+        PackageRequestLimits.isBudgetValid(
+          1.0,
+          SupportedCurrency.eur,
+          grid: testGrid757(),
+        ),
+        isFalse,
+      );
+    });
+
+    test('hors bornes : refusé sans être compté comme sous le minimum', () {
+      useTestCommissionGrid();
+      expect(
+        PackageRequestLimits.isBelowCommissionMinimum(
+          600,
+          SupportedCurrency.eur,
+        ),
+        isFalse,
+      );
+      expect(
+        PackageRequestLimits.isBelowCommissionMinimum(
+          null,
+          SupportedCurrency.eur,
+        ),
+        isFalse,
+      );
+    });
+
+    test('XOF : le plancher 655 F CFA couvre le minimum de 650', () {
+      useTestCommissionGrid();
+      // Plancher XOF des bornes : 655. Net 5 → frais 650 (minimum) → brut 655.
+      expect(
+        PackageRequestLimits.isBudgetValid(655, SupportedCurrency.xof),
+        isTrue,
+      );
+      expect(
+        PackageRequestLimits.isBudgetValid(700, SupportedCurrency.xof),
+        isTrue,
       );
     });
   });

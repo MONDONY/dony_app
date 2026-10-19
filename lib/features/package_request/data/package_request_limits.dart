@@ -1,4 +1,6 @@
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 
 /// Bornes de saisie d'une demande d'envoi.
 ///
@@ -54,7 +56,47 @@ abstract final class PackageRequestLimits {
   /// sélecteur de l'étape budget), jamais une devise de repli implicite —
   /// c'est exactement ce qui manquait avant ce fix : un budget saisi en XOF
   /// était comparé aux bornes euros et rendu invalide en silence.
-  static bool isBudgetValid(double? amount, SupportedCurrency currency) =>
+  ///
+  /// Sous grille de commission ([grid], sinon la grille en vigueur), le
+  /// budget doit en plus couvrir les frais de service minimum : le back
+  /// refuse sinon la demande (422 `budget-below-commission-minimum`).
+  static bool isBudgetValid(
+    double? amount,
+    SupportedCurrency currency, {
+    CommissionGrid? grid,
+  }) =>
+      _withinBounds(amount, currency) &&
+      netForBudget(amount!, currency, grid: grid) != null;
+
+  /// Le budget tient dans les bornes de [currency] mais ne couvre pas les
+  /// frais de service minimum de la grille : message dédié, distinct de
+  /// celui des bornes.
+  static bool isBelowCommissionMinimum(
+    double? amount,
+    SupportedCurrency currency, {
+    CommissionGrid? grid,
+  }) =>
+      _withinBounds(amount, currency) &&
+      netForBudget(amount!, currency, grid: grid) == null;
+
+  /// Net du voyageur contenu dans le budget public [amount], tel que le back
+  /// le stockera ; `null` quand [amount] ne couvre pas les frais de service
+  /// minimum de la grille (ou n'est pas un montant positif).
+  static double? netForBudget(
+    double amount,
+    SupportedCurrency currency, {
+    CommissionGrid? grid,
+  }) {
+    if (!amount.isFinite || amount <= 0) return null;
+    try {
+      final net = netForSenderGross(amount, currency.code, grid: grid);
+      return net > 0 ? net : null;
+    } on BudgetBelowCommissionMinimumException {
+      return null;
+    }
+  }
+
+  static bool _withinBounds(double? amount, SupportedCurrency currency) =>
       amount != null &&
       amount >= minBudgetFor(currency) &&
       amount <= maxBudgetFor(currency);

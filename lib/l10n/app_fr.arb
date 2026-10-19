@@ -2967,7 +2967,7 @@
       }
     }
   },
-  "requestCreateCommissionLabel": "Commission Yadony",
+  "requestCreateCommissionLabel": "Frais de service Yadony",
   "@requestCreateCommissionLabel": {
     "description": "Libellé de la ligne commission d'une décomposition de prix, le montant s'affiche à côté (step_3_recap_budget.dart, accept_offer_bottom_sheet.dart, counter_offer_bottom_sheet.dart). Sans taux (FLUTTER-R6)"
   },
@@ -2978,6 +2978,23 @@
   "requestCreateTravelerReceivesLabel": "Le voyageur touchera",
   "@requestCreateTravelerReceivesLabel": {
     "description": "Libellé de la ligne du net voyageur dans la décomposition du budget (step_3_recap_budget.dart)"
+  },
+  "requestCreatePromoDiscountLabel": "Réduction du code promo",
+  "@requestCreatePromoDiscountLabel": {
+    "description": "Sous grille de commission : ligne de la réduction qu'un code promo fait sur ce que paie l'expéditeur, montant négatif à côté (step_3_recap_budget.dart)"
+  },
+  "requestCreateYouPayLabel": "Vous paierez",
+  "@requestCreateYouPayLabel": {
+    "description": "Sous grille de commission : total payé par l'expéditeur quand un code promo le baisse sous le budget public (step_3_recap_budget.dart)"
+  },
+  "requestBudgetBelowCommissionMinimum": "Le budget doit dépasser les frais de service minimum ({minimum}).",
+  "@requestBudgetBelowCommissionMinimum": {
+    "description": "Erreur de validation du budget d'une demande : il ne couvre pas les frais de service minimum de la grille, formaté dans la devise de la demande (step_3_recap_budget.dart)",
+    "placeholders": {
+      "minimum": {
+        "type": "String"
+      }
+    }
   },
   "requestCreateCurrencySemanticLabel": "Devise de la demande : {name}, {code}. Bouton, modifier la devise.",
   "@requestCreateCurrencySemanticLabel": {

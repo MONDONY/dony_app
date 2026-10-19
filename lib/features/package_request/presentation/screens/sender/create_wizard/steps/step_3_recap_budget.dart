@@ -7,8 +7,13 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ai_form_draft/presentation/widgets/ai_field_mark.dart';
+import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/payment_setup_notice.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
@@ -70,11 +75,21 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   final _quoteNotifier = ValueNotifier<Object?>(null);
   final _quoteLoadingNotifier = ValueNotifier<bool>(false);
 
+  /// Grille de commission figée de la demande éditée, `null` en création ou
+  /// tant qu'elle n'est pas lue : la grille en vigueur s'applique alors.
+  late final ValueNotifier<CommissionGrid?> _frozenGridNotifier;
+
   @override
   void initState() {
     super.initState();
     // Pré-remplissage (édition / retour à l'étape) du budget brut depuis l'état.
     final s = context.read<PackageRequestFormBloc>().state;
+    _frozenGridNotifier = ValueNotifier(
+      CommissionGridStore.byId(s.commissionGridId),
+    );
+    // La grille figée peut arriver après l'ouverture : le bouton se recale.
+    _frozenGridNotifier.addListener(_sync);
+    _loadFrozenGrid(s.commissionGridId);
     final b = s.totalBudgetEur;
     if (b != null) {
       _budgetCtrl.text = b == b.roundToDouble()
@@ -114,6 +129,25 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   SupportedCurrency _resolveCurrency(PackageRequestFormState s) =>
       resolveWizardCurrency(s, fallback: widget.currency);
 
+  /// Grille de commission de cette demande : celle figée à sa création en
+  /// édition (le back recalcule le net d'un nouveau budget sur elle), sinon
+  /// la grille en vigueur. `null` sans grille : taux unique historique.
+  CommissionGrid? get _requestGrid =>
+      _frozenGridNotifier.value ?? activeCommissionGrid;
+
+  /// Lit la grille figée [id] quand l'app ne la connaît pas encore. Un échec
+  /// laisse la grille en vigueur s'appliquer.
+  void _loadFrozenGrid(String? id) {
+    if (id == null || _frozenGridNotifier.value != null) return;
+    if (!getIt.isRegistered<IConfigRepository>()) return;
+    final config = getIt<IConfigRepository>();
+    unawaited(
+      CommissionGridStore.ensure(id, config.getCommissionGridById).then((grid) {
+        if (mounted && grid != null) _frozenGridNotifier.value = grid;
+      }),
+    );
+  }
+
   /// Le bouton ne doit être actif que si la publication peut réellement
   /// aboutir : il l'était dès qu'un montant était saisi, y compris hors
   /// bornes, et la publication échouait ensuite sans un mot.
@@ -124,6 +158,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         PackageRequestLimits.isBudgetValid(
           s.totalBudgetEur,
           _resolveCurrency(s),
+          grid: _requestGrid,
         ) &&
         !_mobileMoneyAccountMissing(s);
   }
@@ -136,14 +171,18 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
       s.acceptedPaymentMethods.contains(PaymentMethod.mobileMoney);
 
   Future<void> _applyPromoCode() async {
-    final budget = context.read<PackageRequestFormBloc>().state.totalBudgetEur;
+    final state = context.read<PackageRequestFormBloc>().state;
+    final budget = state.totalBudgetEur;
     if (budget == null) return;
     final code = _promoCtrl.text.trim();
     _quoteLoadingNotifier.value = true;
     try {
+      // La devise de la demande : sous grille, elle choisit le minimum de
+      // frais de service du devis (ignorée par un back sans grille).
       final quote = await getIt<PackageRequestRepository>().quote(
         budget,
         promoCode: code.isEmpty ? null : code,
+        currency: _resolveCurrency(state).code,
       );
       _quoteNotifier.value = quote;
       // Persisté dans l'état du formulaire dès validation réussie — envoyé à
@@ -193,6 +232,9 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     _promoCtrl.dispose();
     _quoteNotifier.dispose();
     _quoteLoadingNotifier.dispose();
+    _frozenGridNotifier
+      ..removeListener(_sync)
+      ..dispose();
     super.dispose();
   }
 
@@ -205,6 +247,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         !PackageRequestLimits.isBudgetValid(
           state.totalBudgetEur,
           _resolveCurrency(state),
+          grid: _requestGrid,
         )) {
       // Backstop : le bouton « Aperçu » est déjà grisé dans ce cas. `validate()`
       // vient d'afficher le message sous le champ ; on y ramène l'utilisateur,
@@ -311,11 +354,15 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                   ),
                 ),
                 const SizedBox(height: DonySpacing.xs),
-                _BudgetTotalInput(
-                  key: _budgetFieldKey,
-                  controller: _budgetCtrl,
-                  onBudgetChanged: _invalidateQuote,
-                  currency: currency,
+                ValueListenableBuilder<CommissionGrid?>(
+                  valueListenable: _frozenGridNotifier,
+                  builder: (context, frozenGrid, _) => _BudgetTotalInput(
+                    key: _budgetFieldKey,
+                    controller: _budgetCtrl,
+                    onBudgetChanged: _invalidateQuote,
+                    currency: currency,
+                    grid: frozenGrid ?? activeCommissionGrid,
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: DonySpacing.xs),
@@ -331,7 +378,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 if (state.totalBudgetEur != null) ...[
                   const SizedBox(height: DonySpacing.sm),
                   ListenableBuilder(
-                    listenable: _quoteNotifier,
+                    listenable: Listenable.merge([
+                      _quoteNotifier,
+                      _frozenGridNotifier,
+                    ]),
                     builder: (context, _) {
                       final quoteVal = _quoteNotifier.value;
                       final quote = quoteVal is NegotiationQuote
@@ -341,6 +391,8 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                         budgetEur: state.totalBudgetEur!,
                         quote: quote,
                         currency: currency,
+                        grid: _requestGrid,
+                        editing: state.isEditing,
                       );
                     },
                   ),
@@ -431,6 +483,31 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                                     style: tt.bodySmall?.copyWith(
                                       color: cs.success,
                                       fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          // Code valide, mais le minimum de frais de service
+                          // annule tout le gain : indice, sans style d'erreur.
+                          if (quote != null &&
+                              quote.promoIneffectiveBecauseMinimum) ...[
+                            const SizedBox(height: DonySpacing.xs),
+                            Row(
+                              key: const Key('request-promo-ineffective'),
+                              children: [
+                                DonyIcon(
+                                  'info',
+                                  size: 16,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    l10n.promoIneffectiveCommissionMinimum,
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -653,9 +730,13 @@ class _BudgetTotalInput extends StatelessWidget {
     required this.controller,
     this.onBudgetChanged,
     required this.currency,
+    this.grid,
   });
   final TextEditingController controller;
   final SupportedCurrency? currency;
+
+  /// Grille de commission de la demande, `null` sans grille.
+  final CommissionGrid? grid;
 
   /// Prévient le parent qu'un devis chargé précédemment est périmé.
   final VoidCallback? onBudgetChanged;
@@ -723,7 +804,24 @@ class _BudgetTotalInput extends StatelessWidget {
         }
         final d = double.tryParse(v.replaceAll(',', '.'));
         final effectiveCurrency = currency ?? SupportedCurrency.eur;
-        if (!PackageRequestLimits.isBudgetValid(d, effectiveCurrency)) {
+        if (!PackageRequestLimits.isBudgetValid(
+          d,
+          effectiveCurrency,
+          grid: grid,
+        )) {
+          // Dans les bornes, mais sous les frais de service minimum de la
+          // grille : le back refuserait la demande (422).
+          final minimum = grid?.minimumFor(effectiveCurrency.code);
+          if (minimum != null &&
+              PackageRequestLimits.isBelowCommissionMinimum(
+                d,
+                effectiveCurrency,
+                grid: grid,
+              )) {
+            return l10n.requestBudgetBelowCommissionMinimum(
+              CurrencyFormatter.format(minimum, effectiveCurrency),
+            );
+          }
           final min = CurrencyFormatter.formatOrPlain(
             PackageRequestLimits.minBudgetFor(effectiveCurrency),
             currency,
@@ -742,25 +840,134 @@ class _BudgetTotalInput extends StatelessWidget {
 
 // ─── Net preview ─────────────────────────────────────────────────────────────
 
-/// Décomposition transparente du budget : la commission Yadony reste
-/// toujours affichée au taux de base (jamais faussée par le promo — même
-/// contrat que les autres devis de l'app), et c'est le net voyageur qui
-/// bouge quand un code promo est appliqué (le budget de l'expéditeur, lui,
-/// ne change pas : un promo rend son offre plus attractive à dépense égale,
-/// au lieu de réduire ce qu'il paie — cf. PackageRequestService.quote).
+/// Décomposition transparente du budget public (TTC) de la demande.
+///
+/// Sous grille de commission, le budget contient le net du voyageur (le plus
+/// grand net dont le total tient dans le budget, celui que le back stockera)
+/// et les frais de service Yadony, minimum compris. Un code promo baisse alors
+/// ce que paie l'expéditeur (devis de budget, spec §5.4) : les frais du devis
+/// sont après code, une ligne de réduction et « Vous paierez » le disent.
+///
+/// Sans grille, chemin historique : la commission reste au taux de base et
+/// c'est le net voyageur qui bouge quand un code promo est appliqué (le
+/// budget de l'expéditeur ne change pas, cf. PackageRequestService.quote).
 class _BudgetBreakdown extends StatelessWidget {
   const _BudgetBreakdown({
     required this.budgetEur,
     this.quote,
     required this.currency,
+    this.grid,
+    this.editing = false,
   });
 
   final double budgetEur;
   final NegotiationQuote? quote;
   final SupportedCurrency? currency;
 
+  /// Grille de la demande (figée en édition, sinon en vigueur).
+  final CommissionGrid? grid;
+
+  /// Demande existante : le devis du back suit la grille en vigueur, ses
+  /// montants ne valent que s'il porte la grille figée de la demande.
+  final bool editing;
+
+  /// Devis dont les montants valent pour cette demande.
+  NegotiationQuote? get _amountQuote {
+    final q = quote;
+    if (q == null || !editing) return q;
+    return q.commissionGridId == grid?.id ? q : null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cur = currency ?? SupportedCurrency.eur;
+    final q = _amountQuote;
+    final underGrid =
+        q?.commissionGridId != null || grid?.minimumFor(cur.code) != null;
+    return underGrid ? _gridBreakdown(context, cur, q) : _legacy(context);
+  }
+
+  Widget _gridBreakdown(
+    BuildContext context,
+    SupportedCurrency cur,
+    NegotiationQuote? q,
+  ) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    String fmt(double v) => CurrencyFormatter.format(v, cur);
+
+    final calcGrid = CommissionGridStore.byId(q?.commissionGridId) ?? grid;
+    final net =
+        q?.netEur ??
+        PackageRequestLimits.netForBudget(budgetEur, cur, grid: calcGrid);
+    // Budget sous les frais de service minimum : le message est sous le champ.
+    if (net == null) return const SizedBox.shrink();
+
+    // Total sans code promo : celui du budget public.
+    final base = senderPriceForNet(net, cur.code, grid: calcGrid);
+    final baseGross = base.fromGrid ? base.gross : budgetEur;
+    final commission = q?.commissionEur ?? base.commission;
+    final total = q?.totalEur ?? baseGross;
+    final minimum = q?.minimumApplied ?? base.minimumApplied;
+    final discount = baseGross - total;
+    final hasDiscount = discount > _halfMinorUnit(cur);
+
+    return _card(
+      cs,
+      children: [
+        _line(tt, cs, l10n.requestPublicBudget, fmt(budgetEur)),
+        const SizedBox(height: DonySpacing.xs),
+        _line(
+          tt,
+          cs,
+          l10n.requestCreateCommissionLabel,
+          serviceFeeAmountLabel(l10n, commission, cur.code, minimum: minimum),
+        ),
+        if (hasDiscount) ...[
+          const SizedBox(height: DonySpacing.xs),
+          _line(
+            tt,
+            cs,
+            l10n.requestCreatePromoDiscountLabel,
+            '−${fmt(discount)}',
+          ),
+        ],
+        const SizedBox(height: DonySpacing.xs),
+        Divider(color: cs.success.withValues(alpha: 0.2)),
+        const SizedBox(height: DonySpacing.xs),
+        _netRow(tt, cs, l10n, fmt(net)),
+        if (hasDiscount) ...[
+          const SizedBox(height: DonySpacing.xs),
+          Row(
+            key: const Key('request-budget-you-pay'),
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.requestCreateYouPayLabel,
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.success,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Text(
+                fmt(total),
+                style: tt.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.success,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _legacy(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
@@ -772,64 +979,86 @@ class _BudgetBreakdown extends StatelessWidget {
     final boost = promoApplied ? net - netBase : 0.0;
     final hasRealBoost = boost > 0.005;
 
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.successLight,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _line(
-            tt,
-            cs,
-            l10n.requestPublicBudget,
-            CurrencyFormatter.formatOrPlain(budgetEur, currency),
-          ),
+    return _card(
+      cs,
+      children: [
+        _line(
+          tt,
+          cs,
+          l10n.requestPublicBudget,
+          CurrencyFormatter.formatOrPlain(budgetEur, currency),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        _line(
+          tt,
+          cs,
+          l10n.requestCreateCommissionLabel,
+          CurrencyFormatter.formatOrPlain(commissionEur, currency),
+        ),
+        if (hasRealBoost) ...[
           const SizedBox(height: DonySpacing.xs),
           _line(
             tt,
             cs,
-            l10n.requestCreateCommissionLabel,
-            CurrencyFormatter.formatOrPlain(commissionEur, currency),
-          ),
-          if (hasRealBoost) ...[
-            const SizedBox(height: DonySpacing.xs),
-            _line(
-              tt,
-              cs,
-              l10n.requestCreatePromoBoostLabel,
-              '+${CurrencyFormatter.formatOrPlain(boost, currency)}',
-              valueColor: cs.success,
-            ),
-          ],
-          const SizedBox(height: DonySpacing.xs),
-          Divider(color: cs.success.withValues(alpha: 0.2)),
-          const SizedBox(height: DonySpacing.xs),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                l10n.requestCreateTravelerReceivesLabel,
-                style: tt.bodyMedium?.copyWith(fontSize: 13, color: cs.success),
-              ),
-              Text(
-                CurrencyFormatter.formatOrPlain(net, currency),
-                style: tt.bodyMedium?.copyWith(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: cs.success,
-                ),
-              ),
-            ],
+            l10n.requestCreatePromoBoostLabel,
+            '+${CurrencyFormatter.formatOrPlain(boost, currency)}',
+            valueColor: cs.success,
           ),
         ],
-      ),
+        const SizedBox(height: DonySpacing.xs),
+        Divider(color: cs.success.withValues(alpha: 0.2)),
+        const SizedBox(height: DonySpacing.xs),
+        _netRow(tt, cs, l10n, CurrencyFormatter.formatOrPlain(net, currency)),
+      ],
     );
   }
+
+  /// Moitié de l'unité mineure de [cur] : en dessous, un écart n'est qu'un
+  /// reste d'arrondi.
+  static double _halfMinorUnit(SupportedCurrency cur) {
+    var unit = 1.0;
+    for (var i = 0; i < cur.minorUnit; i++) {
+      unit /= 10;
+    }
+    return unit / 2;
+  }
+
+  Widget _card(ColorScheme cs, {required List<Widget> children}) => Container(
+    padding: const EdgeInsets.all(DonySpacing.base),
+    decoration: BoxDecoration(
+      color: cs.successLight,
+      borderRadius: BorderRadius.circular(DonyRadius.md),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
+    ),
+  );
+
+  Widget _netRow(
+    TextTheme tt,
+    ColorScheme cs,
+    AppLocalizations l10n,
+    String value,
+  ) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Text(
+        l10n.requestCreateTravelerReceivesLabel,
+        style: tt.bodyMedium?.copyWith(fontSize: 13, color: cs.success),
+      ),
+      Text(
+        value,
+        style: tt.bodyMedium?.copyWith(
+          fontSize: 24,
+          fontWeight: FontWeight.w800,
+          color: cs.success,
+        ),
+      ),
+    ],
+  );
 
   Widget _line(
     TextTheme tt,

@@ -6782,7 +6782,7 @@ abstract class AppLocalizations {
   /// Libellé de la ligne commission d'une décomposition de prix, le montant s'affiche à côté (step_3_recap_budget.dart, accept_offer_bottom_sheet.dart, counter_offer_bottom_sheet.dart). Sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Commission Yadony'**
+  /// **'Frais de service Yadony'**
   String get requestCreateCommissionLabel;
 
   /// Libellé de la ligne de bonus promo dans la décomposition du budget (step_3_recap_budget.dart)
@@ -6796,6 +6796,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le voyageur touchera'**
   String get requestCreateTravelerReceivesLabel;
+
+  /// Sous grille de commission : ligne de la réduction qu'un code promo fait sur ce que paie l'expéditeur, montant négatif à côté (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réduction du code promo'**
+  String get requestCreatePromoDiscountLabel;
+
+  /// Sous grille de commission : total payé par l'expéditeur quand un code promo le baisse sous le budget public (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous paierez'**
+  String get requestCreateYouPayLabel;
+
+  /// Erreur de validation du budget d'une demande : il ne couvre pas les frais de service minimum de la grille, formaté dans la devise de la demande (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le budget doit dépasser les frais de service minimum ({minimum}).'**
+  String requestBudgetBelowCommissionMinimum(String minimum);
 
   /// Libellé d'accessibilité du sélecteur de devise (step_3_recap_budget.dart)
   ///

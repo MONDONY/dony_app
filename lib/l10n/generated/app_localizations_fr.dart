@@ -4031,7 +4031,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get requestCreateCommissionLabel => 'Commission Yadony';
+  String get requestCreateCommissionLabel => 'Frais de service Yadony';
 
   @override
   String get requestCreatePromoBoostLabel =>
@@ -4039,6 +4039,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestCreateTravelerReceivesLabel => 'Le voyageur touchera';
+
+  @override
+  String get requestCreatePromoDiscountLabel => 'Réduction du code promo';
+
+  @override
+  String get requestCreateYouPayLabel => 'Vous paierez';
+
+  @override
+  String requestBudgetBelowCommissionMinimum(String minimum) {
+    return 'Le budget doit dépasser les frais de service minimum ($minimum).';
+  }
 
   @override
   String requestCreateCurrencySemanticLabel(String name, String code) {

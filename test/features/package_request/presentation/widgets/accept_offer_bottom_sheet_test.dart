@@ -129,7 +129,7 @@ void main() {
     await tester.pumpWidget(_buildApp(bloc: bloc, grossPriceEur: 39.20));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Commission Yadony'), findsOneWidget);
+    expect(find.textContaining('Frais de service Yadony'), findsOneWidget);
     expect(find.text('Net voyageur'), findsOneWidget);
   });
 
@@ -141,7 +141,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Commission Yadony'), findsOneWidget);
+    expect(find.textContaining('Frais de service Yadony'), findsOneWidget);
     expect(find.text('Prix payé par l\'expéditeur'), findsOneWidget);
   });
 
@@ -698,12 +698,14 @@ void main() {
     setUp(() => setDonyCommissionRate(0.125));
     tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
-    testWidgets('fr : « Commission Yadony », sans pourcentage', (tester) async {
+    testWidgets('fr : « Frais de service Yadony », sans pourcentage', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildApp(bloc: bloc, grossPriceEur: 39.20));
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Commission Yadony'), findsOneWidget);
+      expect(find.text('Frais de service Yadony'), findsOneWidget);
       expect(find.textContaining('%'), findsNothing);
     });
 

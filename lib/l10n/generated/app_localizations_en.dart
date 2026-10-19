@@ -4021,6 +4021,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestCreateTravelerReceivesLabel => 'The traveler will receive';
 
   @override
+  String get requestCreatePromoDiscountLabel => 'Promo code discount';
+
+  @override
+  String get requestCreateYouPayLabel => 'You will pay';
+
+  @override
+  String requestBudgetBelowCommissionMinimum(String minimum) {
+    return 'The budget must be above the minimum service fee ($minimum).';
+  }
+
+  @override
   String requestCreateCurrencySemanticLabel(String name, String code) {
     return 'Request currency: $name, $code. Button, change the currency.';
   }

@@ -2,12 +2,17 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
+import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -19,10 +24,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
+
+class _MockConfigRepo extends Mock implements IConfigRepository {}
+
+void _unregisterRepos() {
+  if (getIt.isRegistered<PackageRequestRepository>()) {
+    getIt.unregister<PackageRequestRepository>();
+  }
+  if (getIt.isRegistered<IConfigRepository>()) {
+    getIt.unregister<IConfigRepository>();
+  }
+}
 
 class _MockFormBloc
     extends MockBloc<PackageRequestFormEvent, PackageRequestFormState>
@@ -590,7 +607,7 @@ void main() {
       setUp(() => setDonyCommissionRate(0.125));
       tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
-      testWidgets('fr : « Commission Yadony », sans pourcentage', (
+      testWidgets('fr : « Frais de service Yadony », sans pourcentage', (
         tester,
       ) async {
         const seed = PackageRequestFormState(totalBudgetEur: 40);
@@ -599,7 +616,7 @@ void main() {
         );
         await tester.pump();
 
-        expect(find.text('Commission Yadony'), findsOneWidget);
+        expect(find.text('Frais de service Yadony'), findsOneWidget);
         expect(find.textContaining('12,5'), findsNothing);
       });
 
@@ -616,6 +633,340 @@ void main() {
         expect(find.text('Yadony service fee'), findsOneWidget);
         expect(find.textContaining('12.5'), findsNothing);
       });
+    });
+  });
+
+  // Commission par paliers : sous grille, le budget public est un brut dont le
+  // net est le plus grand net qui y tient ; un code promo baisse ce que paie
+  // l'expéditeur (devis §5.4), il n'augmente plus le net du voyageur.
+  group('Step3RecapBudget — sous grille de commission', () {
+    String eur(double v) => CurrencyFormatter.format(v, SupportedCurrency.eur);
+
+    NegotiationQuote quote({
+      required double net,
+      required double commission,
+      required double total,
+      bool promoApplied = false,
+      bool minimumApplied = false,
+      String? promoIneffectiveReason,
+      String? gridId = kTestGridId,
+    }) => NegotiationQuote(
+      netEur: net,
+      rate: 0.07,
+      commissionEur: commission,
+      totalEur: total,
+      promoApplied: promoApplied,
+      promoLabel: promoApplied ? 'Code PROMO appliqué' : null,
+      minimumApplied: minimumApplied,
+      minimumAmount: 1,
+      commissionGridId: gridId,
+      promoIneffectiveReason: promoIneffectiveReason,
+    );
+
+    void stubQuote(NegotiationQuote q) => when(
+      () => repo.quote(
+        any(),
+        promoCode: any(named: 'promoCode'),
+        currency: any(named: 'currency'),
+      ),
+    ).thenAnswer((_) async => q);
+
+    Future<void> applyPromo(WidgetTester tester, String code) async {
+      await tester.enterText(find.byKey(const Key('promo-code-input')), code);
+      final apply = find.byKey(const Key('apply-promo-code-btn'));
+      await tester.ensureVisible(apply);
+      await tester.pump();
+      await tester.tap(apply);
+      await tester.pump();
+      await tester.pump();
+    }
+
+    setUp(() {
+      useTestCommissionGrid();
+      getIt.registerSingleton<PackageRequestRepository>(repo);
+    });
+
+    tearDown(_unregisterRepos);
+
+    testWidgets('budget 21,40 € sans devis : frais 1,40 €, le voyageur reçoit '
+        '20,00 €', (tester) async {
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 21.40,
+        currency: SupportedCurrency.eur,
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+
+      expect(find.text('Frais de service Yadony'), findsOneWidget);
+      expect(find.text(eur(1.40)), findsOneWidget);
+      expect(find.text(eur(20)), findsOneWidget);
+      expect(find.text('Vous paierez'), findsNothing);
+      expect(find.text('Réduction du code promo'), findsNothing);
+    });
+
+    testWidgets('sans devis, budget 5 € : frais au minimum, suivis de '
+        '« (minimum) »', (tester) async {
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 5,
+        currency: SupportedCurrency.eur,
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+
+      expect(find.text('${eur(1)} (minimum)'), findsOneWidget);
+      expect(find.text(eur(4)), findsOneWidget);
+    });
+
+    testWidgets('devis avec promo (net 20, commission 1,00, total 21,00) : '
+        'réduction −0,40 €, « Vous paierez 21,00 € », aucune ligne « le '
+        'voyageur touche » de boost', (tester) async {
+      stubQuote(
+        quote(net: 20, commission: 1.00, total: 21.00, promoApplied: true),
+      );
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 21.40,
+        currency: SupportedCurrency.eur,
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+      await applyPromo(tester, 'PROMO');
+
+      expect(find.text('Réduction du code promo'), findsOneWidget);
+      expect(find.text('−${eur(0.40)}'), findsOneWidget);
+      expect(find.text('Vous paierez'), findsOneWidget);
+      expect(find.text(eur(21)), findsOneWidget);
+      expect(find.text(eur(1)), findsOneWidget);
+      expect(find.text(eur(20)), findsOneWidget);
+      expect(
+        find.text('Grâce au code promo, le voyageur touche'),
+        findsNothing,
+      );
+      expect(find.text('Code PROMO appliqué'), findsOneWidget);
+    });
+
+    testWidgets('devis minimumApplied : frais suivis de « (minimum) »', (
+      tester,
+    ) async {
+      stubQuote(
+        quote(net: 20, commission: 1.00, total: 21.00, minimumApplied: true),
+      );
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 21.40,
+        currency: SupportedCurrency.eur,
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+      // Sans devis, 1,40 € de frais : pas de minimum.
+      expect(find.textContaining('(minimum)'), findsNothing);
+
+      await applyPromo(tester, 'PROMO');
+
+      expect(find.text('${eur(1)} (minimum)'), findsOneWidget);
+    });
+
+    testWidgets('promo sans effet : message « Ce code ne change rien sur ce '
+        'montant (frais minimum) »', (tester) async {
+      stubQuote(
+        quote(
+          net: 4,
+          commission: 1,
+          total: 5,
+          minimumApplied: true,
+          promoIneffectiveReason: 'COMMISSION_MINIMUM',
+        ),
+      );
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 5,
+        currency: SupportedCurrency.eur,
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+      await applyPromo(tester, 'PROMO');
+
+      expect(
+        find.text('Ce code ne change rien sur ce montant (frais minimum)'),
+        findsOneWidget,
+      );
+      expect(find.text('Réduction du code promo'), findsNothing);
+      expect(find.text('Vous paierez'), findsNothing);
+    });
+
+    testWidgets('le devis part avec la devise de la demande (XOF)', (
+      tester,
+    ) async {
+      stubQuote(quote(net: 12470, commission: 873, total: 13343));
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 13343,
+        currency: SupportedCurrency.xof,
+        acceptedPaymentMethods: {PaymentMethod.cash},
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+      await applyPromo(tester, '');
+
+      verify(() => repo.quote(13343, currency: 'XOF')).called(1);
+    });
+
+    testWidgets('budget 1,00 € : bouton Continuer bloqué et message du '
+        'minimum', (tester) async {
+      final canContinue = ValueNotifier<bool>(true);
+      addTearDown(canContinue.dispose);
+      await tester.pumpWidget(
+        wrap(Step3RecapBudget(canContinueNotifier: canContinue)),
+      );
+      await tester.enterText(find.byKey(const Key('total-budget-input')), '1');
+      await tester.pump();
+      await tester.pump();
+
+      expect(canContinue.value, isFalse);
+      expect(
+        find.text(
+          'Le budget doit dépasser les frais de service minimum '
+          '(${eur(1)}).',
+        ),
+        findsOneWidget,
+      );
+      // Le message des bornes ne s'y superpose pas.
+      expect(find.textContaining('Entre '), findsNothing);
+    });
+
+    testWidgets('budget 1,01 € : publiable sous grille', (tester) async {
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+      await tester.pumpWidget(
+        wrap(Step3RecapBudget(canContinueNotifier: canContinue)),
+      );
+      await tester.enterText(
+        find.byKey(const Key('total-budget-input')),
+        '1,01',
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(canContinue.value, isTrue);
+    });
+
+    group('édition : grille figée de la demande', () {
+      // Grille plus ancienne que celle en vigueur : 10 % sur toute la tranche.
+      final oldGrid = CommissionGrid(
+        id: 'grid-old',
+        effectiveFrom: DateTime.utc(2026, 9),
+        tiers: const [CommissionTier(fromEur: 0, rate: 0.10)],
+        minimums: const {'EUR': 1.00, 'XOF': 650},
+      );
+
+      const editSeed = PackageRequestFormState(
+        editingRequestId: 'r-1',
+        commissionGridId: 'grid-old',
+        totalBudgetEur: 22,
+        currency: SupportedCurrency.eur,
+      );
+
+      testWidgets('grille figée inconnue : lue par identifiant, puis les '
+          'frais se calculent sur elle', (tester) async {
+        final config = _MockConfigRepo();
+        when(
+          () => config.getCommissionGridById('grid-old'),
+        ).thenAnswer((_) async => oldGrid);
+        getIt.registerSingleton<IConfigRepository>(config);
+
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(), seed: editSeed, useMock: true),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        // 22 € sur la grille figée à 10 % : net 20, frais 2.
+        expect(find.text(eur(2)), findsOneWidget);
+        expect(find.text(eur(20)), findsOneWidget);
+        verify(() => config.getCommissionGridById('grid-old')).called(1);
+      });
+
+      testWidgets('devis sur une autre grille : montants de la grille figée', (
+        tester,
+      ) async {
+        CommissionGridStore.put(oldGrid);
+        // Le devis du back suit la grille en vigueur, pas celle de la demande.
+        stubQuote(quote(net: 20.56, commission: 1.44, total: 22));
+
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(), seed: editSeed, useMock: true),
+        );
+        await tester.pump();
+        await applyPromo(tester, '');
+
+        expect(find.text(eur(2)), findsOneWidget);
+        expect(find.text(eur(20)), findsOneWidget);
+        expect(find.text(eur(20.56)), findsNothing);
+      });
+    });
+  });
+
+  group('Step3RecapBudget — sans grille de commission', () {
+    setUp(() => getIt.registerSingleton<PackageRequestRepository>(repo));
+    tearDown(_unregisterRepos);
+
+    testWidgets('sans grille : décomposition et boost inchangés', (
+      tester,
+    ) async {
+      when(
+        () => repo.quote(
+          any(),
+          promoCode: any(named: 'promoCode'),
+          currency: any(named: 'currency'),
+        ),
+      ).thenAnswer(
+        (_) async => const NegotiationQuote(
+          netEur: 39.22,
+          rate: 0.05,
+          commissionEur: 1.90,
+          totalEur: 40,
+          promoApplied: true,
+          promoLabel: 'Code PROMO appliqué',
+        ),
+      );
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 40,
+        currency: SupportedCurrency.eur,
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+      String eur(double v) =>
+          CurrencyFormatter.format(v, SupportedCurrency.eur);
+      // Estimation locale au taux unique : 40 / 1,05.
+      expect(find.text(eur(40 - 40 / 1.05)), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('promo-code-input')), 'P');
+      final apply = find.byKey(const Key('apply-promo-code-btn'));
+      await tester.ensureVisible(apply);
+      await tester.pump();
+      await tester.tap(apply);
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text('Grâce au code promo, le voyageur touche'),
+        findsOneWidget,
+      );
+      expect(find.text('+${eur(39.22 - 40 / 1.05)}'), findsOneWidget);
+      expect(find.text(eur(1.90)), findsOneWidget);
+      expect(find.text(eur(39.22)), findsOneWidget);
+      expect(find.text('Vous paierez'), findsNothing);
+      expect(find.text('Réduction du code promo'), findsNothing);
     });
   });
 
