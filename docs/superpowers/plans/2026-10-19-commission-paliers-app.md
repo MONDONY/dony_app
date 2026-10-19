@@ -627,3 +627,9 @@ git commit -m "feat(commission): textes sans taux, minimum lu dans la grille, an
 - Mise à jour forcée (spec §7.2) : avant la date d'effet de la première grille, monter `min_supported_build` (Remote Config, clé unique iOS et Android, lue par `AppUpdateService`) au **numéro du premier build qui contient cette PR**. Derniers numéros connus le 19/10 : IPA prod 138, AAB staging 134. Le premier build visé est donc **139 au plus tôt**, et l'AAB qui contient la PR doit porter un numéro au moins égal à la valeur montée, sinon tous les Android seraient bloqués sur une version introuvable.
 - Point juridique à faire relire (spec §7.3) : prix d'appel des listes hors frais, total frais compris affiché avant validation.
 - Recette staging (spec §9.3) : grille de test programmée à J+5 minutes, app ouverte pendant la bascule (Review Focus 2), vecteurs §4.6 vérifiés à l'écran sur la carte, les espèces et le mobile money.
+
+## Décisions du propriétaire (19/10, après le plan) — font foi
+- Libellé : « Commission Yadony » devient partout « Frais de service Yadony » (FR), cohérent avec l'anglais et les CGU.
+- Carte des trajets (pastilles ET fiche affichée depuis la carte) : uniquement « + frais de service », SANS le minimum. Les autres listes et fiches gardent « + frais de service Yadony (min. X) ».
+- Le back ajoute `commissionGridId` dans `NegotiationThreadResponse` et `PackageRequestResponse` (PR back jumelle à venir) : les aperçus d'un fil/d'une demande utilisent la grille figée (via `GET /config/commission-grid/{id}`) quand le champ est présent, sinon la grille en vigueur (tolérer l'absence du champ).
+- `min_supported_build` : rien à faire dans le code ; noter dans la PR que le propriétaire devra poser une condition Remote Config par plateforme (IPA et AAB n'ont pas le même numéro).
