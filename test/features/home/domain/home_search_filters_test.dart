@@ -340,5 +340,81 @@ void main() {
         expect(q.departureDateTo, f.dateTo);
       });
     });
+
+    group('puce « Valise 23 kg » (YADONY-FLUTTER-PROD-Z)', () {
+      test('inactive par défaut : rien ne change dans la requête', () {
+        const f = HomeSearchFilters();
+        expect(f.suitcase23Only, isFalse);
+        expect(f.toAnnouncementQuery().minAvailableKg, isNull);
+        expect(f.activeKeys, isNot(contains('suitcase_23')));
+      });
+
+      test('active seule : minAvailableKg = 23', () {
+        const f = HomeSearchFilters(suitcase23Only: true);
+        expect(f.toAnnouncementQuery().minAvailableKg, 23);
+        expect(f.effectiveMinAvailableKg, kSuitcaseKg);
+      });
+
+      test('Capacité sous 23 kg : la puce prime', () {
+        const f = HomeSearchFilters(suitcase23Only: true, weightMin: 10);
+        expect(f.toAnnouncementQuery().minAvailableKg, 23);
+        // La Capacité réglée reste celle de l'utilisateur.
+        expect(f.weightMin, 10);
+      });
+
+      test('Capacité au-dessus de 23 kg : la plus exigeante est gardée', () {
+        const f = HomeSearchFilters(suitcase23Only: true, weightMin: 30);
+        expect(f.toAnnouncementQuery().minAvailableKg, 30);
+      });
+
+      test('le maximum de capacité part tel quel', () {
+        const f = HomeSearchFilters(suitcase23Only: true, weightMax: 40);
+        final q = f.toAnnouncementQuery();
+        expect(q.minAvailableKg, 23);
+        expect(q.maxAvailableKg, 40);
+      });
+
+      test('activeKeys : suitcase_23, distincte de weight', () {
+        expect(const HomeSearchFilters(suitcase23Only: true).activeKeys, {
+          'suitcase_23',
+        });
+        expect(
+          const HomeSearchFilters(
+            suitcase23Only: true,
+            weightMin: 30,
+          ).activeKeys,
+          {'suitcase_23', 'weight'},
+        );
+      });
+
+      test('badge : comptée en mode Trajets seulement', () {
+        const f = HomeSearchFilters(suitcase23Only: true);
+        expect(f.activeCountFor(SearchMode.trips), 1);
+        expect(f.activeCountFor(SearchMode.parcels), 0);
+        expect(f.activeCount, 1);
+        expect(
+          const HomeSearchFilters(
+            suitcase23Only: true,
+            weightMin: 30,
+          ).activeCountFor(SearchMode.trips),
+          2,
+        );
+      });
+
+      test('copyWith : pose, retire, et conserve la puce', () {
+        const base = HomeSearchFilters();
+        final on = base.copyWith(suitcase23Only: true);
+        expect(on.suitcase23Only, isTrue);
+        expect(on.copyWith(departureCity: 'Paris').suitcase23Only, isTrue);
+        expect(on.copyWith(clearWeight: true).suitcase23Only, isTrue);
+        expect(on.swapCorridor().suitcase23Only, isTrue);
+        expect(on.copyWith(suitcase23Only: false).suitcase23Only, isFalse);
+      });
+
+      test('mode Colis : la puce ne touche pas la recherche de demandes', () {
+        const f = HomeSearchFilters(suitcase23Only: true);
+        expect(f.toPackageRequestQuery().maxWeight, isNull);
+      });
+    });
   });
 }

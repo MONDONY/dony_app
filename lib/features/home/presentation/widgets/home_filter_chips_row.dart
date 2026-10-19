@@ -39,6 +39,7 @@ class HomeFilterChipsRow extends StatelessWidget {
     required this.onPriceTap,
     required this.onPriceClear,
     required this.onGpProToggle,
+    required this.onSuitcase23Toggle,
     required this.onMaxWeightTap,
     required this.onMaxWeightClear,
     required this.onParcelSizeTap,
@@ -64,6 +65,10 @@ class HomeFilterChipsRow extends StatelessWidget {
   final VoidCallback onPriceTap;
   final VoidCallback onPriceClear;
   final VoidCallback onGpProToggle;
+
+  /// Bascule de la puce « 🧳 Valise 23 kg » (trajets avec au moins 23 kg
+  /// disponibles).
+  final VoidCallback onSuitcase23Toggle;
 
   // Colis
   final VoidCallback onMaxWeightTap;
@@ -164,6 +169,15 @@ class HomeFilterChipsRow extends StatelessWidget {
 
           // ── Spécifiques au mode ─────────────────────────────────────────────
           if (mode.isTrips) ...[
+            // Juste après la date : le besoin le plus courant de la diaspora
+            // (une valise en soute), en un toucher (YADONY-FLUTTER-PROD-Z).
+            HomeSmallChip(
+              key: const Key('chip-suitcase-23'),
+              label: l.homeFilterChipsSuitcase23,
+              isActive: filters.suitcase23Only,
+              onTap: onSuitcase23Toggle,
+            ),
+            const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
               label: _ratingLabel(l),
               isActive: filters.minRating != null,

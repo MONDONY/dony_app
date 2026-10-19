@@ -302,6 +302,53 @@ void main() {
     expect(after.last, isNull);
   });
 
+  // YADONY-FLUTTER-PROD-Z : la puce rapide compte les trajets à 23 kg et plus.
+  testWidgets('Filtres rapides : « 🧳 Valise 23 kg » demande 23 kg minimum', (
+    tester,
+  ) async {
+    _vueHaute(tester);
+    final repo = _MockAnnouncementRepo();
+    await tester.pumpWidget(_Harness(announcementRepo: repo));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.byKey(const Key('composer-suitcase-23')));
+    await tester.tap(find.byKey(const Key('composer-suitcase-23')));
+    await _settleFilterChange(tester);
+
+    final captured = verify(
+      () => repo.countAnnouncements(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDateFrom: any(named: 'departureDateFrom'),
+        departureDateTo: any(named: 'departureDateTo'),
+        minAvailableKg: captureAny(named: 'minAvailableKg'),
+        maxAvailableKg: any(named: 'maxAvailableKg'),
+        maxPricePerKg: any(named: 'maxPricePerKg'),
+        gpProOnly: any(named: 'gpProOnly'),
+        minRating: any(named: 'minRating'),
+        weekendOnly: any(named: 'weekendOnly'),
+        transportMode: any(named: 'transportMode'),
+        kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+        contentType: any(named: 'contentType'),
+        userLat: any(named: 'userLat'),
+        userLng: any(named: 'userLng'),
+        radiusKm: any(named: 'radiusKm'),
+        urgent: any(named: 'urgent'),
+        maxStops: any(named: 'maxStops'),
+        paymentMethods: any(named: 'paymentMethods'),
+      ),
+    ).captured;
+    expect(captured.last, 23);
+  });
+
+  testWidgets('mode Colis : pas de puce Valise 23 kg', (tester) async {
+    _vueHaute(tester);
+    await tester.pumpWidget(const _Harness(mode: SearchMode.parcels));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('composer-suitcase-23')), findsNothing);
+  });
+
   testWidgets('le bloc de phrase est marqué facultatif', (tester) async {
     await tester.pumpWidget(const _Harness());
     await tester.pumpAndSettle();

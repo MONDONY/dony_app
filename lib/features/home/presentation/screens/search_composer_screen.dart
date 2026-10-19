@@ -338,6 +338,12 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         runSpacing: DonySpacing.sm,
         children: [
           QuickChip(
+            key: const Key('composer-suitcase-23'),
+            label: l.homeFilterChipsSuitcase23,
+            active: f.suitcase23Only,
+            onChanged: (v) => _update(f.copyWith(suitcase23Only: v)),
+          ),
+          QuickChip(
             label: l.gpProBadgeLabel,
             iconAsset: 'award',
             active: f.gpProOnly,

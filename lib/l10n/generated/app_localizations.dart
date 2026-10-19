@@ -4136,6 +4136,12 @@ abstract class AppLocalizations {
   /// **'🔥 Urgent'**
   String get homeFilterChipsUrgent;
 
+  /// Puce rapide de l'accueil (mode Trajets) et du composeur : trajets avec au moins 23 kg disponibles, une valise en soute.
+  ///
+  /// In fr, this message translates to:
+  /// **'🧳 Valise 23 kg'**
+  String get homeFilterChipsSuitcase23;
+
   /// No description provided for @homeFilterFieldsExactDate.
   ///
   /// In fr, this message translates to:
