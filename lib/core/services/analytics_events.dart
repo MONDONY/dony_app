@@ -509,8 +509,14 @@ abstract final class AnalyticsEvents {
   static const bidSupplementDeclined = 'bid_supplement_declined';
 
   /// Retrait ou refus impossible. Propriétés `action`
-  /// (`withdraw`/`decline`), `error_code`.
+  /// (`withdraw`/`decline`/`pay`/`confirm_payment`), `error_code`.
   static const bidSupplementActionFailed = 'bid_supplement_action_failed';
+
+  /// L'expéditeur lance le paiement du supplément : le serveur a accepté et
+  /// rendu un PaymentIntent. Propriétés `method` (`card`), `currency`,
+  /// `amount_bracket`. Le paiement lui-même est tracé par la feuille
+  /// (`payment_*`, `context: bid_supplement`).
+  static const bidSupplementPaymentStarted = 'bid_supplement_payment_started';
 
   /// Scan de remise refusé par le serveur (409
   /// `handover-supplement-pending`) : un supplément attend la réponse de

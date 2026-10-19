@@ -70,4 +70,21 @@ void main() {
     expect(await repository.withdraw('b', 'sup-1'), _supplement);
     expect(await repository.decline('b', 'sup-1'), _supplement);
   });
+
+  test('accept et confirmPayment délèguent à la datasource', () async {
+    const checkout = SupplementCheckout(
+      clientSecret: 'pi_1_secret_2',
+      amount: 17,
+      currency: 'EUR',
+    );
+    when(
+      () => datasource.accept('b', 'sup-1'),
+    ).thenAnswer((_) async => checkout);
+    when(
+      () => datasource.confirmPayment('b', 'sup-1'),
+    ).thenAnswer((_) async => _supplement);
+
+    expect(await repository.accept('b', 'sup-1'), checkout);
+    expect(await repository.confirmPayment('b', 'sup-1'), _supplement);
+  });
 }

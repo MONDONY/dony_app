@@ -4,7 +4,7 @@ import 'package:dony/features/matching/data/models/bid_supplement.dart';
 
 /// Supplément de prix à la remise (`/bids/{bidId}/supplements`). Le voyageur
 /// demande ([options], [quote], [create], [withdraw]), l'expéditeur répond
-/// ([decline] ; le paiement arrive avec les rails, PR A2 à A4). Erreurs
+/// ([accept] puis [confirmPayment] pour la carte, ou [decline]). Erreurs
 /// RFC 7807 : voir `ErrorCatalog` (`supplement-*`).
 class BidSupplementRemoteDatasource {
   const BidSupplementRemoteDatasource(this._client);
@@ -87,6 +87,29 @@ class BidSupplementRemoteDatasource {
   Future<BidSupplement> decline(String bidId, String supplementId) async {
     final response = await _client.dio.post<Map<String, dynamic>>(
       '${_base(bidId)}/$supplementId/decline',
+    );
+    return BidSupplement.fromJson(response.data!);
+  }
+
+  /// L'expéditeur accepte et paie. Carte : le serveur crée (ou recycle) le
+  /// PaymentIntent du supplément et rend de quoi ouvrir la feuille de
+  /// paiement ; `clientSecret` nul quand il n'y a plus rien à payer.
+  Future<SupplementCheckout> accept(String bidId, String supplementId) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '${_base(bidId)}/$supplementId/accept',
+    );
+    return SupplementCheckout.fromJson(response.data!);
+  }
+
+  /// Filet client après la feuille de paiement : le serveur relit le
+  /// PaymentIntent chez Stripe et passe le supplément payé s'il a réussi.
+  /// Rejouable, doublé par le webhook Stripe.
+  Future<BidSupplement> confirmPayment(
+    String bidId,
+    String supplementId,
+  ) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '${_base(bidId)}/$supplementId/confirm-payment',
     );
     return BidSupplement.fromJson(response.data!);
   }

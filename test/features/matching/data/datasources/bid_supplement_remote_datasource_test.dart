@@ -152,4 +152,73 @@ void main() {
     );
     expect(form.files.single.value.filename, 'supplement.jpg');
   });
+
+  test('accept : POST …/accept, contrat de checkout carte', () async {
+    api.on('POST', '/bids/$_bidId/supplements/sup-1/accept', {
+      'supplement': _supplement('PAYMENT_PENDING'),
+      'rail': 'STRIPE',
+      'clientSecret': 'pi_1_secret_2',
+      'paymentMethodTypes': ['card', 'paypal'],
+      'amount': 16.8,
+      'currency': 'EUR',
+      'publishableKey': 'pk_test',
+    });
+
+    final checkout = await datasource.accept(_bidId, 'sup-1');
+
+    expect(api.last.method, 'POST');
+    expect(api.last.data, isNull);
+    expect(checkout.isCard, isTrue);
+    expect(checkout.needsPayment, isTrue);
+    expect(checkout.clientSecret, 'pi_1_secret_2');
+    expect(checkout.paymentMethodTypes, ['card', 'paypal']);
+    expect(checkout.amount, 16.8);
+    expect(checkout.currency, 'EUR');
+    expect(checkout.publishableKey, 'pk_test');
+    expect(checkout.supplement!.status, BidSupplementStatus.paymentPending);
+  });
+
+  test(
+    'accept : déjà payé, clientSecret nul, montant repris du supplément',
+    () async {
+      api.on('POST', '/bids/$_bidId/supplements/sup-1/accept', {
+        'supplement': {..._supplement('PAID'), 'currency': 'XOF'},
+        'rail': 'STRIPE',
+        'clientSecret': null,
+      });
+
+      final checkout = await datasource.accept(_bidId, 'sup-1');
+
+      expect(checkout.needsPayment, isFalse);
+      expect(checkout.paymentMethodTypes, isEmpty);
+      expect(checkout.amount, 16.8);
+      expect(checkout.currency, 'XOF');
+      expect(checkout.publishableKey, isNull);
+    },
+  );
+
+  test('accept : réponse minimale sans supplément', () {
+    final checkout = SupplementCheckout.fromJson({
+      'rail': 'PAWAPAY',
+      'clientSecret': '',
+    });
+    expect(checkout.supplement, isNull);
+    expect(checkout.isCard, isFalse);
+    expect(checkout.needsPayment, isFalse);
+    expect(checkout.amount, 0);
+    expect(checkout.currency, 'EUR');
+  });
+
+  test('confirmPayment : POST …/confirm-payment', () async {
+    api.on(
+      'POST',
+      '/bids/$_bidId/supplements/sup-1/confirm-payment',
+      _supplement('PAID'),
+    );
+
+    final s = await datasource.confirmPayment(_bidId, 'sup-1');
+
+    expect(api.last.method, 'POST');
+    expect(s.status, BidSupplementStatus.paid);
+  });
 }
