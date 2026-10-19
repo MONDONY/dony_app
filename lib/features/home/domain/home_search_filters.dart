@@ -104,6 +104,22 @@ class AnnouncementQuery {
 /// Poids d'une valise en soute standard, seuil de la puce « Valise 23 kg ».
 const double kSuitcaseKg = 23;
 
+/// Bornes des curseurs de poids des trajets (feuille Capacité de l'accueil,
+/// champ « Poids min » du composeur).
+const double kCapacitySliderMinKg = 1;
+const double kCapacitySliderMaxKg = 50;
+
+/// Traduit la position des poignées du curseur Capacité en bornes de filtre.
+/// Une poignée laissée à son extrémité veut dire « pas de borne » : au
+/// minimum, aucun `minAvailableKg` ; au maximum, aucun `maxAvailableKg`.
+/// Sans cela, ouvrir la feuille puis « Appliquer » sans rien toucher posait
+/// `1 à 50 kg` et cachait les trajets de plus de 50 kg disponibles.
+({double? min, double? max}) capacityBoundsFromSlider(double min, double max) =>
+    (
+      min: min <= kCapacitySliderMinKg ? null : min,
+      max: max >= kCapacitySliderMaxKg ? null : max,
+    );
+
 class HomeSearchFilters {
   const HomeSearchFilters({
     // Communs
@@ -242,7 +258,7 @@ class HomeSearchFilters {
       departureCity: ignoreCorridor ? null : departureCity,
       arrivalCity: ignoreCorridor ? null : arrivalCity,
       date: customDate,
-      weightKg: weightMin ?? 6,
+      weightKg: weightMin ?? 0,
       maxPricePerKg: maxPricePerKg ?? 25,
       gpProOnly: gpProOnly,
       ratingFilter: minRating != null,

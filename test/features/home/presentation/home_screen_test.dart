@@ -1551,6 +1551,136 @@ void main() {
   // « soumet » jamais de recherche, il ne doit donc jamais tracer cet event
   // (régression du bug corrigé : avant, `_onFiltersChanged` le traçait à
   // chaque changement, faussant complètement le ratio phrase/filtres).
+  // Ouvrir la feuille Capacité puis « Appliquer » sans rien toucher posait
+  // 1 à 50 kg : les trajets de plus de 50 kg disponibles disparaissaient.
+  group('feuille Capacité : une poignée au bout = pas de borne', () {
+    Future<MockAnnouncementBloc> pumpTrips(WidgetTester tester) async {
+      final bloc = MockAnnouncementBloc();
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _buildHome(
+          announcementBlocOverride: bloc,
+          user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+      return bloc;
+    }
+
+    Future<void> openSheet(WidgetTester tester) async {
+      final chip = find.byKey(const Key('chip-capacity'));
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+    }
+
+    List<AnnouncementSearchRequested> searches(MockAnnouncementBloc bloc) =>
+        verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<AnnouncementSearchRequested>().toList();
+
+    String chipLabel(WidgetTester tester) => tester
+        .widget<Text>(
+          find
+              .descendant(
+                of: find.byKey(const Key('chip-capacity')),
+                matching: find.byType(Text),
+              )
+              .first,
+        )
+        .data!;
+
+    testWidgets('appliquer sans toucher : aucune borne, puce inactive', (
+      tester,
+    ) async {
+      final bloc = await pumpTrips(tester);
+      await openSheet(tester);
+      expect(find.text('50 kg et +'), findsOneWidget);
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      for (final e in searches(bloc)) {
+        expect(e.minAvailableKg, isNull);
+        expect(e.maxAvailableKg, isNull);
+      }
+      expect(chipLabel(tester), 'Kilos');
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'weight', 'mode': 'trips'},
+        ),
+      );
+    });
+
+    testWidgets('minimum seul déplacé : seul minAvailableKg part', (
+      tester,
+    ) async {
+      final bloc = await pumpTrips(tester);
+      await openSheet(tester);
+      final slider = tester.getRect(find.byType(RangeSlider));
+      await tester.dragFrom(
+        Offset(slider.left + 24, slider.center.dy),
+        const Offset(200, 0),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      final last = searches(bloc).last;
+      expect(last.minAvailableKg, isNotNull);
+      expect(last.minAvailableKg, greaterThan(1));
+      expect(last.maxAvailableKg, isNull);
+      expect(chipLabel(tester), startsWith('≥ '));
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'weight', 'mode': 'trips'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('maximum seul déplacé : seul maxAvailableKg part', (
+      tester,
+    ) async {
+      final bloc = await pumpTrips(tester);
+      await openSheet(tester);
+      final slider = tester.getRect(find.byType(RangeSlider));
+      await tester.dragFrom(
+        Offset(slider.right - 24, slider.center.dy),
+        const Offset(-200, 0),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      final last = searches(bloc).last;
+      expect(last.minAvailableKg, isNull);
+      expect(last.maxAvailableKg, isNotNull);
+      expect(last.maxAvailableKg, lessThan(50));
+      expect(chipLabel(tester), startsWith('≤ '));
+    });
+
+    testWidgets('puce Valise 23 kg + Capacité au bout : minimum 23 seul', (
+      tester,
+    ) async {
+      final bloc = await pumpTrips(tester);
+      await tester.tap(find.byKey(const Key('chip-suitcase-23')));
+      await tester.pumpAndSettle();
+      await openSheet(tester);
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      final last = searches(bloc).last;
+      expect(last.minAvailableKg, 23);
+      expect(last.maxAvailableKg, isNull);
+      expect(chipLabel(tester), 'Kilos');
+    });
+  });
+
   group('search_submitted', () {
     testWidgets('un changement direct au doigt (hors composer) ne trace rien', (
       tester,

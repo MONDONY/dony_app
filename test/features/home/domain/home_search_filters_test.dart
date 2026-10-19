@@ -415,6 +415,65 @@ void main() {
         const f = HomeSearchFilters(suitcase23Only: true);
         expect(f.toPackageRequestQuery().maxWeight, isNull);
       });
+
+      test(
+        "Capacité « jusqu'au bout » (bornes null) : la puce seule compte",
+        () {
+          final bounds = capacityBoundsFromSlider(
+            kCapacitySliderMinKg,
+            kCapacitySliderMaxKg,
+          );
+          final f = const HomeSearchFilters(
+            suitcase23Only: true,
+          ).copyWith(weightMin: bounds.min, weightMax: bounds.max);
+          final q = f.toAnnouncementQuery();
+          expect(q.minAvailableKg, 23);
+          expect(q.maxAvailableKg, isNull);
+          expect(f.activeKeys, {'suitcase_23'});
+        },
+      );
+    });
+
+    group('curseur Capacité : une poignée au bout = pas de borne', () {
+      test('les deux poignées aux extrémités : aucune borne', () {
+        final b = capacityBoundsFromSlider(
+          kCapacitySliderMinKg,
+          kCapacitySliderMaxKg,
+        );
+        expect(b.min, isNull);
+        expect(b.max, isNull);
+        final f = const HomeSearchFilters().copyWith(
+          weightMin: b.min,
+          weightMax: b.max,
+        );
+        expect(f.activeKeys, isNot(contains('weight')));
+        expect(f.activeCountFor(SearchMode.trips), 0);
+        final q = f.toAnnouncementQuery();
+        expect(q.minAvailableKg, isNull);
+        expect(q.maxAvailableKg, isNull);
+      });
+
+      test('maximum au bout : seul le minimum part', () {
+        final b = capacityBoundsFromSlider(10, kCapacitySliderMaxKg);
+        expect(b.min, 10);
+        expect(b.max, isNull);
+      });
+
+      test('minimum au bout : seul le maximum part', () {
+        final b = capacityBoundsFromSlider(kCapacitySliderMinKg, 20);
+        expect(b.min, isNull);
+        expect(b.max, 20);
+      });
+
+      test('deux poignées déplacées : les deux bornes partent', () {
+        final b = capacityBoundsFromSlider(5, 20);
+        expect(b.min, 5);
+        expect(b.max, 20);
+      });
+
+      test('toSearchParams sans minimum : 0 (aucun minimum)', () {
+        expect(const HomeSearchFilters().toSearchParams().weightKg, 0);
+      });
     });
   });
 }

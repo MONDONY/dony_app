@@ -10,7 +10,7 @@ void main() {
 
       expect(params.departureCity, 'Paris');
       expect(params.arrivalCity, 'Dakar');
-      expect(params.weightKg, 6);
+      expect(params.weightKg, 0); // 0 = aucun minimum
       expect(params.maxPricePerKg, 25);
       expect(params.gpProOnly, isFalse);
       expect(params.ratingFilter, isFalse);
@@ -28,7 +28,7 @@ void main() {
 
       expect(params.departureCity, isNull);
       expect(params.arrivalCity, isNull);
-      expect(params.weightKg, 6);
+      expect(params.weightKg, 0); // 0 = aucun minimum
     });
 
     test('constructs with all fields', () {

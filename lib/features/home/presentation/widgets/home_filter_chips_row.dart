@@ -118,7 +118,7 @@ class HomeFilterChipsRow extends StatelessWidget {
     final min = filters.weightMin;
     final max = filters.weightMax;
     if (min != null && max != null) {
-      return '${min.toInt()}–${max.toInt()} kg';
+      return l.homeFilterChipsCapacityRange(min.toInt(), max.toInt());
     }
     if (min != null) {
       return '≥ ${min.toInt()} kg';
@@ -186,6 +186,7 @@ class HomeFilterChipsRow extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
+              key: const Key('chip-capacity'),
               label: _capacityLabel(l),
               isActive: hasCapacity,
               iconAsset: 'dumbbell',

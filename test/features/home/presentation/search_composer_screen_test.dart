@@ -226,6 +226,48 @@ void main() {
     }
   });
 
+  // Le curseur « Poids min » laissé au minimum ne pose aucun minimum.
+  testWidgets('Poids min confirmé sans toucher : aucune borne de kilos', (
+    tester,
+  ) async {
+    _vueHaute(tester);
+    final repo = _MockAnnouncementRepo();
+    await tester.pumpWidget(_Harness(announcementRepo: repo));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.text('POIDS MIN'));
+    await tester.tap(find.text('POIDS MIN'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmer'));
+    await _settleFilterChange(tester);
+
+    final captured = verify(
+      () => repo.countAnnouncements(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDateFrom: any(named: 'departureDateFrom'),
+        departureDateTo: any(named: 'departureDateTo'),
+        minAvailableKg: captureAny(named: 'minAvailableKg'),
+        maxAvailableKg: captureAny(named: 'maxAvailableKg'),
+        maxPricePerKg: any(named: 'maxPricePerKg'),
+        gpProOnly: any(named: 'gpProOnly'),
+        minRating: any(named: 'minRating'),
+        weekendOnly: any(named: 'weekendOnly'),
+        transportMode: any(named: 'transportMode'),
+        kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+        contentType: any(named: 'contentType'),
+        userLat: any(named: 'userLat'),
+        userLng: any(named: 'userLng'),
+        radiusKm: any(named: 'radiusKm'),
+        urgent: any(named: 'urgent'),
+        maxStops: any(named: 'maxStops'),
+        paymentMethods: any(named: 'paymentMethods'),
+      ),
+    ).captured;
+    expect(captured.every((v) => v == null), isTrue);
+    expect(find.text('Tous'), findsWidgets);
+  });
+
   // FLUTTER-GD / FLUTTER-G0 : les deux filtres partent au serveur.
   testWidgets('Escales et moyens de paiement alimentent la recherche', (
     tester,

@@ -547,14 +547,18 @@ class WeightField extends StatelessWidget {
     required this.onChanged,
   });
 
-  final double weightKg;
-  final ValueChanged<double> onChanged;
+  /// Poids minimal choisi ; `null` = aucun minimum (« Tous »).
+  final double? weightKg;
+
+  /// Reçoit `null` quand le curseur est laissé à son minimum : aucune borne.
+  final ValueChanged<double?> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final active = weightKg != 6;
+    final kg = weightKg;
+    final active = kg != null;
     return GestureDetector(
       onTap: () => _showWeightPicker(context),
       child: Container(
@@ -581,7 +585,9 @@ class WeightField extends StatelessWidget {
                 DonyIcon('scale', size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
-                  '${weightKg.toStringAsFixed(0)} kg',
+                  kg == null
+                      ? context.l10n.homeFilterFieldsAll
+                      : '${kg.toStringAsFixed(0)} kg',
                   style: tt.titleSmall?.copyWith(
                     color: active ? cs.primary : cs.onSurface,
                     fontWeight: active ? FontWeight.w700 : FontWeight.w400,
@@ -598,7 +604,11 @@ class WeightField extends StatelessWidget {
   void _showWeightPicker(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    double local = weightKg;
+    // Un minimum posé par la feuille Capacité (jusqu'à 50 kg) ou par la
+    // phrase peut sortir du curseur : on le ramène dans ses bornes.
+    double local = (weightKg ?? kCapacitySliderMinKg)
+        .clamp(kCapacitySliderMinKg, kCapacitySliderMaxKg)
+        .toDouble();
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -610,25 +620,30 @@ class WeightField extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      local.toStringAsFixed(0),
-                      style: tt.displayLarge?.copyWith(color: cs.primary),
-                    ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Padding(
-                      padding: const EdgeInsets.only(top: DonySpacing.md),
-                      child: Text(
-                        'kg',
-                        style: tt.headlineMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                child: local <= kCapacitySliderMinKg
+                    ? Text(
+                        ctx.l10n.homeFilterFieldsAll,
+                        style: tt.displaySmall?.copyWith(color: cs.primary),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            local.toStringAsFixed(0),
+                            style: tt.displayLarge?.copyWith(color: cs.primary),
+                          ),
+                          const SizedBox(width: DonySpacing.sm),
+                          Padding(
+                            padding: const EdgeInsets.only(top: DonySpacing.md),
+                            child: Text(
+                              'kg',
+                              style: tt.headlineMedium?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
               ),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
@@ -639,9 +654,10 @@ class WeightField extends StatelessWidget {
                 ),
                 child: Slider(
                   value: local,
-                  min: 1,
-                  max: 30,
-                  divisions: 29,
+                  min: kCapacitySliderMinKg,
+                  max: kCapacitySliderMaxKg,
+                  divisions: (kCapacitySliderMaxKg - kCapacitySliderMinKg)
+                      .toInt(),
                   onChanged: (v) => setS(() => local = v),
                 ),
               ),
@@ -649,7 +665,8 @@ class WeightField extends StatelessWidget {
               DonyButton(
                 label: ctx.l10n.commonConfirm,
                 onPressed: () {
-                  onChanged(local);
+                  // Curseur laissé au minimum = aucun minimum envoyé.
+                  onChanged(local <= kCapacitySliderMinKg ? null : local);
                   // Navigator plutôt que `ctx.pop()` (go_router) : la feuille
                   // est un route modale imperative, et Navigator ne suppose
                   // aucun GoRouter au-dessus.

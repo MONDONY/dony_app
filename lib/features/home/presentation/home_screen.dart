@@ -1137,7 +1137,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   Future<void> _showWeightSheet() async {
-    final result = await showModalBottomSheet<({double min, double max})>(
+    final result = await showModalBottomSheet<({double? min, double? max})>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -1148,12 +1148,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
       ),
     );
     if (result == null || !mounted) return;
-    final cleared = _filters.copyWith(clearWeight: true);
+    // Bornes `null` = poignée laissée au bout du curseur : aucune borne
+    // envoyée, la puce Capacité reste inactive (voir capacityBoundsFromSlider).
     _onFiltersChanged(
-      cleared.copyWith(
-        weightMin: result.min <= 0 ? null : result.min,
-        weightMax: result.max <= 0 ? null : result.max,
-      ),
+      _filters
+          .copyWith(clearWeight: true)
+          .copyWith(weightMin: result.min, weightMax: result.max),
     );
   }
 
@@ -3128,8 +3128,8 @@ class _WeightRangeSheet extends StatefulWidget {
 }
 
 class _WeightRangeSheetState extends State<_WeightRangeSheet> {
-  static const double _kMin = 1.0;
-  static const double _kMax = 50.0;
+  static const double _kMin = kCapacitySliderMinKg;
+  static const double _kMax = kCapacitySliderMaxKg;
 
   late double _min;
   late double _max;
@@ -3137,8 +3137,10 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
   @override
   void initState() {
     super.initState();
-    _min = widget.currentMin ?? _kMin;
-    _max = widget.currentMax ?? _kMax;
+    // Une borne posée ailleurs (phrase du composeur) peut sortir du curseur :
+    // on la ramène dans ses bornes, un RangeSlider hors bornes plante.
+    _min = (widget.currentMin ?? _kMin).clamp(_kMin, _kMax).toDouble();
+    _max = (widget.currentMax ?? _kMax).clamp(_min, _kMax).toDouble();
   }
 
   @override
@@ -3182,7 +3184,10 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
           const SizedBox(height: DonySpacing.xl),
           Center(
             child: Text(
-              '${_min.toInt()} – ${_max.toInt()} kg',
+              _max >= _kMax
+                  ? '${_min.toInt()} – '
+                        '${context.l10n.homeWeightSliderMaxOpen(_kMax.toInt())}'
+                  : '${_min.toInt()} – ${_max.toInt()} kg',
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: cs.primary,
@@ -3218,7 +3223,7 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 Text(
-                  '50 kg',
+                  context.l10n.homeWeightSliderMaxOpen(_kMax.toInt()),
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -3229,7 +3234,8 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop((min: 0.0, max: 0.0)),
+                  onTap: () =>
+                      Navigator.of(context).pop((min: null, max: null)),
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
@@ -3253,8 +3259,9 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
               Expanded(
                 child: DonyButton(
                   label: context.l10n.commonApply,
-                  onPressed: () =>
-                      Navigator.of(context).pop((min: _min, max: _max)),
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pop(capacityBoundsFromSlider(_min, _max)),
                 ),
               ),
             ],
