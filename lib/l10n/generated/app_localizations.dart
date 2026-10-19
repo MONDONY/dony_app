@@ -515,8 +515,32 @@ abstract class AppLocalizations {
   /// No description provided for @errorPhoneAlreadyExistsMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Ce numéro est déjà associé à un autre compte.'**
+  /// **'Ce numéro a déjà son propre compte Yadony. Connectez-vous avec ce numéro, ou contactez le support pour regrouper vos comptes.'**
   String get errorPhoneAlreadyExistsMessage;
+
+  /// No description provided for @errorPhonePendingDeletionTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte en cours de suppression'**
+  String get errorPhonePendingDeletionTitle;
+
+  /// No description provided for @errorPhonePendingDeletionMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro appartient à un compte en cours de suppression. Connectez-vous avec ce numéro pour annuler la suppression.'**
+  String get errorPhonePendingDeletionMessage;
+
+  /// Sujet prérempli du ticket support ouvert depuis l'ajout d'un numéro déjà utilisé ou en cours de suppression.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro déjà utilisé par un autre compte'**
+  String get contactPhoneConflictSupportSubject;
+
+  /// Message d'amorce prérempli, modifiable, du ticket support ouvert depuis l'ajout d'un numéro déjà utilisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour, je veux ajouter le numéro {phone} à mon compte, mais il est déjà associé à un autre compte Yadony. Pouvez-vous m\'aider à regrouper mes comptes ?'**
+  String contactPhoneConflictSupportMessage(String phone);
 
   /// No description provided for @errorSmsOtpDisabledTitle.
   ///

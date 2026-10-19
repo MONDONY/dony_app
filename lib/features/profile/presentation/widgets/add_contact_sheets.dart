@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/phone/phone_country.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -7,11 +9,13 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/dial_code_picker.dart';
 import 'package:dony/features/auth/presentation/widgets/otp_code_field.dart';
+import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:dony/l10n/rich_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constante interne : étape de la sheet (saisie → OTP)
@@ -179,6 +183,11 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   /// Vrai entre l'envoi du code de vérification et sa réponse.
   bool _verifySubmitted = false;
 
+  /// Refus « numéro déjà pris » reçu sur cet écran (code dans
+  /// [phoneConflictCodes]), `null` sinon. Possédé par le [State] : seul le
+  /// listener du BLoC y écrit, et il est disposé avec lui.
+  final _conflict = ValueNotifier<AppException?>(null);
+
   @override
   void initState() {
     super.initState();
@@ -189,6 +198,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   void dispose() {
     _phoneCtrl.dispose();
     _otpCtrl.dispose();
+    _conflict.dispose();
     super.dispose();
   }
 
@@ -204,6 +214,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
     final number = _phoneCtrl.text.trim();
     if (number.isEmpty) return;
     _pendingPhone = toE164(_country.dialCode, number);
+    _conflict.value = null;
     context.read<AuthBloc>().add(AuthSendOtpRequested(_pendingPhone));
   }
 
@@ -240,30 +251,101 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
           Navigator.of(context, rootNavigator: true).pop(true);
         } else if (state is AuthError) {
           _verifySubmitted = false;
-          ErrorPresenter.show(context, state.error);
+          if (phoneConflictCodes.contains(state.error.code)) {
+            // Le bandeau ci-dessous explique quoi faire et propose le
+            // support : pas de snackbar en double (YADONY-FLUTTER-PROD-Y).
+            _conflict.value = state.error;
+          } else {
+            ErrorPresenter.show(context, state.error);
+          }
         }
       },
-      child: ValueListenableBuilder<_ContactStep>(
-        valueListenable: widget.stepNotifier,
-        builder: (_, step, _) {
-          if (step == _ContactStep.input) {
-            return _PhoneInputStep(
-              controller: _phoneCtrl,
-              country: _country,
-              onCountryChanged: (c) => setState(() => _country = c),
-              tt: tt,
-              cs: cs,
-            );
-          }
-          return _OtpStep(
-            controller: _otpCtrl,
-            onCompleted: (_) => _verifyOtp(),
-            readSms: true,
-            contact: _pendingPhone,
-            tt: tt,
-            cs: cs,
-          );
-        },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ValueListenableBuilder<AppException?>(
+            valueListenable: _conflict,
+            builder: (_, error, _) => error == null
+                ? const SizedBox.shrink()
+                : _PhoneConflictBanner(error: error, phone: _pendingPhone),
+          ),
+          ValueListenableBuilder<_ContactStep>(
+            valueListenable: widget.stepNotifier,
+            builder: (_, step, _) {
+              if (step == _ContactStep.input) {
+                return _PhoneInputStep(
+                  controller: _phoneCtrl,
+                  country: _country,
+                  onCountryChanged: (c) => setState(() => _country = c),
+                  tt: tt,
+                  cs: cs,
+                );
+              }
+              return _OtpStep(
+                controller: _otpCtrl,
+                onCompleted: (_) => _verifyOtp(),
+                readSms: true,
+                contact: _pendingPhone,
+                tt: tt,
+                cs: cs,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Refus du rattachement parce que le numéro appartient déjà à un autre
+/// compte : actif (`phone-already-exists`) ou en cours de suppression
+/// (`phone-pending-deletion`). L'écran montre alors quoi faire et un accès au
+/// support, au lieu d'une simple snackbar.
+const phoneConflictCodes = {'phone-already-exists', 'phone-pending-deletion'};
+
+/// Origine analytics de la demande support ouverte depuis ce bandeau
+/// ([SupportTicketDraft.origin]).
+const phoneConflictSupportOrigin = 'phone_already_used';
+
+/// Bandeau d'un numéro déjà pris : titre et message du catalogue d'erreurs,
+/// puis « Contacter le support », qui ouvre une demande préremplie (catégorie
+/// Compte, sujet et message modifiables avant l'envoi).
+class _PhoneConflictBanner extends StatelessWidget {
+  const _PhoneConflictBanner({required this.error, required this.phone});
+
+  final AppException error;
+  final String phone;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final presentation = ErrorCatalog.lookup(error, l10n: l);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        0,
+      ),
+      child: DonyStatusBanner(
+        key: const Key('phone-conflict-banner'),
+        type: DonyStatusBannerType.warning,
+        title: presentation.title,
+        message: presentation.message,
+        action: TextButton(
+          key: const Key('phone-conflict-support-cta'),
+          onPressed: () => context.push(
+            '/support',
+            extra: SupportTicketDraft(
+              category: 'ACCOUNT',
+              subject: l.contactPhoneConflictSupportSubject,
+              message: l.contactPhoneConflictSupportMessage(phone),
+              origin: phoneConflictSupportOrigin,
+            ),
+          ),
+          child: Text(l.supportContactCta),
+        ),
       ),
     );
   }

@@ -16,6 +16,12 @@ void main() {
       expect(SupportHomeRequested().props, isEmpty);
     });
 
+    test('brouillon ouvert : comparé sur son origine', () {
+      expectValueEquality(() => SupportDraftOpened('phone_already_used'), [
+        SupportDraftOpened('team_cancelled_parcel'),
+      ]);
+    });
+
     test('création de ticket : catégorie, sujet et message', () {
       SupportTicketCreateRequested make({
         String category = 'PAYMENT',

@@ -28,6 +28,12 @@ abstract final class AnalyticsEvents {
   /// (`guest-claim-invalid-token`, `guest-claim-self`, …) ou `unknown`.
   static const guestDataClaimFailed = 'guest_data_claim_failed';
 
+  /// Échec du rattachement d'un numéro depuis Profil › Modifier le profil ›
+  /// Téléphone (`POST /auth/sms-otp/attach`). Propriété `error_code` : code
+  /// métier du backend (`phone-already-exists`, `phone-pending-deletion`,
+  /// `phone-otp-invalid`, …) ou `unknown`. Jamais le numéro.
+  static const phoneAttachFailed = 'phone_attach_failed';
+
   // KYC
   static const kycStarted = 'kyc_started';
   static const kycCompleted = 'kyc_completed';
@@ -502,6 +508,12 @@ abstract final class AnalyticsEvents {
   /// Ticket support créé avec succès (propriété `category` : énumération
   /// fermée backend, jamais le sujet ni le message).
   static const supportTicketCreated = 'support_ticket_created';
+
+  /// Écran support ouvert avec une demande préremplie (`SupportTicketDraft`),
+  /// avant toute saisie. Propriété `origin` : écran d'où vient la demande
+  /// (`team_cancelled_parcel`, `phone_already_used`). Jamais le sujet ni le
+  /// message.
+  static const supportDraftOpened = 'support_draft_opened';
 
   /// Message utilisateur envoyé dans un ticket support existant. Aucune
   /// propriété : le contenu ne part jamais dans l'analytics.
