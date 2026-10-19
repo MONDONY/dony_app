@@ -424,6 +424,75 @@ void main() {
     });
   });
 
+  group('mobileMoneyCountries', () {
+    test(
+      'GET /payments/mobile-money/countries avec operation=DEPOSIT',
+      () async {
+        when(
+          () => mockDio.get<dynamic>(
+            '/payments/mobile-money/countries',
+            queryParameters: {'operation': 'DEPOSIT'},
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(
+              path: '/payments/mobile-money/countries',
+            ),
+            statusCode: 200,
+            data: {
+              'available': <dynamic>[],
+              'upcoming': ['ML'],
+            },
+          ),
+        );
+
+        final data = await datasource.mobileMoneyCountries();
+
+        expect(data['upcoming'], ['ML']);
+      },
+    );
+  });
+
+  group('pendingTopup', () {
+    test('200 : renvoie le corps JSON', () async {
+      when(() => mockDio.get<dynamic>('/wallet/topup/pending')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/topup/pending'),
+          statusCode: 200,
+          data: {'topupId': 't-1', 'status': 'PENDING'},
+        ),
+      );
+
+      final data = await datasource.pendingTopup();
+
+      expect(data, isNotNull);
+      expect(data!['topupId'], 't-1');
+    });
+
+    test('204 : renvoie null', () async {
+      when(() => mockDio.get<dynamic>('/wallet/topup/pending')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/topup/pending'),
+          statusCode: 204,
+        ),
+      );
+
+      expect(await datasource.pendingTopup(), isNull);
+    });
+
+    test('200 sans corps : renvoie null', () async {
+      when(() => mockDio.get<dynamic>('/wallet/topup/pending')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/topup/pending'),
+          statusCode: 200,
+          data: '',
+        ),
+      );
+
+      expect(await datasource.pendingTopup(), isNull);
+    });
+  });
+
   test('le datasource ne convertit rien : la DioException remonte telle '
       'quelle (le repository seul la traduit)', () async {
     when(() => mockDio.get<dynamic>('/wallet/balance')).thenThrow(

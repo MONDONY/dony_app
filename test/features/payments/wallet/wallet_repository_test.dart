@@ -18,6 +18,116 @@ void main() {
     repo = WalletRepository(mockDatasource);
   });
 
+  DioException notFound(String path) => DioException(
+    requestOptions: RequestOptions(path: path),
+    error: const NotFoundException(),
+  );
+
+  group('mobileMoneyCountries', () {
+    test('200 : mappe le catalogue', () async {
+      when(() => mockDatasource.mobileMoneyCountries()).thenAnswer(
+        (_) async => {
+          'available': [
+            {
+              'country': 'CI',
+              'currency': 'XOF',
+              'operators': [
+                {
+                  'code': 'ORANGE_CIV',
+                  'label': 'Orange Money',
+                  'brand': 'ORANGE',
+                  'validationHint': 'SMS_LINK',
+                  'minAmount': 100,
+                  'maxAmount': 1500000,
+                },
+              ],
+            },
+          ],
+          'upcoming': ['ML'],
+        },
+      );
+
+      final result = await repo.mobileMoneyCountries();
+
+      expect(result, isNotNull);
+      expect(result!.byCode('CI')!.operators.single.code, 'ORANGE_CIV');
+      expect(result.isUpcoming('ML'), isTrue);
+    });
+
+    test('mobileMoneyCountries_404_returnsNull', () async {
+      when(
+        () => mockDatasource.mobileMoneyCountries(),
+      ).thenThrow(notFound('/payments/mobile-money/countries'));
+
+      expect(await repo.mobileMoneyCountries(), isNull);
+    });
+
+    test('une autre erreur est convertie en AppException', () async {
+      when(() => mockDatasource.mobileMoneyCountries()).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/payments/mobile-money/countries',
+          ),
+          error: const NetworkException('Erreur réseau'),
+        ),
+      );
+
+      await expectLater(
+        repo.mobileMoneyCountries(),
+        throwsA(isA<NetworkException>()),
+      );
+    });
+  });
+
+  group('pendingTopup', () {
+    test('pendingTopup_200_returnsModel', () async {
+      when(() => mockDatasource.pendingTopup()).thenAnswer(
+        (_) async => {
+          'topupId': 't-1',
+          'status': 'PENDING',
+          'amount': 5000.0,
+          'currency': 'XOF',
+          'provider': 'ORANGE_CIV',
+          'providerLabel': 'Orange Money',
+          'msisdnMasked': '+225 •• •• 56 78',
+          'expiresAt': '2026-10-19T10:15:00Z',
+          'validationHint': 'SMS_LINK',
+        },
+      );
+
+      final result = await repo.pendingTopup();
+
+      expect(result, isNotNull);
+      expect(result!.topupId, 't-1');
+      expect(result.expiresAt, DateTime.utc(2026, 10, 19, 10, 15));
+    });
+
+    test('pendingTopup_204_returnsNull', () async {
+      when(() => mockDatasource.pendingTopup()).thenAnswer((_) async => null);
+
+      expect(await repo.pendingTopup(), isNull);
+    });
+
+    test('pendingTopup_404_returnsNull', () async {
+      when(
+        () => mockDatasource.pendingTopup(),
+      ).thenThrow(notFound('/wallet/topup/pending'));
+
+      expect(await repo.pendingTopup(), isNull);
+    });
+
+    test('une autre erreur est convertie en AppException', () async {
+      when(() => mockDatasource.pendingTopup()).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/wallet/topup/pending'),
+          error: const NetworkException('Erreur réseau'),
+        ),
+      );
+
+      await expectLater(repo.pendingTopup(), throwsA(isA<NetworkException>()));
+    });
+  });
+
   group('requestRefund', () {
     test('requestRefund(currency) délègue au datasource avec const [] et '
         'renvoie un WalletRefundRequestModel', () async {
