@@ -466,7 +466,7 @@ void main() {
             verify(() => prefsRepo.updatePrefs(captureAny())).captured.single
                 as NotificationPrefsDto;
         final json = dto.toJson();
-        expect(json.keys, hasLength(11));
+        expect(json.keys, hasLength(13));
         expect(json['pushMessages'], isFalse);
         // Les champs non touchés partent avec leur valeur courante : le PUT est
         // un remplacement complet côté serveur, un champ omis y arriverait à
@@ -577,9 +577,9 @@ void main() {
 
   // ─── Contrat de sérialisation ──────────────────────────────────────────────
   group('NotificationPrefsDto', () {
-    test('toJson émet toujours les onze champs, même sur une map vide', () {
+    test('toJson émet toujours les treize champs, même sur une map vide', () {
       final json = const NotificationPrefsDto({}).toJson();
-      expect(json.keys, hasLength(11));
+      expect(json.keys, hasLength(13));
       // V305 (back #452) : défaut true, comme les colonnes.
       expect(json['pushMissedCalls'], isTrue);
       expect(json['pushTravelerAutomations'], isTrue);
@@ -587,6 +587,9 @@ void main() {
       // V340 (plan bruit, étape 4b) : un réglage par rôle, défaut true.
       expect(json['pushMyTrips'], isTrue);
       expect(json['pushRecipientParcels'], isTrue);
+      // V342 (plan bruit, étape 5) : e-mails coupables, défaut true.
+      expect(json['emailRecaps'], isTrue);
+      expect(json['emailAlertsTips'], isTrue);
       // Les défauts répliquent `NotificationPrefsDto.defaults()` du backend.
       expect(json['pushActivityBids'], isTrue);
       expect(json['pushPromo'], isFalse);
@@ -616,6 +619,8 @@ void main() {
         'pushRemindersTips': false,
         'pushMyTrips': false,
         'pushRecipientParcels': true,
+        'emailRecaps': false,
+        'emailAlertsTips': true,
       });
       expect(dto.toJson(), {
         'pushActivityBids': false,
@@ -629,6 +634,8 @@ void main() {
         'pushRemindersTips': false,
         'pushMyTrips': false,
         'pushRecipientParcels': true,
+        'emailRecaps': false,
+        'emailAlertsTips': true,
       });
     });
 

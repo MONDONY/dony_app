@@ -13145,6 +13145,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tracking of parcels sent to you';
 
   @override
+  String get notificationSettingsSectionEmails => 'EMAILS';
+
+  @override
+  String get notificationSettingsEmailRecapsLabel => 'Summaries';
+
+  @override
+  String get notificationSettingsEmailRecapsSubtitle =>
+      'Booking, delivery, cancellation, return';
+
+  @override
+  String get notificationSettingsEmailAlertsTipsLabel => 'Alerts and tips';
+
+  @override
+  String get notificationSettingsEmailAlertsTipsSubtitle =>
+      'Summary of your alerts, flight prices, getting started';
+
+  @override
+  String get notificationSettingsEmailsAlwaysNote =>
+      'Receipts and team decisions are always sent to you by email, if your account has an address.';
+
+  @override
   String get notificationSettingsMissedCallsLabel => 'Missed calls';
 
   @override
