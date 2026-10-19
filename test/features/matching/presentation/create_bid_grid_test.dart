@@ -631,6 +631,96 @@ void main() {
       },
     );
 
+    testWidgets(
+      'code accepté, champ vidé sans « Appliquer », changement de poids : '
+      'devis de fond sans code',
+      (tester) async {
+        useTestCommissionGrid();
+        await openSheet(tester);
+        await setWeight(tester, 8);
+        await applyPromo(tester, 'WELCOME10');
+        bidStream.add(
+          BidQuoteLoaded(
+            const BidQuoteResponse(
+              netEur: 20.0,
+              kgNetEur: 20.0,
+              rate: 0.07,
+              commissionEur: 1.40,
+              totalEur: 21.10,
+              promoApplied: true,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        capturedQuotes();
+
+        // Le champ vidé : l'offre partirait sans code, le devis aussi.
+        await tester.enterText(
+          find.ancestor(
+            of: find.text('WELCOME10'),
+            matching: find.byType(TextFormField),
+          ),
+          '',
+        );
+        await tester.pump();
+        await setWeight(tester, 5);
+        final sent = capturedQuotes();
+        expect(sent, hasLength(1));
+        expect(sent.single.promoCode, isNull);
+        expect(sent.single.backgroundKey, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'code refusé : message promo gardé et devis de fond sans code affiché',
+      (tester) async {
+        useTestCommissionGrid();
+        await openSheet(tester);
+        await setWeight(tester, 8);
+        capturedQuotes();
+        await applyPromo(tester, 'PARRAIN42');
+        capturedQuotes();
+
+        bidStream.add(
+          BidPromoError(const ServerException('not found', 'promo-not-found')),
+        );
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        final sent = capturedQuotes();
+        expect(sent, hasLength(1));
+        expect(sent.single.promoCode, isNull);
+        final key = sent.single.backgroundKey;
+        expect(key, isNotNull);
+
+        bidStream.add(
+          BidQuoteLoaded(
+            const BidQuoteResponse(
+              netEur: 20.0,
+              kgNetEur: 20.0,
+              rate: 0.04,
+              commissionEur: 0.80,
+              totalEur: 20.80,
+              promoApplied: false,
+            ),
+            backgroundKey: key,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(squash(textOf(tester, totalKey)), '20,80 €');
+        // Le message sous le champ reste visible.
+        expect(
+          find.text(
+            "Ce code promo n'existe pas. Vérifiez la saisie et réessayez. "
+            "Un code parrain se saisit à l'inscription ou dans Moi › "
+            "« J'ai un code parrain ».",
+          ),
+          findsWidgets,
+        );
+      },
+    );
+
     testWidgets('un devis automatique périmé est ignoré', (tester) async {
       useTestCommissionGrid();
       await openSheet(tester);

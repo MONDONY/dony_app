@@ -274,6 +274,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _promoCtrl = TextEditingController();
   final _quoteNotifier = ValueNotifier<Object?>(null);
 
+  /// Message d'un code promo refusé, affiché sous le champ. Séparé du devis :
+  /// après un refus, le devis de fond (sous grille) peut s'afficher sans
+  /// effacer le message.
+  final _promoErrorNotifier = ValueNotifier<String?>(null);
+
   /// Attente avant le devis automatique sous grille : un devis par geste
   /// posé, pas un par cran du curseur de poids.
   static const _autoQuoteDebounce = Duration(milliseconds: 400);
@@ -626,6 +631,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _stepNotifier.removeListener(_onStepChanged);
     _methodNotifier.removeListener(_syncPickerButtonState);
     _quoteNotifier.dispose();
+    _promoErrorNotifier.dispose();
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
     _catalogNotifier.dispose();
@@ -907,6 +913,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     // Tant que RecipientSection est montée : l'étape paiement la démonte (même
     // raison que _goToPicker).
     _recipientSection.maybeSaveManualEntry();
+    // Plus de devis de fond une fois le formulaire quitté : il recouvrirait
+    // l'envoi en cours dans le BLoC.
+    _autoQuoteTimer?.cancel();
 
     if (!_hasAlternativePaymentMethods) {
       _submitNegotiation();
@@ -918,6 +927,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// Première proposition, étape 2 : l'envoie avec le mode choisi. Les champs
   /// du formulaire vivent dans ce State et survivent au changement d'étape.
   void _submitNegotiation() {
+    _autoQuoteTimer?.cancel();
     final proposed = _readProposal();
     if (proposed == null) return;
     final method = _methodNotifier.value;
@@ -1027,6 +1037,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     if (code.isEmpty) {
       _requestedPromoCode = null;
       _appliedPromoCode = null;
+      _promoErrorNotifier.value = null;
       _quoteNotifier.value = null;
       _scheduleAutoQuote();
       return;
@@ -1045,6 +1056,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   void _invalidateQuote() {
     if (_quoteNotifier.value != null) _quoteNotifier.value = null;
+    if (_promoErrorNotifier.value != null) _promoErrorNotifier.value = null;
   }
 
   /// Clé de la saisie qui détermine un devis (poids, articles) : une réponse
@@ -1067,7 +1079,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// devis ne sert qu'au code promo).
   void _scheduleAutoQuote() {
     _autoQuoteTimer?.cancel();
-    if (!commissionGridActive || _netTotal() <= 0) return;
+    if (!commissionGridActive ||
+        _stepNotifier.value != _FormStep.form ||
+        _netTotal() <= 0) {
+      return;
+    }
     _autoQuoteTimer = Timer(_autoQuoteDebounce, _requestAutoQuote);
   }
 
@@ -1078,7 +1094,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       BidQuoteRequested(
         announcementId: widget.announcement.id,
         weightKg: weight > 0 ? weight : null,
-        promoCode: _appliedPromoCode,
+        // Seulement si le champ porte encore le code accepté, normalisé comme
+        // à l'envoi : un code effacé ou changé sans « Appliquer » ne part pas
+        // avec l'offre, il ne doit pas baisser le total affiché.
+        promoCode:
+            _appliedPromoCode != null &&
+                _promoCtrl.text.trim() == _appliedPromoCode
+            ? _appliedPromoCode
+            : null,
         gridItems: _selectedGridItems(),
         backgroundKey: _quoteInputsKey,
       ),
@@ -1109,6 +1132,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     // which disposes RecipientSection (and clears its save hook) before
     // BidCreated/BidCheckoutReady ever arrive.
     _recipientSection.maybeSaveManualEntry();
+    // Plus de devis de fond une fois le formulaire validé : il recouvrirait
+    // l'envoi de l'offre dans le BLoC.
+    _autoQuoteTimer?.cancel();
 
     final promoCode = _promoCtrl.text.trim().isNotEmpty
         ? _promoCtrl.text.trim()
@@ -1133,6 +1159,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   }
 
   void _confirmPayment() {
+    _autoQuoteTimer?.cancel();
     final data = _formData;
     if (data == null) return;
     final method = _methodNotifier.value;
@@ -1200,11 +1227,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       // Devis d'arrière-plan : écarté s'il répond pour une saisie qui a
       // changé, ou si un devis demandé par l'utilisateur (code promo) est
       // déjà affiché pour la saisie courante.
+      // Écarté aussi hors de l'étape formulaire (offre en cours d'envoi).
       if (key != null &&
-          (key != _quoteInputsKey || _quoteNotifier.value != null)) {
+          (key != _quoteInputsKey ||
+              _quoteNotifier.value != null ||
+              _stepNotifier.value != _FormStep.form)) {
         return;
       }
-      if (key == null) _appliedPromoCode = _requestedPromoCode;
+      if (key == null) {
+        _appliedPromoCode = _requestedPromoCode;
+        _promoErrorNotifier.value = null;
+      }
       _quoteNotifier.value = state.quote;
     } else if (state is BidQuoteBackgroundPromoRejected) {
       // Le code accepté plus tôt ne l'est plus : le devis de fond repart sans
@@ -1215,11 +1248,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       }
     } else if (state is BidPromoError) {
       _appliedPromoCode = null;
-      _quoteNotifier.value = ErrorPresenter.resolve(
+      _quoteNotifier.value = null;
+      _promoErrorNotifier.value = ErrorPresenter.resolve(
         state.error,
         l10n: context.l10n,
       ).message;
       ErrorPresenter.show(context, state.error);
+      // Sous grille, le total redevient celui du serveur sans code (taux
+      // spécial, bon), pas le calcul local.
+      _scheduleAutoQuote();
     } else if (state is BidError) {
       ErrorPresenter.show(context, state.error);
       // Trajet parti, complet ou fermé entre-temps : la demande ne pourra plus
@@ -1695,13 +1732,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               bloc: _bidBloc,
               builder: (context, bidState) {
                 final isQuoteLoading = bidState is BidQuoteLoading;
-                return ValueListenableBuilder<Object?>(
-                  valueListenable: _quoteNotifier,
-                  builder: (_, quoteVal, _) {
+                return ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _quoteNotifier,
+                    _promoErrorNotifier,
+                  ]),
+                  builder: (_, _) {
+                    final quoteVal = _quoteNotifier.value;
                     final quote = quoteVal is BidQuoteResponse
                         ? quoteVal
                         : null;
-                    final promoError = quoteVal is String ? quoteVal : null;
+                    final promoError = _promoErrorNotifier.value;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

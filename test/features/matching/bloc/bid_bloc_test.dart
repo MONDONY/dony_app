@@ -1781,6 +1781,30 @@ void main() {
     );
 
     blocTest<BidBloc, BidState>(
+      'devis d\'arrière-plan pendant l\'envoi d\'une offre (BidLoading) : '
+      'rien n\'est émis',
+      build: () {
+        when(
+          () => mockRepo.quoteBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            promoCode: any(named: 'promoCode'),
+          ),
+        ).thenAnswer((_) async => quote);
+        return buildBloc();
+      },
+      seed: () => BidLoading(),
+      act: (bloc) => bloc.add(
+        BidQuoteRequested(
+          announcementId: 'ann-001',
+          weightKg: 5.0,
+          backgroundKey: '5.0|',
+        ),
+      ),
+      expect: () => <BidState>[],
+    );
+
+    blocTest<BidBloc, BidState>(
       'devis d\'arrière-plan en échec : BidQuoteBackgroundFailed, jamais '
       'BidError',
       build: () {

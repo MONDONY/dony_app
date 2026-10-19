@@ -535,8 +535,14 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   Future<void> _backgroundQuote(
     BidQuoteRequested event,
     String backgroundKey,
-    Emitter<BidState> emit,
+    Emitter<BidState> rawEmit,
   ) async {
+    // Une offre en cours d'envoi (BidLoading) ne doit jamais être recouverte
+    // par un devis de fond : son résultat est alors abandonné.
+    void emit(BidState next) {
+      if (state is! BidLoading) rawEmit(next);
+    }
+
     Future<BidQuoteResponse> quote(String? promoCode) => _repository.quoteBid(
       announcementId: event.announcementId,
       weightKg: event.weightKg,
