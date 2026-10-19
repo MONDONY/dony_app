@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
 
 class _MockAnnouncementFormBloc
@@ -133,6 +134,96 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('viennent de votre profil'), findsOneWidget);
+    });
+  });
+
+  group('GridPreviewCard — sous grille de commission', () {
+    const netItems = [
+      GridPreviewItem(
+        id: 'n1',
+        label: 'Livre',
+        unitPriceDisplay: 5.25,
+        unitPriceNet: 5,
+      ),
+    ];
+
+    testWidgets('l\'étiquette montre le net, pas le prix majoré', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        _wrap(
+          netItems,
+          currency: SupportedCurrency.eur,
+          gridCurrency: SupportedCurrency.eur,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(CurrencyFormatter.format(5, SupportedCurrency.eur)),
+        findsOneWidget,
+      );
+      expect(
+        find.text(CurrencyFormatter.format(5.25, SupportedCurrency.eur)),
+        findsNothing,
+      );
+    });
+
+    testWidgets('sans grille, l\'étiquette garde le prix affiché', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          netItems,
+          currency: SupportedCurrency.eur,
+          gridCurrency: SupportedCurrency.eur,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(CurrencyFormatter.format(5.25, SupportedCurrency.eur)),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('la feuille dit que le voyageur touche ces prix', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        _wrap(
+          [...netItems, ..._items],
+          currency: SupportedCurrency.eur,
+          gridCurrency: SupportedCurrency.eur,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('grid-preview-see-all')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Prix touchés par le voyageur. Les frais de service Yadony '
+          's\'ajoutent au total (min. 1\u00A0€).',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sans grille, la feuille garde la note actuelle', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(_items, currency: SupportedCurrency.eur));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('grid-preview-see-all')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Prix payés par l\'expéditeur, commission Yadony comprise.'),
+        findsOneWidget,
+      );
     });
   });
 

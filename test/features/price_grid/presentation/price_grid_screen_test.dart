@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/commission_grid_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockPriceGridBloc extends MockBloc<PriceGridEvent, PriceGridState>
@@ -126,6 +127,50 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Valable sur tous vos trajets'), findsOneWidget);
+    });
+
+    testWidgets('sous grille, prix payé d\'un article de 5 € = 6,00 €', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        _wrap(
+          _blocWith(
+            const PriceGridLoaded([
+              PriceGridItemModel(
+                id: 'a9',
+                label: 'Livres',
+                unitPriceNet: 5.0,
+                // Prix servi par un serveur encore au taux unique : ignoré.
+                unitPriceDisplay: 5.25,
+                position: 1,
+              ),
+            ]),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 7 % de 5 € = 0,35 € : le minimum de 1 € porte le total à 6 €.
+      expect(find.textContaining('6,00'), findsOneWidget);
+      expect(find.textContaining('5,25'), findsNothing);
+    });
+
+    testWidgets('sous grille, la notice de pied cite le minimum', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(_wrap(_blocWith(const PriceGridLoaded(_items))));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('avec un minimum de 1\u00A0€'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Vous encaissez exactement votre montant'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('rappelle la commission en pied de liste', (tester) async {

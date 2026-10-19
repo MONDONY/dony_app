@@ -21359,4 +21359,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serviceFeeMinimumTag => '(minimum)';
+
+  @override
+  String tripPublishGridCommissionNoticeGrid(String minimum) {
+    return 'The Yadony service fee is added to the total paid by the sender (min. $minimum)';
+  }
+
+  @override
+  String tripPublishGridSheetCommissionNoteGrid(String minimum) {
+    return 'Prices received by the traveler. The Yadony service fee is added to the total (min. $minimum).';
+  }
+
+  @override
+  String priceGridCommissionNoticeGrid(String minimum) {
+    return 'The Yadony service fee is added to the total paid by the sender, with a minimum of $minimum. You receive exactly your amount.';
+  }
+
+  @override
+  String priceGridSenderWillPayMessageGrid(String paid, String fee) {
+    return 'The sender will pay $paid, including $fee Yadony service fee.';
+  }
 }

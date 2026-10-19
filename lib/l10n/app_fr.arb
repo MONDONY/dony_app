@@ -22137,5 +22137,13 @@
   "listPriceServiceFeeShortSuffix": "+ frais de service",
   "@listPriceServiceFeeShortSuffix": {"description": "Mention courte sous le prix au kilo sur la carte des trajets, sans le minimum, faute de place (pricing_labels.dart)."},
   "serviceFeeMinimumTag": "(minimum)",
-  "@serviceFeeMinimumTag": {"description": "Précision accolée à un montant de frais de service relevé au minimum de la grille (pricing_labels.dart)."}
+  "@serviceFeeMinimumTag": {"description": "Précision accolée à un montant de frais de service relevé au minimum de la grille (pricing_labels.dart)."},
+  "tripPublishGridCommissionNoticeGrid": "Les frais de service Yadony s'ajoutent au total payé par l'expéditeur (min. {minimum})",
+  "@tripPublishGridCommissionNoticeGrid": {"description": "Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : les prix saisis sont ceux du voyageur, les frais s'ajoutent au total. {minimum} : frais de service minimum formatés dans la devise du trajet. Variante de tripPublishGridCommissionNotice.", "placeholders": {"minimum": {"type": "String"}}},
+  "tripPublishGridSheetCommissionNoteGrid": "Prix touchés par le voyageur. Les frais de service Yadony s'ajoutent au total (min. {minimum}).",
+  "@tripPublishGridSheetCommissionNoteGrid": {"description": "Pied de la feuille complète de l'aperçu de grille quand une grille de commission est en vigueur. {minimum} : frais de service minimum dans la devise affichée. Variante de tripPublishGridSheetCommissionNote.", "placeholders": {"minimum": {"type": "String"}}},
+  "priceGridCommissionNoticeGrid": "Les frais de service Yadony s'ajoutent au total payé par l'expéditeur, avec un minimum de {minimum}. Vous encaissez exactement votre montant.",
+  "@priceGridCommissionNoticeGrid": {"description": "Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. {minimum} : frais de service minimum formatés dans la devise active. Variante de priceGridCommissionNotice.", "placeholders": {"minimum": {"type": "String"}}},
+  "priceGridSenderWillPayMessageGrid": "L'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.",
+  "@priceGridSenderWillPayMessageGrid": {"description": "Écho de la feuille de saisie d'un article de la grille de prix quand une grille de commission est en vigueur. {paid} : total payé par l'expéditeur, {fee} : frais de service avec la mention (minimum) si le plancher s'applique (serviceFeeAmountLabel). Variante de priceGridSenderWillPayMessage.", "placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}}
 }

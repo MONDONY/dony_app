@@ -36,6 +36,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../../helpers/currency_test_doubles.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_analytics_backend.dart';
@@ -100,6 +101,8 @@ Widget _host({
   String? residenceCountry,
   ValueNotifier<bool>? cardEnabledNotifier,
   ValueNotifier<bool>? cashNotifier,
+  int initialPriceOption = 0,
+  double initialCustomPrice = 0,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -115,8 +118,8 @@ Widget _host({
   // Contrôleurs / notifiers (cycle de vie géré par le StatefulWidget parent
   // en production ; ici on les crée dans le host et on les laisse se disposer
   // en fin de test — accepté dans un contexte de test unitaire).
-  final priceOptionNotifier = ValueNotifier<int>(0);
-  final customPriceNotifier = ValueNotifier<double>(0);
+  final priceOptionNotifier = ValueNotifier<int>(initialPriceOption);
+  final customPriceNotifier = ValueNotifier<double>(initialCustomPrice);
   final availableKgNotifier = ValueNotifier<double>(initialAvailableKg);
   final cashEnabledNotifier = cashNotifier ?? ValueNotifier<bool>(false);
   final kgPriceEnabledNotifier = ValueNotifier<bool>(true);
@@ -209,9 +212,13 @@ Future<void> _pump(
   String? residenceCountry,
   ValueNotifier<bool>? cardEnabledNotifier,
   ValueNotifier<bool>? cashNotifier,
+  int initialPriceOption = 0,
+  double initialCustomPrice = 0,
 }) async {
   await tester.pumpWidget(
     _host(
+      initialPriceOption: initialPriceOption,
+      initialCustomPrice: initialCustomPrice,
       cardEnabledNotifier: cardEnabledNotifier,
       cashNotifier: cashNotifier,
       stripeState: stripeState,
@@ -433,6 +440,91 @@ void main() {
       // availableKg=10, prix index 0 → 5€/kg : vous touchez 50€ (net entier),
       // l'expéditeur paie 56€ (net × 1,12).
       expect(find.textContaining('Vous touchez'), findsOneWidget);
+    });
+
+    // ── Frais de service sous grille de commission ────────────────────────────
+
+    testWidgets('sous grille, 10 kg à 2 € : l\'expéditeur paiera 21,40 €', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      // Option 4 = « Autre prix » (4 chips préréglés).
+      await _pump(tester, initialPriceOption: 4, initialCustomPrice: 2);
+
+      // Net 20 €, frais 7 % = 1,40 € : le brut est 21,40 €, pas 22,40 €.
+      expect(
+        find.text(
+          'Vous touchez ${CurrencyFormatter.format(20, SupportedCurrency.eur)}'
+          ' · l\'expéditeur paie '
+          '${CurrencyFormatter.format(21.4, SupportedCurrency.eur)}',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sous grille, le minimum de frais s\'applique au total', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      // 10 kg à 0,50 € : net 5 €, 7 % = 0,35 € relevé au minimum de 1 €.
+      await _pump(tester, initialPriceOption: 4, initialCustomPrice: 0.5);
+
+      expect(
+        find.textContaining(
+          'l\'expéditeur paie '
+          '${CurrencyFormatter.format(6, SupportedCurrency.eur)}',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sans grille, total et notice inchangés', (tester) async {
+      await _pump(tester, initialPriceOption: 4, initialCustomPrice: 2);
+
+      // Net 20 €, taux unique : 20 × (1 + taux).
+      expect(
+        find.textContaining(
+          'l\'expéditeur paie '
+          '${CurrencyFormatter.format(netToSenderPrice(20), SupportedCurrency.eur)}',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('min.'), findsNothing);
+    });
+
+    testWidgets('sous grille, la notice du mode grille cite le minimum', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await _pump(tester);
+      await tester.tap(find.text('Articles + kilo'));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      expect(
+        find.text(
+          'Les frais de service Yadony s\'ajoutent au total payé par '
+          'l\'expéditeur (min. ${formatPriceIn(1, 'EUR')})',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sans grille, la notice du mode grille est inchangée', (
+      tester,
+    ) async {
+      await _pump(tester);
+      await tester.tap(find.text('Articles + kilo'));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      expect(
+        find.text(
+          'Yadony ajoute sa commission sur chaque article et sur le prix au '
+          'kilo',
+        ),
+        findsOneWidget,
+      );
     });
 
     // ── Section MODES DE PAIEMENT ─────────────────────────────────────────────

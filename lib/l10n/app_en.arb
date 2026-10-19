@@ -10943,5 +10943,13 @@
   "listPriceServiceFeeSuffix": "+ Yadony service fee (min. {minimum})",
   "@listPriceServiceFeeSuffix": {"placeholders": {"minimum": {"type": "String"}}},
   "listPriceServiceFeeShortSuffix": "+ service fee",
-  "serviceFeeMinimumTag": "(minimum)"
+  "serviceFeeMinimumTag": "(minimum)",
+  "tripPublishGridCommissionNoticeGrid": "The Yadony service fee is added to the total paid by the sender (min. {minimum})",
+  "@tripPublishGridCommissionNoticeGrid": {"placeholders": {"minimum": {"type": "String"}}},
+  "tripPublishGridSheetCommissionNoteGrid": "Prices received by the traveler. The Yadony service fee is added to the total (min. {minimum}).",
+  "@tripPublishGridSheetCommissionNoteGrid": {"placeholders": {"minimum": {"type": "String"}}},
+  "priceGridCommissionNoticeGrid": "The Yadony service fee is added to the total paid by the sender, with a minimum of {minimum}. You receive exactly your amount.",
+  "@priceGridCommissionNoticeGrid": {"placeholders": {"minimum": {"type": "String"}}},
+  "priceGridSenderWillPayMessageGrid": "The sender will pay {paid}, including {fee} Yadony service fee.",
+  "@priceGridSenderWillPayMessageGrid": {"placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}}
 }

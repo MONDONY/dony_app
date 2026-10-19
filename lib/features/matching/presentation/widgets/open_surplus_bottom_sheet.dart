@@ -2,7 +2,9 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -260,7 +262,10 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
               ]),
               builder: (context, _) => _PublicPricePreview(
                 netPricePerKg: _pricePerKg,
-                senderPricePerKg: netToSenderPrice(_pricePerKg),
+                // Sous grille, le prix au kilo reste le net et les frais de
+                // service se lisent en suffixe ; sinon, prix majoré du taux.
+                senderPricePerKg: listUnitPrice(_pricePerKg),
+                feeSuffix: listPriceFeeSuffix(l, widget.announcement.currency),
                 currency: widget.announcement.currency,
               ),
             ),
@@ -500,11 +505,16 @@ class _PublicPricePreview extends StatelessWidget {
   const _PublicPricePreview({
     required this.netPricePerKg,
     required this.senderPricePerKg,
+    this.feeSuffix,
     this.currency = 'EUR',
   });
 
   final double netPricePerKg;
   final double senderPricePerKg;
+
+  /// Mention « + frais de service Yadony (min. X) » sous le prix au kilo,
+  /// `null` sans grille de commission.
+  final String? feeSuffix;
   final String currency;
 
   @override
@@ -529,12 +539,25 @@ class _PublicPricePreview extends StatelessWidget {
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
             ),
           ),
-          Text(
-            hasPrice ? '${formatPriceIn(senderPricePerKg, currency)}/kg' : '-',
-            style: tt.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: cs.success,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                hasPrice
+                    ? '${formatPriceIn(senderPricePerKg, currency)}/kg'
+                    : '-',
+                style: tt.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.success,
+                ),
+              ),
+              if (hasPrice && feeSuffix != null)
+                Text(
+                  feeSuffix!,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+            ],
           ),
         ],
       ),

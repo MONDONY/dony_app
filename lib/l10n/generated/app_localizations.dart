@@ -34713,6 +34713,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'(minimum)'**
   String get serviceFeeMinimumTag;
+
+  /// Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : les prix saisis sont ceux du voyageur, les frais s'ajoutent au total. {minimum} : frais de service minimum formatés dans la devise du trajet. Variante de tripPublishGridCommissionNotice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais de service Yadony s\'ajoutent au total payé par l\'expéditeur (min. {minimum})'**
+  String tripPublishGridCommissionNoticeGrid(String minimum);
+
+  /// Pied de la feuille complète de l'aperçu de grille quand une grille de commission est en vigueur. {minimum} : frais de service minimum dans la devise affichée. Variante de tripPublishGridSheetCommissionNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix touchés par le voyageur. Les frais de service Yadony s\'ajoutent au total (min. {minimum}).'**
+  String tripPublishGridSheetCommissionNoteGrid(String minimum);
+
+  /// Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. {minimum} : frais de service minimum formatés dans la devise active. Variante de priceGridCommissionNotice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais de service Yadony s\'ajoutent au total payé par l\'expéditeur, avec un minimum de {minimum}. Vous encaissez exactement votre montant.'**
+  String priceGridCommissionNoticeGrid(String minimum);
+
+  /// Écho de la feuille de saisie d'un article de la grille de prix quand une grille de commission est en vigueur. {paid} : total payé par l'expéditeur, {fee} : frais de service avec la mention (minimum) si le plancher s'applique (serviceFeeAmountLabel). Variante de priceGridSenderWillPayMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.'**
+  String priceGridSenderWillPayMessageGrid(String paid, String fee);
 }
 
 class _AppLocalizationsDelegate
