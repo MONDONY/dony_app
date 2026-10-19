@@ -21819,4 +21819,56 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supplementSenderRefunded => 'Le supplément vous a été remboursé';
+
+  @override
+  String supplementPay(String amount) {
+    return 'Payer $amount';
+  }
+
+  @override
+  String get supplementPaidSnackbar => 'Supplément payé';
+
+  @override
+  String get supplementPaymentContextLabel => 'Supplément de prix du colis';
+
+  @override
+  String get supplementTravelerRefundPending =>
+      'Remboursement de l\'expéditeur en cours';
+
+  @override
+  String get supplementSenderRefundPending =>
+      'Remboursement du supplément en cours';
+
+  @override
+  String get supplementSenderPayHelp =>
+      'Payez avec le bouton en bas de l\'écran, ou refusez ici.';
+
+  @override
+  String get errorSupplementPaymentProcessingTitle => 'Paiement en cours';
+
+  @override
+  String get errorSupplementPaymentProcessingMessage =>
+      'Le paiement du supplément est en cours de traitement. Revenez dans quelques minutes.';
+
+  @override
+  String get errorSupplementPaymentCreationFailedTitle =>
+      'Paiement indisponible';
+
+  @override
+  String get errorSupplementPaymentCreationFailedMessage =>
+      'Impossible de préparer le paiement du supplément. Réessayez.';
+
+  @override
+  String get errorPaymentBusyTitle => 'Paiement en cours de validation';
+
+  @override
+  String get errorPaymentBusyMessage =>
+      'Un paiement est en cours de validation. Réessayez dans un instant.';
+
+  @override
+  String get errorStripeUnavailableTitle => 'Service de paiement injoignable';
+
+  @override
+  String get errorStripeUnavailableMessage =>
+      'Le service de paiement est momentanément injoignable. Réessayez.';
 }

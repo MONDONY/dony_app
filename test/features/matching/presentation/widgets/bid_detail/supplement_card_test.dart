@@ -289,6 +289,8 @@ void main() {
         BidSupplementStatus.declined: 'Vous avez refusé le supplément',
         BidSupplementStatus.expired: 'La demande de supplément a expiré',
         BidSupplementStatus.refunded: 'Le supplément vous a été remboursé',
+        BidSupplementStatus.refundPending:
+            'Remboursement du supplément en cours',
       };
       for (final entry in cases.entries) {
         await pump(
@@ -307,6 +309,42 @@ void main() {
           reason: entry.key.name,
         );
       }
+    });
+  });
+
+  group('encart expéditeur : où payer', () {
+    testWidgets('carte : renvoi vers le bouton du bas', (tester) async {
+      await pump(
+        tester,
+        SupplementSenderCard(
+          bid: _bid(_supplement(BidSupplementStatus.proposed, forSender: true)),
+        ),
+      );
+      expect(
+        find.text('Payez avec le bouton en bas de l\'écran, ou refusez ici.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('mobile money : pas de renvoi en A2', (tester) async {
+      final s = _supplement(BidSupplementStatus.proposed, forSender: true);
+      await pump(
+        tester,
+        SupplementSenderCard(
+          bid: _bid(
+            BidSupplement(
+              id: s.id,
+              status: s.status,
+              rail: 'PAWAPAY',
+              grossAmount: s.grossAmount,
+            ),
+          ),
+        ),
+      );
+      expect(
+        find.text('Payez avec le bouton en bas de l\'écran, ou refusez ici.'),
+        findsNothing,
+      );
     });
   });
 
@@ -430,7 +468,7 @@ void main() {
         BidSupplementStatus.paidOut: 'Supplément versé : +15 €',
         BidSupplementStatus.refunded: 'Supplément remboursé à l\'expéditeur',
         BidSupplementStatus.refundPending:
-            'Supplément remboursé à l\'expéditeur',
+            'Remboursement de l\'expéditeur en cours',
       };
       for (final entry in cases.entries) {
         await pump(

@@ -7503,6 +7503,24 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorHandoverSupplementPendingMessage': (l) =>
       l.errorHandoverSupplementPendingMessage,
   'supplementSenderRefunded': (l) => l.supplementSenderRefunded,
+  'supplementPay': (l) => l.supplementPay(placeholderMarker('amount')),
+  'supplementPaidSnackbar': (l) => l.supplementPaidSnackbar,
+  'supplementPaymentContextLabel': (l) => l.supplementPaymentContextLabel,
+  'supplementTravelerRefundPending': (l) => l.supplementTravelerRefundPending,
+  'supplementSenderRefundPending': (l) => l.supplementSenderRefundPending,
+  'supplementSenderPayHelp': (l) => l.supplementSenderPayHelp,
+  'errorSupplementPaymentProcessingTitle': (l) =>
+      l.errorSupplementPaymentProcessingTitle,
+  'errorSupplementPaymentProcessingMessage': (l) =>
+      l.errorSupplementPaymentProcessingMessage,
+  'errorSupplementPaymentCreationFailedTitle': (l) =>
+      l.errorSupplementPaymentCreationFailedTitle,
+  'errorSupplementPaymentCreationFailedMessage': (l) =>
+      l.errorSupplementPaymentCreationFailedMessage,
+  'errorPaymentBusyTitle': (l) => l.errorPaymentBusyTitle,
+  'errorPaymentBusyMessage': (l) => l.errorPaymentBusyMessage,
+  'errorStripeUnavailableTitle': (l) => l.errorStripeUnavailableTitle,
+  'errorStripeUnavailableMessage': (l) => l.errorStripeUnavailableMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8097,4 +8115,5 @@ const textParameters = <String, List<String>>{
   'supplementTravelerPaidOut': ['amount'],
   'supplementSenderAmount': ['amount'],
   'supplementSenderPaid': ['amount'],
+  'supplementPay': ['amount'],
 };

@@ -32,7 +32,7 @@ class PaymentSheetConfig extends Equatable {
 
   /// Parcours d'origine, envoyé en propriété `context` des événements de
   /// paiement (`bid`, `trip_negotiation`, `negotiation`, `escrow`,
-  /// `wallet_topup`) : sans lui, un paiement d'offre et une recharge du
+  /// `wallet_topup`, `bid_supplement`) : sans lui, un paiement d'offre et une recharge du
   /// solde étaient indiscernables dans PostHog.
   final String analyticsContext;
 

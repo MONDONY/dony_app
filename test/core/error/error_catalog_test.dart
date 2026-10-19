@@ -1742,6 +1742,10 @@ void main() {
         'supplement-not-found': 'Supplément introuvable',
         'invalid-photo-url': 'Photo refusée',
         'handover-supplement-pending': 'Supplément en attente',
+        'supplement-payment-processing': 'Paiement en cours',
+        'supplement-payment-creation-failed': 'Paiement indisponible',
+        'payment-busy': 'Paiement en cours de validation',
+        'stripe-unavailable': 'Service de paiement injoignable',
       };
       for (final entry in codes.entries) {
         final error = ConflictException('d', code: entry.key);

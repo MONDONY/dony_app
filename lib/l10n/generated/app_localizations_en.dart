@@ -21677,4 +21677,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supplementSenderRefunded => 'The extra charge was refunded to you';
+
+  @override
+  String supplementPay(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String get supplementPaidSnackbar => 'Extra charge paid';
+
+  @override
+  String get supplementPaymentContextLabel => 'Parcel extra charge';
+
+  @override
+  String get supplementTravelerRefundPending =>
+      'Refund to the sender in progress';
+
+  @override
+  String get supplementSenderRefundPending => 'Extra charge refund in progress';
+
+  @override
+  String get supplementSenderPayHelp =>
+      'Pay with the button at the bottom of the screen, or decline here.';
+
+  @override
+  String get errorSupplementPaymentProcessingTitle => 'Payment in progress';
+
+  @override
+  String get errorSupplementPaymentProcessingMessage =>
+      'The extra charge payment is being processed. Check back in a few minutes.';
+
+  @override
+  String get errorSupplementPaymentCreationFailedTitle => 'Payment unavailable';
+
+  @override
+  String get errorSupplementPaymentCreationFailedMessage =>
+      'We couldn\'t prepare the extra charge payment. Please try again.';
+
+  @override
+  String get errorPaymentBusyTitle => 'Payment being confirmed';
+
+  @override
+  String get errorPaymentBusyMessage =>
+      'A payment is being confirmed. Please try again in a moment.';
+
+  @override
+  String get errorStripeUnavailableTitle => 'Payment service unreachable';
+
+  @override
+  String get errorStripeUnavailableMessage =>
+      'The payment service is temporarily unreachable. Please try again.';
 }

@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cub
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_refusal_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_pay_button.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -40,8 +41,9 @@ class SupplementTravelerCard extends StatelessWidget {
 
 /// Encart « Supplément de prix » de la vue expéditeur : motif, photo, TOTAL
 /// à payer seulement (jamais le net du voyageur ni la commission),
-/// échéance et « Refuser le supplément ». Le paiement arrive avec les rails
-/// (PR A2 à A4) : d'ici là, le back ne crée aucune demande payable.
+/// échéance et « Refuser le supplément ». Colis payé par carte : « Payer »
+/// est dans la barre du bas ([SupplementPayButton]) ; mobile money et
+/// espèces arrivent avec leurs rails (PR A3, A4).
 class SupplementSenderCard extends StatelessWidget {
   const SupplementSenderCard({super.key, required this.bid});
 
@@ -178,6 +180,11 @@ class _TravelerContent extends StatelessWidget {
           color: cs.onSurfaceVariant,
           text: l.supplementTravelerExpired,
         ),
+        BidSupplementStatus.refundPending => _StatusLine(
+          iconAsset: 'refresh-cw',
+          color: cs.onSurfaceVariant,
+          text: l.supplementTravelerRefundPending,
+        ),
         _ => _StatusLine(
           iconAsset: 'refresh-cw',
           color: cs.onSurfaceVariant,
@@ -298,6 +305,11 @@ class _SenderContent extends StatelessWidget {
           color: cs.onSurfaceVariant,
           text: l.supplementSenderExpired,
         ),
+        BidSupplementStatus.refundPending => _StatusLine(
+          iconAsset: 'refresh-cw',
+          color: cs.onSurfaceVariant,
+          text: l.supplementSenderRefundPending,
+        ),
         _ => _StatusLine(
           iconAsset: 'refresh-cw',
           color: cs.onSurfaceVariant,
@@ -329,6 +341,8 @@ class _SenderContent extends StatelessWidget {
             ),
           ),
         _HelpText(l.supplementSenderPendingHelp),
+        if (SupplementPayButton.canPay(bid))
+          _HelpText(l.supplementSenderPayHelp),
       ],
     ];
 
