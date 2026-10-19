@@ -144,6 +144,7 @@ class AssistantAnswer extends Equatable {
     this.parcelId,
     this.parcels = const [],
     this.suggestions = const [],
+    this.answerRich,
   });
 
   /// Lève une `TypeError` sur une réponse malformée (texte absent, `actions`
@@ -164,8 +165,14 @@ class AssistantAnswer extends Equatable {
       parcelId: json['parcelId'] as String?,
       parcels: _parseParcels(json['parcels']),
       suggestions: AssistantSuggestion.parseList(json['suggestions']),
+      answerRich: _richOrNull(json['answerRich']),
     );
   }
+
+  /// Texte riche facultatif (back d'avant YADONY-FLUTTER-PROD-13 : absent) ;
+  /// non textuel ou blanc : `null`, l'app affiche alors le texte brut.
+  static String? _richOrNull(Object? raw) =>
+      raw is String && raw.trim().isNotEmpty ? raw : null;
 
   /// Absent d'un back antérieur : aucun choix. Un colis incomplet est écarté
   /// sans rejeter les autres.
@@ -215,6 +222,13 @@ class AssistantAnswer extends Equatable {
   /// Questions proposées sous la réponse ; vide sur un back antérieur.
   final List<AssistantSuggestion> suggestions;
 
+  /// Même réponse en texte riche (`**gras**`, puces `- `), à afficher ;
+  /// [answer] reste le texte brut de l'historique et de l'escalade.
+  final String? answerRich;
+
+  /// Texte à afficher : riche si le back l'a fourni, sinon brut.
+  String get displayText => answerRich ?? answer;
+
   @override
   List<Object?> get props => [
     answer,
@@ -225,6 +239,7 @@ class AssistantAnswer extends Equatable {
     parcelId,
     parcels,
     suggestions,
+    answerRich,
   ];
 }
 
@@ -235,6 +250,7 @@ class AssistantScreenIntro extends Equatable {
     required this.explanation,
     this.questions = const [],
     this.actions = const [],
+    this.explanationRich,
   });
 
   /// Lève une `TypeError` ou une `FormatException` sur une réponse malformée :
@@ -257,6 +273,7 @@ class AssistantScreenIntro extends Equatable {
         'answer': explanation,
         'actions': json['actions'],
       }).actions,
+      explanationRich: AssistantAnswer._richOrNull(json['explanationRich']),
     );
   }
 
@@ -264,8 +281,12 @@ class AssistantScreenIntro extends Equatable {
   final List<String> questions;
   final List<AssistantAction> actions;
 
+  /// Explication en texte riche (un paragraphe par ligne), si le back l'a
+  /// fournie ; sinon [explanation].
+  final String? explanationRich;
+
   @override
-  List<Object?> get props => [explanation, questions, actions];
+  List<Object?> get props => [explanation, questions, actions, explanationRich];
 }
 
 /// Un tour de la conversation envoyé au back comme contexte.

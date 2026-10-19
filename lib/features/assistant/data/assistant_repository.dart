@@ -5,6 +5,10 @@ import 'package:dony/features/assistant/data/assistant_models.dart';
 /// Code ProblemDetail du back quand le quota quotidien est atteint.
 const _quotaExceededCode = 'assistant-quota-exceeded';
 
+/// Valeur de `format` : réponses en texte riche (`answerRich`,
+/// `explanationRich`), ignorée par un back d'avant YADONY-FLUTTER-PROD-13.
+const kAssistantRichFormat = 'rich';
+
 class AssistantRepository {
   AssistantRepository(this._api);
 
@@ -26,6 +30,9 @@ class AssistantRepository {
           'history': history.map((t) => t.toJson()).toList(),
           // Colis choisi plus tôt : le back revérifie l'accès à chaque question.
           'parcelId': ?parcelId,
+          // L'app sait afficher gras et puces : le back renvoie `answerRich`
+          // en plus de `answer` (texte brut), YADONY-FLUTTER-PROD-13.
+          'format': kAssistantRichFormat,
         },
       );
     } on DioException catch (e) {
@@ -51,7 +58,11 @@ class AssistantRepository {
     try {
       final response = await _api.dio.get(
         '/assistant/screen',
-        queryParameters: {'path': screen, 'locale': locale},
+        queryParameters: {
+          'path': screen,
+          'locale': locale,
+          'format': kAssistantRichFormat,
+        },
       );
       final data = response.data;
       if (response.statusCode == 204 || data is! Map<String, dynamic>) {

@@ -7,6 +7,7 @@ class AssistantMessage extends Equatable {
     required this.id,
     required this.author,
     required this.text,
+    this.richText,
     this.actions = const [],
     this.parcels = const [],
     this.suggestions = const [],
@@ -19,7 +20,16 @@ class AssistantMessage extends Equatable {
 
   final int id;
   final AssistantAuthor author;
+
+  /// Texte brut : historique envoyé au back, ticket d'escalade.
   final String text;
+
+  /// Même texte en riche (`**gras**`, puces `- `), seulement pour l'affichage.
+  final String? richText;
+
+  /// Texte à afficher : riche s'il existe, sinon brut.
+  String get displayText => richText ?? text;
+
   final List<AssistantAction> actions;
 
   /// Colis proposés au choix sous la réponse (question sur l'un des siens).
@@ -47,6 +57,7 @@ class AssistantMessage extends Equatable {
     id: id,
     author: author,
     text: text,
+    richText: richText,
     actions: actions,
     parcels: parcels,
     suggestions: suggestions,
@@ -62,6 +73,7 @@ class AssistantMessage extends Equatable {
     id,
     author,
     text,
+    richText,
     actions,
     parcels,
     suggestions,
