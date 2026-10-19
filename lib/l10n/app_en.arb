@@ -11062,5 +11062,8 @@
   "errorPaymentBusyMessage": "A payment is being confirmed. Please try again in a moment.",
   "errorStripeUnavailableTitle": "Payment service unreachable",
   "errorStripeUnavailableMessage": "The payment service is temporarily unreachable. Please try again.",
-  "supplementPaymentConfirming": "Payment received, confirmation in progress. The parcel will update in a moment."
+  "supplementPaymentConfirming": "Payment received, confirmation in progress. The parcel will update in a moment.",
+  "mobileMoneyExpiredSupplement": "This supplement can no longer be paid: the request expired or was closed. The parcel stays at the agreed price.",
+  "supplementMobileMoneyNotConfirmed": "Supplement payment not confirmed yet.",
+  "supplementSenderMobileMoneyPending": "Mobile money payment for the supplement pending"
 }

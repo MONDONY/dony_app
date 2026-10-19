@@ -144,6 +144,22 @@ class MobileMoneyPaymentStatus extends Equatable {
   bool get isEscrowed =>
       paymentStatus == 'ESCROW' || paymentStatus == 'RELEASED';
 
+  /// Paiement rendu au payeur (`REFUNDED`).
+  bool get isRefunded => paymentStatus == 'REFUNDED';
+
+  /// `paymentStatus` fait partie du contrat connu de l'app (ou est absent).
+  /// Faux pour une valeur ajoutée plus tard par le back : l'appelant se
+  /// replie alors sur un affichage « en cours », sans planter.
+  bool get hasKnownPaymentStatus => switch (paymentStatus) {
+    null ||
+    'PENDING' ||
+    'ESCROW' ||
+    'RELEASED' ||
+    'REFUNDED' ||
+    'CANCELLED' => true,
+    _ => false,
+  };
+
   /// Un dépôt est en cours côté opérateur.
   bool get isDepositLive => deposit?.isLive ?? false;
 

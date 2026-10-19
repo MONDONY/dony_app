@@ -1753,4 +1753,109 @@ void main() {
       expect(find.text('Back'), findsOneWidget);
     });
   });
+
+  group('Portée supplément de prix (PR A3)', () {
+    const supplementScope = MobileMoneyScope.supplement(
+      bidId: bidId,
+      supplementId: 'sup-1',
+    );
+
+    testWidgets('Escrowed : « Supplément payé » puis pop(true)', (
+      tester,
+    ) async {
+      stub(const MobileMoneyPaymentEscrowed(escrowedStatus));
+
+      await pumpScreen(tester, scope: supplementScope);
+
+      expect(find.text('host'), findsOneWidget);
+      expect(find.text('Supplément payé'), findsOneWidget);
+      expect(
+        find.text('Paiement confirmé, votre envoi est sécurisé'),
+        findsNothing,
+      );
+      expect(await poppedResult, isTrue);
+    });
+
+    testWidgets('Expired : la demande est close, le colis reste au prix '
+        'prévu ; Retour → pop(false)', (tester) async {
+      stub(
+        const MobileMoneyPaymentExpired(
+          MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'ACCEPTED',
+            paymentStatus: 'CANCELLED',
+            amount: 1500,
+          ),
+        ),
+      );
+
+      await pumpScreen(tester, scope: supplementScope);
+
+      expect(
+        find.text(
+          'Ce supplément n\'est plus à payer : la demande a expiré ou a été '
+          'close. Le colis reste au prix prévu.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('refaites une offre'), findsNothing);
+
+      await tester.tap(find.text('Retour'));
+      await tester.pumpAndSettle();
+
+      expect(await poppedResult, isFalse);
+    });
+
+    testWidgets('analytics mobile_money_awaiting : scope bid_supplement', (
+      tester,
+    ) async {
+      stub(
+        const MobileMoneyPaymentInitial(),
+        previous: const MobileMoneyPaymentInitial(),
+      );
+
+      await pumpScreen(tester, settle: false, scope: supplementScope);
+
+      verify(
+        () => analyticsBackend.capture(AnalyticsEvents.mobileMoneyAwaiting, {
+          'provider': 'mobile_money',
+          'scope': 'bid_supplement',
+        }),
+      ).called(1);
+      verify(
+        () => bloc.add(const MobileMoneyPaymentOpened(scope: supplementScope)),
+      ).called(1);
+    });
+
+    testWidgets('lien profond (pile vide) : Escrowed → détail du colis', (
+      tester,
+    ) async {
+      stub(const MobileMoneyPaymentEscrowed(escrowedStatus));
+      final router = GoRouter(
+        initialLocation: supplementScope.awaitingRoute,
+        routes: [
+          GoRoute(
+            path: '/bids/:bidId',
+            builder: (_, state) =>
+                Scaffold(body: Text('detail ${state.pathParameters['bidId']}')),
+          ),
+          GoRoute(
+            path:
+                '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
+            builder: (_, _) => BlocProvider<MobileMoneyPaymentBloc>.value(
+              value: bloc,
+              child: const MobileMoneyAwaitingScreen(scope: supplementScope),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('detail $bidId'), findsOneWidget);
+    });
+  });
 }

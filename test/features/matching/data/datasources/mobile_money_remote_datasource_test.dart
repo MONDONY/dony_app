@@ -25,6 +25,11 @@ void main() {
   const threadId = '660e8400-e29b-41d4-a716-446655440000';
   const bidScope = MobileMoneyScope.bid(bidId);
   const negotiationScope = MobileMoneyScope.negotiation(threadId);
+  const supplementId = '770e8400-e29b-41d4-a716-446655440000';
+  const supplementScope = MobileMoneyScope.supplement(
+    bidId: bidId,
+    supplementId: supplementId,
+  );
 
   final statusJson = {
     'bidId': bidId,
@@ -165,7 +170,7 @@ void main() {
           ),
         ).thenAnswer((_) async => _ok(catalogJson, path));
 
-        final result = await datasource.providers(bidId);
+        final result = await datasource.providers(bidScope);
 
         expect(result.travelerFirstName, 'Aminata');
         expect(result.providers.single.code, 'ORANGE_CIV');
@@ -179,7 +184,7 @@ void main() {
           ),
         ).thenAnswer((_) async => _ok(catalogJson, path));
 
-        await datasource.providers(bidId, phoneNumber: '  +225 05  ');
+        await datasource.providers(bidScope, phoneNumber: '  +225 05  ');
 
         verify(
           () => dio.post<Map<String, dynamic>>(
@@ -198,7 +203,7 @@ void main() {
           ),
         ).thenAnswer((_) async => _ok(catalogJson, path));
 
-        await datasource.providers(bidId, phoneNumber: '   ');
+        await datasource.providers(bidScope, phoneNumber: '   ');
 
         verify(
           () => dio.post<Map<String, dynamic>>(
@@ -227,7 +232,36 @@ void main() {
           ),
         );
 
-        expect(datasource.providers(bidId), throwsA(isA<DioException>()));
+        expect(datasource.providers(bidScope), throwsA(isA<DioException>()));
+      });
+
+      test('supplément : catalogue dédié du supplément', () async {
+        const supplementPath =
+            '/bids/$bidId/supplements/$supplementId/mobile-money/providers';
+        when(
+          () => dio.post<Map<String, dynamic>>(
+            supplementPath,
+            data: {'phoneNumber': '+22505'},
+          ),
+        ).thenAnswer((_) async => _ok(catalogJson, supplementPath));
+
+        final result = await datasource.providers(
+          supplementScope,
+          phoneNumber: '+22505',
+        );
+
+        expect(result.providers.single.code, 'ORANGE_CIV');
+        verifyNever(
+          () => dio.post<Map<String, dynamic>>(path, data: any(named: 'data')),
+        );
+      });
+
+      test('fil de négociation : aucun catalogue, ArgumentError', () {
+        expect(
+          () => datasource.providers(negotiationScope),
+          throwsArgumentError,
+        );
+        verifyZeroInteractions(dio);
       });
     });
 

@@ -689,6 +689,24 @@ final appRouter = GoRouter(
           BidAcceptedSuccessScreen(bidId: state.pathParameters['bidId']!),
     ),
 
+    // ── Supplément de prix payé en mobile money : écran d'attente (hors
+    //    shell). Déclarée avant `/bids/:bidId`, même raison que
+    //    `/negotiation`. Ouverte par le bouton « Payer » de l'expéditeur ou
+    //    par le retour Wave (`yadony://bids/{id}/supplements/{id}/…`).
+    GoRoute(
+      path: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
+      name: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<MobileMoneyPaymentBloc>(),
+        child: MobileMoneyAwaitingScreen(
+          scope: MobileMoneyScope.supplement(
+            bidId: state.pathParameters['bidId']!,
+            supplementId: state.pathParameters['supplementId']!,
+          ),
+        ),
+      ),
+    ),
+
     // ── Bid detail (hors shell) ──────────────────────────────────────────
     GoRoute(
       path: '/bids/:bidId',

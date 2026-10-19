@@ -12,14 +12,15 @@ import 'package:dony/features/matching/data/repositories/mobile_money_repository
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Paiement mobile money (Wave / Orange Money via pawaPay) d'un bid ou d'un
-/// fil de négociation : ouverture de l'écran d'attente, initiation d'un
-/// dépôt, sondage périodique du statut jusqu'au séquestre ou à l'expiration.
+/// Paiement mobile money (Wave / Orange Money via pawaPay) d'un bid, d'un
+/// fil de négociation ou du supplément de prix d'un colis : ouverture de
+/// l'écran d'attente, initiation d'un dépôt, sondage périodique du statut
+/// jusqu'au séquestre ou à l'expiration.
 ///
-/// Côté bid, l'expéditeur choisit d'abord un opérateur parmi ceux acceptés
-/// par le voyageur (`MobileMoneyPaymentChooseOperator`) avant qu'un dépôt ne
-/// soit lancé ; côté fil de négociation, le back n'expose pas de catalogue
-/// et l'initiation reste directe (lot 2, inchangé).
+/// Côté bid et supplément, l'expéditeur choisit d'abord un opérateur parmi
+/// ceux acceptés par le voyageur (`MobileMoneyPaymentChooseOperator`) avant
+/// qu'un dépôt ne soit lancé ; côté fil de négociation, le back n'expose pas
+/// de catalogue et l'initiation reste directe (lot 2, inchangé).
 ///
 /// Style identique à `MobileMoneyAccountBloc` : le repository ne fait que
 /// passer, c'est ici que les erreurs sont déballées (`unwrapDioError`) et
@@ -49,22 +50,26 @@ class MobileMoneyPaymentBloc
     emit(const MobileMoneyPaymentLoading());
     try {
       final status = await _repository.getStatus(event.scope);
-      final known = _stateFor(status);
+      final known = _stateFor(status, event.scope);
       // Une ligne `CANCELLED` résiduelle sur un fil (renoncement, dépôt refusé
       // ou échéance) n'est pas une expiration à afficher : le fil est revenu
       // à « à payer » et le backend recycle la ligne au prochain `initiate`.
       // Seul un sondage en cours de suivi traduit `CANCELLED` en Expired.
+      // Un supplément `CANCELLED` (refusé, expiré, retiré) est clos pour de
+      // bon : rien à recycler, l'expiration s'affiche.
       final residualCancelled =
-          known is MobileMoneyPaymentExpired && status.isReverted;
+          known is MobileMoneyPaymentExpired &&
+          status.isReverted &&
+          !event.scope.cancelledIsFinal;
       if (known != null && !residualCancelled) {
         _emitKnown(known, emit, event.scope);
         return;
       }
       final scope = event.scope;
-      if (scope is BidMobileMoneyScope) {
-        // Aucun dépôt encore tenté (ou ligne recyclable) pour ce bid :
-        // l'expéditeur choisit d'abord son opérateur parmi ceux acceptés par
-        // le voyageur (spec du 2026-09-11).
+      if (scope.providersPath != null) {
+        // Aucun dépôt encore tenté (ou ligne recyclable) pour ce bid ou ce
+        // supplément : l'expéditeur choisit d'abord son opérateur parmi ceux
+        // acceptés par le voyageur (spec du 2026-09-11).
         await _loadCatalogAndEmit(scope, status, event.phoneNumber, null, emit);
       } else {
         // Fil de négociation : pas de catalogue côté back (lot 2), on initie
@@ -107,7 +112,8 @@ class MobileMoneyPaymentBloc
     }
   }
 
-  /// Charge le catalogue payeur d'un bid et émet l'étape de choix. Un fil de
+  /// Charge le catalogue payeur d'un bid (ou d'un supplément, par son
+  /// catalogue dédié) et émet l'étape de choix. Un fil de
   /// négociation n'a pas de catalogue côté back (lot 2) : initiation directe
   /// sans opérateur, exactement comme le repli 404 d'un ancien back sur un
   /// bid. Un 404 sur un bid signale de même un back sans catalogue (ancien
@@ -127,13 +133,13 @@ class MobileMoneyPaymentBloc
         isLoadingCatalog: true,
       ),
     );
-    if (scope is! BidMobileMoneyScope) {
+    if (scope.providersPath == null) {
       await _initiateAndEmit(scope, phoneNumber, null, emit);
       return;
     }
     try {
       final catalog = await _repository.providers(
-        scope.id,
+        scope,
         phoneNumber: phoneNumber,
       );
       emit(
@@ -183,7 +189,7 @@ class MobileMoneyPaymentBloc
   ) async {
     try {
       final status = await _repository.getStatus(event.scope);
-      final known = _stateFor(status);
+      final known = _stateFor(status, event.scope);
       // `null` : aucun dépôt encore renvoyé par le backend (rare en plein
       // sondage) — on garde l'état courant plutôt que de perdre l'écran.
       if (known != null) {
@@ -215,7 +221,8 @@ class MobileMoneyPaymentBloc
       provider: provider,
     );
     final next =
-        _stateFor(status) ?? MobileMoneyPaymentAwaitingConfirmation(status);
+        _stateFor(status, scope) ??
+        MobileMoneyPaymentAwaitingConfirmation(status);
     _emitKnown(next, emit, scope);
     unawaited(
       _analytics.logEvent(
@@ -279,7 +286,8 @@ class MobileMoneyPaymentBloc
     }
   }
 
-  /// Issue d'un paiement mobile money d'un colis dans la famille commune
+  /// Issue d'un paiement mobile money d'un colis (ou de son supplément de
+  /// prix, `context: bid_supplement`) dans la famille commune
   /// `payment_succeeded` / `payment_failed` (`method: mobile_money`), pour
   /// lire tous les moyens dans un même tableau. Les événements
   /// `mobile_money_*` restent émis à côté.
@@ -296,9 +304,13 @@ class MobileMoneyPaymentBloc
         event,
         properties: {
           'method': AnalyticsPaymentMethod.mobileMoney,
-          'context': scope is BidMobileMoneyScope
-              ? AnalyticsPaymentContext.bid
-              : AnalyticsPaymentContext.negotiation,
+          'context': switch (scope) {
+            BidMobileMoneyScope() => AnalyticsPaymentContext.bid,
+            NegotiationMobileMoneyScope() =>
+              AnalyticsPaymentContext.negotiation,
+            SupplementMobileMoneyScope() =>
+              AnalyticsPaymentContext.bidSupplement,
+          },
           'currency': status.currency,
           if (amount != null) 'amount_bracket': analyticsAmountBracket(amount),
           'provider': ?provider,
@@ -338,8 +350,22 @@ class MobileMoneyPaymentBloc
   /// du dernier dépôt, qui prime sur un dépôt encore en cours. `null` quand
   /// aucun dépôt n'a jamais été tenté : il faut en initier un (ou, pour un
   /// bid, choisir d'abord un opérateur).
-  MobileMoneyPaymentState? _stateFor(MobileMoneyPaymentStatus s) {
+  ///
+  /// Supplément : un supplément remboursé n'est plus à payer (fenêtre close),
+  /// et un statut que l'app ne connaît pas encore (back plus récent, ex.
+  /// remboursement en cours) s'affiche « en cours » plutôt que de relancer
+  /// un catalogue que le back refuserait.
+  MobileMoneyPaymentState? _stateFor(
+    MobileMoneyPaymentStatus s,
+    MobileMoneyScope scope,
+  ) {
     if (s.isEscrowed) return MobileMoneyPaymentEscrowed(s);
+    if (scope is SupplementMobileMoneyScope) {
+      if (s.isRefunded) return MobileMoneyPaymentExpired(s);
+      if (!s.hasKnownPaymentStatus) {
+        return MobileMoneyPaymentAwaitingConfirmation(s);
+      }
+    }
     if (s.isExpired(_now())) return MobileMoneyPaymentExpired(s);
     if (s.isDepositFailed) return MobileMoneyPaymentDepositFailed(s);
     if (s.isDepositLive) return MobileMoneyPaymentAwaitingConfirmation(s);

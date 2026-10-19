@@ -128,5 +128,85 @@ void main() {
         isNull,
       );
     });
+
+    group('supplément de prix (retour Wave, PR A3)', () {
+      const supplementId = '9b2c4d6e-1f3a-4b5c-8d7e-0a1b2c3d4e5f';
+
+      test('résout vers l\'écran d\'attente du supplément', () {
+        expect(
+          resolveMobileMoneyAwaitingDeepLink(
+            Uri.parse(
+              'yadony://bids/$uuid/supplements/$supplementId/'
+              'mobile-money/awaiting',
+            ),
+          ),
+          '/bids/$uuid/supplements/$supplementId/mobile-money/awaiting',
+        );
+      });
+
+      test('rejette un supplément qui n\'est pas un UUID', () {
+        expect(
+          resolveMobileMoneyAwaitingDeepLink(
+            Uri.parse(
+              'yadony://bids/$uuid/supplements/42/mobile-money/awaiting',
+            ),
+          ),
+          isNull,
+        );
+      });
+
+      test('rejette un supplément sous un fil de négociation', () {
+        expect(
+          resolveMobileMoneyAwaitingDeepLink(
+            Uri.parse(
+              'yadony://negotiations/$uuid/supplements/$supplementId/'
+              'mobile-money/awaiting',
+            ),
+          ),
+          isNull,
+        );
+      });
+
+      test('rejette un segment autre que « supplements » ou une fin '
+          'différente', () {
+        expect(
+          resolveMobileMoneyAwaitingDeepLink(
+            Uri.parse(
+              'yadony://bids/$uuid/other/$supplementId/mobile-money/awaiting',
+            ),
+          ),
+          isNull,
+        );
+        expect(
+          resolveMobileMoneyAwaitingDeepLink(
+            Uri.parse(
+              'yadony://bids/$uuid/supplements/$supplementId/'
+              'mobile-money/status',
+            ),
+          ),
+          isNull,
+        );
+        expect(
+          resolveMobileMoneyAwaitingDeepLink(
+            Uri.parse('yadony://bids/$uuid/supplements/$supplementId'),
+          ),
+          isNull,
+        );
+      });
+
+      // `Uri.parse` normalise `..` : le lien retombe sur un chemin qui doit
+      // encore passer la validation stricte des UUID.
+      test('rejette une remontée de chemin qui contourne le colis', () {
+        expect(
+          resolveMobileMoneyAwaitingDeepLink(
+            Uri.parse(
+              'yadony://bids/../supplements/$supplementId/'
+              'mobile-money/awaiting',
+            ),
+          ),
+          isNull,
+        );
+      });
+    });
   });
 }

@@ -26,11 +26,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Écran d'attente du paiement mobile money (Wave / Orange Money via
-/// pawaPay) d'un bid ou d'un fil de négociation, ouvert depuis le détail de
-/// l'envoi ou le fil (`context.push<bool>(scope.awaitingRoute)`), une
-/// notification `MM_PAYMENT_PENDING` ou le lien profond
+/// pawaPay) d'un bid, d'un fil de négociation ou du supplément de prix d'un
+/// colis, ouvert depuis le détail de l'envoi ou le fil
+/// (`context.push<bool>(scope.awaitingRoute)`), une notification
+/// `MM_PAYMENT_PENDING` ou le lien profond
 /// `yadony://bids/{uuid}/mobile-money/awaiting` (ou
-/// `yadony://negotiations/{uuid}/mobile-money/awaiting`).
+/// `yadony://negotiations/{uuid}/mobile-money/awaiting`, ou
+/// `yadony://bids/{uuid}/supplements/{uuid}/mobile-money/awaiting`).
 ///
 /// L'ouverture déclenche le dépôt (push PIN chez l'opérateur, ou redirection
 /// Wave via `authorizationUrl`) : le bloc s'en charge lui-même dès
@@ -247,7 +249,9 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                 _cancelAllTimers();
                 DonySnackbar.show(
                   context,
-                  message: l.mobileMoneyPaymentConfirmedSecured,
+                  message: widget.scope is SupplementMobileMoneyScope
+                      ? l.supplementPaidSnackbar
+                      : l.mobileMoneyPaymentConfirmedSecured,
                   type: DonySnackbarType.success,
                 );
                 _close(context, paid: true);
@@ -937,6 +941,7 @@ class _ExpiredBody extends StatelessWidget {
   String _message(AppLocalizations l) => switch (scope) {
     BidMobileMoneyScope() => l.mobileMoneyExpiredBid,
     NegotiationMobileMoneyScope() => l.mobileMoneyExpiredNegotiation,
+    SupplementMobileMoneyScope() => l.mobileMoneyExpiredSupplement,
   };
 
   @override

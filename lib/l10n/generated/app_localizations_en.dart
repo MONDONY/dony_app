@@ -21750,4 +21750,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get supplementPaymentConfirming =>
       'Payment received, confirmation in progress. The parcel will update in a moment.';
+
+  @override
+  String get mobileMoneyExpiredSupplement =>
+      'This supplement can no longer be paid: the request expired or was closed. The parcel stays at the agreed price.';
+
+  @override
+  String get supplementMobileMoneyNotConfirmed =>
+      'Supplement payment not confirmed yet.';
+
+  @override
+  String get supplementSenderMobileMoneyPending =>
+      'Mobile money payment for the supplement pending';
 }
