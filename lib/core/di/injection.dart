@@ -5,6 +5,7 @@ import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/ai_form_draft_injection.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
+import 'package:dony/core/di/supplement_injection.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
@@ -136,7 +137,6 @@ import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_list_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
-import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_request_cubit.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
@@ -475,13 +475,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
   );
-  getIt.registerFactory<SupplementPaymentCubit>(
-    () => SupplementPaymentCubit(
-      getIt<BidSupplementRepository>(),
-      getIt<AnalyticsService>(),
-      errorReporter: getIt<ErrorReportingService>(),
-    ),
-  );
+  registerSupplementPaymentDependencies(getIt);
   getIt.registerFactory<RecipientReplacementCubit>(
     () => RecipientReplacementCubit(
       getIt<BidRepository>(),

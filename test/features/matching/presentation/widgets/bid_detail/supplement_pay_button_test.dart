@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -301,6 +303,99 @@ void main() {
     );
     expect(button.isLoading, isFalse);
     expect(button.onPressed, isNotNull);
+  });
+
+  testWidgets('confirmation encore en attente : message neutre, jamais '
+      '« payé », colis relu', (tester) async {
+    final sheet = _FakeSheet();
+    when(
+      () => repository.accept(any(), any()),
+    ).thenAnswer((_) async => _checkout);
+    when(() => repository.confirmPayment(any(), any())).thenAnswer(
+      (_) async => _supplement(status: BidSupplementStatus.paymentPending),
+    );
+    await pump(tester, _bid(_supplement()), presentSheet: sheet.present);
+
+    await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      find.text(
+        'Paiement reçu, confirmation en cours. Le colis se met à jour '
+        'dans un instant.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Supplément payé'), findsNothing);
+    verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
+  });
+
+  testWidgets('confirmation en échec : même message neutre, jamais « payé »', (
+    tester,
+  ) async {
+    final sheet = _FakeSheet();
+    when(
+      () => repository.accept(any(), any()),
+    ).thenAnswer((_) async => _checkout);
+    when(
+      () => repository.confirmPayment(any(), any()),
+    ).thenThrow(const ConflictException('d', code: 'payment-busy'));
+    await pump(tester, _bid(_supplement()), presentSheet: sheet.present);
+
+    await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      find.text(
+        'Paiement reçu, confirmation en cours. Le colis se met à jour '
+        'dans un instant.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Supplément payé'), findsNothing);
+    verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
+  });
+
+  testWidgets('invite d\'autorisation ouverte : bouton désactivé, un double '
+      'tap n\'ouvre qu\'une invite ; refus : bouton réactivé', (tester) async {
+    final pending = Completer<bool>();
+    var calls = 0;
+    await pump(
+      tester,
+      _bid(_supplement()),
+      authorize: (_) {
+        calls++;
+        return pending.future;
+      },
+    );
+
+    await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+    await tester.pump();
+    await tester.tap(
+      find.byKey(const Key('supplement-pay-btn')),
+      warnIfMissed: false,
+    );
+    await tester.pump();
+
+    expect(calls, 1);
+    var button = tester.widget<DonyButton>(
+      find.byKey(const Key('supplement-pay-btn')),
+    );
+    expect(button.isLoading, isTrue);
+    expect(button.onPressed, isNull);
+
+    pending.complete(false);
+    await tester.pump();
+    await tester.pump();
+
+    button = tester.widget<DonyButton>(
+      find.byKey(const Key('supplement-pay-btn')),
+    );
+    expect(button.isLoading, isFalse);
+    expect(button.onPressed, isNotNull);
+    verifyNever(() => repository.accept(any(), any()));
   });
 
   testWidgets('déjà payé : relecture directe, sans feuille', (tester) async {

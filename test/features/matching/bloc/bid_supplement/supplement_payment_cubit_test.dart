@@ -32,6 +32,13 @@ const _supplement = BidSupplement(
   grossAmount: 16.8,
 );
 
+BidSupplement _with(BidSupplementStatus status) => BidSupplement(
+  id: 'sup-1',
+  status: status,
+  rail: 'STRIPE',
+  grossAmount: 16.8,
+);
+
 const _checkout = SupplementCheckout(
   rail: 'STRIPE',
   clientSecret: 'pi_1_secret_2',
@@ -176,10 +183,10 @@ void main() {
   );
 
   blocTest<SupplementPaymentCubit, SupplementPaymentState>(
-    'confirmPayment : confirming puis paid',
+    'confirmPayment : statut payé rendu → confirming puis paid',
     setUp: () => when(
       () => repository.confirmPayment('bid-1', 'sup-1'),
-    ).thenAnswer((_) async => _supplement),
+    ).thenAnswer((_) async => _with(BidSupplementStatus.paid)),
     build: build,
     seed: () => const SupplementPaymentState(
       status: SupplementPaymentStatus.readyToPay,
@@ -206,8 +213,8 @@ void main() {
   );
 
   blocTest<SupplementPaymentCubit, SupplementPaymentState>(
-    'confirmPayment : échec rapporté et tracé, jamais montré (le webhook '
-    'prend le relais)',
+    'confirmPayment : échec rapporté et tracé, jamais « payé » : '
+    'confirmation en attente (le webhook prend le relais)',
     setUp: () => when(() => repository.confirmPayment(any(), any())).thenThrow(
       const ConflictException('d', code: 'supplement-payment-processing'),
     ),
@@ -215,7 +222,9 @@ void main() {
     act: (c) => c.confirmPayment(_bid, _supplement),
     expect: () => const [
       SupplementPaymentState(status: SupplementPaymentStatus.confirming),
-      SupplementPaymentState(status: SupplementPaymentStatus.paid),
+      SupplementPaymentState(
+        status: SupplementPaymentStatus.confirmationPending,
+      ),
     ],
     verify: (_) {
       verify(
@@ -236,6 +245,109 @@ void main() {
       ).called(1);
     },
   );
+
+  for (final status in [
+    BidSupplementStatus.paymentPending,
+    BidSupplementStatus.proposed,
+  ]) {
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'confirmPayment : statut ${status.name} rendu → confirmation en '
+      'attente, jamais « payé »',
+      setUp: () => when(
+        () => repository.confirmPayment(any(), any()),
+      ).thenAnswer((_) async => _with(status)),
+      build: build,
+      act: (c) => c.confirmPayment(_bid, _supplement),
+      expect: () => const [
+        SupplementPaymentState(status: SupplementPaymentStatus.confirming),
+        SupplementPaymentState(
+          status: SupplementPaymentStatus.confirmationPending,
+        ),
+      ],
+    );
+  }
+
+  blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+    'confirmPayment : versé compte aussi comme payé',
+    setUp: () => when(
+      () => repository.confirmPayment(any(), any()),
+    ).thenAnswer((_) async => _with(BidSupplementStatus.paidOut)),
+    build: build,
+    act: (c) => c.confirmPayment(_bid, _supplement),
+    expect: () => const [
+      SupplementPaymentState(status: SupplementPaymentStatus.confirming),
+      SupplementPaymentState(status: SupplementPaymentStatus.paid),
+    ],
+  );
+
+  group('autorisation locale', () {
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'beginAuthorization : authorizing, le bouton est occupé',
+      build: build,
+      act: (c) => expect(c.beginAuthorization(), isTrue),
+      expect: () => const [
+        SupplementPaymentState(status: SupplementPaymentStatus.authorizing),
+      ],
+      verify: (c) => expect(c.state.isBusy, isTrue),
+    );
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'beginAuthorization : refusé si une invite est déjà ouverte',
+      build: build,
+      seed: () => const SupplementPaymentState(
+        status: SupplementPaymentStatus.authorizing,
+      ),
+      act: (c) => expect(c.beginAuthorization(), isFalse),
+      expect: () => const <SupplementPaymentState>[],
+    );
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'authorizationDenied : retour à idle',
+      build: build,
+      seed: () => const SupplementPaymentState(
+        status: SupplementPaymentStatus.authorizing,
+      ),
+      act: (c) => c.authorizationDenied(),
+      expect: () => const [SupplementPaymentState()],
+    );
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'authorizationDenied : sans effet hors autorisation',
+      build: build,
+      seed: () => const SupplementPaymentState(
+        status: SupplementPaymentStatus.accepting,
+      ),
+      act: (c) => c.authorizationDenied(),
+      expect: () => const <SupplementPaymentState>[],
+    );
+
+    test('beginAuthorization / authorizationDenied : cubit fermé', () async {
+      final cubit = build();
+      await cubit.close();
+      expect(cubit.beginAuthorization(), isFalse);
+      cubit.authorizationDenied();
+      expect(cubit.state.status, SupplementPaymentStatus.idle);
+    });
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'pay après autorisation : accepting puis readyToPay',
+      setUp: () => when(
+        () => repository.accept(any(), any()),
+      ).thenAnswer((_) async => _checkout),
+      build: build,
+      seed: () => const SupplementPaymentState(
+        status: SupplementPaymentStatus.authorizing,
+      ),
+      act: (c) => c.pay(_bid, _supplement),
+      expect: () => const [
+        SupplementPaymentState(status: SupplementPaymentStatus.accepting),
+        SupplementPaymentState(
+          status: SupplementPaymentStatus.readyToPay,
+          checkout: _checkout,
+        ),
+      ],
+    );
+  });
 
   test('confirmPayment : la requête part même cubit fermé', () async {
     when(
@@ -282,7 +394,8 @@ void main() {
     for (final status in SupplementPaymentStatus.values) {
       expect(
         SupplementPaymentState(status: status).isBusy,
-        status == SupplementPaymentStatus.accepting ||
+        status == SupplementPaymentStatus.authorizing ||
+            status == SupplementPaymentStatus.accepting ||
             status == SupplementPaymentStatus.readyToPay ||
             status == SupplementPaymentStatus.confirming,
         reason: status.name,

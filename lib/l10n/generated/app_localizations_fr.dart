@@ -21871,4 +21871,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorStripeUnavailableMessage =>
       'Le service de paiement est momentanément injoignable. Réessayez.';
+
+  @override
+  String get supplementPaymentConfirming =>
+      'Paiement reçu, confirmation en cours. Le colis se met à jour dans un instant.';
 }

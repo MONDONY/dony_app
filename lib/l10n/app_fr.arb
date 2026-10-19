@@ -22337,5 +22337,7 @@
   "errorStripeUnavailableTitle": "Service de paiement injoignable",
   "@errorStripeUnavailableTitle": {"description": "ErrorCatalog stripe-unavailable"},
   "errorStripeUnavailableMessage": "Le service de paiement est momentanément injoignable. Réessayez.",
-  "@errorStripeUnavailableMessage": {"description": "ErrorCatalog stripe-unavailable"}
+  "@errorStripeUnavailableMessage": {"description": "ErrorCatalog stripe-unavailable"},
+  "supplementPaymentConfirming": "Paiement reçu, confirmation en cours. Le colis se met à jour dans un instant.",
+  "@supplementPaymentConfirming": {"description": "Message neutre après le paiement du supplément quand le serveur ne l'a pas encore confirmé payé (traitement en cours, réseau)"}
 }

@@ -35313,6 +35313,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le service de paiement est momentanément injoignable. Réessayez.'**
   String get errorStripeUnavailableMessage;
+
+  /// Message neutre après le paiement du supplément quand le serveur ne l'a pas encore confirmé payé (traitement en cours, réseau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement reçu, confirmation en cours. Le colis se met à jour dans un instant.'**
+  String get supplementPaymentConfirming;
 }
 
 class _AppLocalizationsDelegate

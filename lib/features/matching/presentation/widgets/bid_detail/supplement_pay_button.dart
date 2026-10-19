@@ -125,9 +125,15 @@ class _PayButtonView extends StatelessWidget {
 
   Future<void> _pay(BuildContext context) async {
     final cubit = context.read<SupplementPaymentCubit>();
+    // Bouton désactivé pendant l'invite : un double tap n'en ouvre pas deux.
+    if (!cubit.beginAuthorization()) return;
     final authenticated = await authorize(context);
-    if (!context.mounted) return;
+    if (!context.mounted) {
+      cubit.authorizationDenied();
+      return;
+    }
     if (!authenticated) {
+      cubit.authorizationDenied();
       DonySnackbar.show(
         context,
         message: context.l10n.paymentNotConfirmedSnackbar,
@@ -149,12 +155,21 @@ class _PayButtonView extends StatelessWidget {
           message: context.l10n.supplementPaidSnackbar,
           type: DonySnackbarType.success,
         );
+      case SupplementPaymentStatus.confirmationPending:
+        // Pas de succès annoncé : le serveur n'a pas encore vu le paiement
+        // payé. La fiche relue montre l'état réel.
+        _reloadBid(context);
+        DonySnackbar.show(
+          context,
+          message: context.l10n.supplementPaymentConfirming,
+        );
       case SupplementPaymentStatus.failure:
         ErrorPresenter.show(context, state.error);
         // Demande refusée, expirée ou retirée entre-temps : la fiche montre
         // le vrai état.
         _reloadBid(context);
       case SupplementPaymentStatus.idle ||
+          SupplementPaymentStatus.authorizing ||
           SupplementPaymentStatus.accepting ||
           SupplementPaymentStatus.confirming:
         break;

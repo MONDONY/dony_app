@@ -14,6 +14,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 enum SupplementPaymentStatus {
   idle,
 
+  /// Vérification locale (`requirePaymentAuth`) ouverte : le bouton est
+  /// désactivé, un double tap n'ouvre pas une seconde invite.
+  authorizing,
+
   /// `POST …/accept` en cours.
   accepting,
 
@@ -24,8 +28,14 @@ enum SupplementPaymentStatus {
   /// Paiement autorisé, `POST …/confirm-payment` en cours.
   confirming,
 
-  /// Supplément payé (ou déjà payé) : l'écran relit le colis.
+  /// Supplément payé (ou déjà payé), confirmé par le serveur : l'écran
+  /// relit le colis et annonce le succès.
   paid,
+
+  /// Paiement autorisé par la feuille mais pas encore confirmé payé par le
+  /// serveur (traitement Stripe en cours, `payment-busy`, réseau) : message
+  /// neutre et relecture du colis, jamais « payé ».
+  confirmationPending,
   failure,
 }
 
@@ -41,6 +51,7 @@ class SupplementPaymentState extends Equatable {
   final AppException? error;
 
   bool get isBusy =>
+      status == SupplementPaymentStatus.authorizing ||
       status == SupplementPaymentStatus.accepting ||
       status == SupplementPaymentStatus.readyToPay ||
       status == SupplementPaymentStatus.confirming;
@@ -51,7 +62,8 @@ class SupplementPaymentState extends Equatable {
 
 /// Paiement par carte d'un supplément de prix par l'expéditeur (PR A2).
 ///
-/// L'écran passe `requirePaymentAuth` AVANT [pay], ouvre la feuille de
+/// L'écran pose [beginAuthorization], passe `requirePaymentAuth`, puis
+/// appelle [pay] (ou [authorizationDenied] sur un refus), ouvre la feuille de
 /// paiement sur [SupplementPaymentStatus.readyToPay] et attend [confirmPayment]
 /// dans son `onSuccess`. Le paiement lui-même (`payment_*`) est tracé par la
 /// feuille (`PaymentSheetBloc`, `context: bid_supplement`), jamais ici.
@@ -71,7 +83,9 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
   /// directement à [SupplementPaymentStatus.paid] s'il n'y a plus rien à
   /// payer (supplément déjà payé ailleurs).
   Future<void> pay(BidModel bid, BidSupplement supplement) async {
-    if (state.isBusy) return;
+    if (state.isBusy && state.status != SupplementPaymentStatus.authorizing) {
+      return;
+    }
     emit(
       const SupplementPaymentState(status: SupplementPaymentStatus.accepting),
     );
@@ -116,6 +130,24 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
     }
   }
 
+  /// Ouvre la vérification locale. Rend `false` si une action est déjà en
+  /// cours (double tap) : l'appelant n'ouvre alors pas d'invite.
+  bool beginAuthorization() {
+    if (isClosed || state.isBusy) return false;
+    emit(
+      const SupplementPaymentState(status: SupplementPaymentStatus.authorizing),
+    );
+    return true;
+  }
+
+  /// Vérification refusée ou abandonnée : le bouton revient.
+  void authorizationDenied() {
+    if (isClosed || state.status != SupplementPaymentStatus.authorizing) {
+      return;
+    }
+    emit(const SupplementPaymentState());
+  }
+
   /// Feuille fermée sans paiement : le supplément reste `PAYMENT_PENDING`
   /// côté serveur et le bouton « Payer » revient. Sans effet après un succès
   /// (la confirmation est déjà partie).
@@ -126,8 +158,10 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
 
   /// Confirme au serveur le paiement autorisé par la feuille. À attendre
   /// dans `onSuccess`, sans garde de montage : la requête doit partir même si
-  /// l'écran se ferme. Un échec n'est pas montré (le webhook Stripe et la
-  /// relecture serveur prennent le relais) mais il est rapporté.
+  /// l'écran se ferme. Seul un statut payé rendu par le serveur mène à
+  /// [SupplementPaymentStatus.paid] ; un statut encore en attente ou un échec
+  /// (rapporté, le webhook Stripe prend le relais) mène à
+  /// [SupplementPaymentStatus.confirmationPending].
   Future<void> confirmPayment(BidModel bid, BidSupplement supplement) async {
     if (!isClosed) {
       emit(
@@ -137,8 +171,10 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
         ),
       );
     }
+    var confirmed = false;
     try {
-      await _repository.confirmPayment(bid.id, supplement.id);
+      final result = await _repository.confirmPayment(bid.id, supplement.id);
+      confirmed = result.status.isPaid;
     } catch (e, stackTrace) {
       _logFailure('confirm_payment', unwrapDioError(e));
       await _errorReporter?.report(
@@ -150,7 +186,9 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
     if (isClosed) return;
     emit(
       SupplementPaymentState(
-        status: SupplementPaymentStatus.paid,
+        status: confirmed
+            ? SupplementPaymentStatus.paid
+            : SupplementPaymentStatus.confirmationPending,
         checkout: state.checkout,
       ),
     );

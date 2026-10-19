@@ -21727,4 +21727,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorStripeUnavailableMessage =>
       'The payment service is temporarily unreachable. Please try again.';
+
+  @override
+  String get supplementPaymentConfirming =>
+      'Payment received, confirmation in progress. The parcel will update in a moment.';
 }

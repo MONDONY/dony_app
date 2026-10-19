@@ -7521,6 +7521,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorPaymentBusyMessage': (l) => l.errorPaymentBusyMessage,
   'errorStripeUnavailableTitle': (l) => l.errorStripeUnavailableTitle,
   'errorStripeUnavailableMessage': (l) => l.errorStripeUnavailableMessage,
+  'supplementPaymentConfirming': (l) => l.supplementPaymentConfirming,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
