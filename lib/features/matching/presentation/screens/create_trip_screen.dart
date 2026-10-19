@@ -903,7 +903,9 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _deliveryAddressNotifier = ValueNotifier<AddressData?>(null);
   AddressData? get _pickupAddress => _pickupAddressNotifier.value;
   AddressData? get _deliveryAddress => _deliveryAddressNotifier.value;
-  final _availableKgNotifier = ValueNotifier<double>(15);
+  // Même défaut que le bloc (une valise de 23 kg) : le compteur affiche le
+  // bloc, la soumission lit ce notifier (YADONY-FLUTTER-PROD-18).
+  final _availableKgNotifier = ValueNotifier<double>(defaultAvailableKg);
   final _priceOptionNotifier = ValueNotifier<int>(-1); // -1 = aucune sélection
   final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
@@ -1131,6 +1133,10 @@ class _TripFormContentState extends State<_TripFormContent> {
           _ => CapacityUnit.suitcase23kg,
         };
         formBloc.add(CapacityUnitChanged(unit));
+        // L'unité réécrit le kg à sa contenance (une valise) ; le kg du
+        // trajet passe ensuite, sinon un trajet de deux valises, ou déjà
+        // en partie réservé, s'enregistrait à une seule valise pleine.
+        formBloc.add(AvailableKgChanged(a.availableKg));
 
         final mode = a.pricingMode == 'MIXED'
             ? PricingMode.mixed
@@ -1151,6 +1157,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         _syncCityToFormBloc();
       });
     }
+    if (!_isEdit) _seedAvailableKgToFormBloc();
     widget.onSubmitReady?.call(_submit);
     widget.onPaymentMethodsReady?.call(_paymentMethods);
     widget.onDraftHandlersReady?.call(_draftSnapshot, _restoreDraft);
@@ -1571,6 +1578,37 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// relancent l'une l'autre sans fin — une boucle de microtâches où les
   /// timers ne tournent jamais, donc que `--timeout` ne coupe pas.
   bool _applyingKgFromBloc = false;
+
+  /// Une seule source de vérité au démarrage d'une création : le kg du
+  /// notifier (défaut, ou poids d'un trajet dédié) part tout de suite dans le
+  /// bloc, que le compteur de valises affiche. Sans cet envoi, le bloc restait
+  /// à `null` (compteur sur 23 kg) et la soumission envoyait le défaut du
+  /// notifier (15 kg, YADONY-FLUTTER-PROD-18).
+  ///
+  /// Appelé en `initState`, avant tout préremplissage (modèle, brouillon,
+  /// assistant) : leurs événements sont ajoutés après, et l'emportent.
+  void _seedAvailableKgToFormBloc() {
+    final bloc = context.read<AnnouncementFormBloc>();
+    if (bloc.state.availableKg != null) return;
+    bloc.add(AvailableKgChanged(_availableKgNotifier.value));
+  }
+
+  /// Kg envoyés au serveur. En création libre avec une unité valise, ramenés
+  /// à un nombre entier de valises : le compteur ne montre jamais autre chose.
+  /// L'édition garde le kg du trajet, qui baisse à chaque réservation ; le
+  /// trajet dédié garde le poids fixé par la demande.
+  /// Réservé aux tests : kg que la création enverrait, lu comme
+  /// [handoverDeadlineForTest] via le `Key` de `_TripFormContent`.
+  @visibleForTesting
+  double get availableKgToSubmitForTest => _availableKgToSubmit;
+
+  double get _availableKgToSubmit {
+    final kg = _availableKgNotifier.value;
+    if (_isEdit || _isLocked) return kg;
+    return context.read<AnnouncementFormBloc>().state.capacityUnit.normalizeKg(
+      kg,
+    );
+  }
 
   void _syncKgToFormBloc() {
     if (!mounted || _applyingKgFromBloc) return;
@@ -1995,7 +2033,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         arrivalDate: arrivalDate,
         pickupAddress: _pickupAddress!,
         deliveryAddress: _deliveryAddress!,
-        availableKg: _availableKgNotifier.value,
+        availableKg: _availableKgToSubmit,
         pricePerKg: pricePerKgToSubmit,
         transportMode: transportMode,
         stops: stops,

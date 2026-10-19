@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +27,9 @@ class TripFormFields {
   final transportMode = ValueNotifier<TransportMode?>(null);
   final pickupAddress = ValueNotifier<AddressData?>(null);
   final deliveryAddress = ValueNotifier<AddressData?>(null);
-  final availableKg = ValueNotifier<double>(15);
+  // Une valise de 23 kg, comme le bloc et son compteur
+  // (YADONY-FLUTTER-PROD-18).
+  final availableKg = ValueNotifier<double>(defaultAvailableKg);
 
   /// Index de chip ; -1 = aucune sélection ; `presets.length` = « Autre prix ».
   final priceOption = ValueNotifier<int>(-1);
