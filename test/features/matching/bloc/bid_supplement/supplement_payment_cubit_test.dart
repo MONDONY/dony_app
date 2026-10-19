@@ -542,4 +542,78 @@ void main() {
       expect: () => const <SupplementPaymentState>[],
     );
   });
+
+  group('espèces (PR A4)', () {
+    const cash = BidSupplement(
+      id: 'sup-1',
+      status: BidSupplementStatus.proposed,
+      rail: 'CASH',
+      grossAmount: 16.8,
+    );
+    const cashCheckout = SupplementCheckout(
+      supplement: BidSupplement(
+        id: 'sup-1',
+        status: BidSupplementStatus.paid,
+        rail: 'CASH',
+        grossAmount: 16.8,
+      ),
+      rail: 'CASH',
+      amount: 16.8,
+      currency: 'EUR',
+    );
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'accept : PAID tout de suite, bid_supplement_cash_accepted, aucun '
+      'payment_*',
+      setUp: () => when(
+        () => repository.accept('bid-1', 'sup-1'),
+      ).thenAnswer((_) async => cashCheckout),
+      build: build,
+      act: (c) => c.pay(_bid, cash),
+      expect: () => const [
+        SupplementPaymentState(status: SupplementPaymentStatus.accepting),
+        SupplementPaymentState(
+          status: SupplementPaymentStatus.paid,
+          checkout: cashCheckout,
+        ),
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.bidSupplementCashAccepted,
+            properties: {'currency': 'EUR', 'amount_bracket': '<20'},
+          ),
+        ).called(1);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.paymentSucceeded,
+            properties: any(named: 'properties'),
+          ),
+        );
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.bidSupplementPaymentStarted,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'accept refusé (demande expirée) : échec tracé',
+      setUp: () => when(
+        () => repository.accept('bid-1', 'sup-1'),
+      ).thenThrow(const ConflictException('d', code: 'supplement-expired')),
+      build: build,
+      act: (c) => c.pay(_bid, cash),
+      skip: 1,
+      expect: () => [
+        isA<SupplementPaymentState>().having(
+          (s) => s.status,
+          'status',
+          SupplementPaymentStatus.failure,
+        ),
+      ],
+    );
+  });
 }

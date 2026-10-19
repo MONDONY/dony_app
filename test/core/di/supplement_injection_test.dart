@@ -1,6 +1,8 @@
 import 'package:dony/core/di/supplement_injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_flow.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
@@ -64,5 +66,29 @@ void main() {
     expect(sink.captures, hasLength(1));
     expect(sink.captures.single['operation'], 'bid.supplement.confirmPayment');
     await cubit.close();
+  });
+
+  test('commission espèces : flux partagé, cubit de reprise neuf à chaque '
+      'encart', () {
+    final getIt = GetIt.asNewInstance();
+    getIt
+      ..registerSingleton<BidSupplementRepository>(_MockRepository())
+      ..registerSingleton<AnalyticsService>(
+        makeDisabledAnalytics(MockAnalyticsBackend()),
+      )
+      ..registerSingleton<ErrorReportingService>(
+        ErrorReportingService(_RecordingSink()),
+      );
+
+    registerSupplementPaymentDependencies(getIt);
+
+    expect(
+      getIt<SupplementCommissionFlow>(),
+      same(getIt<SupplementCommissionFlow>()),
+    );
+    expect(
+      getIt<SupplementCommissionCubit>(),
+      isNot(same(getIt<SupplementCommissionCubit>())),
+    );
   });
 }

@@ -105,6 +105,90 @@ void main() {
     });
   });
 
+  test(
+    'create espèces : source de commission et devise de complément',
+    () async {
+      api.on('POST', '/bids/$_bidId/supplements', {
+        ..._supplement('COMMISSION_PENDING'),
+        'rail': 'CASH',
+        'commissionStatus': 'REQUIRES_3DS',
+        'commissionClientSecret': 'pi_c_secret_1',
+      }, status: 201);
+
+      final created = await datasource.create(
+        _bidId,
+        netAmount: 5,
+        reason: BidSupplementReason.extraWeight,
+        photoKey: 'tracking/$_bidId/y.jpg',
+        commissionSource: SupplementCommissionSource.card,
+        fundingCurrency: ' xof ',
+      );
+
+      expect(api.last.data, {
+        'netAmount': 5.0,
+        'reasonCode': 'EXTRA_WEIGHT',
+        'photoKey': 'tracking/$_bidId/y.jpg',
+        'commissionSource': 'CARD',
+        'fundingCurrency': 'XOF',
+      });
+      expect(created.status, BidSupplementStatus.commissionPending);
+      expect(created.isCash, isTrue);
+      expect(created.commissionClientSecret, 'pi_c_secret_1');
+      expect(created.needsCommissionAuth, isTrue);
+    },
+  );
+
+  test('create : devise de complément vide omise', () async {
+    api.on('POST', '/bids/$_bidId/supplements', _supplement('PROPOSED'));
+
+    await datasource.create(
+      _bidId,
+      netAmount: 5,
+      reason: BidSupplementReason.extraWeight,
+      photoKey: 'k',
+      commissionSource: SupplementCommissionSource.wallet,
+      fundingCurrency: '  ',
+    );
+
+    expect(api.last.data, {
+      'netAmount': 5.0,
+      'reasonCode': 'EXTRA_WEIGHT',
+      'photoKey': 'k',
+      'commissionSource': 'WALLET_FIRST',
+    });
+  });
+
+  test(
+    'confirmCommission : POST …/{supplementId}/commission/confirm',
+    () async {
+      api.on('POST', '/bids/$_bidId/supplements/sup-1/commission/confirm', {
+        ..._supplement('PROPOSED'),
+        'rail': 'CASH',
+        'commissionStatus': 'CHARGED',
+      });
+
+      final s = await datasource.confirmCommission(_bidId, 'sup-1');
+
+      expect(api.last.method, 'POST');
+      expect(s.status, BidSupplementStatus.proposed);
+      expect(s.commissionCharged, isTrue);
+      expect(s.commissionClientSecret, isNull);
+    },
+  );
+
+  test('current : supplément de la fiche du colis, ou null', () async {
+    api.on('GET', '/bids/$_bidId', {
+      'id': _bidId,
+      'supplement': _supplement('COMMISSION_PENDING'),
+    });
+    final s = await datasource.current(_bidId);
+    expect(api.last.method, 'GET');
+    expect(s?.status, BidSupplementStatus.commissionPending);
+
+    api.on('GET', '/bids/$_bidId', {'id': _bidId});
+    expect(await datasource.current(_bidId), isNull);
+  });
+
   test('withdraw : DELETE /bids/{id}/supplements/{supplementId}', () async {
     api.on(
       'DELETE',

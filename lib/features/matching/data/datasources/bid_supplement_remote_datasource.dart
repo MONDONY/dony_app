@@ -51,6 +51,13 @@ class BidSupplementRemoteDatasource {
 
   /// Demande du voyageur (201). Le serveur fige la commission et le brut,
   /// prévient l'expéditeur et bloque le scan de remise.
+  ///
+  /// Colis payé en espèces : la commission du supplément est prélevée au
+  /// voyageur à la demande, depuis [commissionSource] (solde par défaut côté
+  /// back) et, pour le solde, le portefeuille de complément
+  /// [fundingCurrency]. Avec la carte, la demande peut revenir en
+  /// `COMMISSION_PENDING` avec `commissionClientSecret` (3DS). Les deux champs
+  /// ne partent que s'ils sont posés : un back antérieur les ignore.
   Future<BidSupplement> create(
     String bidId, {
     required double netAmount,
@@ -58,9 +65,12 @@ class BidSupplementRemoteDatasource {
     String? reasonText,
     String? gridItemLabel,
     required String photoKey,
+    SupplementCommissionSource? commissionSource,
+    String? fundingCurrency,
   }) async {
     final text = reasonText?.trim();
     final label = gridItemLabel?.trim();
+    final funding = fundingCurrency?.trim().toUpperCase();
     final response = await _client.dio.post<Map<String, dynamic>>(
       _base(bidId),
       data: {
@@ -69,9 +79,37 @@ class BidSupplementRemoteDatasource {
         if (text != null && text.isNotEmpty) 'reasonText': text,
         if (label != null && label.isNotEmpty) 'gridItemLabel': label,
         'photoKey': photoKey,
+        'commissionSource': ?commissionSource?.apiValue,
+        if (funding != null && funding.isNotEmpty) 'fundingCurrency': funding,
       },
     );
     return BidSupplement.fromJson(response.data!);
+  }
+
+  /// Espèces : valide la commission d'une demande en `COMMISSION_PENDING`,
+  /// après la 3DS ou pour reprendre un débit resté sans réponse (502/503 à
+  /// la création ; même clé côté back, jamais de second débit). Rend la vue
+  /// du voyageur : `PROPOSED` une fois prélevée, ou encore
+  /// `COMMISSION_PENDING` avec un nouveau `commissionClientSecret`.
+  Future<BidSupplement> confirmCommission(
+    String bidId,
+    String supplementId,
+  ) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '${_base(bidId)}/$supplementId/commission/confirm',
+    );
+    return BidSupplement.fromJson(response.data!);
+  }
+
+  /// Supplément affiché sur la fiche du colis (`GET /bids/{bidId}`, champ
+  /// `supplement`) : la demande en cours, sinon la dernière. `null` sans
+  /// supplément ou avec un back antérieur.
+  Future<BidSupplement?> current(String bidId) async {
+    final response = await _client.dio.get<Map<String, dynamic>>(
+      '/bids/$bidId',
+    );
+    final raw = response.data?['supplement'];
+    return raw is Map<String, dynamic> ? BidSupplement.fromJson(raw) : null;
   }
 
   /// Le voyageur retire sa demande tant que l'expéditeur n'a pas payé.

@@ -63,6 +63,8 @@ void main() {
       AnalyticsEvents.bidSupplementViewed,
       AnalyticsEvents.bidSupplementDeclined,
       AnalyticsEvents.bidSupplementActionFailed,
+      AnalyticsEvents.bidSupplementCashAccepted,
+      AnalyticsEvents.bidSupplementCommissionResumed,
       AnalyticsEvents.handoverBlockedSupplement,
       AnalyticsEvents.blocError,
     ];

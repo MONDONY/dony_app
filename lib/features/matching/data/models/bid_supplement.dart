@@ -45,6 +45,34 @@ enum BidSupplementStatus {
   bool get isRefunded => this == refundPending || this == refunded;
 }
 
+/// Valeurs de [BidSupplement.commissionStatus] (`CommissionStatus` côté
+/// back). Texte brut : une valeur inconnue de l'app ne casse pas le parsing.
+abstract final class SupplementCommissionStatus {
+  static const requires3ds = 'REQUIRES_3DS';
+  static const charged = 'CHARGED';
+  static const failed = 'FAILED';
+  static const refunded = 'REFUNDED';
+  static const refundFailed = 'REFUND_FAILED';
+}
+
+/// D'où prélever la commission d'un supplément sur un colis payé en espèces
+/// (`commissionSource` de `POST /bids/{bidId}/supplements`), même contrat que
+/// l'acceptation d'un colis en espèces. [apiValue] part au back,
+/// [analyticsValue] dans l'analytics.
+enum SupplementCommissionSource {
+  /// Solde de la devise du colis, complété par la devise active ou celle
+  /// choisie (`fundingCurrency`). Défaut du back.
+  wallet('WALLET_FIRST', 'wallet'),
+
+  /// Carte commission enregistrée du voyageur (3DS possible).
+  card('CARD', 'card');
+
+  const SupplementCommissionSource(this.apiValue, this.analyticsValue);
+
+  final String apiValue;
+  final String analyticsValue;
+}
+
 /// Motif d'un supplément. [apiValue] part au back, [analyticsValue] dans
 /// l'analytics ; jamais le texte libre saisi.
 enum BidSupplementReason {
@@ -94,6 +122,7 @@ class BidSupplement {
     this.paidAt,
     this.commissionStatus,
     this.blocksHandover = false,
+    this.commissionClientSecret,
   });
 
   final String id;
@@ -137,7 +166,32 @@ class BidSupplement {
   @JsonKey(defaultValue: false)
   final bool blocksHandover;
 
+  /// Espèces, voyageur seulement : client secret de la PaymentIntent de la
+  /// commission quand la carte demande une authentification (3DS, statut
+  /// [BidSupplementStatus.commissionPending]). Rendu seulement par la
+  /// création et `…/commission/confirm` ; absent d'un back antérieur (nul).
+  /// Jamais réécrit en JSON : un secret de paiement ne se met pas en cache.
+  @JsonKey(includeToJson: false)
+  final String? commissionClientSecret;
+
   BidSupplementReason? get reason => BidSupplementReason.fromApi(reasonCode);
+
+  /// Colis payé en espèces : l'expéditeur remet le complément en main
+  /// propre, la commission est prélevée au voyageur à la demande.
+  bool get isCash => rail == SupplementCheckout.railCash;
+
+  /// Une authentification bancaire (3DS) attend le voyageur.
+  bool get needsCommissionAuth =>
+      status == BidSupplementStatus.commissionPending &&
+      (commissionClientSecret?.isNotEmpty ?? false);
+
+  /// Commission du supplément prélevée au voyageur (espèces).
+  bool get commissionCharged =>
+      commissionStatus == SupplementCommissionStatus.charged;
+
+  /// Commission du supplément rendue au voyageur (espèces).
+  bool get commissionRefunded =>
+      commissionStatus == SupplementCommissionStatus.refunded;
 
   factory BidSupplement.fromJson(Map<String, dynamic> json) =>
       _$BidSupplementFromJson(json);
@@ -248,6 +302,7 @@ class SupplementCheckout {
 
   static const railStripe = 'STRIPE';
   static const railPawapay = 'PAWAPAY';
+  static const railCash = 'CASH';
 
   /// Vue expéditeur du supplément (brut seul).
   final BidSupplement? supplement;
@@ -271,6 +326,10 @@ class SupplementCheckout {
   /// Mobile money (pawaPay) : pas de feuille de paiement, l'écran d'attente
   /// mobile money du supplément prend le relais.
   bool get isMobileMoney => rail == railPawapay;
+
+  /// Espèces : rien à payer en ligne, l'expéditeur s'engage à remettre le
+  /// complément en main propre (supplément rendu `PAID`).
+  bool get isCash => rail == railCash;
 
   /// Une feuille de paiement est à ouvrir.
   bool get needsPayment => clientSecret != null && clientSecret!.isNotEmpty;
