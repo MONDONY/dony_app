@@ -11,6 +11,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
 import 'package:dony/features/tracking/presentation/widgets/delivery_departure_gate.dart';
 import 'package:flutter/material.dart';
@@ -37,8 +38,10 @@ BidModel _bid({
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   String? arrivalCity,
   DateTime? departureAt,
+  BidSupplement? supplement,
 }) => BidModel(
   id: 'b1',
+  supplement: supplement,
   announcementId: 'a1',
   senderId: 's1',
   status: status,
@@ -134,6 +137,53 @@ void main() {
   testWidgets('ACCEPTED confirmé → Scanner le colis', (tester) async {
     await _pump(tester, _bid(status: 'ACCEPTED', voyageurConfirmed: true));
     expect(find.text('Lire le QR du colis'), findsOneWidget);
+  });
+
+  testWidgets('supplément en attente → scan désactivé et expliqué', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'ACCEPTED',
+        voyageurConfirmed: true,
+        supplement: const BidSupplement(
+          id: 'sup-1',
+          status: BidSupplementStatus.proposed,
+          grossAmount: 16.8,
+          blocksHandover: true,
+        ),
+      ),
+    );
+    final button = tester.widget<DonyButton>(
+      find.byKey(const Key('traveler-scan-btn')),
+    );
+    expect(button.onPressed, isNull);
+    expect(
+      find.text(
+        "Un supplément attend la réponse de l'expéditeur : le scan est bloqué.",
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('supplément refusé → scan de nouveau possible', (tester) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'ACCEPTED',
+        voyageurConfirmed: true,
+        supplement: const BidSupplement(
+          id: 'sup-1',
+          status: BidSupplementStatus.declined,
+          grossAmount: 16.8,
+        ),
+      ),
+    );
+    final button = tester.widget<DonyButton>(
+      find.byKey(const Key('traveler-scan-btn')),
+    );
+    expect(button.onPressed, isNotNull);
   });
 
   testWidgets('ACCEPTED non confirmé → Confirmer ma présence', (tester) async {

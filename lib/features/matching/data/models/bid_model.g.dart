@@ -136,6 +136,14 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   deliveryAddress: json['deliveryAddress'] == null
       ? null
       : AddressData.fromJson(json['deliveryAddress'] as Map<String, dynamic>),
+  supplement: json['supplement'] == null
+      ? null
+      : BidSupplement.fromJson(json['supplement'] as Map<String, dynamic>),
+  supplementRequestAllowed: json['supplementRequestAllowed'] as bool? ?? false,
+  totalSenderAmountWithSupplementEur:
+      (json['totalSenderAmountWithSupplementEur'] as num?)?.toDouble(),
+  totalNetAmountWithSupplementEur:
+      (json['totalNetAmountWithSupplementEur'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -223,6 +231,11 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'reschedule': instance.reschedule,
   'handoverAddress': instance.handoverAddress,
   'deliveryAddress': instance.deliveryAddress,
+  'supplement': instance.supplement,
+  'supplementRequestAllowed': instance.supplementRequestAllowed,
+  'totalSenderAmountWithSupplementEur':
+      instance.totalSenderAmountWithSupplementEur,
+  'totalNetAmountWithSupplementEur': instance.totalNetAmountWithSupplementEur,
 };
 
 const _$BidPaymentMethodEnumMap = {

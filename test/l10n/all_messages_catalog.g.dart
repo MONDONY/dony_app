@@ -7387,6 +7387,117 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.walletTopupAmountAtLeast(placeholderMarker('min')),
   'walletTopupAmountAtMost': (l) =>
       l.walletTopupAmountAtMost(placeholderMarker('max')),
+  'bidDetailRequestSupplementLabel': (l) => l.bidDetailRequestSupplementLabel,
+  'bidDetailRequestSupplementSubtitle': (l) =>
+      l.bidDetailRequestSupplementSubtitle,
+  'bidDetailScanBlockedSupplement': (l) => l.bidDetailScanBlockedSupplement,
+  'supplementRequestTitle': (l) => l.supplementRequestTitle,
+  'supplementRequestIntro': (l) => l.supplementRequestIntro,
+  'supplementRequestSuggestionsLabel': (l) =>
+      l.supplementRequestSuggestionsLabel,
+  'supplementRequestSuggestionKg': (l) =>
+      l.supplementRequestSuggestionKg(placeholderMarker('amount')),
+  'supplementRequestSuggestionItem': (l) => l.supplementRequestSuggestionItem(
+    placeholderMarker('label'),
+    placeholderMarker('amount'),
+  ),
+  'supplementRequestAmountLabel': (l) =>
+      l.supplementRequestAmountLabel(placeholderMarker('currency')),
+  'supplementRequestAmountHint': (l) => l.supplementRequestAmountHint(
+    placeholderMarker('min'),
+    placeholderMarker('max'),
+  ),
+  'supplementRequestAmountOutOfRange': (l) =>
+      l.supplementRequestAmountOutOfRange(
+        placeholderMarker('min'),
+        placeholderMarker('max'),
+      ),
+  'supplementRequestReasonLabel': (l) => l.supplementRequestReasonLabel,
+  'supplementReasonGridItem': (l) => l.supplementReasonGridItem,
+  'supplementReasonGridItemHint': (l) => l.supplementReasonGridItemHint,
+  'supplementReasonExtraWeight': (l) => l.supplementReasonExtraWeight,
+  'supplementReasonOther': (l) => l.supplementReasonOther,
+  'supplementRequestDetailsLabel': (l) => l.supplementRequestDetailsLabel,
+  'supplementRequestDetailsHint': (l) => l.supplementRequestDetailsHint,
+  'supplementRequestDetailsRequiredHint': (l) =>
+      l.supplementRequestDetailsRequiredHint,
+  'supplementRequestPhotoLabel': (l) => l.supplementRequestPhotoLabel,
+  'supplementRequestPhotoHelp': (l) => l.supplementRequestPhotoHelp,
+  'supplementRecapNet': (l) => l.supplementRecapNet,
+  'supplementRecapCommission': (l) => l.supplementRecapCommission,
+  'supplementRecapGross': (l) => l.supplementRecapGross,
+  'supplementRequestNotice': (l) => l.supplementRequestNotice,
+  'supplementRequestSubmit': (l) => l.supplementRequestSubmit,
+  'supplementRequestSubmitAmount': (l) =>
+      l.supplementRequestSubmitAmount(placeholderMarker('amount')),
+  'supplementRequestLoadFailed': (l) => l.supplementRequestLoadFailed,
+  'supplementRequestSent': (l) => l.supplementRequestSent,
+  'supplementCardTitle': (l) => l.supplementCardTitle,
+  'supplementDeadline': (l) => l.supplementDeadline(placeholderMarker('time')),
+  'supplementReasonWithItem': (l) =>
+      l.supplementReasonWithItem(placeholderMarker('label')),
+  'supplementTravelerPending': (l) => l.supplementTravelerPending,
+  'supplementTravelerPendingNotice': (l) => l.supplementTravelerPendingNotice,
+  'supplementTravelerPaymentPending': (l) => l.supplementTravelerPaymentPending,
+  'supplementWithdraw': (l) => l.supplementWithdraw,
+  'supplementWithdrawConfirmTitle': (l) => l.supplementWithdrawConfirmTitle,
+  'supplementWithdrawConfirmMessage': (l) => l.supplementWithdrawConfirmMessage,
+  'supplementWithdrawn': (l) => l.supplementWithdrawn,
+  'supplementTravelerDeclined': (l) => l.supplementTravelerDeclined,
+  'supplementTravelerExpired': (l) => l.supplementTravelerExpired,
+  'supplementTravelerClosedHelp': (l) => l.supplementTravelerClosedHelp,
+  'supplementTravelerPaid': (l) =>
+      l.supplementTravelerPaid(placeholderMarker('amount')),
+  'supplementTravelerPaidHelp': (l) => l.supplementTravelerPaidHelp,
+  'supplementTravelerPaidOut': (l) =>
+      l.supplementTravelerPaidOut(placeholderMarker('amount')),
+  'supplementRefunded': (l) => l.supplementRefunded,
+  'supplementSenderPendingTitle': (l) => l.supplementSenderPendingTitle,
+  'supplementSenderAmount': (l) =>
+      l.supplementSenderAmount(placeholderMarker('amount')),
+  'supplementSenderPendingHelp': (l) => l.supplementSenderPendingHelp,
+  'supplementDecline': (l) => l.supplementDecline,
+  'supplementDeclineConfirmTitle': (l) => l.supplementDeclineConfirmTitle,
+  'supplementDeclineConfirmMessage': (l) => l.supplementDeclineConfirmMessage,
+  'supplementDeclined': (l) => l.supplementDeclined,
+  'supplementSenderDeclined': (l) => l.supplementSenderDeclined,
+  'supplementSenderExpired': (l) => l.supplementSenderExpired,
+  'supplementSenderPaid': (l) =>
+      l.supplementSenderPaid(placeholderMarker('amount')),
+  'supplementSenderPaymentPending': (l) => l.supplementSenderPaymentPending,
+  'supplementPhotoSemantics': (l) => l.supplementPhotoSemantics,
+  'errorSupplementDisabledTitle': (l) => l.errorSupplementDisabledTitle,
+  'errorSupplementDisabledMessage': (l) => l.errorSupplementDisabledMessage,
+  'errorSupplementRailUnsupportedTitle': (l) =>
+      l.errorSupplementRailUnsupportedTitle,
+  'errorSupplementRailUnsupportedMessage': (l) =>
+      l.errorSupplementRailUnsupportedMessage,
+  'errorSupplementAmountOutOfRangeTitle': (l) =>
+      l.errorSupplementAmountOutOfRangeTitle,
+  'errorSupplementAmountOutOfRangeMessage': (l) =>
+      l.errorSupplementAmountOutOfRangeMessage,
+  'errorSupplementLimitReachedTitle': (l) => l.errorSupplementLimitReachedTitle,
+  'errorSupplementLimitReachedMessage': (l) =>
+      l.errorSupplementLimitReachedMessage,
+  'errorSupplementLockedTitle': (l) => l.errorSupplementLockedTitle,
+  'errorSupplementLockedMessage': (l) => l.errorSupplementLockedMessage,
+  'errorSupplementAlreadyActiveTitle': (l) =>
+      l.errorSupplementAlreadyActiveTitle,
+  'errorSupplementAlreadyActiveMessage': (l) =>
+      l.errorSupplementAlreadyActiveMessage,
+  'errorSupplementNotPendingTitle': (l) => l.errorSupplementNotPendingTitle,
+  'errorSupplementNotPendingMessage': (l) => l.errorSupplementNotPendingMessage,
+  'errorSupplementExpiredTitle': (l) => l.errorSupplementExpiredTitle,
+  'errorSupplementExpiredMessage': (l) => l.errorSupplementExpiredMessage,
+  'errorSupplementNotFoundTitle': (l) => l.errorSupplementNotFoundTitle,
+  'errorSupplementNotFoundMessage': (l) => l.errorSupplementNotFoundMessage,
+  'errorInvalidPhotoUrlTitle': (l) => l.errorInvalidPhotoUrlTitle,
+  'errorInvalidPhotoUrlMessage': (l) => l.errorInvalidPhotoUrlMessage,
+  'errorHandoverSupplementPendingTitle': (l) =>
+      l.errorHandoverSupplementPendingTitle,
+  'errorHandoverSupplementPendingMessage': (l) =>
+      l.errorHandoverSupplementPendingMessage,
+  'supplementSenderRefunded': (l) => l.supplementSenderRefunded,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7969,4 +8080,16 @@ const textParameters = <String, List<String>>{
   'walletTopupCreditedLineUnchanged': ['currency', 'active'],
   'walletTopupAmountAtLeast': ['min'],
   'walletTopupAmountAtMost': ['max'],
+  'supplementRequestSuggestionKg': ['amount'],
+  'supplementRequestSuggestionItem': ['label', 'amount'],
+  'supplementRequestAmountLabel': ['currency'],
+  'supplementRequestAmountHint': ['min', 'max'],
+  'supplementRequestAmountOutOfRange': ['min', 'max'],
+  'supplementRequestSubmitAmount': ['amount'],
+  'supplementDeadline': ['time'],
+  'supplementReasonWithItem': ['label'],
+  'supplementTravelerPaid': ['amount'],
+  'supplementTravelerPaidOut': ['amount'],
+  'supplementSenderAmount': ['amount'],
+  'supplementSenderPaid': ['amount'],
 };

@@ -56,6 +56,14 @@ void main() {
       AnalyticsEvents.aiFormDraftApplied,
       AnalyticsEvents.aiFormDraftDegraded,
       AnalyticsEvents.aiFormDraftQuotaExceeded,
+      AnalyticsEvents.bidSupplementSheetOpened,
+      AnalyticsEvents.bidSupplementRequested,
+      AnalyticsEvents.bidSupplementRequestFailed,
+      AnalyticsEvents.bidSupplementWithdrawn,
+      AnalyticsEvents.bidSupplementViewed,
+      AnalyticsEvents.bidSupplementDeclined,
+      AnalyticsEvents.bidSupplementActionFailed,
+      AnalyticsEvents.handoverBlockedSupplement,
       AnalyticsEvents.blocError,
     ];
     for (final e in events) {

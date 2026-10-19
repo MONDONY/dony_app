@@ -160,6 +160,7 @@ class _ScanBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final h = DonyLayout.hPadding(context);
+    final blocked = bid.supplement?.blocksHandover ?? false;
     return Container(
       color: cs.surface,
       padding: EdgeInsets.fromLTRB(
@@ -170,10 +171,29 @@ class _ScanBar extends StatelessWidget {
       ),
       // Mode Valider du Suivi, sur le trajet de ce colis (FLUTTER-9N) :
       // le QR lu y ouvre l'étape suivante, le retour ramène au colis.
-      child: DonyButton(
-        label: context.l10n.bidDetailScanParcelQr,
-        iconAsset: 'scan-line',
-        onPressed: () => openTripValidation(context, bid),
+      // Un supplément en attente de l'expéditeur bloque la remise : le back
+      // refuserait le scan (409 `handover-supplement-pending`).
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DonyButton(
+            key: const Key('traveler-scan-btn'),
+            label: context.l10n.bidDetailScanParcelQr,
+            iconAsset: 'scan-line',
+            onPressed: blocked ? null : () => openTripValidation(context, bid),
+          ),
+          if (blocked) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              context.l10n.bidDetailScanBlockedSupplement,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ],
       ),
     );
   }

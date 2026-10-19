@@ -205,6 +205,22 @@ void main() {
       expect(await iconAssetFor(tester, 'CORRIDOR_ALERT'), 'plane');
     });
 
+    testWidgets('supplément de prix', (tester) async {
+      expect(
+        await iconAssetFor(tester, 'BID_SUPPLEMENT_REQUESTED'),
+        'credit-card',
+      );
+      expect(await iconAssetFor(tester, 'BID_SUPPLEMENT_PAID'), 'banknote');
+      expect(await iconAssetFor(tester, 'BID_SUPPLEMENT_PAID_OUT'), 'banknote');
+      expect(await iconAssetFor(tester, 'BID_SUPPLEMENT_DECLINED'), 'circle-x');
+      expect(await iconAssetFor(tester, 'BID_SUPPLEMENT_EXPIRED'), 'timer-off');
+      expect(await iconAssetFor(tester, 'BID_SUPPLEMENT_WITHDRAWN'), 'ban');
+      expect(
+        await iconAssetFor(tester, 'BID_SUPPLEMENT_REFUNDED'),
+        'refresh-cw',
+      );
+    });
+
     testWidgets('colis à recevoir et réponse du destinataire', (tester) async {
       expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_INCOMING'), 'inbox');
       expect(

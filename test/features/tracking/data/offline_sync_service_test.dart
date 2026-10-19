@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/report_severity.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
@@ -11,6 +13,7 @@ import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/scan_send_guard.dart';
+import 'package:dony/features/tracking/data/tracking_photo_upload.dart';
 import 'package:dony/features/tracking/data/tracking_queue_photo_store.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,6 +23,8 @@ import 'package:mocktail/mocktail.dart';
 class MockTrackingRepository extends Mock implements TrackingRepository {}
 
 class _MockReporter extends Mock implements ErrorReportingService {}
+
+class _MockAnalytics extends Mock implements AnalyticsService {}
 
 late Directory _tempDir;
 late HiveService _hiveService;
@@ -1546,6 +1551,229 @@ void main() {
       expect(LostTrackingPhoto.fromJson(null), isNull);
       expect(const TrackingPhotoLostError().toString(), contains('Lost'));
     });
+  });
+
+  group('supplément en attente (409 handover-supplement-pending)', () {
+    final t0 = DateTime.utc(2026, 10, 19, 12);
+    late DateTime now;
+    late _MockAnalytics analytics;
+    late OfflineSyncService timed;
+
+    DioException blocked() => DioException(
+      requestOptions: RequestOptions(path: '/tracking/events'),
+      error: const ConflictException(
+        'Un supplément attend',
+        code: 'handover-supplement-pending',
+      ),
+    );
+
+    void stubPost(Future<TrackingEventModel> Function() answer) => when(
+      () => mockRepo.postScan(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoUrl: any(named: 'photoUrl'),
+        scanMethod: any(named: 'scanMethod'),
+        trackingNumber: any(named: 'trackingNumber'),
+        offlineTimestamp: any(named: 'offlineTimestamp'),
+      ),
+    ).thenAnswer((_) => answer());
+
+    setUp(() {
+      now = t0;
+      analytics = _MockAnalytics();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      timed = OfflineSyncService(
+        _hiveService,
+        mockRepo,
+        null,
+        () => now,
+        null,
+        null,
+        analytics,
+      );
+    });
+
+    tearDown(() => timed.dispose());
+
+    test('ni définitif, ni passager : refusé pour l\'instant', () {
+      const pending = ConflictException(
+        'x',
+        code: 'handover-supplement-pending',
+      );
+      expect(isRetryLaterTrackingRejection(pending), isTrue);
+      expect(OfflineSyncService.isDefinitiveRejection(pending), isFalse);
+      expect(
+        isRetryLaterTrackingRejection(
+          const ConflictException('x', code: 'depart-already-scanned'),
+        ),
+        isFalse,
+      );
+      expect(
+        isRetryLaterTrackingRejection(
+          const ValidationException('x', code: 'handover-supplement-pending'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('syncAll garde l\'étape et la renvoie 5 min plus tard', () async {
+      stubPost(() async => throw blocked());
+      final key = await timed.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+
+      await timed.syncAll();
+
+      final entry = Map<String, dynamic>.from(
+        _hiveService.offlineQueue.get(key)!,
+      );
+      expect(entry['notBefore'], '2026-10-19T12:05:00.000Z');
+      expect(timed.nextRetryDelay, isNull, reason: 'pas une panne');
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.handoverBlockedSupplement,
+          properties: {'channel': 'offline'},
+        ),
+      ).called(1);
+
+      // Avant l'échéance : rien ne part.
+      now = t0.add(const Duration(minutes: 4));
+      await timed.syncAll();
+      verify(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          scanMethod: any(named: 'scanMethod'),
+          trackingNumber: any(named: 'trackingNumber'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(1);
+
+      // Après la réponse de l'expéditeur : l'étape passe et quitte la file.
+      stubPost(() async => _fakeEvent());
+      now = t0.add(const Duration(minutes: 6));
+      await timed.syncAll();
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+
+    test('rejeux : la photo n\'est envoyée qu\'une fois', () async {
+      final dir = await Directory.systemTemp.createTemp('supp_photo');
+      addTearDown(() => dir.delete(recursive: true));
+      final photo = File('${dir.path}/depart.jpg')..writeAsBytesSync([1]);
+      when(
+        () => mockRepo.uploadTrackingPhoto(any(), any()),
+      ).thenAnswer((_) async => 'tracking/bid-1/depart.jpg');
+      stubPost(() async => throw blocked());
+      final key = await timed.queueScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        photoPath: photo.path,
+      );
+
+      await timed.syncAll();
+      expect(
+        _hiveService.offlineQueue.get(key)!['photoKey'],
+        'tracking/bid-1/depart.jpg',
+      );
+
+      now = t0.add(const Duration(minutes: 6));
+      await timed.syncAll();
+      now = t0.add(const Duration(minutes: 12));
+      stubPost(() async => _fakeEvent());
+      await timed.syncAll();
+
+      verify(() => mockRepo.uploadTrackingPhoto(any(), any())).called(1);
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoUrl: 'tracking/bid-1/depart.jpg',
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(3);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+
+    test('événement offline émis au premier report seulement', () async {
+      stubPost(() async => throw blocked());
+      await timed.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+
+      await timed.syncAll();
+      now = t0.add(const Duration(minutes: 6));
+      await timed.syncAll();
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.handoverBlockedSupplement,
+          properties: {'channel': 'offline'},
+        ),
+      ).called(1);
+    });
+
+    test(
+      'sendScheduled sans écran pour le motif : étape gardée et comptée',
+      () async {
+        stubPost(() async => throw blocked());
+        final key = await timed.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          notBefore: t0.add(const Duration(seconds: 7)),
+        );
+
+        expect(await timed.sendScheduled(key, canShowRefusal: false), isNull);
+
+        final entry = Map<String, dynamic>.from(
+          _hiveService.offlineQueue.get(key)!,
+        );
+        expect(entry['notBefore'], '2026-10-19T12:05:00.000Z');
+        // Le bandeau des scans en attente la montre : la remise n'est pas
+        // validée.
+        expect(timed.pendingCountFor({'bid-1'}), 1);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.handoverBlockedSupplement,
+            properties: {'channel': 'direct'},
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'sendScheduled (onglet Suivi) : retirée de la file, erreur remontée',
+      () async {
+        stubPost(() async => throw blocked());
+        final key = await timed.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          notBefore: t0.add(const Duration(seconds: 7)),
+        );
+
+        await expectLater(
+          timed.sendScheduled(key),
+          throwsA(
+            isA<DioException>().having(
+              (e) => (e.error as ConflictException?)?.code,
+              'code',
+              'handover-supplement-pending',
+            ),
+          ),
+        );
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.handoverBlockedSupplement,
+            properties: {'channel': 'direct'},
+          ),
+        ).called(1);
+      },
+    );
   });
 
   group('dispose', () {

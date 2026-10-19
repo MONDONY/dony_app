@@ -34725,6 +34725,492 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Au plus {max}'**
   String walletTopupAmountAtMost(String max);
+
+  /// Tuile d'options voyageur : demander un supplément de prix à la remise (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander un supplément'**
+  String get bidDetailRequestSupplementLabel;
+
+  /// Sous-titre de la tuile supplément (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis vaut plus que prévu : l\'expéditeur paie la différence'**
+  String get bidDetailRequestSupplementSubtitle;
+
+  /// Sous le bouton de scan désactivé de la vue voyageur (traveler_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Un supplément attend la réponse de l\'expéditeur : le scan est bloqué.'**
+  String get bidDetailScanBlockedSupplement;
+
+  /// Titre de la feuille de demande de supplément (supplement_request_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander un supplément'**
+  String get supplementRequestTitle;
+
+  /// Introduction de la feuille de demande de supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis ne correspond pas à la déclaration ? Demandez la différence à l\'expéditeur. Il paie par le même moyen que le colis, ou refuse.'**
+  String get supplementRequestIntro;
+
+  /// Titre des puces de suggestion (feuille de demande de supplément)
+  ///
+  /// In fr, this message translates to:
+  /// **'Montants suggérés'**
+  String get supplementRequestSuggestionsLabel;
+
+  /// Puce : un kilo de plus au prix du trajet. {amount} : montant net formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'+1 kg : {amount}'**
+  String supplementRequestSuggestionKg(String amount);
+
+  /// Puce : un article de la grille du trajet. {label} : article, {amount} : montant net formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} : {amount}'**
+  String supplementRequestSuggestionItem(String label, String amount);
+
+  /// Libellé du champ montant net. {currency} : symbole de la devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant pour vous ({currency})'**
+  String supplementRequestAmountLabel(String currency);
+
+  /// Aide sous le champ montant. {min}/{max} : bornes formatées
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre {min} et {max}'**
+  String supplementRequestAmountHint(String min, String max);
+
+  /// Erreur sous le champ montant. {min}/{max} : bornes formatées
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant doit être compris entre {min} et {max}.'**
+  String supplementRequestAmountOutOfRange(String min, String max);
+
+  /// Titre du choix du motif du supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif'**
+  String get supplementRequestReasonLabel;
+
+  /// Motif : un article facturé à l'unité (ex. un téléphone déclaré au kilo)
+  ///
+  /// In fr, this message translates to:
+  /// **'Article de votre grille de prix'**
+  String get supplementReasonGridItem;
+
+  /// Sous-titre du motif article de la grille
+  ///
+  /// In fr, this message translates to:
+  /// **'Par exemple un téléphone déclaré au kilo'**
+  String get supplementReasonGridItemHint;
+
+  /// Motif : poids en plus
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids supérieur à la déclaration'**
+  String get supplementReasonExtraWeight;
+
+  /// Motif : autre, détail obligatoire
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get supplementReasonOther;
+
+  /// Libellé du champ détail du motif
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisions'**
+  String get supplementRequestDetailsLabel;
+
+  /// Aide du champ détail
+  ///
+  /// In fr, this message translates to:
+  /// **'Facultatif : ce que vous avez constaté'**
+  String get supplementRequestDetailsHint;
+
+  /// Aide du champ détail, obligatoire pour le motif Autre
+  ///
+  /// In fr, this message translates to:
+  /// **'Expliquez l\'écart à l\'expéditeur'**
+  String get supplementRequestDetailsRequiredHint;
+
+  /// Titre de la section photo de la demande de supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo du colis'**
+  String get supplementRequestPhotoLabel;
+
+  /// Aide de la section photo
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligatoire : l\'expéditeur la voit avec votre demande.'**
+  String get supplementRequestPhotoHelp;
+
+  /// Récapitulatif : net du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour vous'**
+  String get supplementRecapNet;
+
+  /// Récapitulatif : commission Yadony du supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission Yadony'**
+  String get supplementRecapCommission;
+
+  /// Récapitulatif : total payé par l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé par l\'expéditeur'**
+  String get supplementRecapGross;
+
+  /// Bandeau d'information de la feuille de demande de supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Le scan de remise reste bloqué jusqu\'à la réponse de l\'expéditeur, 2 h au plus. S\'il refuse, transportez le colis au prix prévu ou refusez-le, sans pénalité.'**
+  String get supplementRequestNotice;
+
+  /// Bouton d'envoi sans devis (stickyBottom de la feuille de demande)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer la demande'**
+  String get supplementRequestSubmit;
+
+  /// Bouton d'envoi avec le total payé par l'expéditeur. {amount} : montant formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander {amount}'**
+  String supplementRequestSubmitAmount(String amount);
+
+  /// Erreur de chargement des options de supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les montants possibles.'**
+  String get supplementRequestLoadFailed;
+
+  /// Snackbar après une demande de supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée à l\'expéditeur'**
+  String get supplementRequestSent;
+
+  /// Titre de l'encart du supplément (détail d'envoi)
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément de prix'**
+  String get supplementCardTitle;
+
+  /// Échéance de réponse de l'expéditeur. {time} : heure locale
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse attendue avant {time}'**
+  String supplementDeadline(String time);
+
+  /// Motif article de la grille dans l'encart. {label} : article
+  ///
+  /// In fr, this message translates to:
+  /// **'Article : {label}'**
+  String supplementReasonWithItem(String label);
+
+  /// Encart voyageur : demande en attente
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de l\'expéditeur'**
+  String get supplementTravelerPending;
+
+  /// Encart voyageur : rappel du blocage du scan
+  ///
+  /// In fr, this message translates to:
+  /// **'Le scan de remise est bloqué en attendant sa réponse.'**
+  String get supplementTravelerPendingNotice;
+
+  /// Encart voyageur : paiement en cours
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur est en train de payer'**
+  String get supplementTravelerPaymentPending;
+
+  /// Bouton secondaire de l'encart voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer la demande'**
+  String get supplementWithdraw;
+
+  /// Dialogue de confirmation du retrait
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer la demande ?'**
+  String get supplementWithdrawConfirmTitle;
+
+  /// Message du dialogue de retrait
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur est prévenu et vous pourrez scanner le colis au prix prévu.'**
+  String get supplementWithdrawConfirmMessage;
+
+  /// Snackbar après le retrait
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande retirée'**
+  String get supplementWithdrawn;
+
+  /// Encart voyageur : refusé
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur a refusé le supplément'**
+  String get supplementTravelerDeclined;
+
+  /// Encart voyageur : expiré
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur n\'a pas répondu à temps'**
+  String get supplementTravelerExpired;
+
+  /// Encart voyageur refusé ou expiré : choix restant
+  ///
+  /// In fr, this message translates to:
+  /// **'Transportez le colis au prix prévu, ou refusez-le sans pénalité.'**
+  String get supplementTravelerClosedHelp;
+
+  /// Encart voyageur : payé. {amount} : net formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément payé : +{amount} pour vous'**
+  String supplementTravelerPaid(String amount);
+
+  /// Encart voyageur payé : quand il est versé
+  ///
+  /// In fr, this message translates to:
+  /// **'Versé avec le paiement du colis, après la livraison.'**
+  String get supplementTravelerPaidHelp;
+
+  /// Encart voyageur : versé. {amount} : net formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément versé : +{amount}'**
+  String supplementTravelerPaidOut(String amount);
+
+  /// Encart : supplément remboursé
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément remboursé à l\'expéditeur'**
+  String get supplementRefunded;
+
+  /// Encart expéditeur : demande en attente
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur demande un supplément'**
+  String get supplementSenderPendingTitle;
+
+  /// Encart expéditeur : montant brut demandé. {amount} : montant formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} de plus'**
+  String supplementSenderAmount(String amount);
+
+  /// Encart expéditeur : explication
+  ///
+  /// In fr, this message translates to:
+  /// **'Il a constaté un écart avec votre déclaration. Si vous refusez, il transporte le colis au prix prévu ou le refuse.'**
+  String get supplementSenderPendingHelp;
+
+  /// Bouton de refus de l'encart expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser le supplément'**
+  String get supplementDecline;
+
+  /// Dialogue de confirmation du refus
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser le supplément ?'**
+  String get supplementDeclineConfirmTitle;
+
+  /// Message du dialogue de refus
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur pourra transporter le colis au prix prévu ou le refuser.'**
+  String get supplementDeclineConfirmMessage;
+
+  /// Snackbar après le refus
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément refusé'**
+  String get supplementDeclined;
+
+  /// Encart expéditeur : refusé
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez refusé le supplément'**
+  String get supplementSenderDeclined;
+
+  /// Encart expéditeur : expiré
+  ///
+  /// In fr, this message translates to:
+  /// **'La demande de supplément a expiré'**
+  String get supplementSenderExpired;
+
+  /// Encart expéditeur : payé. {amount} : brut formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément payé : {amount}'**
+  String supplementSenderPaid(String amount);
+
+  /// Encart expéditeur : paiement en cours
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement du supplément en cours'**
+  String get supplementSenderPaymentPending;
+
+  /// Libellé d'accessibilité de la photo du supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo du colis prise par le voyageur'**
+  String get supplementPhotoSemantics;
+
+  /// ErrorCatalog supplement-disabled
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément indisponible'**
+  String get errorSupplementDisabledTitle;
+
+  /// ErrorCatalog supplement-disabled
+  ///
+  /// In fr, this message translates to:
+  /// **'Les demandes de supplément ne sont pas encore ouvertes.'**
+  String get errorSupplementDisabledMessage;
+
+  /// ErrorCatalog supplement-rail-unsupported
+  ///
+  /// In fr, this message translates to:
+  /// **'Moyen de paiement non pris en charge'**
+  String get errorSupplementRailUnsupportedTitle;
+
+  /// ErrorCatalog supplement-rail-unsupported
+  ///
+  /// In fr, this message translates to:
+  /// **'Un supplément n\'est pas encore possible avec le moyen de paiement de ce colis.'**
+  String get errorSupplementRailUnsupportedMessage;
+
+  /// ErrorCatalog supplement-amount-out-of-range
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant hors limites'**
+  String get errorSupplementAmountOutOfRangeTitle;
+
+  /// ErrorCatalog supplement-amount-out-of-range, sans les bornes
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce montant n\'est pas accepté pour un supplément.'**
+  String get errorSupplementAmountOutOfRangeMessage;
+
+  /// ErrorCatalog supplement-limit-reached
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de demande possible'**
+  String get errorSupplementLimitReachedTitle;
+
+  /// ErrorCatalog supplement-limit-reached
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà fait le nombre maximal de demandes de supplément pour ce colis.'**
+  String get errorSupplementLimitReachedMessage;
+
+  /// ErrorCatalog supplement-locked
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ trop proche'**
+  String get errorSupplementLockedTitle;
+
+  /// ErrorCatalog supplement-locked
+  ///
+  /// In fr, this message translates to:
+  /// **'Un supplément ne se demande plus juste avant le départ.'**
+  String get errorSupplementLockedMessage;
+
+  /// ErrorCatalog supplement-already-active
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande déjà en cours'**
+  String get errorSupplementAlreadyActiveTitle;
+
+  /// ErrorCatalog supplement-already-active
+  ///
+  /// In fr, this message translates to:
+  /// **'Une demande de supplément existe déjà pour ce colis.'**
+  String get errorSupplementAlreadyActiveMessage;
+
+  /// ErrorCatalog supplement-not-pending
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande déjà traitée'**
+  String get errorSupplementNotPendingTitle;
+
+  /// ErrorCatalog supplement-not-pending
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande de supplément n\'attend plus de réponse.'**
+  String get errorSupplementNotPendingMessage;
+
+  /// ErrorCatalog supplement-expired
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande expirée'**
+  String get errorSupplementExpiredTitle;
+
+  /// ErrorCatalog supplement-expired
+  ///
+  /// In fr, this message translates to:
+  /// **'Le délai de réponse à ce supplément est passé.'**
+  String get errorSupplementExpiredMessage;
+
+  /// ErrorCatalog supplement-not-found
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément introuvable'**
+  String get errorSupplementNotFoundTitle;
+
+  /// ErrorCatalog supplement-not-found
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande de supplément n\'existe plus.'**
+  String get errorSupplementNotFoundMessage;
+
+  /// ErrorCatalog invalid-photo-url
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo refusée'**
+  String get errorInvalidPhotoUrlTitle;
+
+  /// ErrorCatalog invalid-photo-url
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette photo n\'a pas pu être enregistrée. Reprenez-la.'**
+  String get errorInvalidPhotoUrlMessage;
+
+  /// ErrorCatalog handover-supplement-pending (scan DEPART bloqué)
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément en attente'**
+  String get errorHandoverSupplementPendingTitle;
+
+  /// ErrorCatalog handover-supplement-pending (scan DEPART bloqué)
+  ///
+  /// In fr, this message translates to:
+  /// **'Un supplément attend la réponse de l\'expéditeur. Scannez le colis une fois qu\'il a répondu.'**
+  String get errorHandoverSupplementPendingMessage;
+
+  /// Encart expéditeur : supplément remboursé
+  ///
+  /// In fr, this message translates to:
+  /// **'Le supplément vous a été remboursé'**
+  String get supplementSenderRefunded;
 }
 
 class _AppLocalizationsDelegate

@@ -1,5 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
@@ -7,10 +9,13 @@ import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
@@ -18,6 +23,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -63,6 +69,11 @@ class _MockContactRevealBloc
     extends MockBloc<ContactRevealEvent, ContactRevealState>
     implements ContactRevealBloc {}
 
+class _MockSupplementRepository extends Mock
+    implements BidSupplementRepository {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
 class _MockConversationOpenBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
@@ -86,7 +97,9 @@ BidModel _bid({
   String? arrivalCity = 'Dakar',
   bool senderHasRated = false,
   String? arrivalInstructions,
+  BidSupplement? supplement,
 }) => BidModel(
+  supplement: supplement,
   id: 'bid-001',
   announcementId: 'ann-001',
   senderId: 'sender-001',
@@ -123,8 +136,9 @@ _MockContactRevealBloc _revealBloc() {
 Widget _host(
   BidModel bid,
   _MockCancellationBloc cancellationBloc,
-  _MockConversationOpenBloc conversationOpenBloc,
-) {
+  _MockConversationOpenBloc conversationOpenBloc, {
+  bool focusSupplement = false,
+}) {
   return MaterialApp(
     theme: AppTheme.light(),
     home: Scaffold(
@@ -137,7 +151,7 @@ Widget _host(
           // Le numéro n'est plus dans le bid : la carte de contact lit ce bloc.
           BlocProvider<ContactRevealBloc>.value(value: _revealBloc()),
         ],
-        child: SenderDetailBody(bid: bid),
+        child: SenderDetailBody(bid: bid, focusSupplement: focusSupplement),
       ),
     ),
   );
@@ -348,6 +362,93 @@ void main() {
       expect(find.text('Rating sent'), findsOneWidget);
     },
   );
+
+  group('supplément de prix', () {
+    const proposed = BidSupplement(
+      id: 'sup-1',
+      status: BidSupplementStatus.proposed,
+      grossAmount: 17,
+      blocksHandover: true,
+    );
+
+    setUp(() {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerFactory<SupplementActionCubit>(
+        () => SupplementActionCubit(_MockSupplementRepository(), analytics),
+      );
+    });
+
+    tearDown(() async => getIt.reset());
+
+    double scrollOffset(WidgetTester tester) => tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position
+        .pixels;
+
+    testWidgets('encart affiché sous le hero, sans défilement par défaut', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          _bid(supplement: proposed),
+          cancellationBloc,
+          conversationOpenBloc,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(SupplementSenderCard), findsOneWidget);
+      expect(scrollOffset(tester), 0);
+    });
+
+    testWidgets('?action=supplement : l\'encart est amené à l\'écran', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          _bid(supplement: proposed),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusSupplement: true,
+        ),
+      );
+      await tester.pump();
+      // Défilement animé (300 ms) lancé après la première image.
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(scrollOffset(tester), greaterThan(0));
+    });
+
+    testWidgets('sans supplément : pas d\'encart ni de défilement', (
+      tester,
+    ) async {
+      sizeView(tester);
+      await tester.pumpWidget(
+        _host(
+          _bid(),
+          cancellationBloc,
+          conversationOpenBloc,
+          focusSupplement: true,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(SupplementSenderCard), findsNothing);
+      expect(scrollOffset(tester), 0);
+    });
+  });
 }
 
 /// Bouton d'une carte de profil (appel ou message), repéré par son icône.
