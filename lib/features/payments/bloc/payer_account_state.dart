@@ -26,6 +26,14 @@ enum RecognitionStatus {
 
   /// Numéro refusé ou inconnu des opérateurs du pays.
   unrecognized,
+
+  /// Numéro reconnu sur un autre opérateur que celui que l'utilisateur a
+  /// ensuite choisi lui-même : son choix est respecté, sans nouvel appel.
+  overridden,
+
+  /// Reconnaissance impossible (coupure réseau, erreur serveur) : le numéro
+  /// n'est pas en cause, `retryRecognition` relance l'appel.
+  failed,
 }
 
 const Object _unset = Object();
@@ -68,7 +76,8 @@ class PayerAccountState extends Equatable {
 
   bool get canProceed =>
       recognition == RecognitionStatus.recognized ||
-      recognition == RecognitionStatus.autoSwitched;
+      recognition == RecognitionStatus.autoSwitched ||
+      recognition == RecognitionStatus.overridden;
 
   PayerAccountState copyWith({
     PayerAccountStatus? status,

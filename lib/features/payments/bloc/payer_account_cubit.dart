@@ -49,38 +49,55 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
   /// reconnaissance qui résout avec un jeton périmé est ignorée.
   int _generation = 0;
 
+  /// Opérateur que pawaPay a prédit pour [_recognizedE164], gardé pour
+  /// respecter un choix manuel sans relancer d'appel.
+  String? _detectedCode;
+  String? _recognizedE164;
+
   /// Charge le catalogue, puis préremplit pays, opérateur et numéro depuis la
   /// mémoire quand le pays est encore ouvert et l'opérateur encore proposé.
   Future<void> load() async {
+    final generation = _newSession();
     emit(const PayerAccountState());
     final MobileMoneyCountries? countries;
     try {
       countries = await _repository.mobileMoneyCountries();
     } on Object {
-      if (isClosed) return;
+      if (isClosed || generation != _generation) return;
       emit(const PayerAccountState(status: PayerAccountStatus.error));
       return;
     }
-    if (isClosed) return;
+    if (isClosed || generation != _generation) return;
     if (countries == null) {
       emit(const PayerAccountState(status: PayerAccountStatus.legacy));
       return;
     }
-    emit(
-      PayerAccountState(status: PayerAccountStatus.ready, countries: countries),
-    );
 
+    // La mémoire est lue avant d'émettre `ready` : sinon l'utilisateur
+    // pourrait choisir un pays pendant la lecture, et le préremplissage
+    // écraserait son choix.
     final remembered = await _memory.read();
-    if (isClosed || remembered == null) return;
-    final country = countries.byCode(remembered.country);
+    if (isClosed || generation != _generation) return;
+    final country = remembered == null
+        ? null
+        : countries.byCode(remembered.country);
     final operator = country == null
         ? null
-        : _operatorOf(country, remembered.operatorCode);
-    if (country == null || operator == null) return;
+        : _operatorOf(country, remembered!.operatorCode);
+    if (remembered == null || country == null || operator == null) {
+      emit(
+        PayerAccountState(
+          status: PayerAccountStatus.ready,
+          countries: countries,
+        ),
+      );
+      return;
+    }
 
-    _generation++;
     emit(
-      state.copyWith(
+      PayerAccountState(
+        status: PayerAccountStatus.ready,
+        countries: countries,
         country: country,
         operator: operator,
         localNumber: _localPart(remembered.country, remembered.e164),
@@ -103,6 +120,7 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     if (country == null && !upcoming) return;
 
     _reset();
+    _forgetDetection();
     emit(
       state.copyWith(
         country: country,
@@ -127,6 +145,7 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
 
   void clearCountry() {
     _reset();
+    _forgetDetection();
     emit(
       state.copyWith(
         country: null,
@@ -140,15 +159,40 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     );
   }
 
-  /// Choisit l'opérateur du pays courant ; le numéro est conservé et, s'il
-  /// est complet, revérifié sans attendre.
+  /// Choisit l'opérateur du pays courant ; le numéro est conservé.
+  ///
+  /// Re-choisir l'opérateur déjà retenu ne fait rien. Une fois le numéro
+  /// reconnu, un autre choix est respecté sans nouvel appel
+  /// ([RecognitionStatus.overridden]) : relancer la reconnaissance
+  /// rebasculerait aussitôt sur l'opérateur détecté. Sans reconnaissance
+  /// aboutie pour ce numéro, un numéro complet est revérifié sans attendre.
   void selectOperator(String code) {
     final country = state.country;
-    if (country == null) return;
+    if (country == null || state.operator?.code == code) return;
     final operator = _operatorOf(country, code);
     if (operator == null) return;
 
     _reset();
+    final e164 = state.e164;
+    final detected = _detectedCode;
+    final recognizedBefore =
+        detected != null &&
+        e164 != null &&
+        e164 == _recognizedE164 &&
+        state.canProceed;
+    if (recognizedBefore) {
+      emit(
+        state.copyWith(
+          operator: operator,
+          recognition: code == detected
+              ? RecognitionStatus.recognized
+              : RecognitionStatus.overridden,
+          switchedFrom: null,
+        ),
+      );
+      return;
+    }
+
     emit(
       state.copyWith(
         operator: operator,
@@ -156,10 +200,23 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
         switchedFrom: null,
       ),
     );
-    final e164 = state.e164;
     if (e164 != null && _isComplete(country.country, e164)) {
       unawaited(_recognize());
     }
+  }
+
+  /// Relance la reconnaissance du numéro courant (après une coupure réseau).
+  Future<void> retryRecognition() async {
+    final country = state.country;
+    final e164 = state.e164;
+    if (state.operator == null ||
+        country == null ||
+        e164 == null ||
+        !_isComplete(country.country, e164)) {
+      return;
+    }
+    _reset();
+    await _recognize();
   }
 
   /// Saisie ou collage du numéro. Un indicatif collé (`+225`, `00225`) n'est
@@ -167,6 +224,7 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
   /// quand le numéro a la longueur attendue du pays.
   void phoneChanged(String raw) {
     _reset();
+    _forgetDetection();
     final country = state.country;
     final normalized = normalizePayerPhone(raw);
     final phone = country == null ? null : phoneCountryForCode(country.country);
@@ -195,6 +253,19 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     }
 
     final composed = _compose(phone, normalized);
+    if (composed.international && !composed.e164.startsWith(phone.dialCode)) {
+      // Numéro d'un autre pays que celui choisi : aucun opérateur d'ici ne
+      // peut le servir, inutile d'interroger pawaPay.
+      emit(
+        state.copyWith(
+          localNumber: _withoutForeignDialCode(composed.e164),
+          e164: composed.e164,
+          recognition: RecognitionStatus.unrecognized,
+          switchedFrom: null,
+        ),
+      );
+      return;
+    }
     emit(
       state.copyWith(
         localNumber: composed.international
@@ -250,6 +321,18 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     _generation++;
   }
 
+  /// Nouvelle session de chargement : invalide tout ce qui est en vol.
+  int _newSession() {
+    _reset();
+    _forgetDetection();
+    return _generation;
+  }
+
+  void _forgetDetection() {
+    _detectedCode = null;
+    _recognizedE164 = null;
+  }
+
   Future<void> _recognize() async {
     final e164 = state.e164;
     final operator = state.operator;
@@ -268,14 +351,22 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       if (isClosed || generation != _generation) return;
 
       final detected = catalog.detected;
-      if (detected == null || detected == operator.code) {
-        emit(state.copyWith(recognition: RecognitionStatus.recognized));
+      if (detected == null) {
+        // pawaPay a prédit un opérateur fermé au dépôt ou d'une autre
+        // devise : un dépôt partirait sur un mauvais opérateur.
+        _markUnrecognized(logEvent: true);
         return;
       }
       final target = _operatorOf(country, detected);
       if (target == null) {
         // Le numéro appartient à un réseau que ce pays ne sert pas.
         _markUnrecognized(logEvent: true);
+        return;
+      }
+      _detectedCode = detected;
+      _recognizedE164 = e164;
+      if (detected == operator.code) {
+        emit(state.copyWith(recognition: RecognitionStatus.recognized));
         return;
       }
       emit(
@@ -291,9 +382,13 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       });
     } on Object catch (e) {
       if (isClosed || generation != _generation) return;
-      _markUnrecognized(
-        logEvent: e is AppException && _unrecognizedCodes.contains(e.code),
-      );
+      if (e is AppException && _unrecognizedCodes.contains(e.code)) {
+        _markUnrecognized(logEvent: true);
+      } else {
+        // Coupure réseau ou erreur serveur : le numéro n'est pas en cause,
+        // l'écran propose de réessayer.
+        emit(state.copyWith(recognition: RecognitionStatus.failed));
+      }
     }
   }
 
@@ -364,6 +459,21 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       return e164.substring(phone.dialCode.length);
     }
     return e164.replaceAll('+', '');
+  }
+
+  /// E.164 d'un autre pays sans son indicatif (le plus long qui correspond),
+  /// pour ne pas l'afficher derrière l'indicatif du pays choisi.
+  static String _withoutForeignDialCode(String e164) {
+    String? best;
+    for (final c in kPhoneCountries) {
+      if (e164.startsWith(c.dialCode) &&
+          (best == null || c.dialCode.length > best.length)) {
+        best = c.dialCode;
+      }
+    }
+    return best == null
+        ? e164.replaceAll('+', '')
+        : e164.substring(best.length);
   }
 
   /// Le numéro a-t-il la longueur attendue du pays ?

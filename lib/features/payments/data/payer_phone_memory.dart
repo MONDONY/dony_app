@@ -83,7 +83,8 @@ class PayerPhoneMemory {
       if (raw == null) return null;
       return RememberedPayer.fromJson(jsonDecode(raw));
     } on Object catch (e) {
-      debugPrint('PayerPhoneMemory.read failed: $e');
+      // Jamais `$e` : une FormatException recopie la source, donc le numéro.
+      debugPrint('PayerPhoneMemory.read failed: ${e.runtimeType}');
       return null;
     }
   }
@@ -94,7 +95,7 @@ class PayerPhoneMemory {
     try {
       await _storage.write(key, jsonEncode(payer.toJson()));
     } on Object catch (e) {
-      debugPrint('PayerPhoneMemory.save failed: $e');
+      debugPrint('PayerPhoneMemory.save failed: ${e.runtimeType}');
     }
   }
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/form_draft_store.dart';
 import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
 import 'package:dony/features/payments/bloc/payer_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
@@ -22,6 +23,26 @@ class MockAnalyticsService extends Mock implements AnalyticsService {}
 class _Invalid extends ValidationException {
   const _Invalid()
     : super('numéro invalide', code: 'mobile-money-invalid-phone');
+}
+
+/// Trousseau dont la lecture attend [gate].
+class _SlowStorage implements FormDraftStorage {
+  _SlowStorage(this._inner, this.gate);
+
+  final FormDraftStorage _inner;
+  final Future<void> gate;
+
+  @override
+  Future<String?> read(String key) async {
+    await gate;
+    return _inner.read(key);
+  }
+
+  @override
+  Future<void> write(String key, String value) => _inner.write(key, value);
+
+  @override
+  Future<void> delete(String key) => _inner.delete(key);
 }
 
 void main() {
@@ -165,6 +186,54 @@ void main() {
       verifyNever(() => repo.topupProviders(any()));
     });
 
+    test('load_memoryReadPending_isNotReadyYet_thenPrefills', () async {
+      await memory.save(
+        const RememberedPayer(
+          country: 'CI',
+          operatorCode: 'ORANGE_CIV',
+          e164: e164,
+        ),
+      );
+      final gate = Completer<void>();
+      final slow = _SlowStorage(storage, gate.future);
+      cubit = PayerAccountCubit(
+        repo,
+        PayerPhoneMemory(storage: slow, currentUid: () => 'uid-1'),
+        analytics,
+        flow: 'topup',
+      );
+
+      final loading = cubit.load();
+      await Future<void>.delayed(Duration.zero);
+      // Tant que la mémoire se lit, le catalogue n'est pas exposé : aucun
+      // choix de l'utilisateur ne peut être écrasé par le préremplissage.
+      expect(cubit.state.status, PayerAccountStatus.loading);
+      cubit.selectCountry('SN');
+      expect(cubit.state.country, isNull);
+
+      gate.complete();
+      await loading;
+
+      expect(cubit.state.status, PayerAccountStatus.ready);
+      expect(cubit.state.country, ci);
+      expect(cubit.state.operator, orange);
+    });
+
+    test('load_calledAgain_dropsOlderLoad', () async {
+      final gate = Completer<MobileMoneyCountries?>();
+      var calls = 0;
+      when(() => repo.mobileMoneyCountries()).thenAnswer((_) {
+        return ++calls == 1 ? gate.future : Future.value(countries);
+      });
+
+      final first = cubit.load();
+      await cubit.load();
+      gate.complete(null);
+      await first;
+
+      expect(cubit.state.status, PayerAccountStatus.ready);
+    });
+
     test('load_ignoresMemory_whenOperatorGone', () async {
       await memory.save(
         const RememberedPayer(
@@ -305,6 +374,84 @@ void main() {
         expect(cubit.state.e164, e164);
         expect(cubit.state.recognition, RecognitionStatus.recognized);
         verify(() => repo.topupProviders(e164)).called(1);
+      });
+    });
+
+    test('selectOperator_sameCode_isNoop', () {
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+        final before = cubit.state;
+
+        cubit.selectOperator('ORANGE_CIV');
+        async.flushMicrotasks();
+
+        expect(cubit.state, before);
+        verify(() => repo.topupProviders(e164)).called(1);
+      });
+    });
+
+    test('selectOperator_afterAutoSwitch_respectsManualChoice', () {
+      when(
+        () => repo.topupProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('MTN_MOMO_CIV'));
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+        expect(cubit.state.recognition, RecognitionStatus.autoSwitched);
+
+        cubit.selectOperator('ORANGE_CIV');
+        async.flushMicrotasks();
+
+        expect(cubit.state.operator, orange);
+        expect(cubit.state.recognition, RecognitionStatus.overridden);
+        expect(cubit.state.switchedFrom, isNull);
+        expect(cubit.state.canProceed, isTrue);
+
+        cubit.selectOperator('WAVE_CIV');
+        expect(cubit.state.operator, wave);
+        expect(cubit.state.recognition, RecognitionStatus.overridden);
+
+        cubit.selectOperator('MTN_MOMO_CIV');
+        expect(cubit.state.operator, mtn);
+        expect(cubit.state.recognition, RecognitionStatus.recognized);
+
+        // Aucun nouvel appel, ni second basculement.
+        verify(() => repo.topupProviders(e164)).called(1);
+        verifyLogged(AnalyticsEvents.mobileMoneyOperatorAutoSwitched, {
+          'from': 'ORANGE_CIV',
+          'to': 'MTN_MOMO_CIV',
+          'flow': 'topup',
+        });
+      });
+    });
+
+    test('selectOperator_afterNumberEdit_recognizesAgain', () {
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
+        // Un nouveau numéro efface la détection : le choix suivant interroge.
+        cubit.phoneChanged('0101010101');
+        cubit.selectOperator('WAVE_CIV');
+        async.flushMicrotasks();
+
+        verify(() => repo.topupProviders('+2250101010101')).called(1);
       });
     });
 
@@ -484,7 +631,7 @@ void main() {
       });
     });
 
-    test('phoneChanged_networkError_unrecognizedWithoutEvent', () {
+    test('phoneChanged_networkError_failed', () {
       when(() => repo.topupProviders(any())).thenThrow(Exception('réseau'));
       fakeAsync((async) {
         cubit.load();
@@ -496,7 +643,88 @@ void main() {
         async.elapse(PayerAccountCubit.debounce);
         async.flushMicrotasks();
 
+        expect(cubit.state.recognition, RecognitionStatus.failed);
+        expect(cubit.state.canProceed, isFalse);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyNumberUnrecognized,
+            properties: any(named: 'properties'),
+          ),
+        );
+      });
+    });
+
+    test('retryRecognition_afterFailure_recognizes', () {
+      var calls = 0;
+      when(() => repo.topupProviders(any())).thenAnswer((_) async {
+        if (++calls == 1) throw Exception('réseau');
+        return catalogDetecting('ORANGE_CIV');
+      });
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+        expect(cubit.state.recognition, RecognitionStatus.failed);
+
+        cubit.retryRecognition();
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.recognized);
+        expect(cubit.state.canProceed, isTrue);
+        verify(() => repo.topupProviders(e164)).called(2);
+      });
+    });
+
+    test('retryRecognition_withoutCompleteNumber_doesNothing', () async {
+      await readyOnOrange();
+
+      await cubit.retryRecognition();
+
+      verifyNever(() => repo.topupProviders(any()));
+      expect(cubit.state.recognition, RecognitionStatus.idle);
+    });
+
+    test('phoneChanged_predictedOperatorClosed_unrecognized', () {
+      when(
+        () => repo.topupProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting(null));
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
         expect(cubit.state.recognition, RecognitionStatus.unrecognized);
+        expect(cubit.state.canProceed, isFalse);
+        verifyLogged(AnalyticsEvents.mobileMoneyNumberUnrecognized, {
+          'flow': 'topup',
+        });
+      });
+    });
+
+    test('phoneChanged_foreignDialCode_unrecognizedWithoutCall', () {
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+
+        cubit.phoneChanged('+221 77 123 45 67');
+        async.elapse(const Duration(seconds: 2));
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.unrecognized);
+        expect(cubit.state.e164, '+221771234567');
+        expect(cubit.state.localNumber, '771234567');
+        verifyNever(() => repo.topupProviders(any()));
         verifyNever(
           () => analytics.logEvent(
             AnalyticsEvents.mobileMoneyNumberUnrecognized,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dony/features/payments/data/payer_phone_memory.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/form_draft_test_doubles.dart';
@@ -58,6 +59,23 @@ void main() {
   test('save_storageThrows_isSwallowed', () async {
     storage.failWrites = true;
     await expectLater(build().save(payer), completes);
+  });
+
+  test('failures_neverLogTheNumber', () async {
+    final logs = <String>[];
+    final previous = debugPrint;
+    debugPrint = (message, {wrapWidth}) => logs.add(message ?? '');
+    addTearDown(() => debugPrint = previous);
+
+    // jsonDecode recopie la source dans sa FormatException.
+    storage.values['mm_last_payer_uid-1'] = '+2250748840856 pas du json';
+    await build().read();
+    storage.failWrites = true;
+    await build().save(payer);
+
+    expect(logs, isNotEmpty);
+    expect(logs.join(), isNot(contains('0748840856')));
+    expect(logs.join(), contains('FormatException'));
   });
 
   test('read_corruptedJson_returnsNull', () async {
