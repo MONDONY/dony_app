@@ -116,6 +116,21 @@ class PaymentConfirmationException implements Exception, SeverityAwareError {
       authenticationFailureCodes.contains(stripeErrorCode) ||
       authenticationFailureCodes.contains(declineCode);
 
+  /// Moyen de paiement non activé sur le compte Stripe (YADONY-FLUTTER-PROD-10) :
+  /// PayPal proposé alors qu'il n'est pas activé en live, Stripe répond
+  /// `payment_intent_invalid_parameter` avec « The payment method type
+  /// "paypal" is invalid ». Reste remonté à Sentry : c'est une erreur de
+  /// configuration, pas un geste de l'utilisateur.
+  bool get isMethodUnavailable {
+    if (methodUnavailableCodes.contains(stripeErrorCode)) return true;
+    if (stripeErrorCode != invalidParameterCode) return false;
+    final message = stripeMessage?.toLowerCase() ?? '';
+    return message.contains(
+          'payment method type',
+        ) || // i18n-ignore : message Stripe
+        message.contains('payment_method_type'); // i18n-ignore : message Stripe
+  }
+
   /// Refus carte et échec 3-D Secure sont attendus : jamais remontés à Sentry.
   /// Un `Failed` sans aucun code reste remonté, en `warning`. Tout le reste
   /// (api_error, invalid_request_error, rate_limit_error, erreur locale du
@@ -132,6 +147,12 @@ class PaymentConfirmationException implements Exception, SeverityAwareError {
   }
 
   static const cardErrorType = 'card_error';
+
+  /// Code Stripe d'un paramètre de PaymentIntent refusé.
+  static const invalidParameterCode = 'payment_intent_invalid_parameter';
+
+  /// Codes Stripe d'un moyen de paiement non activé sur le compte.
+  static const methodUnavailableCodes = {'payment_method_unactivated'};
 
   /// Codes Stripe (`code` ou `decline_code`) d'un refus par la banque ou
   /// d'une saisie de carte invalide.
@@ -329,6 +350,10 @@ enum StripeFailureKind {
   /// SDK, sans type Stripe (« FragmentManager has been destroyed »).
   sheetUnavailable,
 
+  /// Moyen de paiement non activé sur le compte Stripe (PayPal en live,
+  /// YADONY-FLUTTER-PROD-10) : l'utilisateur doit payer autrement.
+  methodUnavailable,
+
   /// Toute autre erreur Stripe typée (api_error, invalid_request_error…).
   generic,
 }
@@ -343,6 +368,7 @@ StripeFailureKind classifyStripeFailure(
   // `card_error`.
   if (e.isAuthenticationFailure) return StripeFailureKind.authenticationFailed;
   if (e.isCardError) return StripeFailureKind.cardDeclined;
+  if (e.isMethodUnavailable) return StripeFailureKind.methodUnavailable;
   if (opening || e.stripeErrorType == null) {
     return StripeFailureKind.sheetUnavailable;
   }

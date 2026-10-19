@@ -113,6 +113,48 @@ void main() {
     });
   });
 
+  // YADONY-FLUTTER-PROD-10 : PayPal non activé sur le compte Stripe live.
+  group('moyen non activé → methodUnavailable, toujours remonté', () {
+    const paypalInvalid = PaymentConfirmationException.fromStripe(
+      null,
+      stripeCode: 'Failed',
+      stripeErrorCode: 'payment_intent_invalid_parameter',
+      stripeErrorType: 'invalid_request_error',
+      stripeMessage:
+          'The payment method type "paypal" is invalid. Please ensure the '
+          'provided type is activated in your dashboard.',
+    );
+
+    test('payment_intent_invalid_parameter + type de moyen invalide', () {
+      expect(paypalInvalid.isMethodUnavailable, isTrue);
+      expect(
+        classifyStripeFailure(paypalInvalid),
+        StripeFailureKind.methodUnavailable,
+      );
+      expect(paypalInvalid.reportSeverity, ReportSeverity.error);
+    });
+
+    test('payment_method_unactivated seul', () {
+      final e = sdk(
+        code: 'payment_method_unactivated',
+        type: 'invalid_request_error',
+      );
+      expect(classifyStripeFailure(e), StripeFailureKind.methodUnavailable);
+    });
+
+    test('autre paramètre invalide : reste generic', () {
+      const e = PaymentConfirmationException.fromStripe(
+        null,
+        stripeCode: 'Failed',
+        stripeErrorCode: 'payment_intent_invalid_parameter',
+        stripeErrorType: 'invalid_request_error',
+        stripeMessage: 'Invalid amount.',
+      );
+      expect(e.isMethodUnavailable, isFalse);
+      expect(classifyStripeFailure(e), StripeFailureKind.generic);
+    });
+  });
+
   test('mapStripeException lit code, decline_code et type du SDK', () {
     final mapped =
         mapStripeException(

@@ -3371,6 +3371,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'paymentCardDeclined': (l) => l.paymentCardDeclined,
   'paymentAuthenticationFailed': (l) => l.paymentAuthenticationFailed,
   'paymentSheetOpenFailed': (l) => l.paymentSheetOpenFailed,
+  'paymentMethodUnavailable': (l) => l.paymentMethodUnavailable,
   'paymentMethodsSemantics': (l) =>
       l.paymentMethodsSemantics(placeholderMarker('wallet')),
   'paymentContextRecipient': (l) =>

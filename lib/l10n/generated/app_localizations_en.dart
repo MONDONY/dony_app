@@ -9339,6 +9339,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The payment couldn\'t open. Please try again.';
 
   @override
+  String get paymentMethodUnavailable =>
+      'This payment method is temporarily unavailable. Please pay by card.';
+
+  @override
   String paymentMethodsSemantics(String wallet) {
     return 'Card, $wallet, PayPal';
   }

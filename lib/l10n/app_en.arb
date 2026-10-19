@@ -4545,6 +4545,7 @@
   "paymentCardDeclined": "Your card was declined. Try another card or contact your bank.",
   "paymentAuthenticationFailed": "Your bank's verification didn't go through. Please try again.",
   "paymentSheetOpenFailed": "The payment couldn't open. Please try again.",
+  "paymentMethodUnavailable": "This payment method is temporarily unavailable. Please pay by card.",
   "paymentMethodsSemantics": "Card, {wallet}, PayPal",
   "@paymentMethodsSemantics": {
     "placeholders": {

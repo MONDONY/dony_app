@@ -9400,6 +9400,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le paiement n\'a pas pu s\'ouvrir. Réessayez.';
 
   @override
+  String get paymentMethodUnavailable =>
+      'Ce moyen de paiement est momentanément indisponible. Payez par carte.';
+
+  @override
   String paymentMethodsSemantics(String wallet) {
     return 'Carte, $wallet, PayPal';
   }
