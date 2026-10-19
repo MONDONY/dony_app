@@ -30366,7 +30366,7 @@ abstract class AppLocalizations {
   /// Titre de la section des colis versés dans la fenêtre récente (money_overview_screen.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
-  /// **'Versés récemment'**
+  /// **'Payés récemment'**
   String get moneyRecentlyPaidSection;
 
   /// Note quand le serveur a coupé la liste à son plafond (money_overview_screen.dart, FLUTTER-HV).
@@ -30452,6 +30452,192 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'mise à jour en cours'**
   String get moneyShortUnknown;
+
+  /// État court d'un colis payé sur le compte Stripe du voyageur, disponible à la date donnée (bankPayout PENDING_AVAILABILITY, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'payé, dispo le {date}'**
+  String moneyShortBankPending(String date);
+
+  /// État court PENDING_AVAILABILITY sans date de disponibilité (money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'payé, bientôt dispo'**
+  String get moneyShortBankPendingNoDate;
+
+  /// État court d'un colis disponible sur Stripe, virement vers la banque pas encore parti (bankPayout AVAILABLE, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'virement bancaire à venir'**
+  String get moneyShortBankAvailable;
+
+  /// État court d'un virement vers la banque parti, arrivée prévue à la date donnée (bankPayout IN_TRANSIT, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'virement en cours, arrivée le {date}'**
+  String moneyShortBankInTransit(String date);
+
+  /// État court IN_TRANSIT sans date d'arrivée (money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'virement bancaire en cours'**
+  String get moneyShortBankInTransitNoDate;
+
+  /// État court d'un virement arrivé sur la banque du voyageur (bankPayout PAID, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'arrivé sur votre banque le {date}'**
+  String moneyShortBankPaid(String date);
+
+  /// État court PAID sans date (money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'arrivé sur votre banque'**
+  String get moneyShortBankPaidNoDate;
+
+  /// État court d'un virement vers la banque refusé (bankPayout FAILED, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'virement échoué, vérifiez votre banque'**
+  String get moneyShortBankFailed;
+
+  /// Titre de la feuille de suivi du virement bancaire d'un colis versé (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi du virement'**
+  String get moneyBankSheetTitle;
+
+  /// Étape 1 de la frise du virement : Yadony a payé le voyageur sur son compte Stripe (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé sur votre compte Stripe le {date}'**
+  String moneyBankStepPaidToStripe(String date);
+
+  /// Étape 1 de la frise du virement, sans date (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé sur votre compte Stripe'**
+  String get moneyBankStepPaidToStripeNoDate;
+
+  /// Étape 2 de la frise : l'argent devient disponible sur le compte Stripe (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible le {date}'**
+  String moneyBankStepAvailable(String date);
+
+  /// Étape 2 de la frise, sans date (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible sur votre compte Stripe'**
+  String get moneyBankStepAvailableNoDate;
+
+  /// Étape 3 de la frise : virement Stripe vers la banque, arrivée prévue (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement en cours, arrivée prévue le {date}'**
+  String moneyBankStepInTransit(String date);
+
+  /// Étape 3 de la frise, sans date d'arrivée (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement vers votre banque'**
+  String get moneyBankStepInTransitNoDate;
+
+  /// Étape 3 de la frise une fois l'argent arrivé (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement envoyé par Stripe'**
+  String get moneyBankStepTransferSent;
+
+  /// Étape 3 de la frise quand la banque a refusé le virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement échoué'**
+  String get moneyBankStepFailed;
+
+  /// Étape 4 de la frise : argent arrivé sur la banque (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé sur votre banque le {date}'**
+  String moneyBankStepArrived(String date);
+
+  /// Étape 4 de la frise, sans date ou pas encore atteinte (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé sur votre banque'**
+  String get moneyBankStepArrivedNoDate;
+
+  /// Phrase d'aide sous la frise du virement : délai Stripe puis délai bancaire (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony vous paie d\'abord sur votre compte Stripe. Stripe rend l\'argent disponible quelques jours plus tard, puis le vire automatiquement sur votre compte bancaire. Comptez ensuite 1 à 3 jours ouvrés selon votre banque.'**
+  String get moneyBankHelp;
+
+  /// Phrase d'aide d'un virement échoué (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre banque a refusé le virement. L\'argent reste sur votre compte Stripe : vérifiez ou changez votre compte bancaire, le virement repartira ensuite.'**
+  String get moneyBankHelpFailed;
+
+  /// Bouton de la feuille de suivi du virement qui ouvre le colis (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le colis'**
+  String get moneyBankOpenParcel;
+
+  /// Libellé d'accessibilité d'une étape terminée de la frise du virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, terminé'**
+  String moneyBankStepDoneSemantics(String label);
+
+  /// Libellé d'accessibilité de l'étape en cours de la frise du virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, en cours'**
+  String moneyBankStepCurrentSemantics(String label);
+
+  /// Libellé d'accessibilité d'une étape échouée de la frise du virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, échec'**
+  String moneyBankStepFailedSemantics(String label);
+
+  /// Libellé d'accessibilité d'une étape à venir de la frise du virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, à venir'**
+  String moneyBankStepTodoSemantics(String label);
+
+  /// Bouton qui ouvre l'espace Stripe Express pour changer d'IBAN (change_bank_account_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de compte bancaire'**
+  String get bankAccountChangeButton;
+
+  /// Aide sous le bouton « Changer de compte bancaire » de « Recevoir mes paiements » (payout_onboarding_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous serez redirigé vers votre espace Stripe pour modifier votre IBAN.'**
+  String get bankAccountChangeHint;
+
+  /// Message quand le serveur ne trouve pas de compte Stripe (404 stripe-account-missing, change_bank_account_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun compte de paiement n\'est relié. Configurez d\'abord la réception de vos paiements.'**
+  String get bankAccountChangeMissing;
+
+  /// Message quand l'inscription Stripe n'est pas terminée (409 stripe-onboarding-incomplete, change_bank_account_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminez d\'abord votre inscription Stripe pour changer de compte bancaire.'**
+  String get bankAccountChangeOnboardingIncomplete;
+
+  /// Message quand le serveur ne sert pas encore le lien vers l'espace Stripe (ancien back, change_bank_account_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le changement de compte bancaire sera disponible bientôt.'**
+  String get bankAccountChangeUnavailable;
 
   /// Titre de l'écran du détail par trajet de « Mon argent » (money_trips_screen.dart, FLUTTER-HV).
   ///

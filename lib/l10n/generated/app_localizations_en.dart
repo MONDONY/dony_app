@@ -18525,7 +18525,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moneyAllTripsLink => 'All my trips';
 
   @override
-  String get moneyRecentlyPaidSection => 'Recently paid out';
+  String get moneyRecentlyPaidSection => 'Recently paid';
 
   @override
   String get moneyTruncatedNote =>
@@ -18575,6 +18575,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moneyShortUnknown => 'updating';
+
+  @override
+  String moneyShortBankPending(String date) {
+    return 'paid, available $date';
+  }
+
+  @override
+  String get moneyShortBankPendingNoDate => 'paid, available soon';
+
+  @override
+  String get moneyShortBankAvailable => 'bank transfer coming';
+
+  @override
+  String moneyShortBankInTransit(String date) {
+    return 'transfer on its way, arrives $date';
+  }
+
+  @override
+  String get moneyShortBankInTransitNoDate => 'bank transfer on its way';
+
+  @override
+  String moneyShortBankPaid(String date) {
+    return 'in your bank on $date';
+  }
+
+  @override
+  String get moneyShortBankPaidNoDate => 'in your bank';
+
+  @override
+  String get moneyShortBankFailed => 'transfer failed, check your bank';
+
+  @override
+  String get moneyBankSheetTitle => 'Transfer tracking';
+
+  @override
+  String moneyBankStepPaidToStripe(String date) {
+    return 'Paid to your Stripe account on $date';
+  }
+
+  @override
+  String get moneyBankStepPaidToStripeNoDate => 'Paid to your Stripe account';
+
+  @override
+  String moneyBankStepAvailable(String date) {
+    return 'Available on $date';
+  }
+
+  @override
+  String get moneyBankStepAvailableNoDate => 'Available in your Stripe account';
+
+  @override
+  String moneyBankStepInTransit(String date) {
+    return 'Transfer on its way, expected on $date';
+  }
+
+  @override
+  String get moneyBankStepInTransitNoDate => 'Transfer to your bank';
+
+  @override
+  String get moneyBankStepTransferSent => 'Transfer sent by Stripe';
+
+  @override
+  String get moneyBankStepFailed => 'Transfer failed';
+
+  @override
+  String moneyBankStepArrived(String date) {
+    return 'In your bank on $date';
+  }
+
+  @override
+  String get moneyBankStepArrivedNoDate => 'In your bank';
+
+  @override
+  String get moneyBankHelp =>
+      'Yadony first pays you into your Stripe account. Stripe makes the money available a few days later, then sends it to your bank account automatically. Allow 1 to 3 business days after that, depending on your bank.';
+
+  @override
+  String get moneyBankHelpFailed =>
+      'Your bank rejected the transfer. The money stays in your Stripe account: check or change your bank account and the transfer will go out again.';
+
+  @override
+  String get moneyBankOpenParcel => 'View parcel';
+
+  @override
+  String moneyBankStepDoneSemantics(String label) {
+    return '$label, done';
+  }
+
+  @override
+  String moneyBankStepCurrentSemantics(String label) {
+    return '$label, in progress';
+  }
+
+  @override
+  String moneyBankStepFailedSemantics(String label) {
+    return '$label, failed';
+  }
+
+  @override
+  String moneyBankStepTodoSemantics(String label) {
+    return '$label, upcoming';
+  }
+
+  @override
+  String get bankAccountChangeButton => 'Change bank account';
+
+  @override
+  String get bankAccountChangeHint =>
+      'You will be taken to your Stripe space to update your IBAN.';
+
+  @override
+  String get bankAccountChangeMissing =>
+      'No payout account is linked yet. Set up how you receive payments first.';
+
+  @override
+  String get bankAccountChangeOnboardingIncomplete =>
+      'Finish your Stripe sign-up first to change your bank account.';
+
+  @override
+  String get bankAccountChangeUnavailable =>
+      'Changing your bank account will be available soon.';
 
   @override
   String get moneyTripsTitle => 'My trips';

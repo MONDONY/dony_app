@@ -393,6 +393,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `connect_onboarding_completed` | ConnectOnboardingBloc._onPollingRequested — compte de versement actif au retour de Stripe (pas au chargement d'un statut déjà actif) |
 | `connect_onboarding_still_pending` | ConnectOnboardingBloc._onPollingRequested — retour de Stripe sans formulaire terminé |
 | `connect_onboarding_failed` | ConnectOnboardingBloc — échec (propriétés `stage` : `link`/`status`/`rejected`/`disabled`/`launch`, `reason`) |
+| `bank_account_change_link_opened` | BankAccountLinkCubit.request — lien vers l'espace Stripe Express obtenu (`POST /payments/connect/dashboard-link`), bouton « Changer de compte bancaire ». Propriété `source` : `payouts_screen` (« Recevoir mes paiements ») / `bank_payout_sheet` (feuille d'un virement échoué de « Mon argent ») |
+| `bank_account_change_link_failed` | BankAccountLinkCubit — lien refusé ou navigateur non ouvert. Propriétés `source`, `reason` (`account_missing` = 404 `stripe-account-missing`, `onboarding_incomplete` = 409 `stripe-onboarding-incomplete`, `unavailable` = back sans la route, `launch`, `error`), `error_code` |
 | `payment_failed` | PaymentBloc._onPaymentFailed() |
 | `mobile_money_awaiting` | MobileMoneyAwaitingScreen.initState |
 | `mobile_money_account_activated` | MobileMoneyAccountBloc._onActivateRequested — compte de versement mobile money du voyageur (Wave/Orange Money) activé avec succès, réseaux cochés compris (propriétés `provider`, `providers_count`, `currency`). Même event réémis par _onProvidersUpdateRequested quand les réseaux acceptés d'un compte déjà actif sont modifiés sans ressaisir le numéro (propriété additionnelle `update: true`) |

@@ -153,6 +153,14 @@ abstract final class AnalyticsEvents {
       'connect_onboarding_still_pending';
   static const connectOnboardingFailed = 'connect_onboarding_failed';
 
+  /// Lien vers l'espace Stripe Express obtenu (« Changer de compte
+  /// bancaire »). Propriété `source` (`payouts_screen`/`bank_payout_sheet`).
+  static const bankAccountChangeLinkOpened = 'bank_account_change_link_opened';
+
+  /// Lien vers l'espace Stripe Express refusé ou navigateur non ouvert.
+  /// Propriétés `source`, `reason`, `error_code`.
+  static const bankAccountChangeLinkFailed = 'bank_account_change_link_failed';
+
   /// Compte de versement mobile money (voyageur) activé ou désactivé.
   static const mobileMoneyAccountActivated = 'mobile_money_account_activated';
   static const mobileMoneyAccountDisabled = 'mobile_money_account_disabled';

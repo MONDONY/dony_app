@@ -6,6 +6,7 @@ import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
 import 'package:dony/features/payments/money/bloc/money_schedule.dart';
 import 'package:dony/features/payments/money/data/models/money_overview_model.dart';
 import 'package:dony/features/payments/money/presentation/money_labels.dart';
+import 'package:dony/features/payments/money/presentation/widgets/bank_payout_sheet.dart';
 import 'package:dony/features/payments/money/presentation/widgets/money_parcel_line.dart';
 import 'package:dony/features/payments/money/presentation/widgets/money_payout_group.dart';
 import 'package:dony/features/payments/money/presentation/widgets/money_upcoming_card.dart';
@@ -116,8 +117,7 @@ class _Content extends StatelessWidget {
     final overview = state.overview;
     final schedule = state.schedule;
 
-    void openParcel(MoneyItemModel item) =>
-        unawaited(pushAndRefreshMoney(context, '/bids/${item.bidId}'));
+    void openParcel(MoneyItemModel item) => openMoneyItem(context, item);
     void openTrip(MoneyTrip trip) {
       final id = trip.announcementId;
       unawaited(

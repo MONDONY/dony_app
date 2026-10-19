@@ -68,6 +68,7 @@ import 'package:dony/features/city/data/recent_city_store.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/config/data/config_datasource.dart';
 import 'package:dony/features/config/data/config_repository.dart';
+import 'package:dony/features/connect_onboarding/bloc/bank_account_link_cubit.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
@@ -1001,6 +1002,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<IConnectOnboardingRepository>(
     () => ConnectOnboardingRepository(getIt<ConnectOnboardingDatasource>()),
+  );
+  getIt.registerFactory<BankAccountLinkCubit>(
+    () => BankAccountLinkCubit(
+      getIt<IConnectOnboardingRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerFactory<ConnectOnboardingBloc>(
     () => ConnectOnboardingBloc(

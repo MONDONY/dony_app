@@ -87,6 +87,87 @@ enum MoneyChannel {
   };
 }
 
+/// Étape du virement Stripe vers la banque du voyageur, après le transfert de
+/// Yadony vers son compte Stripe (`bankPayout.status`, yadony-back, PR
+/// jumelle du suivi du virement bancaire).
+enum BankPayoutStatus {
+  /// Payé sur le compte Stripe, pas encore disponible (`availableOn`).
+  pendingAvailability,
+
+  /// Disponible sur le compte Stripe, virement vers la banque à venir.
+  available,
+
+  /// Virement parti vers la banque (`arrivalDate` prévue).
+  inTransit,
+
+  /// Arrivé sur la banque (`arrivalDate` ou `paidAt`).
+  paid,
+
+  /// Virement refusé par la banque (`failureCode`).
+  failed,
+
+  /// Valeur inconnue (back plus récent que l'app) : comportement d'avant le
+  /// suivi bancaire (« versé le … »).
+  unknown;
+
+  static BankPayoutStatus parse(Object? value) => switch (value) {
+    'PENDING_AVAILABILITY' => pendingAvailability, // i18n-ignore : code serveur
+    'AVAILABLE' => available, // i18n-ignore : code serveur
+    'IN_TRANSIT' => inTransit, // i18n-ignore : code serveur
+    'PAID' => paid, // i18n-ignore : code serveur
+    'FAILED' => failed, // i18n-ignore : code serveur
+    _ => unknown,
+  };
+}
+
+/// Suivi du virement bancaire d'un colis versé (`bankPayout`, facultatif) :
+/// absent pour l'expéditeur, le mobile money, les espèces, avant le transfert
+/// ou depuis un back antérieur au suivi.
+class BankPayoutModel {
+  const BankPayoutModel({
+    required this.status,
+    this.availableOn,
+    this.arrivalDate,
+    this.paidAt,
+    this.failureCode,
+  });
+
+  final BankPayoutStatus status;
+
+  /// Jour où l'argent devient disponible sur le compte Stripe.
+  final DateTime? availableOn;
+
+  /// Jour d'arrivée (prévue ou effective) sur la banque.
+  final DateTime? arrivalDate;
+
+  /// Instant où Stripe a marqué le virement payé.
+  final DateTime? paidAt;
+
+  /// Motif Stripe d'un échec (`account_closed`…), jamais affiché tel quel.
+  final String? failureCode;
+
+  /// Statut lisible par l'app : sinon on garde l'affichage d'avant.
+  bool get isKnown => status != BankPayoutStatus.unknown;
+
+  /// Jour d'arrivée sur la banque : la date prévue, sinon celle du paiement.
+  DateTime? get arrivedOn => arrivalDate ?? paidAt;
+
+  /// `null` quand [json] n'est pas un objet (champ absent, `null`, type
+  /// inattendu) : le colis s'affiche alors comme avant.
+  static BankPayoutModel? fromJson(Object? json) {
+    if (json is! Map) return null;
+    DateTime? day(Object? v) => v is String ? DateTime.tryParse(v) : null;
+    final code = json['failureCode'];
+    return BankPayoutModel(
+      status: BankPayoutStatus.parse(json['status']),
+      availableOn: day(json['availableOn']),
+      arrivalDate: day(json['arrivalDate']),
+      paidAt: _toDate(json['paidAt']),
+      failureCode: code is String && code.isNotEmpty ? code : null,
+    );
+  }
+}
+
 double? _toDouble(Object? v) => v is num ? v.toDouble() : null;
 
 DateTime? _toDate(Object? v) =>
@@ -114,6 +195,7 @@ class MoneyItemModel {
     this.bidStatus,
     this.weightKg,
     this.cashCommissionStatus,
+    this.bankPayout,
   });
 
   final String bidId;
@@ -156,6 +238,22 @@ class MoneyItemModel {
   /// Espèces seulement : statut de la commission Yadony (`CHARGED`…).
   final String? cashCommissionStatus;
 
+  /// Suivi du virement vers la banque du voyageur, facultatif.
+  final BankPayoutModel? bankPayout;
+
+  /// Suivi bancaire affichable : voyageur, colis versé, statut connu. Sinon
+  /// les libellés d'avant (« versé le … ») restent en place.
+  BankPayoutModel? get trackedBankPayout {
+    final payout = bankPayout;
+    if (payout == null ||
+        !payout.isKnown ||
+        role != MoneyRole.traveler ||
+        state != MoneyState.releasedRecently) {
+      return null;
+    }
+    return payout;
+  }
+
   factory MoneyItemModel.fromJson(Map<String, dynamic> json) {
     DateTime? day(Object? v) => v is String ? DateTime.tryParse(v) : null;
     return MoneyItemModel(
@@ -180,6 +278,7 @@ class MoneyItemModel {
       bidStatus: json['bidStatus'] as String?,
       weightKg: _toDouble(json['weightKg']),
       cashCommissionStatus: json['cashCommissionStatus'] as String?,
+      bankPayout: BankPayoutModel.fromJson(json['bankPayout']),
     );
   }
 

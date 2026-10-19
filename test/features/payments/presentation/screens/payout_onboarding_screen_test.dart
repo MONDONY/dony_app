@@ -2,13 +2,14 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
-import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/connect_onboarding/bloc/bank_account_link_cubit.dart';
+import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/payments/presentation/stripe_onboarding_return.dart';
@@ -22,6 +23,7 @@ import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
+import '../../../../helpers/mock_analytics_backend.dart';
 // `MockStripeAccountBloc` est déjà déclaré localement ci-dessous : on n'importe
 // que la constante d'état pour éviter la collision de noms.
 import '../../../../helpers/stripe_account_test_doubles.dart'
@@ -39,6 +41,8 @@ class MockStripeAccountBloc
 class FakeAuthEvent extends Fake implements AuthEvent {}
 
 class _MockAuthRepository extends Mock implements AuthRepository {}
+
+class _MockConnectRepo extends Mock implements IConnectOnboardingRepository {}
 
 const _kUser = UserModel(
   id: 'uid-1',
@@ -152,8 +156,19 @@ void main() {
   late MockPaymentBloc mockBloc;
   late MockStripeAccountBloc mockStripeBloc;
   late _MockAuthRepository mockAuthRepository;
+  late _MockConnectRepo mockConnectRepo;
 
   setUp(() {
+    mockConnectRepo = _MockConnectRepo();
+    if (getIt.isRegistered<BankAccountLinkCubit>()) {
+      getIt.unregister<BankAccountLinkCubit>();
+    }
+    getIt.registerFactory<BankAccountLinkCubit>(
+      () => BankAccountLinkCubit(
+        mockConnectRepo,
+        makeEnabledAnalytics(MockAnalyticsBackend()),
+      ),
+    );
     mockBloc = MockPaymentBloc();
     whenListen<PaymentState>(
       mockBloc,
@@ -185,6 +200,9 @@ void main() {
   });
 
   tearDown(() {
+    if (getIt.isRegistered<BankAccountLinkCubit>()) {
+      getIt.unregister<BankAccountLinkCubit>();
+    }
     if (getIt.isRegistered<StripeAccountBloc>()) {
       getIt.unregister<StripeAccountBloc>();
     }
@@ -582,6 +600,36 @@ void main() {
           );
         },
       );
+    });
+
+    testWidgets('compte connecté hors parcours : « Changer de compte '
+        'bancaire » ; 409 relit le statut Stripe', (tester) async {
+      when(() => mockStripeBloc.state).thenReturn(
+        const StripeAccountReady(
+          ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+        ),
+      );
+      when(mockConnectRepo.createDashboardLink).thenThrow(
+        const ConflictException('x', code: 'stripe-onboarding-incomplete'),
+      );
+
+      await tester.pumpWidget(_wrap(mockBloc, stripeBloc: mockStripeBloc));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('Changer de compte bancaire'), findsOneWidget);
+      expect(find.textContaining('modifier votre IBAN'), findsOneWidget);
+      clearInteractions(mockStripeBloc);
+
+      await tester.ensureVisible(find.text('Changer de compte bancaire'));
+      await tester.tap(find.text('Changer de compte bancaire'));
+      await tester.pump();
+      await tester.pump();
+
+      verify(mockConnectRepo.createDashboardLink).called(1);
+      verify(
+        () => mockStripeBloc.add(const StripeAccountStatusRefreshed()),
+      ).called(1);
+      await tester.pump(const Duration(seconds: 5));
     });
 
     testWidgets('pays non couvert par Stripe SANS onboarding (progress null) : '

@@ -248,6 +248,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // l'intention (trajets ou colis de la ligne).
     'FIRST_ACTION_REMINDER' => firstStepsRoute,
     'CARD_EXPIRING' => '/payments/commission-method',
+    // Suivi du virement Stripe vers la banque (arrivé, échoué, en cours…) :
+    // « Mon argent » montre l'étape de chaque colis. Préfixe plutôt que liste
+    // fermée, le back pourra ajouter une étape sans casser le routage.
+    final String t when t.startsWith('BANK_PAYOUT_') => '/payments/money',
     // Un filleul a fait son premier envoi : la récompense est à choisir sur
     // l'écran Parrainage (yadony-back #528).
     'REFERRAL_REWARD_AVAILABLE' => '/profile/referral',

@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/payments/money/bloc/money_overview_bloc.dart';
 import 'package:dony/features/payments/money/bloc/money_schedule.dart';
 import 'package:dony/features/payments/money/bloc/money_trips_cubit.dart';
 import 'package:dony/features/payments/money/presentation/screens/money_overview_screen.dart';
+import 'package:dony/features/payments/money/presentation/widgets/bank_payout_sheet.dart';
 import 'package:dony/features/payments/money/presentation/widgets/money_trip_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -154,9 +153,7 @@ class _TripsList extends StatelessWidget {
                           expanded: view.isExpanded(trip.key),
                           onToggle: () =>
                               context.read<MoneyTripsCubit>().toggle(trip.key),
-                          onOpenParcel: (item) => unawaited(
-                            pushAndRefreshMoney(context, '/bids/${item.bidId}'),
-                          ),
+                          onOpenParcel: (item) => openMoneyItem(context, item),
                         )
                         .animate()
                         .fadeIn(
