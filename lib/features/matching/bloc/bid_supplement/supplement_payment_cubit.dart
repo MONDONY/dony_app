@@ -25,6 +25,17 @@ enum SupplementPaymentStatus {
   /// [SupplementPaymentState.checkout].
   readyToPay,
 
+  /// Mobile money : supplément accepté (`PAYMENT_PENDING`), l'écran ouvre
+  /// l'écran d'attente mobile money du supplément et attend son retour
+  /// ([SupplementPaymentCubit.mobileMoneyReturned]).
+  awaitingMobileMoney,
+
+  /// Retour de l'écran d'attente mobile money sans paiement confirmé
+  /// (retour arrière, délai dépassé, demande close) : message neutre et
+  /// relecture du colis, le bouton « Payer » revient si la demande est
+  /// encore ouverte.
+  mobileMoneyNotConfirmed,
+
   /// Paiement autorisé, `POST …/confirm-payment` en cours.
   confirming,
 
@@ -54,19 +65,28 @@ class SupplementPaymentState extends Equatable {
       status == SupplementPaymentStatus.authorizing ||
       status == SupplementPaymentStatus.accepting ||
       status == SupplementPaymentStatus.readyToPay ||
+      status == SupplementPaymentStatus.awaitingMobileMoney ||
       status == SupplementPaymentStatus.confirming;
 
   @override
   List<Object?> get props => [status, checkout, error];
 }
 
-/// Paiement par carte d'un supplément de prix par l'expéditeur (PR A2).
+/// Paiement d'un supplément de prix par l'expéditeur, par carte (PR A2) ou
+/// en mobile money (PR A3).
 ///
 /// L'écran pose [beginAuthorization], passe `requirePaymentAuth`, puis
-/// appelle [pay] (ou [authorizationDenied] sur un refus), ouvre la feuille de
-/// paiement sur [SupplementPaymentStatus.readyToPay] et attend [confirmPayment]
-/// dans son `onSuccess`. Le paiement lui-même (`payment_*`) est tracé par la
-/// feuille (`PaymentSheetBloc`, `context: bid_supplement`), jamais ici.
+/// appelle [pay] (ou [authorizationDenied] sur un refus).
+/// - Carte : il ouvre la feuille de paiement sur
+///   [SupplementPaymentStatus.readyToPay] et attend [confirmPayment] dans son
+///   `onSuccess`. Le paiement (`payment_*`) est tracé par la feuille
+///   (`PaymentSheetBloc`, `context: bid_supplement`).
+/// - Mobile money : il ouvre l'écran d'attente du supplément sur
+///   [SupplementPaymentStatus.awaitingMobileMoney] et rend son résultat à
+///   [mobileMoneyReturned]. Le paiement est tracé par
+///   `MobileMoneyPaymentBloc` (`method: mobile_money`,
+///   `context: bid_supplement`).
+/// Jamais de `payment_*` réémis ici.
 class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
   SupplementPaymentCubit(
     this._repository,
@@ -92,6 +112,17 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
     try {
       final checkout = await _repository.accept(bid.id, supplement.id);
       if (isClosed) return;
+      if (checkout.isMobileMoney &&
+          !(checkout.supplement?.status.isPaid ?? false)) {
+        emit(
+          SupplementPaymentState(
+            status: SupplementPaymentStatus.awaitingMobileMoney,
+            checkout: checkout,
+          ),
+        );
+        _logStarted(AnalyticsPaymentMethod.mobileMoney, checkout);
+        return;
+      }
       if (!checkout.needsPayment) {
         emit(
           SupplementPaymentState(
@@ -107,16 +138,7 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
           checkout: checkout,
         ),
       );
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.bidSupplementPaymentStarted,
-          properties: {
-            'method': AnalyticsPaymentMethod.card,
-            'currency': checkout.currency,
-            'amount_bracket': analyticsAmountBracket(checkout.amount),
-          },
-        ),
-      );
+      _logStarted(AnalyticsPaymentMethod.card, checkout);
     } catch (e) {
       if (isClosed) return;
       final error = unwrapDioError(e);
@@ -128,6 +150,25 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
       );
       _logFailure('pay', error);
     }
+  }
+
+  /// Retour de l'écran d'attente mobile money : [paid] vaut `true` quand il
+  /// s'est refermé sur un paiement confirmé (séquestre), sinon `false` ou
+  /// `null` (retour arrière, délai dépassé). Sans effet hors de
+  /// [SupplementPaymentStatus.awaitingMobileMoney].
+  void mobileMoneyReturned(bool? paid) {
+    if (isClosed ||
+        state.status != SupplementPaymentStatus.awaitingMobileMoney) {
+      return;
+    }
+    emit(
+      SupplementPaymentState(
+        status: paid == true
+            ? SupplementPaymentStatus.paid
+            : SupplementPaymentStatus.mobileMoneyNotConfirmed,
+        checkout: state.checkout,
+      ),
+    );
   }
 
   /// Ouvre la vérification locale. Rend `false` si une action est déjà en
@@ -190,6 +231,19 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
             ? SupplementPaymentStatus.paid
             : SupplementPaymentStatus.confirmationPending,
         checkout: state.checkout,
+      ),
+    );
+  }
+
+  void _logStarted(String method, SupplementCheckout checkout) {
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.bidSupplementPaymentStarted,
+        properties: {
+          'method': method,
+          'currency': checkout.currency,
+          'amount_bracket': analyticsAmountBracket(checkout.amount),
+        },
       ),
     );
   }

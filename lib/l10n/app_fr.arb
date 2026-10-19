@@ -22345,5 +22345,11 @@
   "errorStripeUnavailableMessage": "Le service de paiement est momentanément injoignable. Réessayez.",
   "@errorStripeUnavailableMessage": {"description": "ErrorCatalog stripe-unavailable"},
   "supplementPaymentConfirming": "Paiement reçu, confirmation en cours. Le colis se met à jour dans un instant.",
-  "@supplementPaymentConfirming": {"description": "Message neutre après le paiement du supplément quand le serveur ne l'a pas encore confirmé payé (traitement en cours, réseau)"}
+  "@supplementPaymentConfirming": {"description": "Message neutre après le paiement du supplément quand le serveur ne l'a pas encore confirmé payé (traitement en cours, réseau)"},
+  "mobileMoneyExpiredSupplement": "Ce supplément n'est plus à payer : la demande a expiré ou a été close. Le colis reste au prix prévu.",
+  "@mobileMoneyExpiredSupplement": {"description": "Texte de la fenêtre close quand la portée est un supplément de prix (mobile_money_awaiting_screen.dart _ExpiredBody)"},
+  "supplementMobileMoneyNotConfirmed": "Paiement du supplément pas encore confirmé.",
+  "@supplementMobileMoneyNotConfirmed": {"description": "Snackbar neutre au retour de l'écran d'attente mobile money du supplément sans paiement confirmé (retour, délai dépassé)"},
+  "supplementSenderMobileMoneyPending": "Paiement mobile money du supplément en attente",
+  "@supplementSenderMobileMoneyPending": {"description": "Encart expéditeur : supplément d'un colis payé en mobile money, paiement lancé mais pas encore confirmé"}
 }

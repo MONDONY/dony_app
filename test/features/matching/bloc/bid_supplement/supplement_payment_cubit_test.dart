@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
@@ -390,16 +391,155 @@ void main() {
     expect(cubit.state.status, SupplementPaymentStatus.idle);
   });
 
-  test('isBusy pendant acceptation, feuille et confirmation', () {
+  test('isBusy pendant acceptation, feuille, attente mobile money et '
+      'confirmation', () {
     for (final status in SupplementPaymentStatus.values) {
       expect(
         SupplementPaymentState(status: status).isBusy,
         status == SupplementPaymentStatus.authorizing ||
             status == SupplementPaymentStatus.accepting ||
             status == SupplementPaymentStatus.readyToPay ||
+            status == SupplementPaymentStatus.awaitingMobileMoney ||
             status == SupplementPaymentStatus.confirming,
         reason: status.name,
       );
     }
+  });
+
+  group('mobile money (PR A3)', () {
+    const mmSupplement = BidSupplement(
+      id: 'sup-1',
+      status: BidSupplementStatus.proposed,
+      rail: 'PAWAPAY',
+      grossAmount: 1500,
+      currency: 'XOF',
+    );
+    const mmCheckout = SupplementCheckout(
+      supplement: BidSupplement(
+        id: 'sup-1',
+        status: BidSupplementStatus.paymentPending,
+        rail: 'PAWAPAY',
+        grossAmount: 1500,
+        currency: 'XOF',
+      ),
+      rail: 'PAWAPAY',
+      amount: 1500,
+      currency: 'XOF',
+    );
+    const mmPaid = SupplementCheckout(
+      supplement: BidSupplement(
+        id: 'sup-1',
+        status: BidSupplementStatus.paid,
+        rail: 'PAWAPAY',
+        grossAmount: 1500,
+        currency: 'XOF',
+      ),
+      rail: 'PAWAPAY',
+      amount: 1500,
+      currency: 'XOF',
+    );
+    const awaiting = SupplementPaymentState(
+      status: SupplementPaymentStatus.awaitingMobileMoney,
+      checkout: mmCheckout,
+    );
+
+    test('awaitingMobileMoney occupe le bouton', () {
+      expect(awaiting.isBusy, isTrue);
+      expect(
+        const SupplementPaymentState(
+          status: SupplementPaymentStatus.mobileMoneyNotConfirmed,
+        ).isBusy,
+        isFalse,
+      );
+    });
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'pay : accept puis écran d\'attente, paiement lancé tracé en '
+      'mobile_money, jamais de feuille ni de confirm-payment',
+      setUp: () => when(
+        () => repository.accept('bid-1', 'sup-1'),
+      ).thenAnswer((_) async => mmCheckout),
+      build: build,
+      act: (c) => c.pay(_bid, mmSupplement),
+      expect: () => const [
+        SupplementPaymentState(status: SupplementPaymentStatus.accepting),
+        awaiting,
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.bidSupplementPaymentStarted,
+            properties: {
+              'method': 'mobile_money',
+              'currency': 'XOF',
+              'amount_bracket': analyticsAmountBracket(1500),
+            },
+          ),
+        ).called(1);
+        verifyNever(() => repository.confirmPayment(any(), any()));
+      },
+    );
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'pay : supplément déjà payé à l\'acceptation → paid, pas d\'attente',
+      setUp: () => when(
+        () => repository.accept(any(), any()),
+      ).thenAnswer((_) async => mmPaid),
+      build: build,
+      act: (c) => c.pay(_bid, mmSupplement),
+      expect: () => const [
+        SupplementPaymentState(status: SupplementPaymentStatus.accepting),
+        SupplementPaymentState(
+          status: SupplementPaymentStatus.paid,
+          checkout: mmPaid,
+        ),
+      ],
+    );
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'retour payé → paid',
+      build: build,
+      seed: () => awaiting,
+      act: (c) => c.mobileMoneyReturned(true),
+      expect: () => const [
+        SupplementPaymentState(
+          status: SupplementPaymentStatus.paid,
+          checkout: mmCheckout,
+        ),
+      ],
+    );
+
+    for (final result in [false, null]) {
+      blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+        'retour sans paiement ($result) → mobileMoneyNotConfirmed',
+        build: build,
+        seed: () => awaiting,
+        act: (c) => c.mobileMoneyReturned(result),
+        expect: () => const [
+          SupplementPaymentState(
+            status: SupplementPaymentStatus.mobileMoneyNotConfirmed,
+            checkout: mmCheckout,
+          ),
+        ],
+      );
+    }
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'retour hors attente : sans effet',
+      build: build,
+      act: (c) => c.mobileMoneyReturned(true),
+      expect: () => const <SupplementPaymentState>[],
+    );
+
+    blocTest<SupplementPaymentCubit, SupplementPaymentState>(
+      'retour après fermeture du cubit : sans effet ni erreur',
+      build: build,
+      seed: () => awaiting,
+      act: (c) async {
+        await c.close();
+        c.mobileMoneyReturned(true);
+      },
+      expect: () => const <SupplementPaymentState>[],
+    );
   });
 }

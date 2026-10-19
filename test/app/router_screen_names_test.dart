@@ -47,4 +47,32 @@ void main() {
       reason: 'un name de route doit être unique',
     );
   });
+
+  test('écran d\'attente mobile money du supplément : nommé, et déclaré '
+      'avant /bids/:bidId', () {
+    const supplementPath =
+        '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting';
+    final ordered = <GoRoute>[];
+    void flatten(List<RouteBase> routes) {
+      for (final route in routes) {
+        if (route is GoRoute) {
+          ordered.add(route);
+          flatten(route.routes);
+        } else if (route is StatefulShellRoute) {
+          for (final branch in route.branches) {
+            flatten(branch.routes);
+          }
+        } else if (route is ShellRoute) {
+          flatten(route.routes);
+        }
+      }
+    }
+
+    flatten(appRouter.configuration.routes);
+    final supplement = ordered.indexWhere((r) => r.path == supplementPath);
+    final detail = ordered.indexWhere((r) => r.path == '/bids/:bidId');
+    expect(supplement, isNot(-1));
+    expect(ordered[supplement].name, supplementPath);
+    expect(supplement, lessThan(detail));
+  });
 }

@@ -252,7 +252,7 @@ void main() {
           ),
         );
         when(
-          () => repository.providers(bidId, phoneNumber: null),
+          () => repository.providers(scope, phoneNumber: null),
         ).thenAnswer((_) async => catalog);
         return bloc();
       },
@@ -494,7 +494,7 @@ void main() {
           () => repository.getStatus(scope),
         ).thenAnswer((_) async => noDepositStatus);
         when(
-          () => repository.providers(bidId, phoneNumber: null),
+          () => repository.providers(scope, phoneNumber: null),
         ).thenAnswer((_) async => catalog);
         return bloc();
       },
@@ -526,7 +526,7 @@ void main() {
           () => repository.getStatus(scope),
         ).thenAnswer((_) async => noDepositStatus);
         when(
-          () => repository.providers(bidId, phoneNumber: null),
+          () => repository.providers(scope, phoneNumber: null),
         ).thenThrow(const NotFoundException());
         when(
           () => repository.initiate(scope, phoneNumber: null, provider: null),
@@ -551,7 +551,7 @@ void main() {
           () => repository.getStatus(scope),
         ).thenAnswer((_) async => noDepositStatus);
         when(
-          () => repository.providers(bidId, phoneNumber: null),
+          () => repository.providers(scope, phoneNumber: null),
         ).thenThrow(const OfflineException());
         return bloc();
       },
@@ -578,7 +578,7 @@ void main() {
           () => repository.getStatus(scope),
         ).thenAnswer((_) async => noDepositStatus);
         when(
-          () => repository.providers(bidId, phoneNumber: '+221771234567'),
+          () => repository.providers(scope, phoneNumber: '+221771234567'),
         ).thenAnswer((_) async => catalog);
         return bloc();
       },
@@ -603,7 +603,7 @@ void main() {
       ],
       verify: (_) {
         verify(
-          () => repository.providers(bidId, phoneNumber: '+221771234567'),
+          () => repository.providers(scope, phoneNumber: '+221771234567'),
         ).called(1);
       },
     );
@@ -654,7 +654,7 @@ void main() {
       'précédent gardé pendant le chargement',
       build: () {
         when(
-          () => repository.providers(bidId, phoneNumber: '+22505'),
+          () => repository.providers(scope, phoneNumber: '+22505'),
         ).thenAnswer((_) async => catalog);
         return bloc();
       },
@@ -688,7 +688,7 @@ void main() {
       'l\'opérateur',
       build: () {
         when(
-          () => repository.providers(bidId, phoneNumber: null),
+          () => repository.providers(scope, phoneNumber: null),
         ).thenAnswer((_) async => catalog);
         return bloc();
       },
@@ -712,7 +712,7 @@ void main() {
       'affiché sous le bandeau d\'erreur',
       build: () {
         when(
-          () => repository.providers(bidId, phoneNumber: '+22505'),
+          () => repository.providers(scope, phoneNumber: '+22505'),
         ).thenThrow(const OfflineException());
         return bloc();
       },
@@ -744,7 +744,7 @@ void main() {
       'isLoadingCatalog',
       build: () {
         when(
-          () => repository.providers(bidId, phoneNumber: null),
+          () => repository.providers(scope, phoneNumber: null),
         ).thenThrow(const NotFoundException());
         when(
           () => repository.initiate(scope, phoneNumber: null, provider: null),
@@ -1365,6 +1365,328 @@ void main() {
             ),
           ),
         ).called(1);
+      },
+    );
+  });
+
+  group('portée supplément de prix (PR A3)', () {
+    const supplementId = '770e8400-e29b-41d4-a716-446655440222';
+    const supplementScope = MobileMoneyScope.supplement(
+      bidId: bidId,
+      supplementId: supplementId,
+    );
+    // Statut du supplément : `bidStatus` est celui du colis (déjà payé).
+    const pending = MobileMoneyPaymentStatus(
+      subjectId: bidId,
+      subjectStatus: 'ACCEPTED',
+      paymentStatus: 'PENDING',
+      amount: 1500,
+    );
+    const failedDeposit = MobileMoneyDeposit(
+      id: 'deposit-s',
+      status: MobileMoneyDepositStatus.failed,
+      providerLabel: 'Orange Money',
+      failureCode: 'PAYER_NOT_FOUND',
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'sans dépôt : catalogue DU SUPPLÉMENT chargé, jamais celui du colis',
+      build: () {
+        when(
+          () => repository.getStatus(supplementScope),
+        ).thenAnswer((_) async => pending);
+        when(
+          () => repository.providers(supplementScope, phoneNumber: null),
+        ).thenAnswer((_) async => catalog);
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: supplementScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentChooseOperator>().having(
+          (s) => s.isLoadingCatalog,
+          'isLoadingCatalog',
+          true,
+        ),
+        isA<MobileMoneyPaymentChooseOperator>().having(
+          (s) => s.catalog,
+          'catalog',
+          catalog,
+        ),
+      ],
+      verify: (_) {
+        verify(
+          () => repository.providers(supplementScope, phoneNumber: null),
+        ).called(1);
+        verifyNever(
+          () => repository.providers(
+            scope,
+            phoneNumber: any(named: 'phoneNumber'),
+          ),
+        );
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'supplément clos (CANCELLED) : expiration affichée, aucun catalogue '
+      'ni dépôt relancé',
+      build: () {
+        when(() => repository.getStatus(supplementScope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'ACCEPTED',
+            paymentStatus: 'CANCELLED',
+            amount: 1500,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: supplementScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentExpired>(),
+      ],
+      verify: (_) {
+        verifyNever(
+          () => repository.providers(
+            any(),
+            phoneNumber: any(named: 'phoneNumber'),
+          ),
+        );
+        verifyNever(
+          () => repository.initiate(
+            any(),
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        );
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'supplément remboursé : fenêtre close',
+      build: () {
+        when(() => repository.getStatus(supplementScope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            paymentStatus: 'REFUNDED',
+            amount: 1500,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: supplementScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentExpired>(),
+      ],
+    );
+
+    for (final refunding in ['REFUND_PENDING', 'REFUNDING']) {
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        'remboursement en cours ($refunding) : état terminal, jamais '
+        'd\'attente sans fin ni payment_failed',
+        build: () {
+          when(() => repository.getStatus(supplementScope)).thenAnswer(
+            (_) async => MobileMoneyPaymentStatus(
+              subjectId: bidId,
+              paymentStatus: refunding,
+              deadlineAt: DateTime.now().add(const Duration(hours: 1)),
+              amount: 1500,
+            ),
+          );
+          return bloc();
+        },
+        seed: () => const MobileMoneyPaymentAwaitingConfirmation(pending),
+        act: (b) =>
+            b.add(const MobileMoneyStatusPolled(scope: supplementScope)),
+        expect: () => [isA<MobileMoneyPaymentExpired>()],
+        verify: (_) {
+          verifyNever(
+            () => analytics.logEvent(
+              AnalyticsEvents.paymentFailed,
+              properties: any(named: 'properties'),
+            ),
+          );
+          verifyNever(
+            () => analytics.logEvent(
+              AnalyticsEvents.mobileMoneyExpired,
+              properties: any(named: 'properties'),
+            ),
+          );
+        },
+      );
+    }
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'statut inconnu du back, échéance passée : expiration (le sondage '
+      's\'arrête), pas d\'attente sans fin',
+      build: () {
+        when(() => repository.getStatus(supplementScope)).thenAnswer(
+          (_) async => MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            paymentStatus: 'SOMETHING_NEW',
+            deadlineAt: DateTime(2020),
+            amount: 1500,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: supplementScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentExpired>(),
+      ],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'statut inconnu du back, échéance à venir : affichage « en cours », '
+      'sans planter ni relancer de catalogue',
+      build: () {
+        when(() => repository.getStatus(supplementScope)).thenAnswer(
+          (_) async => MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            paymentStatus: 'SOMETHING_NEW',
+            deadlineAt: DateTime.now().add(const Duration(hours: 1)),
+            amount: 1500,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: supplementScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+      verify: (_) {
+        verifyNever(
+          () => repository.providers(
+            any(),
+            phoneNumber: any(named: 'phoneNumber'),
+          ),
+        );
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'séquestre : payment_succeeded émis une fois, method mobile_money, '
+      'context bid_supplement, sans PII',
+      build: () {
+        when(
+          () => repository.getStatus(supplementScope),
+        ).thenAnswer((_) async => escrowedStatus);
+        return bloc();
+      },
+      seed: () => const MobileMoneyPaymentAwaitingConfirmation(pending),
+      act: (b) async {
+        b.add(const MobileMoneyStatusPolled(scope: supplementScope));
+        await Future<void>.delayed(Duration.zero);
+        // Un second sondage qui confirme le même séquestre ne réémet rien.
+        b.add(const MobileMoneyStatusPolled(scope: supplementScope));
+      },
+      expect: () => [isA<MobileMoneyPaymentEscrowed>()],
+      verify: (_) {
+        final calls = verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.paymentSucceeded,
+            properties: captureAny(named: 'properties'),
+          ),
+        ).captured;
+        expect(calls, hasLength(1));
+        final p = calls.single as Map<String, Object?>;
+        expect(p['method'], 'mobile_money');
+        expect(p['context'], 'bid_supplement');
+        expect(p['currency'], 'XOF');
+        expect(p.containsKey('amount_bracket'), isTrue);
+        expect(p.keys, isNot(contains('phone')));
+        expect(p.keys, isNot(contains('msisdn')));
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyConfirmed,
+            properties: {'scope': 'bid_supplement'},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'dépôt refusé : payment_failed émis une fois, context bid_supplement',
+      build: () {
+        when(() => repository.getStatus(supplementScope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'ACCEPTED',
+            paymentStatus: 'PENDING',
+            amount: 1500,
+            deposit: failedDeposit,
+          ),
+        );
+        return bloc();
+      },
+      seed: () => const MobileMoneyPaymentAwaitingConfirmation(pending),
+      act: (b) async {
+        b.add(const MobileMoneyStatusPolled(scope: supplementScope));
+        await Future<void>.delayed(Duration.zero);
+        b.add(const MobileMoneyStatusPolled(scope: supplementScope));
+      },
+      expect: () => [isA<MobileMoneyPaymentDepositFailed>()],
+      verify: (_) {
+        final calls = verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.paymentFailed,
+            properties: captureAny(named: 'properties'),
+          ),
+        ).captured;
+        expect(calls, hasLength(1));
+        final p = calls.single as Map<String, Object?>;
+        expect(p['method'], 'mobile_money');
+        expect(p['context'], 'bid_supplement');
+        expect(p['reason'], 'declined');
+        expect(p['error_code'], 'PAYER_NOT_FOUND');
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'initiation avec opérateur : portée supplément, analytics scope '
+      'bid_supplement',
+      build: () {
+        when(
+          () => repository.initiate(
+            supplementScope,
+            phoneNumber: null,
+            provider: 'ORANGE_CIV',
+          ),
+        ).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            paymentStatus: 'PENDING',
+            amount: 1500,
+            deposit: liveDeposit,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(
+        const MobileMoneyPaymentInitiateRequested(
+          scope: supplementScope,
+          provider: 'ORANGE_CIV',
+        ),
+      ),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+      verify: (_) {
+        final invocation =
+            verify(
+                  () => analytics.logEvent(
+                    AnalyticsEvents.mobileMoneyInitiated,
+                    properties: captureAny(named: 'properties'),
+                  ),
+                ).captured.single
+                as Map<String, Object?>;
+        expect(invocation['scope'], 'bid_supplement');
+        expect(invocation['chosen'], isTrue);
       },
     );
   });

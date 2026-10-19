@@ -35337,6 +35337,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Paiement reçu, confirmation en cours. Le colis se met à jour dans un instant.'**
   String get supplementPaymentConfirming;
+
+  /// Texte de la fenêtre close quand la portée est un supplément de prix (mobile_money_awaiting_screen.dart _ExpiredBody)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce supplément n\'est plus à payer : la demande a expiré ou a été close. Le colis reste au prix prévu.'**
+  String get mobileMoneyExpiredSupplement;
+
+  /// Snackbar neutre au retour de l'écran d'attente mobile money du supplément sans paiement confirmé (retour, délai dépassé)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement du supplément pas encore confirmé.'**
+  String get supplementMobileMoneyNotConfirmed;
+
+  /// Encart expéditeur : supplément d'un colis payé en mobile money, paiement lancé mais pas encore confirmé
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement mobile money du supplément en attente'**
+  String get supplementSenderMobileMoneyPending;
 }
 
 class _AppLocalizationsDelegate

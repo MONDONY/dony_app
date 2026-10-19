@@ -1023,8 +1023,8 @@ void main() {
 
     tearDown(() async => getIt.unregister<SupplementPaymentCubit>());
 
-    test('hasAction vrai pour un supplément carte à payer, même hors '
-        'statut habituel', () {
+    test('hasAction vrai pour un supplément carte ou mobile money à payer, '
+        'même hors statut habituel ; faux en espèces (PR A4)', () {
       expect(
         SenderStickyBar.hasAction(withSupplement(status: 'PAYMENT_ESCROWED')),
         isTrue,
@@ -1035,6 +1035,16 @@ void main() {
             status: 'PAYMENT_ESCROWED',
             rail: 'PAWAPAY',
             paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        SenderStickyBar.hasAction(
+          withSupplement(
+            status: 'PAYMENT_ESCROWED',
+            rail: 'CASH',
+            paymentMethod: BidPaymentMethod.cash,
           ),
         ),
         isFalse,
@@ -1081,8 +1091,9 @@ void main() {
       expect(find.byType(SupplementPayButton), findsOneWidget);
     });
 
-    testWidgets('mobile money : pas de bouton en A2, la barre garde son '
-        'action', (tester) async {
+    testWidgets('mobile money : « Payer » remplace le QR (PR A3)', (
+      tester,
+    ) async {
       final bloc = _MockBidBloc();
       whenListen<BidState>(
         bloc,
@@ -1102,7 +1113,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(SupplementPayButton), findsNothing);
+      expect(find.byType(SupplementPayButton), findsOneWidget);
+      expect(find.text('Afficher le QR de remise'), findsNothing);
     });
 
     testWidgets('supplément payé : retour à l\'action du statut', (

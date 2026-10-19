@@ -21894,4 +21894,16 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get supplementPaymentConfirming =>
       'Paiement reçu, confirmation en cours. Le colis se met à jour dans un instant.';
+
+  @override
+  String get mobileMoneyExpiredSupplement =>
+      'Ce supplément n\'est plus à payer : la demande a expiré ou a été close. Le colis reste au prix prévu.';
+
+  @override
+  String get supplementMobileMoneyNotConfirmed =>
+      'Paiement du supplément pas encore confirmé.';
+
+  @override
+  String get supplementSenderMobileMoneyPending =>
+      'Paiement mobile money du supplément en attente';
 }

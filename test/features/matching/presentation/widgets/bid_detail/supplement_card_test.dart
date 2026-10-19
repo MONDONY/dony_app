@@ -5,6 +5,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/media_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -326,24 +327,51 @@ void main() {
       );
     });
 
-    testWidgets('mobile money : pas de renvoi en A2', (tester) async {
-      final s = _supplement(BidSupplementStatus.proposed, forSender: true);
+    testWidgets('mobile money : renvoi vers le bouton du bas (PR A3)', (
+      tester,
+    ) async {
       await pump(
         tester,
         SupplementSenderCard(
           bid: _bid(
-            BidSupplement(
-              id: s.id,
-              status: s.status,
+            const BidSupplement(
+              id: 'sup-1',
+              status: BidSupplementStatus.proposed,
               rail: 'PAWAPAY',
-              grossAmount: s.grossAmount,
+              grossAmount: 17,
             ),
           ),
         ),
       );
       expect(
         find.text('Payez avec le bouton en bas de l\'écran, ou refusez ici.'),
-        findsNothing,
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('mobile money, paiement lancé : « en attente », bouton du '
+        'bas toujours proposé', (tester) async {
+      await pump(
+        tester,
+        SupplementSenderCard(
+          bid: _bid(
+            const BidSupplement(
+              id: 'sup-1',
+              status: BidSupplementStatus.paymentPending,
+              rail: 'PAWAPAY',
+              grossAmount: 17,
+            ),
+          ),
+        ),
+      );
+      expect(
+        find.text('Paiement mobile money du supplément en attente'),
+        findsOneWidget,
+      );
+      expect(find.text('Paiement du supplément en cours'), findsNothing);
+      expect(
+        find.text('Payez avec le bouton en bas de l\'écran, ou refusez ici.'),
+        findsOneWidget,
       );
     });
   });
@@ -405,6 +433,31 @@ void main() {
       );
       expect(find.text('L\'expéditeur est en train de payer'), findsOneWidget);
       expect(find.byKey(const Key('supplement-withdraw-btn')), findsNothing);
+    });
+
+    testWidgets('mobile money, paiement en cours : même texte, icône '
+        'téléphone', (tester) async {
+      await pump(
+        tester,
+        SupplementTravelerCard(
+          bid: _bid(
+            const BidSupplement(
+              id: 'sup-1',
+              status: BidSupplementStatus.paymentPending,
+              rail: 'PAWAPAY',
+              netAmount: 1000,
+              commissionAmount: 100,
+              grossAmount: 1100,
+              currency: 'XOF',
+            ),
+          ),
+        ),
+      );
+      expect(find.text('L\'expéditeur est en train de payer'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'smartphone'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('refusé : choix restant et lien vers le refus du colis', (

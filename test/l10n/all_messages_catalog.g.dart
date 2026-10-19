@@ -7526,6 +7526,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorStripeUnavailableTitle': (l) => l.errorStripeUnavailableTitle,
   'errorStripeUnavailableMessage': (l) => l.errorStripeUnavailableMessage,
   'supplementPaymentConfirming': (l) => l.supplementPaymentConfirming,
+  'mobileMoneyExpiredSupplement': (l) => l.mobileMoneyExpiredSupplement,
+  'supplementMobileMoneyNotConfirmed': (l) =>
+      l.supplementMobileMoneyNotConfirmed,
+  'supplementSenderMobileMoneyPending': (l) =>
+      l.supplementSenderMobileMoneyPending,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
