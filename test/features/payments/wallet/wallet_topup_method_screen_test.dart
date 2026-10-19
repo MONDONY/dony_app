@@ -6,6 +6,8 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
+import 'package:dony/features/payments/bloc/payer_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_code_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_availability_cubit.dart';
@@ -30,6 +32,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
+import '../../../helpers/payer_account_test_doubles.dart';
 
 /// Écran de choix de méthode de recharge : tuile mobile money (numéro +
 /// checklist d'opérateurs), garde du bouton « Suivant » et parcours Stripe
@@ -79,6 +82,11 @@ void main() {
   /// prise sur le code d'erreur du backend.
   late WalletRepository availabilityRepo;
   late MockAnalyticsBackend analyticsBackend;
+
+  /// Composant « compte qui paie ». Par défaut en `legacy` (back sans
+  /// catalogue des pays) : les tests historiques ci-dessous couvrent
+  /// l'ancien champ numéro, gardé pour ce cas.
+  late MockPayerAccountCubit payer;
   WalletTopupMethodSelection? capturedSelection;
   Object? popResult;
 
@@ -136,6 +144,12 @@ void main() {
     analyticsBackend = MockAnalyticsBackend();
     capturedSelection = null;
     popResult = null;
+    payer = MockPayerAccountCubit();
+    final payerStates = stubPayerAccount(
+      payer,
+      const PayerAccountState(status: PayerAccountStatus.legacy),
+    );
+    addTearDown(payerStates.close);
     if (getIt.isRegistered<WalletTopupCodeCubit>()) {
       getIt.unregister<WalletTopupCodeCubit>();
     }
@@ -171,6 +185,7 @@ void main() {
           )..add(const HelpCenterLoadRequested()),
         ),
         BlocProvider<WalletTopupMobileMoneyCubit>.value(value: mmCubit),
+        BlocProvider<PayerAccountCubit>.value(value: payer),
         BlocProvider<WalletTopupMobileMoneyAvailabilityCubit>(
           create: (_) =>
               WalletTopupMobileMoneyAvailabilityCubit(availabilityRepo)
@@ -1086,6 +1101,206 @@ void main() {
 
       expect(find.text('Mobile money'), findsNothing);
       expect(find.text('Carte bancaire'), findsOneWidget);
+    });
+  });
+
+  group('compte qui paie (pays, opérateur, numéro)', () {
+    /// Remplace l'état `legacy` du harnais par [initial] ; les états suivants
+    /// passent par le contrôleur rendu.
+    StreamController<PayerAccountState> payerStarts(PayerAccountState initial) {
+      final controller = stubPayerAccount(payer, initial);
+      addTearDown(controller.close);
+      return controller;
+    }
+
+    DonyButton cta(WidgetTester tester) =>
+        tester.widget<DonyButton>(find.byType(DonyButton).last);
+
+    Future<void> openMobileMoney(WidgetTester tester) async {
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mobile money'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'methodScreen_mobileMoney_showsCountryField_notLegacyPhoneField',
+      (tester) async {
+        payerStarts(kPayerReady);
+        await openMobileMoney(tester);
+
+        expect(find.byKey(const Key('mm-country-field')), findsOneWidget);
+        expect(
+          find.byKey(const Key('wallet-topup-payer-phone-field')),
+          findsNothing,
+        );
+        expect(find.text('COMPTE QUI PAIE'), findsOneWidget);
+        // Les trois lignes du moyen restent visibles.
+        expect(find.text('Carte bancaire'), findsOneWidget);
+        expect(find.text("J'ai un code de recharge"), findsOneWidget);
+        expect(cta(tester).onPressed, isNull);
+      },
+    );
+
+    testWidgets('methodScreen_legacyState_showsOldPhoneField', (tester) async {
+      await openMobileMoney(tester);
+
+      expect(
+        find.byKey(const Key('wallet-topup-payer-phone-field')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('mm-country-field')), findsNothing);
+    });
+
+    testWidgets('upcomingCountry_ctaBecomesSwitchToCard', (tester) async {
+      payerStarts(kPayerReady.copyWith(unavailableCountry: 'ML'));
+      await openMobileMoney(tester);
+
+      expect(find.text('Recharger par carte'), findsOneWidget);
+      expect(find.text('Suivant → Montant'), findsNothing);
+      expect(cta(tester).onPressed, isNotNull);
+
+      await tester.tap(find.text('Recharger par carte'));
+      await tester.pumpAndSettle();
+
+      verify(() => payer.switchToCardTapped()).called(1);
+      // Carte bancaire sélectionnée : le bloc mobile money se replie et le
+      // bouton reprend « Suivant », actif.
+      expect(find.byKey(const Key('mm-country-field')), findsNothing);
+      expect(find.text('Suivant → Montant'), findsOneWidget);
+      expect(cta(tester).onPressed, isNotNull);
+
+      await tester.tap(find.text('Suivant → Montant'));
+      await tester.pumpAndSettle();
+      expect(capturedSelection?.method, 'STRIPE');
+    });
+
+    testWidgets('next_disabledUntilRecognized', (tester) async {
+      const typing = PayerAccountState(
+        status: PayerAccountStatus.ready,
+        countries: kPayerCountries,
+        country: kCoteDIvoire,
+        operator: kOrangeCiv,
+        localNumber: '0748',
+        e164: '+2250748',
+      );
+      // Fermé par le tearDown posé dans payerStarts.
+      // ignore: close_sinks
+      final states = payerStarts(typing);
+      await openMobileMoney(tester);
+      expect(cta(tester).onPressed, isNull);
+
+      for (final recognition in [
+        RecognitionStatus.checking,
+        RecognitionStatus.unrecognized,
+        RecognitionStatus.failed,
+      ]) {
+        states.add(kPayerRecognized.copyWith(recognition: recognition));
+        // Jamais pumpAndSettle : l'indicateur de vérification tourne.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(cta(tester).onPressed, isNull, reason: recognition.name);
+      }
+
+      states.add(kPayerRecognized);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(cta(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('codeTile_stillVisible_andOpensSheet', (tester) async {
+      payerStarts(kPayerRecognized);
+      await openMobileMoney(tester);
+
+      await tester.ensureVisible(find.text("J'ai un code de recharge"));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("J'ai un code de recharge"));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Valider le code'), findsOneWidget);
+    });
+
+    testWidgets('next_pushesAmountWithOperatorInSelection', (tester) async {
+      payerStarts(kPayerRecognized);
+      await openMobileMoney(tester);
+
+      final cubit = BlocProvider.of<WalletTopupMobileMoneyCubit>(
+        tester.element(find.byType(WalletTopupMethodScreen)),
+      );
+
+      await tester.tap(find.text('Suivant → Montant'));
+      await tester.pumpAndSettle();
+
+      expect(capturedSelection, isNotNull);
+      expect(capturedSelection!.method, 'MOBILE_MONEY');
+      expect(capturedSelection!.phoneNumber, '+2250748840856');
+      expect(capturedSelection!.currency, 'XOF');
+      expect(capturedSelection!.operator, kOrangeCiv);
+      expect(capturedSelection!.cubit, same(cubit));
+
+      // L'opérateur choisi est celui que la recharge enverra au back, sans
+      // catalogue chargé par l'ancien parcours.
+      unawaited(cubit.initiate(amount: 5000, phoneNumber: '+2250748840856'));
+      await tester.pump();
+      await tester.pump();
+      verify(
+        () => repo.topupMobileMoney(
+          amount: 5000,
+          phoneNumber: '+2250748840856',
+          provider: 'ORANGE_CIV',
+        ),
+      ).called(1);
+      cubit.stopPolling();
+    });
+
+    testWidgets('recharge confirmée : le compte qui paie est mémorisé', (
+      tester,
+    ) async {
+      when(
+        () => repo.topupStatus(any()),
+      ).thenAnswer((_) async => statusFor('CONFIRMED'));
+      payerStarts(kPayerRecognized);
+      await openMobileMoney(tester);
+
+      final cubit = BlocProvider.of<WalletTopupMobileMoneyCubit>(
+        tester.element(find.byType(WalletTopupMethodScreen)),
+      );
+      verifyNever(() => payer.rememberSuccess());
+
+      unawaited(cubit.initiate(amount: 5000, phoneNumber: '+2250748840856'));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(WalletTopupMobileMoneyCubit.pollInterval);
+      await tester.pump();
+
+      verify(() => payer.rememberSuccess()).called(1);
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('methodScreen_darkTheme_rendersWithoutOverflow', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360 * 3, 640 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      payerStarts(
+        kPayerRecognized.copyWith(
+          operator: kMtnCiv,
+          recognition: RecognitionStatus.autoSwitched,
+          switchedFrom: 'ORANGE_CIV',
+        ),
+      );
+
+      await tester.pumpWidget(buildHarness(theme: AppTheme.dark()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mobile money'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(
+        find.text("C'est un numéro MTN MoMo : l'opérateur a été changé."),
+        findsOneWidget,
+      );
     });
   });
 }

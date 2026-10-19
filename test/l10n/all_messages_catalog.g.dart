@@ -7245,6 +7245,24 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'assistantNextQuestionsTitle': (l) => l.assistantNextQuestionsTitle,
   'assistantDiscoverySemantics': (l) =>
       l.assistantDiscoverySemantics(placeholderMarker('text')),
+  'mobileMoneyPayerSectionLabel': (l) => l.mobileMoneyPayerSectionLabel,
+  'mobileMoneyCountrySearchHint': (l) => l.mobileMoneyCountrySearchHint,
+  'mobileMoneyCountryUpcoming': (l) => l.mobileMoneyCountryUpcoming,
+  'mobileMoneyCountryUpcomingSubtitle': (l) =>
+      l.mobileMoneyCountryUpcomingSubtitle,
+  'mobileMoneyCountryUnavailableNotice': (l) =>
+      l.mobileMoneyCountryUnavailableNotice,
+  'mobileMoneyCountryNotSupported': (l) => l.mobileMoneyCountryNotSupported,
+  'mobileMoneyOperatorLabel': (l) => l.mobileMoneyOperatorLabel,
+  'mobileMoneyOperatorNumberLabel': (l) =>
+      l.mobileMoneyOperatorNumberLabel(placeholderMarker('operator')),
+  'mobileMoneyNumberRecognized': (l) =>
+      l.mobileMoneyNumberRecognized(placeholderMarker('operator')),
+  'mobileMoneyOperatorSwitched': (l) =>
+      l.mobileMoneyOperatorSwitched(placeholderMarker('operator')),
+  'mobileMoneyNumberUnrecognized': (l) => l.mobileMoneyNumberUnrecognized,
+  'mobileMoneyRecognitionFailed': (l) => l.mobileMoneyRecognitionFailed,
+  'walletTopupSwitchToCard': (l) => l.walletTopupSwitchToCard,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7803,4 +7821,7 @@ const textParameters = <String, List<String>>{
   'gpProReason': ['reason'],
   'aiFormDraftSummaryAround': ['date'],
   'assistantDiscoverySemantics': ['text'],
+  'mobileMoneyOperatorNumberLabel': ['operator'],
+  'mobileMoneyNumberRecognized': ['operator'],
+  'mobileMoneyOperatorSwitched': ['operator'],
 };

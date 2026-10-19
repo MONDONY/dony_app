@@ -119,6 +119,62 @@ void main() {
       ],
     );
 
+    test(
+      "useOperator() : sans catalogue chargé, l'opérateur choisi sur l'écran "
+      '« Recharger » part au back',
+      () async {
+        when(
+          () => repo.topupMobileMoney(
+            amount: 5000,
+            phoneNumber: phoneNumber,
+            provider: 'WAVE_SEN',
+          ),
+        ).thenAnswer((_) async => topup2);
+
+        cubit.useOperator('WAVE_SEN');
+        await cubit.initiate(amount: 5000, phoneNumber: phoneNumber);
+        cubit.stopPolling();
+
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+        verify(
+          () => repo.topupMobileMoney(
+            amount: 5000,
+            phoneNumber: phoneNumber,
+            provider: 'WAVE_SEN',
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      "useOperator() : le catalogue de l'ancien parcours garde la main",
+      () async {
+        when(
+          () => repo.topupProviders(phoneNumber),
+        ).thenAnswer((_) async => catalog);
+        when(
+          () => repo.topupMobileMoney(
+            amount: 5000,
+            phoneNumber: phoneNumber,
+            provider: any(named: 'provider'),
+          ),
+        ).thenAnswer((_) async => topup);
+
+        cubit.useOperator('WAVE_SEN');
+        await cubit.loadProviders(phoneNumber);
+        await cubit.initiate(amount: 5000, phoneNumber: phoneNumber);
+        cubit.stopPolling();
+
+        verify(
+          () => repo.topupMobileMoney(
+            amount: 5000,
+            phoneNumber: phoneNumber,
+            provider: 'ORANGE_SEN',
+          ),
+        ).called(1);
+      },
+    );
+
     blocTest<WalletTopupMobileMoneyCubit, WalletTopupMobileMoneyState>(
       'selectProvider(null) efface la sélection (décochée dans la checklist)',
       build: () {

@@ -15630,7 +15630,7 @@ abstract class AppLocalizations {
   /// **'Non renseigné'**
   String get mobileMoneyNotProvided;
 
-  /// Libellé de la ligne pays de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
+  /// Libellé « Pays » du mobile money : ligne pays de la vue active du compte de versement (mobile_money_account_screen.dart _ActiveView) et champ pays du compte qui paie (payer_account_section.dart).
   ///
   /// In fr, this message translates to:
   /// **'Pays'**
@@ -34093,6 +34093,84 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'À découvrir dans Yadony : {text}'**
   String assistantDiscoverySemantics(String text);
+
+  /// Titre de la section « compte qui paie » (pays, opérateur, numéro) de l'écran Recharger, en majuscules comme les autres titres de section (payer_account_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'COMPTE QUI PAIE'**
+  String get mobileMoneyPayerSectionLabel;
+
+  /// Texte d'aide du champ de recherche du pays mobile money qui paie (mobile_money_country_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un pays'**
+  String get mobileMoneyCountrySearchHint;
+
+  /// Pastille d'un pays où le mobile money n'est pas encore ouvert, dans la liste de recherche du pays (mobile_money_country_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bientôt'**
+  String get mobileMoneyCountryUpcoming;
+
+  /// Sous-titre d'un pays « Bientôt » dans la liste de recherche du pays mobile money.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money pas encore disponible'**
+  String get mobileMoneyCountryUpcomingSubtitle;
+
+  /// Note affichée quand le pays cherché n'a pas encore le mobile money (« Bientôt ») : propose les autres moyens de recharge.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attendant, rechargez par carte bancaire ou avec un code de recharge.'**
+  String get mobileMoneyCountryUnavailableNotice;
+
+  /// Texte affiché sous le champ pays quand la recherche ne trouve aucun pays servi ni annoncé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le mobile money n\'est pas disponible pour ce pays.'**
+  String get mobileMoneyCountryNotSupported;
+
+  /// Libellé de la ligne de choix de l'opérateur mobile money qui paie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Opérateur'**
+  String get mobileMoneyOperatorLabel;
+
+  /// Libellé du champ numéro du compte mobile money qui paie. {operator} : nom de l'opérateur choisi (ex. Orange Money).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro {operator}'**
+  String mobileMoneyOperatorNumberLabel(String operator);
+
+  /// Confirmation sous le compte qui paie : pawaPay reconnaît le numéro sur l'opérateur choisi. {operator} : nom de l'opérateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro {operator} reconnu'**
+  String mobileMoneyNumberRecognized(String operator);
+
+  /// Note sous le compte qui paie : le numéro appartient à un autre opérateur que celui touché, l'app a basculé dessus. {operator} : nom du nouvel opérateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est un numéro {operator} : l\'opérateur a été changé.'**
+  String mobileMoneyOperatorSwitched(String operator);
+
+  /// Message sous le compte qui paie : aucun opérateur du pays choisi ne reconnaît le numéro saisi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro n\'est reconnu par aucun opérateur de ce pays.'**
+  String get mobileMoneyNumberUnrecognized;
+
+  /// Message sous le compte qui paie : la vérification du numéro a échoué (coupure réseau, erreur serveur), suivi d'un bouton Réessayer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification impossible pour le moment.'**
+  String get mobileMoneyRecognitionFailed;
+
+  /// Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger par carte'**
+  String get walletTopupSwitchToCard;
 }
 
 class _AppLocalizationsDelegate

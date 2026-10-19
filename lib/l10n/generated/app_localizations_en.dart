@@ -20963,4 +20963,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String assistantDiscoverySemantics(String text) {
     return 'Discover in Yadony: $text';
   }
+
+  @override
+  String get mobileMoneyPayerSectionLabel => 'PAYING ACCOUNT';
+
+  @override
+  String get mobileMoneyCountrySearchHint => 'Search a country';
+
+  @override
+  String get mobileMoneyCountryUpcoming => 'Soon';
+
+  @override
+  String get mobileMoneyCountryUpcomingSubtitle =>
+      'Mobile money not available yet';
+
+  @override
+  String get mobileMoneyCountryUnavailableNotice =>
+      'Meanwhile, top up by card or with a top-up code.';
+
+  @override
+  String get mobileMoneyCountryNotSupported =>
+      'Mobile money is not available for this country.';
+
+  @override
+  String get mobileMoneyOperatorLabel => 'Operator';
+
+  @override
+  String mobileMoneyOperatorNumberLabel(String operator) {
+    return '$operator number';
+  }
+
+  @override
+  String mobileMoneyNumberRecognized(String operator) {
+    return '$operator number recognised';
+  }
+
+  @override
+  String mobileMoneyOperatorSwitched(String operator) {
+    return 'This is a $operator number: the operator was changed.';
+  }
+
+  @override
+  String get mobileMoneyNumberUnrecognized =>
+      'No operator in this country recognises this number.';
+
+  @override
+  String get mobileMoneyRecognitionFailed =>
+      'We can\'t check this number right now.';
+
+  @override
+  String get walletTopupSwitchToCard => 'Top up by card';
 }

@@ -6,8 +6,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/phone/normalize_payer_phone.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
+import 'package:dony/features/payments/bloc/payer_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
+import 'package:dony/features/payments/presentation/widgets/payer_account_section.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_availability_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
@@ -31,7 +34,15 @@ import 'package:go_router/go_router.dart';
 /// instance survit à tout le parcours de recharge — c'est elle qui est
 /// transmise en aval via [WalletTopupMethodSelection.cubit], jamais une
 /// nouvelle (le sondage démarré par `initiate()` ne doit jamais être perdu).
-/// Pause de saisie après laquelle les opérateurs du numéro sont chargés.
+///
+/// En mobile money, le bloc « compte qui paie » ([PayerAccountSection], lu
+/// dans le [PayerAccountCubit] posé par la route) demande pays, opérateur
+/// puis numéro. Sur un back sans catalogue des pays (état `legacy`), l'écran
+/// garde l'ancien champ numéro et sa liste d'opérateurs
+/// ([_MobileMoneySection]).
+
+/// Pause de saisie après laquelle les opérateurs du numéro sont chargés
+/// (ancien parcours, état `legacy`).
 @visibleForTesting
 const walletTopupPhoneDebounceDelay = Duration(milliseconds: 700);
 
@@ -151,27 +162,67 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
     super.dispose();
   }
 
-  bool _canProceed(WalletTopupMobileMoneyState mobileMoneyState) {
+  bool _canProceed(
+    WalletTopupMobileMoneyState mobileMoneyState,
+    PayerAccountState payer,
+  ) {
     if (_selected == null) return false;
     if (_selected != 'MOBILE_MONEY') return true;
-    return mobileMoneyState is WalletTopupMobileMoneyProvidersReady &&
-        mobileMoneyState.selectedProvider != null;
+    if (payer.status == PayerAccountStatus.legacy) {
+      return mobileMoneyState is WalletTopupMobileMoneyProvidersReady &&
+          mobileMoneyState.selectedProvider != null;
+    }
+    return payer.canProceed &&
+        payer.country != null &&
+        payer.operator != null &&
+        payer.e164 != null;
   }
 
-  Future<void> _onNext(WalletTopupMobileMoneyState mobileMoneyState) async {
+  /// Pays « Bientôt » retenu : le bouton du bas propose la carte bancaire.
+  bool _offersCard(PayerAccountState payer) =>
+      _selected == 'MOBILE_MONEY' &&
+      payer.status == PayerAccountStatus.ready &&
+      payer.country == null &&
+      payer.unavailableCountry != null;
+
+  void _onSwitchToCard() {
+    context.read<PayerAccountCubit>().switchToCardTapped();
+    setState(() => _selected = 'STRIPE');
+  }
+
+  Future<void> _onNext(
+    WalletTopupMobileMoneyState mobileMoneyState,
+    PayerAccountState payer,
+  ) async {
     final selected = _selected;
     if (selected == null) return;
 
-    final selection = selected == 'MOBILE_MONEY'
-        ? WalletTopupMethodSelection(
-            method: selected,
-            phoneNumber: normalizePayerPhone(_phoneController.text),
-            currency: (mobileMoneyState as WalletTopupMobileMoneyProvidersReady)
-                .catalog
-                .currency,
-            cubit: context.read<WalletTopupMobileMoneyCubit>(),
-          )
-        : WalletTopupMethodSelection(method: selected);
+    final WalletTopupMethodSelection selection;
+    if (selected != 'MOBILE_MONEY') {
+      selection = WalletTopupMethodSelection(method: selected);
+    } else if (payer.status == PayerAccountStatus.legacy) {
+      selection = WalletTopupMethodSelection(
+        method: selected,
+        phoneNumber: normalizePayerPhone(_phoneController.text),
+        currency: (mobileMoneyState as WalletTopupMobileMoneyProvidersReady)
+            .catalog
+            .currency,
+        cubit: context.read<WalletTopupMobileMoneyCubit>(),
+      );
+    } else {
+      final operator = payer.operator!;
+      // Aucun catalogue n'est chargé dans ce parcours : le cubit de recharge
+      // reçoit l'opérateur choisi, que `initiate()` enverra au back.
+      final cubit = context.read<WalletTopupMobileMoneyCubit>()
+        ..useOperator(operator.code);
+      selection = WalletTopupMethodSelection(
+        method: selected,
+        phoneNumber: payer.e164,
+        currency: payer.country!.currency,
+        cubit: cubit,
+        operator: operator,
+      );
+    }
 
     // Propage le succès (true) jusqu'au wallet pour qu'il recharge son
     // solde une fois la recharge effectuée.
@@ -203,17 +254,16 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     // La tuile mobile money n'existe que si le backend déployé sert ce rail
     // (sonde lancée à l'ouverture de la route) : sur une prod gelée avant le
     // lot 2, l'écran reste celui d'avant, carte bancaire seule.
     final mobileMoneyAvailable = context
         .watch<WalletTopupMobileMoneyAvailabilityCubit>()
         .state;
+    // Mobile money en tête (maquettes v3), puis la carte bancaire.
     final methods = [
-      _cardMethod(l),
       if (mobileMoneyAvailable) _mobileMoneyMethod(l),
+      _cardMethod(l),
     ];
 
     return BlocConsumer<
@@ -238,6 +288,9 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
           case final WalletTopupMobileMoneyError e:
             unawaited(ErrorPresenter.show(context, e.error));
           case final WalletTopupMobileMoneyConfirmed s:
+            // Recharge réussie : pays, opérateur et numéro préremplis la
+            // prochaine fois (sans effet dans l'ancien parcours).
+            unawaited(context.read<PayerAccountCubit>().rememberSuccess());
             // Filet de sécurité : si l'écran d'attente n'est plus là quand
             // la confirmation arrive (retour arrière), personne d'autre ne
             // l'annoncerait et l'utilisateur croirait à un échec alors que
@@ -253,118 +306,174 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
         }
       },
       builder: (context, mobileMoneyState) {
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBar(
-            actions: const [DonyFeedbackButton()],
-            backgroundColor: DonyColors.blue700,
-            foregroundColor: DonyColors.neutral0,
-            elevation: 0,
-            surfaceTintColor: Colors.transparent,
-            centerTitle: false,
-            leading: const DonyAppBarBackButton(),
-            title: Text(
-              l.walletTopupMethodTitle,
-              style: tt.headlineLarge?.copyWith(
-                color: DonyColors.neutral0,
-                fontSize: 17,
-              ),
-            ),
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(4),
-              child: _StepProgressBar(value: 0.5, color: DonyColors.blue300),
-            ),
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.xl,
-                    DonySpacing.lg,
-                    DonySpacing.xxl,
-                  ),
-                  children: [
-                    // Tutoriel vidéo de la recharge du solde (FLUTTER-8G), carte
-                    // bancaire comme mobile money : affiché quel que soit le
-                    // rail proposé (FLUTTER-AB).
-                    const ContextualTutorialCard(
-                      context: TutorialContext.walletTopup,
-                      padding: EdgeInsets.only(bottom: DonySpacing.lg),
-                    ),
-                    Text(
-                      l.walletTopupMethodSectionLabel,
-                      style: tt.labelMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.md),
-                    ...List.generate(methods.length, (i) {
-                      final m = methods[i];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-                        child:
-                            _MethodCard(
-                                  def: m,
-                                  isSelected: _selected == m.value,
-                                  onTap: () =>
-                                      setState(() => _selected = m.value),
-                                )
-                                .animate(delay: (60 * i).ms)
-                                .fadeIn(duration: 250.ms)
-                                .slideY(
-                                  begin: 0.04,
-                                  curve: Curves.easeOutCubic,
-                                ),
-                      );
-                    }),
-                    if (_selected == 'MOBILE_MONEY')
-                      _MobileMoneySection(
-                            phoneController: _phoneController,
-                            phoneFocusNode: _phoneFocusNode,
-                            onPhoneChanged: _onPhoneChanged,
-                            state: mobileMoneyState,
-                            onRetry: () {
-                              final normalized = normalizePayerPhone(
-                                _phoneController.text,
-                              );
-                              if (normalized != null && normalized.isNotEmpty) {
-                                _requestProviders(normalized);
-                              }
-                            },
-                          )
-                          .animate()
-                          .fadeIn(duration: 200.ms)
-                          .slideY(begin: 0.03, curve: Curves.easeOutCubic),
-                    const SizedBox(height: DonySpacing.lg),
-                    _CodeEntryTile(onTap: _onRedeemCode)
-                        .animate(delay: (60 * methods.length).ms)
-                        .fadeIn(duration: 250.ms)
-                        .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                  ],
-                ),
-              ),
-              // ── Sticky bottom CTA ─────────────────────────────────────────
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  0,
-                  DonySpacing.lg,
-                  MediaQuery.paddingOf(context).bottom + DonySpacing.lg,
-                ),
-                child: DonyButton(
-                  label: l.walletTopupMethodNextCta,
-                  onPressed: _canProceed(mobileMoneyState)
-                      ? () => _onNext(mobileMoneyState)
-                      : null,
-                ),
-              ),
-            ],
+        return BlocBuilder<PayerAccountCubit, PayerAccountState>(
+          builder: (context, payer) => _buildScaffold(
+            context,
+            methods: methods,
+            mobileMoneyState: mobileMoneyState,
+            payer: payer,
           ),
         );
       },
+    );
+  }
+
+  /// Entrée d'une ligne : fondu et léger glissé décalés de 60 ms, coupés
+  /// quand la réduction du mouvement est active.
+  Widget _enter(BuildContext context, Widget child, int index) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    return child
+        .animate(delay: (60 * index).ms)
+        .fadeIn(duration: 250.ms, curve: Curves.easeOutCubic)
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+  }
+
+  Widget _buildScaffold(
+    BuildContext context, {
+    required List<_MethodDef> methods,
+    required WalletTopupMobileMoneyState mobileMoneyState,
+    required PayerAccountState payer,
+  }) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final legacyPayer = payer.status == PayerAccountStatus.legacy;
+    final offersCard = _offersCard(payer);
+
+    final rows = <Widget>[
+      for (final m in methods)
+        _MethodCard(
+          def: m,
+          isSelected: _selected == m.value,
+          onTap: () => setState(() => _selected = m.value),
+        ),
+      _CodeEntryTile(onTap: _onRedeemCode),
+    ];
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
+        backgroundColor: DonyColors.blue700,
+        foregroundColor: DonyColors.neutral0,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        leading: const DonyAppBarBackButton(),
+        title: Text(
+          l.walletTopupMethodTitle,
+          style: tt.headlineLarge?.copyWith(
+            color: DonyColors.neutral0,
+            fontSize: 17,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(4),
+          child: _StepProgressBar(value: 0.5, color: DonyColors.blue300),
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.xl,
+                DonySpacing.lg,
+                DonySpacing.xxl,
+              ),
+              children: [
+                // Tutoriel vidéo de la recharge du solde (FLUTTER-8G), carte
+                // bancaire comme mobile money : affiché quel que soit le
+                // rail proposé (FLUTTER-AB).
+                const ContextualTutorialCard(
+                  context: TutorialContext.walletTopup,
+                  padding: EdgeInsets.only(bottom: DonySpacing.lg),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: DonySpacing.xs,
+                    bottom: DonySpacing.sm,
+                  ),
+                  child: Text(
+                    l.walletTopupMethodSectionLabel,
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ),
+                // Moyens de recharge regroupés dans une même carte, lignes
+                // séparées : mobile money, carte bancaire, code de recharge.
+                DonyCard(
+                  padding: EdgeInsets.zero,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(DonyRadius.card),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = 0; i < rows.length; i++) ...[
+                          if (i > 0)
+                            const Divider(
+                              height: 1,
+                              indent: DonySpacing.base + _kRowIconSize,
+                            ),
+                          _enter(context, rows[i], i),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                if (_selected == 'MOBILE_MONEY')
+                  if (legacyPayer)
+                    _MobileMoneySection(
+                          phoneController: _phoneController,
+                          phoneFocusNode: _phoneFocusNode,
+                          onPhoneChanged: _onPhoneChanged,
+                          state: mobileMoneyState,
+                          onRetry: () {
+                            final normalized = normalizePayerPhone(
+                              _phoneController.text,
+                            );
+                            if (normalized != null && normalized.isNotEmpty) {
+                              _requestProviders(normalized);
+                            }
+                          },
+                        )
+                        .animate()
+                        .fadeIn(duration: 200.ms)
+                        .slideY(begin: 0.03, curve: Curves.easeOutCubic)
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(top: DonySpacing.xl),
+                      child: _enter(context, const PayerAccountSection(), 0),
+                    ),
+              ],
+            ),
+          ),
+          // ── Sticky bottom CTA ─────────────────────────────────────────
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              0,
+              DonySpacing.lg,
+              MediaQuery.paddingOf(context).bottom + DonySpacing.lg,
+            ),
+            child: offersCard
+                ? DonyButton(
+                    label: l.walletTopupSwitchToCard,
+                    variant: DonyButtonVariant.secondary,
+                    onPressed: _onSwitchToCard,
+                  )
+                : DonyButton(
+                    label: l.walletTopupMethodNextCta,
+                    onPressed: _canProceed(mobileMoneyState, payer)
+                        ? () => _onNext(mobileMoneyState, payer)
+                        : null,
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -579,8 +688,13 @@ class _MethodDef {
   final String value;
 }
 
-// ─── Method card ──────────────────────────────────────────────────────────────
+// ─── Ligne de moyen de recharge ──────────────────────────────────────────────
 
+/// Côté de la pastille d'icône des lignes de moyen (alignement du séparateur).
+const double _kRowIconSize = 36;
+
+/// Une ligne radio de la carte « moyen » : pastille d'icône, nom, détail,
+/// rond coché à droite.
 class _MethodCard extends StatelessWidget {
   const _MethodCard({
     required this.def,
@@ -596,97 +710,99 @@ class _MethodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final duration = reduceMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 160);
 
     return Semantics(
       button: true,
       selected: isSelected,
       label: def.label,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          curve: Curves.easeOut,
-          decoration: BoxDecoration(
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: duration,
+            curve: Curves.easeOut,
             // Teintes dérivées du thème : un blue50 en dur passait sous le
             // texte clair du thème sombre, illisible (Sentry FLUTTER-8B).
-            color: isSelected
-                ? Color.alphaBlend(
-                    cs.primary.withValues(alpha: 0.10),
-                    cs.surface,
-                  )
-                : cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(
-              color: isSelected ? cs.primary : cs.outline,
-              width: isSelected ? 2 : 1,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Color.alphaBlend(
+                      cs.primary.withValues(alpha: 0.06),
+                      cs.surface,
+                    )
+                  : cs.surface,
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: DonyColors.blue500.withValues(alpha: 0.12),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base,
-            vertical: DonySpacing.md + 2,
-          ),
-          child: Row(
-            children: [
-              // Icon container
-              Container(
-                width: DonySpacing.icon,
-                height: DonySpacing.icon,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? cs.primary.withValues(alpha: 0.16)
-                      : cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
+            constraints: const BoxConstraints(
+              minHeight: kDonyMinTapTarget + 16,
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.md,
+            ),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: duration,
+                  curve: Curves.easeOut,
+                  width: _kRowIconSize,
+                  height: _kRowIconSize,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? cs.primary.withValues(alpha: 0.14)
+                        : cs.surfaceContainerHighest,
+                    shape: BoxShape.circle,
+                  ),
+                  child: def.iconAsset != null
+                      ? DonyIcon(
+                          def.iconAsset!,
+                          color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                          size: 18,
+                        )
+                      : Icon(
+                          def.icon,
+                          color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                          size: 18,
+                        ),
                 ),
-                child: def.iconAsset != null
-                    ? DonyIcon(
-                        def.iconAsset!,
-                        color: isSelected ? cs.primary : cs.onSurfaceVariant,
-                        size: 20,
-                      )
-                    : Icon(
-                        def.icon,
-                        color: isSelected ? cs.primary : cs.onSurfaceVariant,
-                        size: 20,
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        def.label,
+                        style: tt.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-              ),
-              const SizedBox(width: DonySpacing.base),
-              // Labels
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      def.label,
-                      style: tt.titleLarge?.copyWith(fontSize: 15),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      def.subtitle,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        def.subtitle,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              // Radio indicator
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                child: DonyIcon(
-                  isSelected ? 'circle-dot' : 'circle',
-                  key: ValueKey(isSelected),
-                  color: isSelected ? cs.primary : cs.outline,
-                  size: 22,
+                const SizedBox(width: DonySpacing.sm),
+                AnimatedSwitcher(
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 150),
+                  child: DonyIcon(
+                    isSelected ? 'circle-dot' : 'circle',
+                    key: ValueKey(isSelected),
+                    color: isSelected ? cs.primary : cs.outline,
+                    size: 22,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -697,7 +813,8 @@ class _MethodCard extends StatelessWidget {
 // ─── Tuile « J'ai un code de recharge » ──────────────────────────────────────
 
 /// Ouvre la saisie d'un code de recharge. Pas une méthode radio : le montant
-/// vient du code, donc pas d'écran de montant.
+/// vient du code, donc pas d'écran de montant. Dernière ligne de la carte
+/// « moyen ».
 class _CodeEntryTile extends StatelessWidget {
   const _CodeEntryTile({required this.onTap});
 
@@ -713,50 +830,61 @@ class _CodeEntryTile extends StatelessWidget {
       label: l.walletTopupCodeTileTitle,
       child: Material(
         color: cs.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          side: BorderSide(color: cs.outline),
-        ),
-        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base,
-              vertical: DonySpacing.md + 2,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: kDonyMinTapTarget + 16,
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: DonySpacing.icon,
-                  height: DonySpacing.icon,
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.md,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: _kRowIconSize,
+                    height: _kRowIconSize,
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest,
+                      shape: BoxShape.circle,
+                    ),
+                    child: DonyIcon(
+                      'gift',
+                      color: cs.onSurfaceVariant,
+                      size: 18,
+                    ),
                   ),
-                  child: DonyIcon('gift', color: cs.onSurfaceVariant, size: 20),
-                ),
-                const SizedBox(width: DonySpacing.base),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l.walletTopupCodeTileTitle,
-                        style: tt.titleLarge?.copyWith(fontSize: 15),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l.walletTopupCodeTileSubtitle,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.walletTopupCodeTileTitle,
+                          style: tt.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          l.walletTopupCodeTileSubtitle,
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 20),
-              ],
+                  const SizedBox(width: DonySpacing.sm),
+                  DonyIcon(
+                    'chevron-right',
+                    color: cs.onSurfaceVariant,
+                    size: 20,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

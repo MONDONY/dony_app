@@ -21099,4 +21099,54 @@ class AppLocalizationsFr extends AppLocalizations {
   String assistantDiscoverySemantics(String text) {
     return 'À découvrir dans Yadony : $text';
   }
+
+  @override
+  String get mobileMoneyPayerSectionLabel => 'COMPTE QUI PAIE';
+
+  @override
+  String get mobileMoneyCountrySearchHint => 'Rechercher un pays';
+
+  @override
+  String get mobileMoneyCountryUpcoming => 'Bientôt';
+
+  @override
+  String get mobileMoneyCountryUpcomingSubtitle =>
+      'Mobile money pas encore disponible';
+
+  @override
+  String get mobileMoneyCountryUnavailableNotice =>
+      'En attendant, rechargez par carte bancaire ou avec un code de recharge.';
+
+  @override
+  String get mobileMoneyCountryNotSupported =>
+      'Le mobile money n\'est pas disponible pour ce pays.';
+
+  @override
+  String get mobileMoneyOperatorLabel => 'Opérateur';
+
+  @override
+  String mobileMoneyOperatorNumberLabel(String operator) {
+    return 'Numéro $operator';
+  }
+
+  @override
+  String mobileMoneyNumberRecognized(String operator) {
+    return 'Numéro $operator reconnu';
+  }
+
+  @override
+  String mobileMoneyOperatorSwitched(String operator) {
+    return 'C\'est un numéro $operator : l\'opérateur a été changé.';
+  }
+
+  @override
+  String get mobileMoneyNumberUnrecognized =>
+      'Ce numéro n\'est reconnu par aucun opérateur de ce pays.';
+
+  @override
+  String get mobileMoneyRecognitionFailed =>
+      'Vérification impossible pour le moment.';
+
+  @override
+  String get walletTopupSwitchToCard => 'Recharger par carte';
 }

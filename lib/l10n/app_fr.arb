@@ -9895,7 +9895,7 @@
   },
   "mobileMoneyCountryLabel": "Pays",
   "@mobileMoneyCountryLabel": {
-    "description": "Libellé de la ligne pays de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
+    "description": "Libellé « Pays » du mobile money : ligne pays de la vue active du compte de versement (mobile_money_account_screen.dart _ActiveView) et champ pays du compte qui paie (payer_account_section.dart)."
   },
   "mobileMoneyCurrencyLabel": "Devise",
   "@mobileMoneyCurrencyLabel": {
@@ -21876,5 +21876,31 @@
   "assistantNextQuestionsTitle": "Vous pourriez aussi demander",
   "@assistantNextQuestionsTitle": {"description": "Titre des questions proposées sous la dernière réponse de l'assistant (FLUTTER-RD)."},
   "assistantDiscoverySemantics": "À découvrir dans Yadony : {text}",
-  "@assistantDiscoverySemantics": {"description": "Libellé d'accessibilité de la puce « découverte » sous la dernière réponse de l'assistant. {text} : la question proposée.", "placeholders": {"text": {"type": "String"}}}
+  "@assistantDiscoverySemantics": {"description": "Libellé d'accessibilité de la puce « découverte » sous la dernière réponse de l'assistant. {text} : la question proposée.", "placeholders": {"text": {"type": "String"}}},
+  "mobileMoneyPayerSectionLabel": "COMPTE QUI PAIE",
+  "@mobileMoneyPayerSectionLabel": {"description": "Titre de la section « compte qui paie » (pays, opérateur, numéro) de l'écran Recharger, en majuscules comme les autres titres de section (payer_account_section.dart)."},
+  "mobileMoneyCountrySearchHint": "Rechercher un pays",
+  "@mobileMoneyCountrySearchHint": {"description": "Texte d'aide du champ de recherche du pays mobile money qui paie (mobile_money_country_field.dart)."},
+  "mobileMoneyCountryUpcoming": "Bientôt",
+  "@mobileMoneyCountryUpcoming": {"description": "Pastille d'un pays où le mobile money n'est pas encore ouvert, dans la liste de recherche du pays (mobile_money_country_field.dart)."},
+  "mobileMoneyCountryUpcomingSubtitle": "Mobile money pas encore disponible",
+  "@mobileMoneyCountryUpcomingSubtitle": {"description": "Sous-titre d'un pays « Bientôt » dans la liste de recherche du pays mobile money."},
+  "mobileMoneyCountryUnavailableNotice": "En attendant, rechargez par carte bancaire ou avec un code de recharge.",
+  "@mobileMoneyCountryUnavailableNotice": {"description": "Note affichée quand le pays cherché n'a pas encore le mobile money (« Bientôt ») : propose les autres moyens de recharge."},
+  "mobileMoneyCountryNotSupported": "Le mobile money n'est pas disponible pour ce pays.",
+  "@mobileMoneyCountryNotSupported": {"description": "Texte affiché sous le champ pays quand la recherche ne trouve aucun pays servi ni annoncé."},
+  "mobileMoneyOperatorLabel": "Opérateur",
+  "@mobileMoneyOperatorLabel": {"description": "Libellé de la ligne de choix de l'opérateur mobile money qui paie."},
+  "mobileMoneyOperatorNumberLabel": "Numéro {operator}",
+  "@mobileMoneyOperatorNumberLabel": {"description": "Libellé du champ numéro du compte mobile money qui paie. {operator} : nom de l'opérateur choisi (ex. Orange Money).", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyNumberRecognized": "Numéro {operator} reconnu",
+  "@mobileMoneyNumberRecognized": {"description": "Confirmation sous le compte qui paie : pawaPay reconnaît le numéro sur l'opérateur choisi. {operator} : nom de l'opérateur.", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyOperatorSwitched": "C'est un numéro {operator} : l'opérateur a été changé.",
+  "@mobileMoneyOperatorSwitched": {"description": "Note sous le compte qui paie : le numéro appartient à un autre opérateur que celui touché, l'app a basculé dessus. {operator} : nom du nouvel opérateur.", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyNumberUnrecognized": "Ce numéro n'est reconnu par aucun opérateur de ce pays.",
+  "@mobileMoneyNumberUnrecognized": {"description": "Message sous le compte qui paie : aucun opérateur du pays choisi ne reconnaît le numéro saisi."},
+  "mobileMoneyRecognitionFailed": "Vérification impossible pour le moment.",
+  "@mobileMoneyRecognitionFailed": {"description": "Message sous le compte qui paie : la vérification du numéro a échoué (coupure réseau, erreur serveur), suivi d'un bouton Réessayer."},
+  "walletTopupSwitchToCard": "Recharger par carte",
+  "@walletTopupSwitchToCard": {"description": "Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire."}
 }

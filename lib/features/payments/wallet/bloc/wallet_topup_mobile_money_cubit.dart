@@ -56,6 +56,11 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   /// ouvriraient deux dépôts côté serveur, donc deux débits.
   bool _initiating = false;
 
+  /// Opérateur choisi dans le bloc « compte qui paie » de l'écran Recharger
+  /// ([useOperator]). Ce parcours ne charge pas de catalogue par
+  /// [loadProviders] : sans lui, [initiate] partirait sans opérateur.
+  String? _chosenProvider;
+
   /// Catalogue des opérateurs utilisables sur [phoneNumber], pré-sélectionne
   /// celui détecté par pawaPay pour ce numéro.
   ///
@@ -81,6 +86,11 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     }
   }
 
+  /// Retient l'opérateur choisi sur l'écran Recharger (pays, opérateur,
+  /// numéro reconnu), envoyé au back par [initiate]. Un catalogue chargé par
+  /// [loadProviders] (ancien parcours) garde la priorité.
+  void useOperator(String? code) => _chosenProvider = code;
+
   /// Change l'opérateur choisi, ou l'efface (`null`, ex : décoché dans la
   /// checklist). Sans effet hors de [WalletTopupMobileMoneyProvidersReady].
   void selectProvider(String? code) {
@@ -95,9 +105,10 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     }
   }
 
-  /// Initie la recharge avec l'opérateur sélectionné (`null` si
-  /// [loadProviders] n'a jamais été appelé : le back retient alors celui
-  /// qu'il détecte lui-même), puis démarre le sondage du statut.
+  /// Initie la recharge avec l'opérateur sélectionné dans le catalogue, à
+  /// défaut celui retenu par [useOperator] (`null` si aucun des deux : le
+  /// back retient alors celui qu'il détecte lui-même), puis démarre le
+  /// sondage du statut.
   ///
   /// [custom] : montant saisi via « Autre montant » plutôt que choisi parmi
   /// les montants proposés (FLUTTER-CF). Seul ce drapeau part dans
@@ -126,7 +137,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     final current = state;
     final provider = current is WalletTopupMobileMoneyProvidersReady
         ? current.selectedProvider
-        : null;
+        : _chosenProvider;
     emit(const WalletTopupMobileMoneyInitiating());
     _amount = amount;
     try {

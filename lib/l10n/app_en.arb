@@ -10878,5 +10878,18 @@
   "assistantMicTooltipStop": "Stop and send my question",
   "assistantMicUnavailable": "Microphone unavailable: type your question.",
   "assistantNextQuestionsTitle": "You could also ask",
-  "assistantDiscoverySemantics": "Discover in Yadony: {text}"
+  "assistantDiscoverySemantics": "Discover in Yadony: {text}",
+  "mobileMoneyPayerSectionLabel": "PAYING ACCOUNT",
+  "mobileMoneyCountrySearchHint": "Search a country",
+  "mobileMoneyCountryUpcoming": "Soon",
+  "mobileMoneyCountryUpcomingSubtitle": "Mobile money not available yet",
+  "mobileMoneyCountryUnavailableNotice": "Meanwhile, top up by card or with a top-up code.",
+  "mobileMoneyCountryNotSupported": "Mobile money is not available for this country.",
+  "mobileMoneyOperatorLabel": "Operator",
+  "mobileMoneyOperatorNumberLabel": "{operator} number",
+  "mobileMoneyNumberRecognized": "{operator} number recognised",
+  "mobileMoneyOperatorSwitched": "This is a {operator} number: the operator was changed.",
+  "mobileMoneyNumberUnrecognized": "No operator in this country recognises this number.",
+  "mobileMoneyRecognitionFailed": "We can't check this number right now.",
+  "walletTopupSwitchToCard": "Top up by card"
 }
