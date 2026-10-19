@@ -16360,6 +16360,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'To the day on your public profile, so people reaching out know you are active.';
 
   @override
+  String receptionsPromptTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels are waiting for you',
+      one: 'A parcel is waiting for you',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String receptionsPromptFromSender(String name) {
+    return '$name is sending you a parcel';
+  }
+
+  @override
+  String get receptionsPromptSubtitle => 'Confirm that it\'s for you.';
+
+  @override
   String get receptionsSectionTitle => 'Parcels coming to you';
 
   @override

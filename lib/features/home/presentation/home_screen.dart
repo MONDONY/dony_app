@@ -57,6 +57,8 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
+import 'package:dony/features/receptions/bloc/receptions_prompt_cubit.dart';
+import 'package:dony/features/receptions/presentation/widgets/receptions_prompt_banner.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -333,6 +335,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Statut d'activation (guidage après KYC) ; `null` hors DI complète.
   final ActivationCubit? _activationCubit = getItSafe<ActivationCubit>();
 
+  /// Bandeau « Un colis vous attend » (YADONY-FLUTTER-PROD-12) ; `null` hors
+  /// DI complète.
+  final ReceptionsPromptCubit? _receptionsPrompt =
+      getItSafe<ReceptionsPromptCubit>();
+
+  /// Colis à recevoir lus une fois par compte, à l'arrivée sur l'accueil
+  /// après la connexion ou l'inscription. Un visiteur n'en a pas.
+  void _loadReceptionsPrompt(AuthState auth) {
+    final cubit = _receptionsPrompt;
+    if (cubit == null) return;
+    final realSession = getIt<FirebaseSessionProbe>().hasRealSession;
+    unawaited(cubit.loadFor(realSession ? auth.currentUserId : null));
+  }
+
   /// Retour au premier plan : la carte « première action » disparaît dès que
   /// la personne a publié, réservé ou créé une alerte ailleurs.
   late final AppLifecycleListener _activationLifecycle;
@@ -441,6 +457,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _router?.routerDelegate.addListener(_onRouteChanged);
       final activation = _activationCubit?.state;
       if (activation != null) unawaited(_maybeAskIntent(context, activation));
+      _loadReceptionsPrompt(context.read<AuthBloc>().state);
     });
     _activationLifecycle = AppLifecycleListener(
       onResume: () {
@@ -657,6 +674,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   void dispose() {
     _router?.routerDelegate.removeListener(_onRouteChanged);
     _activationLifecycle.dispose();
+    unawaited(_receptionsPrompt?.close());
     _blockSub?.cancel();
     _pendingSearchNotifier?.removeListener(_consumePendingSearch);
     _sheetController.removeListener(_onSheetSizeChanged);
@@ -2225,6 +2243,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 ),
                               )
                             : const SizedBox.shrink(),
+                      ),
+                    ),
+                  if (_receptionsPrompt case final prompt?)
+                    SliverToBoxAdapter(
+                      child: BlocListener<AuthBloc, AuthState>(
+                        listenWhen: (a, b) =>
+                            a.currentUserId != b.currentUserId,
+                        listener: (_, auth) => _loadReceptionsPrompt(auth),
+                        child: ReceptionsPromptBanner(cubit: prompt),
                       ),
                     ),
                   if (_mode.isParcels)

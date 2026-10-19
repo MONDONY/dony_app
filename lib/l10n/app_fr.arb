@@ -18634,6 +18634,12 @@
   "@privacyShowLastSeenSubtitle": {
     "description": "Réglage de confidentialité, sous-titre"
   },
+  "receptionsPromptTitle": "{count, plural, =1{Un colis vous attend} other{{count} colis vous attendent}}",
+  "@receptionsPromptTitle": {"description": "Bandeau de l'accueil : colis à confirmer par le destinataire (YADONY-FLUTTER-PROD-12).", "placeholders": {"count": {"type": "int", "example": "1"}}},
+  "receptionsPromptFromSender": "{name} vous envoie un colis",
+  "@receptionsPromptFromSender": {"description": "Bandeau de l'accueil, un seul colis à confirmer et prénom de l'expéditeur connu.", "placeholders": {"name": {"type": "String", "example": "Awa"}}},
+  "receptionsPromptSubtitle": "Confirmez qu'il est bien pour vous.",
+  "@receptionsPromptSubtitle": {"description": "Sous-titre du bandeau « Un colis vous attend » de l'accueil."},
   "receptionsSectionTitle": "Colis à recevoir",
   "@receptionsSectionTitle": {
     "description": "Titre de la section des colis que l'utilisateur va recevoir, onglet Suivi (receptions_section.dart)."

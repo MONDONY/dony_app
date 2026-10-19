@@ -65,12 +65,16 @@ class SuiviScreen extends StatelessWidget {
   const SuiviScreen({
     super.key,
     this.requestedMode,
+    this.requestedSegment,
     this.tripId,
     this.cameraBuilder,
   });
 
   /// Mode imposé par l'URL (`/tracking?mode=suivre`).
   final SuiviMode? requestedMode;
+
+  /// Segment imposé par l'URL (`segment=receptions`).
+  final SuiviTrackSegment? requestedSegment;
 
   /// Trajet à afficher en mode Valider (`/tracking/validate?trip=…`, ouvert
   /// depuis le détail d'un colis, FLUTTER-9N).
@@ -106,7 +110,8 @@ class SuiviScreen extends StatelessWidget {
             providers: [
               BlocProvider<SuiviCubit>(
                 create: (_) => getIt<SuiviCubit>()
-                  ..start(canValidate: canValidate, requested: requestedMode),
+                  ..start(canValidate: canValidate, requested: requestedMode)
+                  ..applyRequestedSegment(requestedSegment),
               ),
               // Colis à recevoir (lot 2) : section silencieuse en cas d'échec.
               BlocProvider<ReceptionsCubit>(
@@ -131,6 +136,7 @@ class SuiviScreen extends StatelessWidget {
             child: _SuiviBody(
               canValidate: canValidate,
               requestedMode: requestedMode,
+              requestedSegment: requestedSegment,
               cameraBuilder: cameraBuilder ?? _defaultCamera,
             ),
           ),
@@ -144,11 +150,13 @@ class _SuiviBody extends StatefulWidget {
   const _SuiviBody({
     required this.canValidate,
     required this.requestedMode,
+    this.requestedSegment,
     required this.cameraBuilder,
   });
 
   final bool canValidate;
   final SuiviMode? requestedMode;
+  final SuiviTrackSegment? requestedSegment;
   final SuiviCameraBuilder cameraBuilder;
 
   @override
@@ -240,6 +248,9 @@ class _SuiviBodyState extends State<_SuiviBody> {
     super.didUpdateWidget(oldWidget);
     if (widget.requestedMode != oldWidget.requestedMode) {
       context.read<SuiviCubit>().applyRequestedMode(widget.requestedMode);
+    }
+    if (widget.requestedSegment != oldWidget.requestedSegment) {
+      context.read<SuiviCubit>().applyRequestedSegment(widget.requestedSegment);
     }
   }
 

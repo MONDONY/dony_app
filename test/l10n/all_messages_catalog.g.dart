@@ -5746,6 +5746,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.profilePublicResponseDays(intPlaceholderValue),
   'privacyShowLastSeenLabel': (l) => l.privacyShowLastSeenLabel,
   'privacyShowLastSeenSubtitle': (l) => l.privacyShowLastSeenSubtitle,
+  'receptionsPromptTitle': (l) => l.receptionsPromptTitle(intPlaceholderValue),
+  'receptionsPromptFromSender': (l) =>
+      l.receptionsPromptFromSender(placeholderMarker('name')),
+  'receptionsPromptSubtitle': (l) => l.receptionsPromptSubtitle,
   'receptionsSectionTitle': (l) => l.receptionsSectionTitle,
   'receptionsRowFrom': (l) => l.receptionsRowFrom(placeholderMarker('name')),
   'receptionsPendingChip': (l) => l.receptionsPendingChip,
@@ -7928,6 +7932,7 @@ const textParameters = <String, List<String>>{
   'bidRescheduleNote': ['note'],
   'bidRescheduleDecisionHint': ['deadline'],
   'bidRescheduleTravelerHint': ['deadline'],
+  'receptionsPromptFromSender': ['name'],
   'receptionsRowFrom': ['name'],
   'receptionsRowStep': ['status'],
   'receptionPendingHeadline': ['name'],

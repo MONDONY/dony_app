@@ -906,6 +906,10 @@ abstract final class AnalyticsEvents {
   // Colis à recevoir (lot 2 destinataire). Jamais le nom, le numéro ni le
   // code : seulement des statuts et des comptes.
   static const receptionsSectionViewed = 'receptions_section_viewed';
+  // Bandeau « Un colis vous attend » de l'accueil (YADONY-FLUTTER-PROD-12),
+  // propriété `count` seulement.
+  static const receptionsPromptShown = 'receptions_prompt_shown';
+  static const receptionsPromptTapped = 'receptions_prompt_tapped';
   static const receptionOpened = 'reception_opened';
   static const receptionConfirmed = 'reception_confirmed';
   static const receptionDeclined = 'reception_declined';

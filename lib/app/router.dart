@@ -2075,6 +2075,9 @@ final appRouter = GoRouter(
                 requestedMode: suiviModeFromQuery(
                   state.uri.queryParameters['mode'],
                 ),
+                requestedSegment: suiviSegmentFromQuery(
+                  state.uri.queryParameters['segment'],
+                ),
               ),
             ),
           ],

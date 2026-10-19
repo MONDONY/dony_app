@@ -16469,6 +16469,25 @@ class AppLocalizationsFr extends AppLocalizations {
       'Au jour près sur votre profil public, pour rassurer ceux qui vous contactent.';
 
   @override
+  String receptionsPromptTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis vous attendent',
+      one: 'Un colis vous attend',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String receptionsPromptFromSender(String name) {
+    return '$name vous envoie un colis';
+  }
+
+  @override
+  String get receptionsPromptSubtitle => 'Confirmez qu\'il est bien pour vous.';
+
+  @override
   String get receptionsSectionTitle => 'Colis à recevoir';
 
   @override
