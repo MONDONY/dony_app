@@ -696,6 +696,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => BidNegotiationBloc(
       getIt<BidNegotiationRepository>(),
       getIt<AnalyticsService>(),
+      getIt<IConfigRepository>(),
     ),
   );
   getIt.registerFactory<BidPhotosCubit>(

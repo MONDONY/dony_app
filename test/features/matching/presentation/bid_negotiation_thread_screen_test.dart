@@ -34,6 +34,7 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/commission_grid_test_doubles.dart';
 import '../../../helpers/error_reporting_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
@@ -93,6 +94,9 @@ BidNegotiation _thread({
   bool counterpartyGpPro = false,
   DateTime? commissionDueBy,
   double? commissionRate,
+  String? commissionGridId,
+  double? commissionOverrideRate,
+  double? commissionVoucherFactor,
   List<BidNegotiationMessage> messages = const [
     BidNegotiationMessage(
       id: 'm1',
@@ -138,6 +142,9 @@ BidNegotiation _thread({
   paymentMethod: paymentMethod,
   commissionDueBy: commissionDueBy,
   commissionRate: commissionRate,
+  commissionGridId: commissionGridId,
+  commissionOverrideRate: commissionOverrideRate,
+  commissionVoucherFactor: commissionVoucherFactor,
 );
 
 void main() {
@@ -883,6 +890,76 @@ void main() {
       final sent = counters().single;
       expect(sent.proposedNetEur, 35);
       expect(sent.proposedTotalEur, isNull);
+    });
+
+    testWidgets('contre-offre du voyageur sous grille, net 50 € avec '
+        'réductions figées : aperçu 51,00 €', (tester) async {
+      // Grille figée 7 % du fil, taux spécial 4 % et bon ×0,5 figés : le back
+      // facture 50 + min(3,50 ; 2,00) × 0,5 = 51,00 €.
+      useTestCommissionGrid();
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(
+            netEur: 37.5,
+            commissionRate: 0.12,
+            commissionGridId: kTestGridId,
+            commissionOverrideRate: 0.04,
+            commissionVoucherFactor: 0.5,
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('nego-counter-btn')));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      await tester.enterText(
+        find.byKey(const Key('nego-counter-amount')),
+        '50',
+      );
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      final preview = tester.widget<Text>(
+        find.byKey(const Key('nego-counter-gross-preview')),
+      );
+      // Montant rond : formatPriceIn écrit « 51 € ». Sans les réductions, ce
+      // serait 53,50 € ; au taux figé de 12 %, 56 €.
+      expect(preview.data, matches(RegExp(r'paiera 51\s€')));
+
+      await tester.tap(find.byKey(const Key('nego-counter-submit')));
+      await tester.pump(_kSettle);
+
+      final sent = counters().single;
+      expect(sent.proposedNetEur, 50);
+      expect(sent.proposedTotalEur, isNull);
+    });
+
+    testWidgets('fil à grille sans taux servi : saisie en net quand même', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(netEur: 37.5, commissionGridId: kTestGridId),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('nego-counter-btn')));
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      await tester.enterText(
+        find.byKey(const Key('nego-counter-amount')),
+        '20',
+      );
+      await tester.pump(_kSettle);
+      await tester.pump(_kSettle);
+
+      final preview = tester.widget<Text>(
+        find.byKey(const Key('nego-counter-gross-preview')),
+      );
+      expect(preview.data, contains('21,40'));
     });
 
     testWidgets('sans taux (ancien back) : saisie brute comme avant', (

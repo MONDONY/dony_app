@@ -1370,10 +1370,13 @@ abstract final class CounterProposalSheet {
       child: _CounterProposalForm(
         bloc: bloc,
         bidId: bidId,
-        // Voyageur et taux connus : saisie du NET qu'il touchera, avec un
-        // aperçu du brut payé par l'expéditeur (FLUTTER-NS). Sinon, saisie
-        // du brut comme avant (expéditeur, serveur antérieur).
-        netRate: negotiation.counterInNet ? negotiation.commissionRate : null,
+        // Voyageur et grille figée ou taux connus : saisie du NET qu'il
+        // touchera, avec un aperçu du brut payé par l'expéditeur (FLUTTER-NS),
+        // calculé sur la grille et les réductions figées du fil. Sinon,
+        // saisie du brut comme avant (expéditeur, serveur antérieur).
+        grossOfNet: negotiation.counterInNet
+            ? (net) => grossForNegotiationNet(negotiation, net)
+            : null,
         initialAmount: negotiation.counterInNet
             ? (negotiation.netEur ?? negotiation.proposedGrossEur)
             : negotiation.proposedGrossEur,
@@ -1395,7 +1398,7 @@ class _CounterProposalForm extends StatefulWidget {
     required this.currentGross,
     required this.currencyCode,
     required this.onSubmitReady,
-    this.netRate,
+    this.grossOfNet,
   });
 
   final BidNegotiationBloc bloc;
@@ -1406,8 +1409,9 @@ class _CounterProposalForm extends StatefulWidget {
   /// le brut ne change pas (`counter-same-amount`), même saisie en net.
   final double currentGross;
 
-  /// Taux du fil quand le voyageur saisit son net ; nul pour une saisie brute.
-  final double? netRate;
+  /// Brut payé par l'expéditeur pour un net saisi par le voyageur ; nul pour
+  /// une saisie brute.
+  final double Function(double net)? grossOfNet;
   final String currencyCode;
   final void Function(VoidCallback?) onSubmitReady;
 
@@ -1439,15 +1443,14 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
 
   double? _read() => parsePriceInput(_amountCtrl.text);
 
-  bool get _inNet => widget.netRate != null;
+  bool get _inNet => widget.grossOfNet != null;
 
   /// Brut qui partira pour la saisie courante : la saisie elle-même en mode
   /// brut, l'aperçu calculé depuis le net sinon.
   double? _grossOf(double? amount) {
     if (amount == null) return null;
-    final rate = widget.netRate;
-    if (rate == null) return amount;
-    return grossForNet(amount, rate, widget.currencyCode);
+    final grossOf = widget.grossOfNet;
+    return grossOf == null ? amount : grossOf(amount);
   }
 
   /// Montant inchangé : la contre-offre partait au prix d'en face pendant que
