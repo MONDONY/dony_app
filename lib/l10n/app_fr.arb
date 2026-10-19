@@ -5016,7 +5016,7 @@
   "@bidCreateItemsRequiredHint": {
     "description": "Rappel qu'au moins un article doit être sélectionné (create_bid_bottom_sheet.dart)"
   },
-  "bidCreatePhotosSectionLabel": "PHOTOS DU COLIS (OPTIONNEL)",
+  "bidCreatePhotosSectionLabel": "PHOTOS DU COLIS",
   "@bidCreatePhotosSectionLabel": {
     "description": "Titre de la section photos du formulaire d'offre (create_bid_bottom_sheet.dart)"
   },
@@ -7699,7 +7699,7 @@
   "@parcelRefusalConsequences": {
     "description": "Encart des conséquences du refus (parcel_refusal_sheet.dart)"
   },
-  "parcelRefusalCashNotice": "Paiement en espèces : rendez à l'expéditeur l'argent qu'il vous a déjà remis. La commission Yadony déjà réglée n'est pas remboursée.",
+  "parcelRefusalCashNotice": "Paiement en espèces : rendez à l'expéditeur l'argent qu'il vous a déjà remis. La commission Yadony déjà réglée vous est rendue.",
   "@parcelRefusalCashNotice": {
     "description": "Encart espèces de la feuille de refus (parcel_refusal_sheet.dart)"
   },
@@ -19275,6 +19275,56 @@
   "callStatusConnecting": "Connexion…",
   "@callStatusConnecting": {
     "description": "Statut de l'écran d'appel pendant la connexion."
+  },
+  "bidCreateGridSuggestionTitle": "Ce voyageur facture « {item} » à l'article ({price})",
+  "@bidCreateGridSuggestionTitle": {
+    "description": "Bandeau : article de la grille qui semble décrire le colis déclaré au kilo (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateGridSuggestionBody": "Si votre colis en contient, ajoutez-le et retirez son poids des kilos déclarés. Sinon, à la remise, le voyageur pourra refuser le colis.",
+  "@bidCreateGridSuggestionBody": {
+    "description": "Corps du bandeau article de grille (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateGridSuggestionAdd": "Ajouter « {item} »",
+  "@bidCreateGridSuggestionAdd": {
+    "description": "Bouton du bandeau : ajouter l'article (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateGridSuggestionDismiss": "Mon colis n'en contient pas",
+  "@bidCreateGridSuggestionDismiss": {
+    "description": "Bouton du bandeau : écarter l'article (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateGridSuggestionPendingHint": "Indiquez si votre colis contient « {item} ».",
+  "@bidCreateGridSuggestionPendingHint": {
+    "description": "Aide au-dessus du bouton tant que le bandeau article attend une réponse (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreatePhotoRequiredHint": "Ajoutez au moins une photo du colis.",
+  "@bidCreatePhotoRequiredHint": {
+    "description": "Aide au-dessus du bouton : photo obligatoire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePhotosRequiredHelp": "Au moins une photo : elle protège les deux parties si le colis remis ne correspond pas à la déclaration.",
+  "@bidCreatePhotosRequiredHelp": {
+    "description": "Aide sous le titre des photos (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateHandoverCheckNotice": "À la remise, le voyageur vérifie le colis. S'il ne correspond pas à votre déclaration, il peut le refuser : vous êtes alors remboursé.",
+  "@bidCreateHandoverCheckNotice": {
+    "description": "Mention sous l'avertissement douane (create_bid_bottom_sheet.dart)"
   },
   "callStatusRinging": "Ça sonne…",
   "@callStatusRinging": {

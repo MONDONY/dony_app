@@ -9318,7 +9318,7 @@ abstract class AppLocalizations {
   /// Titre de la section photos du formulaire d'offre (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'PHOTOS DU COLIS (OPTIONNEL)'**
+  /// **'PHOTOS DU COLIS'**
   String get bidCreatePhotosSectionLabel;
 
   /// Titre de la section description quand seuls des articles de la grille sont choisis : la description devient facultative (FLUTTER-B7)
@@ -12753,7 +12753,7 @@ abstract class AppLocalizations {
   /// Encart espèces de la feuille de refus (parcel_refusal_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. La commission Yadony déjà réglée n\'est pas remboursée.'**
+  /// **'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. La commission Yadony déjà réglée vous est rendue.'**
   String get parcelRefusalCashNotice;
 
   /// Encart colis déjà remis (parcel_refusal_sheet.dart)
@@ -27790,6 +27790,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Connexion…'**
   String get callStatusConnecting;
+
+  /// Bandeau : article de la grille qui semble décrire le colis déclaré au kilo (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur facture « {item} » à l\'article ({price})'**
+  String bidCreateGridSuggestionTitle(String item, String price);
+
+  /// Corps du bandeau article de grille (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Si votre colis en contient, ajoutez-le et retirez son poids des kilos déclarés. Sinon, à la remise, le voyageur pourra refuser le colis.'**
+  String get bidCreateGridSuggestionBody;
+
+  /// Bouton du bandeau : ajouter l'article (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter « {item} »'**
+  String bidCreateGridSuggestionAdd(String item);
+
+  /// Bouton du bandeau : écarter l'article (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon colis n\'en contient pas'**
+  String get bidCreateGridSuggestionDismiss;
+
+  /// Aide au-dessus du bouton tant que le bandeau article attend une réponse (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez si votre colis contient « {item} ».'**
+  String bidCreateGridSuggestionPendingHint(String item);
+
+  /// Aide au-dessus du bouton : photo obligatoire (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez au moins une photo du colis.'**
+  String get bidCreatePhotoRequiredHint;
+
+  /// Aide sous le titre des photos (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au moins une photo : elle protège les deux parties si le colis remis ne correspond pas à la déclaration.'**
+  String get bidCreatePhotosRequiredHelp;
+
+  /// Mention sous l'avertissement douane (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous êtes alors remboursé.'**
+  String get bidCreateHandoverCheckNotice;
 
   /// Statut de l'écran d'appel pendant que le téléphone de l'autre sonne.
   ///

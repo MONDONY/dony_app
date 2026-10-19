@@ -1684,7 +1684,7 @@
   "@bidCreateItemsRequiredHint": {
     "description": "Rappel qu'au moins un article doit être sélectionné (create_bid_bottom_sheet.dart)"
   },
-  "bidCreatePhotosSectionLabel": "PARCEL PHOTOS (OPTIONAL)",
+  "bidCreatePhotosSectionLabel": "PARCEL PHOTOS",
   "@bidCreatePhotosSectionLabel": {
     "description": "Titre de la section photos du formulaire d'offre (create_bid_bottom_sheet.dart)"
   },
@@ -3967,7 +3967,7 @@
   "parcelRefusalRemovePhoto": "Remove the photo",
   "parcelRefusalPhotoFailed": "This photo couldn't be read. Try again.",
   "parcelRefusalConsequences": "The sender is notified and fully refunded. Repeated refusals suspend their account.",
-  "parcelRefusalCashNotice": "Cash payment: give back any money the sender already handed you. The Yadony commission already paid is not refunded.",
+  "parcelRefusalCashNotice": "Cash payment: give back any money the sender already handed you. The Yadony commission already paid is given back to you.",
   "parcelRefusalHandedOverNotice": "You already scanned this parcel: give it back to the sender on the spot.",
   "parcelRefusalSubmit": "Refuse the parcel",
   "parcelRefusalSuccess": "Parcel refused. The sender is notified and refunded.",
@@ -9339,6 +9339,14 @@
   "chatCopyMessageAction": "Copy message",
   "bidCreateWeightRequiredHint": "Enter the estimated weight, e.g. 0.5 kg for a phone.",
   "bidCreateContentRequiredHint": "Specify what's in the parcel: pick a category or items.",
+  "bidCreateGridSuggestionTitle": "This traveler charges \"{item}\" per item ({price})",
+  "bidCreateGridSuggestionBody": "If your parcel contains one, add it and remove its weight from the declared kilos. Otherwise, at handover, the traveler can refuse the parcel.",
+  "bidCreateGridSuggestionAdd": "Add \"{item}\"",
+  "bidCreateGridSuggestionDismiss": "My parcel has none",
+  "bidCreateGridSuggestionPendingHint": "Say whether your parcel contains \"{item}\".",
+  "bidCreatePhotoRequiredHint": "Add at least one photo of the parcel.",
+  "bidCreatePhotosRequiredHelp": "At least one photo: it protects both sides if the parcel handed over doesn't match the declaration.",
+  "bidCreateHandoverCheckNotice": "At handover, the traveler checks the parcel. If it doesn't match your declaration, they can refuse it: you are then refunded.",
   "requestSenderViewProfileButton": "View profile",
   "callNotificationTitle": "Yadony call in progress",
   "callStatusConnecting": "Connecting…",

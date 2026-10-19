@@ -272,7 +272,9 @@ void main() {
       () => _currentPhotosCubit.stream,
     ).thenAnswer((_) => const Stream.empty());
     when(() => _currentPhotosCubit.close()).thenAnswer((_) async {});
-    when(() => _currentPhotosCubit.readyKeys).thenReturn(const <String>[]);
+    when(
+      () => _currentPhotosCubit.readyKeys,
+    ).thenReturn(const <String>['bids/photo-1.jpg']);
 
     _currentRecipientBloc = _MockRecipientBloc();
     when(

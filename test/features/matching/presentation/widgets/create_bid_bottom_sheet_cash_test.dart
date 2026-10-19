@@ -371,7 +371,9 @@ void main() {
       () => _currentPhotosCubit.stream,
     ).thenAnswer((_) => const Stream.empty());
     when(() => _currentPhotosCubit.close()).thenAnswer((_) async {});
-    when(() => _currentPhotosCubit.readyKeys).thenReturn(const <String>[]);
+    when(
+      () => _currentPhotosCubit.readyKeys,
+    ).thenReturn(const <String>['bids/photo-1.jpg']);
 
     _currentRecipientBloc = _MockRecipientBloc();
     when(() => _currentRecipientBloc.state).thenReturn(const RecipientState());
@@ -1263,6 +1265,117 @@ void main() {
 
         expect(find.text(contentHint), findsNothing);
       });
+    });
+  });
+
+  group('Article de grille à confirmer et photo obligatoire (lot 3)', () {
+    DonyButton submitButton(WidgetTester tester) => tester.widget<DonyButton>(
+      find
+          .ancestor(of: find.text('Envoyer'), matching: find.byType(DonyButton))
+          .first,
+    );
+
+    /// Poids 5 kg, catégorie électronique, avertissement signé.
+    Future<void> declarePhoneByKg(WidgetTester tester) async {
+      tester.widget<Slider>(find.byType(Slider)).onChanged!(5);
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('bid-content-field')));
+      await tester.pumpAndSettle();
+      // L'item est hors de la zone visible de la liste : on la filtre.
+      await tester.enterText(find.byType(TextField).at(0), 'Téléphone');
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('bid-content-item-Téléphone & électronique')),
+      );
+      await tester.pumpAndSettle();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+    }
+
+    Finder banner() => find.textContaining(
+      'Ce voyageur facture « Téléphone » à l\'article',
+      findRichText: true,
+    );
+
+    testWidgets('électronique au kilo : bandeau et envoi bloqué', (
+      tester,
+    ) async {
+      await _openSheet(tester, _mixedAnnouncement());
+      await declarePhoneByKg(tester);
+
+      expect(banner(), findsOneWidget);
+      expect(
+        find.text('Indiquez si votre colis contient « Téléphone ».'),
+        findsOneWidget,
+      );
+      expect(submitButton(tester).onPressed, isNull);
+    });
+
+    testWidgets('« Ajouter » coche l\'article et débloque l\'envoi', (
+      tester,
+    ) async {
+      await _openSheet(tester, _mixedAnnouncement());
+      await declarePhoneByKg(tester);
+
+      await tester.tap(find.text('Ajouter « Téléphone »'));
+      await tester.pumpAndSettle();
+
+      expect(banner(), findsNothing);
+      expect(find.text('1 article sélectionné'), findsOneWidget);
+      expect(submitButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('« Mon colis n\'en contient pas » écarte le bandeau', (
+      tester,
+    ) async {
+      await _openSheet(tester, _mixedAnnouncement());
+      await declarePhoneByKg(tester);
+
+      await tester.tap(find.text('Mon colis n\'en contient pas'));
+      await tester.pumpAndSettle();
+
+      expect(banner(), findsNothing);
+      expect(submitButton(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('description « iPhone » sans catégorie électronique', (
+      tester,
+    ) async {
+      await _openSheet(tester, _mixedAnnouncement());
+      await _enableSubmitButton(tester);
+      expect(banner(), findsNothing);
+
+      await tester.enterText(find.byType(TextField).at(1), 'Un iPhone 13');
+      await tester.pumpAndSettle();
+
+      expect(banner(), findsOneWidget);
+      expect(submitButton(tester).onPressed, isNull);
+    });
+
+    testWidgets('sans photo prête : aide affichée et envoi bloqué', (
+      tester,
+    ) async {
+      when(() => _currentPhotosCubit.readyKeys).thenReturn(const <String>[]);
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+
+      expect(find.text('Ajoutez au moins une photo du colis.'), findsOneWidget);
+      expect(submitButton(tester).onPressed, isNull);
+    });
+
+    testWidgets('mention de la vérification à la remise', (tester) async {
+      await _openSheet(tester, _announcement());
+
+      expect(
+        find.text(
+          'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas '
+          'à votre déclaration, il peut le refuser : vous êtes alors remboursé.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('PHOTOS DU COLIS'), findsOneWidget);
     });
   });
 }
