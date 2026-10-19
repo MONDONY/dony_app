@@ -155,4 +155,51 @@ void main() {
       ),
     ).called(1);
   });
+
+  test(
+    'Android : un push regroupé reprend la clé du back comme tag, avec l’identifiant 0',
+    () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+      service.testHandleForegroundMessage(
+        const RemoteMessage(
+          data: {
+            'type': 'NEW_MESSAGE',
+            'conversationId': 'conv_c1',
+            'collapseKey': 'chat:conv_c1',
+          },
+          notification: RemoteNotification(title: 'Awa', body: 'Bonjour'),
+        ),
+      );
+
+      final captured = verify(
+        () => local.show(
+          0,
+          'Awa',
+          'Bonjour',
+          captureAny(),
+          payload: any(named: 'payload'),
+        ),
+      ).captured;
+      final details = captured.single as NotificationDetails;
+      expect(details.android?.tag, 'chat:conv_c1');
+    },
+  );
+
+  test('Android : sans clé, chaque push garde sa propre notification', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+    service.testHandleForegroundMessage(message());
+
+    final captured = verify(
+      () => local.show(
+        any(),
+        'Awa',
+        'Bonjour',
+        captureAny(),
+        payload: any(named: 'payload'),
+      ),
+    ).captured;
+    expect((captured.single as NotificationDetails).android?.tag, isNull);
+  });
 }
