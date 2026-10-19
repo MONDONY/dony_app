@@ -5990,14 +5990,10 @@
   "@conversationListEmptyDescription": {
     "description": "Description de l'état vide sans conversation de conversation_list_screen.dart (le saut de ligne fait partie de la valeur)."
   },
-  "conversationFilterAll": "All",
-  "@conversationFilterAll": {
-    "description": "Pastille de filtre « Tous » de conversation_list_screen.dart."
-  },
-  "conversationFilterUnread": "Unread",
-  "@conversationFilterUnread": {
-    "description": "Pastille de filtre « Non lus » de conversation_list_screen.dart."
-  },
+  "conversationListEmptyActiveTitle": "No active conversations",
+  "conversationListEmptyActiveDescription": "Conversations about delivered or cancelled parcels move to “Done” once read.",
+  "conversationListEmptyDoneTitle": "No finished conversations",
+  "conversationListEmptyDoneDescription": "When a parcel is delivered or cancelled, its conversation moves here once read.",
   "conversationFilterActive": "Active",
   "@conversationFilterActive": {
     "description": "Pastille de filtre « En cours » de conversation_list_screen.dart."

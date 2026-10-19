@@ -3825,8 +3825,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'conversationListEmptySearchDescription': (l) =>
       l.conversationListEmptySearchDescription(placeholderMarker('query')),
   'conversationListEmptyDescription': (l) => l.conversationListEmptyDescription,
-  'conversationFilterAll': (l) => l.conversationFilterAll,
-  'conversationFilterUnread': (l) => l.conversationFilterUnread,
+  'conversationListEmptyActiveTitle': (l) => l.conversationListEmptyActiveTitle,
+  'conversationListEmptyActiveDescription': (l) =>
+      l.conversationListEmptyActiveDescription,
+  'conversationListEmptyDoneTitle': (l) => l.conversationListEmptyDoneTitle,
+  'conversationListEmptyDoneDescription': (l) =>
+      l.conversationListEmptyDoneDescription,
   'conversationFilterActive': (l) => l.conversationFilterActive,
   'conversationFilterDone': (l) => l.conversationFilterDone,
   'conversationSectionToday': (l) => l.conversationSectionToday,

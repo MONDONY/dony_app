@@ -10630,10 +10630,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.';
 
   @override
-  String get conversationFilterAll => 'Tous';
+  String get conversationListEmptyActiveTitle => 'Aucune conversation en cours';
 
   @override
-  String get conversationFilterUnread => 'Non lus';
+  String get conversationListEmptyActiveDescription =>
+      'Les conversations des colis livrés ou annulés, une fois lues, sont rangées dans « Terminés ».';
+
+  @override
+  String get conversationListEmptyDoneTitle => 'Aucune conversation terminée';
+
+  @override
+  String get conversationListEmptyDoneDescription =>
+      'Quand un colis est livré ou annulé, sa conversation arrive ici une fois lue.';
 
   @override
   String get conversationFilterActive => 'En cours';

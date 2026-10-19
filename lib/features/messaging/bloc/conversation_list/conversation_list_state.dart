@@ -1,7 +1,19 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 
-enum ConversationFilter { all, unread, active, done }
+/// Filtres de Messages (YADONY-FLUTTER-PROD-W) : « Tous » et « Non lus » ont
+/// disparu. [active] (par défaut) garde tout fil encore utile : colis pas
+/// terminé, ou message pas encore lu. [done] range les fils terminés (colis
+/// livré ou annulé, [ConversationModel.isFinished]) une fois lus.
+enum ConversationFilter {
+  active,
+  done;
+
+  bool matches(ConversationModel c) => switch (this) {
+    ConversationFilter.active => !c.isFinished || c.hasUnread,
+    ConversationFilter.done => c.isFinished && !c.hasUnread,
+  };
+}
 
 abstract class ConversationListState {
   const ConversationListState();
@@ -14,11 +26,6 @@ class ConversationListInitial extends ConversationListState {
 class ConversationListLoading extends ConversationListState {
   const ConversationListLoading();
 }
-
-/// Statuts d'un fil « En cours » : offre acceptée, colis remis ou en route
-/// (`IN_TRANSIT`), arrivé mais pas encore livré (`TRIP_ARRIVED`). Seul
-/// `BID_ACCEPTED` était retenu : le fil sortait du filtre dès la remise.
-const activeBidStatuses = {'BID_ACCEPTED', 'IN_TRANSIT', 'TRIP_ARRIVED'};
 
 /// Retour ponctuel d'une bascule de sourdine lancée depuis la liste :
 /// confirmation ([error] `null`) ou échec, la bascule étant alors annulée.
@@ -74,7 +81,7 @@ class ConversationListLoaded extends ConversationListState {
   const ConversationListLoaded(
     this.conversations, {
     this.archivedConversations = const [],
-    this.filter = ConversationFilter.all,
+    this.filter = ConversationFilter.active,
     this.searchQuery = '',
     this.muteFeedback,
     this.batchFeedback,
@@ -82,12 +89,7 @@ class ConversationListLoaded extends ConversationListState {
 
   /// Liste filtrée + recherche — calculée à chaque build, sans duplication.
   List<ConversationModel> get displayed => conversations.where((c) {
-    final matchFilter = switch (filter) {
-      ConversationFilter.all => true,
-      ConversationFilter.unread => c.hasUnread,
-      ConversationFilter.active => activeBidStatuses.contains(c.bidStatus),
-      ConversationFilter.done => c.bidStatus == 'DELIVERY_CONFIRMED',
-    };
+    final matchFilter = filter.matches(c);
     final q = searchQuery.toLowerCase();
     final matchSearch =
         q.isEmpty ||

@@ -103,7 +103,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
                         builder: (context, state) {
                           final filter = state is ConversationListLoaded
                               ? state.filter
-                              : ConversationFilter.all;
+                              : ConversationFilter.active;
                           final searchQuery = state is ConversationListLoaded
                               ? state.searchQuery
                               : '';
@@ -305,6 +305,34 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     );
   }
 
+  /// Liste vide : recherche sans résultat, aucune conversation du tout, ou
+  /// filtre vide alors que l'autre en contient (YADONY-FLUTTER-PROD-W).
+  Widget _emptyState(AppLocalizations l, ConversationListLoaded state) {
+    final (title, description) = state.searchQuery.isNotEmpty
+        ? (
+            l.conversationListEmptyResultsTitle,
+            l.conversationListEmptySearchDescription(state.searchQuery),
+          )
+        : state.conversations.isEmpty
+        ? (l.conversationListEmptyTitle, l.conversationListEmptyDescription)
+        : switch (state.filter) {
+            ConversationFilter.active => (
+              l.conversationListEmptyActiveTitle,
+              l.conversationListEmptyActiveDescription,
+            ),
+            ConversationFilter.done => (
+              l.conversationListEmptyDoneTitle,
+              l.conversationListEmptyDoneDescription,
+            ),
+          };
+    return DonyEmptyState(
+      key: Key('conversation-empty-${state.filter.name}'),
+      mascotte: DonyMascotteType.assis,
+      title: title,
+      description: description,
+    );
+  }
+
   Widget _buildBody(BuildContext context, ConversationListState state) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
@@ -344,17 +372,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
             SliverToBoxAdapter(child: _pinnedRows()),
             SliverFillRemaining(
               hasScrollBody: false,
-              child: DonyEmptyState(
-                mascotte: DonyMascotteType.assis,
-                title: state.searchQuery.isNotEmpty
-                    ? l.conversationListEmptyResultsTitle
-                    : l.conversationListEmptyTitle,
-                description: state.searchQuery.isNotEmpty
-                    ? l.conversationListEmptySearchDescription(
-                        state.searchQuery,
-                      )
-                    : l.conversationListEmptyDescription,
-              ),
+              child: _emptyState(l, state),
             ),
           ],
         );
@@ -627,28 +645,7 @@ class _MessagesHeader extends StatelessWidget {
                     child: Row(
                       children: [
                         _FilterPill(
-                          label: l.conversationFilterAll,
-                          isActive: activeFilter == ConversationFilter.all,
-                          onTap: () => context.read<ConversationListBloc>().add(
-                            const ConversationFilterChanged(
-                              filter: ConversationFilter.all,
-                              searchQuery: '',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: DonySpacing.xs),
-                        _FilterPill(
-                          label: l.conversationFilterUnread,
-                          isActive: activeFilter == ConversationFilter.unread,
-                          onTap: () => context.read<ConversationListBloc>().add(
-                            const ConversationFilterChanged(
-                              filter: ConversationFilter.unread,
-                              searchQuery: '',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: DonySpacing.xs),
-                        _FilterPill(
+                          key: const Key('conversation-filter-active'),
                           label: l.conversationFilterActive,
                           isActive: activeFilter == ConversationFilter.active,
                           onTap: () => context.read<ConversationListBloc>().add(
@@ -660,6 +657,7 @@ class _MessagesHeader extends StatelessWidget {
                         ),
                         const SizedBox(width: DonySpacing.xs),
                         _FilterPill(
+                          key: const Key('conversation-filter-done'),
                           label: l.conversationFilterDone,
                           isActive: activeFilter == ConversationFilter.done,
                           onTap: () => context.read<ConversationListBloc>().add(
@@ -689,6 +687,7 @@ class _FilterPill extends StatelessWidget {
   final VoidCallback onTap;
 
   const _FilterPill({
+    super.key,
     required this.label,
     required this.isActive,
     required this.onTap,
