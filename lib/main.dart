@@ -8,6 +8,7 @@ import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/config/app_orientations.dart';
 import 'package:dony/core/config/environment.dart';
 import 'package:dony/core/config/flights_flag.dart';
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/currency/active_rates.dart';
@@ -222,6 +223,19 @@ Future<void> _bootstrap() async {
   // éteint, le bloc « Billets d'avion » d'Activités est masqué et l'écran
   // Billets inaccessible. Repli sûr sur false tant que le flag n'est pas chargé.
   unawaited(_loadFlightsEnabled());
+
+  // Moyens de paiement (réglages plateforme payments_*_enabled) : dernière
+  // valeur connue pour les annonces de moyens ; la feuille de paiement les
+  // relit elle-même à chaque ouverture. Repli sûr : tout éteint.
+  unawaited(_loadPaymentMethods());
+}
+
+Future<void> _loadPaymentMethods() async {
+  try {
+    setPaymentMethodFlags(await getIt<IConfigRepository>().getPaymentMethods());
+  } catch (_) {
+    // Repli sur PaymentMethodFlags.none (carte seule) conservé — non bloquant.
+  }
 }
 
 Future<void> _loadFlightsEnabled() async {

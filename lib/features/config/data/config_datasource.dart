@@ -1,3 +1,4 @@
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/network/api_client.dart';
 
 class ConfigDatasource {
@@ -50,5 +51,11 @@ class ConfigDatasource {
     final response = await _client.dio.get('/config/pro-enabled');
     final data = response.data as Map<String, dynamic>;
     return data['enabled'] as bool;
+  }
+
+  /// Drapeaux des moyens de la feuille de paiement. Champ absent : faux.
+  Future<PaymentMethodFlags> getPaymentMethods() async {
+    final response = await _client.dio.get('/config/payment-methods');
+    return PaymentMethodFlags.fromJson(response.data as Map<String, dynamic>);
   }
 }

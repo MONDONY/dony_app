@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/config/data/config_datasource.dart';
 import 'package:dony/features/config/data/config_repository.dart';
@@ -21,6 +22,54 @@ void main() {
     when(() => mockApiClient.dio).thenReturn(mockDio);
     datasource = ConfigDatasource(mockApiClient);
     repository = ConfigRepository(datasource);
+  });
+
+  group('ConfigDatasource — getPaymentMethods (YADONY-FLUTTER-PROD-11)', () {
+    Response<dynamic> ok(Map<String, dynamic> data) => Response(
+      data: data,
+      statusCode: 200,
+      requestOptions: RequestOptions(path: '/config/payment-methods'),
+    );
+
+    test('lit les trois drapeaux', () async {
+      when(() => mockDio.get('/config/payment-methods')).thenAnswer(
+        (_) async => ok({
+          'applePayEnabled': true,
+          'googlePayEnabled': false,
+          'paypalEnabled': true,
+        }),
+      );
+
+      expect(
+        await repository.getPaymentMethods(),
+        const PaymentMethodFlags(applePay: true, paypal: true),
+      );
+    });
+
+    test('champ absent : faux', () async {
+      when(
+        () => mockDio.get('/config/payment-methods'),
+      ).thenAnswer((_) async => ok({'applePayEnabled': true}));
+
+      expect(
+        await repository.getPaymentMethods(),
+        const PaymentMethodFlags(applePay: true),
+      );
+    });
+
+    test(
+      'route inconnue (ancien serveur) : erreur unwrap, jamais un plantage',
+      () {
+        when(() => mockDio.get('/config/payment-methods')).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/config/payment-methods'),
+            message: 'Not found',
+          ),
+        );
+
+        expect(repository.getPaymentMethods(), throwsA(isA<Exception>()));
+      },
+    );
   });
 
   group('ConfigDatasource — getExchangeRates', () {

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
@@ -89,6 +90,12 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   static const platformPaySuspectAfter = Duration(seconds: 8);
 
   final PaymentGateway _gateway;
+
+  /// Délai max de lecture des drapeaux à l'ouverture : au-delà, la feuille
+  /// s'ouvre avec la dernière valeur connue (repli : carte seule).
+  static const paymentMethodFlagsTimeout = Duration(seconds: 4);
+
+  final Future<PaymentMethodFlags> Function()? _loadPaymentMethodFlags;
   final PlatformPayCancelLogger _platformPayCancelLog;
   final DateTime Function() _now;
   final PaymentRepository _repository;
@@ -104,7 +111,9 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     AnalyticsService? analytics,
     PlatformPayCancelLogger platformPayCancelLog = _appLogPlatformPayCancel,
     DateTime Function() now = DateTime.now,
+    Future<PaymentMethodFlags> Function()? loadPaymentMethodFlags,
   }) : _gateway = gateway,
+       _loadPaymentMethodFlags = loadPaymentMethodFlags,
        _platformPayCancelLog = platformPayCancelLog,
        _now = now,
        _repository = repository,
@@ -123,11 +132,19 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   ) async {
     // Aucun bouton mort : chaque moyen n'apparaît que s'il est disponible.
     // Les échecs de résolution ne bloquent jamais la sheet (dégradation propre).
+    //
+    // Apple Pay / Google Pay : drapeau serveur (relu ici, à l'ouverture, pour
+    // qu'une bascule du back-office s'applique au paiement suivant) ET appareil
+    // compatible. Drapeau illisible : dernière valeur connue, au pire éteint.
+    final flags = await _resolvePaymentMethodFlags();
     bool walletAvailable = false;
-    try {
-      walletAvailable = await _gateway.isPlatformPaySupported();
-    } catch (_) {}
+    if (flags.walletEnabledFor(defaultTargetPlatform)) {
+      try {
+        walletAvailable = await _gateway.isPlatformPaySupported();
+      } catch (_) {}
+    }
 
+    // PayPal : décidé par paiement côté serveur (types du PaymentIntent).
     final paypalAvailable = config.paymentMethodTypes.contains('paypal');
     emit(
       PaymentSheetResolved(
@@ -139,6 +156,18 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
       'wallet_available': walletAvailable,
       'paypal_available': paypalAvailable,
     });
+  }
+
+  Future<PaymentMethodFlags> _resolvePaymentMethodFlags() async {
+    final load = _loadPaymentMethodFlags;
+    if (load != null) {
+      try {
+        final fresh = await load().timeout(paymentMethodFlagsTimeout);
+        setPaymentMethodFlags(fresh);
+        return fresh;
+      } catch (_) {}
+    }
+    return paymentMethodFlagsListenable.value;
   }
 
   /// Propriétés communes à tous les événements de paiement, sans montant

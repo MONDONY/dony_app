@@ -1,3 +1,4 @@
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/config/data/config_datasource.dart';
 
@@ -9,6 +10,7 @@ abstract class IConfigRepository {
   Future<bool> getProEnabled();
   Future<bool> getFlightsEnabled();
   Future<Map<String, double>> getExchangeRates();
+  Future<PaymentMethodFlags> getPaymentMethods();
 }
 
 class ConfigRepository implements IConfigRepository {
@@ -74,6 +76,15 @@ class ConfigRepository implements IConfigRepository {
   Future<Map<String, double>> getExchangeRates() async {
     try {
       return await _datasource.getExchangeRates();
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<PaymentMethodFlags> getPaymentMethods() async {
+    try {
+      return await _datasource.getPaymentMethods();
     } catch (e) {
       throw unwrapDioError(e);
     }
