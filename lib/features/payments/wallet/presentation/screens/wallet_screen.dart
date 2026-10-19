@@ -16,6 +16,7 @@ import 'package:dony/features/payments/wallet/data/models/wallet_currency_balanc
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
+import 'package:dony/features/payments/wallet/presentation/wallet_tx_label.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_active_currency_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_confirm_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_currency_sheet.dart';
@@ -810,26 +811,7 @@ class _TxTile extends StatelessWidget {
   final SupportedCurrency currency;
   final int index;
 
-  // Le back n'expose ni l'opérateur ni le numéro sur les lignes de
-  // transaction (contrairement à `WalletTopupStatusModel`, propre au
-  // sondage de la recharge en cours) : impossible d'afficher
-  // « Recharge {providerLabel} · {msisdnMasked} », seul `isMobileMoneyTopup`
-  // (dérivé du préfixe `pawapay:` du `paymentRef`) distingue le rail.
-  // Comparaisons sur `tx.type` : codes serveur, jamais affichés bruts.
-  String _label(AppLocalizations l) => switch (tx.type) {
-    'TOP_UP' when tx.isMobileMoneyTopup => // i18n-ignore
-    l.walletTxTypeMobileMoneyTopUp,
-    'TOP_UP' => l.walletTxTypeTopUp, // i18n-ignore
-    'BID_PAYMENT' => l.walletTxTypeBidPayment, // i18n-ignore
-    'COMMISSION_DEDUCTED' => l.walletTxTypeCommission, // i18n-ignore
-    'REFUND' || 'SELF_REFUND_OUT' => l.walletTxTypeRefund, // i18n-ignore
-    'REFERRAL_REWARD' => l.walletTxTypeReferral, // i18n-ignore
-    'TOP_UP_CODE' => l.walletTxTypeTopUpCode, // i18n-ignore
-    'ADMIN_CREDIT' => l.walletTxTypeAdminCredit, // i18n-ignore
-    'ADMIN_DEBIT' => l.walletTxTypeAdminDebit, // i18n-ignore
-    'FORFEITED_ON_DELETION' => l.walletTxTypeForfeited, // i18n-ignore
-    _ => tx.type,
-  };
+  String _label(AppLocalizations l) => walletTxLabel(l, tx);
 
   /// Ouvre la fiche du colis de la ligne (FLUTTER-QP), la même que « Mon
   /// argent » : `/bids/{bidId}`, qui sert l'expéditeur comme le voyageur.

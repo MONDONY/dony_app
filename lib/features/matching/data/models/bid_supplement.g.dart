@@ -31,6 +31,7 @@ BidSupplement _$BidSupplementFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['paidAt'] as String),
       commissionStatus: json['commissionStatus'] as String?,
       blocksHandover: json['blocksHandover'] as bool? ?? false,
+      commissionClientSecret: json['commissionClientSecret'] as String?,
     );
 
 Map<String, dynamic> _$BidSupplementToJson(BidSupplement instance) =>

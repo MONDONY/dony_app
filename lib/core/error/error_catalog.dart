@@ -360,6 +360,40 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.credit_card_off_rounded,
     ),
+    // Commission du supplément d'un colis payé en espèces, prélevée au
+    // voyageur à la demande (`BidSupplementCashRail`, PR A4).
+    'supplement-commission-unfunded': _Entry(
+      title: (l) => l.errorSupplementCommissionUnfundedTitle,
+      message: (l) => l.errorSupplementCommissionUnfundedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.account_balance_wallet_outlined,
+    ),
+    // Avertissement (snackbar), pas une boîte de dialogue : la feuille de
+    // demande se referme juste après l'avoir montré.
+    'supplement-commission-card-declined': _Entry(
+      title: (l) => l.errorSupplementCommissionCardDeclinedTitle,
+      message: (l) => l.errorSupplementCommissionCardDeclinedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.credit_card_off_rounded,
+    ),
+    'supplement-commission-charge-failed': _Entry(
+      title: (l) => l.errorSupplementCommissionChargeFailedTitle,
+      message: (l) => l.errorSupplementCommissionChargeFailedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.credit_card_off_rounded,
+    ),
+    'commission-method-missing': _Entry(
+      title: (l) => l.errorCommissionMethodMissingTitle,
+      message: (l) => l.errorCommissionMethodMissingMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.add_card_rounded,
+    ),
+    'funding-currency-invalid': _Entry(
+      title: (l) => l.errorFundingCurrencyInvalidTitle,
+      message: (l) => l.errorFundingCurrencyInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.currency_exchange_rounded,
+    ),
     'payment-busy': _Entry(
       title: (l) => l.errorPaymentBusyTitle,
       message: (l) => l.errorPaymentBusyMessage,

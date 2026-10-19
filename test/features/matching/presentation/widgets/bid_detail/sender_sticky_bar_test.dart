@@ -1023,8 +1023,8 @@ void main() {
 
     tearDown(() async => getIt.unregister<SupplementPaymentCubit>());
 
-    test('hasAction vrai pour un supplément carte ou mobile money à payer, '
-        'même hors statut habituel ; faux en espèces (PR A4)', () {
+    test('hasAction vrai pour un supplément carte, mobile money ou espèces, '
+        'même hors statut habituel (espèces : PR A4)', () {
       expect(
         SenderStickyBar.hasAction(withSupplement(status: 'PAYMENT_ESCROWED')),
         isTrue,
@@ -1047,7 +1047,7 @@ void main() {
             paymentMethod: BidPaymentMethod.cash,
           ),
         ),
-        isFalse,
+        isTrue,
       );
     });
 

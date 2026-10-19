@@ -6,8 +6,10 @@ import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/services/media_service.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_flow.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/models/supplement_commission_unfunded.dart';
 import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -24,6 +26,10 @@ enum SupplementRequestStatus {
   /// propose de réessayer.
   loadFailed,
   editing,
+
+  /// Espèces : vérification locale (`requirePaymentAuth`) ouverte avant un
+  /// appel qui prélève la commission. Le bouton est désactivé.
+  authorizing,
   submitting,
   success,
 
@@ -37,6 +43,20 @@ enum SupplementRequestStatus {
 
   /// Photo illisible : rien n'a changé dans le formulaire.
   photoFailed,
+
+  /// Espèces : le solde ne couvre pas la commission du supplément (422
+  /// `supplement-commission-unfunded`). Rien n'a été créé : la feuille
+  /// propose la carte, un autre portefeuille ou la recharge.
+  unfunded,
+
+  /// Espèces : aucune carte commission enregistrée (422
+  /// `commission-method-missing`). Rien n'a été créé.
+  cardMissing,
+
+  /// Espèces : la demande existe mais sa commission n'est pas encore
+  /// prélevée (3DS abandonnée, débit sans réponse 502/503). « Réessayer »
+  /// appelle `…/commission/confirm`, jamais un nouveau `POST`.
+  commissionRetry,
 }
 
 class SupplementRequestState {
@@ -52,6 +72,12 @@ class SupplementRequestState {
     this.quote,
     this.created,
     this.error,
+    this.isCash = false,
+    this.commissionSource = SupplementCommissionSource.wallet,
+    this.fundingCurrency,
+    this.unfunded,
+    this.awaitingCommission = false,
+    this.pending,
   });
 
   final SupplementRequestStatus status;
@@ -81,7 +107,38 @@ class SupplementRequestState {
   final BidSupplement? created;
   final AppException? error;
 
+  /// Colis payé en espèces : la commission du supplément est prélevée au
+  /// voyageur à la demande ; la feuille propose d'où.
+  final bool isCash;
+
+  /// Espèces : solde (défaut) ou carte commission.
+  final SupplementCommissionSource commissionSource;
+
+  /// Espèces, solde : autre portefeuille choisi pour compléter la
+  /// commission, au taux du jour. `null` : devise active (défaut du back).
+  final String? fundingCurrency;
+
+  /// Dernier refus « solde insuffisant » : de quoi proposer les autres
+  /// moyens. Effacé quand le montant change.
+  final SupplementCommissionUnfunded? unfunded;
+
+  /// La demande est créée mais attend sa commission : le formulaire est figé
+  /// et la feuille ne propose plus que « Réessayer ».
+  final bool awaitingCommission;
+
+  /// Demande en `COMMISSION_PENDING` connue de l'app (3DS abandonnée).
+  /// `null` après un débit sans réponse : « Réessayer » la relit sur la fiche
+  /// du colis.
+  final BidSupplement? pending;
+
   bool get isSubmitting => status == SupplementRequestStatus.submitting;
+
+  /// Vérification locale ou appel au serveur en cours.
+  bool get isBusy =>
+      isSubmitting || status == SupplementRequestStatus.authorizing;
+
+  /// Champs du formulaire figés : envoi en cours ou demande déjà créée.
+  bool get isLocked => isBusy || awaitingCommission;
 
   /// Montant saisi dans les bornes du serveur.
   bool get amountInRange {
@@ -95,7 +152,8 @@ class SupplementRequestState {
       amount != null && options != null && !amountInRange;
 
   bool get canSubmit =>
-      !isSubmitting &&
+      !isBusy &&
+      !awaitingCommission &&
       status != SupplementRequestStatus.loading &&
       status != SupplementRequestStatus.loadFailed &&
       amountInRange &&
@@ -115,6 +173,12 @@ class SupplementRequestState {
     SupplementQuote? Function()? quote,
     BidSupplement? created,
     AppException? error,
+    bool? isCash,
+    SupplementCommissionSource? commissionSource,
+    String? Function()? fundingCurrency,
+    SupplementCommissionUnfunded? Function()? unfunded,
+    bool? awaitingCommission,
+    BidSupplement? Function()? pending,
   }) => SupplementRequestState(
     status: status ?? SupplementRequestStatus.editing,
     options: options ?? this.options,
@@ -127,6 +191,14 @@ class SupplementRequestState {
     quote: quote != null ? quote() : this.quote,
     created: created ?? this.created,
     error: error,
+    isCash: isCash ?? this.isCash,
+    commissionSource: commissionSource ?? this.commissionSource,
+    fundingCurrency: fundingCurrency != null
+        ? fundingCurrency()
+        : this.fundingCurrency,
+    unfunded: unfunded != null ? unfunded() : this.unfunded,
+    awaitingCommission: awaitingCommission ?? this.awaitingCommission,
+    pending: pending != null ? pending() : this.pending,
   );
 }
 
@@ -141,23 +213,45 @@ const _closingCodes = {
   'supplement-already-active',
   'bid-not-found',
   'forbidden',
+  // Espèces : carte commission refusée, la demande est annulée côté serveur.
+  _cardDeclined,
 };
+
+const _cardDeclined = 'supplement-commission-card-declined';
+const _cardMissing = 'commission-method-missing';
+const _fundingCurrencyInvalid = 'funding-currency-invalid';
+const _authInterruptedCode = 'commission/3ds-interrupted';
+const _authStillRequiredCode = 'commission/3ds-still-required';
 
 /// Feuille « Demander un supplément » du voyageur : montant (suggestion de la
 /// grille ou du kilo, ou saisi), motif, détail, photo obligatoire, devis
 /// rafraîchi pendant la saisie, puis envoi (`POST /bids/{bidId}/supplements`).
 /// Le serveur fige la commission et prévient l'expéditeur.
+///
+/// Colis payé en espèces (PR A4) : la commission du supplément est prélevée
+/// au voyageur à la demande, depuis son solde ([SupplementCommissionSource.wallet],
+/// éventuellement complété par un autre portefeuille) ou sa carte commission
+/// (3DS possible, [SupplementCommissionFlow]). L'écran passe
+/// `requirePaymentAuth` avant [submit] et [retryCommission]
+/// ([beginAuthorization] / [authorizationDenied]).
 class SupplementRequestCubit extends Cubit<SupplementRequestState> {
   SupplementRequestCubit(
     this._repository,
     this._media,
     this._analytics, {
     this.quoteDebounce = const Duration(milliseconds: 400),
-  }) : super(const SupplementRequestState());
+    SupplementCommissionFlow? commissionFlow,
+  }) : _flow =
+           commissionFlow ?? SupplementCommissionFlow(_repository, _analytics),
+       super(const SupplementRequestState());
 
   final BidSupplementRepository _repository;
   final DonyMediaService _media;
   final AnalyticsService _analytics;
+  final SupplementCommissionFlow _flow;
+
+  /// Statut à rendre quand la vérification locale est refusée.
+  SupplementRequestStatus _beforeAuth = SupplementRequestStatus.editing;
 
   /// Attente après la dernière frappe avant de demander le devis.
   final Duration quoteDebounce;
@@ -172,7 +266,14 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
     try {
       final options = await _repository.options(bid.id);
       if (isClosed) return;
-      emit(state.copyWith(options: options));
+      emit(
+        state.copyWith(
+          options: options,
+          isCash:
+              bid.paymentMethod == BidPaymentMethod.cash ||
+              options.rail == SupplementCheckout.railCash,
+        ),
+      );
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidSupplementSheetOpened,
@@ -222,9 +323,54 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
         amount: () => amount,
         suggestion: keepSuggestion ? null : () => null,
         quote: () => null,
+        unfunded: () => null,
+        fundingCurrency: () => null,
       ),
     );
     _scheduleQuote();
+  }
+
+  /// Espèces : d'où prélever la commission. [fundingCurrency] choisit un
+  /// autre portefeuille pour compléter le solde (proposé après un « solde
+  /// insuffisant »), ignoré pour la carte.
+  void selectCommissionSource(
+    SupplementCommissionSource source, {
+    String? fundingCurrency,
+  }) {
+    if (state.isLocked) return;
+    emit(
+      state.copyWith(
+        status: _editingStatus,
+        commissionSource: source,
+        fundingCurrency: () => source == SupplementCommissionSource.wallet
+            ? fundingCurrency
+            : null,
+      ),
+    );
+  }
+
+  /// Ouvre la vérification locale avant un appel qui prélève la commission.
+  /// Rend `false` si un envoi est déjà en cours (double tap) : l'appelant
+  /// n'ouvre alors pas d'invite.
+  bool beginAuthorization() {
+    if (isClosed || state.isBusy) return false;
+    _beforeAuth = state.status;
+    emit(
+      state.copyWith(
+        status: SupplementRequestStatus.authorizing,
+        error: state.error,
+      ),
+    );
+    return true;
+  }
+
+  /// Vérification refusée ou abandonnée : la feuille revient où elle était.
+  void authorizationDenied() {
+    if (isClosed || state.status != SupplementRequestStatus.authorizing) {
+      return;
+    }
+    // Sans l'erreur précédente : elle a déjà été montrée.
+    emit(state.copyWith(status: _beforeAuth));
   }
 
   void selectReason(BidSupplementReason reason) =>
@@ -260,11 +406,14 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
     ),
   );
 
-  /// Statut à garder pendant une saisie : un chargement raté reste visible.
-  SupplementRequestStatus get _editingStatus =>
-      state.status == SupplementRequestStatus.loadFailed
-      ? SupplementRequestStatus.loadFailed
-      : SupplementRequestStatus.editing;
+  /// Statut à garder pendant une saisie : un chargement raté et un refus
+  /// « solde insuffisant » ou « carte manquante » restent visibles.
+  SupplementRequestStatus get _editingStatus => switch (state.status) {
+    SupplementRequestStatus.loadFailed ||
+    SupplementRequestStatus.unfunded ||
+    SupplementRequestStatus.cardMissing => state.status,
+    _ => SupplementRequestStatus.editing,
+  };
 
   void _scheduleQuote() {
     _quoteTimer?.cancel();
@@ -290,74 +439,383 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
 
   Future<void> submit() async {
     final bid = _bid;
-    if (bid == null || !state.canSubmit) return;
+    if (bid == null) return;
+    // Espèces : l'écran a ouvert la vérification locale juste avant.
+    final authorized = state.status == SupplementRequestStatus.authorizing;
+    final ready = authorized
+        ? state.copyWith(status: _beforeAuth, error: state.error).canSubmit
+        : state.canSubmit;
+    if (!ready) return;
     final reason = state.reason!;
-    final amount = state.amount!;
     final suggestion = state.suggestion;
     emit(state.copyWith(status: SupplementRequestStatus.submitting));
+    String key;
     try {
-      final key =
+      key =
           state.photoKey ??
           await _repository.uploadPhoto(bid.id, state.photoPath!);
+    } catch (e) {
       if (isClosed) return;
-      emit(
-        state.copyWith(
-          status: SupplementRequestStatus.submitting,
-          photoKey: () => key,
-        ),
-      );
-      final created = await _repository.create(
+      _onUploadError(reason, e);
+      return;
+    }
+    if (isClosed) return;
+    emit(
+      state.copyWith(
+        status: SupplementRequestStatus.submitting,
+        photoKey: () => key,
+      ),
+    );
+    await _create(bid, reason, suggestion, key);
+  }
+
+  /// Espèces : relance la commission d'une demande déjà créée. Une demande
+  /// en `COMMISSION_PENDING` passe par `…/commission/confirm` (jamais un
+  /// nouveau `POST`, qui rendrait 409 `supplement-already-active`) ; une
+  /// demande déjà partie chez l'expéditeur clôt la feuille en succès ; s'il
+  /// n'y a aucune demande (le serveur n'avait rien créé), elle est envoyée.
+  /// Une demande connue mais close entre-temps (409/404 sur la
+  /// confirmation) est relue une fois sur la fiche du colis.
+  Future<void> retryCommission() async {
+    final bid = _bid;
+    if (bid == null || !state.awaitingCommission) return;
+    if (state.isSubmitting) return;
+    final reason = state.reason!;
+    final suggestion = state.suggestion;
+    final key = state.photoKey;
+    emit(
+      state.copyWith(
+        status: SupplementRequestStatus.submitting,
+        awaitingCommission: true,
+      ),
+    );
+    BidSupplement? target = state.pending;
+    var reread = target == null;
+    try {
+      while (true) {
+        target ??= await _repository.current(bid.id);
+        if (isClosed) return;
+        if (target == null || !target.status.isOpen) {
+          if (key == null) {
+            // Aucun POST n'est parti (photo non envoyée) : retour au
+            // formulaire.
+            emit(
+              state.copyWith(
+                status: SupplementRequestStatus.editing,
+                awaitingCommission: false,
+                pending: () => null,
+              ),
+            );
+            return;
+          }
+          await _create(bid, reason, suggestion, key);
+          return;
+        }
+        final BidSupplement settled;
+        try {
+          settled = target.status == BidSupplementStatus.commissionPending
+              ? await _flow.resume(bid.id, target.id)
+              : target;
+        } on SupplementCommissionAuthInterrupted {
+          rethrow;
+        } catch (e) {
+          final error = unwrapDioError(e);
+          if (!reread &&
+              (error is ConflictException || error is NotFoundException)) {
+            // Demande connue périmée (close, inconnue) : relecture.
+            reread = true;
+            target = null;
+            continue;
+          }
+          rethrow;
+        }
+        if (isClosed) return;
+        _afterSettled(bid, reason, suggestion, settled);
+        return;
+      }
+    } on SupplementCommissionAuthInterrupted {
+      if (isClosed) return;
+      _onAuthInterrupted(reason, target);
+    } catch (e) {
+      if (isClosed) return;
+      _onCommissionError(reason, target, e);
+    }
+  }
+
+  /// `POST /bids/{bidId}/supplements`, puis, en espèces, la commission
+  /// jusqu'à l'expéditeur (3DS et confirmation si la carte le demande).
+  Future<void> _create(
+    BidModel bid,
+    BidSupplementReason reason,
+    SupplementSuggestion? suggestion,
+    String photoKey,
+  ) async {
+    final cash = state.isCash;
+    final source = state.commissionSource;
+    final funding = cash && source == SupplementCommissionSource.wallet
+        ? state.fundingCurrency
+        : null;
+    final BidSupplement created;
+    try {
+      created = await _repository.create(
         bid.id,
-        netAmount: amount,
+        netAmount: state.amount!,
         reason: reason,
         reasonText: _clip(state.reasonText),
         gridItemLabel: reason == BidSupplementReason.gridItem
             ? suggestion?.label
             : null,
-        photoKey: key,
-      );
-      if (isClosed) return;
-      emit(
-        state.copyWith(
-          status: SupplementRequestStatus.success,
-          created: created,
-        ),
-      );
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.bidSupplementRequested,
-          properties: {
-            'reason': reason.analyticsValue,
-            'suggestion': suggestion == null
-                ? 'custom'
-                : (suggestion.isGridItem ? 'grid_item' : 'kg'),
-            'amount_bracket': analyticsAmountBracket(amount),
-            'currency': state.options?.currency ?? bid.currency,
-            'payment_method': bid.paymentMethod.name,
-          },
-        ),
+        photoKey: photoKey,
+        commissionSource: cash ? source : null,
+        fundingCurrency: funding,
       );
     } catch (e) {
       if (isClosed) return;
-      final error = unwrapDioError(e);
-      emit(
-        state.copyWith(
-          status: _closingCodes.contains(error.code)
-              ? SupplementRequestStatus.closed
-              : SupplementRequestStatus.failure,
-          error: error,
-        ),
-      );
+      _onCreateError(bid, reason, e);
+      return;
+    }
+    if (isClosed) return;
+    if (!created.needsCommissionAuth) {
+      _afterSettled(bid, reason, suggestion, created);
+      return;
+    }
+    // Carte commission avec 3DS : la demande existe déjà, une 3DS
+    // abandonnée se reprend par « Réessayer ».
+    emit(
+      state.copyWith(
+        status: SupplementRequestStatus.submitting,
+        awaitingCommission: true,
+        pending: () => created,
+      ),
+    );
+    try {
+      final settled = await _flow.settle(bid.id, created);
+      if (isClosed) return;
+      _afterSettled(bid, reason, suggestion, settled);
+    } on SupplementCommissionAuthInterrupted {
+      if (isClosed) return;
+      _onAuthInterrupted(reason, created);
+    } catch (e) {
+      if (isClosed) return;
+      _onCommissionError(reason, created, e);
+    }
+  }
+
+  /// Issue côté serveur : une 3DS encore demandée après
+  /// [SupplementCommissionFlow.maxAuthRounds] reste à réessayer ; sinon la
+  /// demande est envoyée (ou en traitement chez Stripe).
+  void _afterSettled(
+    BidModel bid,
+    BidSupplementReason reason,
+    SupplementSuggestion? suggestion,
+    BidSupplement settled,
+  ) {
+    if (settled.needsCommissionAuth) {
+      _onAuthInterrupted(reason, settled, errorCode: _authStillRequiredCode);
+      return;
+    }
+    _finish(bid, reason, suggestion, settled);
+  }
+
+  /// La demande est créée : envoyée à l'expéditeur, ou (carte en cours de
+  /// traitement chez Stripe) en attente de la commission, que le webhook
+  /// tranchera.
+  void _finish(
+    BidModel bid,
+    BidSupplementReason reason,
+    SupplementSuggestion? suggestion,
+    BidSupplement created,
+  ) {
+    emit(
+      state.copyWith(
+        status: SupplementRequestStatus.success,
+        created: created,
+        awaitingCommission: false,
+        pending: () => null,
+      ),
+    );
+    if (state.isCash) _flow.logCharged(created, state.commissionSource);
+    // Commission encore en traitement chez Stripe : la demande n'a pas
+    // encore atteint l'expéditeur, rien n'est compté.
+    if (created.status == BidSupplementStatus.commissionPending) return;
+    final funding =
+        state.isCash &&
+            state.commissionSource == SupplementCommissionSource.wallet
+        ? state.fundingCurrency
+        : null;
+    if (funding != null) {
       unawaited(
         _analytics.logEvent(
-          AnalyticsEvents.bidSupplementRequestFailed,
+          AnalyticsEvents.commissionFundingCurrencyChosen,
           properties: {
-            'reason': reason.analyticsValue,
-            'error_code': error.code ?? 'unknown',
+            'currency': funding,
+            'context': AnalyticsPaymentContext.bidSupplement,
           },
         ),
       );
     }
+    final amount = created.netAmount ?? state.amount ?? 0;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.bidSupplementRequested,
+        properties: {
+          'reason': reason.analyticsValue,
+          'suggestion': suggestion == null
+              ? 'custom'
+              : (suggestion.isGridItem ? 'grid_item' : 'kg'),
+          'amount_bracket': analyticsAmountBracket(amount),
+          'currency': state.options?.currency ?? bid.currency,
+          'payment_method': bid.paymentMethod.name,
+          if (state.isCash)
+            'commission_source': state.commissionSource.analyticsValue,
+        },
+      ),
+    );
+  }
+
+  /// Photo non envoyée : aucun `POST` n'est parti, rien n'est créé ni
+  /// débité. Le formulaire reste ouvert (« Réessayer » n'a pas lieu d'être).
+  void _onUploadError(BidSupplementReason reason, Object e) {
+    final error = unwrapDioError(e);
+    final code = error.code ?? 'unknown';
+    emit(
+      state.copyWith(
+        status: _closingCodes.contains(code)
+            ? SupplementRequestStatus.closed
+            : SupplementRequestStatus.failure,
+        awaitingCommission: false,
+        pending: () => null,
+        error: error,
+      ),
+    );
+    _logRequestFailed(reason, code);
+  }
+
+  /// Échec avant ou pendant la création (rien n'a été prélevé, sauf débit
+  /// carte sans réponse : voir [SupplementRequestStatus.commissionRetry]).
+  void _onCreateError(BidModel bid, BidSupplementReason reason, Object e) {
+    final error = unwrapDioError(e);
+    final code = error.code ?? 'unknown';
+    final source = state.commissionSource;
+    final unfunded = SupplementCommissionUnfunded.fromError(error);
+    if (unfunded != null) {
+      emit(
+        state.copyWith(
+          status: SupplementRequestStatus.unfunded,
+          unfunded: () => unfunded,
+          awaitingCommission: false,
+          pending: () => null,
+          error: error,
+        ),
+      );
+      _flow.logFailed(
+        source,
+        reason: 'insufficient_balance',
+        errorCode: code,
+        currency: unfunded.currency,
+      );
+    } else if (code == _cardMissing) {
+      emit(
+        state.copyWith(
+          status: SupplementRequestStatus.cardMissing,
+          awaitingCommission: false,
+          pending: () => null,
+          error: error,
+        ),
+      );
+      _flow.logFailed(source, reason: 'card_missing', errorCode: code);
+    } else if (state.isCash &&
+        (error is ServiceUnavailableException || error is TimeoutException)) {
+      // `POST` parti sans réponse exploitable (débit de la carte ou du solde
+      // en suspens) : la demande a pu être créée. « Réessayer » la relit sur
+      // la fiche du colis avant tout nouvel envoi (un second `POST`
+      // rendrait 409 `supplement-already-active`).
+      emit(
+        state.copyWith(
+          status: SupplementRequestStatus.commissionRetry,
+          awaitingCommission: true,
+          pending: () => null,
+          error: error,
+        ),
+      );
+      _flow.logFailed(source, reason: 'generic', errorCode: code);
+    } else {
+      if (code == _cardDeclined) {
+        _flow.logFailed(source, reason: 'declined', errorCode: code);
+      }
+      emit(
+        state.copyWith(
+          status: _closingCodes.contains(code)
+              ? SupplementRequestStatus.closed
+              : SupplementRequestStatus.failure,
+          fundingCurrency: code == _fundingCurrencyInvalid ? () => null : null,
+          awaitingCommission: false,
+          pending: () => null,
+          error: error,
+        ),
+      );
+    }
+    _logRequestFailed(reason, code);
+  }
+
+  /// 3DS abandonnée ou refusée : la demande reste en attente côté serveur.
+  void _onAuthInterrupted(
+    BidSupplementReason reason,
+    BidSupplement? pending, {
+    String errorCode = _authInterruptedCode,
+  }) {
+    emit(
+      state.copyWith(
+        status: SupplementRequestStatus.commissionRetry,
+        awaitingCommission: true,
+        pending: () => pending,
+      ),
+    );
+    _flow.logFailed(
+      SupplementCommissionSource.card,
+      reason: 'authentication_failed',
+      errorCode: errorCode,
+    );
+    _logRequestFailed(reason, errorCode);
+  }
+
+  /// Échec de la confirmation d'une demande déjà créée : carte refusée ou
+  /// détachée (demande annulée par le serveur), sinon on réessaiera.
+  void _onCommissionError(
+    BidSupplementReason reason,
+    BidSupplement? pending,
+    Object e,
+  ) {
+    final error = unwrapDioError(e);
+    final code = error.code ?? 'unknown';
+    final definitive = code == _cardDeclined || code == _cardMissing;
+    _flow.logFailed(
+      SupplementCommissionSource.card,
+      reason: code == _cardDeclined
+          ? 'declined'
+          : (code == _cardMissing ? 'card_missing' : 'generic'),
+      errorCode: code,
+    );
+    emit(
+      state.copyWith(
+        status: definitive
+            ? SupplementRequestStatus.closed
+            : SupplementRequestStatus.commissionRetry,
+        awaitingCommission: !definitive,
+        pending: () => definitive ? null : pending,
+        error: error,
+      ),
+    );
+    _logRequestFailed(reason, code);
+  }
+
+  void _logRequestFailed(BidSupplementReason reason, String code) {
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.bidSupplementRequestFailed,
+        properties: {'reason': reason.analyticsValue, 'error_code': code},
+      ),
+    );
   }
 
   static String? _clip(String text) {

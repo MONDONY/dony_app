@@ -21801,4 +21801,188 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get supplementSenderMobileMoneyPending =>
       'Mobile money payment for the supplement pending';
+
+  @override
+  String get supplementCommissionSourceTitle => 'Supplement commission';
+
+  @override
+  String get supplementCommissionSourceHelp =>
+      'It is taken now and given back to you if the sender declines, does not answer in time or if the parcel is not delivered. The sender hands you the total in cash.';
+
+  @override
+  String get supplementCommissionSourceWallet => 'My Yadony balance';
+
+  @override
+  String get supplementCommissionSourceWalletHint =>
+      'Taken now from your balance';
+
+  @override
+  String supplementCommissionSourceWalletCurrency(String currency) {
+    return 'My $currency balance';
+  }
+
+  @override
+  String get supplementCommissionSourceCard => 'My commission card';
+
+  @override
+  String get supplementCommissionSourceCardHint =>
+      'Charged now, your bank may ask you to confirm';
+
+  @override
+  String get supplementCommissionUnfundedHint =>
+      'Choose your card or another balance above, or top up your balance.';
+
+  @override
+  String get supplementCommissionCardMissing =>
+      'No commission card saved. Add one, or pay with your balance.';
+
+  @override
+  String get supplementCommissionRetryNotice =>
+      'Your request is saved, but the commission has not been taken yet. Try again to send it to the sender.';
+
+  @override
+  String get supplementCommissionRetry => 'Try the payment again';
+
+  @override
+  String get supplementCommissionAuthInterrupted =>
+      'Bank confirmation interrupted: nothing was taken. Please try again.';
+
+  @override
+  String get supplementCommissionProcessing =>
+      'Request saved: commission payment being confirmed';
+
+  @override
+  String get supplementRecapGrossCash => 'Handed over in cash by the sender';
+
+  @override
+  String get supplementTravelerCommissionPending => 'Commission to confirm';
+
+  @override
+  String get supplementTravelerCommissionPendingHelp =>
+      'Confirm the commission payment to send the request to the sender. Without confirmation within 30 minutes, it is cancelled at no cost.';
+
+  @override
+  String get supplementCommissionConfirm => 'Confirm the payment';
+
+  @override
+  String get supplementCommissionConfirmedSnackbar =>
+      'Commission paid: request sent to the sender';
+
+  @override
+  String get supplementTravelerCashCommissionHelp =>
+      'Commission taken. It is given back to you if the request does not go through.';
+
+  @override
+  String supplementTravelerCashPaid(String amount) {
+    return 'Supplement accepted: the sender hands you $amount in cash';
+  }
+
+  @override
+  String get supplementTravelerCashPaidHelp =>
+      'Receive the extra amount in person when the parcel is handed over.';
+
+  @override
+  String get supplementTravelerCommissionRefunded =>
+      'The supplement commission has been given back to you.';
+
+  @override
+  String get supplementTravelerCommissionRefundPending =>
+      'The supplement commission will be given back to you shortly.';
+
+  @override
+  String get supplementTravelerCancelled => 'Supplement request cancelled';
+
+  @override
+  String get supplementTravelerCancelledNoCharge =>
+      'Nothing was taken from your balance or your card.';
+
+  @override
+  String get supplementTravelerCashRefunded =>
+      'Parcel not delivered: give the extra cash back to the sender';
+
+  @override
+  String supplementCashAccept(String amount) {
+    return 'Accept $amount';
+  }
+
+  @override
+  String get supplementSenderCashHelp =>
+      'Accept with the button at the bottom of the screen, then hand the extra amount in cash to the traveler, or decline here.';
+
+  @override
+  String get supplementCashConfirmTitle => 'Accept the supplement';
+
+  @override
+  String supplementCashConfirmMessage(String amount) {
+    return 'You will hand $amount in cash to the traveler, in person, when the parcel is handed over.';
+  }
+
+  @override
+  String get supplementCashConfirmHelp =>
+      'The handover scan is unlocked as soon as you agree. Nothing is paid in the app.';
+
+  @override
+  String supplementCashConfirmButton(String amount) {
+    return 'I will hand over $amount in cash';
+  }
+
+  @override
+  String supplementCashAcceptedSnackbar(String amount) {
+    return 'Supplement accepted: hand $amount in cash to the traveler';
+  }
+
+  @override
+  String supplementSenderCashPaid(String amount) {
+    return 'Supplement accepted: $amount to hand over in cash';
+  }
+
+  @override
+  String get supplementSenderCashRefunded =>
+      'Parcel not delivered: the traveler gives the extra cash back to you';
+
+  @override
+  String get walletTxTypeSupplementCommission => 'Supplement commission';
+
+  @override
+  String get walletTxTypeSupplementCommissionRefund =>
+      'Supplement commission refunded';
+
+  @override
+  String get walletTxTypeOther => 'Balance movement';
+
+  @override
+  String get errorSupplementCommissionUnfundedTitle => 'Insufficient balance';
+
+  @override
+  String get errorSupplementCommissionUnfundedMessage =>
+      'Your balance does not cover the supplement commission. Top it up or pay by card.';
+
+  @override
+  String get errorSupplementCommissionCardDeclinedTitle => 'Card declined';
+
+  @override
+  String get errorSupplementCommissionCardDeclinedMessage =>
+      'Your commission card was declined: nothing was taken and the request is cancelled.';
+
+  @override
+  String get errorSupplementCommissionChargeFailedTitle =>
+      'Commission not taken';
+
+  @override
+  String get errorSupplementCommissionChargeFailedMessage =>
+      'The commission charge did not go through. Please try again.';
+
+  @override
+  String get errorCommissionMethodMissingTitle => 'No commission card';
+
+  @override
+  String get errorCommissionMethodMissingMessage =>
+      'Save a commission card, or pay with your balance.';
+
+  @override
+  String get errorFundingCurrencyInvalidTitle => 'Currency not supported';
+
+  @override
+  String get errorFundingCurrencyInvalidMessage =>
+      'This wallet cannot pay the commission. Choose another one.';
 }

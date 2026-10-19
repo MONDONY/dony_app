@@ -87,4 +87,35 @@ void main() {
     expect(await repository.accept('b', 'sup-1'), checkout);
     expect(await repository.confirmPayment('b', 'sup-1'), _supplement);
   });
+
+  test('commission espèces : create, confirmCommission et current', () async {
+    when(
+      () => datasource.create(
+        'b',
+        netAmount: 5,
+        reason: BidSupplementReason.extraWeight,
+        photoKey: 'k',
+        commissionSource: SupplementCommissionSource.card,
+        fundingCurrency: 'XOF',
+      ),
+    ).thenAnswer((_) async => _supplement);
+    when(
+      () => datasource.confirmCommission('b', 'sup-1'),
+    ).thenAnswer((_) async => _supplement);
+    when(() => datasource.current('b')).thenAnswer((_) async => null);
+
+    expect(
+      await repository.create(
+        'b',
+        netAmount: 5,
+        reason: BidSupplementReason.extraWeight,
+        photoKey: 'k',
+        commissionSource: SupplementCommissionSource.card,
+        fundingCurrency: 'XOF',
+      ),
+      _supplement,
+    );
+    expect(await repository.confirmCommission('b', 'sup-1'), _supplement);
+    expect(await repository.current('b'), isNull);
+  });
 }

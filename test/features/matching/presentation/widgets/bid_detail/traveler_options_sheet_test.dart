@@ -322,7 +322,7 @@ void main() {
       );
     });
 
-    testWidgets('espèces : masqué même autorisé (commission en PR A4)', (
+    testWidgets('espèces : visible dès que le serveur l\'autorise (PR A4)', (
       tester,
     ) async {
       await _open(
@@ -332,6 +332,11 @@ void main() {
           paymentMethod: BidPaymentMethod.cash,
         ),
       );
+      expect(find.text('Demander un supplément'), findsOneWidget);
+    });
+
+    testWidgets('espèces non autorisé par le serveur : masqué', (tester) async {
+      await _open(tester, _bid(paymentMethod: BidPaymentMethod.cash));
       expect(find.text('Demander un supplément'), findsNothing);
     });
 

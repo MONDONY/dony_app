@@ -1746,6 +1746,11 @@ void main() {
         'supplement-payment-creation-failed': 'Paiement indisponible',
         'payment-busy': 'Paiement en cours de validation',
         'stripe-unavailable': 'Service de paiement injoignable',
+        'supplement-commission-unfunded': 'Solde insuffisant',
+        'supplement-commission-card-declined': 'Carte refusée',
+        'supplement-commission-charge-failed': 'Commission non prélevée',
+        'commission-method-missing': 'Carte commission manquante',
+        'funding-currency-invalid': 'Devise non prise en charge',
       };
       for (final entry in codes.entries) {
         final error = ConflictException('d', code: entry.key);

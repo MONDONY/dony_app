@@ -51,7 +51,12 @@ typedef SupplementMobileMoneyOpener =
 /// Mobile money : `requirePaymentAuth`, `POST …/accept` (`PAYMENT_PENDING`),
 /// puis l'écran d'attente du supplément (choix de l'opérateur, numéro,
 /// initiation, sondage) ; à son retour, relecture du colis et message selon
-/// l'issue. Espèces : PR A4.
+/// l'issue.
+///
+/// Espèces (PR A4) : « Accepter {brut} » ouvre une feuille de confirmation
+/// (« Vous remettrez {brut} en espèces »), sans vérification locale ni
+/// paiement en ligne : rien n'est débité. `POST …/accept` rend le
+/// supplément `PAID` ; l'expéditeur remet le complément en main propre.
 class SupplementPayButton extends StatelessWidget {
   const SupplementPayButton({
     super.key,
@@ -75,18 +80,24 @@ class SupplementPayButton extends StatelessWidget {
       switch (bid.paymentMethod) {
         BidPaymentMethod.stripe => SupplementCheckout.railStripe,
         BidPaymentMethod.mobileMoney => SupplementCheckout.railPawapay,
+        BidPaymentMethod.cash => SupplementCheckout.railCash,
         _ => null,
       };
 
-  /// Supplément payable maintenant, par carte ou en mobile money.
+  /// Supplément à régler maintenant : payable par carte ou en mobile money
+  /// (`PROPOSED` ou `PAYMENT_PENDING`), ou à accepter en espèces
+  /// (`PROPOSED`).
   static bool canPay(BidModel bid) {
     final s = bid.supplement;
     if (s == null) return false;
+    final rail = railOf(bid);
+    if (rail == SupplementCheckout.railCash) {
+      return s.status == BidSupplementStatus.proposed;
+    }
     if (s.status != BidSupplementStatus.proposed &&
         s.status != BidSupplementStatus.paymentPending) {
       return false;
     }
-    final rail = railOf(bid);
     return rail == SupplementCheckout.railStripe ||
         rail == SupplementCheckout.railPawapay;
   }
@@ -139,21 +150,38 @@ class _PayButtonView extends StatelessWidget {
       supplement.grossAmount,
       supplement.currency,
     );
+    final rail = SupplementPayButton.railOf(bid);
+    final cash = rail == SupplementCheckout.railCash;
     return BlocConsumer<SupplementPaymentCubit, SupplementPaymentState>(
       listenWhen: (prev, curr) => prev.status != curr.status,
       listener: _onState,
       builder: (context, state) => DonyButton(
         key: const Key('supplement-pay-btn'),
-        label: context.l10n.supplementPay(gross),
-        iconAsset:
-            SupplementPayButton.railOf(bid) == SupplementCheckout.railPawapay
-            ? 'smartphone'
-            : 'lock',
+        label: cash
+            ? context.l10n.supplementCashAccept(gross)
+            : context.l10n.supplementPay(gross),
+        iconAsset: switch (rail) {
+          SupplementCheckout.railPawapay => 'smartphone',
+          SupplementCheckout.railCash => 'banknote',
+          _ => 'lock',
+        },
         isLoading: state.isBusy,
-        onPressed: state.isBusy ? null : () => _pay(context),
+        onPressed: state.isBusy
+            ? null
+            : () => cash ? _acceptCash(context) : _pay(context),
       ),
     );
   }
+
+  /// Espèces : la feuille de confirmation porte le bouton d'acceptation
+  /// (`stickyBottom`) ; aucune vérification locale, rien n'est débité.
+  Future<void> _acceptCash(BuildContext context) =>
+      SupplementCashAcceptSheet.show(
+        context,
+        bid: bid,
+        supplement: supplement,
+        cubit: context.read<SupplementPaymentCubit>(),
+      );
 
   Future<void> _pay(BuildContext context) async {
     final cubit = context.read<SupplementPaymentCubit>();
@@ -189,7 +217,14 @@ class _PayButtonView extends StatelessWidget {
         if (state.checkout?.isMobileMoney ?? false) break;
         DonySnackbar.show(
           context,
-          message: context.l10n.supplementPaidSnackbar,
+          message: (state.checkout?.isCash ?? false)
+              ? context.l10n.supplementCashAcceptedSnackbar(
+                  formatSupplementAmount(
+                    supplement.grossAmount,
+                    supplement.currency,
+                  ),
+                )
+              : context.l10n.supplementPaidSnackbar,
           type: DonySnackbarType.success,
         );
       case SupplementPaymentStatus.mobileMoneyNotConfirmed:
@@ -263,5 +298,83 @@ class _PayButtonView extends StatelessWidget {
     } on ProviderNotFoundException {
       // Bouton hors de l'écran de détail (tests) : rien à relire.
     }
+  }
+}
+
+/// Feuille de confirmation de l'expéditeur, colis payé en espèces :
+/// « Vous remettrez {brut} en espèces au voyageur ». Le bouton « Je
+/// remettrai {brut} en espèces » est dans le `stickyBottom` et lit l'état du
+/// [SupplementPaymentCubit] du bouton de la barre (même instance, fournie
+/// par `wrapper`). La feuille se referme dès l'issue (accepté ou refusé) ;
+/// le bouton de la barre relit le colis et annonce le résultat.
+class SupplementCashAcceptSheet extends StatelessWidget {
+  const SupplementCashAcceptSheet({super.key, required this.gross});
+
+  /// Brut formaté.
+  final String gross;
+
+  static Future<void> show(
+    BuildContext context, {
+    required BidModel bid,
+    required BidSupplement supplement,
+    required SupplementPaymentCubit cubit,
+  }) {
+    final l = context.l10n;
+    final gross = formatSupplementAmount(
+      supplement.grossAmount,
+      supplement.currency,
+    );
+    return DonyBottomSheet.show<void>(
+      context,
+      analyticsName: 'bid/supplement-cash-accept',
+      title: l.supplementCashConfirmTitle,
+      wrapper: (child) => BlocProvider<SupplementPaymentCubit>.value(
+        value: cubit,
+        child: child,
+      ),
+      stickyBottom: BlocBuilder<SupplementPaymentCubit, SupplementPaymentState>(
+        builder: (ctx, state) => DonyButton(
+          key: const Key('supplement-cash-confirm-btn'),
+          label: ctx.l10n.supplementCashConfirmButton(gross),
+          iconAsset: 'banknote',
+          isLoading: state.isBusy,
+          onPressed: state.isBusy
+              ? null
+              : () => ctx.read<SupplementPaymentCubit>().pay(bid, supplement),
+        ),
+      ),
+      child: SupplementCashAcceptSheet(gross: gross),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return BlocListener<SupplementPaymentCubit, SupplementPaymentState>(
+      listenWhen: (prev, curr) =>
+          prev.status != curr.status &&
+          (curr.status == SupplementPaymentStatus.paid ||
+              curr.status == SupplementPaymentStatus.failure),
+      listener: (context, _) => Navigator.of(context).pop(),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: DonySpacing.base),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l.supplementCashConfirmMessage(gross),
+              style: tt.bodyLarge?.copyWith(color: cs.onSurface),
+            ),
+            const SizedBox(height: DonySpacing.md),
+            DonyStatusBanner(
+              type: DonyStatusBannerType.info,
+              message: l.supplementCashConfirmHelp,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

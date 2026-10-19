@@ -72,8 +72,13 @@ class SupplementPaymentState extends Equatable {
   List<Object?> get props => [status, checkout, error];
 }
 
-/// Paiement d'un supplément de prix par l'expéditeur, par carte (PR A2) ou
-/// en mobile money (PR A3).
+/// Paiement d'un supplément de prix par l'expéditeur, par carte (PR A2), en
+/// mobile money (PR A3) ou en espèces (PR A4).
+///
+/// Espèces : pas de vérification locale (rien n'est débité), l'écran appelle
+/// [pay] depuis la feuille de confirmation ; l'acceptation rend le
+/// supplément `PAID` aussitôt ([SupplementPaymentStatus.paid]), tracée par
+/// `bid_supplement_cash_accepted`.
 ///
 /// L'écran pose [beginAuthorization], passe `requirePaymentAuth`, puis
 /// appelle [pay] (ou [authorizationDenied] sur un refus).
@@ -101,7 +106,7 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
 
   /// Accepte le supplément : rend le PaymentIntent à présenter, ou passe
   /// directement à [SupplementPaymentStatus.paid] s'il n'y a plus rien à
-  /// payer (supplément déjà payé ailleurs).
+  /// payer (supplément déjà payé ailleurs, ou espèces).
   Future<void> pay(BidModel bid, BidSupplement supplement) async {
     if (state.isBusy && state.status != SupplementPaymentStatus.authorizing) {
       return;
@@ -112,6 +117,26 @@ class SupplementPaymentCubit extends Cubit<SupplementPaymentState> {
     try {
       final checkout = await _repository.accept(bid.id, supplement.id);
       if (isClosed) return;
+      if (checkout.isCash) {
+        // Espèces : rien à payer en ligne, le supplément est `PAID` et
+        // l'expéditeur remet le complément en main propre.
+        emit(
+          SupplementPaymentState(
+            status: SupplementPaymentStatus.paid,
+            checkout: checkout,
+          ),
+        );
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.bidSupplementCashAccepted,
+            properties: {
+              'currency': checkout.currency,
+              'amount_bracket': analyticsAmountBracket(checkout.amount),
+            },
+          ),
+        );
+        return;
+      }
       if (checkout.isMobileMoney &&
           !(checkout.supplement?.status.isPaid ?? false)) {
         emit(

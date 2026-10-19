@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_refusal_sheet.dart';
@@ -20,30 +21,52 @@ import 'package:intl/intl.dart';
 /// (échéance, « Retirer la demande »), paiement en cours, payé ou versé,
 /// refusé ou expiré (lien vers « Le colis ne correspond pas »), remboursé.
 /// Le voyageur voit son net, la commission et le total de l'expéditeur.
+///
+/// Colis payé en espèces (PR A4) : commission à valider (« Valider le
+/// paiement », 3DS), complément remis en main propre, commission rendue
+/// quand la demande n'aboutit pas.
 class SupplementTravelerCard extends StatelessWidget {
-  const SupplementTravelerCard({super.key, required this.bid});
+  const SupplementTravelerCard({super.key, required this.bid, this.authorize});
 
   final BidModel bid;
 
-  /// Une demande retirée ou annulée ne laisse rien à dire au voyageur.
-  static bool shouldShow(BidModel bid) => switch (bid.supplement?.status) {
-    null ||
-    BidSupplementStatus.withdrawn ||
-    BidSupplementStatus.cancelled ||
-    BidSupplementStatus.unknown => false,
-    _ => true,
-  };
+  /// Vérification locale avant « Valider le paiement » ; `null` en usage
+  /// réel (`requirePaymentAuth`).
+  final SupplementRequestAuthorizer? authorize;
+
+  /// Une demande retirée ou annulée ne laisse rien à dire au voyageur, sauf
+  /// en espèces : une demande annulée (commission jamais validée, colis
+  /// terminé) ou retirée après le prélèvement de sa commission dit ce
+  /// qu'il advient de la commission.
+  static bool shouldShow(BidModel bid) {
+    final s = bid.supplement;
+    return switch (s?.status) {
+      null || BidSupplementStatus.unknown => false,
+      BidSupplementStatus.cancelled => s!.isCash,
+      BidSupplementStatus.withdrawn => s!.isCash && _commissionTaken(s),
+      _ => true,
+    };
+  }
 
   @override
-  Widget build(BuildContext context) =>
-      _SupplementCard(bid: bid, isSender: false);
+  Widget build(BuildContext context) => _SupplementCard(
+    bid: bid,
+    isSender: false,
+    authorize: authorize ?? defaultSupplementAuthorize,
+  );
 }
+
+/// Commission du supplément prélevée au voyageur (rendue ou à rendre).
+bool _commissionTaken(BidSupplement s) =>
+    s.commissionCharged ||
+    s.commissionRefunded ||
+    s.commissionStatus == SupplementCommissionStatus.refundFailed;
 
 /// Encart « Supplément de prix » de la vue expéditeur : motif, photo, TOTAL
 /// à payer seulement (jamais le net du voyageur ni la commission),
-/// échéance et « Refuser le supplément ». Colis payé par carte : « Payer »
-/// est dans la barre du bas ([SupplementPayButton]), par carte ou en mobile
-/// money ; les espèces arrivent avec leur rail (PR A4).
+/// échéance et « Refuser le supplément ». « Payer » (carte, mobile money)
+/// ou « Accepter » (espèces) est dans la barre du bas
+/// ([SupplementPayButton]).
 class SupplementSenderCard extends StatelessWidget {
   const SupplementSenderCard({super.key, required this.bid});
 
@@ -67,10 +90,15 @@ class SupplementSenderCard extends StatelessWidget {
 }
 
 class _SupplementCard extends StatelessWidget {
-  const _SupplementCard({required this.bid, required this.isSender});
+  const _SupplementCard({
+    required this.bid,
+    required this.isSender,
+    this.authorize,
+  });
 
   final BidModel bid;
   final bool isSender;
+  final SupplementRequestAuthorizer? authorize;
 
   BidSupplement get _supplement => bid.supplement!;
 
@@ -87,7 +115,11 @@ class _SupplementCard extends StatelessWidget {
           title: context.l10n.supplementCardTitle,
           child: isSender
               ? _SenderContent(bid: bid, supplement: _supplement)
-              : _TravelerContent(bid: bid, supplement: _supplement),
+              : _TravelerContent(
+                  bid: bid,
+                  supplement: _supplement,
+                  authorize: authorize ?? defaultSupplementAuthorize,
+                ),
         ),
       ),
     );
@@ -114,20 +146,27 @@ class _SupplementCard extends StatelessWidget {
     }
   }
 
-  void _reloadBid(BuildContext context) {
-    try {
-      context.read<BidBloc>().add(BidDetailRequested(bid.id));
-    } on ProviderNotFoundException {
-      // Encart hors de l'écran de détail (tests) : rien à relire.
-    }
+  void _reloadBid(BuildContext context) => _reloadBidOf(context, bid.id);
+}
+
+void _reloadBidOf(BuildContext context, String bidId) {
+  try {
+    context.read<BidBloc>().add(BidDetailRequested(bidId));
+  } on ProviderNotFoundException {
+    // Encart hors de l'écran de détail (tests) : rien à relire.
   }
 }
 
 class _TravelerContent extends StatelessWidget {
-  const _TravelerContent({required this.bid, required this.supplement});
+  const _TravelerContent({
+    required this.bid,
+    required this.supplement,
+    required this.authorize,
+  });
 
   final BidModel bid;
   final BidSupplement supplement;
+  final SupplementRequestAuthorizer authorize;
 
   @override
   Widget build(BuildContext context) {
@@ -142,13 +181,30 @@ class _TravelerContent extends StatelessWidget {
             commission: commission,
             gross: s.grossAmount,
             currency: s.currency,
+            cash: s.isCash,
           )
         : null;
     final netLabel = formatSupplementAmount(net ?? s.grossAmount, s.currency);
+    final grossLabel = formatSupplementAmount(s.grossAmount, s.currency);
+    final paid =
+        s.status == BidSupplementStatus.paid ||
+        s.status == BidSupplementStatus.payoutPending;
+    final closedUnpaid = switch (s.status) {
+      BidSupplementStatus.declined ||
+      BidSupplementStatus.expired ||
+      BidSupplementStatus.withdrawn ||
+      BidSupplementStatus.cancelled ||
+      BidSupplementStatus.refunded => true,
+      _ => false,
+    };
 
     final children = <Widget>[
       switch (s.status) {
-        BidSupplementStatus.commissionPending ||
+        BidSupplementStatus.commissionPending => _StatusLine(
+          iconAsset: 'credit-card',
+          color: cs.warning,
+          text: l.supplementTravelerCommissionPending,
+        ),
         BidSupplementStatus.proposed => _StatusLine(
           iconAsset: 'timer',
           color: cs.warning,
@@ -158,6 +214,12 @@ class _TravelerContent extends StatelessWidget {
           iconAsset: _isMobileMoney(bid) ? 'smartphone' : 'credit-card',
           color: cs.warning,
           text: l.supplementTravelerPaymentPending,
+        ),
+        BidSupplementStatus.paid ||
+        BidSupplementStatus.payoutPending when s.isCash => _StatusLine(
+          iconAsset: 'banknote',
+          color: cs.success,
+          text: l.supplementTravelerCashPaid(grossLabel),
         ),
         BidSupplementStatus.paid ||
         BidSupplementStatus.payoutPending => _StatusLine(
@@ -180,10 +242,25 @@ class _TravelerContent extends StatelessWidget {
           color: cs.onSurfaceVariant,
           text: l.supplementTravelerExpired,
         ),
+        BidSupplementStatus.withdrawn => _StatusLine(
+          iconAsset: 'circle-x',
+          color: cs.onSurfaceVariant,
+          text: l.supplementWithdrawn,
+        ),
+        BidSupplementStatus.cancelled => _StatusLine(
+          iconAsset: 'circle-x',
+          color: cs.onSurfaceVariant,
+          text: l.supplementTravelerCancelled,
+        ),
         BidSupplementStatus.refundPending => _StatusLine(
           iconAsset: 'refresh-cw',
           color: cs.onSurfaceVariant,
           text: l.supplementTravelerRefundPending,
+        ),
+        _ when s.isCash => _StatusLine(
+          iconAsset: 'refresh-cw',
+          color: cs.onSurfaceVariant,
+          text: l.supplementTravelerCashRefunded,
         ),
         _ => _StatusLine(
           iconAsset: 'refresh-cw',
@@ -195,18 +272,28 @@ class _TravelerContent extends StatelessWidget {
         if (s.expiresAt != null) _DeadlineLine(expiresAt: s.expiresAt!),
         ?recap,
         _ReasonLine(supplement: s),
+        if (s.status == BidSupplementStatus.commissionPending)
+          _HelpText(l.supplementTravelerCommissionPendingHelp)
+        else if (s.isCash && s.commissionCharged)
+          _HelpText(l.supplementTravelerCashCommissionHelp),
         _HelpText(l.supplementTravelerPendingNotice),
       ],
-      if (s.status == BidSupplementStatus.paid ||
-          s.status == BidSupplementStatus.payoutPending)
-        _HelpText(l.supplementTravelerPaidHelp),
+      if (paid)
+        _HelpText(
+          s.isCash
+              ? l.supplementTravelerCashPaidHelp
+              : l.supplementTravelerPaidHelp,
+        ),
       if (s.status == BidSupplementStatus.declined ||
           s.status == BidSupplementStatus.expired)
         _HelpText(l.supplementTravelerClosedHelp),
+      if (s.isCash && closedUnpaid) ?_cashCommissionHelp(l, s),
     ];
 
     final canWithdraw =
         s.status == BidSupplementStatus.proposed ||
+        s.status == BidSupplementStatus.commissionPending;
+    final canConfirmCommission =
         s.status == BidSupplementStatus.commissionPending;
     final canRefuseParcel =
         (s.status == BidSupplementStatus.declined ||
@@ -218,6 +305,14 @@ class _TravelerContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ..._spaced(children),
+          if (canConfirmCommission) ...[
+            const SizedBox(height: DonySpacing.md),
+            _CommissionConfirmButton(
+              bid: bid,
+              supplement: s,
+              authorize: authorize,
+            ),
+          ],
           if (canWithdraw) ...[
             const SizedBox(height: DonySpacing.md),
             DonyButton(
@@ -259,6 +354,112 @@ class _TravelerContent extends StatelessWidget {
   }
 }
 
+/// Espèces, demande close : ce qu'il advient de la commission du
+/// supplément. `null` quand il n'y a rien à dire (demande déjà remboursée
+/// à l'expéditeur après paiement : la ligne d'état suffit).
+Widget? _cashCommissionHelp(AppLocalizations l, BidSupplement s) {
+  if (s.commissionRefunded) {
+    return _HelpText(l.supplementTravelerCommissionRefunded);
+  }
+  if (s.commissionCharged ||
+      s.commissionStatus == SupplementCommissionStatus.refundFailed) {
+    return _HelpText(l.supplementTravelerCommissionRefundPending);
+  }
+  if (s.status == BidSupplementStatus.cancelled) {
+    return _HelpText(l.supplementTravelerCancelledNoCharge);
+  }
+  return null;
+}
+
+/// « Valider le paiement » d'une demande en attente de sa commission
+/// (espèces) : `requirePaymentAuth`, puis `…/commission/confirm` et la 3DS
+/// si la carte la redemande. Jamais un nouveau `POST`.
+class _CommissionConfirmButton extends StatelessWidget {
+  const _CommissionConfirmButton({
+    required this.bid,
+    required this.supplement,
+    required this.authorize,
+  });
+
+  final BidModel bid;
+  final BidSupplement supplement;
+  final SupplementRequestAuthorizer authorize;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<SupplementCommissionCubit>(),
+      child:
+          BlocConsumer<
+            SupplementCommissionCubit,
+            SupplementCommissionResumeState
+          >(
+            listenWhen: (prev, curr) => prev.status != curr.status,
+            listener: _onState,
+            builder: (context, state) => DonyButton(
+              key: const Key('supplement-commission-confirm-btn'),
+              label: context.l10n.supplementCommissionConfirm,
+              iconAsset: 'credit-card',
+              isLoading: state.isBusy,
+              onPressed: state.isBusy ? null : () => _confirm(context),
+            ),
+          ),
+    );
+  }
+
+  Future<void> _confirm(BuildContext context) async {
+    final cubit = context.read<SupplementCommissionCubit>();
+    if (!cubit.beginAuthorization()) return;
+    final authenticated = await authorize(context);
+    if (!context.mounted) {
+      cubit.authorizationDenied();
+      return;
+    }
+    if (!authenticated) {
+      cubit.authorizationDenied();
+      DonySnackbar.show(
+        context,
+        message: context.l10n.paymentNotConfirmedSnackbar,
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    await cubit.resume(bid, supplement);
+  }
+
+  void _onState(BuildContext context, SupplementCommissionResumeState state) {
+    final l = context.l10n;
+    switch (state.status) {
+      case SupplementCommissionResumeStatus.proposed:
+        _reloadBidOf(context, bid.id);
+        DonySnackbar.show(
+          context,
+          message: l.supplementCommissionConfirmedSnackbar,
+          type: DonySnackbarType.success,
+        );
+      case SupplementCommissionResumeStatus.pending:
+        _reloadBidOf(context, bid.id);
+        DonySnackbar.show(context, message: l.supplementCommissionProcessing);
+      case SupplementCommissionResumeStatus.failure:
+        if (state.error == null) {
+          DonySnackbar.show(
+            context,
+            message: l.supplementCommissionAuthInterrupted,
+            type: DonySnackbarType.error,
+          );
+        } else {
+          ErrorPresenter.show(context, state.error);
+          // Carte refusée : la demande est annulée, la fiche le montre.
+          _reloadBidOf(context, bid.id);
+        }
+      case SupplementCommissionResumeStatus.idle ||
+          SupplementCommissionResumeStatus.authorizing ||
+          SupplementCommissionResumeStatus.busy:
+        break;
+    }
+  }
+}
+
 class _SenderContent extends StatelessWidget {
   const _SenderContent({required this.bid, required this.supplement});
 
@@ -279,7 +480,7 @@ class _SenderContent extends StatelessWidget {
     final children = <Widget>[
       switch (s.status) {
         BidSupplementStatus.proposed => _StatusLine(
-          iconAsset: 'credit-card',
+          iconAsset: s.isCash ? 'banknote' : 'credit-card',
           color: cs.warning,
           text: l.supplementSenderPendingTitle,
         ),
@@ -293,6 +494,13 @@ class _SenderContent extends StatelessWidget {
           iconAsset: 'credit-card',
           color: cs.warning,
           text: l.supplementSenderPaymentPending,
+        ),
+        BidSupplementStatus.paid ||
+        BidSupplementStatus.payoutPending ||
+        BidSupplementStatus.paidOut when s.isCash => _StatusLine(
+          iconAsset: 'banknote',
+          color: cs.success,
+          text: l.supplementSenderCashPaid(gross),
         ),
         BidSupplementStatus.paid ||
         BidSupplementStatus.payoutPending ||
@@ -315,6 +523,11 @@ class _SenderContent extends StatelessWidget {
           iconAsset: 'refresh-cw',
           color: cs.onSurfaceVariant,
           text: l.supplementSenderRefundPending,
+        ),
+        _ when s.isCash => _StatusLine(
+          iconAsset: 'refresh-cw',
+          color: cs.onSurfaceVariant,
+          text: l.supplementSenderCashRefunded,
         ),
         _ => _StatusLine(
           iconAsset: 'refresh-cw',
@@ -348,7 +561,9 @@ class _SenderContent extends StatelessWidget {
           ),
         _HelpText(l.supplementSenderPendingHelp),
         if (SupplementPayButton.canPay(bid))
-          _HelpText(l.supplementSenderPayHelp),
+          _HelpText(
+            s.isCash ? l.supplementSenderCashHelp : l.supplementSenderPayHelp,
+          ),
       ],
     ];
 

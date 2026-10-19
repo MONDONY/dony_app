@@ -120,6 +120,9 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.contactPhoneConflictSupportSubject,
   'contactPhoneConflictSupportMessage': (l) =>
       l.contactPhoneConflictSupportMessage(placeholderMarker('phone')),
+  'contactEmailChangeSupportSubject': (l) => l.contactEmailChangeSupportSubject,
+  'contactEmailChangeSupportMessage': (l) =>
+      l.contactEmailChangeSupportMessage(placeholderMarker('email')),
   'errorSmsOtpDisabledTitle': (l) => l.errorSmsOtpDisabledTitle,
   'errorSmsOtpDisabledMessage': (l) => l.errorSmsOtpDisabledMessage,
   'errorInvalidPhoneNumberTitle': (l) => l.errorInvalidPhoneNumberTitle,
@@ -4641,6 +4644,25 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.notificationSettingsRemindersTipsLabel,
   'notificationSettingsRemindersTipsSubtitle': (l) =>
       l.notificationSettingsRemindersTipsSubtitle,
+  'notificationSettingsMyTripsLabel': (l) => l.notificationSettingsMyTripsLabel,
+  'notificationSettingsMyTripsSubtitle': (l) =>
+      l.notificationSettingsMyTripsSubtitle,
+  'notificationSettingsRecipientParcelsLabel': (l) =>
+      l.notificationSettingsRecipientParcelsLabel,
+  'notificationSettingsRecipientParcelsSubtitle': (l) =>
+      l.notificationSettingsRecipientParcelsSubtitle,
+  'notificationSettingsSectionEmails': (l) =>
+      l.notificationSettingsSectionEmails,
+  'notificationSettingsEmailRecapsLabel': (l) =>
+      l.notificationSettingsEmailRecapsLabel,
+  'notificationSettingsEmailRecapsSubtitle': (l) =>
+      l.notificationSettingsEmailRecapsSubtitle,
+  'notificationSettingsEmailAlertsTipsLabel': (l) =>
+      l.notificationSettingsEmailAlertsTipsLabel,
+  'notificationSettingsEmailAlertsTipsSubtitle': (l) =>
+      l.notificationSettingsEmailAlertsTipsSubtitle,
+  'notificationSettingsEmailsAlwaysNote': (l) =>
+      l.notificationSettingsEmailsAlwaysNote,
   'notificationSettingsMissedCallsLabel': (l) =>
       l.notificationSettingsMissedCallsLabel,
   'notificationSettingsMissedCallsSubtitle': (l) =>
@@ -7529,12 +7551,88 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.supplementMobileMoneyNotConfirmed,
   'supplementSenderMobileMoneyPending': (l) =>
       l.supplementSenderMobileMoneyPending,
+  'supplementCommissionSourceTitle': (l) => l.supplementCommissionSourceTitle,
+  'supplementCommissionSourceHelp': (l) => l.supplementCommissionSourceHelp,
+  'supplementCommissionSourceWallet': (l) => l.supplementCommissionSourceWallet,
+  'supplementCommissionSourceWalletHint': (l) =>
+      l.supplementCommissionSourceWalletHint,
+  'supplementCommissionSourceWalletCurrency': (l) =>
+      l.supplementCommissionSourceWalletCurrency(placeholderMarker('currency')),
+  'supplementCommissionSourceCard': (l) => l.supplementCommissionSourceCard,
+  'supplementCommissionSourceCardHint': (l) =>
+      l.supplementCommissionSourceCardHint,
+  'supplementCommissionUnfundedHint': (l) => l.supplementCommissionUnfundedHint,
+  'supplementCommissionCardMissing': (l) => l.supplementCommissionCardMissing,
+  'supplementCommissionRetryNotice': (l) => l.supplementCommissionRetryNotice,
+  'supplementCommissionRetry': (l) => l.supplementCommissionRetry,
+  'supplementCommissionAuthInterrupted': (l) =>
+      l.supplementCommissionAuthInterrupted,
+  'supplementCommissionProcessing': (l) => l.supplementCommissionProcessing,
+  'supplementRecapGrossCash': (l) => l.supplementRecapGrossCash,
+  'supplementTravelerCommissionPending': (l) =>
+      l.supplementTravelerCommissionPending,
+  'supplementTravelerCommissionPendingHelp': (l) =>
+      l.supplementTravelerCommissionPendingHelp,
+  'supplementCommissionConfirm': (l) => l.supplementCommissionConfirm,
+  'supplementCommissionConfirmedSnackbar': (l) =>
+      l.supplementCommissionConfirmedSnackbar,
+  'supplementTravelerCashCommissionHelp': (l) =>
+      l.supplementTravelerCashCommissionHelp,
+  'supplementTravelerCashPaid': (l) =>
+      l.supplementTravelerCashPaid(placeholderMarker('amount')),
+  'supplementTravelerCashPaidHelp': (l) => l.supplementTravelerCashPaidHelp,
+  'supplementTravelerCommissionRefunded': (l) =>
+      l.supplementTravelerCommissionRefunded,
+  'supplementTravelerCommissionRefundPending': (l) =>
+      l.supplementTravelerCommissionRefundPending,
+  'supplementTravelerCancelled': (l) => l.supplementTravelerCancelled,
+  'supplementTravelerCancelledNoCharge': (l) =>
+      l.supplementTravelerCancelledNoCharge,
+  'supplementTravelerCashRefunded': (l) => l.supplementTravelerCashRefunded,
+  'supplementCashAccept': (l) =>
+      l.supplementCashAccept(placeholderMarker('amount')),
+  'supplementSenderCashHelp': (l) => l.supplementSenderCashHelp,
+  'supplementCashConfirmTitle': (l) => l.supplementCashConfirmTitle,
+  'supplementCashConfirmMessage': (l) =>
+      l.supplementCashConfirmMessage(placeholderMarker('amount')),
+  'supplementCashConfirmHelp': (l) => l.supplementCashConfirmHelp,
+  'supplementCashConfirmButton': (l) =>
+      l.supplementCashConfirmButton(placeholderMarker('amount')),
+  'supplementCashAcceptedSnackbar': (l) =>
+      l.supplementCashAcceptedSnackbar(placeholderMarker('amount')),
+  'supplementSenderCashPaid': (l) =>
+      l.supplementSenderCashPaid(placeholderMarker('amount')),
+  'supplementSenderCashRefunded': (l) => l.supplementSenderCashRefunded,
+  'walletTxTypeSupplementCommission': (l) => l.walletTxTypeSupplementCommission,
+  'walletTxTypeSupplementCommissionRefund': (l) =>
+      l.walletTxTypeSupplementCommissionRefund,
+  'walletTxTypeOther': (l) => l.walletTxTypeOther,
+  'errorSupplementCommissionUnfundedTitle': (l) =>
+      l.errorSupplementCommissionUnfundedTitle,
+  'errorSupplementCommissionUnfundedMessage': (l) =>
+      l.errorSupplementCommissionUnfundedMessage,
+  'errorSupplementCommissionCardDeclinedTitle': (l) =>
+      l.errorSupplementCommissionCardDeclinedTitle,
+  'errorSupplementCommissionCardDeclinedMessage': (l) =>
+      l.errorSupplementCommissionCardDeclinedMessage,
+  'errorSupplementCommissionChargeFailedTitle': (l) =>
+      l.errorSupplementCommissionChargeFailedTitle,
+  'errorSupplementCommissionChargeFailedMessage': (l) =>
+      l.errorSupplementCommissionChargeFailedMessage,
+  'errorCommissionMethodMissingTitle': (l) =>
+      l.errorCommissionMethodMissingTitle,
+  'errorCommissionMethodMissingMessage': (l) =>
+      l.errorCommissionMethodMissingMessage,
+  'errorFundingCurrencyInvalidTitle': (l) => l.errorFundingCurrencyInvalidTitle,
+  'errorFundingCurrencyInvalidMessage': (l) =>
+      l.errorFundingCurrencyInvalidMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
 /// en a, dans l'ordre de la signature.
 const textParameters = <String, List<String>>{
   'contactPhoneConflictSupportMessage': ['phone'],
+  'contactEmailChangeSupportMessage': ['email'],
   'errorBidBelowMinPriceMessage': ['price'],
   'authOtpCodeSentTo': ['contact'],
   'authOtpCodeSentToPhone': ['contact'],
@@ -8124,4 +8222,11 @@ const textParameters = <String, List<String>>{
   'supplementSenderAmount': ['amount'],
   'supplementSenderPaid': ['amount'],
   'supplementPay': ['amount'],
+  'supplementCommissionSourceWalletCurrency': ['currency'],
+  'supplementTravelerCashPaid': ['amount'],
+  'supplementCashAccept': ['amount'],
+  'supplementCashConfirmMessage': ['amount'],
+  'supplementCashConfirmButton': ['amount'],
+  'supplementCashAcceptedSnackbar': ['amount'],
+  'supplementSenderCashPaid': ['amount'],
 };

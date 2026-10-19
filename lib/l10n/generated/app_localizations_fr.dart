@@ -21945,4 +21945,188 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get supplementSenderMobileMoneyPending =>
       'Paiement mobile money du supplément en attente';
+
+  @override
+  String get supplementCommissionSourceTitle => 'Commission du supplément';
+
+  @override
+  String get supplementCommissionSourceHelp =>
+      'Elle est prélevée maintenant et vous est rendue si l\'expéditeur refuse, ne répond pas à temps ou si le colis n\'est pas livré. L\'expéditeur vous remet le total en espèces.';
+
+  @override
+  String get supplementCommissionSourceWallet => 'Mon solde Yadony';
+
+  @override
+  String get supplementCommissionSourceWalletHint =>
+      'Prélevée maintenant sur votre solde';
+
+  @override
+  String supplementCommissionSourceWalletCurrency(String currency) {
+    return 'Mon solde $currency';
+  }
+
+  @override
+  String get supplementCommissionSourceCard => 'Ma carte commission';
+
+  @override
+  String get supplementCommissionSourceCardHint =>
+      'Débitée maintenant, votre banque peut demander une validation';
+
+  @override
+  String get supplementCommissionUnfundedHint =>
+      'Choisissez votre carte ou un autre solde ci-dessus, ou rechargez votre solde.';
+
+  @override
+  String get supplementCommissionCardMissing =>
+      'Aucune carte commission enregistrée. Ajoutez-en une, ou payez avec votre solde.';
+
+  @override
+  String get supplementCommissionRetryNotice =>
+      'Votre demande est enregistrée, mais la commission n\'a pas encore été prélevée. Réessayez pour l\'envoyer à l\'expéditeur.';
+
+  @override
+  String get supplementCommissionRetry => 'Réessayer le paiement';
+
+  @override
+  String get supplementCommissionAuthInterrupted =>
+      'Validation bancaire interrompue : rien n\'a été prélevé. Réessayez.';
+
+  @override
+  String get supplementCommissionProcessing =>
+      'Demande enregistrée : paiement de la commission en cours de validation';
+
+  @override
+  String get supplementRecapGrossCash => 'Remis en espèces par l\'expéditeur';
+
+  @override
+  String get supplementTravelerCommissionPending => 'Commission à valider';
+
+  @override
+  String get supplementTravelerCommissionPendingHelp =>
+      'Validez le paiement de la commission pour envoyer la demande à l\'expéditeur. Sans validation sous 30 minutes, elle est annulée sans frais.';
+
+  @override
+  String get supplementCommissionConfirm => 'Valider le paiement';
+
+  @override
+  String get supplementCommissionConfirmedSnackbar =>
+      'Commission payée : demande envoyée à l\'expéditeur';
+
+  @override
+  String get supplementTravelerCashCommissionHelp =>
+      'Commission prélevée. Elle vous est rendue si la demande n\'aboutit pas.';
+
+  @override
+  String supplementTravelerCashPaid(String amount) {
+    return 'Supplément accepté : l\'expéditeur vous remet $amount en espèces';
+  }
+
+  @override
+  String get supplementTravelerCashPaidHelp =>
+      'Recevez le complément en main propre à la remise du colis.';
+
+  @override
+  String get supplementTravelerCommissionRefunded =>
+      'La commission du supplément vous a été rendue.';
+
+  @override
+  String get supplementTravelerCommissionRefundPending =>
+      'La commission du supplément vous sera rendue sous peu.';
+
+  @override
+  String get supplementTravelerCancelled => 'Demande de supplément annulée';
+
+  @override
+  String get supplementTravelerCancelledNoCharge =>
+      'Rien n\'a été prélevé sur votre solde ni sur votre carte.';
+
+  @override
+  String get supplementTravelerCashRefunded =>
+      'Colis non livré : rendez le complément en espèces à l\'expéditeur';
+
+  @override
+  String supplementCashAccept(String amount) {
+    return 'Accepter $amount';
+  }
+
+  @override
+  String get supplementSenderCashHelp =>
+      'Acceptez avec le bouton en bas de l\'écran puis remettez le complément en espèces au voyageur, ou refusez ici.';
+
+  @override
+  String get supplementCashConfirmTitle => 'Accepter le supplément';
+
+  @override
+  String supplementCashConfirmMessage(String amount) {
+    return 'Vous remettrez $amount en espèces au voyageur, en main propre, à la remise du colis.';
+  }
+
+  @override
+  String get supplementCashConfirmHelp =>
+      'Le scan de remise se débloque dès votre accord. Rien n\'est payé dans l\'application.';
+
+  @override
+  String supplementCashConfirmButton(String amount) {
+    return 'Je remettrai $amount en espèces';
+  }
+
+  @override
+  String supplementCashAcceptedSnackbar(String amount) {
+    return 'Supplément accepté : remettez $amount en espèces au voyageur';
+  }
+
+  @override
+  String supplementSenderCashPaid(String amount) {
+    return 'Supplément accepté : $amount à remettre en espèces';
+  }
+
+  @override
+  String get supplementSenderCashRefunded =>
+      'Colis non livré : le voyageur vous rend le complément en espèces';
+
+  @override
+  String get walletTxTypeSupplementCommission => 'Commission de supplément';
+
+  @override
+  String get walletTxTypeSupplementCommissionRefund =>
+      'Commission de supplément rendue';
+
+  @override
+  String get walletTxTypeOther => 'Mouvement du solde';
+
+  @override
+  String get errorSupplementCommissionUnfundedTitle => 'Solde insuffisant';
+
+  @override
+  String get errorSupplementCommissionUnfundedMessage =>
+      'Votre solde ne couvre pas la commission du supplément. Rechargez-le ou payez par carte.';
+
+  @override
+  String get errorSupplementCommissionCardDeclinedTitle => 'Carte refusée';
+
+  @override
+  String get errorSupplementCommissionCardDeclinedMessage =>
+      'Votre carte commission a été refusée : rien n\'a été prélevé et la demande est annulée.';
+
+  @override
+  String get errorSupplementCommissionChargeFailedTitle =>
+      'Commission non prélevée';
+
+  @override
+  String get errorSupplementCommissionChargeFailedMessage =>
+      'Le débit de la commission n\'a pas abouti. Réessayez.';
+
+  @override
+  String get errorCommissionMethodMissingTitle => 'Carte commission manquante';
+
+  @override
+  String get errorCommissionMethodMissingMessage =>
+      'Enregistrez une carte commission, ou payez avec votre solde.';
+
+  @override
+  String get errorFundingCurrencyInvalidTitle => 'Devise non prise en charge';
+
+  @override
+  String get errorFundingCurrencyInvalidMessage =>
+      'Ce portefeuille ne peut pas payer la commission. Choisissez-en un autre.';
 }

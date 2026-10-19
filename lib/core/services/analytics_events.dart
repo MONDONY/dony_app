@@ -309,7 +309,8 @@ abstract final class AnalyticsEvents {
   /// Commission d'un accord en espèces (offre ou fil de négociation) : le
   /// voyageur choisit de payer le complément depuis un autre portefeuille,
   /// converti au taux du jour (FLUTTER-CG). Propriétés `currency` (code ISO
-  /// du portefeuille choisi) et `context` (`bid`/`negotiation`). Jamais de
+  /// du portefeuille choisi) et `context` (`bid`/`negotiation`/
+  /// `bid_supplement`). Jamais de
   /// montant ni de solde.
   static const commissionFundingCurrencyChosen =
       'commission_funding_currency_chosen';
@@ -490,7 +491,7 @@ abstract final class AnalyticsEvents {
   /// Demande de supplément créée par le serveur. Propriétés `reason`
   /// (`grid_item`/`extra_weight`/`other`), `suggestion`
   /// (`grid_item`/`kg`/`custom`), `amount_bracket`, `currency`,
-  /// `payment_method`.
+  /// `payment_method`, et en espèces `commission_source` (`wallet`/`card`).
   static const bidSupplementRequested = 'bid_supplement_requested';
 
   /// Demande impossible (photo non envoyée, montant hors bornes, départ trop
@@ -517,6 +518,19 @@ abstract final class AnalyticsEvents {
   /// `amount_bracket`. Le paiement lui-même est tracé par la feuille
   /// (`payment_*`, `context: bid_supplement`).
   static const bidSupplementPaymentStarted = 'bid_supplement_payment_started';
+
+  /// Colis payé en espèces : l'expéditeur accepte le supplément et s'engage à
+  /// remettre le complément en main propre (`POST …/accept`, rail `CASH`).
+  /// Propriétés `amount_bracket`, `currency`. Aucun argent ne passe par
+  /// l'app : pas de `payment_succeeded`.
+  static const bidSupplementCashAccepted = 'bid_supplement_cash_accepted';
+
+  /// Colis payé en espèces : le voyageur relance depuis l'encart la
+  /// validation de la commission d'une demande en attente (3DS abandonnée,
+  /// débit sans réponse). Propriété `outcome` : `proposed` (demande partie à
+  /// l'expéditeur), `pending` (encore en attente), `failed`.
+  static const bidSupplementCommissionResumed =
+      'bid_supplement_commission_resumed';
 
   /// Scan de remise refusé par le serveur (409
   /// `handover-supplement-pending`) : un supplément attend la réponse de

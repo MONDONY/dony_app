@@ -22,6 +22,8 @@ class BidSupplementRepository {
     String? reasonText,
     String? gridItemLabel,
     required String photoKey,
+    SupplementCommissionSource? commissionSource,
+    String? fundingCurrency,
   }) => _datasource.create(
     bidId,
     netAmount: netAmount,
@@ -29,7 +31,14 @@ class BidSupplementRepository {
     reasonText: reasonText,
     gridItemLabel: gridItemLabel,
     photoKey: photoKey,
+    commissionSource: commissionSource,
+    fundingCurrency: fundingCurrency,
   );
+
+  Future<BidSupplement> confirmCommission(String bidId, String supplementId) =>
+      _datasource.confirmCommission(bidId, supplementId);
+
+  Future<BidSupplement?> current(String bidId) => _datasource.current(bidId);
 
   Future<BidSupplement> withdraw(String bidId, String supplementId) =>
       _datasource.withdraw(bidId, supplementId);

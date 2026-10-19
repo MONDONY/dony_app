@@ -204,18 +204,50 @@ void main() {
         SupplementPayButton.canPay(
           _bid(_supplement(rail: null), paymentMethod: BidPaymentMethod.cash),
         ),
+        isTrue,
+      );
+      expect(
+        SupplementPayButton.canPay(
+          _bid(_supplement(rail: null), paymentMethod: BidPaymentMethod.wave),
+        ),
         isFalse,
       );
     });
 
-    test('mobile money : bouton (PR A3) ; espèces : pas encore (PR A4)', () {
+    test('mobile money (PR A3) et espèces (PR A4) : bouton', () {
       expect(
         SupplementPayButton.canPay(_bid(_supplement(rail: 'PAWAPAY'))),
         isTrue,
       );
       expect(
         SupplementPayButton.canPay(_bid(_supplement(rail: 'CASH'))),
+        isTrue,
+      );
+    });
+
+    test('espèces : seulement à accepter (PROPOSED), jamais en paiement', () {
+      expect(
+        SupplementPayButton.canPay(
+          _bid(
+            _supplement(
+              rail: 'CASH',
+              status: BidSupplementStatus.paymentPending,
+            ),
+          ),
+        ),
         isFalse,
+      );
+      expect(
+        SupplementPayButton.canPay(
+          _bid(_supplement(rail: 'CASH', status: BidSupplementStatus.paid)),
+        ),
+        isFalse,
+      );
+      expect(
+        SupplementPayButton.railOf(
+          _bid(_supplement(rail: null), paymentMethod: BidPaymentMethod.cash),
+        ),
+        'CASH',
       );
     });
 
@@ -782,6 +814,116 @@ void main() {
 
       verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
       expect(find.byKey(const Key('supplement-pay-btn')), findsOneWidget);
+    });
+  });
+
+  group('espèces (PR A4)', () {
+    BidModel cashBid() =>
+        _bid(_supplement(rail: 'CASH'), paymentMethod: BidPaymentMethod.cash);
+
+    testWidgets('« Accepter » ouvre la confirmation, sans vérification '
+        'locale ; le bouton est dans le stickyBottom', (tester) async {
+      var authorizations = 0;
+      final accepted = Completer<SupplementCheckout>();
+      when(
+        () => repository.accept('bid-1', 'sup-1'),
+      ).thenAnswer((_) => accepted.future);
+      await pump(
+        tester,
+        cashBid(),
+        authorize: (_) async {
+          authorizations++;
+          return true;
+        },
+      );
+
+      expect(_txt('Accepter 16,80 €'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accepter le supplément'), findsOneWidget);
+      expect(
+        _txt(
+          'Vous remettrez 16,80 € en espèces au voyageur, en main propre, à '
+          'la remise du colis.',
+        ),
+        findsOneWidget,
+      );
+      final confirm = find.byKey(const Key('supplement-cash-confirm-btn'));
+      expect(
+        find.ancestor(
+          of: confirm,
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsNothing,
+      );
+
+      await tester.tap(confirm);
+      await tester.pump();
+      expect(tester.widget<DonyButton>(confirm).isLoading, isTrue);
+
+      accepted.complete(
+        const SupplementCheckout(
+          supplement: BidSupplement(
+            id: 'sup-1',
+            status: BidSupplementStatus.paid,
+            rail: 'CASH',
+            grossAmount: 16.8,
+          ),
+          rail: 'CASH',
+          amount: 16.8,
+          currency: 'EUR',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(authorizations, 0);
+      expect(find.text('Accepter le supplément'), findsNothing);
+      expect(
+        _txt('Supplément accepté : remettez 16,80 € en espèces au voyageur'),
+        findsOneWidget,
+      );
+      verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidSupplementCashAccepted, {
+          'currency': 'EUR',
+          'amount_bracket': '<20',
+        }),
+      ).called(1);
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
+      );
+    });
+
+    testWidgets('acceptation refusée : feuille fermée, erreur, relecture', (
+      tester,
+    ) async {
+      when(
+        () => repository.accept('bid-1', 'sup-1'),
+      ).thenThrow(const ConflictException('d', code: 'supplement-expired'));
+      await pump(tester, cashBid());
+
+      await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('supplement-cash-confirm-btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accepter le supplément'), findsNothing);
+      verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
+    });
+
+    testWidgets('feuille refermée sans accepter : rien n\'est envoyé', (
+      tester,
+    ) async {
+      await pump(tester, cashBid());
+
+      await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => repository.accept(any(), any()));
+      expect(_txt('Accepter 16,80 €'), findsOneWidget);
     });
   });
 }
