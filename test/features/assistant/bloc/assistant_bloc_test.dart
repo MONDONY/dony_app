@@ -157,6 +157,47 @@ void main() {
   );
 
   blocTest<AssistantBloc, AssistantState>(
+    'texte riche affiché, historique renvoyé en texte brut (PROD-13)',
+    build: () {
+      answers(
+        const AssistantAnswer(
+          answer: 'Allez dans Moi.\n• Touchez Profil',
+          answerRich: 'Allez dans **Moi**.\n- Touchez **Profil**',
+          answered: true,
+          actions: [],
+          provider: 'claude',
+          remainingToday: 10,
+        ),
+      );
+      return build();
+    },
+    act: (b) async {
+      b.add(const AssistantQuestionSubmitted('Q1', locale: 'fr'));
+      await Future<void>.delayed(Duration.zero);
+      b.add(const AssistantQuestionSubmitted('Q2', locale: 'fr'));
+    },
+    verify: (b) {
+      final reply = b.state.messages.firstWhere(
+        (m) => m.author == AssistantAuthor.assistant,
+      );
+      expect(reply.richText, 'Allez dans **Moi**.\n- Touchez **Profil**');
+      expect(reply.displayText, reply.richText);
+      expect(reply.text, 'Allez dans Moi.\n• Touchez Profil');
+      final history =
+          verify(
+                () => repository.ask(
+                  question: 'Q2',
+                  locale: 'fr',
+                  history: captureAny(named: 'history'),
+                ),
+              ).captured.single
+              as List<AssistantHistoryTurn>;
+      expect(history.last.text, 'Allez dans Moi.\n• Touchez Profil');
+      expect(history.map((t) => t.text).join(), isNot(contains('**')));
+    },
+  );
+
+  blocTest<AssistantBloc, AssistantState>(
     'l’historique envoyé est borné à 12 tours',
     build: () {
       answers(_answer);
