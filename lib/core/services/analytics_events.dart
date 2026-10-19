@@ -163,6 +163,31 @@ abstract final class AnalyticsEvents {
   static const mobileMoneyConfirmed = 'mobile_money_confirmed';
   static const mobileMoneyFailed = 'mobile_money_failed';
 
+  /// Composant partagé « compte qui paie » (recharge, paiement d'un colis,
+  /// versement). Toutes portent la propriété `flow` (`topup`...) et ne
+  /// contiennent jamais de numéro.
+  ///
+  /// Pays choisi. Propriétés `country`, `available` (servi ou « Bientôt »).
+  static const mobileMoneyCountrySelected = 'mobile_money_country_selected';
+
+  /// Pays « Bientôt » affiché. Propriété `country`.
+  static const mobileMoneyCountryUnavailableViewed =
+      'mobile_money_country_unavailable_viewed';
+
+  /// Opérateur remplacé par celui que pawaPay reconnaît sur le numéro.
+  /// Propriétés `from`, `to` (codes opérateur).
+  static const mobileMoneyOperatorAutoSwitched =
+      'mobile_money_operator_auto_switched';
+
+  /// Numéro refusé ou inconnu des opérateurs du pays.
+  static const mobileMoneyNumberUnrecognized =
+      'mobile_money_number_unrecognized';
+
+  /// Bouton « Recharger par carte » touché depuis un pays « Bientôt ».
+  /// Propriété `country`.
+  static const mobileMoneySwitchToCardTapped =
+      'mobile_money_switch_to_card_tapped';
+
   // Tracking / QR
   static const qrScanSuccess = 'qr_scan_success';
   static const deliveryConfirmed = 'delivery_confirmed';
