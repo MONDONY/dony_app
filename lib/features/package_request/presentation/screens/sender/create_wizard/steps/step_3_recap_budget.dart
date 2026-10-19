@@ -935,7 +935,7 @@ class _BudgetBreakdown extends StatelessWidget {
     // Seul un code saisi et appliqué ouvre une ligne de réduction : sans code,
     // les frais du devis intègrent déjà un éventuel taux spécial.
     final hasDiscount =
-        (q?.promoApplied ?? false) && discount > _halfMinorUnit(cur);
+        (q?.promoApplied ?? false) && discount > halfMinorUnit(cur);
 
     return _card(
       cs,
@@ -1036,16 +1036,6 @@ class _BudgetBreakdown extends StatelessWidget {
         _netRow(tt, cs, l10n, CurrencyFormatter.formatOrPlain(net, currency)),
       ],
     );
-  }
-
-  /// Moitié de l'unité mineure de [cur] : en dessous, un écart n'est qu'un
-  /// reste d'arrondi.
-  static double _halfMinorUnit(SupportedCurrency cur) {
-    var unit = 1.0;
-    for (var i = 0; i < cur.minorUnit; i++) {
-      unit /= 10;
-    }
-    return unit / 2;
   }
 
   Widget _card(ColorScheme cs, {required List<Widget> children}) => Container(

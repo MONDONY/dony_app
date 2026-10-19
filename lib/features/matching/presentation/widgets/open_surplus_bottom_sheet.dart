@@ -264,7 +264,10 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
                 netPricePerKg: _pricePerKg,
                 // Sous grille, le prix au kilo reste le net et les frais de
                 // service se lisent en suffixe ; sinon, prix majoré du taux.
-                senderPricePerKg: listUnitPrice(_pricePerKg),
+                senderPricePerKg: listUnitPrice(
+                  _pricePerKg,
+                  widget.announcement.currency,
+                ),
                 feeSuffix: listPriceFeeSuffix(l, widget.announcement.currency),
                 currency: widget.announcement.currency,
               ),

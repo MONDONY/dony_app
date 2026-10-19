@@ -382,6 +382,11 @@ class _TripNegoHero extends StatelessWidget {
           : l.negotiationThreadYouWouldPay,
       amount: formatPriceIn(amount, negotiation.currency),
       amountKey: Key(isTraveler ? 'nego-net-amount' : 'nego-total-amount'),
+      // Sous grille, les lignes du colis sont au prix du voyageur : le brut
+      // payé par l'expéditeur, lui, comprend les frais de service.
+      amountNote: negotiation.senderSeesNetGridLines
+          ? l.bidNegotiationHeroServiceFeeIncluded
+          : null,
       badgeLabel: variant.badge(l),
       roundLabel: l.negotiationThreadRoundLabel(
         negotiation.round,
@@ -595,8 +600,11 @@ class _ParcelSummary extends StatelessWidget {
             _SummaryLine(
               icon: Icons.category_rounded,
               label: line.label,
-              trailing:
-                  '${line.quantity} × ${formatPriceIn(line.unitPriceDisplayEur, negotiation.currency)}',
+              trailing: bidNegotiationGridLineLabel(
+                context.l10n,
+                negotiation,
+                line,
+              ),
             ),
           for (final item in negotiation.customItems)
             _SummaryLine(

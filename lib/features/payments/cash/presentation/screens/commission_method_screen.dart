@@ -4,6 +4,7 @@ import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -113,15 +114,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                 ),
                 const SizedBox(height: DonySpacing.base),
                 Text(
-                  // Le plancher de 1 € n'est vrai qu'en euros : ne pas
-                  // l'afficher à un voyageur dont la commission est prélevée
-                  // dans une autre devise. Le montant est toujours formaté en
-                  // EUR (formatPriceIn) : il garde la locale de sa devise,
-                  // jamais celle de la langue de l'app.
-                  (ActiveCurrency.current ?? SupportedCurrency.eur) ==
-                          SupportedCurrency.eur
-                      ? l.commissionCardDebitNoticeMin(formatPriceIn(1, 'EUR'))
-                      : l.commissionCardDebitNotice,
+                  _debitNotice(l),
                   style: Theme.of(ctx).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: DonySpacing.xl),
@@ -275,3 +268,24 @@ String commissionSetupErrorMessage(
   StripeFailureKind.sheetUnavailable => l.paymentSheetOpenFailed,
   StripeFailureKind.generic => l.commissionCardAddErrorMessage,
 };
+
+/// Notice de débit de la carte, avec le plancher des frais quand il est connu.
+///
+/// Sous grille de commission, le minimum vient de la grille, dans la devise
+/// active du voyageur. Sans grille, le plancher historique de 1 € n'est vrai
+/// qu'en euros : il n'est pas affiché à un voyageur dont les frais sont
+/// prélevés dans une autre devise. Le montant garde la locale de sa devise
+/// (formatPriceIn), jamais celle de la langue de l'app.
+String _debitNotice(AppLocalizations l) {
+  final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
+  final minimum = commissionMinimumFor(currency.code);
+  if (minimum != null) {
+    return l.commissionCardDebitNoticeMin(
+      formatPriceIn(minimum, currency.code),
+    );
+  }
+  if (commissionGridActive || currency != SupportedCurrency.eur) {
+    return l.commissionCardDebitNotice;
+  }
+  return l.commissionCardDebitNoticeMin(formatPriceIn(1, 'EUR'));
+}

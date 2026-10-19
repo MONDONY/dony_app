@@ -10959,5 +10959,10 @@
   "@priceGridSenderWillPayMessageGrid": {"placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}},
   "promoIneffectiveCommissionMinimum": "This code does not change this amount (minimum fee)",
   "bidCreateServiceFeeLineLabel": "Yadony service fee",
-  "bidCreateGridSheetServiceFeeIncluded": "Service fee included"
+  "bidCreateGridSheetServiceFeeIncluded": "Service fee included",
+  "faqPaymentsCommissionAGrid": "The service fee covers payment costs, support, fraud prevention and the development of the platform. It depends on the transport price, with a minimum of {minimum}. The exact amount is shown before you confirm.",
+  "@faqPaymentsCommissionAGrid": {"placeholders": {"minimum": {"type": "String"}}},
+  "bidNegotiationGridLineServiceFee": "{line} + service fee",
+  "@bidNegotiationGridLineServiceFee": {"placeholders": {"line": {"type": "String"}}},
+  "bidNegotiationHeroServiceFeeIncluded": "Service fee included"
 }

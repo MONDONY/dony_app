@@ -99,7 +99,7 @@ void main() {
     await _pump(tester, _announcement(pricePerKg: 6, pricePerKgDisplay: null));
 
     expect(
-      find.text(formatPriceIn(netToSenderPrice(6), 'EUR')),
+      find.text(formatPriceIn(6 * (1 + donyCommissionRate), 'EUR')),
       findsOneWidget,
     );
     expect(find.text(formatPriceIn(6, 'EUR')), findsNothing);

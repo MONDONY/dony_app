@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -176,10 +177,36 @@ void main() {
 
   group('listUnitPrice', () {
     test('listUnitPrice(8) vaut 8 sous grille et 8,40 sans', () {
-      expect(listUnitPrice(8), closeTo(8.40, 1e-9));
+      expect(listUnitPrice(8, 'EUR'), closeTo(8.40, 1e-9));
 
       useTestCommissionGrid();
-      expect(listUnitPrice(8), 8);
+      expect(listUnitPrice(8, 'EUR'), 8);
+    });
+
+    test('grille sans minimum pour la devise : taux unique, comme le suffixe '
+        'et senderPriceForNet', () {
+      useTestCommissionGrid(
+        CommissionGrid(
+          id: 'grid-eur-only',
+          effectiveFrom: DateTime.utc(2026, 10),
+          tiers: const [CommissionTier(fromEur: 0, rate: 0.07)],
+          minimums: const {'EUR': 1.00},
+        ),
+      );
+      expect(listUnitPrice(8, 'EUR'), 8);
+      expect(listUnitPrice(8, 'USD'), closeTo(8.40, 1e-9));
+      // Devise absente ou inconnue : repli EUR, comme formatPriceIn.
+      expect(listUnitPrice(8, null), 8);
+    });
+  });
+
+  group('halfMinorUnit', () {
+    test('0,005 en euros, 0,5 en francs CFA', () {
+      expect(halfMinorUnit(SupportedCurrency.eur), closeTo(0.005, 1e-12));
+      expect(
+        halfMinorUnit(SupportedCurrency.fromCodeOrDefault('XOF')),
+        closeTo(0.5, 1e-12),
+      );
     });
   });
 

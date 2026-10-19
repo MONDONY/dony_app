@@ -1,4 +1,6 @@
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
@@ -92,7 +94,7 @@ class _FaqScreenState extends State<FaqScreen> {
         _FaqItem(
           id: 'commission',
           q: l.faqPaymentsCommissionQ,
-          a: l.faqPaymentsCommissionA,
+          a: _commissionAnswer(l),
         ),
         _FaqItem(
           id: 'payment_security',
@@ -162,6 +164,17 @@ class _FaqScreenState extends State<FaqScreen> {
         .replaceAll(RegExp('[òóôöõ]'), 'o') // i18n-ignore
         .replaceAll(RegExp('[ùúûü]'), 'u') // i18n-ignore
         .replaceAll(RegExp('[ýÿ]'), 'y'); // i18n-ignore
+  }
+
+  /// Réponse sur les frais de service : sous grille de commission, elle cite
+  /// le minimum de la grille dans la devise active, jamais un taux ; sans
+  /// grille, le texte historique.
+  static String _commissionAnswer(AppLocalizations l) {
+    final code = ActiveCurrency.current?.code;
+    final minimum = commissionMinimumFor(code);
+    return minimum == null
+        ? l.faqPaymentsCommissionA
+        : l.faqPaymentsCommissionAGrid(formatPriceIn(minimum, code));
   }
 
   static List<_FaqSectionData> _filterSections(

@@ -34,18 +34,15 @@ void main() {
   tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
   group('dony_pricing — défaut', () {
-    test('taux et multiplicateur par défaut alignés sur le backend (5 %)', () {
+    test('taux par défaut aligné sur le backend (5 %)', () {
       expect(donyCommissionRate, 0.05);
-      expect(donyCommissionMultiplier, closeTo(1.05, 1e-9));
     });
   });
 
   group('setDonyCommissionRate (source unique ajustable)', () {
-    test('met à jour taux, multiplicateur et conversion', () {
+    test('met à jour le taux', () {
       setDonyCommissionRate(0.20);
       expect(donyCommissionRate, 0.20);
-      expect(donyCommissionMultiplier, closeTo(1.20, 1e-9));
-      expect(netToSenderPrice(10), closeTo(12.0, 1e-9));
     });
 
     test('ignore les valeurs aberrantes (reste sur le repli)', () {
@@ -53,14 +50,6 @@ void main() {
       expect(donyCommissionRate, kDonyCommissionRateDefault);
       setDonyCommissionRate(-0.1);
       expect(donyCommissionRate, kDonyCommissionRateDefault);
-    });
-  });
-
-  group('netToSenderPrice', () {
-    test('applique +5 % au net', () {
-      expect(netToSenderPrice(10), closeTo(10.50, 1e-9));
-      expect(netToSenderPrice(5), closeTo(5.25, 1e-9));
-      expect(netToSenderPrice(0), 0);
     });
   });
 

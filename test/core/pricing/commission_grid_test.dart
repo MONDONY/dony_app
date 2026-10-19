@@ -162,4 +162,33 @@ void main() {
       expect(exactProductHalfUp(0, 1.15, 2), 0.0);
     });
   });
+
+  group('lectures limites du décimal exact', () {
+    final grid = CommissionGrid(
+      id: 'g-limites',
+      effectiveFrom: DateTime.utc(2026, 10),
+      tiers: const [CommissionTier(fromEur: 0, rate: 0.07)],
+      minimums: const {'EUR': 1.00},
+    );
+
+    test('net non fini : FormatException (la façade le filtre avant)', () {
+      expect(
+        () => computeCommission(double.infinity, 'EUR', grid),
+        throwsFormatException,
+      );
+    });
+
+    test('net en notation exponentielle (1e21) : lu sans perte', () {
+      final result = computeCommission(1e21, 'EUR', grid);
+      expect(result.net, 1e21);
+      expect(result.commission, 7e19);
+    });
+
+    test('tranche JSON non numérique : FormatException', () {
+      expect(
+        () => CommissionTier.fromJson({'fromEur': true, 'rate': 0.07}),
+        throwsFormatException,
+      );
+    });
+  });
 }

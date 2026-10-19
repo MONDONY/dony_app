@@ -15528,16 +15528,16 @@ abstract class AppLocalizations {
   /// **'Envoi de votre colis'**
   String get paymentContextDefault;
 
-  /// Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros. Sans taux (FLUTTER-R6).
+  /// Notice de débit de la carte commission avec le plancher (commission_method_screen.dart) : sous grille de commission, minimum de la grille dans la devise active ; sans grille, plancher historique de 1 € en EUR seulement. {min} est déjà formaté dans sa devise (formatPriceIn). Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Cette carte sera débitée de la commission (min. {min}) à chaque colis en espèces accepté.'**
+  /// **'Cette carte sera débitée des frais de service (min. {min}) à chaque colis en espèces accepté.'**
   String commissionCardDebitNoticeMin(String min);
 
-  /// Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros. Sans taux (FLUTTER-R6).
+  /// Notice de débit de la carte commission sans plancher connu (commission_method_screen.dart) : sans grille de commission et devise active autre que l'EUR, ou grille sans minimum pour la devise. Sans taux (FLUTTER-R6).
   ///
   /// In fr, this message translates to:
-  /// **'Cette carte sera débitée de la commission à chaque colis en espèces accepté.'**
+  /// **'Cette carte sera débitée des frais de service à chaque colis en espèces accepté.'**
   String get commissionCardDebitNotice;
 
   /// Titre de l'AppBar de l'écran Carte commission (commission_method_screen.dart).
@@ -34785,6 +34785,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Frais de service inclus'**
   String get bidCreateGridSheetServiceFeeIncluded;
+
+  /// Réponse FAQ payments/commission quand une grille de commission est en vigueur (faq_screen.dart). {minimum} : frais de service minimum de la grille, formatés dans la devise active. Sans taux. Variante de faqPaymentsCommissionA.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme. Ils dépendent du prix du transport, avec un minimum de {minimum}. Le montant exact est affiché avant de confirmer.'**
+  String faqPaymentsCommissionAGrid(String minimum);
+
+  /// Ligne d'un article de grille dans le récapitulatif d'un fil de négociation sur un trajet, vue expéditeur, quand le fil porte une grille de commission : {line} est « quantité × prix voyageur », les frais de service s'ajoutent au total (bid_negotiation_thread_screen.dart, bid_negotiation_parcel_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{line} + frais de service'**
+  String bidNegotiationGridLineServiceFee(String line);
+
+  /// Légende sous « Vous paieriez » de la carte en tête d'un fil de négociation sur un trajet, vue expéditeur, quand le fil porte une grille de commission : le montant affiché comprend les frais de service (bid_negotiation_thread_screen.dart, _TripNegoHero).
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de service compris'**
+  String get bidNegotiationHeroServiceFeeIncluded;
 }
 
 class _AppLocalizationsDelegate

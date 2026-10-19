@@ -9791,18 +9791,18 @@
   "@paymentContextDefault": {
     "description": "Libellé de contexte de la feuille de paiement quand aucun destinataire n'est connu (payment_screen.dart)."
   },
-  "commissionCardDebitNoticeMin": "Cette carte sera débitée de la commission (min. {min}) à chaque colis en espèces accepté.",
+  "commissionCardDebitNoticeMin": "Cette carte sera débitée des frais de service (min. {min}) à chaque colis en espèces accepté.",
   "@commissionCardDebitNoticeMin": {
-    "description": "Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros. Sans taux (FLUTTER-R6).",
+    "description": "Notice de débit de la carte commission avec le plancher (commission_method_screen.dart) : sous grille de commission, minimum de la grille dans la devise active ; sans grille, plancher historique de 1 € en EUR seulement. {min} est déjà formaté dans sa devise (formatPriceIn). Sans taux (FLUTTER-R6).",
     "placeholders": {
       "min": {
         "type": "String"
       }
     }
   },
-  "commissionCardDebitNotice": "Cette carte sera débitée de la commission à chaque colis en espèces accepté.",
+  "commissionCardDebitNotice": "Cette carte sera débitée des frais de service à chaque colis en espèces accepté.",
   "@commissionCardDebitNotice": {
-    "description": "Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros. Sans taux (FLUTTER-R6)."
+    "description": "Notice de débit de la carte commission sans plancher connu (commission_method_screen.dart) : sans grille de commission et devise active autre que l'EUR, ou grille sans minimum pour la devise. Sans taux (FLUTTER-R6)."
   },
 
   "commissionCardScreenTitle": "Carte commission",
@@ -22170,5 +22170,11 @@
   "bidCreateServiceFeeLineLabel": "Frais de service Yadony",
   "@bidCreateServiceFeeLineLabel": {"description": "Ligne des frais de service du récapitulatif de prix d'une offre sur un trajet, sous grille de commission : les lignes au-dessus sont au net, celle-ci s'y ajoute (create_bid_bottom_sheet.dart)."},
   "bidCreateGridSheetServiceFeeIncluded": "Frais de service inclus",
-  "@bidCreateGridSheetServiceFeeIncluded": {"description": "Mention à côté du total de la feuille de choix des articles de grille, sous grille de commission : le total affiché comprend les frais de service, alors que les prix des articles sont au net (grid_item_selection_sheet.dart)."}
+  "@bidCreateGridSheetServiceFeeIncluded": {"description": "Mention à côté du total de la feuille de choix des articles de grille, sous grille de commission : le total affiché comprend les frais de service, alors que les prix des articles sont au net (grid_item_selection_sheet.dart)."},
+  "faqPaymentsCommissionAGrid": "Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme. Ils dépendent du prix du transport, avec un minimum de {minimum}. Le montant exact est affiché avant de confirmer.",
+  "@faqPaymentsCommissionAGrid": {"description": "Réponse FAQ payments/commission quand une grille de commission est en vigueur (faq_screen.dart). {minimum} : frais de service minimum de la grille, formatés dans la devise active. Sans taux. Variante de faqPaymentsCommissionA.", "placeholders": {"minimum": {"type": "String"}}},
+  "bidNegotiationGridLineServiceFee": "{line} + frais de service",
+  "@bidNegotiationGridLineServiceFee": {"description": "Ligne d'un article de grille dans le récapitulatif d'un fil de négociation sur un trajet, vue expéditeur, quand le fil porte une grille de commission : {line} est « quantité × prix voyageur », les frais de service s'ajoutent au total (bid_negotiation_thread_screen.dart, bid_negotiation_parcel_sheet.dart).", "placeholders": {"line": {"type": "String"}}},
+  "bidNegotiationHeroServiceFeeIncluded": "Frais de service compris",
+  "@bidNegotiationHeroServiceFeeIncluded": {"description": "Légende sous « Vous paieriez » de la carte en tête d'un fil de négociation sur un trajet, vue expéditeur, quand le fil porte une grille de commission : le montant affiché comprend les frais de service (bid_negotiation_thread_screen.dart, _TripNegoHero)."}
 }

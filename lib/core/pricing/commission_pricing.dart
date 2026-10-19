@@ -1,7 +1,7 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/commission_rate.dart';
 
 /// Façade de prix côté expéditeur : la grille de commission par paliers quand
 /// le serveur en publie une, sinon le taux unique historique
@@ -12,7 +12,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 /// la devise, et ne lève jamais pour un net nul ou une devise inconnue (repli
 /// EUR, comme [formatPriceIn]). Le serveur reste la source de vérité : un
 /// montant qu'il sert (`totalSenderAmountEur`, `pricePerKgDisplay`) passe
-/// toujours avant ce calcul.
+/// toujours avant ce calcul (`formatPriceIn`, dans `dony_pricing.dart`).
 
 /// Prix payé par l'expéditeur pour un net du voyageur.
 class SenderPrice {
@@ -127,17 +127,36 @@ double netForSenderGross(
 /// l'expéditeur, faute de champ `*Display` servi par le serveur.
 ///
 /// Sous grille, les frais ne se répartissent plus à l'unité : la liste montre
-/// le net et les frais de service s'ajoutent au total. Sans grille, le prix
-/// reste majoré du taux unique, comme avant.
-double listUnitPrice(double netUnit) =>
-    commissionGridActive ? netUnit : netUnit * (1 + donyCommissionRate);
+/// le net et les frais de service s'ajoutent au total. Sans grille, ou quand
+/// la grille n'a pas de minimum pour [currencyCode], le prix reste majoré du
+/// taux unique, comme avant : même règle que [senderPriceForNet] et que la
+/// mention « + frais de service » (`listPriceFeeSuffix`), qui n'apparaît
+/// qu'avec ce minimum.
+double listUnitPrice(double netUnit, String? currencyCode) =>
+    commissionMinimumFor(currencyCode) != null
+    ? netUnit
+    : netUnit * (1 + donyCommissionRate);
 
 /// Frais de service minimum de la grille en vigueur dans [currencyCode]
 /// (repli EUR), `null` sans grille ou sans minimum pour la devise.
 double? commissionMinimumFor(String? currencyCode) => activeCommissionGrid
     ?.minimumFor(SupportedCurrency.fromCodeOrDefault(currencyCode).code);
 
+/// Moitié de l'unité mineure de [currency] (0,005 en euros, 0,5 en franc
+/// CFA) : un écart plus petit entre deux montants n'est qu'un reste d'arrondi.
+double halfMinorUnit(SupportedCurrency currency) =>
+    1 / _minorUnitFactor(currency) / 2;
+
 // ── Interne ────────────────────────────────────────────────────────────────
+
+/// `10^minorUnit` : 100 pour l'euro, 1 pour le franc CFA.
+double _minorUnitFactor(SupportedCurrency currency) {
+  var factor = 1.0;
+  for (var i = 0; i < currency.minorUnit; i++) {
+    factor *= 10;
+  }
+  return factor;
+}
 
 /// Grille à utiliser pour [currency], `null` quand il faut retomber sur le
 /// taux unique (aucune grille, ou pas de minimum pour la devise).
@@ -153,11 +172,7 @@ CommissionGrid? _usableGrid(CommissionGrid? grid, SupportedCurrency currency) {
 /// [computeCommission] lèverait.
 bool _isPositiveAtMinorUnit(double net, SupportedCurrency currency) {
   if (!net.isFinite || net <= 0) return false;
-  var factor = 1.0;
-  for (var i = 0; i < currency.minorUnit; i++) {
-    factor *= 10;
-  }
-  return (net * factor).round() > 0;
+  return (net * _minorUnitFactor(currency)).round() > 0;
 }
 
 CommissionGrid _flatRateGrid(double rate, SupportedCurrency currency) =>

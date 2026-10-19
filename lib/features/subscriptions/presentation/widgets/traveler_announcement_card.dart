@@ -67,7 +67,10 @@ class TravelerAnnouncementCard extends StatelessWidget {
                                     announcement.currency,
                                   )
                                 : formatPriceIn(
-                                    listUnitPrice(announcement.pricePerKg),
+                                    listUnitPrice(
+                                      announcement.pricePerKg,
+                                      announcement.currency,
+                                    ),
                                     announcement.currency,
                                   ),
                             maxLines: 1,

@@ -485,7 +485,7 @@ void main() {
       expect(
         find.textContaining(
           'l\'expéditeur paie '
-          '${CurrencyFormatter.format(netToSenderPrice(20), SupportedCurrency.eur)}',
+          '${CurrencyFormatter.format(20 * (1 + donyCommissionRate), SupportedCurrency.eur)}',
         ),
         findsOneWidget,
       );

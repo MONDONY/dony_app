@@ -177,11 +177,14 @@ void main() {
   });
 
   group('grille figée du fil', () {
+    // Seul le voyageur calcule un aperçu sur la grille figée, et seulement
+    // tant que le fil se négocie : c'est le fil qui attend la grille.
+    BidNegotiation travelerThread({String status = 'NEGOTIATING'}) =>
+        _thread(commissionGridId: 'g-thread', netEur: 40, status: status);
+
     test('fetch charge la grille figée avant d émettre le fil', () async {
       final grid = Completer<CommissionGrid?>();
-      when(
-        () => repo.thread('bid1'),
-      ).thenAnswer((_) async => _thread(commissionGridId: 'g-thread'));
+      when(() => repo.thread('bid1')).thenAnswer((_) async => travelerThread());
       when(
         () => config.getCommissionGridById('g-thread'),
       ).thenAnswer((_) => grid.future);
@@ -209,7 +212,7 @@ void main() {
       build: () {
         when(
           () => repo.thread('bid1'),
-        ).thenAnswer((_) async => _thread(commissionGridId: 'g-thread'));
+        ).thenAnswer((_) async => travelerThread());
         when(
           () => config.getCommissionGridById('g-thread'),
         ).thenThrow(const OfflineException());
@@ -232,7 +235,7 @@ void main() {
       build: () {
         when(
           () => repo.thread('bid1'),
-        ).thenAnswer((_) async => _thread(commissionGridId: 'g-thread'));
+        ).thenAnswer((_) async => travelerThread());
         when(
           () => config.getCommissionGridById('g-thread'),
         ).thenAnswer((_) => Completer<CommissionGrid?>().future);
@@ -249,7 +252,7 @@ void main() {
         CommissionGridStore.put(_threadGrid());
         when(
           () => repo.thread('bid1'),
-        ).thenAnswer((_) async => _thread(commissionGridId: 'g-thread'));
+        ).thenAnswer((_) async => travelerThread());
         return buildBloc();
       },
       act: (bloc) => bloc.add(const BidNegotiationFetchRequested('bid1')),
@@ -271,7 +274,7 @@ void main() {
     blocTest<BidNegotiationBloc, BidNegotiationState>(
       'propose : la grille figée du nouveau fil est chargée',
       build: () {
-        stubPropose(_thread(commissionGridId: 'g-thread'));
+        stubPropose(travelerThread());
         when(
           () => config.getCommissionGridById('g-thread'),
         ).thenAnswer((_) async => _threadGrid());
@@ -281,6 +284,33 @@ void main() {
       wait: const Duration(milliseconds: 1),
       expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
       verify: (_) => expect(CommissionGridStore.byId('g-thread'), isNotNull),
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'vue expéditeur : le fil à grille n attend aucune lecture',
+      build: () {
+        when(
+          () => repo.thread('bid1'),
+        ).thenAnswer((_) async => _thread(commissionGridId: 'g-thread'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationFetchRequested('bid1')),
+      expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
+      verify: (_) => verifyNever(() => config.getCommissionGridById(any())),
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'fil fermé côté voyageur : aucune lecture',
+      build: () {
+        when(
+          () => repo.accept('bid1'),
+        ).thenAnswer((_) async => travelerThread(status: 'ACCEPTED'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationAcceptRequested('bid1')),
+      wait: const Duration(milliseconds: 1),
+      expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
+      verify: (_) => verifyNever(() => config.getCommissionGridById(any())),
     );
 
     for (final entry in <String, void Function(BidNegotiationBloc)>{
@@ -294,7 +324,7 @@ void main() {
       blocTest<BidNegotiationBloc, BidNegotiationState>(
         '${entry.key} : la grille figée du fil est chargée avant l émission',
         build: () {
-          final thread = _thread(commissionGridId: 'g-thread');
+          final thread = travelerThread();
           when(
             () => repo.counter(
               'bid1',

@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:dony/core/error/app_exception.dart';
-import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/config/data/commission_grid_preload.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
@@ -12,21 +12,17 @@ import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Attente maximale de la grille figée d'un fil avant de l'afficher : au-delà,
-/// le fil s'affiche (aperçus sur la grille en vigueur) et la lecture continue
-/// en cache.
-const kBidNegotiationGridTimeout = Duration(seconds: 3);
-
 /// Fil de négociation du prix d'un trajet.
 ///
 /// Style identique à [BidBloc] : le repository ne fait que passer, c'est ici
 /// que les erreurs sont déballées (`unwrapDioError`) et que les events
 /// analytics sont tirés, toujours en `unawaited`.
 ///
-/// Avant chaque émission d'un fil, sa grille de commission figée
-/// (`commissionGridId`) est chargée dans [CommissionGridStore] : l'aperçu de
-/// la contre-offre du voyageur se calcule sur la grille du bid, pas sur celle
-/// du jour.
+/// Avant d'émettre un fil encore en négociation vu par le voyageur, sa grille
+/// de commission figée (`commissionGridId`) est chargée dans le magasin des
+/// grilles : l'aperçu de sa contre-offre en net se calcule sur la grille du
+/// bid, pas sur celle du jour. L'expéditeur, lui, ne calcule rien localement
+/// (il saisit un brut et lit les frais servis) : son fil n'attend pas.
 class BidNegotiationBloc
     extends Bloc<BidNegotiationEvent, BidNegotiationState> {
   final BidNegotiationRepository _repository;
@@ -38,7 +34,7 @@ class BidNegotiationBloc
     this._repository,
     this._analytics,
     this._config, {
-    Duration gridTimeout = kBidNegotiationGridTimeout,
+    Duration gridTimeout = kCommissionGridPreloadTimeout,
   }) : _gridTimeout = gridTimeout,
        super(const BidNegotiationInitial()) {
     on<BidNegotiationFetchRequested>(_onFetch);
@@ -68,14 +64,19 @@ class BidNegotiationBloc
     emit(BidNegotiationLoaded(thread, action: action));
   }
 
-  /// Charge la grille figée de [thread] si l'app ne la connaît pas encore.
-  /// Ne lève jamais et rend la main au plus tard après [_gridTimeout] : un
-  /// échec ou une lenteur laisse la grille en vigueur servir de repli.
+  /// Charge la grille figée de [thread] si l'app ne la connaît pas encore,
+  /// seulement quand elle sert : fil vu par le voyageur et encore ouvert à la
+  /// contre-offre. Ne lève jamais et rend la main au plus tard après
+  /// [_gridTimeout] : un échec ou une lenteur laisse la grille en vigueur
+  /// servir de repli.
   Future<BidNegotiation> _withGrid(BidNegotiation thread) async {
-    await CommissionGridStore.ensure(
-      thread.commissionGridId,
-      _config.getCommissionGridById,
-    ).timeout(_gridTimeout, onTimeout: () => null);
+    if (thread.isTravelerView && !thread.isClosed) {
+      await preloadCommissionGrids(
+        [thread.commissionGridId],
+        _config.getCommissionGridById,
+        timeout: _gridTimeout,
+      );
+    }
     return thread;
   }
 

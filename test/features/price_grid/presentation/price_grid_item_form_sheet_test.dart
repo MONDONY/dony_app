@@ -301,8 +301,8 @@ void main() {
       // FLUTTER-R6 : le montant de la commission, plus son taux.
       expect(
         find.text(
-          'L\'expéditeur paiera ${formatPriceActive(netToSenderPrice(15))}, '
-          'dont ${formatPriceActive(netToSenderPrice(15) - 15)} de commission '
+          'L\'expéditeur paiera ${formatPriceActive(15 * (1 + donyCommissionRate))}, '
+          'dont ${formatPriceActive(15 * (1 + donyCommissionRate) - 15)} de commission '
           'Yadony.',
         ),
         findsOneWidget,

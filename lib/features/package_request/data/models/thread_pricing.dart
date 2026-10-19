@@ -1,18 +1,7 @@
-import 'dart:async';
-
 import 'package:dony/core/currency/supported_currency.dart';
-import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
-
-/// Lecture d'une grille de commission par identifiant
-/// (`IConfigRepository.getCommissionGridById`).
-typedef CommissionGridLoader = Future<CommissionGrid?> Function(String id);
-
-/// Attente maximale de la grille figée d'un fil avant de l'afficher : au-delà,
-/// le fil s'affiche avec la grille en vigueur et la lecture continue en cache.
-const kThreadGridPreloadTimeout = Duration(seconds: 3);
 
 /// Prix d'un fil de demande, calculé sur la grille figée du fil.
 ///
@@ -21,7 +10,7 @@ const kThreadGridPreloadTimeout = Duration(seconds: 3);
 /// montant que le back.
 ///
 /// - Fil avec `commissionGridId` : grille figée du fil, connue du store
-///   (chargée par [preloadCommissionGrids] avant l'émission du fil), sinon la
+///   (chargée par `preloadCommissionGrids` avant l'émission du fil), sinon la
 ///   grille en vigueur faute de mieux.
 /// - Fil sans `commissionGridId` (fil d'avant les grilles, champ absent du
 ///   back quand il est nul) : taux unique, comme le back qui le calcule ainsi
@@ -68,7 +57,7 @@ class ThreadPricer {
     final current = currentNet;
     final gross = servedGross;
     if (current == null || gross == null) return null;
-    return (net - current).abs() < _halfMinorUnit(currency) ? gross : null;
+    return (net - current).abs() < _half ? gross : null;
   }
 
   /// Prix expéditeur pour [net], sans réduction personnelle.
@@ -109,7 +98,7 @@ class ThreadPricer {
     final commission =
         servedCommission ?? (servedGross == null ? null : servedGross - net);
     if (commission == null) return local;
-    final half = _halfMinorUnit(currency);
+    final half = _half;
     return SenderPrice(
       net: net,
       commission: commission,
@@ -119,6 +108,9 @@ class ThreadPricer {
       fromGrid: local.fromGrid,
     );
   }
+
+  double get _half =>
+      halfMinorUnit(SupportedCurrency.fromCodeOrDefault(currency));
 
   @override
   bool operator ==(Object other) =>
@@ -132,37 +124,4 @@ class ThreadPricer {
   @override
   int get hashCode =>
       Object.hash(gridId, currency, legacyRate, currentNet, servedGross);
-}
-
-/// Charge en cache les grilles figées [ids] inconnues de l'app avant
-/// d'afficher les fils qui les portent. Ne lève jamais et rend la main au plus
-/// tard après [timeout] : un échec ou une lenteur laisse la grille en vigueur
-/// s'appliquer (voir [ThreadPricer.priceFor]).
-Future<void> preloadCommissionGrids(
-  Iterable<String?> ids,
-  CommissionGridLoader? loader, {
-  Duration timeout = kThreadGridPreloadTimeout,
-}) async {
-  if (loader == null) return;
-  final missing = ids
-      .whereType<String>()
-      .where((id) => CommissionGridStore.byId(id) == null)
-      .toSet();
-  if (missing.isEmpty) return;
-  try {
-    await Future.wait(
-      missing.map((id) => CommissionGridStore.ensure(id, loader)),
-    ).timeout(timeout);
-  } on TimeoutException {
-    // La lecture continue en arrière-plan et remplira le cache.
-  }
-}
-
-double _halfMinorUnit(String currencyCode) {
-  var unit = 1.0;
-  final digits = SupportedCurrency.fromCodeOrDefault(currencyCode).minorUnit;
-  for (var i = 0; i < digits; i++) {
-    unit /= 10;
-  }
-  return unit / 2;
 }

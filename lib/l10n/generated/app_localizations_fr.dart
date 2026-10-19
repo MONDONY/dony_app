@@ -9404,12 +9404,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String commissionCardDebitNoticeMin(String min) {
-    return 'Cette carte sera débitée de la commission (min. $min) à chaque colis en espèces accepté.';
+    return 'Cette carte sera débitée des frais de service (min. $min) à chaque colis en espèces accepté.';
   }
 
   @override
   String get commissionCardDebitNotice =>
-      'Cette carte sera débitée de la commission à chaque colis en espèces accepté.';
+      'Cette carte sera débitée des frais de service à chaque colis en espèces accepté.';
 
   @override
   String get commissionCardScreenTitle => 'Carte commission';
@@ -21547,4 +21547,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidCreateGridSheetServiceFeeIncluded => 'Frais de service inclus';
+
+  @override
+  String faqPaymentsCommissionAGrid(String minimum) {
+    return 'Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme. Ils dépendent du prix du transport, avec un minimum de $minimum. Le montant exact est affiché avant de confirmer.';
+  }
+
+  @override
+  String bidNegotiationGridLineServiceFee(String line) {
+    return '$line + frais de service';
+  }
+
+  @override
+  String get bidNegotiationHeroServiceFeeIncluded => 'Frais de service compris';
 }

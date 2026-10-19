@@ -202,7 +202,7 @@ class BidModel {
   /// taux unique sans grille.
   double? get senderPricePerKg =>
       pricePerKgSenderEur ??
-      (pricePerKg != null ? listUnitPrice(pricePerKg!) : null);
+      (pricePerKg != null ? listUnitPrice(pricePerKg!, currency) : null);
   final String? trackingNumber;
   final String? trackingToken;
   final String? confirmationCode;

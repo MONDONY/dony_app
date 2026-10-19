@@ -128,7 +128,7 @@ void main() {
 
     // Chip 0 = 7 € net, majoré du taux unique.
     expect(
-      find.text('${formatPriceIn(netToSenderPrice(7), 'EUR')}/kg'),
+      find.text('${formatPriceIn(7 * (1 + donyCommissionRate), 'EUR')}/kg'),
       findsOneWidget,
     );
     expect(find.textContaining('frais de service'), findsNothing);

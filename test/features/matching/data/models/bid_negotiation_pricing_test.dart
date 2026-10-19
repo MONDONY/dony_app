@@ -68,6 +68,17 @@ void main() {
       expect(grossForNegotiationNet(thread, 20), 21.40);
     });
 
+    test('grille figée inconnue et aucune grille en vigueur : taux figé du '
+        'fil', () {
+      // Ni la grille du bid ni une grille du jour : seul le taux figé du fil
+      // reste, comme pour un fil d'avant les grilles (35 × 1,12 = 39,20 €).
+      final thread = _thread(
+        commissionGridId: 'grid-inconnue',
+        commissionRate: 0.12,
+      );
+      expect(grossForNegotiationNet(thread, 35), 39.20);
+    });
+
     test('francs CFA : minimum de 650 F relevé puis bon ×0,5', () {
       useTestCommissionGrid();
       final thread = _thread(

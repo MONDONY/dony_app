@@ -21407,4 +21407,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidCreateGridSheetServiceFeeIncluded => 'Service fee included';
+
+  @override
+  String faqPaymentsCommissionAGrid(String minimum) {
+    return 'The service fee covers payment costs, support, fraud prevention and the development of the platform. It depends on the transport price, with a minimum of $minimum. The exact amount is shown before you confirm.';
+  }
+
+  @override
+  String bidNegotiationGridLineServiceFee(String line) {
+    return '$line + service fee';
+  }
+
+  @override
+  String get bidNegotiationHeroServiceFeeIncluded => 'Service fee included';
 }

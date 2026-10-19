@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -713,6 +714,71 @@ void main() {
     expect(find.byKey(const Key('nego-total-amount')), findsOneWidget);
   });
 
+  group('lignes de grille au prix du voyageur (fil à grille)', () {
+    final line = '1 × ${formatPriceIn(12, 'EUR')}';
+
+    testWidgets('expéditeur : « + frais de service » sur la ligne et '
+        'légende sous « Vous paieriez »', (tester) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(_thread(commissionGridId: kTestGridId)),
+      );
+
+      expect(find.text('$line + frais de service'), findsOneWidget);
+      expect(find.byKey(const Key('nego-hero-amount-note')), findsOneWidget);
+      expect(find.text('Frais de service compris'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('nego-view-parcel')));
+      await tester.pump(_kSettle);
+      final sheet = find.byKey(const Key('nego-parcel-sheet'));
+      expect(
+        find.descendant(
+          of: sheet,
+          matching: find.text('$line + frais de service'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('expéditeur sans grille : ligne et carte inchangées', (
+      tester,
+    ) async {
+      await pumpScreen(tester, BidNegotiationLoaded(_thread()));
+
+      expect(find.text(line), findsOneWidget);
+      expect(find.textContaining('+ frais de service'), findsNothing);
+      expect(find.byKey(const Key('nego-hero-amount-note')), findsNothing);
+    });
+
+    testWidgets('voyageur sur un fil à grille : ligne nue, sans légende', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(netEur: 37, commissionGridId: kTestGridId),
+        ),
+      );
+
+      expect(find.text(line), findsOneWidget);
+      expect(find.textContaining('+ frais de service'), findsNothing);
+      expect(find.byKey(const Key('nego-hero-amount-note')), findsNothing);
+    });
+
+    testWidgets('en anglais : « + service fee » et « Service fee included »', (
+      tester,
+    ) async {
+      useEnglish();
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(_thread(commissionGridId: kTestGridId)),
+      );
+
+      expect(find.text('$line + service fee'), findsOneWidget);
+      expect(find.text('Service fee included'), findsOneWidget);
+    });
+  });
+
   testWidgets('l ouverture marque le fil comme lu', (tester) async {
     await pumpScreen(tester, BidNegotiationLoaded(_thread()));
 
@@ -893,7 +959,7 @@ void main() {
     });
 
     testWidgets('contre-offre du voyageur sous grille, net 50 € avec '
-        'réductions figées : aperçu 51,00 €', (tester) async {
+        'réductions figées : aperçu 51 €', (tester) async {
       // Grille figée 7 % du fil, taux spécial 4 % et bon ×0,5 figés : le back
       // facture 50 + min(3,50 ; 2,00) × 0,5 = 51,00 €.
       useTestCommissionGrid();

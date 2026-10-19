@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/config/data/commission_grid_preload.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
-import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 
 /// Code du 409 que renvoie le devis d'un fil dont le prix est déjà scellé.
 const _threadSealedCode = 'negotiation/thread-sealed';
@@ -19,7 +19,7 @@ class NegotiationRepository {
   final ApiClient _apiClient;
 
   /// Lit la grille figée d'un fil inconnue de l'app, avant de rendre le fil :
-  /// ses aperçus de prix ([ThreadPricer]) tombent alors sur la grille du back.
+  /// ses aperçus de prix (`ThreadPricer`) tombent alors sur la grille du back.
   /// `null` (tests) : aucune lecture.
   final CommissionGridLoader? _gridLoader;
 

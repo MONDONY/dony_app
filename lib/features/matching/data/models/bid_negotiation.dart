@@ -292,6 +292,12 @@ class BidNegotiation {
   bool get counterInNet =>
       isTravelerView && (commissionGridId != null || commissionRate != null);
 
+  /// L'expéditeur lit des lignes de grille au prix du voyageur : sous grille
+  /// de commission, le serveur sert `unitPriceDisplay` au net et les frais de
+  /// service s'ajoutent au total, alors que sans grille ce prix les inclut.
+  bool get senderSeesNetGridLines =>
+      !isTravelerView && commissionGridId != null;
+
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
   bool get isClosed => status != 'NEGOTIATING';
 
