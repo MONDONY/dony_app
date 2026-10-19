@@ -17,12 +17,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// La tuile « Demander un supplément » s'affiche si le serveur l'autorise.
-/// Espèces exclues tant que l'app ne sait pas prélever la commission du
-/// supplément au voyageur (PR A4) : une app de cette version ne doit pas
-/// envoyer une demande espèces incomplète à un back qui l'accepterait.
-bool canRequestSupplement(BidModel bid) =>
-    bid.supplementRequestAllowed && bid.paymentMethod != BidPaymentMethod.cash;
+/// La tuile « Demander un supplément » s'affiche si le serveur l'autorise,
+/// quel que soit le moyen de paiement du colis. En espèces, la feuille fait
+/// choisir d'où prélever la commission du supplément (PR A4) ; un back sans
+/// rail espèces rend `supplementRequestAllowed` faux.
+bool canRequestSupplement(BidModel bid) => bid.supplementRequestAllowed;
 
 /// Statuses for which the traveler can dismiss/delete the bid record.
 const _dismissableStatuses = {'REJECTED', 'CANCELLED'};

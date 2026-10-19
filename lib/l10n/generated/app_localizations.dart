@@ -35421,6 +35421,294 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Paiement mobile money du supplément en attente'**
   String get supplementSenderMobileMoneyPending;
+
+  /// Feuille de demande, colis payé en espèces : titre du choix de la source de la commission
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission du supplément'**
+  String get supplementCommissionSourceTitle;
+
+  /// Feuille de demande, espèces : explication de la commission du supplément prélevée au voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle est prélevée maintenant et vous est rendue si l\'expéditeur refuse, ne répond pas à temps ou si le colis n\'est pas livré. L\'expéditeur vous remet le total en espèces.'**
+  String get supplementCommissionSourceHelp;
+
+  /// Feuille de demande, espèces : option solde
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon solde Yadony'**
+  String get supplementCommissionSourceWallet;
+
+  /// Feuille de demande, espèces : sous-titre de l'option solde
+  ///
+  /// In fr, this message translates to:
+  /// **'Prélevée maintenant sur votre solde'**
+  String get supplementCommissionSourceWalletHint;
+
+  /// Feuille de demande, espèces : option d'un autre portefeuille proposé après un solde insuffisant. {currency} : code ISO
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon solde {currency}'**
+  String supplementCommissionSourceWalletCurrency(String currency);
+
+  /// Feuille de demande, espèces : option carte commission
+  ///
+  /// In fr, this message translates to:
+  /// **'Ma carte commission'**
+  String get supplementCommissionSourceCard;
+
+  /// Feuille de demande, espèces : sous-titre de l'option carte
+  ///
+  /// In fr, this message translates to:
+  /// **'Débitée maintenant, votre banque peut demander une validation'**
+  String get supplementCommissionSourceCardHint;
+
+  /// Feuille de demande, espèces : solde insuffisant pour la commission du supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez votre carte ou un autre solde ci-dessus, ou rechargez votre solde.'**
+  String get supplementCommissionUnfundedHint;
+
+  /// Feuille de demande, espèces : carte commission manquante
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune carte commission enregistrée. Ajoutez-en une, ou payez avec votre solde.'**
+  String get supplementCommissionCardMissing;
+
+  /// Feuille de demande, espèces : commission en attente après une validation bancaire interrompue ou un débit sans réponse
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande est enregistrée, mais la commission n\'a pas encore été prélevée. Réessayez pour l\'envoyer à l\'expéditeur.'**
+  String get supplementCommissionRetryNotice;
+
+  /// Bouton de la feuille de demande : relancer la commission du supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer le paiement'**
+  String get supplementCommissionRetry;
+
+  /// Snackbar : 3DS de la commission du supplément abandonnée
+  ///
+  /// In fr, this message translates to:
+  /// **'Validation bancaire interrompue : rien n\'a été prélevé. Réessayez.'**
+  String get supplementCommissionAuthInterrupted;
+
+  /// Snackbar : commission du supplément encore en traitement chez la banque
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande enregistrée : paiement de la commission en cours de validation'**
+  String get supplementCommissionProcessing;
+
+  /// Récapitulatif voyageur, espèces : total remis par l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis en espèces par l\'expéditeur'**
+  String get supplementRecapGrossCash;
+
+  /// Encart voyageur : demande en attente du paiement de sa commission (espèces)
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission à valider'**
+  String get supplementTravelerCommissionPending;
+
+  /// Encart voyageur : aide de la commission à valider
+  ///
+  /// In fr, this message translates to:
+  /// **'Validez le paiement de la commission pour envoyer la demande à l\'expéditeur. Sans validation sous 30 minutes, elle est annulée sans frais.'**
+  String get supplementTravelerCommissionPendingHelp;
+
+  /// Bouton de l'encart voyageur : valider la commission du supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider le paiement'**
+  String get supplementCommissionConfirm;
+
+  /// Snackbar : commission du supplément prélevée après reprise
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission payée : demande envoyée à l\'expéditeur'**
+  String get supplementCommissionConfirmedSnackbar;
+
+  /// Encart voyageur, espèces : commission prélevée, demande en attente
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission prélevée. Elle vous est rendue si la demande n\'aboutit pas.'**
+  String get supplementTravelerCashCommissionHelp;
+
+  /// Encart voyageur, espèces : supplément accepté. {amount} : brut formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément accepté : l\'expéditeur vous remet {amount} en espèces'**
+  String supplementTravelerCashPaid(String amount);
+
+  /// Encart voyageur, espèces : aide après acceptation
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevez le complément en main propre à la remise du colis.'**
+  String get supplementTravelerCashPaidHelp;
+
+  /// Encart voyageur, espèces : commission rendue
+  ///
+  /// In fr, this message translates to:
+  /// **'La commission du supplément vous a été rendue.'**
+  String get supplementTravelerCommissionRefunded;
+
+  /// Encart voyageur, espèces : commission en cours de remboursement
+  ///
+  /// In fr, this message translates to:
+  /// **'La commission du supplément vous sera rendue sous peu.'**
+  String get supplementTravelerCommissionRefundPending;
+
+  /// Encart voyageur : demande annulée (commission non validée, colis terminé)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande de supplément annulée'**
+  String get supplementTravelerCancelled;
+
+  /// Encart voyageur, espèces : demande annulée sans prélèvement
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien n\'a été prélevé sur votre solde ni sur votre carte.'**
+  String get supplementTravelerCancelledNoCharge;
+
+  /// Encart voyageur, espèces : supplément accepté puis colis terminé sans livraison
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis non livré : rendez le complément en espèces à l\'expéditeur'**
+  String get supplementTravelerCashRefunded;
+
+  /// Bouton de la barre du bas de l'expéditeur, colis payé en espèces. {amount} : brut formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter {amount}'**
+  String supplementCashAccept(String amount);
+
+  /// Encart expéditeur, espèces : où accepter le supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptez avec le bouton en bas de l\'écran puis remettez le complément en espèces au voyageur, ou refusez ici.'**
+  String get supplementSenderCashHelp;
+
+  /// Titre de la feuille de confirmation espèces de l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter le supplément'**
+  String get supplementCashConfirmTitle;
+
+  /// Feuille de confirmation espèces de l'expéditeur. {amount} : brut formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous remettrez {amount} en espèces au voyageur, en main propre, à la remise du colis.'**
+  String supplementCashConfirmMessage(String amount);
+
+  /// Feuille de confirmation espèces de l'expéditeur : aide
+  ///
+  /// In fr, this message translates to:
+  /// **'Le scan de remise se débloque dès votre accord. Rien n\'est payé dans l\'application.'**
+  String get supplementCashConfirmHelp;
+
+  /// Bouton de la feuille de confirmation espèces. {amount} : brut formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Je remettrai {amount} en espèces'**
+  String supplementCashConfirmButton(String amount);
+
+  /// Snackbar expéditeur après acceptation espèces. {amount} : brut formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément accepté : remettez {amount} en espèces au voyageur'**
+  String supplementCashAcceptedSnackbar(String amount);
+
+  /// Encart expéditeur, espèces : supplément accepté. {amount} : brut formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément accepté : {amount} à remettre en espèces'**
+  String supplementSenderCashPaid(String amount);
+
+  /// Encart expéditeur, espèces : supplément accepté puis colis terminé sans livraison
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis non livré : le voyageur vous rend le complément en espèces'**
+  String get supplementSenderCashRefunded;
+
+  /// Historique du solde : commission d'un supplément prélevée (SUPPLEMENT_COMMISSION_DEDUCTED)
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission de supplément'**
+  String get walletTxTypeSupplementCommission;
+
+  /// Historique du solde : commission d'un supplément rendue (REFUND, payment_ref supplement-refund-)
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission de supplément rendue'**
+  String get walletTxTypeSupplementCommissionRefund;
+
+  /// Historique du solde : type de ligne inconnu de cette version de l'app
+  ///
+  /// In fr, this message translates to:
+  /// **'Mouvement du solde'**
+  String get walletTxTypeOther;
+
+  /// ErrorCatalog supplement-commission-unfunded
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde insuffisant'**
+  String get errorSupplementCommissionUnfundedTitle;
+
+  /// ErrorCatalog supplement-commission-unfunded
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre solde ne couvre pas la commission du supplément. Rechargez-le ou payez par carte.'**
+  String get errorSupplementCommissionUnfundedMessage;
+
+  /// ErrorCatalog supplement-commission-card-declined
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte refusée'**
+  String get errorSupplementCommissionCardDeclinedTitle;
+
+  /// ErrorCatalog supplement-commission-card-declined
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre carte commission a été refusée : rien n\'a été prélevé et la demande est annulée.'**
+  String get errorSupplementCommissionCardDeclinedMessage;
+
+  /// ErrorCatalog supplement-commission-charge-failed
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission non prélevée'**
+  String get errorSupplementCommissionChargeFailedTitle;
+
+  /// ErrorCatalog supplement-commission-charge-failed
+  ///
+  /// In fr, this message translates to:
+  /// **'Le débit de la commission n\'a pas abouti. Réessayez.'**
+  String get errorSupplementCommissionChargeFailedMessage;
+
+  /// ErrorCatalog commission-method-missing
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte commission manquante'**
+  String get errorCommissionMethodMissingTitle;
+
+  /// ErrorCatalog commission-method-missing
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrez une carte commission, ou payez avec votre solde.'**
+  String get errorCommissionMethodMissingMessage;
+
+  /// ErrorCatalog funding-currency-invalid
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise non prise en charge'**
+  String get errorFundingCurrencyInvalidTitle;
+
+  /// ErrorCatalog funding-currency-invalid
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce portefeuille ne peut pas payer la commission. Choisissez-en un autre.'**
+  String get errorFundingCurrencyInvalidMessage;
 }
 
 class _AppLocalizationsDelegate
