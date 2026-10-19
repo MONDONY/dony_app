@@ -1,4 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/features/config/data/config_datasource.dart';
 
 abstract class IConfigRepository {
@@ -9,6 +12,13 @@ abstract class IConfigRepository {
   Future<bool> getProEnabled();
   Future<bool> getFlightsEnabled();
   Future<Map<String, double>> getExchangeRates();
+
+  /// Grilles en vigueur et suivante. [CommissionGridConfig.none] quand le back
+  /// ne connaît pas encore la route (404).
+  Future<CommissionGridConfig> getCommissionGrid();
+
+  /// Grille figée par identifiant, `null` si inconnue ou annulée (404).
+  Future<CommissionGrid?> getCommissionGridById(String id);
 }
 
 class ConfigRepository implements IConfigRepository {
@@ -75,6 +85,28 @@ class ConfigRepository implements IConfigRepository {
     try {
       return await _datasource.getExchangeRates();
     } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<CommissionGridConfig> getCommissionGrid() async {
+    try {
+      return await _datasource.getCommissionGrid();
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
+        return CommissionGridConfig.none;
+      }
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<CommissionGrid?> getCommissionGridById(String id) async {
+    try {
+      return await _datasource.getCommissionGridById(id);
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) return null;
       throw unwrapDioError(e);
     }
   }

@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/features/config/data/config_datasource.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -342,6 +344,111 @@ void main() {
       );
 
       expect(() => repository.getSmsEnabled(), throwsA(isA<Exception>()));
+    });
+  });
+
+  group('Grilles de commission', () {
+    Map<String, dynamic> gridJson(String id, String from) => {
+      'gridId': id,
+      'effectiveFrom': from,
+      'tiers': [
+        {'fromEur': 0, 'rate': 0.07},
+        {'fromEur': '100', 'rate': '0.06'},
+      ],
+      'minimums': {'EUR': 1.0, 'XOF': '650'},
+    };
+
+    DioException notFound(String path) => DioException(
+      requestOptions: RequestOptions(path: path),
+      response: Response(
+        statusCode: 404,
+        requestOptions: RequestOptions(path: path),
+      ),
+      type: DioExceptionType.badResponse,
+    );
+
+    void stubGet(String path, Object data) {
+      when(() => mockDio.get(path)).thenAnswer(
+        (_) async => Response(
+          data: data,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: path),
+        ),
+      );
+    }
+
+    test('getCommissionGrid lit current et next', () async {
+      stubGet('/config/commission-grid', {
+        'current': gridJson('g1', '2026-10-01T00:00:00'),
+        'next': gridJson('g2', '2026-11-20T09:00:00'),
+      });
+
+      final config = await repository.getCommissionGrid();
+
+      expect(config.current?.id, 'g1');
+      expect(config.next?.id, 'g2');
+      expect(config.next?.effectiveFrom, DateTime.utc(2026, 11, 20, 9));
+      expect(config.current?.minimumFor('XOF'), 650);
+      expect(config.current?.tiers[1].rate, 0.06);
+    });
+
+    test('getCommissionGrid lit current null', () async {
+      stubGet('/config/commission-grid', {
+        'current': null,
+        'next': gridJson('g2', '2026-11-20T09:00:00'),
+      });
+
+      final config = await repository.getCommissionGrid();
+
+      expect(config.current, isNull);
+      expect(config.next?.id, 'g2');
+    });
+
+    test('getCommissionGrid renvoie none sur 404', () async {
+      when(
+        () => mockDio.get('/config/commission-grid'),
+      ).thenThrow(notFound('/config/commission-grid'));
+
+      expect(
+        await repository.getCommissionGrid(),
+        same(CommissionGridConfig.none),
+      );
+    });
+
+    test('getCommissionGrid relaie une erreur 500 en AppException', () async {
+      when(() => mockDio.get('/config/commission-grid')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/commission-grid'),
+          error: const ServerException('boom'),
+          response: Response(
+            statusCode: 500,
+            requestOptions: RequestOptions(path: '/config/commission-grid'),
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
+
+      expect(repository.getCommissionGrid(), throwsA(isA<AppException>()));
+    });
+
+    test('getCommissionGridById lit la grille', () async {
+      stubGet(
+        '/config/commission-grid/g1',
+        gridJson('g1', '2026-10-01T00:00:00'),
+      );
+
+      final grid = await repository.getCommissionGridById('g1');
+
+      expect(grid?.id, 'g1');
+      expect(grid?.tiers, hasLength(2));
+    });
+
+    test('getCommissionGridById renvoie null sur 404', () async {
+      when(
+        () => mockDio.get('/config/commission-grid/inconnue'),
+      ).thenThrow(notFound('/config/commission-grid/inconnue'));
+
+      expect(await repository.getCommissionGridById('inconnue'), isNull);
     });
   });
 }
