@@ -1072,23 +1072,26 @@ void main() {
 
   group('Mode MIXED — toggle et aperçu grille', () {
     testWidgets(
-      'tap "Grille + kilo" affiche le SwitchListTile kg-price-toggle',
+      'tap "Articles + kilo" affiche le SwitchListTile kg-price-toggle',
       (tester) async {
         await _pump(tester);
-        await tester.tap(find.text('Grille + kilo'));
+        await tester.tap(find.text('Articles + kilo'));
         await tester.pump(const Duration(milliseconds: 200));
         await tester.pump();
         expect(find.byKey(const Key('kg-price-toggle')), findsOneWidget);
         expect(find.text('Tarif au kilo'), findsOneWidget);
-        expect(find.text('Optionnel en mode grille'), findsOneWidget);
+        expect(
+          find.text('Optionnel avec les prix par article'),
+          findsOneWidget,
+        );
       },
     );
 
-    testWidgets('tap "Grille + kilo" puis "Au kilo" masque le toggle kg', (
+    testWidgets('tap "Articles + kilo" puis "Au kilo" masque le toggle kg', (
       tester,
     ) async {
       await _pump(tester);
-      await tester.tap(find.text('Grille + kilo'));
+      await tester.tap(find.text('Articles + kilo'));
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
       await tester.tap(find.text('Au kilo'));
@@ -1101,10 +1104,10 @@ void main() {
       tester,
     ) async {
       await _pump(tester);
-      await tester.tap(find.text('Grille + kilo'));
+      await tester.tap(find.text('Articles + kilo'));
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
-      expect(find.text('Votre grille est vide'), findsOneWidget);
+      expect(find.text('Aucun prix par article'), findsOneWidget);
       // L'état vide ne se contente pas de constater : il ouvre l'écran où la
       // grille se compose.
       expect(find.byKey(const Key('grid-preview-create')), findsOneWidget);

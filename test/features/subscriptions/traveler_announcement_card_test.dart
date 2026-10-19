@@ -130,7 +130,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Grille tarifaire'), findsOneWidget);
+      expect(find.text('Prix par article'), findsOneWidget);
       expect(find.text('/kg'), findsNothing);
       expect(find.textContaining('0 €'), findsNothing);
     },

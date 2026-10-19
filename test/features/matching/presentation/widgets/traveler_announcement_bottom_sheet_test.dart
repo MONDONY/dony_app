@@ -1341,7 +1341,7 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Grille tarifaire'), findsOneWidget);
+      expect(find.text('Prix par article'), findsOneWidget);
       expect(find.textContaining('dès '), findsOneWidget);
       expect(find.text('Article 1'), findsOneWidget);
       expect(find.text('Article 4'), findsOneWidget);

@@ -556,7 +556,7 @@ void main() {
           // sont construites. L'absence se lit donc ici, sans balayer la page.
           await _scrollTo(tester, find.text('Carte commission espèces'));
 
-          expect(find.text('Ma grille de prix'), findsNothing);
+          expect(find.text('Mes prix par article'), findsNothing);
         },
       );
 
