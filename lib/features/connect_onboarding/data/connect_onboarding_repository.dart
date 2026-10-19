@@ -8,6 +8,9 @@ abstract class IConnectOnboardingRepository {
   Future<ConnectAccountStatus> getAccountStatus();
   Future<ConnectAccountStatus> createConnectAccount();
   Future<String> createOnboardingLink();
+
+  /// Lien vers l'espace Stripe Express (changement de compte bancaire).
+  Future<String> createDashboardLink();
 }
 
 class ConnectOnboardingRepository implements IConnectOnboardingRepository {
@@ -37,6 +40,15 @@ class ConnectOnboardingRepository implements IConnectOnboardingRepository {
   Future<String> createOnboardingLink() async {
     try {
       return await _datasource.createOnboardingLink();
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<String> createDashboardLink() async {
+    try {
+      return await _datasource.createDashboardLink();
     } catch (e) {
       throw unwrapDioError(e);
     }

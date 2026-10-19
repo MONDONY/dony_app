@@ -6498,6 +6498,48 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'moneyShortRefundedNoDate': (l) => l.moneyShortRefundedNoDate,
   'moneyShortCash': (l) => l.moneyShortCash,
   'moneyShortUnknown': (l) => l.moneyShortUnknown,
+  'moneyShortBankPending': (l) =>
+      l.moneyShortBankPending(placeholderMarker('date')),
+  'moneyShortBankPendingNoDate': (l) => l.moneyShortBankPendingNoDate,
+  'moneyShortBankAvailable': (l) => l.moneyShortBankAvailable,
+  'moneyShortBankInTransit': (l) =>
+      l.moneyShortBankInTransit(placeholderMarker('date')),
+  'moneyShortBankInTransitNoDate': (l) => l.moneyShortBankInTransitNoDate,
+  'moneyShortBankPaid': (l) => l.moneyShortBankPaid(placeholderMarker('date')),
+  'moneyShortBankPaidNoDate': (l) => l.moneyShortBankPaidNoDate,
+  'moneyShortBankFailed': (l) => l.moneyShortBankFailed,
+  'moneyBankSheetTitle': (l) => l.moneyBankSheetTitle,
+  'moneyBankStepPaidToStripe': (l) =>
+      l.moneyBankStepPaidToStripe(placeholderMarker('date')),
+  'moneyBankStepPaidToStripeNoDate': (l) => l.moneyBankStepPaidToStripeNoDate,
+  'moneyBankStepAvailable': (l) =>
+      l.moneyBankStepAvailable(placeholderMarker('date')),
+  'moneyBankStepAvailableNoDate': (l) => l.moneyBankStepAvailableNoDate,
+  'moneyBankStepInTransit': (l) =>
+      l.moneyBankStepInTransit(placeholderMarker('date')),
+  'moneyBankStepInTransitNoDate': (l) => l.moneyBankStepInTransitNoDate,
+  'moneyBankStepTransferSent': (l) => l.moneyBankStepTransferSent,
+  'moneyBankStepFailed': (l) => l.moneyBankStepFailed,
+  'moneyBankStepArrived': (l) =>
+      l.moneyBankStepArrived(placeholderMarker('date')),
+  'moneyBankStepArrivedNoDate': (l) => l.moneyBankStepArrivedNoDate,
+  'moneyBankHelp': (l) => l.moneyBankHelp,
+  'moneyBankHelpFailed': (l) => l.moneyBankHelpFailed,
+  'moneyBankOpenParcel': (l) => l.moneyBankOpenParcel,
+  'moneyBankStepDoneSemantics': (l) =>
+      l.moneyBankStepDoneSemantics(placeholderMarker('label')),
+  'moneyBankStepCurrentSemantics': (l) =>
+      l.moneyBankStepCurrentSemantics(placeholderMarker('label')),
+  'moneyBankStepFailedSemantics': (l) =>
+      l.moneyBankStepFailedSemantics(placeholderMarker('label')),
+  'moneyBankStepTodoSemantics': (l) =>
+      l.moneyBankStepTodoSemantics(placeholderMarker('label')),
+  'bankAccountChangeButton': (l) => l.bankAccountChangeButton,
+  'bankAccountChangeHint': (l) => l.bankAccountChangeHint,
+  'bankAccountChangeMissing': (l) => l.bankAccountChangeMissing,
+  'bankAccountChangeOnboardingIncomplete': (l) =>
+      l.bankAccountChangeOnboardingIncomplete,
+  'bankAccountChangeUnavailable': (l) => l.bankAccountChangeUnavailable,
   'moneyTripsTitle': (l) => l.moneyTripsTitle,
   'moneyTripsSubtitle': (l) => l.moneyTripsSubtitle,
   'moneyParcelCount': (l) => l.moneyParcelCount(intPlaceholderValue),
@@ -7777,6 +7819,17 @@ const textParameters = <String, List<String>>{
   'moneyShortReleased': ['date'],
   'moneyShortAuto': ['date'],
   'moneyShortRefunded': ['date'],
+  'moneyShortBankPending': ['date'],
+  'moneyShortBankInTransit': ['date'],
+  'moneyShortBankPaid': ['date'],
+  'moneyBankStepPaidToStripe': ['date'],
+  'moneyBankStepAvailable': ['date'],
+  'moneyBankStepInTransit': ['date'],
+  'moneyBankStepArrived': ['date'],
+  'moneyBankStepDoneSemantics': ['label'],
+  'moneyBankStepCurrentSemantics': ['label'],
+  'moneyBankStepFailedSemantics': ['label'],
+  'moneyBankStepTodoSemantics': ['label'],
   'moneyTripSemantics': ['route', 'parcels', 'counters'],
   'billetTeamCancelledSupportSubject': ['number'],
   'tripPosterHeroDeparture': ['day'],

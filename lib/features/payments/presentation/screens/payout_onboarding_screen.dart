@@ -10,6 +10,8 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/features/connect_onboarding/bloc/bank_account_link_cubit.dart';
+import 'package:dony/features/connect_onboarding/presentation/widgets/change_bank_account_button.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/stripe_onboarding_return.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -622,6 +624,30 @@ class _ActiveAccountView extends StatelessWidget {
                                           l.payoutActiveInfoBankAccountSubtitle,
                                     ),
                                   ],
+                                ),
+                              ),
+                              const SizedBox(height: DonySpacing.lg),
+                              // Changer d'IBAN se fait dans l'espace Stripe
+                              // Express : sans ce bouton, aucun chemin dans
+                              // l'app n'y menait.
+                              SizedBox(
+                                width: double.infinity,
+                                child: ChangeBankAccountButton(
+                                  source: BankAccountLinkSource.payoutsScreen,
+                                  // Compte devenu incomplet entre-temps :
+                                  // relire le statut ramène l'écran sur
+                                  // l'inscription Stripe.
+                                  onOnboardingRequired: () =>
+                                      getIt<StripeAccountBloc>().add(
+                                        const StripeAccountStatusRefreshed(),
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(height: DonySpacing.sm),
+                              Text(
+                                l.bankAccountChangeHint,
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
                                 ),
                               ),
                             ],

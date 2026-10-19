@@ -18671,7 +18671,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get moneyAllTripsLink => 'Tous mes trajets';
 
   @override
-  String get moneyRecentlyPaidSection => 'Versés récemment';
+  String get moneyRecentlyPaidSection => 'Payés récemment';
 
   @override
   String get moneyTruncatedNote =>
@@ -18721,6 +18721,128 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get moneyShortUnknown => 'mise à jour en cours';
+
+  @override
+  String moneyShortBankPending(String date) {
+    return 'payé, dispo le $date';
+  }
+
+  @override
+  String get moneyShortBankPendingNoDate => 'payé, bientôt dispo';
+
+  @override
+  String get moneyShortBankAvailable => 'virement bancaire à venir';
+
+  @override
+  String moneyShortBankInTransit(String date) {
+    return 'virement en cours, arrivée le $date';
+  }
+
+  @override
+  String get moneyShortBankInTransitNoDate => 'virement bancaire en cours';
+
+  @override
+  String moneyShortBankPaid(String date) {
+    return 'arrivé sur votre banque le $date';
+  }
+
+  @override
+  String get moneyShortBankPaidNoDate => 'arrivé sur votre banque';
+
+  @override
+  String get moneyShortBankFailed => 'virement échoué, vérifiez votre banque';
+
+  @override
+  String get moneyBankSheetTitle => 'Suivi du virement';
+
+  @override
+  String moneyBankStepPaidToStripe(String date) {
+    return 'Payé sur votre compte Stripe le $date';
+  }
+
+  @override
+  String get moneyBankStepPaidToStripeNoDate => 'Payé sur votre compte Stripe';
+
+  @override
+  String moneyBankStepAvailable(String date) {
+    return 'Disponible le $date';
+  }
+
+  @override
+  String get moneyBankStepAvailableNoDate =>
+      'Disponible sur votre compte Stripe';
+
+  @override
+  String moneyBankStepInTransit(String date) {
+    return 'Virement en cours, arrivée prévue le $date';
+  }
+
+  @override
+  String get moneyBankStepInTransitNoDate => 'Virement vers votre banque';
+
+  @override
+  String get moneyBankStepTransferSent => 'Virement envoyé par Stripe';
+
+  @override
+  String get moneyBankStepFailed => 'Virement échoué';
+
+  @override
+  String moneyBankStepArrived(String date) {
+    return 'Arrivé sur votre banque le $date';
+  }
+
+  @override
+  String get moneyBankStepArrivedNoDate => 'Arrivé sur votre banque';
+
+  @override
+  String get moneyBankHelp =>
+      'Yadony vous paie d\'abord sur votre compte Stripe. Stripe rend l\'argent disponible quelques jours plus tard, puis le vire automatiquement sur votre compte bancaire. Comptez ensuite 1 à 3 jours ouvrés selon votre banque.';
+
+  @override
+  String get moneyBankHelpFailed =>
+      'Votre banque a refusé le virement. L\'argent reste sur votre compte Stripe : vérifiez ou changez votre compte bancaire, le virement repartira ensuite.';
+
+  @override
+  String get moneyBankOpenParcel => 'Voir le colis';
+
+  @override
+  String moneyBankStepDoneSemantics(String label) {
+    return '$label, terminé';
+  }
+
+  @override
+  String moneyBankStepCurrentSemantics(String label) {
+    return '$label, en cours';
+  }
+
+  @override
+  String moneyBankStepFailedSemantics(String label) {
+    return '$label, échec';
+  }
+
+  @override
+  String moneyBankStepTodoSemantics(String label) {
+    return '$label, à venir';
+  }
+
+  @override
+  String get bankAccountChangeButton => 'Changer de compte bancaire';
+
+  @override
+  String get bankAccountChangeHint =>
+      'Vous serez redirigé vers votre espace Stripe pour modifier votre IBAN.';
+
+  @override
+  String get bankAccountChangeMissing =>
+      'Aucun compte de paiement n\'est relié. Configurez d\'abord la réception de vos paiements.';
+
+  @override
+  String get bankAccountChangeOnboardingIncomplete =>
+      'Terminez d\'abord votre inscription Stripe pour changer de compte bancaire.';
+
+  @override
+  String get bankAccountChangeUnavailable =>
+      'Le changement de compte bancaire sera disponible bientôt.';
 
   @override
   String get moneyTripsTitle => 'Mes trajets';
