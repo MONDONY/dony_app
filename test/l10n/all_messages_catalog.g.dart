@@ -3372,8 +3372,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'paymentAuthenticationFailed': (l) => l.paymentAuthenticationFailed,
   'paymentSheetOpenFailed': (l) => l.paymentSheetOpenFailed,
   'paymentMethodUnavailable': (l) => l.paymentMethodUnavailable,
-  'paymentMethodsSemantics': (l) =>
-      l.paymentMethodsSemantics(placeholderMarker('wallet')),
   'paymentContextRecipient': (l) =>
       l.paymentContextRecipient(placeholderMarker('name')),
   'paymentContextDefault': (l) => l.paymentContextDefault,
@@ -7743,7 +7741,6 @@ const textParameters = <String, List<String>>{
   'activityToolsProgressBody': ['missing'],
   'activityNewSinceLastVisit': ['label', 'title'],
   'bidCreateMaxWeightLabel': ['maxKg'],
-  'paymentMethodsSemantics': ['wallet'],
   'paymentContextRecipient': ['name'],
   'commissionCardDebitNoticeMin': ['min'],
   'commissionCardExpiringMessage': ['date'],

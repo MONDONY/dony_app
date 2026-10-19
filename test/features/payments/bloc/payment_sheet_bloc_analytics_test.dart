@@ -1,3 +1,4 @@
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
@@ -29,14 +30,23 @@ void main() {
     analyticsContext: 'bid',
   );
 
+  tearDown(resetPaymentMethodFlagsForTest);
+
   setUp(() async {
+    resetPaymentMethodFlagsForTest();
     gateway = _MockPaymentGateway();
     repository = _MockPaymentRepository();
     backend = MockAnalyticsBackend();
     when(() => gateway.isPlatformPaySupported()).thenAnswer((_) async => true);
   });
 
-  Future<PaymentSheetBloc> buildBloc({bool enabled = true}) async {
+  Future<PaymentSheetBloc> buildBloc({
+    bool enabled = true,
+    PaymentMethodFlags flags = const PaymentMethodFlags(
+      applePay: true,
+      googlePay: true,
+    ),
+  }) async {
     final analytics = enabled
         ? makeEnabledAnalytics(backend)
         : makeDisabledAnalytics(backend);
@@ -46,12 +56,19 @@ void main() {
       repository: repository,
       config: config,
       analytics: analytics,
+      loadPaymentMethodFlags: () async => flags,
     );
   }
 
   /// Ouvre la feuille et attend que les moyens soient résolus.
-  Future<PaymentSheetBloc> openSheet({bool enabled = true}) async {
-    final bloc = await buildBloc(enabled: enabled);
+  Future<PaymentSheetBloc> openSheet({
+    bool enabled = true,
+    PaymentMethodFlags flags = const PaymentMethodFlags(
+      applePay: true,
+      googlePay: true,
+    ),
+  }) async {
+    final bloc = await buildBloc(enabled: enabled, flags: flags);
     bloc.add(const PaymentSheetStarted());
     await bloc.stream.firstWhere((s) => s is PaymentSheetResolved);
     return bloc;
@@ -75,6 +92,20 @@ void main() {
       'paypal_available': true,
     });
   });
+
+  test(
+    'payment_sheet_opened : wallet_available suit le drapeau serveur',
+    () async {
+      await openSheet(flags: PaymentMethodFlags.none);
+      await settle();
+
+      expect(
+        capturedFor(AnalyticsEvents.paymentSheetOpened)['wallet_available'],
+        false,
+        reason: 'appareil compatible mais Google Pay éteint côté serveur',
+      );
+    },
+  );
 
   test('wallet réussi : initiated puis succeeded en `platform_pay`', () async {
     when(

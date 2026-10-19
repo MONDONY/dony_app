@@ -9404,11 +9404,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce moyen de paiement est momentanément indisponible. Payez par carte.';
 
   @override
-  String paymentMethodsSemantics(String wallet) {
-    return 'Carte, $wallet, PayPal';
-  }
-
-  @override
   String paymentContextRecipient(String name) {
     return 'Envoi de $name';
   }

@@ -15528,12 +15528,6 @@ abstract class AppLocalizations {
   /// **'Ce moyen de paiement est momentanément indisponible. Payez par carte.'**
   String get paymentMethodUnavailable;
 
-  /// Semantics regroupée des moyens de paiement (payment_method_names.dart, mode compact). {wallet} = Apple Pay ou Google Pay, nom de marque non traduit.
-  ///
-  /// In fr, this message translates to:
-  /// **'Carte, {wallet}, PayPal'**
-  String paymentMethodsSemantics(String wallet);
-
   /// Libellé de contexte de la feuille de paiement quand le destinataire est connu (payment_screen.dart).
   ///
   /// In fr, this message translates to:
