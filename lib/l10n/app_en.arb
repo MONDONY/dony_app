@@ -10954,5 +10954,7 @@
   "@priceGridCommissionNoticeGrid": {"placeholders": {"minimum": {"type": "String"}}},
   "priceGridSenderWillPayMessageGrid": "The sender will pay {paid}, including {fee} Yadony service fee.",
   "@priceGridSenderWillPayMessageGrid": {"placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}},
-  "promoIneffectiveCommissionMinimum": "This code does not change this amount (minimum fee)"
+  "promoIneffectiveCommissionMinimum": "This code does not change this amount (minimum fee)",
+  "bidCreateServiceFeeLineLabel": "Yadony service fee",
+  "bidCreateGridSheetServiceFeeIncluded": "Service fee included"
 }

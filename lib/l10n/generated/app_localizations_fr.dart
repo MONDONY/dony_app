@@ -5805,7 +5805,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidCreatePromoBadge => 'Promo';
 
   @override
-  String get bidCreateServiceFeeIncludedLabel => 'Commission Yadony incluse';
+  String get bidCreateServiceFeeIncludedLabel =>
+      'Frais de service Yadony inclus';
 
   @override
   String get bidCreatePhotosVisibleHint =>
@@ -21529,4 +21530,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get promoIneffectiveCommissionMinimum =>
       'Ce code ne change rien sur ce montant (frais minimum)';
+
+  @override
+  String get bidCreateServiceFeeLineLabel => 'Frais de service Yadony';
+
+  @override
+  String get bidCreateGridSheetServiceFeeIncluded => 'Frais de service inclus';
 }

@@ -9618,7 +9618,7 @@ abstract class AppLocalizations {
   /// Mention sous le total du récapitulatif de prix (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Commission Yadony incluse'**
+  /// **'Frais de service Yadony inclus'**
   String get bidCreateServiceFeeIncludedLabel;
 
   /// Explication de l'utilité des photos du colis (create_bid/photo_section.dart)
@@ -34755,6 +34755,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce code ne change rien sur ce montant (frais minimum)'**
   String get promoIneffectiveCommissionMinimum;
+
+  /// Ligne des frais de service du récapitulatif de prix d'une offre sur un trajet, sous grille de commission : les lignes au-dessus sont au net, celle-ci s'y ajoute (create_bid_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de service Yadony'**
+  String get bidCreateServiceFeeLineLabel;
+
+  /// Mention à côté du total de la feuille de choix des articles de grille, sous grille de commission : le total affiché comprend les frais de service, alors que les prix des articles sont au net (grid_item_selection_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de service inclus'**
+  String get bidCreateGridSheetServiceFeeIncluded;
 }
 
 class _AppLocalizationsDelegate

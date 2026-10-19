@@ -21390,4 +21390,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get promoIneffectiveCommissionMinimum =>
       'This code does not change this amount (minimum fee)';
+
+  @override
+  String get bidCreateServiceFeeLineLabel => 'Yadony service fee';
+
+  @override
+  String get bidCreateGridSheetServiceFeeIncluded => 'Service fee included';
 }

@@ -77,13 +77,34 @@ class GridItemSelectionSheet {
                         ),
                       ),
                       const Spacer(),
-                      Text(
-                        formatPriceIn(totalPrice, currency),
-                        key: const Key('grid-sheet-total'),
-                        style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            formatPriceIn(totalPrice, currency),
+                            key: const Key('grid-sheet-total'),
+                            style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                          // Les lignes sont au net : sans cette mention, le
+                          // total (frais compris) ne collait pas à leur somme.
+                          if (commissionGridActive)
+                            Text(
+                              ctx.l10n.bidCreateGridSheetServiceFeeIncluded,
+                              key: const Key('grid-sheet-fee-included'),
+                              style: Theme.of(ctx).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      ctx,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                        ],
                       ),
                     ],
                   ),

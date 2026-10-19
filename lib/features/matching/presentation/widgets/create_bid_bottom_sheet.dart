@@ -6,7 +6,9 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/phone/normalize_payer_phone.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
@@ -800,12 +802,30 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Total expéditeur calculé localement, sans attendre le devis serveur.
   double _localSenderTotal() {
+    if (commissionGridActive) return _localGridPrice().gross;
     final price = _pricePerKg;
     final kg = (price != null && price > 0)
         ? netToSenderPrice(_weightNotifier.value * price)
         : 0.0;
     return kg + _gridDisplayTotal();
   }
+
+  /// Net du voyageur pour la saisie courante : poids × prix au kilo plus les
+  /// articles de grille. Valable sous grille de commission seulement, où le
+  /// serveur sert `pricePerKgDisplay` et `unitPriceDisplay` au net ; sans
+  /// grille ces prix portent déjà la commission.
+  double _netTotal() {
+    final price = _pricePerKg;
+    final kg = (price != null && price > 0)
+        ? _weightNotifier.value * (widget.announcement.senderPricePerKg ?? 0)
+        : 0.0;
+    return kg + _gridDisplayTotal();
+  }
+
+  /// Prix expéditeur local sous grille : les frais de service se calculent
+  /// une fois sur le net total (palier, minimum), jamais ligne par ligne.
+  SenderPrice _localGridPrice() =>
+      senderPriceForNet(_netTotal(), widget.announcement.currency);
 
   /// Prix suggéré : ce que coûterait le colis au tarif du voyageur, plus ce que
   /// l'expéditeur a lui-même chiffré hors grille. Le devis serveur prime dès
@@ -917,6 +937,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     if (quote is BidQuoteResponse) return quote.totalEur;
     final data = _formData;
     if (data == null) return 0.0;
+    if (commissionGridActive) return _localGridPrice().gross;
     final price = _pricePerKg;
     final kg = price == null ? 0.0 : data.weightKg * price;
     return netToSenderPrice(kg) + _gridDisplayTotal();
@@ -1674,6 +1695,39 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                             ],
                           ),
                         ],
+                        // Code valide mais sans effet : le minimum de frais
+                        // annule le gain. Simple information (le code reste
+                        // saisi et part avec l'offre), jamais une erreur.
+                        if (quote != null &&
+                            quote.promoIneffectiveBecauseMinimum) ...[
+                          const SizedBox(height: DonySpacing.xs),
+                          Row(
+                            key: const Key('bid-promo-ineffective'),
+                            children: [
+                              DonyIcon(
+                                'info',
+                                size: 16,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  context
+                                      .l10n
+                                      .promoIneffectiveCommissionMinimum,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         if (promoError != null) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Row(
@@ -1709,6 +1763,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               valueListenable: _quoteNotifier,
               builder: (_, quoteVal, _) {
                 final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
+                if (commissionGridActive) {
+                  return _buildGridPriceBreakdown(weightKg, quote);
+                }
                 final kgDisplayLocal = hasKgPricing
                     ? netToSenderPrice(weightKg * kgPrice)
                     : 0.0;
@@ -1783,6 +1840,42 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           ],
         );
       },
+    );
+  }
+
+  /// Récapitulatif sous grille de commission : lignes au net du voyageur
+  /// (poids, articles), puis une ligne « Frais de service Yadony » calculée
+  /// une seule fois sur le total. Le devis serveur prime dès qu'il existe :
+  /// c'est lui qui applique le code promo, l'app ne recalcule aucune remise.
+  /// Sans devis, le total montré est celui sans code.
+  Widget _buildGridPriceBreakdown(double weightKg, BidQuoteResponse? quote) {
+    final local = _localGridPrice();
+    final kgPrice = _pricePerKg;
+    final kgNet =
+        quote?.kgNetEur ??
+        ((kgPrice != null && kgPrice > 0)
+            ? weightKg * (widget.announcement.senderPricePerKg ?? 0)
+            : 0.0);
+    final gridNet = quote?.gridNetEur ?? _gridDisplayTotal();
+    final total = quote?.totalEur ?? local.gross;
+    if (total <= 0) return const SizedBox.shrink();
+    final promoApplied = quote?.promoApplied ?? false;
+    return _PriceBreakdown(
+      weightKg: weightKg,
+      pricePerKg: weightKg > 0 ? kgNet / weightKg : 0,
+      kgDisplay: kgNet,
+      gridDisplay: gridNet,
+      totalPrice: total,
+      // Prix avant code : net + frais au barème, tels que le devis les sert.
+      originalTotal: (quote != null && promoApplied)
+          ? quote.netEur + quote.commissionEur
+          : null,
+      promoApplied: promoApplied,
+      serviceFee: quote != null
+          ? quote.totalEur - quote.netEur
+          : local.commission,
+      serviceFeeMinimum: quote?.minimumApplied ?? local.minimumApplied,
+      currency: quote?.currency ?? widget.announcement.currency,
     );
   }
 
@@ -3051,6 +3144,8 @@ class _PriceBreakdown extends StatelessWidget {
     required this.currency,
     this.originalTotal,
     this.promoApplied = false,
+    this.serviceFee,
+    this.serviceFeeMinimum = false,
   });
 
   final double weightKg;
@@ -3069,6 +3164,14 @@ class _PriceBreakdown extends StatelessWidget {
   final double? originalTotal;
   final bool promoApplied;
   final String currency;
+
+  /// Frais de service Yadony, sous grille de commission seulement : les
+  /// lignes ci-dessus sont alors au net et cette ligne s'y ajoute. `null`
+  /// sans grille, où les lignes portent déjà la commission (aucune ligne).
+  final double? serviceFee;
+
+  /// Les frais ont été relevés au minimum de la grille.
+  final bool serviceFeeMinimum;
 
   @override
   Widget build(BuildContext context) {
@@ -3103,10 +3206,30 @@ class _PriceBreakdown extends StatelessWidget {
         _line(tt, context.l10n.bidCreateArticlesLineLabel, fmt(gridDisplay)),
       );
     }
-    // Pas de ligne « Commission » en addition : elle est déjà comprise dans les
-    // lignes ci-dessus, l'ajouter la compterait deux fois. Sa présence reste
-    // annoncée sous le total (« Commission Yadony incluse »).
-    if (hasRealSavings) {
+    // Sans grille, pas de ligne de frais en addition : ils sont déjà compris
+    // dans les lignes ci-dessus, l'ajouter les compterait deux fois. Leur
+    // présence reste annoncée sous le total (« Frais de service Yadony
+    // inclus »). Sous grille, les lignes sont au net et les frais s'ajoutent.
+    final fee = serviceFee;
+    if (fee != null) {
+      lines.add(
+        _line(
+          tt,
+          context.l10n.bidCreateServiceFeeLineLabel,
+          serviceFeeAmountLabel(
+            context.l10n,
+            fee,
+            currency,
+            minimum: serviceFeeMinimum,
+          ),
+          valueKey: const Key('bid-service-fee-amount'),
+        ),
+      );
+    }
+    // Sous grille, la ligne de frais est déjà après code : une ligne de
+    // réduction en plus ferait sommer les lignes sous le total. La remise se
+    // lit alors au prix barré.
+    if (hasRealSavings && fee == null) {
       lines.add(
         _line(
           tt,
@@ -3205,11 +3328,13 @@ class _PriceBreakdown extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: DonySpacing.xs),
-          Text(
-            context.l10n.bidCreateServiceFeeIncludedLabel,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
+          if (fee == null) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              context.l10n.bidCreateServiceFeeIncludedLabel,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
         ],
       ),
     );
@@ -3218,14 +3343,23 @@ class _PriceBreakdown extends StatelessWidget {
   // Expanded sur le libellé (variable, ex: "5.0 kg × 8.00€") plutôt qu'un
   // Row spaceBetween non contraint : à 200 % il passe à la ligne au lieu de
   // pousser le montant hors de la carte.
-  Widget _line(TextTheme tt, String label, String value, {Color? valueColor}) =>
-      Row(
-        children: [
-          Expanded(child: Text(label, style: tt.bodyMedium)),
-          const SizedBox(width: DonySpacing.sm),
-          Text(value, style: tt.titleMedium?.copyWith(color: valueColor)),
-        ],
-      );
+  Widget _line(
+    TextTheme tt,
+    String label,
+    String value, {
+    Color? valueColor,
+    Key? valueKey,
+  }) => Row(
+    children: [
+      Expanded(child: Text(label, style: tt.bodyMedium)),
+      const SizedBox(width: DonySpacing.sm),
+      Text(
+        value,
+        key: valueKey,
+        style: tt.titleMedium?.copyWith(color: valueColor),
+      ),
+    ],
+  );
 
   /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR
   /// (ex. 0.05 → « 5 », 0.065 → « 6,5 »).
