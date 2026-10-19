@@ -2699,7 +2699,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tripPublishTemplateChipGrid(String label) {
-    return '$label · price grid';
+    return '$label · per item';
   }
 
   @override
@@ -2884,7 +2884,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishPricingModeKg => 'By the kilo';
 
   @override
-  String get tripPublishPricingModeMixed => 'Price grid + kilo';
+  String get tripPublishPricingModeMixed => 'Items + kilo';
 
   @override
   String get tripPublishPricePerKgSectionLabel => 'Price per kg';
@@ -2893,7 +2893,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishKgPriceToggleTitle => 'Price per kilo';
 
   @override
-  String get tripPublishKgPriceToggleSubtitle => 'Optional in grid mode';
+  String get tripPublishKgPriceToggleSubtitle =>
+      'Optional with prices per item';
 
   @override
   String get tripPublishCustomPriceChipLabel => 'Other price';
@@ -3046,7 +3047,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishAgreedPriceLabel => 'Total price agreed';
 
   @override
-  String get tripPublishGridPreviewLabel => 'Your grid';
+  String get tripPublishGridPreviewLabel => 'Your prices per item';
 
   @override
   String tripPublishGridPreviewSeeAll(int count) {
@@ -3063,27 +3064,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tripPublishGridSheetTitle => 'Your price grid';
+  String get tripPublishGridSheetTitle => 'Your prices per item';
 
   @override
   String get tripPublishGridSheetSubtitle => 'Valid on all your trips';
 
   @override
-  String get tripPublishGridSheetEditCta => 'Edit my grid';
+  String get tripPublishGridSheetEditCta => 'Edit my prices';
 
   @override
   String get tripPublishGridSheetCommissionNote =>
       'Prices paid by the sender, Yadony service fee included.';
 
   @override
-  String get tripPublishGridEmptyTitle => 'Your grid is empty';
+  String get tripPublishGridEmptyTitle => 'No prices per item';
 
   @override
   String get tripPublishGridEmptySubtitle =>
       'Add at least one item so senders can book item by item.';
 
   @override
-  String get tripPublishGridComposeCta => 'Build my grid';
+  String get tripPublishGridComposeCta => 'Add my prices per item';
 
   @override
   String get tripPublishCorridorConfirmedBadge => 'Confirmed';
@@ -3403,6 +3404,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPosterSaveSuccess => 'Poster saved to your gallery';
 
   @override
+  String get gallerySaveAccessDenied =>
+      'Allow Yadony to add photos in Settings, then try again.';
+
+  @override
+  String get gallerySaveOpenSettings => 'Open Settings';
+
+  @override
+  String get gallerySaveNotEnoughSpace =>
+      'Not enough storage on your phone to save the image.';
+
+  @override
   String get tripPosterCaptionCopied => 'Caption copied';
 
   @override
@@ -3477,7 +3489,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTemplateCreateAction => 'Create a template';
 
   @override
-  String get tripTemplateGridPriceLabel => 'grid pricing';
+  String get tripTemplateGridPriceLabel => 'price per item';
 
   @override
   String get tripTemplateDeleteDialogTitle => 'Delete template';
@@ -4895,7 +4907,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingPricePerKgLabel => 'Price per kg';
 
   @override
-  String get listingPriceGridShort => 'Grid';
+  String get listingPriceGridShort => 'Per item';
 
   @override
   String get listingPriceUnavailableShort => 'Unavailable';
@@ -5021,7 +5033,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingCapacityAvailableSuffix => 'available';
 
   @override
-  String get listingPricingSuffixTarifaire => 'pricing';
+  String get listingPricingSuffixTarifaire => 'price';
 
   @override
   String get listingPricingSuffixPrix => 'price';
@@ -5170,7 +5182,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingDepositDeadlineLabel => 'drop-off deadline';
 
   @override
-  String get listingPriceGridLabel => 'Price grid';
+  String get listingPriceGridLabel => 'Price per item';
 
   @override
   String listingItemCount(int count) {
@@ -5776,7 +5788,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account has no number: enter the one that will pay. You\'ll receive the payment request on it.';
 
   @override
-  String get bidCreateCustomItemsSectionTitle => 'Items outside the grid';
+  String get bidCreateCustomItemsSectionTitle => 'Other items';
 
   @override
   String get bidCreateCustomItemsSectionHint =>
@@ -5786,8 +5798,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidCreateCustomItemsEmpty => 'No items yet.';
 
   @override
-  String get bidCreateCustomItemsTotalLabel =>
-      'Total for items outside the grid';
+  String get bidCreateCustomItemsTotalLabel => 'Total for other items';
 
   @override
   String get bidCreateAddItemButton => 'Add an item';
@@ -7565,6 +7576,104 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sender will be refunded automatically';
 
   @override
+  String get bidDetailRefuseParcelLabel => 'The parcel doesn\'t match';
+
+  @override
+  String get bidDetailRefuseParcelSubtitle =>
+      'Refuse it with no penalty, the sender is refunded';
+
+  @override
+  String get parcelRefusalTitle => 'Refuse the parcel';
+
+  @override
+  String get parcelRefusalIntro =>
+      'The parcel doesn\'t match what the sender declared? Refuse it: you don\'t carry it and you get no penalty.';
+
+  @override
+  String get parcelRefusalDeclaredTitle => 'Declared by the sender';
+
+  @override
+  String parcelRefusalDeclaredWeight(String weight) {
+    return 'Weight: $weight kg';
+  }
+
+  @override
+  String get parcelRefusalReasonLabel => 'What\'s wrong';
+
+  @override
+  String get parcelRefusalReasonContentMismatch =>
+      'Content differs from the declaration';
+
+  @override
+  String get parcelRefusalReasonContentMismatchHint =>
+      'E.g. a phone declared as 1 kg of clothes';
+
+  @override
+  String get parcelRefusalReasonOverweight => 'Heavier than declared';
+
+  @override
+  String get parcelRefusalReasonProhibited => 'Prohibited item';
+
+  @override
+  String get parcelRefusalReasonProhibitedHint =>
+      'Or content you refuse on this trip';
+
+  @override
+  String get parcelRefusalReasonOther => 'Other reason';
+
+  @override
+  String get parcelRefusalDetailsLabel => 'Details';
+
+  @override
+  String get parcelRefusalDetailsHint => 'What you noticed (optional)';
+
+  @override
+  String get parcelRefusalDetailsRequiredHint => 'Explain what you noticed';
+
+  @override
+  String get parcelRefusalPhotoLabel => 'Photo of the parcel';
+
+  @override
+  String get parcelRefusalPhotoHelp =>
+      'Required: it serves as proof if you disagree.';
+
+  @override
+  String get parcelRefusalTakePhoto => 'Take a photo';
+
+  @override
+  String get parcelRefusalRetakePhoto => 'Retake the photo';
+
+  @override
+  String get parcelRefusalRemovePhoto => 'Remove the photo';
+
+  @override
+  String get parcelRefusalPhotoFailed =>
+      'This photo couldn\'t be read. Try again.';
+
+  @override
+  String get parcelRefusalConsequences =>
+      'The sender is notified and fully refunded. Repeated refusals suspend their account.';
+
+  @override
+  String get parcelRefusalCashNotice =>
+      'Cash payment: give back any money the sender already handed you. The Yadony commission already paid is not refunded.';
+
+  @override
+  String get parcelRefusalHandedOverNotice =>
+      'You already scanned this parcel: give it back to the sender on the spot.';
+
+  @override
+  String get parcelRefusalSubmit => 'Refuse the parcel';
+
+  @override
+  String get parcelRefusalSuccess =>
+      'Parcel refused. The sender is notified and refunded.';
+
+  @override
+  String get parcelRefusalSuccessCash =>
+      'Parcel refused. The sender is notified.';
+
+  @override
   String get bidDetailPayByMobileMoney => 'Pay by mobile money';
 
   @override
@@ -8729,7 +8838,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityToolMissingTemplate => 'a trip template';
 
   @override
-  String get activityToolMissingPriceGrid => 'a price grid';
+  String get activityToolMissingPriceGrid => 'prices per item';
 
   @override
   String get activityToolCtaAddresses => 'Add an address';
@@ -8744,7 +8853,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityToolCtaTemplates => 'Create a trip template';
 
   @override
-  String get activityToolCtaPriceGrid => 'Fill in my price grid';
+  String get activityToolCtaPriceGrid => 'Add my prices per item';
 
   @override
   String activityToolBadgeAddresses(num count) {
@@ -8805,7 +8914,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityToolTitleTemplates => 'Trip templates';
 
   @override
-  String get activityToolTitlePriceGrid => 'My price grid';
+  String get activityToolTitlePriceGrid => 'My prices per item';
 
   @override
   String get activityToolTitleAddresses => 'My addresses';
@@ -9092,7 +9201,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activityToolsStartBody =>
-      'Addresses, recipients, templates, price grid, alerts: fill them in once, reuse them every time you post.';
+      'Addresses, recipients, templates, prices per item, alerts: fill them in once, reuse them every time you post.';
 
   @override
   String activityToolsProgressBody(Object missing) {
@@ -10408,10 +10517,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your conversations will appear here\nonce an offer is accepted.';
 
   @override
-  String get conversationFilterAll => 'All';
+  String get conversationListEmptyActiveTitle => 'No active conversations';
 
   @override
-  String get conversationFilterUnread => 'Unread';
+  String get conversationListEmptyActiveDescription =>
+      'Conversations about delivered or cancelled parcels move to “Done” once read.';
+
+  @override
+  String get conversationListEmptyDoneTitle => 'No finished conversations';
+
+  @override
+  String get conversationListEmptyDoneDescription =>
+      'When a parcel is delivered or cancelled, its conversation moves here once read.';
 
   @override
   String get conversationFilterActive => 'Active';
@@ -14708,7 +14825,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Will be added to \"My recipients\" for your next shipments';
 
   @override
-  String get priceGridScreenTitle => 'My price list';
+  String get priceGridScreenTitle => 'My prices per item';
 
   @override
   String get priceGridCommissionNotice =>
@@ -14725,7 +14842,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get priceGridEmptyDescription =>
-      'Set the price of the items you carry. The same price list applies to all your trips.';
+      'Set the price of the items you carry. The same prices apply to all your trips.';
 
   @override
   String get priceGridScopeStampLabel => 'Valid on all your trips';
@@ -14753,14 +14870,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String priceGridDeleteItemMessage(String label) {
-    return 'The item \"$label\" will be removed from your price list, on all your trips.';
+    return 'The item \"$label\" will be removed from your prices per item, on all your trips.';
   }
 
   @override
   String get priceGridEditItemTitle => 'Edit label';
 
   @override
-  String get priceGridAddToGridButton => 'Add to my price list';
+  String get priceGridAddToGridButton => 'Add to my prices';
 
   @override
   String get priceGridSearchFieldLabel => 'Item';
@@ -14770,7 +14887,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get priceGridAllCatalogTakenMessage =>
-      'All catalog items are already in your price list. Write your own to add another one.';
+      'All catalog items already have a price. Write your own to add another one.';
 
   @override
   String priceGridAddCustomLabel(String query) {
@@ -18383,7 +18500,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moneyAllTripsLink => 'All my trips';
 
   @override
-  String get moneyRecentlyPaidSection => 'Recently paid out';
+  String get moneyRecentlyPaidSection => 'Recently paid';
 
   @override
   String get moneyTruncatedNote =>
@@ -18433,6 +18550,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moneyShortUnknown => 'updating';
+
+  @override
+  String moneyShortBankPending(String date) {
+    return 'paid, available $date';
+  }
+
+  @override
+  String get moneyShortBankPendingNoDate => 'paid, available soon';
+
+  @override
+  String get moneyShortBankAvailable => 'bank transfer coming';
+
+  @override
+  String moneyShortBankInTransit(String date) {
+    return 'transfer on its way, arrives $date';
+  }
+
+  @override
+  String get moneyShortBankInTransitNoDate => 'bank transfer on its way';
+
+  @override
+  String moneyShortBankPaid(String date) {
+    return 'in your bank on $date';
+  }
+
+  @override
+  String get moneyShortBankPaidNoDate => 'in your bank';
+
+  @override
+  String get moneyShortBankFailed => 'transfer failed, check your bank';
+
+  @override
+  String get moneyBankSheetTitle => 'Transfer tracking';
+
+  @override
+  String moneyBankStepPaidToStripe(String date) {
+    return 'Paid to your Stripe account on $date';
+  }
+
+  @override
+  String get moneyBankStepPaidToStripeNoDate => 'Paid to your Stripe account';
+
+  @override
+  String moneyBankStepAvailable(String date) {
+    return 'Available on $date';
+  }
+
+  @override
+  String get moneyBankStepAvailableNoDate => 'Available in your Stripe account';
+
+  @override
+  String moneyBankStepInTransit(String date) {
+    return 'Transfer on its way, expected on $date';
+  }
+
+  @override
+  String get moneyBankStepInTransitNoDate => 'Transfer to your bank';
+
+  @override
+  String get moneyBankStepTransferSent => 'Transfer sent by Stripe';
+
+  @override
+  String get moneyBankStepFailed => 'Transfer failed';
+
+  @override
+  String moneyBankStepArrived(String date) {
+    return 'In your bank on $date';
+  }
+
+  @override
+  String get moneyBankStepArrivedNoDate => 'In your bank';
+
+  @override
+  String get moneyBankHelp =>
+      'Yadony first pays you into your Stripe account. Stripe makes the money available a few days later, then sends it to your bank account automatically. Allow 1 to 3 business days after that, depending on your bank.';
+
+  @override
+  String get moneyBankHelpFailed =>
+      'Your bank rejected the transfer. The money stays in your Stripe account: check or change your bank account and the transfer will go out again.';
+
+  @override
+  String get moneyBankOpenParcel => 'View parcel';
+
+  @override
+  String moneyBankStepDoneSemantics(String label) {
+    return '$label, done';
+  }
+
+  @override
+  String moneyBankStepCurrentSemantics(String label) {
+    return '$label, in progress';
+  }
+
+  @override
+  String moneyBankStepFailedSemantics(String label) {
+    return '$label, failed';
+  }
+
+  @override
+  String moneyBankStepTodoSemantics(String label) {
+    return '$label, upcoming';
+  }
+
+  @override
+  String get bankAccountChangeButton => 'Change bank account';
+
+  @override
+  String get bankAccountChangeHint =>
+      'You will be taken to your Stripe space to update your IBAN.';
+
+  @override
+  String get bankAccountChangeMissing =>
+      'No payout account is linked yet. Set up how you receive payments first.';
+
+  @override
+  String get bankAccountChangeOnboardingIncomplete =>
+      'Finish your Stripe sign-up first to change your bank account.';
+
+  @override
+  String get bankAccountChangeUnavailable =>
+      'Changing your bank account will be available soon.';
 
   @override
   String get moneyTripsTitle => 'My trips';
@@ -20721,7 +20959,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiFormDraftUnderstoodTitle => 'Understood so far';
 
   @override
-  String get aiFormDraftChipGrid => 'My grid';
+  String get aiFormDraftChipGrid => 'My prices per item';
 
   @override
   String get aiFormDraftChipDirect => 'Non-stop';
@@ -20815,7 +21053,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiFormDraftSummaryGrid => 'Items';
 
   @override
-  String get aiFormDraftSummaryGridValue => 'My price grid';
+  String get aiFormDraftSummaryGridValue => 'My prices per item';
 
   @override
   String get aiFormDraftSummaryPayment => 'Payment';
@@ -20867,7 +21105,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiFormDraftWarningNoGrid =>
-      'You do not have a price grid yet: I used the price per kilo.';
+      'You do not have prices per item yet: I used the price per kilo.';
 
   @override
   String get aiFormDraftWarningCardNotConfigured =>

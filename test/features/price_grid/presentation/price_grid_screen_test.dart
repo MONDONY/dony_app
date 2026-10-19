@@ -232,7 +232,7 @@ void main() {
       // commune, et le dialogue doit le dire avant de supprimer.
       expect(
         find.textContaining(
-          'sera retiré de votre grille, sur tous vos '
+          'sera retiré de vos prix par article, sur tous vos '
           'trajets',
         ),
         findsOneWidget,
@@ -285,7 +285,7 @@ void main() {
       await tester.pumpWidget(_wrap(_blocWith(const PriceGridLoaded(_items))));
       await tester.pumpAndSettle();
 
-      expect(find.text('My price list'), findsOneWidget);
+      expect(find.text('My prices per item'), findsOneWidget);
       // Catégorie canonique traduite ; le libellé libre reste tel quel.
       expect(find.text('Shoes'), findsOneWidget);
       expect(find.text('Phones & electronics'), findsOneWidget);

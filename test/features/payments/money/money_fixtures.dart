@@ -134,6 +134,7 @@ MoneyItemModel item({
   DateTime? departureDate,
   String? counterpartyName,
   MoneyChannel channel = MoneyChannel.card,
+  BankPayoutModel? bankPayout,
 }) => MoneyItemModel(
   bidId: bidId,
   announcementId: announcementId,
@@ -154,6 +155,7 @@ MoneyItemModel item({
   weightKg: weightKg,
   departureDate: departureDate,
   counterpartyName: counterpartyName,
+  bankPayout: bankPayout,
 );
 
 /// Horloge des tests d'écran : mercredi 8 octobre 2026 (semaine du 5 au 11,

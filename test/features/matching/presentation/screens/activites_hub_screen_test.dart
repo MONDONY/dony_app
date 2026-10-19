@@ -657,7 +657,7 @@ void main() {
     testWidgets('Ma grille de prix → grille de prix', (tester) async {
       await expectNavigation(
         tester,
-        'Ma grille de prix',
+        'Mes prix par article',
         '/profile/price-grid',
       );
     });

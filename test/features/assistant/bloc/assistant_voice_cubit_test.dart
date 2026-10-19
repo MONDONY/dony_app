@@ -110,6 +110,48 @@ void main() {
     expect(cubit.state.completed, 0);
   });
 
+  blocTest<AssistantVoiceCubit, AssistantVoiceState>(
+    'cancel pendant l’écoute : retour au repos, aucun completed, même si le '
+    'résultat final arrive ensuite (YADONY-FLUTTER-PROD-X)',
+    build: () => AssistantVoiceCubit(speech),
+    act: (c) async {
+      await c.start(localeId: 'fr_FR');
+      speech.emit('Comment payer');
+      await c.cancel();
+      speech
+        ..emit('Comment payer ?', isFinal: true)
+        ..finish();
+    },
+    skip: 3,
+    expect: () => const [AssistantVoiceState()],
+    verify: (c) {
+      // Une annulation par cancel, une par la fermeture du cubit.
+      expect(speech.cancelCount, 2);
+      expect(speech.stopCount, 0);
+      expect(c.state.completed, 0);
+    },
+  );
+
+  test('cancel pendant le démarrage : l’écoute ne commence jamais', () async {
+    final cubit = AssistantVoiceCubit(speech);
+    final starting = cubit.start(localeId: 'fr_FR');
+    expect(cubit.state.status, AssistantVoiceStatus.starting);
+    await cubit.cancel();
+    await starting;
+    expect(cubit.state.status, AssistantVoiceStatus.idle);
+    expect(speech.startCount, 0);
+    await cubit.close();
+  });
+
+  blocTest<AssistantVoiceCubit, AssistantVoiceState>(
+    'cancel au repos : rien ne se passe',
+    build: () => AssistantVoiceCubit(speech),
+    act: (c) => c.cancel(),
+    expect: () => const <AssistantVoiceState>[],
+    // Seule la fermeture du cubit annule le moteur.
+    verify: (_) => expect(speech.cancelCount, 1),
+  );
+
   test('busy pendant le démarrage et l’écoute', () {
     expect(
       const AssistantVoiceState(status: AssistantVoiceStatus.starting).busy,

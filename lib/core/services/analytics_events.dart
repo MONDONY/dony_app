@@ -153,6 +153,14 @@ abstract final class AnalyticsEvents {
       'connect_onboarding_still_pending';
   static const connectOnboardingFailed = 'connect_onboarding_failed';
 
+  /// Lien vers l'espace Stripe Express obtenu (« Changer de compte
+  /// bancaire »). Propriété `source` (`payouts_screen`/`bank_payout_sheet`).
+  static const bankAccountChangeLinkOpened = 'bank_account_change_link_opened';
+
+  /// Lien vers l'espace Stripe Express refusé ou navigateur non ouvert.
+  /// Propriétés `source`, `reason`, `error_code`.
+  static const bankAccountChangeLinkFailed = 'bank_account_change_link_failed';
+
   /// Compte de versement mobile money (voyageur) activé ou désactivé.
   static const mobileMoneyAccountActivated = 'mobile_money_account_activated';
   static const mobileMoneyAccountDisabled = 'mobile_money_account_disabled';
@@ -454,6 +462,16 @@ abstract final class AnalyticsEvents {
   static const cancellationInitiated = 'cancellation_initiated';
   static const bidCancelled = 'bid_cancelled';
   static const bidCancelledBeforePayment = 'bid_cancelled_before_payment';
+
+  /// Colis non conforme refusé par le voyageur à la remise
+  /// (`POST /bids/{id}/refuse-parcel`), confirmé par le serveur. Propriétés
+  /// `reason` (code fermé de [ParcelRefusalReason]), `status` (statut avant
+  /// le refus), `payment_method`. Jamais le détail saisi.
+  static const parcelRefused = 'parcel_refused';
+
+  /// Refus du colis impossible (photo non envoyée, statut changé, trajet
+  /// parti). Propriétés `reason`, `error_code`.
+  static const parcelRefusalFailed = 'parcel_refusal_failed';
   static const rematchAccepted = 'rematch_accepted';
   static const rematchAlternativesOpened = 'rematch_alternatives_opened';
   static const noShowReportedBySender = 'no_show_reported_by_sender';
@@ -957,6 +975,11 @@ abstract final class AnalyticsEvents {
   static const tripPosterOpened = 'trip_poster_opened';
   static const tripPosterShared = 'trip_poster_shared';
   static const tripPosterLinkCopied = 'trip_poster_link_copied';
+
+  /// Échec d'un enregistrement dans la galerie (affiche de trajet ou de
+  /// demande, QR code du colis), YADONY-FLUTTER-PROD-T. Propriétés `context`,
+  /// `stage` (`request_access`/`write`) et `error_code`.
+  static const gallerySaveFailed = 'gallery_save_failed';
 
   // Affiche de demande d'envoi — jumelle de l'affiche de trajet, côté
   // expéditeur : il la poste pour trouver un voyageur sur son axe.

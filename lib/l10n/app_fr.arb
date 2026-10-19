@@ -1314,7 +1314,7 @@
       }
     }
   },
-  "tripPublishTemplateChipGrid": "{label} · grille",
+  "tripPublishTemplateChipGrid": "{label} · par article",
   "@tripPublishTemplateChipGrid": {
     "description": "Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom",
     "placeholders": {
@@ -1516,7 +1516,7 @@
   "@tripPublishPricingModeKg": {
     "description": "Option « au kilo » du toggle de mode de tarification, étape Prix & conditions"
   },
-  "tripPublishPricingModeMixed": "Grille + kilo",
+  "tripPublishPricingModeMixed": "Articles + kilo",
   "@tripPublishPricingModeMixed": {
     "description": "Option « grille + kilo » du toggle de mode de tarification"
   },
@@ -1528,7 +1528,7 @@
   "@tripPublishKgPriceToggleTitle": {
     "description": "Titre du toggle « Tarif au kilo », visible en mode grille"
   },
-  "tripPublishKgPriceToggleSubtitle": "Optionnel en mode grille",
+  "tripPublishKgPriceToggleSubtitle": "Optionnel avec les prix par article",
   "@tripPublishKgPriceToggleSubtitle": {
     "description": "Sous-titre du toggle « Tarif au kilo »"
   },
@@ -1717,7 +1717,7 @@
   "@tripPublishAgreedPriceLabel": {
     "description": "Libellé de la carte affichant le prix total convenu (trajet dédié)"
   },
-  "tripPublishGridPreviewLabel": "Votre grille",
+  "tripPublishGridPreviewLabel": "Vos prix par article",
   "@tripPublishGridPreviewLabel": {
     "description": "Libellé au-dessus de l'aperçu de grille, étape Prix & conditions"
   },
@@ -1744,7 +1744,7 @@
       }
     }
   },
-  "tripPublishGridSheetTitle": "Votre grille de prix",
+  "tripPublishGridSheetTitle": "Vos prix par article",
   "@tripPublishGridSheetTitle": {
     "description": "Titre de la feuille listant tous les articles de la grille"
   },
@@ -1752,7 +1752,7 @@
   "@tripPublishGridSheetSubtitle": {
     "description": "Sous-titre de la feuille de grille complète"
   },
-  "tripPublishGridSheetEditCta": "Modifier ma grille",
+  "tripPublishGridSheetEditCta": "Modifier mes prix",
   "@tripPublishGridSheetEditCta": {
     "description": "Bouton sticky de la feuille de grille complète"
   },
@@ -1760,7 +1760,7 @@
   "@tripPublishGridSheetCommissionNote": {
     "description": "Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)"
   },
-  "tripPublishGridEmptyTitle": "Votre grille est vide",
+  "tripPublishGridEmptyTitle": "Aucun prix par article",
   "@tripPublishGridEmptyTitle": {
     "description": "Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette"
   },
@@ -1768,7 +1768,7 @@
   "@tripPublishGridEmptySubtitle": {
     "description": "Sous-titre de la carte grille vide"
   },
-  "tripPublishGridComposeCta": "Composer ma grille",
+  "tripPublishGridComposeCta": "Ajouter mes prix par article",
   "@tripPublishGridComposeCta": {
     "description": "Bouton de la carte grille vide, ouvre l'écran de grille du profil"
   },
@@ -2204,6 +2204,18 @@
   "@tripPosterSaveSuccess": {
     "description": "Message de succès de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
   },
+  "gallerySaveAccessDenied": "Autorisez Yadony à ajouter des photos dans Réglages, puis réessayez.",
+  "@gallerySaveAccessDenied": {
+    "description": "Enregistrement dans la galerie refusé par le système (accès aux photos refusé, iOS ne redemande plus) : renvoi aux Réglages (gallery_save_service.dart)"
+  },
+  "gallerySaveOpenSettings": "Ouvrir les Réglages",
+  "@gallerySaveOpenSettings": {
+    "description": "Action du message d'accès aux photos refusé : ouvre les réglages de Yadony"
+  },
+  "gallerySaveNotEnoughSpace": "Espace insuffisant sur le téléphone pour enregistrer l'image.",
+  "@gallerySaveNotEnoughSpace": {
+    "description": "Enregistrement dans la galerie impossible faute d'espace de stockage"
+  },
   "tripPosterCaptionCopied": "Légende copiée",
   "@tripPosterCaptionCopied": {
     "description": "Confirmation après copie de la légende de l'affiche (trip_poster_screen.dart)"
@@ -2282,7 +2294,7 @@
   "@tripTemplateCreateAction": {
     "description": "Bouton d'action de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)"
   },
-  "tripTemplateGridPriceLabel": "prix à la grille",
+  "tripTemplateGridPriceLabel": "prix par article",
   "@tripTemplateGridPriceLabel": {
     "description": "Repli affiché à la place du tarif au kilo quand le modèle vend à la grille (trip_templates_screen.dart, trip_recurrence_edit_screen.dart)"
   },
@@ -4119,7 +4131,7 @@
   "@listingPricePerKgLabel": {
     "description": "Libellé de la carte statistique prix au kg (announcement_detail_screen.dart)"
   },
-  "listingPriceGridShort": "Grille",
+  "listingPriceGridShort": "Par article",
   "@listingPriceGridShort": {
     "description": "Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, announcement_detail_body.dart, marker_bitmap_factory.dart via announcement_map_view.dart)"
   },
@@ -4277,7 +4289,7 @@
   "@listingCapacityAvailableSuffix": {
     "description": "Libellé secondaire de la pastille capacité disponible (announcement_detail_body.dart)"
   },
-  "listingPricingSuffixTarifaire": "tarifaire",
+  "listingPricingSuffixTarifaire": "prix",
   "@listingPricingSuffixTarifaire": {
     "description": "Libellé secondaire de la pastille prix en mode grille (announcement_detail_body.dart)"
   },
@@ -4460,7 +4472,7 @@
   "@listingDepositDeadlineLabel": {
     "description": "Libellé secondaire de la carte date limite de dépôt (traveler_announcement_bottom_sheet.dart)"
   },
-  "listingPriceGridLabel": "Grille tarifaire",
+  "listingPriceGridLabel": "Prix par article",
   "@listingPriceGridLabel": {
     "description": "Titre de la carte grille tarifaire (traveler_announcement_bottom_sheet.dart, trip_card.dart, traveler_card.dart)"
   },
@@ -5231,7 +5243,7 @@
   "@bidCreatePayerPhoneHintNoProfile": {
     "description": "Texte d'aide quand le compte n'a pas de numéro de téléphone (create_bid/payer_phone_field.dart)"
   },
-  "bidCreateCustomItemsSectionTitle": "Articles hors grille",
+  "bidCreateCustomItemsSectionTitle": "Autres articles",
   "@bidCreateCustomItemsSectionTitle": {
     "description": "Titre de la section articles hors grille en négociation (custom_items_section.dart)"
   },
@@ -5243,7 +5255,7 @@
   "@bidCreateCustomItemsEmpty": {
     "description": "État vide de la liste d'articles hors grille (custom_items_section.dart)"
   },
-  "bidCreateCustomItemsTotalLabel": "Total des articles hors grille",
+  "bidCreateCustomItemsTotalLabel": "Total des autres articles",
   "@bidCreateCustomItemsTotalLabel": {
     "description": "Libellé du total des articles hors grille (custom_items_section.dart)"
   },
@@ -7590,6 +7602,123 @@
   "@bidDetailCancelTransportAcceptedSubtitle": {
     "description": "Sous-titre annuler ce transport, autre statut (traveler_options_sheet.dart)"
   },
+  "bidDetailRefuseParcelLabel": "Le colis ne correspond pas",
+  "@bidDetailRefuseParcelLabel": {
+    "description": "Tuile d'options voyageur : refuser un colis non conforme (traveler_options_sheet.dart)"
+  },
+  "bidDetailRefuseParcelSubtitle": "Refusez-le sans pénalité, l'expéditeur est remboursé",
+  "@bidDetailRefuseParcelSubtitle": {
+    "description": "Sous-titre de la tuile refus du colis (traveler_options_sheet.dart)"
+  },
+  "parcelRefusalTitle": "Refuser le colis",
+  "@parcelRefusalTitle": {
+    "description": "Titre de la feuille de refus d'un colis non conforme (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalIntro": "Le colis ne correspond pas à ce que l'expéditeur a déclaré ? Refusez-le : vous ne le transportez pas et vous n'êtes pas pénalisé.",
+  "@parcelRefusalIntro": {
+    "description": "Introduction de la feuille de refus (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalDeclaredTitle": "Déclaré par l'expéditeur",
+  "@parcelRefusalDeclaredTitle": {
+    "description": "Titre de l'encart qui rappelle la déclaration (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalDeclaredWeight": "Poids : {weight} kg",
+  "@parcelRefusalDeclaredWeight": {
+    "description": "Poids déclaré (parcel_refusal_sheet.dart)",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "parcelRefusalReasonLabel": "Ce qui ne va pas",
+  "@parcelRefusalReasonLabel": {
+    "description": "Libellé du choix du motif (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalReasonContentMismatch": "Contenu différent de la déclaration",
+  "@parcelRefusalReasonContentMismatch": {
+    "description": "Motif : contenu non conforme (parcel_refusal_sheet.dart). Envoyé au serveur, lu par l'expéditeur : garder court"
+  },
+  "parcelRefusalReasonContentMismatchHint": "Ex. un téléphone déclaré comme 1 kg de vêtements",
+  "@parcelRefusalReasonContentMismatchHint": {
+    "description": "Exemple sous le motif contenu non conforme (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalReasonOverweight": "Poids supérieur à la déclaration",
+  "@parcelRefusalReasonOverweight": {
+    "description": "Motif : poids supérieur (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalReasonProhibited": "Objet interdit",
+  "@parcelRefusalReasonProhibited": {
+    "description": "Motif : objet interdit (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalReasonProhibitedHint": "Ou un contenu que vous refusez sur ce trajet",
+  "@parcelRefusalReasonProhibitedHint": {
+    "description": "Précision sous le motif objet interdit (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalReasonOther": "Autre raison",
+  "@parcelRefusalReasonOther": {
+    "description": "Motif : autre (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalDetailsLabel": "Précisions",
+  "@parcelRefusalDetailsLabel": {
+    "description": "Libellé du champ de précisions (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalDetailsHint": "Ce que vous avez constaté (facultatif)",
+  "@parcelRefusalDetailsHint": {
+    "description": "Indication du champ de précisions, facultatif (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalDetailsRequiredHint": "Expliquez ce que vous avez constaté",
+  "@parcelRefusalDetailsRequiredHint": {
+    "description": "Indication du champ de précisions, obligatoire pour Autre raison (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalPhotoLabel": "Photo du colis",
+  "@parcelRefusalPhotoLabel": {
+    "description": "Titre de la section photo (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalPhotoHelp": "Obligatoire : elle sert de preuve en cas de désaccord.",
+  "@parcelRefusalPhotoHelp": {
+    "description": "Aide de la section photo (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalTakePhoto": "Prendre une photo",
+  "@parcelRefusalTakePhoto": {
+    "description": "Bouton prise de photo (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalRetakePhoto": "Reprendre la photo",
+  "@parcelRefusalRetakePhoto": {
+    "description": "Bouton pour reprendre la photo (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalRemovePhoto": "Retirer la photo",
+  "@parcelRefusalRemovePhoto": {
+    "description": "Infobulle du bouton retirer la photo (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalPhotoFailed": "Cette photo n'a pas pu être lue. Réessayez.",
+  "@parcelRefusalPhotoFailed": {
+    "description": "Snackbar photo illisible (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalConsequences": "L'expéditeur est prévenu et remboursé intégralement. Des refus répétés suspendent son compte.",
+  "@parcelRefusalConsequences": {
+    "description": "Encart des conséquences du refus (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalCashNotice": "Paiement en espèces : rendez à l'expéditeur l'argent qu'il vous a déjà remis. La commission Yadony déjà réglée n'est pas remboursée.",
+  "@parcelRefusalCashNotice": {
+    "description": "Encart espèces de la feuille de refus (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalHandedOverNotice": "Vous avez déjà scanné ce colis : rendez-le à l'expéditeur sur place.",
+  "@parcelRefusalHandedOverNotice": {
+    "description": "Encart colis déjà remis (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalSubmit": "Refuser le colis",
+  "@parcelRefusalSubmit": {
+    "description": "Bouton de confirmation du refus (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalSuccess": "Colis refusé. L'expéditeur est prévenu et remboursé.",
+  "@parcelRefusalSuccess": {
+    "description": "Snackbar refus confirmé (parcel_refusal_sheet.dart)"
+  },
+  "parcelRefusalSuccessCash": "Colis refusé. L'expéditeur est prévenu.",
+  "@parcelRefusalSuccessCash": {
+    "description": "Snackbar refus confirmé, paiement en espèces (parcel_refusal_sheet.dart)"
+  },
   "bidDetailPayByMobileMoney": "Payer par mobile money",
   "@bidDetailPayByMobileMoney": {
     "description": "Bouton AWAITING_PAYMENT mobile money (sender_sticky_bar.dart)"
@@ -9137,7 +9266,7 @@
   "@activityToolMissingTemplate": {
     "description": "Groupe nominal de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.missingPhrase)."
   },
-  "activityToolMissingPriceGrid": "une grille de prix",
+  "activityToolMissingPriceGrid": "des prix par article",
   "@activityToolMissingPriceGrid": {
     "description": "Groupe nominal de l'outil grille de prix (activity_labels.dart ToolKeyL10n.missingPhrase)."
   },
@@ -9157,7 +9286,7 @@
   "@activityToolCtaTemplates": {
     "description": "CTA de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.ctaLabel)."
   },
-  "activityToolCtaPriceGrid": "Remplir ma grille de prix",
+  "activityToolCtaPriceGrid": "Ajouter mes prix par article",
   "@activityToolCtaPriceGrid": {
     "description": "CTA de l'outil grille de prix (activity_labels.dart ToolKeyL10n.ctaLabel)."
   },
@@ -9193,7 +9322,7 @@
   "@activityToolTitleTemplates": {
     "description": "Titre de la tuile/ligne outil modèles de trajet, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart."
   },
-  "activityToolTitlePriceGrid": "Ma grille de prix",
+  "activityToolTitlePriceGrid": "Mes prix par article",
   "@activityToolTitlePriceGrid": {
     "description": "Titre de la tuile/ligne outil grille de prix, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart."
   },
@@ -9495,7 +9624,7 @@
   "@activityToolsProgressTitle": {
     "description": "Titre de la carte de progression dès qu'au moins un outil est prêt (tools_completion_card.dart _ProgressCard)."
   },
-  "activityToolsStartBody": "Adresses, destinataires, modèles, grille de prix, alertes : remplis une fois, réutilisés à chaque publication.",
+  "activityToolsStartBody": "Adresses, destinataires, modèles, prix par article, alertes : remplis une fois, réutilisés à chaque publication.",
   "@activityToolsStartBody": {
     "description": "Corps de la carte de progression au tout départ, aucun outil prêt (tools_completion_card.dart)."
   },
@@ -11274,13 +11403,21 @@
   "@conversationListEmptyDescription": {
     "description": "Description de l'état vide sans conversation de conversation_list_screen.dart (le saut de ligne fait partie de la valeur)."
   },
-  "conversationFilterAll": "Tous",
-  "@conversationFilterAll": {
-    "description": "Pastille de filtre « Tous » de conversation_list_screen.dart."
+  "conversationListEmptyActiveTitle": "Aucune conversation en cours",
+  "@conversationListEmptyActiveTitle": {
+    "description": "Messages, filtre « En cours » vide alors que des conversations existent (toutes terminées et lues)"
   },
-  "conversationFilterUnread": "Non lus",
-  "@conversationFilterUnread": {
-    "description": "Pastille de filtre « Non lus » de conversation_list_screen.dart."
+  "conversationListEmptyActiveDescription": "Les conversations des colis livrés ou annulés, une fois lues, sont rangées dans « Terminés ».",
+  "@conversationListEmptyActiveDescription": {
+    "description": "Explication sous le titre du filtre « En cours » vide"
+  },
+  "conversationListEmptyDoneTitle": "Aucune conversation terminée",
+  "@conversationListEmptyDoneTitle": {
+    "description": "Messages, filtre « Terminés » vide"
+  },
+  "conversationListEmptyDoneDescription": "Quand un colis est livré ou annulé, sa conversation arrive ici une fois lue.",
+  "@conversationListEmptyDoneDescription": {
+    "description": "Explication sous le titre du filtre « Terminés » vide"
   },
   "conversationFilterActive": "En cours",
   "@conversationFilterActive": {
@@ -16476,7 +16613,7 @@
   "@recipientSectionSaveToggleSubtitle": {
     "description": "Sous-titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart)."
   },
-  "priceGridScreenTitle": "Ma grille de prix",
+  "priceGridScreenTitle": "Mes prix par article",
   "@priceGridScreenTitle": {
     "description": "Titre de l'AppBar (price_grid_screen.dart)."
   },
@@ -16545,7 +16682,7 @@
   "@priceGridDeleteItemTitle": {
     "description": "Titre du dialogue de suppression d'une étiquette (price_grid_screen.dart)."
   },
-  "priceGridDeleteItemMessage": "L'article \"{label}\" sera retiré de votre grille, sur tous vos trajets.",
+  "priceGridDeleteItemMessage": "L'article \"{label}\" sera retiré de vos prix par article, sur tous vos trajets.",
   "@priceGridDeleteItemMessage": {
     "description": "Message du dialogue de suppression, label = libellé affiché de l'article (price_grid_screen.dart).",
     "placeholders": {
@@ -16558,7 +16695,7 @@
   "@priceGridEditItemTitle": {
     "description": "Titre de la feuille en mode édition (price_grid_item_form_sheet.dart)."
   },
-  "priceGridAddToGridButton": "Ajouter à ma grille",
+  "priceGridAddToGridButton": "Ajouter à mes prix",
   "@priceGridAddToGridButton": {
     "description": "Bouton de validation en mode création (price_grid_item_form_sheet.dart)."
   },
@@ -16570,7 +16707,7 @@
   "@priceGridSearchFieldHint": {
     "description": "Placeholder du champ de recherche du catalogue (price_grid_item_form_sheet.dart)."
   },
-  "priceGridAllCatalogTakenMessage": "Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.",
+  "priceGridAllCatalogTakenMessage": "Tous les articles du catalogue ont déjà un prix. Écrivez le vôtre pour en ajouter un autre.",
   "@priceGridAllCatalogTakenMessage": {
     "description": "Message affiché quand le catalogue filtré est vide sans possibilité d'ajout (price_grid_item_form_sheet.dart)."
   },
@@ -20349,7 +20486,7 @@
   "@moneyLineReview": {"description": "Fin de ligne d'un versement retenu pour vérification (money_payout_group.dart, FLUTTER-HV)."},
   "moneyAllTripsLink": "Tous mes trajets",
   "@moneyAllTripsLink": {"description": "Entrée vers l'écran « Mes trajets » (money_overview_screen.dart, FLUTTER-HV)."},
-  "moneyRecentlyPaidSection": "Versés récemment",
+  "moneyRecentlyPaidSection": "Payés récemment",
   "@moneyRecentlyPaidSection": {"description": "Titre de la section des colis versés dans la fenêtre récente (money_overview_screen.dart, FLUTTER-HV)."},
   "moneyTruncatedNote": "Liste partielle : seuls vos colis les plus récents sont comptés.",
   "@moneyTruncatedNote": {"description": "Note quand le serveur a coupé la liste à son plafond (money_overview_screen.dart, FLUTTER-HV)."},
@@ -20379,6 +20516,68 @@
   "@moneyShortCash": {"description": "État court d'un colis réglé en espèces, hors Yadony (money_labels.dart, FLUTTER-HV)."},
   "moneyShortUnknown": "mise à jour en cours",
   "@moneyShortUnknown": {"description": "État inconnu renvoyé par un serveur plus récent que l'app (money_labels.dart, FLUTTER-HV)."},
+  "moneyShortBankPending": "payé, dispo le {date}",
+  "@moneyShortBankPending": {"description": "État court d'un colis payé sur le compte Stripe du voyageur, disponible à la date donnée (bankPayout PENDING_AVAILABILITY, money_labels.dart).", "placeholders": {"date": {"type": "String"}}},
+  "moneyShortBankPendingNoDate": "payé, bientôt dispo",
+  "@moneyShortBankPendingNoDate": {"description": "État court PENDING_AVAILABILITY sans date de disponibilité (money_labels.dart)."},
+  "moneyShortBankAvailable": "virement bancaire à venir",
+  "@moneyShortBankAvailable": {"description": "État court d'un colis disponible sur Stripe, virement vers la banque pas encore parti (bankPayout AVAILABLE, money_labels.dart)."},
+  "moneyShortBankInTransit": "virement en cours, arrivée le {date}",
+  "@moneyShortBankInTransit": {"description": "État court d'un virement vers la banque parti, arrivée prévue à la date donnée (bankPayout IN_TRANSIT, money_labels.dart).", "placeholders": {"date": {"type": "String"}}},
+  "moneyShortBankInTransitNoDate": "virement bancaire en cours",
+  "@moneyShortBankInTransitNoDate": {"description": "État court IN_TRANSIT sans date d'arrivée (money_labels.dart)."},
+  "moneyShortBankPaid": "arrivé sur votre banque le {date}",
+  "@moneyShortBankPaid": {"description": "État court d'un virement arrivé sur la banque du voyageur (bankPayout PAID, money_labels.dart).", "placeholders": {"date": {"type": "String"}}},
+  "moneyShortBankPaidNoDate": "arrivé sur votre banque",
+  "@moneyShortBankPaidNoDate": {"description": "État court PAID sans date (money_labels.dart)."},
+  "moneyShortBankFailed": "virement échoué, vérifiez votre banque",
+  "@moneyShortBankFailed": {"description": "État court d'un virement vers la banque refusé (bankPayout FAILED, money_labels.dart)."},
+  "moneyBankSheetTitle": "Suivi du virement",
+  "@moneyBankSheetTitle": {"description": "Titre de la feuille de suivi du virement bancaire d'un colis versé (bank_payout_sheet.dart)."},
+  "moneyBankStepPaidToStripe": "Payé sur votre compte Stripe le {date}",
+  "@moneyBankStepPaidToStripe": {"description": "Étape 1 de la frise du virement : Yadony a payé le voyageur sur son compte Stripe (bank_payout_sheet.dart).", "placeholders": {"date": {"type": "String"}}},
+  "moneyBankStepPaidToStripeNoDate": "Payé sur votre compte Stripe",
+  "@moneyBankStepPaidToStripeNoDate": {"description": "Étape 1 de la frise du virement, sans date (bank_payout_sheet.dart)."},
+  "moneyBankStepAvailable": "Disponible le {date}",
+  "@moneyBankStepAvailable": {"description": "Étape 2 de la frise : l'argent devient disponible sur le compte Stripe (bank_payout_sheet.dart).", "placeholders": {"date": {"type": "String"}}},
+  "moneyBankStepAvailableNoDate": "Disponible sur votre compte Stripe",
+  "@moneyBankStepAvailableNoDate": {"description": "Étape 2 de la frise, sans date (bank_payout_sheet.dart)."},
+  "moneyBankStepInTransit": "Virement en cours, arrivée prévue le {date}",
+  "@moneyBankStepInTransit": {"description": "Étape 3 de la frise : virement Stripe vers la banque, arrivée prévue (bank_payout_sheet.dart).", "placeholders": {"date": {"type": "String"}}},
+  "moneyBankStepInTransitNoDate": "Virement vers votre banque",
+  "@moneyBankStepInTransitNoDate": {"description": "Étape 3 de la frise, sans date d'arrivée (bank_payout_sheet.dart)."},
+  "moneyBankStepTransferSent": "Virement envoyé par Stripe",
+  "@moneyBankStepTransferSent": {"description": "Étape 3 de la frise une fois l'argent arrivé (bank_payout_sheet.dart)."},
+  "moneyBankStepFailed": "Virement échoué",
+  "@moneyBankStepFailed": {"description": "Étape 3 de la frise quand la banque a refusé le virement (bank_payout_sheet.dart)."},
+  "moneyBankStepArrived": "Arrivé sur votre banque le {date}",
+  "@moneyBankStepArrived": {"description": "Étape 4 de la frise : argent arrivé sur la banque (bank_payout_sheet.dart).", "placeholders": {"date": {"type": "String"}}},
+  "moneyBankStepArrivedNoDate": "Arrivé sur votre banque",
+  "@moneyBankStepArrivedNoDate": {"description": "Étape 4 de la frise, sans date ou pas encore atteinte (bank_payout_sheet.dart)."},
+  "moneyBankHelp": "Yadony vous paie d'abord sur votre compte Stripe. Stripe rend l'argent disponible quelques jours plus tard, puis le vire automatiquement sur votre compte bancaire. Comptez ensuite 1 à 3 jours ouvrés selon votre banque.",
+  "@moneyBankHelp": {"description": "Phrase d'aide sous la frise du virement : délai Stripe puis délai bancaire (bank_payout_sheet.dart)."},
+  "moneyBankHelpFailed": "Votre banque a refusé le virement. L'argent reste sur votre compte Stripe : vérifiez ou changez votre compte bancaire, le virement repartira ensuite.",
+  "@moneyBankHelpFailed": {"description": "Phrase d'aide d'un virement échoué (bank_payout_sheet.dart)."},
+  "moneyBankOpenParcel": "Voir le colis",
+  "@moneyBankOpenParcel": {"description": "Bouton de la feuille de suivi du virement qui ouvre le colis (bank_payout_sheet.dart)."},
+  "moneyBankStepDoneSemantics": "{label}, terminé",
+  "@moneyBankStepDoneSemantics": {"description": "Libellé d'accessibilité d'une étape terminée de la frise du virement (bank_payout_sheet.dart).", "placeholders": {"label": {"type": "String"}}},
+  "moneyBankStepCurrentSemantics": "{label}, en cours",
+  "@moneyBankStepCurrentSemantics": {"description": "Libellé d'accessibilité de l'étape en cours de la frise du virement (bank_payout_sheet.dart).", "placeholders": {"label": {"type": "String"}}},
+  "moneyBankStepFailedSemantics": "{label}, échec",
+  "@moneyBankStepFailedSemantics": {"description": "Libellé d'accessibilité d'une étape échouée de la frise du virement (bank_payout_sheet.dart).", "placeholders": {"label": {"type": "String"}}},
+  "moneyBankStepTodoSemantics": "{label}, à venir",
+  "@moneyBankStepTodoSemantics": {"description": "Libellé d'accessibilité d'une étape à venir de la frise du virement (bank_payout_sheet.dart).", "placeholders": {"label": {"type": "String"}}},
+  "bankAccountChangeButton": "Changer de compte bancaire",
+  "@bankAccountChangeButton": {"description": "Bouton qui ouvre l'espace Stripe Express pour changer d'IBAN (change_bank_account_button.dart)."},
+  "bankAccountChangeHint": "Vous serez redirigé vers votre espace Stripe pour modifier votre IBAN.",
+  "@bankAccountChangeHint": {"description": "Aide sous le bouton « Changer de compte bancaire » de « Recevoir mes paiements » (payout_onboarding_screen.dart)."},
+  "bankAccountChangeMissing": "Aucun compte de paiement n'est relié. Configurez d'abord la réception de vos paiements.",
+  "@bankAccountChangeMissing": {"description": "Message quand le serveur ne trouve pas de compte Stripe (404 stripe-account-missing, change_bank_account_button.dart)."},
+  "bankAccountChangeOnboardingIncomplete": "Terminez d'abord votre inscription Stripe pour changer de compte bancaire.",
+  "@bankAccountChangeOnboardingIncomplete": {"description": "Message quand l'inscription Stripe n'est pas terminée (409 stripe-onboarding-incomplete, change_bank_account_button.dart)."},
+  "bankAccountChangeUnavailable": "Le changement de compte bancaire sera disponible bientôt.",
+  "@bankAccountChangeUnavailable": {"description": "Message quand le serveur ne sert pas encore le lien vers l'espace Stripe (ancien back, change_bank_account_button.dart)."},
   "moneyTripsTitle": "Mes trajets",
   "@moneyTripsTitle": {"description": "Titre de l'écran du détail par trajet de « Mon argent » (money_trips_screen.dart, FLUTTER-HV)."},
   "moneyTripsSubtitle": "Du plus proche au plus lointain",
@@ -21693,7 +21892,7 @@
   "@aiFormDraftMicUnavailable": {"description": "Micro refusé ou reconnaissance vocale indisponible : seule la saisie écrite reste."},
   "aiFormDraftUnderstoodTitle": "Déjà compris",
   "@aiFormDraftUnderstoodTitle": {"description": "Titre de l'encart des informations comprises par l'IA."},
-  "aiFormDraftChipGrid": "Ma grille",
+  "aiFormDraftChipGrid": "Mes prix par article",
   "@aiFormDraftChipGrid": {"description": "Puce « Déjà compris » : les articles de la grille de prix."},
   "aiFormDraftChipDirect": "Sans escale",
   "@aiFormDraftChipDirect": {"description": "Puce « Déjà compris » : vol direct."},
@@ -21745,7 +21944,7 @@
   "@aiFormDraftSummaryPrice": {"description": "Ligne du résumé : prix au kilo."},
   "aiFormDraftSummaryGrid": "Articles",
   "@aiFormDraftSummaryGrid": {"description": "Ligne du résumé : tarification par la grille."},
-  "aiFormDraftSummaryGridValue": "Ma grille de prix",
+  "aiFormDraftSummaryGridValue": "Mes prix par article",
   "@aiFormDraftSummaryGridValue": {"description": "Valeur de la ligne Articles du résumé."},
   "aiFormDraftSummaryPayment": "Paiement",
   "@aiFormDraftSummaryPayment": {"description": "Ligne du résumé : moyens de paiement."},
@@ -21775,7 +21974,7 @@
   "@aiFormDraftWarningDepartureUnknown": {"description": "Avertissement du résumé : ville de départ introuvable."},
   "aiFormDraftWarningArrivalUnknown": "Je n'ai pas reconnu la ville d'arrivée : choisissez-la dans le formulaire.",
   "@aiFormDraftWarningArrivalUnknown": {"description": "Avertissement du résumé : ville d'arrivée introuvable."},
-  "aiFormDraftWarningNoGrid": "Vous n'avez pas encore de grille : j'ai mis le prix au kilo.",
+  "aiFormDraftWarningNoGrid": "Vous n'avez pas encore de prix par article : j'ai mis le prix au kilo.",
   "@aiFormDraftWarningNoGrid": {"description": "Avertissement : grille demandée mais vide."},
   "aiFormDraftWarningCardNotConfigured": "Pour être payé par carte, terminez la configuration de vos paiements. Je vous le rappelle à l'étape Prix.",
   "@aiFormDraftWarningCardNotConfigured": {"description": "Avertissement : carte demandée, paiements par carte non configurés."},

@@ -1,9 +1,14 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/parcel_refusal/parcel_refusal_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_options_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -26,6 +31,12 @@ class _FakeConversationOpenEvent extends Fake
     implements ConversationOpenEvent {}
 
 class _FakeBidEvent extends Fake implements BidEvent {}
+
+class _MockBidRepository extends Mock implements BidRepository {}
+
+class _MockMediaService extends Mock implements DonyMediaService {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 BidModel _bid({
   String status = 'ACCEPTED',
@@ -110,6 +121,7 @@ void main() {
       expect(find.text('Partager le suivi'), findsNothing);
       expect(find.text("Signaler l'expéditeur"), findsOneWidget);
       expect(find.text('Annuler ce transport'), findsOneWidget);
+      expect(find.text('Le colis ne correspond pas'), findsOneWidget);
       expect(find.text('Supprimer cette demande'), findsNothing);
     },
   );
@@ -118,6 +130,7 @@ void main() {
     await _open(tester, _bid(status: 'REJECTED', token: null));
     expect(find.text('Supprimer cette demande'), findsOneWidget);
     expect(find.text('Annuler ce transport'), findsNothing);
+    expect(find.text('Le colis ne correspond pas'), findsNothing);
     expect(find.text('Partager le suivi'), findsNothing);
   });
 
@@ -132,6 +145,7 @@ void main() {
   ) async {
     await _open(tester, _bid(status: 'IN_TRANSIT', token: null));
     expect(find.text('Annuler ce transport'), findsNothing);
+    expect(find.text('Le colis ne correspond pas'), findsNothing);
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
@@ -147,6 +161,7 @@ void main() {
       ),
     );
     expect(find.text('Annuler ce transport'), findsOneWidget);
+    expect(find.text('Le colis ne correspond pas'), findsOneWidget);
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
@@ -162,6 +177,7 @@ void main() {
       ),
     );
     expect(find.text('Annuler ce transport'), findsNothing);
+    expect(find.text('Le colis ne correspond pas'), findsNothing);
   });
 
   testWidgets('sans trackingToken → pas de Partager le suivi', (tester) async {
@@ -217,6 +233,7 @@ void main() {
 
   testWidgets('tap Annuler ce transport → dialog affiché', (tester) async {
     await _open(tester, _bid(token: null));
+    await tester.ensureVisible(find.text('Annuler ce transport'));
     await tester.tap(find.text('Annuler ce transport'));
     await tester.pumpAndSettle();
     // CancellationDialog shows a button text (Garder or Confirmer)
@@ -226,6 +243,26 @@ void main() {
           find.text('Annuler').evaluate().isNotEmpty,
       isTrue,
     );
+  });
+
+  testWidgets('tap Le colis ne correspond pas → feuille de refus ouverte', (
+    tester,
+  ) async {
+    getIt.registerFactory<ParcelRefusalCubit>(
+      () => ParcelRefusalCubit(
+        _MockBidRepository(),
+        _MockMediaService(),
+        _MockAnalyticsService(),
+      ),
+    );
+    addTearDown(getIt.reset);
+    await _open(tester, _bid(token: null));
+
+    await tester.tap(find.text('Le colis ne correspond pas'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Déclaré par l\'expéditeur'), findsOneWidget);
+    expect(find.widgetWithText(DonyButton, 'Refuser le colis'), findsOneWidget);
   });
 
   testWidgets('tap Supprimer → BidTravelerDismissRequested émis', (
@@ -261,5 +298,6 @@ void main() {
     expect(find.text('Parcel details'), findsOneWidget);
     expect(find.text('Report the sender'), findsOneWidget);
     expect(find.text('Cancel this transport'), findsOneWidget);
+    expect(find.text("The parcel doesn't match"), findsOneWidget);
   });
 }

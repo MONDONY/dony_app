@@ -18,6 +18,7 @@ import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/core/services/gallery_save_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
@@ -68,6 +69,7 @@ import 'package:dony/features/city/data/recent_city_store.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/config/data/config_datasource.dart';
 import 'package:dony/features/config/data/config_repository.dart';
+import 'package:dony/features/connect_onboarding/bloc/bank_account_link_cubit.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
@@ -136,6 +138,7 @@ import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
+import 'package:dony/features/matching/bloc/parcel_refusal/parcel_refusal_cubit.dart';
 import 'package:dony/features/matching/bloc/pinned_trips_cubit.dart';
 import 'package:dony/features/matching/bloc/recipient_change/recipient_change_cubit.dart';
 import 'package:dony/features/matching/bloc/recipient_replacement/recipient_replacement_cubit.dart';
@@ -447,6 +450,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () =>
         RecipientChangeCubit(getIt<BidRepository>(), getIt<AnalyticsService>()),
   );
+  getIt.registerFactory<ParcelRefusalCubit>(
+    () => ParcelRefusalCubit(
+      getIt<BidRepository>(),
+      getIt<DonyMediaService>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
   getIt.registerFactory<RecipientReplacementCubit>(
     () => RecipientReplacementCubit(
       getIt<BidRepository>(),
@@ -465,6 +475,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
 
   getIt.registerLazySingleton<ExternalUrlLauncher>(() => ExternalUrlLauncher());
+
+  getIt.registerLazySingleton<GallerySaveService>(
+    () => const GallerySaveService(),
+  );
 
   // Auth
   getIt.registerLazySingleton<AuthRemoteDatasource>(
@@ -1011,6 +1025,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<IConnectOnboardingRepository>(
     () => ConnectOnboardingRepository(getIt<ConnectOnboardingDatasource>()),
+  );
+  getIt.registerFactory<BankAccountLinkCubit>(
+    () => BankAccountLinkCubit(
+      getIt<IConnectOnboardingRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerFactory<ConnectOnboardingBloc>(
     () => ConnectOnboardingBloc(

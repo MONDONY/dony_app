@@ -29,6 +29,22 @@ void main() {
   });
 
   group('ConnectOnboardingDatasource', () {
+    test(
+      'createDashboardLink poste sur la route du lien Stripe Express',
+      () async {
+        when(() => mockDio.post(kConnectDashboardLinkPath)).thenAnswer(
+          (_) async =>
+              _response({'url': 'https://connect.stripe.com/express/abc'}),
+        );
+
+        expect(
+          await datasource.createDashboardLink(),
+          'https://connect.stripe.com/express/abc',
+        );
+        expect(kConnectDashboardLinkPath, '/payments/connect/dashboard-link');
+      },
+    );
+
     test('getAccountStatus lit GET /payments/connect/account', () async {
       when(() => mockDio.get('/payments/connect/account')).thenAnswer(
         (_) async => _response({
@@ -147,5 +163,27 @@ void main() {
         );
       },
     );
+
+    test('createDashboardLink délègue au datasource', () async {
+      when(
+        () => mockDatasource.createDashboardLink(),
+      ).thenAnswer((_) async => 'https://connect.stripe.com/express/abc');
+
+      expect(
+        await repository.createDashboardLink(),
+        'https://connect.stripe.com/express/abc',
+      );
+    });
+
+    test('createDashboardLink traduit une DioException en AppException', () {
+      when(
+        () => mockDatasource.createDashboardLink(),
+      ).thenThrow(DioException(requestOptions: RequestOptions()));
+
+      expect(
+        () => repository.createDashboardLink(),
+        throwsA(isA<AppException>()),
+      );
+    });
   });
 }

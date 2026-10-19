@@ -339,8 +339,8 @@ void main() {
 
         expect(find.text('No messages'), findsOneWidget);
         expect(find.text('Aucun message'), findsNothing);
-        expect(find.text('All'), findsOneWidget);
-        expect(find.text('Unread'), findsOneWidget);
+        expect(find.text('All'), findsNothing);
+        expect(find.text('Unread'), findsNothing);
         expect(find.text('Active'), findsOneWidget);
         expect(find.text('Done'), findsOneWidget);
       },
@@ -421,10 +421,112 @@ void main() {
       when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
       await _pump(tester, bloc);
 
-      expect(find.text('Tous'), findsOneWidget);
-      expect(find.text('Non lus'), findsOneWidget);
+      // YADONY-FLUTTER-PROD-W : « Tous » et « Non lus » ont disparu.
+      expect(find.text('Tous'), findsNothing);
+      expect(find.text('Non lus'), findsNothing);
       expect(find.text('En cours'), findsOneWidget);
       expect(find.text('Terminés'), findsOneWidget);
+    });
+
+    testWidgets('« Terminés » touché : dispatch du filtre done', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+      await _pump(tester, bloc);
+
+      await tester.tap(find.byKey(const Key('conversation-filter-done')));
+      await tester.pump();
+
+      verify(
+        () => bloc.add(
+          const ConversationFilterChanged(
+            filter: ConversationFilter.done,
+            searchQuery: '',
+          ),
+        ),
+      ).called(1);
+    });
+
+    group('En cours / Terminés', () {
+      ConversationModel conv(
+        String id,
+        String name, {
+        String? bidStatus,
+        bool unread = false,
+      }) => ConversationModel(
+        id: id,
+        bidId: 'bid-$id',
+        firestoreConversationId: 'conv_$id',
+        otherParticipant: ParticipantModel(id: 'u-$id', name: name),
+        bidStatus: bidStatus,
+        hasUnread: unread,
+        unreadCount: unread ? 1 : 0,
+        lastMessageAt: DateTime.now(),
+      );
+
+      final cancelledRead = conv('a', 'Annulé Lu', bidStatus: 'TRIP_CANCELLED');
+      final deliveredUnread = conv(
+        'b',
+        'Livré Nonlu',
+        bidStatus: 'DELIVERY_CONFIRMED',
+        unread: true,
+      );
+      final pending = conv('c', 'Offre Attente');
+
+      testWidgets('par défaut « En cours » : livré non lu et offre en attente '
+          'affichés, annulé lu rangé', (tester) async {
+        when(() => bloc.state).thenReturn(
+          ConversationListLoaded([cancelledRead, deliveredUnread, pending]),
+        );
+        await _pump(tester, bloc);
+
+        expect(find.text('Livré Nonlu'), findsOneWidget);
+        expect(find.text('Offre Attente'), findsOneWidget);
+        expect(find.text('Annulé Lu'), findsNothing);
+      });
+
+      testWidgets('« Terminés » : annulé lu seulement', (tester) async {
+        when(() => bloc.state).thenReturn(
+          ConversationListLoaded([
+            cancelledRead,
+            deliveredUnread,
+            pending,
+          ], filter: ConversationFilter.done),
+        );
+        await _pump(tester, bloc);
+
+        expect(find.text('Annulé Lu'), findsOneWidget);
+        expect(find.text('Livré Nonlu'), findsNothing);
+        expect(find.text('Offre Attente'), findsNothing);
+      });
+
+      testWidgets('« En cours » vide alors que tout est terminé : renvoi '
+          'vers « Terminés »', (tester) async {
+        when(
+          () => bloc.state,
+        ).thenReturn(ConversationListLoaded([cancelledRead]));
+        await _pump(tester, bloc);
+
+        expect(find.byKey(const Key('conversation-empty-active')), findsOne);
+        expect(find.text('Aucune conversation en cours'), findsOneWidget);
+      });
+
+      testWidgets('« Terminés » vide : texte dédié', (tester) async {
+        when(() => bloc.state).thenReturn(
+          ConversationListLoaded([pending], filter: ConversationFilter.done),
+        );
+        await _pump(tester, bloc);
+
+        expect(find.byKey(const Key('conversation-empty-done')), findsOne);
+        expect(find.text('Aucune conversation terminée'), findsOneWidget);
+      });
+
+      testWidgets('aucune conversation : texte historique', (tester) async {
+        when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+        await _pump(tester, bloc);
+
+        expect(find.text('Aucun message'), findsOneWidget);
+      });
     });
 
     testWidgets('taper dans le champ dispatch ConversationFilterChanged', (
@@ -443,8 +545,8 @@ void main() {
               (e) =>
                   e is ConversationFilterChanged &&
                   e.searchQuery == 'Dakar' &&
-                  e.filter == ConversationFilter.all,
-              'is ConversationFilterChanged(filter: all, searchQuery: Dakar)',
+                  e.filter == ConversationFilter.active,
+              'is ConversationFilterChanged(filter: active, searchQuery: Dakar)',
             ),
           ),
         ),
@@ -1178,16 +1280,22 @@ void main() {
     testWidgets(
       '« Sélectionner les terminées » coche les colis livrés ou annulés',
       (tester) async {
-        when(
-          () => bloc.state,
-        ).thenReturn(ConversationListLoaded([_conv, delivered, cancelled]));
+        // Livrés ou annulés et lus : rangés dans « Terminés »
+        // (YADONY-FLUTTER-PROD-W).
+        when(() => bloc.state).thenReturn(
+          ConversationListLoaded([
+            _conv,
+            delivered,
+            cancelled,
+          ], filter: ConversationFilter.done),
+        );
         await _pump(tester, bloc);
 
-        await enterSelection(tester, 'Aïcha Bah');
+        await enterSelection(tester, 'Mariam');
         await tester.tap(find.byKey(const Key('conversation-select-finished')));
         await tester.pumpAndSettle();
 
-        expect(find.text('3 sélectionnées'), findsOneWidget);
+        expect(find.text('2 sélectionnées'), findsOneWidget);
       },
     );
 

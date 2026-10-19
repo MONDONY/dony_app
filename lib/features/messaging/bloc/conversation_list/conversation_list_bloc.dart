@@ -25,7 +25,7 @@ class ConversationListBloc
   List<ConversationModel> _archived = [];
 
   // Préservés entre les rechargements pour ne pas perdre le filtre actif.
-  ConversationFilter _currentFilter = ConversationFilter.all;
+  ConversationFilter _currentFilter = ConversationFilter.active;
   String _currentSearchQuery = '';
 
   /// UID Firebase de l'utilisateur courant, injectable pour les tests.

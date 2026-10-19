@@ -228,7 +228,7 @@ void main() {
     await tester.pumpWidget(_wrap(notifier));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Items outside the grid'), findsOneWidget);
+    expect(find.text('Other items'), findsOneWidget);
     expect(find.text('No items yet.'), findsOneWidget);
     expect(find.text('Add an item'), findsOneWidget);
   });

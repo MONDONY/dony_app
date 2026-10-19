@@ -148,7 +148,7 @@ void main() {
     expect(find.textContaining('/ kg'), findsNothing);
   });
 
-  testWidgets('mode grille sans items : libellé "Grille tarifaire"', (
+  testWidgets('mode grille sans items : libellé "Prix par article"', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -162,7 +162,7 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Grille tarifaire'), findsOneWidget);
+    expect(find.text('Prix par article'), findsOneWidget);
     expect(find.textContaining('0 €'), findsNothing);
   });
 

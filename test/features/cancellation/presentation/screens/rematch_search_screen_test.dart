@@ -451,7 +451,7 @@ void main() {
       // le stub `_toAnnouncementModel` est toujours en mode 'KG' par défaut et
       // n'a jamais de grille tarifaire. Une régression qui ouvrirait la sheet
       // avec le stub ferait échouer ces deux assertions.
-      expect(find.text('Grille tarifaire'), findsOneWidget);
+      expect(find.text('Prix par article'), findsOneWidget);
       expect(find.text('Valise 23kg'), findsOneWidget);
     },
   );

@@ -182,8 +182,8 @@ void main() {
       findsNothing,
     );
 
-    // Versés récemment, envois, lien discret vers le solde Yadony.
-    expect(find.text('Versés récemment'), findsOneWidget);
+    // Payés récemment, envois, lien discret vers le solde Yadony.
+    expect(find.text('Payés récemment'), findsOneWidget);
     expect(find.textContaining('versé le 6 oct.'), findsOneWidget);
     expect(find.text('Mes envois'), findsOneWidget);
     expect(find.textContaining('DON-SENT'), findsOneWidget);

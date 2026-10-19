@@ -252,6 +252,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // qu'envoyés par le back) : le portefeuille montre le solde et la ligne
     // de la recharge.
     'wallet_topup_confirmed' || 'wallet_topup_failed' => '/payments/wallet',
+    // Suivi du virement Stripe vers la banque (arrivé, échoué, en cours…) :
+    // « Mon argent » montre l'étape de chaque colis. Préfixe plutôt que liste
+    // fermée, le back pourra ajouter une étape sans casser le routage.
+    final String t when t.startsWith('BANK_PAYOUT_') => '/payments/money',
     // Un filleul a fait son premier envoi : la récompense est à choisir sur
     // l'écran Parrainage (yadony-back #528).
     'REFERRAL_REWARD_AVAILABLE' => '/profile/referral',

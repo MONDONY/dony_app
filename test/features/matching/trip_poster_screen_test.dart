@@ -1,4 +1,7 @@
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/gallery_save_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
@@ -419,12 +422,123 @@ void main() {
 
       await _tapAction(tester, 'Publier dans le groupe Yadony');
 
+      // Accès aux photos refusé (YADONY-FLUTTER-PROD-T) : renvoi aux
+      // Réglages plutôt que le message générique.
       expect(
-        find.text('Impossible de préparer la publication. Réessayez.'),
+        find.text(
+          'Autorisez Yadony à ajouter des photos dans Réglages, '
+          'puis réessayez.',
+        ),
         findsOneWidget,
       );
       expect(find.text('Votre publication est prête'), findsNothing);
       expect(launcher.opened, isEmpty);
+    });
+  });
+
+  group('« Enregistrer dans la galerie » (YADONY-FLUTTER-PROD-T)', () {
+    late List<MethodCall> galCalls;
+    late int settingsOpened;
+
+    void mockGal(Future<Object?> Function(MethodCall call) handler) {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('gal'), (call) {
+            galCalls.add(call);
+            return handler(call);
+          });
+    }
+
+    setUp(() {
+      DonySnackbar.clearDedup();
+      galCalls = <MethodCall>[];
+      settingsOpened = 0;
+      getIt.registerSingleton<GallerySaveService>(
+        GallerySaveService(openSettings: () async => settingsOpened++),
+      );
+    });
+
+    tearDown(() async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('gal'), null);
+      await getIt.unregister<GallerySaveService>();
+    });
+
+    Future<void> pumpPoster(WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TripPosterScreen(
+            announcement: _announcement(),
+            shareBaseUrl: 'https://api.yadony.test/api/v1',
+            captureOverride: () async => Uint8List.fromList([1, 2, 3]),
+          ),
+        ),
+      );
+      await tester.pump();
+    }
+
+    testWidgets('accès accordé : affiche enregistrée', (tester) async {
+      mockGal((call) async => call.method == 'requestAccess' ? true : null);
+      await pumpPoster(tester);
+
+      await _tapAction(tester, 'Enregistrer dans la galerie');
+
+      expect(galCalls.map((c) => c.method), contains('putImageBytes'));
+      expect(
+        find.text('Affiche enregistrée dans votre galerie'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('accès refusé : renvoi aux Réglages, qui s\'ouvrent', (
+      tester,
+    ) async {
+      mockGal((call) async => call.method == 'requestAccess' ? false : null);
+      await pumpPoster(tester);
+
+      await _tapAction(tester, 'Enregistrer dans la galerie');
+
+      expect(galCalls.map((c) => c.method), isNot(contains('putImageBytes')));
+      expect(
+        find.text(
+          'Autorisez Yadony à ajouter des photos dans Réglages, '
+          'puis réessayez.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Impossible d\'enregistrer l\'affiche'), findsNothing);
+      await tester.tap(find.text('Ouvrir les Réglages'));
+      await tester.pump();
+      expect(settingsOpened, 1);
+      await tester.pumpAndSettle(const Duration(seconds: 7));
+    });
+
+    testWidgets('stockage plein : message dédié', (tester) async {
+      mockGal((call) async {
+        if (call.method == 'requestAccess') return true;
+        throw PlatformException(code: 'NOT_ENOUGH_SPACE');
+      });
+      await pumpPoster(tester);
+
+      await _tapAction(tester, 'Enregistrer dans la galerie');
+
+      expect(
+        find.text(
+          "Espace insuffisant sur le téléphone pour enregistrer l'image.",
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('erreur inattendue : message générique', (tester) async {
+      mockGal((call) async {
+        if (call.method == 'requestAccess') return true;
+        throw PlatformException(code: 'UNEXPECTED');
+      });
+      await pumpPoster(tester);
+
+      await _tapAction(tester, 'Enregistrer dans la galerie');
+
+      expect(find.text('Impossible d\'enregistrer l\'affiche'), findsOneWidget);
     });
   });
 }

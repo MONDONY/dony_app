@@ -46,7 +46,13 @@ List<String> orderedIntentDestinations(AppLocalizations l) {
 
 /// « Vous utilisez Yadony pour… » + « Votre destination principale », lu et écrit dans [IntentCubit].
 class IntentForm extends StatelessWidget {
-  const IntentForm({super.key});
+  const IntentForm({super.key, this.belowIntents});
+
+  /// Inséré juste sous les trois cartes d'intention, avant les pays. Sert à
+  /// l'inscription pour la case GP Pro : placée après la longue liste des
+  /// pays, elle tombait sous la ligne de flottaison et passait inaperçue
+  /// (YADONY-FLUTTER-PROD-G).
+  final Widget? belowIntents;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +84,7 @@ class IntentForm extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
+        ?belowIntents,
         const SizedBox(height: DonySpacing.base),
         Text(
           l.intentDestinationTitle,

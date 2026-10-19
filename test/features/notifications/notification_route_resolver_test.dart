@@ -426,6 +426,27 @@ void main() {
       );
     });
 
+    test('BANK_PAYOUT_* (arrivé, échoué, futur type) ouvre « Mon argent »', () {
+      for (final type in [
+        'BANK_PAYOUT_PAID',
+        'BANK_PAYOUT_FAILED',
+        'BANK_PAYOUT_IN_TRANSIT',
+      ]) {
+        expect(resolveNotificationRoute(type, {}), '/payments/money');
+        expect(
+          resolveNotificationRoute(type, {
+            'bidId': '11111111-2222-3333-4444-555555555555',
+          }),
+          '/payments/money',
+        );
+      }
+    });
+
+    test('type inconnu proche (BANK_PAYOUT sans suffixe) : aucune cible', () {
+      expect(resolveNotificationRoute('BANK_PAYOUT', {}), isNull);
+      expect(resolveNotificationRoute('bank_payout_paid', {}), isNull);
+    });
+
     test('CARD_EXPIRING routes to the commission card management screen', () {
       expect(
         resolveNotificationRoute('CARD_EXPIRING', {}),

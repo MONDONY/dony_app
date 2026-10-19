@@ -199,7 +199,33 @@ void main() {
       await _tapAction(tester, 'Enregistrer dans la galerie');
 
       expect(galCalls.map((c) => c.method), isNot(contains('putImageBytes')));
+      // YADONY-FLUTTER-PROD-T : plus de message générique, renvoi aux
+      // Réglages (iOS ne redemande plus après un refus).
+      expect(
+        find.text(
+          'Autorisez Yadony à ajouter des photos dans Réglages, '
+          'puis réessayez.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Ouvrir les Réglages'), findsOneWidget);
+      expect(find.text('Impossible d\'enregistrer l\'affiche'), findsNothing);
+    });
+
+    testWidgets('écriture en échec inattendu : message générique', (
+      tester,
+    ) async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('gal'), (call) async {
+            if (call.method == 'requestAccess') return true;
+            throw PlatformException(code: 'UNEXPECTED');
+          });
+      await _pumpScreen(tester);
+
+      await _tapAction(tester, 'Enregistrer dans la galerie');
+
       expect(find.text('Impossible d\'enregistrer l\'affiche'), findsOneWidget);
+      expect(find.text('Ouvrir les Réglages'), findsNothing);
     });
 
     testWidgets('capture impossible : message d\'erreur', (tester) async {

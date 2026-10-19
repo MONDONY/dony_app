@@ -88,6 +88,11 @@ enum MoneyTone { neutral, positive, info, attention }
     case MoneyState.payoutInProgress:
       return (text: l.moneyShortInProgress, tone: MoneyTone.info);
     case MoneyState.releasedRecently:
+      // « versé le … » laissait croire l'argent arrivé sur la banque, alors
+      // que c'est le jour du transfert de Yadony vers le compte Stripe. Avec
+      // le suivi bancaire, on dit où en est vraiment l'argent.
+      final payout = item.trackedBankPayout;
+      if (payout != null) return bankPayoutShortState(payout, l);
       final at = item.settledAt;
       return (
         text: at == null
@@ -124,5 +129,46 @@ enum MoneyTone { neutral, positive, info, attention }
       );
     case MoneyState.unknown:
       return (text: l.moneyShortUnknown, tone: MoneyTone.neutral);
+  }
+}
+
+/// État court d'un colis versé dont le back suit le virement bancaire.
+({String text, MoneyTone tone}) bankPayoutShortState(
+  BankPayoutModel payout,
+  AppLocalizations l,
+) {
+  String? day(DateTime? d) => d == null ? null : shortDate(d, l);
+  switch (payout.status) {
+    case BankPayoutStatus.pendingAvailability:
+      final at = day(payout.availableOn);
+      return (
+        text: at == null
+            ? l.moneyShortBankPendingNoDate
+            : l.moneyShortBankPending(at),
+        tone: MoneyTone.info,
+      );
+    case BankPayoutStatus.available:
+      return (text: l.moneyShortBankAvailable, tone: MoneyTone.info);
+    case BankPayoutStatus.inTransit:
+      final at = day(payout.arrivalDate);
+      return (
+        text: at == null
+            ? l.moneyShortBankInTransitNoDate
+            : l.moneyShortBankInTransit(at),
+        tone: MoneyTone.info,
+      );
+    case BankPayoutStatus.paid:
+      final at = day(payout.arrivedOn);
+      return (
+        text: at == null
+            ? l.moneyShortBankPaidNoDate
+            : l.moneyShortBankPaid(at),
+        tone: MoneyTone.positive,
+      );
+    case BankPayoutStatus.failed:
+      return (text: l.moneyShortBankFailed, tone: MoneyTone.attention);
+    case BankPayoutStatus.unknown:
+      // Jamais atteint via [MoneyItemModel.trackedBankPayout] ; repli neutre.
+      return (text: l.moneyShortReleasedNoDate, tone: MoneyTone.positive);
   }
 }

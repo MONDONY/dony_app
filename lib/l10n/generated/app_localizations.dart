@@ -4625,7 +4625,7 @@ abstract class AppLocalizations {
   /// Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom
   ///
   /// In fr, this message translates to:
-  /// **'{label} · grille'**
+  /// **'{label} · par article'**
   String tripPublishTemplateChipGrid(String label);
 
   /// Titre de section (étape Trajet) pour la date limite de dépôt des colis
@@ -4925,7 +4925,7 @@ abstract class AppLocalizations {
   /// Option « grille + kilo » du toggle de mode de tarification
   ///
   /// In fr, this message translates to:
-  /// **'Grille + kilo'**
+  /// **'Articles + kilo'**
   String get tripPublishPricingModeMixed;
 
   /// Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé
@@ -4943,7 +4943,7 @@ abstract class AppLocalizations {
   /// Sous-titre du toggle « Tarif au kilo »
   ///
   /// In fr, this message translates to:
-  /// **'Optionnel en mode grille'**
+  /// **'Optionnel avec les prix par article'**
   String get tripPublishKgPriceToggleSubtitle;
 
   /// Libellé de la puce « Autre prix » du sélecteur de prix au kg
@@ -5186,7 +5186,7 @@ abstract class AppLocalizations {
   /// Libellé au-dessus de l'aperçu de grille, étape Prix & conditions
   ///
   /// In fr, this message translates to:
-  /// **'Votre grille'**
+  /// **'Vos prix par article'**
   String get tripPublishGridPreviewLabel;
 
   /// Bouton pour ouvrir la feuille listant tous les articles de la grille
@@ -5210,7 +5210,7 @@ abstract class AppLocalizations {
   /// Titre de la feuille listant tous les articles de la grille
   ///
   /// In fr, this message translates to:
-  /// **'Votre grille de prix'**
+  /// **'Vos prix par article'**
   String get tripPublishGridSheetTitle;
 
   /// Sous-titre de la feuille de grille complète
@@ -5222,7 +5222,7 @@ abstract class AppLocalizations {
   /// Bouton sticky de la feuille de grille complète
   ///
   /// In fr, this message translates to:
-  /// **'Modifier ma grille'**
+  /// **'Modifier mes prix'**
   String get tripPublishGridSheetEditCta;
 
   /// Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)
@@ -5234,7 +5234,7 @@ abstract class AppLocalizations {
   /// Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette
   ///
   /// In fr, this message translates to:
-  /// **'Votre grille est vide'**
+  /// **'Aucun prix par article'**
   String get tripPublishGridEmptyTitle;
 
   /// Sous-titre de la carte grille vide
@@ -5246,7 +5246,7 @@ abstract class AppLocalizations {
   /// Bouton de la carte grille vide, ouvre l'écran de grille du profil
   ///
   /// In fr, this message translates to:
-  /// **'Composer ma grille'**
+  /// **'Ajouter mes prix par article'**
   String get tripPublishGridComposeCta;
 
   /// Badge sur l'aperçu du corridor une fois départ et arrivée sélectionnés
@@ -5771,6 +5771,24 @@ abstract class AppLocalizations {
   /// **'Affiche enregistrée dans votre galerie'**
   String get tripPosterSaveSuccess;
 
+  /// Enregistrement dans la galerie refusé par le système (accès aux photos refusé, iOS ne redemande plus) : renvoi aux Réglages (gallery_save_service.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Autorisez Yadony à ajouter des photos dans Réglages, puis réessayez.'**
+  String get gallerySaveAccessDenied;
+
+  /// Action du message d'accès aux photos refusé : ouvre les réglages de Yadony
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les Réglages'**
+  String get gallerySaveOpenSettings;
+
+  /// Enregistrement dans la galerie impossible faute d'espace de stockage
+  ///
+  /// In fr, this message translates to:
+  /// **'Espace insuffisant sur le téléphone pour enregistrer l\'image.'**
+  String get gallerySaveNotEnoughSpace;
+
   /// Confirmation après copie de la légende de l'affiche (trip_poster_screen.dart)
   ///
   /// In fr, this message translates to:
@@ -5912,7 +5930,7 @@ abstract class AppLocalizations {
   /// Repli affiché à la place du tarif au kilo quand le modèle vend à la grille (trip_templates_screen.dart, trip_recurrence_edit_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'prix à la grille'**
+  /// **'prix par article'**
   String get tripTemplateGridPriceLabel;
 
   /// Titre du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)
@@ -8232,7 +8250,7 @@ abstract class AppLocalizations {
   /// Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, announcement_detail_body.dart, marker_bitmap_factory.dart via announcement_map_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Grille'**
+  /// **'Par article'**
   String get listingPriceGridShort;
 
   /// Valeur compacte quand le prix au kg est indisponible (announcement_detail_screen.dart)
@@ -8466,7 +8484,7 @@ abstract class AppLocalizations {
   /// Libellé secondaire de la pastille prix en mode grille (announcement_detail_body.dart)
   ///
   /// In fr, this message translates to:
-  /// **'tarifaire'**
+  /// **'prix'**
   String get listingPricingSuffixTarifaire;
 
   /// Libellé secondaire de la pastille prix au kilo (announcement_detail_body.dart)
@@ -8688,7 +8706,7 @@ abstract class AppLocalizations {
   /// Titre de la carte grille tarifaire (traveler_announcement_bottom_sheet.dart, trip_card.dart, traveler_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Grille tarifaire'**
+  /// **'Prix par article'**
   String get listingPriceGridLabel;
 
   /// Nombre d'articles de la grille tarifaire (traveler_announcement_bottom_sheet.dart)
@@ -9618,7 +9636,7 @@ abstract class AppLocalizations {
   /// Titre de la section articles hors grille en négociation (custom_items_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Articles hors grille'**
+  /// **'Autres articles'**
   String get bidCreateCustomItemsSectionTitle;
 
   /// Explication de la section articles hors grille (custom_items_section.dart)
@@ -9636,7 +9654,7 @@ abstract class AppLocalizations {
   /// Libellé du total des articles hors grille (custom_items_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Total des articles hors grille'**
+  /// **'Total des autres articles'**
   String get bidCreateCustomItemsTotalLabel;
 
   /// Bouton et titre d'ajout d'un article hors grille (custom_items_section.dart)
@@ -12594,6 +12612,174 @@ abstract class AppLocalizations {
   /// **'L\'expéditeur sera remboursé automatiquement'**
   String get bidDetailCancelTransportAcceptedSubtitle;
 
+  /// Tuile d'options voyageur : refuser un colis non conforme (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis ne correspond pas'**
+  String get bidDetailRefuseParcelLabel;
+
+  /// Sous-titre de la tuile refus du colis (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusez-le sans pénalité, l\'expéditeur est remboursé'**
+  String get bidDetailRefuseParcelSubtitle;
+
+  /// Titre de la feuille de refus d'un colis non conforme (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser le colis'**
+  String get parcelRefusalTitle;
+
+  /// Introduction de la feuille de refus (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis ne correspond pas à ce que l\'expéditeur a déclaré ? Refusez-le : vous ne le transportez pas et vous n\'êtes pas pénalisé.'**
+  String get parcelRefusalIntro;
+
+  /// Titre de l'encart qui rappelle la déclaration (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Déclaré par l\'expéditeur'**
+  String get parcelRefusalDeclaredTitle;
+
+  /// Poids déclaré (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids : {weight} kg'**
+  String parcelRefusalDeclaredWeight(String weight);
+
+  /// Libellé du choix du motif (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce qui ne va pas'**
+  String get parcelRefusalReasonLabel;
+
+  /// Motif : contenu non conforme (parcel_refusal_sheet.dart). Envoyé au serveur, lu par l'expéditeur : garder court
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu différent de la déclaration'**
+  String get parcelRefusalReasonContentMismatch;
+
+  /// Exemple sous le motif contenu non conforme (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. un téléphone déclaré comme 1 kg de vêtements'**
+  String get parcelRefusalReasonContentMismatchHint;
+
+  /// Motif : poids supérieur (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids supérieur à la déclaration'**
+  String get parcelRefusalReasonOverweight;
+
+  /// Motif : objet interdit (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Objet interdit'**
+  String get parcelRefusalReasonProhibited;
+
+  /// Précision sous le motif objet interdit (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ou un contenu que vous refusez sur ce trajet'**
+  String get parcelRefusalReasonProhibitedHint;
+
+  /// Motif : autre (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre raison'**
+  String get parcelRefusalReasonOther;
+
+  /// Libellé du champ de précisions (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisions'**
+  String get parcelRefusalDetailsLabel;
+
+  /// Indication du champ de précisions, facultatif (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que vous avez constaté (facultatif)'**
+  String get parcelRefusalDetailsHint;
+
+  /// Indication du champ de précisions, obligatoire pour Autre raison (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Expliquez ce que vous avez constaté'**
+  String get parcelRefusalDetailsRequiredHint;
+
+  /// Titre de la section photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo du colis'**
+  String get parcelRefusalPhotoLabel;
+
+  /// Aide de la section photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Obligatoire : elle sert de preuve en cas de désaccord.'**
+  String get parcelRefusalPhotoHelp;
+
+  /// Bouton prise de photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre une photo'**
+  String get parcelRefusalTakePhoto;
+
+  /// Bouton pour reprendre la photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la photo'**
+  String get parcelRefusalRetakePhoto;
+
+  /// Infobulle du bouton retirer la photo (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer la photo'**
+  String get parcelRefusalRemovePhoto;
+
+  /// Snackbar photo illisible (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette photo n\'a pas pu être lue. Réessayez.'**
+  String get parcelRefusalPhotoFailed;
+
+  /// Encart des conséquences du refus (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur est prévenu et remboursé intégralement. Des refus répétés suspendent son compte.'**
+  String get parcelRefusalConsequences;
+
+  /// Encart espèces de la feuille de refus (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. La commission Yadony déjà réglée n\'est pas remboursée.'**
+  String get parcelRefusalCashNotice;
+
+  /// Encart colis déjà remis (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà scanné ce colis : rendez-le à l\'expéditeur sur place.'**
+  String get parcelRefusalHandedOverNotice;
+
+  /// Bouton de confirmation du refus (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser le colis'**
+  String get parcelRefusalSubmit;
+
+  /// Snackbar refus confirmé (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis refusé. L\'expéditeur est prévenu et remboursé.'**
+  String get parcelRefusalSuccess;
+
+  /// Snackbar refus confirmé, paiement en espèces (parcel_refusal_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis refusé. L\'expéditeur est prévenu.'**
+  String get parcelRefusalSuccessCash;
+
   /// Bouton AWAITING_PAYMENT mobile money (sender_sticky_bar.dart)
   ///
   /// In fr, this message translates to:
@@ -14595,7 +14781,7 @@ abstract class AppLocalizations {
   /// Groupe nominal de l'outil grille de prix (activity_labels.dart ToolKeyL10n.missingPhrase).
   ///
   /// In fr, this message translates to:
-  /// **'une grille de prix'**
+  /// **'des prix par article'**
   String get activityToolMissingPriceGrid;
 
   /// CTA de l'outil adresses (activity_labels.dart ToolKeyL10n.ctaLabel).
@@ -14625,7 +14811,7 @@ abstract class AppLocalizations {
   /// CTA de l'outil grille de prix (activity_labels.dart ToolKeyL10n.ctaLabel).
   ///
   /// In fr, this message translates to:
-  /// **'Remplir ma grille de prix'**
+  /// **'Ajouter mes prix par article'**
   String get activityToolCtaPriceGrid;
 
   /// Texte du badge « prêt » de l'outil adresses (activity_labels.dart ToolKeyL10n.badgeLabel).
@@ -14679,7 +14865,7 @@ abstract class AppLocalizations {
   /// Titre de la tuile/ligne outil grille de prix, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart.
   ///
   /// In fr, this message translates to:
-  /// **'Ma grille de prix'**
+  /// **'Mes prix par article'**
   String get activityToolTitlePriceGrid;
 
   /// Titre de la tuile/ligne outil adresses, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart.
@@ -15117,7 +15303,7 @@ abstract class AppLocalizations {
   /// Corps de la carte de progression au tout départ, aucun outil prêt (tools_completion_card.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Adresses, destinataires, modèles, grille de prix, alertes : remplis une fois, réutilisés à chaque publication.'**
+  /// **'Adresses, destinataires, modèles, prix par article, alertes : remplis une fois, réutilisés à chaque publication.'**
   String get activityToolsStartBody;
 
   /// Corps de la carte de progression une fois au moins un outil prêt ; {missing} est la phrase déjà localisée (activityToolsMissing) (tools_completion_card.dart).
@@ -17287,17 +17473,29 @@ abstract class AppLocalizations {
   /// **'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.'**
   String get conversationListEmptyDescription;
 
-  /// Pastille de filtre « Tous » de conversation_list_screen.dart.
+  /// Messages, filtre « En cours » vide alors que des conversations existent (toutes terminées et lues)
   ///
   /// In fr, this message translates to:
-  /// **'Tous'**
-  String get conversationFilterAll;
+  /// **'Aucune conversation en cours'**
+  String get conversationListEmptyActiveTitle;
 
-  /// Pastille de filtre « Non lus » de conversation_list_screen.dart.
+  /// Explication sous le titre du filtre « En cours » vide
   ///
   /// In fr, this message translates to:
-  /// **'Non lus'**
-  String get conversationFilterUnread;
+  /// **'Les conversations des colis livrés ou annulés, une fois lues, sont rangées dans « Terminés ».'**
+  String get conversationListEmptyActiveDescription;
+
+  /// Messages, filtre « Terminés » vide
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune conversation terminée'**
+  String get conversationListEmptyDoneTitle;
+
+  /// Explication sous le titre du filtre « Terminés » vide
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand un colis est livré ou annulé, sa conversation arrive ici une fois lue.'**
+  String get conversationListEmptyDoneDescription;
 
   /// Pastille de filtre « En cours » de conversation_list_screen.dart.
   ///
@@ -24436,7 +24634,7 @@ abstract class AppLocalizations {
   /// Titre de l'AppBar (price_grid_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ma grille de prix'**
+  /// **'Mes prix par article'**
   String get priceGridScreenTitle;
 
   /// Note de commission en pied de liste (price_grid_screen.dart), sans taux (FLUTTER-R6).
@@ -24508,7 +24706,7 @@ abstract class AppLocalizations {
   /// Message du dialogue de suppression, label = libellé affiché de l'article (price_grid_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'L\'article \"{label}\" sera retiré de votre grille, sur tous vos trajets.'**
+  /// **'L\'article \"{label}\" sera retiré de vos prix par article, sur tous vos trajets.'**
   String priceGridDeleteItemMessage(String label);
 
   /// Titre de la feuille en mode édition (price_grid_item_form_sheet.dart).
@@ -24520,7 +24718,7 @@ abstract class AppLocalizations {
   /// Bouton de validation en mode création (price_grid_item_form_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ajouter à ma grille'**
+  /// **'Ajouter à mes prix'**
   String get priceGridAddToGridButton;
 
   /// Libellé du champ de recherche du catalogue (price_grid_item_form_sheet.dart).
@@ -24538,7 +24736,7 @@ abstract class AppLocalizations {
   /// Message affiché quand le catalogue filtré est vide sans possibilité d'ajout (price_grid_item_form_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.'**
+  /// **'Tous les articles du catalogue ont déjà un prix. Écrivez le vôtre pour en ajouter un autre.'**
   String get priceGridAllCatalogTakenMessage;
 
   /// Ligne d'ajout d'un libellé libre non trouvé au catalogue. Espaces normales (U+0020) autour des guillemets, PAS les espaces insécables (U+00A0) de contentCategoryAdd : reprise à l'identique de l'ancien texte, non réutilisée pour ne pas changer le rendu (price_grid_item_form_sheet.dart).
@@ -30134,7 +30332,7 @@ abstract class AppLocalizations {
   /// Titre de la section des colis versés dans la fenêtre récente (money_overview_screen.dart, FLUTTER-HV).
   ///
   /// In fr, this message translates to:
-  /// **'Versés récemment'**
+  /// **'Payés récemment'**
   String get moneyRecentlyPaidSection;
 
   /// Note quand le serveur a coupé la liste à son plafond (money_overview_screen.dart, FLUTTER-HV).
@@ -30220,6 +30418,192 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'mise à jour en cours'**
   String get moneyShortUnknown;
+
+  /// État court d'un colis payé sur le compte Stripe du voyageur, disponible à la date donnée (bankPayout PENDING_AVAILABILITY, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'payé, dispo le {date}'**
+  String moneyShortBankPending(String date);
+
+  /// État court PENDING_AVAILABILITY sans date de disponibilité (money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'payé, bientôt dispo'**
+  String get moneyShortBankPendingNoDate;
+
+  /// État court d'un colis disponible sur Stripe, virement vers la banque pas encore parti (bankPayout AVAILABLE, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'virement bancaire à venir'**
+  String get moneyShortBankAvailable;
+
+  /// État court d'un virement vers la banque parti, arrivée prévue à la date donnée (bankPayout IN_TRANSIT, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'virement en cours, arrivée le {date}'**
+  String moneyShortBankInTransit(String date);
+
+  /// État court IN_TRANSIT sans date d'arrivée (money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'virement bancaire en cours'**
+  String get moneyShortBankInTransitNoDate;
+
+  /// État court d'un virement arrivé sur la banque du voyageur (bankPayout PAID, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'arrivé sur votre banque le {date}'**
+  String moneyShortBankPaid(String date);
+
+  /// État court PAID sans date (money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'arrivé sur votre banque'**
+  String get moneyShortBankPaidNoDate;
+
+  /// État court d'un virement vers la banque refusé (bankPayout FAILED, money_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'virement échoué, vérifiez votre banque'**
+  String get moneyShortBankFailed;
+
+  /// Titre de la feuille de suivi du virement bancaire d'un colis versé (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi du virement'**
+  String get moneyBankSheetTitle;
+
+  /// Étape 1 de la frise du virement : Yadony a payé le voyageur sur son compte Stripe (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé sur votre compte Stripe le {date}'**
+  String moneyBankStepPaidToStripe(String date);
+
+  /// Étape 1 de la frise du virement, sans date (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé sur votre compte Stripe'**
+  String get moneyBankStepPaidToStripeNoDate;
+
+  /// Étape 2 de la frise : l'argent devient disponible sur le compte Stripe (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible le {date}'**
+  String moneyBankStepAvailable(String date);
+
+  /// Étape 2 de la frise, sans date (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible sur votre compte Stripe'**
+  String get moneyBankStepAvailableNoDate;
+
+  /// Étape 3 de la frise : virement Stripe vers la banque, arrivée prévue (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement en cours, arrivée prévue le {date}'**
+  String moneyBankStepInTransit(String date);
+
+  /// Étape 3 de la frise, sans date d'arrivée (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement vers votre banque'**
+  String get moneyBankStepInTransitNoDate;
+
+  /// Étape 3 de la frise une fois l'argent arrivé (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement envoyé par Stripe'**
+  String get moneyBankStepTransferSent;
+
+  /// Étape 3 de la frise quand la banque a refusé le virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement échoué'**
+  String get moneyBankStepFailed;
+
+  /// Étape 4 de la frise : argent arrivé sur la banque (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé sur votre banque le {date}'**
+  String moneyBankStepArrived(String date);
+
+  /// Étape 4 de la frise, sans date ou pas encore atteinte (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé sur votre banque'**
+  String get moneyBankStepArrivedNoDate;
+
+  /// Phrase d'aide sous la frise du virement : délai Stripe puis délai bancaire (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony vous paie d\'abord sur votre compte Stripe. Stripe rend l\'argent disponible quelques jours plus tard, puis le vire automatiquement sur votre compte bancaire. Comptez ensuite 1 à 3 jours ouvrés selon votre banque.'**
+  String get moneyBankHelp;
+
+  /// Phrase d'aide d'un virement échoué (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre banque a refusé le virement. L\'argent reste sur votre compte Stripe : vérifiez ou changez votre compte bancaire, le virement repartira ensuite.'**
+  String get moneyBankHelpFailed;
+
+  /// Bouton de la feuille de suivi du virement qui ouvre le colis (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le colis'**
+  String get moneyBankOpenParcel;
+
+  /// Libellé d'accessibilité d'une étape terminée de la frise du virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, terminé'**
+  String moneyBankStepDoneSemantics(String label);
+
+  /// Libellé d'accessibilité de l'étape en cours de la frise du virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, en cours'**
+  String moneyBankStepCurrentSemantics(String label);
+
+  /// Libellé d'accessibilité d'une étape échouée de la frise du virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, échec'**
+  String moneyBankStepFailedSemantics(String label);
+
+  /// Libellé d'accessibilité d'une étape à venir de la frise du virement (bank_payout_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, à venir'**
+  String moneyBankStepTodoSemantics(String label);
+
+  /// Bouton qui ouvre l'espace Stripe Express pour changer d'IBAN (change_bank_account_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de compte bancaire'**
+  String get bankAccountChangeButton;
+
+  /// Aide sous le bouton « Changer de compte bancaire » de « Recevoir mes paiements » (payout_onboarding_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous serez redirigé vers votre espace Stripe pour modifier votre IBAN.'**
+  String get bankAccountChangeHint;
+
+  /// Message quand le serveur ne trouve pas de compte Stripe (404 stripe-account-missing, change_bank_account_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun compte de paiement n\'est relié. Configurez d\'abord la réception de vos paiements.'**
+  String get bankAccountChangeMissing;
+
+  /// Message quand l'inscription Stripe n'est pas terminée (409 stripe-onboarding-incomplete, change_bank_account_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminez d\'abord votre inscription Stripe pour changer de compte bancaire.'**
+  String get bankAccountChangeOnboardingIncomplete;
+
+  /// Message quand le serveur ne sert pas encore le lien vers l'espace Stripe (ancien back, change_bank_account_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le changement de compte bancaire sera disponible bientôt.'**
+  String get bankAccountChangeUnavailable;
 
   /// Titre de l'écran du détail par trajet de « Mon argent » (money_trips_screen.dart, FLUTTER-HV).
   ///
@@ -33697,7 +34081,7 @@ abstract class AppLocalizations {
   /// Puce « Déjà compris » : les articles de la grille de prix.
   ///
   /// In fr, this message translates to:
-  /// **'Ma grille'**
+  /// **'Mes prix par article'**
   String get aiFormDraftChipGrid;
 
   /// Puce « Déjà compris » : vol direct.
@@ -33853,7 +34237,7 @@ abstract class AppLocalizations {
   /// Valeur de la ligne Articles du résumé.
   ///
   /// In fr, this message translates to:
-  /// **'Ma grille de prix'**
+  /// **'Mes prix par article'**
   String get aiFormDraftSummaryGridValue;
 
   /// Ligne du résumé : moyens de paiement.
@@ -33943,7 +34327,7 @@ abstract class AppLocalizations {
   /// Avertissement : grille demandée mais vide.
   ///
   /// In fr, this message translates to:
-  /// **'Vous n\'avez pas encore de grille : j\'ai mis le prix au kilo.'**
+  /// **'Vous n\'avez pas encore de prix par article : j\'ai mis le prix au kilo.'**
   String get aiFormDraftWarningNoGrid;
 
   /// Avertissement : carte demandée, paiements par carte non configurés.

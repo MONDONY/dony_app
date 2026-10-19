@@ -76,7 +76,8 @@ class AssistantVoiceCubit extends Cubit<AssistantVoiceState> {
     if (state.busy) return;
     emit(state.copyWith(status: AssistantVoiceStatus.starting, transcript: ''));
     final available = await _speech.initialize();
-    if (isClosed) return;
+    // Annulée pendant le démarrage ([cancel]) : ne pas se mettre à écouter.
+    if (isClosed || state.status != AssistantVoiceStatus.starting) return;
     if (!available) {
       emit(state.copyWith(status: AssistantVoiceStatus.unavailable));
       return;
@@ -103,6 +104,15 @@ class AssistantVoiceCubit extends Cubit<AssistantVoiceState> {
     if (!state.listening) return;
     await _speech.stop();
     _finish();
+  }
+
+  /// Abandonne la dictée sans rien produire : aucun [AssistantVoiceState.completed]
+  /// n'est émis. Sert quand la question part par un autre chemin (bouton
+  /// envoyer, puce) pendant l'écoute (YADONY-FLUTTER-PROD-X).
+  Future<void> cancel() async {
+    if (!state.busy) return;
+    emit(state.copyWith(status: AssistantVoiceStatus.idle, transcript: ''));
+    await _speech.cancel();
   }
 
   void _finish() {
