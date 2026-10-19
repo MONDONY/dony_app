@@ -84,7 +84,13 @@ Future<void> openSupplementRequestSheet(
     bid: bid,
     authorize: authorize,
   );
-  if (result == null || !context.mounted) return;
+  if (!context.mounted) return;
+  if (result == null) {
+    // Feuille fermée sans issue (croix, barrière, retour) : une demande a pu
+    // être créée et sa commission débitée juste avant ; la fiche le montre.
+    bidBloc?.add(BidDetailRequested(bid.id));
+    return;
+  }
   switch (result) {
     case SupplementRequestResult.topUp:
       // /topup/method compose la sélection attendue par /topup/amount.
@@ -137,6 +143,11 @@ class SupplementRequestSheet extends StatefulWidget {
       context,
       analyticsName: 'bid/supplement-request',
       title: l.supplementRequestTitle,
+      // Le glissement vers le bas ferme sans consulter `PopScope` : il
+      // laisserait partir la feuille pendant l'envoi (demande créée, commission
+      // débitée, 3DS jamais présentée). La croix, la barrière et le retour
+      // passent par `maybePop` et respectent le garde de l'envoi.
+      enableDrag: false,
       wrapper: (child) => BlocProvider(
         create: (_) => getIt<SupplementRequestCubit>()..load(bid),
         child: child,
@@ -238,12 +249,26 @@ class _SupplementRequestSheetState extends State<SupplementRequestSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Pas de fermeture (croix, barrière, retour) pendant la vérification ou
+    // l'envoi : la demande et le débit de la commission partiraient sans
+    // suite (3DS jamais présentée, fiche jamais relue).
+    return BlocBuilder<SupplementRequestCubit, SupplementRequestState>(
+      buildWhen: (prev, curr) => prev.isBusy != curr.isBusy,
+      builder: (context, guard) =>
+          PopScope(canPop: !guard.isBusy, child: _content(context)),
+    );
+  }
+
+  Widget _content(BuildContext context) {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-
     return BlocListener<SupplementRequestCubit, SupplementRequestState>(
-      listenWhen: (prev, curr) => prev.status != curr.status,
+      // Une vérification locale refusée rend l'état d'avant : son erreur a
+      // déjà été montrée, rien à rejouer.
+      listenWhen: (prev, curr) =>
+          prev.status != curr.status &&
+          prev.status != SupplementRequestStatus.authorizing,
       listener: _onStateChanged,
       child: BlocBuilder<SupplementRequestCubit, SupplementRequestState>(
         builder: (context, state) {

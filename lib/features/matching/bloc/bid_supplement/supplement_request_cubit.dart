@@ -221,6 +221,7 @@ const _cardDeclined = 'supplement-commission-card-declined';
 const _cardMissing = 'commission-method-missing';
 const _fundingCurrencyInvalid = 'funding-currency-invalid';
 const _authInterruptedCode = 'commission/3ds-interrupted';
+const _authStillRequiredCode = 'commission/3ds-still-required';
 
 /// Feuille « Demander un supplément » du voyageur : montant (suggestion de la
 /// grille ou du kilo, ou saisi), motif, détail, photo obligatoire, devis
@@ -368,7 +369,8 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
     if (isClosed || state.status != SupplementRequestStatus.authorizing) {
       return;
     }
-    emit(state.copyWith(status: _beforeAuth, error: state.error));
+    // Sans l'erreur précédente : elle a déjà été montrée.
+    emit(state.copyWith(status: _beforeAuth));
   }
 
   void selectReason(BidSupplementReason reason) =>
@@ -454,7 +456,7 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
           await _repository.uploadPhoto(bid.id, state.photoPath!);
     } catch (e) {
       if (isClosed) return;
-      _onCreateError(bid, reason, e);
+      _onUploadError(reason, e);
       return;
     }
     if (isClosed) return;
@@ -472,12 +474,15 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
   /// nouveau `POST`, qui rendrait 409 `supplement-already-active`) ; une
   /// demande déjà partie chez l'expéditeur clôt la feuille en succès ; s'il
   /// n'y a aucune demande (le serveur n'avait rien créé), elle est envoyée.
+  /// Une demande connue mais close entre-temps (409/404 sur la
+  /// confirmation) est relue une fois sur la fiche du colis.
   Future<void> retryCommission() async {
     final bid = _bid;
     if (bid == null || !state.awaitingCommission) return;
     if (state.isSubmitting) return;
     final reason = state.reason!;
     final suggestion = state.suggestion;
+    final key = state.photoKey;
     emit(
       state.copyWith(
         status: SupplementRequestStatus.submitting,
@@ -485,20 +490,49 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
       ),
     );
     BidSupplement? target = state.pending;
+    var reread = target == null;
     try {
-      target ??= await _repository.current(bid.id);
-      if (isClosed) return;
-      if (target == null || !target.status.isOpen) {
-        // Rien en attente : le serveur n'avait rien créé (ou l'a clos). La
-        // photo est déjà envoyée (la création ne part qu'après elle).
-        await _create(bid, reason, suggestion, state.photoKey!);
+      while (true) {
+        target ??= await _repository.current(bid.id);
+        if (isClosed) return;
+        if (target == null || !target.status.isOpen) {
+          if (key == null) {
+            // Aucun POST n'est parti (photo non envoyée) : retour au
+            // formulaire.
+            emit(
+              state.copyWith(
+                status: SupplementRequestStatus.editing,
+                awaitingCommission: false,
+                pending: () => null,
+              ),
+            );
+            return;
+          }
+          await _create(bid, reason, suggestion, key);
+          return;
+        }
+        final BidSupplement settled;
+        try {
+          settled = target.status == BidSupplementStatus.commissionPending
+              ? await _flow.resume(bid.id, target.id)
+              : target;
+        } on SupplementCommissionAuthInterrupted {
+          rethrow;
+        } catch (e) {
+          final error = unwrapDioError(e);
+          if (!reread &&
+              (error is ConflictException || error is NotFoundException)) {
+            // Demande connue périmée (close, inconnue) : relecture.
+            reread = true;
+            target = null;
+            continue;
+          }
+          rethrow;
+        }
+        if (isClosed) return;
+        _afterSettled(bid, reason, suggestion, settled);
         return;
       }
-      final settled = target.status == BidSupplementStatus.commissionPending
-          ? await _flow.resume(bid.id, target.id)
-          : target;
-      if (isClosed) return;
-      _finish(bid, reason, suggestion, settled);
     } on SupplementCommissionAuthInterrupted {
       if (isClosed) return;
       _onAuthInterrupted(reason, target);
@@ -521,17 +555,6 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
     final funding = cash && source == SupplementCommissionSource.wallet
         ? state.fundingCurrency
         : null;
-    if (funding != null) {
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.commissionFundingCurrencyChosen,
-          properties: {
-            'currency': funding,
-            'context': AnalyticsPaymentContext.bidSupplement,
-          },
-        ),
-      );
-    }
     final BidSupplement created;
     try {
       created = await _repository.create(
@@ -553,7 +576,7 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
     }
     if (isClosed) return;
     if (!created.needsCommissionAuth) {
-      _finish(bid, reason, suggestion, created);
+      _afterSettled(bid, reason, suggestion, created);
       return;
     }
     // Carte commission avec 3DS : la demande existe déjà, une 3DS
@@ -568,7 +591,7 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
     try {
       final settled = await _flow.settle(bid.id, created);
       if (isClosed) return;
-      _finish(bid, reason, suggestion, settled);
+      _afterSettled(bid, reason, suggestion, settled);
     } on SupplementCommissionAuthInterrupted {
       if (isClosed) return;
       _onAuthInterrupted(reason, created);
@@ -576,6 +599,22 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
       if (isClosed) return;
       _onCommissionError(reason, created, e);
     }
+  }
+
+  /// Issue côté serveur : une 3DS encore demandée après
+  /// [SupplementCommissionFlow.maxAuthRounds] reste à réessayer ; sinon la
+  /// demande est envoyée (ou en traitement chez Stripe).
+  void _afterSettled(
+    BidModel bid,
+    BidSupplementReason reason,
+    SupplementSuggestion? suggestion,
+    BidSupplement settled,
+  ) {
+    if (settled.needsCommissionAuth) {
+      _onAuthInterrupted(reason, settled, errorCode: _authStillRequiredCode);
+      return;
+    }
+    _finish(bid, reason, suggestion, settled);
   }
 
   /// La demande est créée : envoyée à l'expéditeur, ou (carte en cours de
@@ -595,6 +634,26 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
         pending: () => null,
       ),
     );
+    if (state.isCash) _flow.logCharged(created, state.commissionSource);
+    // Commission encore en traitement chez Stripe : la demande n'a pas
+    // encore atteint l'expéditeur, rien n'est compté.
+    if (created.status == BidSupplementStatus.commissionPending) return;
+    final funding =
+        state.isCash &&
+            state.commissionSource == SupplementCommissionSource.wallet
+        ? state.fundingCurrency
+        : null;
+    if (funding != null) {
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.commissionFundingCurrencyChosen,
+          properties: {
+            'currency': funding,
+            'context': AnalyticsPaymentContext.bidSupplement,
+          },
+        ),
+      );
+    }
     final amount = created.netAmount ?? state.amount ?? 0;
     unawaited(
       _analytics.logEvent(
@@ -612,7 +671,24 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
         },
       ),
     );
-    if (state.isCash) _flow.logCharged(created, state.commissionSource);
+  }
+
+  /// Photo non envoyée : aucun `POST` n'est parti, rien n'est créé ni
+  /// débité. Le formulaire reste ouvert (« Réessayer » n'a pas lieu d'être).
+  void _onUploadError(BidSupplementReason reason, Object e) {
+    final error = unwrapDioError(e);
+    final code = error.code ?? 'unknown';
+    emit(
+      state.copyWith(
+        status: _closingCodes.contains(code)
+            ? SupplementRequestStatus.closed
+            : SupplementRequestStatus.failure,
+        awaitingCommission: false,
+        pending: () => null,
+        error: error,
+      ),
+    );
+    _logRequestFailed(reason, code);
   }
 
   /// Échec avant ou pendant la création (rien n'a été prélevé, sauf débit
@@ -627,6 +703,8 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
         state.copyWith(
           status: SupplementRequestStatus.unfunded,
           unfunded: () => unfunded,
+          awaitingCommission: false,
+          pending: () => null,
           error: error,
         ),
       );
@@ -640,15 +718,18 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
       emit(
         state.copyWith(
           status: SupplementRequestStatus.cardMissing,
+          awaitingCommission: false,
+          pending: () => null,
           error: error,
         ),
       );
       _flow.logFailed(source, reason: 'card_missing', errorCode: code);
     } else if (state.isCash &&
-        source == SupplementCommissionSource.card &&
         (error is ServiceUnavailableException || error is TimeoutException)) {
-      // Débit de la carte resté sans réponse : la demande a pu être créée en
-      // `COMMISSION_PENDING`. « Réessayer » la retrouve et la confirme.
+      // `POST` parti sans réponse exploitable (débit de la carte ou du solde
+      // en suspens) : la demande a pu être créée. « Réessayer » la relit sur
+      // la fiche du colis avant tout nouvel envoi (un second `POST`
+      // rendrait 409 `supplement-already-active`).
       emit(
         state.copyWith(
           status: SupplementRequestStatus.commissionRetry,
@@ -668,6 +749,8 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
               ? SupplementRequestStatus.closed
               : SupplementRequestStatus.failure,
           fundingCurrency: code == _fundingCurrencyInvalid ? () => null : null,
+          awaitingCommission: false,
+          pending: () => null,
           error: error,
         ),
       );
@@ -676,7 +759,11 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
   }
 
   /// 3DS abandonnée ou refusée : la demande reste en attente côté serveur.
-  void _onAuthInterrupted(BidSupplementReason reason, BidSupplement? pending) {
+  void _onAuthInterrupted(
+    BidSupplementReason reason,
+    BidSupplement? pending, {
+    String errorCode = _authInterruptedCode,
+  }) {
     emit(
       state.copyWith(
         status: SupplementRequestStatus.commissionRetry,
@@ -687,9 +774,9 @@ class SupplementRequestCubit extends Cubit<SupplementRequestState> {
     _flow.logFailed(
       SupplementCommissionSource.card,
       reason: 'authentication_failed',
-      errorCode: _authInterruptedCode,
+      errorCode: errorCode,
     );
-    _logRequestFailed(reason, _authInterruptedCode);
+    _logRequestFailed(reason, errorCode);
   }
 
   /// Échec de la confirmation d'une demande déjà créée : carte refusée ou

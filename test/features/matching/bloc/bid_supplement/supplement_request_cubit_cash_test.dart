@@ -648,6 +648,12 @@ void main() {
           properties: any(named: 'properties'),
         ),
       );
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidSupplementRequested,
+          properties: any(named: 'properties'),
+        ),
+      );
     },
   );
 
@@ -711,6 +717,267 @@ void main() {
       expect(cubit.beginAuthorization(), isTrue);
       cubit.selectCommissionSource(SupplementCommissionSource.card);
       expect(cubit.state.commissionSource, SupplementCommissionSource.wallet);
+    });
+  });
+  group('relecture A4', () {
+    void verifyNoCreate() => verifyNever(
+      () => repository.create(
+        any(),
+        netAmount: any(named: 'netAmount'),
+        reason: any(named: 'reason'),
+        reasonText: any(named: 'reasonText'),
+        gridItemLabel: any(named: 'gridItemLabel'),
+        photoKey: any(named: 'photoKey'),
+        commissionSource: any(named: 'commissionSource'),
+        fundingCurrency: any(named: 'fundingCurrency'),
+      ),
+    );
+
+    int createCount() => verify(
+      () => repository.create(
+        any(),
+        netAmount: any(named: 'netAmount'),
+        reason: any(named: 'reason'),
+        reasonText: any(named: 'reasonText'),
+        gridItemLabel: any(named: 'gridItemLabel'),
+        photoKey: any(named: 'photoKey'),
+        commissionSource: any(named: 'commissionSource'),
+        fundingCurrency: any(named: 'fundingCurrency'),
+      ),
+    ).callCount;
+
+    for (final error in <AppException>[
+      const ServiceUnavailableException('d', 'stripe-unavailable'),
+      const TimeoutException(),
+    ]) {
+      test('photo non envoyée (${error.runtimeType}) : échec, formulaire '
+          'ouvert, « Réessayer » sans effet', () async {
+        when(() => repository.uploadPhoto(any(), any())).thenThrow(error);
+        final cubit = await ready();
+        cubit.selectCommissionSource(SupplementCommissionSource.card);
+
+        await authorizedSubmit(cubit);
+
+        expect(cubit.state.status, SupplementRequestStatus.failure);
+        expect(cubit.state.awaitingCommission, isFalse);
+        expect(cubit.state.isLocked, isFalse);
+        expect(cubit.state.canSubmit, isTrue);
+
+        await cubit.retryCommission();
+
+        expect(cubit.state.status, SupplementRequestStatus.failure);
+        verifyNever(() => repository.current(any()));
+        verifyNoCreate();
+      });
+    }
+
+    test(
+      'vérification refusée : l\'erreur précédente n\'est pas rendue',
+      () async {
+        stubCreate(
+          (_) async => throw const ServiceUnavailableException(
+            'd',
+            'supplement-commission-charge-failed',
+          ),
+        );
+        final cubit = await ready();
+        cubit.selectCommissionSource(SupplementCommissionSource.card);
+        await authorizedSubmit(cubit);
+        expect(cubit.state.error, isNotNull);
+
+        expect(cubit.beginAuthorization(), isTrue);
+        cubit.authorizationDenied();
+
+        expect(cubit.state.status, SupplementRequestStatus.commissionRetry);
+        expect(cubit.state.awaitingCommission, isTrue);
+        expect(cubit.state.error, isNull);
+      },
+    );
+
+    test('reprise puis erreur définitive (carte manquante) : « Ajouter une '
+        'carte » revient', () async {
+      var calls = 0;
+      stubCreate((_) async {
+        if (calls++ == 0) {
+          throw const ServiceUnavailableException('d', 'stripe-unavailable');
+        }
+        throw const ValidationException('d', code: 'commission-method-missing');
+      });
+      when(() => repository.current('bid-1')).thenAnswer((_) async => null);
+      final cubit = await ready();
+      cubit.selectCommissionSource(SupplementCommissionSource.card);
+      await authorizedSubmit(cubit);
+
+      await cubit.retryCommission();
+
+      expect(cubit.state.status, SupplementRequestStatus.cardMissing);
+      expect(cubit.state.awaitingCommission, isFalse);
+      expect(cubit.state.canSubmit, isTrue);
+    });
+
+    test('3DS encore demandée après deux tours : à réessayer, une seule '
+        'demande comptée', () async {
+      stubCreate(
+        (_) async =>
+            _sup(BidSupplementStatus.commissionPending, secret: 'pi_1'),
+      );
+      when(() => repository.confirmCommission('bid-1', 'sup-1')).thenAnswer(
+        (_) async =>
+            _sup(BidSupplementStatus.commissionPending, secret: 'pi_again'),
+      );
+      final cubit = await ready();
+      cubit.selectCommissionSource(SupplementCommissionSource.card);
+
+      await authorizedSubmit(cubit);
+
+      expect(cubit.state.status, SupplementRequestStatus.commissionRetry);
+      expect(cubit.state.awaitingCommission, isTrue);
+      expect(cubit.state.pending?.commissionClientSecret, 'pi_again');
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidSupplementRequested,
+          properties: any(named: 'properties'),
+        ),
+      );
+
+      when(
+        () => repository.confirmCommission('bid-1', 'sup-1'),
+      ).thenAnswer((_) async => _proposedCharged);
+      await cubit.retryCommission();
+
+      expect(cubit.state.status, SupplementRequestStatus.success);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.bidSupplementRequested,
+          properties: any(named: 'properties'),
+        ),
+      ).called(1);
+    });
+
+    test('demande connue périmée (409 à la confirmation) : relue sur la '
+        'fiche', () async {
+      failAuth = true;
+      stubCreate(
+        (_) async =>
+            _sup(BidSupplementStatus.commissionPending, secret: 'pi_secret'),
+      );
+      final cubit = await ready();
+      cubit.selectCommissionSource(SupplementCommissionSource.card);
+      await authorizedSubmit(cubit);
+      when(
+        () => repository.confirmCommission('bid-1', 'sup-1'),
+      ).thenThrow(const ConflictException('d', code: 'supplement-not-pending'));
+      when(
+        () => repository.current('bid-1'),
+      ).thenAnswer((_) async => _proposedCharged);
+
+      await cubit.retryCommission();
+
+      expect(cubit.state.status, SupplementRequestStatus.success);
+      verify(() => repository.current('bid-1')).called(1);
+      verify(() => repository.confirmCommission('bid-1', 'sup-1')).called(1);
+    });
+
+    test('demande inconnue (404) puis rien sur la fiche : la demande '
+        'repart', () async {
+      failAuth = true;
+      var calls = 0;
+      stubCreate((_) async {
+        if (calls++ == 0) {
+          return _sup(BidSupplementStatus.commissionPending, secret: 'pi_1');
+        }
+        return _proposedCharged;
+      });
+      final cubit = await ready();
+      cubit.selectCommissionSource(SupplementCommissionSource.card);
+      await authorizedSubmit(cubit);
+      when(() => repository.confirmCommission('bid-1', 'sup-1')).thenThrow(
+        const NotFoundException(message: 'd', apiCode: 'supplement-not-found'),
+      );
+      when(() => repository.current('bid-1')).thenAnswer((_) async => null);
+
+      await cubit.retryCommission();
+
+      expect(calls, 2);
+      expect(cubit.state.status, SupplementRequestStatus.success);
+    });
+
+    test('409 à la confirmation après relecture : pas de boucle', () async {
+      stubCreate(
+        (_) async => throw const ServiceUnavailableException(
+          'd',
+          'supplement-commission-charge-failed',
+        ),
+      );
+      final cubit = await ready();
+      cubit.selectCommissionSource(SupplementCommissionSource.card);
+      await authorizedSubmit(cubit);
+      when(
+        () => repository.current('bid-1'),
+      ).thenAnswer((_) async => _sup(BidSupplementStatus.commissionPending));
+      when(
+        () => repository.confirmCommission('bid-1', 'sup-1'),
+      ).thenThrow(const ConflictException('d', code: 'supplement-not-pending'));
+
+      await cubit.retryCommission();
+
+      expect(cubit.state.status, SupplementRequestStatus.commissionRetry);
+      verify(() => repository.current('bid-1')).called(1);
+      verify(() => repository.confirmCommission('bid-1', 'sup-1')).called(1);
+    });
+
+    test('solde (WALLET_FIRST) + 503 sur le POST : relecture avant tout '
+        'nouvel envoi', () async {
+      stubCreate(
+        (_) async =>
+            throw const ServiceUnavailableException('d', 'SERVICE_UNAVAILABLE'),
+      );
+      final cubit = await ready();
+
+      await authorizedSubmit(cubit);
+
+      expect(cubit.state.status, SupplementRequestStatus.commissionRetry);
+      expect(cubit.state.awaitingCommission, isTrue);
+      when(
+        () => repository.current('bid-1'),
+      ).thenAnswer((_) async => _proposedCharged);
+
+      await cubit.retryCommission();
+
+      expect(cubit.state.status, SupplementRequestStatus.success);
+      expect(createCount(), 1);
+    });
+
+    test('autre portefeuille : commission_funding_currency_chosen une seule '
+        'fois, au succès', () async {
+      var calls = 0;
+      stubCreate((_) async {
+        if (calls++ < 2) throw _unfundedError;
+        return _proposedCharged;
+      });
+      final cubit = await ready();
+      cubit.selectCommissionSource(
+        SupplementCommissionSource.wallet,
+        fundingCurrency: 'XOF',
+      );
+      await authorizedSubmit(cubit);
+      await authorizedSubmit(cubit);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.commissionFundingCurrencyChosen,
+          properties: any(named: 'properties'),
+        ),
+      );
+
+      await authorizedSubmit(cubit);
+
+      expect(cubit.state.status, SupplementRequestStatus.success);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.commissionFundingCurrencyChosen,
+          properties: {'currency': 'XOF', 'context': 'bid_supplement'},
+        ),
+      ).called(1);
     });
   });
 }

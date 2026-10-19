@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -525,5 +527,85 @@ void main() {
     expect(find.text('Supplement commission'), findsOneWidget);
     expect(find.text('My Yadony balance'), findsOneWidget);
     expect(find.text('My commission card'), findsOneWidget);
+  });
+
+  testWidgets('envoi en cours : la croix, la barrière et le retour ne '
+      'ferment pas la feuille ; l\'issue arrive et la fiche est relue', (
+    tester,
+  ) async {
+    final created = Completer<BidSupplement>();
+    stubCreate(() => created.future);
+    await open(tester);
+    await fill(tester);
+
+    await tester.tap(_btn('Demander 10 €'));
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Fermer'));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Demander un supplément'), findsOneWidget);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Demander un supplément'), findsOneWidget);
+    final navigator = tester.state<NavigatorState>(
+      find.byType(Navigator).first,
+    );
+    // Retour système : `maybePop` sur le navigateur racine.
+    await navigator.maybePop();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Demander un supplément'), findsOneWidget);
+
+    created.complete(_proposed);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Demande envoyée à l\'expéditeur'), findsOneWidget);
+    verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+  });
+
+  testWidgets('feuille fermée sans issue : la fiche est relue quand même', (
+    tester,
+  ) async {
+    await open(tester);
+
+    await tester.tap(find.byTooltip('Fermer'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Demander un supplément'), findsNothing);
+    verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+  });
+
+  testWidgets('vérification refusée en reprise : l\'erreur n\'est pas '
+      'réaffichée', (tester) async {
+    stubCreate(
+      () async => throw const ServiceUnavailableException(
+        'd',
+        'supplement-commission-charge-failed',
+      ),
+    );
+    await open(tester);
+    await fill(tester);
+    await tester.tap(find.text('Ma carte commission'));
+    await tester.pumpAndSettle();
+    await tester.tap(_btn('Demander 10 €'));
+    await tester.pumpAndSettle();
+    expect(find.text('Commission non prélevée'), findsWidgets);
+    // Laisse la snackbar disparaître.
+    await tester.pump(const Duration(seconds: 10));
+    await tester.pumpAndSettle();
+    expect(find.text('Commission non prélevée'), findsNothing);
+
+    authorizeResult = false;
+    await tester.tap(find.byKey(const Key('supplement-commission-retry-btn')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Paiement non confirmé, réessayez'), findsOneWidget);
+    expect(find.text('Commission non prélevée'), findsNothing);
+    expect(
+      find.text(
+        'Validation bancaire interrompue : rien n\'a été prélevé. Réessayez.',
+      ),
+      findsNothing,
+    );
   });
 }
