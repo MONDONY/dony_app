@@ -180,4 +180,33 @@ void main() {
     expect(find.textContaining('Versé'), findsWidgets);
     expect(find.textContaining('espèces'), findsNothing);
   });
+
+  group('supplément payé', () {
+    BidModel withSupplement({
+      BidPaymentMethod method = BidPaymentMethod.stripe,
+    }) => BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      status: 'ACCEPTED',
+      totalAmountEur: 48,
+      totalSenderAmountEur: 54,
+      totalNetAmountWithSupplementEur: 63,
+      totalSenderAmountWithSupplementEur: 70.8,
+      paymentMethod: method,
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
+    );
+
+    test('net et brut comptent le supplément', () {
+      expect(travelerNetAmount(withSupplement()), 63);
+      expect(travelerCashGrossAmount(withSupplement()), 70.8);
+      expect(travelerAmountLabel(withSupplement()), formatPriceIn(63, 'EUR'));
+    });
+
+    testWidgets('carte : gain affiché avec le supplément', (tester) async {
+      await _pump(tester, withSupplement());
+      expect(find.text(formatPriceIn(63, 'EUR')), findsOneWidget);
+    });
+  });
 }

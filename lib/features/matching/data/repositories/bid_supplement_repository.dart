@@ -36,4 +36,10 @@ class BidSupplementRepository {
 
   Future<BidSupplement> decline(String bidId, String supplementId) =>
       _datasource.decline(bidId, supplementId);
+
+  Future<SupplementCheckout> accept(String bidId, String supplementId) =>
+      _datasource.accept(bidId, supplementId);
+
+  Future<BidSupplement> confirmPayment(String bidId, String supplementId) =>
+      _datasource.confirmPayment(bidId, supplementId);
 }

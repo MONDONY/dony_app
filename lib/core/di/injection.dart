@@ -5,6 +5,7 @@ import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/ai_form_draft_injection.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
+import 'package:dony/core/di/supplement_injection.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
@@ -474,6 +475,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
   );
+  registerSupplementPaymentDependencies(getIt);
   getIt.registerFactory<RecipientReplacementCubit>(
     () => RecipientReplacementCubit(
       getIt<BidRepository>(),

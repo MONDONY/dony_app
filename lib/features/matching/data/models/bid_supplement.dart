@@ -230,3 +230,62 @@ class SupplementQuote {
         currency: json['currency'] as String? ?? 'EUR',
       );
 }
+
+/// Réponse à l'acceptation d'un supplément par l'expéditeur
+/// (`POST /bids/{bidId}/supplements/{id}/accept`). Carte : même contrat que
+/// le checkout d'un colis ; la clé éphémère des cartes enregistrées reste
+/// demandée par la feuille de paiement (`POST /payments/me/ephemeral-key`).
+class SupplementCheckout {
+  const SupplementCheckout({
+    this.supplement,
+    this.rail,
+    this.clientSecret,
+    this.paymentMethodTypes = const [],
+    required this.amount,
+    required this.currency,
+    this.publishableKey,
+  });
+
+  static const railStripe = 'STRIPE';
+
+  /// Vue expéditeur du supplément (brut seul).
+  final BidSupplement? supplement;
+
+  /// `STRIPE`, `PAWAPAY` ou `CASH`.
+  final String? rail;
+
+  /// Nul quand il n'y a plus rien à payer (supplément déjà payé).
+  final String? clientSecret;
+
+  /// Moyens du PaymentIntent (ex. `card`, `paypal`).
+  final List<String> paymentMethodTypes;
+
+  /// Brut à payer, dans [currency].
+  final double amount;
+  final String currency;
+  final String? publishableKey;
+
+  bool get isCard => rail == railStripe;
+
+  /// Une feuille de paiement est à ouvrir.
+  bool get needsPayment => clientSecret != null && clientSecret!.isNotEmpty;
+
+  factory SupplementCheckout.fromJson(Map<String, dynamic> json) {
+    final supplement = json['supplement'] as Map<String, dynamic>?;
+    final parsed = supplement == null
+        ? null
+        : BidSupplement.fromJson(supplement);
+    return SupplementCheckout(
+      supplement: parsed,
+      rail: json['rail'] as String?,
+      clientSecret: json['clientSecret'] as String?,
+      paymentMethodTypes: [
+        for (final t in (json['paymentMethodTypes'] as List?) ?? const [])
+          t as String,
+      ],
+      amount: (json['amount'] as num?)?.toDouble() ?? parsed?.grossAmount ?? 0,
+      currency: json['currency'] as String? ?? parsed?.currency ?? 'EUR',
+      publishableKey: json['publishableKey'] as String?,
+    );
+  }
+}

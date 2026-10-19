@@ -4,9 +4,14 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-/// Net reçu par le voyageur (= [BidModel.totalAmountEur], fallback
-/// `pricePerKg × weightKg`). `null` si indéterminable.
+/// Net reçu par le voyageur, supplément payé compris
+/// ([BidModel.totalNetAmountWithSupplementEur]), sinon
+/// [BidModel.totalAmountEur], repli `pricePerKg × weightKg`. `null` si
+/// indéterminable.
 double? travelerNetAmount(BidModel bid) {
+  if (bid.totalNetAmountWithSupplementEur != null) {
+    return bid.totalNetAmountWithSupplementEur;
+  }
   if (bid.totalAmountEur != null) {
     return bid.totalAmountEur;
   }
@@ -20,9 +25,12 @@ double? travelerNetAmount(BidModel bid) {
 /// part de l'expéditeur ([BidModel.totalSenderAmountEur], commission comprise).
 /// En espèces, la commission n'est pas déduite de l'argent remis : elle est
 /// prélevée à part sur le solde ou la carte du voyageur (FLUTTER-R8). Repli sur
-/// le net pour un ancien back qui n'envoie pas ce champ.
+/// le net pour un ancien back qui n'envoie pas ce champ. Supplément payé
+/// compris.
 double? travelerCashGrossAmount(BidModel bid) =>
-    bid.totalSenderAmountEur ?? travelerNetAmount(bid);
+    bid.totalSenderAmountWithSupplementEur ??
+    bid.totalSenderAmountEur ??
+    travelerNetAmount(bid);
 
 /// Montant net formaté dans la devise du bid, ou `—`.
 String travelerAmountLabel(BidModel bid) {

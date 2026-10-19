@@ -40,9 +40,12 @@ class PaiementCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     // senderLabel : ce que paie l'expéditeur (brut séquestré/remboursé, ou net
-    // en cash). On n'affiche jamais le net du voyageur à l'expéditeur.
+    // en cash), supplément payé compris. On n'affiche jamais le net du
+    // voyageur à l'expéditeur.
     final senderLabel = _fmt(
-      bid.totalSenderAmountEur ?? bid.totalAmountEur,
+      bid.totalSenderAmountWithSupplementEur ??
+          bid.totalSenderAmountEur ??
+          bid.totalAmountEur,
       bid.currency,
     );
 

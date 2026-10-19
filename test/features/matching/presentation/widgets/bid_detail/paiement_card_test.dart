@@ -102,4 +102,27 @@ void main() {
       },
     );
   });
+
+  testWidgets('supplément payé : total avec supplément, jamais le net', (
+    tester,
+  ) async {
+    final bid = BidModel(
+      id: 'bid-pc-1',
+      announcementId: 'ann-1',
+      senderId: 'sender-1',
+      status: 'ACCEPTED',
+      totalAmountEur: 182,
+      totalSenderAmountEur: 200,
+      totalSenderAmountWithSupplementEur: 216.8,
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    );
+    await tester.pumpWidget(_wrap(bid));
+
+    final expected = formatPriceIn(216.8, 'EUR');
+    expect(
+      find.text('$expected séquestré : libéré à la livraison'),
+      findsOneWidget,
+    );
+  });
 }

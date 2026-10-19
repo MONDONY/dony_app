@@ -10,6 +10,7 @@ import 'package:dony/features/matching/presentation/widgets/action_bars/bid_deta
 import 'package:dony/features/matching/presentation/widgets/bid_detail/cancel_before_payment_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_pay_button.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
@@ -70,6 +71,9 @@ class SenderStickyBar extends StatelessWidget {
     if (bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION') {
       return false;
     }
+
+    // Supplément de prix à payer par carte : « Payer » prend la barre.
+    if (SupplementPayButton.canPay(bid)) return true;
 
     final status = bid.status;
 
@@ -151,6 +155,17 @@ class SenderStickyBar extends StatelessWidget {
     }
 
     final status = bid.status;
+
+    // 1.2 Supplément de prix demandé à la remise, colis payé par carte : le
+    //     paiement passe avant le QR, que le voyageur ne peut pas scanner tant
+    //     que le supplément attend (409 `handover-supplement-pending`).
+    //     « Refuser » se trouve dans l'encart du supplément.
+    if (SupplementPayButton.canPay(bid)) {
+      return SupplementPayButton(
+        key: ValueKey('supplement-pay-${bid.supplement!.id}'),
+        bid: bid,
+      );
+    }
 
     // 1.4 AWAITING_PAYMENT (mobile money) : le voyageur vient d'accepter,
     //     l'expéditeur a 30 min pour séquestrer via pawaPay. Le retour de

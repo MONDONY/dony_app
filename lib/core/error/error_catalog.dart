@@ -347,6 +347,31 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.search_off_rounded,
     ),
+    // Paiement par carte du supplément (`BidSupplementCardRail`).
+    'supplement-payment-processing': _Entry(
+      title: (l) => l.errorSupplementPaymentProcessingTitle,
+      message: (l) => l.errorSupplementPaymentProcessingMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'supplement-payment-creation-failed': _Entry(
+      title: (l) => l.errorSupplementPaymentCreationFailedTitle,
+      message: (l) => l.errorSupplementPaymentCreationFailedMessage,
+      severity: ErrorSeverity.critical,
+      icon: Icons.credit_card_off_rounded,
+    ),
+    'payment-busy': _Entry(
+      title: (l) => l.errorPaymentBusyTitle,
+      message: (l) => l.errorPaymentBusyMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'stripe-unavailable': _Entry(
+      title: (l) => l.errorStripeUnavailableTitle,
+      message: (l) => l.errorStripeUnavailableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.cloud_off_rounded,
+    ),
     'invalid-photo-url': _Entry(
       title: (l) => l.errorInvalidPhotoUrlTitle,
       message: (l) => l.errorInvalidPhotoUrlMessage,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -153,6 +154,25 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('En attente de remise'), findsNothing);
+  });
+
+  testWidgets('2 bis · montant payé : supplément payé compris', (tester) async {
+    final bid = BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: 'sender-001',
+      status: 'PAYMENT_ESCROWED',
+      totalAmountEur: 45,
+      totalSenderAmountEur: 50,
+      totalSenderAmountWithSupplementEur: 66.8,
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining(formatPriceIn(66.8, 'EUR')), findsOneWidget);
+    expect(find.textContaining(formatPriceIn(50, 'EUR')), findsNothing);
   });
 
   // ── Test 3: ACCEPTED fenêtre future ─────────────────────────────────────────

@@ -35229,6 +35229,96 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le supplément vous a été remboursé'**
   String get supplementSenderRefunded;
+
+  /// Bouton de la barre du bas de l'expéditeur : payer le supplément par carte. {amount} : brut formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer {amount}'**
+  String supplementPay(String amount);
+
+  /// Snackbar après le paiement du supplément par l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément payé'**
+  String get supplementPaidSnackbar;
+
+  /// Libellé de contexte de la feuille de paiement du supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Supplément de prix du colis'**
+  String get supplementPaymentContextLabel;
+
+  /// Encart voyageur : supplément en cours de remboursement à l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement de l\'expéditeur en cours'**
+  String get supplementTravelerRefundPending;
+
+  /// Encart expéditeur : supplément en cours de remboursement
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement du supplément en cours'**
+  String get supplementSenderRefundPending;
+
+  /// Encart expéditeur, colis payé par carte : où payer le supplément
+  ///
+  /// In fr, this message translates to:
+  /// **'Payez avec le bouton en bas de l\'écran, ou refusez ici.'**
+  String get supplementSenderPayHelp;
+
+  /// ErrorCatalog supplement-payment-processing
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en cours'**
+  String get errorSupplementPaymentProcessingTitle;
+
+  /// ErrorCatalog supplement-payment-processing
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement du supplément est en cours de traitement. Revenez dans quelques minutes.'**
+  String get errorSupplementPaymentProcessingMessage;
+
+  /// ErrorCatalog supplement-payment-creation-failed
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement indisponible'**
+  String get errorSupplementPaymentCreationFailedTitle;
+
+  /// ErrorCatalog supplement-payment-creation-failed
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de préparer le paiement du supplément. Réessayez.'**
+  String get errorSupplementPaymentCreationFailedMessage;
+
+  /// ErrorCatalog payment-busy
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en cours de validation'**
+  String get errorPaymentBusyTitle;
+
+  /// ErrorCatalog payment-busy
+  ///
+  /// In fr, this message translates to:
+  /// **'Un paiement est en cours de validation. Réessayez dans un instant.'**
+  String get errorPaymentBusyMessage;
+
+  /// ErrorCatalog stripe-unavailable
+  ///
+  /// In fr, this message translates to:
+  /// **'Service de paiement injoignable'**
+  String get errorStripeUnavailableTitle;
+
+  /// ErrorCatalog stripe-unavailable
+  ///
+  /// In fr, this message translates to:
+  /// **'Le service de paiement est momentanément injoignable. Réessayez.'**
+  String get errorStripeUnavailableMessage;
+
+  /// Message neutre après le paiement du supplément quand le serveur ne l'a pas encore confirmé payé (traitement en cours, réseau)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement reçu, confirmation en cours. Le colis se met à jour dans un instant.'**
+  String get supplementPaymentConfirming;
 }
 
 class _AppLocalizationsDelegate

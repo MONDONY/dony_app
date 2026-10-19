@@ -11042,5 +11042,20 @@
   "errorInvalidPhotoUrlMessage": "This photo couldn't be saved. Please take it again.",
   "errorHandoverSupplementPendingTitle": "Extra charge pending",
   "errorHandoverSupplementPendingMessage": "An extra charge is awaiting the sender's reply. Scan the parcel once they've replied.",
-  "supplementSenderRefunded": "The extra charge was refunded to you"
+  "supplementSenderRefunded": "The extra charge was refunded to you",
+  "supplementPay": "Pay {amount}",
+  "supplementPaidSnackbar": "Extra charge paid",
+  "supplementPaymentContextLabel": "Parcel extra charge",
+  "supplementTravelerRefundPending": "Refund to the sender in progress",
+  "supplementSenderRefundPending": "Extra charge refund in progress",
+  "supplementSenderPayHelp": "Pay with the button at the bottom of the screen, or decline here.",
+  "errorSupplementPaymentProcessingTitle": "Payment in progress",
+  "errorSupplementPaymentProcessingMessage": "The extra charge payment is being processed. Check back in a few minutes.",
+  "errorSupplementPaymentCreationFailedTitle": "Payment unavailable",
+  "errorSupplementPaymentCreationFailedMessage": "We couldn't prepare the extra charge payment. Please try again.",
+  "errorPaymentBusyTitle": "Payment being confirmed",
+  "errorPaymentBusyMessage": "A payment is being confirmed. Please try again in a moment.",
+  "errorStripeUnavailableTitle": "Payment service unreachable",
+  "errorStripeUnavailableMessage": "The payment service is temporarily unreachable. Please try again.",
+  "supplementPaymentConfirming": "Payment received, confirmation in progress. The parcel will update in a moment."
 }
