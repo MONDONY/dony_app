@@ -26945,6 +26945,24 @@ abstract class AppLocalizations {
   /// **'Au jour près sur votre profil public, pour rassurer ceux qui vous contactent.'**
   String get privacyShowLastSeenSubtitle;
 
+  /// Bandeau de l'accueil : colis à confirmer par le destinataire (YADONY-FLUTTER-PROD-12).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Un colis vous attend} other{{count} colis vous attendent}}'**
+  String receptionsPromptTitle(int count);
+
+  /// Bandeau de l'accueil, un seul colis à confirmer et prénom de l'expéditeur connu.
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} vous envoie un colis'**
+  String receptionsPromptFromSender(String name);
+
+  /// Sous-titre du bandeau « Un colis vous attend » de l'accueil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez qu\'il est bien pour vous.'**
+  String get receptionsPromptSubtitle;
+
   /// Titre de la section des colis que l'utilisateur va recevoir, onglet Suivi (receptions_section.dart).
   ///
   /// In fr, this message translates to:

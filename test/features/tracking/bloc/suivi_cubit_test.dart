@@ -1067,5 +1067,37 @@ void main() {
         ),
       );
     });
+
+    // YADONY-FLUTTER-PROD-12 : bandeau « Un colis vous attend » de l'accueil.
+    test('suiviSegmentFromQuery', () {
+      expect(suiviSegmentFromQuery('receptions'), SuiviTrackSegment.receptions);
+      expect(suiviSegmentFromQuery('envois'), SuiviTrackSegment.envois);
+      expect(suiviSegmentFromQuery('autre'), isNull);
+      expect(suiviSegmentFromQuery(null), isNull);
+    });
+
+    test('segment imposé par l\'URL : Suivre, gardé, sans analytics', () async {
+      final c = build()
+        ..start(canValidate: true)
+        ..applyRequestedSegment(SuiviTrackSegment.receptions);
+      expect(c.state.mode, SuiviMode.suivre);
+      expect(c.state.trackSegment, SuiviTrackSegment.receptions);
+
+      // Des envois existent : le défaut ne réécrit pas le segment demandé.
+      await c.loadShipments();
+      c.updateReceptionsCount(1);
+      expect(c.state.trackSegment, SuiviTrackSegment.receptions);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.suiviSegmentChanged,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    test('segment absent : rien ne change', () {
+      final c = build()..applyRequestedSegment(null);
+      expect(c.state.trackSegment, isNull);
+    });
   });
 }

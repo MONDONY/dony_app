@@ -24,6 +24,11 @@ class HiveService {
   static const String kIntentPromptCount = 'intent_prompt_count';
   static const String kIntentPromptLastAt = 'intent_prompt_last_at';
 
+  /// Colis à recevoir dont le bandeau « Un colis vous attend » de l'accueil a
+  /// été fermé (liste d'identifiants de colis, YADONY-FLUTTER-PROD-12).
+  static const String kReceptionsPromptDismissed =
+      'receptions_prompt_dismissed';
+
   // ── Préférences app ──────────────────────────────────────────────────────
   static const String kThemeMode = 'theme_mode'; // 'system' | 'light' | 'dark'
   static const String kLanguageCode = 'language_code'; // 'system' | 'fr' | 'en'
