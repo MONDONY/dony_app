@@ -38,12 +38,15 @@ Widget _wrap(Widget child, MockAuthBloc authBloc) {
   );
 }
 
-/// [EditPhoneScreen] dans un vrai GoRouter : « Contacter le support » pousse
+/// [home] (par défaut [EditPhoneScreen]) dans un vrai GoRouter : « Contacter le support » pousse
 /// `/support`, qui affiche ici l'origine et le message du brouillon reçu.
-Widget _routerWrap(MockAuthBloc authBloc) {
+Widget _routerWrap(
+  MockAuthBloc authBloc, {
+  Widget home = const EditPhoneScreen(),
+}) {
   final router = GoRouter(
     routes: [
-      GoRoute(path: '/', builder: (_, _) => const EditPhoneScreen()),
+      GoRoute(path: '/', builder: (_, _) => home),
       GoRoute(
         path: '/support',
         builder: (_, state) {
@@ -556,6 +559,90 @@ void main() {
 
       expect(find.text('Edit phone number'), findsOneWidget);
       expect(find.widgetWithText(DonyButton, 'Send code'), findsOneWidget);
+    });
+  });
+
+  /// Une adresse s'ajoute, jamais ne se remplace (409 `email-already-set`) :
+  /// un compte qui en porte déjà une ne voit plus de champ ni d'envoi de code.
+  group('EditEmailScreen — adresse déjà définie', () {
+    const userWithEmail = UserModel(
+      id: 'u1',
+      firstName: 'Ibrahima',
+      lastName: 'Diallo',
+      email: 'ibrahima@exemple.com',
+      roles: ['SENDER'],
+      kycStatus: 'NOT_STARTED',
+      status: 'ACTIVE',
+    );
+
+    testWidgets('affiche l\'adresse et l\'explication, sans champ ni envoi', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(userWithEmail),
+      );
+
+      await tester.pumpWidget(_wrap(const EditEmailScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ibrahima@exemple.com'), findsOneWidget);
+      expect(find.byKey(const Key('email-already-set-banner')), findsOneWidget);
+      expect(find.text('Adresse déjà définie'), findsOneWidget);
+      expect(find.byType(TextField), findsNothing);
+      expect(find.widgetWithText(DonyButton, 'Envoyer le code'), findsNothing);
+      verifyNever(() => mockAuthBloc.add(any()));
+    });
+
+    testWidgets('« Contacter le support » ouvre une demande préremplie', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(userWithEmail),
+      );
+
+      await tester.pumpWidget(
+        _routerWrap(mockAuthBloc, home: const EditEmailScreen()),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('email-already-set-support-cta')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('support:email_change:ACCOUNT'), findsOneWidget);
+      expect(find.textContaining('ibrahima@exemple.com'), findsOneWidget);
+    });
+
+    testWidgets('adresse vide : le formulaire d\'ajout reste proposé', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(
+          UserModel(
+            id: 'u1',
+            firstName: 'Ibrahima',
+            lastName: 'Diallo',
+            email: '  ',
+            roles: ['SENDER'],
+            kycStatus: 'NOT_STARTED',
+            status: 'ACTIVE',
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(_wrap(const EditEmailScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('email-already-set-banner')), findsNothing);
+      expect(
+        find.widgetWithText(DonyButton, 'Envoyer le code'),
+        findsOneWidget,
+      );
     });
   });
 }

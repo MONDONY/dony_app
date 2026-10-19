@@ -84,6 +84,13 @@ class EditEmailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // L'adresse identifie le compte Firebase : elle s'ajoute, jamais ne se
+    // remplace (409 `email-already-set`). Lue une fois à l'ouverture : la
+    // saisie ne doit pas basculer sur cette vue au moment où l'ajout réussit.
+    final existing = context.read<AuthBloc>().state.currentUser?.email?.trim();
+    if (existing != null && existing.isNotEmpty) {
+      return _EmailAlreadySetScreen(email: existing);
+    }
     final stepNotifier = ValueNotifier(_ContactStep.input);
     VoidCallback? submit;
 
@@ -119,6 +126,60 @@ class EditEmailScreen extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Origine analytics de la demande support ouverte depuis l'écran d'une adresse
+/// déjà définie ([SupportTicketDraft.origin]).
+const emailChangeSupportOrigin = 'email_change';
+
+/// Compte qui porte déjà une adresse : l'écran l'affiche et explique qu'elle ne
+/// se remplace pas, au lieu d'un champ qui enverrait un code pour rien avant le
+/// refus du serveur. Le changement passe par le support.
+class _EmailAlreadySetScreen extends StatelessWidget {
+  const _EmailAlreadySetScreen({required this.email});
+
+  final String email;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final tt = Theme.of(context).textTheme;
+    return Scaffold(
+      appBar: DonyAppBar(title: l.contactEditEmailTitle),
+      body: ListView(
+        padding: const EdgeInsets.all(DonySpacing.lg),
+        children: [
+          Text(l.profileFieldEmailAllCaps, style: tt.labelSmall),
+          const SizedBox(height: DonySpacing.xs),
+          SelectableText(
+            email,
+            key: const Key('email-already-set-address'),
+            style: tt.titleMedium,
+          ),
+          const SizedBox(height: DonySpacing.lg),
+          DonyStatusBanner(
+            key: const Key('email-already-set-banner'),
+            type: DonyStatusBannerType.info,
+            title: l.errorEmailAlreadySetTitle,
+            message: l.errorEmailAlreadySetMessage,
+            action: TextButton(
+              key: const Key('email-already-set-support-cta'),
+              onPressed: () => context.push(
+                '/support',
+                extra: SupportTicketDraft(
+                  category: 'ACCOUNT',
+                  subject: l.contactEmailChangeSupportSubject,
+                  message: l.contactEmailChangeSupportMessage(email),
+                  origin: emailChangeSupportOrigin,
+                ),
+              ),
+              child: Text(l.supportContactCta),
             ),
           ),
         ],

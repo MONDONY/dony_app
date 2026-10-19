@@ -542,6 +542,18 @@ abstract class AppLocalizations {
   /// **'Bonjour, je veux ajouter le numéro {phone} à mon compte, mais il est déjà associé à un autre compte Yadony. Pouvez-vous m\'aider à regrouper mes comptes ?'**
   String contactPhoneConflictSupportMessage(String phone);
 
+  /// Sujet prérempli du ticket support ouvert depuis l'écran Email quand une adresse est déjà associée au compte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer l\'adresse e-mail de mon compte'**
+  String get contactEmailChangeSupportSubject;
+
+  /// Message d'amorce prérempli, modifiable, du ticket support ouvert depuis l'écran Email d'un compte qui a déjà une adresse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour, je souhaite remplacer l\'adresse e-mail de mon compte ({email}) par une nouvelle adresse.'**
+  String contactEmailChangeSupportMessage(String email);
+
   /// No description provided for @errorSmsOtpDisabledTitle.
   ///
   /// In fr, this message translates to:
