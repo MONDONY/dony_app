@@ -1482,16 +1482,72 @@ void main() {
       ],
     );
 
+    for (final refunding in ['REFUND_PENDING', 'REFUNDING']) {
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        'remboursement en cours ($refunding) : état terminal, jamais '
+        'd\'attente sans fin ni payment_failed',
+        build: () {
+          when(() => repository.getStatus(supplementScope)).thenAnswer(
+            (_) async => MobileMoneyPaymentStatus(
+              subjectId: bidId,
+              paymentStatus: refunding,
+              deadlineAt: DateTime.now().add(const Duration(hours: 1)),
+              amount: 1500,
+            ),
+          );
+          return bloc();
+        },
+        seed: () => const MobileMoneyPaymentAwaitingConfirmation(pending),
+        act: (b) =>
+            b.add(const MobileMoneyStatusPolled(scope: supplementScope)),
+        expect: () => [isA<MobileMoneyPaymentExpired>()],
+        verify: (_) {
+          verifyNever(
+            () => analytics.logEvent(
+              AnalyticsEvents.paymentFailed,
+              properties: any(named: 'properties'),
+            ),
+          );
+          verifyNever(
+            () => analytics.logEvent(
+              AnalyticsEvents.mobileMoneyExpired,
+              properties: any(named: 'properties'),
+            ),
+          );
+        },
+      );
+    }
+
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'statut inconnu du back (remboursement en cours) : affichage « en '
-      'cours », sans planter ni relancer de catalogue',
+      'statut inconnu du back, échéance passée : expiration (le sondage '
+      's\'arrête), pas d\'attente sans fin',
       build: () {
         when(() => repository.getStatus(supplementScope)).thenAnswer(
           (_) async => MobileMoneyPaymentStatus(
             subjectId: bidId,
-            paymentStatus: 'REFUND_PENDING',
-            // Échéance passée : le statut inconnu prime sur l'expiration.
+            paymentStatus: 'SOMETHING_NEW',
             deadlineAt: DateTime(2020),
+            amount: 1500,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: supplementScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentExpired>(),
+      ],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'statut inconnu du back, échéance à venir : affichage « en cours », '
+      'sans planter ni relancer de catalogue',
+      build: () {
+        when(() => repository.getStatus(supplementScope)).thenAnswer(
+          (_) async => MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            paymentStatus: 'SOMETHING_NEW',
+            deadlineAt: DateTime.now().add(const Duration(hours: 1)),
             amount: 1500,
           ),
         );

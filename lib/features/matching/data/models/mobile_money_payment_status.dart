@@ -147,6 +147,11 @@ class MobileMoneyPaymentStatus extends Equatable {
   /// Paiement rendu au payeur (`REFUNDED`).
   bool get isRefunded => paymentStatus == 'REFUNDED';
 
+  /// Remboursement lancé mais pas encore abouti (`REFUND_PENDING`, ou toute
+  /// autre valeur `REFUND…` que le back ajouterait).
+  bool get isRefundInProgress =>
+      !isRefunded && (paymentStatus?.startsWith('REFUND') ?? false);
+
   /// `paymentStatus` fait partie du contrat connu de l'app (ou est absent).
   /// Faux pour une valeur ajoutée plus tard par le back : l'appelant se
   /// replie alors sur un affichage « en cours », sans planter.
@@ -155,6 +160,7 @@ class MobileMoneyPaymentStatus extends Equatable {
     'PENDING' ||
     'ESCROW' ||
     'RELEASED' ||
+    'REFUND_PENDING' ||
     'REFUNDED' ||
     'CANCELLED' => true,
     _ => false,

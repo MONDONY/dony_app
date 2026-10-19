@@ -338,8 +338,9 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               phoneController: _payerPhoneController,
               onRetry: () => _retryToChooseOperator(_payerPhoneController.text),
             ),
-            MobileMoneyPaymentExpired() => _ExpiredBody(
+            final MobileMoneyPaymentExpired s => _ExpiredBody(
               scope: widget.scope,
+              status: s.status,
               onBack: () => _close(context, paid: false),
             ),
             MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
@@ -381,9 +382,15 @@ class _CountdownLabel extends StatelessWidget {
 
   static const _urgentThreshold = Duration(minutes: 5);
 
+  /// `mm:ss` sous une heure (dépôt d'un colis, 30 min) ; `h:mm:ss` au-delà
+  /// (échéance de 2 h d'un supplément), jamais « 120:00 ».
   static String _format(Duration d) {
-    final mm = d.inMinutes.toString().padLeft(2, '0');
     final ss = (d.inSeconds % 60).toString().padLeft(2, '0');
+    if (d.inHours >= 1) {
+      final mm = (d.inMinutes % 60).toString().padLeft(2, '0');
+      return '${d.inHours}:$mm:$ss';
+    }
+    final mm = d.inMinutes.toString().padLeft(2, '0');
     return '$mm:$ss';
   }
 
@@ -934,13 +941,22 @@ class _PhoneRequiredBody extends StatelessWidget {
 /// texte dépend de la portée : un bid expiré est annulé côté back (il faut
 /// refaire une offre), alors qu'un fil revient simplement à « à payer ».
 class _ExpiredBody extends StatelessWidget {
-  const _ExpiredBody({required this.scope, required this.onBack});
+  const _ExpiredBody({
+    required this.scope,
+    required this.status,
+    required this.onBack,
+  });
   final MobileMoneyScope scope;
+  final MobileMoneyPaymentStatus status;
   final VoidCallback onBack;
 
   String _message(AppLocalizations l) => switch (scope) {
     BidMobileMoneyScope() => l.mobileMoneyExpiredBid,
     NegotiationMobileMoneyScope() => l.mobileMoneyExpiredNegotiation,
+    SupplementMobileMoneyScope() when status.isRefunded =>
+      l.supplementSenderRefunded,
+    SupplementMobileMoneyScope() when status.isRefundInProgress =>
+      l.supplementSenderRefundPending,
     SupplementMobileMoneyScope() => l.mobileMoneyExpiredSupplement,
   };
 

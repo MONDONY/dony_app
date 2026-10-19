@@ -273,7 +273,11 @@ class MobileMoneyPaymentBloc
         'reason': 'declined',
         'error_code': failureCode.isEmpty ? 'unknown' : failureCode,
       });
-    } else if (next is MobileMoneyPaymentExpired && !wasExpired) {
+    } else if (next is MobileMoneyPaymentExpired &&
+        !wasExpired &&
+        // Un remboursement n'est pas un paiement échoué : il a abouti avant.
+        !next.status.isRefunded &&
+        !next.status.isRefundInProgress) {
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.mobileMoneyExpired,
@@ -351,9 +355,10 @@ class MobileMoneyPaymentBloc
   /// aucun dépôt n'a jamais été tenté : il faut en initier un (ou, pour un
   /// bid, choisir d'abord un opérateur).
   ///
-  /// Supplément : un supplément remboursé n'est plus à payer (fenêtre close),
-  /// et un statut que l'app ne connaît pas encore (back plus récent, ex.
-  /// remboursement en cours) s'affiche « en cours » plutôt que de relancer
+  /// Supplément : un supplément remboursé ou en cours de remboursement n'est
+  /// plus à payer (fenêtre close, sondage arrêté). Un statut que l'app ne
+  /// connaît pas encore (back plus récent) passe d'abord par l'échéance :
+  /// échu, il expire ; sinon il s'affiche « en cours » plutôt que de relancer
   /// un catalogue que le back refuserait.
   MobileMoneyPaymentState? _stateFor(
     MobileMoneyPaymentStatus s,
@@ -361,7 +366,10 @@ class MobileMoneyPaymentBloc
   ) {
     if (s.isEscrowed) return MobileMoneyPaymentEscrowed(s);
     if (scope is SupplementMobileMoneyScope) {
-      if (s.isRefunded) return MobileMoneyPaymentExpired(s);
+      if (s.isRefunded || s.isRefundInProgress) {
+        return MobileMoneyPaymentExpired(s);
+      }
+      if (s.isExpired(_now())) return MobileMoneyPaymentExpired(s);
       if (!s.hasKnownPaymentStatus) {
         return MobileMoneyPaymentAwaitingConfirmation(s);
       }

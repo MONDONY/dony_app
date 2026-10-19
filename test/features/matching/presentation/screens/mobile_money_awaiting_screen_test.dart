@@ -1806,6 +1806,65 @@ void main() {
       expect(await poppedResult, isFalse);
     });
 
+    for (final (status, text) in [
+      ('REFUND_PENDING', 'Remboursement du supplément en cours'),
+      ('REFUNDED', 'Le supplément vous a été remboursé'),
+    ]) {
+      testWidgets('fenêtre close sur un remboursement ($status) : $text', (
+        tester,
+      ) async {
+        stub(
+          MobileMoneyPaymentExpired(
+            MobileMoneyPaymentStatus(
+              subjectId: bidId,
+              paymentStatus: status,
+              amount: 1500,
+            ),
+          ),
+        );
+
+        await pumpScreen(tester, scope: supplementScope);
+
+        expect(find.text(text), findsOneWidget);
+        expect(find.textContaining('plus à payer'), findsNothing);
+      });
+    }
+
+    testWidgets('compte à rebours au-delà d\'une heure : h:mm:ss', (
+      tester,
+    ) async {
+      stub(
+        MobileMoneyPaymentAwaitingConfirmation(
+          MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            paymentStatus: 'PENDING',
+            deadlineAt: DateTime.now().toUtc().add(const Duration(hours: 2)),
+            amount: 1500,
+            deposit: const MobileMoneyDeposit(
+              id: 'deposit-s',
+              status: MobileMoneyDepositStatus.accepted,
+              providerLabel: 'Orange Money',
+            ),
+          ),
+        ),
+      );
+
+      await pumpScreen(tester, settle: false, scope: supplementScope);
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Text &&
+              w.data != null &&
+              RegExp(r'^Temps restant [12]:[0-5]\d:[0-5]\d$').hasMatch(w.data!),
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('120:'), findsNothing);
+      expect(find.textContaining('119:'), findsNothing);
+    });
+
     testWidgets('analytics mobile_money_awaiting : scope bid_supplement', (
       tester,
     ) async {
