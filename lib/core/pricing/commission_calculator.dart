@@ -150,11 +150,7 @@ CommissionResult computeCommission(
   final currency = _currencyOf(currencyCode);
   final n = _Dec.fromDouble(net).roundHalfUp(currency.minorUnit);
   if (n.signum <= 0) {
-    throw ArgumentError.value(
-      net,
-      'net',
-      'Le net doit être strictement positif',
-    );
+    throw ArgumentError.value(net, 'net', 'Net must be strictly positive');
   }
   final c = _commission(n, currency, grid, reductions);
   return CommissionResult(
@@ -205,7 +201,7 @@ double netForGross(
 SupportedCurrency _currencyOf(String code) {
   final currency = SupportedCurrency.fromCode(code);
   if (currency == null) {
-    throw StateError('Devise hors catalogue pour la commission : $code');
+    throw StateError('Unsupported commission currency: $code');
   }
   return currency;
 }
@@ -247,7 +243,7 @@ _Commission _commission(
   final minimumValue = grid.minimumFor(currency.code);
   if (minimumValue == null) {
     throw StateError(
-      'Grille de commission ${grid.id} sans minimum pour ${currency.code}',
+      'Commission grid ${grid.id} has no minimum for ${currency.code}',
     );
   }
   final minimum = _Dec.fromDouble(minimumValue);
@@ -308,7 +304,7 @@ class _Dec {
     final m = _plain.firstMatch(text.trim());
     if (m == null ||
         ((m.group(2) ?? '').isEmpty && (m.group(3) ?? '').isEmpty)) {
-      throw FormatException('Nombre décimal invalide', text);
+      throw FormatException('Invalid decimal number', text);
     }
     final sign = m.group(1) == '-' ? BigInt.from(-1) : BigInt.one;
     final intPart = m.group(2) ?? '';
@@ -383,7 +379,7 @@ class _Dec {
 double _jsonDouble(Object? value) {
   if (value is num) return value.toDouble();
   if (value is String) return double.parse(value);
-  throw FormatException('Valeur numérique attendue', value);
+  throw FormatException('Numeric value expected', value);
 }
 
 final _timeZoneSuffix = RegExp(
