@@ -6,7 +6,8 @@ void main() {
   test('défauts = formulaire vierge', () {
     final f = TripFormFields();
     expect(f.currency.value, SupportedCurrency.eur);
-    expect(f.availableKg.value, 15);
+    // Une valise de 23 kg, comme le compteur (YADONY-FLUTTER-PROD-18).
+    expect(f.availableKg.value, 23);
     expect(f.priceOption.value, -1);
     expect(f.pricePerKg, isNull);
     expect(f.kgPriceEnabled.value, isTrue);

@@ -26,6 +26,7 @@ import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_legs_cubit.dart';
@@ -360,6 +361,8 @@ AnnouncementModel _makeFullAnnouncement({
   bool? currencyEditable,
   DateTime? departureDate,
   DateTime? handoverDeadline,
+  double availableKg = 10.0,
+  String? capacityUnit,
 }) => AnnouncementModel(
   id: 'ann-full-1',
   travelerId: 'trav-1',
@@ -369,7 +372,7 @@ AnnouncementModel _makeFullAnnouncement({
   // 22:00 departure → handoverEnd 18:00 is safely before departure
   departureTime: '22:00',
   arrivalTime: '10:30',
-  availableKg: 10.0,
+  availableKg: availableKg,
   totalKg: 23.0,
   pricePerKg: pricePerKg,
   status: status,
@@ -394,6 +397,7 @@ AnnouncementModel _makeFullAnnouncement({
   refusedTypes: const ['Produits dangereux'],
   currency: currency,
   currencyEditable: currencyEditable,
+  capacityUnit: capacityUnit,
 );
 
 /// Returns a minimal `LockedTripContext` suitable for locked-mode tests.
@@ -4724,6 +4728,222 @@ void main() {
   });
 
   // ── Group: Créer avec l'IA (formulaires IA) ───────────────────────────────
+
+  // ── YADONY-FLUTTER-PROD-18 : valise de 23 kg envoyée à 15 kg ─────────────
+  // Le compteur de valises affiche le bloc, la soumission lit le notifier de
+  // l'écran : les deux doivent partir de la même valeur, et un préremplissage
+  // (modèle, brouillon, édition) ne doit pas être écrasé par ce défaut.
+
+  group('CreateTripScreen — capacité par défaut (PROD-18)', () {
+    late _MockAnnouncementBloc announcementBloc;
+
+    setUp(() {
+      announcementBloc = _MockAnnouncementBloc();
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+      when(
+        () => announcementBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
+      if (getIt.isRegistered<AnnouncementBloc>()) {
+        getIt.unregister<AnnouncementBloc>();
+      }
+      getIt.registerFactory<AnnouncementBloc>(() => announcementBloc);
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<AnnouncementBloc>()) {
+        getIt.unregister<AnnouncementBloc>();
+      }
+      getIt.registerFactory<AnnouncementBloc>(() {
+        final b = _MockAnnouncementBloc();
+        when(() => b.state).thenReturn(AnnouncementInitial());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+    });
+
+    Future<void> pumpScreen(WidgetTester tester, CreateTripArgs? args) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
+      // Post-frames : modèle appliqué, brouillon repris, unité de l'édition.
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    AnnouncementFormBloc formBlocOf(WidgetTester tester) =>
+        BlocProvider.of<AnnouncementFormBloc>(
+          tester.element(find.byType(TrajetStep, skipOffstage: false)),
+        );
+
+    double notifierKg(WidgetTester tester) => tester
+        .widget<PrixConditionsStep>(
+          find.byType(PrixConditionsStep, skipOffstage: false),
+        )
+        .availableKgNotifier
+        .value;
+
+    /// Kg que la création enverrait (cf. `handoverDeadlineOf`).
+    double kgToSubmit(WidgetTester tester) {
+      final state = tester.state<State<StatefulWidget>>(
+        find.byKey(const Key('trip-form-content')),
+      );
+      return (state as dynamic).availableKgToSubmitForTest as double;
+    }
+
+    Future<void> send(WidgetTester tester, AnnouncementFormEvent e) async {
+      formBlocOf(tester).add(e);
+      await tester.pump();
+      await tester.pump();
+    }
+
+    testWidgets('création sans toucher la capacité : une valise de 23 kg '
+        'affichée, dans le bloc et envoyée', (tester) async {
+      await pumpScreen(tester, null);
+
+      final bloc = formBlocOf(tester);
+      expect(bloc.state.capacityUnit, CapacityUnit.suitcase23kg);
+      expect(bloc.state.availableKg, 23);
+      expect(notifierKg(tester), 23);
+      expect(kgToSubmit(tester), 23);
+    });
+
+    testWidgets('valise de 32 kg choisie : 32 kg envoyés', (tester) async {
+      await pumpScreen(tester, null);
+
+      await send(tester, const CapacityUnitChanged(CapacityUnit.suitcase32kg));
+
+      expect(formBlocOf(tester).state.availableKg, 32);
+      expect(notifierKg(tester), 32);
+      expect(kgToSubmit(tester), 32);
+    });
+
+    testWidgets('deux valises au compteur : 46 kg envoyés', (tester) async {
+      await pumpScreen(tester, null);
+
+      await send(tester, const AvailableKgChanged(46));
+
+      expect(kgToSubmit(tester), 46);
+    });
+
+    testWidgets('unité valise : un kg hors multiple est ramené à un nombre '
+        'entier de valises', (tester) async {
+      await pumpScreen(tester, null);
+
+      await send(tester, const AvailableKgChanged(15));
+      expect(kgToSubmit(tester), 23);
+
+      await send(tester, const AvailableKgChanged(40));
+      expect(kgToSubmit(tester), 46);
+
+      await send(tester, const CapacityUnitChanged(CapacityUnit.suitcase32kg));
+      await send(tester, const AvailableKgChanged(50));
+      expect(kgToSubmit(tester), 64);
+    });
+
+    testWidgets('kg personnalisé puis kg libre : le kg saisi part tel quel', (
+      tester,
+    ) async {
+      await pumpScreen(tester, null);
+
+      await send(tester, const CapacityUnitChanged(CapacityUnit.custom));
+      // Le champ personnalisé part du défaut, pas de 1 kg ni de 15 kg.
+      expect(formBlocOf(tester).state.availableKg, 23);
+      await send(tester, const AvailableKgChanged(17));
+      expect(kgToSubmit(tester), 17);
+
+      await send(tester, const CapacityUnitChanged(CapacityUnit.kgFree));
+      expect(kgToSubmit(tester), 17);
+    });
+
+    testWidgets('modèle « valise 23 kg, 46 kg » : 46 kg, pas le défaut', (
+      tester,
+    ) async {
+      registerCurrencyPreference('EUR');
+      await pumpScreen(
+        tester,
+        const CreateTripArgs(
+          template: TripTemplate(
+            id: 'tpl-46',
+            label: 'Deux valises',
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            transportMode: 'PLANE',
+            capacityUnit: 'SUITCASE_23KG',
+            availableKg: 46,
+            pricePerKg: 8,
+            acceptedCategories: [],
+          ),
+        ),
+      );
+
+      expect(formBlocOf(tester).state.availableKg, 46);
+      expect(notifierKg(tester), 46);
+      expect(kgToSubmit(tester), 46);
+
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('brouillon à 46 kg : 46 kg, pas le défaut', (tester) async {
+      await pumpScreen(
+        tester,
+        const CreateTripArgs(
+          resumeDraft: TripFormDraft(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            transportMode: 'PLANE',
+            capacityUnit: 'SUITCASE_23KG',
+            availableKg: 46,
+          ),
+        ),
+      );
+
+      expect(formBlocOf(tester).state.availableKg, 46);
+      expect(notifierKg(tester), 46);
+      expect(kgToSubmit(tester), 46);
+
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    Future<AnnouncementUpdateRequested> submitEdit(
+      WidgetTester tester,
+      AnnouncementModel announcement,
+    ) async {
+      await pumpScreen(tester, CreateTripArgs(announcement: announcement));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
+      return verify(
+        () => announcementBloc.add(captureAny()),
+      ).captured.whereType<AnnouncementUpdateRequested>().single;
+    }
+
+    testWidgets('édition d\'un trajet en partie réservé (10 kg restants sur '
+        'une valise) : 10 kg renvoyés, ni le défaut ni une valise pleine', (
+      tester,
+    ) async {
+      final sent = await submitEdit(
+        tester,
+        _makeFullAnnouncement(capacityUnit: 'SUITCASE_23KG'),
+      );
+      expect(sent.availableKg, 10);
+      expect(sent.capacityUnit, 'SUITCASE_23KG');
+    });
+
+    testWidgets('édition d\'un trajet de deux valises : 46 kg renvoyés', (
+      tester,
+    ) async {
+      final sent = await submitEdit(
+        tester,
+        _makeFullAnnouncement(availableKg: 46, capacityUnit: 'SUITCASE_23KG'),
+      );
+      expect(sent.availableKg, 46);
+    });
+  });
 
   group('CreateTripScreen — Créer avec l’IA', () {
     final departure = isoDate(DateTime.now().add(const Duration(days: 30)));

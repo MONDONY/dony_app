@@ -73,4 +73,28 @@ void main() {
       },
     );
   });
+
+  // YADONY-FLUTTER-PROD-18 : le défaut et le kg envoyé suivent le compteur.
+  group('capacité par défaut et normalisation', () {
+    test('un formulaire vierge part d\'une valise de 23 kg', () {
+      const s = AnnouncementFormState();
+      expect(s.capacityUnit, defaultCapacityUnit);
+      expect(defaultCapacityUnit.maxKg, defaultAvailableKg);
+      expect(defaultAvailableKg, 23);
+    });
+
+    test('valise : ramené à un nombre entier de valises, au moins une', () {
+      expect(CapacityUnit.suitcase23kg.normalizeKg(15), 23);
+      expect(CapacityUnit.suitcase23kg.normalizeKg(23), 23);
+      expect(CapacityUnit.suitcase23kg.normalizeKg(40), 46);
+      expect(CapacityUnit.suitcase23kg.normalizeKg(1), 23);
+      expect(CapacityUnit.suitcase32kg.normalizeKg(30), 32);
+      expect(CapacityUnit.suitcase32kg.normalizeKg(64), 64);
+    });
+
+    test('kg libre et personnalisé : inchangés', () {
+      expect(CapacityUnit.custom.normalizeKg(17), 17);
+      expect(CapacityUnit.kgFree.normalizeKg(1), 1);
+    });
+  });
 }

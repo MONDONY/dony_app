@@ -35,7 +35,30 @@ extension CapacityUnitWire on CapacityUnit {
         return null;
     }
   }
+
+  /// Ramène [kg] à un nombre entier de valises (au moins une) pour les
+  /// unités valise, laisse les autres unités telles quelles.
+  ///
+  /// Le compteur de valises affiche déjà `round(kg / maxKg)` valises : un
+  /// trajet ne doit jamais partir avec un poids que l'écran ne montrait pas
+  /// (YADONY-FLUTTER-PROD-18, valise de 23 kg envoyée à 15 kg).
+  double normalizeKg(double kg) {
+    final unitKg = maxKg;
+    if (unitKg == null) return kg;
+    final count = (kg / unitKg).round().clamp(1, 999999);
+    return count * unitKg;
+  }
 }
+
+/// Unité de capacité d'un formulaire de trajet vierge.
+const CapacityUnit defaultCapacityUnit = CapacityUnit.suitcase23kg;
+
+/// Kg disponibles d'un formulaire de trajet vierge : une valise de
+/// [defaultCapacityUnit]. Les notifiers de kg des écrans partent de cette
+/// valeur, la même que celle affichée par le compteur de valises : un écart
+/// entre les deux faisait publier 15 kg pour une valise de 23 kg
+/// (YADONY-FLUTTER-PROD-18).
+const double defaultAvailableKg = 23.0;
 
 class AnnouncementFormState extends Equatable {
   final String? departureCity;
@@ -84,7 +107,7 @@ class AnnouncementFormState extends Equatable {
     this.departureDate,
     this.pricePerKg,
     this.availableKg,
-    this.capacityUnit = CapacityUnit.suitcase23kg,
+    this.capacityUnit = defaultCapacityUnit,
     this.description,
     this.priceWarning,
     this.isSubmitting = false,

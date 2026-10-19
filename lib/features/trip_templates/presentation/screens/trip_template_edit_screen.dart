@@ -91,6 +91,15 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       // modèle enregistré avant une restriction de zone CFA ne doit pas
       // rester coché.
       _onCurrencyChanged();
+    } else {
+      // Nouveau modèle : le kg par défaut part tout de suite dans le bloc,
+      // que le compteur de valises affiche. Sans cet envoi, le bloc restait
+      // à `null` (compteur sur 23 kg) et le modèle s'enregistrait avec le
+      // défaut du notifier (YADONY-FLUTTER-PROD-18).
+      final bloc = context.read<AnnouncementFormBloc>();
+      if (bloc.state.availableKg == null) {
+        bloc.add(AvailableKgChanged(_fields.availableKg.value));
+      }
     }
     _labelCtrl.addListener(_recomputeCanContinue);
     _fields.arrivalTime.addListener(_onArrivalTimeChanged);

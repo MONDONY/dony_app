@@ -701,6 +701,41 @@ void main() {
     });
 
     testWidgets(
+      'nouveau modèle sans toucher la capacité : une valise de 23 kg dans '
+      'le payload, pas 15 kg (YADONY-FLUTTER-PROD-18)',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+        await tester.pump(const Duration(milliseconds: 600));
+        final fields =
+            (tester.state<State<TripTemplateEditScreen>>(
+                          find.byType(TripTemplateEditScreen),
+                        )
+                        as dynamic)
+                    .fieldsForTest
+                as TripFormFields;
+        expect(fields.availableKg.value, 23);
+        fields.selectPrice(6.0);
+
+        await goToStep(tester, 2);
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Enregistrer le modèle'),
+        );
+        await tester.pump();
+
+        final captured = verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<TripTemplateCreated>().single;
+        expect(captured.data['capacityUnit'], 'SUITCASE_23KG');
+        expect(captured.data['availableKg'], 23);
+      },
+    );
+
+    testWidgets(
       'changer la capacité à l\'étape 1 atteint le payload (constat #1 — '
       'CapacityControl écrivait dans le bloc sans jamais être relu)',
       (tester) async {
