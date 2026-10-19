@@ -21487,4 +21487,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String walletTopupAmountAtMost(String max) {
     return 'Au plus $max';
   }
+
+  @override
+  String listPriceServiceFeeSuffix(String minimum) {
+    return '+ frais de service Yadony (min. $minimum)';
+  }
+
+  @override
+  String get listPriceServiceFeeShortSuffix => '+ frais de service';
+
+  @override
+  String get serviceFeeMinimumTag => '(minimum)';
 }

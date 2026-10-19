@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/owner_views_label.dart';
@@ -170,6 +171,12 @@ class TravelerCard extends StatelessWidget {
         : !announcement.hasKgPrice
         ? l.tripPosterPriceUnavailable
         : '${formatPriceIn(senderPricePerKg!, announcement.currency)}/kg';
+    // Sous grille, le prix au kilo est le net du voyageur : les frais de
+    // service s'y ajoutent. Seulement quand un vrai prix au kilo est affiché.
+    final feeSuffix =
+        announcement.pricingMode != 'MIXED' && announcement.hasKgPrice
+        ? listPriceFeeSuffix(l, announcement.currency)
+        : null;
 
     return _PressableCard(
           onTap: onTap,
@@ -337,6 +344,16 @@ class TravelerCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
+                          if (feeSuffix != null)
+                            Text(
+                              feeSuffix,
+                              key: const Key('traveler-card-fee-suffix'),
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                           // Mode MIXED : le prix est une grille, pas un montant
                           // unique au kilo, donc pas d'équivalent converti ici.
                           if (announcement.pricingMode != 'MIXED')

@@ -4,6 +4,7 @@ import 'package:dony/features/matching/presentation/widgets/grid_item_selection_
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 Widget _wrap(Widget child) {
@@ -336,6 +337,48 @@ void main() {
 
       expect(find.text('Available items'), findsOneWidget);
       expect(find.text('Confirm selection'), findsOneWidget);
+    });
+
+    testWidgets('total sous grille : 1 article à 5 € → 6,00 €', (tester) async {
+      useTestCommissionGrid();
+      const cheap = [
+        AnnouncementGridItemModel(
+          id: 'item-1',
+          label: 'Téléphone',
+          unitPriceNet: 5.0,
+          unitPriceDisplay: 5.0,
+        ),
+      ];
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () => GridItemSelectionSheet.show(
+                  context,
+                  items: cheap,
+                  initialQuantities: {},
+                  corridor: 'Paris → Dakar',
+                ),
+                child: const Text('Ouvrir'),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('grid-item-add-item-1')));
+      await tester.pump();
+
+      // Net 5 € + frais de service au minimum de 1 € : 7 % de 5 € (0,35 €)
+      // ne couvre pas le plancher.
+      expect(find.byKey(const Key('grid-sheet-total')), findsOneWidget);
+      expect(find.textContaining('6'), findsWidgets);
+      final total = tester.widget<Text>(
+        find.byKey(const Key('grid-sheet-total')),
+      );
+      expect(total.data, anyOf('6,00\u00A0€', '6\u00A0€'));
     });
   });
 }

@@ -37,6 +37,24 @@ class TripMatchCard extends StatelessWidget {
   static String _priceStr(TripMatchModel match) =>
       '${formatPriceIn(match.pricePerKg!, match.currency)}/kg';
 
+  /// Mention des frais de service sous le prix au kilo, vide sans grille.
+  static List<Widget> _feeSuffix(BuildContext context, TripMatchModel match) {
+    final suffix = listPriceFeeSuffix(context.l10n, match.currency);
+    if (suffix == null) return const [];
+    final tt = Theme.of(context).textTheme;
+    return [
+      Text(
+        suffix,
+        key: const Key('trip-match-fee-suffix'),
+        style: tt.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -191,6 +209,11 @@ class TripMatchCard extends StatelessWidget {
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
+                                  // Sous grille, ce prix au kilo est le net du
+                                  // voyageur : les frais de service s'y ajoutent.
+                                  if (!match.gridOnly &&
+                                      match.pricePerKg != null)
+                                    ..._feeSuffix(context, match),
                                 ],
                               ),
                             ),

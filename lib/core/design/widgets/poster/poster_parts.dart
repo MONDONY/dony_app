@@ -194,6 +194,7 @@ class PosterTile extends StatelessWidget {
     required this.label,
     required this.value,
     this.detail,
+    this.note,
     this.background = PosterPalette.tile,
     this.valueColor = PosterPalette.ink,
     this.labelColor = PosterPalette.muted,
@@ -203,6 +204,10 @@ class PosterTile extends StatelessWidget {
   final String label;
   final String value;
   final String? detail;
+
+  /// Mention de fin sous [detail], sur deux lignes au plus (frais de service
+  /// qui s'ajoutent à un prix net).
+  final String? note;
   final Color background;
   final Color valueColor;
   final Color labelColor;
@@ -214,6 +219,7 @@ class PosterTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final detail = this.detail;
+    final note = this.note;
     final gauge = this.gauge;
     return Container(
       padding: const EdgeInsets.fromLTRB(9, 8, 9, 8),
@@ -261,6 +267,20 @@ class PosterTile extends StatelessWidget {
             Text(
               detail,
               maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: text.bodySmall?.copyWith(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w600,
+                color: labelColor,
+              ),
+            ),
+          ],
+          if (note != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              note,
+              key: const Key('poster-tile-note'),
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: text.bodySmall?.copyWith(
                 fontSize: 9.5,

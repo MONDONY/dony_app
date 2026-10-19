@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
@@ -49,10 +50,17 @@ class GridItemSelectionSheet {
           );
           // Total courant : sans lui, la feuille demandait de confirmer une
           // sélection sans jamais dire ce qu'elle coûte.
-          final totalPrice = items.fold<double>(0, (sum, item) {
+          final subtotal = items.fold<double>(0, (sum, item) {
             final qty = quantities[item.id] ?? 0;
             return sum + qty * item.unitPriceDisplay;
           });
+          // Sous grille, les prix des articles sont des nets et les frais de
+          // service se calculent sur le total (palier, minimum) : la somme des
+          // lignes ne suffit plus. Sans grille, les prix portent déjà la
+          // commission.
+          final totalPrice = commissionGridActive
+              ? senderPriceForNet(subtotal, currency).gross
+              : subtotal;
 
           return Column(
             mainAxisSize: MainAxisSize.min,

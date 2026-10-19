@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -30,6 +31,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final gridOnly = announcement.gridOnly;
     final isFull = announcement.availableKg <= 0;
+    final feeSuffix = listPriceFeeSuffix(l, announcement.currency);
 
     return DonyCard(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -46,42 +48,62 @@ class TravelerAnnouncementCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Flexible(
-                      child: Text(
-                        // Trajet tarifé à la grille seulement : son prix au
-                        // kilo vaut 0, jamais « 0 € /kg » (FLUTTER-PC).
-                        gridOnly
-                            ? gridPriceLabel(
-                                l,
-                                announcement.minGridUnitPriceDisplay,
-                                announcement.currency,
-                              )
-                            : formatPriceIn(
-                                netToSenderPrice(announcement.pricePerKg),
-                                announcement.currency,
-                              ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            // Trajet tarifé à la grille seulement : son prix au
+                            // kilo vaut 0, jamais « 0 € /kg » (FLUTTER-PC).
+                            gridOnly
+                                ? gridPriceLabel(
+                                    l,
+                                    announcement.minGridUnitPriceDisplay,
+                                    announcement.currency,
+                                  )
+                                : formatPriceIn(
+                                    listUnitPrice(announcement.pricePerKg),
+                                    announcement.currency,
+                                  ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                        if (!gridOnly) ...[
+                          const SizedBox(width: DonySpacing.xxs),
+                          Text(
+                            '/kg',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    if (!gridOnly) ...[
-                      const SizedBox(width: DonySpacing.xxs),
+                    // Sous grille, le prix au kilo est le net du voyageur : les
+                    // frais de service s'y ajoutent.
+                    if (!gridOnly && feeSuffix != null)
                       Text(
-                        '/kg',
+                        feeSuffix,
+                        key: const Key('announcement-card-fee-suffix'),
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
                   ],
                 ),
               ),

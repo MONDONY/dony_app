@@ -34695,6 +34695,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Au plus {max}'**
   String walletTopupAmountAtMost(String max);
+
+  /// Mention sous le prix au kilo d'une annonce, d'une affiche ou d'une carte de trajet quand une grille de commission est en vigueur (pricing_labels.dart). {minimum} : frais de service minimum formatés dans la devise du prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'+ frais de service Yadony (min. {minimum})'**
+  String listPriceServiceFeeSuffix(String minimum);
+
+  /// Mention courte sous le prix au kilo sur la carte des trajets, sans le minimum, faute de place (pricing_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'+ frais de service'**
+  String get listPriceServiceFeeShortSuffix;
+
+  /// Précision accolée à un montant de frais de service relevé au minimum de la grille (pricing_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'(minimum)'**
+  String get serviceFeeMinimumTag;
 }
 
 class _AppLocalizationsDelegate

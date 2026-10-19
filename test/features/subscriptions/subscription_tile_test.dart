@@ -4,6 +4,7 @@ import 'package:dony/features/subscriptions/presentation/widgets/subscription_ti
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/commission_grid_test_doubles.dart';
 import '../../helpers/l10n_test_helpers.dart';
 
 SubscriptionItem _item({
@@ -337,5 +338,23 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('sous grille, le dernier trajet porte les frais de service', (
+    tester,
+  ) async {
+    useTestCommissionGrid();
+    await tester.pumpWidget(host(_item(last: trajet())));
+    expect(
+      find.text('+ frais de service Yadony (min. 1\u00A0€)'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('sans grille, aucune mention des frais de service', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(_item(last: trajet())));
+    expect(find.byKey(const Key('subscription-tile-fee-suffix')), findsNothing);
   });
 }

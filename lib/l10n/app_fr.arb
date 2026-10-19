@@ -22131,5 +22131,11 @@
   "walletTopupAmountAtLeast": "Au moins {min}",
   "@walletTopupAmountAtLeast": {"description": "Seule borne publiée par l'opérateur : le minimum, sous le montant saisi (wallet_topup_amount_screen.dart). {min} : montant formaté.", "placeholders": {"min": {"type": "String"}}},
   "walletTopupAmountAtMost": "Au plus {max}",
-  "@walletTopupAmountAtMost": {"description": "Seule borne publiée par l'opérateur : le maximum, sous le montant saisi (wallet_topup_amount_screen.dart). {max} : montant formaté.", "placeholders": {"max": {"type": "String"}}}
+  "@walletTopupAmountAtMost": {"description": "Seule borne publiée par l'opérateur : le maximum, sous le montant saisi (wallet_topup_amount_screen.dart). {max} : montant formaté.", "placeholders": {"max": {"type": "String"}}},
+  "listPriceServiceFeeSuffix": "+ frais de service Yadony (min. {minimum})",
+  "@listPriceServiceFeeSuffix": {"description": "Mention sous le prix au kilo d'une annonce, d'une affiche ou d'une carte de trajet quand une grille de commission est en vigueur (pricing_labels.dart). {minimum} : frais de service minimum formatés dans la devise du prix.", "placeholders": {"minimum": {"type": "String"}}},
+  "listPriceServiceFeeShortSuffix": "+ frais de service",
+  "@listPriceServiceFeeShortSuffix": {"description": "Mention courte sous le prix au kilo sur la carte des trajets, sans le minimum, faute de place (pricing_labels.dart)."},
+  "serviceFeeMinimumTag": "(minimum)",
+  "@serviceFeeMinimumTag": {"description": "Précision accolée à un montant de frais de service relevé au minimum de la grille (pricing_labels.dart)."}
 }

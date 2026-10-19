@@ -10939,5 +10939,9 @@
   "walletTopupAmountAtLeast": "At least {min}",
   "@walletTopupAmountAtLeast": {"placeholders": {"min": {"type": "String"}}},
   "walletTopupAmountAtMost": "At most {max}",
-  "@walletTopupAmountAtMost": {"placeholders": {"max": {"type": "String"}}}
+  "@walletTopupAmountAtMost": {"placeholders": {"max": {"type": "String"}}},
+  "listPriceServiceFeeSuffix": "+ Yadony service fee (min. {minimum})",
+  "@listPriceServiceFeeSuffix": {"placeholders": {"minimum": {"type": "String"}}},
+  "listPriceServiceFeeShortSuffix": "+ service fee",
+  "serviceFeeMinimumTag": "(minimum)"
 }

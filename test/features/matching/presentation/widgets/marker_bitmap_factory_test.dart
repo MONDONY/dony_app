@@ -172,6 +172,40 @@ void main() {
       expect(identical(a, b), isTrue);
     });
 
+    test('la mention « + frais de service » change la pastille', () async {
+      final plain = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12,
+        gridLabel: 'Par article',
+      );
+      final withFee = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12,
+        gridLabel: 'Par article',
+        feeSuffix: '+ frais de service',
+      );
+      final withFeeAgain = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12,
+        gridLabel: 'Par article',
+        feeSuffix: '+ frais de service',
+      );
+      expect(identical(plain, withFee), isFalse);
+      expect(identical(withFee, withFeeAgain), isTrue);
+    });
+
+    test('la pile de pastilles porte aussi la mention', () async {
+      final plain = await MarkerBitmapFactory.stackedPricePill(
+        pricePerKg: 12,
+        count: 3,
+        gridLabel: 'Par article',
+      );
+      final withFee = await MarkerBitmapFactory.stackedPricePill(
+        pricePerKg: 12,
+        count: 3,
+        gridLabel: 'Par article',
+        feeSuffix: '+ frais de service',
+      );
+      expect(identical(plain, withFee), isFalse);
+    });
+
     test('selected vs not produce different bitmaps', () async {
       final plain = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,

@@ -89,6 +89,7 @@ class MarkerBitmapFactory {
     Brightness brightness = Brightness.light,
     String prefix = '',
     String? currencyCode,
+    String feeSuffix = '',
   }) async {
     final key = _PricePillKey(
       priceCents: (pricePerKg * 100).round(),
@@ -98,6 +99,7 @@ class MarkerBitmapFactory {
       prefix: prefix,
       currencyCode: currencyCode ?? 'EUR', // i18n-ignore — code devise ISO
       gridLabel: gridLabel,
+      feeSuffix: feeSuffix,
     );
     final cached = _pillCache[key];
     if (cached != null) {
@@ -111,6 +113,7 @@ class MarkerBitmapFactory {
       brightness: brightness,
       prefix: prefix,
       currencyCode: currencyCode,
+      feeSuffix: feeSuffix,
     );
     _pillCache[key] = bitmap;
     return bitmap;
@@ -127,6 +130,7 @@ class MarkerBitmapFactory {
     Brightness brightness = Brightness.light,
     String prefix = '',
     String? currencyCode,
+    String feeSuffix = '',
   }) async {
     final key = _StackedPillKey(
       priceCents: (pricePerKg * 100).round(),
@@ -137,6 +141,7 @@ class MarkerBitmapFactory {
       prefix: prefix,
       currencyCode: currencyCode ?? 'EUR', // i18n-ignore — code devise ISO
       gridLabel: gridLabel,
+      feeSuffix: feeSuffix,
     );
     final cached = _stackedPillCache[key];
     if (cached != null) {
@@ -151,6 +156,7 @@ class MarkerBitmapFactory {
       brightness: brightness,
       prefix: prefix,
       currencyCode: currencyCode,
+      feeSuffix: feeSuffix,
     );
     _stackedPillCache[key] = bitmap;
     return bitmap;
@@ -165,6 +171,7 @@ class MarkerBitmapFactory {
     required Brightness brightness,
     String prefix = '',
     String? currencyCode,
+    String feeSuffix = '',
   }) async {
     final palette = _pillPalette(brightness);
     final price = pricePerKg <= 0
@@ -190,6 +197,15 @@ class MarkerBitmapFactory {
           fontWeight: FontWeight.w700,
           color: textColor,
         ),
+        // Sous grille, le prix est le net du voyageur : la mention est dite
+        // en plus léger, jamais pour la pastille « Grille » sans montant.
+        children: [
+          if (feeSuffix.isNotEmpty && pricePerKg > 0)
+            TextSpan(
+              text: ' $feeSuffix',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+        ],
       ),
       textDirection: TextDirection.ltr,
     )..layout();
@@ -383,6 +399,7 @@ class MarkerBitmapFactory {
     required Brightness brightness,
     String prefix = '',
     String? currencyCode,
+    String feeSuffix = '',
   }) async {
     final palette = _pillPalette(brightness);
     final label = pricePerKg <= 0
@@ -408,6 +425,15 @@ class MarkerBitmapFactory {
           fontWeight: FontWeight.w700,
           color: textColor,
         ),
+        // Sous grille, le prix est le net du voyageur : la mention est dite
+        // en plus léger, jamais pour la pastille « Grille » sans montant.
+        children: [
+          if (feeSuffix.isNotEmpty && pricePerKg > 0)
+            TextSpan(
+              text: ' $feeSuffix',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+        ],
       ),
       textDirection: TextDirection.ltr,
     )..layout();
@@ -665,6 +691,7 @@ class _PricePillKey {
     required this.prefix,
     required this.currencyCode,
     required this.gridLabel,
+    required this.feeSuffix,
   });
 
   final int priceCents;
@@ -678,6 +705,9 @@ class _PricePillKey {
   // un changement de langue en session.
   final String gridLabel;
 
+  /// Mention « + frais de service » de la pastille, vide sans grille.
+  final String feeSuffix;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -688,7 +718,8 @@ class _PricePillKey {
           isDark == other.isDark &&
           prefix == other.prefix &&
           currencyCode == other.currencyCode &&
-          gridLabel == other.gridLabel;
+          gridLabel == other.gridLabel &&
+          feeSuffix == other.feeSuffix;
 
   @override
   int get hashCode => Object.hash(
@@ -699,6 +730,7 @@ class _PricePillKey {
     prefix,
     currencyCode,
     gridLabel,
+    feeSuffix,
   );
 }
 
@@ -712,6 +744,7 @@ class _StackedPillKey {
     required this.prefix,
     required this.currencyCode,
     required this.gridLabel,
+    required this.feeSuffix,
   });
 
   final int priceCents;
@@ -722,6 +755,9 @@ class _StackedPillKey {
   final String prefix;
   final String currencyCode;
   final String gridLabel;
+
+  /// Mention « + frais de service » de la pastille, vide sans grille.
+  final String feeSuffix;
 
   @override
   bool operator ==(Object other) =>
@@ -734,7 +770,8 @@ class _StackedPillKey {
           isDark == other.isDark &&
           prefix == other.prefix &&
           currencyCode == other.currencyCode &&
-          gridLabel == other.gridLabel;
+          gridLabel == other.gridLabel &&
+          feeSuffix == other.feeSuffix;
 
   @override
   int get hashCode => Object.hash(
@@ -746,5 +783,6 @@ class _StackedPillKey {
     prefix,
     currencyCode,
     gridLabel,
+    feeSuffix,
   );
 }
