@@ -2269,6 +2269,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeWeightCapacityTitle => 'Capacité kilo';
 
   @override
+  String homeWeightSliderMaxOpen(int kg) {
+    return '$kg kg et +';
+  }
+
+  @override
+  String homeFilterChipsCapacityRange(int min, int max) {
+    return '$min à $max kg';
+  }
+
+  @override
   String get homeMaxPriceTitle => 'Prix maximum';
 
   @override

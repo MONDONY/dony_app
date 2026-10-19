@@ -768,6 +768,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeRatingOnlyFive': (l) => l.homeRatingOnlyFive,
   'homeRatingAndUp': (l) => l.homeRatingAndUp(placeholderMarker('rating')),
   'homeWeightCapacityTitle': (l) => l.homeWeightCapacityTitle,
+  'homeWeightSliderMaxOpen': (l) =>
+      l.homeWeightSliderMaxOpen(intPlaceholderValue),
+  'homeFilterChipsCapacityRange': (l) =>
+      l.homeFilterChipsCapacityRange(intPlaceholderValue, intPlaceholderValue),
   'homeMaxPriceTitle': (l) => l.homeMaxPriceTitle,
   'homeAnyPrice': (l) => l.homeAnyPrice,
   'homeComposerTitleTrips': (l) => l.homeComposerTitleTrips,

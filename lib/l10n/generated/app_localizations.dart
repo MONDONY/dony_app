@@ -3830,6 +3830,18 @@ abstract class AppLocalizations {
   /// **'Capacité kilo'**
   String get homeWeightCapacityTitle;
 
+  /// Extrémité haute du curseur de poids : au bout, aucune limite haute n'est envoyée (trajets de plus de {kg} kg inclus).
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg et +'**
+  String homeWeightSliderMaxOpen(int kg);
+
+  /// Puce Capacité de l'accueil quand un minimum et un maximum de kilos disponibles sont posés.
+  ///
+  /// In fr, this message translates to:
+  /// **'{min} à {max} kg'**
+  String homeFilterChipsCapacityRange(int min, int max);
+
   /// No description provided for @homeMaxPriceTitle.
   ///
   /// In fr, this message translates to:

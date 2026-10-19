@@ -967,6 +967,10 @@
     }
   },
   "homeWeightCapacityTitle": "Capacité kilo",
+  "homeWeightSliderMaxOpen": "{kg} kg et +",
+  "@homeWeightSliderMaxOpen": {"description": "Extrémité haute du curseur de poids : au bout, aucune limite haute n'est envoyée (trajets de plus de {kg} kg inclus).", "placeholders": {"kg": {"type": "int", "example": "50"}}},
+  "homeFilterChipsCapacityRange": "{min} à {max} kg",
+  "@homeFilterChipsCapacityRange": {"description": "Puce Capacité de l'accueil quand un minimum et un maximum de kilos disponibles sont posés.", "placeholders": {"min": {"type": "int", "example": "5"}, "max": {"type": "int", "example": "20"}}},
   "homeMaxPriceTitle": "Prix maximum",
   "homeAnyPrice": "Tous les prix",
   "homeComposerTitleTrips": "Filtrer les trajets",

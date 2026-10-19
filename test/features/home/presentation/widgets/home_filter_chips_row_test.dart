@@ -58,6 +58,49 @@ void main() {
   group('puce GP Pro', _gpProChipTests);
   group('puce Valise 23 kg', _suitcaseChipTests);
   group('date personnalisée', _customDateChipTests);
+  group('puce Capacité', _capacityChipTests);
+}
+
+void _capacityChipTests() {
+  HomeSmallChip chip(WidgetTester tester) =>
+      tester.widget<HomeSmallChip>(find.byKey(const Key('chip-capacity')));
+
+  Future<void> pumpWith(WidgetTester tester, HomeSearchFilters f) =>
+      tester.pumpWidget(_wrap(mode: SearchMode.trips, filters: f));
+
+  testWidgets('sans borne : « Kilos », inactive', (tester) async {
+    await pumpWith(tester, const HomeSearchFilters());
+    expect(chip(tester).label, 'Kilos');
+    expect(chip(tester).isActive, isFalse);
+  });
+
+  testWidgets('minimum seul : « ≥ X kg »', (tester) async {
+    await pumpWith(tester, const HomeSearchFilters(weightMin: 10));
+    expect(chip(tester).label, '≥ 10 kg');
+    expect(chip(tester).isActive, isTrue);
+  });
+
+  testWidgets('maximum seul : « ≤ Y kg »', (tester) async {
+    await pumpWith(tester, const HomeSearchFilters(weightMax: 20));
+    expect(chip(tester).label, '≤ 20 kg');
+  });
+
+  testWidgets('deux bornes : « X à Y kg », « X to Y kg » en anglais', (
+    tester,
+  ) async {
+    await pumpWith(
+      tester,
+      const HomeSearchFilters(weightMin: 5, weightMax: 20),
+    );
+    expect(chip(tester).label, '5 à 20 kg');
+
+    useEnglish();
+    await pumpWith(
+      tester,
+      const HomeSearchFilters(weightMin: 5, weightMax: 20),
+    );
+    expect(chip(tester).label, '5 to 20 kg');
+  });
 }
 
 void _customDateChipTests() {

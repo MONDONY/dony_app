@@ -2260,6 +2260,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeWeightCapacityTitle => 'Weight capacity';
 
   @override
+  String homeWeightSliderMaxOpen(int kg) {
+    return '$kg+ kg';
+  }
+
+  @override
+  String homeFilterChipsCapacityRange(int min, int max) {
+    return '$min to $max kg';
+  }
+
+  @override
   String get homeMaxPriceTitle => 'Maximum price';
 
   @override

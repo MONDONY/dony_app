@@ -165,4 +165,62 @@ void main() {
       findsOneWidget,
     );
   });
+
+  group('WeightField : curseur au minimum = aucun minimum', () {
+    Future<List<double?>> openAndConfirm(
+      WidgetTester tester, {
+      required double? weightKg,
+      Offset? drag,
+    }) async {
+      final received = <double?>[];
+      await tester.pumpWidget(
+        _wrap(WeightField(weightKg: weightKg, onChanged: received.add)),
+      );
+      await tester.tap(find.text('POIDS MIN'));
+      await tester.pumpAndSettle();
+      if (drag != null) {
+        final slider = tester.getRect(find.byType(Slider));
+        await tester.dragFrom(Offset(slider.left + 24, slider.center.dy), drag);
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Confirmer'));
+      await tester.pumpAndSettle();
+      return received;
+    }
+
+    testWidgets('sans minimum : « Tous », pas de mise en avant', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(WeightField(weightKg: null, onChanged: (_) {})),
+      );
+      expect(find.text('Tous'), findsOneWidget);
+      expect(find.textContaining('kg'), findsNothing);
+    });
+
+    testWidgets('confirmer sans toucher : aucun minimum envoyé', (
+      tester,
+    ) async {
+      final received = await openAndConfirm(tester, weightKg: null);
+      expect(received, [null]);
+    });
+
+    testWidgets('curseur déplacé : le minimum choisi part', (tester) async {
+      final received = await openAndConfirm(
+        tester,
+        weightKg: null,
+        drag: const Offset(150, 0),
+      );
+      expect(received, hasLength(1));
+      expect(received.single, isNotNull);
+      expect(received.single, greaterThan(kCapacitySliderMinKg));
+    });
+
+    testWidgets('minimum hors curseur (60 kg) : ramené à 50, sans planter', (
+      tester,
+    ) async {
+      final received = await openAndConfirm(tester, weightKg: 60);
+      expect(received, [kCapacitySliderMaxKg]);
+    });
+  });
 }
