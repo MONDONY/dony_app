@@ -555,8 +555,8 @@ abstract final class AnalyticsEvents {
 
   /// Écran support ouvert avec une demande préremplie (`SupportTicketDraft`),
   /// avant toute saisie. Propriété `origin` : écran d'où vient la demande
-  /// (`team_cancelled_parcel`, `phone_already_used`). Jamais le sujet ni le
-  /// message.
+  /// (`team_cancelled_parcel`, `phone_already_used`, `email_change`). Jamais
+  /// le sujet ni le message.
   static const supportDraftOpened = 'support_draft_opened';
 
   /// Message utilisateur envoyé dans un ticket support existant. Aucune

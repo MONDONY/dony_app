@@ -270,6 +270,15 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get contactEmailChangeSupportSubject =>
+      'Changer l\'adresse e-mail de mon compte';
+
+  @override
+  String contactEmailChangeSupportMessage(String email) {
+    return 'Bonjour, je souhaite remplacer l\'adresse e-mail de mon compte ($email) par une nouvelle adresse.';
+  }
+
+  @override
   String get errorSmsOtpDisabledTitle => 'Indisponible';
 
   @override

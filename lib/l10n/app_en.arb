@@ -74,6 +74,8 @@
   "errorPhonePendingDeletionMessage": "This number belongs to an account that is being deleted. Sign in with this number to cancel the deletion.",
   "contactPhoneConflictSupportSubject": "Number already used by another account",
   "contactPhoneConflictSupportMessage": "Hello, I want to add the number {phone} to my account, but it is already linked to another Yadony account. Can you help me merge my accounts?",
+  "contactEmailChangeSupportSubject": "Change my account email address",
+  "contactEmailChangeSupportMessage": "Hello, I would like to replace my account email address ({email}) with a new one.",
   "errorSmsOtpDisabledTitle": "Unavailable",
   "errorSmsOtpDisabledMessage": "Phone sign-in isn't available yet.",
   "errorInvalidPhoneNumberTitle": "Number unreachable",
