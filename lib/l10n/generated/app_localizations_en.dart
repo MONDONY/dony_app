@@ -5604,7 +5604,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidCreateItemsRequiredHint => 'Required: at least 1 item';
 
   @override
-  String get bidCreatePhotosSectionLabel => 'PARCEL PHOTOS (OPTIONAL)';
+  String get bidCreatePhotosSectionLabel => 'PARCEL PHOTOS';
 
   @override
   String get bidCreateDescriptionSectionLabelOptional =>
@@ -7656,7 +7656,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parcelRefusalCashNotice =>
-      'Cash payment: give back any money the sender already handed you. The Yadony commission already paid is not refunded.';
+      'Cash payment: give back any money the sender already handed you. The Yadony commission already paid is given back to you.';
 
   @override
   String get parcelRefusalHandedOverNotice =>
@@ -16877,6 +16877,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callStatusConnecting => 'Connecting…';
+
+  @override
+  String bidCreateGridSuggestionTitle(String item, String price) {
+    return 'This traveler charges \"$item\" per item ($price)';
+  }
+
+  @override
+  String get bidCreateGridSuggestionBody =>
+      'If your parcel contains one, add it and remove its weight from the declared kilos. Otherwise, at handover, the traveler can refuse the parcel.';
+
+  @override
+  String bidCreateGridSuggestionAdd(String item) {
+    return 'Add \"$item\"';
+  }
+
+  @override
+  String get bidCreateGridSuggestionDismiss => 'My parcel has none';
+
+  @override
+  String bidCreateGridSuggestionPendingHint(String item) {
+    return 'Say whether your parcel contains \"$item\".';
+  }
+
+  @override
+  String get bidCreatePhotoRequiredHint =>
+      'Add at least one photo of the parcel.';
+
+  @override
+  String get bidCreatePhotosRequiredHelp =>
+      'At least one photo: it protects both sides if the parcel handed over doesn\'t match the declaration.';
+
+  @override
+  String get bidCreateHandoverCheckNotice =>
+      'At handover, the traveler checks the parcel. If it doesn\'t match your declaration, they can refuse it: you are then refunded.';
 
   @override
   String get callStatusRinging => 'Ringing…';

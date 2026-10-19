@@ -749,7 +749,9 @@ void main() {
       ).thenAnswer((_) => const Stream.empty());
       when(() => mockPhotosCubit.state).thenReturn(const <BidPhotoUpload>[]);
       when(() => mockPhotosCubit.close()).thenAnswer((_) async {});
-      when(() => mockPhotosCubit.readyKeys).thenReturn(const <String>[]);
+      when(
+        () => mockPhotosCubit.readyKeys,
+      ).thenReturn(const <String>['bids/photo-1.jpg']);
 
       // Depuis 57ce4308 (PR #130), la RecipientSection de CreateBidScreen
       // résout getIt<RecipientBloc>() dans initState.

@@ -148,7 +148,9 @@ void main() {
       const Stream<List<BidPhotoUpload>>.empty(),
       initialState: const <BidPhotoUpload>[],
     );
-    when(() => photosCubit.readyKeys).thenReturn(const <String>[]);
+    when(
+      () => photosCubit.readyKeys,
+    ).thenReturn(const <String>['bids/photo-1.jpg']);
     whenListen(
       recipientBloc,
       const Stream<RecipientState>.empty(),

@@ -1137,7 +1137,9 @@ void main() {
       when(() => photosCubit.state).thenReturn(const <BidPhotoUpload>[]);
       when(() => photosCubit.stream).thenAnswer((_) => const Stream.empty());
       when(() => photosCubit.close()).thenAnswer((_) async {});
-      when(() => photosCubit.readyKeys).thenReturn(const <String>[]);
+      when(
+        () => photosCubit.readyKeys,
+      ).thenReturn(const <String>['bids/photo-1.jpg']);
 
       final recipientBloc = _BidMockRecipientBloc();
       when(() => recipientBloc.state).thenReturn(const RecipientState());

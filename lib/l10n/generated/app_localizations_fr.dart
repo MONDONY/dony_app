@@ -5635,7 +5635,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidCreateItemsRequiredHint => 'Requis : au moins 1 article';
 
   @override
-  String get bidCreatePhotosSectionLabel => 'PHOTOS DU COLIS (OPTIONNEL)';
+  String get bidCreatePhotosSectionLabel => 'PHOTOS DU COLIS';
 
   @override
   String get bidCreateDescriptionSectionLabelOptional =>
@@ -7703,7 +7703,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get parcelRefusalCashNotice =>
-      'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. La commission Yadony déjà réglée n\'est pas remboursée.';
+      'Paiement en espèces : rendez à l\'expéditeur l\'argent qu\'il vous a déjà remis. La commission Yadony déjà réglée vous est rendue.';
 
   @override
   String get parcelRefusalHandedOverNotice =>
@@ -16985,6 +16985,40 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get callStatusConnecting => 'Connexion…';
+
+  @override
+  String bidCreateGridSuggestionTitle(String item, String price) {
+    return 'Ce voyageur facture « $item » à l\'article ($price)';
+  }
+
+  @override
+  String get bidCreateGridSuggestionBody =>
+      'Si votre colis en contient, ajoutez-le et retirez son poids des kilos déclarés. Sinon, à la remise, le voyageur pourra refuser le colis.';
+
+  @override
+  String bidCreateGridSuggestionAdd(String item) {
+    return 'Ajouter « $item »';
+  }
+
+  @override
+  String get bidCreateGridSuggestionDismiss => 'Mon colis n\'en contient pas';
+
+  @override
+  String bidCreateGridSuggestionPendingHint(String item) {
+    return 'Indiquez si votre colis contient « $item ».';
+  }
+
+  @override
+  String get bidCreatePhotoRequiredHint =>
+      'Ajoutez au moins une photo du colis.';
+
+  @override
+  String get bidCreatePhotosRequiredHelp =>
+      'Au moins une photo : elle protège les deux parties si le colis remis ne correspond pas à la déclaration.';
+
+  @override
+  String get bidCreateHandoverCheckNotice =>
+      'À la remise, le voyageur vérifie le colis. S\'il ne correspond pas à votre déclaration, il peut le refuser : vous êtes alors remboursé.';
 
   @override
   String get callStatusRinging => 'Ça sonne…';

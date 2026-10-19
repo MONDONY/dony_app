@@ -115,6 +115,9 @@ void main() {
       const Stream<List<BidPhotoUpload>>.empty(),
       initialState: const <BidPhotoUpload>[],
     );
+    when(
+      () => photosCubit.readyKeys,
+    ).thenReturn(const <String>['bids/photo-1.jpg']);
 
     void register<T extends Object>(T mock) {
       if (getIt.isRegistered<T>()) getIt.unregister<T>();

@@ -26,6 +26,7 @@ import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
+import 'package:dony/features/matching/data/grid_item_declaration_matcher.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
@@ -231,6 +232,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _disclaimerNotifier = ValueNotifier<bool>(false);
   final _gridQuantitiesNotifier = ValueNotifier<Map<String, int>>({});
 
+  /// Articles de grille proposés puis écartés par « Mon colis n'en contient
+  /// pas » : ils ne sont plus proposés (cf. [_gridSuggestions]).
+  final _dismissedSuggestionsNotifier = ValueNotifier<Set<String>>({});
+
   // ── Garde-fou de sortie ─────────────────────────────────────────────────────
   /// Signature du formulaire à l'ouverture. Nulle tant que les post-frames
   /// d'initialisation n'ont pas été purgés (cf. `_captureInitialSignature`).
@@ -320,6 +325,41 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// Au moins un article de la grille du voyageur est coché.
   bool get _hasGridItemsSelected =>
       _gridQuantitiesNotifier.value.values.any((q) => q > 0);
+
+  /// Articles de la grille du voyageur qui semblent décrire un colis déclaré
+  /// au kilo (un téléphone déclaré « 1 kg » alors que le voyageur facture
+  /// « Téléphone » à l'article). Tant qu'il en reste, l'expéditeur doit
+  /// l'ajouter ou répondre « Mon colis n'en contient pas » : sinon le
+  /// voyageur découvrait l'écart à la remise, sans pouvoir corriger le prix.
+  List<AnnouncementGridItemModel> get _gridSuggestions {
+    if (widget.announcement.priceGridItems.isEmpty || _isGridOnly) {
+      return const [];
+    }
+    if (_weightNotifier.value <= 0) return const [];
+    return GridItemDeclarationMatcher.suggest(
+      items: widget.announcement.priceGridItems,
+      categories: _categoriesNotifier.value,
+      description: _descCtrl.text,
+      quantities: _gridQuantitiesNotifier.value,
+      dismissed: _dismissedSuggestionsNotifier.value,
+    );
+  }
+
+  /// Au moins une photo du colis envoyée : elle sert de preuve aux deux
+  /// parties si le colis remis ne correspond pas à la déclaration.
+  bool get _hasReadyPhoto => _photosCubit.readyKeys.isNotEmpty;
+
+  void _addSuggestedItem(AnnouncementGridItemModel item) {
+    final q = _gridQuantitiesNotifier.value;
+    _gridQuantitiesNotifier.value = {...q, item.id: (q[item.id] ?? 0) + 1};
+  }
+
+  void _dismissSuggestedItem(AnnouncementGridItemModel item) {
+    _dismissedSuggestionsNotifier.value = {
+      ..._dismissedSuggestionsNotifier.value,
+      item.id,
+    };
+  }
 
   /// Contenu déclaré. En mixte avec un poids, les articles de grille cochés
   /// comptent comme contenu à côté des catégories choisies : ils ne
@@ -414,6 +454,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _disclaimerNotifier.addListener(_syncFormButtonState);
     _gridQuantitiesNotifier.addListener(_syncFormButtonState);
     _customItemsNotifier.addListener(_syncFormButtonState);
+    _dismissedSuggestionsNotifier.addListener(_syncFormButtonState);
+    _descCtrl.addListener(_syncFormButtonState);
     _recipientPhoneCtrl.addListener(_syncFormButtonState);
     _recipientPhoneCtrl.addListener(_clearRecipientPhoneErrorIfFixed);
 
@@ -442,7 +484,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     for (final l in _dirtySources) {
       l.addListener(_recomputeDirty);
     }
-    _photosSub = _photosCubit.stream.listen((_) => _recomputeDirty());
+    _photosSub = _photosCubit.stream.listen((_) {
+      _recomputeDirty();
+      _syncFormButtonState();
+    });
     _captureInitialSignature();
   }
 
@@ -553,6 +598,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _disclaimerNotifier.removeListener(_syncFormButtonState);
     _gridQuantitiesNotifier.removeListener(_syncFormButtonState);
     _customItemsNotifier.removeListener(_syncFormButtonState);
+    _dismissedSuggestionsNotifier.removeListener(_syncFormButtonState);
+    _descCtrl.removeListener(_syncFormButtonState);
     _weightNotifier.removeListener(_invalidateQuote);
     _gridQuantitiesNotifier.removeListener(_invalidateQuote);
     _stepNotifier.removeListener(_onStepChanged);
@@ -563,6 +610,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _catalogNotifier.dispose();
     _disclaimerNotifier.dispose();
     _gridQuantitiesNotifier.dispose();
+    _dismissedSuggestionsNotifier.dispose();
     _stepNotifier.dispose();
     _methodNotifier.dispose();
     super.dispose();
@@ -608,14 +656,24 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     // aide, le bouton grisé ne disait pas ce qui manque (FLUTTER-ET).
     final missingContent =
         hasKgPricing && hasGridPricing && weightOk && !categoriesOk;
+    final suggestions = _gridSuggestions;
+    final photoOk = _hasReadyPhoto;
     final weightHint = missingWeight
         ? context.l10n.bidCreateWeightRequiredHint
         : missingContent
         ? context.l10n.bidCreateContentRequiredHint
+        : suggestions.isNotEmpty
+        ? context.l10n.bidCreateGridSuggestionPendingHint(
+            suggestions.first.label,
+          )
+        : !photoOk
+        ? context.l10n.bidCreatePhotoRequiredHint
         : null;
     final canSubmit =
         (weightOk || gridOk) &&
         categoriesOk &&
+        suggestions.isEmpty &&
+        photoOk &&
         _disclaimerNotifier.value &&
         // Numéro saisi mais pas international, même après l'indicatif du
         // pays d'arrivée : bloqué, l'erreur s'affiche sous le champ. Vide, il
@@ -1416,8 +1474,37 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               const SizedBox(height: DonySpacing.xxl),
             ],
 
+            // ── Article de la grille à confirmer ──────────────────────────
+            ListenableBuilder(
+              listenable: Listenable.merge([
+                _descCtrl,
+                _dismissedSuggestionsNotifier,
+              ]),
+              builder: (context, _) {
+                final suggestions = _gridSuggestions;
+                if (suggestions.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: DonySpacing.xxl),
+                  child: _GridSuggestionCard(
+                    key: ValueKey('grid-suggestion-${suggestions.first.id}'),
+                    item: suggestions.first,
+                    currency: widget.announcement.currency,
+                    onAdd: () => _addSuggestedItem(suggestions.first),
+                    onDismiss: () => _dismissSuggestedItem(suggestions.first),
+                  ),
+                );
+              },
+            ),
+
             // ── Photos ────────────────────────────────────────────────────
             _SectionLabel(label: context.l10n.bidCreatePhotosSectionLabel),
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              context.l10n.bidCreatePhotosRequiredHelp,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: DonySpacing.md),
             const PhotoSection(),
             const SizedBox(height: DonySpacing.xxl),
@@ -1484,6 +1571,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               accepted: disclaimerAccepted,
               onChanged: (v) => _disclaimerNotifier.value = v,
             ).animate().fadeIn(delay: 200.ms),
+            const SizedBox(height: DonySpacing.md),
+            DonyStatusBanner(
+              type: DonyStatusBannerType.info,
+              iconAsset: 'package',
+              message: context.l10n.bidCreateHandoverCheckNotice,
+            ),
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Code promo ────────────────────────────────────────────────
@@ -2405,6 +2498,54 @@ class _StepperButton extends StatelessWidget {
 }
 
 // ── Disclaimer card ────────────────────────────────────────────────────────────
+
+/// Article de la grille du voyageur qui semble décrire le colis déclaré au
+/// kilo : l'expéditeur l'ajoute, ou répond qu'il n'en contient pas.
+class _GridSuggestionCard extends StatelessWidget {
+  const _GridSuggestionCard({
+    super.key,
+    required this.item,
+    required this.currency,
+    required this.onAdd,
+    required this.onDismiss,
+  });
+
+  final AnnouncementGridItemModel item;
+  final String currency;
+  final VoidCallback onAdd;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return DonyStatusBanner(
+      type: DonyStatusBannerType.warning,
+      title: l.bidCreateGridSuggestionTitle(
+        item.label,
+        formatPriceIn(item.unitPriceDisplay, currency),
+      ),
+      message: l.bidCreateGridSuggestionBody,
+      action: Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: [
+          DonyButton(
+            label: l.bidCreateGridSuggestionAdd(item.label),
+            iconAsset: 'plus',
+            fullWidth: false,
+            onPressed: onAdd,
+          ),
+          DonyButton(
+            label: l.bidCreateGridSuggestionDismiss,
+            variant: DonyButtonVariant.ghost,
+            fullWidth: false,
+            onPressed: onDismiss,
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 250.ms);
+  }
+}
 
 class _DisclaimerCard extends StatelessWidget {
   const _DisclaimerCard({required this.accepted, required this.onChanged});
