@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/phone/normalize_payer_phone.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
@@ -273,6 +274,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _promoCtrl = TextEditingController();
   final _quoteNotifier = ValueNotifier<Object?>(null);
 
+  /// Attente avant le devis automatique sous grille : un devis par geste
+  /// posé, pas un par cran du curseur de poids.
+  static const _autoQuoteDebounce = Duration(milliseconds: 400);
+  Timer? _autoQuoteTimer;
+
   // ── Picker step fields ──────────────────────────────────────────────────────
   // Initialisé dans initState : le défaut dépend de widget.announcement
   // (cash si le trajet n'accepte pas Stripe).
@@ -463,6 +469,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
     _weightNotifier.addListener(_invalidateQuote);
     _gridQuantitiesNotifier.addListener(_invalidateQuote);
+    _weightNotifier.addListener(_scheduleAutoQuote);
+    _gridQuantitiesNotifier.addListener(_scheduleAutoQuote);
 
     _stepNotifier.addListener(_onStepChanged);
     _methodNotifier.addListener(_syncPickerButtonState);
@@ -604,6 +612,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _descCtrl.removeListener(_syncFormButtonState);
     _weightNotifier.removeListener(_invalidateQuote);
     _gridQuantitiesNotifier.removeListener(_invalidateQuote);
+    _weightNotifier.removeListener(_scheduleAutoQuote);
+    _gridQuantitiesNotifier.removeListener(_scheduleAutoQuote);
+    _autoQuoteTimer?.cancel();
     _stepNotifier.removeListener(_onStepChanged);
     _methodNotifier.removeListener(_syncPickerButtonState);
     _quoteNotifier.dispose();
@@ -814,12 +825,22 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// articles de grille. Valable sous grille de commission seulement, où le
   /// serveur sert `pricePerKgDisplay` et `unitPriceDisplay` au net ; sans
   /// grille ces prix portent déjà la commission.
-  double _netTotal() {
+  double _netTotal() => _kgNet(_weightNotifier.value) + _gridDisplayTotal();
+
+  /// Net au kilo du voyageur pour [weightKg], calculé comme le back :
+  /// `pricePerKg × weightKg` en décimal exact, arrondi HALF_UP à l'unité
+  /// mineure de la devise (le produit en `double` peut s'en écarter d'un
+  /// centime). Seul calcul du net au kilo de l'écran sous grille.
+  double _kgNet(double weightKg) {
     final price = _pricePerKg;
-    final kg = (price != null && price > 0)
-        ? _weightNotifier.value * (widget.announcement.senderPricePerKg ?? 0)
-        : 0.0;
-    return kg + _gridDisplayTotal();
+    if (price == null || price <= 0 || weightKg <= 0) return 0;
+    return exactProductHalfUp(
+      weightKg,
+      price,
+      SupportedCurrency.fromCodeOrDefault(
+        widget.announcement.currency,
+      ).minorUnit,
+    );
   }
 
   /// Prix expéditeur local sous grille : les frais de service se calculent
@@ -997,6 +1018,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final code = _promoCtrl.text.trim();
     if (code.isEmpty) {
       _quoteNotifier.value = null;
+      _scheduleAutoQuote();
       return;
     }
     final weight = _weightNotifier.value;
@@ -1012,6 +1034,42 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   void _invalidateQuote() {
     if (_quoteNotifier.value != null) _quoteNotifier.value = null;
+  }
+
+  /// Clé de la saisie qui détermine un devis (poids, articles) : une réponse
+  /// d'arrière-plan pour une autre clé est périmée.
+  String get _quoteInputsKey {
+    final grid =
+        _gridQuantitiesNotifier.value.entries
+            .where((e) => e.value > 0)
+            .map((e) => '${e.key}:${e.value}')
+            .toList()
+          ..sort();
+    return '${_weightNotifier.value}|${grid.join(',')}';
+  }
+
+  /// Sous grille de commission seulement : le back applique au total le taux
+  /// spécial et le bon de parrainage de l'expéditeur, que l'app ne connaît
+  /// pas. Un devis sans code est donc demandé après chaque changement de
+  /// poids ou d'articles ; le calcul local s'affiche en attendant. Sans
+  /// grille, aucun appel (le devis ne sert qu'au code promo).
+  void _scheduleAutoQuote() {
+    _autoQuoteTimer?.cancel();
+    if (!commissionGridActive || _netTotal() <= 0) return;
+    _autoQuoteTimer = Timer(_autoQuoteDebounce, _requestAutoQuote);
+  }
+
+  void _requestAutoQuote() {
+    if (!mounted) return;
+    final weight = _weightNotifier.value;
+    _bidBloc.add(
+      BidQuoteRequested(
+        announcementId: widget.announcement.id,
+        weightKg: weight > 0 ? weight : null,
+        gridItems: _selectedGridItems(),
+        backgroundKey: _quoteInputsKey,
+      ),
+    );
   }
 
   // ── Step navigation ─────────────────────────────────────────────────────────
@@ -1125,6 +1183,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         ),
       );
     } else if (state is BidQuoteLoaded) {
+      final key = state.backgroundKey;
+      // Devis d'arrière-plan : écarté s'il répond pour une saisie qui a
+      // changé, ou si un devis demandé par l'utilisateur (code promo) est
+      // déjà affiché pour la saisie courante.
+      if (key != null &&
+          (key != _quoteInputsKey || _quoteNotifier.value != null)) {
+        return;
+      }
       _quoteNotifier.value = state.quote;
     } else if (state is BidPromoError) {
       _quoteNotifier.value = ErrorPresenter.resolve(
@@ -1850,12 +1916,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// Sans devis, le total montré est celui sans code.
   Widget _buildGridPriceBreakdown(double weightKg, BidQuoteResponse? quote) {
     final local = _localGridPrice();
-    final kgPrice = _pricePerKg;
-    final kgNet =
-        quote?.kgNetEur ??
-        ((kgPrice != null && kgPrice > 0)
-            ? weightKg * (widget.announcement.senderPricePerKg ?? 0)
-            : 0.0);
+    final kgNet = quote?.kgNetEur ?? _kgNet(weightKg);
     final gridNet = quote?.gridNetEur ?? _gridDisplayTotal();
     final total = quote?.totalEur ?? local.gross;
     if (total <= 0) return const SizedBox.shrink();
@@ -3150,14 +3211,16 @@ class _PriceBreakdown extends StatelessWidget {
 
   final double weightKg;
 
-  /// Tarif au kilo **payé par l'expéditeur**, commission comprise. Jamais le
-  /// net du voyageur, qui n'appartient qu'à lui.
+  /// Tarif au kilo de la ligne poids. Sans grille : payé par l'expéditeur,
+  /// commission comprise. Sous grille ([serviceFee] non nul) : net du
+  /// voyageur, les frais de service s'ajoutant sur leur propre ligne.
   final double pricePerKg;
 
-  /// Ligne poids, du point de vue de l'expéditeur (= [weightKg] × [pricePerKg]).
+  /// Ligne poids (= [weightKg] × [pricePerKg]), commission comprise sans
+  /// grille, au net sous grille.
   final double kgDisplay;
 
-  /// Ligne articles, du point de vue de l'expéditeur.
+  /// Ligne articles, commission comprise sans grille, au net sous grille.
   final double gridDisplay;
 
   final double totalPrice;

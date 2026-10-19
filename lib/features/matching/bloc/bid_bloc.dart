@@ -493,6 +493,21 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     BidQuoteRequested event,
     Emitter<BidState> emit,
   ) async {
+    final backgroundKey = event.backgroundKey;
+    if (backgroundKey != null) {
+      try {
+        final quote = await _repository.quoteBid(
+          announcementId: event.announcementId,
+          weightKg: event.weightKg,
+          promoCode: event.promoCode,
+          gridItems: event.gridItems,
+        );
+        emit(BidQuoteLoaded(quote, backgroundKey: backgroundKey));
+      } catch (_) {
+        emit(BidQuoteBackgroundFailed(backgroundKey));
+      }
+      return;
+    }
     emit(BidQuoteLoading());
     try {
       final quote = await _repository.quoteBid(

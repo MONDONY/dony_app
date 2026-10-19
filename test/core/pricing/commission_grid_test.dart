@@ -143,4 +143,23 @@ void main() {
       );
     });
   });
+
+  group('exactProductHalfUp', () {
+    test('8,5 kg × 1,15 € : 9,775 exact arrondi HALF_UP à 9,78 €', () {
+      // En double, 8.5 * 1.15 vaut 9.774999… et s'arrondirait à 9,77 €.
+      expect(exactProductHalfUp(8.5, 1.15, 2), 9.78);
+    });
+
+    test('produit déjà à l\'unité mineure : inchangé', () {
+      expect(exactProductHalfUp(8, 2.5, 2), 20.0);
+    });
+
+    test('francs CFA : arrondi au franc', () {
+      expect(exactProductHalfUp(2.5, 1001, 0), 2503.0);
+    });
+
+    test('produit nul : 0', () {
+      expect(exactProductHalfUp(0, 1.15, 2), 0.0);
+    });
+  });
 }

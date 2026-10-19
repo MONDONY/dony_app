@@ -196,6 +196,14 @@ double netForGross(
   return _Dec(BigInt.from(lo), minor).toDouble();
 }
 
+/// Produit `a × b` en décimal exact, arrondi HALF_UP à [minorUnit] décimales :
+/// le net au kilo du back (`pricePerKg × weightKg` en `BigDecimal`,
+/// `setScale(minorUnit, HALF_UP)`). Le produit en `double` s'en écarte d'une
+/// unité mineure (8,5 × 1,15 vaut 9.774999… et non 9,775).
+double exactProductHalfUp(double a, double b, int minorUnit) => _Dec.fromDouble(
+  a,
+).mul(_Dec.fromDouble(b)).roundHalfUp(minorUnit).toDouble();
+
 // ── Interne ────────────────────────────────────────────────────────────────
 
 SupportedCurrency _currencyOf(String code) {

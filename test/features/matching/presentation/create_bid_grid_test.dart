@@ -235,7 +235,15 @@ void main() {
   Future<void> setWeight(WidgetTester tester, double kg) async {
     tester.widget<Slider>(find.byType(Slider)).onChanged!(kg);
     await tester.pumpAndSettle();
+    // Laisse passer l'attente du devis automatique (sous grille), pour ne
+    // laisser aucun minuteur en fin de test.
+    await tester.pump(const Duration(milliseconds: 500));
   }
+
+  /// Demandes de devis envoyées au BLoC depuis le dernier `verify`.
+  List<BidQuoteRequested> capturedQuotes() => verify(
+    () => bidBloc.add(captureAny(that: isA<BidQuoteRequested>())),
+  ).captured.cast<BidQuoteRequested>();
 
   Future<void> applyPromo(WidgetTester tester, String code) async {
     final promoField = find.ancestor(
@@ -443,6 +451,113 @@ void main() {
     );
   });
 
+  group('devis exact et devis automatique sous grille', () {
+    testWidgets('net au kilo exact : 8,5 kg × 1,15 € → 9,78 €, comme le back', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await openSheet(
+        tester,
+        announcement: _announcement(pricePerKg: 1.15, pricePerKgDisplay: 1.15),
+      );
+      await setWeight(tester, 8.5);
+
+      // En double, 8.5 × 1.15 = 9.774999… : arrondi naïf à 9,77 €. Le back
+      // calcule en décimal exact (9,775) puis HALF_UP : 9,78 €.
+      expect(find.textContaining('9,78'), findsOneWidget);
+      expect(find.textContaining('9,77'), findsNothing);
+      // 7 % de 9,78 € < 1 € : minimum, total 10,78 €.
+      expect(squash(textOf(tester, feeKey)), '1,00 € (minimum)');
+      expect(squash(textOf(tester, totalKey)), '10,78 €');
+    });
+
+    testWidgets(
+      'devis sans code émis sous grille après changement de poids (debounce)',
+      (tester) async {
+        useTestCommissionGrid();
+        await openSheet(tester);
+
+        tester.widget<Slider>(find.byType(Slider)).onChanged!(8);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        verifyNever(() => bidBloc.add(any(that: isA<BidQuoteRequested>())));
+
+        await tester.pump(const Duration(milliseconds: 200));
+        final sent = capturedQuotes();
+        expect(sent, hasLength(1));
+        expect(sent.single.promoCode, isNull);
+        expect(sent.single.weightKg, 8);
+        expect(sent.single.announcementId, 'ann-grid-test');
+        final key = sent.single.backgroundKey;
+        expect(key, isNotNull);
+
+        // Calcul local en attendant le devis.
+        expect(squash(textOf(tester, totalKey)), '21,40 €');
+
+        // Le devis porte le taux spécial de l'expéditeur, inconnu de l'app.
+        bidStream.add(
+          BidQuoteLoaded(
+            const BidQuoteResponse(
+              netEur: 20.0,
+              kgNetEur: 20.0,
+              rate: 0.04,
+              commissionEur: 0.80,
+              totalEur: 20.80,
+              promoApplied: false,
+              currency: 'EUR',
+            ),
+            backgroundKey: key,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(squash(textOf(tester, totalKey)), '20,80 €');
+        expect(squash(textOf(tester, feeKey)), '0,80 €');
+      },
+    );
+
+    testWidgets('un devis automatique périmé est ignoré', (tester) async {
+      useTestCommissionGrid();
+      await openSheet(tester);
+      await setWeight(tester, 8);
+      final staleKey = capturedQuotes().single.backgroundKey;
+
+      await setWeight(tester, 2);
+      bidStream.add(
+        BidQuoteLoaded(
+          const BidQuoteResponse(
+            netEur: 20.0,
+            kgNetEur: 20.0,
+            rate: 0.04,
+            commissionEur: 0.80,
+            totalEur: 20.80,
+            promoApplied: false,
+          ),
+          backgroundKey: staleKey,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Le devis répondait pour 8 kg : on garde le calcul local de 2 kg.
+      expect(squash(textOf(tester, totalKey)), '6,00 €');
+    });
+
+    testWidgets(
+      'devis automatique en échec : calcul local gardé, aucun message',
+      (tester) async {
+        useTestCommissionGrid();
+        await openSheet(tester);
+        await setWeight(tester, 8);
+        final key = capturedQuotes().single.backgroundKey;
+
+        bidStream.add(BidQuoteBackgroundFailed(key));
+        await tester.pumpAndSettle();
+
+        expect(squash(textOf(tester, totalKey)), '21,40 €');
+        expect(find.byType(SnackBar), findsNothing);
+      },
+    );
+  });
+
   group('sans grille de commission', () {
     setUpAll(() => setDonyCommissionRate(0.12));
     tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
@@ -455,6 +570,9 @@ void main() {
           announcement: _announcement(pricePerKg: 10, pricePerKgDisplay: null),
         );
         await setWeight(tester, 5);
+        await tester.pump(const Duration(seconds: 1));
+        // Sans grille, aucun devis automatique : seul le code promo en demande.
+        verifyNever(() => bidBloc.add(any(that: isA<BidQuoteRequested>())));
 
         // Taux unique : 5 kg × 11,20 € (10 € + 12 %) = 56,00 €.
         expect(find.textContaining('5 kg × 11,20'), findsOneWidget);
