@@ -151,6 +151,8 @@ void main() {
 
     /// FLUTTER-GB (b) : trois familles qui partaient sans réglage.
     for (final (label, key) in [
+      ('Mes trajets', 'push_my_trips'),
+      ('Colis pour moi', 'push_recipient_parcels'),
       ('Automatisations voyageur', 'push_traveler_automations'),
       ('Rappels et conseils', 'push_reminders_tips'),
       ('Appels manqués', 'push_missed_calls'),
@@ -224,11 +226,15 @@ void main() {
       );
     });
 
-    testWidgets('affiche la section ACTIVITÉ avec ses 4 tiles', (tester) async {
+    testWidgets('affiche la section ACTIVITÉ avec une tuile par rôle', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
       expect(find.text('ACTIVITÉ'), findsOneWidget);
-      expect(find.text('Matchs & enchères'), findsOneWidget);
+      expect(find.text('Mes envois'), findsOneWidget);
+      expect(find.text('Mes trajets'), findsOneWidget);
+      expect(find.text('Colis pour moi'), findsOneWidget);
       expect(find.text('Nouveaux trajets'), findsOneWidget);
       expect(find.text('Discussions de prix'), findsOneWidget);
       expect(find.text('Messages'), findsOneWidget);
@@ -283,7 +289,7 @@ void main() {
     );
 
     testWidgets(
-      'tap Matchs & enchères dispatche NotifPrefToggled(push_activity_bids)',
+      'tap Mes envois dispatche NotifPrefToggled(push_activity_bids)',
       (tester) async {
         final mockBloc = _buildMockBloc();
         addTearDown(mockBloc.close);
@@ -291,7 +297,7 @@ void main() {
         await tester.pumpWidget(_wrapWithBloc(mockBloc));
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Matchs & enchères'));
+        await tester.tap(find.text('Mes envois'));
         await tester.pump();
 
         verify(
@@ -432,24 +438,23 @@ void main() {
   group('NotificationSettingsScreen — colis compatibles', () {
     const label = 'Nouveaux colis compatibles';
 
-    testWidgets(
-      'la ligne vit dans la section ACTIVITÉ, sous Matchs & enchères',
-      (tester) async {
-        final mockBloc = _buildMockBloc(null, true);
-        addTearDown(mockBloc.close);
+    testWidgets('la ligne vit dans la section ACTIVITÉ, sous Mes envois', (
+      tester,
+    ) async {
+      final mockBloc = _buildMockBloc(null, true);
+      addTearDown(mockBloc.close);
 
-        await tester.pumpWidget(_wrapWithBloc(mockBloc));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
 
-        expect(find.text(label), findsOneWidget);
-        // Juste sous « Matchs & enchères » : c'est la section qu'elle complète.
-        final matchs = tester.getTopLeft(find.text('Matchs & enchères')).dy;
-        final compat = tester.getTopLeft(find.text(label)).dy;
-        final autre = tester.getTopLeft(find.text('Discussions de prix')).dy;
-        expect(compat, greaterThan(matchs));
-        expect(compat, lessThan(autre));
-      },
-    );
+      expect(find.text(label), findsOneWidget);
+      // Juste sous « Mes envois » : c'est la section qu'elle complète.
+      final matchs = tester.getTopLeft(find.text('Mes envois')).dy;
+      final compat = tester.getTopLeft(find.text(label)).dy;
+      final autre = tester.getTopLeft(find.text('Discussions de prix')).dy;
+      expect(compat, greaterThan(matchs));
+      expect(compat, lessThan(autre));
+    });
 
     testWidgets('l\'écran demande la valeur serveur à l\'ouverture', (
       tester,

@@ -13049,11 +13049,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationSettingsSectionActivity => 'ACTIVITY';
 
   @override
-  String get notificationSettingsBidsLabel => 'Matches & offers';
+  String get notificationSettingsBidsLabel => 'My parcels';
 
   @override
   String get notificationSettingsBidsSubtitle =>
-      'Requests, acceptances, drop-off, cancellation…';
+      'Traveler replies, drop-off, tracking of your parcels';
 
   @override
   String get notificationSettingsCorridorLabel => 'New trips';
@@ -13120,6 +13120,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationSettingsRemindersTipsSubtitle =>
       'Getting started, your trip departure';
+
+  @override
+  String get notificationSettingsMyTripsLabel => 'My trips';
+
+  @override
+  String get notificationSettingsMyTripsSubtitle =>
+      'Requests received, supplements, rescheduling';
+
+  @override
+  String get notificationSettingsRecipientParcelsLabel => 'Parcels for me';
+
+  @override
+  String get notificationSettingsRecipientParcelsSubtitle =>
+      'Tracking of parcels sent to you';
 
   @override
   String get notificationSettingsMissedCallsLabel => 'Missed calls';

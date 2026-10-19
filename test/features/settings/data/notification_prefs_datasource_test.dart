@@ -85,7 +85,7 @@ void main() {
                   ),
                 ).captured.single
                 as Map<String, dynamic>;
-        expect(data.keys, hasLength(9));
+        expect(data.keys, hasLength(11));
         expect(data['pushMessages'], isFalse);
       },
     );
