@@ -702,10 +702,12 @@ class _TravelerCommissionActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    // Estimation locale (mêmes bases que _NegotiationPriceBreakdown /
-    // AcceptOfferBottomSheet) : le montant exact éventuellement ajusté par
-    // un promo n'est recalculé côté serveur qu'au règlement lui-même.
-    final commission = ThreadPricer.of(thread).priceFor(thread.currentPriceEur);
+    // Montant que le back prélèvera (taux spécial et bon compris) ; repli
+    // sur le calcul local de la grille figée pour un back antérieur.
+    final commission = ThreadPricer.of(thread).resolve(
+      thread.currentPriceEur,
+      servedCommission: thread.travelerCashCommissionEur,
+    );
     final now = DateTime.now();
     final travelOver = isTravelDayOver(thread.travelerTravelDate, now);
     final deadline = effectiveCommissionDeadline(

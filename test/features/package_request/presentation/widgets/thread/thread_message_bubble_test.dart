@@ -108,6 +108,48 @@ void main() {
       expect(find.text('Vous recevez 20,00\u00a0€'), findsOneWidget);
     });
 
+    testWidgets('expéditeur, bulle au prix courant du fil : brut servi', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          ThreadMessageBubble(
+            message: _msg(kind: NegotiationMessageKind.proposal, price: 20),
+            mine: false,
+            isTraveler: false,
+            pricer: const ThreadPricer(
+              gridId: kTestGridId,
+              currentNet: 20,
+              servedGross: 21.10,
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Vous payez 21,10\u00a0€'), findsOneWidget);
+    });
+
+    testWidgets('expéditeur, bulle à un autre prix : calcul de la grille', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          ThreadMessageBubble(
+            message: _msg(kind: NegotiationMessageKind.proposal, price: 20),
+            mine: false,
+            isTraveler: false,
+            pricer: const ThreadPricer(
+              gridId: kTestGridId,
+              currentNet: 25,
+              servedGross: 26.10,
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Vous payez 21,40\u00a0€'), findsOneWidget);
+    });
+
     testWidgets('fil sans grille figée sous grille : taux unique', (
       tester,
     ) async {

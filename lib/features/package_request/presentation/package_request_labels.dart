@@ -50,8 +50,9 @@ extension PaymentMethodL10n on PaymentMethod {
 ///
 /// - Le voyageur voit son net : « Tu reçois 35,00 € ».
 /// - L'expéditeur voit le brut qu'il paie : « Tu paies 39,20 € » ([gross],
-///   montant du serveur, s'il est fourni ; sinon le calcul de [pricer], la
-///   grille figée du fil, ou le taux unique sans [pricer]).
+///   montant du serveur, s'il est fourni ; sinon le brut servi pour le prix
+///   courant du fil ou le calcul de [pricer], grille figée du fil ; taux
+///   unique sans [pricer]).
 String threadPriceLabel(
   AppLocalizations l,
   double net,
@@ -63,11 +64,8 @@ String threadPriceLabel(
   if (isTraveler) {
     return l.requestThreadYouReceive(PriceDisplay.money(net, currencyCode));
   }
-  final g =
-      gross ??
-      (pricer ?? ThreadPricer(currency: currencyCode ?? 'EUR'))
-          .priceFor(net)
-          .gross;
+  final p = pricer ?? ThreadPricer(currency: currencyCode ?? 'EUR');
+  final g = gross ?? p.servedGrossFor(net) ?? p.priceFor(net).gross;
   return l.requestThreadYouPay(PriceDisplay.money(g, currencyCode));
 }
 

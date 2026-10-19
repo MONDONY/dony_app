@@ -1218,7 +1218,7 @@ void main() {
         find.byKey(const Key('nego-settle-commission-btn')),
         findsOneWidget,
       );
-      expect(find.text('Régler la commission'), findsOneWidget);
+      expect(find.text('Régler les frais de service'), findsOneWidget);
       expect(find.byKey(const Key('nego-decline-parcel-btn')), findsOneWidget);
       expect(find.text('Refuser le colis'), findsOneWidget);
       // Brut 42 − net 37 : la commission que le serveur prélèvera.

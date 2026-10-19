@@ -43,6 +43,7 @@ void main() {
     int roundsCount = 2,
     String currency = 'EUR',
     String? gridId,
+    double? grossPriceEur,
     bool isTraveler = false,
   }) async {
     await tester.pumpWidget(
@@ -58,7 +59,13 @@ void main() {
                 threadId: 't-1',
                 currentPriceEur: currentPriceEur,
                 roundsCount: roundsCount,
-                pricer: ThreadPricer(gridId: gridId, currency: currency),
+                grossPriceEur: grossPriceEur,
+                pricer: ThreadPricer(
+                  gridId: gridId,
+                  currency: currency,
+                  currentNet: currentPriceEur,
+                  servedGross: grossPriceEur,
+                ),
                 isTraveler: isTraveler,
               ),
               child: const Text('Ouvrir'),
@@ -126,6 +133,19 @@ void main() {
       await tester.pump();
       expect(find.text('21,40\u00a0€'), findsOneWidget);
       expect(find.text('−1,40\u00a0€'), findsOneWidget);
+    });
+
+    testWidgets('expéditeur, saisie du prix courant : brut servi du fil', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      // Net courant 50 € : la grille donnerait 53,50 € ; le serveur sert 52,00 €.
+      await openSheet(tester, gridId: kTestGridId, grossPriceEur: 52);
+      await tester.enterText(find.byType(TextFormField).first, '50');
+      await tester.pump();
+      expect(find.text('2,00\u00a0€'), findsOneWidget);
+      expect(find.text('52,00\u00a0€'), findsOneWidget);
+      expect(find.text('53,50\u00a0€'), findsNothing);
     });
 
     testWidgets('fil sans grille figée sous grille : taux unique', (

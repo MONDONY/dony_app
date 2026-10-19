@@ -5984,7 +5984,7 @@
       }
     }
   },
-  "negotiationPayCommissionButton": "Régler la commission",
+  "negotiationPayCommissionButton": "Régler les frais de service",
   "@negotiationPayCommissionButton": {
     "description": "Bouton de règlement de la commission (thread_state_cta_bar.dart)"
   },

@@ -128,7 +128,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Régler la commission'), findsOneWidget);
+      expect(find.text('Régler les frais de service'), findsOneWidget);
       expect(find.text('Confirmez votre prise en charge'), findsOneWidget);
       expect(find.text('Renoncer à ce colis'), findsOneWidget);
       // Montant de la commission affiché dans le bandeau.
@@ -152,7 +152,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Régler la commission'), findsNothing);
+      expect(find.text('Régler les frais de service'), findsNothing);
       expect(find.byType(ThreadStateBanner), findsOneWidget);
       expect(
         find.text('En attente de la confirmation du voyageur'),
@@ -176,12 +176,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Régler la commission'), findsNothing);
+      expect(find.text('Régler les frais de service'), findsNothing);
       expect(find.text('Confirmez votre prise en charge'), findsNothing);
     });
 
     testWidgets(
-      'tap "Régler la commission" → dispatch NegotiationSettleCommissionRequested',
+      'tap "Régler les frais de service" → dispatch NegotiationSettleCommissionRequested',
       (tester) async {
         await tester.pumpWidget(
           wrap(
@@ -194,7 +194,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Régler la commission'));
+        await tester.tap(find.text('Régler les frais de service'));
         await tester.pump();
 
         verify(
@@ -321,7 +321,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Régler la commission'), findsOneWidget);
+        expect(find.text('Régler les frais de service'), findsOneWidget);
         expect(find.textContaining('Il vous reste'), findsNothing);
         expect(find.text('Délai écoulé'), findsNothing);
       },

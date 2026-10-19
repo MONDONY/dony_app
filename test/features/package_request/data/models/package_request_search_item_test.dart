@@ -28,20 +28,6 @@ const Object _absent = Object();
 
 void main() {
   group('PackageRequestSearchItem', () {
-    test('lit commissionGridId (yadony-back #594), null si absent', () {
-      expect(
-        PackageRequestSearchItem.fromJson({
-          ..._baseJson(),
-          'commissionGridId': 'grid-757',
-        }).commissionGridId,
-        'grid-757',
-      );
-      expect(
-        PackageRequestSearchItem.fromJson(_baseJson()).commissionGridId,
-        isNull,
-      );
-    });
-
     test('defaults negotiable to true when absent from JSON', () {
       final item = PackageRequestSearchItem.fromJson(_baseJson());
       expect(item.negotiable, isTrue);

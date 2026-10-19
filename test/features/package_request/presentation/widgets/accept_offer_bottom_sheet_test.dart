@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -758,15 +760,26 @@ void main() {
             promoCode: any(named: 'promoCode'),
           ),
         ).thenAnswer((_) async => null);
-        // Net 5 € : la grille donnerait 6,00 € (minimum) ; le brut scellé,
-        // payé avec une réduction, vaut 5,50 €.
+        // Net 5 € : brut scellé servi 6,00 € (frais au minimum). Le calcul
+        // local tomberait ici sur la grille en vigueur à 10 % (5,50 €) : le
+        // bouton doit lire le brut du serveur, pas recalculer.
+        CommissionGridStore.setConfig(
+          CommissionGridConfig(
+            current: CommissionGrid(
+              id: 'grid-other',
+              effectiveFrom: DateTime.utc(2026, 9),
+              tiers: const [CommissionTier(fromEur: 0, rate: 0.10)],
+              minimums: const {'EUR': 0.10},
+            ),
+          ),
+        );
         await tester.pumpWidget(
           _buildApp(
             bloc: bloc,
             isCheckout: true,
             priceEur: 5,
-            grossPriceEur: 5.50,
-            gridId: kTestGridId,
+            grossPriceEur: 6.00,
+            gridId: 'grid-inconnue',
           ),
         );
         await tester.tap(find.byKey(const Key('open')));
@@ -778,10 +791,36 @@ void main() {
             promoCode: any(named: 'promoCode'),
           ),
         ).called(1);
-        expect(find.text('Payer (5,50 €)'), findsOneWidget);
-        expect(find.textContaining('6,00'), findsNothing);
-        expect(find.text('0,50 €'), findsOneWidget);
-        expect(find.textContaining('(minimum)'), findsNothing);
+        expect(find.text('Payer (6,00\u00a0€)'), findsOneWidget);
+        expect(find.textContaining('5,50'), findsNothing);
+        expect(find.text('1,00\u00a0€'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'fil scellé (devis null), brut servi égal au minimum de la grille du '
+      'fil : « (minimum) » conservé',
+      (tester) async {
+        useTestCommissionGrid();
+        when(
+          () => negotiationRepository.quote(
+            't-1',
+            promoCode: any(named: 'promoCode'),
+          ),
+        ).thenAnswer((_) async => null);
+        await tester.pumpWidget(
+          _buildApp(
+            bloc: bloc,
+            isCheckout: true,
+            priceEur: 5,
+            grossPriceEur: 6.00,
+            gridId: kTestGridId,
+          ),
+        );
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+        expect(find.text('Payer (6,00\u00a0€)'), findsOneWidget);
+        expect(find.text('1,00\u00a0€\u00a0(minimum)'), findsOneWidget);
       },
     );
 

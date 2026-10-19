@@ -35,6 +35,7 @@ NegotiationThread _thread({
   double price = 38,
   double? grossPriceEur,
   String? commissionGridId,
+  double? travelerCashCommissionEur,
 }) {
   final messages = <NegotiationMessage>[
     NegotiationMessage(
@@ -56,6 +57,7 @@ NegotiationThread _thread({
     currentPriceEur: price,
     grossPriceEur: grossPriceEur,
     commissionGridId: commissionGridId,
+    travelerCashCommissionEur: travelerCashCommissionEur,
     roundsCount: 1,
     canAccept: canAccept,
     canCounter: canCounter,
@@ -813,6 +815,45 @@ void main() {
         );
       },
     );
+
+    testWidgets('commission espèces servie par le back (taux spécial, bon) : '
+        'affichée telle quelle', (tester) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            viewer: _viewerTraveler,
+            price: 20,
+            commissionGridId: kTestGridId,
+            travelerCashCommissionEur: 0.70,
+          ),
+          _viewerTraveler,
+        ),
+      );
+      expect(find.textContaining('0,70\u00a0€'), findsOneWidget);
+      expect(find.textContaining('1,40'), findsNothing);
+      expect(find.textContaining('(minimum)'), findsNothing);
+    });
+
+    testWidgets('commission espèces servie au minimum : « (minimum) » gardé', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            viewer: _viewerTraveler,
+            price: 5,
+            commissionGridId: kTestGridId,
+            travelerCashCommissionEur: 1.00,
+          ),
+          _viewerTraveler,
+        ),
+      );
+      expect(find.textContaining('1,00\u00a0€\u00a0(minimum)'), findsOneWidget);
+    });
 
     testWidgets('commission espèces d\'un fil sans grille figée : taux unique, '
         'sans minimum', (tester) async {

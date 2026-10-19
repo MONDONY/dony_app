@@ -156,7 +156,7 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'bid_negotiation_message' when _isUuid(bidId) => '/bids/$bidId/negotiation',
     'bid_negotiation_expired' when _isUuid(bidId) => '/bids/$bidId/negotiation',
     // Prix accepté en espèces, commission Yadony à régler (FLUTTER-H7,
-    // yadony-back) : le fil porte le bouton « Régler la commission ». Un back
+    // yadony-back) : le fil porte le bouton « Régler les frais de service ». Un back
     // antérieur envoie encore BID_CREATED pour ce cas, qui reste routé plus
     // haut vers la demande.
     'BID_NEGOTIATION_COMMISSION_DUE' when _isUuid(bidId) =>

@@ -9,22 +9,28 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/commission_grid_test_doubles.dart';
 
-NegotiationThread _thread({String? gridId, String currency = 'EUR'}) =>
-    NegotiationThread(
-      id: 't-1',
-      packageRequestId: 'pr-1',
-      travelerId: 'tr-1',
-      travelerTravelDate: DateTime.utc(2026, 11, 2),
-      travelerAvailableKg: 10,
-      status: NegotiationThreadStatus.open,
-      currentPriceEur: 20,
-      roundsCount: 1,
-      lastActivityAt: DateTime.utc(2026, 10, 19),
-      createdAt: DateTime.utc(2026, 10, 19),
-      messages: const [],
-      currency: currency,
-      commissionGridId: gridId,
-    );
+NegotiationThread _thread({
+  String? gridId,
+  String currency = 'EUR',
+  double? commissionRate,
+  double? grossPriceEur,
+}) => NegotiationThread(
+  id: 't-1',
+  packageRequestId: 'pr-1',
+  travelerId: 'tr-1',
+  travelerTravelDate: DateTime.utc(2026, 11, 2),
+  travelerAvailableKg: 10,
+  status: NegotiationThreadStatus.open,
+  currentPriceEur: 20,
+  roundsCount: 1,
+  lastActivityAt: DateTime.utc(2026, 10, 19),
+  createdAt: DateTime.utc(2026, 10, 19),
+  messages: const [],
+  currency: currency,
+  commissionGridId: gridId,
+  commissionRate: commissionRate,
+  grossPriceEur: grossPriceEur,
+);
 
 /// Grille figée à 10 %, minimum 2 € : distincte de la grille de test (7 %).
 CommissionGrid _frozenGrid() => CommissionGrid(
@@ -51,6 +57,23 @@ void main() {
       expect(p.commission, closeTo(1.00, 1e-9));
       expect(p.fromGrid, isFalse);
       expect(p.minimumApplied, isFalse);
+    });
+
+    test('fil sans grille au taux figé du back (commissionRate) : 20 € à '
+        '10 % → 22,00 €', () {
+      useTestCommissionGrid();
+      setDonyCommissionRate(0.05);
+      final p = ThreadPricer.of(_thread(commissionRate: 0.10)).priceFor(20);
+      expect(p.commission, closeTo(2.00, 1e-9));
+      expect(p.gross, closeTo(22.00, 1e-9));
+    });
+
+    test('commissionRate ignoré pour un fil à grille', () {
+      useTestCommissionGrid();
+      final p = ThreadPricer.of(
+        _thread(gridId: kTestGridId, commissionRate: 0.10),
+      ).priceFor(20);
+      expect(p.gross, closeTo(21.40, 1e-9));
     });
 
     test('grille figée connue (grille en vigueur) : 20 € → 21,40 €', () {
@@ -162,7 +185,51 @@ void main() {
     );
   });
 
-  test('égalité par grille et devise', () {
+  group('ThreadPricer.servedGrossFor', () {
+    test('prix courant du fil : brut servi', () {
+      final pricer = ThreadPricer.of(_thread(grossPriceEur: 21.10));
+      expect(pricer.servedGrossFor(20), 21.10);
+    });
+
+    test('autre prix : rien (calcul local)', () {
+      final pricer = ThreadPricer.of(_thread(grossPriceEur: 21.10));
+      expect(pricer.servedGrossFor(25), isNull);
+    });
+
+    test('brut non servi : rien', () {
+      expect(ThreadPricer.of(_thread()).servedGrossFor(20), isNull);
+    });
+  });
+
+  group('ThreadPricer.resolve (frais servis)', () {
+    test('frais servis : ils priment, brut = net + frais', () {
+      useTestCommissionGrid();
+      final p = ThreadPricer.of(
+        _thread(gridId: kTestGridId),
+      ).resolve(20, servedCommission: 0.80);
+      expect(p.commission, 0.80);
+      expect(p.gross, closeTo(20.80, 1e-9));
+      expect(p.minimumApplied, isFalse);
+    });
+
+    test('frais servis égaux au minimum local : mention gardée', () {
+      useTestCommissionGrid();
+      final p = ThreadPricer.of(
+        _thread(gridId: kTestGridId),
+      ).resolve(5, servedCommission: 1.00);
+      expect(p.minimumApplied, isTrue);
+    });
+
+    test('frais servis prioritaires sur le brut servi', () {
+      useTestCommissionGrid();
+      final p = ThreadPricer.of(
+        _thread(gridId: kTestGridId),
+      ).resolve(20, servedGross: 21.40, servedCommission: 0.80);
+      expect(p.commission, 0.80);
+    });
+  });
+
+  test('égalité par grille, devise, taux et prix servi', () {
     expect(
       ThreadPricer.of(_thread(gridId: 'g')),
       ThreadPricer.of(_thread(gridId: 'g')),
@@ -171,7 +238,15 @@ void main() {
       ThreadPricer.of(_thread(gridId: 'g')).hashCode,
       ThreadPricer.of(_thread(gridId: 'g')).hashCode,
     );
-    expect(ThreadPricer.of(_thread()), const ThreadPricer());
+    expect(ThreadPricer.of(_thread()), const ThreadPricer(currentNet: 20));
+    expect(
+      ThreadPricer.of(_thread(commissionRate: 0.10)),
+      isNot(ThreadPricer.of(_thread())),
+    );
+    expect(
+      ThreadPricer.of(_thread(grossPriceEur: 21)),
+      isNot(ThreadPricer.of(_thread())),
+    );
     expect(
       ThreadPricer.of(_thread(gridId: 'g')),
       isNot(ThreadPricer.of(_thread(gridId: 'g', currency: 'XOF'))),

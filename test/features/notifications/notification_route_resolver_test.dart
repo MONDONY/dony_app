@@ -171,7 +171,7 @@ void main() {
   });
 
   group('resolveNotificationRoute — commission d un accord en especes', () {
-    // FLUTTER-H7 : le fil porte le bouton « Régler la commission ».
+    // FLUTTER-H7 : le fil porte le bouton « Régler les frais de service ».
     test('BID_NEGOTIATION_COMMISSION_DUE routes to the trip thread', () {
       expect(
         resolveNotificationRoute('BID_NEGOTIATION_COMMISSION_DUE', {

@@ -10564,7 +10564,7 @@ abstract class AppLocalizations {
   /// Bouton de règlement de la commission (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Régler la commission'**
+  /// **'Régler les frais de service'**
   String get negotiationPayCommissionButton;
 
   /// Titre du dialog de renoncement à la commission (thread_state_cta_bar.dart)

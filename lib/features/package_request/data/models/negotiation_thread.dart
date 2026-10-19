@@ -84,6 +84,8 @@ class NegotiationThread extends Equatable {
     this.travelerGpPro = false,
     this.senderGpPro = false,
     this.commissionGridId,
+    this.commissionRate,
+    this.travelerCashCommissionEur,
   });
 
   final String id;
@@ -184,6 +186,15 @@ class NegotiationThread extends Equatable {
   /// antérieur. Voir `ThreadPricer`.
   final String? commissionGridId;
 
+  /// Taux figé sur le fil par le back (snapshot du premier paiement), `null`
+  /// avant : le taux global s'applique alors. Sert au fil sans grille.
+  final double? commissionRate;
+
+  /// Commission espèces que le back prélèvera au voyageur (taux spécial et
+  /// bon de parrainage compris). Servie au seul voyageur d'un accord en
+  /// espèces ; absente sinon et sur un back antérieur (repli local).
+  final double? travelerCashCommissionEur;
+
   /// Vrai quand un règlement est resté suspendu à une authentification forte
   /// 3DS. Le voyageur a basculé vers son application bancaire et l'OS a pu tuer
   /// yadony entre-temps : à sa prochaine tentative il faut confirmer le
@@ -262,6 +273,9 @@ class NegotiationThread extends Equatable {
     travelerGpPro: json['travelerGpPro'] as bool? ?? false,
     senderGpPro: json['senderGpPro'] as bool? ?? false,
     commissionGridId: json['commissionGridId'] as String?,
+    commissionRate: (json['commissionRate'] as num?)?.toDouble(),
+    travelerCashCommissionEur: (json['travelerCashCommissionEur'] as num?)
+        ?.toDouble(),
   );
 
   /// Force l'UTC sur un `LocalDateTime` back sans suffixe de zone (ex.
@@ -320,5 +334,7 @@ class NegotiationThread extends Equatable {
     travelerGpPro,
     senderGpPro,
     commissionGridId,
+    commissionRate,
+    travelerCashCommissionEur,
   ];
 }

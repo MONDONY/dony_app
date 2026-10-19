@@ -6382,7 +6382,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get negotiationPayCommissionButton => 'Régler la commission';
+  String get negotiationPayCommissionButton => 'Régler les frais de service';
 
   @override
   String get negotiationDeclineParcelDialogTitle => 'Renoncer à ce colis ?';

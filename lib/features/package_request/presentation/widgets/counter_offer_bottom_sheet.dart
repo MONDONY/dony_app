@@ -309,7 +309,7 @@ class CounterOfferCommissionPreview extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final currency = pricer.currency;
-    final price = pricer.priceFor(net);
+    final price = pricer.resolve(net, servedGross: pricer.servedGrossFor(net));
     final gross = price.gross;
     final fee = serviceFeeAmountLabel(
       l,
