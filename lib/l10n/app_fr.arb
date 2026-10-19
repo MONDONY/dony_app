@@ -14343,11 +14343,11 @@
   "@notificationSettingsSectionActivity": {
     "description": "En-tête de section (notification_settings_screen.dart)"
   },
-  "notificationSettingsBidsLabel": "Matchs & enchères",
+  "notificationSettingsBidsLabel": "Mes envois",
   "@notificationSettingsBidsLabel": {
     "description": "Libellé de la tuile push_activity_bids (notification_settings_screen.dart)"
   },
-  "notificationSettingsBidsSubtitle": "Demandes, acceptations, remise, annulation…",
+  "notificationSettingsBidsSubtitle": "Réponses des voyageurs, remise, suivi de vos colis",
   "@notificationSettingsBidsSubtitle": {
     "description": "Sous-titre de la tuile push_activity_bids (notification_settings_screen.dart)"
   },
@@ -14409,6 +14409,14 @@
   "@notificationSettingsRemindersTipsLabel": {"description": "Tuile push_reminders_tips : FIRST_ACTION_REMINDER et TRIP_IN_PROGRESS (notification_settings_screen.dart)"},
   "notificationSettingsRemindersTipsSubtitle": "Premiers pas, départ de votre trajet",
   "@notificationSettingsRemindersTipsSubtitle": {"description": "Sous-titre de la tuile push_reminders_tips (notification_settings_screen.dart)"},
+  "notificationSettingsMyTripsLabel": "Mes trajets",
+  "@notificationSettingsMyTripsLabel": {"description": "Tuile push_my_trips : ce que reçoit le voyageur (notification_settings_screen.dart)"},
+  "notificationSettingsMyTripsSubtitle": "Demandes reçues, suppléments, reports",
+  "@notificationSettingsMyTripsSubtitle": {"description": "Sous-titre de la tuile push_my_trips (notification_settings_screen.dart)"},
+  "notificationSettingsRecipientParcelsLabel": "Colis pour moi",
+  "@notificationSettingsRecipientParcelsLabel": {"description": "Tuile push_recipient_parcels : suivi des colis dont on est le destinataire (notification_settings_screen.dart)"},
+  "notificationSettingsRecipientParcelsSubtitle": "Suivi des colis qu'on vous envoie",
+  "@notificationSettingsRecipientParcelsSubtitle": {"description": "Sous-titre de la tuile push_recipient_parcels (notification_settings_screen.dart)"},
   "notificationSettingsMissedCallsLabel": "Appels manqués",
   "@notificationSettingsMissedCallsLabel": {"description": "Tuile push_missed_calls : CALL_MISSED (notification_settings_screen.dart)"},
   "notificationSettingsMissedCallsSubtitle": "Quand vous manquez un appel Yadony",

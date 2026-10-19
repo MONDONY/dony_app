@@ -21700,13 +21700,13 @@ abstract class AppLocalizations {
   /// Libellé de la tuile push_activity_bids (notification_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Matchs & enchères'**
+  /// **'Mes envois'**
   String get notificationSettingsBidsLabel;
 
   /// Sous-titre de la tuile push_activity_bids (notification_settings_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Demandes, acceptations, remise, annulation…'**
+  /// **'Réponses des voyageurs, remise, suivi de vos colis'**
   String get notificationSettingsBidsSubtitle;
 
   /// Libellé de la tuile push_corridor_alerts (notification_settings_screen.dart)
@@ -21822,6 +21822,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Premiers pas, départ de votre trajet'**
   String get notificationSettingsRemindersTipsSubtitle;
+
+  /// Tuile push_my_trips : ce que reçoit le voyageur (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes trajets'**
+  String get notificationSettingsMyTripsLabel;
+
+  /// Sous-titre de la tuile push_my_trips (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes reçues, suppléments, reports'**
+  String get notificationSettingsMyTripsSubtitle;
+
+  /// Tuile push_recipient_parcels : suivi des colis dont on est le destinataire (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis pour moi'**
+  String get notificationSettingsRecipientParcelsLabel;
+
+  /// Sous-titre de la tuile push_recipient_parcels (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi des colis qu\'on vous envoie'**
+  String get notificationSettingsRecipientParcelsSubtitle;
 
   /// Tuile push_missed_calls : CALL_MISSED (notification_settings_screen.dart)
   ///

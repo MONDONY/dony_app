@@ -22,6 +22,10 @@ class NotificationPrefsDto {
     'push_missed_calls': true,
     'push_traveler_automations': true,
     'push_reminders_tips': true,
+    // Plan bruit, étape 4b (back V340) : l'ancienne tuile « Matchs & enchères »
+    // devient « Mes envois », le voyageur et le destinataire ont la leur.
+    'push_my_trips': true,
+    'push_recipient_parcels': true,
   };
 
   static const Map<String, String> uiKeyToJsonKey = {
@@ -34,6 +38,8 @@ class NotificationPrefsDto {
     'push_missed_calls': 'pushMissedCalls',
     'push_traveler_automations': 'pushTravelerAutomations',
     'push_reminders_tips': 'pushRemindersTips',
+    'push_my_trips': 'pushMyTrips',
+    'push_recipient_parcels': 'pushRecipientParcels',
   };
 
   static bool isSynced(String uiKey) => uiKeyToJsonKey.containsKey(uiKey);
@@ -54,7 +60,7 @@ class NotificationPrefsDto {
   /// `boolean` primitifs côté Java : un champ omis y arriverait à `false`, ce qui
   /// couperait en silence une catégorie que l'utilisateur n'a jamais touchée.
   ///
-  /// Les trois champs V305 sont tolérés des deux côtés : un serveur antérieur
+  /// Les champs V305 et V340 sont tolérés des deux côtés : un serveur antérieur
   /// les ignore à l'écriture et ne les renvoie pas en lecture (la valeur locale
   /// reste alors inchangée, voir [NotificationPrefsDto.fromJson]).
   Map<String, dynamic> toJson() => {

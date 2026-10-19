@@ -134,6 +134,25 @@ class _NotificationSettingsScreenState
                         prefs: state.prefs,
                         onToggle: (key) => _toggle(context, key),
                       ),
+                      // Une tuile par rôle (back V340) : ce qu'on reçoit comme
+                      // voyageur, puis comme destinataire d'un colis.
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsMyTripsLabel,
+                        subtitle: l.notificationSettingsMyTripsSubtitle,
+                        key: 'push_my_trips',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsRecipientParcelsLabel,
+                        subtitle:
+                            l.notificationSettingsRecipientParcelsSubtitle,
+                        key: 'push_recipient_parcels',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
                       // Cloche rapatriée de l'écran « Colis sur mes trajets »,
                       // supprimé avec sa route : le réglage reste, son écran non.
                       _buildPackageMatchTile(context, state.packageMatchAlert),

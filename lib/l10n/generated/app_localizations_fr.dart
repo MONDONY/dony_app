@@ -13141,11 +13141,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notificationSettingsSectionActivity => 'ACTIVITÉ';
 
   @override
-  String get notificationSettingsBidsLabel => 'Matchs & enchères';
+  String get notificationSettingsBidsLabel => 'Mes envois';
 
   @override
   String get notificationSettingsBidsSubtitle =>
-      'Demandes, acceptations, remise, annulation…';
+      'Réponses des voyageurs, remise, suivi de vos colis';
 
   @override
   String get notificationSettingsCorridorLabel => 'Nouveaux trajets';
@@ -13213,6 +13213,20 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notificationSettingsRemindersTipsSubtitle =>
       'Premiers pas, départ de votre trajet';
+
+  @override
+  String get notificationSettingsMyTripsLabel => 'Mes trajets';
+
+  @override
+  String get notificationSettingsMyTripsSubtitle =>
+      'Demandes reçues, suppléments, reports';
+
+  @override
+  String get notificationSettingsRecipientParcelsLabel => 'Colis pour moi';
+
+  @override
+  String get notificationSettingsRecipientParcelsSubtitle =>
+      'Suivi des colis qu\'on vous envoie';
 
   @override
   String get notificationSettingsMissedCallsLabel => 'Appels manqués';
