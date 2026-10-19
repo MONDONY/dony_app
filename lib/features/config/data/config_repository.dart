@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
@@ -19,6 +20,8 @@ abstract class IConfigRepository {
 
   /// Grille figée par identifiant, `null` si inconnue ou annulée (404).
   Future<CommissionGrid?> getCommissionGridById(String id);
+
+  Future<PaymentMethodFlags> getPaymentMethods();
 }
 
 class ConfigRepository implements IConfigRepository {
@@ -107,6 +110,15 @@ class ConfigRepository implements IConfigRepository {
       return await _datasource.getCommissionGridById(id);
     } catch (e) {
       if (e is DioException && e.response?.statusCode == 404) return null;
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<PaymentMethodFlags> getPaymentMethods() async {
+    try {
+      return await _datasource.getPaymentMethods();
+    } catch (e) {
       throw unwrapDioError(e);
     }
   }

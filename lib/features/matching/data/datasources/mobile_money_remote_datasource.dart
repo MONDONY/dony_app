@@ -14,19 +14,25 @@ class MobileMoneyRemoteDatasource {
     return MobileMoneyPaymentStatus.fromJson(response.data!);
   }
 
-  /// Réseaux avec lesquels l'expéditeur peut payer ce colis : ceux de son
-  /// numéro ([phoneNumber], sinon celui du bid), restreints par le back aux
-  /// marques acceptées par le voyageur. Liste vide = aucun réseau commun.
+  /// Réseaux avec lesquels l'expéditeur peut payer ce colis (ou son
+  /// supplément) : ceux de son numéro ([phoneNumber], sinon celui du bid),
+  /// restreints par le back aux marques acceptées par le voyageur. Liste
+  /// vide = aucun réseau commun. Réservé aux portées qui exposent un
+  /// catalogue ([MobileMoneyScope.providersPath] non nul).
   Future<MobileMoneyProviderCatalog> providers(
-    String bidId, {
+    MobileMoneyScope scope, {
     String? phoneNumber,
   }) async {
+    final path = scope.providersPath;
+    if (path == null) {
+      throw ArgumentError.value(scope, 'scope', 'aucun catalogue');
+    }
     final trimmed = phoneNumber?.trim();
     final body = (trimmed != null && trimmed.isNotEmpty)
         ? {'phoneNumber': trimmed}
         : null;
     final response = await _client.dio.post<Map<String, dynamic>>(
-      '/bids/$bidId/mobile-money/providers',
+      path,
       data: body,
     );
     return MobileMoneyProviderCatalog.fromJson(response.data!);

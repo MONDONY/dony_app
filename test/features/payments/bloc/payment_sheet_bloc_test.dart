@@ -1,9 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_stripe/flutter_stripe.dart'
     show FailureCode, LocalizedErrorMessage, StripeException;
 import 'package:flutter_test/flutter_test.dart';
@@ -31,10 +33,24 @@ void main() {
   setUp(() {
     gateway = MockPaymentGateway();
     repository = MockPaymentRepository();
+    resetPaymentMethodFlagsForTest();
   });
 
-  PaymentSheetBloc buildBloc({PaymentSheetConfig cfg = config}) =>
-      PaymentSheetBloc(gateway: gateway, repository: repository, config: cfg);
+  tearDown(resetPaymentMethodFlagsForTest);
+
+  /// Par défaut, le serveur autorise Apple Pay et Google Pay : les tests
+  /// historiques portent sur l'appareil et le PaymentIntent.
+  const walletsOn = PaymentMethodFlags(applePay: true, googlePay: true);
+
+  PaymentSheetBloc buildBloc({
+    PaymentSheetConfig cfg = config,
+    PaymentMethodFlags flags = walletsOn,
+  }) => PaymentSheetBloc(
+    gateway: gateway,
+    repository: repository,
+    config: cfg,
+    loadPaymentMethodFlags: () async => flags,
+  );
 
   void stubResolution({bool wallet = false}) {
     when(
@@ -92,6 +108,99 @@ void main() {
           paypalAvailable: true,
         ),
       ],
+    );
+  });
+
+  group('PaymentSheetStarted — drapeaux serveur (YADONY-FLUTTER-PROD-11)', () {
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'Google Pay éteint côté serveur : pas de wallet, appareil non interrogé',
+      build: () {
+        stubResolution(wallet: true);
+        return buildBloc(flags: const PaymentMethodFlags(applePay: true));
+      },
+      act: (bloc) => bloc.add(const PaymentSheetStarted()),
+      expect: () => [
+        const PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: true,
+        ),
+      ],
+      verify: (_) => verifyNever(() => gateway.isPlatformPaySupported()),
+    );
+
+    test('Apple Pay suit son propre drapeau sur iOS', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      try {
+        stubResolution(wallet: true);
+        for (final (flags, expected) in [
+          (const PaymentMethodFlags(googlePay: true), false),
+          (const PaymentMethodFlags(applePay: true), true),
+        ]) {
+          final bloc = buildBloc(flags: flags)
+            ..add(const PaymentSheetStarted());
+          final resolved =
+              await bloc.stream.firstWhere((s) => s is PaymentSheetResolved)
+                  as PaymentSheetResolved;
+          expect(resolved.walletAvailable, expected, reason: '$flags');
+          await bloc.close();
+        }
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'valeur relue à l\'ouverture : mémorisée comme dernière valeur connue',
+      build: () {
+        stubResolution(wallet: true);
+        return buildBloc(flags: const PaymentMethodFlags(googlePay: true));
+      },
+      act: (bloc) => bloc.add(const PaymentSheetStarted()),
+      verify: (_) => expect(
+        paymentMethodFlagsListenable.value,
+        const PaymentMethodFlags(googlePay: true),
+      ),
+    );
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'lecture en échec (ancien serveur, réseau) : dernière valeur connue',
+      build: () {
+        stubResolution(wallet: true);
+        setPaymentMethodFlags(const PaymentMethodFlags(googlePay: true));
+        return PaymentSheetBloc(
+          gateway: gateway,
+          repository: repository,
+          config: config,
+          loadPaymentMethodFlags: () async => throw Exception('404'),
+        );
+      },
+      act: (bloc) => bloc.add(const PaymentSheetStarted()),
+      expect: () => [
+        const PaymentSheetResolved(
+          walletAvailable: true,
+          paypalAvailable: true,
+        ),
+      ],
+    );
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'aucune valeur connue : repli carte seule (+ PayPal du PaymentIntent)',
+      build: () {
+        stubResolution(wallet: true);
+        return PaymentSheetBloc(
+          gateway: gateway,
+          repository: repository,
+          config: config,
+        );
+      },
+      act: (bloc) => bloc.add(const PaymentSheetStarted()),
+      expect: () => [
+        const PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: true,
+        ),
+      ],
+      verify: (_) => verifyNever(() => gateway.isPlatformPaySupported()),
     );
   });
 

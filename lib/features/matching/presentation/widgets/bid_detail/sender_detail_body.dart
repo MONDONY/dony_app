@@ -13,6 +13,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_lo
 import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
@@ -41,7 +42,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 class SenderDetailBody extends StatefulWidget {
   final BidModel bid;
 
-  const SenderDetailBody({super.key, required this.bid});
+  /// Ouvert depuis la notification `BID_SUPPLEMENT_REQUESTED`
+  /// (`?action=supplement`) : l'encart du supplément est amené à l'écran au
+  /// premier affichage où il existe.
+  final bool focusSupplement;
+
+  const SenderDetailBody({
+    super.key,
+    required this.bid,
+    this.focusSupplement = false,
+  });
 
   @override
   State<SenderDetailBody> createState() => _SenderDetailBodyState();
@@ -85,16 +95,42 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     });
   }
 
+  /// Encart du supplément, cible de [SenderDetailBody.focusSupplement].
+  final _supplementKey = GlobalKey();
+  bool _supplementFocused = false;
+
   @override
   void dispose() {
     _entranceTimer?.cancel();
     super.dispose();
   }
 
+  /// Amène l'encart du supplément à l'écran une seule fois, dès qu'il existe
+  /// (le colis arrive souvent après le premier affichage, lien profond).
+  void _maybeFocusSupplement() {
+    if (!widget.focusSupplement ||
+        _supplementFocused ||
+        !SupplementSenderCard.shouldShow(widget.bid)) {
+      return;
+    }
+    _supplementFocused = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _supplementKey.currentContext;
+      if (!mounted || target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        alignment: 0.1,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final h = DonyLayout.hPadding(context);
     final status = widget.bid.status;
+    _maybeFocusSupplement();
 
     final children = <Widget>[
       // index 0 — ColisBillet possède déjà son propre .animate().fadeIn().slideY()
@@ -102,6 +138,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // pour éviter une double animation (fade × fade + slide × slide).
       ColisBillet(bid: widget.bid, isSender: true),
       SenderHeroCard(bid: widget.bid),
+      // Supplément de prix demandé par le voyageur : réponse attendue avant
+      // la remise, juste sous le hero.
+      if (SupplementSenderCard.shouldShow(widget.bid))
+        SupplementSenderCard(key: _supplementKey, bid: widget.bid),
       if (TripRescheduleCard.shouldShow(widget.bid))
         TripRescheduleCard(bid: widget.bid, isSender: true),
       // Lieu de remise puis lieu de récupération, ouvrables dans la carte

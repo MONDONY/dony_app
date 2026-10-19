@@ -688,6 +688,24 @@ final appRouter = GoRouter(
           BidAcceptedSuccessScreen(bidId: state.pathParameters['bidId']!),
     ),
 
+    // ── Supplément de prix payé en mobile money : écran d'attente (hors
+    //    shell). Déclarée avant `/bids/:bidId`, même raison que
+    //    `/negotiation`. Ouverte par le bouton « Payer » de l'expéditeur ou
+    //    par le retour Wave (`yadony://bids/{id}/supplements/{id}/…`).
+    GoRoute(
+      path: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
+      name: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<MobileMoneyPaymentBloc>(),
+        child: MobileMoneyAwaitingScreen(
+          scope: MobileMoneyScope.supplement(
+            bidId: state.pathParameters['bidId']!,
+            supplementId: state.pathParameters['supplementId']!,
+          ),
+        ),
+      ),
+    ),
+
     // ── Bid detail (hors shell) ──────────────────────────────────────────
     GoRoute(
       path: '/bids/:bidId',
@@ -698,12 +716,14 @@ final appRouter = GoRouter(
         final fromPayment = state.uri.queryParameters['from'] == 'payment';
         // Notification CONFIRMATION_CODE_REQUESTED (FLUTTER-G2) : le voyageur
         // demande un nouveau code, la fiche ouvre directement la régénération.
-        final openCodeRenewal =
-            state.uri.queryParameters['action'] == 'new-code';
+        final action = state.uri.queryParameters['action'];
         return BidDetailScreen(
           bid: bid,
           fromPayment: fromPayment,
-          openCodeRenewal: openCodeRenewal,
+          openCodeRenewal: action == 'new-code',
+          // Notification BID_SUPPLEMENT_REQUESTED : la fiche amène l'encart
+          // du supplément à l'écran de l'expéditeur.
+          focusSupplement: action == 'supplement',
         );
       },
     ),
@@ -2064,6 +2084,9 @@ final appRouter = GoRouter(
               builder: (context, state) => SuiviScreen(
                 requestedMode: suiviModeFromQuery(
                   state.uri.queryParameters['mode'],
+                ),
+                requestedSegment: suiviSegmentFromQuery(
+                  state.uri.queryParameters['segment'],
                 ),
               ),
             ),

@@ -614,7 +614,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _reopenSessionAfterContactChange(result.sessionToken);
       emit(AuthProfileUpdated(result.user));
     } catch (e) {
-      emit(AuthError(_friendlyError(e)));
+      final error = _friendlyError(e);
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.phoneAttachFailed,
+          properties: {'error_code': error.code ?? 'unknown'},
+        ),
+      );
+      emit(AuthError(error));
     }
   }
 

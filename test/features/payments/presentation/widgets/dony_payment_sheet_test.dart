@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
+import 'package:dony/features/payments/data/payment_gateway.dart';
+import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,6 +20,10 @@ class MockPaymentSheetBloc
   @override
   final PaymentSheetConfig config;
 }
+
+class _MockPaymentGateway extends Mock implements PaymentGateway {}
+
+class _MockPaymentRepository extends Mock implements PaymentRepository {}
 
 const _config = PaymentSheetConfig(
   clientSecret: 'pi_123_secret_abc',
@@ -451,6 +458,60 @@ void main() {
     );
 
     testWidgets(
+      'methodUnavailable → « momentanément indisponible » (YADONY-FLUTTER-PROD-10)',
+      (tester) async {
+        const ready = PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: false,
+        );
+        whenListen<PaymentSheetState>(
+          bloc,
+          Stream.fromIterable([
+            const PaymentSheetFailure(
+              reason: PaymentSheetFailureReason.methodUnavailable,
+              ready: ready,
+            ),
+          ]),
+          initialState: ready,
+        );
+
+        // pumpAndSettle avancerait le temps virtuel jusqu'à la disparition de la
+        // snackbar (durée par défaut 4s) — on pompe image par image à la place.
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) => TextButton(
+                  onPressed: () => DonyPaymentSheet.show(
+                    ctx,
+                    config: _config,
+                    contextLabel: 'Envoi vers Dakar',
+                    onSuccess: () {},
+                    bloc: bloc,
+                  ),
+                  child: const Text('Ouvrir'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump();
+
+        expect(
+          find.text(
+            'Ce moyen de paiement est momentanément indisponible. '
+            'Payez par carte.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Paiement refusé'), findsNothing);
+      },
+    );
+
+    testWidgets(
       'providerMessage du gateway affiché tel quel, avant le libellé générique',
       (tester) async {
         const ready = PaymentSheetResolved(
@@ -532,5 +593,54 @@ void main() {
       );
       expect(find.text('Done'), findsOneWidget);
     });
+  });
+
+  group('Drapeaux serveur, bloc réel (YADONY-FLUTTER-PROD-11)', () {
+    tearDown(resetPaymentMethodFlagsForTest);
+
+    testWidgets(
+      'appareil compatible mais Google Pay et PayPal éteints : carte seule',
+      (tester) async {
+        final gateway = _MockPaymentGateway();
+        when(gateway.isPlatformPaySupported).thenAnswer((_) async => true);
+        final realBloc = PaymentSheetBloc(
+          gateway: gateway,
+          repository: _MockPaymentRepository(),
+          // PayPal absent du PaymentIntent : le serveur ne l'a pas activé.
+          config: const PaymentSheetConfig(
+            clientSecret: 'pi_123_secret_abc',
+            amountEur: 56.0,
+            paymentMethodTypes: ['card'],
+          ),
+          loadPaymentMethodFlags: () async => PaymentMethodFlags.none,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) => TextButton(
+                  onPressed: () => DonyPaymentSheet.show(
+                    ctx,
+                    config: realBloc.config,
+                    contextLabel: 'Envoi vers Dakar',
+                    onSuccess: () {},
+                    bloc: realBloc,
+                  ),
+                  child: const Text('Ouvrir'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('paymentSheetWalletButton')), findsNothing);
+        expect(find.byKey(const Key('paymentSheetPayPalButton')), findsNothing);
+        expect(find.byKey(const Key('paymentSheetCardButton')), findsOneWidget);
+        verifyNever(gateway.isPlatformPaySupported);
+      },
+    );
   });
 }

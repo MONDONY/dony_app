@@ -11,9 +11,9 @@ class MobileMoneyRepository {
       _datasource.getStatus(scope);
 
   Future<MobileMoneyProviderCatalog> providers(
-    String bidId, {
+    MobileMoneyScope scope, {
     String? phoneNumber,
-  }) => _datasource.providers(bidId, phoneNumber: phoneNumber);
+  }) => _datasource.providers(scope, phoneNumber: phoneNumber);
 
   Future<MobileMoneyPaymentStatus> initiate(
     MobileMoneyScope scope, {

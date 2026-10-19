@@ -266,6 +266,7 @@ String commissionSetupErrorMessage(
   StripeFailureKind.cardDeclined => e.message ?? l.paymentCardDeclined,
   StripeFailureKind.authenticationFailed => l.paymentAuthenticationFailed,
   StripeFailureKind.sheetUnavailable => l.paymentSheetOpenFailed,
+  StripeFailureKind.methodUnavailable => l.paymentMethodUnavailable,
   StripeFailureKind.generic => l.commissionCardAddErrorMessage,
 };
 

@@ -114,6 +114,15 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorPhoneAlreadySetMessage': (l) => l.errorPhoneAlreadySetMessage,
   'errorPhoneAlreadyExistsTitle': (l) => l.errorPhoneAlreadyExistsTitle,
   'errorPhoneAlreadyExistsMessage': (l) => l.errorPhoneAlreadyExistsMessage,
+  'errorPhonePendingDeletionTitle': (l) => l.errorPhonePendingDeletionTitle,
+  'errorPhonePendingDeletionMessage': (l) => l.errorPhonePendingDeletionMessage,
+  'contactPhoneConflictSupportSubject': (l) =>
+      l.contactPhoneConflictSupportSubject,
+  'contactPhoneConflictSupportMessage': (l) =>
+      l.contactPhoneConflictSupportMessage(placeholderMarker('phone')),
+  'contactEmailChangeSupportSubject': (l) => l.contactEmailChangeSupportSubject,
+  'contactEmailChangeSupportMessage': (l) =>
+      l.contactEmailChangeSupportMessage(placeholderMarker('email')),
   'errorSmsOtpDisabledTitle': (l) => l.errorSmsOtpDisabledTitle,
   'errorSmsOtpDisabledMessage': (l) => l.errorSmsOtpDisabledMessage,
   'errorInvalidPhoneNumberTitle': (l) => l.errorInvalidPhoneNumberTitle,
@@ -766,6 +775,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeRatingOnlyFive': (l) => l.homeRatingOnlyFive,
   'homeRatingAndUp': (l) => l.homeRatingAndUp(placeholderMarker('rating')),
   'homeWeightCapacityTitle': (l) => l.homeWeightCapacityTitle,
+  'homeWeightSliderMaxOpen': (l) =>
+      l.homeWeightSliderMaxOpen(intPlaceholderValue),
+  'homeFilterChipsCapacityRange': (l) =>
+      l.homeFilterChipsCapacityRange(intPlaceholderValue, intPlaceholderValue),
   'homeMaxPriceTitle': (l) => l.homeMaxPriceTitle,
   'homeAnyPrice': (l) => l.homeAnyPrice,
   'homeComposerTitleTrips': (l) => l.homeComposerTitleTrips,
@@ -829,6 +842,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'homeFilterChipsPrice': (l) => l.homeFilterChipsPrice,
   'homeFilterChipsSize': (l) => l.homeFilterChipsSize,
   'homeFilterChipsUrgent': (l) => l.homeFilterChipsUrgent,
+  'homeFilterChipsSuitcase23': (l) => l.homeFilterChipsSuitcase23,
   'homeFilterFieldsExactDate': (l) => l.homeFilterFieldsExactDate,
   'homeFilterFieldsMaxPrice': (l) => l.homeFilterFieldsMaxPrice,
   'homeFilterFieldsAll': (l) => l.homeFilterFieldsAll,
@@ -3368,8 +3382,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'paymentCardDeclined': (l) => l.paymentCardDeclined,
   'paymentAuthenticationFailed': (l) => l.paymentAuthenticationFailed,
   'paymentSheetOpenFailed': (l) => l.paymentSheetOpenFailed,
-  'paymentMethodsSemantics': (l) =>
-      l.paymentMethodsSemantics(placeholderMarker('wallet')),
+  'paymentMethodUnavailable': (l) => l.paymentMethodUnavailable,
   'paymentContextRecipient': (l) =>
       l.paymentContextRecipient(placeholderMarker('name')),
   'paymentContextDefault': (l) => l.paymentContextDefault,
@@ -4639,6 +4652,25 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.notificationSettingsRemindersTipsLabel,
   'notificationSettingsRemindersTipsSubtitle': (l) =>
       l.notificationSettingsRemindersTipsSubtitle,
+  'notificationSettingsMyTripsLabel': (l) => l.notificationSettingsMyTripsLabel,
+  'notificationSettingsMyTripsSubtitle': (l) =>
+      l.notificationSettingsMyTripsSubtitle,
+  'notificationSettingsRecipientParcelsLabel': (l) =>
+      l.notificationSettingsRecipientParcelsLabel,
+  'notificationSettingsRecipientParcelsSubtitle': (l) =>
+      l.notificationSettingsRecipientParcelsSubtitle,
+  'notificationSettingsSectionEmails': (l) =>
+      l.notificationSettingsSectionEmails,
+  'notificationSettingsEmailRecapsLabel': (l) =>
+      l.notificationSettingsEmailRecapsLabel,
+  'notificationSettingsEmailRecapsSubtitle': (l) =>
+      l.notificationSettingsEmailRecapsSubtitle,
+  'notificationSettingsEmailAlertsTipsLabel': (l) =>
+      l.notificationSettingsEmailAlertsTipsLabel,
+  'notificationSettingsEmailAlertsTipsSubtitle': (l) =>
+      l.notificationSettingsEmailAlertsTipsSubtitle,
+  'notificationSettingsEmailsAlwaysNote': (l) =>
+      l.notificationSettingsEmailsAlwaysNote,
   'notificationSettingsMissedCallsLabel': (l) =>
       l.notificationSettingsMissedCallsLabel,
   'notificationSettingsMissedCallsSubtitle': (l) =>
@@ -5742,6 +5774,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.profilePublicResponseDays(intPlaceholderValue),
   'privacyShowLastSeenLabel': (l) => l.privacyShowLastSeenLabel,
   'privacyShowLastSeenSubtitle': (l) => l.privacyShowLastSeenSubtitle,
+  'receptionsPromptTitle': (l) => l.receptionsPromptTitle(intPlaceholderValue),
+  'receptionsPromptFromSender': (l) =>
+      l.receptionsPromptFromSender(placeholderMarker('name')),
+  'receptionsPromptSubtitle': (l) => l.receptionsPromptSubtitle,
   'receptionsSectionTitle': (l) => l.receptionsSectionTitle,
   'receptionsRowFrom': (l) => l.receptionsRowFrom(placeholderMarker('name')),
   'receptionsPendingChip': (l) => l.receptionsPendingChip,
@@ -7414,11 +7450,223 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.bidNegotiationGridLineServiceFee(placeholderMarker('line')),
   'bidNegotiationHeroServiceFeeIncluded': (l) =>
       l.bidNegotiationHeroServiceFeeIncluded,
+  'bidDetailRequestSupplementLabel': (l) => l.bidDetailRequestSupplementLabel,
+  'bidDetailRequestSupplementSubtitle': (l) =>
+      l.bidDetailRequestSupplementSubtitle,
+  'bidDetailScanBlockedSupplement': (l) => l.bidDetailScanBlockedSupplement,
+  'supplementRequestTitle': (l) => l.supplementRequestTitle,
+  'supplementRequestIntro': (l) => l.supplementRequestIntro,
+  'supplementRequestSuggestionsLabel': (l) =>
+      l.supplementRequestSuggestionsLabel,
+  'supplementRequestSuggestionKg': (l) =>
+      l.supplementRequestSuggestionKg(placeholderMarker('amount')),
+  'supplementRequestSuggestionItem': (l) => l.supplementRequestSuggestionItem(
+    placeholderMarker('label'),
+    placeholderMarker('amount'),
+  ),
+  'supplementRequestAmountLabel': (l) =>
+      l.supplementRequestAmountLabel(placeholderMarker('currency')),
+  'supplementRequestAmountHint': (l) => l.supplementRequestAmountHint(
+    placeholderMarker('min'),
+    placeholderMarker('max'),
+  ),
+  'supplementRequestAmountOutOfRange': (l) =>
+      l.supplementRequestAmountOutOfRange(
+        placeholderMarker('min'),
+        placeholderMarker('max'),
+      ),
+  'supplementRequestReasonLabel': (l) => l.supplementRequestReasonLabel,
+  'supplementReasonGridItem': (l) => l.supplementReasonGridItem,
+  'supplementReasonGridItemHint': (l) => l.supplementReasonGridItemHint,
+  'supplementReasonExtraWeight': (l) => l.supplementReasonExtraWeight,
+  'supplementReasonOther': (l) => l.supplementReasonOther,
+  'supplementRequestDetailsLabel': (l) => l.supplementRequestDetailsLabel,
+  'supplementRequestDetailsHint': (l) => l.supplementRequestDetailsHint,
+  'supplementRequestDetailsRequiredHint': (l) =>
+      l.supplementRequestDetailsRequiredHint,
+  'supplementRequestPhotoLabel': (l) => l.supplementRequestPhotoLabel,
+  'supplementRequestPhotoHelp': (l) => l.supplementRequestPhotoHelp,
+  'supplementRecapNet': (l) => l.supplementRecapNet,
+  'supplementRecapCommission': (l) => l.supplementRecapCommission,
+  'supplementRecapGross': (l) => l.supplementRecapGross,
+  'supplementRequestNotice': (l) => l.supplementRequestNotice,
+  'supplementRequestSubmit': (l) => l.supplementRequestSubmit,
+  'supplementRequestSubmitAmount': (l) =>
+      l.supplementRequestSubmitAmount(placeholderMarker('amount')),
+  'supplementRequestLoadFailed': (l) => l.supplementRequestLoadFailed,
+  'supplementRequestSent': (l) => l.supplementRequestSent,
+  'supplementCardTitle': (l) => l.supplementCardTitle,
+  'supplementDeadline': (l) => l.supplementDeadline(placeholderMarker('time')),
+  'supplementReasonWithItem': (l) =>
+      l.supplementReasonWithItem(placeholderMarker('label')),
+  'supplementTravelerPending': (l) => l.supplementTravelerPending,
+  'supplementTravelerPendingNotice': (l) => l.supplementTravelerPendingNotice,
+  'supplementTravelerPaymentPending': (l) => l.supplementTravelerPaymentPending,
+  'supplementWithdraw': (l) => l.supplementWithdraw,
+  'supplementWithdrawConfirmTitle': (l) => l.supplementWithdrawConfirmTitle,
+  'supplementWithdrawConfirmMessage': (l) => l.supplementWithdrawConfirmMessage,
+  'supplementWithdrawn': (l) => l.supplementWithdrawn,
+  'supplementTravelerDeclined': (l) => l.supplementTravelerDeclined,
+  'supplementTravelerExpired': (l) => l.supplementTravelerExpired,
+  'supplementTravelerClosedHelp': (l) => l.supplementTravelerClosedHelp,
+  'supplementTravelerPaid': (l) =>
+      l.supplementTravelerPaid(placeholderMarker('amount')),
+  'supplementTravelerPaidHelp': (l) => l.supplementTravelerPaidHelp,
+  'supplementTravelerPaidOut': (l) =>
+      l.supplementTravelerPaidOut(placeholderMarker('amount')),
+  'supplementRefunded': (l) => l.supplementRefunded,
+  'supplementSenderPendingTitle': (l) => l.supplementSenderPendingTitle,
+  'supplementSenderAmount': (l) =>
+      l.supplementSenderAmount(placeholderMarker('amount')),
+  'supplementSenderPendingHelp': (l) => l.supplementSenderPendingHelp,
+  'supplementDecline': (l) => l.supplementDecline,
+  'supplementDeclineConfirmTitle': (l) => l.supplementDeclineConfirmTitle,
+  'supplementDeclineConfirmMessage': (l) => l.supplementDeclineConfirmMessage,
+  'supplementDeclined': (l) => l.supplementDeclined,
+  'supplementSenderDeclined': (l) => l.supplementSenderDeclined,
+  'supplementSenderExpired': (l) => l.supplementSenderExpired,
+  'supplementSenderPaid': (l) =>
+      l.supplementSenderPaid(placeholderMarker('amount')),
+  'supplementSenderPaymentPending': (l) => l.supplementSenderPaymentPending,
+  'supplementPhotoSemantics': (l) => l.supplementPhotoSemantics,
+  'errorSupplementDisabledTitle': (l) => l.errorSupplementDisabledTitle,
+  'errorSupplementDisabledMessage': (l) => l.errorSupplementDisabledMessage,
+  'errorSupplementRailUnsupportedTitle': (l) =>
+      l.errorSupplementRailUnsupportedTitle,
+  'errorSupplementRailUnsupportedMessage': (l) =>
+      l.errorSupplementRailUnsupportedMessage,
+  'errorSupplementAmountOutOfRangeTitle': (l) =>
+      l.errorSupplementAmountOutOfRangeTitle,
+  'errorSupplementAmountOutOfRangeMessage': (l) =>
+      l.errorSupplementAmountOutOfRangeMessage,
+  'errorSupplementLimitReachedTitle': (l) => l.errorSupplementLimitReachedTitle,
+  'errorSupplementLimitReachedMessage': (l) =>
+      l.errorSupplementLimitReachedMessage,
+  'errorSupplementLockedTitle': (l) => l.errorSupplementLockedTitle,
+  'errorSupplementLockedMessage': (l) => l.errorSupplementLockedMessage,
+  'errorSupplementAlreadyActiveTitle': (l) =>
+      l.errorSupplementAlreadyActiveTitle,
+  'errorSupplementAlreadyActiveMessage': (l) =>
+      l.errorSupplementAlreadyActiveMessage,
+  'errorSupplementNotPendingTitle': (l) => l.errorSupplementNotPendingTitle,
+  'errorSupplementNotPendingMessage': (l) => l.errorSupplementNotPendingMessage,
+  'errorSupplementExpiredTitle': (l) => l.errorSupplementExpiredTitle,
+  'errorSupplementExpiredMessage': (l) => l.errorSupplementExpiredMessage,
+  'errorSupplementNotFoundTitle': (l) => l.errorSupplementNotFoundTitle,
+  'errorSupplementNotFoundMessage': (l) => l.errorSupplementNotFoundMessage,
+  'errorInvalidPhotoUrlTitle': (l) => l.errorInvalidPhotoUrlTitle,
+  'errorInvalidPhotoUrlMessage': (l) => l.errorInvalidPhotoUrlMessage,
+  'errorHandoverSupplementPendingTitle': (l) =>
+      l.errorHandoverSupplementPendingTitle,
+  'errorHandoverSupplementPendingMessage': (l) =>
+      l.errorHandoverSupplementPendingMessage,
+  'supplementSenderRefunded': (l) => l.supplementSenderRefunded,
+  'supplementPay': (l) => l.supplementPay(placeholderMarker('amount')),
+  'supplementPaidSnackbar': (l) => l.supplementPaidSnackbar,
+  'supplementPaymentContextLabel': (l) => l.supplementPaymentContextLabel,
+  'supplementTravelerRefundPending': (l) => l.supplementTravelerRefundPending,
+  'supplementSenderRefundPending': (l) => l.supplementSenderRefundPending,
+  'supplementSenderPayHelp': (l) => l.supplementSenderPayHelp,
+  'errorSupplementPaymentProcessingTitle': (l) =>
+      l.errorSupplementPaymentProcessingTitle,
+  'errorSupplementPaymentProcessingMessage': (l) =>
+      l.errorSupplementPaymentProcessingMessage,
+  'errorSupplementPaymentCreationFailedTitle': (l) =>
+      l.errorSupplementPaymentCreationFailedTitle,
+  'errorSupplementPaymentCreationFailedMessage': (l) =>
+      l.errorSupplementPaymentCreationFailedMessage,
+  'errorPaymentBusyTitle': (l) => l.errorPaymentBusyTitle,
+  'errorPaymentBusyMessage': (l) => l.errorPaymentBusyMessage,
+  'errorStripeUnavailableTitle': (l) => l.errorStripeUnavailableTitle,
+  'errorStripeUnavailableMessage': (l) => l.errorStripeUnavailableMessage,
+  'supplementPaymentConfirming': (l) => l.supplementPaymentConfirming,
+  'mobileMoneyExpiredSupplement': (l) => l.mobileMoneyExpiredSupplement,
+  'supplementMobileMoneyNotConfirmed': (l) =>
+      l.supplementMobileMoneyNotConfirmed,
+  'supplementSenderMobileMoneyPending': (l) =>
+      l.supplementSenderMobileMoneyPending,
+  'supplementCommissionSourceTitle': (l) => l.supplementCommissionSourceTitle,
+  'supplementCommissionSourceHelp': (l) => l.supplementCommissionSourceHelp,
+  'supplementCommissionSourceWallet': (l) => l.supplementCommissionSourceWallet,
+  'supplementCommissionSourceWalletHint': (l) =>
+      l.supplementCommissionSourceWalletHint,
+  'supplementCommissionSourceWalletCurrency': (l) =>
+      l.supplementCommissionSourceWalletCurrency(placeholderMarker('currency')),
+  'supplementCommissionSourceCard': (l) => l.supplementCommissionSourceCard,
+  'supplementCommissionSourceCardHint': (l) =>
+      l.supplementCommissionSourceCardHint,
+  'supplementCommissionUnfundedHint': (l) => l.supplementCommissionUnfundedHint,
+  'supplementCommissionCardMissing': (l) => l.supplementCommissionCardMissing,
+  'supplementCommissionRetryNotice': (l) => l.supplementCommissionRetryNotice,
+  'supplementCommissionRetry': (l) => l.supplementCommissionRetry,
+  'supplementCommissionAuthInterrupted': (l) =>
+      l.supplementCommissionAuthInterrupted,
+  'supplementCommissionProcessing': (l) => l.supplementCommissionProcessing,
+  'supplementRecapGrossCash': (l) => l.supplementRecapGrossCash,
+  'supplementTravelerCommissionPending': (l) =>
+      l.supplementTravelerCommissionPending,
+  'supplementTravelerCommissionPendingHelp': (l) =>
+      l.supplementTravelerCommissionPendingHelp,
+  'supplementCommissionConfirm': (l) => l.supplementCommissionConfirm,
+  'supplementCommissionConfirmedSnackbar': (l) =>
+      l.supplementCommissionConfirmedSnackbar,
+  'supplementTravelerCashCommissionHelp': (l) =>
+      l.supplementTravelerCashCommissionHelp,
+  'supplementTravelerCashPaid': (l) =>
+      l.supplementTravelerCashPaid(placeholderMarker('amount')),
+  'supplementTravelerCashPaidHelp': (l) => l.supplementTravelerCashPaidHelp,
+  'supplementTravelerCommissionRefunded': (l) =>
+      l.supplementTravelerCommissionRefunded,
+  'supplementTravelerCommissionRefundPending': (l) =>
+      l.supplementTravelerCommissionRefundPending,
+  'supplementTravelerCancelled': (l) => l.supplementTravelerCancelled,
+  'supplementTravelerCancelledNoCharge': (l) =>
+      l.supplementTravelerCancelledNoCharge,
+  'supplementTravelerCashRefunded': (l) => l.supplementTravelerCashRefunded,
+  'supplementCashAccept': (l) =>
+      l.supplementCashAccept(placeholderMarker('amount')),
+  'supplementSenderCashHelp': (l) => l.supplementSenderCashHelp,
+  'supplementCashConfirmTitle': (l) => l.supplementCashConfirmTitle,
+  'supplementCashConfirmMessage': (l) =>
+      l.supplementCashConfirmMessage(placeholderMarker('amount')),
+  'supplementCashConfirmHelp': (l) => l.supplementCashConfirmHelp,
+  'supplementCashConfirmButton': (l) =>
+      l.supplementCashConfirmButton(placeholderMarker('amount')),
+  'supplementCashAcceptedSnackbar': (l) =>
+      l.supplementCashAcceptedSnackbar(placeholderMarker('amount')),
+  'supplementSenderCashPaid': (l) =>
+      l.supplementSenderCashPaid(placeholderMarker('amount')),
+  'supplementSenderCashRefunded': (l) => l.supplementSenderCashRefunded,
+  'walletTxTypeSupplementCommission': (l) => l.walletTxTypeSupplementCommission,
+  'walletTxTypeSupplementCommissionRefund': (l) =>
+      l.walletTxTypeSupplementCommissionRefund,
+  'walletTxTypeOther': (l) => l.walletTxTypeOther,
+  'errorSupplementCommissionUnfundedTitle': (l) =>
+      l.errorSupplementCommissionUnfundedTitle,
+  'errorSupplementCommissionUnfundedMessage': (l) =>
+      l.errorSupplementCommissionUnfundedMessage,
+  'errorSupplementCommissionCardDeclinedTitle': (l) =>
+      l.errorSupplementCommissionCardDeclinedTitle,
+  'errorSupplementCommissionCardDeclinedMessage': (l) =>
+      l.errorSupplementCommissionCardDeclinedMessage,
+  'errorSupplementCommissionChargeFailedTitle': (l) =>
+      l.errorSupplementCommissionChargeFailedTitle,
+  'errorSupplementCommissionChargeFailedMessage': (l) =>
+      l.errorSupplementCommissionChargeFailedMessage,
+  'errorCommissionMethodMissingTitle': (l) =>
+      l.errorCommissionMethodMissingTitle,
+  'errorCommissionMethodMissingMessage': (l) =>
+      l.errorCommissionMethodMissingMessage,
+  'errorFundingCurrencyInvalidTitle': (l) => l.errorFundingCurrencyInvalidTitle,
+  'errorFundingCurrencyInvalidMessage': (l) =>
+      l.errorFundingCurrencyInvalidMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
 /// en a, dans l'ordre de la signature.
 const textParameters = <String, List<String>>{
+  'contactPhoneConflictSupportMessage': ['phone'],
+  'contactEmailChangeSupportMessage': ['email'],
   'errorBidBelowMinPriceMessage': ['price'],
   'authOtpCodeSentTo': ['contact'],
   'authOtpCodeSentToPhone': ['contact'],
@@ -7626,7 +7874,6 @@ const textParameters = <String, List<String>>{
   'activityToolsProgressBody': ['missing'],
   'activityNewSinceLastVisit': ['label', 'title'],
   'bidCreateMaxWeightLabel': ['maxKg'],
-  'paymentMethodsSemantics': ['wallet'],
   'paymentContextRecipient': ['name'],
   'commissionCardDebitNoticeMin': ['min'],
   'commissionCardExpiringMessage': ['date'],
@@ -7820,6 +8067,7 @@ const textParameters = <String, List<String>>{
   'bidRescheduleNote': ['note'],
   'bidRescheduleDecisionHint': ['deadline'],
   'bidRescheduleTravelerHint': ['deadline'],
+  'receptionsPromptFromSender': ['name'],
   'receptionsRowFrom': ['name'],
   'receptionsRowStep': ['status'],
   'receptionPendingHeadline': ['name'],
@@ -8003,4 +8251,24 @@ const textParameters = <String, List<String>>{
   'priceGridSenderWillPayMessageGrid': ['paid', 'fee'],
   'faqPaymentsCommissionAGrid': ['minimum'],
   'bidNegotiationGridLineServiceFee': ['line'],
+  'supplementRequestSuggestionKg': ['amount'],
+  'supplementRequestSuggestionItem': ['label', 'amount'],
+  'supplementRequestAmountLabel': ['currency'],
+  'supplementRequestAmountHint': ['min', 'max'],
+  'supplementRequestAmountOutOfRange': ['min', 'max'],
+  'supplementRequestSubmitAmount': ['amount'],
+  'supplementDeadline': ['time'],
+  'supplementReasonWithItem': ['label'],
+  'supplementTravelerPaid': ['amount'],
+  'supplementTravelerPaidOut': ['amount'],
+  'supplementSenderAmount': ['amount'],
+  'supplementSenderPaid': ['amount'],
+  'supplementPay': ['amount'],
+  'supplementCommissionSourceWalletCurrency': ['currency'],
+  'supplementTravelerCashPaid': ['amount'],
+  'supplementCashAccept': ['amount'],
+  'supplementCashConfirmMessage': ['amount'],
+  'supplementCashConfirmButton': ['amount'],
+  'supplementCashAcceptedSnackbar': ['amount'],
+  'supplementSenderCashPaid': ['amount'],
 };

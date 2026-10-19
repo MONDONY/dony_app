@@ -102,6 +102,7 @@ class _DonyAppState extends State<DonyApp> {
   late final DeepLinkGate _deepLinkGate = DeepLinkGate(
     currentLocation: () =>
         appRouter.routerDelegate.currentConfiguration.uri.path,
+    topLocation: () => topRouteLocation(appRouter),
     navigate: _navigateToRoute,
   );
 

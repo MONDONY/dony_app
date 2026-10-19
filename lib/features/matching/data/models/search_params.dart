@@ -5,6 +5,8 @@ class SearchParams {
   final String? departureCity;
   final String? arrivalCity;
   final DateTime? date;
+
+  /// Poids minimal recherché, en kg ; `0` = aucun minimum.
   final double weightKg;
   final double maxPricePerKg;
   final bool gpProOnly;
@@ -20,7 +22,7 @@ class SearchParams {
     this.departureCity,
     this.arrivalCity,
     this.date,
-    this.weightKg = 6,
+    this.weightKg = 0,
     this.maxPricePerKg = 25,
     this.gpProOnly = false,
     this.ratingFilter = false,

@@ -4,6 +4,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
@@ -13,7 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
 /// Bottom sheet de paiement custom Yadony (Apple Pay/Google Pay + PayPal +
-/// bouton « Carte »), Stripe restant le seul processeur.
+/// bouton « Carte »), Stripe restant le seul processeur. Apple Pay, Google Pay
+/// et PayPal n'apparaissent que si le serveur les active
+/// (`GET /config/payment-methods`, relu à chaque ouverture).
 ///
 /// PCI : la saisie carte est intégralement déléguée à la PaymentSheet native
 /// Stripe (bouton « Carte » → [PaymentGateway.initPaymentSheet] +
@@ -43,6 +46,10 @@ abstract final class DonyPaymentSheet {
                     analytics: getIt.isRegistered<AnalyticsService>()
                         ? getIt<AnalyticsService>()
                         : null,
+                    loadPaymentMethodFlags:
+                        getIt.isRegistered<IConfigRepository>()
+                        ? getIt<IConfigRepository>().getPaymentMethods
+                        : null,
                   ))
               ..add(const PaymentSheetStarted()),
         child: child,
@@ -65,6 +72,8 @@ String _reasonMessage(AppLocalizations l, PaymentSheetFailureReason reason) {
       return l.paymentAuthenticationFailed;
     case PaymentSheetFailureReason.sheetUnavailable:
       return l.paymentSheetOpenFailed;
+    case PaymentSheetFailureReason.methodUnavailable:
+      return l.paymentMethodUnavailable;
     case PaymentSheetFailureReason.generic:
       return l.paymentFailedGeneric;
   }

@@ -266,10 +266,14 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         children: [
           Expanded(
             child: WeightField(
-              weightKg: f.weightMin ?? 6,
+              weightKg: f.weightMin,
+              // `null` = curseur au minimum : on retire le seul minimum, un
+              // maximum posé par la feuille Capacité de l'accueil reste.
               onChanged: (v) => _update(
-                v == 6
-                    ? f.copyWith(clearWeight: true)
+                v == null
+                    ? f
+                          .copyWith(clearWeight: true)
+                          .copyWith(weightMax: f.weightMax)
                     : f.copyWith(weightMin: v),
               ),
             ),
@@ -337,6 +341,12 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         spacing: DonySpacing.sm,
         runSpacing: DonySpacing.sm,
         children: [
+          QuickChip(
+            key: const Key('composer-suitcase-23'),
+            label: l.homeFilterChipsSuitcase23,
+            active: f.suitcase23Only,
+            onChanged: (v) => _update(f.copyWith(suitcase23Only: v)),
+          ),
           QuickChip(
             label: l.gpProBadgeLabel,
             iconAsset: 'award',

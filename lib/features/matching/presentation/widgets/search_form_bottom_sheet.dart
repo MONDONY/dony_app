@@ -127,7 +127,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     _departureCityNotifier = ValueNotifier<String?>(p?.departureCity);
     _arrivalCityNotifier = ValueNotifier<String?>(p?.arrivalCity);
     _dateNotifier = ValueNotifier<DateTime?>(p?.date);
-    _weightKgNotifier = ValueNotifier<double>(p?.weightKg ?? 6);
+    _weightKgNotifier = ValueNotifier<double>(p?.weightKg ?? 0);
     _maxPricePerKgNotifier = ValueNotifier<double>(p?.maxPricePerKg ?? 25);
     _gpProOnlyNotifier = ValueNotifier<bool>(p?.gpProOnly ?? false);
     _ratingFilterNotifier = ValueNotifier<bool>(p?.ratingFilter ?? false);
@@ -217,7 +217,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     _departureCityNotifier.value = null;
     _arrivalCityNotifier.value = null;
     _dateNotifier.value = null;
-    _weightKgNotifier.value = 6;
+    _weightKgNotifier.value = 0;
     _maxPricePerKgNotifier.value = 25;
     _gpProOnlyNotifier.value = false;
     _ratingFilterNotifier.value = false;
@@ -232,7 +232,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   int get _activeFilterCount {
     int count = 0;
     if (_dateNotifier.value != null) count++;
-    if (_weightKgNotifier.value != 6) count++;
+    if (_weightKgNotifier.value > 0) count++;
     if (_priceFilterNotifier.value) count++;
     if (_gpProOnlyNotifier.value) count++;
     if (_ratingFilterNotifier.value) count++;
@@ -299,8 +299,11 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: WeightField(
-                    weightKg: _weightKgNotifier.value,
-                    onChanged: (v) => _weightKgNotifier.value = v,
+                    // 0 = aucun minimum (SearchParams.weightKg).
+                    weightKg: _weightKgNotifier.value > 0
+                        ? _weightKgNotifier.value
+                        : null,
+                    onChanged: (v) => _weightKgNotifier.value = v ?? 0,
                   ),
                 ),
               ],

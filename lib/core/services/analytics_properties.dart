@@ -57,6 +57,14 @@ abstract final class AnalyticsPaymentContext {
 
   /// Commission Yadony d'un accord en espèces.
   static const commission = 'commission';
+
+  /// Supplément de prix demandé par le voyageur à la remise, payé par
+  /// l'expéditeur.
+  static const bidSupplement = 'bid_supplement';
+
+  /// Commission d'un supplément sur un colis payé en espèces, prélevée au
+  /// voyageur à la demande (solde ou carte).
+  static const bidSupplementCommission = 'bid_supplement_commission';
 }
 
 /// Moyen de retour d'un remboursement du solde, depuis le `rail` serveur :

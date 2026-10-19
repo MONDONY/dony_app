@@ -101,6 +101,25 @@ class AnnouncementQuery {
 /// conservés lors d'une bascule ; les spécifiques aux trajets ; les spécifiques
 /// aux colis. C'est le partage des communs qui corrige la perte du corridor au
 /// changement de mode.
+/// Poids d'une valise en soute standard, seuil de la puce « Valise 23 kg ».
+const double kSuitcaseKg = 23;
+
+/// Bornes des curseurs de poids des trajets (feuille Capacité de l'accueil,
+/// champ « Poids min » du composeur).
+const double kCapacitySliderMinKg = 1;
+const double kCapacitySliderMaxKg = 50;
+
+/// Traduit la position des poignées du curseur Capacité en bornes de filtre.
+/// Une poignée laissée à son extrémité veut dire « pas de borne » : au
+/// minimum, aucun `minAvailableKg` ; au maximum, aucun `maxAvailableKg`.
+/// Sans cela, ouvrir la feuille puis « Appliquer » sans rien toucher posait
+/// `1 à 50 kg` et cachait les trajets de plus de 50 kg disponibles.
+({double? min, double? max}) capacityBoundsFromSlider(double min, double max) =>
+    (
+      min: min <= kCapacitySliderMinKg ? null : min,
+      max: max >= kCapacitySliderMaxKg ? null : max,
+    );
+
 class HomeSearchFilters {
   const HomeSearchFilters({
     // Communs
@@ -118,6 +137,7 @@ class HomeSearchFilters {
     this.weightMin,
     this.weightMax,
     this.gpProOnly = false,
+    this.suitcase23Only = false,
     this.minRating,
     this.weekendOnly = false,
     this.transportMode,
@@ -151,6 +171,12 @@ class HomeSearchFilters {
   final double? weightMin;
   final double? weightMax;
   final bool gpProOnly;
+
+  /// Puce « 🧳 Valise 23 kg » (YADONY-FLUTTER-PROD-Z) : seulement les trajets
+  /// qui peuvent encore prendre une valise standard, soit au moins
+  /// [kSuitcaseKg] disponibles. Indépendante de la Capacité ([weightMin]) :
+  /// la requête retient le plus exigeant des deux minimums.
+  final bool suitcase23Only;
   final double? minRating;
   final bool weekendOnly;
   final TransportMode? transportMode;
@@ -232,7 +258,7 @@ class HomeSearchFilters {
       departureCity: ignoreCorridor ? null : departureCity,
       arrivalCity: ignoreCorridor ? null : arrivalCity,
       date: customDate,
-      weightKg: weightMin ?? 6,
+      weightKg: weightMin ?? 0,
       maxPricePerKg: maxPricePerKg ?? 25,
       gpProOnly: gpProOnly,
       ratingFilter: minRating != null,
@@ -276,7 +302,7 @@ class HomeSearchFilters {
       arrivalCity: ignoreCorridor ? null : arrivalCity,
       departureDateFrom: from,
       departureDateTo: to,
-      minAvailableKg: weightMin,
+      minAvailableKg: effectiveMinAvailableKg,
       maxAvailableKg: weightMax,
       maxPricePerKg: maxPricePerKg,
       gpProOnly: gpProOnly ? true : null,
@@ -294,6 +320,16 @@ class HomeSearchFilters {
           ? null
           : (paymentMethods.map((m) => m.apiValue).toList()..sort()),
     );
+  }
+
+  /// Minimum de kilos disponibles envoyé au serveur : la Capacité réglée
+  /// ([weightMin]) et, puce « Valise 23 kg » active, au moins [kSuitcaseKg].
+  /// Le plus exigeant l'emporte : une Capacité « ≥ 30 kg » reste à 30, une
+  /// Capacité « ≥ 10 kg » passe à 23.
+  double? get effectiveMinAvailableKg {
+    final min = weightMin;
+    if (!suitcase23Only) return min;
+    return min == null || min < kSuitcaseKg ? kSuitcaseKg : min;
   }
 
   /// Fenêtre de départ envoyée au serveur : la date choisie croisée avec le
@@ -334,6 +370,7 @@ class HomeSearchFilters {
     if (urgentOnly) 'urgent',
     if (nearMeActive) 'near_me',
     if (gpProOnly) 'gp_pro',
+    if (suitcase23Only) 'suitcase_23',
     if (minRating != null) 'rating',
     if (weightMin != null || weightMax != null) 'weight',
     if (maxPricePerKg != null) 'price',
@@ -369,6 +406,9 @@ class HomeSearchFilters {
   int get _tripsOnlyActiveCount {
     var n = 0;
     if (gpProOnly) {
+      n++;
+    }
+    if (suitcase23Only) {
       n++;
     }
     if (minRating != null) {
@@ -461,6 +501,7 @@ class HomeSearchFilters {
     double? weightMin,
     double? weightMax,
     bool? gpProOnly,
+    bool? suitcase23Only,
     double? minRating,
     bool? weekendOnly,
     TransportMode? transportMode,
@@ -505,6 +546,7 @@ class HomeSearchFilters {
       weightMin: clearWeight ? null : (weightMin ?? this.weightMin),
       weightMax: clearWeight ? null : (weightMax ?? this.weightMax),
       gpProOnly: gpProOnly ?? this.gpProOnly,
+      suitcase23Only: suitcase23Only ?? this.suitcase23Only,
       minRating: clearMinRating ? null : (minRating ?? this.minRating),
       weekendOnly: weekendOnly ?? this.weekendOnly,
       transportMode: clearTransportMode

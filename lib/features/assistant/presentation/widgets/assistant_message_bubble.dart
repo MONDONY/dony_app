@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/assistant/bloc/assistant_bloc.dart';
 import 'package:dony/features/assistant/data/assistant_models.dart';
+import 'package:dony/features/assistant/presentation/widgets/assistant_rich_text.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -56,7 +57,9 @@ class AssistantEntrance extends StatelessWidget {
   }
 }
 
-/// Bulle de texte brut (jamais de Markdown) de l'utilisateur ou de l'assistant.
+/// Bulle de l'utilisateur (texte brut) ou de l'assistant (texte riche du back,
+/// gras et puces seulement, rendu par [AssistantRichText] ; jamais de Markdown
+/// libre).
 class AssistantBubbleShell extends StatelessWidget {
   const AssistantBubbleShell({
     super.key,
@@ -310,8 +313,8 @@ class AssistantMessageBubble extends StatelessWidget {
             children: [
               Semantics(
                 liveRegion: liveRegion,
-                child: Text(
-                  message.text,
+                child: AssistantRichText(
+                  message.displayText,
                   style: _bodyStyle(context, cs.onSurface),
                 ),
               ),

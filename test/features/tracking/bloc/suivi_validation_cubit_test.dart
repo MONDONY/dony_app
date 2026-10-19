@@ -69,7 +69,11 @@ void main() {
     ).thenAnswer(answer);
 
     void stubSend(Future<SentScan?> Function(Invocation) answer) => when(
-      () => queue.sendScheduled(any(), position: any(named: 'position')),
+      () => queue.sendScheduled(
+        any(),
+        position: any(named: 'position'),
+        canShowRefusal: any(named: 'canShowRefusal'),
+      ),
     ).thenAnswer(answer);
 
     setUp(() {
@@ -97,7 +101,11 @@ void main() {
         );
 
     void verifyNeverSent() => verifyNever(
-      () => queue.sendScheduled(any(), position: any(named: 'position')),
+      () => queue.sendScheduled(
+        any(),
+        position: any(named: 'position'),
+        canShowRefusal: any(named: 'canShowRefusal'),
+      ),
     );
 
     /// Position passée à l'envoi de l'entrée [key].
@@ -106,6 +114,7 @@ void main() {
               () => queue.sendScheduled(
                 key,
                 position: captureAny(named: 'position'),
+                canShowRefusal: any(named: 'canShowRefusal'),
               ),
             ).captured.single
             as Future<ScanPosition?>;
@@ -285,13 +294,21 @@ void main() {
 
         async.elapse(const Duration(seconds: 2));
         verify(
-          () => queue.sendScheduled(1, position: any(named: 'position')),
+          () => queue.sendScheduled(
+            1,
+            position: any(named: 'position'),
+            canShowRefusal: any(named: 'canShowRefusal'),
+          ),
         ).called(1);
         expect(c.state.pending.map((p) => p.bidId), ['b']);
 
         async.elapse(const Duration(seconds: 3));
         verify(
-          () => queue.sendScheduled(2, position: any(named: 'position')),
+          () => queue.sendScheduled(
+            2,
+            position: any(named: 'position'),
+            canShowRefusal: any(named: 'canShowRefusal'),
+          ),
         ).called(1);
         expect(c.state.outcomeId, 2);
         unawaited(c.close());
@@ -335,13 +352,59 @@ void main() {
       await c.close();
     });
 
+    // Supplément en attente (409 handover-supplement-pending) : seul l'envoi
+    // à la fin du délai, onglet affiché, peut montrer le motif. flush() et
+    // close() demandent à la file de garder l'étape.
+    test('fin du délai : le refus pourra être affiché', () {
+      fakeAsync((async) {
+        final c = build();
+        scheduleTransit(c);
+        async.elapse(const Duration(seconds: 6));
+        verify(
+          () => queue.sendScheduled(7, position: any(named: 'position')),
+        ).called(1);
+        unawaited(c.close());
+      });
+    });
+
+    test(
+      'flush et close : la file garde l\'étape refusée pour l\'instant',
+      () async {
+        final c = build();
+        scheduleTransit(c);
+        await c.flush();
+        verify(
+          () => queue.sendScheduled(
+            7,
+            position: any(named: 'position'),
+            canShowRefusal: false,
+          ),
+        ).called(1);
+
+        scheduleTransit(c, bidId: 'bid-2');
+        await c.close();
+        await Future<void>.delayed(Duration.zero);
+        verify(
+          () => queue.sendScheduled(
+            7,
+            position: any(named: 'position'),
+            canShowRefusal: false,
+          ),
+        ).called(1);
+      },
+    );
+
     test('fermé pendant le délai : la validation part quand même', () async {
       final c = build();
       scheduleTransit(c);
       await c.close();
       await Future<void>.delayed(Duration.zero);
       verify(
-        () => queue.sendScheduled(7, position: any(named: 'position')),
+        () => queue.sendScheduled(
+          7,
+          position: any(named: 'position'),
+          canShowRefusal: any(named: 'canShowRefusal'),
+        ),
       ).called(1);
     });
 
@@ -371,7 +434,11 @@ void main() {
     blocTest<SuiviValidationCubit, SuiviValidationState>(
       'refus du back : issue en échec, rien de tracé comme validé',
       setUp: () => when(
-        () => queue.sendScheduled(any(), position: any(named: 'position')),
+        () => queue.sendScheduled(
+          any(),
+          position: any(named: 'position'),
+          canShowRefusal: any(named: 'canShowRefusal'),
+        ),
       ).thenThrow(const ConflictException('déjà scanné')),
       build: () => build(delay: const Duration(milliseconds: 10)),
       act: (c) => scheduleTransit(c),

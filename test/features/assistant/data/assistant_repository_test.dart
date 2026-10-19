@@ -86,10 +86,50 @@ void main() {
       ]);
       // Sans colis choisi, le champ n'est pas envoyé (back antérieur).
       expect(data.containsKey('parcelId'), isFalse);
+      // L'app sait afficher le texte riche (YADONY-FLUTTER-PROD-13).
+      expect(data['format'], 'rich');
+      // Back d'avant PROD-13 : pas de `answerRich`, affichage du texte brut.
+      expect(answer.answerRich, isNull);
+      expect(answer.displayText, 'Allez dans Moi.');
       expect(answer.parcelId, isNull);
       expect(answer.parcels, isEmpty);
     },
   );
+
+  group('texte riche (YADONY-FLUTTER-PROD-13)', () {
+    Map<String, Object?> body(Object? rich) => {
+      'answer': 'Allez dans Moi.\n• Touchez Profil',
+      'answered': true,
+      'actions': [],
+      'provider': 'claude',
+      'remainingToday': 3,
+      'answerRich': rich,
+    };
+
+    test('answerRich affiché, answer garde le texte brut', () async {
+      respondWith(body('Allez dans **Moi**.\n- Touchez **Profil**'));
+      final answer = await repository.ask(
+        question: 'Où ?',
+        locale: 'fr',
+        history: const [],
+      );
+      expect(answer.displayText, 'Allez dans **Moi**.\n- Touchez **Profil**');
+      expect(answer.answer, 'Allez dans Moi.\n• Touchez Profil');
+    });
+
+    for (final rich in [null, '', '   ', 42]) {
+      test('answerRich $rich : repli sur answer', () async {
+        respondWith(body(rich));
+        final answer = await repository.ask(
+          question: 'Où ?',
+          locale: 'fr',
+          history: const [],
+        );
+        expect(answer.answerRich, isNull);
+        expect(answer.displayText, 'Allez dans Moi.\n• Touchez Profil');
+      });
+    }
+  });
 
   test('envoie le colis choisi et lit les colis proposés', () async {
     respondWith({
@@ -446,7 +486,18 @@ void main() {
                 ),
               ).captured.single
               as Map;
-      expect(query, {'path': '/envois', 'locale': 'fr'});
+      expect(query, {'path': '/envois', 'locale': 'fr', 'format': 'rich'});
+      expect(intro.explanationRich, isNull);
+    });
+
+    test('explanationRich lu quand le back le fournit (PROD-13)', () async {
+      screenResponds(200, {
+        'explanation': 'Ligne une.\nLigne deux.',
+        'explanationRich': 'Ligne une.\n- Ligne **deux**.',
+      });
+      final intro = await repository.screen('/envois', 'fr');
+      expect(intro!.explanationRich, 'Ligne une.\n- Ligne **deux**.');
+      expect(intro.explanation, 'Ligne une.\nLigne deux.');
     });
 
     test('204, corps vide ou malformé : rien à expliquer', () async {

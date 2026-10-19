@@ -251,7 +251,32 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPhoneAlreadyExistsMessage =>
-      'Ce numéro est déjà associé à un autre compte.';
+      'Ce numéro a déjà son propre compte Yadony. Connectez-vous avec ce numéro, ou contactez le support pour regrouper vos comptes.';
+
+  @override
+  String get errorPhonePendingDeletionTitle => 'Compte en cours de suppression';
+
+  @override
+  String get errorPhonePendingDeletionMessage =>
+      'Ce numéro appartient à un compte en cours de suppression. Connectez-vous avec ce numéro pour annuler la suppression.';
+
+  @override
+  String get contactPhoneConflictSupportSubject =>
+      'Numéro déjà utilisé par un autre compte';
+
+  @override
+  String contactPhoneConflictSupportMessage(String phone) {
+    return 'Bonjour, je veux ajouter le numéro $phone à mon compte, mais il est déjà associé à un autre compte Yadony. Pouvez-vous m\'aider à regrouper mes comptes ?';
+  }
+
+  @override
+  String get contactEmailChangeSupportSubject =>
+      'Changer l\'adresse e-mail de mon compte';
+
+  @override
+  String contactEmailChangeSupportMessage(String email) {
+    return 'Bonjour, je souhaite remplacer l\'adresse e-mail de mon compte ($email) par une nouvelle adresse.';
+  }
 
   @override
   String get errorSmsOtpDisabledTitle => 'Indisponible';
@@ -2260,6 +2285,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeWeightCapacityTitle => 'Capacité kilo';
 
   @override
+  String homeWeightSliderMaxOpen(int kg) {
+    return '$kg kg et +';
+  }
+
+  @override
+  String homeFilterChipsCapacityRange(int min, int max) {
+    return '$min à $max kg';
+  }
+
+  @override
   String get homeMaxPriceTitle => 'Prix maximum';
 
   @override
@@ -2443,6 +2478,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeFilterChipsUrgent => '🔥 Urgent';
+
+  @override
+  String get homeFilterChipsSuitcase23 => '🧳 Valise 23 kg';
 
   @override
   String get homeFilterFieldsExactDate => 'DATE PRÉCISE';
@@ -9393,9 +9431,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le paiement n\'a pas pu s\'ouvrir. Réessayez.';
 
   @override
-  String paymentMethodsSemantics(String wallet) {
-    return 'Carte, $wallet, PayPal';
-  }
+  String get paymentMethodUnavailable =>
+      'Ce moyen de paiement est momentanément indisponible. Payez par carte.';
 
   @override
   String paymentContextRecipient(String name) {
@@ -13136,11 +13173,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notificationSettingsSectionActivity => 'ACTIVITÉ';
 
   @override
-  String get notificationSettingsBidsLabel => 'Matchs & enchères';
+  String get notificationSettingsBidsLabel => 'Mes envois';
 
   @override
   String get notificationSettingsBidsSubtitle =>
-      'Demandes, acceptations, remise, annulation…';
+      'Réponses des voyageurs, remise, suivi de vos colis';
 
   @override
   String get notificationSettingsCorridorLabel => 'Nouveaux trajets';
@@ -13208,6 +13245,41 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notificationSettingsRemindersTipsSubtitle =>
       'Premiers pas, départ de votre trajet';
+
+  @override
+  String get notificationSettingsMyTripsLabel => 'Mes trajets';
+
+  @override
+  String get notificationSettingsMyTripsSubtitle =>
+      'Demandes reçues, suppléments, reports';
+
+  @override
+  String get notificationSettingsRecipientParcelsLabel => 'Colis pour moi';
+
+  @override
+  String get notificationSettingsRecipientParcelsSubtitle =>
+      'Suivi des colis qu\'on vous envoie';
+
+  @override
+  String get notificationSettingsSectionEmails => 'E-MAILS';
+
+  @override
+  String get notificationSettingsEmailRecapsLabel => 'Récapitulatifs';
+
+  @override
+  String get notificationSettingsEmailRecapsSubtitle =>
+      'Réservation, livraison, annulation, retour';
+
+  @override
+  String get notificationSettingsEmailAlertsTipsLabel => 'Alertes et conseils';
+
+  @override
+  String get notificationSettingsEmailAlertsTipsSubtitle =>
+      'Récapitulatif de vos alertes, prix des vols, premiers pas';
+
+  @override
+  String get notificationSettingsEmailsAlwaysNote =>
+      'Les reçus et les décisions de l\'équipe vous sont toujours envoyés par e-mail, si votre compte a une adresse.';
 
   @override
   String get notificationSettingsMissedCallsLabel => 'Appels manqués';
@@ -16460,6 +16532,25 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get privacyShowLastSeenSubtitle =>
       'Au jour près sur votre profil public, pour rassurer ceux qui vous contactent.';
+
+  @override
+  String receptionsPromptTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis vous attendent',
+      one: 'Un colis vous attend',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String receptionsPromptFromSender(String name) {
+    return '$name vous envoie un colis';
+  }
+
+  @override
+  String get receptionsPromptSubtitle => 'Confirmez qu\'il est bien pour vous.';
 
   @override
   String get receptionsSectionTitle => 'Colis à recevoir';
@@ -21567,4 +21658,559 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidNegotiationHeroServiceFeeIncluded => 'Frais de service compris';
+
+  @override
+  String get bidDetailRequestSupplementLabel => 'Demander un supplément';
+
+  @override
+  String get bidDetailRequestSupplementSubtitle =>
+      'Le colis vaut plus que prévu : l\'expéditeur paie la différence';
+
+  @override
+  String get bidDetailScanBlockedSupplement =>
+      'Un supplément attend la réponse de l\'expéditeur : le scan est bloqué.';
+
+  @override
+  String get supplementRequestTitle => 'Demander un supplément';
+
+  @override
+  String get supplementRequestIntro =>
+      'Le colis ne correspond pas à la déclaration ? Demandez la différence à l\'expéditeur. Il paie par le même moyen que le colis, ou refuse.';
+
+  @override
+  String get supplementRequestSuggestionsLabel => 'Montants suggérés';
+
+  @override
+  String supplementRequestSuggestionKg(String amount) {
+    return '+1 kg : $amount';
+  }
+
+  @override
+  String supplementRequestSuggestionItem(String label, String amount) {
+    return '$label : $amount';
+  }
+
+  @override
+  String supplementRequestAmountLabel(String currency) {
+    return 'Montant pour vous ($currency)';
+  }
+
+  @override
+  String supplementRequestAmountHint(String min, String max) {
+    return 'Entre $min et $max';
+  }
+
+  @override
+  String supplementRequestAmountOutOfRange(String min, String max) {
+    return 'Le montant doit être compris entre $min et $max.';
+  }
+
+  @override
+  String get supplementRequestReasonLabel => 'Motif';
+
+  @override
+  String get supplementReasonGridItem => 'Article de votre grille de prix';
+
+  @override
+  String get supplementReasonGridItemHint =>
+      'Par exemple un téléphone déclaré au kilo';
+
+  @override
+  String get supplementReasonExtraWeight => 'Poids supérieur à la déclaration';
+
+  @override
+  String get supplementReasonOther => 'Autre';
+
+  @override
+  String get supplementRequestDetailsLabel => 'Précisions';
+
+  @override
+  String get supplementRequestDetailsHint =>
+      'Facultatif : ce que vous avez constaté';
+
+  @override
+  String get supplementRequestDetailsRequiredHint =>
+      'Expliquez l\'écart à l\'expéditeur';
+
+  @override
+  String get supplementRequestPhotoLabel => 'Photo du colis';
+
+  @override
+  String get supplementRequestPhotoHelp =>
+      'Obligatoire : l\'expéditeur la voit avec votre demande.';
+
+  @override
+  String get supplementRecapNet => 'Pour vous';
+
+  @override
+  String get supplementRecapCommission => 'Frais de service Yadony';
+
+  @override
+  String get supplementRecapGross => 'Payé par l\'expéditeur';
+
+  @override
+  String get supplementRequestNotice =>
+      'Le scan de remise reste bloqué jusqu\'à la réponse de l\'expéditeur, 2 h au plus. S\'il refuse, transportez le colis au prix prévu ou refusez-le, sans pénalité.';
+
+  @override
+  String get supplementRequestSubmit => 'Envoyer la demande';
+
+  @override
+  String supplementRequestSubmitAmount(String amount) {
+    return 'Demander $amount';
+  }
+
+  @override
+  String get supplementRequestLoadFailed =>
+      'Impossible de charger les montants possibles.';
+
+  @override
+  String get supplementRequestSent => 'Demande envoyée à l\'expéditeur';
+
+  @override
+  String get supplementCardTitle => 'Supplément de prix';
+
+  @override
+  String supplementDeadline(String time) {
+    return 'Réponse attendue avant $time';
+  }
+
+  @override
+  String supplementReasonWithItem(String label) {
+    return 'Article : $label';
+  }
+
+  @override
+  String get supplementTravelerPending => 'En attente de l\'expéditeur';
+
+  @override
+  String get supplementTravelerPendingNotice =>
+      'Le scan de remise est bloqué en attendant sa réponse.';
+
+  @override
+  String get supplementTravelerPaymentPending =>
+      'L\'expéditeur est en train de payer';
+
+  @override
+  String get supplementWithdraw => 'Retirer la demande';
+
+  @override
+  String get supplementWithdrawConfirmTitle => 'Retirer la demande ?';
+
+  @override
+  String get supplementWithdrawConfirmMessage =>
+      'L\'expéditeur est prévenu et vous pourrez scanner le colis au prix prévu.';
+
+  @override
+  String get supplementWithdrawn => 'Demande retirée';
+
+  @override
+  String get supplementTravelerDeclined =>
+      'L\'expéditeur a refusé le supplément';
+
+  @override
+  String get supplementTravelerExpired =>
+      'L\'expéditeur n\'a pas répondu à temps';
+
+  @override
+  String get supplementTravelerClosedHelp =>
+      'Transportez le colis au prix prévu, ou refusez-le sans pénalité.';
+
+  @override
+  String supplementTravelerPaid(String amount) {
+    return 'Supplément payé : +$amount pour vous';
+  }
+
+  @override
+  String get supplementTravelerPaidHelp =>
+      'Versé avec le paiement du colis, après la livraison.';
+
+  @override
+  String supplementTravelerPaidOut(String amount) {
+    return 'Supplément versé : +$amount';
+  }
+
+  @override
+  String get supplementRefunded => 'Supplément remboursé à l\'expéditeur';
+
+  @override
+  String get supplementSenderPendingTitle =>
+      'Le voyageur demande un supplément';
+
+  @override
+  String supplementSenderAmount(String amount) {
+    return '$amount de plus';
+  }
+
+  @override
+  String get supplementSenderPendingHelp =>
+      'Il a constaté un écart avec votre déclaration. Si vous refusez, il transporte le colis au prix prévu ou le refuse.';
+
+  @override
+  String get supplementDecline => 'Refuser le supplément';
+
+  @override
+  String get supplementDeclineConfirmTitle => 'Refuser le supplément ?';
+
+  @override
+  String get supplementDeclineConfirmMessage =>
+      'Le voyageur pourra transporter le colis au prix prévu ou le refuser.';
+
+  @override
+  String get supplementDeclined => 'Supplément refusé';
+
+  @override
+  String get supplementSenderDeclined => 'Vous avez refusé le supplément';
+
+  @override
+  String get supplementSenderExpired => 'La demande de supplément a expiré';
+
+  @override
+  String supplementSenderPaid(String amount) {
+    return 'Supplément payé : $amount';
+  }
+
+  @override
+  String get supplementSenderPaymentPending =>
+      'Paiement du supplément en cours';
+
+  @override
+  String get supplementPhotoSemantics => 'Photo du colis prise par le voyageur';
+
+  @override
+  String get errorSupplementDisabledTitle => 'Supplément indisponible';
+
+  @override
+  String get errorSupplementDisabledMessage =>
+      'Les demandes de supplément ne sont pas encore ouvertes.';
+
+  @override
+  String get errorSupplementRailUnsupportedTitle =>
+      'Moyen de paiement non pris en charge';
+
+  @override
+  String get errorSupplementRailUnsupportedMessage =>
+      'Un supplément n\'est pas encore possible avec le moyen de paiement de ce colis.';
+
+  @override
+  String get errorSupplementAmountOutOfRangeTitle => 'Montant hors limites';
+
+  @override
+  String get errorSupplementAmountOutOfRangeMessage =>
+      'Ce montant n\'est pas accepté pour un supplément.';
+
+  @override
+  String get errorSupplementLimitReachedTitle => 'Plus de demande possible';
+
+  @override
+  String get errorSupplementLimitReachedMessage =>
+      'Vous avez déjà fait le nombre maximal de demandes de supplément pour ce colis.';
+
+  @override
+  String get errorSupplementLockedTitle => 'Départ trop proche';
+
+  @override
+  String get errorSupplementLockedMessage =>
+      'Un supplément ne se demande plus juste avant le départ.';
+
+  @override
+  String get errorSupplementAlreadyActiveTitle => 'Demande déjà en cours';
+
+  @override
+  String get errorSupplementAlreadyActiveMessage =>
+      'Une demande de supplément existe déjà pour ce colis.';
+
+  @override
+  String get errorSupplementNotPendingTitle => 'Demande déjà traitée';
+
+  @override
+  String get errorSupplementNotPendingMessage =>
+      'Cette demande de supplément n\'attend plus de réponse.';
+
+  @override
+  String get errorSupplementExpiredTitle => 'Demande expirée';
+
+  @override
+  String get errorSupplementExpiredMessage =>
+      'Le délai de réponse à ce supplément est passé.';
+
+  @override
+  String get errorSupplementNotFoundTitle => 'Supplément introuvable';
+
+  @override
+  String get errorSupplementNotFoundMessage =>
+      'Cette demande de supplément n\'existe plus.';
+
+  @override
+  String get errorInvalidPhotoUrlTitle => 'Photo refusée';
+
+  @override
+  String get errorInvalidPhotoUrlMessage =>
+      'Cette photo n\'a pas pu être enregistrée. Reprenez-la.';
+
+  @override
+  String get errorHandoverSupplementPendingTitle => 'Supplément en attente';
+
+  @override
+  String get errorHandoverSupplementPendingMessage =>
+      'Un supplément attend la réponse de l\'expéditeur. Scannez le colis une fois qu\'il a répondu.';
+
+  @override
+  String get supplementSenderRefunded => 'Le supplément vous a été remboursé';
+
+  @override
+  String supplementPay(String amount) {
+    return 'Payer $amount';
+  }
+
+  @override
+  String get supplementPaidSnackbar => 'Supplément payé';
+
+  @override
+  String get supplementPaymentContextLabel => 'Supplément de prix du colis';
+
+  @override
+  String get supplementTravelerRefundPending =>
+      'Remboursement de l\'expéditeur en cours';
+
+  @override
+  String get supplementSenderRefundPending =>
+      'Remboursement du supplément en cours';
+
+  @override
+  String get supplementSenderPayHelp =>
+      'Payez avec le bouton en bas de l\'écran, ou refusez ici.';
+
+  @override
+  String get errorSupplementPaymentProcessingTitle => 'Paiement en cours';
+
+  @override
+  String get errorSupplementPaymentProcessingMessage =>
+      'Le paiement du supplément est en cours de traitement. Revenez dans quelques minutes.';
+
+  @override
+  String get errorSupplementPaymentCreationFailedTitle =>
+      'Paiement indisponible';
+
+  @override
+  String get errorSupplementPaymentCreationFailedMessage =>
+      'Impossible de préparer le paiement du supplément. Réessayez.';
+
+  @override
+  String get errorPaymentBusyTitle => 'Paiement en cours de validation';
+
+  @override
+  String get errorPaymentBusyMessage =>
+      'Un paiement est en cours de validation. Réessayez dans un instant.';
+
+  @override
+  String get errorStripeUnavailableTitle => 'Service de paiement injoignable';
+
+  @override
+  String get errorStripeUnavailableMessage =>
+      'Le service de paiement est momentanément injoignable. Réessayez.';
+
+  @override
+  String get supplementPaymentConfirming =>
+      'Paiement reçu, confirmation en cours. Le colis se met à jour dans un instant.';
+
+  @override
+  String get mobileMoneyExpiredSupplement =>
+      'Ce supplément n\'est plus à payer : la demande a expiré ou a été close. Le colis reste au prix prévu.';
+
+  @override
+  String get supplementMobileMoneyNotConfirmed =>
+      'Paiement du supplément pas encore confirmé.';
+
+  @override
+  String get supplementSenderMobileMoneyPending =>
+      'Paiement mobile money du supplément en attente';
+
+  @override
+  String get supplementCommissionSourceTitle =>
+      'Frais de service du supplément';
+
+  @override
+  String get supplementCommissionSourceHelp =>
+      'Elle est prélevée maintenant et vous est rendue si l\'expéditeur refuse, ne répond pas à temps ou si le colis n\'est pas livré. L\'expéditeur vous remet le total en espèces.';
+
+  @override
+  String get supplementCommissionSourceWallet => 'Mon solde Yadony';
+
+  @override
+  String get supplementCommissionSourceWalletHint =>
+      'Prélevée maintenant sur votre solde';
+
+  @override
+  String supplementCommissionSourceWalletCurrency(String currency) {
+    return 'Mon solde $currency';
+  }
+
+  @override
+  String get supplementCommissionSourceCard => 'Ma carte des frais de service';
+
+  @override
+  String get supplementCommissionSourceCardHint =>
+      'Débitée maintenant, votre banque peut demander une validation';
+
+  @override
+  String get supplementCommissionUnfundedHint =>
+      'Choisissez votre carte ou un autre solde ci-dessus, ou rechargez votre solde.';
+
+  @override
+  String get supplementCommissionCardMissing =>
+      'Aucune carte des frais de service enregistrée. Ajoutez-en une, ou payez avec votre solde.';
+
+  @override
+  String get supplementCommissionRetryNotice =>
+      'Votre demande est enregistrée, mais les frais de service n\'ont pas encore été prélevés. Réessayez pour l\'envoyer à l\'expéditeur.';
+
+  @override
+  String get supplementCommissionRetry => 'Réessayer le paiement';
+
+  @override
+  String get supplementCommissionAuthInterrupted =>
+      'Validation bancaire interrompue : rien n\'a été prélevé. Réessayez.';
+
+  @override
+  String get supplementCommissionProcessing =>
+      'Demande enregistrée : paiement des frais de service en cours de validation';
+
+  @override
+  String get supplementRecapGrossCash => 'Remis en espèces par l\'expéditeur';
+
+  @override
+  String get supplementTravelerCommissionPending =>
+      'Frais de service à valider';
+
+  @override
+  String get supplementTravelerCommissionPendingHelp =>
+      'Validez le paiement des frais de service pour envoyer la demande à l\'expéditeur. Sans validation sous 30 minutes, elle est annulée sans frais.';
+
+  @override
+  String get supplementCommissionConfirm => 'Valider le paiement';
+
+  @override
+  String get supplementCommissionConfirmedSnackbar =>
+      'Frais de service payés : demande envoyée à l\'expéditeur';
+
+  @override
+  String get supplementTravelerCashCommissionHelp =>
+      'Frais de service prélevés. Ils vous sont rendus si la demande n\'aboutit pas.';
+
+  @override
+  String supplementTravelerCashPaid(String amount) {
+    return 'Supplément accepté : l\'expéditeur vous remet $amount en espèces';
+  }
+
+  @override
+  String get supplementTravelerCashPaidHelp =>
+      'Recevez le complément en main propre à la remise du colis.';
+
+  @override
+  String get supplementTravelerCommissionRefunded =>
+      'Les frais de service du supplément vous ont été rendus.';
+
+  @override
+  String get supplementTravelerCommissionRefundPending =>
+      'Les frais de service du supplément vous seront rendus sous peu.';
+
+  @override
+  String get supplementTravelerCancelled => 'Demande de supplément annulée';
+
+  @override
+  String get supplementTravelerCancelledNoCharge =>
+      'Rien n\'a été prélevé sur votre solde ni sur votre carte.';
+
+  @override
+  String get supplementTravelerCashRefunded =>
+      'Colis non livré : rendez le complément en espèces à l\'expéditeur';
+
+  @override
+  String supplementCashAccept(String amount) {
+    return 'Accepter $amount';
+  }
+
+  @override
+  String get supplementSenderCashHelp =>
+      'Acceptez avec le bouton en bas de l\'écran puis remettez le complément en espèces au voyageur, ou refusez ici.';
+
+  @override
+  String get supplementCashConfirmTitle => 'Accepter le supplément';
+
+  @override
+  String supplementCashConfirmMessage(String amount) {
+    return 'Vous remettrez $amount en espèces au voyageur, en main propre, à la remise du colis.';
+  }
+
+  @override
+  String get supplementCashConfirmHelp =>
+      'Le scan de remise se débloque dès votre accord. Rien n\'est payé dans l\'application.';
+
+  @override
+  String supplementCashConfirmButton(String amount) {
+    return 'Je remettrai $amount en espèces';
+  }
+
+  @override
+  String supplementCashAcceptedSnackbar(String amount) {
+    return 'Supplément accepté : remettez $amount en espèces au voyageur';
+  }
+
+  @override
+  String supplementSenderCashPaid(String amount) {
+    return 'Supplément accepté : $amount à remettre en espèces';
+  }
+
+  @override
+  String get supplementSenderCashRefunded =>
+      'Colis non livré : le voyageur vous rend le complément en espèces';
+
+  @override
+  String get walletTxTypeSupplementCommission =>
+      'Frais de service de supplément';
+
+  @override
+  String get walletTxTypeSupplementCommissionRefund =>
+      'Frais de service de supplément rendus';
+
+  @override
+  String get walletTxTypeOther => 'Mouvement du solde';
+
+  @override
+  String get errorSupplementCommissionUnfundedTitle => 'Solde insuffisant';
+
+  @override
+  String get errorSupplementCommissionUnfundedMessage =>
+      'Votre solde ne couvre pas les frais de service du supplément. Rechargez-le ou payez par carte.';
+
+  @override
+  String get errorSupplementCommissionCardDeclinedTitle => 'Carte refusée';
+
+  @override
+  String get errorSupplementCommissionCardDeclinedMessage =>
+      'Votre carte des frais de service a été refusée : rien n\'a été prélevé et la demande est annulée.';
+
+  @override
+  String get errorSupplementCommissionChargeFailedTitle =>
+      'Frais de service non prélevés';
+
+  @override
+  String get errorSupplementCommissionChargeFailedMessage =>
+      'Le débit des frais de service n\'a pas abouti. Réessayez.';
+
+  @override
+  String get errorCommissionMethodMissingTitle =>
+      'Carte des frais de service manquante';
+
+  @override
+  String get errorCommissionMethodMissingMessage =>
+      'Enregistrez une carte pour les frais de service, ou payez avec votre solde.';
+
+  @override
+  String get errorFundingCurrencyInvalidTitle => 'Devise non prise en charge';
+
+  @override
+  String get errorFundingCurrencyInvalidMessage =>
+      'Ce portefeuille ne peut pas payer les frais de service. Choisissez-en un autre.';
 }

@@ -101,4 +101,21 @@ void main() {
       });
     });
   });
+
+  test('moyen non activé → « momentanément indisponible », traduit', () {
+    const e = PaymentConfirmationException.fromStripe(
+      null,
+      stripeCode: 'Failed',
+      stripeErrorCode: 'payment_method_unactivated',
+      stripeErrorType: 'invalid_request_error',
+    );
+    expect(
+      commissionSetupErrorMessage(fr, e, opening: false),
+      'Ce moyen de paiement est momentanément indisponible. Payez par carte.',
+    );
+    expect(
+      commissionSetupErrorMessage(en, e, opening: false),
+      'This payment method is temporarily unavailable. Please pay by card.',
+    );
+  });
 }

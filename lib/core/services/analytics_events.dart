@@ -28,6 +28,12 @@ abstract final class AnalyticsEvents {
   /// (`guest-claim-invalid-token`, `guest-claim-self`, …) ou `unknown`.
   static const guestDataClaimFailed = 'guest_data_claim_failed';
 
+  /// Échec du rattachement d'un numéro depuis Profil › Modifier le profil ›
+  /// Téléphone (`POST /auth/sms-otp/attach`). Propriété `error_code` : code
+  /// métier du backend (`phone-already-exists`, `phone-pending-deletion`,
+  /// `phone-otp-invalid`, …) ou `unknown`. Jamais le numéro.
+  static const phoneAttachFailed = 'phone_attach_failed';
+
   // KYC
   static const kycStarted = 'kyc_started';
   static const kycCompleted = 'kyc_completed';
@@ -303,7 +309,8 @@ abstract final class AnalyticsEvents {
   /// Commission d'un accord en espèces (offre ou fil de négociation) : le
   /// voyageur choisit de payer le complément depuis un autre portefeuille,
   /// converti au taux du jour (FLUTTER-CG). Propriétés `currency` (code ISO
-  /// du portefeuille choisi) et `context` (`bid`/`negotiation`). Jamais de
+  /// du portefeuille choisi) et `context` (`bid`/`negotiation`/
+  /// `bid_supplement`). Jamais de
   /// montant ni de solde.
   static const commissionFundingCurrencyChosen =
       'commission_funding_currency_chosen';
@@ -472,6 +479,63 @@ abstract final class AnalyticsEvents {
   /// Refus du colis impossible (photo non envoyée, statut changé, trajet
   /// parti). Propriétés `reason`, `error_code`.
   static const parcelRefusalFailed = 'parcel_refusal_failed';
+
+  // Supplément de prix à la remise (`/bids/{bidId}/supplements`). Jamais le
+  // montant exact (tranche `amount_bracket` + `currency`), jamais le texte du
+  // motif.
+
+  /// Feuille « Demander un supplément » ouverte et ses options chargées.
+  /// Propriétés `payment_method` (moyen de paiement du colis), `status`.
+  static const bidSupplementSheetOpened = 'bid_supplement_sheet_opened';
+
+  /// Demande de supplément créée par le serveur. Propriétés `reason`
+  /// (`grid_item`/`extra_weight`/`other`), `suggestion`
+  /// (`grid_item`/`kg`/`custom`), `amount_bracket`, `currency`,
+  /// `payment_method`, et en espèces `commission_source` (`wallet`/`card`).
+  static const bidSupplementRequested = 'bid_supplement_requested';
+
+  /// Demande impossible (photo non envoyée, montant hors bornes, départ trop
+  /// proche…). Propriétés `reason`, `error_code`.
+  static const bidSupplementRequestFailed = 'bid_supplement_request_failed';
+
+  /// Le voyageur retire sa demande, confirmé par le serveur.
+  static const bidSupplementWithdrawn = 'bid_supplement_withdrawn';
+
+  /// Encart du supplément affiché dans le détail d'envoi, une fois par
+  /// écran. Propriétés `role` (`sender`/`traveler`), `status`.
+  static const bidSupplementViewed = 'bid_supplement_viewed';
+
+  /// L'expéditeur refuse le supplément, confirmé par le serveur. Propriété
+  /// `payment_method`.
+  static const bidSupplementDeclined = 'bid_supplement_declined';
+
+  /// Retrait ou refus impossible. Propriétés `action`
+  /// (`withdraw`/`decline`/`pay`/`confirm_payment`), `error_code`.
+  static const bidSupplementActionFailed = 'bid_supplement_action_failed';
+
+  /// L'expéditeur lance le paiement du supplément : le serveur a accepté et
+  /// rendu un PaymentIntent. Propriétés `method` (`card`), `currency`,
+  /// `amount_bracket`. Le paiement lui-même est tracé par la feuille
+  /// (`payment_*`, `context: bid_supplement`).
+  static const bidSupplementPaymentStarted = 'bid_supplement_payment_started';
+
+  /// Colis payé en espèces : l'expéditeur accepte le supplément et s'engage à
+  /// remettre le complément en main propre (`POST …/accept`, rail `CASH`).
+  /// Propriétés `amount_bracket`, `currency`. Aucun argent ne passe par
+  /// l'app : pas de `payment_succeeded`.
+  static const bidSupplementCashAccepted = 'bid_supplement_cash_accepted';
+
+  /// Colis payé en espèces : le voyageur relance depuis l'encart la
+  /// validation de la commission d'une demande en attente (3DS abandonnée,
+  /// débit sans réponse). Propriété `outcome` : `proposed` (demande partie à
+  /// l'expéditeur), `pending` (encore en attente), `failed`.
+  static const bidSupplementCommissionResumed =
+      'bid_supplement_commission_resumed';
+
+  /// Scan de remise refusé par le serveur (409
+  /// `handover-supplement-pending`) : un supplément attend la réponse de
+  /// l'expéditeur. Propriété `channel` (`direct`/`offline`).
+  static const handoverBlockedSupplement = 'handover_blocked_supplement';
   static const rematchAccepted = 'rematch_accepted';
   static const rematchAlternativesOpened = 'rematch_alternatives_opened';
   static const noShowReportedBySender = 'no_show_reported_by_sender';
@@ -502,6 +566,12 @@ abstract final class AnalyticsEvents {
   /// Ticket support créé avec succès (propriété `category` : énumération
   /// fermée backend, jamais le sujet ni le message).
   static const supportTicketCreated = 'support_ticket_created';
+
+  /// Écran support ouvert avec une demande préremplie (`SupportTicketDraft`),
+  /// avant toute saisie. Propriété `origin` : écran d'où vient la demande
+  /// (`team_cancelled_parcel`, `phone_already_used`, `email_change`). Jamais
+  /// le sujet ni le message.
+  static const supportDraftOpened = 'support_draft_opened';
 
   /// Message utilisateur envoyé dans un ticket support existant. Aucune
   /// propriété : le contenu ne part jamais dans l'analytics.
@@ -850,6 +920,10 @@ abstract final class AnalyticsEvents {
   // Colis à recevoir (lot 2 destinataire). Jamais le nom, le numéro ni le
   // code : seulement des statuts et des comptes.
   static const receptionsSectionViewed = 'receptions_section_viewed';
+  // Bandeau « Un colis vous attend » de l'accueil (YADONY-FLUTTER-PROD-12),
+  // propriété `count` seulement.
+  static const receptionsPromptShown = 'receptions_prompt_shown';
+  static const receptionsPromptTapped = 'receptions_prompt_tapped';
   static const receptionOpened = 'reception_opened';
   static const receptionConfirmed = 'reception_confirmed';
   static const receptionDeclined = 'reception_declined';

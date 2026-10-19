@@ -31,6 +31,41 @@ void main() {
     }
   });
 
+  group('resolveNotificationRoute — supplément de prix', () {
+    test('BID_SUPPLEMENT_REQUESTED ouvre la fiche sur l\'encart', () {
+      expect(
+        resolveNotificationRoute('BID_SUPPLEMENT_REQUESTED', {
+          'bidId': bidId,
+          'supplementId': cancellationId,
+        }),
+        '/bids/$bidId?action=supplement',
+      );
+      expect(
+        resolveNotificationRoute('BID_SUPPLEMENT_REQUESTED', {
+          'bidId': '../admin',
+        }),
+        isNull,
+      );
+    });
+
+    for (final type in [
+      'BID_SUPPLEMENT_PAID',
+      'BID_SUPPLEMENT_DECLINED',
+      'BID_SUPPLEMENT_EXPIRED',
+      'BID_SUPPLEMENT_WITHDRAWN',
+      'BID_SUPPLEMENT_REFUNDED',
+      'BID_SUPPLEMENT_PAID_OUT',
+    ]) {
+      test('$type ouvre la fiche du colis', () {
+        expect(
+          resolveNotificationRoute(type, {'bidId': bidId}),
+          '/bids/$bidId',
+        );
+        expect(resolveNotificationRoute(type, {}), isNull);
+      });
+    }
+  });
+
   group('resolveNotificationRoute — BID_EXPIRED', () {
     test('avec bidId → la demande', () {
       expect(

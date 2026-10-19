@@ -166,6 +166,10 @@ class _DraftSheetLauncherState extends State<_DraftSheetLauncher> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final origin = widget.draft.origin;
+      if (origin != null) {
+        context.read<SupportBloc>().add(SupportDraftOpened(origin));
+      }
       unawaited(_openCreateTicketSheet(context, draft: widget.draft));
     });
   }

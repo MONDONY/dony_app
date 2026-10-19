@@ -5,6 +5,7 @@ import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/ai_form_draft_injection.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
+import 'package:dony/core/di/supplement_injection.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/network/maintenance_signal.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
@@ -134,6 +135,9 @@ import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_list_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_flow.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_request_cubit.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
@@ -155,11 +159,13 @@ import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
+import 'package:dony/features/matching/data/datasources/bid_supplement_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:dony/features/matching/data/repositories/tools_completion_repository.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
@@ -246,7 +252,9 @@ import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:dony/features/receptions/bloc/parcel_link_cubit.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
+import 'package:dony/features/receptions/bloc/receptions_prompt_cubit.dart';
 import 'package:dony/features/receptions/data/datasources/reception_remote_datasource.dart';
+import 'package:dony/features/receptions/data/receptions_prompt_store.dart';
 import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
 import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/recipients/bloc/invite_recipient_cubit.dart';
@@ -433,6 +441,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
   );
+  getIt.registerFactory<ReceptionsPromptCubit>(
+    () => ReceptionsPromptCubit(
+      getIt<ReceptionRepository>(),
+      ReceptionsPromptStore(() => getIt<HiveService>().userPrefs),
+      getIt<AnalyticsService>(),
+    ),
+  );
   getIt.registerFactory<ReceptionDetailCubit>(
     () => ReceptionDetailCubit(
       getIt<ReceptionRepository>(),
@@ -456,6 +471,21 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
   );
+  getIt.registerFactory<SupplementRequestCubit>(
+    () => SupplementRequestCubit(
+      getIt<BidSupplementRepository>(),
+      getIt<DonyMediaService>(),
+      getIt<AnalyticsService>(),
+      commissionFlow: getIt<SupplementCommissionFlow>(),
+    ),
+  );
+  getIt.registerFactory<SupplementActionCubit>(
+    () => SupplementActionCubit(
+      getIt<BidSupplementRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  registerSupplementPaymentDependencies(getIt);
   getIt.registerFactory<RecipientReplacementCubit>(
     () => RecipientReplacementCubit(
       getIt<BidRepository>(),
@@ -704,6 +734,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<ShipmentFilterCubit>(
     () => ShipmentFilterCubit(getIt<AnalyticsService>()),
+  );
+
+  // Matching — supplément de prix à la remise
+  getIt.registerLazySingleton<BidSupplementRemoteDatasource>(
+    () => BidSupplementRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BidSupplementRepository>(
+    () => BidSupplementRepository(getIt<BidSupplementRemoteDatasource>()),
   );
 
   // Matching — Mobile Money
@@ -1319,6 +1357,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       DateTime.now,
       null,
       TrackingQueuePhotoStore(),
+      getIt<AnalyticsService>(),
     ),
     dispose: (s) => s.dispose(),
   );

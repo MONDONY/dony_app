@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_refusal_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -15,6 +16,12 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// La tuile « Demander un supplément » s'affiche si le serveur l'autorise,
+/// quel que soit le moyen de paiement du colis. En espèces, la feuille fait
+/// choisir d'où prélever la commission du supplément (PR A4) ; un back sans
+/// rail espèces rend `supplementRequestAllowed` faux.
+bool canRequestSupplement(BidModel bid) => bid.supplementRequestAllowed;
 
 /// Statuses for which the traveler can dismiss/delete the bid record.
 const _dismissableStatuses = {'REJECTED', 'CANCELLED'};
@@ -113,6 +120,24 @@ class _TravelerOptionsSheet extends StatelessWidget {
               },
             ),
             const SizedBox(height: DonySpacing.sm),
+
+            // ── Demander un supplément (avant le refus du colis) ───────────
+            // Le serveur seul dit si une demande est possible (fenêtre, rail,
+            // plafond) : `supplementRequestAllowed`.
+            if (canRequestSupplement(bid)) ...[
+              _OptionTile(
+                iconAsset: 'tag',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.bidDetailRequestSupplementLabel,
+                subtitle: l.bidDetailRequestSupplementSubtitle,
+                onTap: () {
+                  context.pop();
+                  openSupplementRequestSheet(outerContext, bid);
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
 
             // ── Le colis ne correspond pas (même fenêtre que l'annulation) ──
             // Refus à l'inspection : l'expéditeur est remboursé et prévenu, le

@@ -32,6 +32,14 @@ enum SuiviLoadStatus { idle, loading, loaded, error }
 /// analytics.
 enum SuiviTrackSegment { envois, receptions }
 
+/// Segment demandé par l'URL (`/tracking?mode=suivre&segment=receptions`,
+/// bandeau « Un colis vous attend » de l'accueil), `null` si absent ou inconnu.
+SuiviTrackSegment? suiviSegmentFromQuery(String? raw) => switch (raw) {
+  'envois' => SuiviTrackSegment.envois,
+  'receptions' => SuiviTrackSegment.receptions,
+  _ => null,
+};
+
 /// Verdict sur le numéro de suivi saisi à la remise d'un colis (DEPART).
 /// [unverified] : le serveur n'a pas pu répondre (hors ligne) ; la saisie est
 /// gardée et il la vérifiera à la réception de l'étape.
@@ -409,6 +417,21 @@ class SuiviCubit extends Cubit<SuiviState> {
         properties: {'segment': segment.name},
       ),
     );
+  }
+
+  /// Segment imposé par la navigation (`segment=receptions`) : il passe en
+  /// « Suivre » et ne bouge plus ensuite, sans événement analytics (ce n'est
+  /// pas un choix au doigt).
+  void applyRequestedSegment(SuiviTrackSegment? segment) {
+    if (segment == null) return;
+    _segmentSettled = true;
+    if (state.canValidate && state.mode != SuiviMode.suivre) {
+      _modeIsDefault = false;
+      _setMode(SuiviMode.suivre);
+    }
+    if (state.trackSegment != segment) {
+      emit(state._copy(trackSegment: segment));
+    }
   }
 
   /// Nombre de colis à recevoir, lu par l'écran sur `ReceptionsCubit`.

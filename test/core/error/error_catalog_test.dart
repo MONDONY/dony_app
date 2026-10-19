@@ -1179,19 +1179,54 @@ void main() {
   });
 
   group('ErrorCatalog — codes auth', () {
-    test('phone-already-exists en français et en anglais', () {
+    test('phone-already-exists en français et en anglais : dit quoi faire', () {
       const error = NetworkException('x', code: 'phone-already-exists');
+      final fr = ErrorCatalog.lookup(error);
+      expect(fr.title, 'Numéro déjà utilisé');
       expect(
-        ErrorCatalog.lookup(error).message,
-        'Ce numéro est déjà associé à un autre compte.',
+        fr.message,
+        'Ce numéro a déjà son propre compte Yadony. Connectez-vous avec ce '
+        'numéro, ou contactez le support pour regrouper vos comptes.',
       );
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.title, 'Number already in use');
       expect(
-        ErrorCatalog.lookup(
-          error,
-          l10n: lookupAppLocalizations(AppL10n.en),
-        ).title,
-        'Number already in use',
+        en.message,
+        'This number already has its own Yadony account. Sign in with this '
+        'number, or contact support to merge your accounts.',
       );
+    });
+
+    test('phone-pending-deletion en français et en anglais', () {
+      const error = ConflictException('x', code: 'phone-pending-deletion');
+      final fr = ErrorCatalog.lookup(error);
+      expect(fr.title, 'Compte en cours de suppression');
+      expect(
+        fr.message,
+        'Ce numéro appartient à un compte en cours de suppression. '
+        'Connectez-vous avec ce numéro pour annuler la suppression.',
+      );
+      expect(fr.severity, ErrorSeverity.warning);
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.title, 'Account being deleted');
+      expect(
+        en.message,
+        'This number belongs to an account that is being deleted. Sign in '
+        'with this number to cancel the deletion.',
+      );
+    });
+
+    test('code de conflit inconnu → message générique, jamais le code', () {
+      const error = ConflictException('x', code: 'phone-merge-future-code');
+      final p = ErrorCatalog.lookup(error);
+      expect(p.title, isNot(contains('phone-merge')));
+      expect(p.message, isNot(contains('phone-merge')));
     });
 
     test('announcement-update-blocked : colis déjà acceptés sur le trajet', () {
@@ -1654,5 +1689,94 @@ void main() {
       'Ce montant ne couvre pas les frais de service minimum de Yadony.',
     );
     expect(p.severity, ErrorSeverity.warning);
+  });
+
+  group('ErrorCatalog — supplément de prix', () {
+    String norm(String s) => s.replaceAll(RegExp('[\u00A0\u202F]'), ' ');
+
+    test('montant hors bornes : cite le minimum et le maximum', () {
+      const error = ValidationException(
+        'detail',
+        code: 'supplement-amount-out-of-range',
+        extensions: {'min': 1, 'max': 300, 'currency': 'EUR'},
+      );
+
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+
+      expect(p.title, 'Montant hors limites');
+      expect(
+        norm(p.message),
+        'Le montant doit être compris entre 1 € et 300 €.',
+      );
+    });
+
+    test('bornes en texte ou absentes : texte de repli', () {
+      final withText = ErrorCatalog.lookup(
+        const ValidationException(
+          'd',
+          code: 'supplement-amount-out-of-range',
+          extensions: {'min': '656', 'max': '196787', 'currency': 'XOF'},
+        ),
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(withText.message, startsWith('The amount must be between'));
+
+      for (final error in [
+        const ValidationException('d', code: 'supplement-amount-out-of-range'),
+        const ValidationException(
+          'd',
+          code: 'supplement-amount-out-of-range',
+          extensions: {'min': 'abc', 'max': 300},
+        ),
+        const NetworkException('d', code: 'supplement-amount-out-of-range'),
+      ]) {
+        expect(
+          ErrorCatalog.lookup(
+            error,
+            l10n: lookupAppLocalizations(AppL10n.fr),
+          ).message,
+          "Ce montant n'est pas accepté pour un supplément.",
+        );
+      }
+    });
+
+    test('chaque code du supplément a son texte', () {
+      const codes = {
+        'supplement-disabled': 'Supplément indisponible',
+        'supplement-rail-unsupported': 'Moyen de paiement non pris en charge',
+        'supplement-limit-reached': 'Plus de demande possible',
+        'supplement-locked': 'Départ trop proche',
+        'supplement-already-active': 'Demande déjà en cours',
+        'supplement-not-pending': 'Demande déjà traitée',
+        'supplement-expired': 'Demande expirée',
+        'supplement-not-found': 'Supplément introuvable',
+        'invalid-photo-url': 'Photo refusée',
+        'handover-supplement-pending': 'Supplément en attente',
+        'supplement-payment-processing': 'Paiement en cours',
+        'supplement-payment-creation-failed': 'Paiement indisponible',
+        'payment-busy': 'Paiement en cours de validation',
+        'stripe-unavailable': 'Service de paiement injoignable',
+        'supplement-commission-unfunded': 'Solde insuffisant',
+        'supplement-commission-card-declined': 'Carte refusée',
+        'supplement-commission-charge-failed': 'Frais de service non prélevés',
+        'commission-method-missing': 'Carte des frais de service manquante',
+        'funding-currency-invalid': 'Devise non prise en charge',
+      };
+      for (final entry in codes.entries) {
+        final error = ConflictException('d', code: entry.key);
+        expect(ErrorCatalog.isKnown(error), isTrue, reason: entry.key);
+        expect(
+          ErrorCatalog.lookup(
+            error,
+            l10n: lookupAppLocalizations(AppL10n.fr),
+          ).title,
+          entry.value,
+          reason: entry.key,
+        );
+      }
+    });
   });
 }

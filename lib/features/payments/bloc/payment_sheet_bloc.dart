@@ -1,14 +1,18 @@
 import 'dart:async';
 
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'payment_sheet_event.dart';
@@ -29,7 +33,7 @@ class PaymentSheetConfig extends Equatable {
 
   /// Parcours d'origine, envoyé en propriété `context` des événements de
   /// paiement (`bid`, `trip_negotiation`, `negotiation`, `escrow`,
-  /// `wallet_topup`) : sans lui, un paiement d'offre et une recharge du
+  /// `wallet_topup`, `bid_supplement`) : sans lui, un paiement d'offre et une recharge du
   /// solde étaient indiscernables dans PostHog.
   final String analyticsContext;
 
@@ -57,8 +61,43 @@ class PaymentSheetConfig extends Equatable {
       SupportedCurrency.fromCodeOrDefault(currencyCode);
 }
 
+/// Journal d'une feuille Apple Pay / Google Pay refermée en `Canceled`.
+/// [suspicious] : la feuille est restée ouverte plus de
+/// [PaymentSheetBloc.platformPaySuspectAfter], probablement un échec déguisé.
+typedef PlatformPayCancelLogger =
+    void Function(
+      String message, {
+      required bool suspicious,
+      required Map<String, Object> data,
+    });
+
+void _appLogPlatformPayCancel(
+  String message, {
+  required bool suspicious,
+  required Map<String, Object> data,
+}) => suspicious
+    ? AppLog.warn(message, data: data)
+    : AppLog.info(message, data: data);
+
 class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
+  /// Message Sentry (Logs + breadcrumb) d'une feuille Apple Pay / Google Pay
+  /// refermée en `Canceled` (YADONY-FLUTTER-PROD-11).
+  static const platformPayCancelledLog = 'payment.platform_pay_cancelled';
+
+  /// Au-delà, une annulation Apple Pay / Google Pay ressemble à un échec :
+  /// sans certificat de traitement côté Apple, la feuille tourne puis se
+  /// referme et le SDK ne renvoie que `Canceled`.
+  static const platformPaySuspectAfter = Duration(seconds: 8);
+
   final PaymentGateway _gateway;
+
+  /// Délai max de lecture des drapeaux à l'ouverture : au-delà, la feuille
+  /// s'ouvre avec la dernière valeur connue (repli : carte seule).
+  static const paymentMethodFlagsTimeout = Duration(seconds: 4);
+
+  final Future<PaymentMethodFlags> Function()? _loadPaymentMethodFlags;
+  final PlatformPayCancelLogger _platformPayCancelLog;
+  final DateTime Function() _now;
   final PaymentRepository _repository;
   final ErrorReportingService? _errorReporter;
   final AnalyticsService? _analytics;
@@ -70,7 +109,13 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     required this.config,
     ErrorReportingService? errorReporter,
     AnalyticsService? analytics,
+    PlatformPayCancelLogger platformPayCancelLog = _appLogPlatformPayCancel,
+    DateTime Function() now = DateTime.now,
+    Future<PaymentMethodFlags> Function()? loadPaymentMethodFlags,
   }) : _gateway = gateway,
+       _loadPaymentMethodFlags = loadPaymentMethodFlags,
+       _platformPayCancelLog = platformPayCancelLog,
+       _now = now,
        _repository = repository,
        _errorReporter = errorReporter,
        _analytics = analytics,
@@ -87,11 +132,19 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   ) async {
     // Aucun bouton mort : chaque moyen n'apparaît que s'il est disponible.
     // Les échecs de résolution ne bloquent jamais la sheet (dégradation propre).
+    //
+    // Apple Pay / Google Pay : drapeau serveur (relu ici, à l'ouverture, pour
+    // qu'une bascule du back-office s'applique au paiement suivant) ET appareil
+    // compatible. Drapeau illisible : dernière valeur connue, au pire éteint.
+    final flags = await _resolvePaymentMethodFlags();
     bool walletAvailable = false;
-    try {
-      walletAvailable = await _gateway.isPlatformPaySupported();
-    } catch (_) {}
+    if (flags.walletEnabledFor(defaultTargetPlatform)) {
+      try {
+        walletAvailable = await _gateway.isPlatformPaySupported();
+      } catch (_) {}
+    }
 
+    // PayPal : décidé par paiement côté serveur (types du PaymentIntent).
     final paypalAvailable = config.paymentMethodTypes.contains('paypal');
     emit(
       PaymentSheetResolved(
@@ -103,6 +156,18 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
       'wallet_available': walletAvailable,
       'paypal_available': paypalAvailable,
     });
+  }
+
+  Future<PaymentMethodFlags> _resolvePaymentMethodFlags() async {
+    final load = _loadPaymentMethodFlags;
+    if (load != null) {
+      try {
+        final fresh = await load().timeout(paymentMethodFlagsTimeout);
+        setPaymentMethodFlags(fresh);
+        return fresh;
+      } catch (_) {}
+    }
+    return paymentMethodFlagsListenable.value;
   }
 
   /// Propriétés communes à tous les événements de paiement, sans montant
@@ -148,6 +213,7 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         PaymentSheetFailureReason.authenticationFailed =>
           'authentication_failed',
         PaymentSheetFailureReason.sheetUnavailable => 'sheet_unavailable',
+        PaymentSheetFailureReason.methodUnavailable => 'method_unavailable',
         PaymentSheetFailureReason.generic => 'generic',
       };
 
@@ -250,6 +316,7 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     if (ready == null) return;
     emit(PaymentSheetProcessing(ready: ready, method: method));
     _log(AnalyticsEvents.paymentInitiated, const {}, method);
+    final startedAt = _now();
     try {
       await action();
       emit(PaymentSheetSuccess(method: method));
@@ -257,6 +324,9 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     } on PaymentCancelledException {
       emit(ready); // annulation silencieuse — la sheet reste prête
       _log(AnalyticsEvents.paymentCancelled, const {}, method);
+      if (method == PaymentMethodKind.wallet) {
+        _logPlatformPayCancelled(_now().difference(startedAt));
+      }
     } on _EphemeralKeyUnavailableException {
       _fail(
         emit,
@@ -331,11 +401,34 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         reason: PaymentSheetFailureReason.sheetUnavailable,
         ready: ready,
       ),
+      StripeFailureKind.methodUnavailable => PaymentSheetFailure(
+        reason: PaymentSheetFailureReason.methodUnavailable,
+        ready: ready,
+      ),
       StripeFailureKind.generic => PaymentSheetFailure(
         reason: PaymentSheetFailureReason.generic,
         ready: ready,
       ),
     };
+  }
+
+  /// Le SDK ne distingue pas une feuille Apple Pay / Google Pay fermée par
+  /// l'utilisateur d'une feuille en échec (certificat Apple absent,
+  /// YADONY-FLUTTER-PROD-11) : les deux rendent `Canceled`. L'UX ne change
+  /// pas, mais la durée part à Sentry, en warning au-delà de
+  /// [platformPaySuspectAfter].
+  void _logPlatformPayCancelled(Duration elapsed) {
+    _platformPayCancelLog(
+      platformPayCancelledLog,
+      suspicious: elapsed > platformPaySuspectAfter,
+      data: {
+        'duration_ms': elapsed.inMilliseconds,
+        'platform': defaultTargetPlatform == TargetPlatform.iOS
+            ? 'apple_pay'
+            : 'google_pay',
+        'context': config.analyticsContext,
+      },
+    );
   }
 
   /// Remonte à Sentry un échec Stripe (hors annulation, déjà mappée en

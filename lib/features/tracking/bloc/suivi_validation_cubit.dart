@@ -180,7 +180,10 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     _positions[id] = position != null
         ? Future.value(position)
         : _locator.capture();
-    _timers[id] = Timer(delay, () => unawaited(_send(id)));
+    _timers[id] = Timer(
+      delay,
+      () => unawaited(_send(id, canShowRefusal: true)),
+    );
     emit(
       _copy(
         pending: [
@@ -218,10 +221,15 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
 
   /// Envoie tout de suite les validations en attente (onglet quitté, app
   /// en arrière-plan).
+  /// L'issue n'est pas toujours visible (onglet quitté, app en
+  /// arrière-plan) : une étape refusée pour l'instant reste en file.
   Future<void> flush() =>
       Future.wait([for (final p in state.pending) _send(p.id)]);
 
-  Future<void> _send(int id) async {
+  /// [canShowRefusal] : l'onglet est affiché et montrera le motif d'un
+  /// refus « pour l'instant » (supplément en attente). Sinon la file garde
+  /// l'étape et la renvoie plus tard : un départ ne se perd jamais en silence.
+  Future<void> _send(int id, {bool canShowRefusal = false}) async {
     final pending = _find(id);
     if (pending == null) return;
     _timers.remove(id)?.cancel();
@@ -235,6 +243,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
       final sent = await _queue.sendScheduled(
         await key,
         position: _positionOrNull(position),
+        canShowRefusal: canShowRefusal,
       );
       unawaited(
         _analytics.logEvent(

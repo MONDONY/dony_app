@@ -134,6 +134,25 @@ class _NotificationSettingsScreenState
                         prefs: state.prefs,
                         onToggle: (key) => _toggle(context, key),
                       ),
+                      // Une tuile par rôle (back V340) : ce qu'on reçoit comme
+                      // voyageur, puis comme destinataire d'un colis.
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsMyTripsLabel,
+                        subtitle: l.notificationSettingsMyTripsSubtitle,
+                        key: 'push_my_trips',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsRecipientParcelsLabel,
+                        subtitle:
+                            l.notificationSettingsRecipientParcelsSubtitle,
+                        key: 'push_recipient_parcels',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
                       // Cloche rapatriée de l'écran « Colis sur mes trajets »,
                       // supprimé avec sa route : le réglage reste, son écran non.
                       _buildPackageMatchTile(context, state.packageMatchAlert),
@@ -213,6 +232,44 @@ class _NotificationSettingsScreenState
                       if (CallLockScreenTile.isAvailable)
                         const CallLockScreenTile(),
                     ],
+                  ),
+                  // E-mails des notifications (back V342) : les reçus et les
+                  // décisions partent toujours, ces deux familles se coupent.
+                  const SizedBox(height: DonySpacing.xl),
+                  SettingsSectionHeader(l.notificationSettingsSectionEmails),
+                  SettingsFlatGroup(
+                    children: [
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsEmailRecapsLabel,
+                        subtitle: l.notificationSettingsEmailRecapsSubtitle,
+                        key: 'email_recaps',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsEmailAlertsTipsLabel,
+                        subtitle: l.notificationSettingsEmailAlertsTipsSubtitle,
+                        key: 'email_alerts_tips',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.sm,
+                      DonySpacing.lg,
+                      0,
+                    ),
+                    child: Text(
+                      l.notificationSettingsEmailsAlwaysNote,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 ],
               )

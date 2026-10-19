@@ -1,13 +1,11 @@
-import 'dart:io';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/parcel_refusal/parcel_refusal_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/parcel_photo_picker.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -210,7 +208,14 @@ class _ParcelRefusalSheetState extends State<ParcelRefusalSheet> {
                   enabled: !state.isSubmitting,
                 ),
                 const SizedBox(height: DonySpacing.lg),
-                _PhotoSection(state: state),
+                ParcelPhotoPicker(
+                  title: l.parcelRefusalPhotoLabel,
+                  help: l.parcelRefusalPhotoHelp,
+                  photoPath: state.photoPath,
+                  busy: state.isSubmitting,
+                  onTake: cubit.takePhoto,
+                  onRemove: cubit.removePhoto,
+                ),
                 const SizedBox(height: DonySpacing.lg),
                 if (bid.status == 'HANDED_OVER') ...[
                   DonyStatusBanner(
@@ -294,80 +299,4 @@ class _DeclaredCard extends StatelessWidget {
 
   static String _formatKg(double kg) =>
       kg == kg.roundToDouble() ? kg.toStringAsFixed(0) : kg.toStringAsFixed(1);
-}
-
-/// Photo obligatoire du colis : bouton de prise de vue, puis miniature avec
-/// « Reprendre la photo » et « Retirer la photo ».
-class _PhotoSection extends StatelessWidget {
-  const _PhotoSection({required this.state});
-
-  final ParcelRefusalState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final cubit = context.read<ParcelRefusalCubit>();
-    final path = state.photoPath;
-    final busy = state.isSubmitting;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          l.parcelRefusalPhotoLabel,
-          style: tt.titleSmall?.copyWith(color: cs.onSurface),
-        ),
-        const SizedBox(height: DonySpacing.xs),
-        Text(
-          l.parcelRefusalPhotoHelp,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        const SizedBox(height: DonySpacing.md),
-        if (path == null)
-          DonyButton(
-            label: l.parcelRefusalTakePhoto,
-            iconAsset: 'camera',
-            variant: DonyButtonVariant.secondary,
-            onPressed: busy ? null : cubit.takePhoto,
-          )
-        else
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                child: Image.file(
-                  File(path),
-                  width: 88,
-                  height: 88,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    width: 88,
-                    height: 88,
-                    color: cs.surfaceContainerHighest,
-                    alignment: Alignment.center,
-                    child: DonyIcon('camera', color: cs.onSurfaceVariant),
-                  ),
-                ),
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: DonyButton(
-                  label: l.parcelRefusalRetakePhoto,
-                  iconAsset: 'camera',
-                  variant: DonyButtonVariant.ghost,
-                  onPressed: busy ? null : cubit.takePhoto,
-                ),
-              ),
-              IconButton(
-                tooltip: l.parcelRefusalRemovePhoto,
-                onPressed: busy ? null : cubit.removePhoto,
-                icon: DonyIcon('trash-2', color: cs.error, size: 20),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
 }

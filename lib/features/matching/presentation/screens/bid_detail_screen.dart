@@ -56,11 +56,17 @@ class BidDetailScreen extends StatelessWidget {
   /// nouveau code, la feuille de régénération s'ouvre dès le chargement.
   final bool openCodeRenewal;
 
+  /// Ouvert depuis la notification `BID_SUPPLEMENT_REQUESTED`
+  /// (`?action=supplement`) : la vue expéditeur amène l'encart du supplément
+  /// à l'écran.
+  final bool focusSupplement;
+
   const BidDetailScreen({
     super.key,
     required this.bid,
     this.fromPayment = false,
     this.openCodeRenewal = false,
+    this.focusSupplement = false,
   });
 
   @override
@@ -79,6 +85,7 @@ class BidDetailScreen extends StatelessWidget {
         initialBid: bid,
         fromPayment: fromPayment,
         openCodeRenewal: openCodeRenewal,
+        focusSupplement: focusSupplement,
       ),
     );
   }
@@ -88,10 +95,12 @@ class _BidDetailView extends StatefulWidget {
   final BidModel initialBid;
   final bool fromPayment;
   final bool openCodeRenewal;
+  final bool focusSupplement;
   const _BidDetailView({
     required this.initialBid,
     this.fromPayment = false,
     this.openCodeRenewal = false,
+    this.focusSupplement = false,
   });
 
   @override
@@ -729,7 +738,10 @@ class _BidDetailViewState extends State<_BidDetailView>
                   body: _skeletonLoading
                       ? const DonyDetailSkeleton()
                       : isSender
-                      ? SenderDetailBody(bid: _bid)
+                      ? SenderDetailBody(
+                          bid: _bid,
+                          focusSupplement: widget.focusSupplement,
+                        )
                       : TravelerDetailBody(bid: _bid),
                   bottomNavigationBar: isSender
                       ? (SenderStickyBar.hasAction(_bid)

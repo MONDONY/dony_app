@@ -109,9 +109,13 @@ class _HeroContent {
 
 // ── Status mapping ────────────────────────────────────────────────────────────
 
-/// Montant payé par l'expéditeur = net + commission (totalSenderAmountEur).
+/// Montant payé par l'expéditeur = net + commission (totalSenderAmountEur),
+/// supplément payé compris.
 String _senderAmountLabel(BidModel bid) {
-  final value = bid.totalSenderAmountEur ?? bid.totalAmountEur;
+  final value =
+      bid.totalSenderAmountWithSupplementEur ??
+      bid.totalSenderAmountEur ??
+      bid.totalAmountEur;
   return value != null ? formatPriceIn(value, bid.currency) : '–';
 }
 

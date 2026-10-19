@@ -57,6 +57,8 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
+import 'package:dony/features/receptions/bloc/receptions_prompt_cubit.dart';
+import 'package:dony/features/receptions/presentation/widgets/receptions_prompt_banner.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -333,6 +335,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Statut d'activation (guidage après KYC) ; `null` hors DI complète.
   final ActivationCubit? _activationCubit = getItSafe<ActivationCubit>();
 
+  /// Bandeau « Un colis vous attend » (YADONY-FLUTTER-PROD-12) ; `null` hors
+  /// DI complète.
+  final ReceptionsPromptCubit? _receptionsPrompt =
+      getItSafe<ReceptionsPromptCubit>();
+
+  /// Colis à recevoir lus une fois par compte, à l'arrivée sur l'accueil
+  /// après la connexion ou l'inscription. Un visiteur n'en a pas.
+  void _loadReceptionsPrompt(AuthState auth) {
+    final cubit = _receptionsPrompt;
+    if (cubit == null) return;
+    final realSession = getIt<FirebaseSessionProbe>().hasRealSession;
+    unawaited(cubit.loadFor(realSession ? auth.currentUserId : null));
+  }
+
   /// Retour au premier plan : la carte « première action » disparaît dès que
   /// la personne a publié, réservé ou créé une alerte ailleurs.
   late final AppLifecycleListener _activationLifecycle;
@@ -441,6 +457,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _router?.routerDelegate.addListener(_onRouteChanged);
       final activation = _activationCubit?.state;
       if (activation != null) unawaited(_maybeAskIntent(context, activation));
+      _loadReceptionsPrompt(context.read<AuthBloc>().state);
     });
     _activationLifecycle = AppLifecycleListener(
       onResume: () {
@@ -657,6 +674,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   void dispose() {
     _router?.routerDelegate.removeListener(_onRouteChanged);
     _activationLifecycle.dispose();
+    unawaited(_receptionsPrompt?.close());
     _blockSub?.cancel();
     _pendingSearchNotifier?.removeListener(_consumePendingSearch);
     _sheetController.removeListener(_onSheetSizeChanged);
@@ -1137,7 +1155,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   Future<void> _showWeightSheet() async {
-    final result = await showModalBottomSheet<({double min, double max})>(
+    final result = await showModalBottomSheet<({double? min, double? max})>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -1148,12 +1166,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
       ),
     );
     if (result == null || !mounted) return;
-    final cleared = _filters.copyWith(clearWeight: true);
+    // Bornes `null` = poignée laissée au bout du curseur : aucune borne
+    // envoyée, la puce Capacité reste inactive (voir capacityBoundsFromSlider).
     _onFiltersChanged(
-      cleared.copyWith(
-        weightMin: result.min <= 0 ? null : result.min,
-        weightMax: result.max <= 0 ? null : result.max,
-      ),
+      _filters
+          .copyWith(clearWeight: true)
+          .copyWith(weightMin: result.min, weightMax: result.max),
     );
   }
 
@@ -1824,6 +1842,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               clearMaxPricePerKg: true,
               clearWeight: true,
               gpProOnly: false,
+              suitcase23Only: false,
               clearMinRating: true,
               weekendOnly: false,
               clearTransportMode: true,
@@ -1917,6 +1936,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
           _onFiltersChanged(_filters.copyWith(clearMaxPricePerKg: true)),
       onGpProToggle: () =>
           _onFiltersChanged(_filters.copyWith(gpProOnly: !_filters.gpProOnly)),
+      onSuitcase23Toggle: () => _onFiltersChanged(
+        _filters.copyWith(suitcase23Only: !_filters.suitcase23Only),
+      ),
       onMaxWeightTap: () async {
         final result = await _showMaxWeightSheet(context);
         if (result == null || !mounted) return;
@@ -2221,6 +2243,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 ),
                               )
                             : const SizedBox.shrink(),
+                      ),
+                    ),
+                  if (_receptionsPrompt case final prompt?)
+                    SliverToBoxAdapter(
+                      child: BlocListener<AuthBloc, AuthState>(
+                        listenWhen: (a, b) =>
+                            a.currentUserId != b.currentUserId,
+                        listener: (_, auth) => _loadReceptionsPrompt(auth),
+                        child: ReceptionsPromptBanner(cubit: prompt),
                       ),
                     ),
                   if (_mode.isParcels)
@@ -3124,8 +3155,8 @@ class _WeightRangeSheet extends StatefulWidget {
 }
 
 class _WeightRangeSheetState extends State<_WeightRangeSheet> {
-  static const double _kMin = 1.0;
-  static const double _kMax = 50.0;
+  static const double _kMin = kCapacitySliderMinKg;
+  static const double _kMax = kCapacitySliderMaxKg;
 
   late double _min;
   late double _max;
@@ -3133,8 +3164,10 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
   @override
   void initState() {
     super.initState();
-    _min = widget.currentMin ?? _kMin;
-    _max = widget.currentMax ?? _kMax;
+    // Une borne posée ailleurs (phrase du composeur) peut sortir du curseur :
+    // on la ramène dans ses bornes, un RangeSlider hors bornes plante.
+    _min = (widget.currentMin ?? _kMin).clamp(_kMin, _kMax).toDouble();
+    _max = (widget.currentMax ?? _kMax).clamp(_min, _kMax).toDouble();
   }
 
   @override
@@ -3178,7 +3211,10 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
           const SizedBox(height: DonySpacing.xl),
           Center(
             child: Text(
-              '${_min.toInt()} – ${_max.toInt()} kg',
+              _max >= _kMax
+                  ? '${_min.toInt()} – '
+                        '${context.l10n.homeWeightSliderMaxOpen(_kMax.toInt())}'
+                  : '${_min.toInt()} – ${_max.toInt()} kg',
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: cs.primary,
@@ -3214,7 +3250,7 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 Text(
-                  '50 kg',
+                  context.l10n.homeWeightSliderMaxOpen(_kMax.toInt()),
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -3225,7 +3261,8 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop((min: 0.0, max: 0.0)),
+                  onTap: () =>
+                      Navigator.of(context).pop((min: null, max: null)),
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
@@ -3249,8 +3286,9 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
               Expanded(
                 child: DonyButton(
                   label: context.l10n.commonApply,
-                  onPressed: () =>
-                      Navigator.of(context).pop((min: _min, max: _max)),
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pop(capacityBoundsFromSlider(_min, _max)),
                 ),
               ),
             ],

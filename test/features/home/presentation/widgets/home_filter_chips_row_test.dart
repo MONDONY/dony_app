@@ -19,6 +19,7 @@ Widget _wrap({
   VoidCallback? onMatchingMyTripsToggle,
   VoidCallback? onMatchingMyTripsBlocked,
   VoidCallback? onGpProToggle,
+  VoidCallback? onSuitcase23Toggle,
 }) => MaterialApp(
   home: Scaffold(
     body: HomeFilterChipsRow(
@@ -35,6 +36,7 @@ Widget _wrap({
       onPriceTap: () {},
       onPriceClear: () {},
       onGpProToggle: onGpProToggle ?? () {},
+      onSuitcase23Toggle: onSuitcase23Toggle ?? () {},
       onMaxWeightTap: () {},
       onMaxWeightClear: () {},
       onParcelSizeTap: () {},
@@ -54,7 +56,51 @@ void main() {
   group('pastille « Pour mes trajets »', _matchingMyTripsChipTests);
   group('traductions', _translationTests);
   group('puce GP Pro', _gpProChipTests);
+  group('puce Valise 23 kg', _suitcaseChipTests);
   group('date personnalisée', _customDateChipTests);
+  group('puce Capacité', _capacityChipTests);
+}
+
+void _capacityChipTests() {
+  HomeSmallChip chip(WidgetTester tester) =>
+      tester.widget<HomeSmallChip>(find.byKey(const Key('chip-capacity')));
+
+  Future<void> pumpWith(WidgetTester tester, HomeSearchFilters f) =>
+      tester.pumpWidget(_wrap(mode: SearchMode.trips, filters: f));
+
+  testWidgets('sans borne : « Kilos », inactive', (tester) async {
+    await pumpWith(tester, const HomeSearchFilters());
+    expect(chip(tester).label, 'Kilos');
+    expect(chip(tester).isActive, isFalse);
+  });
+
+  testWidgets('minimum seul : « ≥ X kg »', (tester) async {
+    await pumpWith(tester, const HomeSearchFilters(weightMin: 10));
+    expect(chip(tester).label, '≥ 10 kg');
+    expect(chip(tester).isActive, isTrue);
+  });
+
+  testWidgets('maximum seul : « ≤ Y kg »', (tester) async {
+    await pumpWith(tester, const HomeSearchFilters(weightMax: 20));
+    expect(chip(tester).label, '≤ 20 kg');
+  });
+
+  testWidgets('deux bornes : « X à Y kg », « X to Y kg » en anglais', (
+    tester,
+  ) async {
+    await pumpWith(
+      tester,
+      const HomeSearchFilters(weightMin: 5, weightMax: 20),
+    );
+    expect(chip(tester).label, '5 à 20 kg');
+
+    useEnglish();
+    await pumpWith(
+      tester,
+      const HomeSearchFilters(weightMin: 5, weightMax: 20),
+    );
+    expect(chip(tester).label, '5 to 20 kg');
+  });
 }
 
 void _customDateChipTests() {
@@ -248,8 +294,70 @@ void _gpProChipTests() {
       _wrap(mode: SearchMode.trips, onGpProToggle: () => taps++),
     );
 
+    // La rangée défile : avec la puce Valise 23 kg, GP Pro sort de l'écran
+    // de test de 800 px.
+    await tester.ensureVisible(find.text('GP Pro'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('GP Pro'));
 
     expect(taps, 1);
+  });
+}
+
+void _suitcaseChipTests() {
+  Widget chipOf(WidgetTester tester) =>
+      tester.widget(find.byKey(const Key('chip-suitcase-23')));
+
+  testWidgets('mode Trajets : puce présente, juste après la date', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips));
+
+    expect(find.text('🧳 Valise 23 kg'), findsOneWidget);
+    final date = tester.getTopLeft(find.byKey(const Key('chip-date')));
+    final suitcase = tester.getTopLeft(
+      find.byKey(const Key('chip-suitcase-23')),
+    );
+    final rating = tester.getTopLeft(find.text('Note'));
+    expect(suitcase.dx, greaterThan(date.dx));
+    expect(suitcase.dx, lessThan(rating.dx));
+  });
+
+  testWidgets('mode Colis : pas de puce', (tester) async {
+    await tester.pumpWidget(_wrap());
+
+    expect(find.byKey(const Key('chip-suitcase-23')), findsNothing);
+  });
+
+  testWidgets('tap : bascule le filtre', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      _wrap(mode: SearchMode.trips, onSuitcase23Toggle: () => taps++),
+    );
+
+    await tester.tap(find.byKey(const Key('chip-suitcase-23')));
+    expect(taps, 1);
+  });
+
+  testWidgets('état sélectionné suivi du filtre', (tester) async {
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips));
+    expect((chipOf(tester) as HomeSmallChip).isActive, isFalse);
+
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: const HomeSearchFilters(suitcase23Only: true),
+      ),
+    );
+    expect((chipOf(tester) as HomeSmallChip).isActive, isTrue);
+    // La Capacité garde sa propre valeur : aucune réglée, puce Kilos neutre.
+    expect(find.text('Kilos'), findsOneWidget);
+  });
+
+  testWidgets('en anglais : « 🧳 23 kg suitcase »', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips));
+
+    expect(find.text('🧳 23 kg suitcase'), findsOneWidget);
   });
 }

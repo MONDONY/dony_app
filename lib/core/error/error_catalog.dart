@@ -290,6 +290,136 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.flight_takeoff_rounded,
     ),
+    // ─── Supplément de prix à la remise (`BidSupplementService`) ────────
+    'supplement-disabled': _Entry(
+      title: (l) => l.errorSupplementDisabledTitle,
+      message: (l) => l.errorSupplementDisabledMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.info_outline_rounded,
+    ),
+    'supplement-rail-unsupported': _Entry(
+      title: (l) => l.errorSupplementRailUnsupportedTitle,
+      message: (l) => l.errorSupplementRailUnsupportedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.payments_outlined,
+    ),
+    // Message avec les bornes `min`/`max`/`currency` du ProblemDetail quand
+    // elles sont lisibles (`_supplementAmountOutOfRangeMessage`).
+    'supplement-amount-out-of-range': _Entry(
+      title: (l) => l.errorSupplementAmountOutOfRangeTitle,
+      message: (l) => l.errorSupplementAmountOutOfRangeMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.rule_rounded,
+    ),
+    'supplement-limit-reached': _Entry(
+      title: (l) => l.errorSupplementLimitReachedTitle,
+      message: (l) => l.errorSupplementLimitReachedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'supplement-locked': _Entry(
+      title: (l) => l.errorSupplementLockedTitle,
+      message: (l) => l.errorSupplementLockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.flight_takeoff_rounded,
+    ),
+    'supplement-already-active': _Entry(
+      title: (l) => l.errorSupplementAlreadyActiveTitle,
+      message: (l) => l.errorSupplementAlreadyActiveMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'supplement-not-pending': _Entry(
+      title: (l) => l.errorSupplementNotPendingTitle,
+      message: (l) => l.errorSupplementNotPendingMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.task_alt_rounded,
+    ),
+    'supplement-expired': _Entry(
+      title: (l) => l.errorSupplementExpiredTitle,
+      message: (l) => l.errorSupplementExpiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.timer_off_outlined,
+    ),
+    'supplement-not-found': _Entry(
+      title: (l) => l.errorSupplementNotFoundTitle,
+      message: (l) => l.errorSupplementNotFoundMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.search_off_rounded,
+    ),
+    // Paiement par carte du supplément (`BidSupplementCardRail`).
+    'supplement-payment-processing': _Entry(
+      title: (l) => l.errorSupplementPaymentProcessingTitle,
+      message: (l) => l.errorSupplementPaymentProcessingMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'supplement-payment-creation-failed': _Entry(
+      title: (l) => l.errorSupplementPaymentCreationFailedTitle,
+      message: (l) => l.errorSupplementPaymentCreationFailedMessage,
+      severity: ErrorSeverity.critical,
+      icon: Icons.credit_card_off_rounded,
+    ),
+    // Commission du supplément d'un colis payé en espèces, prélevée au
+    // voyageur à la demande (`BidSupplementCashRail`, PR A4).
+    'supplement-commission-unfunded': _Entry(
+      title: (l) => l.errorSupplementCommissionUnfundedTitle,
+      message: (l) => l.errorSupplementCommissionUnfundedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.account_balance_wallet_outlined,
+    ),
+    // Avertissement (snackbar), pas une boîte de dialogue : la feuille de
+    // demande se referme juste après l'avoir montré.
+    'supplement-commission-card-declined': _Entry(
+      title: (l) => l.errorSupplementCommissionCardDeclinedTitle,
+      message: (l) => l.errorSupplementCommissionCardDeclinedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.credit_card_off_rounded,
+    ),
+    'supplement-commission-charge-failed': _Entry(
+      title: (l) => l.errorSupplementCommissionChargeFailedTitle,
+      message: (l) => l.errorSupplementCommissionChargeFailedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.credit_card_off_rounded,
+    ),
+    'commission-method-missing': _Entry(
+      title: (l) => l.errorCommissionMethodMissingTitle,
+      message: (l) => l.errorCommissionMethodMissingMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.add_card_rounded,
+    ),
+    'funding-currency-invalid': _Entry(
+      title: (l) => l.errorFundingCurrencyInvalidTitle,
+      message: (l) => l.errorFundingCurrencyInvalidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.currency_exchange_rounded,
+    ),
+    'payment-busy': _Entry(
+      title: (l) => l.errorPaymentBusyTitle,
+      message: (l) => l.errorPaymentBusyMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'stripe-unavailable': _Entry(
+      title: (l) => l.errorStripeUnavailableTitle,
+      message: (l) => l.errorStripeUnavailableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.cloud_off_rounded,
+    ),
+    'invalid-photo-url': _Entry(
+      title: (l) => l.errorInvalidPhotoUrlTitle,
+      message: (l) => l.errorInvalidPhotoUrlMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.no_photography_outlined,
+    ),
+    // Scan DEPART refusé tant qu'un supplément attend l'expéditeur. La file
+    // hors ligne garde l'étape et la renvoie plus tard (`handoverRetryLaterCodes`).
+    'handover-supplement-pending': _Entry(
+      title: (l) => l.errorHandoverSupplementPendingTitle,
+      message: (l) => l.errorHandoverSupplementPendingMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_top_rounded,
+    ),
     'already-bid': _Entry(
       title: (l) => l.errorAlreadyBidTitle,
       message: (l) => l.errorAlreadyBidMessage,
@@ -419,6 +549,15 @@ abstract final class ErrorCatalog {
     'phone-already-exists': _Entry(
       title: (l) => l.errorPhoneAlreadyExistsTitle,
       message: (l) => l.errorPhoneAlreadyExistsMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+    // Le numéro appartient à un compte dont la suppression est programmée :
+    // se connecter avec ce numéro annule la suppression (409 du back,
+    // YADONY-FLUTTER-PROD-Y).
+    'phone-pending-deletion': _Entry(
+      title: (l) => l.errorPhonePendingDeletionTitle,
+      message: (l) => l.errorPhonePendingDeletionMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
@@ -1662,6 +1801,14 @@ abstract final class ErrorCatalog {
             icon: p.icon,
           );
         }
+        if (error.code == 'supplement-amount-out-of-range') {
+          return ErrorPresentation(
+            title: p.title,
+            message: _supplementAmountOutOfRangeMessage(error, l) ?? p.message,
+            severity: p.severity,
+            icon: p.icon,
+          );
+        }
         if (error.code == 'commission/failed') {
           return ErrorPresentation(
             title: p.title,
@@ -1709,6 +1856,29 @@ abstract final class ErrorCatalog {
     );
     return l.errorBidBelowMinPriceMessage(
       CurrencyFormatter.format(amount, currency),
+    );
+  }
+
+  /// « Le montant doit être compris entre {min} et {max} », depuis les
+  /// propriétés `min`, `max` et `currency` du ProblemDetail. `null` si elles
+  /// manquent ou sont illisibles.
+  static String? _supplementAmountOutOfRangeMessage(
+    AppException error,
+    AppLocalizations l,
+  ) {
+    if (error is! ValidationException) return null;
+    final ext = error.extensions;
+    double? read(Object? raw) =>
+        raw is num ? raw.toDouble() : double.tryParse('${raw ?? ''}');
+    final min = read(ext?['min']);
+    final max = read(ext?['max']);
+    if (min == null || max == null) return null;
+    final currency = SupportedCurrency.fromCodeOrDefault(
+      ext?['currency'] as String?,
+    );
+    return l.supplementRequestAmountOutOfRange(
+      CurrencyFormatter.format(min, currency, compact: true),
+      CurrencyFormatter.format(max, currency, compact: true),
     );
   }
 

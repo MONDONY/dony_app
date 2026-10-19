@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -122,6 +123,60 @@ void main() {
       await bloc.stream.firstWhere((s) => s is AuthAuthenticated);
       await Future<void>.delayed(Duration.zero);
       verifyNever(() => backend.capture(any(), any()));
+    });
+  });
+
+  group('phone_attach_failed', () {
+    test('porte le code métier du refus, jamais le numéro', () async {
+      when(
+        () => repo.attachPhone(
+          phoneNumber: any(named: 'phoneNumber'),
+          code: any(named: 'code'),
+        ),
+      ).thenThrow(
+        const ConflictException('taken', code: 'phone-already-exists'),
+      );
+
+      final bloc = makeBloc();
+      bloc.add(
+        const AuthAddPhoneFromProfileRequested(
+          phoneNumber: '+33612345678',
+          code: '123456',
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is AuthError);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.phoneAttachFailed, {
+          'error_code': 'phone-already-exists',
+        }),
+      ).called(1);
+    });
+
+    test('erreur sans code → unknown', () async {
+      when(
+        () => repo.attachPhone(
+          phoneNumber: any(named: 'phoneNumber'),
+          code: any(named: 'code'),
+        ),
+      ).thenThrow(const NetworkException('offline'));
+
+      final bloc = makeBloc();
+      bloc.add(
+        const AuthAddPhoneFromProfileRequested(
+          phoneNumber: '+33612345678',
+          code: '123456',
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is AuthError);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.phoneAttachFailed, {
+          'error_code': 'unknown',
+        }),
+      ).called(1);
     });
   });
 

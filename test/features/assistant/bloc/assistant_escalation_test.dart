@@ -20,6 +20,24 @@ void main() {
     );
   });
 
+  test('transcript en texte brut, jamais les balises du texte riche', () {
+    const rich = AssistantMessage(
+      id: 2,
+      author: AssistantAuthor.assistant,
+      text: 'Allez dans Moi.\n• Touchez Profil',
+      richText: 'Allez dans **Moi**.\n- Touchez **Profil**',
+    );
+    final msg = buildEscalationMessage(
+      [u(1, 'Où ?'), rich],
+      youLabel: 'Vous',
+      assistantLabel: 'Assistant',
+      header: 'Échange :',
+    );
+    expect(msg, contains('Assistant : Allez dans Moi.'));
+    expect(msg, isNot(contains('**')));
+    expect(rich.displayText, startsWith('Allez dans **Moi**'));
+  });
+
   test('sujet vide quand aucune question n’a été posée', () {
     expect(buildEscalationSubject(const []), '');
     expect(buildEscalationSubject([a(0, 'bonjour')]), '');

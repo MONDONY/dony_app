@@ -60,17 +60,17 @@ void main() {
       test('délègue à datasource.providers et renvoie le catalogue', () async {
         when(
           () => datasource.providers(
-            bidId,
+            scope,
             // ignore: avoid_redundant_argument_values
             phoneNumber: null,
           ),
         ).thenAnswer((_) async => catalog);
 
-        final result = await repository.providers(bidId);
+        final result = await repository.providers(scope);
 
         verify(
           () => datasource.providers(
-            bidId,
+            scope,
             // ignore: avoid_redundant_argument_values
             phoneNumber: null,
           ),
@@ -80,16 +80,16 @@ void main() {
 
       test('transmet phoneNumber au datasource', () async {
         when(
-          () => datasource.providers(bidId, phoneNumber: '+221771234567'),
+          () => datasource.providers(scope, phoneNumber: '+221771234567'),
         ).thenAnswer((_) async => catalog);
 
         final result = await repository.providers(
-          bidId,
+          scope,
           phoneNumber: '+221771234567',
         );
 
         verify(
-          () => datasource.providers(bidId, phoneNumber: '+221771234567'),
+          () => datasource.providers(scope, phoneNumber: '+221771234567'),
         ).called(1);
         expect(result, equals(catalog));
       });
@@ -97,14 +97,14 @@ void main() {
       test('propage l\'exception du datasource', () async {
         when(
           () => datasource.providers(
-            bidId,
+            scope,
             // ignore: avoid_redundant_argument_values
             phoneNumber: null,
           ),
         ).thenAnswer((_) => Future.error(Exception('Network error')));
 
         await expectLater(
-          repository.providers(bidId),
+          repository.providers(scope),
           throwsA(isA<Exception>()),
         );
       });

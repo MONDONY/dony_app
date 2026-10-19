@@ -1,8 +1,10 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_submitter.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -96,6 +98,53 @@ void main() {
       await bloc.stream.first;
       await Future<void>.delayed(const Duration(milliseconds: 100));
       verifyNever(() => backend.capture(any(), any()));
+    });
+  });
+
+  group('scan bloqué par un supplément', () {
+    TrackingBloc online() {
+      final a = makeEnabledAnalytics(backend)..onConfigured();
+      return TrackingBloc(
+        repo,
+        offlineSync,
+        a,
+        submitter: ScanSubmitter(repo, offlineSync, isOnline: () async => true),
+      );
+    }
+
+    test(
+      '409 handover-supplement-pending → handover_blocked_supplement',
+      () async {
+        when(() => repo.postScan(bidId: 'bid1', eventType: 'DEPART')).thenThrow(
+          const ConflictException('x', code: 'handover-supplement-pending'),
+        );
+        final bloc = online();
+        bloc.add(QrScanSubmitRequested(bidId: 'bid1', eventType: 'DEPART'));
+        final error =
+            await bloc.stream.firstWhere((s) => s is QrScanError)
+                as QrScanError;
+
+        expect(error.error.code, 'handover-supplement-pending');
+        verify(
+          () => backend.capture(
+            AnalyticsEvents.handoverBlockedSupplement,
+            any(that: containsPair('channel', 'direct')),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('autre refus : aucun événement de supplément', () async {
+      when(
+        () => repo.postScan(bidId: 'bid1', eventType: 'DEPART'),
+      ).thenThrow(const ConflictException('x', code: 'invalid-bid-status'));
+      final bloc = online();
+      bloc.add(QrScanSubmitRequested(bidId: 'bid1', eventType: 'DEPART'));
+      await bloc.stream.firstWhere((s) => s is QrScanError);
+
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.handoverBlockedSupplement, any()),
+      );
     });
   });
 }

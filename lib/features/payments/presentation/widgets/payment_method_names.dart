@@ -1,3 +1,4 @@
+import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
@@ -6,7 +7,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 /// Moyens couverts par le rail Stripe : logo(s) + nom, une ligne par moyen.
 /// Plateforme-aware : Apple Pay (iOS) / Google Pay (Android) ; carte
-/// (Visa/Mastercard) + PayPal partout. Le choix réel de l'instrument se fait
+/// (Visa/Mastercard) partout ; Apple Pay, Google Pay et PayPal seulement si le
+/// serveur les active ([paymentMethodFlagsListenable]). Le choix réel de l'instrument se fait
 /// dans la PaymentSheet Stripe — cette liste ne fait que l'annoncer.
 ///
 /// [compact] rend la même annonce sur **une seule rangée de logos**, sans les
@@ -22,22 +24,44 @@ class PaymentMethodNames extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<PaymentMethodFlags>(
+      valueListenable: paymentMethodFlagsListenable,
+      builder: (context, flags, _) => _build(context, flags),
+    );
+  }
+
+  Widget _build(BuildContext context, PaymentMethodFlags flags) {
     final l = context.l10n;
     final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
     final walletLogo = isIOS ? 'apple-pay' : 'google-pay';
     // i18n-ignore : noms de marque (Apple Pay / Google Pay)
     final walletName = isIOS ? 'Apple Pay' : 'Google Pay';
+    // N'annoncer que ce que la feuille de paiement peut proposer : Apple Pay,
+    // Google Pay et PayPal sont pilotés par le serveur (YADONY-FLUTTER-PROD-11).
+    final showWallet = flags.walletEnabledFor(defaultTargetPlatform);
+    final showPaypal = flags.paypal;
 
     if (compact) {
+      // i18n-ignore : noms de marque (PayPal)
+      final names = [
+        l.paymentMethodCard,
+        if (showWallet) walletName,
+        if (showPaypal) 'PayPal',
+      ];
       return Semantics(
-        label: l.paymentMethodsSemantics(walletName),
+        label: names.join(', '),
         child: ExcludeSemantics(
           child: Wrap(
             spacing: DonySpacing.sm,
             runSpacing: DonySpacing.xs,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              for (final logo in ['visa', 'mastercard', walletLogo, 'paypal'])
+              for (final logo in [
+                'visa',
+                'mastercard',
+                if (showWallet) walletLogo,
+                if (showPaypal) 'paypal',
+              ])
                 SvgPicture.asset(
                   'assets/logos/payment/$logo.svg',
                   key: Key('payment-logo-$logo'),
@@ -58,9 +82,9 @@ class PaymentMethodNames extends StatelessWidget {
           l.paymentMethodCard,
           id: 'card',
         ),
-        _row(context, [walletLogo], walletName, id: walletLogo),
+        if (showWallet) _row(context, [walletLogo], walletName, id: walletLogo),
         // i18n-ignore : nom de marque
-        _row(context, const ['paypal'], 'PayPal', id: 'paypal'),
+        if (showPaypal) _row(context, const ['paypal'], 'PayPal', id: 'paypal'),
       ],
     );
   }

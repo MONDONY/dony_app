@@ -8,6 +8,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/details_a
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart'
     show RatingDoneBadge;
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
@@ -86,6 +87,9 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       // pour éviter une double animation (fade × fade + slide × slide).
       ColisBillet(bid: widget.bid, isSender: false),
       TravelerHeroCard(bid: widget.bid),
+      // Supplément de prix : en attente, il bloque le scan de remise.
+      if (SupplementTravelerCard.shouldShow(widget.bid))
+        SupplementTravelerCard(bid: widget.bid),
       if (TripRescheduleCard.shouldShow(widget.bid))
         TripRescheduleCard(bid: widget.bid, isSender: false),
       // Procédure « destinataire absent » (FLUTTER-E2) ; elle retombe sur

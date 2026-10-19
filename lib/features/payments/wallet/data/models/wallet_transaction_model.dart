@@ -59,4 +59,9 @@ class WalletTransactionModel {
   /// `WalletTopupOutcomeListener`). Un rail Stripe (`pi_...`) ou un
   /// `paymentRef` nul rendent faux.
   bool get isMobileMoneyTopup => paymentRef?.startsWith('pawapay:') ?? false;
+
+  /// Commission d'un supplément de prix rendue au voyageur (colis payé en
+  /// espèces) : ligne `REFUND` au `paymentRef` `supplement-refund-<id>`.
+  bool get isSupplementCommissionRefund =>
+      paymentRef?.startsWith('supplement-refund-') ?? false;
 }

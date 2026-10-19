@@ -918,8 +918,16 @@ class NotificationService {
     if (notification == null) return;
 
     final channel = _androidChannel(AppL10n.current);
+    // Flux qui se répète (conversation, fil, trajet, alerte) : le back pose
+    // `collapseKey`. Même tag et identifiant 0 que la notification affichée par
+    // Firebase en arrière-plan, pour que la suivante remplace la précédente au
+    // lieu de s'empiler, que l'app soit ouverte ou non.
+    final collapseKey = message.data['collapseKey'];
+    final tag = collapseKey is String && collapseKey.isNotEmpty
+        ? collapseKey
+        : null;
     _localNotifications.show(
-      notification.hashCode,
+      tag == null ? notification.hashCode : 0,
       notification.title,
       notification.body,
       NotificationDetails(
@@ -930,6 +938,7 @@ class NotificationService {
           importance: Importance.high,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
+          tag: tag,
         ),
         iOS: const DarwinNotificationDetails(
           presentAlert: true,

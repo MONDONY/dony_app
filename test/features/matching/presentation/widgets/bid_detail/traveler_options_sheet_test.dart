@@ -6,9 +6,12 @@ import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_request_cubit.dart';
 import 'package:dony/features/matching/bloc/parcel_refusal/parcel_refusal_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_supplement.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_options_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -38,12 +41,19 @@ class _MockMediaService extends Mock implements DonyMediaService {}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
+class _MockSupplementRepository extends Mock
+    implements BidSupplementRepository {}
+
 BidModel _bid({
   String status = 'ACCEPTED',
   String? token = 'tok',
   DateTime? departureAt,
+  bool supplementRequestAllowed = false,
+  BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
 }) => BidModel(
   id: 'b1',
+  supplementRequestAllowed: supplementRequestAllowed,
+  paymentMethod: paymentMethod,
   announcementId: 'a1',
   senderId: 's1',
   status: status,
@@ -289,6 +299,73 @@ void main() {
     verify(
       () => bidBloc.add(any(that: isA<BidTravelerDismissRequested>())),
     ).called(1);
+  });
+
+  group('Demander un supplément', () {
+    testWidgets('masqué tant que le serveur ne l\'autorise pas', (
+      tester,
+    ) async {
+      await _open(tester, _bid());
+      expect(find.text('Demander un supplément'), findsNothing);
+    });
+
+    testWidgets('autorisé : tuile avant « Le colis ne correspond pas »', (
+      tester,
+    ) async {
+      await _open(tester, _bid(supplementRequestAllowed: true));
+
+      final supplement = find.text('Demander un supplément');
+      expect(supplement, findsOneWidget);
+      expect(
+        tester.getTopLeft(supplement).dy,
+        lessThan(tester.getTopLeft(find.text('Le colis ne correspond pas')).dy),
+      );
+    });
+
+    testWidgets('espèces : visible dès que le serveur l\'autorise (PR A4)', (
+      tester,
+    ) async {
+      await _open(
+        tester,
+        _bid(
+          supplementRequestAllowed: true,
+          paymentMethod: BidPaymentMethod.cash,
+        ),
+      );
+      expect(find.text('Demander un supplément'), findsOneWidget);
+    });
+
+    testWidgets('espèces non autorisé par le serveur : masqué', (tester) async {
+      await _open(tester, _bid(paymentMethod: BidPaymentMethod.cash));
+      expect(find.text('Demander un supplément'), findsNothing);
+    });
+
+    testWidgets('tap → feuille de demande ouverte', (tester) async {
+      final repository = _MockSupplementRepository();
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      when(() => repository.options(any())).thenAnswer(
+        (_) async =>
+            const SupplementOptions(currency: 'EUR', minNet: 1, maxNet: 300),
+      );
+      getIt.registerFactory<SupplementRequestCubit>(
+        () =>
+            SupplementRequestCubit(repository, _MockMediaService(), analytics),
+      );
+      addTearDown(getIt.reset);
+      await _open(tester, _bid(supplementRequestAllowed: true));
+
+      await tester.tap(find.text('Demander un supplément'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.widgetWithText(DonyButton, 'Envoyer la demande'),
+        findsOneWidget,
+      );
+      verify(() => repository.options('b1')).called(1);
+    });
   });
 
   testWidgets('anglais — tuiles traduites', (tester) async {

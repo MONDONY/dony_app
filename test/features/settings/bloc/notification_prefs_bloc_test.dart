@@ -466,7 +466,7 @@ void main() {
             verify(() => prefsRepo.updatePrefs(captureAny())).captured.single
                 as NotificationPrefsDto;
         final json = dto.toJson();
-        expect(json.keys, hasLength(9));
+        expect(json.keys, hasLength(13));
         expect(json['pushMessages'], isFalse);
         // Les champs non touchés partent avec leur valeur courante : le PUT est
         // un remplacement complet côté serveur, un champ omis y arriverait à
@@ -577,13 +577,19 @@ void main() {
 
   // ─── Contrat de sérialisation ──────────────────────────────────────────────
   group('NotificationPrefsDto', () {
-    test('toJson émet toujours les neuf champs, même sur une map vide', () {
+    test('toJson émet toujours les treize champs, même sur une map vide', () {
       final json = const NotificationPrefsDto({}).toJson();
-      expect(json.keys, hasLength(9));
+      expect(json.keys, hasLength(13));
       // V305 (back #452) : défaut true, comme les colonnes.
       expect(json['pushMissedCalls'], isTrue);
       expect(json['pushTravelerAutomations'], isTrue);
       expect(json['pushRemindersTips'], isTrue);
+      // V340 (plan bruit, étape 4b) : un réglage par rôle, défaut true.
+      expect(json['pushMyTrips'], isTrue);
+      expect(json['pushRecipientParcels'], isTrue);
+      // V342 (plan bruit, étape 5) : e-mails coupables, défaut true.
+      expect(json['emailRecaps'], isTrue);
+      expect(json['emailAlertsTips'], isTrue);
       // Les défauts répliquent `NotificationPrefsDto.defaults()` du backend.
       expect(json['pushActivityBids'], isTrue);
       expect(json['pushPromo'], isFalse);
@@ -611,6 +617,10 @@ void main() {
         'pushMissedCalls': false,
         'pushTravelerAutomations': false,
         'pushRemindersTips': false,
+        'pushMyTrips': false,
+        'pushRecipientParcels': true,
+        'emailRecaps': false,
+        'emailAlertsTips': true,
       });
       expect(dto.toJson(), {
         'pushActivityBids': false,
@@ -622,8 +632,24 @@ void main() {
         'pushMissedCalls': false,
         'pushTravelerAutomations': false,
         'pushRemindersTips': false,
+        'pushMyTrips': false,
+        'pushRecipientParcels': true,
+        'emailRecaps': false,
+        'emailAlertsTips': true,
       });
     });
+
+    /// Serveur antérieur à V340 : sans les réglages par rôle, la valeur locale
+    /// reste (et l'ancien choix « Offres » couvre déjà les trois rôles côté back).
+    test(
+      'fromJson d\'un serveur sans V340 ne touche pas aux réglages par rôle',
+      () {
+        final dto = NotificationPrefsDto.fromJson({'pushActivityBids': false});
+        expect(dto.values['push_activity_bids'], isFalse);
+        expect(dto.values.containsKey('push_my_trips'), isFalse);
+        expect(dto.values.containsKey('push_recipient_parcels'), isFalse);
+      },
+    );
 
     /// Serveur antérieur à V305 : il ne renvoie pas les trois nouveaux champs,
     /// la valeur locale ne doit pas être écrasée par un défaut.

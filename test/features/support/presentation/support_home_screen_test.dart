@@ -564,6 +564,19 @@ void main() {
       );
     });
 
+    testWidgets('ouverture mesurée une fois avec l’origine du brouillon', (
+      tester,
+    ) async {
+      stubState(const SupportState(homeStatus: SupportViewStatus.ready));
+
+      await tester.pumpWidget(_harness(bloc, draft: draft));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => bloc.add(const SupportDraftOpened('team_cancelled_parcel')),
+      ).called(1);
+    });
+
     testWidgets('message modifié puis « Envoyer » : la saisie part au BLoC', (
       tester,
     ) async {
@@ -642,6 +655,8 @@ void main() {
 
       await tester.pumpWidget(_harness(bloc));
       await tester.pumpAndSettle();
+
+      verifyNever(() => bloc.add(any(that: isA<SupportDraftOpened>())));
 
       expect(find.text('Catégorie'), findsNothing);
     });

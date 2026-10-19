@@ -1,12 +1,17 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/repositories/bid_supplement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_sticky_bar.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_pay_button.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -23,6 +28,11 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
 
 // ── Mock ──────────────────────────────────────────────────────────────────────
+
+class _MockSupplementRepository extends Mock
+    implements BidSupplementRepository {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -975,6 +985,159 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Show the drop-off QR'), findsOneWidget);
+    });
+  });
+
+  // ── Supplément de prix à payer par carte (PR A2) ────────────────────────────
+
+  group('supplément de prix', () {
+    BidModel withSupplement({
+      String status = 'ACCEPTED',
+      String rail = 'STRIPE',
+      BidSupplementStatus supplementStatus = BidSupplementStatus.proposed,
+      BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+    }) => BidModel(
+      id: 'bid-test-1',
+      announcementId: 'ann-1',
+      senderId: 'sender-1',
+      status: status,
+      paymentMethod: paymentMethod,
+      supplement: BidSupplement(
+        id: 'sup-1',
+        status: supplementStatus,
+        rail: rail,
+        grossAmount: 16.8,
+      ),
+      createdAt: DateTime(2025),
+      updatedAt: DateTime(2025),
+    );
+
+    setUp(() {
+      getIt.registerFactory<SupplementPaymentCubit>(
+        () => SupplementPaymentCubit(
+          _MockSupplementRepository(),
+          _MockAnalyticsService(),
+        ),
+      );
+    });
+
+    tearDown(() async => getIt.unregister<SupplementPaymentCubit>());
+
+    test('hasAction vrai pour un supplément carte, mobile money ou espèces, '
+        'même hors statut habituel (espèces : PR A4)', () {
+      expect(
+        SenderStickyBar.hasAction(withSupplement(status: 'PAYMENT_ESCROWED')),
+        isTrue,
+      );
+      expect(
+        SenderStickyBar.hasAction(
+          withSupplement(
+            status: 'PAYMENT_ESCROWED',
+            rail: 'PAWAPAY',
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        SenderStickyBar.hasAction(
+          withSupplement(
+            status: 'PAYMENT_ESCROWED',
+            rail: 'CASH',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    testWidgets('carte, supplément en attente : « Payer » remplace le QR', (
+      tester,
+    ) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
+
+      await tester.pumpWidget(
+        _host(bloc, withSupplement(), paymentLoaded: true),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SupplementPayButton), findsOneWidget);
+      expect(find.text('Afficher le QR de remise'), findsNothing);
+    });
+
+    testWidgets('carte, paiement interrompu (PAYMENT_PENDING) : « Payer » '
+        'reste', (tester) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          withSupplement(supplementStatus: BidSupplementStatus.paymentPending),
+          paymentLoaded: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SupplementPayButton), findsOneWidget);
+    });
+
+    testWidgets('mobile money : « Payer » remplace le QR (PR A3)', (
+      tester,
+    ) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          withSupplement(
+            rail: 'PAWAPAY',
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+          paymentLoaded: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SupplementPayButton), findsOneWidget);
+      expect(find.text('Afficher le QR de remise'), findsNothing);
+    });
+
+    testWidgets('supplément payé : retour à l\'action du statut', (
+      tester,
+    ) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          withSupplement(supplementStatus: BidSupplementStatus.paid),
+          paymentLoaded: true,
+          existingPayment: _payment(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SupplementPayButton), findsNothing);
     });
   });
 }
