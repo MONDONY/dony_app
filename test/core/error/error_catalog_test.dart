@@ -1642,4 +1642,17 @@ void main() {
       'Solde en cours de remboursement',
     );
   });
+
+  test('budget-below-commission-minimum a un titre et un message', () {
+    final p = ErrorCatalog.lookup(
+      const ValidationException('x', code: 'budget-below-commission-minimum'),
+    );
+
+    expect(p.title, 'Budget trop faible');
+    expect(
+      p.message,
+      'Ce montant ne couvre pas les frais de service minimum de Yadony.',
+    );
+    expect(p.severity, ErrorSeverity.warning);
+  });
 }

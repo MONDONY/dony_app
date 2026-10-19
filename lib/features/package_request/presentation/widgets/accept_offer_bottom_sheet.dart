@@ -64,6 +64,8 @@ class AcceptOfferBottomSheet {
 
     Future<void> loadQuote() async {
       try {
+        // `null` sur un fil scellé : le total scellé est déjà dans
+        // `grossPriceEur`, le bouton retombe dessus comme sans devis.
         quoteNotifier.value = await getIt<NegotiationRepository>().quote(
           threadId,
         );

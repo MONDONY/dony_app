@@ -638,6 +638,18 @@ abstract class AppLocalizations {
   /// **'Passez en PRO pour créer davantage de brouillons.'**
   String get errorDraftLimitReachedMessage;
 
+  /// No description provided for @errorBudgetBelowCommissionMinimumTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget trop faible'**
+  String get errorBudgetBelowCommissionMinimumTitle;
+
+  /// No description provided for @errorBudgetBelowCommissionMinimumMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce montant ne couvre pas les frais de service minimum de Yadony.'**
+  String get errorBudgetBelowCommissionMinimumMessage;
+
   /// No description provided for @errorNotADraftTitle.
   ///
   /// In fr, this message translates to:
@@ -34737,6 +34749,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.'**
   String priceGridSenderWillPayMessageGrid(String paid, String fee);
+
+  /// Indice affiché sous le code promo quand le code est valide mais sans effet, le minimum de frais de service annulant tout le gain (promoIneffectiveReason COMMISSION_MINIMUM).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce code ne change rien sur ce montant (frais minimum)'**
+  String get promoIneffectiveCommissionMinimum;
 }
 
 class _AppLocalizationsDelegate

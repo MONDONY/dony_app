@@ -36,5 +36,32 @@ void main() {
       );
       expect(quote.toJson()['currency'], 'CAD');
     });
+
+    test('lit minimumApplied, minimumAmount, commissionGridId, '
+        'promoIneffectiveReason', () {
+      final quote = BidQuoteResponse.fromJson({
+        ...base,
+        'currency': 'XOF',
+        'minimumApplied': true,
+        'minimumAmount': 650,
+        'commissionGridId': 'grid-1',
+        'promoIneffectiveReason': 'COMMISSION_MINIMUM',
+      });
+      expect(quote.minimumApplied, isTrue);
+      expect(quote.minimumAmount, 650.0);
+      expect(quote.commissionGridId, 'grid-1');
+      expect(quote.promoIneffectiveReason, 'COMMISSION_MINIMUM');
+      expect(quote.promoIneffectiveBecauseMinimum, isTrue);
+    });
+
+    test('ancien contrat sans ces champs : minimumApplied faux, le reste '
+        'null', () {
+      final quote = BidQuoteResponse.fromJson(base);
+      expect(quote.minimumApplied, isFalse);
+      expect(quote.minimumAmount, isNull);
+      expect(quote.commissionGridId, isNull);
+      expect(quote.promoIneffectiveReason, isNull);
+      expect(quote.promoIneffectiveBecauseMinimum, isFalse);
+    });
   });
 }

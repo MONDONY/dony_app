@@ -90,6 +90,8 @@
   "errorProLimitReachedMessage": "You've reached your listing limit for this month. Upgrade to Pro to post without limits.",
   "errorDraftLimitReachedTitle": "Draft limit reached",
   "errorDraftLimitReachedMessage": "Upgrade to Pro to create more drafts.",
+  "errorBudgetBelowCommissionMinimumTitle": "Budget too low",
+  "errorBudgetBelowCommissionMinimumMessage": "This amount does not cover the minimum Yadony service fee.",
   "errorNotADraftTitle": "Already posted",
   "errorNotADraftMessage": "This trip isn't a draft.",
   "errorPublishingSuspendedTitle": "Posting suspended",
@@ -10951,5 +10953,6 @@
   "priceGridCommissionNoticeGrid": "The Yadony service fee is added to the total paid by the sender, with a minimum of {minimum}. You receive exactly your amount.",
   "@priceGridCommissionNoticeGrid": {"placeholders": {"minimum": {"type": "String"}}},
   "priceGridSenderWillPayMessageGrid": "The sender will pay {paid}, including {fee} Yadony service fee.",
-  "@priceGridSenderWillPayMessageGrid": {"placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}}
+  "@priceGridSenderWillPayMessageGrid": {"placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}},
+  "promoIneffectiveCommissionMinimum": "This code does not change this amount (minimum fee)"
 }

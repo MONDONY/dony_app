@@ -321,6 +321,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Upgrade to Pro to create more drafts.';
 
   @override
+  String get errorBudgetBelowCommissionMinimumTitle => 'Budget too low';
+
+  @override
+  String get errorBudgetBelowCommissionMinimumMessage =>
+      'This amount does not cover the minimum Yadony service fee.';
+
+  @override
   String get errorNotADraftTitle => 'Already posted';
 
   @override
@@ -21379,4 +21386,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String priceGridSenderWillPayMessageGrid(String paid, String fee) {
     return 'The sender will pay $paid, including $fee Yadony service fee.';
   }
+
+  @override
+  String get promoIneffectiveCommissionMinimum =>
+      'This code does not change this amount (minimum fee)';
 }

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -446,7 +447,7 @@ void main() {
         }, '/negotiations/th-1/quote'),
       );
 
-      final quote = await repo.quote('th-1');
+      final quote = (await repo.quote('th-1'))!;
       expect(quote.netEur, 40.0);
       expect(quote.rate, 0.05);
       expect(quote.commissionEur, 2.0);
@@ -474,12 +475,44 @@ void main() {
           }, '/negotiations/th-1/quote'),
         );
 
-        final quote = await repo.quote('th-1', promoCode: 'WELCOME6');
+        final quote = (await repo.quote('th-1', promoCode: 'WELCOME6'))!;
         expect(quote.promoApplied, true);
         expect(quote.promoLabel, 'Code WELCOME6 : 6 % de réduction');
         expect(quote.totalEur, 42.40);
       },
     );
+  });
+
+  group('quote, fil scellé', () {
+    DioException conflict(String code) => DioException(
+      requestOptions: RequestOptions(path: '/negotiations/th-1/quote'),
+      error: ConflictException('conflit', code: code),
+    );
+
+    test('quote renvoie null sur 409 negotiation/thread-sealed', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/negotiations/th-1/quote'),
+      ).thenThrow(conflict('negotiation/thread-sealed'));
+
+      expect(await repo.quote('th-1'), isNull);
+    });
+
+    test('quote relance un autre 409', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/negotiations/th-1/quote'),
+      ).thenThrow(conflict('negotiation/duplicate-thread'));
+
+      expect(
+        () => repo.quote('th-1'),
+        throwsA(
+          isA<DioException>().having(
+            (e) => (e.error as ConflictException).code,
+            'code',
+            'negotiation/duplicate-thread',
+          ),
+        ),
+      );
+    });
   });
 
   group('checkout', () {

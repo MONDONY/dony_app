@@ -102,6 +102,8 @@
   "errorProLimitReachedMessage": "Vous avez atteint votre limite d'annonces ce mois-ci. Passez en PRO pour publier sans limite.",
   "errorDraftLimitReachedTitle": "Limite de brouillons atteinte",
   "errorDraftLimitReachedMessage": "Passez en PRO pour créer davantage de brouillons.",
+  "errorBudgetBelowCommissionMinimumTitle": "Budget trop faible",
+  "errorBudgetBelowCommissionMinimumMessage": "Ce montant ne couvre pas les frais de service minimum de Yadony.",
   "errorNotADraftTitle": "Déjà publié",
   "errorNotADraftMessage": "Ce trajet n'est pas un brouillon.",
   "errorPublishingSuspendedTitle": "Publication suspendue",
@@ -22145,5 +22147,7 @@
   "priceGridCommissionNoticeGrid": "Les frais de service Yadony s'ajoutent au total payé par l'expéditeur, avec un minimum de {minimum}. Vous encaissez exactement votre montant.",
   "@priceGridCommissionNoticeGrid": {"description": "Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. {minimum} : frais de service minimum formatés dans la devise active. Variante de priceGridCommissionNotice.", "placeholders": {"minimum": {"type": "String"}}},
   "priceGridSenderWillPayMessageGrid": "L'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.",
-  "@priceGridSenderWillPayMessageGrid": {"description": "Écho de la feuille de saisie d'un article de la grille de prix quand une grille de commission est en vigueur. {paid} : total payé par l'expéditeur, {fee} : frais de service avec la mention (minimum) si le plancher s'applique (serviceFeeAmountLabel). Variante de priceGridSenderWillPayMessage.", "placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}}
+  "@priceGridSenderWillPayMessageGrid": {"description": "Écho de la feuille de saisie d'un article de la grille de prix quand une grille de commission est en vigueur. {paid} : total payé par l'expéditeur, {fee} : frais de service avec la mention (minimum) si le plancher s'applique (serviceFeeAmountLabel). Variante de priceGridSenderWillPayMessage.", "placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}},
+  "promoIneffectiveCommissionMinimum": "Ce code ne change rien sur ce montant (frais minimum)",
+  "@promoIneffectiveCommissionMinimum": {"description": "Indice affiché sous le code promo quand le code est valide mais sans effet, le minimum de frais de service annulant tout le gain (promoIneffectiveReason COMMISSION_MINIMUM)."}
 }

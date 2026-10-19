@@ -946,6 +946,55 @@ void main() {
     );
   });
 
+  group('quote, devise', () {
+    test('quote envoie currency=XOF', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests/quote',
+          queryParameters: {'budgetEur': 25000.0, 'currency': 'XOF'},
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'netEur': 24000.0,
+          'rate': 0.04,
+          'commissionEur': 1000.0,
+          'totalEur': 25000.0,
+          'promoApplied': false,
+          'minimumApplied': true,
+          'minimumAmount': 650,
+          'commissionGridId': 'grid-1',
+        }, '/package-requests/quote'),
+      );
+
+      final quote = await repo.quote(25000.0, currency: 'XOF');
+      expect(quote.minimumApplied, isTrue);
+      expect(quote.commissionGridId, 'grid-1');
+    });
+
+    test('quote sans currency n\'envoie pas la clé', () async {
+      Map<String, dynamic>? sent;
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests/quote',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        sent = inv.namedArguments[#queryParameters] as Map<String, dynamic>?;
+        return _ok({
+          'netEur': 38.10,
+          'rate': 0.05,
+          'commissionEur': 1.90,
+          'totalEur': 40.0,
+          'promoApplied': false,
+        }, '/package-requests/quote');
+      });
+
+      await repo.quote(40.0);
+      expect(sent, {'budgetEur': 40.0});
+      expect(sent!.containsKey('currency'), isFalse);
+    });
+  });
+
   group('photos parsing', () {
     test('PackageRequest.fromJson maps photos to photoUrls + photoKeys', () {
       final json = <String, dynamic>{

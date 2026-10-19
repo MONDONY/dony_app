@@ -241,12 +241,22 @@ class PackageRequestRepository {
   /// Devis transparent pendant que l'expéditeur fixe son budget (étape 3) :
   /// net voyageur, commission Yadony (taux + montant), et prévisualisation
   /// d'un code promo optionnel — avant même qu'un voyageur/thread existe.
-  Future<NegotiationQuote> quote(double budgetEur, {String? promoCode}) async {
+  ///
+  /// [currency] (code ISO) est facultatif : sans lui le back chiffre dans la
+  /// devise par défaut du budget. Sous grille, `commissionEur` inclut le code
+  /// promo et `totalEur` vaut net + commission (l'expéditeur paie moins que son
+  /// budget).
+  Future<NegotiationQuote> quote(
+    double budgetEur, {
+    String? promoCode,
+    String? currency,
+  }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/package-requests/quote',
       queryParameters: {
         'budgetEur': budgetEur,
         if (promoCode != null && promoCode.isNotEmpty) 'promoCode': promoCode,
+        'currency': ?currency,
       },
     );
     return NegotiationQuote.fromJson(response.data!);

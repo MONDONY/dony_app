@@ -324,6 +324,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Passez en PRO pour créer davantage de brouillons.';
 
   @override
+  String get errorBudgetBelowCommissionMinimumTitle => 'Budget trop faible';
+
+  @override
+  String get errorBudgetBelowCommissionMinimumMessage =>
+      'Ce montant ne couvre pas les frais de service minimum de Yadony.';
+
+  @override
   String get errorNotADraftTitle => 'Déjà publié';
 
   @override
@@ -21518,4 +21525,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String priceGridSenderWillPayMessageGrid(String paid, String fee) {
     return 'L\'expéditeur paiera $paid, dont $fee de frais de service Yadony.';
   }
+
+  @override
+  String get promoIneffectiveCommissionMinimum =>
+      'Ce code ne change rien sur ce montant (frais minimum)';
 }

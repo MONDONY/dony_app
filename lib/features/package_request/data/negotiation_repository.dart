@@ -1,9 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+
+/// Code du 409 que renvoie le devis d'un fil dont le prix est déjà scellé.
+const _threadSealedCode = 'negotiation/thread-sealed';
 
 class NegotiationRepository {
   const NegotiationRepository(this._apiClient);
@@ -205,14 +209,26 @@ class NegotiationRepository {
 
   /// Devis transparent avant paiement : net voyageur, commission Yadony (taux +
   /// montant), total, et prévisualisation d'un code promo optionnel.
-  Future<NegotiationQuote> quote(String id, {String? promoCode}) async {
-    final response = await _apiClient.dio.get<Map<String, dynamic>>(
-      '/negotiations/$id/quote',
-      queryParameters: promoCode != null && promoCode.isNotEmpty
-          ? {'promoCode': promoCode}
-          : null,
-    );
-    return NegotiationQuote.fromJson(response.data!);
+  ///
+  /// Renvoie `null` quand le fil est scellé (409 `negotiation/thread-sealed`) :
+  /// le paiement est fait, le total scellé est déjà dans `grossPriceEur` du fil
+  /// et il n'y a plus rien à chiffrer. Tout autre échec est relancé.
+  Future<NegotiationQuote?> quote(String id, {String? promoCode}) async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/negotiations/$id/quote',
+        queryParameters: promoCode != null && promoCode.isNotEmpty
+            ? {'promoCode': promoCode}
+            : null,
+      );
+      return NegotiationQuote.fromJson(response.data!);
+    } on DioException catch (e) {
+      final error = unwrapDioError(e);
+      if (error is ConflictException && error.code == _threadSealedCode) {
+        return null;
+      }
+      rethrow;
+    }
   }
 
   /// Sender confirms payment (Stripe paymentIntentId or placeholder) for an
