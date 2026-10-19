@@ -1642,4 +1642,84 @@ void main() {
       'Solde en cours de remboursement',
     );
   });
+
+  group('ErrorCatalog — supplément de prix', () {
+    String norm(String s) => s.replaceAll(RegExp('[\u00A0\u202F]'), ' ');
+
+    test('montant hors bornes : cite le minimum et le maximum', () {
+      const error = ValidationException(
+        'detail',
+        code: 'supplement-amount-out-of-range',
+        extensions: {'min': 1, 'max': 300, 'currency': 'EUR'},
+      );
+
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.fr),
+      );
+
+      expect(p.title, 'Montant hors limites');
+      expect(
+        norm(p.message),
+        'Le montant doit être compris entre 1 € et 300 €.',
+      );
+    });
+
+    test('bornes en texte ou absentes : texte de repli', () {
+      final withText = ErrorCatalog.lookup(
+        const ValidationException(
+          'd',
+          code: 'supplement-amount-out-of-range',
+          extensions: {'min': '656', 'max': '196787', 'currency': 'XOF'},
+        ),
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(withText.message, startsWith('The amount must be between'));
+
+      for (final error in [
+        const ValidationException('d', code: 'supplement-amount-out-of-range'),
+        const ValidationException(
+          'd',
+          code: 'supplement-amount-out-of-range',
+          extensions: {'min': 'abc', 'max': 300},
+        ),
+        const NetworkException('d', code: 'supplement-amount-out-of-range'),
+      ]) {
+        expect(
+          ErrorCatalog.lookup(
+            error,
+            l10n: lookupAppLocalizations(AppL10n.fr),
+          ).message,
+          "Ce montant n'est pas accepté pour un supplément.",
+        );
+      }
+    });
+
+    test('chaque code du supplément a son texte', () {
+      const codes = {
+        'supplement-disabled': 'Supplément indisponible',
+        'supplement-rail-unsupported': 'Moyen de paiement non pris en charge',
+        'supplement-limit-reached': 'Plus de demande possible',
+        'supplement-locked': 'Départ trop proche',
+        'supplement-already-active': 'Demande déjà en cours',
+        'supplement-not-pending': 'Demande déjà traitée',
+        'supplement-expired': 'Demande expirée',
+        'supplement-not-found': 'Supplément introuvable',
+        'invalid-photo-url': 'Photo refusée',
+        'handover-supplement-pending': 'Supplément en attente',
+      };
+      for (final entry in codes.entries) {
+        final error = ConflictException('d', code: entry.key);
+        expect(ErrorCatalog.isKnown(error), isTrue, reason: entry.key);
+        expect(
+          ErrorCatalog.lookup(
+            error,
+            l10n: lookupAppLocalizations(AppL10n.fr),
+          ).title,
+          entry.value,
+          reason: entry.key,
+        );
+      }
+    });
+  });
 }

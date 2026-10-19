@@ -55,6 +55,17 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'PAYMENT_RELEASED' when _isUuid(bidId) => '/bids/$bidId',
     'DISPUTE_OPENED' when _isUuid(bidId) => '/bids/$bidId',
     'PARCEL_REFUSED' when _isUuid(bidId) => '/bids/$bidId',
+    // Supplément de prix à la remise : la demande ouvre la fiche du colis sur
+    // l'encart de l'expéditeur ; les suites (payé, refusé, expiré, retiré,
+    // remboursé, versé) ouvrent la fiche.
+    'BID_SUPPLEMENT_REQUESTED' when _isUuid(bidId) =>
+      '/bids/$bidId?action=supplement',
+    'BID_SUPPLEMENT_PAID' ||
+    'BID_SUPPLEMENT_DECLINED' ||
+    'BID_SUPPLEMENT_EXPIRED' ||
+    'BID_SUPPLEMENT_WITHDRAWN' ||
+    'BID_SUPPLEMENT_REFUNDED' ||
+    'BID_SUPPLEMENT_PAID_OUT' when _isUuid(bidId) => '/bids/$bidId',
     'BID_EXPIRED' when _isUuid(bidId) => '/bids/$bidId',
     // Demande carte jamais payée, annulée à la date limite de dépôt puis
     // supprimée : le back n'envoie plus de bidId (back #459) mais le trajet,

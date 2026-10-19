@@ -114,6 +114,7 @@ Future<GoRouter> _pump(
   required BidModel bid,
   required _MockAuthBloc authBloc,
   bool openCodeRenewal = false,
+  bool focusSupplement = false,
 }) async {
   await initializeDateFormatting('fr_FR');
   tester.view.physicalSize = const Size(800, 3000);
@@ -127,7 +128,11 @@ Future<GoRouter> _pump(
         path: '/',
         builder: (ctx, _) => BlocProvider<AuthBloc>.value(
           value: authBloc,
-          child: BidDetailScreen(bid: bid, openCodeRenewal: openCodeRenewal),
+          child: BidDetailScreen(
+            bid: bid,
+            openCodeRenewal: openCodeRenewal,
+            focusSupplement: focusSupplement,
+          ),
         ),
       ),
       GoRoute(
@@ -575,6 +580,28 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text(sheetTitle), findsNothing);
     });
+  });
+
+  // Notification BID_SUPPLEMENT_REQUESTED : `?action=supplement` est transmis
+  // à la vue expéditeur, qui amène l'encart du supplément à l'écran.
+  testWidgets('?action=supplement : transmis à la vue expéditeur', (
+    tester,
+  ) async {
+    final bid = _makeBid(paymentMethod: BidPaymentMethod.stripe);
+    await _pump(
+      tester,
+      bid: bid,
+      authBloc: senderAuth(),
+      focusSupplement: true,
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(
+      tester
+          .widget<SenderDetailBody>(find.byType(SenderDetailBody))
+          .focusSupplement,
+      isTrue,
+    );
   });
 
   group('FLUTTER-HQ — note envoyée depuis une autre instance de RatingBloc', () {
