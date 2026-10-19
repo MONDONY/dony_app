@@ -50,7 +50,7 @@ void main() {
       expect(s.blocksHandover, isTrue);
     });
 
-    test("côté expéditeur, le net et la commission sont nuls", () {
+    test('côté expéditeur, le net et la commission sont nuls', () {
       final s = BidSupplement.fromJson(_supplementJson(withNet: false));
 
       expect(s.netAmount, isNull);

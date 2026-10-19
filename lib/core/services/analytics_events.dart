@@ -472,6 +472,44 @@ abstract final class AnalyticsEvents {
   /// Refus du colis impossible (photo non envoyée, statut changé, trajet
   /// parti). Propriétés `reason`, `error_code`.
   static const parcelRefusalFailed = 'parcel_refusal_failed';
+
+  // Supplément de prix à la remise (`/bids/{bidId}/supplements`). Jamais le
+  // montant exact (tranche `amount_bracket` + `currency`), jamais le texte du
+  // motif.
+
+  /// Feuille « Demander un supplément » ouverte et ses options chargées.
+  /// Propriétés `payment_method` (moyen de paiement du colis), `status`.
+  static const bidSupplementSheetOpened = 'bid_supplement_sheet_opened';
+
+  /// Demande de supplément créée par le serveur. Propriétés `reason`
+  /// (`grid_item`/`extra_weight`/`other`), `suggestion`
+  /// (`grid_item`/`kg`/`custom`), `amount_bracket`, `currency`,
+  /// `payment_method`.
+  static const bidSupplementRequested = 'bid_supplement_requested';
+
+  /// Demande impossible (photo non envoyée, montant hors bornes, départ trop
+  /// proche…). Propriétés `reason`, `error_code`.
+  static const bidSupplementRequestFailed = 'bid_supplement_request_failed';
+
+  /// Le voyageur retire sa demande, confirmé par le serveur.
+  static const bidSupplementWithdrawn = 'bid_supplement_withdrawn';
+
+  /// Encart du supplément affiché dans le détail d'envoi, une fois par
+  /// écran. Propriétés `role` (`sender`/`traveler`), `status`.
+  static const bidSupplementViewed = 'bid_supplement_viewed';
+
+  /// L'expéditeur refuse le supplément, confirmé par le serveur. Propriété
+  /// `payment_method`.
+  static const bidSupplementDeclined = 'bid_supplement_declined';
+
+  /// Retrait ou refus impossible. Propriétés `action`
+  /// (`withdraw`/`decline`), `error_code`.
+  static const bidSupplementActionFailed = 'bid_supplement_action_failed';
+
+  /// Scan de remise refusé par le serveur (409
+  /// `handover-supplement-pending`) : un supplément attend la réponse de
+  /// l'expéditeur. Propriété `channel` (`direct`/`offline`).
+  static const handoverBlockedSupplement = 'handover_blocked_supplement';
   static const rematchAccepted = 'rematch_accepted';
   static const rematchAlternativesOpened = 'rematch_alternatives_opened';
   static const noShowReportedBySender = 'no_show_reported_by_sender';

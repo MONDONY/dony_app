@@ -5,6 +5,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/report_severity.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
@@ -116,6 +118,9 @@ class OfflineSyncService {
 
   AppLifecycleListener? _lifecycle;
 
+  /// Événement `handover_blocked_supplement`. `null` en test.
+  final AnalyticsService? _analytics;
+
   OfflineSyncService(
     this._hive,
     this._repository, [
@@ -123,6 +128,7 @@ class OfflineSyncService {
     this._now = DateTime.now,
     ScanSendGuard? guard,
     this._photos,
+    this._analytics,
   ]) : _guard = guard ?? ScanSendGuard.shared;
 
   void startListening() {
@@ -368,7 +374,13 @@ class OfflineSyncService {
       }
       return await _send(key, entry, deferred: false);
     } catch (error, stackTrace) {
-      if (isDefinitiveRejection(unwrapDioError(error))) rethrow;
+      final cause = unwrapDioError(error);
+      // Refus définitif ou « pour l'instant » (supplément en attente) :
+      // l'entrée est déjà retirée par _send, l'appelant affiche le motif.
+      if (isDefinitiveRejection(cause) ||
+          isRetryLaterTrackingRejection(cause)) {
+        rethrow;
+      }
       _reportUnexpected(error, stackTrace, failedCount: 1);
       _scheduleRetry();
       // Libérée avant l'écriture : le bandeau rebâti par cette écriture la
@@ -410,8 +422,16 @@ class OfflineSyncService {
         try {
           await _send(key, Map<String, dynamic>.from(raw), deferred: true);
         } catch (error, stackTrace) {
+          final cause = unwrapDioError(error);
+          // Refusée pour l'instant : déjà repoussée par _send, elle repart à
+          // son échéance sans compter comme une panne.
+          if (isRetryLaterTrackingRejection(cause)) {
+            final due = _now().add(retryLaterDelay);
+            if (nextDue == null || due.isBefore(nextDue)) nextDue = due;
+            continue;
+          }
           // Refus définitif : déjà retirée par _send.
-          if (isDefinitiveRejection(unwrapDioError(error))) continue;
+          if (isDefinitiveRejection(cause)) continue;
           // Panne réseau, délai, 5xx, session expirée : on garde l'entrée
           // pour la prochaine tentative.
           failedCount++;
@@ -483,7 +503,27 @@ class OfflineSyncService {
       await _delete(key, entry);
       return SentScan(event, photoDropped: photoDropped);
     } catch (error) {
-      if (isDefinitiveRejection(unwrapDioError(error))) {
+      final cause = unwrapDioError(error);
+      if (isRetryLaterTrackingRejection(cause)) {
+        // Un supplément attend l'expéditeur (409
+        // `handover-supplement-pending`). Envoi différé (scan hors ligne,
+        // personne devant l'écran) : l'étape reste en file et repart dans
+        // [retryLaterDelay]. Envoi direct de l'onglet Suivi : le voyageur
+        // voit le message et rescanne une fois la réponse venue.
+        if (deferred) {
+          await _postpone(key, entry);
+        } else {
+          await _delete(key, entry);
+        }
+        unawaited(
+          _analytics?.logEvent(
+            AnalyticsEvents.handoverBlockedSupplement,
+            properties: {'channel': deferred ? 'offline' : 'direct'},
+          ),
+        );
+        rethrow;
+      }
+      if (isDefinitiveRejection(cause)) {
         // Le serveur a tranché sur l'étape (409, 422, 404, 403) :
         // rejouer l'entrée à chaque retour du réseau ne changera rien et
         // gonflait Sentry côté back d'un 500 par tentative
@@ -515,6 +555,17 @@ class OfflineSyncService {
         },
       ),
     );
+  }
+
+  /// Délai avant de renvoyer une étape refusée « pour l'instant »
+  /// ([isRetryLaterTrackingRejection]).
+  static const retryLaterDelay = Duration(minutes: 5);
+
+  /// Garde l'entrée en file avec une échéance dans [retryLaterDelay].
+  Future<void> _postpone(Object? key, Map<String, dynamic> entry) async {
+    if (!_hive.offlineQueue.containsKey(key)) return;
+    entry['notBefore'] = _now().add(retryLaterDelay).toUtc().toIso8601String();
+    await _hive.offlineQueue.put(key, entry);
   }
 
   static DateTime? _notBefore(Map raw) {

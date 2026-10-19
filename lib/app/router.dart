@@ -699,12 +699,14 @@ final appRouter = GoRouter(
         final fromPayment = state.uri.queryParameters['from'] == 'payment';
         // Notification CONFIRMATION_CODE_REQUESTED (FLUTTER-G2) : le voyageur
         // demande un nouveau code, la fiche ouvre directement la régénération.
-        final openCodeRenewal =
-            state.uri.queryParameters['action'] == 'new-code';
+        final action = state.uri.queryParameters['action'];
         return BidDetailScreen(
           bid: bid,
           fromPayment: fromPayment,
-          openCodeRenewal: openCodeRenewal,
+          openCodeRenewal: action == 'new-code',
+          // Notification BID_SUPPLEMENT_REQUESTED : la fiche amène l'encart
+          // du supplément à l'écran de l'expéditeur.
+          focusSupplement: action == 'supplement',
         );
       },
     ),

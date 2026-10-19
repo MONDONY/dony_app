@@ -11,13 +11,27 @@ import 'package:dony/features/tracking/data/tracking_repository.dart';
 /// réinstallation) et que l'étape part sans elle (FLUTTER-MJ).
 typedef TrackingPhotoUpload = ({String? key, bool dropped, bool lost});
 
+/// Codes par lesquels le back refuse une étape POUR L'INSTANT : la même
+/// requête passera plus tard. `handover-supplement-pending` : un supplément
+/// de prix attend la réponse de l'expéditeur, le scan de remise (DEPART)
+/// est bloqué jusqu'à sa réponse (2 h au plus).
+const handoverRetryLaterCodes = {'handover-supplement-pending'};
+
+/// Vrai quand le back a refusé l'étape pour l'instant seulement
+/// ([handoverRetryLaterCodes]) : la file hors ligne la garde et la renvoie
+/// plus tard au lieu de la perdre.
+bool isRetryLaterTrackingRejection(AppException error) =>
+    error is ConflictException && handoverRetryLaterCodes.contains(error.code);
+
 /// Vrai quand le back a refusé l'envoi pour une raison qui ne dépend pas
-/// du réseau ni du moment : la même requête échouerait à l'identique.
+/// du réseau ni du moment : la même requête échouerait à l'identique. Un
+/// refus « pour l'instant » ([isRetryLaterTrackingRejection]) n'en est pas un.
 bool isDefinitiveTrackingRejection(AppException error) =>
-    error is ConflictException ||
-    error is ValidationException ||
-    error is NotFoundException ||
-    error is ForbiddenException;
+    !isRetryLaterTrackingRejection(error) &&
+    (error is ConflictException ||
+        error is ValidationException ||
+        error is NotFoundException ||
+        error is ForbiddenException);
 
 /// Codes par lesquels le serveur refuse la photo elle-même : la renvoyer
 /// échouerait à l'identique.

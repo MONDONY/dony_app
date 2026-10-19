@@ -156,7 +156,18 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
         ),
       );
     } catch (e) {
-      emit(QrScanError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      emit(QrScanError(error));
+      // Supplément en attente de l'expéditeur : le message dit de rescanner
+      // après sa réponse (ErrorCatalog `handover-supplement-pending`).
+      if (isRetryLaterTrackingRejection(error)) {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.handoverBlockedSupplement,
+            properties: {'channel': 'direct'},
+          ),
+        );
+      }
     }
   }
 

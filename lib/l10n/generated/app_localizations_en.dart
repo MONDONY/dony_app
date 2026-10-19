@@ -21351,4 +21351,300 @@ class AppLocalizationsEn extends AppLocalizations {
   String walletTopupAmountAtMost(String max) {
     return 'At most $max';
   }
+
+  @override
+  String get bidDetailRequestSupplementLabel => 'Request an extra charge';
+
+  @override
+  String get bidDetailRequestSupplementSubtitle =>
+      'The parcel is worth more than agreed: the sender pays the difference';
+
+  @override
+  String get bidDetailScanBlockedSupplement =>
+      'An extra charge is awaiting the sender\'s reply: scanning is blocked.';
+
+  @override
+  String get supplementRequestTitle => 'Request an extra charge';
+
+  @override
+  String get supplementRequestIntro =>
+      'Doesn\'t the parcel match what was declared? Ask the sender for the difference. They pay with the same method as the parcel, or decline.';
+
+  @override
+  String get supplementRequestSuggestionsLabel => 'Suggested amounts';
+
+  @override
+  String supplementRequestSuggestionKg(String amount) {
+    return '+1 kg: $amount';
+  }
+
+  @override
+  String supplementRequestSuggestionItem(String label, String amount) {
+    return '$label: $amount';
+  }
+
+  @override
+  String supplementRequestAmountLabel(String currency) {
+    return 'Amount for you ($currency)';
+  }
+
+  @override
+  String supplementRequestAmountHint(String min, String max) {
+    return 'Between $min and $max';
+  }
+
+  @override
+  String supplementRequestAmountOutOfRange(String min, String max) {
+    return 'The amount must be between $min and $max.';
+  }
+
+  @override
+  String get supplementRequestReasonLabel => 'Reason';
+
+  @override
+  String get supplementReasonGridItem => 'Item from your price list';
+
+  @override
+  String get supplementReasonGridItemHint =>
+      'For example a phone declared by the kilo';
+
+  @override
+  String get supplementReasonExtraWeight => 'Heavier than declared';
+
+  @override
+  String get supplementReasonOther => 'Other reason';
+
+  @override
+  String get supplementRequestDetailsLabel => 'Details';
+
+  @override
+  String get supplementRequestDetailsHint => 'Optional: what you noticed';
+
+  @override
+  String get supplementRequestDetailsRequiredHint =>
+      'Explain the difference to the sender';
+
+  @override
+  String get supplementRequestPhotoLabel => 'Parcel photo';
+
+  @override
+  String get supplementRequestPhotoHelp =>
+      'Required: the sender sees it with your request.';
+
+  @override
+  String get supplementRecapNet => 'For you';
+
+  @override
+  String get supplementRecapCommission => 'Yadony fee';
+
+  @override
+  String get supplementRecapGross => 'Paid by the sender';
+
+  @override
+  String get supplementRequestNotice =>
+      'The handover scan stays blocked until the sender replies, within 2 hours. If they decline, carry the parcel at the agreed price or refuse it, with no penalty.';
+
+  @override
+  String get supplementRequestSubmit => 'Send the request';
+
+  @override
+  String supplementRequestSubmitAmount(String amount) {
+    return 'Request $amount';
+  }
+
+  @override
+  String get supplementRequestLoadFailed =>
+      'Couldn\'t load the possible amounts.';
+
+  @override
+  String get supplementRequestSent => 'Request sent to the sender';
+
+  @override
+  String get supplementCardTitle => 'Extra charge';
+
+  @override
+  String supplementDeadline(String time) {
+    return 'Reply expected by $time';
+  }
+
+  @override
+  String supplementReasonWithItem(String label) {
+    return 'Item: $label';
+  }
+
+  @override
+  String get supplementTravelerPending => 'Waiting for the sender';
+
+  @override
+  String get supplementTravelerPendingNotice =>
+      'The handover scan is blocked until they reply.';
+
+  @override
+  String get supplementTravelerPaymentPending => 'The sender is paying';
+
+  @override
+  String get supplementWithdraw => 'Withdraw the request';
+
+  @override
+  String get supplementWithdrawConfirmTitle => 'Withdraw the request?';
+
+  @override
+  String get supplementWithdrawConfirmMessage =>
+      'The sender is notified and you can scan the parcel at the agreed price.';
+
+  @override
+  String get supplementWithdrawn => 'Request withdrawn';
+
+  @override
+  String get supplementTravelerDeclined =>
+      'The sender declined the extra charge';
+
+  @override
+  String get supplementTravelerExpired => 'The sender didn\'t reply in time';
+
+  @override
+  String get supplementTravelerClosedHelp =>
+      'Carry the parcel at the agreed price, or refuse it with no penalty.';
+
+  @override
+  String supplementTravelerPaid(String amount) {
+    return 'Extra charge paid: +$amount for you';
+  }
+
+  @override
+  String get supplementTravelerPaidHelp =>
+      'Paid out with the parcel payment, after delivery.';
+
+  @override
+  String supplementTravelerPaidOut(String amount) {
+    return 'Extra charge paid out: +$amount';
+  }
+
+  @override
+  String get supplementRefunded => 'Extra charge refunded to the sender';
+
+  @override
+  String get supplementSenderPendingTitle =>
+      'The traveler requests an extra charge';
+
+  @override
+  String supplementSenderAmount(String amount) {
+    return '$amount more';
+  }
+
+  @override
+  String get supplementSenderPendingHelp =>
+      'They noticed a difference with your declaration. If you decline, they carry the parcel at the agreed price or refuse it.';
+
+  @override
+  String get supplementDecline => 'Decline the extra charge';
+
+  @override
+  String get supplementDeclineConfirmTitle => 'Decline the extra charge?';
+
+  @override
+  String get supplementDeclineConfirmMessage =>
+      'The traveler may carry the parcel at the agreed price or refuse it.';
+
+  @override
+  String get supplementDeclined => 'Extra charge declined';
+
+  @override
+  String get supplementSenderDeclined => 'You declined the extra charge';
+
+  @override
+  String get supplementSenderExpired => 'The extra charge request expired';
+
+  @override
+  String supplementSenderPaid(String amount) {
+    return 'Extra charge paid: $amount';
+  }
+
+  @override
+  String get supplementSenderPaymentPending =>
+      'Extra charge payment in progress';
+
+  @override
+  String get supplementPhotoSemantics => 'Parcel photo taken by the traveler';
+
+  @override
+  String get errorSupplementDisabledTitle => 'Extra charge unavailable';
+
+  @override
+  String get errorSupplementDisabledMessage =>
+      'Extra charge requests aren\'t open yet.';
+
+  @override
+  String get errorSupplementRailUnsupportedTitle =>
+      'Payment method not supported';
+
+  @override
+  String get errorSupplementRailUnsupportedMessage =>
+      'An extra charge isn\'t possible yet with this parcel\'s payment method.';
+
+  @override
+  String get errorSupplementAmountOutOfRangeTitle => 'Amount out of range';
+
+  @override
+  String get errorSupplementAmountOutOfRangeMessage =>
+      'This amount isn\'t accepted for an extra charge.';
+
+  @override
+  String get errorSupplementLimitReachedTitle => 'No more requests';
+
+  @override
+  String get errorSupplementLimitReachedMessage =>
+      'You\'ve already made the maximum number of extra charge requests for this parcel.';
+
+  @override
+  String get errorSupplementLockedTitle => 'Departure too close';
+
+  @override
+  String get errorSupplementLockedMessage =>
+      'An extra charge can no longer be requested right before departure.';
+
+  @override
+  String get errorSupplementAlreadyActiveTitle => 'Request already pending';
+
+  @override
+  String get errorSupplementAlreadyActiveMessage =>
+      'An extra charge request already exists for this parcel.';
+
+  @override
+  String get errorSupplementNotPendingTitle => 'Request already handled';
+
+  @override
+  String get errorSupplementNotPendingMessage =>
+      'This extra charge request no longer awaits a reply.';
+
+  @override
+  String get errorSupplementExpiredTitle => 'Request expired';
+
+  @override
+  String get errorSupplementExpiredMessage =>
+      'The time to reply to this extra charge has passed.';
+
+  @override
+  String get errorSupplementNotFoundTitle => 'Extra charge not found';
+
+  @override
+  String get errorSupplementNotFoundMessage =>
+      'This extra charge request no longer exists.';
+
+  @override
+  String get errorInvalidPhotoUrlTitle => 'Photo rejected';
+
+  @override
+  String get errorInvalidPhotoUrlMessage =>
+      'This photo couldn\'t be saved. Please take it again.';
+
+  @override
+  String get errorHandoverSupplementPendingTitle => 'Extra charge pending';
+
+  @override
+  String get errorHandoverSupplementPendingMessage =>
+      'An extra charge is awaiting the sender\'s reply. Scan the parcel once they\'ve replied.';
+
+  @override
+  String get supplementSenderRefunded => 'The extra charge was refunded to you';
 }
