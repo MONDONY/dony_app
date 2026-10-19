@@ -1824,6 +1824,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               clearMaxPricePerKg: true,
               clearWeight: true,
               gpProOnly: false,
+              suitcase23Only: false,
               clearMinRating: true,
               weekendOnly: false,
               clearTransportMode: true,
@@ -1917,6 +1918,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
           _onFiltersChanged(_filters.copyWith(clearMaxPricePerKg: true)),
       onGpProToggle: () =>
           _onFiltersChanged(_filters.copyWith(gpProOnly: !_filters.gpProOnly)),
+      onSuitcase23Toggle: () => _onFiltersChanged(
+        _filters.copyWith(suitcase23Only: !_filters.suitcase23Only),
+      ),
       onMaxWeightTap: () async {
         final result = await _showMaxWeightSheet(context);
         if (result == null || !mounted) return;

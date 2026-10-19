@@ -932,6 +932,100 @@ void main() {
       ).called(1);
     });
 
+    testWidgets(
+      'la puce Valise 23 kg cherche les trajets avec au moins 23 kg (PROD-Z)',
+      (tester) async {
+        final announcementBloc = MockAnnouncementBloc();
+        final authBloc = MockAuthBloc();
+        final roleCubit = MockActiveRoleCubit();
+        final notifBloc = MockNotificationBloc();
+        final bidBloc = MockBidBloc();
+
+        when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+        when(
+          () => announcementBloc.stream,
+        ).thenAnswer((_) => const Stream.empty());
+        when(() => authBloc.state).thenReturn(AuthAuthenticated(_makeUser()));
+        when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+        when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+        when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+        when(() => notifBloc.state).thenReturn(const NotificationInitial());
+        when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+        when(() => bidBloc.state).thenReturn(BidInitial());
+        when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+              BlocProvider<AuthBloc>.value(value: authBloc),
+              BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+              BlocProvider<NotificationBloc>.value(value: notifBloc),
+              BlocProvider<BidBloc>.value(value: bidBloc),
+              BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+              _helpCenterProvider(),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.light(),
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('fr'), Locale('en')],
+              locale: const Locale('fr'),
+              home: const HomeScreen(),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        // Au montage, aucun minimum de kilos.
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: isA<AnnouncementSearchRequested>().having(
+                (e) => e.minAvailableKg,
+                'minAvailableKg',
+                isNull,
+              ),
+            ),
+          ),
+        ).called(1);
+
+        await tester.tap(find.byKey(const Key('chip-suitcase-23')));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.searchFilterApplied,
+            properties: {'filter': 'suitcase_23', 'mode': 'trips'},
+          ),
+        ).called(1);
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: isA<AnnouncementSearchRequested>().having(
+                (e) => e.minAvailableKg,
+                'minAvailableKg',
+                23,
+              ),
+            ),
+          ),
+        ).called(1);
+
+        // Second toucher : la puce se retire, le filtre aussi.
+        await tester.tap(find.byKey(const Key('chip-suitcase-23')));
+        await tester.pumpAndSettle();
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.searchFilterCleared,
+            properties: {'filter': 'suitcase_23', 'mode': 'trips'},
+          ),
+        ).called(1);
+      },
+    );
+
     testWidgets('shows TravelerCards when announcements loaded', (
       tester,
     ) async {

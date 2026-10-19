@@ -227,6 +227,7 @@ class SearchComposerBloc
         clearMaxPricePerKg: true,
         clearWeight: true,
         gpProOnly: false,
+        suitcase23Only: false,
         clearMinRating: true,
         weekendOnly: false,
         clearTransportMode: true,

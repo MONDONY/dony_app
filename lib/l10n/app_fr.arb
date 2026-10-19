@@ -1064,6 +1064,8 @@
   "homeFilterChipsPrice": "Prix",
   "homeFilterChipsSize": "Taille",
   "homeFilterChipsUrgent": "🔥 Urgent",
+  "homeFilterChipsSuitcase23": "🧳 Valise 23 kg",
+  "@homeFilterChipsSuitcase23": {"description": "Puce rapide de l'accueil (mode Trajets) et du composeur : trajets avec au moins 23 kg disponibles, une valise en soute."},
   "homeFilterFieldsExactDate": "DATE PRÉCISE",
   "homeFilterFieldsMaxPrice": "PRIX MAX",
   "homeFilterFieldsAll": "Tous",

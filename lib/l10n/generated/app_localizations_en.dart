@@ -2434,6 +2434,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFilterChipsUrgent => '🔥 Urgent';
 
   @override
+  String get homeFilterChipsSuitcase23 => '🧳 23 kg suitcase';
+
+  @override
   String get homeFilterFieldsExactDate => 'EXACT DATE';
 
   @override

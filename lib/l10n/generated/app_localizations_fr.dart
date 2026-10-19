@@ -2438,6 +2438,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeFilterChipsUrgent => '🔥 Urgent';
 
   @override
+  String get homeFilterChipsSuitcase23 => '🧳 Valise 23 kg';
+
+  @override
   String get homeFilterFieldsExactDate => 'DATE PRÉCISE';
 
   @override
