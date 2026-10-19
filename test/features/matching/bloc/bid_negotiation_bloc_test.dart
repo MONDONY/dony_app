@@ -272,18 +272,15 @@ void main() {
     );
 
     blocTest<BidNegotiationBloc, BidNegotiationState>(
-      'propose : la grille figée du nouveau fil est chargée',
+      'propose : réponse en vue expéditeur, aucune lecture de grille figée',
       build: () {
-        stubPropose(travelerThread());
-        when(
-          () => config.getCommissionGridById('g-thread'),
-        ).thenAnswer((_) async => _threadGrid());
+        stubPropose(_thread(commissionGridId: 'g-thread'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(proposeEvent),
       wait: const Duration(milliseconds: 1),
       expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
-      verify: (_) => expect(CommissionGridStore.byId('g-thread'), isNotNull),
+      verify: (_) => verifyNever(() => config.getCommissionGridById(any())),
     );
 
     blocTest<BidNegotiationBloc, BidNegotiationState>(

@@ -117,22 +117,22 @@ class BidNegotiationBloc
   ) async {
     emit(const BidNegotiationLoading());
     try {
-      final thread = await _withGrid(
-        await _repository.propose(
-          announcementId: event.announcementId,
-          weightKg: event.weightKg,
-          description: event.description,
-          contentCategory: event.contentCategory,
-          recipientName: event.recipientName,
-          recipientPhone: event.recipientPhone,
-          proposedTotalEur: event.proposedTotalEur,
-          paymentMethod: event.paymentMethod,
-          phoneNumber: event.phoneNumber,
-          countryCode: event.countryCode,
-          photoKeys: event.photoKeys,
-          customItems: event.customItems,
-          gridItems: event.gridItems,
-        ),
+      // La réponse d'une proposition est toujours en vue expéditeur : aucune
+      // grille figée à précharger (voir `_withGrid`).
+      final thread = await _repository.propose(
+        announcementId: event.announcementId,
+        weightKg: event.weightKg,
+        description: event.description,
+        contentCategory: event.contentCategory,
+        recipientName: event.recipientName,
+        recipientPhone: event.recipientPhone,
+        proposedTotalEur: event.proposedTotalEur,
+        paymentMethod: event.paymentMethod,
+        phoneNumber: event.phoneNumber,
+        countryCode: event.countryCode,
+        photoKeys: event.photoKeys,
+        customItems: event.customItems,
+        gridItems: event.gridItems,
       );
       _emitLoaded(thread, BidNegotiationAction.proposed, emit);
       // Ni description, ni destinataire, ni téléphone : on mesure si la

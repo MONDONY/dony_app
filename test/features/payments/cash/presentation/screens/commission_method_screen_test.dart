@@ -281,6 +281,30 @@ void main() {
       },
     );
 
+    testWidgets(
+      'sous grille sans minimum pour la devise active : notice sans minimum, '
+      'jamais le plancher de 1 €',
+      (tester) async {
+        useTestCommissionGrid(
+          CommissionGrid(
+            id: 'grid-eur-only',
+            effectiveFrom: DateTime.utc(2026, 10),
+            tiers: const [CommissionTier(fromEur: 0, rate: 0.07)],
+            minimums: const {'EUR': 1.20},
+          ),
+        );
+        registerCurrencyPreference('XOF');
+        await pumpLoaded(tester);
+
+        expect(
+          debitNotice(tester),
+          'Cette carte sera débitée des frais de service à chaque colis en '
+          'espèces accepté.',
+        );
+        expect(debitNotice(tester), isNot(contains('min.')));
+      },
+    );
+
     testWidgets('sans grille, EUR : texte actuel au minimum de 1 €', (
       tester,
     ) async {
