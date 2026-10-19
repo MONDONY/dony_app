@@ -2711,7 +2711,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String tripPublishTemplateChipGrid(String label) {
-    return '$label · grille';
+    return '$label · par article';
   }
 
   @override
@@ -2896,7 +2896,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishPricingModeKg => 'Au kilo';
 
   @override
-  String get tripPublishPricingModeMixed => 'Grille + kilo';
+  String get tripPublishPricingModeMixed => 'Articles + kilo';
 
   @override
   String get tripPublishPricePerKgSectionLabel => 'Prix par kg';
@@ -2905,7 +2905,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishKgPriceToggleTitle => 'Tarif au kilo';
 
   @override
-  String get tripPublishKgPriceToggleSubtitle => 'Optionnel en mode grille';
+  String get tripPublishKgPriceToggleSubtitle =>
+      'Optionnel avec les prix par article';
 
   @override
   String get tripPublishCustomPriceChipLabel => 'Autre prix';
@@ -3061,7 +3062,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishAgreedPriceLabel => 'Prix total convenu';
 
   @override
-  String get tripPublishGridPreviewLabel => 'Votre grille';
+  String get tripPublishGridPreviewLabel => 'Vos prix par article';
 
   @override
   String tripPublishGridPreviewSeeAll(int count) {
@@ -3078,27 +3079,27 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get tripPublishGridSheetTitle => 'Votre grille de prix';
+  String get tripPublishGridSheetTitle => 'Vos prix par article';
 
   @override
   String get tripPublishGridSheetSubtitle => 'Valable sur tous vos trajets';
 
   @override
-  String get tripPublishGridSheetEditCta => 'Modifier ma grille';
+  String get tripPublishGridSheetEditCta => 'Modifier mes prix';
 
   @override
   String get tripPublishGridSheetCommissionNote =>
       'Prix payés par l\'expéditeur, commission Yadony comprise.';
 
   @override
-  String get tripPublishGridEmptyTitle => 'Votre grille est vide';
+  String get tripPublishGridEmptyTitle => 'Aucun prix par article';
 
   @override
   String get tripPublishGridEmptySubtitle =>
       'Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.';
 
   @override
-  String get tripPublishGridComposeCta => 'Composer ma grille';
+  String get tripPublishGridComposeCta => 'Ajouter mes prix par article';
 
   @override
   String get tripPublishCorridorConfirmedBadge => 'Confirmé';
@@ -3507,7 +3508,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripTemplateCreateAction => 'Créer un modèle';
 
   @override
-  String get tripTemplateGridPriceLabel => 'prix à la grille';
+  String get tripTemplateGridPriceLabel => 'prix par article';
 
   @override
   String get tripTemplateDeleteDialogTitle => 'Supprimer le modèle';
@@ -4932,7 +4933,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingPricePerKgLabel => 'Prix par kg';
 
   @override
-  String get listingPriceGridShort => 'Grille';
+  String get listingPriceGridShort => 'Par article';
 
   @override
   String get listingPriceUnavailableShort => 'Indisponible';
@@ -5059,7 +5060,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingCapacityAvailableSuffix => 'disponibles';
 
   @override
-  String get listingPricingSuffixTarifaire => 'tarifaire';
+  String get listingPricingSuffixTarifaire => 'prix';
 
   @override
   String get listingPricingSuffixPrix => 'prix';
@@ -5209,7 +5210,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingDepositDeadlineLabel => 'date limite de dépôt';
 
   @override
-  String get listingPriceGridLabel => 'Grille tarifaire';
+  String get listingPriceGridLabel => 'Prix par article';
 
   @override
   String listingItemCount(int count) {
@@ -5815,7 +5816,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre compte n\'a pas de numéro : indiquez celui qui paiera. Vous recevrez la demande de paiement dessus.';
 
   @override
-  String get bidCreateCustomItemsSectionTitle => 'Articles hors grille';
+  String get bidCreateCustomItemsSectionTitle => 'Autres articles';
 
   @override
   String get bidCreateCustomItemsSectionHint =>
@@ -5825,7 +5826,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidCreateCustomItemsEmpty => 'Aucun article pour le moment.';
 
   @override
-  String get bidCreateCustomItemsTotalLabel => 'Total des articles hors grille';
+  String get bidCreateCustomItemsTotalLabel => 'Total des autres articles';
 
   @override
   String get bidCreateAddItemButton => 'Ajouter un article';
@@ -8890,7 +8891,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get activityToolMissingTemplate => 'un modèle de trajet';
 
   @override
-  String get activityToolMissingPriceGrid => 'une grille de prix';
+  String get activityToolMissingPriceGrid => 'des prix par article';
 
   @override
   String get activityToolCtaAddresses => 'Ajouter une adresse';
@@ -8905,7 +8906,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get activityToolCtaTemplates => 'Créer un modèle de trajet';
 
   @override
-  String get activityToolCtaPriceGrid => 'Remplir ma grille de prix';
+  String get activityToolCtaPriceGrid => 'Ajouter mes prix par article';
 
   @override
   String activityToolBadgeAddresses(num count) {
@@ -8966,7 +8967,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get activityToolTitleTemplates => 'Modèles de trajet';
 
   @override
-  String get activityToolTitlePriceGrid => 'Ma grille de prix';
+  String get activityToolTitlePriceGrid => 'Mes prix par article';
 
   @override
   String get activityToolTitleAddresses => 'Mes adresses';
@@ -9260,7 +9261,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get activityToolsStartBody =>
-      'Adresses, destinataires, modèles, grille de prix, alertes : remplis une fois, réutilisés à chaque publication.';
+      'Adresses, destinataires, modèles, prix par article, alertes : remplis une fois, réutilisés à chaque publication.';
 
   @override
   String activityToolsProgressBody(Object missing) {
@@ -14970,7 +14971,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Sera ajouté à « Mes destinataires » pour vos prochains envois';
 
   @override
-  String get priceGridScreenTitle => 'Ma grille de prix';
+  String get priceGridScreenTitle => 'Mes prix par article';
 
   @override
   String get priceGridCommissionNotice =>
@@ -15015,14 +15016,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String priceGridDeleteItemMessage(String label) {
-    return 'L\'article \"$label\" sera retiré de votre grille, sur tous vos trajets.';
+    return 'L\'article \"$label\" sera retiré de vos prix par article, sur tous vos trajets.';
   }
 
   @override
   String get priceGridEditItemTitle => 'Modifier l\'étiquette';
 
   @override
-  String get priceGridAddToGridButton => 'Ajouter à ma grille';
+  String get priceGridAddToGridButton => 'Ajouter à mes prix';
 
   @override
   String get priceGridSearchFieldLabel => 'Article';
@@ -15032,7 +15033,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get priceGridAllCatalogTakenMessage =>
-      'Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.';
+      'Tous les articles du catalogue ont déjà un prix. Écrivez le vôtre pour en ajouter un autre.';
 
   @override
   String priceGridAddCustomLabel(String query) {
@@ -21021,7 +21022,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiFormDraftUnderstoodTitle => 'Déjà compris';
 
   @override
-  String get aiFormDraftChipGrid => 'Ma grille';
+  String get aiFormDraftChipGrid => 'Mes prix par article';
 
   @override
   String get aiFormDraftChipDirect => 'Sans escale';
@@ -21115,7 +21116,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiFormDraftSummaryGrid => 'Articles';
 
   @override
-  String get aiFormDraftSummaryGridValue => 'Ma grille de prix';
+  String get aiFormDraftSummaryGridValue => 'Mes prix par article';
 
   @override
   String get aiFormDraftSummaryPayment => 'Paiement';
@@ -21167,7 +21168,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiFormDraftWarningNoGrid =>
-      'Vous n\'avez pas encore de grille : j\'ai mis le prix au kilo.';
+      'Vous n\'avez pas encore de prix par article : j\'ai mis le prix au kilo.';
 
   @override
   String get aiFormDraftWarningCardNotConfigured =>

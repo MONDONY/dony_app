@@ -1314,7 +1314,7 @@
       }
     }
   },
-  "tripPublishTemplateChipGrid": "{label} · grille",
+  "tripPublishTemplateChipGrid": "{label} · par article",
   "@tripPublishTemplateChipGrid": {
     "description": "Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom",
     "placeholders": {
@@ -1516,7 +1516,7 @@
   "@tripPublishPricingModeKg": {
     "description": "Option « au kilo » du toggle de mode de tarification, étape Prix & conditions"
   },
-  "tripPublishPricingModeMixed": "Grille + kilo",
+  "tripPublishPricingModeMixed": "Articles + kilo",
   "@tripPublishPricingModeMixed": {
     "description": "Option « grille + kilo » du toggle de mode de tarification"
   },
@@ -1528,7 +1528,7 @@
   "@tripPublishKgPriceToggleTitle": {
     "description": "Titre du toggle « Tarif au kilo », visible en mode grille"
   },
-  "tripPublishKgPriceToggleSubtitle": "Optionnel en mode grille",
+  "tripPublishKgPriceToggleSubtitle": "Optionnel avec les prix par article",
   "@tripPublishKgPriceToggleSubtitle": {
     "description": "Sous-titre du toggle « Tarif au kilo »"
   },
@@ -1717,7 +1717,7 @@
   "@tripPublishAgreedPriceLabel": {
     "description": "Libellé de la carte affichant le prix total convenu (trajet dédié)"
   },
-  "tripPublishGridPreviewLabel": "Votre grille",
+  "tripPublishGridPreviewLabel": "Vos prix par article",
   "@tripPublishGridPreviewLabel": {
     "description": "Libellé au-dessus de l'aperçu de grille, étape Prix & conditions"
   },
@@ -1744,7 +1744,7 @@
       }
     }
   },
-  "tripPublishGridSheetTitle": "Votre grille de prix",
+  "tripPublishGridSheetTitle": "Vos prix par article",
   "@tripPublishGridSheetTitle": {
     "description": "Titre de la feuille listant tous les articles de la grille"
   },
@@ -1752,7 +1752,7 @@
   "@tripPublishGridSheetSubtitle": {
     "description": "Sous-titre de la feuille de grille complète"
   },
-  "tripPublishGridSheetEditCta": "Modifier ma grille",
+  "tripPublishGridSheetEditCta": "Modifier mes prix",
   "@tripPublishGridSheetEditCta": {
     "description": "Bouton sticky de la feuille de grille complète"
   },
@@ -1760,7 +1760,7 @@
   "@tripPublishGridSheetCommissionNote": {
     "description": "Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)"
   },
-  "tripPublishGridEmptyTitle": "Votre grille est vide",
+  "tripPublishGridEmptyTitle": "Aucun prix par article",
   "@tripPublishGridEmptyTitle": {
     "description": "Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette"
   },
@@ -1768,7 +1768,7 @@
   "@tripPublishGridEmptySubtitle": {
     "description": "Sous-titre de la carte grille vide"
   },
-  "tripPublishGridComposeCta": "Composer ma grille",
+  "tripPublishGridComposeCta": "Ajouter mes prix par article",
   "@tripPublishGridComposeCta": {
     "description": "Bouton de la carte grille vide, ouvre l'écran de grille du profil"
   },
@@ -2294,7 +2294,7 @@
   "@tripTemplateCreateAction": {
     "description": "Bouton d'action de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)"
   },
-  "tripTemplateGridPriceLabel": "prix à la grille",
+  "tripTemplateGridPriceLabel": "prix par article",
   "@tripTemplateGridPriceLabel": {
     "description": "Repli affiché à la place du tarif au kilo quand le modèle vend à la grille (trip_templates_screen.dart, trip_recurrence_edit_screen.dart)"
   },
@@ -4131,7 +4131,7 @@
   "@listingPricePerKgLabel": {
     "description": "Libellé de la carte statistique prix au kg (announcement_detail_screen.dart)"
   },
-  "listingPriceGridShort": "Grille",
+  "listingPriceGridShort": "Par article",
   "@listingPriceGridShort": {
     "description": "Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, announcement_detail_body.dart, marker_bitmap_factory.dart via announcement_map_view.dart)"
   },
@@ -4289,7 +4289,7 @@
   "@listingCapacityAvailableSuffix": {
     "description": "Libellé secondaire de la pastille capacité disponible (announcement_detail_body.dart)"
   },
-  "listingPricingSuffixTarifaire": "tarifaire",
+  "listingPricingSuffixTarifaire": "prix",
   "@listingPricingSuffixTarifaire": {
     "description": "Libellé secondaire de la pastille prix en mode grille (announcement_detail_body.dart)"
   },
@@ -4472,7 +4472,7 @@
   "@listingDepositDeadlineLabel": {
     "description": "Libellé secondaire de la carte date limite de dépôt (traveler_announcement_bottom_sheet.dart)"
   },
-  "listingPriceGridLabel": "Grille tarifaire",
+  "listingPriceGridLabel": "Prix par article",
   "@listingPriceGridLabel": {
     "description": "Titre de la carte grille tarifaire (traveler_announcement_bottom_sheet.dart, trip_card.dart, traveler_card.dart)"
   },
@@ -5243,7 +5243,7 @@
   "@bidCreatePayerPhoneHintNoProfile": {
     "description": "Texte d'aide quand le compte n'a pas de numéro de téléphone (create_bid/payer_phone_field.dart)"
   },
-  "bidCreateCustomItemsSectionTitle": "Articles hors grille",
+  "bidCreateCustomItemsSectionTitle": "Autres articles",
   "@bidCreateCustomItemsSectionTitle": {
     "description": "Titre de la section articles hors grille en négociation (custom_items_section.dart)"
   },
@@ -5255,7 +5255,7 @@
   "@bidCreateCustomItemsEmpty": {
     "description": "État vide de la liste d'articles hors grille (custom_items_section.dart)"
   },
-  "bidCreateCustomItemsTotalLabel": "Total des articles hors grille",
+  "bidCreateCustomItemsTotalLabel": "Total des autres articles",
   "@bidCreateCustomItemsTotalLabel": {
     "description": "Libellé du total des articles hors grille (custom_items_section.dart)"
   },
@@ -9266,7 +9266,7 @@
   "@activityToolMissingTemplate": {
     "description": "Groupe nominal de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.missingPhrase)."
   },
-  "activityToolMissingPriceGrid": "une grille de prix",
+  "activityToolMissingPriceGrid": "des prix par article",
   "@activityToolMissingPriceGrid": {
     "description": "Groupe nominal de l'outil grille de prix (activity_labels.dart ToolKeyL10n.missingPhrase)."
   },
@@ -9286,7 +9286,7 @@
   "@activityToolCtaTemplates": {
     "description": "CTA de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.ctaLabel)."
   },
-  "activityToolCtaPriceGrid": "Remplir ma grille de prix",
+  "activityToolCtaPriceGrid": "Ajouter mes prix par article",
   "@activityToolCtaPriceGrid": {
     "description": "CTA de l'outil grille de prix (activity_labels.dart ToolKeyL10n.ctaLabel)."
   },
@@ -9322,7 +9322,7 @@
   "@activityToolTitleTemplates": {
     "description": "Titre de la tuile/ligne outil modèles de trajet, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart."
   },
-  "activityToolTitlePriceGrid": "Ma grille de prix",
+  "activityToolTitlePriceGrid": "Mes prix par article",
   "@activityToolTitlePriceGrid": {
     "description": "Titre de la tuile/ligne outil grille de prix, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart."
   },
@@ -9624,7 +9624,7 @@
   "@activityToolsProgressTitle": {
     "description": "Titre de la carte de progression dès qu'au moins un outil est prêt (tools_completion_card.dart _ProgressCard)."
   },
-  "activityToolsStartBody": "Adresses, destinataires, modèles, grille de prix, alertes : remplis une fois, réutilisés à chaque publication.",
+  "activityToolsStartBody": "Adresses, destinataires, modèles, prix par article, alertes : remplis une fois, réutilisés à chaque publication.",
   "@activityToolsStartBody": {
     "description": "Corps de la carte de progression au tout départ, aucun outil prêt (tools_completion_card.dart)."
   },
@@ -16681,7 +16681,7 @@
   "@recipientSectionSaveToggleSubtitle": {
     "description": "Sous-titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart)."
   },
-  "priceGridScreenTitle": "Ma grille de prix",
+  "priceGridScreenTitle": "Mes prix par article",
   "@priceGridScreenTitle": {
     "description": "Titre de l'AppBar (price_grid_screen.dart)."
   },
@@ -16750,7 +16750,7 @@
   "@priceGridDeleteItemTitle": {
     "description": "Titre du dialogue de suppression d'une étiquette (price_grid_screen.dart)."
   },
-  "priceGridDeleteItemMessage": "L'article \"{label}\" sera retiré de votre grille, sur tous vos trajets.",
+  "priceGridDeleteItemMessage": "L'article \"{label}\" sera retiré de vos prix par article, sur tous vos trajets.",
   "@priceGridDeleteItemMessage": {
     "description": "Message du dialogue de suppression, label = libellé affiché de l'article (price_grid_screen.dart).",
     "placeholders": {
@@ -16763,7 +16763,7 @@
   "@priceGridEditItemTitle": {
     "description": "Titre de la feuille en mode édition (price_grid_item_form_sheet.dart)."
   },
-  "priceGridAddToGridButton": "Ajouter à ma grille",
+  "priceGridAddToGridButton": "Ajouter à mes prix",
   "@priceGridAddToGridButton": {
     "description": "Bouton de validation en mode création (price_grid_item_form_sheet.dart)."
   },
@@ -16775,7 +16775,7 @@
   "@priceGridSearchFieldHint": {
     "description": "Placeholder du champ de recherche du catalogue (price_grid_item_form_sheet.dart)."
   },
-  "priceGridAllCatalogTakenMessage": "Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.",
+  "priceGridAllCatalogTakenMessage": "Tous les articles du catalogue ont déjà un prix. Écrivez le vôtre pour en ajouter un autre.",
   "@priceGridAllCatalogTakenMessage": {
     "description": "Message affiché quand le catalogue filtré est vide sans possibilité d'ajout (price_grid_item_form_sheet.dart)."
   },
@@ -21902,7 +21902,7 @@
   "@aiFormDraftMicUnavailable": {"description": "Micro refusé ou reconnaissance vocale indisponible : seule la saisie écrite reste."},
   "aiFormDraftUnderstoodTitle": "Déjà compris",
   "@aiFormDraftUnderstoodTitle": {"description": "Titre de l'encart des informations comprises par l'IA."},
-  "aiFormDraftChipGrid": "Ma grille",
+  "aiFormDraftChipGrid": "Mes prix par article",
   "@aiFormDraftChipGrid": {"description": "Puce « Déjà compris » : les articles de la grille de prix."},
   "aiFormDraftChipDirect": "Sans escale",
   "@aiFormDraftChipDirect": {"description": "Puce « Déjà compris » : vol direct."},
@@ -21954,7 +21954,7 @@
   "@aiFormDraftSummaryPrice": {"description": "Ligne du résumé : prix au kilo."},
   "aiFormDraftSummaryGrid": "Articles",
   "@aiFormDraftSummaryGrid": {"description": "Ligne du résumé : tarification par la grille."},
-  "aiFormDraftSummaryGridValue": "Ma grille de prix",
+  "aiFormDraftSummaryGridValue": "Mes prix par article",
   "@aiFormDraftSummaryGridValue": {"description": "Valeur de la ligne Articles du résumé."},
   "aiFormDraftSummaryPayment": "Paiement",
   "@aiFormDraftSummaryPayment": {"description": "Ligne du résumé : moyens de paiement."},
@@ -21984,7 +21984,7 @@
   "@aiFormDraftWarningDepartureUnknown": {"description": "Avertissement du résumé : ville de départ introuvable."},
   "aiFormDraftWarningArrivalUnknown": "Je n'ai pas reconnu la ville d'arrivée : choisissez-la dans le formulaire.",
   "@aiFormDraftWarningArrivalUnknown": {"description": "Avertissement du résumé : ville d'arrivée introuvable."},
-  "aiFormDraftWarningNoGrid": "Vous n'avez pas encore de grille : j'ai mis le prix au kilo.",
+  "aiFormDraftWarningNoGrid": "Vous n'avez pas encore de prix par article : j'ai mis le prix au kilo.",
   "@aiFormDraftWarningNoGrid": {"description": "Avertissement : grille demandée mais vide."},
   "aiFormDraftWarningCardNotConfigured": "Pour être payé par carte, terminez la configuration de vos paiements. Je vous le rappelle à l'étape Prix.",
   "@aiFormDraftWarningCardNotConfigured": {"description": "Avertissement : carte demandée, paiements par carte non configurés."},

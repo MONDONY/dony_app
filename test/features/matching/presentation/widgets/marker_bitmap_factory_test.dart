@@ -148,11 +148,11 @@ void main() {
     test('light vs dark produce different bitmaps', () async {
       final light = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
       );
       final dark = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         brightness: Brightness.dark,
       );
       expect(identical(light, dark), isFalse);
@@ -161,12 +161,12 @@ void main() {
     test('same brightness hits the cache', () async {
       final a = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         brightness: Brightness.dark,
       );
       final b = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         brightness: Brightness.dark,
       );
       expect(identical(a, b), isTrue);
@@ -175,11 +175,11 @@ void main() {
     test('selected vs not produce different bitmaps', () async {
       final plain = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
       );
       final selected = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         isSelected: true,
       );
       expect(identical(plain, selected), isFalse);
@@ -190,12 +190,12 @@ void main() {
       () async {
         final eur = await MarkerBitmapFactory.pricePill(
           pricePerKg: 12,
-          gridLabel: 'Grille',
+          gridLabel: 'Par article',
           currencyCode: 'EUR',
         );
         final cad = await MarkerBitmapFactory.pricePill(
           pricePerKg: 12,
-          gridLabel: 'Grille',
+          gridLabel: 'Par article',
           currencyCode: 'CAD',
         );
         expect(identical(eur, cad), isFalse);
@@ -205,12 +205,12 @@ void main() {
     test('same currency hits the cache', () async {
       final a = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         currencyCode: 'CAD',
       );
       final b = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         currencyCode: 'CAD',
       );
       expect(identical(a, b), isTrue);
@@ -221,11 +221,11 @@ void main() {
       () async {
         final fr = await MarkerBitmapFactory.pricePill(
           pricePerKg: 0,
-          gridLabel: 'Grille',
+          gridLabel: 'Par article',
         );
         final en = await MarkerBitmapFactory.pricePill(
           pricePerKg: 0,
-          gridLabel: 'Grid',
+          gridLabel: 'Per item',
         );
         expect(identical(fr, en), isFalse);
       },
@@ -236,12 +236,12 @@ void main() {
     test('light vs dark produce different stacked bitmaps', () async {
       final light = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         count: 3,
       );
       final dark = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         count: 3,
         brightness: Brightness.dark,
       );
@@ -251,13 +251,13 @@ void main() {
     test('same brightness hits the stacked cache', () async {
       final a = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         count: 3,
         brightness: Brightness.dark,
       );
       final b = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         count: 3,
         brightness: Brightness.dark,
       );
@@ -267,13 +267,13 @@ void main() {
     test('different currencies produce different stacked bitmaps', () async {
       final eur = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         count: 3,
         currencyCode: 'EUR',
       );
       final cad = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
-        gridLabel: 'Grille',
+        gridLabel: 'Par article',
         count: 3,
         currencyCode: 'CAD',
       );
@@ -285,12 +285,12 @@ void main() {
       () async {
         final fr = await MarkerBitmapFactory.stackedPricePill(
           pricePerKg: 0,
-          gridLabel: 'Grille',
+          gridLabel: 'Par article',
           count: 3,
         );
         final en = await MarkerBitmapFactory.stackedPricePill(
           pricePerKg: 0,
-          gridLabel: 'Grid',
+          gridLabel: 'Per item',
           count: 3,
         );
         expect(identical(fr, en), isFalse);

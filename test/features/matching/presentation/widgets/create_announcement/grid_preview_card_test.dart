@@ -143,7 +143,7 @@ void main() {
       await tester.pumpWidget(_wrap(const []));
       await tester.pumpAndSettle();
 
-      expect(find.text('Votre grille est vide'), findsOneWidget);
+      expect(find.text('Aucun prix par article'), findsOneWidget);
       expect(find.byKey(const Key('grid-preview-create')), findsOneWidget);
       expect(find.byKey(const Key('grid-preview-see-all')), findsNothing);
     });

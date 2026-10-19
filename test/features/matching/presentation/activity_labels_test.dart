@@ -77,14 +77,14 @@ void main() {
       ToolKey.recipients: 'un destinataire',
       ToolKey.alerts: 'une alerte',
       ToolKey.tripTemplates: 'un modèle de trajet',
-      ToolKey.priceGrid: 'une grille de prix',
+      ToolKey.priceGrid: 'des prix par article',
     };
     const enPhrases = {
       ToolKey.addresses: 'an address',
       ToolKey.recipients: 'a recipient',
       ToolKey.alerts: 'an alert',
       ToolKey.tripTemplates: 'a trip template',
-      ToolKey.priceGrid: 'a price grid',
+      ToolKey.priceGrid: 'prices per item',
     };
 
     for (final tool in ToolKey.values) {
@@ -103,7 +103,7 @@ void main() {
       expect(ToolKey.recipients.ctaLabel(fr), 'Ajouter un destinataire');
       expect(ToolKey.alerts.ctaLabel(fr), 'Créer une alerte');
       expect(ToolKey.tripTemplates.ctaLabel(fr), 'Créer un modèle de trajet');
-      expect(ToolKey.priceGrid.ctaLabel(fr), 'Remplir ma grille de prix');
+      expect(ToolKey.priceGrid.ctaLabel(fr), 'Ajouter mes prix par article');
     });
 
     test('en', () {
@@ -111,7 +111,7 @@ void main() {
       expect(ToolKey.recipients.ctaLabel(en), 'Add a recipient');
       expect(ToolKey.alerts.ctaLabel(en), 'Create an alert');
       expect(ToolKey.tripTemplates.ctaLabel(en), 'Create a trip template');
-      expect(ToolKey.priceGrid.ctaLabel(en), 'Fill in my price grid');
+      expect(ToolKey.priceGrid.ctaLabel(en), 'Add my prices per item');
     });
   });
 
@@ -181,7 +181,7 @@ void main() {
           ToolKey.tripTemplates,
           ToolKey.priceGrid,
         ]),
-        'Il vous manque une alerte, un modèle de trajet et une grille de prix.',
+        'Il vous manque une alerte, un modèle de trajet et des prix par article.',
       );
     });
 

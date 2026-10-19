@@ -4625,7 +4625,7 @@ abstract class AppLocalizations {
   /// Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom
   ///
   /// In fr, this message translates to:
-  /// **'{label} · grille'**
+  /// **'{label} · par article'**
   String tripPublishTemplateChipGrid(String label);
 
   /// Titre de section (étape Trajet) pour la date limite de dépôt des colis
@@ -4925,7 +4925,7 @@ abstract class AppLocalizations {
   /// Option « grille + kilo » du toggle de mode de tarification
   ///
   /// In fr, this message translates to:
-  /// **'Grille + kilo'**
+  /// **'Articles + kilo'**
   String get tripPublishPricingModeMixed;
 
   /// Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé
@@ -4943,7 +4943,7 @@ abstract class AppLocalizations {
   /// Sous-titre du toggle « Tarif au kilo »
   ///
   /// In fr, this message translates to:
-  /// **'Optionnel en mode grille'**
+  /// **'Optionnel avec les prix par article'**
   String get tripPublishKgPriceToggleSubtitle;
 
   /// Libellé de la puce « Autre prix » du sélecteur de prix au kg
@@ -5186,7 +5186,7 @@ abstract class AppLocalizations {
   /// Libellé au-dessus de l'aperçu de grille, étape Prix & conditions
   ///
   /// In fr, this message translates to:
-  /// **'Votre grille'**
+  /// **'Vos prix par article'**
   String get tripPublishGridPreviewLabel;
 
   /// Bouton pour ouvrir la feuille listant tous les articles de la grille
@@ -5210,7 +5210,7 @@ abstract class AppLocalizations {
   /// Titre de la feuille listant tous les articles de la grille
   ///
   /// In fr, this message translates to:
-  /// **'Votre grille de prix'**
+  /// **'Vos prix par article'**
   String get tripPublishGridSheetTitle;
 
   /// Sous-titre de la feuille de grille complète
@@ -5222,7 +5222,7 @@ abstract class AppLocalizations {
   /// Bouton sticky de la feuille de grille complète
   ///
   /// In fr, this message translates to:
-  /// **'Modifier ma grille'**
+  /// **'Modifier mes prix'**
   String get tripPublishGridSheetEditCta;
 
   /// Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)
@@ -5234,7 +5234,7 @@ abstract class AppLocalizations {
   /// Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette
   ///
   /// In fr, this message translates to:
-  /// **'Votre grille est vide'**
+  /// **'Aucun prix par article'**
   String get tripPublishGridEmptyTitle;
 
   /// Sous-titre de la carte grille vide
@@ -5246,7 +5246,7 @@ abstract class AppLocalizations {
   /// Bouton de la carte grille vide, ouvre l'écran de grille du profil
   ///
   /// In fr, this message translates to:
-  /// **'Composer ma grille'**
+  /// **'Ajouter mes prix par article'**
   String get tripPublishGridComposeCta;
 
   /// Badge sur l'aperçu du corridor une fois départ et arrivée sélectionnés
@@ -5930,7 +5930,7 @@ abstract class AppLocalizations {
   /// Repli affiché à la place du tarif au kilo quand le modèle vend à la grille (trip_templates_screen.dart, trip_recurrence_edit_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'prix à la grille'**
+  /// **'prix par article'**
   String get tripTemplateGridPriceLabel;
 
   /// Titre du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)
@@ -8250,7 +8250,7 @@ abstract class AppLocalizations {
   /// Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, announcement_detail_body.dart, marker_bitmap_factory.dart via announcement_map_view.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Grille'**
+  /// **'Par article'**
   String get listingPriceGridShort;
 
   /// Valeur compacte quand le prix au kg est indisponible (announcement_detail_screen.dart)
@@ -8484,7 +8484,7 @@ abstract class AppLocalizations {
   /// Libellé secondaire de la pastille prix en mode grille (announcement_detail_body.dart)
   ///
   /// In fr, this message translates to:
-  /// **'tarifaire'**
+  /// **'prix'**
   String get listingPricingSuffixTarifaire;
 
   /// Libellé secondaire de la pastille prix au kilo (announcement_detail_body.dart)
@@ -8706,7 +8706,7 @@ abstract class AppLocalizations {
   /// Titre de la carte grille tarifaire (traveler_announcement_bottom_sheet.dart, trip_card.dart, traveler_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Grille tarifaire'**
+  /// **'Prix par article'**
   String get listingPriceGridLabel;
 
   /// Nombre d'articles de la grille tarifaire (traveler_announcement_bottom_sheet.dart)
@@ -9636,7 +9636,7 @@ abstract class AppLocalizations {
   /// Titre de la section articles hors grille en négociation (custom_items_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Articles hors grille'**
+  /// **'Autres articles'**
   String get bidCreateCustomItemsSectionTitle;
 
   /// Explication de la section articles hors grille (custom_items_section.dart)
@@ -9654,7 +9654,7 @@ abstract class AppLocalizations {
   /// Libellé du total des articles hors grille (custom_items_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Total des articles hors grille'**
+  /// **'Total des autres articles'**
   String get bidCreateCustomItemsTotalLabel;
 
   /// Bouton et titre d'ajout d'un article hors grille (custom_items_section.dart)
@@ -14781,7 +14781,7 @@ abstract class AppLocalizations {
   /// Groupe nominal de l'outil grille de prix (activity_labels.dart ToolKeyL10n.missingPhrase).
   ///
   /// In fr, this message translates to:
-  /// **'une grille de prix'**
+  /// **'des prix par article'**
   String get activityToolMissingPriceGrid;
 
   /// CTA de l'outil adresses (activity_labels.dart ToolKeyL10n.ctaLabel).
@@ -14811,7 +14811,7 @@ abstract class AppLocalizations {
   /// CTA de l'outil grille de prix (activity_labels.dart ToolKeyL10n.ctaLabel).
   ///
   /// In fr, this message translates to:
-  /// **'Remplir ma grille de prix'**
+  /// **'Ajouter mes prix par article'**
   String get activityToolCtaPriceGrid;
 
   /// Texte du badge « prêt » de l'outil adresses (activity_labels.dart ToolKeyL10n.badgeLabel).
@@ -14865,7 +14865,7 @@ abstract class AppLocalizations {
   /// Titre de la tuile/ligne outil grille de prix, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart.
   ///
   /// In fr, this message translates to:
-  /// **'Ma grille de prix'**
+  /// **'Mes prix par article'**
   String get activityToolTitlePriceGrid;
 
   /// Titre de la tuile/ligne outil adresses, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart.
@@ -15303,7 +15303,7 @@ abstract class AppLocalizations {
   /// Corps de la carte de progression au tout départ, aucun outil prêt (tools_completion_card.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Adresses, destinataires, modèles, grille de prix, alertes : remplis une fois, réutilisés à chaque publication.'**
+  /// **'Adresses, destinataires, modèles, prix par article, alertes : remplis une fois, réutilisés à chaque publication.'**
   String get activityToolsStartBody;
 
   /// Corps de la carte de progression une fois au moins un outil prêt ; {missing} est la phrase déjà localisée (activityToolsMissing) (tools_completion_card.dart).
@@ -24692,7 +24692,7 @@ abstract class AppLocalizations {
   /// Titre de l'AppBar (price_grid_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ma grille de prix'**
+  /// **'Mes prix par article'**
   String get priceGridScreenTitle;
 
   /// Note de commission en pied de liste (price_grid_screen.dart), sans taux (FLUTTER-R6).
@@ -24764,7 +24764,7 @@ abstract class AppLocalizations {
   /// Message du dialogue de suppression, label = libellé affiché de l'article (price_grid_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'L\'article \"{label}\" sera retiré de votre grille, sur tous vos trajets.'**
+  /// **'L\'article \"{label}\" sera retiré de vos prix par article, sur tous vos trajets.'**
   String priceGridDeleteItemMessage(String label);
 
   /// Titre de la feuille en mode édition (price_grid_item_form_sheet.dart).
@@ -24776,7 +24776,7 @@ abstract class AppLocalizations {
   /// Bouton de validation en mode création (price_grid_item_form_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Ajouter à ma grille'**
+  /// **'Ajouter à mes prix'**
   String get priceGridAddToGridButton;
 
   /// Libellé du champ de recherche du catalogue (price_grid_item_form_sheet.dart).
@@ -24794,7 +24794,7 @@ abstract class AppLocalizations {
   /// Message affiché quand le catalogue filtré est vide sans possibilité d'ajout (price_grid_item_form_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.'**
+  /// **'Tous les articles du catalogue ont déjà un prix. Écrivez le vôtre pour en ajouter un autre.'**
   String get priceGridAllCatalogTakenMessage;
 
   /// Ligne d'ajout d'un libellé libre non trouvé au catalogue. Espaces normales (U+0020) autour des guillemets, PAS les espaces insécables (U+00A0) de contentCategoryAdd : reprise à l'identique de l'ancien texte, non réutilisée pour ne pas changer le rendu (price_grid_item_form_sheet.dart).
@@ -33959,7 +33959,7 @@ abstract class AppLocalizations {
   /// Puce « Déjà compris » : les articles de la grille de prix.
   ///
   /// In fr, this message translates to:
-  /// **'Ma grille'**
+  /// **'Mes prix par article'**
   String get aiFormDraftChipGrid;
 
   /// Puce « Déjà compris » : vol direct.
@@ -34115,7 +34115,7 @@ abstract class AppLocalizations {
   /// Valeur de la ligne Articles du résumé.
   ///
   /// In fr, this message translates to:
-  /// **'Ma grille de prix'**
+  /// **'Mes prix par article'**
   String get aiFormDraftSummaryGridValue;
 
   /// Ligne du résumé : moyens de paiement.
@@ -34205,7 +34205,7 @@ abstract class AppLocalizations {
   /// Avertissement : grille demandée mais vide.
   ///
   /// In fr, this message translates to:
-  /// **'Vous n\'avez pas encore de grille : j\'ai mis le prix au kilo.'**
+  /// **'Vous n\'avez pas encore de prix par article : j\'ai mis le prix au kilo.'**
   String get aiFormDraftWarningNoGrid;
 
   /// Avertissement : carte demandée, paiements par carte non configurés.
