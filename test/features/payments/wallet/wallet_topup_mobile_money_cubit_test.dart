@@ -566,7 +566,7 @@ void main() {
         async.flushMicrotasks();
 
         async.elapse(
-          WalletTopupMobileMoneyCubit.expiry - const Duration(seconds: 3),
+          walletTopupFallbackExpiry - const Duration(seconds: 3),
         );
         expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
 
@@ -1122,7 +1122,7 @@ void main() {
           // Le temps qui aurait déclenché l'expiration (ou une confirmation)
           // ne doit produire aucun nouvel état : le cubit est fermé.
           async.elapse(
-            WalletTopupMobileMoneyCubit.expiry + const Duration(minutes: 1),
+            walletTopupFallbackExpiry + const Duration(minutes: 1),
           );
 
           expect(states, statesAtClose);

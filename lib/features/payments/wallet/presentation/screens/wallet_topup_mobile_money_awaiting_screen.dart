@@ -7,8 +7,11 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/phone/phone_last_digits.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
+import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/mobile_money_awaiting_ring.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
@@ -89,9 +92,26 @@ class _WalletTopupMobileMoneyAwaitingScreenState
     context.go('/payments/wallet');
   }
 
-  void _resend() {
+  /// Relancer un dépôt est un nouveau paiement : même confirmation que le
+  /// premier. Refusé, ou écran quitté pendant la vérification, rien n'est
+  /// lancé.
+  Future<void> _resend() async {
     final phoneNumber = widget.phoneNumber;
     if (phoneNumber == null) return;
+    final authenticated = await requirePaymentAuth(
+      context,
+      authService: getIt<LocalAuthService>(),
+      userPrefs: getIt<HiveService>().userPrefs,
+    );
+    if (!mounted) return;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.paymentNotConfirmedSnackbar,
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
     unawaited(_cubit.initiate(amount: widget.amount, phoneNumber: phoneNumber));
   }
 
@@ -385,7 +405,7 @@ class _OutcomeBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final tone = warning ? DonyColors.warning : cs.error;
+    final tone = warning ? cs.warning : cs.error;
 
     return Center(
       child: SingleChildScrollView(

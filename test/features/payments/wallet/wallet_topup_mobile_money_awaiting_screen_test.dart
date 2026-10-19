@@ -4,8 +4,11 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:dony/features/payments/presentation/widgets/mobile_money_awaiting_ring.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
@@ -18,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
@@ -31,8 +35,24 @@ import '../../../helpers/l10n_test_helpers.dart';
 class _MockCubit extends MockCubit<WalletTopupMobileMoneyState>
     implements WalletTopupMobileMoneyCubit {}
 
+class _MockLocalAuthService extends Mock implements LocalAuthService {}
+
+class _MockBox extends Mock implements Box {}
+
+/// [HiveService.userPrefs] ouvre une vraie box Hive : remplacée par un mock
+/// pour que `requirePaymentAuth` ne touche pas au disque.
+class _FakeHiveService extends HiveService {
+  _FakeHiveService(this._box);
+  final Box _box;
+
+  @override
+  Box get userPrefs => _box;
+}
+
 void main() {
   late _MockCubit cubit;
+  late _MockLocalAuthService authService;
+  late _MockBox userPrefsBox;
   Object? capturedWalletExtra;
   var didNavigateToWallet = false;
 
@@ -65,6 +85,30 @@ void main() {
         phoneNumber: any(named: 'phoneNumber'),
       ),
     ).thenAnswer((_) async {});
+
+    // Par défaut : ni biométrie ni PIN, `requirePaymentAuth` laisse passer.
+    authService = _MockLocalAuthService();
+    userPrefsBox = _MockBox();
+    when(
+      () => userPrefsBox.get(
+        HiveService.kBiometricEnabled,
+        defaultValue: any(named: 'defaultValue'),
+      ),
+    ).thenReturn(false);
+    when(() => authService.isPinSet()).thenAnswer((_) async => false);
+    if (getIt.isRegistered<LocalAuthService>()) {
+      getIt.unregister<LocalAuthService>();
+    }
+    getIt.registerSingleton<LocalAuthService>(authService);
+    if (getIt.isRegistered<HiveService>()) getIt.unregister<HiveService>();
+    getIt.registerSingleton<HiveService>(_FakeHiveService(userPrefsBox));
+  });
+
+  tearDown(() {
+    if (getIt.isRegistered<LocalAuthService>()) {
+      getIt.unregister<LocalAuthService>();
+    }
+    if (getIt.isRegistered<HiveService>()) getIt.unregister<HiveService>();
   });
 
   Widget screen({String? phoneNumber = '+2250748840856'}) =>
@@ -83,6 +127,17 @@ void main() {
         GoRoute(
           path: '/payments/wallet/topup/mobile-money/awaiting',
           builder: (context, state) => screen(phoneNumber: phoneNumber),
+        ),
+        // Saisie du PIN de `requirePaymentAuth` : « Refuser » vaut un PIN
+        // erroné (retour `false`).
+        GoRoute(
+          path: '/auth/local',
+          builder: (context, state) => Scaffold(
+            body: TextButton(
+              onPressed: () => context.pop(false),
+              child: const Text('Refuser le PIN'),
+            ),
+          ),
         ),
         GoRoute(
           path: '/payments/wallet',
@@ -377,6 +432,89 @@ void main() {
     verify(
       () => cubit.initiate(amount: 5000, phoneNumber: '+2250748840856'),
     ).called(1);
+  });
+
+  testWidgets('Overdue : « Renvoyer une demande » refusé par le PIN, rien '
+      "n'est relancé", (tester) async {
+    when(() => authService.isPinSet()).thenAnswer((_) async => true);
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: WalletTopupMobileMoneyOverdue(topup: topup),
+    );
+    await pumpScreen(tester);
+
+    await tester.tap(find.text('Renvoyer une demande'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.tap(find.text('Refuser le PIN'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    verifyNever(
+      () => cubit.initiate(
+        amount: any(named: 'amount'),
+        phoneNumber: any(named: 'phoneNumber'),
+      ),
+    );
+    expect(find.text('Paiement non confirmé, réessayez'), findsOneWidget);
+  });
+
+  testWidgets('Overdue : « Renvoyer une demande » après biométrie acceptée '
+      'relance le dépôt', (tester) async {
+    when(
+      () => userPrefsBox.get(
+        HiveService.kBiometricEnabled,
+        defaultValue: any(named: 'defaultValue'),
+      ),
+    ).thenReturn(true);
+    when(
+      () => authService.isBiometricAvailable(),
+    ).thenAnswer((_) async => true);
+    when(
+      () => authService.authenticateWithBiometric(),
+    ).thenAnswer((_) async => true);
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: WalletTopupMobileMoneyOverdue(topup: topup),
+    );
+    await pumpScreen(tester);
+
+    await tester.tap(find.text('Renvoyer une demande'));
+    await tester.pump();
+    await tester.pump();
+
+    verify(() => authService.authenticateWithBiometric()).called(1);
+    verify(
+      () => cubit.initiate(amount: 5000, phoneNumber: '+2250748840856'),
+    ).called(1);
+  });
+
+  testWidgets('Erreur : « Réessayer » refusé par le PIN, rien n\'est relancé', (
+    tester,
+  ) async {
+    when(() => authService.isPinSet()).thenAnswer((_) async => true);
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: const WalletTopupMobileMoneyError(NetworkException('boom')),
+    );
+    await pumpScreen(tester);
+
+    await tester.tap(find.text('Réessayer'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.tap(find.text('Refuser le PIN'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    verifyNever(
+      () => cubit.initiate(
+        amount: any(named: 'amount'),
+        phoneNumber: any(named: 'phoneNumber'),
+      ),
+    );
   });
 
   testWidgets('Overdue : « Payer avec un autre numéro » abandonne et revient', (

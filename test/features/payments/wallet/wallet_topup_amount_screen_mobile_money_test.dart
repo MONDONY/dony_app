@@ -6,6 +6,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
@@ -19,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
@@ -30,10 +33,26 @@ import '../../../helpers/mock_analytics_backend.dart';
 /// l'écran d'attente en remplaçant cet écran dans la pile.
 class _MockWalletRepository extends Mock implements WalletRepository {}
 
+class _MockLocalAuthService extends Mock implements LocalAuthService {}
+
+class _MockBox extends Mock implements Box {}
+
+/// [HiveService.userPrefs] ouvre une vraie box Hive : remplacée par un mock
+/// pour que `requirePaymentAuth` ne touche pas au disque.
+class _FakeHiveService extends HiveService {
+  _FakeHiveService(this._box);
+  final Box _box;
+
+  @override
+  Box get userPrefs => _box;
+}
+
 void main() {
   late _MockWalletRepository repo;
   late MockAnalyticsBackend analyticsBackend;
   late WalletTopupMobileMoneyCubit cubit;
+  late _MockLocalAuthService authService;
+  late _MockBox userPrefsBox;
   WalletTopupMobileMoneyAwaitingArgs? capturedArgs;
 
   const topup = WalletTopupModel(
@@ -79,12 +98,37 @@ void main() {
     getIt.registerSingleton<AnalyticsService>(
       makeEnabledAnalytics(MockAnalyticsBackend()),
     );
+
+    // Par défaut : ni biométrie ni PIN, `requirePaymentAuth` laisse passer.
+    authService = _MockLocalAuthService();
+    userPrefsBox = _MockBox();
+    when(
+      () => userPrefsBox.get(
+        HiveService.kBiometricEnabled,
+        defaultValue: any(named: 'defaultValue'),
+      ),
+    ).thenReturn(false);
+    when(() => authService.isPinSet()).thenAnswer((_) async => false);
+    if (getIt.isRegistered<LocalAuthService>()) {
+      getIt.unregister<LocalAuthService>();
+    }
+    getIt.registerSingleton<LocalAuthService>(authService);
+    if (getIt.isRegistered<HiveService>()) getIt.unregister<HiveService>();
+    getIt.registerSingleton<HiveService>(_FakeHiveService(userPrefsBox));
   });
 
   tearDown(() {
     unawaited(cubit.close());
-    if (getIt.isRegistered<AnalyticsService>()) {
-      getIt.unregister<AnalyticsService>();
+    for (final unregister in [
+      () => getIt.unregister<AnalyticsService>(),
+      () => getIt.unregister<LocalAuthService>(),
+      () => getIt.unregister<HiveService>(),
+    ]) {
+      try {
+        unregister();
+      } on Object {
+        // Déjà retiré : rien à nettoyer.
+      }
     }
   });
 
@@ -113,6 +157,17 @@ void main() {
                   mobileMoneyOperator: operator,
                 ),
               ),
+        ),
+        // Saisie du PIN de `requirePaymentAuth` : « Refuser » vaut un PIN
+        // erroné (retour `false`).
+        GoRoute(
+          path: '/auth/local',
+          builder: (context, state) => Scaffold(
+            body: TextButton(
+              onPressed: () => context.pop(false),
+              child: const Text('Refuser le PIN'),
+            ),
+          ),
         ),
         GoRoute(
           path: '/payments/wallet/topup/mobile-money/awaiting',
@@ -457,6 +512,69 @@ void main() {
 
       // initiate() a démarré le sondage périodique (3 s réelles) : l'arrêter
       // explicitement ici, sinon le timer reste "pending" à la fin du test.
+      cubit.stopPolling();
+    },
+  );
+
+  testWidgets(
+    'Payer : PIN refusé, aucun dépôt lancé et l\'écran reste en place',
+    (tester) async {
+      // Un PIN existe : `requirePaymentAuth` ouvre sa saisie, qui échoue.
+      when(() => authService.isPinSet()).thenAnswer((_) async => true);
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      await tapQuickAmount(tester, 10000);
+      final pay = find.text('Payer 10000 F CFA');
+      await tester.ensureVisible(pay);
+      await tester.tap(pay);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Refuser le PIN'));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => repo.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      );
+      expect(find.text('Paiement non confirmé, réessayez'), findsOneWidget);
+      expect(find.text('Recharger · Étape 2/2'), findsOneWidget);
+      expect(find.text('Attente'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Payer : biométrie acceptée, le dépôt est lancé après la vérification',
+    (tester) async {
+      when(
+        () => userPrefsBox.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(true);
+      when(
+        () => authService.isBiometricAvailable(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => authService.authenticateWithBiometric(),
+      ).thenAnswer((_) async => true);
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      await tapQuickAmount(tester, 10000);
+      final pay = find.text('Payer 10000 F CFA');
+      await tester.ensureVisible(pay);
+      await tester.tap(pay);
+      await tester.pumpAndSettle();
+
+      verify(() => authService.authenticateWithBiometric()).called(1);
+      verify(
+        () =>
+            repo.topupMobileMoney(amount: 10000, phoneNumber: '+2250748840856'),
+      ).called(1);
+      expect(find.text('Attente'), findsOneWidget);
       cubit.stopPolling();
     },
   );

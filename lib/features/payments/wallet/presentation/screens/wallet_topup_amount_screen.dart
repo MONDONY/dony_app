@@ -10,9 +10,12 @@ import 'package:dony/core/phone/phone_last_digits.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
+import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
@@ -784,6 +787,30 @@ class _MobileMoneyStickyButton extends StatelessWidget {
   /// du montant affiche les bornes.
   final bool outOfBounds;
 
+  /// `requirePaymentAuth` d'abord : c'est lui qui décide si une confirmation,
+  /// la biométrie ou le PIN s'appliquent. Refusé, ou écran quitté entre-temps,
+  /// aucun dépôt n'est lancé.
+  Future<void> _pay(BuildContext context) async {
+    final cubit = context.read<WalletTopupMobileMoneyCubit>();
+    final authenticated = await requirePaymentAuth(
+      context,
+      authService: getIt<LocalAuthService>(),
+      userPrefs: getIt<HiveService>().userPrefs,
+    );
+    if (!context.mounted) return;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.paymentNotConfirmedSnackbar,
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    unawaited(
+      cubit.initiate(amount: amount, phoneNumber: phoneNumber, custom: custom),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<
@@ -819,13 +846,7 @@ class _MobileMoneyStickyButton extends StatelessWidget {
           child: DonyButton(
             label: label,
             isLoading: isLoading,
-            onPressed: canSubmit
-                ? () => context.read<WalletTopupMobileMoneyCubit>().initiate(
-                    amount: amount,
-                    phoneNumber: phoneNumber,
-                    custom: custom,
-                  )
-                : null,
+            onPressed: canSubmit ? () => _pay(context) : null,
           ),
         );
       },

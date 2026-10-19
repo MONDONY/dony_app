@@ -30,9 +30,6 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
 
   static const pollInterval = Duration(seconds: 3);
 
-  /// Repli quand le back ne donne pas d'échéance.
-  static const expiry = walletTopupFallbackExpiry;
-
   final WalletRepository _repository;
   final AnalyticsService _analytics;
   final DateTime Function() _now;

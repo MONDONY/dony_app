@@ -26,7 +26,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Écran de choix de la méthode de recharge du portefeuille — carte bancaire
-/// (Stripe) ou mobile money (Orange Money, Wave, MTN MoMo via pawaPay).
+/// (Stripe) ou mobile money (Orange Money, MTN MoMo via pawaPay).
 ///
 /// Le [WalletTopupMobileMoneyCubit] utilisé par la section mobile money est
 /// fourni par un ancêtre (`BlocProvider` posé au niveau de la route dans
