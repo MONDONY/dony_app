@@ -25,6 +25,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/error_reporting_test_doubles.dart';
@@ -148,12 +149,14 @@ void main() {
     BidModel bid, {
     Future<bool> Function(BuildContext)? authorize,
     SupplementPaymentSheetPresenter? presentSheet,
+    SupplementMobileMoneyOpener? openMobileMoney,
     bool withBidBloc = true,
   }) async {
     final button = SupplementPayButton(
       bid: bid,
       authorize: authorize ?? (_) async => true,
       presentSheet: presentSheet,
+      openMobileMoney: openMobileMoney,
     );
     await tester.pumpWidget(
       MaterialApp(
@@ -195,18 +198,47 @@ void main() {
             paymentMethod: BidPaymentMethod.mobileMoney,
           ),
         ),
+        isTrue,
+      );
+      expect(
+        SupplementPayButton.canPay(
+          _bid(_supplement(rail: null), paymentMethod: BidPaymentMethod.cash),
+        ),
         isFalse,
       );
     });
 
-    test('mobile money, espèces : pas de bouton en A2', () {
+    test('mobile money : bouton (PR A3) ; espèces : pas encore (PR A4)', () {
       expect(
         SupplementPayButton.canPay(_bid(_supplement(rail: 'PAWAPAY'))),
-        isFalse,
+        isTrue,
       );
       expect(
         SupplementPayButton.canPay(_bid(_supplement(rail: 'CASH'))),
         isFalse,
+      );
+    });
+
+    test('railOf : rail du back, sinon celui du moyen du colis', () {
+      expect(
+        SupplementPayButton.railOf(_bid(_supplement(rail: 'PAWAPAY'))),
+        'PAWAPAY',
+      );
+      expect(
+        SupplementPayButton.railOf(
+          _bid(
+            _supplement(rail: null),
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ),
+        'PAWAPAY',
+      );
+      expect(SupplementPayButton.railOf(_bid(null)), 'STRIPE');
+      expect(
+        SupplementPayButton.railOf(
+          _bid(null, paymentMethod: BidPaymentMethod.wave),
+        ),
+        isNull,
       );
     });
 
@@ -554,6 +586,202 @@ void main() {
           containsPair('currency', 'EUR'),
         ),
       );
+    });
+  });
+
+  group('mobile money (PR A3)', () {
+    final mmBid = _bid(
+      _supplement(rail: 'PAWAPAY'),
+      paymentMethod: BidPaymentMethod.mobileMoney,
+    );
+    const route = '/bids/bid-1/supplements/sup-1/mobile-money/awaiting';
+    SupplementCheckout mmCheckout({
+      BidSupplementStatus status = BidSupplementStatus.paymentPending,
+    }) => SupplementCheckout(
+      supplement: _supplement(rail: 'PAWAPAY', status: status),
+      rail: 'PAWAPAY',
+      amount: 16.8,
+      currency: 'EUR',
+    );
+
+    testWidgets('icône téléphone et libellé « Payer {brut} »', (tester) async {
+      await pump(tester, mmBid);
+      expect(_txt('Payer 16,80 €'), findsOneWidget);
+      final button = tester.widget<DonyButton>(
+        find.byKey(const Key('supplement-pay-btn')),
+      );
+      expect(button.iconAsset, 'smartphone');
+    });
+
+    testWidgets('requirePaymentAuth, puis accept, puis l\'écran d\'attente '
+        'du supplément ; payé : colis relu, pas de second message', (
+      tester,
+    ) async {
+      final order = <String>[];
+      when(() => repository.accept('bid-1', 'sup-1')).thenAnswer((_) async {
+        order.add('accept');
+        return mmCheckout();
+      });
+      String? opened;
+      await pump(
+        tester,
+        mmBid,
+        authorize: (_) async {
+          order.add('auth');
+          return true;
+        },
+        openMobileMoney: (_, r) async {
+          order.add('open');
+          opened = r;
+          return true;
+        },
+      );
+
+      await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+      await tester.pump();
+      await tester.pump();
+
+      expect(order, ['auth', 'accept', 'open']);
+      expect(opened, route);
+      verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
+      // L'écran d'attente a déjà annoncé « Supplément payé » en se fermant.
+      expect(find.text('Supplément payé'), findsNothing);
+      verify(
+        () => backend.capture(AnalyticsEvents.bidSupplementPaymentStarted, {
+          'method': 'mobile_money',
+          'currency': 'EUR',
+          'amount_bracket': '<20',
+        }),
+      ).called(1);
+      // Le paiement lui-même est tracé par MobileMoneyPaymentBloc.
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
+      );
+      verifyNever(() => repository.confirmPayment(any(), any()));
+    });
+
+    testWidgets('retour sans paiement : message neutre, colis relu, bouton '
+        'réactivé', (tester) async {
+      when(
+        () => repository.accept(any(), any()),
+      ).thenAnswer((_) async => mmCheckout());
+      await pump(tester, mmBid, openMobileMoney: (_, _) async => null);
+
+      await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text('Paiement du supplément pas encore confirmé.'),
+        findsOneWidget,
+      );
+      verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
+      final button = tester.widget<DonyButton>(
+        find.byKey(const Key('supplement-pay-btn')),
+      );
+      expect(button.isLoading, isFalse);
+      expect(button.onPressed, isNotNull);
+    });
+
+    testWidgets('vérification refusée : ni accept ni écran d\'attente', (
+      tester,
+    ) async {
+      var opened = false;
+      await pump(
+        tester,
+        mmBid,
+        authorize: (_) async => false,
+        openMobileMoney: (_, _) async {
+          opened = true;
+          return true;
+        },
+      );
+
+      await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+      await tester.pump();
+
+      verifyNever(() => repository.accept(any(), any()));
+      expect(opened, isFalse);
+    });
+
+    testWidgets('déjà payé à l\'acceptation : relecture, pas d\'écran '
+        'd\'attente', (tester) async {
+      when(
+        () => repository.accept(any(), any()),
+      ).thenAnswer((_) async => mmCheckout(status: BidSupplementStatus.paid));
+      var opened = false;
+      await pump(
+        tester,
+        mmBid,
+        openMobileMoney: (_, _) async {
+          opened = true;
+          return true;
+        },
+      );
+
+      await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+      await tester.pump();
+
+      expect(opened, isFalse);
+      verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
+    });
+
+    testWidgets('ouverture par défaut : GoRouter pousse la route d\'attente '
+        'du supplément et lit son résultat', (tester) async {
+      when(
+        () => repository.accept(any(), any()),
+      ).thenAnswer((_) async => mmCheckout());
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => Scaffold(
+              body: BlocProvider<BidBloc>.value(
+                value: bidBloc,
+                child: SupplementPayButton(
+                  bid: mmBid,
+                  authorize: (_) async => true,
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path:
+                '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
+            builder: (context, state) => Scaffold(
+              body: TextButton(
+                key: const Key('fake-awaiting-paid'),
+                onPressed: () => context.pop(true),
+                child: Text(
+                  '${state.pathParameters['bidId']}/'
+                  '${state.pathParameters['supplementId']}',
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        MaterialApp.router(
+          theme: AppTheme.light(),
+          locale: AppL10n.fr,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('supplement-pay-btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('bid-1/sup-1'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('fake-awaiting-paid')));
+      await tester.pumpAndSettle();
+
+      verify(() => bidBloc.add(any(that: _reloadOf('bid-1')))).called(1);
+      expect(find.byKey(const Key('supplement-pay-btn')), findsOneWidget);
     });
   });
 }

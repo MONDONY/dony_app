@@ -11,6 +11,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_payment_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_supplement.dart';
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/supplement_request_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -18,6 +19,7 @@ import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.d
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// Vérification locale avant paiement (`requirePaymentAuth` par défaut).
 typedef SupplementPaymentAuthorizer = Future<bool> Function(BuildContext);
@@ -31,21 +33,32 @@ typedef SupplementPaymentSheetPresenter =
       required VoidCallback onSuccess,
     });
 
+/// Ouverture de l'écran d'attente mobile money du supplément
+/// (`context.push<bool>(route)` par défaut) ; rend son résultat de `pop`.
+typedef SupplementMobileMoneyOpener =
+    Future<bool?> Function(BuildContext context, String route);
+
 /// Bouton « Payer {brut} » de la barre du bas de l'expéditeur, tant qu'un
-/// supplément d'un colis payé par carte attend son paiement (`PROPOSED` ou
-/// `PAYMENT_PENDING`). « Refuser » reste dans l'encart du supplément.
+/// supplément d'un colis payé par carte ou en mobile money attend son
+/// paiement (`PROPOSED` ou `PAYMENT_PENDING`). « Refuser » reste dans
+/// l'encart du supplément.
 ///
-/// Parcours : `requirePaymentAuth`, `POST …/accept`, feuille de paiement
+/// Carte : `requirePaymentAuth`, `POST …/accept`, feuille de paiement
 /// (`context: bid_supplement`), `POST …/confirm-payment` attendu dans
 /// `onSuccess`, puis relecture du colis. Feuille fermée sans payer : rien ne
-/// change, le bouton reste « Payer ». Mobile money et espèces arrivent avec
-/// leurs rails (PR A3, A4).
+/// change, le bouton reste « Payer ».
+///
+/// Mobile money : `requirePaymentAuth`, `POST …/accept` (`PAYMENT_PENDING`),
+/// puis l'écran d'attente du supplément (choix de l'opérateur, numéro,
+/// initiation, sondage) ; à son retour, relecture du colis et message selon
+/// l'issue. Espèces : PR A4.
 class SupplementPayButton extends StatelessWidget {
   const SupplementPayButton({
     super.key,
     required this.bid,
     this.authorize,
     this.presentSheet,
+    this.openMobileMoney,
   });
 
   final BidModel bid;
@@ -53,8 +66,19 @@ class SupplementPayButton extends StatelessWidget {
   /// Injectables pour les tests ; `null` en usage réel.
   final SupplementPaymentAuthorizer? authorize;
   final SupplementPaymentSheetPresenter? presentSheet;
+  final SupplementMobileMoneyOpener? openMobileMoney;
 
-  /// Supplément payable par carte maintenant.
+  /// Rail du supplément : celui rendu par le back, sinon déduit du moyen de
+  /// paiement du colis (le supplément suit toujours le rail du colis).
+  static String? railOf(BidModel bid) =>
+      bid.supplement?.rail ??
+      switch (bid.paymentMethod) {
+        BidPaymentMethod.stripe => SupplementCheckout.railStripe,
+        BidPaymentMethod.mobileMoney => SupplementCheckout.railPawapay,
+        _ => null,
+      };
+
+  /// Supplément payable maintenant, par carte ou en mobile money.
   static bool canPay(BidModel bid) {
     final s = bid.supplement;
     if (s == null) return false;
@@ -62,12 +86,9 @@ class SupplementPayButton extends StatelessWidget {
         s.status != BidSupplementStatus.paymentPending) {
       return false;
     }
-    final rail =
-        s.rail ??
-        (bid.paymentMethod == BidPaymentMethod.stripe
-            ? SupplementCheckout.railStripe
-            : null);
-    return rail == SupplementCheckout.railStripe;
+    final rail = railOf(bid);
+    return rail == SupplementCheckout.railStripe ||
+        rail == SupplementCheckout.railPawapay;
   }
 
   @override
@@ -79,9 +100,15 @@ class SupplementPayButton extends StatelessWidget {
         supplement: bid.supplement!,
         authorize: authorize ?? _defaultAuthorize,
         presentSheet: presentSheet ?? DonyPaymentSheet.show,
+        openMobileMoney: openMobileMoney ?? _defaultOpenMobileMoney,
       ),
     );
   }
+
+  static Future<bool?> _defaultOpenMobileMoney(
+    BuildContext context,
+    String route,
+  ) => context.push<bool>(route);
 
   static Future<bool> _defaultAuthorize(BuildContext context) =>
       requirePaymentAuth(
@@ -97,12 +124,14 @@ class _PayButtonView extends StatelessWidget {
     required this.supplement,
     required this.authorize,
     required this.presentSheet,
+    required this.openMobileMoney,
   });
 
   final BidModel bid;
   final BidSupplement supplement;
   final SupplementPaymentAuthorizer authorize;
   final SupplementPaymentSheetPresenter presentSheet;
+  final SupplementMobileMoneyOpener openMobileMoney;
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +145,10 @@ class _PayButtonView extends StatelessWidget {
       builder: (context, state) => DonyButton(
         key: const Key('supplement-pay-btn'),
         label: context.l10n.supplementPay(gross),
-        iconAsset: 'lock',
+        iconAsset:
+            SupplementPayButton.railOf(bid) == SupplementCheckout.railPawapay
+            ? 'smartphone'
+            : 'lock',
         isLoading: state.isBusy,
         onPressed: state.isBusy ? null : () => _pay(context),
       ),
@@ -148,12 +180,23 @@ class _PayButtonView extends StatelessWidget {
     switch (state.status) {
       case SupplementPaymentStatus.readyToPay:
         unawaited(_presentSheet(context, state.checkout!));
+      case SupplementPaymentStatus.awaitingMobileMoney:
+        unawaited(_openMobileMoney(context));
       case SupplementPaymentStatus.paid:
         _reloadBid(context);
+        // Mobile money : l'écran d'attente a déjà annoncé le paiement en se
+        // refermant, pas de second message.
+        if (state.checkout?.isMobileMoney ?? false) break;
         DonySnackbar.show(
           context,
           message: context.l10n.supplementPaidSnackbar,
           type: DonySnackbarType.success,
+        );
+      case SupplementPaymentStatus.mobileMoneyNotConfirmed:
+        _reloadBid(context);
+        DonySnackbar.show(
+          context,
+          message: context.l10n.supplementMobileMoneyNotConfirmed,
         );
       case SupplementPaymentStatus.confirmationPending:
         // Pas de succès annoncé : le serveur n'a pas encore vu le paiement
@@ -199,6 +242,19 @@ class _PayButtonView extends StatelessWidget {
     // Après un succès, `onSuccess` a déjà fait passer l'état à
     // « confirmation » : sans effet. Sinon, la feuille a été fermée.
     cubit.sheetClosed();
+  }
+
+  /// Ouvre l'écran d'attente mobile money du supplément et rend son
+  /// résultat au cubit, que l'écran soit encore monté ou non : le cubit
+  /// ignore le retour s'il a été fermé entre-temps.
+  Future<void> _openMobileMoney(BuildContext context) async {
+    final cubit = context.read<SupplementPaymentCubit>();
+    final scope = MobileMoneyScope.supplement(
+      bidId: bid.id,
+      supplementId: supplement.id,
+    );
+    final paid = await openMobileMoney(context, scope.awaitingRoute);
+    cubit.mobileMoneyReturned(paid);
   }
 
   void _reloadBid(BuildContext context) {

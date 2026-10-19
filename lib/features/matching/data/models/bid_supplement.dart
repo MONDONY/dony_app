@@ -247,6 +247,7 @@ class SupplementCheckout {
   });
 
   static const railStripe = 'STRIPE';
+  static const railPawapay = 'PAWAPAY';
 
   /// Vue expéditeur du supplément (brut seul).
   final BidSupplement? supplement;
@@ -266,6 +267,10 @@ class SupplementCheckout {
   final String? publishableKey;
 
   bool get isCard => rail == railStripe;
+
+  /// Mobile money (pawaPay) : pas de feuille de paiement, l'écran d'attente
+  /// mobile money du supplément prend le relais.
+  bool get isMobileMoney => rail == railPawapay;
 
   /// Une feuille de paiement est à ouvrir.
   bool get needsPayment => clientSecret != null && clientSecret!.isNotEmpty;

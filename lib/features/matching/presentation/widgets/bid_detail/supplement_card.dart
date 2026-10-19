@@ -42,8 +42,8 @@ class SupplementTravelerCard extends StatelessWidget {
 /// Encart « Supplément de prix » de la vue expéditeur : motif, photo, TOTAL
 /// à payer seulement (jamais le net du voyageur ni la commission),
 /// échéance et « Refuser le supplément ». Colis payé par carte : « Payer »
-/// est dans la barre du bas ([SupplementPayButton]) ; mobile money et
-/// espèces arrivent avec leurs rails (PR A3, A4).
+/// est dans la barre du bas ([SupplementPayButton]), par carte ou en mobile
+/// money ; les espèces arrivent avec leur rail (PR A4).
 class SupplementSenderCard extends StatelessWidget {
   const SupplementSenderCard({super.key, required this.bid});
 
@@ -155,7 +155,7 @@ class _TravelerContent extends StatelessWidget {
           text: l.supplementTravelerPending,
         ),
         BidSupplementStatus.paymentPending => _StatusLine(
-          iconAsset: 'credit-card',
+          iconAsset: _isMobileMoney(bid) ? 'smartphone' : 'credit-card',
           color: cs.warning,
           text: l.supplementTravelerPaymentPending,
         ),
@@ -283,6 +283,12 @@ class _SenderContent extends StatelessWidget {
           color: cs.warning,
           text: l.supplementSenderPendingTitle,
         ),
+        BidSupplementStatus.paymentPending when _isMobileMoney(bid) =>
+          _StatusLine(
+            iconAsset: 'smartphone',
+            color: cs.warning,
+            text: l.supplementSenderMobileMoneyPending,
+          ),
         BidSupplementStatus.paymentPending => _StatusLine(
           iconAsset: 'credit-card',
           color: cs.warning,
@@ -381,6 +387,10 @@ class _SenderContent extends StatelessWidget {
     await cubit.decline(bid, supplement);
   }
 }
+
+/// Supplément payé (ou à payer) en mobile money : rail du colis.
+bool _isMobileMoney(BidModel bid) =>
+    SupplementPayButton.railOf(bid) == SupplementCheckout.railPawapay;
 
 List<Widget> _spaced(List<Widget> children) => [
   for (var i = 0; i < children.length; i++) ...[

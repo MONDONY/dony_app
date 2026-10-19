@@ -72,7 +72,8 @@ class SenderStickyBar extends StatelessWidget {
       return false;
     }
 
-    // Supplément de prix à payer par carte : « Payer » prend la barre.
+    // Supplément de prix à payer (carte, mobile money) : « Payer » prend la
+    // barre.
     if (SupplementPayButton.canPay(bid)) return true;
 
     final status = bid.status;
@@ -156,9 +157,10 @@ class SenderStickyBar extends StatelessWidget {
 
     final status = bid.status;
 
-    // 1.2 Supplément de prix demandé à la remise, colis payé par carte : le
-    //     paiement passe avant le QR, que le voyageur ne peut pas scanner tant
-    //     que le supplément attend (409 `handover-supplement-pending`).
+    // 1.2 Supplément de prix demandé à la remise, colis payé par carte ou en
+    //     mobile money : le paiement passe avant le QR, que le voyageur ne
+    //     peut pas scanner tant que le supplément attend (409
+    //     `handover-supplement-pending`).
     //     « Refuser » se trouve dans l'encart du supplément.
     if (SupplementPayButton.canPay(bid)) {
       return SupplementPayButton(
