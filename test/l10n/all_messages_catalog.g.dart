@@ -4651,6 +4651,18 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.notificationSettingsRecipientParcelsLabel,
   'notificationSettingsRecipientParcelsSubtitle': (l) =>
       l.notificationSettingsRecipientParcelsSubtitle,
+  'notificationSettingsSectionEmails': (l) =>
+      l.notificationSettingsSectionEmails,
+  'notificationSettingsEmailRecapsLabel': (l) =>
+      l.notificationSettingsEmailRecapsLabel,
+  'notificationSettingsEmailRecapsSubtitle': (l) =>
+      l.notificationSettingsEmailRecapsSubtitle,
+  'notificationSettingsEmailAlertsTipsLabel': (l) =>
+      l.notificationSettingsEmailAlertsTipsLabel,
+  'notificationSettingsEmailAlertsTipsSubtitle': (l) =>
+      l.notificationSettingsEmailAlertsTipsSubtitle,
+  'notificationSettingsEmailsAlwaysNote': (l) =>
+      l.notificationSettingsEmailsAlwaysNote,
   'notificationSettingsMissedCallsLabel': (l) =>
       l.notificationSettingsMissedCallsLabel,
   'notificationSettingsMissedCallsSubtitle': (l) =>
