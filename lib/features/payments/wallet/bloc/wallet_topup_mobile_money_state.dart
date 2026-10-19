@@ -5,8 +5,9 @@ import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_mo
 import 'package:equatable/equatable.dart';
 
 /// États de [WalletTopupMobileMoneyCubit] : chargement des opérateurs
-/// utilisables sur le numéro payeur, initiation de la recharge, puis
-/// sondage du statut jusqu'à confirmation, échec ou expiration.
+/// utilisables sur le numéro payeur, initiation (ou reprise) de la recharge,
+/// puis sondage du statut jusqu'à confirmation ou échec, en passant par
+/// « pas encore validé » une fois l'échéance dépassée.
 sealed class WalletTopupMobileMoneyState extends Equatable {
   const WalletTopupMobileMoneyState();
 
@@ -46,52 +47,72 @@ class WalletTopupMobileMoneyInitiating extends WalletTopupMobileMoneyState {
   const WalletTopupMobileMoneyInitiating();
 }
 
-/// Recharge initiée, en attente de confirmation opérateur. [startedAt] sert
-/// de référence pour l'expiration (15 min) du sondage.
+/// Délai de validation retenu quand le back ne donne pas d'échéance
+/// (`expiresAt` absent d'un back ancien).
+const walletTopupFallbackExpiry = Duration(minutes: 15);
+
+/// Recharge initiée (ou reprise), en attente de confirmation opérateur.
+/// [startedAt] sert au repli quand le back ne donne pas d'échéance.
+/// [amount] : montant de la recharge, connu de l'app ou relu sur le serveur
+/// pour une recharge reprise. [resumed] : recharge reprise du serveur
+/// (`GET /wallet/topup/pending`), dont le numéro n'est connu que masqué.
 class WalletTopupMobileMoneyAwaiting extends WalletTopupMobileMoneyState {
   const WalletTopupMobileMoneyAwaiting({
     required this.topup,
     required this.startedAt,
+    this.amount,
+    this.resumed = false,
   });
 
   final WalletTopupModel topup;
   final DateTime startedAt;
+  final double? amount;
+  final bool resumed;
+
+  /// Échéance du chrono : celle du serveur, sinon [startedAt] + 15 min.
+  DateTime get expiresAt =>
+      topup.expiresAt ?? startedAt.add(walletTopupFallbackExpiry);
 
   @override
-  List<Object?> get props => [topup, startedAt];
+  List<Object?> get props => [topup, startedAt, amount, resumed];
 }
 
-/// Recharge confirmée : portefeuille crédité.
+/// Échéance passée sans statut final : l'opérateur peut encore valider, le
+/// sondage continue. Jamais un échec : seul le back déclare un `FAILED`.
+class WalletTopupMobileMoneyOverdue extends WalletTopupMobileMoneyState {
+  const WalletTopupMobileMoneyOverdue({required this.topup});
+
+  final WalletTopupModel topup;
+
+  @override
+  List<Object?> get props => [topup];
+}
+
+/// Recharge confirmée : portefeuille crédité. [resumed] : recharge reprise
+/// à l'ouverture de l'écran 1 ; son numéro n'est connu que masqué, il n'est
+/// donc pas mémorisé pour la prochaine fois.
 class WalletTopupMobileMoneyConfirmed extends WalletTopupMobileMoneyState {
-  const WalletTopupMobileMoneyConfirmed(this.status);
+  const WalletTopupMobileMoneyConfirmed(this.status, {this.resumed = false});
 
   final WalletTopupStatusModel status;
+  final bool resumed;
 
   @override
-  List<Object?> get props => [status];
+  List<Object?> get props => [status, resumed];
 }
 
-/// Cause d'un [WalletTopupMobileMoneyFailed] : sondage expiré (15 min) sans
-/// confirmation, ou dépôt refusé par l'opérateur. L'écran choisit le message
-/// affiché à partir de cette valeur (spec i18n : jamais de texte traduit
-/// gardé dans l'état).
-enum WalletTopupFailureReason { expired, refused }
-
-/// Recharge refusée par l'opérateur, ou sondage expiré (15 min) sans
-/// confirmation. [operatorMessage], quand présent, est le motif renvoyé par
-/// l'opérateur (déjà nettoyé, jamais vide) ; sinon l'écran affiche un message
-/// générique déterminé par [reason].
+/// Recharge refusée, confirmé par l'opérateur (`FAILED` du back).
+/// [failureCode] : code Yadony (`insufficient-balance`, `not-approved`...),
+/// traduit par l'écran ; [failureReason] : texte déjà traduit par le back,
+/// nettoyé, jamais vide, en repli d'un code inconnu de l'app.
 class WalletTopupMobileMoneyFailed extends WalletTopupMobileMoneyState {
-  const WalletTopupMobileMoneyFailed({
-    required this.reason,
-    this.operatorMessage,
-  });
+  const WalletTopupMobileMoneyFailed({this.failureCode, this.failureReason});
 
-  final WalletTopupFailureReason reason;
-  final String? operatorMessage;
+  final String? failureCode;
+  final String? failureReason;
 
   @override
-  List<Object?> get props => [reason, operatorMessage];
+  List<Object?> get props => [failureCode, failureReason];
 }
 
 /// Erreur technique (réseau, serveur) sur `loadProviders` ou `initiate`.

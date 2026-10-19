@@ -4,7 +4,12 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
@@ -16,21 +21,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
-/// Écran de montant, branche mobile money : devise de l'opérateur sans
-/// centimes, aucune borne min/max devinée (A5 — le back n'en expose
-/// aucune), initiation puis navigation vers l'écran d'attente en
-/// remplaçant cet écran dans la pile.
+/// Écran de montant, branche mobile money : compte qui paie rappelé en haut,
+/// montant libre dans la carte, bornes réelles de l'opérateur, une seule
+/// ligne sur le portefeuille crédité, initiation puis navigation vers
+/// l'écran d'attente en remplaçant cet écran dans la pile.
 class _MockWalletRepository extends Mock implements WalletRepository {}
+
+class _MockLocalAuthService extends Mock implements LocalAuthService {}
+
+class _MockBox extends Mock implements Box {}
+
+/// [HiveService.userPrefs] ouvre une vraie box Hive : remplacée par un mock
+/// pour que `requirePaymentAuth` ne touche pas au disque.
+class _FakeHiveService extends HiveService {
+  _FakeHiveService(this._box);
+  final Box _box;
+
+  @override
+  Box get userPrefs => _box;
+}
 
 void main() {
   late _MockWalletRepository repo;
   late MockAnalyticsBackend analyticsBackend;
   late WalletTopupMobileMoneyCubit cubit;
+  late _MockLocalAuthService authService;
+  late _MockBox userPrefsBox;
   WalletTopupMobileMoneyAwaitingArgs? capturedArgs;
 
   const topup = WalletTopupModel(
@@ -41,13 +63,13 @@ void main() {
     msisdnMasked: '+221 ** ** 12 34',
   );
 
-  setUp(() {
+  setUp(() async {
     repo = _MockWalletRepository();
     analyticsBackend = MockAnalyticsBackend();
-    cubit = WalletTopupMobileMoneyCubit(
-      repo,
-      makeEnabledAnalytics(analyticsBackend),
-    );
+    final analytics = makeEnabledAnalytics(analyticsBackend);
+    // Service configuré : les événements du cubit atteignent le backend.
+    await analytics.onConfigured();
+    cubit = WalletTopupMobileMoneyCubit(repo, analytics);
     capturedArgs = null;
     when(
       () => repo.topupMobileMoney(
@@ -76,16 +98,50 @@ void main() {
     getIt.registerSingleton<AnalyticsService>(
       makeEnabledAnalytics(MockAnalyticsBackend()),
     );
+
+    // Par défaut : ni biométrie ni PIN, `requirePaymentAuth` laisse passer.
+    authService = _MockLocalAuthService();
+    userPrefsBox = _MockBox();
+    when(
+      () => userPrefsBox.get(
+        HiveService.kBiometricEnabled,
+        defaultValue: any(named: 'defaultValue'),
+      ),
+    ).thenReturn(false);
+    when(() => authService.isPinSet()).thenAnswer((_) async => false);
+    if (getIt.isRegistered<LocalAuthService>()) {
+      getIt.unregister<LocalAuthService>();
+    }
+    getIt.registerSingleton<LocalAuthService>(authService);
+    if (getIt.isRegistered<HiveService>()) getIt.unregister<HiveService>();
+    getIt.registerSingleton<HiveService>(_FakeHiveService(userPrefsBox));
   });
 
   tearDown(() {
     unawaited(cubit.close());
-    if (getIt.isRegistered<AnalyticsService>()) {
-      getIt.unregister<AnalyticsService>();
+    for (final unregister in [
+      () => getIt.unregister<AnalyticsService>(),
+      () => getIt.unregister<LocalAuthService>(),
+      () => getIt.unregister<HiveService>(),
+    ]) {
+      try {
+        unregister();
+      } on Object {
+        // Déjà retiré : rien à nettoyer.
+      }
     }
   });
 
-  Widget buildHarness() {
+  /// Orange Money Côte d'Ivoire, bornes pawaPay 100 à 1 500 000 F CFA.
+  const orangeCiv = MobileMoneyOperator(
+    code: 'ORANGE_CIV',
+    label: 'Orange Money',
+    brand: 'ORANGE',
+    minAmount: 100,
+    maxAmount: 1500000,
+  );
+
+  Widget buildHarness({MobileMoneyOperator? operator = orangeCiv}) {
     final router = GoRouter(
       initialLocation: '/payments/wallet/topup/amount',
       routes: [
@@ -94,12 +150,24 @@ void main() {
           builder: (context, state) =>
               BlocProvider<WalletTopupMobileMoneyCubit>.value(
                 value: cubit,
-                child: const WalletTopupAmountScreen(
+                child: WalletTopupAmountScreen(
                   paymentMethod: 'MOBILE_MONEY',
-                  mobileMoneyPhoneNumber: '+221771234567',
+                  mobileMoneyPhoneNumber: '+2250748840856',
                   mobileMoneyCurrency: 'XOF',
+                  mobileMoneyOperator: operator,
                 ),
               ),
+        ),
+        // Saisie du PIN de `requirePaymentAuth` : « Refuser » vaut un PIN
+        // erroné (retour `false`).
+        GoRoute(
+          path: '/auth/local',
+          builder: (context, state) => Scaffold(
+            body: TextButton(
+              onPressed: () => context.pop(false),
+              child: const Text('Refuser le PIN'),
+            ),
+          ),
         ),
         GoRoute(
           path: '/payments/wallet/topup/mobile-money/awaiting',
@@ -121,48 +189,298 @@ void main() {
     await tester.pump();
   }
 
+  Finder field() => find.byKey(const Key('wallet-topup-custom-amount-field'));
+
+  String fieldText(WidgetTester tester) =>
+      tester.widget<TextField>(field()).controller!.text;
+
+  DonyButton payButton(WidgetTester tester) =>
+      tester.widget<DonyButton>(find.byType(DonyButton));
+
+  /// Enregistre le dépôt wallet dans GetIt : c'est lui que l'écran
+  /// interroge pour connaître la devise réelle du portefeuille.
+  void registerWallet(String currency) {
+    if (getIt.isRegistered<WalletRepository>()) {
+      getIt.unregister<WalletRepository>();
+    }
+    when(() => repo.getBalance()).thenAnswer(
+      (_) async =>
+          WalletModel(balance: 0, currency: currency, transactions: const []),
+    );
+    getIt.registerSingleton<WalletRepository>(repo);
+    addTearDown(() {
+      if (getIt.isRegistered<WalletRepository>()) {
+        getIt.unregister<WalletRepository>();
+      }
+    });
+  }
+
+  testWidgets('amountScreen_showsFromAccountRow_andSingleCreditLine', (
+    tester,
+  ) async {
+    registerWallet('XOF');
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Recharger · Étape 2/2'), findsOneWidget);
+    expect(find.text('Depuis Orange Money ••56'), findsOneWidget);
+    expect(find.text('Changer'), findsOneWidget);
+    expect(find.text('Crédité sur votre portefeuille F CFA'), findsOneWidget);
+    // Les anciens bandeaux sur la devise ont disparu.
+    expect(find.textContaining('ne connaît pas les centimes'), findsNothing);
+    expect(
+      find.byKey(const Key('wallet-topup-currency-mismatch')),
+      findsNothing,
+    );
+    expect(find.textContaining('ne bouge pas'), findsNothing);
+  });
+
+  testWidgets('ancien parcours : opérateur coché dans le catalogue du cubit', (
+    tester,
+  ) async {
+    when(() => repo.topupProviders(any())).thenAnswer(
+      (_) async => const MobileMoneyProviderCatalog(
+        country: 'SN',
+        currency: 'XOF',
+        msisdnMasked: '+221 ** ** 12 34',
+        detected: 'WAVE_SEN',
+        providers: [
+          MobileMoneyProviderOption(code: 'ORANGE_SEN', label: 'Orange Money'),
+          MobileMoneyProviderOption(
+            code: 'WAVE_SEN',
+            label: 'Wave',
+            detected: true,
+          ),
+        ],
+      ),
+    );
+    await cubit.loadProviders('+2250748840856');
+
+    await tester.pumpWidget(buildHarness(operator: null));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Depuis Wave ••56'), findsOneWidget);
+    // Sans catalogue des pays, aucune borne connue.
+    await tester.enterText(field(), '50');
+    await tester.pump();
+    expect(find.textContaining('Entre '), findsNothing);
+  });
+
   testWidgets(
-    'devise de l\'opérateur (XOF) sans décimales, pas de bouton décimal',
+    'ancien parcours sans opérateur choisi : pas de ligne « Depuis »',
     (tester) async {
+      await tester.pumpWidget(buildHarness(operator: null));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Depuis'), findsNothing);
+      expect(find.text('Changer'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'amountScreen_currencyDiffersFromActive_appendsUnchangedSentence',
+    (tester) async {
+      registerWallet('EUR');
       await tester.pumpWidget(buildHarness());
       await tester.pumpAndSettle();
 
-      expect(find.text('Recharger · Étape 2/2'), findsOneWidget);
-
-      await tapQuickAmount(tester, 5000);
-
-      expect(find.textContaining('F CFA'), findsWidgets);
-      // « Autre montant » : clavier numérique sans virgule décimale.
-      await tester.ensureVisible(find.text('Autre montant'));
-      await tester.tap(find.text('Autre montant'));
-      await tester.pumpAndSettle();
-      final field = tester.widget<TextField>(
-        find.byKey(const Key('wallet-topup-custom-amount-field')),
-      );
-      expect(field.keyboardType, const TextInputType.numberWithOptions());
-      // Bandeau dédié au F CFA sans centimes.
+      // Même ligne : la destination, puis le portefeuille actif inchangé.
       expect(
-        find.textContaining('Le F CFA ne connaît pas les centimes'),
+        find.text(
+          'Crédité sur votre portefeuille F CFA. '
+          'Votre portefeuille € ne bouge pas.',
+        ),
         findsOneWidget,
       );
     },
   );
 
-  testWidgets(
-    'bouton désactivé à zéro, actif dès un montant positif (aucune borne min/max devinée)',
-    (tester) async {
-      await tester.pumpWidget(buildHarness());
-      await tester.pumpAndSettle();
+  testWidgets('« Changer » revient au choix du compte qui paie', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/method',
+      routes: [
+        GoRoute(
+          path: '/method',
+          builder: (context, state) => Scaffold(
+            body: TextButton(
+              onPressed: () => context.push('/payments/wallet/topup/amount'),
+              child: const Text('Écran 1'),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/payments/wallet/topup/amount',
+          builder: (context, state) =>
+              BlocProvider<WalletTopupMobileMoneyCubit>.value(
+                value: cubit,
+                child: const WalletTopupAmountScreen(
+                  paymentMethod: 'MOBILE_MONEY',
+                  mobileMoneyPhoneNumber: '+2250748840856',
+                  mobileMoneyCurrency: 'XOF',
+                  mobileMoneyOperator: orangeCiv,
+                ),
+              ),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Écran 1'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Entrez un montant'), findsOneWidget);
+    await tester.tap(find.text('Changer'));
+    await tester.pumpAndSettle();
 
-      await tapQuickAmount(tester, 1000);
+    expect(find.text('Écran 1'), findsOneWidget);
+  });
 
-      // 1000 F CFA (≈ 1,50 €) reste actif : aucune borne devinée côté
-      // client, contrairement à Stripe (minimum 5 € codé en dur).
-      expect(find.text('Payer 1000 F CFA'), findsOneWidget);
-    },
-  );
+  testWidgets('quickAmount_fillsField', (tester) async {
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Entrez un montant'), findsOneWidget);
+
+    await tapQuickAmount(tester, 5000);
+
+    expect(fieldText(tester), '5 000');
+    expect(find.text('Payer 5000 F CFA'), findsOneWidget);
+    // Montant rapide : la ligne du portefeuille crédité reste affichée.
+    expect(
+      find.textContaining('Crédité sur votre portefeuille'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('customAmount_outOfBounds_disablesPay_andShowsBounds', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Autre montant'));
+    await tester.pumpAndSettle();
+
+    final currency = SupportedCurrency.fromCodeOrDefault('XOF');
+    final bounds =
+        'Entre ${CurrencyFormatter.formatAmountOnly(100, currency)} et '
+        '${CurrencyFormatter.format(1500000, currency)}';
+    expect(find.text(bounds), findsOneWidget);
+
+    await tester.enterText(field(), '50');
+    await tester.pump();
+    expect(find.text(bounds), findsOneWidget);
+    expect(payButton(tester).onPressed, isNull);
+
+    await tester.enterText(field(), '2000000');
+    await tester.pump();
+    expect(payButton(tester).onPressed, isNull);
+
+    await tester.enterText(field(), '7500');
+    await tester.pump();
+    expect(find.text('Payer 7500 F CFA'), findsOneWidget);
+    expect(payButton(tester).onPressed, isNotNull);
+  });
+
+  testWidgets('une seule borne publiée : « Au moins » ou « Au plus »', (
+    tester,
+  ) async {
+    final xof = SupportedCurrency.fromCodeOrDefault('XOF');
+    await tester.pumpWidget(
+      buildHarness(
+        operator: const MobileMoneyOperator(
+          code: 'ORANGE_CIV',
+          label: 'Orange Money',
+          brand: 'ORANGE',
+          minAmount: 100,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(field(), '50');
+    await tester.pump();
+    expect(
+      find.text('Au moins ${CurrencyFormatter.format(100, xof)}'),
+      findsOneWidget,
+    );
+    expect(payButton(tester).onPressed, isNull);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(
+      buildHarness(
+        operator: const MobileMoneyOperator(
+          code: 'ORANGE_CIV',
+          label: 'Orange Money',
+          brand: 'ORANGE',
+          maxAmount: 5000,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tapQuickAmount(tester, 10000);
+    expect(
+      find.text('Au plus ${CurrencyFormatter.format(5000, xof)}'),
+      findsOneWidget,
+    );
+    expect(payButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('409 « recharge déjà en cours » : l\'attente du serveur, '
+      'sans numéro ni montant saisis', (tester) async {
+    when(
+      () => repo.topupMobileMoney(
+        amount: any(named: 'amount'),
+        phoneNumber: any(named: 'phoneNumber'),
+        provider: any(named: 'provider'),
+      ),
+    ).thenThrow(const ConflictException('déjà', code: 'topup-already-pending'));
+    when(() => repo.pendingTopup()).thenAnswer(
+      (_) async => const WalletTopupStatusModel(
+        topupId: 'topup-server',
+        status: 'PENDING',
+        amount: 3000,
+        currency: 'XOF',
+        provider: 'ORANGE_CIV',
+        providerLabel: 'Orange Money',
+        msisdnMasked: '+225 07 •• •• 56',
+      ),
+    );
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
+
+    await tapQuickAmount(tester, 10000);
+    await tester.tap(find.text('Payer 10000 F CFA'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Attente'), findsOneWidget);
+    expect(capturedArgs!.phoneNumber, isNull);
+    expect(capturedArgs!.amount, 3000);
+    cubit.stopPolling();
+  });
+
+  testWidgets('sans bornes publiées : aucun plafond deviné', (tester) async {
+    await tester.pumpWidget(
+      buildHarness(
+        operator: const MobileMoneyOperator(
+          code: 'ORANGE_CIV',
+          label: 'Orange Money',
+          brand: 'ORANGE',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(field(), '50');
+    await tester.pump();
+
+    expect(find.textContaining('Entre '), findsNothing);
+    expect(find.text('Payer 50 F CFA'), findsOneWidget);
+    expect(payButton(tester).onPressed, isNotNull);
+  });
 
   testWidgets(
     'Payer déclenche initiate() puis remplace l\'écran par celui d\'attente '
@@ -173,28 +491,90 @@ void main() {
 
       await tapQuickAmount(tester, 10000);
 
-      final payButton = find.text('Payer 10000 F CFA');
-      await tester.ensureVisible(payButton);
-      await tester.tap(payButton);
+      final pay = find.text('Payer 10000 F CFA');
+      await tester.ensureVisible(pay);
+      await tester.tap(pay);
       await tester.pumpAndSettle();
 
       verify(
         () =>
-            repo.topupMobileMoney(amount: 10000, phoneNumber: '+221771234567'),
+            repo.topupMobileMoney(amount: 10000, phoneNumber: '+2250748840856'),
       ).called(1);
 
       expect(find.text('Attente'), findsOneWidget);
       expect(capturedArgs, isNotNull);
       expect(capturedArgs!.cubit, same(cubit));
-      expect(capturedArgs!.phoneNumber, '+221771234567');
+      expect(capturedArgs!.phoneNumber, '+2250748840856');
       expect(capturedArgs!.amount, 10000);
       // L'écran de montant a bien été remplacé (pushReplacement), pas
       // simplement empilé par-dessus.
       expect(find.text('Recharger · Étape 2/2'), findsNothing);
 
       // initiate() a démarré le sondage périodique (3 s réelles) : l'arrêter
-      // explicitement ici, sinon le timer reste "pending" à la fin du test
-      // (tearDown ferme le cubit trop tard pour la vérification du binding).
+      // explicitement ici, sinon le timer reste "pending" à la fin du test.
+      cubit.stopPolling();
+    },
+  );
+
+  testWidgets(
+    'Payer : PIN refusé, aucun dépôt lancé et l\'écran reste en place',
+    (tester) async {
+      // Un PIN existe : `requirePaymentAuth` ouvre sa saisie, qui échoue.
+      when(() => authService.isPinSet()).thenAnswer((_) async => true);
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      await tapQuickAmount(tester, 10000);
+      final pay = find.text('Payer 10000 F CFA');
+      await tester.ensureVisible(pay);
+      await tester.tap(pay);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Refuser le PIN'));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => repo.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      );
+      expect(find.text('Paiement non confirmé, réessayez'), findsOneWidget);
+      expect(find.text('Recharger · Étape 2/2'), findsOneWidget);
+      expect(find.text('Attente'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Payer : biométrie acceptée, le dépôt est lancé après la vérification',
+    (tester) async {
+      when(
+        () => userPrefsBox.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(true);
+      when(
+        () => authService.isBiometricAvailable(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => authService.authenticateWithBiometric(),
+      ).thenAnswer((_) async => true);
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      await tapQuickAmount(tester, 10000);
+      final pay = find.text('Payer 10000 F CFA');
+      await tester.ensureVisible(pay);
+      await tester.tap(pay);
+      await tester.pumpAndSettle();
+
+      verify(() => authService.authenticateWithBiometric()).called(1);
+      verify(
+        () =>
+            repo.topupMobileMoney(amount: 10000, phoneNumber: '+2250748840856'),
+      ).called(1);
+      expect(find.text('Attente'), findsOneWidget);
       cubit.stopPolling();
     },
   );
@@ -209,10 +589,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    Finder field() => find.byKey(const Key('wallet-topup-custom-amount-field'));
-
-    testWidgets('les montants proposés restent, le champ libre est absent '
-        'tant que « Autre montant » n\'est pas choisi', (tester) async {
+    testWidgets('montants proposés et « Autre montant » côte à côte', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildHarness());
       await tester.pumpAndSettle();
 
@@ -220,69 +599,73 @@ void main() {
         expect(find.text('$a F CFA'), findsOneWidget);
       }
       expect(find.text('Autre montant'), findsOneWidget);
-      expect(field(), findsNothing);
     });
 
-    testWidgets('champ libre : unité en suffixe, montant saisi payé et '
-        'marqué « custom » côté analytics', (tester) async {
-      await openCustom(tester);
+    testWidgets(
+      'montant saisi au clavier : groupé, payé et marqué « custom »',
+      (tester) async {
+        await tester.pumpWidget(buildHarness());
+        await tester.pumpAndSettle();
+        await tapQuickAmount(tester, 5000);
 
-      expect(field(), findsOneWidget);
-      final decoration = tester.widget<TextField>(field()).decoration!;
-      expect(decoration.suffixText, 'F CFA');
-      expect(decoration.labelText, 'Montant à recharger');
-      // Le choix d'« Autre montant » repart d'un montant vide.
-      expect(find.text('Entrez un montant'), findsOneWidget);
+        // « Autre montant » repart d'un montant vide, clavier numérique.
+        await tester.tap(
+          find.byKey(const Key('wallet-topup-custom-amount-chip')),
+        );
+        await tester.pumpAndSettle();
+        expect(fieldText(tester), isEmpty);
+        expect(find.text('Entrez un montant'), findsOneWidget);
+        expect(
+          tester.widget<TextField>(field()).keyboardType,
+          const TextInputType.numberWithOptions(),
+        );
 
-      await tester.enterText(field(), '12500');
-      await tester.pump();
+        await tester.enterText(field(), '12500');
+        await tester.pump();
+        expect(fieldText(tester), '12 500');
 
-      final pay = find.text('Payer 12500 F CFA');
-      expect(pay, findsOneWidget);
-      await tester.ensureVisible(pay);
-      await tester.tap(pay);
-      await tester.pumpAndSettle();
+        final pay = find.text('Payer 12500 F CFA');
+        expect(pay, findsOneWidget);
+        await tester.ensureVisible(pay);
+        await tester.tap(pay);
+        await tester.pumpAndSettle();
 
-      verify(
-        () =>
-            repo.topupMobileMoney(amount: 12500, phoneNumber: '+221771234567'),
-      ).called(1);
-      expect(capturedArgs!.amount, 12500);
-      cubit.stopPolling();
-    });
+        verify(
+          () => repo.topupMobileMoney(
+            amount: 12500,
+            phoneNumber: '+2250748840856',
+          ),
+        ).called(1);
+        expect(capturedArgs!.amount, 12500);
+        // Montant saisi au clavier : marqué « custom », jamais le montant.
+        final props =
+            verify(
+                  () => analyticsBackend.capture(
+                    'wallet_topup_mobile_money_initiated',
+                    captureAny(),
+                  ),
+                ).captured.single
+                as Map<String, Object>?;
+        expect(props?['custom'], isTrue);
+        cubit.stopPolling();
+      },
+    );
 
     testWidgets('F CFA : ni centimes ni lettres dans le champ', (tester) async {
       await openCustom(tester);
 
       await tester.enterText(field(), '1500,5');
       await tester.pump();
-      expect(tester.widget<TextField>(field()).controller!.text, isEmpty);
+      expect(fieldText(tester), isEmpty);
 
       await tester.enterText(field(), '1500');
       await tester.pump();
-      await tester.enterText(field(), '1500a');
+      await tester.enterText(field(), '1 500a');
       await tester.pump();
-      expect(tester.widget<TextField>(field()).controller!.text, '1500');
+      expect(fieldText(tester), '1 500');
     });
 
-    testWidgets('montant nul : erreur à la perte de focus, bouton désactivé', (
-      tester,
-    ) async {
-      await openCustom(tester);
-
-      await tester.enterText(field(), '0');
-      await tester.pump();
-      // Pas d'erreur pendant la frappe.
-      expect(find.text('Indiquez un montant supérieur à 0.'), findsNothing);
-
-      // « OK » du clavier : le champ perd le focus.
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-      expect(find.text('Indiquez un montant supérieur à 0.'), findsOneWidget);
-      expect(find.text('Entrez un montant'), findsOneWidget);
-    });
-
-    testWidgets('revenir à un montant proposé referme le champ libre', (
+    testWidgets('revenir à un montant proposé remplace la saisie', (
       tester,
     ) async {
       await openCustom(tester);
@@ -292,7 +675,7 @@ void main() {
       await tapQuickAmount(tester, 2000);
       await tester.pumpAndSettle();
 
-      expect(field(), findsNothing);
+      expect(fieldText(tester), '2 000');
       expect(find.text('Payer 2000 F CFA'), findsOneWidget);
     });
 
@@ -304,7 +687,7 @@ void main() {
     });
   });
 
-  testWidgets('anglais : montant sans décimales et bouton Pay traduits', (
+  testWidgets('anglais : compte, portefeuille crédité et bouton Pay traduits', (
     tester,
   ) async {
     useEnglish();
@@ -313,88 +696,11 @@ void main() {
 
     expect(find.text('Top up · Step 2/2'), findsOneWidget);
     expect(find.text('Enter an amount'), findsOneWidget);
+    expect(find.text('From Orange Money ••56'), findsOneWidget);
+    expect(find.text('Credited to your F CFA wallet'), findsOneWidget);
 
     await tapQuickAmount(tester, 1000);
 
     expect(find.text('Pay 1000 F CFA'), findsOneWidget);
-    expect(find.textContaining("doesn't use cents"), findsOneWidget);
-  });
-
-  group('devise de l\'opérateur différente de la devise active', () {
-    /// Enregistre le dépôt wallet dans GetIt : c'est lui que l'écran
-    /// interroge pour connaître la devise réelle du portefeuille.
-    void registerWallet(String currency) {
-      if (getIt.isRegistered<WalletRepository>()) {
-        getIt.unregister<WalletRepository>();
-      }
-      when(() => repo.getBalance()).thenAnswer(
-        (_) async =>
-            WalletModel(balance: 0, currency: currency, transactions: const []),
-      );
-      getIt.registerSingleton<WalletRepository>(repo);
-      addTearDown(() {
-        if (getIt.isRegistered<WalletRepository>()) {
-          getIt.unregister<WalletRepository>();
-        }
-      });
-    }
-
-    testWidgets(
-      'IMPORTANT — portefeuille en EUR, opérateur en XOF : avertissement '
-      'avant de payer (le solde arriverait verrouillé)',
-      (tester) async {
-        registerWallet('EUR');
-
-        await tester.pumpWidget(buildHarness());
-        await tester.pumpAndSettle();
-
-        expect(
-          find.byKey(const Key('wallet-topup-currency-mismatch')),
-          findsOneWidget,
-        );
-        expect(
-          find.textContaining(
-            'Votre portefeuille Franc CFA Ouest sera crédité du montant que vous saisissez',
-          ),
-          findsOneWidget,
-        );
-        expect(find.textContaining('crédité de 0'), findsNothing);
-        expect(
-          find.textContaining('Votre portefeuille Euro ne bouge pas'),
-          findsOneWidget,
-        );
-        expect(find.textContaining('verrouillé'), findsNothing);
-      },
-    );
-
-    testWidgets('portefeuille déjà en XOF : aucun avertissement', (
-      tester,
-    ) async {
-      registerWallet('XOF');
-
-      await tester.pumpWidget(buildHarness());
-      await tester.pumpAndSettle();
-
-      expect(
-        find.byKey(const Key('wallet-topup-currency-mismatch')),
-        findsNothing,
-      );
-    });
-
-    testWidgets('le bandeau de destination suit le montant saisi', (
-      tester,
-    ) async {
-      registerWallet('EUR');
-
-      await tester.pumpWidget(buildHarness());
-      await tester.pumpAndSettle();
-      await tapQuickAmount(tester, 5000);
-
-      final formatted = CurrencyFormatter.format(
-        5000,
-        SupportedCurrency.fromCodeOrDefault('XOF'),
-      );
-      expect(find.textContaining('sera crédité de $formatted'), findsOneWidget);
-    });
   });
 }

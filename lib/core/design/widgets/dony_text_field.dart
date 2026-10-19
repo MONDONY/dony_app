@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Marge conservée entre un champ focalisé et le haut du clavier.
 ///
@@ -45,6 +46,7 @@ class DonyTextField extends StatelessWidget {
     this.focusNode,
     this.textInputAction,
     this.onSubmitted,
+    this.inputFormatters,
   }) : _variant = _DonyTextFieldVariant.text,
        _value = null,
        _onTap = null,
@@ -98,7 +100,8 @@ class DonyTextField extends StatelessWidget {
        // d'action, ni validation clavier n'ont de sens ici.
        focusNode = null,
        textInputAction = null,
-       onSubmitted = null;
+       onSubmitted = null,
+       inputFormatters = null;
 
   // ── Champs partagés ─────────────────────────────────────────────────────────
 
@@ -144,6 +147,9 @@ class DonyTextField extends StatelessWidget {
 
   /// Déclenché à la validation clavier. Sert à passer au champ suivant.
   final ValueChanged<String>? onSubmitted;
+
+  /// Mise en forme de la saisie (ex. numéro groupé par deux chiffres).
+  final List<TextInputFormatter>? inputFormatters;
 
   // Tappable
   final String? _value;
@@ -208,6 +214,7 @@ class DonyTextField extends StatelessWidget {
           focusNode: focusNode,
           textInputAction: textInputAction,
           onFieldSubmitted: onSubmitted,
+          inputFormatters: inputFormatters,
           // Toucher hors du champ ferme le clavier (FLUTTER-A3). Flutter ne
           // le fait que sur ordinateur : sur téléphone, le pavé numérique
           // d'iOS n'a pas de touche « OK », et un formulaire court qui ne

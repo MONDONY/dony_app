@@ -152,6 +152,7 @@ import 'package:dony/features/package_request/presentation/screens/traveler/pack
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
+import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
@@ -1122,6 +1123,11 @@ final appRouter = GoRouter(
           BlocProvider<WalletTopupMobileMoneyCubit>(
             create: (_) => getIt<WalletTopupMobileMoneyCubit>(),
           ),
+          // Compte qui paie (pays, opérateur, numéro) : catalogue des pays
+          // chargé dès l'ouverture, préremplissage de la dernière recharge.
+          BlocProvider<PayerAccountCubit>(
+            create: (_) => getIt<PayerAccountCubit>(param1: 'topup')..load(),
+          ),
           // Sonde la disponibilité du rail mobile money côté backend dès
           // l'ouverture : la tuile n'apparaît qu'en cas de réponse positive.
           BlocProvider<WalletTopupMobileMoneyAvailabilityCubit>(
@@ -1143,6 +1149,7 @@ final appRouter = GoRouter(
               paymentMethod: selection.method,
               mobileMoneyPhoneNumber: selection.phoneNumber,
               mobileMoneyCurrency: selection.currency,
+              mobileMoneyOperator: selection.operator,
             ),
           );
         }

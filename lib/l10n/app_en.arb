@@ -4743,30 +4743,16 @@
 
   "walletTopupMmAwaitingTitle": "Mobile money top-up",
   "walletTopupMmPayWithAnotherNumber": "Pay with a different number",
-  "walletTopupMmValidateTitle": "Approve the payment on your phone",
-  "walletTopupMmRequestSent": "A payment request was sent to {number} via {provider}.",
-  "@walletTopupMmRequestSent": {
-    "placeholders": {
-      "number": {
-        "type": "String"
-      },
-      "provider": {
-        "type": "String"
-      }
-    }
-  },
-  "walletTopupMmConfirmationAutomatic": "Confirmation is automatic, keep this screen open.",
   "walletTopupMmAmountLabel": "Amount",
   "walletTopupMmCreditedToLabel": "Credited to",
-  "walletTopupMmCreditedTo": "Yadony balance ({code})",
+  "walletTopupMmCreditedTo": "{currency} wallet",
   "@walletTopupMmCreditedTo": {
     "placeholders": {
-      "code": {
+      "currency": {
         "type": "String"
       }
     }
   },
-  "walletTopupMmExpiresInLabel": "Expires in",
   "walletTopupMmOpenProvider": "Open {provider}",
   "@walletTopupMmOpenProvider": {
     "placeholders": {
@@ -4775,8 +4761,6 @@
       }
     }
   },
-  "walletTopupMmExpired": "The payment wasn't approved in time.",
-  "walletTopupMmRefused": "The payment was declined by the mobile operator.",
 
   "walletShortfallRequired": "Service fee due: {amount}",
   "@walletShortfallRequired": {
@@ -5081,42 +5065,6 @@
     "description": "Note sous le montant saisi, carte ou mobile money (wallet_topup_amount_screen.dart _buildStripe, _buildMobileMoney).",
     "placeholders": {
       "code": {
-        "type": "String"
-      }
-    }
-  },
-  "walletTopupNoDecimalsNotice": "{symbol} doesn't use cents: enter a whole number.",
-  "@walletTopupNoDecimalsNotice": {
-    "description": "Avertissement mobile money quand la devise n'a pas de sous-unité (wallet_topup_amount_screen.dart _buildMobileMoney).",
-    "placeholders": {
-      "symbol": {
-        "type": "String"
-      }
-    }
-  },
-  "walletTopupCreditedAmount": "Your {currency} wallet will be credited {amount}. Your {active} wallet stays the same.",
-  "@walletTopupCreditedAmount": {
-    "description": "Bandeau de mismatch de devise mobile money, montant déjà saisi (wallet_topup_amount_screen.dart _buildMobileMoney).",
-    "placeholders": {
-      "currency": {
-        "type": "String"
-      },
-      "amount": {
-        "type": "String"
-      },
-      "active": {
-        "type": "String"
-      }
-    }
-  },
-  "walletTopupCreditedPending": "Your {currency} wallet will be credited the amount you enter. Your {active} wallet stays the same.",
-  "@walletTopupCreditedPending": {
-    "description": "Bandeau de mismatch de devise mobile money, avant toute saisie (wallet_topup_amount_screen.dart _buildMobileMoney).",
-    "placeholders": {
-      "currency": {
-        "type": "String"
-      },
-      "active": {
         "type": "String"
       }
     }
@@ -9543,7 +9491,6 @@
     "description": "Sheet « Solde insuffisant » : avertissement sous les options de paiement depuis un autre portefeuille (commission_funding_options.dart)."
   },
   "walletTopupCustomAmountChip": "Other amount",
-  "walletTopupCustomAmountInvalid": "Enter an amount above 0.",
   "negotiationsActionRequired": "Action required",
   "receptionRateTitle": "Rate the traveler",
   "receptionRateIntro": "Your parcel has been delivered. How did it go with {name}?",
@@ -10936,5 +10883,53 @@
   "assistantMicTooltipStop": "Stop and send my question",
   "assistantMicUnavailable": "Microphone unavailable: type your question.",
   "assistantNextQuestionsTitle": "You could also ask",
-  "assistantDiscoverySemantics": "Discover in Yadony: {text}"
+  "assistantDiscoverySemantics": "Discover in Yadony: {text}",
+  "mobileMoneyPayerSectionLabel": "PAYING ACCOUNT",
+  "mobileMoneyCountrySearchHint": "Search a country",
+  "mobileMoneyCountryUpcoming": "Soon",
+  "mobileMoneyCountryUpcomingSubtitle": "Mobile money not available yet",
+  "mobileMoneyCountryUnavailableNotice": "Meanwhile, top up by card or with a top-up code.",
+  "mobileMoneyCountryNotSupported": "Mobile money is not available for this country.",
+  "mobileMoneyOperatorLabel": "Operator",
+  "mobileMoneyOperatorNumberLabel": "{operator} number",
+  "mobileMoneyNumberRecognized": "{operator} number recognised",
+  "mobileMoneyOperatorSwitched": "This is a {operator} number: the operator was changed.",
+  "mobileMoneyNumberUnrecognized": "No operator in this country recognises this number.",
+  "mobileMoneyRecognitionFailed": "We can't check this number right now.",
+  "walletTopupSwitchToCard": "Top up by card",
+  "walletTopupMmRingCaption": "to approve",
+  "walletTopupMmSmsSentTitle": "SMS sent to {number}",
+  "@walletTopupMmSmsSentTitle": {"placeholders": {"number": {"type": "String"}}},
+  "walletTopupMmSmsSentBody": "Open it and tap the link to approve the payment.",
+  "walletTopupMmPromptTitle": "Request sent to {number}",
+  "@walletTopupMmPromptTitle": {"placeholders": {"number": {"type": "String"}}},
+  "walletTopupMmPromptBody": "A prompt appears on your phone: approve with your PIN.",
+  "walletTopupMmGenericBody": "Approve the payment on your phone (SMS or operator prompt).",
+  "walletTopupMmOverdueTitle": "Not approved yet",
+  "walletTopupMmOverdueBody": "If you still approve within the next few minutes, your balance will be credited.",
+  "walletTopupMmResend": "Send a new request",
+  "walletTopupMmFailedTitle": "Top-up not completed",
+  "walletTopupMmFromLabel": "From",
+  "walletTopupMmFromValue": "{operator} ••{last2}",
+  "@walletTopupMmFromValue": {"placeholders": {"operator": {"type": "String"}, "last2": {"type": "String"}}},
+  "walletTopupFromAccount": "From {operator} ••{last2}",
+  "@walletTopupFromAccount": {"placeholders": {"operator": {"type": "String"}, "last2": {"type": "String"}}},
+  "walletTopupChangeAccount": "Change",
+  "walletTopupCreditedLine": "Credited to your {currency} wallet",
+  "@walletTopupCreditedLine": {"placeholders": {"currency": {"type": "String"}}},
+  "walletTopupAmountBounds": "Between {min} and {max}",
+  "@walletTopupAmountBounds": {"placeholders": {"min": {"type": "String"}, "max": {"type": "String"}}},
+  "walletTopupFailureInsufficientBalance": "Insufficient balance on your mobile money account.",
+  "walletTopupFailureNotApproved": "The payment was not approved on your phone.",
+  "walletTopupFailurePayerLimit": "Your operator declined the payment: payment limit reached.",
+  "walletTopupFailureInvalidNumber": "This number cannot pay with mobile money.",
+  "walletTopupFailureProviderUnavailable": "Your operator is unavailable right now. Please try again later.",
+  "walletTopupFailureExpired": "The request expired before it was approved.",
+  "walletTopupFailureOther": "The payment was declined by the operator.",
+  "walletTopupCreditedLineUnchanged": "Credited to your {currency} wallet. Your {active} wallet stays unchanged.",
+  "@walletTopupCreditedLineUnchanged": {"placeholders": {"currency": {"type": "String"}, "active": {"type": "String"}}},
+  "walletTopupAmountAtLeast": "At least {min}",
+  "@walletTopupAmountAtLeast": {"placeholders": {"min": {"type": "String"}}},
+  "walletTopupAmountAtMost": "At most {max}",
+  "@walletTopupAmountAtMost": {"placeholders": {"max": {"type": "String"}}}
 }

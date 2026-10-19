@@ -9698,43 +9698,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get walletTopupMmPayWithAnotherNumber => 'Payer avec un autre numéro';
 
   @override
-  String get walletTopupMmValidateTitle =>
-      'Validez le paiement sur votre téléphone';
-
-  @override
-  String walletTopupMmRequestSent(String number, String provider) {
-    return 'Une demande de paiement a été envoyée à $number via $provider.';
-  }
-
-  @override
-  String get walletTopupMmConfirmationAutomatic =>
-      'La confirmation est automatique, gardez cet écran ouvert.';
-
-  @override
   String get walletTopupMmAmountLabel => 'Montant';
 
   @override
   String get walletTopupMmCreditedToLabel => 'Crédité sur';
 
   @override
-  String walletTopupMmCreditedTo(String code) {
-    return 'Solde Yadony ($code)';
+  String walletTopupMmCreditedTo(String currency) {
+    return 'Portefeuille $currency';
   }
-
-  @override
-  String get walletTopupMmExpiresInLabel => 'Expire dans';
 
   @override
   String walletTopupMmOpenProvider(String provider) {
     return 'Ouvrir $provider';
   }
-
-  @override
-  String get walletTopupMmExpired => 'Le paiement n\'a pas été validé à temps.';
-
-  @override
-  String get walletTopupMmRefused =>
-      'Le paiement a été refusé par l\'opérateur.';
 
   @override
   String walletShortfallRequired(String amount) {
@@ -9943,25 +9920,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String walletTopupCreditNotice(String code) {
     return 'Le solde Yadony sera crédité en $code après confirmation.';
-  }
-
-  @override
-  String walletTopupNoDecimalsNotice(String symbol) {
-    return 'Le $symbol ne connaît pas les centimes : indiquez un montant entier.';
-  }
-
-  @override
-  String walletTopupCreditedAmount(
-    String currency,
-    String amount,
-    String active,
-  ) {
-    return 'Votre portefeuille $currency sera crédité de $amount. Votre portefeuille $active ne bouge pas.';
-  }
-
-  @override
-  String walletTopupCreditedPending(String currency, String active) {
-    return 'Votre portefeuille $currency sera crédité du montant que vous saisissez. Votre portefeuille $active ne bouge pas.';
   }
 
   @override
@@ -17452,10 +17410,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get walletTopupCustomAmountChip => 'Autre montant';
 
   @override
-  String get walletTopupCustomAmountInvalid =>
-      'Indiquez un montant supérieur à 0.';
-
-  @override
   String get negotiationsActionRequired => 'Action requise';
 
   @override
@@ -21341,5 +21295,162 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String assistantDiscoverySemantics(String text) {
     return 'À découvrir dans Yadony : $text';
+  }
+
+  @override
+  String get mobileMoneyPayerSectionLabel => 'COMPTE QUI PAIE';
+
+  @override
+  String get mobileMoneyCountrySearchHint => 'Rechercher un pays';
+
+  @override
+  String get mobileMoneyCountryUpcoming => 'Bientôt';
+
+  @override
+  String get mobileMoneyCountryUpcomingSubtitle =>
+      'Mobile money pas encore disponible';
+
+  @override
+  String get mobileMoneyCountryUnavailableNotice =>
+      'En attendant, rechargez par carte bancaire ou avec un code de recharge.';
+
+  @override
+  String get mobileMoneyCountryNotSupported =>
+      'Le mobile money n\'est pas disponible pour ce pays.';
+
+  @override
+  String get mobileMoneyOperatorLabel => 'Opérateur';
+
+  @override
+  String mobileMoneyOperatorNumberLabel(String operator) {
+    return 'Numéro $operator';
+  }
+
+  @override
+  String mobileMoneyNumberRecognized(String operator) {
+    return 'Numéro $operator reconnu';
+  }
+
+  @override
+  String mobileMoneyOperatorSwitched(String operator) {
+    return 'C\'est un numéro $operator : l\'opérateur a été changé.';
+  }
+
+  @override
+  String get mobileMoneyNumberUnrecognized =>
+      'Ce numéro n\'est reconnu par aucun opérateur de ce pays.';
+
+  @override
+  String get mobileMoneyRecognitionFailed =>
+      'Vérification impossible pour le moment.';
+
+  @override
+  String get walletTopupSwitchToCard => 'Recharger par carte';
+
+  @override
+  String get walletTopupMmRingCaption => 'pour valider';
+
+  @override
+  String walletTopupMmSmsSentTitle(String number) {
+    return 'SMS envoyé au $number';
+  }
+
+  @override
+  String get walletTopupMmSmsSentBody =>
+      'Ouvrez-le et cliquez sur le lien pour valider le paiement.';
+
+  @override
+  String walletTopupMmPromptTitle(String number) {
+    return 'Demande envoyée au $number';
+  }
+
+  @override
+  String get walletTopupMmPromptBody =>
+      'Une fenêtre s\'affiche sur votre téléphone : validez avec votre code secret.';
+
+  @override
+  String get walletTopupMmGenericBody =>
+      'Validez le paiement sur votre téléphone (SMS ou fenêtre de votre opérateur).';
+
+  @override
+  String get walletTopupMmOverdueTitle => 'Pas encore validé';
+
+  @override
+  String get walletTopupMmOverdueBody =>
+      'Si vous validez quand même dans les prochaines minutes, votre solde sera crédité.';
+
+  @override
+  String get walletTopupMmResend => 'Renvoyer une demande';
+
+  @override
+  String get walletTopupMmFailedTitle => 'Recharge non aboutie';
+
+  @override
+  String get walletTopupMmFromLabel => 'Depuis';
+
+  @override
+  String walletTopupMmFromValue(String operator, String last2) {
+    return '$operator ••$last2';
+  }
+
+  @override
+  String walletTopupFromAccount(String operator, String last2) {
+    return 'Depuis $operator ••$last2';
+  }
+
+  @override
+  String get walletTopupChangeAccount => 'Changer';
+
+  @override
+  String walletTopupCreditedLine(String currency) {
+    return 'Crédité sur votre portefeuille $currency';
+  }
+
+  @override
+  String walletTopupAmountBounds(String min, String max) {
+    return 'Entre $min et $max';
+  }
+
+  @override
+  String get walletTopupFailureInsufficientBalance =>
+      'Solde insuffisant sur votre compte mobile money.';
+
+  @override
+  String get walletTopupFailureNotApproved =>
+      'Le paiement n\'a pas été validé sur votre téléphone.';
+
+  @override
+  String get walletTopupFailurePayerLimit =>
+      'Votre opérateur a refusé : plafond de paiement atteint.';
+
+  @override
+  String get walletTopupFailureInvalidNumber =>
+      'Ce numéro ne peut pas payer par mobile money.';
+
+  @override
+  String get walletTopupFailureProviderUnavailable =>
+      'Votre opérateur est indisponible pour le moment. Réessayez plus tard.';
+
+  @override
+  String get walletTopupFailureExpired =>
+      'La demande a expiré avant d\'être validée.';
+
+  @override
+  String get walletTopupFailureOther =>
+      'Le paiement a été refusé par l\'opérateur.';
+
+  @override
+  String walletTopupCreditedLineUnchanged(String currency, String active) {
+    return 'Crédité sur votre portefeuille $currency. Votre portefeuille $active ne bouge pas.';
+  }
+
+  @override
+  String walletTopupAmountAtLeast(String min) {
+    return 'Au moins $min';
+  }
+
+  @override
+  String walletTopupAmountAtMost(String max) {
+    return 'Au plus $max';
   }
 }

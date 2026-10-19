@@ -10024,7 +10024,7 @@
   },
   "mobileMoneyCountryLabel": "Pays",
   "@mobileMoneyCountryLabel": {
-    "description": "Libellé de la ligne pays de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
+    "description": "Libellé « Pays » du mobile money : ligne pays de la vue active du compte de versement (mobile_money_account_screen.dart _ActiveView) et champ pays du compte qui paie (payer_account_section.dart)."
   },
   "mobileMoneyCurrencyLabel": "Devise",
   "@mobileMoneyCurrencyLabel": {
@@ -10191,26 +10191,6 @@
   "@walletTopupMmPayWithAnotherNumber": {
     "description": "Bouton d'abandon de la recharge en cours, pour repartir avec un autre numéro (wallet_topup_mobile_money_awaiting_screen.dart)."
   },
-  "walletTopupMmValidateTitle": "Validez le paiement sur votre téléphone",
-  "@walletTopupMmValidateTitle": {
-    "description": "Titre du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
-  },
-  "walletTopupMmRequestSent": "Une demande de paiement a été envoyée à {number} via {provider}.",
-  "@walletTopupMmRequestSent": {
-    "description": "Sous-titre du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).",
-    "placeholders": {
-      "number": {
-        "type": "String"
-      },
-      "provider": {
-        "type": "String"
-      }
-    }
-  },
-  "walletTopupMmConfirmationAutomatic": "La confirmation est automatique, gardez cet écran ouvert.",
-  "@walletTopupMmConfirmationAutomatic": {
-    "description": "Note de bas du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
-  },
   "walletTopupMmAmountLabel": "Montant",
   "@walletTopupMmAmountLabel": {
     "description": "Libellé de la ligne montant de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
@@ -10219,18 +10199,14 @@
   "@walletTopupMmCreditedToLabel": {
     "description": "Libellé de la ligne « crédité sur » de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
   },
-  "walletTopupMmCreditedTo": "Solde Yadony ({code})",
+  "walletTopupMmCreditedTo": "Portefeuille {currency}",
   "@walletTopupMmCreditedTo": {
-    "description": "Valeur de la ligne « crédité sur » de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).",
+    "description": "Valeur de la ligne « crédité sur » du récapitulatif de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody). {currency} : symbole court de la devise (F CFA).",
     "placeholders": {
-      "code": {
+      "currency": {
         "type": "String"
       }
     }
-  },
-  "walletTopupMmExpiresInLabel": "Expire dans",
-  "@walletTopupMmExpiresInLabel": {
-    "description": "Libellé de la ligne compte à rebours de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
   },
   "walletTopupMmOpenProvider": "Ouvrir {provider}",
   "@walletTopupMmOpenProvider": {
@@ -10240,14 +10216,6 @@
         "type": "String"
       }
     }
-  },
-  "walletTopupMmExpired": "Le paiement n'a pas été validé à temps.",
-  "@walletTopupMmExpired": {
-    "description": "Message générique de la recharge par mobile money quand le sondage expire sans confirmation (wallet_topup_mobile_money_awaiting_screen.dart, WalletTopupFailureReason.expired)."
-  },
-  "walletTopupMmRefused": "Le paiement a été refusé par l'opérateur.",
-  "@walletTopupMmRefused": {
-    "description": "Message générique de la recharge par mobile money quand l'opérateur refuse le dépôt sans motif exploitable (wallet_topup_mobile_money_awaiting_screen.dart, WalletTopupFailureReason.refused)."
   },
 
   "walletShortfallRequired": "Commission requise : {amount}",
@@ -10553,42 +10521,6 @@
     "description": "Note sous le montant saisi, carte ou mobile money (wallet_topup_amount_screen.dart _buildStripe, _buildMobileMoney).",
     "placeholders": {
       "code": {
-        "type": "String"
-      }
-    }
-  },
-  "walletTopupNoDecimalsNotice": "Le {symbol} ne connaît pas les centimes : indiquez un montant entier.",
-  "@walletTopupNoDecimalsNotice": {
-    "description": "Avertissement mobile money quand la devise n'a pas de sous-unité (wallet_topup_amount_screen.dart _buildMobileMoney).",
-    "placeholders": {
-      "symbol": {
-        "type": "String"
-      }
-    }
-  },
-  "walletTopupCreditedAmount": "Votre portefeuille {currency} sera crédité de {amount}. Votre portefeuille {active} ne bouge pas.",
-  "@walletTopupCreditedAmount": {
-    "description": "Bandeau de mismatch de devise mobile money, montant déjà saisi (wallet_topup_amount_screen.dart _buildMobileMoney).",
-    "placeholders": {
-      "currency": {
-        "type": "String"
-      },
-      "amount": {
-        "type": "String"
-      },
-      "active": {
-        "type": "String"
-      }
-    }
-  },
-  "walletTopupCreditedPending": "Votre portefeuille {currency} sera crédité du montant que vous saisissez. Votre portefeuille {active} ne bouge pas.",
-  "@walletTopupCreditedPending": {
-    "description": "Bandeau de mismatch de devise mobile money, avant toute saisie (wallet_topup_amount_screen.dart _buildMobileMoney).",
-    "placeholders": {
-      "currency": {
-        "type": "String"
-      },
-      "active": {
         "type": "String"
       }
     }
@@ -19838,10 +19770,6 @@
   "@walletTopupCustomAmountChip": {
     "description": "Recharge mobile money : puce qui ouvre la saisie libre d'un montant, à côté des montants proposés (FLUTTER-CF)."
   },
-  "walletTopupCustomAmountInvalid": "Indiquez un montant supérieur à 0.",
-  "@walletTopupCustomAmountInvalid": {
-    "description": "Recharge mobile money : erreur du champ « Autre montant » quand le montant saisi vaut 0 (FLUTTER-CF)."
-  },
   "negotiationsActionRequired": "Action requise",
   "@negotiationsActionRequired": {
     "description": "Libellé d'accessibilité du voyant clignotant des « Discussions de prix » (Messages, Activités) quand c'est à l'utilisateur d'agir (FLUTTER-BY)."
@@ -22075,5 +22003,83 @@
   "assistantNextQuestionsTitle": "Vous pourriez aussi demander",
   "@assistantNextQuestionsTitle": {"description": "Titre des questions proposées sous la dernière réponse de l'assistant (FLUTTER-RD)."},
   "assistantDiscoverySemantics": "À découvrir dans Yadony : {text}",
-  "@assistantDiscoverySemantics": {"description": "Libellé d'accessibilité de la puce « découverte » sous la dernière réponse de l'assistant. {text} : la question proposée.", "placeholders": {"text": {"type": "String"}}}
+  "@assistantDiscoverySemantics": {"description": "Libellé d'accessibilité de la puce « découverte » sous la dernière réponse de l'assistant. {text} : la question proposée.", "placeholders": {"text": {"type": "String"}}},
+  "mobileMoneyPayerSectionLabel": "COMPTE QUI PAIE",
+  "@mobileMoneyPayerSectionLabel": {"description": "Titre de la section « compte qui paie » (pays, opérateur, numéro) de l'écran Recharger, en majuscules comme les autres titres de section (payer_account_section.dart)."},
+  "mobileMoneyCountrySearchHint": "Rechercher un pays",
+  "@mobileMoneyCountrySearchHint": {"description": "Texte d'aide du champ de recherche du pays mobile money qui paie (mobile_money_country_field.dart)."},
+  "mobileMoneyCountryUpcoming": "Bientôt",
+  "@mobileMoneyCountryUpcoming": {"description": "Pastille d'un pays où le mobile money n'est pas encore ouvert, dans la liste de recherche du pays (mobile_money_country_field.dart)."},
+  "mobileMoneyCountryUpcomingSubtitle": "Mobile money pas encore disponible",
+  "@mobileMoneyCountryUpcomingSubtitle": {"description": "Sous-titre d'un pays « Bientôt » dans la liste de recherche du pays mobile money."},
+  "mobileMoneyCountryUnavailableNotice": "En attendant, rechargez par carte bancaire ou avec un code de recharge.",
+  "@mobileMoneyCountryUnavailableNotice": {"description": "Note affichée quand le pays cherché n'a pas encore le mobile money (« Bientôt ») : propose les autres moyens de recharge."},
+  "mobileMoneyCountryNotSupported": "Le mobile money n'est pas disponible pour ce pays.",
+  "@mobileMoneyCountryNotSupported": {"description": "Texte affiché sous le champ pays quand la recherche ne trouve aucun pays servi ni annoncé."},
+  "mobileMoneyOperatorLabel": "Opérateur",
+  "@mobileMoneyOperatorLabel": {"description": "Libellé de la ligne de choix de l'opérateur mobile money qui paie."},
+  "mobileMoneyOperatorNumberLabel": "Numéro {operator}",
+  "@mobileMoneyOperatorNumberLabel": {"description": "Libellé du champ numéro du compte mobile money qui paie. {operator} : nom de l'opérateur choisi (ex. Orange Money).", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyNumberRecognized": "Numéro {operator} reconnu",
+  "@mobileMoneyNumberRecognized": {"description": "Confirmation sous le compte qui paie : pawaPay reconnaît le numéro sur l'opérateur choisi. {operator} : nom de l'opérateur.", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyOperatorSwitched": "C'est un numéro {operator} : l'opérateur a été changé.",
+  "@mobileMoneyOperatorSwitched": {"description": "Note sous le compte qui paie : le numéro appartient à un autre opérateur que celui touché, l'app a basculé dessus. {operator} : nom du nouvel opérateur.", "placeholders": {"operator": {"type": "String"}}},
+  "mobileMoneyNumberUnrecognized": "Ce numéro n'est reconnu par aucun opérateur de ce pays.",
+  "@mobileMoneyNumberUnrecognized": {"description": "Message sous le compte qui paie : aucun opérateur du pays choisi ne reconnaît le numéro saisi."},
+  "mobileMoneyRecognitionFailed": "Vérification impossible pour le moment.",
+  "@mobileMoneyRecognitionFailed": {"description": "Message sous le compte qui paie : la vérification du numéro a échoué (coupure réseau, erreur serveur), suivi d'un bouton Réessayer."},
+  "walletTopupSwitchToCard": "Recharger par carte",
+  "@walletTopupSwitchToCard": {"description": "Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire."},
+  "walletTopupMmRingCaption": "pour valider",
+  "@walletTopupMmRingCaption": {"description": "Légende sous le chrono de l'anneau d'attente du mobile money (mobile_money_awaiting_ring.dart)."},
+  "walletTopupMmSmsSentTitle": "SMS envoyé au {number}",
+  "@walletTopupMmSmsSentTitle": {"description": "Titre de l'attente quand l'opérateur fait valider par un lien reçu par SMS (wallet_topup_mobile_money_awaiting_screen.dart). {number} : numéro masqué.", "placeholders": {"number": {"type": "String"}}},
+  "walletTopupMmSmsSentBody": "Ouvrez-le et cliquez sur le lien pour valider le paiement.",
+  "@walletTopupMmSmsSentBody": {"description": "Consigne de l'attente, validation par lien SMS (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupMmPromptTitle": "Demande envoyée au {number}",
+  "@walletTopupMmPromptTitle": {"description": "Titre de l'attente quand l'opérateur fait valider par code secret, ou mode inconnu (wallet_topup_mobile_money_awaiting_screen.dart). {number} : numéro masqué.", "placeholders": {"number": {"type": "String"}}},
+  "walletTopupMmPromptBody": "Une fenêtre s'affiche sur votre téléphone : validez avec votre code secret.",
+  "@walletTopupMmPromptBody": {"description": "Consigne de l'attente, validation par code secret (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupMmGenericBody": "Validez le paiement sur votre téléphone (SMS ou fenêtre de votre opérateur).",
+  "@walletTopupMmGenericBody": {"description": "Consigne de l'attente quand le mode de validation de l'opérateur est inconnu (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupMmOverdueTitle": "Pas encore validé",
+  "@walletTopupMmOverdueTitle": {"description": "Titre de l'attente une fois l'échéance passée sans réponse de l'opérateur (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupMmOverdueBody": "Si vous validez quand même dans les prochaines minutes, votre solde sera crédité.",
+  "@walletTopupMmOverdueBody": {"description": "Texte de l'état « Pas encore validé » : le paiement peut encore aboutir, rien n'est déclaré prélevé ou non (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupMmResend": "Renvoyer une demande",
+  "@walletTopupMmResend": {"description": "Bouton qui relance la recharge avec le même numéro et le même montant (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupMmFailedTitle": "Recharge non aboutie",
+  "@walletTopupMmFailedTitle": {"description": "Titre de l'écran d'échec final d'une recharge mobile money (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupMmFromLabel": "Depuis",
+  "@walletTopupMmFromLabel": {"description": "Libellé de la ligne « compte qui paie » du récapitulatif d'attente (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupMmFromValue": "{operator} ••{last2}",
+  "@walletTopupMmFromValue": {"description": "Valeur de la ligne « compte qui paie » du récapitulatif d'attente (wallet_topup_mobile_money_awaiting_screen.dart). {operator} : opérateur, {last2} : deux derniers chiffres du numéro.", "placeholders": {"operator": {"type": "String"}, "last2": {"type": "String"}}},
+  "walletTopupFromAccount": "Depuis {operator} ••{last2}",
+  "@walletTopupFromAccount": {"description": "Rappel du compte qui paie en haut de la carte du montant (wallet_topup_amount_screen.dart). {operator} : opérateur, {last2} : deux derniers chiffres du numéro.", "placeholders": {"operator": {"type": "String"}, "last2": {"type": "String"}}},
+  "walletTopupChangeAccount": "Changer",
+  "@walletTopupChangeAccount": {"description": "Lien de retour au choix du compte qui paie, sur la carte du montant (wallet_topup_amount_screen.dart)."},
+  "walletTopupCreditedLine": "Crédité sur votre portefeuille {currency}",
+  "@walletTopupCreditedLine": {"description": "Ligne sous le montant mobile money (wallet_topup_amount_screen.dart). {currency} : symbole court de la devise de l'opérateur (F CFA).", "placeholders": {"currency": {"type": "String"}}},
+  "walletTopupAmountBounds": "Entre {min} et {max}",
+  "@walletTopupAmountBounds": {"description": "Bornes de montant de l'opérateur, sous le montant saisi (wallet_topup_amount_screen.dart). {min}, {max} : montants formatés.", "placeholders": {"min": {"type": "String"}, "max": {"type": "String"}}},
+  "walletTopupFailureInsufficientBalance": "Solde insuffisant sur votre compte mobile money.",
+  "@walletTopupFailureInsufficientBalance": {"description": "Motif d'échec d'une recharge, code insufficient-balance (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupFailureNotApproved": "Le paiement n'a pas été validé sur votre téléphone.",
+  "@walletTopupFailureNotApproved": {"description": "Motif d'échec d'une recharge, code not-approved (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupFailurePayerLimit": "Votre opérateur a refusé : plafond de paiement atteint.",
+  "@walletTopupFailurePayerLimit": {"description": "Motif d'échec d'une recharge, code payer-limit-reached (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupFailureInvalidNumber": "Ce numéro ne peut pas payer par mobile money.",
+  "@walletTopupFailureInvalidNumber": {"description": "Motif d'échec d'une recharge, code invalid-number (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupFailureProviderUnavailable": "Votre opérateur est indisponible pour le moment. Réessayez plus tard.",
+  "@walletTopupFailureProviderUnavailable": {"description": "Motif d'échec d'une recharge, code provider-unavailable (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupFailureExpired": "La demande a expiré avant d'être validée.",
+  "@walletTopupFailureExpired": {"description": "Motif d'échec d'une recharge, code expired (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupFailureOther": "Le paiement a été refusé par l'opérateur.",
+  "@walletTopupFailureOther": {"description": "Motif d'échec d'une recharge, code other ou inconnu (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupCreditedLineUnchanged": "Crédité sur votre portefeuille {currency}. Votre portefeuille {active} ne bouge pas.",
+  "@walletTopupCreditedLineUnchanged": {"description": "Ligne sous le montant mobile money quand la devise de l'opérateur diffère du portefeuille actif (wallet_topup_amount_screen.dart). {currency}, {active} : symboles courts des devises (F CFA, €).", "placeholders": {"currency": {"type": "String"}, "active": {"type": "String"}}},
+  "walletTopupAmountAtLeast": "Au moins {min}",
+  "@walletTopupAmountAtLeast": {"description": "Seule borne publiée par l'opérateur : le minimum, sous le montant saisi (wallet_topup_amount_screen.dart). {min} : montant formaté.", "placeholders": {"min": {"type": "String"}}},
+  "walletTopupAmountAtMost": "Au plus {max}",
+  "@walletTopupAmountAtMost": {"description": "Seule borne publiée par l'opérateur : le maximum, sous le montant saisi (wallet_topup_amount_screen.dart). {max} : montant formaté.", "placeholders": {"max": {"type": "String"}}}
 }

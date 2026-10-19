@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:clock/clock.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
@@ -56,6 +57,8 @@ void main() {
     String status, {
     String topupId = 'topup-1',
     String? failureReason,
+    String? failureCode,
+    DateTime? expiresAt,
   }) => WalletTopupStatusModel(
     topupId: topupId,
     status: status,
@@ -65,6 +68,8 @@ void main() {
     providerLabel: 'Orange Money',
     msisdnMasked: '+221 ** ** 12 34',
     failureReason: failureReason,
+    failureCode: failureCode,
+    expiresAt: expiresAt,
   );
 
   group('loadProviders / initiate (sans minuterie)', () {
@@ -117,6 +122,62 @@ void main() {
         isA<WalletTopupMobileMoneyProvidersLoading>(),
         isA<WalletTopupMobileMoneyError>(),
       ],
+    );
+
+    test(
+      "useOperator() : sans catalogue chargé, l'opérateur choisi sur l'écran "
+      '« Recharger » part au back',
+      () async {
+        when(
+          () => repo.topupMobileMoney(
+            amount: 5000,
+            phoneNumber: phoneNumber,
+            provider: 'WAVE_SEN',
+          ),
+        ).thenAnswer((_) async => topup2);
+
+        cubit.useOperator('WAVE_SEN');
+        await cubit.initiate(amount: 5000, phoneNumber: phoneNumber);
+        cubit.stopPolling();
+
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+        verify(
+          () => repo.topupMobileMoney(
+            amount: 5000,
+            phoneNumber: phoneNumber,
+            provider: 'WAVE_SEN',
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      "useOperator() : le catalogue de l'ancien parcours garde la main",
+      () async {
+        when(
+          () => repo.topupProviders(phoneNumber),
+        ).thenAnswer((_) async => catalog);
+        when(
+          () => repo.topupMobileMoney(
+            amount: 5000,
+            phoneNumber: phoneNumber,
+            provider: any(named: 'provider'),
+          ),
+        ).thenAnswer((_) async => topup);
+
+        cubit.useOperator('WAVE_SEN');
+        await cubit.loadProviders(phoneNumber);
+        await cubit.initiate(amount: 5000, phoneNumber: phoneNumber);
+        cubit.stopPolling();
+
+        verify(
+          () => repo.topupMobileMoney(
+            amount: 5000,
+            phoneNumber: phoneNumber,
+            provider: 'ORANGE_SEN',
+          ),
+        ).called(1);
+      },
     );
 
     blocTest<WalletTopupMobileMoneyCubit, WalletTopupMobileMoneyState>(
@@ -422,17 +483,11 @@ void main() {
 
         expect(
           cubit.state,
-          isA<WalletTopupMobileMoneyFailed>()
-              .having(
-                (s) => s.reason,
-                'reason',
-                WalletTopupFailureReason.refused,
-              )
-              .having(
-                (s) => s.operatorMessage,
-                'operatorMessage',
-                'Solde insuffisant',
-              ),
+          isA<WalletTopupMobileMoneyFailed>().having(
+            (s) => s.failureReason,
+            'failureReason',
+            'Solde insuffisant',
+          ),
         );
         expect(async.periodicTimerCount, 0);
         verifyNever(
@@ -466,7 +521,7 @@ void main() {
       });
     });
 
-    test('FAILED sans motif serveur -> reason refused, aucun operatorMessage '
+    test('FAILED sans motif ni code serveur : aucun texte gardé '
         '(l\'écran affiche le message générique)', () {
       fakeAsync((async) {
         when(
@@ -486,20 +541,16 @@ void main() {
         expect(
           cubit.state,
           isA<WalletTopupMobileMoneyFailed>()
-              .having(
-                (s) => s.reason,
-                'reason',
-                WalletTopupFailureReason.refused,
-              )
-              .having((s) => s.operatorMessage, 'operatorMessage', isNull),
+              .having((s) => s.failureReason, 'failureReason', isNull)
+              .having((s) => s.failureCode, 'failureCode', isNull),
         );
 
         unawaited(cubit.close());
       });
     });
 
-    test('expiration après 15 min sans confirmation -> Failed reason expired, '
-        'aucun operatorMessage', () {
+    test('sans expiresAt du back : repli à 15 min, puis Overdue et sondage '
+        'maintenu (jamais un échec déclaré par l\'app)', () {
       fakeAsync((async) {
         when(
           () => repo.topupStatus('topup-1'),
@@ -514,30 +565,530 @@ void main() {
         unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
         async.flushMicrotasks();
 
-        async.elapse(
-          WalletTopupMobileMoneyCubit.expiry + const Duration(seconds: 1),
+        async.elapse(walletTopupFallbackExpiry - const Duration(seconds: 3));
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+
+        async.elapse(const Duration(seconds: 6));
+
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyOverdue>().having(
+            (s) => s.topup.topupId,
+            'topupId',
+            'topup-1',
+          ),
         );
+        expect(async.periodicTimerCount, 1);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupFailed,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('poll_pastExpiresAt_stillPending_emitsOverdue_keepsPolling', () {
+      fakeAsync((async) {
+        final expiresAt = clock.now().add(const Duration(seconds: 5));
+        when(
+          () => repo.topupMobileMoney(
+            amount: any(named: 'amount'),
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        ).thenAnswer(
+          (_) async => WalletTopupModel(
+            topupId: 'topup-1',
+            currency: 'XOF',
+            provider: 'ORANGE_SEN',
+            providerLabel: 'Orange Money',
+            msisdnMasked: '+221 ** ** 12 34',
+            expiresAt: expiresAt,
+          ),
+        );
+        var calls = 0;
+        when(() => repo.topupStatus('topup-1')).thenAnswer((_) async {
+          calls++;
+          return statusFor('PENDING');
+        });
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+        final states = <WalletTopupMobileMoneyState>[];
+        final sub = cubit.stream.listen(states.add);
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval); // 3 s
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval); // 6 s
+        expect(cubit.state, isA<WalletTopupMobileMoneyOverdue>());
+
+        // Le sondage continue : l'opérateur peut encore valider.
+        final callsAtOverdue = calls;
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval * 2);
+        expect(calls, greaterThan(callsAtOverdue));
+        expect(async.periodicTimerCount, 1);
+        // Un seul passage en Overdue, jamais réémis à chaque tick.
+        expect(states.whereType<WalletTopupMobileMoneyOverdue>(), hasLength(1));
+
+        unawaited(sub.cancel());
+        unawaited(cubit.close());
+      });
+    });
+
+    test('poll_confirmedWhileOverdue_emitsConfirmed', () {
+      fakeAsync((async) {
+        final expiresAt = clock.now().add(const Duration(seconds: 2));
+        when(
+          () => repo.topupMobileMoney(
+            amount: any(named: 'amount'),
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        ).thenAnswer(
+          (_) async => WalletTopupModel(
+            topupId: 'topup-1',
+            currency: 'XOF',
+            provider: 'ORANGE_SEN',
+            providerLabel: 'Orange Money',
+            msisdnMasked: '+221 ** ** 12 34',
+            expiresAt: expiresAt,
+          ),
+        );
+        var call = 0;
+        when(() => repo.topupStatus('topup-1')).thenAnswer((_) async {
+          call++;
+          return call < 2 ? statusFor('PENDING') : statusFor('CONFIRMED');
+        });
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+        expect(cubit.state, isA<WalletTopupMobileMoneyOverdue>());
+
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyConfirmed>().having(
+            (s) => s.resumed,
+            'resumed',
+            isFalse,
+          ),
+        );
+        expect(async.periodicTimerCount, 0);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupCompleted,
+            properties: any(named: 'properties'),
+          ),
+        ).called(1);
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('poll_failed_carriesFailureCode', () {
+      fakeAsync((async) {
+        when(() => repo.topupStatus('topup-1')).thenAnswer(
+          (_) async => statusFor(
+            'FAILED',
+            failureCode: 'insufficient-balance',
+            failureReason: 'Solde insuffisant sur votre compte mobile money.',
+          ),
+        );
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
 
         expect(
           cubit.state,
           isA<WalletTopupMobileMoneyFailed>()
               .having(
-                (s) => s.reason,
-                'reason',
-                WalletTopupFailureReason.expired,
+                (s) => s.failureCode,
+                'failureCode',
+                'insufficient-balance',
               )
-              .having((s) => s.operatorMessage, 'operatorMessage', isNull),
+              .having(
+                (s) => s.failureReason,
+                'failureReason',
+                'Solde insuffisant sur votre compte mobile money.',
+              ),
         );
-        expect(async.periodicTimerCount, 0);
+        // Le code Yadony part dans l'analytics (jamais le texte).
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.walletTopupFailed,
             properties: any(
               named: 'properties',
-              that: containsPair('reason', 'expired'),
+              that: containsPair('error_code', 'insufficient-balance'),
             ),
           ),
         ).called(1);
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('detach_stopsPolling_withoutCancelledEvent', () {
+      fakeAsync((async) {
+        final expiresAt = clock.now().add(const Duration(minutes: 10));
+        when(
+          () => repo.topupMobileMoney(
+            amount: any(named: 'amount'),
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        ).thenAnswer(
+          (_) async => WalletTopupModel(
+            topupId: 'topup-1',
+            currency: 'XOF',
+            provider: 'ORANGE_SEN',
+            providerLabel: 'Orange Money',
+            msisdnMasked: '+221 ** ** 12 34',
+            expiresAt: expiresAt,
+          ),
+        );
+        var calls = 0;
+        when(() => repo.topupStatus('topup-1')).thenAnswer((_) async {
+          calls++;
+          return statusFor('PENDING');
+        });
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 60));
+
+        cubit.detach();
+        // Le ✕ et le PopScope appellent tous deux detach() : sans effet la
+        // seconde fois.
+        cubit.detach();
+
+        expect(async.periodicTimerCount, 0);
+        // La recharge n'est pas abandonnée : l'état reste celui de l'attente.
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+        final callsAtDetach = calls;
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval * 3);
+        expect(calls, callsAtDetach);
+
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupAwaitingClosed,
+            properties: {'remaining_s': 540},
+          ),
+        ).called(1);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupCancelled,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('detach : une réponse de sondage en vol n\'émet plus rien', () {
+      fakeAsync((async) {
+        final slow = Completer<WalletTopupStatusModel>();
+        when(() => repo.topupStatus('topup-1')).thenAnswer((_) => slow.future);
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+
+        cubit.detach();
+        slow.complete(statusFor('CONFIRMED'));
+        async.flushMicrotasks();
+
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupMobileMoneyConfirmed,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('initiate_alreadyPending_resumesServerTopup', () {
+      fakeAsync((async) {
+        when(
+          () => repo.topupMobileMoney(
+            amount: any(named: 'amount'),
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        ).thenThrow(
+          const ConflictException('déjà', code: 'topup-already-pending'),
+        );
+        when(() => repo.pendingTopup()).thenAnswer(
+          (_) async => statusFor('PENDING', topupId: 'topup-server'),
+        );
+        when(() => repo.topupStatus('topup-server')).thenAnswer(
+          (_) async => statusFor('PENDING', topupId: 'topup-server'),
+        );
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+        final states = <WalletTopupMobileMoneyState>[];
+        final sub = cubit.stream.listen(states.add);
+
+        unawaited(cubit.initiate(amount: 5000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+
+        // La recharge du serveur est reprise, jamais l'erreur 409.
+        expect(states.whereType<WalletTopupMobileMoneyError>(), isEmpty);
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyAwaiting>()
+              .having((s) => s.topup.topupId, 'topupId', 'topup-server')
+              .having((s) => s.resumed, 'resumed', isTrue)
+              .having((s) => s.amount, 'amount', 20000),
+        );
+        expect(async.periodicTimerCount, 1);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupFailed,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        unawaited(sub.cancel());
+        unawaited(cubit.close());
+      });
+    });
+
+    test('409 sans recharge retrouvée : l\'erreur d\'origine', () async {
+      const conflict = ConflictException('déjà', code: 'topup-already-pending');
+      when(
+        () => repo.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      ).thenThrow(conflict);
+      when(() => repo.pendingTopup()).thenAnswer((_) async => null);
+      final cubit = WalletTopupMobileMoneyCubit(repo, analytics);
+
+      await cubit.initiate(amount: 5000, phoneNumber: phoneNumber);
+
+      expect(
+        cubit.state,
+        isA<WalletTopupMobileMoneyError>().having(
+          (s) => s.error,
+          'error',
+          conflict,
+        ),
+      );
+      await cubit.close();
+    });
+
+    test(
+      'resumePending : refusée par shouldResume au retour de la réponse',
+      () async {
+        when(
+          () => repo.pendingTopup(),
+        ).thenAnswer((_) async => statusFor('PENDING'));
+        final cubit = WalletTopupMobileMoneyCubit(repo, analytics);
+
+        expect(await cubit.resumePending(shouldResume: () => false), isFalse);
+        expect(cubit.state, isA<WalletTopupMobileMoneyIdle>());
+        await cubit.close();
+      },
+    );
+
+    test('reset() pendant Overdue (« Payer avec un autre numéro ») : '
+        'wallet_topup_cancelled, retour à Idle', () {
+      fakeAsync((async) {
+        final expiresAt = clock.now().add(const Duration(seconds: 1));
+        when(
+          () => repo.topupMobileMoney(
+            amount: any(named: 'amount'),
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        ).thenAnswer(
+          (_) async => WalletTopupModel(
+            topupId: 'topup-1',
+            currency: 'XOF',
+            provider: 'ORANGE_SEN',
+            providerLabel: 'Orange Money',
+            msisdnMasked: '+221 ** ** 12 34',
+            expiresAt: expiresAt,
+          ),
+        );
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) async => statusFor('PENDING'));
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+        expect(cubit.state, isA<WalletTopupMobileMoneyOverdue>());
+
+        cubit.reset();
+
+        expect(cubit.state, isA<WalletTopupMobileMoneyIdle>());
+        expect(async.periodicTimerCount, 0);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupCancelled,
+            properties: {'method': 'mobile_money'},
+          ),
+        ).called(1);
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('resumePending_withOpenTopup_emitsAwaiting_andPolls', () {
+      fakeAsync((async) {
+        final expiresAt = clock.now().add(const Duration(minutes: 12));
+        when(
+          () => repo.pendingTopup(),
+        ).thenAnswer((_) async => statusFor('PENDING', expiresAt: expiresAt));
+        var call = 0;
+        when(() => repo.topupStatus('topup-1')).thenAnswer((_) async {
+          call++;
+          return call < 2 ? statusFor('PENDING') : statusFor('CONFIRMED');
+        });
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        bool? resumed;
+        unawaited(cubit.resumePending().then((r) => resumed = r));
+        async.flushMicrotasks();
+
+        expect(resumed, isTrue);
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyAwaiting>()
+              .having((s) => s.topup.topupId, 'topupId', 'topup-1')
+              .having((s) => s.topup.expiresAt, 'expiresAt', expiresAt)
+              .having((s) => s.amount, 'amount', 20000),
+        );
+        expect(async.periodicTimerCount, 1);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupResumed,
+            properties: {'provider': 'ORANGE_SEN', 'currency': 'XOF'},
+          ),
+        ).called(1);
+
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval * 2);
+        // Confirmation d'une recharge reprise : signalée comme telle, le
+        // numéro (masqué) n'est jamais mémorisé.
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyConfirmed>().having(
+            (s) => s.resumed,
+            'resumed',
+            isTrue,
+          ),
+        );
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('resumePending_none_returnsFalse', () async {
+      when(() => repo.pendingTopup()).thenAnswer((_) async => null);
+      final cubit = WalletTopupMobileMoneyCubit(repo, analytics);
+
+      expect(await cubit.resumePending(), isFalse);
+      expect(cubit.state, isA<WalletTopupMobileMoneyIdle>());
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.walletTopupResumed,
+          properties: any(named: 'properties'),
+        ),
+      );
+      await cubit.close();
+    });
+
+    test('resumePending : erreur réseau -> false, rien ne change', () async {
+      when(() => repo.pendingTopup()).thenThrow(Exception('network'));
+      final cubit = WalletTopupMobileMoneyCubit(repo, analytics);
+
+      expect(await cubit.resumePending(), isFalse);
+      expect(cubit.state, isA<WalletTopupMobileMoneyIdle>());
+      await cubit.close();
+    });
+
+    test('resumePending : une recharge lancée entre-temps garde la main', () {
+      fakeAsync((async) {
+        final pending = Completer<WalletTopupStatusModel?>();
+        when(() => repo.pendingTopup()).thenAnswer((_) => pending.future);
+        when(
+          () => repo.topupStatus(any()),
+        ).thenAnswer((_) async => statusFor('PENDING'));
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        bool? resumed;
+        unawaited(cubit.resumePending().then((r) => resumed = r));
+        unawaited(cubit.initiate(amount: 5000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        pending.complete(statusFor('PENDING', topupId: 'topup-old'));
+        async.flushMicrotasks();
+
+        expect(resumed, isFalse);
+        expect(
+          (cubit.state as WalletTopupMobileMoneyAwaiting).topup.topupId,
+          'topup-1',
+        );
 
         unawaited(cubit.close());
       });
@@ -568,9 +1119,7 @@ void main() {
           final statesAtClose = List.of(states);
           // Le temps qui aurait déclenché l'expiration (ou une confirmation)
           // ne doit produire aucun nouvel état : le cubit est fermé.
-          async.elapse(
-            WalletTopupMobileMoneyCubit.expiry + const Duration(minutes: 1),
-          );
+          async.elapse(walletTopupFallbackExpiry + const Duration(minutes: 1));
 
           expect(states, statesAtClose);
           expect(async.periodicTimerCount, 0);
@@ -645,8 +1194,8 @@ void main() {
         expect(
           cubit.state,
           isA<WalletTopupMobileMoneyFailed>().having(
-            (s) => s.operatorMessage,
-            'operatorMessage',
+            (s) => s.failureReason,
+            'failureReason',
             'Solde insuffisant',
           ),
         );
@@ -656,7 +1205,7 @@ void main() {
     });
 
     test("motif d'échec composé uniquement d'espaces : traité comme absent, "
-        'aucun operatorMessage (l\'écran affiche le message générique)', () {
+        'aucun failureReason (l\'écran affiche le message générique)', () {
       fakeAsync((async) {
         when(
           () => repo.topupStatus('topup-1'),
@@ -675,12 +1224,8 @@ void main() {
         expect(
           cubit.state,
           isA<WalletTopupMobileMoneyFailed>()
-              .having(
-                (s) => s.reason,
-                'reason',
-                WalletTopupFailureReason.refused,
-              )
-              .having((s) => s.operatorMessage, 'operatorMessage', isNull),
+              .having((s) => s.failureReason, 'failureReason', isNull)
+              .having((s) => s.failureCode, 'failureCode', isNull),
         );
 
         unawaited(cubit.close());

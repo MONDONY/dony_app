@@ -108,6 +108,26 @@ class WalletRemoteDatasource {
     return response.data as Map<String, dynamic>;
   }
 
+  /// Catalogue des pays et opérateurs mobile money pour les recharges.
+  Future<Map<String, dynamic>> mobileMoneyCountries() async {
+    final response = await _client.dio.get(
+      '/payments/mobile-money/countries',
+      queryParameters: {'operation': 'DEPOSIT'},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Recharge mobile money encore en attente, même JSON que [topupStatus] ;
+  /// `null` quand le back répond 204 (aucune recharge en cours).
+  Future<Map<String, dynamic>?> pendingTopup() async {
+    final response = await _client.dio.get('/wallet/topup/pending');
+    final data = response.data;
+    if (response.statusCode == 204 || data is! Map<String, dynamic>) {
+      return null;
+    }
+    return data;
+  }
+
   /// Utilise un code de recharge. Le texte saisi part brut : le serveur
   /// normalise (majuscules, espaces retirés).
   Future<Map<String, dynamic>> redeemTopupCode(String code) async {

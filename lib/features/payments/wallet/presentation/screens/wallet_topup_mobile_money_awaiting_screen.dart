@@ -5,26 +5,39 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/phone/phone_last_digits.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
+import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_awaiting_ring.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
 import 'package:dony/l10n/l10n.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Écran d'attente d'une recharge de portefeuille par mobile money — sondage
-/// déjà démarré par [WalletTopupMobileMoneyCubit.initiate] (poussé depuis
-/// l'écran de montant via `pushReplacement` : cet écran remplace celui de
-/// montant dans la pile, si bien qu'un `context.pop()` depuis ici revient
-/// directement à l'écran de choix de méthode).
+/// Écran d'attente d'une recharge de portefeuille par mobile money : anneau
+/// et chrono calés sur l'échéance du serveur, consigne selon la façon dont
+/// l'opérateur fait valider (lien par SMS, code secret, ou neutre), puis
+/// récapitulatif (montant, compte qui paie, portefeuille crédité).
 ///
-/// Le cubit est fourni par un ancêtre (`BlocProvider.value` posé par
-/// `router.dart` avec l'instance créée par l'écran de choix) : jamais
-/// recréé ici, pour ne jamais perdre le sondage en cours.
+/// Poussé depuis l'écran de montant (`pushReplacement` : un `pop` revient
+/// à l'écran Recharger) ou depuis l'écran Recharger quand une recharge en
+/// cours est reprise. Le cubit est fourni par un ancêtre
+/// (`BlocProvider.value` posé par `router.dart`), jamais recréé ici.
+///
+/// Quitter l'écran (✕, retour système) ne perd pas la recharge : le cubit
+/// arrête seulement de sonder ([WalletTopupMobileMoneyCubit.detach]), le
+/// serveur continue de suivre le dépôt et notifie l'issue, et l'on quitte
+/// tout le parcours de recharge pour le portefeuille. Rouvrir « Recharger »
+/// reprend alors l'attente (`resumePending`). pawaPay ne sait
+/// pas annuler un dépôt : « Payer avec un autre numéro » n'apparaît qu'une
+/// fois l'échéance passée ou après un échec final.
 class WalletTopupMobileMoneyAwaitingScreen extends StatefulWidget {
   const WalletTopupMobileMoneyAwaitingScreen({
     super.key,
@@ -32,13 +45,14 @@ class WalletTopupMobileMoneyAwaitingScreen extends StatefulWidget {
     required this.amount,
   });
 
-  /// Numéro payeur, réutilisé par « Réessayer » après un
-  /// [WalletTopupMobileMoneyFailed].
-  final String phoneNumber;
+  /// Numéro payeur complet, réutilisé par « Renvoyer une demande ». `null`
+  /// pour une recharge reprise : le serveur ne renvoie que le numéro
+  /// masqué, la relance n'est alors pas proposée.
+  final String? phoneNumber;
 
-  /// Montant de la recharge, réutilisé par « Réessayer » — [WalletTopupModel]
-  /// ne le porte pas lui-même (seul [WalletTopupStatusModel] l'expose,
-  /// après le premier sondage).
+  /// Montant de la recharge, réutilisé par « Renvoyer une demande ».
+  /// L'affichage préfère celui de l'état ([WalletTopupMobileMoneyAwaiting.
+  /// amount]), seul fiable après une reprise.
   final double amount;
 
   @override
@@ -48,218 +62,248 @@ class WalletTopupMobileMoneyAwaitingScreen extends StatefulWidget {
 
 class _WalletTopupMobileMoneyAwaitingScreenState
     extends State<WalletTopupMobileMoneyAwaitingScreen> {
-  static const _tick = Duration(seconds: 1);
-
-  Timer? _countdownTimer;
-
-  /// Jamais mis à jour via `setState` : seul `_CountdownValue` (via
-  /// `ValueListenableBuilder`) se redessine à chaque tick.
-  final ValueNotifier<Duration> _remaining = ValueNotifier(Duration.zero);
-
   /// Capturé à l'ouverture : `onPopInvokedWithResult` se déclenche alors que
   /// cette route est déjà dépilée, un `context.read` y serait trop tard.
-  late final WalletTopupMobileMoneyCubit _cubit = context
-      .read<WalletTopupMobileMoneyCubit>();
+  late final WalletTopupMobileMoneyCubit _cubit;
 
   @override
   void initState() {
     super.initState();
-    _syncCountdown(_cubit.state);
-    _countdownTimer = Timer.periodic(_tick, (_) {
-      if (!mounted) return;
-      _syncCountdown(_cubit.state);
-    });
+    _cubit = context.read<WalletTopupMobileMoneyCubit>();
   }
 
-  /// Sortie par le bouton retour de l'AppBar ou par le geste système : même
-  /// traitement que « Payer avec un autre numéro ». Sans ce reset, le cubit
-  /// (partagé avec l'écran de choix) resterait `Awaiting` et continuerait de
-  /// sonder : l'écran de choix n'a pas de bras pour cet état (plus d'
-  /// opérateurs, « Suivant » mort, `loadProviders` refusé), et la
-  /// confirmation qui finirait par arriver n'aurait plus personne pour
-  /// l'annoncer — l'utilisateur croirait à un échec alors que l'argent est
-  /// débité, et paierait une seconde fois.
+  /// Retour système ou geste : même sortie que le ✕. Un `pop` explicite
+  /// (« Payer avec un autre numéro », déjà réinitialisé) passe tel quel.
   void _onPopped(bool didPop, Object? result) {
-    if (!didPop) return;
-    // Rien à abandonner : recharge confirmée (le portefeuille est crédité),
-    // ou déjà réinitialisée par « Payer avec un autre numéro ».
-    if (_cubit.state is WalletTopupMobileMoneyConfirmed ||
-        _cubit.state is WalletTopupMobileMoneyIdle) {
+    if (didPop) {
+      _cubit.detach();
       return;
     }
-    _cubit.reset();
+    _leave();
   }
 
-  void _syncCountdown(WalletTopupMobileMoneyState state) {
-    if (state is! WalletTopupMobileMoneyAwaiting) return;
-    final deadline = state.startedAt.add(WalletTopupMobileMoneyCubit.expiry);
-    final diff = deadline.difference(DateTime.now());
-    _remaining.value = diff.isNegative ? Duration.zero : diff;
+  /// ✕ : la recharge continue côté serveur, le sondage s'arrête et l'on
+  /// quitte tout le parcours pour le portefeuille. Jamais de `reset()` :
+  /// l'abandon est réservé à « Payer avec un autre numéro ». Revenir sur
+  /// l'écran Recharger laisserait une recharge orpheline (409, ou second
+  /// dépôt sans avertissement).
+  void _leave() {
+    _cubit.detach();
+    context.go('/payments/wallet');
   }
 
-  @override
-  void dispose() {
-    _countdownTimer?.cancel();
-    _remaining.dispose();
-    super.dispose();
-  }
-
-  void _retry(BuildContext context) {
-    context.read<WalletTopupMobileMoneyCubit>().initiate(
-      amount: widget.amount,
-      phoneNumber: widget.phoneNumber,
+  /// Relancer un dépôt est un nouveau paiement : même confirmation que le
+  /// premier. Refusé, ou écran quitté pendant la vérification, rien n'est
+  /// lancé.
+  Future<void> _resend() async {
+    final phoneNumber = widget.phoneNumber;
+    if (phoneNumber == null) return;
+    final authenticated = await requirePaymentAuth(
+      context,
+      authService: getIt<LocalAuthService>(),
+      userPrefs: getIt<HiveService>().userPrefs,
     );
+    if (!mounted) return;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.paymentNotConfirmedSnackbar,
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    unawaited(_cubit.initiate(amount: widget.amount, phoneNumber: phoneNumber));
+  }
+
+  /// Abandon de la recharge puis retour à l'écran Recharger.
+  void _payWithAnotherNumber() {
+    _cubit.reset();
+    context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return PopScope(
+      canPop: false,
       onPopInvokedWithResult: _onPopped,
-      child: _buildScaffold(context, cs),
-    );
-  }
-
-  Widget _buildScaffold(BuildContext context, ColorScheme cs) {
-    return Scaffold(
-      backgroundColor: cs.surfaceContainerLowest,
-      appBar: AppBar(
-        actions: const [DonyFeedbackButton()],
-        leading: const DonyAppBarBackButton(),
-        title: Text(context.l10n.walletTopupMmAwaitingTitle),
-        backgroundColor: cs.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: cs.outline),
+      child: Scaffold(
+        backgroundColor: cs.surfaceContainerLowest,
+        appBar: AppBar(
+          actions: const [DonyFeedbackButton()],
+          leading: DonyAppBarBackButton(
+            leadingIcon: Icons.close_rounded,
+            onBack: _leave,
+          ),
+          title: Text(context.l10n.walletTopupMmAwaitingTitle),
+          backgroundColor: cs.surface,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Divider(height: 1, color: cs.outline),
+          ),
         ),
-      ),
-      body: SafeArea(
-        top: false,
-        child:
-            BlocConsumer<
-              WalletTopupMobileMoneyCubit,
-              WalletTopupMobileMoneyState
-            >(
-              listenWhen: (previous, current) =>
-                  previous.runtimeType != current.runtimeType,
-              listener: (context, state) {
-                switch (state) {
-                  case final WalletTopupMobileMoneyConfirmed s:
-                    _countdownTimer?.cancel();
+        body: SafeArea(
+          top: false,
+          child:
+              BlocConsumer<
+                WalletTopupMobileMoneyCubit,
+                WalletTopupMobileMoneyState
+              >(
+                listenWhen: (previous, current) =>
+                    previous.runtimeType != current.runtimeType,
+                listener: (context, state) {
+                  if (state is WalletTopupMobileMoneyConfirmed) {
                     context.go(
                       '/payments/wallet',
-                      extra: {'topupConfirmed': s.status},
+                      extra: {'topupConfirmed': state.status},
                     );
-                  // L'erreur technique n'est plus présentée en surimpression :
-                  // le corps de l'écran l'affiche avec son bouton
-                  // « Réessayer », un second message dirait la même chose.
-                  default:
-                }
-              },
-              builder: (context, state) => Column(
-                children: [
-                  Expanded(
-                    child: switch (state) {
-                      final WalletTopupMobileMoneyAwaiting s => _AwaitingBody(
-                        topup: s.topup,
-                        amount: widget.amount,
-                        remaining: _remaining,
+                  }
+                },
+                builder: (context, state) => Column(
+                  children: [
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: reduceMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 250),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        child: KeyedSubtree(
+                          key: ValueKey(state.runtimeType),
+                          child: _bodyFor(context, state),
+                        ),
                       ),
-                      final WalletTopupMobileMoneyFailed f => _FailedBody(
-                        message: _failureMessage(context.l10n, f),
-                      ),
-                      // Une erreur technique (réseau coupé pendant une
-                      // reprise) se traite comme un échec : sans ce bras,
-                      // l'écran restait sur une roue infinie et sans bouton,
-                      // le retour arrière pour seule issue.
-                      final WalletTopupMobileMoneyError e => _FailedBody(
-                        message: ErrorPresenter.resolve(
-                          e.error,
-                          l10n: context.l10n,
-                        ).message,
-                      ),
-                      _ => Center(
-                        child: CircularProgressIndicator(color: cs.primary),
-                      ),
-                    },
-                  ),
-                  _bottomFor(context, state),
-                ],
+                    ),
+                    _bottomFor(context, state),
+                  ],
+                ),
               ),
-            ),
+        ),
       ),
     );
   }
 
+  Widget _bodyFor(BuildContext context, WalletTopupMobileMoneyState state) {
+    final l = context.l10n;
+    return switch (state) {
+      final WalletTopupMobileMoneyAwaiting s => _AwaitingBody(
+        topup: s.topup,
+        expiresAt: s.expiresAt,
+        amount: s.amount ?? widget.amount,
+      ),
+      WalletTopupMobileMoneyOverdue() => _OutcomeBody(
+        iconAsset: 'clock',
+        warning: true,
+        title: l.walletTopupMmOverdueTitle,
+        message: l.walletTopupMmOverdueBody,
+      ),
+      final WalletTopupMobileMoneyFailed f => _OutcomeBody(
+        iconAsset: 'circle-alert',
+        title: l.walletTopupMmFailedTitle,
+        message: walletTopupFailureMessage(l, f),
+      ),
+      // Erreur technique (réseau coupé pendant « Renvoyer une demande ») :
+      // message et boutons de reprise, jamais une roue infinie.
+      final WalletTopupMobileMoneyError e => _OutcomeBody(
+        iconAsset: 'circle-alert',
+        message: ErrorPresenter.resolve(e.error, l10n: l).message,
+      ),
+      _ => Center(
+        child: CircularProgressIndicator(
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    };
+  }
+
+  /// Boutons du bas : aucun pendant l'attente (seul le ✕ fait sortir),
+  /// « Renvoyer une demande » (ou « Réessayer » après une erreur technique)
+  /// et « Payer avec un autre numéro » une fois l'échéance passée ou après
+  /// un échec.
   Widget _bottomFor(BuildContext context, WalletTopupMobileMoneyState state) {
-    if (state is WalletTopupMobileMoneyFailed ||
-        state is WalletTopupMobileMoneyError) {
-      return Padding(
-        padding: EdgeInsets.fromLTRB(
-          DonySpacing.lg,
-          0,
-          DonySpacing.lg,
-          MediaQuery.paddingOf(context).bottom + DonySpacing.lg,
-        ),
-        child: DonyButton(
-          key: const Key('mobile-money-awaiting-retry'),
-          label: context.l10n.commonRetry,
-          onPressed: () => _retry(context),
-        ),
-      );
+    final l = context.l10n;
+    final String? primaryLabel;
+    switch (state) {
+      case WalletTopupMobileMoneyOverdue() || WalletTopupMobileMoneyFailed():
+        primaryLabel = l.walletTopupMmResend;
+      case WalletTopupMobileMoneyError():
+        primaryLabel = l.commonRetry;
+      default:
+        return const SizedBox.shrink();
     }
-    if (state is WalletTopupMobileMoneyAwaiting) {
-      return Padding(
-        padding: EdgeInsets.fromLTRB(
-          DonySpacing.lg,
-          0,
-          DonySpacing.lg,
-          MediaQuery.paddingOf(context).bottom + DonySpacing.lg,
-        ),
-        child: DonyButton(
-          key: const Key('mobile-money-awaiting-other-number'),
-          label: context.l10n.walletTopupMmPayWithAnotherNumber,
-          variant: DonyButtonVariant.ghost,
-          // L'abandon de la recharge n'est pas écrit ici : il vit dans le
-          // [PopScope] de l'écran, seul endroit traversé par TOUTES les
-          // sorties (ce bouton, le retour de l'AppBar, le geste système).
-          onPressed: () => context.pop(),
-        ),
-      );
-    }
-    return const SizedBox.shrink();
+    final canResend = widget.phoneNumber != null;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        0,
+        DonySpacing.lg,
+        MediaQuery.paddingOf(context).bottom + DonySpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (canResend) ...[
+            DonyButton(
+              key: const Key('mobile-money-awaiting-resend'),
+              label: primaryLabel,
+              onPressed: _resend,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+          ],
+          DonyButton(
+            key: const Key('mobile-money-awaiting-other-number'),
+            label: l.walletTopupMmPayWithAnotherNumber,
+            variant: canResend
+                ? DonyButtonVariant.ghost
+                : DonyButtonVariant.primary,
+            onPressed: _payWithAnotherNumber,
+          ),
+        ],
+      ),
+    );
   }
 }
 
-/// Message affiché pour un [WalletTopupMobileMoneyFailed] : le motif renvoyé
-/// par l'opérateur ([WalletTopupMobileMoneyFailed.operatorMessage]) s'il est
-/// présent, sinon un message générique déterminé par
-/// [WalletTopupMobileMoneyFailed.reason] (spec i18n : aucun texte traduit
-/// gardé dans l'état du cubit).
-String _failureMessage(AppLocalizations l, WalletTopupMobileMoneyFailed state) {
-  final operatorMessage = state.operatorMessage;
-  if (operatorMessage != null) return operatorMessage;
-  return switch (state.reason) {
-    WalletTopupFailureReason.expired => l.walletTopupMmExpired,
-    WalletTopupFailureReason.refused => l.walletTopupMmRefused,
+/// Texte d'un échec final : celui du code Yadony dans la langue de l'app,
+/// sinon le motif déjà traduit par le back (code inconnu de cette version),
+/// sinon un message générique.
+@visibleForTesting
+String walletTopupFailureMessage(
+  AppLocalizations l,
+  WalletTopupMobileMoneyFailed state,
+) {
+  // Codes Yadony du back (liste fermée), jamais affichés.
+  final byCode = switch (state.failureCode) {
+    'insufficient-balance' =>
+      l.walletTopupFailureInsufficientBalance, // i18n-ignore
+    'not-approved' => l.walletTopupFailureNotApproved, // i18n-ignore
+    'payer-limit-reached' => l.walletTopupFailurePayerLimit, // i18n-ignore
+    'invalid-number' => l.walletTopupFailureInvalidNumber, // i18n-ignore
+    'provider-unavailable' =>
+      l.walletTopupFailureProviderUnavailable, // i18n-ignore
+    'expired' => l.walletTopupFailureExpired, // i18n-ignore
+    'other' => l.walletTopupFailureOther, // i18n-ignore
+    _ => null,
   };
+  return byCode ?? state.failureReason ?? l.walletTopupFailureOther;
 }
 
-/// Icône pulsée, texte d'attente, carte de détails (montant, crédité sur,
-/// expire dans) et, pour Wave, bouton d'ouverture de la page de redirection.
+/// Anneau, consigne de validation et récapitulatif de la recharge.
 class _AwaitingBody extends StatelessWidget {
   const _AwaitingBody({
     required this.topup,
+    required this.expiresAt,
     required this.amount,
-    required this.remaining,
   });
 
   final WalletTopupModel topup;
+  final DateTime expiresAt;
   final double amount;
-  final ValueListenable<Duration> remaining;
 
   @override
   Widget build(BuildContext context) {
@@ -267,30 +311,38 @@ class _AwaitingBody extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
     final currency = SupportedCurrency.fromCodeOrDefault(topup.currency);
+    final (title, body) = switch (topup.validationHint) {
+      MobileMoneyValidationHint.smsLink => (
+        l.walletTopupMmSmsSentTitle(topup.msisdnMasked),
+        l.walletTopupMmSmsSentBody,
+      ),
+      MobileMoneyValidationHint.pinPrompt => (
+        l.walletTopupMmPromptTitle(topup.msisdnMasked),
+        l.walletTopupMmPromptBody,
+      ),
+      MobileMoneyValidationHint.generic => (
+        l.walletTopupMmPromptTitle(topup.msisdnMasked),
+        l.walletTopupMmGenericBody,
+      ),
+    };
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(DonySpacing.lg),
       child: Column(
         children: [
           const SizedBox(height: DonySpacing.md),
-          const _PulsingIcon(),
+          MobileMoneyAwaitingRing(expiresAt: expiresAt, now: DateTime.now),
           const SizedBox(height: DonySpacing.xl),
           Text(
-            l.walletTopupMmValidateTitle,
+            title,
             textAlign: TextAlign.center,
-            style: tt.headlineMedium,
+            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            l.walletTopupMmRequestSent(topup.msisdnMasked, topup.providerLabel),
+            body,
             textAlign: TextAlign.center,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: DonySpacing.base),
-          Text(
-            l.walletTopupMmConfirmationAutomatic,
-            textAlign: TextAlign.center,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.xl),
           DonyCard(
@@ -302,18 +354,16 @@ class _AwaitingBody extends StatelessWidget {
                 ),
                 const DonyInfoRow.divider(),
                 DonyInfoRow(
-                  label: l.walletTopupMmCreditedToLabel,
-                  value: l.walletTopupMmCreditedTo(currency.code),
+                  label: l.walletTopupMmFromLabel,
+                  value: l.walletTopupMmFromValue(
+                    topup.providerLabel,
+                    phoneLastDigits(topup.msisdnMasked),
+                  ),
                 ),
                 const DonyInfoRow.divider(),
                 DonyInfoRow(
-                  label: l.walletTopupMmExpiresInLabel,
-                  value: '',
-                  valueWidget: ValueListenableBuilder<Duration>(
-                    valueListenable: remaining,
-                    builder: (context, value, _) =>
-                        Text(_formatCountdown(value)),
-                  ),
+                  label: l.walletTopupMmCreditedToLabel,
+                  value: l.walletTopupMmCreditedTo(currency.symbol),
                 ),
               ],
             ),
@@ -332,77 +382,63 @@ class _AwaitingBody extends StatelessWidget {
       ),
     );
   }
-
-  static String _formatCountdown(Duration d) {
-    final mm = d.inMinutes.toString().padLeft(2, '0');
-    final ss = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return '$mm:$ss';
-  }
 }
 
-/// Dernier dépôt refusé par l'opérateur (ou sondage expiré) : message et
-/// bouton « Réessayer » dans le [_bottomFor] sticky du parent.
-class _FailedBody extends StatelessWidget {
-  const _FailedBody({required this.message});
+/// Issue sans attente : « Pas encore validé » (échéance passée), échec
+/// final ou erreur technique. Icône dans une pastille, titre, texte.
+class _OutcomeBody extends StatelessWidget {
+  const _OutcomeBody({
+    required this.iconAsset,
+    required this.message,
+    this.title,
+    this.warning = false,
+  });
 
+  final String iconAsset;
+  final String? title;
   final String message;
+
+  /// Pastille ambre (rien n'est perdu) plutôt que rouge (échec).
+  final bool warning;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final tone = warning ? cs.warning : cs.error;
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyIcon('circle-alert', color: cs.error, size: 48),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: tone.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Center(child: DonyIcon(iconAsset, color: tone, size: 26)),
+            ),
             const SizedBox(height: DonySpacing.base),
-            Text(message, textAlign: TextAlign.center, style: tt.bodyMedium),
+            if (title case final String t) ...[
+              Text(
+                t,
+                textAlign: TextAlign.center,
+                style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Icône « smartphone » qui respire en boucle (agrandissement/réduction) :
-/// signale une attente active sans texte supplémentaire. `AnimationController`
-/// brut (pas `flutter_animate`) — un `Ticker`, jamais un `Timer` `dart:async`,
-/// se coupe proprement dans [dispose] sans laisser de minuterie en vol.
-class _PulsingIcon extends StatefulWidget {
-  const _PulsingIcon();
-
-  @override
-  State<_PulsingIcon> createState() => _PulsingIconState();
-}
-
-class _PulsingIconState extends State<_PulsingIcon>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  )..repeat(reverse: true);
-
-  late final Animation<double> _scale = CurvedAnimation(
-    parent: _controller,
-    curve: Curves.easeInOut,
-  ).drive(Tween(begin: 1, end: 1.08));
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ScaleTransition(
-      scale: _scale,
-      child: DonyIcon('smartphone', color: cs.primary, size: 64),
     );
   }
 }

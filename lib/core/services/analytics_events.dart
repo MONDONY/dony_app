@@ -171,6 +171,31 @@ abstract final class AnalyticsEvents {
   static const mobileMoneyConfirmed = 'mobile_money_confirmed';
   static const mobileMoneyFailed = 'mobile_money_failed';
 
+  /// Composant partagé « compte qui paie » (recharge, paiement d'un colis,
+  /// versement). Toutes portent la propriété `flow` (`topup`...) et ne
+  /// contiennent jamais de numéro.
+  ///
+  /// Pays choisi. Propriétés `country`, `available` (servi ou « Bientôt »).
+  static const mobileMoneyCountrySelected = 'mobile_money_country_selected';
+
+  /// Pays « Bientôt » affiché. Propriété `country`.
+  static const mobileMoneyCountryUnavailableViewed =
+      'mobile_money_country_unavailable_viewed';
+
+  /// Opérateur remplacé par celui que pawaPay reconnaît sur le numéro.
+  /// Propriétés `from`, `to` (codes opérateur).
+  static const mobileMoneyOperatorAutoSwitched =
+      'mobile_money_operator_auto_switched';
+
+  /// Numéro refusé ou inconnu des opérateurs du pays.
+  static const mobileMoneyNumberUnrecognized =
+      'mobile_money_number_unrecognized';
+
+  /// Bouton « Recharger par carte » touché depuis un pays « Bientôt ».
+  /// Propriété `country`.
+  static const mobileMoneySwitchToCardTapped =
+      'mobile_money_switch_to_card_tapped';
+
   // Tracking / QR
   static const qrScanSuccess = 'qr_scan_success';
   static const deliveryConfirmed = 'delivery_confirmed';
@@ -400,11 +425,14 @@ abstract final class AnalyticsEvents {
   static const walletTopupCompleted = 'wallet_topup_completed';
 
   /// Recharge en échec. Propriétés `method`, `reason` (`intent_failed`,
-  /// `initiate_failed`, `declined`, `expired`, `code_rejected`),
-  /// `error_code`, `currency`, `provider`.
+  /// `initiate_failed`, `declined`, `code_rejected`), `error_code` (pour un
+  /// refus mobile money : code Yadony du back, ex. `insufficient-balance`),
+  /// `currency`, `provider`.
   static const walletTopupFailed = 'wallet_topup_failed';
 
-  /// Recharge mobile money abandonnée en attente (« autre numéro »).
+  /// Recharge mobile money encore ouverte abandonnée par « Payer avec un
+  /// autre numéro » (proposé après l'échéance), jamais en quittant
+  /// l'attente (voir [walletTopupAwaitingClosed]).
   static const walletTopupCancelled = 'wallet_topup_cancelled';
 
   /// Recharge mobile money initiée (dépôt pawaPay lancé, avant confirmation).
@@ -417,6 +445,15 @@ abstract final class AnalyticsEvents {
   /// par recharge. Mêmes propriétés que [walletTopupMobileMoneyInitiated].
   static const walletTopupMobileMoneyConfirmed =
       'wallet_topup_mobile_money_confirmed';
+
+  /// Écran d'attente mobile money quitté (✕, retour système) sans abandonner
+  /// la recharge. Propriété `remaining_s` : secondes restantes avant
+  /// l'échéance (0 une fois passée).
+  static const walletTopupAwaitingClosed = 'wallet_topup_awaiting_closed';
+
+  /// Recharge mobile money encore ouverte reprise à l'ouverture de l'écran
+  /// Recharger. Propriétés `provider` et `currency`.
+  static const walletTopupResumed = 'wallet_topup_resumed';
 
   // Ratings
   static const ratingSubmitted = 'rating_submitted';

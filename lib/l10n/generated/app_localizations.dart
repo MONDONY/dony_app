@@ -15816,7 +15816,7 @@ abstract class AppLocalizations {
   /// **'Non renseigné'**
   String get mobileMoneyNotProvided;
 
-  /// Libellé de la ligne pays de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
+  /// Libellé « Pays » du mobile money : ligne pays de la vue active du compte de versement (mobile_money_account_screen.dart _ActiveView) et champ pays du compte qui paie (payer_account_section.dart).
   ///
   /// In fr, this message translates to:
   /// **'Pays'**
@@ -16018,24 +16018,6 @@ abstract class AppLocalizations {
   /// **'Payer avec un autre numéro'**
   String get walletTopupMmPayWithAnotherNumber;
 
-  /// Titre du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Validez le paiement sur votre téléphone'**
-  String get walletTopupMmValidateTitle;
-
-  /// Sous-titre du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Une demande de paiement a été envoyée à {number} via {provider}.'**
-  String walletTopupMmRequestSent(String number, String provider);
-
-  /// Note de bas du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'La confirmation est automatique, gardez cet écran ouvert.'**
-  String get walletTopupMmConfirmationAutomatic;
-
   /// Libellé de la ligne montant de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
   ///
   /// In fr, this message translates to:
@@ -16048,35 +16030,17 @@ abstract class AppLocalizations {
   /// **'Crédité sur'**
   String get walletTopupMmCreditedToLabel;
 
-  /// Valeur de la ligne « crédité sur » de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
+  /// Valeur de la ligne « crédité sur » du récapitulatif de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody). {currency} : symbole court de la devise (F CFA).
   ///
   /// In fr, this message translates to:
-  /// **'Solde Yadony ({code})'**
-  String walletTopupMmCreditedTo(String code);
-
-  /// Libellé de la ligne compte à rebours de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Expire dans'**
-  String get walletTopupMmExpiresInLabel;
+  /// **'Portefeuille {currency}'**
+  String walletTopupMmCreditedTo(String currency);
 
   /// Bouton d'ouverture de la page de redirection de l'opérateur (Wave) de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
   ///
   /// In fr, this message translates to:
   /// **'Ouvrir {provider}'**
   String walletTopupMmOpenProvider(String provider);
-
-  /// Message générique de la recharge par mobile money quand le sondage expire sans confirmation (wallet_topup_mobile_money_awaiting_screen.dart, WalletTopupFailureReason.expired).
-  ///
-  /// In fr, this message translates to:
-  /// **'Le paiement n\'a pas été validé à temps.'**
-  String get walletTopupMmExpired;
-
-  /// Message générique de la recharge par mobile money quand l'opérateur refuse le dépôt sans motif exploitable (wallet_topup_mobile_money_awaiting_screen.dart, WalletTopupFailureReason.refused).
-  ///
-  /// In fr, this message translates to:
-  /// **'Le paiement a été refusé par l\'opérateur.'**
-  String get walletTopupMmRefused;
 
   /// Sheet « Solde insuffisant », sans breakdown : première ligne (commission_shortfall_text.dart).
   ///
@@ -16416,28 +16380,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le solde Yadony sera crédité en {code} après confirmation.'**
   String walletTopupCreditNotice(String code);
-
-  /// Avertissement mobile money quand la devise n'a pas de sous-unité (wallet_topup_amount_screen.dart _buildMobileMoney).
-  ///
-  /// In fr, this message translates to:
-  /// **'Le {symbol} ne connaît pas les centimes : indiquez un montant entier.'**
-  String walletTopupNoDecimalsNotice(String symbol);
-
-  /// Bandeau de mismatch de devise mobile money, montant déjà saisi (wallet_topup_amount_screen.dart _buildMobileMoney).
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre portefeuille {currency} sera crédité de {amount}. Votre portefeuille {active} ne bouge pas.'**
-  String walletTopupCreditedAmount(
-    String currency,
-    String amount,
-    String active,
-  );
-
-  /// Bandeau de mismatch de devise mobile money, avant toute saisie (wallet_topup_amount_screen.dart _buildMobileMoney).
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre portefeuille {currency} sera crédité du montant que vous saisissez. Votre portefeuille {active} ne bouge pas.'**
-  String walletTopupCreditedPending(String currency, String active);
 
   /// Bouton sticky pendant l'envoi, carte ou mobile money (wallet_topup_amount_screen.dart _StickyButton, _MobileMoneyStickyButton).
   ///
@@ -28521,12 +28463,6 @@ abstract class AppLocalizations {
   /// **'Autre montant'**
   String get walletTopupCustomAmountChip;
 
-  /// Recharge mobile money : erreur du champ « Autre montant » quand le montant saisi vaut 0 (FLUTTER-CF).
-  ///
-  /// In fr, this message translates to:
-  /// **'Indiquez un montant supérieur à 0.'**
-  String get walletTopupCustomAmountInvalid;
-
   /// Libellé d'accessibilité du voyant clignotant des « Discussions de prix » (Messages, Activités) quand c'est à l'utilisateur d'agir (FLUTTER-BY).
   ///
   /// In fr, this message translates to:
@@ -34477,6 +34413,240 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'À découvrir dans Yadony : {text}'**
   String assistantDiscoverySemantics(String text);
+
+  /// Titre de la section « compte qui paie » (pays, opérateur, numéro) de l'écran Recharger, en majuscules comme les autres titres de section (payer_account_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'COMPTE QUI PAIE'**
+  String get mobileMoneyPayerSectionLabel;
+
+  /// Texte d'aide du champ de recherche du pays mobile money qui paie (mobile_money_country_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un pays'**
+  String get mobileMoneyCountrySearchHint;
+
+  /// Pastille d'un pays où le mobile money n'est pas encore ouvert, dans la liste de recherche du pays (mobile_money_country_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bientôt'**
+  String get mobileMoneyCountryUpcoming;
+
+  /// Sous-titre d'un pays « Bientôt » dans la liste de recherche du pays mobile money.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money pas encore disponible'**
+  String get mobileMoneyCountryUpcomingSubtitle;
+
+  /// Note affichée quand le pays cherché n'a pas encore le mobile money (« Bientôt ») : propose les autres moyens de recharge.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attendant, rechargez par carte bancaire ou avec un code de recharge.'**
+  String get mobileMoneyCountryUnavailableNotice;
+
+  /// Texte affiché sous le champ pays quand la recherche ne trouve aucun pays servi ni annoncé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le mobile money n\'est pas disponible pour ce pays.'**
+  String get mobileMoneyCountryNotSupported;
+
+  /// Libellé de la ligne de choix de l'opérateur mobile money qui paie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Opérateur'**
+  String get mobileMoneyOperatorLabel;
+
+  /// Libellé du champ numéro du compte mobile money qui paie. {operator} : nom de l'opérateur choisi (ex. Orange Money).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro {operator}'**
+  String mobileMoneyOperatorNumberLabel(String operator);
+
+  /// Confirmation sous le compte qui paie : pawaPay reconnaît le numéro sur l'opérateur choisi. {operator} : nom de l'opérateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro {operator} reconnu'**
+  String mobileMoneyNumberRecognized(String operator);
+
+  /// Note sous le compte qui paie : le numéro appartient à un autre opérateur que celui touché, l'app a basculé dessus. {operator} : nom du nouvel opérateur.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est un numéro {operator} : l\'opérateur a été changé.'**
+  String mobileMoneyOperatorSwitched(String operator);
+
+  /// Message sous le compte qui paie : aucun opérateur du pays choisi ne reconnaît le numéro saisi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro n\'est reconnu par aucun opérateur de ce pays.'**
+  String get mobileMoneyNumberUnrecognized;
+
+  /// Message sous le compte qui paie : la vérification du numéro a échoué (coupure réseau, erreur serveur), suivi d'un bouton Réessayer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification impossible pour le moment.'**
+  String get mobileMoneyRecognitionFailed;
+
+  /// Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger par carte'**
+  String get walletTopupSwitchToCard;
+
+  /// Légende sous le chrono de l'anneau d'attente du mobile money (mobile_money_awaiting_ring.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'pour valider'**
+  String get walletTopupMmRingCaption;
+
+  /// Titre de l'attente quand l'opérateur fait valider par un lien reçu par SMS (wallet_topup_mobile_money_awaiting_screen.dart). {number} : numéro masqué.
+  ///
+  /// In fr, this message translates to:
+  /// **'SMS envoyé au {number}'**
+  String walletTopupMmSmsSentTitle(String number);
+
+  /// Consigne de l'attente, validation par lien SMS (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrez-le et cliquez sur le lien pour valider le paiement.'**
+  String get walletTopupMmSmsSentBody;
+
+  /// Titre de l'attente quand l'opérateur fait valider par code secret, ou mode inconnu (wallet_topup_mobile_money_awaiting_screen.dart). {number} : numéro masqué.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée au {number}'**
+  String walletTopupMmPromptTitle(String number);
+
+  /// Consigne de l'attente, validation par code secret (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une fenêtre s\'affiche sur votre téléphone : validez avec votre code secret.'**
+  String get walletTopupMmPromptBody;
+
+  /// Consigne de l'attente quand le mode de validation de l'opérateur est inconnu (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Validez le paiement sur votre téléphone (SMS ou fenêtre de votre opérateur).'**
+  String get walletTopupMmGenericBody;
+
+  /// Titre de l'attente une fois l'échéance passée sans réponse de l'opérateur (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore validé'**
+  String get walletTopupMmOverdueTitle;
+
+  /// Texte de l'état « Pas encore validé » : le paiement peut encore aboutir, rien n'est déclaré prélevé ou non (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous validez quand même dans les prochaines minutes, votre solde sera crédité.'**
+  String get walletTopupMmOverdueBody;
+
+  /// Bouton qui relance la recharge avec le même numéro et le même montant (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer une demande'**
+  String get walletTopupMmResend;
+
+  /// Titre de l'écran d'échec final d'une recharge mobile money (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge non aboutie'**
+  String get walletTopupMmFailedTitle;
+
+  /// Libellé de la ligne « compte qui paie » du récapitulatif d'attente (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis'**
+  String get walletTopupMmFromLabel;
+
+  /// Valeur de la ligne « compte qui paie » du récapitulatif d'attente (wallet_topup_mobile_money_awaiting_screen.dart). {operator} : opérateur, {last2} : deux derniers chiffres du numéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'{operator} ••{last2}'**
+  String walletTopupMmFromValue(String operator, String last2);
+
+  /// Rappel du compte qui paie en haut de la carte du montant (wallet_topup_amount_screen.dart). {operator} : opérateur, {last2} : deux derniers chiffres du numéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis {operator} ••{last2}'**
+  String walletTopupFromAccount(String operator, String last2);
+
+  /// Lien de retour au choix du compte qui paie, sur la carte du montant (wallet_topup_amount_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get walletTopupChangeAccount;
+
+  /// Ligne sous le montant mobile money (wallet_topup_amount_screen.dart). {currency} : symbole court de la devise de l'opérateur (F CFA).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crédité sur votre portefeuille {currency}'**
+  String walletTopupCreditedLine(String currency);
+
+  /// Bornes de montant de l'opérateur, sous le montant saisi (wallet_topup_amount_screen.dart). {min}, {max} : montants formatés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre {min} et {max}'**
+  String walletTopupAmountBounds(String min, String max);
+
+  /// Motif d'échec d'une recharge, code insufficient-balance (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde insuffisant sur votre compte mobile money.'**
+  String get walletTopupFailureInsufficientBalance;
+
+  /// Motif d'échec d'une recharge, code not-approved (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement n\'a pas été validé sur votre téléphone.'**
+  String get walletTopupFailureNotApproved;
+
+  /// Motif d'échec d'une recharge, code payer-limit-reached (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre opérateur a refusé : plafond de paiement atteint.'**
+  String get walletTopupFailurePayerLimit;
+
+  /// Motif d'échec d'une recharge, code invalid-number (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro ne peut pas payer par mobile money.'**
+  String get walletTopupFailureInvalidNumber;
+
+  /// Motif d'échec d'une recharge, code provider-unavailable (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre opérateur est indisponible pour le moment. Réessayez plus tard.'**
+  String get walletTopupFailureProviderUnavailable;
+
+  /// Motif d'échec d'une recharge, code expired (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La demande a expiré avant d\'être validée.'**
+  String get walletTopupFailureExpired;
+
+  /// Motif d'échec d'une recharge, code other ou inconnu (wallet_topup_mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement a été refusé par l\'opérateur.'**
+  String get walletTopupFailureOther;
+
+  /// Ligne sous le montant mobile money quand la devise de l'opérateur diffère du portefeuille actif (wallet_topup_amount_screen.dart). {currency}, {active} : symboles courts des devises (F CFA, €).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crédité sur votre portefeuille {currency}. Votre portefeuille {active} ne bouge pas.'**
+  String walletTopupCreditedLineUnchanged(String currency, String active);
+
+  /// Seule borne publiée par l'opérateur : le minimum, sous le montant saisi (wallet_topup_amount_screen.dart). {min} : montant formaté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au moins {min}'**
+  String walletTopupAmountAtLeast(String min);
+
+  /// Seule borne publiée par l'opérateur : le maximum, sous le montant saisi (wallet_topup_amount_screen.dart). {max} : montant formaté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus {max}'**
+  String walletTopupAmountAtMost(String max);
 }
 
 class _AppLocalizationsDelegate

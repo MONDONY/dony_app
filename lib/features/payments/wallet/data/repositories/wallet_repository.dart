@@ -1,4 +1,5 @@
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/wallet/data/datasources/wallet_remote_datasource.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_eligible_topup_model.dart';
@@ -155,6 +156,32 @@ class WalletRepository {
       return WalletTopupStatusModel.fromJson(data);
     } catch (e) {
       throw unwrapDioError(e);
+    }
+  }
+
+  /// Catalogue des pays mobile money. `null` sur 404 : back ancien sans la
+  /// route, l'appelant se rabat sur l'écran d'avant.
+  Future<MobileMoneyCountries?> mobileMoneyCountries() async {
+    try {
+      final data = await _datasource.mobileMoneyCountries();
+      return MobileMoneyCountries.fromJson(data);
+    } catch (e) {
+      final error = unwrapDioError(e);
+      if (error is NotFoundException) return null;
+      throw error;
+    }
+  }
+
+  /// Recharge mobile money encore en attente. `null` quand il n'y en a pas
+  /// (204) ou que le back ne connaît pas la route (404, back ancien).
+  Future<WalletTopupStatusModel?> pendingTopup() async {
+    try {
+      final data = await _datasource.pendingTopup();
+      return data == null ? null : WalletTopupStatusModel.fromJson(data);
+    } catch (e) {
+      final error = unwrapDioError(e);
+      if (error is NotFoundException) return null;
+      throw error;
     }
   }
 

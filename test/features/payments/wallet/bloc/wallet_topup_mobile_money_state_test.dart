@@ -3,6 +3,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -26,19 +27,62 @@ void main() {
     ]);
   });
 
-  test('Failed compare la raison et le message de l’opérateur', () {
+  test('Confirmed distingue une recharge reprise', () {
+    final paid = _status('CONFIRMED');
+    expectValueEquality(
+      () => WalletTopupMobileMoneyConfirmed(paid, resumed: true),
+      [WalletTopupMobileMoneyConfirmed(paid)],
+    );
+  });
+
+  test('Failed compare le code et le motif du back', () {
     expectValueEquality(
       () => WalletTopupMobileMoneyFailed(
-        reason: WalletTopupFailureReason.refused,
-        operatorMessage: 'Solde insuffisant',
+        failureCode: 'insufficient-balance',
+        failureReason: 'Solde insuffisant',
       ),
       [
-        WalletTopupMobileMoneyFailed(reason: WalletTopupFailureReason.refused),
+        WalletTopupMobileMoneyFailed(failureCode: 'insufficient-balance'),
         WalletTopupMobileMoneyFailed(
-          reason: WalletTopupFailureReason.expired,
-          operatorMessage: 'Solde insuffisant',
+          failureCode: 'other',
+          failureReason: 'Solde insuffisant',
         ),
       ],
     );
   });
+
+  test('Overdue compare la recharge', () {
+    final topup = _topup('tp-1');
+    expectValueEquality(() => WalletTopupMobileMoneyOverdue(topup: topup), [
+      WalletTopupMobileMoneyOverdue(topup: _topup('tp-2')),
+    ]);
+  });
+
+  test('Awaiting : échéance du back, sinon repli à 15 min', () {
+    final startedAt = DateTime.utc(2026, 10, 19, 10);
+    final server = DateTime.utc(2026, 10, 19, 10, 5);
+    expect(
+      WalletTopupMobileMoneyAwaiting(
+        topup: _topup('tp-1', expiresAt: server),
+        startedAt: startedAt,
+      ).expiresAt,
+      server,
+    );
+    expect(
+      WalletTopupMobileMoneyAwaiting(
+        topup: _topup('tp-1'),
+        startedAt: startedAt,
+      ).expiresAt,
+      startedAt.add(walletTopupFallbackExpiry),
+    );
+  });
 }
+
+WalletTopupModel _topup(String id, {DateTime? expiresAt}) => WalletTopupModel(
+  topupId: id,
+  currency: 'XOF',
+  provider: 'ORANGE_CIV',
+  providerLabel: 'Orange Money',
+  msisdnMasked: '+225 07 •• •• 56',
+  expiresAt: expiresAt,
+);

@@ -3477,22 +3477,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'walletTopupMmAwaitingTitle': (l) => l.walletTopupMmAwaitingTitle,
   'walletTopupMmPayWithAnotherNumber': (l) =>
       l.walletTopupMmPayWithAnotherNumber,
-  'walletTopupMmValidateTitle': (l) => l.walletTopupMmValidateTitle,
-  'walletTopupMmRequestSent': (l) => l.walletTopupMmRequestSent(
-    placeholderMarker('number'),
-    placeholderMarker('provider'),
-  ),
-  'walletTopupMmConfirmationAutomatic': (l) =>
-      l.walletTopupMmConfirmationAutomatic,
   'walletTopupMmAmountLabel': (l) => l.walletTopupMmAmountLabel,
   'walletTopupMmCreditedToLabel': (l) => l.walletTopupMmCreditedToLabel,
   'walletTopupMmCreditedTo': (l) =>
-      l.walletTopupMmCreditedTo(placeholderMarker('code')),
-  'walletTopupMmExpiresInLabel': (l) => l.walletTopupMmExpiresInLabel,
+      l.walletTopupMmCreditedTo(placeholderMarker('currency')),
   'walletTopupMmOpenProvider': (l) =>
       l.walletTopupMmOpenProvider(placeholderMarker('provider')),
-  'walletTopupMmExpired': (l) => l.walletTopupMmExpired,
-  'walletTopupMmRefused': (l) => l.walletTopupMmRefused,
   'walletShortfallRequired': (l) =>
       l.walletShortfallRequired(placeholderMarker('amount')),
   'walletShortfallBalance': (l) => l.walletShortfallBalance(
@@ -3576,17 +3566,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'walletTopupAmountTitle': (l) => l.walletTopupAmountTitle,
   'walletTopupCreditNotice': (l) =>
       l.walletTopupCreditNotice(placeholderMarker('code')),
-  'walletTopupNoDecimalsNotice': (l) =>
-      l.walletTopupNoDecimalsNotice(placeholderMarker('symbol')),
-  'walletTopupCreditedAmount': (l) => l.walletTopupCreditedAmount(
-    placeholderMarker('currency'),
-    placeholderMarker('amount'),
-    placeholderMarker('active'),
-  ),
-  'walletTopupCreditedPending': (l) => l.walletTopupCreditedPending(
-    placeholderMarker('currency'),
-    placeholderMarker('active'),
-  ),
   'walletTopupProcessing': (l) => l.walletTopupProcessing,
   'walletTopupEnterAmount': (l) => l.walletTopupEnterAmount,
   'walletTopupPayAmount': (l) => l.walletTopupPayAmount(
@@ -6086,7 +6065,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.walletShortfallAlternativeApprox(placeholderMarker('amount')),
   'walletShortfallRateDisclaimer': (l) => l.walletShortfallRateDisclaimer,
   'walletTopupCustomAmountChip': (l) => l.walletTopupCustomAmountChip,
-  'walletTopupCustomAmountInvalid': (l) => l.walletTopupCustomAmountInvalid,
   'negotiationsActionRequired': (l) => l.negotiationsActionRequired,
   'receptionRateTitle': (l) => l.receptionRateTitle,
   'receptionRateIntro': (l) => l.receptionRateIntro(placeholderMarker('name')),
@@ -7326,6 +7304,69 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'assistantNextQuestionsTitle': (l) => l.assistantNextQuestionsTitle,
   'assistantDiscoverySemantics': (l) =>
       l.assistantDiscoverySemantics(placeholderMarker('text')),
+  'mobileMoneyPayerSectionLabel': (l) => l.mobileMoneyPayerSectionLabel,
+  'mobileMoneyCountrySearchHint': (l) => l.mobileMoneyCountrySearchHint,
+  'mobileMoneyCountryUpcoming': (l) => l.mobileMoneyCountryUpcoming,
+  'mobileMoneyCountryUpcomingSubtitle': (l) =>
+      l.mobileMoneyCountryUpcomingSubtitle,
+  'mobileMoneyCountryUnavailableNotice': (l) =>
+      l.mobileMoneyCountryUnavailableNotice,
+  'mobileMoneyCountryNotSupported': (l) => l.mobileMoneyCountryNotSupported,
+  'mobileMoneyOperatorLabel': (l) => l.mobileMoneyOperatorLabel,
+  'mobileMoneyOperatorNumberLabel': (l) =>
+      l.mobileMoneyOperatorNumberLabel(placeholderMarker('operator')),
+  'mobileMoneyNumberRecognized': (l) =>
+      l.mobileMoneyNumberRecognized(placeholderMarker('operator')),
+  'mobileMoneyOperatorSwitched': (l) =>
+      l.mobileMoneyOperatorSwitched(placeholderMarker('operator')),
+  'mobileMoneyNumberUnrecognized': (l) => l.mobileMoneyNumberUnrecognized,
+  'mobileMoneyRecognitionFailed': (l) => l.mobileMoneyRecognitionFailed,
+  'walletTopupSwitchToCard': (l) => l.walletTopupSwitchToCard,
+  'walletTopupMmRingCaption': (l) => l.walletTopupMmRingCaption,
+  'walletTopupMmSmsSentTitle': (l) =>
+      l.walletTopupMmSmsSentTitle(placeholderMarker('number')),
+  'walletTopupMmSmsSentBody': (l) => l.walletTopupMmSmsSentBody,
+  'walletTopupMmPromptTitle': (l) =>
+      l.walletTopupMmPromptTitle(placeholderMarker('number')),
+  'walletTopupMmPromptBody': (l) => l.walletTopupMmPromptBody,
+  'walletTopupMmGenericBody': (l) => l.walletTopupMmGenericBody,
+  'walletTopupMmOverdueTitle': (l) => l.walletTopupMmOverdueTitle,
+  'walletTopupMmOverdueBody': (l) => l.walletTopupMmOverdueBody,
+  'walletTopupMmResend': (l) => l.walletTopupMmResend,
+  'walletTopupMmFailedTitle': (l) => l.walletTopupMmFailedTitle,
+  'walletTopupMmFromLabel': (l) => l.walletTopupMmFromLabel,
+  'walletTopupMmFromValue': (l) => l.walletTopupMmFromValue(
+    placeholderMarker('operator'),
+    placeholderMarker('last2'),
+  ),
+  'walletTopupFromAccount': (l) => l.walletTopupFromAccount(
+    placeholderMarker('operator'),
+    placeholderMarker('last2'),
+  ),
+  'walletTopupChangeAccount': (l) => l.walletTopupChangeAccount,
+  'walletTopupCreditedLine': (l) =>
+      l.walletTopupCreditedLine(placeholderMarker('currency')),
+  'walletTopupAmountBounds': (l) => l.walletTopupAmountBounds(
+    placeholderMarker('min'),
+    placeholderMarker('max'),
+  ),
+  'walletTopupFailureInsufficientBalance': (l) =>
+      l.walletTopupFailureInsufficientBalance,
+  'walletTopupFailureNotApproved': (l) => l.walletTopupFailureNotApproved,
+  'walletTopupFailurePayerLimit': (l) => l.walletTopupFailurePayerLimit,
+  'walletTopupFailureInvalidNumber': (l) => l.walletTopupFailureInvalidNumber,
+  'walletTopupFailureProviderUnavailable': (l) =>
+      l.walletTopupFailureProviderUnavailable,
+  'walletTopupFailureExpired': (l) => l.walletTopupFailureExpired,
+  'walletTopupFailureOther': (l) => l.walletTopupFailureOther,
+  'walletTopupCreditedLineUnchanged': (l) => l.walletTopupCreditedLineUnchanged(
+    placeholderMarker('currency'),
+    placeholderMarker('active'),
+  ),
+  'walletTopupAmountAtLeast': (l) =>
+      l.walletTopupAmountAtLeast(placeholderMarker('min')),
+  'walletTopupAmountAtMost': (l) =>
+      l.walletTopupAmountAtMost(placeholderMarker('max')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7550,8 +7591,7 @@ const textParameters = <String, List<String>>{
   'mobileMoneyNoCommonNetwork': ['name', 'networks', 'country'],
   'mobileMoneyPay': ['amount'],
   'mobileMoneyPinSent': ['provider'],
-  'walletTopupMmRequestSent': ['number', 'provider'],
-  'walletTopupMmCreditedTo': ['code'],
+  'walletTopupMmCreditedTo': ['currency'],
   'walletTopupMmOpenProvider': ['provider'],
   'walletShortfallRequired': ['amount'],
   'walletShortfallBalance': ['currency', 'amount'],
@@ -7564,9 +7604,6 @@ const textParameters = <String, List<String>>{
   'walletLockedCurrencySemantics': ['currency'],
   'walletLockedCurrencyNote': ['currency'],
   'walletTopupCreditNotice': ['code'],
-  'walletTopupNoDecimalsNotice': ['symbol'],
-  'walletTopupCreditedAmount': ['currency', 'amount', 'active'],
-  'walletTopupCreditedPending': ['currency', 'active'],
   'walletTopupPayAmount': ['amount', 'symbol'],
   'walletTopupBelowMinimum': ['amount'],
   'walletTopupViaMethod': ['amount', 'symbol', 'method'],
@@ -7896,4 +7933,16 @@ const textParameters = <String, List<String>>{
   'gpProReason': ['reason'],
   'aiFormDraftSummaryAround': ['date'],
   'assistantDiscoverySemantics': ['text'],
+  'mobileMoneyOperatorNumberLabel': ['operator'],
+  'mobileMoneyNumberRecognized': ['operator'],
+  'mobileMoneyOperatorSwitched': ['operator'],
+  'walletTopupMmSmsSentTitle': ['number'],
+  'walletTopupMmPromptTitle': ['number'],
+  'walletTopupMmFromValue': ['operator', 'last2'],
+  'walletTopupFromAccount': ['operator', 'last2'],
+  'walletTopupCreditedLine': ['currency'],
+  'walletTopupAmountBounds': ['min', 'max'],
+  'walletTopupCreditedLineUnchanged': ['currency', 'active'],
+  'walletTopupAmountAtLeast': ['min'],
+  'walletTopupAmountAtMost': ['max'],
 };

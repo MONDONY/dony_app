@@ -1,3 +1,4 @@
+import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,6 +33,48 @@ void main() {
       });
 
       expect(model.authorizationUrl, isNull);
+    });
+
+    test('expiresAt et validationHint lus (back à jour)', () {
+      final model = WalletTopupModel.fromJson({
+        'topupId': 't-3',
+        'currency': 'XOF',
+        'provider': 'ORANGE_CIV',
+        'providerLabel': 'Orange Money',
+        'msisdnMasked': '+225 •• •• 56 78',
+        'expiresAt': '2026-10-19T10:15:00Z',
+        'validationHint': 'SMS_LINK',
+      });
+
+      expect(model.expiresAt, DateTime.utc(2026, 10, 19, 10, 15));
+      expect(model.expiresAt!.isUtc, isTrue);
+      expect(model.validationHint, MobileMoneyValidationHint.smsLink);
+    });
+
+    test('back ancien : expiresAt null, validationHint generic', () {
+      final model = WalletTopupModel.fromJson({
+        'topupId': 't-4',
+        'currency': 'XOF',
+        'provider': 'ORANGE_CIV',
+        'providerLabel': 'Orange Money',
+        'msisdnMasked': '+225 •• •• 56 78',
+      });
+
+      expect(model.expiresAt, isNull);
+      expect(model.validationHint, MobileMoneyValidationHint.generic);
+    });
+
+    test('expiresAt illisible : null, sans lever', () {
+      final model = WalletTopupModel.fromJson({
+        'topupId': 't-5',
+        'currency': 'XOF',
+        'provider': 'ORANGE_CIV',
+        'providerLabel': 'Orange Money',
+        'msisdnMasked': '+225 •• •• 56 78',
+        'expiresAt': 'pas une date',
+      });
+
+      expect(model.expiresAt, isNull);
     });
   });
 
@@ -71,6 +114,27 @@ void main() {
       expect(model.authorizationUrl, isNull);
       expect(model.failureReason, isNull);
       expect(model.walletBalance, isNull);
+    });
+
+    test('expiresAt (ISO UTC), validationHint et failureCode lus', () {
+      final model = WalletTopupStatusModel.fromJson({
+        ...baseJson(status: 'FAILED'),
+        'expiresAt': '2026-10-19T10:15:00Z',
+        'validationHint': 'PIN_PROMPT',
+        'failureCode': 'insufficient-balance',
+      });
+
+      expect(model.expiresAt, DateTime.utc(2026, 10, 19, 10, 15));
+      expect(model.validationHint, MobileMoneyValidationHint.pinPrompt);
+      expect(model.failureCode, 'insufficient-balance');
+    });
+
+    test('back ancien : expiresAt et failureCode null, hint generic', () {
+      final model = WalletTopupStatusModel.fromJson(baseJson());
+
+      expect(model.expiresAt, isNull);
+      expect(model.failureCode, isNull);
+      expect(model.validationHint, MobileMoneyValidationHint.generic);
     });
 
     test('failureReason renseigné sur FAILED', () {

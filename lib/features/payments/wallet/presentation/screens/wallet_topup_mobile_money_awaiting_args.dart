@@ -2,11 +2,14 @@ import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cub
 
 /// `extra` de la route `/payments/wallet/topup/mobile-money/awaiting`.
 ///
-/// Porte l'instance de [cubit] créée par l'écran de choix (jamais recréée
-/// ici : le sondage démarré par `initiate()` doit continuer sans
-/// interruption), ainsi que [phoneNumber] et [amount] — nécessaires pour
-/// qu'un « Réessayer » après un [WalletTopupMobileMoneyFailed] puisse
-/// relancer la même recharge sans redemander ces deux informations.
+/// Porte l'instance de [cubit] créée par l'écran Recharger (jamais recréée
+/// ici : le sondage démarré par `initiate()` ou `resumePending()` doit
+/// continuer sans interruption), ainsi que [phoneNumber] et [amount], pour
+/// le récapitulatif et pour « Renvoyer une demande » (même numéro, même
+/// montant).
+///
+/// [phoneNumber] est `null` pour une recharge reprise : le serveur ne
+/// renvoie que le numéro masqué, la relance n'est alors pas proposée.
 class WalletTopupMobileMoneyAwaitingArgs {
   const WalletTopupMobileMoneyAwaitingArgs({
     required this.cubit,
@@ -15,6 +18,6 @@ class WalletTopupMobileMoneyAwaitingArgs {
   });
 
   final WalletTopupMobileMoneyCubit cubit;
-  final String phoneNumber;
+  final String? phoneNumber;
   final double amount;
 }
