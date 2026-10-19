@@ -133,7 +133,15 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   /// édition (le back recalcule le net d'un nouveau budget sur elle), sinon
   /// la grille en vigueur. `null` sans grille : taux unique historique.
   CommissionGrid? get _requestGrid =>
-      _frozenGridNotifier.value ?? activeCommissionGrid;
+      _legacyPricing(context.read<PackageRequestFormBloc>().state)
+      ? null
+      : _frozenGridNotifier.value ?? activeCommissionGrid;
+
+  /// Demande existante créée avant les paliers (aucune grille figée) : le
+  /// back recalcule son net au taux unique, l'aperçu fait de même. La grille
+  /// en vigueur ne vaut que pour une nouvelle demande.
+  static bool _legacyPricing(PackageRequestFormState s) =>
+      s.isEditing && s.commissionGridId == null;
 
   /// Lit la grille figée [id] quand l'app ne la connaît pas encore. Un échec
   /// laisse la grille en vigueur s'appliquer.
@@ -159,6 +167,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
           s.totalBudgetEur,
           _resolveCurrency(s),
           grid: _requestGrid,
+          legacy: _legacyPricing(s),
         ) &&
         !_mobileMoneyAccountMissing(s);
   }
@@ -248,6 +257,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
           state.totalBudgetEur,
           _resolveCurrency(state),
           grid: _requestGrid,
+          legacy: _legacyPricing(state),
         )) {
       // Backstop : le bouton « Aperçu » est déjà grisé dans ce cas. `validate()`
       // vient d'afficher le message sous le champ ; on y ramène l'utilisateur,
@@ -361,7 +371,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                     controller: _budgetCtrl,
                     onBudgetChanged: _invalidateQuote,
                     currency: currency,
-                    grid: frozenGrid ?? activeCommissionGrid,
+                    grid: _legacyPricing(state)
+                        ? null
+                        : frozenGrid ?? activeCommissionGrid,
+                    legacy: _legacyPricing(state),
                   ),
                 ),
                 Padding(
@@ -731,12 +744,16 @@ class _BudgetTotalInput extends StatelessWidget {
     this.onBudgetChanged,
     required this.currency,
     this.grid,
+    this.legacy = false,
   });
   final TextEditingController controller;
   final SupportedCurrency? currency;
 
   /// Grille de commission de la demande, `null` sans grille.
   final CommissionGrid? grid;
+
+  /// Demande existante antérieure aux paliers : taux unique, sans minimum.
+  final bool legacy;
 
   /// Prévient le parent qu'un devis chargé précédemment est périmé.
   final VoidCallback? onBudgetChanged;
@@ -808,15 +825,19 @@ class _BudgetTotalInput extends StatelessWidget {
           d,
           effectiveCurrency,
           grid: grid,
+          legacy: legacy,
         )) {
           // Dans les bornes, mais sous les frais de service minimum de la
           // grille : le back refuserait la demande (422).
-          final minimum = grid?.minimumFor(effectiveCurrency.code);
+          final minimum = legacy
+              ? null
+              : grid?.minimumFor(effectiveCurrency.code);
           if (minimum != null &&
               PackageRequestLimits.isBelowCommissionMinimum(
                 d,
                 effectiveCurrency,
                 grid: grid,
+                legacy: legacy,
               )) {
             return l10n.requestBudgetBelowCommissionMinimum(
               CurrencyFormatter.format(minimum, effectiveCurrency),
@@ -864,7 +885,8 @@ class _BudgetBreakdown extends StatelessWidget {
   final NegotiationQuote? quote;
   final SupportedCurrency? currency;
 
-  /// Grille de la demande (figée en édition, sinon en vigueur).
+  /// Grille de la demande (figée en édition, sinon en vigueur) ; `null` sans
+  /// grille ou pour une demande existante antérieure aux paliers.
   final CommissionGrid? grid;
 
   /// Demande existante : le devis du back suit la grille en vigueur, ses
@@ -911,7 +933,10 @@ class _BudgetBreakdown extends StatelessWidget {
     final total = q?.totalEur ?? baseGross;
     final minimum = q?.minimumApplied ?? base.minimumApplied;
     final discount = baseGross - total;
-    final hasDiscount = discount > _halfMinorUnit(cur);
+    // Seul un code saisi et appliqué ouvre une ligne de réduction : sans code,
+    // les frais du devis intègrent déjà un éventuel taux spécial.
+    final hasDiscount =
+        (q?.promoApplied ?? false) && discount > _halfMinorUnit(cur);
 
     return _card(
       cs,
@@ -973,9 +998,10 @@ class _BudgetBreakdown extends StatelessWidget {
     final l10n = context.l10n;
 
     final netBase = PriceDisplay.netFromGross(budgetEur);
-    final commissionEur = quote?.commissionEur ?? (budgetEur - netBase);
-    final net = quote?.netEur ?? netBase;
-    final promoApplied = quote?.promoApplied ?? false;
+    final q = _amountQuote;
+    final commissionEur = q?.commissionEur ?? (budgetEur - netBase);
+    final net = q?.netEur ?? netBase;
+    final promoApplied = q?.promoApplied ?? false;
     final boost = promoApplied ? net - netBase : 0.0;
     final hasRealBoost = boost > 0.005;
 

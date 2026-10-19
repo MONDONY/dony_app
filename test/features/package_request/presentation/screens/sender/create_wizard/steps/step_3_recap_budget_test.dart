@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/bloc/package_request_form_event.da
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -750,6 +751,25 @@ void main() {
       expect(find.text('Code PROMO appliqué'), findsOneWidget);
     });
 
+    testWidgets('devis sans code (taux spécial) : frais du devis, sans ligne '
+        'de réduction ni « Vous paierez »', (tester) async {
+      stubQuote(quote(net: 20, commission: 1.20, total: 21.20));
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 21.40,
+        currency: SupportedCurrency.eur,
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+      await applyPromo(tester, '');
+
+      expect(find.text(eur(1.20)), findsOneWidget);
+      expect(find.text(eur(20)), findsOneWidget);
+      expect(find.text('Réduction du code promo'), findsNothing);
+      expect(find.text('Vous paierez'), findsNothing);
+    });
+
     testWidgets('devis minimumApplied : frais suivis de « (minimum) »', (
       tester,
     ) async {
@@ -892,6 +912,61 @@ void main() {
         expect(find.text(eur(2)), findsOneWidget);
         expect(find.text(eur(20)), findsOneWidget);
         verify(() => config.getCommissionGridById('grid-old')).called(1);
+      });
+
+      testWidgets('demande sans grille figée, grille active : prérempli et '
+          'décomposition au taux unique', (tester) async {
+        final request = PackageRequest(
+          id: 'r-legacy',
+          senderId: 's-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          dateToleranceDays: 0,
+          weightKg: 5,
+          parcelSize: ParcelSize.small,
+          transportMode: TransportMode.plane,
+          status: PackageRequestStatus.open,
+          createdAt: DateTime(2026, 9, 2),
+          targetPriceEur: 20,
+        );
+        final bloc = PackageRequestFormBloc(
+          repo,
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+          editing: request,
+        );
+        addTearDown(bloc.close);
+        // Le back renvoie un devis sur la grille en vigueur : ignoré ici.
+        stubQuote(quote(net: 19.62, commission: 1.38, total: 21));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            home: MultiBlocProvider(
+              providers: [
+                BlocProvider<PackageRequestFormBloc>.value(value: bloc),
+                BlocProvider(
+                  create: (_) => PackageRequestPhotosCubit(
+                    repo,
+                    makeDisabledAnalytics(MockAnalyticsBackend()),
+                  ),
+                ),
+              ],
+              child: const Scaffold(body: Step3RecapBudget()),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // Taux unique par défaut (5 %) : 20 → 21 €, frais 1 €, net 20 €.
+        expect(bloc.state.totalBudgetEur, closeTo(21, 1e-9));
+        expect(find.text(eur(1)), findsOneWidget);
+        expect(find.text(eur(20)), findsOneWidget);
+        expect(find.textContaining('(minimum)'), findsNothing);
+
+        await applyPromo(tester, '');
+        expect(find.text(eur(1)), findsOneWidget);
+        expect(find.text(eur(20)), findsOneWidget);
+        expect(find.text(eur(19.62)), findsNothing);
       });
 
       testWidgets('devis sur une autre grille : montants de la grille figée', (

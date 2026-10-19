@@ -79,8 +79,9 @@ class PackageRequestFormBloc
   /// Construit l'état initial pré-rempli pour l'édition. L'utilisateur
   /// saisit et voit le brut, le backend stocke le net : le brut servi par le
   /// serveur ([PackageRequest.grossPriceEur]) prime, sinon le net est
-  /// reconverti sur la grille figée de la demande quand l'app la connaît,
-  /// à défaut sur la grille en vigueur (taux unique sans grille).
+  /// reconverti sur la grille figée de la demande quand l'app la connaît (à
+  /// défaut la grille en vigueur). Une demande sans grille figée a été créée
+  /// avant les paliers : le back la recalcule au taux unique, l'app aussi.
   static PackageRequestFormState _prefilledFrom(PackageRequest r) {
     final net = r.targetPriceEur;
     final gross =
@@ -90,6 +91,7 @@ class PackageRequestFormBloc
                 net,
                 r.currency,
                 grid: CommissionGridStore.byId(r.commissionGridId),
+                legacy: r.commissionGridId == null,
               ).gross
             : null);
     return PackageRequestFormState(

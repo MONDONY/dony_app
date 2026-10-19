@@ -60,13 +60,16 @@ abstract final class PackageRequestLimits {
   /// Sous grille de commission ([grid], sinon la grille en vigueur), le
   /// budget doit en plus couvrir les frais de service minimum : le back
   /// refuse sinon la demande (422 `budget-below-commission-minimum`).
+  /// [legacy] : demande existante créée avant les paliers, recalculée par le
+  /// back au taux unique (aucun minimum).
   static bool isBudgetValid(
     double? amount,
     SupportedCurrency currency, {
     CommissionGrid? grid,
+    bool legacy = false,
   }) =>
       _withinBounds(amount, currency) &&
-      netForBudget(amount!, currency, grid: grid) != null;
+      netForBudget(amount!, currency, grid: grid, legacy: legacy) != null;
 
   /// Le budget tient dans les bornes de [currency] mais ne couvre pas les
   /// frais de service minimum de la grille : message dédié, distinct de
@@ -75,9 +78,10 @@ abstract final class PackageRequestLimits {
     double? amount,
     SupportedCurrency currency, {
     CommissionGrid? grid,
+    bool legacy = false,
   }) =>
       _withinBounds(amount, currency) &&
-      netForBudget(amount!, currency, grid: grid) == null;
+      netForBudget(amount!, currency, grid: grid, legacy: legacy) == null;
 
   /// Net du voyageur contenu dans le budget public [amount], tel que le back
   /// le stockera ; `null` quand [amount] ne couvre pas les frais de service
@@ -86,10 +90,16 @@ abstract final class PackageRequestLimits {
     double amount,
     SupportedCurrency currency, {
     CommissionGrid? grid,
+    bool legacy = false,
   }) {
     if (!amount.isFinite || amount <= 0) return null;
     try {
-      final net = netForSenderGross(amount, currency.code, grid: grid);
+      final net = netForSenderGross(
+        amount,
+        currency.code,
+        grid: grid,
+        legacy: legacy,
+      );
       return net > 0 ? net : null;
     } on BudgetBelowCommissionMinimumException {
       return null;

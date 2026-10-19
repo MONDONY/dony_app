@@ -826,7 +826,16 @@ void main() {
 
     test('sans grossPriceEur, sous grille, net 20 → 21,40', () {
       useTestCommissionGrid();
-      expect(prefilled(request()).totalBudgetEur, closeTo(21.40, 1e-9));
+      expect(
+        prefilled(request(gridId: kTestGridId)).totalBudgetEur,
+        closeTo(21.40, 1e-9),
+      );
+    });
+
+    test('demande sans grille figée, grille active : taux unique (créée '
+        'avant les paliers, le back la recalcule ainsi)', () {
+      useTestCommissionGrid();
+      expect(prefilled(request()).totalBudgetEur, closeTo(22.40, 1e-9));
     });
 
     test('sans grossPriceEur, grille figée connue : calcul sur elle', () {

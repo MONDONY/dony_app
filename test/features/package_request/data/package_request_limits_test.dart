@@ -141,6 +141,26 @@ void main() {
       );
     });
 
+    test('legacy : taux unique malgré la grille active (1,00 € valide)', () {
+      useTestCommissionGrid();
+      expect(
+        PackageRequestLimits.isBudgetValid(
+          1.0,
+          SupportedCurrency.eur,
+          legacy: true,
+        ),
+        isTrue,
+      );
+      expect(
+        PackageRequestLimits.isBelowCommissionMinimum(
+          1.0,
+          SupportedCurrency.eur,
+          legacy: true,
+        ),
+        isFalse,
+      );
+    });
+
     test('hors bornes : refusé sans être compté comme sous le minimum', () {
       useTestCommissionGrid();
       expect(
