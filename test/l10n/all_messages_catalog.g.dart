@@ -114,6 +114,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'errorPhoneAlreadySetMessage': (l) => l.errorPhoneAlreadySetMessage,
   'errorPhoneAlreadyExistsTitle': (l) => l.errorPhoneAlreadyExistsTitle,
   'errorPhoneAlreadyExistsMessage': (l) => l.errorPhoneAlreadyExistsMessage,
+  'errorPhonePendingDeletionTitle': (l) => l.errorPhonePendingDeletionTitle,
+  'errorPhonePendingDeletionMessage': (l) => l.errorPhonePendingDeletionMessage,
+  'contactPhoneConflictSupportSubject': (l) =>
+      l.contactPhoneConflictSupportSubject,
+  'contactPhoneConflictSupportMessage': (l) =>
+      l.contactPhoneConflictSupportMessage(placeholderMarker('phone')),
   'errorSmsOtpDisabledTitle': (l) => l.errorSmsOtpDisabledTitle,
   'errorSmsOtpDisabledMessage': (l) => l.errorSmsOtpDisabledMessage,
   'errorInvalidPhoneNumberTitle': (l) => l.errorInvalidPhoneNumberTitle,
@@ -7386,6 +7392,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
 /// Paramètres texte (`String` ou non typés) de chaque message qui
 /// en a, dans l'ordre de la signature.
 const textParameters = <String, List<String>>{
+  'contactPhoneConflictSupportMessage': ['phone'],
   'errorBidBelowMinPriceMessage': ['price'],
   'authOtpCodeSentTo': ['contact'],
   'authOtpCodeSentToPhone': ['contact'],

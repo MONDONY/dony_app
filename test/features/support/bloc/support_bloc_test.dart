@@ -219,6 +219,25 @@ void main() {
       },
     );
 
+    test(
+      'SupportDraftOpened : ouverture tracée avec son origine, sans appel réseau',
+      () async {
+        final bloc = buildBloc();
+
+        bloc.add(const SupportDraftOpened('phone_already_used'));
+        await Future<void>.delayed(Duration.zero);
+
+        verify(
+          () => backend.capture(AnalyticsEvents.supportDraftOpened, {
+            'origin': 'phone_already_used',
+          }),
+        ).called(1);
+        verifyZeroInteractions(repository);
+        expect(bloc.state, const SupportState());
+        await bloc.close();
+      },
+    );
+
     blocTest<SupportBloc, SupportState>(
       'remonte le detail RFC 7807 du backend en cas de refus',
       build: () {

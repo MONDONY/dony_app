@@ -1179,19 +1179,54 @@ void main() {
   });
 
   group('ErrorCatalog — codes auth', () {
-    test('phone-already-exists en français et en anglais', () {
+    test('phone-already-exists en français et en anglais : dit quoi faire', () {
       const error = NetworkException('x', code: 'phone-already-exists');
+      final fr = ErrorCatalog.lookup(error);
+      expect(fr.title, 'Numéro déjà utilisé');
       expect(
-        ErrorCatalog.lookup(error).message,
-        'Ce numéro est déjà associé à un autre compte.',
+        fr.message,
+        'Ce numéro a déjà son propre compte Yadony. Connectez-vous avec ce '
+        'numéro, ou contactez le support pour regrouper vos comptes.',
       );
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.title, 'Number already in use');
       expect(
-        ErrorCatalog.lookup(
-          error,
-          l10n: lookupAppLocalizations(AppL10n.en),
-        ).title,
-        'Number already in use',
+        en.message,
+        'This number already has its own Yadony account. Sign in with this '
+        'number, or contact support to merge your accounts.',
       );
+    });
+
+    test('phone-pending-deletion en français et en anglais', () {
+      const error = ConflictException('x', code: 'phone-pending-deletion');
+      final fr = ErrorCatalog.lookup(error);
+      expect(fr.title, 'Compte en cours de suppression');
+      expect(
+        fr.message,
+        'Ce numéro appartient à un compte en cours de suppression. '
+        'Connectez-vous avec ce numéro pour annuler la suppression.',
+      );
+      expect(fr.severity, ErrorSeverity.warning);
+      final en = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(en.title, 'Account being deleted');
+      expect(
+        en.message,
+        'This number belongs to an account that is being deleted. Sign in '
+        'with this number to cancel the deletion.',
+      );
+    });
+
+    test('code de conflit inconnu → message générique, jamais le code', () {
+      const error = ConflictException('x', code: 'phone-merge-future-code');
+      final p = ErrorCatalog.lookup(error);
+      expect(p.title, isNot(contains('phone-merge')));
+      expect(p.message, isNot(contains('phone-merge')));
     });
 
     test('announcement-update-blocked : colis déjà acceptés sur le trajet', () {

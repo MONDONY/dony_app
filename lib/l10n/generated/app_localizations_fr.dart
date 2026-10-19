@@ -251,7 +251,23 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorPhoneAlreadyExistsMessage =>
-      'Ce numéro est déjà associé à un autre compte.';
+      'Ce numéro a déjà son propre compte Yadony. Connectez-vous avec ce numéro, ou contactez le support pour regrouper vos comptes.';
+
+  @override
+  String get errorPhonePendingDeletionTitle => 'Compte en cours de suppression';
+
+  @override
+  String get errorPhonePendingDeletionMessage =>
+      'Ce numéro appartient à un compte en cours de suppression. Connectez-vous avec ce numéro pour annuler la suppression.';
+
+  @override
+  String get contactPhoneConflictSupportSubject =>
+      'Numéro déjà utilisé par un autre compte';
+
+  @override
+  String contactPhoneConflictSupportMessage(String phone) {
+    return 'Bonjour, je veux ajouter le numéro $phone à mon compte, mais il est déjà associé à un autre compte Yadony. Pouvez-vous m\'aider à regrouper mes comptes ?';
+  }
 
   @override
   String get errorSmsOtpDisabledTitle => 'Indisponible';

@@ -1,16 +1,19 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/widgets/dial_code_picker.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
+import 'package:dony/features/support/data/support_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pinput/pinput.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -32,6 +35,35 @@ Widget _wrap(Widget child, MockAuthBloc authBloc) {
   return BlocProvider<AuthBloc>.value(
     value: authBloc,
     child: MaterialApp(home: child),
+  );
+}
+
+/// [EditPhoneScreen] dans un vrai GoRouter : « Contacter le support » pousse
+/// `/support`, qui affiche ici l'origine et le message du brouillon reçu.
+Widget _routerWrap(MockAuthBloc authBloc) {
+  final router = GoRouter(
+    routes: [
+      GoRoute(path: '/', builder: (_, _) => const EditPhoneScreen()),
+      GoRoute(
+        path: '/support',
+        builder: (_, state) {
+          final draft = state.extra as SupportTicketDraft?;
+          return Scaffold(
+            body: Column(
+              children: [
+                Text('support:${draft?.origin}:${draft?.category}'),
+                Text(draft?.message ?? ''),
+              ],
+            ),
+          );
+        },
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
+  return BlocProvider<AuthBloc>.value(
+    value: authBloc,
+    child: MaterialApp.router(routerConfig: router),
   );
 }
 
@@ -244,6 +276,135 @@ void main() {
         await controller.close();
       },
     );
+
+    group('numéro déjà pris (YADONY-FLUTTER-PROD-Y)', () {
+      late StreamController<AuthState> states;
+
+      setUp(() {
+        DonySnackbar.clearDedup();
+        states = StreamController<AuthState>.broadcast();
+        addTearDown(states.close);
+        whenListen<AuthState>(
+          mockAuthBloc,
+          states.stream,
+          initialState: const AuthAuthenticated(_user),
+        );
+      });
+
+      Future<void> sendCodeThenFail(
+        WidgetTester tester,
+        AppException error,
+      ) async {
+        await tester.pumpWidget(_routerWrap(mockAuthBloc));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField), '612345678');
+        await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le code'));
+        await tester.pump();
+        states.add(
+          const AuthOtpSent(verificationId: 'vid', phoneNumber: '+33612345678'),
+        );
+        await tester.pumpAndSettle();
+        states.add(AuthError(error));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      testWidgets(
+        'phone-already-exists : bandeau explicatif + « Contacter le support »',
+        (tester) async {
+          await sendCodeThenFail(
+            tester,
+            const ConflictException('taken', code: 'phone-already-exists'),
+          );
+
+          expect(
+            find.byKey(const Key('phone-conflict-banner')),
+            findsOneWidget,
+          );
+          expect(find.text('Numéro déjà utilisé'), findsOneWidget);
+          expect(
+            find.text(
+              'Ce numéro a déjà son propre compte Yadony. Connectez-vous avec '
+              'ce numéro, ou contactez le support pour regrouper vos comptes.',
+            ),
+            findsOneWidget,
+          );
+          expect(find.text('Contacter le support'), findsOneWidget);
+          // Le bandeau remplace la snackbar : pas de message en double.
+          expect(find.byType(SnackBar), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'phone-pending-deletion : bandeau « Compte en cours de suppression »',
+        (tester) async {
+          await sendCodeThenFail(
+            tester,
+            const ConflictException('pending', code: 'phone-pending-deletion'),
+          );
+
+          expect(find.text('Compte en cours de suppression'), findsOneWidget);
+          expect(
+            find.byKey(const Key('phone-conflict-support-cta')),
+            findsOneWidget,
+          );
+        },
+      );
+
+      testWidgets(
+        '« Contacter le support » ouvre /support avec une demande préremplie',
+        (tester) async {
+          await sendCodeThenFail(
+            tester,
+            const ConflictException('taken', code: 'phone-already-exists'),
+          );
+
+          await tester.tap(find.byKey(const Key('phone-conflict-support-cta')));
+          await tester.pumpAndSettle();
+
+          expect(
+            find.text('support:phone_already_used:ACCOUNT'),
+            findsOneWidget,
+          );
+          expect(
+            find.textContaining('+33612345678'),
+            findsOneWidget,
+            reason: 'le numéro aide l’équipe à retrouver les deux comptes',
+          );
+        },
+      );
+
+      testWidgets('autre erreur : pas de bandeau, la snackbar suffit', (
+        tester,
+      ) async {
+        await sendCodeThenFail(
+          tester,
+          const ValidationException('bad', code: 'phone-otp-invalid'),
+        );
+
+        expect(find.byKey(const Key('phone-conflict-banner')), findsNothing);
+      });
+
+      testWidgets('nouvel envoi de code : le bandeau disparaît', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_routerWrap(mockAuthBloc));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField), '612345678');
+        states.add(
+          const AuthError(
+            ConflictException('taken', code: 'phone-already-exists'),
+          ),
+        );
+        await tester.pump();
+        expect(find.byKey(const Key('phone-conflict-banner')), findsOneWidget);
+
+        await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le code'));
+        await tester.pump();
+
+        expect(find.byKey(const Key('phone-conflict-banner')), findsNothing);
+      });
+    });
 
     testWidgets('titre et bouton en anglais', (tester) async {
       useEnglish();

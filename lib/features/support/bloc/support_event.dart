@@ -12,6 +12,17 @@ final class SupportHomeRequested extends SupportEvent {
   const SupportHomeRequested();
 }
 
+/// Écran support ouvert avec une demande préremplie : seulement mesuré,
+/// aucun appel réseau. [origin] vaut [SupportTicketDraft.origin].
+final class SupportDraftOpened extends SupportEvent {
+  const SupportDraftOpened(this.origin);
+
+  final String origin;
+
+  @override
+  List<Object?> get props => [origin];
+}
+
 /// Crée un ticket depuis le formulaire (catégorie, sujet, premier message).
 final class SupportTicketCreateRequested extends SupportEvent {
   const SupportTicketCreateRequested({

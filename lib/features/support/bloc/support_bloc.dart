@@ -28,6 +28,7 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
     Stream<String>? incomingMessages,
   }) : super(const SupportState()) {
     on<SupportHomeRequested>(_onHomeRequested);
+    on<SupportDraftOpened>(_onDraftOpened);
     on<SupportTicketCreateRequested>(_onCreateRequested);
     on<SupportTicketDetailRequested>(_onDetailRequested);
     on<SupportMessageSendRequested>(_onMessageSendRequested);
@@ -113,6 +114,15 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
         ),
       );
     }
+  }
+
+  void _onDraftOpened(SupportDraftOpened event, Emitter<SupportState> emit) {
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.supportDraftOpened,
+        properties: {'origin': event.origin},
+      ),
+    );
   }
 
   Future<void> _onCreateRequested(

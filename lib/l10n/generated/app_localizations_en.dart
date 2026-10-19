@@ -248,7 +248,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPhoneAlreadyExistsMessage =>
-      'This number is already linked to another account.';
+      'This number already has its own Yadony account. Sign in with this number, or contact support to merge your accounts.';
+
+  @override
+  String get errorPhonePendingDeletionTitle => 'Account being deleted';
+
+  @override
+  String get errorPhonePendingDeletionMessage =>
+      'This number belongs to an account that is being deleted. Sign in with this number to cancel the deletion.';
+
+  @override
+  String get contactPhoneConflictSupportSubject =>
+      'Number already used by another account';
+
+  @override
+  String contactPhoneConflictSupportMessage(String phone) {
+    return 'Hello, I want to add the number $phone to my account, but it is already linked to another Yadony account. Can you help me merge my accounts?';
+  }
 
   @override
   String get errorSmsOtpDisabledTitle => 'Unavailable';

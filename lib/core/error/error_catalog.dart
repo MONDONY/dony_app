@@ -422,6 +422,15 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
+    // Le numéro appartient à un compte dont la suppression est programmée :
+    // se connecter avec ce numéro annule la suppression (409 du back,
+    // YADONY-FLUTTER-PROD-Y).
+    'phone-pending-deletion': _Entry(
+      title: (l) => l.errorPhonePendingDeletionTitle,
+      message: (l) => l.errorPhonePendingDeletionMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
     'sms-otp-disabled': _Entry(
       title: (l) => l.errorSmsOtpDisabledTitle,
       message: (l) => l.errorSmsOtpDisabledMessage,
