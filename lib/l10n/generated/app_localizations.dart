@@ -15522,6 +15522,12 @@ abstract class AppLocalizations {
   /// **'Le paiement n\'a pas pu s\'ouvrir. Réessayez.'**
   String get paymentSheetOpenFailed;
 
+  /// Libellé de PaymentSheetFailureReason.methodUnavailable (dony_payment_sheet.dart) et de la carte de commission : moyen non activé sur le compte Stripe (PayPal en live, YADONY-FLUTTER-PROD-10).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce moyen de paiement est momentanément indisponible. Payez par carte.'**
+  String get paymentMethodUnavailable;
+
   /// Semantics regroupée des moyens de paiement (payment_method_names.dart, mode compact). {wallet} = Apple Pay ou Google Pay, nom de marque non traduit.
   ///
   /// In fr, this message translates to:

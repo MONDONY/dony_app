@@ -65,6 +65,8 @@ String _reasonMessage(AppLocalizations l, PaymentSheetFailureReason reason) {
       return l.paymentAuthenticationFailed;
     case PaymentSheetFailureReason.sheetUnavailable:
       return l.paymentSheetOpenFailed;
+    case PaymentSheetFailureReason.methodUnavailable:
+      return l.paymentMethodUnavailable;
     case PaymentSheetFailureReason.generic:
       return l.paymentFailedGeneric;
   }

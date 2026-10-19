@@ -9762,6 +9762,10 @@
   "@paymentSheetOpenFailed": {
     "description": "Libellé de PaymentSheetFailureReason.sheetUnavailable (dony_payment_sheet.dart) : la feuille Stripe/PayPal n'a pas pu s'ouvrir (erreur locale du SDK, FLUTTER-CJ), distinct d'un refus de carte."
   },
+  "paymentMethodUnavailable": "Ce moyen de paiement est momentanément indisponible. Payez par carte.",
+  "@paymentMethodUnavailable": {
+    "description": "Libellé de PaymentSheetFailureReason.methodUnavailable (dony_payment_sheet.dart) et de la carte de commission : moyen non activé sur le compte Stripe (PayPal en live, YADONY-FLUTTER-PROD-10)."
+  },
   "paymentMethodsSemantics": "Carte, {wallet}, PayPal",
   "@paymentMethodsSemantics": {
     "description": "Semantics regroupée des moyens de paiement (payment_method_names.dart, mode compact). {wallet} = Apple Pay ou Google Pay, nom de marque non traduit.",

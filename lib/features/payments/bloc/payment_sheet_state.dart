@@ -58,6 +58,10 @@ enum PaymentSheetFailureReason {
   /// Vérification 3-D Secure de la banque non aboutie (FLUTTER-G5).
   authenticationFailed,
   sheetUnavailable,
+
+  /// Moyen de paiement non activé sur le compte Stripe (PayPal en live,
+  /// YADONY-FLUTTER-PROD-10) : l'utilisateur est invité à payer par carte.
+  methodUnavailable,
   generic,
 }
 
