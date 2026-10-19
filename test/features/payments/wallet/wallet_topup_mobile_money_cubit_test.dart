@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:clock/clock.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
@@ -814,6 +815,127 @@ void main() {
         unawaited(cubit.close());
       });
     });
+
+    test('detach : une réponse de sondage en vol n\'émet plus rien', () {
+      fakeAsync((async) {
+        final slow = Completer<WalletTopupStatusModel>();
+        when(() => repo.topupStatus('topup-1')).thenAnswer((_) => slow.future);
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+
+        cubit.detach();
+        slow.complete(statusFor('CONFIRMED'));
+        async.flushMicrotasks();
+
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupMobileMoneyConfirmed,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('initiate_alreadyPending_resumesServerTopup', () {
+      fakeAsync((async) {
+        when(
+          () => repo.topupMobileMoney(
+            amount: any(named: 'amount'),
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        ).thenThrow(
+          const ConflictException('déjà', code: 'topup-already-pending'),
+        );
+        when(() => repo.pendingTopup()).thenAnswer(
+          (_) async => statusFor('PENDING', topupId: 'topup-server'),
+        );
+        when(() => repo.topupStatus('topup-server')).thenAnswer(
+          (_) async => statusFor('PENDING', topupId: 'topup-server'),
+        );
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+        final states = <WalletTopupMobileMoneyState>[];
+        final sub = cubit.stream.listen(states.add);
+
+        unawaited(cubit.initiate(amount: 5000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+
+        // La recharge du serveur est reprise, jamais l'erreur 409.
+        expect(states.whereType<WalletTopupMobileMoneyError>(), isEmpty);
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyAwaiting>()
+              .having((s) => s.topup.topupId, 'topupId', 'topup-server')
+              .having((s) => s.resumed, 'resumed', isTrue)
+              .having((s) => s.amount, 'amount', 20000),
+        );
+        expect(async.periodicTimerCount, 1);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupFailed,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        unawaited(sub.cancel());
+        unawaited(cubit.close());
+      });
+    });
+
+    test('409 sans recharge retrouvée : l\'erreur d\'origine', () async {
+      const conflict = ConflictException('déjà', code: 'topup-already-pending');
+      when(
+        () => repo.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      ).thenThrow(conflict);
+      when(() => repo.pendingTopup()).thenAnswer((_) async => null);
+      final cubit = WalletTopupMobileMoneyCubit(repo, analytics);
+
+      await cubit.initiate(amount: 5000, phoneNumber: phoneNumber);
+
+      expect(
+        cubit.state,
+        isA<WalletTopupMobileMoneyError>().having(
+          (s) => s.error,
+          'error',
+          conflict,
+        ),
+      );
+      await cubit.close();
+    });
+
+    test(
+      'resumePending : refusée par shouldResume au retour de la réponse',
+      () async {
+        when(
+          () => repo.pendingTopup(),
+        ).thenAnswer((_) async => statusFor('PENDING'));
+        final cubit = WalletTopupMobileMoneyCubit(repo, analytics);
+
+        expect(await cubit.resumePending(shouldResume: () => false), isFalse);
+        expect(cubit.state, isA<WalletTopupMobileMoneyIdle>());
+        await cubit.close();
+      },
+    );
 
     test('reset() pendant Overdue (« Payer avec un autre numéro ») : '
         'wallet_topup_cancelled, retour à Idle', () {

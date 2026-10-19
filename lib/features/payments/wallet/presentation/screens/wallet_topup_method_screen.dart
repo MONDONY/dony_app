@@ -105,9 +105,20 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
   /// Reprend la recharge mobile money encore en attente, s'il y en a une, et
   /// ouvre son écran d'attente. Le numéro n'est connu que masqué : pas de
   /// « Renvoyer une demande » sur une recharge reprise.
+  ///
+  /// La réponse peut arriver tard : la reprise n'a lieu que si l'écran est
+  /// toujours au sommet et que rien n'a été lancé sur le cubit (sinon deux
+  /// écrans d'attente s'empileraient, par exemple depuis l'écran du montant).
   Future<void> _resumePendingTopup() async {
     final cubit = context.read<WalletTopupMobileMoneyCubit>();
-    if (!await cubit.resumePending() || !mounted) return;
+    final resumed = await cubit.resumePending(
+      shouldResume: () =>
+          mounted &&
+          (ModalRoute.of(context)?.isCurrent ?? false) &&
+          (cubit.state is WalletTopupMobileMoneyIdle ||
+              cubit.state is WalletTopupMobileMoneyProvidersReady),
+    );
+    if (!resumed || !mounted) return;
     final state = cubit.state;
     if (state is! WalletTopupMobileMoneyAwaiting) return;
     unawaited(

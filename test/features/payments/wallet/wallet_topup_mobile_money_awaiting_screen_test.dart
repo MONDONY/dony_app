@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -117,6 +119,13 @@ void main() {
         GoRoute(
           path: '/payments/wallet/topup/mobile-money/awaiting',
           builder: (context, state) => screen(),
+        ),
+        GoRoute(
+          path: '/payments/wallet',
+          builder: (context, state) {
+            didNavigateToWallet = true;
+            return const Scaffold(body: Text('Portefeuille'));
+          },
         ),
       ],
     );
@@ -274,9 +283,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
     await tester.pump();
 
-    expect(find.text('Ouvrir attente'), findsOneWidget);
+    // Fin de la transition de page (l'anneau ne tourne plus : écran quitté).
+    await tester.pumpAndSettle();
+    // On quitte tout le parcours de recharge : jamais l'écran Recharger avec
+    // une recharge orpheline derrière lui.
+    expect(find.text('Portefeuille'), findsOneWidget);
+    expect(find.text('Ouvrir attente'), findsNothing);
     // La recharge continue côté serveur : on arrête seulement de suivre.
-    verify(() => cubit.detach()).called(greaterThanOrEqualTo(1));
+    verify(() => cubit.detach()).called(1);
     verifyNever(() => cubit.reset());
   });
 
@@ -295,9 +309,44 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
     await tester.pump();
 
-    expect(find.text('Ouvrir attente'), findsOneWidget);
+    expect(find.text('Portefeuille'), findsOneWidget);
     verify(() => cubit.detach()).called(1);
     verifyNever(() => cubit.reset());
+  });
+
+  testWidgets('montant et devise du récapitulatif lus dans l\'état', (
+    tester,
+  ) async {
+    // Recharge reprise : l'argument de route ne connaît pas le montant.
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: WalletTopupMobileMoneyAwaiting(
+        topup: topup,
+        startedAt: DateTime.now(),
+        amount: 7500,
+        resumed: true,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: BlocProvider<WalletTopupMobileMoneyCubit>.value(
+          value: cubit,
+          child: const WalletTopupMobileMoneyAwaitingScreen(
+            phoneNumber: null,
+            amount: 0,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final xof = SupportedCurrency.fromCodeOrDefault('XOF');
+    expect(find.text(CurrencyFormatter.format(7500, xof)), findsOneWidget);
+    expect(find.text(CurrencyFormatter.format(0, xof)), findsNothing);
+    expect(find.text('Portefeuille F CFA'), findsOneWidget);
   });
 
   testWidgets('awaiting_overdue_showsOverdueTexts_neverNothingDebited', (

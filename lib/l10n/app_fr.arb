@@ -10070,11 +10070,11 @@
   "@walletTopupMmCreditedToLabel": {
     "description": "Libellé de la ligne « crédité sur » de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
   },
-  "walletTopupMmCreditedTo": "Solde Yadony ({code})",
+  "walletTopupMmCreditedTo": "Portefeuille {currency}",
   "@walletTopupMmCreditedTo": {
-    "description": "Valeur de la ligne « crédité sur » de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).",
+    "description": "Valeur de la ligne « crédité sur » du récapitulatif de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody). {currency} : symbole court de la devise (F CFA).",
     "placeholders": {
-      "code": {
+      "currency": {
         "type": "String"
       }
     }
@@ -21860,9 +21860,7 @@
   "walletTopupChangeAccount": "Changer",
   "@walletTopupChangeAccount": {"description": "Lien de retour au choix du compte qui paie, sur la carte du montant (wallet_topup_amount_screen.dart)."},
   "walletTopupCreditedLine": "Crédité sur votre portefeuille {currency}",
-  "@walletTopupCreditedLine": {"description": "Ligne sous le montant mobile money (wallet_topup_amount_screen.dart). {currency} : nom de la devise de l'opérateur.", "placeholders": {"currency": {"type": "String"}}},
-  "walletTopupActiveWalletUnchanged": "Votre portefeuille {active} ne bouge pas.",
-  "@walletTopupActiveWalletUnchanged": {"description": "Ajouté sur la même ligne que walletTopupCreditedLine quand la devise de l'opérateur diffère du portefeuille actif (wallet_topup_amount_screen.dart). {active} : nom de la devise active.", "placeholders": {"active": {"type": "String"}}},
+  "@walletTopupCreditedLine": {"description": "Ligne sous le montant mobile money (wallet_topup_amount_screen.dart). {currency} : symbole court de la devise de l'opérateur (F CFA).", "placeholders": {"currency": {"type": "String"}}},
   "walletTopupAmountBounds": "Entre {min} et {max}",
   "@walletTopupAmountBounds": {"description": "Bornes de montant de l'opérateur, sous le montant saisi (wallet_topup_amount_screen.dart). {min}, {max} : montants formatés.", "placeholders": {"min": {"type": "String"}, "max": {"type": "String"}}},
   "walletTopupFailureInsufficientBalance": "Solde insuffisant sur votre compte mobile money.",
@@ -21878,5 +21876,11 @@
   "walletTopupFailureExpired": "La demande a expiré avant d'être validée.",
   "@walletTopupFailureExpired": {"description": "Motif d'échec d'une recharge, code expired (wallet_topup_mobile_money_awaiting_screen.dart)."},
   "walletTopupFailureOther": "Le paiement a été refusé par l'opérateur.",
-  "@walletTopupFailureOther": {"description": "Motif d'échec d'une recharge, code other ou inconnu (wallet_topup_mobile_money_awaiting_screen.dart)."}
+  "@walletTopupFailureOther": {"description": "Motif d'échec d'une recharge, code other ou inconnu (wallet_topup_mobile_money_awaiting_screen.dart)."},
+  "walletTopupCreditedLineUnchanged": "Crédité sur votre portefeuille {currency}. Votre portefeuille {active} ne bouge pas.",
+  "@walletTopupCreditedLineUnchanged": {"description": "Ligne sous le montant mobile money quand la devise de l'opérateur diffère du portefeuille actif (wallet_topup_amount_screen.dart). {currency}, {active} : symboles courts des devises (F CFA, €).", "placeholders": {"currency": {"type": "String"}, "active": {"type": "String"}}},
+  "walletTopupAmountAtLeast": "Au moins {min}",
+  "@walletTopupAmountAtLeast": {"description": "Seule borne publiée par l'opérateur : le minimum, sous le montant saisi (wallet_topup_amount_screen.dart). {min} : montant formaté.", "placeholders": {"min": {"type": "String"}}},
+  "walletTopupAmountAtMost": "Au plus {max}",
+  "@walletTopupAmountAtMost": {"description": "Seule borne publiée par l'opérateur : le maximum, sous le montant saisi (wallet_topup_amount_screen.dart). {max} : montant formaté.", "placeholders": {"max": {"type": "String"}}}
 }

@@ -182,6 +182,11 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     } catch (e) {
       if (isClosed || generation != _generation) return;
       final error = unwrapDioError(e);
+      // Une recharge est déjà ouverte côté serveur (ex. attente quittée par
+      // le ✕ puis nouvelle recharge avant l'échéance) : on reprend celle-ci,
+      // avec son avertissement, plutôt que d'afficher le 409.
+      if (error.code == _alreadyPendingCode && await _resume()) return;
+      if (isClosed || generation != _generation) return;
       _logOutcome(
         AnalyticsEvents.walletTopupFailed,
         reason: 'initiate_failed',
@@ -226,12 +231,23 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     );
   }
 
+  /// Code du 409 du back quand une recharge est déjà ouverte.
+  static const _alreadyPendingCode = 'topup-already-pending'; // i18n-ignore
+
   /// Reprend la recharge mobile money encore ouverte côté serveur
   /// (`GET /wallet/topup/pending`), à l'ouverture de l'écran Recharger :
   /// passe en [WalletTopupMobileMoneyAwaiting] et sonde son statut. Renvoie
   /// `true` si une recharge a été reprise, `false` sinon (aucune recharge,
-  /// back ancien, erreur réseau, ou une recharge lancée entre-temps).
-  Future<bool> resumePending() async {
+  /// back ancien, erreur réseau, une recharge lancée entre-temps, ou
+  /// [shouldResume] qui refuse au retour de la réponse : l'écran a changé).
+  Future<bool> resumePending({bool Function()? shouldResume}) async {
+    if (_initiating) return false;
+    return _resume(
+      shouldResume: () => !_initiating && (shouldResume?.call() ?? true),
+    );
+  }
+
+  Future<bool> _resume({bool Function()? shouldResume}) async {
     final generation = _generation;
     final WalletTopupStatusModel? pending;
     try {
@@ -240,7 +256,8 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
       // Reprise de confort : sans elle, l'écran Recharger reste utilisable.
       return false;
     }
-    if (isClosed || generation != _generation || _initiating) return false;
+    if (isClosed || generation != _generation) return false;
+    if (!(shouldResume?.call() ?? true)) return false;
     // Statut technique du back, jamais affiché.
     const pendingStatus = 'PENDING'; // i18n-ignore
     if (pending == null || pending.status != pendingStatus) return false;
@@ -262,6 +279,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
         ),
         startedAt: _now(),
         amount: pending.amount,
+        resumed: true,
       ),
     );
     unawaited(
@@ -282,9 +300,14 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   /// l'attente, le serveur continue de suivre le dépôt et notifie l'issue.
   /// Ni [reset] ni `wallet_topup_cancelled`. Sans effet si rien n'est suivi
   /// (déjà détaché, recharge terminée).
+  ///
+  /// Incrémente [_generation] : une réponse de sondage encore en vol au
+  /// moment de la sortie n'émet plus rien (l'utilisateur a quitté le
+  /// parcours, la notification du serveur annoncera l'issue).
   void detach() {
     if (_pollTimer == null) return;
     stopPolling();
+    _generation++;
     final current = state;
     final remaining = current is WalletTopupMobileMoneyAwaiting
         ? current.expiresAt.difference(_now())

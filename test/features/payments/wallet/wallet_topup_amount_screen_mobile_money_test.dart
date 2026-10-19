@@ -4,6 +4,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
@@ -169,10 +170,7 @@ void main() {
     expect(find.text('Recharger · Étape 2/2'), findsOneWidget);
     expect(find.text('Depuis Orange Money ••56'), findsOneWidget);
     expect(find.text('Changer'), findsOneWidget);
-    expect(
-      find.text('Crédité sur votre portefeuille Franc CFA Ouest'),
-      findsOneWidget,
-    );
+    expect(find.text('Crédité sur votre portefeuille F CFA'), findsOneWidget);
     // Les anciens bandeaux sur la devise ont disparu.
     expect(find.textContaining('ne connaît pas les centimes'), findsNothing);
     expect(
@@ -234,8 +232,8 @@ void main() {
       // Même ligne : la destination, puis le portefeuille actif inchangé.
       expect(
         find.text(
-          'Crédité sur votre portefeuille Franc CFA Ouest. '
-          'Votre portefeuille Euro ne bouge pas.',
+          'Crédité sur votre portefeuille F CFA. '
+          'Votre portefeuille € ne bouge pas.',
         ),
         findsOneWidget,
       );
@@ -329,6 +327,84 @@ void main() {
     await tester.pump();
     expect(find.text('Payer 7500 F CFA'), findsOneWidget);
     expect(payButton(tester).onPressed, isNotNull);
+  });
+
+  testWidgets('une seule borne publiée : « Au moins » ou « Au plus »', (
+    tester,
+  ) async {
+    final xof = SupportedCurrency.fromCodeOrDefault('XOF');
+    await tester.pumpWidget(
+      buildHarness(
+        operator: const MobileMoneyOperator(
+          code: 'ORANGE_CIV',
+          label: 'Orange Money',
+          brand: 'ORANGE',
+          minAmount: 100,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(field(), '50');
+    await tester.pump();
+    expect(
+      find.text('Au moins ${CurrencyFormatter.format(100, xof)}'),
+      findsOneWidget,
+    );
+    expect(payButton(tester).onPressed, isNull);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(
+      buildHarness(
+        operator: const MobileMoneyOperator(
+          code: 'ORANGE_CIV',
+          label: 'Orange Money',
+          brand: 'ORANGE',
+          maxAmount: 5000,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tapQuickAmount(tester, 10000);
+    expect(
+      find.text('Au plus ${CurrencyFormatter.format(5000, xof)}'),
+      findsOneWidget,
+    );
+    expect(payButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('409 « recharge déjà en cours » : l\'attente du serveur, '
+      'sans numéro ni montant saisis', (tester) async {
+    when(
+      () => repo.topupMobileMoney(
+        amount: any(named: 'amount'),
+        phoneNumber: any(named: 'phoneNumber'),
+        provider: any(named: 'provider'),
+      ),
+    ).thenThrow(const ConflictException('déjà', code: 'topup-already-pending'));
+    when(() => repo.pendingTopup()).thenAnswer(
+      (_) async => const WalletTopupStatusModel(
+        topupId: 'topup-server',
+        status: 'PENDING',
+        amount: 3000,
+        currency: 'XOF',
+        provider: 'ORANGE_CIV',
+        providerLabel: 'Orange Money',
+        msisdnMasked: '+225 07 •• •• 56',
+      ),
+    );
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
+
+    await tapQuickAmount(tester, 10000);
+    await tester.tap(find.text('Payer 10000 F CFA'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Attente'), findsOneWidget);
+    expect(capturedArgs!.phoneNumber, isNull);
+    expect(capturedArgs!.amount, 3000);
+    cubit.stopPolling();
   });
 
   testWidgets('sans bornes publiées : aucun plafond deviné', (tester) async {
@@ -503,7 +579,7 @@ void main() {
     expect(find.text('Top up · Step 2/2'), findsOneWidget);
     expect(find.text('Enter an amount'), findsOneWidget);
     expect(find.text('From Orange Money ••56'), findsOneWidget);
-    expect(find.textContaining('Credited to your'), findsOneWidget);
+    expect(find.text('Credited to your F CFA wallet'), findsOneWidget);
 
     await tapQuickAmount(tester, 1000);
 

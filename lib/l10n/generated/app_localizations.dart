@@ -15844,11 +15844,11 @@ abstract class AppLocalizations {
   /// **'Crédité sur'**
   String get walletTopupMmCreditedToLabel;
 
-  /// Valeur de la ligne « crédité sur » de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
+  /// Valeur de la ligne « crédité sur » du récapitulatif de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody). {currency} : symbole court de la devise (F CFA).
   ///
   /// In fr, this message translates to:
-  /// **'Solde Yadony ({code})'**
-  String walletTopupMmCreditedTo(String code);
+  /// **'Portefeuille {currency}'**
+  String walletTopupMmCreditedTo(String currency);
 
   /// Bouton d'ouverture de la page de redirection de l'opérateur (Wave) de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).
   ///
@@ -34192,17 +34192,11 @@ abstract class AppLocalizations {
   /// **'Changer'**
   String get walletTopupChangeAccount;
 
-  /// Ligne sous le montant mobile money (wallet_topup_amount_screen.dart). {currency} : nom de la devise de l'opérateur.
+  /// Ligne sous le montant mobile money (wallet_topup_amount_screen.dart). {currency} : symbole court de la devise de l'opérateur (F CFA).
   ///
   /// In fr, this message translates to:
   /// **'Crédité sur votre portefeuille {currency}'**
   String walletTopupCreditedLine(String currency);
-
-  /// Ajouté sur la même ligne que walletTopupCreditedLine quand la devise de l'opérateur diffère du portefeuille actif (wallet_topup_amount_screen.dart). {active} : nom de la devise active.
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre portefeuille {active} ne bouge pas.'**
-  String walletTopupActiveWalletUnchanged(String active);
 
   /// Bornes de montant de l'opérateur, sous le montant saisi (wallet_topup_amount_screen.dart). {min}, {max} : montants formatés.
   ///
@@ -34251,6 +34245,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le paiement a été refusé par l\'opérateur.'**
   String get walletTopupFailureOther;
+
+  /// Ligne sous le montant mobile money quand la devise de l'opérateur diffère du portefeuille actif (wallet_topup_amount_screen.dart). {currency}, {active} : symboles courts des devises (F CFA, €).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crédité sur votre portefeuille {currency}. Votre portefeuille {active} ne bouge pas.'**
+  String walletTopupCreditedLineUnchanged(String currency, String active);
+
+  /// Seule borne publiée par l'opérateur : le minimum, sous le montant saisi (wallet_topup_amount_screen.dart). {min} : montant formaté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au moins {min}'**
+  String walletTopupAmountAtLeast(String min);
+
+  /// Seule borne publiée par l'opérateur : le maximum, sous le montant saisi (wallet_topup_amount_screen.dart). {max} : montant formaté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus {max}'**
+  String walletTopupAmountAtMost(String max);
 }
 
 class _AppLocalizationsDelegate

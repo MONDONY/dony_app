@@ -30,7 +30,9 @@ import 'package:go_router/go_router.dart';
 ///
 /// Quitter l'écran (✕, retour système) ne perd pas la recharge : le cubit
 /// arrête seulement de sonder ([WalletTopupMobileMoneyCubit.detach]), le
-/// serveur continue de suivre le dépôt et notifie l'issue. pawaPay ne sait
+/// serveur continue de suivre le dépôt et notifie l'issue, et l'on quitte
+/// tout le parcours de recharge pour le portefeuille. Rouvrir « Recharger »
+/// reprend alors l'attente (`resumePending`). pawaPay ne sait
 /// pas annuler un dépôt : « Payer avec un autre numéro » n'apparaît qu'une
 /// fois l'échéance passée ou après un échec final.
 class WalletTopupMobileMoneyAwaitingScreen extends StatefulWidget {
@@ -45,8 +47,9 @@ class WalletTopupMobileMoneyAwaitingScreen extends StatefulWidget {
   /// masqué, la relance n'est alors pas proposée.
   final String? phoneNumber;
 
-  /// Montant de la recharge, affiché et réutilisé par « Renvoyer une
-  /// demande » ([WalletTopupModel] ne le porte pas).
+  /// Montant de la recharge, réutilisé par « Renvoyer une demande ».
+  /// L'affichage préfère celui de l'état ([WalletTopupMobileMoneyAwaiting.
+  /// amount]), seul fiable après une reprise.
   final double amount;
 
   @override
@@ -66,16 +69,24 @@ class _WalletTopupMobileMoneyAwaitingScreenState
     _cubit = context.read<WalletTopupMobileMoneyCubit>();
   }
 
-  /// Toute sortie (✕, retour système, geste) passe par ici : la recharge
-  /// continue côté serveur, le sondage s'arrête. Jamais de `reset()` :
-  /// l'abandon est réservé à « Payer avec un autre numéro ».
+  /// Retour système ou geste : même sortie que le ✕. Un `pop` explicite
+  /// (« Payer avec un autre numéro », déjà réinitialisé) passe tel quel.
   void _onPopped(bool didPop, Object? result) {
-    if (didPop) _cubit.detach();
+    if (didPop) {
+      _cubit.detach();
+      return;
+    }
+    _leave();
   }
 
-  void _close() {
+  /// ✕ : la recharge continue côté serveur, le sondage s'arrête et l'on
+  /// quitte tout le parcours pour le portefeuille. Jamais de `reset()` :
+  /// l'abandon est réservé à « Payer avec un autre numéro ». Revenir sur
+  /// l'écran Recharger laisserait une recharge orpheline (409, ou second
+  /// dépôt sans avertissement).
+  void _leave() {
     _cubit.detach();
-    context.pop();
+    context.go('/payments/wallet');
   }
 
   void _resend() {
@@ -96,6 +107,7 @@ class _WalletTopupMobileMoneyAwaitingScreenState
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return PopScope(
+      canPop: false,
       onPopInvokedWithResult: _onPopped,
       child: Scaffold(
         backgroundColor: cs.surfaceContainerLowest,
@@ -103,7 +115,7 @@ class _WalletTopupMobileMoneyAwaitingScreenState
           actions: const [DonyFeedbackButton()],
           leading: DonyAppBarBackButton(
             leadingIcon: Icons.close_rounded,
-            onBack: _close,
+            onBack: _leave,
           ),
           title: Text(context.l10n.walletTopupMmAwaitingTitle),
           backgroundColor: cs.surface,
@@ -161,7 +173,7 @@ class _WalletTopupMobileMoneyAwaitingScreenState
       final WalletTopupMobileMoneyAwaiting s => _AwaitingBody(
         topup: s.topup,
         expiresAt: s.expiresAt,
-        amount: widget.amount,
+        amount: s.amount ?? widget.amount,
       ),
       WalletTopupMobileMoneyOverdue() => _OutcomeBody(
         iconAsset: 'clock',
@@ -331,7 +343,7 @@ class _AwaitingBody extends StatelessWidget {
                 const DonyInfoRow.divider(),
                 DonyInfoRow(
                   label: l.walletTopupMmCreditedToLabel,
-                  value: l.walletTopupMmCreditedTo(currency.code),
+                  value: l.walletTopupMmCreditedTo(currency.symbol),
                 ),
               ],
             ),

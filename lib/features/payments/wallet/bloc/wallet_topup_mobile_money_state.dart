@@ -54,24 +54,27 @@ const walletTopupFallbackExpiry = Duration(minutes: 15);
 /// Recharge initiée (ou reprise), en attente de confirmation opérateur.
 /// [startedAt] sert au repli quand le back ne donne pas d'échéance.
 /// [amount] : montant de la recharge, connu de l'app ou relu sur le serveur
-/// pour une recharge reprise.
+/// pour une recharge reprise. [resumed] : recharge reprise du serveur
+/// (`GET /wallet/topup/pending`), dont le numéro n'est connu que masqué.
 class WalletTopupMobileMoneyAwaiting extends WalletTopupMobileMoneyState {
   const WalletTopupMobileMoneyAwaiting({
     required this.topup,
     required this.startedAt,
     this.amount,
+    this.resumed = false,
   });
 
   final WalletTopupModel topup;
   final DateTime startedAt;
   final double? amount;
+  final bool resumed;
 
   /// Échéance du chrono : celle du serveur, sinon [startedAt] + 15 min.
   DateTime get expiresAt =>
       topup.expiresAt ?? startedAt.add(walletTopupFallbackExpiry);
 
   @override
-  List<Object?> get props => [topup, startedAt, amount];
+  List<Object?> get props => [topup, startedAt, amount, resumed];
 }
 
 /// Échéance passée sans statut final : l'opérateur peut encore valider, le

@@ -3445,7 +3445,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'walletTopupMmAmountLabel': (l) => l.walletTopupMmAmountLabel,
   'walletTopupMmCreditedToLabel': (l) => l.walletTopupMmCreditedToLabel,
   'walletTopupMmCreditedTo': (l) =>
-      l.walletTopupMmCreditedTo(placeholderMarker('code')),
+      l.walletTopupMmCreditedTo(placeholderMarker('currency')),
   'walletTopupMmOpenProvider': (l) =>
       l.walletTopupMmOpenProvider(placeholderMarker('provider')),
   'walletShortfallRequired': (l) =>
@@ -7265,8 +7265,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'walletTopupChangeAccount': (l) => l.walletTopupChangeAccount,
   'walletTopupCreditedLine': (l) =>
       l.walletTopupCreditedLine(placeholderMarker('currency')),
-  'walletTopupActiveWalletUnchanged': (l) =>
-      l.walletTopupActiveWalletUnchanged(placeholderMarker('active')),
   'walletTopupAmountBounds': (l) => l.walletTopupAmountBounds(
     placeholderMarker('min'),
     placeholderMarker('max'),
@@ -7280,6 +7278,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.walletTopupFailureProviderUnavailable,
   'walletTopupFailureExpired': (l) => l.walletTopupFailureExpired,
   'walletTopupFailureOther': (l) => l.walletTopupFailureOther,
+  'walletTopupCreditedLineUnchanged': (l) => l.walletTopupCreditedLineUnchanged(
+    placeholderMarker('currency'),
+    placeholderMarker('active'),
+  ),
+  'walletTopupAmountAtLeast': (l) =>
+      l.walletTopupAmountAtLeast(placeholderMarker('min')),
+  'walletTopupAmountAtMost': (l) =>
+      l.walletTopupAmountAtMost(placeholderMarker('max')),
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -7503,7 +7509,7 @@ const textParameters = <String, List<String>>{
   'mobileMoneyNoCommonNetwork': ['name', 'networks', 'country'],
   'mobileMoneyPay': ['amount'],
   'mobileMoneyPinSent': ['provider'],
-  'walletTopupMmCreditedTo': ['code'],
+  'walletTopupMmCreditedTo': ['currency'],
   'walletTopupMmOpenProvider': ['provider'],
   'walletShortfallRequired': ['amount'],
   'walletShortfallBalance': ['currency', 'amount'],
@@ -7842,6 +7848,8 @@ const textParameters = <String, List<String>>{
   'walletTopupMmFromValue': ['operator', 'last2'],
   'walletTopupFromAccount': ['operator', 'last2'],
   'walletTopupCreditedLine': ['currency'],
-  'walletTopupActiveWalletUnchanged': ['active'],
   'walletTopupAmountBounds': ['min', 'max'],
+  'walletTopupCreditedLineUnchanged': ['currency', 'active'],
+  'walletTopupAmountAtLeast': ['min'],
+  'walletTopupAmountAtMost': ['max'],
 };

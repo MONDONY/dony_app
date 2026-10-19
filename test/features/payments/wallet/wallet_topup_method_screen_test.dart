@@ -789,8 +789,8 @@ void main() {
   });
 
   testWidgets(
-    'CRITIQUE — ✕ de l\'écran d\'attente : retour à l\'écran de choix sans '
-    'abandonner la recharge, plus aucun sondage',
+    'CRITIQUE — ✕ de l\'écran d\'attente : portefeuille, recharge laissée au '
+    'serveur, plus aucun sondage ni second dépôt',
     (tester) async {
       final slowStatus = Completer<WalletTopupStatusModel>();
       when(() => repo.topupStatus(any())).thenAnswer((_) => slowStatus.future);
@@ -818,6 +818,11 @@ void main() {
                     amount: 5000,
                   ),
                 ),
+          ),
+          GoRoute(
+            path: '/payments/wallet',
+            builder: (context, state) =>
+                const Scaffold(body: Text('Portefeuille')),
           ),
         ],
       );
@@ -853,15 +858,29 @@ void main() {
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
 
-      expect(find.byType(WalletTopupMethodScreen), findsOneWidget);
+      // Tout le parcours de recharge est quitté : jamais l'écran Recharger
+      // avec une recharge orpheline (409 ou second dépôt sans avertissement).
+      expect(find.text('Portefeuille'), findsOneWidget);
+      expect(find.byType(WalletTopupMethodScreen), findsNothing);
       // La recharge n'est pas abandonnée : le serveur la suit et notifie.
       expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
 
-      slowStatus.complete(statusFor('PENDING'));
+      // Même une confirmation déjà en vol n'émet plus rien.
+      slowStatus.complete(statusFor('CONFIRMED'));
+      await tester.pump();
+      expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
       await tester.pump();
       await tester.pump(WalletTopupMobileMoneyCubit.pollInterval * 2);
-      // Un seul sondage au total : celui parti avant le ✕.
+      // Un seul sondage au total : celui parti avant le ✕. Aucun second
+      // dépôt : le seul topupMobileMoney est celui lancé plus haut.
       verify(() => repo.topupStatus(any())).called(1);
+      verify(
+        () => repo.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      ).called(1);
     },
   );
 
@@ -1379,6 +1398,30 @@ void main() {
       expect(capturedAwaitingArgs!.phoneNumber, isNull);
       expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
       cubit.stopPolling();
+    });
+
+    testWidgets('reprise tardive alors que l\'écran du montant est ouvert : '
+        'ignorée, une seule attente possible', (tester) async {
+      final pending = Completer<WalletTopupStatusModel?>();
+      when(() => repo.pendingTopup()).thenAnswer((_) => pending.future);
+      payerStarts(kPayerRecognized);
+      await openMobileMoney(tester);
+
+      await tester.tap(find.text('Suivant → Montant'));
+      await tester.pumpAndSettle();
+      expect(find.text('Montant'), findsOneWidget);
+
+      pending.complete(statusFor('PENDING'));
+      await tester.pumpAndSettle();
+
+      final cubit = BlocProvider.of<WalletTopupMobileMoneyCubit>(
+        tester.element(
+          find.byType(WalletTopupMethodScreen, skipOffstage: false),
+        ),
+      );
+      expect(cubit.state, isNot(isA<WalletTopupMobileMoneyAwaiting>()));
+      expect(find.text('Attente'), findsNothing);
+      expect(capturedAwaitingArgs, isNull);
     });
 
     testWidgets('aucune recharge en cours : l\'écran 1 reste affiché', (

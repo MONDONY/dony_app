@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
-import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -519,13 +518,16 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
           previous.runtimeType != current.runtimeType,
       listener: (context, state) {
         switch (state) {
-          case WalletTopupMobileMoneyAwaiting():
+          case final WalletTopupMobileMoneyAwaiting s:
+            // Une recharge déjà ouverte côté serveur (409) est reprise à la
+            // place : son montant est celui du serveur et son numéro n'est
+            // connu que masqué (pas de « Renvoyer une demande »).
             context.pushReplacement(
               '/payments/wallet/topup/mobile-money/awaiting',
               extra: WalletTopupMobileMoneyAwaitingArgs(
                 cubit: context.read<WalletTopupMobileMoneyCubit>(),
-                phoneNumber: phoneNumber,
-                amount: _amount,
+                phoneNumber: s.resumed ? null : phoneNumber,
+                amount: s.amount ?? _amount,
               ),
             );
           case final WalletTopupMobileMoneyError e:
@@ -637,23 +639,33 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     final l = context.l10n;
     final activeCurrency = _activeCurrency;
 
-    final boundsText = minAmount != null && maxAmount != null
-        ? l.walletTopupAmountBounds(
-            CurrencyFormatter.formatAmountOnly(minAmount, currency),
-            CurrencyFormatter.format(maxAmount, currency),
-          )
-        : null;
+    // Bornes publiées par l'opérateur : les deux, ou celle qui existe.
+    final boundsText = switch ((minAmount, maxAmount)) {
+      (final double min, final double max) => l.walletTopupAmountBounds(
+        CurrencyFormatter.formatAmountOnly(min, currency),
+        CurrencyFormatter.format(max, currency),
+      ),
+      (final double min, null) => l.walletTopupAmountAtLeast(
+        CurrencyFormatter.format(min, currency),
+      ),
+      (null, final double max) => l.walletTopupAmountAtMost(
+        CurrencyFormatter.format(max, currency),
+      ),
+      (null, null) => null,
+    };
     final showBounds =
         boundsText != null &&
         (_customAmount || _customFocus.hasFocus || outOfBounds);
     // La recharge crédite le portefeuille de la devise de l'opérateur,
     // jamais le portefeuille actif : une seule ligne le dit, complétée quand
-    // les deux diffèrent.
-    final credited = l.walletTopupCreditedLine(currency.name(l));
+    // les deux diffèrent. Devises nommées par leur symbole court (F CFA, €).
     final creditedLine =
         activeCurrency != null && activeCurrency.code != currency.code
-        ? '$credited. ${l.walletTopupActiveWalletUnchanged(activeCurrency.name(l))}'
-        : credited;
+        ? l.walletTopupCreditedLineUnchanged(
+            currency.symbol,
+            activeCurrency.symbol,
+          )
+        : l.walletTopupCreditedLine(currency.symbol);
     final operator = _payingOperator;
 
     return DonyCard(

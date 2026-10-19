@@ -9530,8 +9530,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletTopupMmCreditedToLabel => 'Credited to';
 
   @override
-  String walletTopupMmCreditedTo(String code) {
-    return 'Yadony balance ($code)';
+  String walletTopupMmCreditedTo(String currency) {
+    return '$currency wallet';
   }
 
   @override
@@ -21030,11 +21030,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String walletTopupActiveWalletUnchanged(String active) {
-    return 'Your $active wallet stays unchanged.';
-  }
-
-  @override
   String walletTopupAmountBounds(String min, String max) {
     return 'Between $min and $max';
   }
@@ -21066,4 +21061,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walletTopupFailureOther =>
       'The payment was declined by the operator.';
+
+  @override
+  String walletTopupCreditedLineUnchanged(String currency, String active) {
+    return 'Credited to your $currency wallet. Your $active wallet stays unchanged.';
+  }
+
+  @override
+  String walletTopupAmountAtLeast(String min) {
+    return 'At least $min';
+  }
+
+  @override
+  String walletTopupAmountAtMost(String max) {
+    return 'At most $max';
+  }
 }

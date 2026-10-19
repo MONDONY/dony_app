@@ -4714,10 +4714,10 @@
   "walletTopupMmPayWithAnotherNumber": "Pay with a different number",
   "walletTopupMmAmountLabel": "Amount",
   "walletTopupMmCreditedToLabel": "Credited to",
-  "walletTopupMmCreditedTo": "Yadony balance ({code})",
+  "walletTopupMmCreditedTo": "{currency} wallet",
   "@walletTopupMmCreditedTo": {
     "placeholders": {
-      "code": {
+      "currency": {
         "type": "String"
       }
     }
@@ -10859,8 +10859,6 @@
   "walletTopupChangeAccount": "Change",
   "walletTopupCreditedLine": "Credited to your {currency} wallet",
   "@walletTopupCreditedLine": {"placeholders": {"currency": {"type": "String"}}},
-  "walletTopupActiveWalletUnchanged": "Your {active} wallet stays unchanged.",
-  "@walletTopupActiveWalletUnchanged": {"placeholders": {"active": {"type": "String"}}},
   "walletTopupAmountBounds": "Between {min} and {max}",
   "@walletTopupAmountBounds": {"placeholders": {"min": {"type": "String"}, "max": {"type": "String"}}},
   "walletTopupFailureInsufficientBalance": "Insufficient balance on your mobile money account.",
@@ -10869,5 +10867,11 @@
   "walletTopupFailureInvalidNumber": "This number cannot pay with mobile money.",
   "walletTopupFailureProviderUnavailable": "Your operator is unavailable right now. Please try again later.",
   "walletTopupFailureExpired": "The request expired before it was approved.",
-  "walletTopupFailureOther": "The payment was declined by the operator."
+  "walletTopupFailureOther": "The payment was declined by the operator.",
+  "walletTopupCreditedLineUnchanged": "Credited to your {currency} wallet. Your {active} wallet stays unchanged.",
+  "@walletTopupCreditedLineUnchanged": {"placeholders": {"currency": {"type": "String"}, "active": {"type": "String"}}},
+  "walletTopupAmountAtLeast": "At least {min}",
+  "@walletTopupAmountAtLeast": {"placeholders": {"min": {"type": "String"}}},
+  "walletTopupAmountAtMost": "At most {max}",
+  "@walletTopupAmountAtMost": {"placeholders": {"max": {"type": "String"}}}
 }
