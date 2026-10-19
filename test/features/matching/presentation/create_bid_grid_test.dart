@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
@@ -109,6 +111,7 @@ void main() {
 
   setUp(() {
     CommissionGridStore.reset();
+    DonySnackbar.clearDedup();
     bidStream = StreamController<BidState>.broadcast();
     bidBloc = _MockBidBloc();
     paymentBloc = _MockPaymentBloc();
@@ -512,6 +515,119 @@ void main() {
         await tester.pumpAndSettle();
         expect(squash(textOf(tester, totalKey)), '20,80 €');
         expect(squash(textOf(tester, feeKey)), '0,80 €');
+      },
+    );
+
+    testWidgets(
+      'code appliqué, changement de poids : devis de fond émis avec le code',
+      (tester) async {
+        useTestCommissionGrid();
+        await openSheet(tester);
+        await setWeight(tester, 8);
+        await applyPromo(tester, 'WELCOME10');
+        bidStream.add(
+          BidQuoteLoaded(
+            const BidQuoteResponse(
+              netEur: 20.0,
+              kgNetEur: 20.0,
+              rate: 0.07,
+              commissionEur: 1.40,
+              totalEur: 21.10,
+              promoApplied: true,
+              promoLabel: 'Code WELCOME10',
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        capturedQuotes();
+
+        await setWeight(tester, 5);
+        final sent = capturedQuotes();
+        expect(sent, hasLength(1));
+        expect(sent.single.promoCode, 'WELCOME10');
+        expect(sent.single.weightKg, 5);
+        final key = sent.single.backgroundKey;
+        expect(key, isNotNull);
+
+        // Le total affiché reste celui qui sera prélevé : code compris.
+        bidStream.add(
+          BidQuoteLoaded(
+            const BidQuoteResponse(
+              netEur: 12.5,
+              kgNetEur: 12.5,
+              rate: 0.07,
+              commissionEur: 1.0,
+              totalEur: 13.20,
+              promoApplied: true,
+              promoLabel: 'Code WELCOME10',
+            ),
+            backgroundKey: key,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(squash(textOf(tester, totalKey)), '13,20 €');
+      },
+    );
+
+    testWidgets(
+      'code devenu invalide au devis de fond : message promo, devis sans code '
+      'affiché, le suivant part sans code',
+      (tester) async {
+        useTestCommissionGrid();
+        await openSheet(tester);
+        await setWeight(tester, 8);
+        await applyPromo(tester, 'WELCOME10');
+        bidStream.add(
+          BidQuoteLoaded(
+            const BidQuoteResponse(
+              netEur: 20.0,
+              kgNetEur: 20.0,
+              rate: 0.07,
+              commissionEur: 1.40,
+              totalEur: 21.10,
+              promoApplied: true,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        capturedQuotes();
+
+        await setWeight(tester, 5);
+        final key = capturedQuotes().single.backgroundKey;
+        bidStream.add(
+          BidQuoteBackgroundPromoRejected(
+            const ServerException('not found', 'promo-not-found'),
+            key,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text(
+            "Ce code promo n'existe pas. Vérifiez la saisie et réessayez. "
+            "Un code parrain se saisit à l'inscription ou dans Moi › "
+            "« J'ai un code parrain ».",
+          ),
+          findsWidgets,
+        );
+
+        bidStream.add(
+          BidQuoteLoaded(
+            const BidQuoteResponse(
+              netEur: 12.5,
+              kgNetEur: 12.5,
+              rate: 0.07,
+              commissionEur: 1.0,
+              totalEur: 13.50,
+              promoApplied: false,
+            ),
+            backgroundKey: key,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(squash(textOf(tester, totalKey)), '13,50 €');
+
+        await setWeight(tester, 6);
+        expect(capturedQuotes().single.promoCode, isNull);
       },
     );
 

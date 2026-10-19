@@ -279,6 +279,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   static const _autoQuoteDebounce = Duration(milliseconds: 400);
   Timer? _autoQuoteTimer;
 
+  /// Code envoyé par le dernier « Appliquer », en attente du devis.
+  String? _requestedPromoCode;
+
+  /// Code accepté par le serveur (devis utilisateur reçu) : le devis de fond
+  /// le reprend, pour que le total affiché reste celui qui sera prélevé.
+  /// Retiré par un refus du code ou un champ vidé.
+  String? _appliedPromoCode;
+
   // ── Picker step fields ──────────────────────────────────────────────────────
   // Initialisé dans initState : le défaut dépend de widget.announcement
   // (cash si le trajet n'accepte pas Stripe).
@@ -1017,10 +1025,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   void _applyPromoCode() {
     final code = _promoCtrl.text.trim();
     if (code.isEmpty) {
+      _requestedPromoCode = null;
+      _appliedPromoCode = null;
       _quoteNotifier.value = null;
       _scheduleAutoQuote();
       return;
     }
+    _requestedPromoCode = code;
     final weight = _weightNotifier.value;
     _bidBloc.add(
       BidQuoteRequested(
@@ -1050,9 +1061,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Sous grille de commission seulement : le back applique au total le taux
   /// spécial et le bon de parrainage de l'expéditeur, que l'app ne connaît
-  /// pas. Un devis sans code est donc demandé après chaque changement de
-  /// poids ou d'articles ; le calcul local s'affiche en attendant. Sans
-  /// grille, aucun appel (le devis ne sert qu'au code promo).
+  /// pas. Un devis est donc demandé après chaque changement de poids ou
+  /// d'articles, avec le code promo accepté s'il y en a un, sans code sinon ;
+  /// le calcul local s'affiche en attendant. Sans grille, aucun appel (le
+  /// devis ne sert qu'au code promo).
   void _scheduleAutoQuote() {
     _autoQuoteTimer?.cancel();
     if (!commissionGridActive || _netTotal() <= 0) return;
@@ -1066,6 +1078,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       BidQuoteRequested(
         announcementId: widget.announcement.id,
         weightKg: weight > 0 ? weight : null,
+        promoCode: _appliedPromoCode,
         gridItems: _selectedGridItems(),
         backgroundKey: _quoteInputsKey,
       ),
@@ -1191,8 +1204,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           (key != _quoteInputsKey || _quoteNotifier.value != null)) {
         return;
       }
+      if (key == null) _appliedPromoCode = _requestedPromoCode;
       _quoteNotifier.value = state.quote;
+    } else if (state is BidQuoteBackgroundPromoRejected) {
+      // Le code accepté plus tôt ne l'est plus : le devis de fond repart sans
+      // code (BLoC) et le message promo habituel prévient, sans bloquer.
+      _appliedPromoCode = null;
+      if (state.backgroundKey == _quoteInputsKey) {
+        ErrorPresenter.show(context, state.error);
+      }
     } else if (state is BidPromoError) {
+      _appliedPromoCode = null;
       _quoteNotifier.value = ErrorPresenter.resolve(
         state.error,
         l10n: context.l10n,
