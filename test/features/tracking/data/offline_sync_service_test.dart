@@ -1663,6 +1663,88 @@ void main() {
       expect(_hiveService.offlineQueue.isEmpty, isTrue);
     });
 
+    test('rejeux : la photo n\'est envoyée qu\'une fois', () async {
+      final dir = await Directory.systemTemp.createTemp('supp_photo');
+      addTearDown(() => dir.delete(recursive: true));
+      final photo = File('${dir.path}/depart.jpg')..writeAsBytesSync([1]);
+      when(
+        () => mockRepo.uploadTrackingPhoto(any(), any()),
+      ).thenAnswer((_) async => 'tracking/bid-1/depart.jpg');
+      stubPost(() async => throw blocked());
+      final key = await timed.queueScan(
+        bidId: 'bid-1',
+        eventType: 'DEPART',
+        photoPath: photo.path,
+      );
+
+      await timed.syncAll();
+      expect(
+        _hiveService.offlineQueue.get(key)!['photoKey'],
+        'tracking/bid-1/depart.jpg',
+      );
+
+      now = t0.add(const Duration(minutes: 6));
+      await timed.syncAll();
+      now = t0.add(const Duration(minutes: 12));
+      stubPost(() async => _fakeEvent());
+      await timed.syncAll();
+
+      verify(() => mockRepo.uploadTrackingPhoto(any(), any())).called(1);
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          photoUrl: 'tracking/bid-1/depart.jpg',
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(3);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+
+    test('événement offline émis au premier report seulement', () async {
+      stubPost(() async => throw blocked());
+      await timed.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+
+      await timed.syncAll();
+      now = t0.add(const Duration(minutes: 6));
+      await timed.syncAll();
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.handoverBlockedSupplement,
+          properties: {'channel': 'offline'},
+        ),
+      ).called(1);
+    });
+
+    test(
+      'sendScheduled sans écran pour le motif : étape gardée et comptée',
+      () async {
+        stubPost(() async => throw blocked());
+        final key = await timed.queueScan(
+          bidId: 'bid-1',
+          eventType: 'DEPART',
+          notBefore: t0.add(const Duration(seconds: 7)),
+        );
+
+        expect(await timed.sendScheduled(key, canShowRefusal: false), isNull);
+
+        final entry = Map<String, dynamic>.from(
+          _hiveService.offlineQueue.get(key)!,
+        );
+        expect(entry['notBefore'], '2026-10-19T12:05:00.000Z');
+        // Le bandeau des scans en attente la montre : la remise n'est pas
+        // validée.
+        expect(timed.pendingCountFor({'bid-1'}), 1);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.handoverBlockedSupplement,
+            properties: {'channel': 'direct'},
+          ),
+        ).called(1);
+      },
+    );
+
     test(
       'sendScheduled (onglet Suivi) : retirée de la file, erreur remontée',
       () async {

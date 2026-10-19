@@ -263,7 +263,11 @@ void main() {
     ).thenAnswer((_) async => 1);
     when(() => offlineSync.discard(any())).thenAnswer((_) async {});
     when(
-      () => offlineSync.sendScheduled(any(), position: any(named: 'position')),
+      () => offlineSync.sendScheduled(
+        any(),
+        position: any(named: 'position'),
+        canShowRefusal: any(named: 'canShowRefusal'),
+      ),
     ).thenAnswer(
       (_) async => SentScan(
         TrackingEventModel(
@@ -472,7 +476,11 @@ void main() {
   }
 
   void verifyNeverSubmitted() => verifyNever(
-    () => offlineSync.sendScheduled(any(), position: any(named: 'position')),
+    () => offlineSync.sendScheduled(
+      any(),
+      position: any(named: 'position'),
+      canShowRefusal: any(named: 'canShowRefusal'),
+    ),
   );
 
   /// Validation mise en file dès le « Valider », puis envoyée une fois (avec
@@ -503,6 +511,7 @@ void main() {
               () => offlineSync.sendScheduled(
                 1,
                 position: captureAny(named: 'position'),
+                canShowRefusal: any(named: 'canShowRefusal'),
               ),
             ).captured.single
             as Future<ScanPosition?>;
@@ -1669,8 +1678,11 @@ void main() {
 
     testWidgets('sans réseau → en attente d\'envoi', (tester) async {
       when(
-        () =>
-            offlineSync.sendScheduled(any(), position: any(named: 'position')),
+        () => offlineSync.sendScheduled(
+          any(),
+          position: any(named: 'position'),
+          canShowRefusal: any(named: 'canShowRefusal'),
+        ),
       ).thenAnswer((_) async => null);
       stubTransitTrips();
       await pump(tester);
@@ -1696,8 +1708,11 @@ void main() {
 
     testWidgets('photo refusée par le serveur → avertissement', (tester) async {
       when(
-        () =>
-            offlineSync.sendScheduled(any(), position: any(named: 'position')),
+        () => offlineSync.sendScheduled(
+          any(),
+          position: any(named: 'position'),
+          canShowRefusal: any(named: 'canShowRefusal'),
+        ),
       ).thenAnswer(
         (_) async => SentScan(
           TrackingEventModel(
@@ -1732,8 +1747,11 @@ void main() {
 
     testWidgets('refus du back → message d\'échec', (tester) async {
       when(
-        () =>
-            offlineSync.sendScheduled(any(), position: any(named: 'position')),
+        () => offlineSync.sendScheduled(
+          any(),
+          position: any(named: 'position'),
+          canShowRefusal: any(named: 'canShowRefusal'),
+        ),
       ).thenThrow(const ConflictException('déjà scanné'));
       stubTransitTrips();
       await pump(tester);

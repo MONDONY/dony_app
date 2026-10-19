@@ -312,6 +312,23 @@ void main() {
     expect(_txt('+1 kg : 8 €'), findsOneWidget);
   });
 
+  testWidgets('photo : aucun DonyButton dans le contenu de la feuille', (
+    tester,
+  ) async {
+    await open(tester);
+
+    expect(find.text('Prendre une photo'), findsOneWidget);
+    expect(find.widgetWithText(DonyButton, 'Prendre une photo'), findsNothing);
+    await tester.tap(find.text('Prendre une photo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reprendre la photo'), findsOneWidget);
+    expect(find.widgetWithText(DonyButton, 'Reprendre la photo'), findsNothing);
+    await tester.tap(find.text('Reprendre la photo'));
+    await tester.pumpAndSettle();
+    verify(() => media.pick(source: any(named: 'source'))).called(2);
+  });
+
   testWidgets('photo illisible : message d\'erreur', (tester) async {
     when(
       () => media.pick(source: any(named: 'source')),

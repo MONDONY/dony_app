@@ -96,6 +96,7 @@ class OfflineSyncService {
 
   /// Relance [syncAll] à la prochaine échéance d'une entrée pas encore due.
   Timer? _wakeUp;
+  DateTime? _wakeUpAt;
 
   /// Premier délai avant un nouvel essai après un échec réseau, un délai
   /// dépassé ou un 5xx, doublé à chaque échec jusqu'à [retryMax]. Sans lui,
@@ -177,7 +178,11 @@ class OfflineSyncService {
     var count = 0;
     for (final key in box.keys) {
       final raw = box.get(key);
-      if (raw == null || _inFlight.contains(key) || _notDue(raw, now)) {
+      // Une étape refusée pour l'instant reste « en attente » pour
+      // l'utilisateur malgré son échéance : la remise n'est pas validée.
+      if (raw == null ||
+          _inFlight.contains(key) ||
+          (_notDue(raw, now) && raw[retryLaterField] != true)) {
         continue;
       }
       if (test(raw)) count++;
@@ -354,6 +359,7 @@ class OfflineSyncService {
   Future<SentScan?> sendScheduled(
     int key, {
     Future<ScanPosition?>? position,
+    bool canShowRefusal = true,
   }) async {
     final raw = _hive.offlineQueue.get(key);
     // Réservée avant la moindre attente : un syncAll concurrent la saute.
@@ -372,15 +378,23 @@ class OfflineSyncService {
         // meurt pendant l'appel.
         await _hive.offlineQueue.put(key, entry);
       }
-      return await _send(key, entry, deferred: false);
+      return await _send(
+        key,
+        entry,
+        deferred: false,
+        canShowRefusal: canShowRefusal,
+      );
     } catch (error, stackTrace) {
       final cause = unwrapDioError(error);
-      // Refus définitif ou « pour l'instant » (supplément en attente) :
-      // l'entrée est déjà retirée par _send, l'appelant affiche le motif.
-      if (isDefinitiveRejection(cause) ||
-          isRetryLaterTrackingRejection(cause)) {
-        rethrow;
+      // Refusée pour l'instant (supplément en attente) : affichable, elle est
+      // déjà retirée et le motif remonte ; sinon _send l'a gardée en file
+      // avec son échéance, comme une étape en attente de réseau.
+      if (isRetryLaterTrackingRejection(cause)) {
+        if (canShowRefusal) rethrow;
+        return null;
       }
+      // Refus définitif : déjà retirée par _send, l'appelant affiche le motif.
+      if (isDefinitiveRejection(cause)) rethrow;
       _reportUnexpected(error, stackTrace, failedCount: 1);
       _scheduleRetry();
       // Libérée avant l'écriture : le bandeau rebâti par cette écriture la
@@ -450,6 +464,8 @@ class OfflineSyncService {
     } finally {
       _syncing = false;
       if (nextDue != null) {
+        _wakeUp?.cancel();
+        _wakeUpAt = nextDue;
         _wakeUp = Timer(nextDue.difference(_now()), () => unawaited(syncAll()));
       }
     }
@@ -465,6 +481,7 @@ class OfflineSyncService {
     Object? key,
     Map<String, dynamic> entry, {
     required bool deferred,
+    bool canShowRefusal = false,
   }) async {
     final bidId = entry['bidId'] as String;
     final eventType = entry['eventType'] as String;
@@ -476,22 +493,32 @@ class OfflineSyncService {
         eventType: eventType,
         repository: _repository,
         post: () async {
-          // Une panne réseau pendant l'upload remonte telle quelle : elle
-          // n'est pas un refus définitif, l'entrée reste en file.
-          final photo = await uploadTrackingPhotoOrDrop(
-            _repository,
-            bidId: bidId,
-            photoPath: await _photoPathOf(entry),
-          );
-          photoDropped = photo.dropped;
-          if (photo.lost) await _forgetLostPhoto(key, entry);
+          // Photo déjà envoyée par un essai précédent (étape refusée pour
+          // l'instant, rejouée toutes les 5 min) : sa clé est reprise, sans
+          // la renvoyer. Sinon 24 envois de la même photo en 2 h finissaient
+          // sur la limite de photos du colis et le départ partait sans elle.
+          final storedKey = entry[photoKeyField] as String?;
+          String? photoKey = storedKey;
+          if (storedKey == null) {
+            // Une panne réseau pendant l'upload remonte telle quelle : elle
+            // n'est pas un refus définitif, l'entrée reste en file.
+            final photo = await uploadTrackingPhotoOrDrop(
+              _repository,
+              bidId: bidId,
+              photoPath: await _photoPathOf(entry),
+            );
+            photoDropped = photo.dropped;
+            photoKey = photo.key;
+            if (photo.lost) await _forgetLostPhoto(key, entry);
+            if (photoKey != null) await _rememberPhotoKey(key, entry, photoKey);
+          }
           return _repository.postScan(
             bidId: bidId,
             eventType: eventType,
             gpsLat: (entry['gpsLat'] as num?)?.toDouble(),
             gpsLon: (entry['gpsLon'] as num?)?.toDouble(),
             gpsLabel: entry['gpsLabel'] as String?,
-            photoUrl: photo.key,
+            photoUrl: photoKey,
             scanMethod: ScanMethod.fromWire(entry['scanMethod']),
             trackingNumber: entry['trackingNumber'] as String?,
             offlineTimestamp: deferred
@@ -506,21 +533,27 @@ class OfflineSyncService {
       final cause = unwrapDioError(error);
       if (isRetryLaterTrackingRejection(cause)) {
         // Un supplément attend l'expéditeur (409
-        // `handover-supplement-pending`). Envoi différé (scan hors ligne,
-        // personne devant l'écran) : l'étape reste en file et repart dans
-        // [retryLaterDelay]. Envoi direct de l'onglet Suivi : le voyageur
-        // voit le message et rescanne une fois la réponse venue.
-        if (deferred) {
-          await _postpone(key, entry);
-        } else {
+        // `handover-supplement-pending`). Personne pour lire le motif (scan
+        // hors ligne, onglet quitté, app fermée) : l'étape reste en file,
+        // comptée parmi les scans en attente, et repart dans
+        // [retryLaterDelay]. Envoi de l'onglet Suivi affiché
+        // ([canShowRefusal]) : le voyageur voit le message et rescanne une
+        // fois la réponse venue.
+        // Événement au premier report seulement, pas à chaque rejeu.
+        final firstBlock = entry[retryLaterField] != true;
+        if (canShowRefusal) {
           await _delete(key, entry);
+        } else {
+          await _postpone(key, entry);
         }
-        unawaited(
-          _analytics?.logEvent(
-            AnalyticsEvents.handoverBlockedSupplement,
-            properties: {'channel': deferred ? 'offline' : 'direct'},
-          ),
-        );
+        if (firstBlock) {
+          unawaited(
+            _analytics?.logEvent(
+              AnalyticsEvents.handoverBlockedSupplement,
+              properties: {'channel': deferred ? 'offline' : 'direct'},
+            ),
+          );
+        }
         rethrow;
       }
       if (isDefinitiveRejection(cause)) {
@@ -564,8 +597,44 @@ class OfflineSyncService {
   /// Garde l'entrée en file avec une échéance dans [retryLaterDelay].
   Future<void> _postpone(Object? key, Map<String, dynamic> entry) async {
     if (!_hive.offlineQueue.containsKey(key)) return;
-    entry['notBefore'] = _now().add(retryLaterDelay).toUtc().toIso8601String();
+    final due = _now().add(retryLaterDelay);
+    entry
+      ..['notBefore'] = due.toUtc().toIso8601String()
+      ..[retryLaterField] = true;
     await _hive.offlineQueue.put(key, entry);
+    _wakeUpBy(due);
+  }
+
+  /// Champ de l'entrée : clé de la photo déjà envoyée.
+  static const photoKeyField = 'photoKey';
+
+  /// Champ de l'entrée : étape refusée pour l'instant, en attente d'un
+  /// nouvel essai. Elle reste comptée parmi les scans en attente malgré son
+  /// échéance.
+  static const retryLaterField = 'retryLater';
+
+  /// Écrit la clé de la photo dans l'entrée, avant l'envoi de l'étape : un
+  /// rejeu (ou un redémarrage) ne renvoie pas la photo.
+  Future<void> _rememberPhotoKey(
+    Object? key,
+    Map<String, dynamic> entry,
+    String photoKey,
+  ) async {
+    entry[photoKeyField] = photoKey;
+    if (_hive.offlineQueue.containsKey(key)) {
+      await _hive.offlineQueue.put(key, entry);
+    }
+  }
+
+  /// Programme [syncAll] au plus tard à [due].
+  void _wakeUpBy(DateTime due) {
+    final current = _wakeUpAt;
+    if (_wakeUp?.isActive == true && current != null && !current.isAfter(due)) {
+      return;
+    }
+    _wakeUp?.cancel();
+    _wakeUpAt = due;
+    _wakeUp = Timer(due.difference(_now()), () => unawaited(syncAll()));
   }
 
   static DateTime? _notBefore(Map raw) {
