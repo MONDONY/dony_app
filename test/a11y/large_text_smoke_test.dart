@@ -20,7 +20,6 @@ import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/data/city_repository.dart';
-import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -702,9 +701,6 @@ Widget _buildBidHarness(AnnouncementModel announcement) {
 class _PayMockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
 
-class _PayMockConfigBloc extends MockBloc<ConfigEvent, ConfigState>
-    implements ConfigBloc {}
-
 class _PayMockLocalAuthService extends Mock implements LocalAuthService {}
 
 class _PayMockBox extends Mock implements Box {}
@@ -724,11 +720,7 @@ final _paymentTestBid = BidModel(
   updatedAt: DateTime(2025, 5),
 );
 
-Widget _wrapPaymentScreen(
-  Widget child,
-  PaymentBloc bloc,
-  ConfigBloc configBloc,
-) {
+Widget _wrapPaymentScreen(Widget child, PaymentBloc bloc) {
   return MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
@@ -737,7 +729,6 @@ Widget _wrapPaymentScreen(
           builder: (_, _) => MultiBlocProvider(
             providers: [
               BlocProvider<PaymentBloc>.value(value: bloc),
-              BlocProvider<ConfigBloc>.value(value: configBloc),
               _smokeHelpCenterProvider(),
             ],
             child: child,
@@ -1206,17 +1197,11 @@ void main() {
 
     testWidgets('paiement', (tester) async {
       final mockBloc = _PayMockPaymentBloc();
-      final mockConfigBloc = _PayMockConfigBloc();
       final mockLocalAuth = _PayMockLocalAuthService();
       whenListen<PaymentState>(
         mockBloc,
         Stream.value(const PaymentInitial()),
         initialState: const PaymentInitial(),
-      );
-      whenListen<ConfigState>(
-        mockConfigBloc,
-        Stream.value(const ConfigLoaded(0.12)),
-        initialState: const ConfigLoaded(0.12),
       );
       when(
         () => mockLocalAuth.isBiometricAvailable(),
@@ -1240,7 +1225,6 @@ void main() {
             userPrefs: userPrefsBox,
           ),
           mockBloc,
-          mockConfigBloc,
         ),
       );
 

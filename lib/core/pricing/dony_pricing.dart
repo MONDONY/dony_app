@@ -3,6 +3,7 @@ import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/active_rates.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/foundation.dart';
 
@@ -265,10 +266,13 @@ void setDonyReimbursementCap(double amount) {
 }
 
 extension AnnouncementSenderPricing on AnnouncementModel {
-  /// Prix au kilo **affiché à l'expéditeur** (net + commission). Préfère le
-  /// champ backend [AnnouncementModel.pricePerKgDisplay] s'il est présent, sinon
-  /// recalcule via [donyCommissionMultiplier]. À utiliser sur toutes les
-  /// surfaces vues par l'expéditeur ; les surfaces voyageur gardent `pricePerKg`.
+  /// Prix au kilo **affiché à l'expéditeur**. Préfère le champ backend
+  /// [AnnouncementModel.pricePerKgDisplay] s'il est présent, sinon
+  /// [listUnitPrice] : le net sous grille de commission (les frais de service
+  /// s'ajoutent au total, le serveur sert alors le net dans
+  /// `pricePerKgDisplay`), le net majoré du taux unique sans grille. À utiliser
+  /// sur toutes les surfaces vues par l'expéditeur ; les surfaces voyageur
+  /// gardent `pricePerKg`.
   ///
   /// `null` quand ni [pricePerKgDisplay] ni [pricePerKg] ne sont exploitables :
   /// mode `MIXED` sans grille de prix au kilo, ou (net masqué pour un
@@ -278,7 +282,7 @@ extension AnnouncementSenderPricing on AnnouncementModel {
     final display = pricePerKgDisplay;
     if (display != null) return display;
     final net = pricePerKg;
-    return net == null ? null : netToSenderPrice(net);
+    return net == null ? null : listUnitPrice(net);
   }
 
   /// Équivalent, dans la devise convertie par le serveur
@@ -295,6 +299,9 @@ extension AnnouncementSenderPricing on AnnouncementModel {
   /// que celui qui produit [senderPricePerKg] — jamais un nouveau calcul de
   /// taux de change, seulement la majoration commission déjà appliquée au
   /// montant d'origine.
+  ///
+  /// Sous grille de commission, [senderPricePerKg] vaut le net : le ratio vaut
+  /// 1 et le résultat est [AnnouncementModel.convertedPricePerKg] tel quel.
   ///
   /// Pour un lecteur anonyme (net masqué, [pricePerKg] absent), aucun ratio
   /// net→brut n'est calculable ici : on retombe alors sur

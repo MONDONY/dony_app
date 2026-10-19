@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
@@ -140,6 +141,34 @@ void main() {
     expect(find.textContaining('58,80'), findsOneWidget);
     expect(find.textContaining('52,50'), findsNothing);
     expect(find.textContaining('Médicaments'), findsOneWidget);
+  });
+
+  testWidgets('repli sous grille : 2 kg × 2,50 € → 6,00 €', (tester) async {
+    // Net 5 € : 7 % = 0,35 €, relevé au minimum de 1,00 € de la grille.
+    useTestCommissionGrid();
+    final bid = BidModel(
+      id: 'b-grid',
+      announcementId: 'ann-1',
+      senderId: 'user-1',
+      senderKycVerified: true,
+      weightKg: 2.0,
+      pricePerKg: 2.5,
+      status: 'COMPLETED',
+      voyageurConfirmed: true,
+      createdAt: DateTime(2025, 3),
+      updatedAt: DateTime.now().subtract(const Duration(days: 2)),
+      travelerName: 'Fatoumata Bah',
+      travelerKycVerified: true,
+    );
+
+    when(() => bloc.state).thenReturn(BidListLoaded([bid]));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining(formatPriceIn(6.00, 'EUR')), findsOneWidget);
+    // Jamais l'ancien calcul au taux unique (5 × 1,12 = 5,60).
+    expect(find.textContaining('5,60'), findsNothing);
   });
 
   testWidgets('today date shows Aujourd\'hui', (tester) async {

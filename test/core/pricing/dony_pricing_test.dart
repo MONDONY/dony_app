@@ -2,6 +2,8 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/commission_grid_test_doubles.dart';
+
 AnnouncementModel _ann({
   required double? pricePerKg,
   double? pricePerKgDisplay,
@@ -113,6 +115,20 @@ void main() {
         expect(a.senderPricePerKg, isNull);
       },
     );
+
+    test('senderPricePerKg sous grille sans pricePerKgDisplay vaut le net', () {
+      // Sous grille, la commission ne se répartit plus au kilo : la liste
+      // affiche le net, les frais de service s'ajoutent au total.
+      useTestCommissionGrid();
+      final a = _ann(pricePerKg: 10);
+      expect(a.senderPricePerKg, 10);
+    });
+
+    test('senderPricePerKg sous grille garde pricePerKgDisplay du serveur', () {
+      useTestCommissionGrid();
+      final a = _ann(pricePerKg: 10, pricePerKgDisplay: 10);
+      expect(a.senderPricePerKg, 10);
+    });
   });
 
   group('AnnouncementSenderPricing.hasKgPrice', () {
@@ -230,6 +246,16 @@ void main() {
         expect(a.convertedSenderPricePerKg, closeTo(7347.2, 1e-6));
       },
     );
+
+    test('convertedSenderPricePerKg sous grille vaut convertedPricePerKg', () {
+      useTestCommissionGrid();
+      final a = _ann(
+        pricePerKg: 10,
+        convertedPricePerKg: 6560,
+        convertedCurrency: 'XOF',
+      );
+      expect(a.convertedSenderPricePerKg, closeTo(6560, 1e-6));
+    });
   });
 
   group('parsePriceInput', () {

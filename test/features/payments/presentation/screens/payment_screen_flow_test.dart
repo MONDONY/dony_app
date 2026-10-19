@@ -7,7 +7,6 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
@@ -29,9 +28,6 @@ import '../../../../helpers/mock_analytics_backend.dart';
 
 class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
-
-class _MockConfigBloc extends MockBloc<ConfigEvent, ConfigState>
-    implements ConfigBloc {}
 
 class _MockLocalAuth extends Mock implements LocalAuthService {}
 
@@ -82,7 +78,6 @@ void main() {
   tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
   late _MockPaymentBloc paymentBloc;
-  late _MockConfigBloc configBloc;
   late _MockLocalAuth auth;
   late _MockBox prefs;
   late _MockGateway gateway;
@@ -91,7 +86,6 @@ void main() {
 
   setUp(() {
     paymentBloc = _MockPaymentBloc();
-    configBloc = _MockConfigBloc();
     auth = _MockLocalAuth();
     prefs = _MockBox();
     gateway = _MockGateway();
@@ -122,7 +116,6 @@ void main() {
   tearDown(() async {
     await getIt.reset();
     await paymentBloc.close();
-    await configBloc.close();
   });
 
   Widget host(BidModel bid) => MaterialApp.router(
@@ -136,7 +129,6 @@ void main() {
           builder: (_, _) => MultiBlocProvider(
             providers: [
               BlocProvider<PaymentBloc>.value(value: paymentBloc),
-              BlocProvider<ConfigBloc>.value(value: configBloc),
               BlocProvider<HelpCenterBloc>(
                 create: (_) => HelpCenterBloc(
                   HelpCenterRepository(
@@ -165,16 +157,9 @@ void main() {
     ),
   );
 
-  void configState(ConfigState state) => whenListen<ConfigState>(
-    configBloc,
-    const Stream<ConfigState>.empty(),
-    initialState: state,
-  );
-
-  testWidgets('config pas chargée : repli sur le taux par défaut', (
+  testWidgets('sans grille ni total serveur : taux unique courant', (
     tester,
   ) async {
-    configState(const ConfigInitial());
     whenListen<PaymentState>(
       paymentBloc,
       const Stream<PaymentState>.empty(),
@@ -193,7 +178,6 @@ void main() {
   testWidgets('erreur de paiement : bandeau avec le message traduit', (
     tester,
   ) async {
-    configState(const ConfigLoaded(0.12));
     const error = TimeoutException();
     whenListen<PaymentState>(
       paymentBloc,
@@ -212,7 +196,6 @@ void main() {
   testWidgets('tarif forfaitaire (grille) : ligne « Type » forfait', (
     tester,
   ) async {
-    configState(const ConfigLoaded(0.12));
     whenListen<PaymentState>(
       paymentBloc,
       const Stream<PaymentState>.empty(),
@@ -230,7 +213,6 @@ void main() {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    configState(const ConfigLoaded(0.12));
     whenListen<PaymentState>(
       paymentBloc,
       const Stream<PaymentState>.empty(),
@@ -252,7 +234,6 @@ void main() {
       tester.view.physicalSize = const Size(800, 1600);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      configState(const ConfigLoaded(0.12));
       whenListen<PaymentState>(
         paymentBloc,
         Stream.fromIterable([
@@ -289,7 +270,6 @@ void main() {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    configState(const ConfigLoaded(0.12));
     whenListen<PaymentState>(
       paymentBloc,
       Stream.fromIterable([

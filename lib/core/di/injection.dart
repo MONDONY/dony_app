@@ -66,7 +66,6 @@ import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_datasource.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/city/data/recent_city_store.dart';
-import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/config/data/config_datasource.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/connect_onboarding/bloc/bank_account_link_cubit.dart';
@@ -1014,9 +1013,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<IConfigRepository>(
     () => ConfigRepository(getIt<ConfigDatasource>()),
-  );
-  getIt.registerFactory<ConfigBloc>(
-    () => ConfigBloc(getIt<IConfigRepository>()),
   );
 
   // Connect onboarding

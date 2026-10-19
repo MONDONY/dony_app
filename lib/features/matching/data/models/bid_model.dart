@@ -1,5 +1,5 @@
 import 'package:dony/core/currency/supported_currency.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
@@ -196,11 +196,13 @@ class BidModel {
   /// pas le tarif net à l'expéditeur ; ce champ est la source côté sender.
   final double? pricePerKgSenderEur;
 
-  /// Tarif/kg à afficher à l'EXPÉDITEUR (brut). Préfère [pricePerKgSenderEur]
-  /// (le backend ne renvoie pas le net au sender), sinon dérive de [pricePerKg].
+  /// Tarif/kg à afficher à l'EXPÉDITEUR. Préfère [pricePerKgSenderEur]
+  /// (le backend ne renvoie pas le net au sender), sinon dérive de [pricePerKg]
+  /// par [listUnitPrice] : le net sous grille de commission, le net majoré du
+  /// taux unique sans grille.
   double? get senderPricePerKg =>
       pricePerKgSenderEur ??
-      (pricePerKg != null ? netToSenderPrice(pricePerKg!) : null);
+      (pricePerKg != null ? listUnitPrice(pricePerKg!) : null);
   final String? trackingNumber;
   final String? trackingToken;
   final String? confirmationCode;
