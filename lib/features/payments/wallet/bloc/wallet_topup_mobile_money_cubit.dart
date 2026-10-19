@@ -5,13 +5,18 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_properties.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Recharge du portefeuille par mobile money (Wave / Orange Money via
-/// pawaPay) : chargement des opérateurs utilisables sur le numéro payeur,
-/// initiation du dépôt, puis sondage du statut jusqu'à confirmation, échec
-/// ou expiration (15 min sans réponse opérateur).
+/// Recharge du portefeuille par mobile money (pawaPay) : chargement des
+/// opérateurs utilisables sur le numéro payeur (ancien parcours), initiation
+/// du dépôt ou reprise d'une recharge en cours ([resumePending]), puis
+/// sondage du statut jusqu'à confirmation ou échec. Passé l'échéance du
+/// serveur (`expiresAt`, 15 min par défaut), l'état devient
+/// [WalletTopupMobileMoneyOverdue] et le sondage continue : l'opérateur
+/// peut encore valider, seul le back déclare un échec.
 ///
 /// Le timer de sondage vit ici, jamais côté écran : [close] l'annule, et
 /// aucun `emit` n'a lieu après fermeture du cubit (garde [isClosed]).
@@ -24,7 +29,9 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
        super(const WalletTopupMobileMoneyIdle());
 
   static const pollInterval = Duration(seconds: 3);
-  static const expiry = Duration(minutes: 15);
+
+  /// Repli quand le back ne donne pas d'échéance.
+  static const expiry = walletTopupFallbackExpiry;
 
   final WalletRepository _repository;
   final AnalyticsService _analytics;
@@ -34,6 +41,10 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
 
   /// Montant de la recharge en cours, pour la tranche envoyée à l'issue.
   double? _amount;
+
+  /// Recharge en cours reprise par [resumePending] plutôt qu'initiée ici :
+  /// la confirmation le signale ([WalletTopupMobileMoneyConfirmed.resumed]).
+  bool _resumed = false;
 
   /// Incrémenté à chaque [initiate] : identifie la « session » de recharge
   /// courante. Une réponse réseau (initiation ou sondage) qui résout après
@@ -140,6 +151,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
         : _chosenProvider;
     emit(const WalletTopupMobileMoneyInitiating());
     _amount = amount;
+    _resumed = false;
     try {
       final topup = await _repository.topupMobileMoney(
         amount: amount,
@@ -149,7 +161,13 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
       // Une recharge plus récente (ou une fermeture) a déjà pris le relais
       // pendant cet appel : cette réponse est périmée, on ne l'affiche pas.
       if (isClosed || generation != _generation) return;
-      emit(WalletTopupMobileMoneyAwaiting(topup: topup, startedAt: _now()));
+      emit(
+        WalletTopupMobileMoneyAwaiting(
+          topup: topup,
+          startedAt: _now(),
+          amount: amount,
+        ),
+      );
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.walletTopupMobileMoneyInitiated,
@@ -208,11 +226,87 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     );
   }
 
+  /// Reprend la recharge mobile money encore ouverte côté serveur
+  /// (`GET /wallet/topup/pending`), à l'ouverture de l'écran Recharger :
+  /// passe en [WalletTopupMobileMoneyAwaiting] et sonde son statut. Renvoie
+  /// `true` si une recharge a été reprise, `false` sinon (aucune recharge,
+  /// back ancien, erreur réseau, ou une recharge lancée entre-temps).
+  Future<bool> resumePending() async {
+    final generation = _generation;
+    final WalletTopupStatusModel? pending;
+    try {
+      pending = await _repository.pendingTopup();
+    } catch (_) {
+      // Reprise de confort : sans elle, l'écran Recharger reste utilisable.
+      return false;
+    }
+    if (isClosed || generation != _generation || _initiating) return false;
+    // Statut technique du back, jamais affiché.
+    const pendingStatus = 'PENDING'; // i18n-ignore
+    if (pending == null || pending.status != pendingStatus) return false;
+    stopPolling();
+    _generation++;
+    _amount = pending.amount;
+    _resumed = true;
+    emit(
+      WalletTopupMobileMoneyAwaiting(
+        topup: WalletTopupModel(
+          topupId: pending.topupId,
+          currency: pending.currency,
+          provider: pending.provider,
+          providerLabel: pending.providerLabel,
+          msisdnMasked: pending.msisdnMasked,
+          authorizationUrl: pending.authorizationUrl,
+          expiresAt: pending.expiresAt,
+          validationHint: pending.validationHint,
+        ),
+        startedAt: _now(),
+        amount: pending.amount,
+      ),
+    );
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.walletTopupResumed,
+        properties: {
+          'provider': pending.provider,
+          'currency': pending.currency,
+        },
+      ),
+    );
+    startPolling();
+    return true;
+  }
+
+  /// L'utilisateur quitte l'écran d'attente (✕, retour système) sans
+  /// abandonner la recharge : le sondage s'arrête, l'état reste celui de
+  /// l'attente, le serveur continue de suivre le dépôt et notifie l'issue.
+  /// Ni [reset] ni `wallet_topup_cancelled`. Sans effet si rien n'est suivi
+  /// (déjà détaché, recharge terminée).
+  void detach() {
+    if (_pollTimer == null) return;
+    stopPolling();
+    final current = state;
+    final remaining = current is WalletTopupMobileMoneyAwaiting
+        ? current.expiresAt.difference(_now())
+        : Duration.zero;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.walletTopupAwaitingClosed,
+        properties: {
+          'remaining_s': remaining.isNegative ? 0 : remaining.inSeconds,
+        },
+      ),
+    );
+  }
+
   /// Démarre le sondage périodique du statut. Sans effet hors de
-  /// [WalletTopupMobileMoneyAwaiting].
+  /// [WalletTopupMobileMoneyAwaiting] et [WalletTopupMobileMoneyOverdue].
   void startPolling() {
     stopPolling();
-    if (state is! WalletTopupMobileMoneyAwaiting) return;
+    if (state is! WalletTopupMobileMoneyAwaiting &&
+        state is! WalletTopupMobileMoneyOverdue) {
+      return;
+    }
     _pollTimer = Timer.periodic(pollInterval, (_) => _poll());
   }
 
@@ -221,8 +315,8 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     _pollTimer = null;
   }
 
-  /// Abandonne la recharge en cours (« Payer avec un autre numéro » depuis
-  /// l'écran d'attente) : arrête le sondage et revient à
+  /// Abandonne la recharge (« Payer avec un autre numéro », proposé une fois
+  /// l'échéance passée ou après un échec) : arrête le sondage et revient à
   /// [WalletTopupMobileMoneyIdle] pour permettre de repartir de zéro.
   ///
   /// Incrémente [_generation] comme [initiate] : une réponse encore en vol
@@ -232,9 +326,10 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   void reset() {
     stopPolling();
     _generation++;
-    // Abandon d'une recharge déjà lancée (« autre numéro ») : on la compte
-    // pour ne pas la confondre avec une attente sans fin.
-    if (state is WalletTopupMobileMoneyAwaiting) {
+    // Abandon d'une recharge encore ouverte (« autre numéro ») : on la
+    // compte pour ne pas la confondre avec une attente sans fin.
+    if (state is WalletTopupMobileMoneyAwaiting ||
+        state is WalletTopupMobileMoneyOverdue) {
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.walletTopupCancelled,
@@ -251,32 +346,28 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     // Capturé avant tout `await` : identifie la session à laquelle cette
     // invocation appartient, quoi qu'il se passe pendant l'appel réseau.
     final generation = _generation;
-    if (_inFlightGeneration == generation) return;
     final current = state;
-    if (current is! WalletTopupMobileMoneyAwaiting) {
-      stopPolling();
-      return;
+    final WalletTopupModel topup;
+    switch (current) {
+      case WalletTopupMobileMoneyAwaiting():
+        topup = current.topup;
+        // Échéance passée sans statut final : « pas encore validé », et le
+        // sondage continue (un COMPLETED tardif crédite quand même).
+        if (!_now().isBefore(current.expiresAt)) {
+          emit(WalletTopupMobileMoneyOverdue(topup: topup));
+        }
+      case WalletTopupMobileMoneyOverdue():
+        topup = current.topup;
+      default:
+        stopPolling();
+        return;
     }
-    if (_now().difference(current.startedAt) >= expiry) {
-      stopPolling();
-      if (!isClosed) {
-        emit(
-          const WalletTopupMobileMoneyFailed(
-            reason: WalletTopupFailureReason.expired,
-          ),
-        );
-        _logOutcome(
-          AnalyticsEvents.walletTopupFailed,
-          currency: current.topup.currency,
-          provider: current.topup.provider,
-          reason: 'expired',
-        );
-      }
-      return;
-    }
+    // Après le passage en Overdue : une requête qui traîne (réseau lent)
+    // ne doit pas retarder « pas encore validé ».
+    if (_inFlightGeneration == generation) return;
     _inFlightGeneration = generation;
     try {
-      final status = await _repository.topupStatus(current.topup.topupId);
+      final status = await _repository.topupStatus(topup.topupId);
       // Une nouvelle recharge a démarré (ou le cubit a fermé) pendant cet
       // appel : cette réponse est périmée pour la session en cours. Ne rien
       // émettre, ne pas toucher au timer (qui appartient déjà à la nouvelle
@@ -285,7 +376,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
       switch (status.status) {
         case 'CONFIRMED': // i18n-ignore
           stopPolling();
-          emit(WalletTopupMobileMoneyConfirmed(status));
+          emit(WalletTopupMobileMoneyConfirmed(status, resumed: _resumed));
           unawaited(
             _analytics.logEvent(
               AnalyticsEvents.walletTopupMobileMoneyConfirmed,
@@ -304,16 +395,17 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
           stopPolling();
           emit(
             WalletTopupMobileMoneyFailed(
-              reason: WalletTopupFailureReason.refused,
-              operatorMessage: _presentableFailure(status.failureReason),
+              failureCode: status.failureCode,
+              failureReason: _presentableFailure(status.failureReason),
             ),
           );
-          // Le motif de l'opérateur est un texte libre : jamais envoyé.
+          // Le code Yadony (liste fermée) part, jamais le texte du motif.
           _logOutcome(
             AnalyticsEvents.walletTopupFailed,
             currency: status.currency,
             provider: status.provider,
             reason: 'declined',
+            errorCode: status.failureCode,
           );
         default:
         // PENDING : rien à faire, le prochain tick relira le statut.
@@ -331,9 +423,9 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     }
   }
 
-  /// Motif renvoyé par l'opérateur, nettoyé, ou `null` s'il est absent ou
-  /// vide : l'écran affiche alors un message générique déterminé par
-  /// [WalletTopupMobileMoneyFailed.reason].
+  /// Motif renvoyé par le back, nettoyé, ou `null` s'il est absent ou vide :
+  /// l'écran se rabat alors sur le texte du code d'échec, ou un message
+  /// générique.
   String? _presentableFailure(String? reason) {
     final trimmed = reason?.trim();
     return (trimmed == null || trimmed.isEmpty) ? null : trimmed;

@@ -9524,18 +9524,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletTopupMmPayWithAnotherNumber => 'Pay with a different number';
 
   @override
-  String get walletTopupMmValidateTitle => 'Approve the payment on your phone';
-
-  @override
-  String walletTopupMmRequestSent(String number, String provider) {
-    return 'A payment request was sent to $number via $provider.';
-  }
-
-  @override
-  String get walletTopupMmConfirmationAutomatic =>
-      'Confirmation is automatic, keep this screen open.';
-
-  @override
   String get walletTopupMmAmountLabel => 'Amount';
 
   @override
@@ -9547,19 +9535,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get walletTopupMmExpiresInLabel => 'Expires in';
-
-  @override
   String walletTopupMmOpenProvider(String provider) {
     return 'Open $provider';
   }
-
-  @override
-  String get walletTopupMmExpired => 'The payment wasn\'t approved in time.';
-
-  @override
-  String get walletTopupMmRefused =>
-      'The payment was declined by the mobile operator.';
 
   @override
   String walletShortfallRequired(String amount) {
@@ -9767,25 +9745,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String walletTopupCreditNotice(String code) {
     return 'Your Yadony balance will be credited in $code after confirmation.';
-  }
-
-  @override
-  String walletTopupNoDecimalsNotice(String symbol) {
-    return '$symbol doesn\'t use cents: enter a whole number.';
-  }
-
-  @override
-  String walletTopupCreditedAmount(
-    String currency,
-    String amount,
-    String active,
-  ) {
-    return 'Your $currency wallet will be credited $amount. Your $active wallet stays the same.';
-  }
-
-  @override
-  String walletTopupCreditedPending(String currency, String active) {
-    return 'Your $currency wallet will be credited the amount you enter. Your $active wallet stays the same.';
   }
 
   @override
@@ -17220,9 +17179,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletTopupCustomAmountChip => 'Other amount';
 
   @override
-  String get walletTopupCustomAmountInvalid => 'Enter an amount above 0.';
-
-  @override
   String get negotiationsActionRequired => 'Action required';
 
   @override
@@ -21013,4 +20969,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletTopupSwitchToCard => 'Top up by card';
+
+  @override
+  String get walletTopupMmRingCaption => 'to approve';
+
+  @override
+  String walletTopupMmSmsSentTitle(String number) {
+    return 'SMS sent to $number';
+  }
+
+  @override
+  String get walletTopupMmSmsSentBody =>
+      'Open it and tap the link to approve the payment.';
+
+  @override
+  String walletTopupMmPromptTitle(String number) {
+    return 'Request sent to $number';
+  }
+
+  @override
+  String get walletTopupMmPromptBody =>
+      'A prompt appears on your phone: approve with your PIN.';
+
+  @override
+  String get walletTopupMmGenericBody =>
+      'Approve the payment on your phone (SMS or operator prompt).';
+
+  @override
+  String get walletTopupMmOverdueTitle => 'Not approved yet';
+
+  @override
+  String get walletTopupMmOverdueBody =>
+      'If you still approve within the next few minutes, your balance will be credited.';
+
+  @override
+  String get walletTopupMmResend => 'Send a new request';
+
+  @override
+  String get walletTopupMmFailedTitle => 'Top-up not completed';
+
+  @override
+  String get walletTopupMmFromLabel => 'From';
+
+  @override
+  String walletTopupMmFromValue(String operator, String last2) {
+    return '$operator ••$last2';
+  }
+
+  @override
+  String walletTopupFromAccount(String operator, String last2) {
+    return 'From $operator ••$last2';
+  }
+
+  @override
+  String get walletTopupChangeAccount => 'Change';
+
+  @override
+  String walletTopupCreditedLine(String currency) {
+    return 'Credited to your $currency wallet';
+  }
+
+  @override
+  String walletTopupActiveWalletUnchanged(String active) {
+    return 'Your $active wallet stays unchanged.';
+  }
+
+  @override
+  String walletTopupAmountBounds(String min, String max) {
+    return 'Between $min and $max';
+  }
+
+  @override
+  String get walletTopupFailureInsufficientBalance =>
+      'Insufficient balance on your mobile money account.';
+
+  @override
+  String get walletTopupFailureNotApproved =>
+      'The payment was not approved on your phone.';
+
+  @override
+  String get walletTopupFailurePayerLimit =>
+      'Your operator declined the payment: payment limit reached.';
+
+  @override
+  String get walletTopupFailureInvalidNumber =>
+      'This number cannot pay with mobile money.';
+
+  @override
+  String get walletTopupFailureProviderUnavailable =>
+      'Your operator is unavailable right now. Please try again later.';
+
+  @override
+  String get walletTopupFailureExpired =>
+      'The request expired before it was approved.';
+
+  @override
+  String get walletTopupFailureOther =>
+      'The payment was declined by the operator.';
 }

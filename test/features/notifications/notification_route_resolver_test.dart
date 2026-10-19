@@ -433,6 +433,19 @@ void main() {
       );
     });
 
+    test('wallet_topup_confirmed / wallet_topup_failed open the wallet', () {
+      // Types en minuscules, tels qu'envoyés par le back (recharge mobile
+      // money confirmée ou refusée).
+      expect(
+        resolveNotificationRoute('wallet_topup_confirmed', {}),
+        '/payments/wallet',
+      );
+      expect(
+        resolveNotificationRoute('wallet_topup_failed', {}),
+        '/payments/wallet',
+      );
+    });
+
     test('PROMO has no known target and returns null', () {
       expect(resolveNotificationRoute('PROMO', {}), isNull);
     });

@@ -1149,6 +1149,7 @@ final appRouter = GoRouter(
               paymentMethod: selection.method,
               mobileMoneyPhoneNumber: selection.phoneNumber,
               mobileMoneyCurrency: selection.currency,
+              mobileMoneyOperator: selection.operator,
             ),
           );
         }

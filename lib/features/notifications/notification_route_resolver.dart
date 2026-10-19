@@ -248,6 +248,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // l'intention (trajets ou colis de la ligne).
     'FIRST_ACTION_REMINDER' => firstStepsRoute,
     'CARD_EXPIRING' => '/payments/commission-method',
+    // Recharge mobile money confirmée ou refusée (types en minuscules, tels
+    // qu'envoyés par le back) : le portefeuille montre le solde et la ligne
+    // de la recharge.
+    'wallet_topup_confirmed' || 'wallet_topup_failed' => '/payments/wallet',
     // Un filleul a fait son premier envoi : la récompense est à choisir sur
     // l'écran Parrainage (yadony-back #528).
     'REFERRAL_REWARD_AVAILABLE' => '/profile/referral',

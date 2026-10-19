@@ -1,12 +1,17 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_awaiting_ring.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,15 +20,12 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 
-/// Écran d'attente de la recharge mobile money : textes figés, carte de
-/// détails, `Confirmed` -> retour au portefeuille, `Failed` -> message et
-/// bouton de reprise.
+/// Écran d'attente de la recharge mobile money : anneau et chrono du
+/// serveur, texte selon l'opérateur, ✕ qui ferme sans abandonner, état
+/// « Pas encore validé » et échec final traduit.
 ///
-/// L'icône pulsée de `_AwaitingBody` tourne en boucle (`repeat(reverse:
-/// true)`) : jamais de `pumpAndSettle()` pendant qu'elle est montée (elle ne
-/// se stabilise jamais), toujours des `pump()` bornés — comme
-/// `mobile_money_awaiting_screen_test.dart` (référence de cet écran) le
-/// fait déjà pour son propre compte à rebours.
+/// L'anneau tourne en boucle : jamais de `pumpAndSettle()` pendant qu'il est
+/// monté (il ne se stabilise jamais), toujours des `pump()` bornés.
 class _MockCubit extends MockCubit<WalletTopupMobileMoneyState>
     implements WalletTopupMobileMoneyCubit {}
 
@@ -32,15 +34,24 @@ void main() {
   Object? capturedWalletExtra;
   var didNavigateToWallet = false;
 
-  const topup = WalletTopupModel(
-    topupId: 'topup-1',
-    currency: 'XOF',
-    provider: 'ORANGE_SEN',
-    providerLabel: 'Orange Money',
-    msisdnMasked: '+221 ** ** 12 34',
-  );
+  WalletTopupModel topupWith(MobileMoneyValidationHint hint) =>
+      WalletTopupModel(
+        topupId: 'topup-1',
+        currency: 'XOF',
+        provider: 'ORANGE_CIV',
+        providerLabel: 'Orange Money',
+        msisdnMasked: '+225 07 •• •• 56',
+        expiresAt: DateTime.now().add(const Duration(minutes: 15)),
+        validationHint: hint,
+      );
 
-  final startedAt = DateTime.now();
+  final topup = topupWith(MobileMoneyValidationHint.smsLink);
+
+  WalletTopupMobileMoneyAwaiting awaiting([WalletTopupModel? t]) =>
+      WalletTopupMobileMoneyAwaiting(
+        topup: t ?? topup,
+        startedAt: DateTime.now(),
+      );
 
   setUp(() {
     cubit = _MockCubit();
@@ -54,20 +65,22 @@ void main() {
     ).thenAnswer((_) async {});
   });
 
-  Widget buildHarness() {
+  Widget screen({String? phoneNumber = '+2250748840856'}) =>
+      BlocProvider<WalletTopupMobileMoneyCubit>.value(
+        value: cubit,
+        child: WalletTopupMobileMoneyAwaitingScreen(
+          phoneNumber: phoneNumber,
+          amount: 5000,
+        ),
+      );
+
+  Widget buildHarness({String? phoneNumber = '+2250748840856'}) {
     final router = GoRouter(
       initialLocation: '/payments/wallet/topup/mobile-money/awaiting',
       routes: [
         GoRoute(
           path: '/payments/wallet/topup/mobile-money/awaiting',
-          builder: (context, state) =>
-              BlocProvider<WalletTopupMobileMoneyCubit>.value(
-                value: cubit,
-                child: const WalletTopupMobileMoneyAwaitingScreen(
-                  phoneNumber: '+221771234567',
-                  amount: 5000,
-                ),
-              ),
+          builder: (context, state) => screen(phoneNumber: phoneNumber),
         ),
         GoRoute(
           path: '/payments/wallet',
@@ -82,41 +95,164 @@ void main() {
     return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
   }
 
+  /// Écran d'attente poussé par-dessus un écran « choix », pour observer le
+  /// retour (pop) et ce qui est fait au cubit en sortant.
+  Widget buildStackedHarness() {
+    final router = GoRouter(
+      initialLocation: '/choice',
+      routes: [
+        GoRoute(
+          path: '/choice',
+          builder: (context, state) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => context.push(
+                  '/payments/wallet/topup/mobile-money/awaiting',
+                ),
+                child: const Text('Ouvrir attente'),
+              ),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/payments/wallet/topup/mobile-money/awaiting',
+          builder: (context, state) => screen(),
+        ),
+      ],
+    );
+    return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
+  }
+
+  Future<void> openStacked(WidgetTester tester) async {
+    await tester.pumpWidget(buildStackedHarness());
+    await tester.pump();
+    await tester.tap(find.text('Ouvrir attente'));
+    // Transition de page puis démarrage de l'anneau : jamais pumpAndSettle.
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+  }
+
+  Future<void> pumpScreen(WidgetTester tester, {String? phoneNumber}) async {
+    await tester.pumpWidget(
+      buildHarness(phoneNumber: phoneNumber ?? '+2250748840856'),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+
+  testWidgets('awaiting_smsLinkHint_showsSmsTexts', (tester) async {
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: awaiting(),
+    );
+
+    await pumpScreen(tester);
+
+    expect(find.byType(MobileMoneyAwaitingRing), findsOneWidget);
+    expect(find.text('pour valider'), findsOneWidget);
+    expect(find.text('SMS envoyé au +225 07 •• •• 56'), findsOneWidget);
+    expect(
+      find.text('Ouvrez-le et cliquez sur le lien pour valider le paiement.'),
+      findsOneWidget,
+    );
+    // Récapitulatif : montant, compte qui paie, portefeuille crédité.
+    expect(find.text('Montant'), findsOneWidget);
+    expect(find.text('Depuis'), findsOneWidget);
+    expect(find.text('Orange Money ••56'), findsOneWidget);
+    expect(find.text('Crédité sur'), findsOneWidget);
+    expect(find.textContaining('gardez cet écran ouvert'), findsNothing);
+    // Pas de redirection opérateur sans authorizationUrl.
+    expect(
+      find.byKey(const Key('mobile-money-awaiting-open-authorization')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('awaiting_pinPromptHint_showsPromptTexts', (tester) async {
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: awaiting(topupWith(MobileMoneyValidationHint.pinPrompt)),
+    );
+
+    await pumpScreen(tester);
+
+    expect(find.text('Demande envoyée au +225 07 •• •• 56'), findsOneWidget);
+    expect(
+      find.text(
+        "Une fenêtre s'affiche sur votre téléphone : validez avec votre "
+        'code secret.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('mode de validation inconnu : consigne neutre', (tester) async {
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: awaiting(topupWith(MobileMoneyValidationHint.generic)),
+    );
+
+    await pumpScreen(tester);
+
+    expect(find.text('Demande envoyée au +225 07 •• •• 56'), findsOneWidget);
+    expect(
+      find.text(
+        'Validez le paiement sur votre téléphone (SMS ou fenêtre de votre '
+        'opérateur).',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets(
-    'textes figés de l\'écran d\'attente (Orange Money, sans redirection)',
+    'redirection opérateur : bouton « Ouvrir » avec authorizationUrl',
     (tester) async {
       whenListen(
         cubit,
         const Stream<WalletTopupMobileMoneyState>.empty(),
-        initialState: WalletTopupMobileMoneyAwaiting(
-          topup: topup,
-          startedAt: startedAt,
+        initialState: awaiting(
+          const WalletTopupModel(
+            topupId: 'topup-2',
+            currency: 'XOF',
+            provider: 'WAVE_SEN',
+            providerLabel: 'Wave',
+            msisdnMasked: '+221 ** ** 56 78',
+            authorizationUrl: 'https://pay.wave.com/abc123',
+          ),
         ),
       );
 
+      await pumpScreen(tester);
+
+      expect(find.text('Ouvrir Wave'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'awaiting_otherNumberButton_hiddenWhileAwaiting_visibleWhenOverdue',
+    (tester) async {
+      final states = StreamController<WalletTopupMobileMoneyState>();
+      addTearDown(states.close);
+      whenListen(cubit, states.stream, initialState: awaiting());
+
       await tester.pumpWidget(buildHarness());
       await tester.pump();
-      await tester.pump();
 
+      // Pendant l'attente : seul le ✕ permet de sortir, aucun second dépôt
+      // possible (pawaPay ne sait pas annuler un dépôt).
+      expect(find.text('SMS envoyé au +225 07 •• •• 56'), findsOneWidget);
       expect(
-        find.text('Validez le paiement sur votre téléphone'),
-        findsOneWidget,
-      );
-      expect(find.textContaining('+221 ** ** 12 34'), findsOneWidget);
-      expect(find.textContaining('Orange Money'), findsWidgets);
-      expect(
-        find.text('La confirmation est automatique, gardez cet écran ouvert.'),
-        findsOneWidget,
-      );
-      expect(find.text('Montant'), findsOneWidget);
-      expect(find.text('Crédité sur'), findsOneWidget);
-      expect(find.text('Expire dans'), findsOneWidget);
-      // Pas de bouton d'ouverture externe : aucune authorizationUrl (Orange
-      // Money, PIN saisi côté opérateur, pas de redirection comme Wave).
-      expect(
-        find.byKey(const Key('mobile-money-awaiting-open-authorization')),
+        find.byKey(const Key('mobile-money-awaiting-other-number')),
         findsNothing,
       );
+
+      states.add(WalletTopupMobileMoneyOverdue(topup: topup));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
       expect(
         find.byKey(const Key('mobile-money-awaiting-other-number')),
         findsOneWidget,
@@ -124,105 +260,165 @@ void main() {
     },
   );
 
-  testWidgets('Wave : bouton « Ouvrir Wave » avec authorizationUrl', (
-    tester,
-  ) async {
-    const waveTopup = WalletTopupModel(
-      topupId: 'topup-2',
-      currency: 'XOF',
-      provider: 'WAVE_SEN',
-      providerLabel: 'Wave',
-      msisdnMasked: '+221 ** ** 56 78',
-      authorizationUrl: 'https://pay.wave.com/abc123',
-    );
+  testWidgets('awaiting_closeButton_detaches_notResets', (tester) async {
     whenListen(
       cubit,
       const Stream<WalletTopupMobileMoneyState>.empty(),
-      initialState: WalletTopupMobileMoneyAwaiting(
-        topup: waveTopup,
-        startedAt: startedAt,
-      ),
+      initialState: awaiting(),
     );
 
-    await tester.pumpWidget(buildHarness());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
+    await openStacked(tester);
+    expect(find.text('SMS envoyé au +225 07 •• •• 56'), findsOneWidget);
 
-    expect(find.text('Ouvrir Wave'), findsOneWidget);
+    await tester.tap(find.byType(DonyAppBarBackButton));
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+
+    expect(find.text('Ouvrir attente'), findsOneWidget);
+    // La recharge continue côté serveur : on arrête seulement de suivre.
+    verify(() => cubit.detach()).called(greaterThanOrEqualTo(1));
+    verifyNever(() => cubit.reset());
   });
 
-  testWidgets(
-    '« Payer avec un autre numéro » revient à l\'écran précédent (pop)',
-    (tester) async {
-      whenListen(
-        cubit,
-        const Stream<WalletTopupMobileMoneyState>.empty(),
-        initialState: WalletTopupMobileMoneyAwaiting(
-          topup: topup,
-          startedAt: startedAt,
+  testWidgets('retour système : même traitement que le ✕', (tester) async {
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: awaiting(),
+    );
+
+    await openStacked(tester);
+    final navigator = tester.state<NavigatorState>(
+      find.byType(Navigator).first,
+    );
+    unawaited(navigator.maybePop());
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+
+    expect(find.text('Ouvrir attente'), findsOneWidget);
+    verify(() => cubit.detach()).called(1);
+    verifyNever(() => cubit.reset());
+  });
+
+  testWidgets('awaiting_overdue_showsOverdueTexts_neverNothingDebited', (
+    tester,
+  ) async {
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: WalletTopupMobileMoneyOverdue(topup: topup),
+    );
+
+    await pumpScreen(tester);
+
+    expect(find.text('Pas encore validé'), findsOneWidget);
+    expect(
+      find.text(
+        'Si vous validez quand même dans les prochaines minutes, votre solde '
+        'sera crédité.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Rien n'), findsNothing);
+    expect(find.textContaining('prélevé'), findsNothing);
+
+    // « Renvoyer une demande » : même numéro, même montant.
+    await tester.tap(find.text('Renvoyer une demande'));
+    await tester.pump();
+    verify(
+      () => cubit.initiate(amount: 5000, phoneNumber: '+2250748840856'),
+    ).called(1);
+  });
+
+  testWidgets('Overdue : « Payer avec un autre numéro » abandonne et revient', (
+    tester,
+  ) async {
+    whenListen(
+      cubit,
+      Stream.fromIterable([WalletTopupMobileMoneyOverdue(topup: topup)]),
+      initialState: awaiting(),
+    );
+
+    await openStacked(tester);
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.tap(find.text('Payer avec un autre numéro'));
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+
+    expect(find.text('Ouvrir attente'), findsOneWidget);
+    verify(() => cubit.reset()).called(1);
+  });
+
+  testWidgets('recharge reprise (numéro inconnu) : pas de « Renvoyer »', (
+    tester,
+  ) async {
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: WalletTopupMobileMoneyOverdue(topup: topup),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.light(), home: screen(phoneNumber: null)),
+    );
+    await tester.pump();
+
+    expect(find.text('Renvoyer une demande'), findsNothing);
+    expect(find.text('Payer avec un autre numéro'), findsOneWidget);
+  });
+
+  testWidgets('awaiting_failed_showsTranslatedReason', (tester) async {
+    whenListen(
+      cubit,
+      Stream.fromIterable([
+        const WalletTopupMobileMoneyFailed(
+          failureCode: 'insufficient-balance',
+          failureReason: 'Insufficient balance on your mobile money account.',
         ),
-      );
+      ]),
+      initialState: awaiting(),
+    );
 
-      final router = GoRouter(
-        initialLocation: '/choice',
-        routes: [
-          GoRoute(
-            path: '/choice',
-            builder: (context, state) => Scaffold(
-              body: Center(
-                child: TextButton(
-                  onPressed: () => context.push(
-                    '/payments/wallet/topup/mobile-money/awaiting',
-                  ),
-                  child: const Text('Ouvrir attente'),
-                ),
-              ),
-            ),
-          ),
-          GoRoute(
-            path: '/payments/wallet/topup/mobile-money/awaiting',
-            builder: (context, state) =>
-                BlocProvider<WalletTopupMobileMoneyCubit>.value(
-                  value: cubit,
-                  child: const WalletTopupMobileMoneyAwaitingScreen(
-                    phoneNumber: '+221771234567',
-                    amount: 5000,
-                  ),
-                ),
-          ),
-        ],
-      );
+    await pumpScreen(tester);
 
-      await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
-      );
-      await tester.pump();
+    expect(find.text('Recharge non aboutie'), findsOneWidget);
+    // Texte de l'app (langue de l'app), pas celui renvoyé par le back.
+    expect(
+      find.text('Solde insuffisant sur votre compte mobile money.'),
+      findsOneWidget,
+    );
+    expect(find.text('Renvoyer une demande'), findsOneWidget);
+    expect(find.text('Payer avec un autre numéro'), findsOneWidget);
+  });
 
-      await tester.tap(find.text('Ouvrir attente'));
-      // Transition de page (~300 ms) puis deux pumps pour flusher le timer
-      // de démarrage de l'icône pulsée — jamais pumpAndSettle() (l'icône
-      // pulse en boucle, la pile ne se stabilise jamais).
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pump();
-      await tester.pump();
+  testWidgets('échec avec un code inconnu : motif du back, sinon générique', (
+    tester,
+  ) async {
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: const WalletTopupMobileMoneyFailed(
+        failureCode: 'new-code',
+        failureReason: 'Motif traduit par le back.',
+      ),
+    );
+    await pumpScreen(tester);
+    expect(find.text('Motif traduit par le back.'), findsOneWidget);
+  });
 
-      expect(
-        find.text('Validez le paiement sur votre téléphone'),
-        findsOneWidget,
-      );
-
-      await tester.tap(find.text('Payer avec un autre numéro'));
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pump();
-
-      expect(find.text('Ouvrir attente'), findsOneWidget);
-      // La recharge en cours doit être abandonnée AVANT le pop, sans quoi
-      // le cubit (partagé avec l'écran de choix) resterait Awaiting et
-      // continuerait de sonder — voir la vraie réinitialisation testée sur
-      // le cubit lui-même et sur l'écran de choix réel ci-dessous.
-      verify(() => cubit.reset()).called(1);
-    },
-  );
+  testWidgets('échec sans code ni motif : message générique', (tester) async {
+    whenListen(
+      cubit,
+      const Stream<WalletTopupMobileMoneyState>.empty(),
+      initialState: const WalletTopupMobileMoneyFailed(),
+    );
+    await pumpScreen(tester);
+    expect(
+      find.text("Le paiement a été refusé par l'opérateur."),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('Confirmed -> retour au portefeuille avec le statut en extra', (
     tester,
@@ -232,213 +428,114 @@ void main() {
       status: 'CONFIRMED',
       amount: 5000,
       currency: 'XOF',
-      provider: 'ORANGE_SEN',
+      provider: 'ORANGE_CIV',
       providerLabel: 'Orange Money',
-      msisdnMasked: '+221 ** ** 12 34',
+      msisdnMasked: '+225 07 •• •• 56',
       walletBalance: 15000,
     );
     whenListen(
       cubit,
       Stream.fromIterable([const WalletTopupMobileMoneyConfirmed(status)]),
-      initialState: WalletTopupMobileMoneyAwaiting(
-        topup: topup,
-        startedAt: startedAt,
-      ),
+      initialState: awaiting(),
     );
 
-    await tester.pumpWidget(buildHarness());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
+    await pumpScreen(tester);
 
     expect(didNavigateToWallet, isTrue);
     expect(capturedWalletExtra, {'topupConfirmed': status});
   });
 
-  testWidgets('Failed -> message affiché et bouton « Réessayer »', (
-    tester,
-  ) async {
-    whenListen(
-      cubit,
-      Stream.fromIterable([
-        const WalletTopupMobileMoneyFailed(
-          reason: WalletTopupFailureReason.refused,
-          operatorMessage: 'Solde insuffisant.',
-        ),
-      ]),
-      initialState: WalletTopupMobileMoneyAwaiting(
-        topup: topup,
-        startedAt: startedAt,
-      ),
-    );
-
-    await tester.pumpWidget(buildHarness());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-
-    expect(find.text('Solde insuffisant.'), findsOneWidget);
-    expect(find.text('Réessayer'), findsOneWidget);
-
-    await tester.tap(find.text('Réessayer'));
-    await tester.pump();
-
-    verify(
-      () => cubit.initiate(amount: 5000, phoneNumber: '+221771234567'),
-    ).called(1);
-  });
-
   testWidgets(
-    'IMPORTANT — Error (réseau coupé pendant « Réessayer ») : message et '
+    'IMPORTANT — Error (réseau coupé pendant « Renvoyer ») : message et '
     'bouton de reprise, jamais une roue infinie',
     (tester) async {
       const failure = NetworkException('boom');
       whenListen(
         cubit,
         Stream.fromIterable([const WalletTopupMobileMoneyError(failure)]),
-        initialState: const WalletTopupMobileMoneyFailed(
-          reason: WalletTopupFailureReason.refused,
-          operatorMessage: 'Refusé.',
-        ),
+        initialState: const WalletTopupMobileMoneyFailed(failureCode: 'other'),
       );
 
-      await tester.pumpWidget(buildHarness());
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
+      await pumpScreen(tester);
 
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(
         find.text(ErrorPresenter.resolve(failure).message),
         findsOneWidget,
       );
-      expect(find.text('Réessayer'), findsOneWidget);
 
       await tester.tap(find.text('Réessayer'));
       await tester.pump();
 
       verify(
-        () => cubit.initiate(amount: 5000, phoneNumber: '+221771234567'),
+        () => cubit.initiate(amount: 5000, phoneNumber: '+2250748840856'),
       ).called(1);
     },
   );
 
-  testWidgets(
-    'CRITIQUE — le bouton retour de l\'AppBar abandonne la recharge, comme '
-    '« Payer avec un autre numéro »',
-    (tester) async {
-      whenListen(
-        cubit,
-        const Stream<WalletTopupMobileMoneyState>.empty(),
-        initialState: WalletTopupMobileMoneyAwaiting(
-          topup: topup,
-          startedAt: startedAt,
-        ),
-      );
-
-      final router = GoRouter(
-        initialLocation: '/choice',
-        routes: [
-          GoRoute(
-            path: '/choice',
-            builder: (context, state) => Scaffold(
-              body: Center(
-                child: TextButton(
-                  onPressed: () => context.push(
-                    '/payments/wallet/topup/mobile-money/awaiting',
-                  ),
-                  child: const Text('Ouvrir attente'),
-                ),
-              ),
-            ),
-          ),
-          GoRoute(
-            path: '/payments/wallet/topup/mobile-money/awaiting',
-            builder: (context, state) =>
-                BlocProvider<WalletTopupMobileMoneyCubit>.value(
-                  value: cubit,
-                  child: const WalletTopupMobileMoneyAwaitingScreen(
-                    phoneNumber: '+221771234567',
-                    amount: 5000,
-                  ),
-                ),
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
-      );
-      await tester.pump();
-
-      await tester.tap(find.text('Ouvrir attente'));
-      // Jamais pumpAndSettle() : l'icône pulsée tourne en boucle.
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pump();
-      await tester.pump();
+  test('chaque code d\'échec Yadony a son texte dans la langue de l\'app', () {
+    final l = lookupAppLocalizations(const Locale('fr'));
+    const expected = {
+      'insufficient-balance':
+          'Solde insuffisant sur votre compte mobile money.',
+      'not-approved': "Le paiement n'a pas été validé sur votre téléphone.",
+      'payer-limit-reached':
+          'Votre opérateur a refusé : plafond de paiement atteint.',
+      'invalid-number': 'Ce numéro ne peut pas payer par mobile money.',
+      'provider-unavailable':
+          'Votre opérateur est indisponible pour le moment. Réessayez plus tard.',
+      'expired': "La demande a expiré avant d'être validée.",
+      'other': "Le paiement a été refusé par l'opérateur.",
+    };
+    expected.forEach((code, text) {
       expect(
-        find.text('Validez le paiement sur votre téléphone'),
-        findsOneWidget,
+        walletTopupFailureMessage(
+          l,
+          WalletTopupMobileMoneyFailed(failureCode: code, failureReason: 'x'),
+        ),
+        text,
+        reason: code,
       );
-
-      await tester.tap(find.byType(DonyAppBarBackButton));
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pump();
-
-      expect(find.text('Ouvrir attente'), findsOneWidget);
-      verify(() => cubit.reset()).called(1);
-    },
-  );
+    });
+  });
 
   group('anglais', () {
-    testWidgets('textes traduits de l\'écran d\'attente, expiration traduite', (
-      tester,
-    ) async {
+    testWidgets('textes traduits de l\'attente', (tester) async {
       useEnglish();
       whenListen(
         cubit,
         const Stream<WalletTopupMobileMoneyState>.empty(),
-        initialState: WalletTopupMobileMoneyAwaiting(
-          topup: topup,
-          startedAt: startedAt,
-        ),
+        initialState: awaiting(),
       );
 
-      await tester.pumpWidget(buildHarness());
-      await tester.pump();
-      await tester.pump();
+      await pumpScreen(tester);
 
       expect(find.text('Mobile money top-up'), findsOneWidget);
-      expect(find.text('Approve the payment on your phone'), findsOneWidget);
-      expect(
-        find.textContaining('A payment request was sent to'),
-        findsOneWidget,
-      );
+      expect(find.text('to approve'), findsOneWidget);
+      expect(find.text('SMS sent to +225 07 •• •• 56'), findsOneWidget);
       expect(find.text('Amount'), findsOneWidget);
+      expect(find.text('From'), findsOneWidget);
       expect(find.text('Credited to'), findsOneWidget);
-      expect(find.text('Expires in'), findsOneWidget);
     });
 
-    testWidgets('Failed sans motif serveur : message générique traduit', (
-      tester,
-    ) async {
+    testWidgets('échec traduit dans la langue de l\'app', (tester) async {
       useEnglish();
       whenListen(
         cubit,
-        Stream.fromIterable([
-          const WalletTopupMobileMoneyFailed(
-            reason: WalletTopupFailureReason.expired,
-          ),
-        ]),
-        initialState: WalletTopupMobileMoneyAwaiting(
-          topup: topup,
-          startedAt: startedAt,
+        const Stream<WalletTopupMobileMoneyState>.empty(),
+        initialState: const WalletTopupMobileMoneyFailed(
+          failureCode: 'not-approved',
+          failureReason: "Le paiement n'a pas été validé sur votre téléphone.",
         ),
       );
 
-      await tester.pumpWidget(buildHarness());
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
+      await pumpScreen(tester);
 
-      expect(find.text("The payment wasn't approved in time."), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
+      expect(
+        find.text('The payment was not approved on your phone.'),
+        findsOneWidget,
+      );
+      expect(find.text('Send a new request'), findsOneWidget);
     });
   });
 }

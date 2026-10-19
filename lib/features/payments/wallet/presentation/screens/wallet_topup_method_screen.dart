@@ -15,6 +15,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_ava
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_selection.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_args.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_topup_code_sheet.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
@@ -40,6 +41,10 @@ import 'package:go_router/go_router.dart';
 /// puis numéro. Sur un back sans catalogue des pays (état `legacy`), l'écran
 /// garde l'ancien champ numéro et sa liste d'opérateurs
 /// ([_MobileMoneySection]).
+///
+/// À l'ouverture, une recharge mobile money encore ouverte côté serveur (app
+/// fermée pendant l'attente) est reprise : son écran d'attente s'ouvre
+/// directement, au lieu du 409 « recharge déjà en cours » au paiement.
 
 /// Pause de saisie après laquelle les opérateurs du numéro sont chargés
 /// (ancien parcours, état `legacy`).
@@ -94,6 +99,27 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
   void initState() {
     super.initState();
     _phoneFocusNode.addListener(_onPhoneFocusChange);
+    unawaited(_resumePendingTopup());
+  }
+
+  /// Reprend la recharge mobile money encore en attente, s'il y en a une, et
+  /// ouvre son écran d'attente. Le numéro n'est connu que masqué : pas de
+  /// « Renvoyer une demande » sur une recharge reprise.
+  Future<void> _resumePendingTopup() async {
+    final cubit = context.read<WalletTopupMobileMoneyCubit>();
+    if (!await cubit.resumePending() || !mounted) return;
+    final state = cubit.state;
+    if (state is! WalletTopupMobileMoneyAwaiting) return;
+    unawaited(
+      context.push(
+        '/payments/wallet/topup/mobile-money/awaiting',
+        extra: WalletTopupMobileMoneyAwaitingArgs(
+          cubit: cubit,
+          phoneNumber: null,
+          amount: state.amount ?? 0,
+        ),
+      ),
+    );
   }
 
   void _onPhoneFocusChange() {
@@ -116,9 +142,9 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
 
   /// Le catalogue affiché correspond-il encore à [phoneNumber] ? Seuls les
   /// deux états qui PORTENT ce catalogue comptent : après un `Failed`, une
-  /// erreur ou un `reset()` (retour arrière, « Payer avec un autre
-  /// numéro »), il n'y a plus rien à l'écran et ressaisir le même numéro
-  /// doit relancer le chargement.
+  /// erreur ou un `reset()` (« Payer avec un autre numéro »), il n'y a plus
+  /// rien à l'écran et ressaisir le même numéro doit relancer le
+  /// chargement.
   bool _hasCatalogFor(String phoneNumber, WalletTopupMobileMoneyState state) {
     if (phoneNumber != _lastLoadedPhone) return false;
     return state is WalletTopupMobileMoneyProvidersReady ||
@@ -133,17 +159,18 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
     final cubit = context.read<WalletTopupMobileMoneyCubit>();
     final busy =
         cubit.state is WalletTopupMobileMoneyInitiating ||
-        cubit.state is WalletTopupMobileMoneyAwaiting;
+        cubit.state is WalletTopupMobileMoneyAwaiting ||
+        cubit.state is WalletTopupMobileMoneyOverdue;
     if (busy) return;
     if (_hasCatalogFor(phoneNumber, cubit.state)) return;
     _lastLoadedPhone = phoneNumber;
     cubit.loadProviders(phoneNumber);
   }
 
-  /// Le cubit est revenu à [WalletTopupMobileMoneyIdle] (retour arrière
-  /// depuis l'écran d'attente, ou « Payer avec un autre numéro ») alors que
-  /// le numéro saisi est toujours là : recharge le catalogue pour que cet
-  /// écran redevienne utilisable sans geste supplémentaire.
+  /// Le cubit est revenu à [WalletTopupMobileMoneyIdle] (« Payer avec un
+  /// autre numéro » depuis l'écran d'attente) alors que le numéro saisi est
+  /// toujours là : recharge le catalogue pour que cet écran redevienne
+  /// utilisable sans geste supplémentaire.
   void _reloadAfterReset() {
     final normalized = normalizePayerPhone(_phoneController.text);
     if (normalized == null || normalized.isEmpty) return;
@@ -299,8 +326,12 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
             unawaited(ErrorPresenter.show(context, e.error));
           case final WalletTopupMobileMoneyConfirmed s:
             // Recharge réussie : pays, opérateur et numéro préremplis la
-            // prochaine fois (sans effet dans l'ancien parcours).
-            unawaited(context.read<PayerAccountCubit>().rememberSuccess());
+            // prochaine fois (sans effet dans l'ancien parcours). Pas pour une
+            // recharge reprise : son numéro n'est connu que masqué, et le
+            // compte prérempli sur cet écran n'est pas forcément le sien.
+            if (!s.resumed) {
+              unawaited(context.read<PayerAccountCubit>().rememberSuccess());
+            }
             // Filet de sécurité : si l'écran d'attente n'est plus là quand
             // la confirmation arrive (retour arrière), personne d'autre ne
             // l'annoncerait et l'utilisateur croirait à un échec alors que
