@@ -199,7 +199,7 @@ void main() {
     await tester.pumpWidget(host(announcementId: 'dkr'));
     await tester.pumpAndSettle();
     expect(
-      find.textContaining('en espèces · commission réglée'),
+      find.textContaining('en espèces · frais de service réglés'),
       findsOneWidget,
     );
   });

@@ -55,7 +55,7 @@ void main() {
       final activeBalance = formatPriceIn(1.33, 'EUR');
 
       expect(lines, [
-        'Commission : $commissionBid',
+        'Frais de service : $commissionBid',
         'Votre portefeuille $bidName en couvre $coveredBid',
         'Il manque $remainingBid, soit $remainingActive, et votre '
             'portefeuille $activeName n\'a que $activeBalance',
@@ -78,7 +78,7 @@ void main() {
       final activeBalance = formatPriceIn(1.33, 'EUR');
 
       expect(lines, [
-        'Commission : $commissionBid, soit $remainingActive',
+        'Frais de service : $commissionBid, soit $remainingActive',
         'Votre portefeuille $activeName n\'a que $activeBalance. Rechargez en '
             '$bidSymbol ou en $activeName, ou payez par carte.',
       ]);
@@ -94,7 +94,7 @@ void main() {
       );
 
       expect(lines, [
-        'Commission requise : ${formatPriceIn(1.60, 'EUR')}',
+        'Frais de service requis : ${formatPriceIn(1.60, 'EUR')}',
         'Solde du portefeuille EUR : ${formatPriceIn(1.33, 'EUR')}',
       ]);
     });

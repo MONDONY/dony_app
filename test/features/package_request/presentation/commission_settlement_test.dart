@@ -538,7 +538,7 @@ void main() {
 
       expect(find.text('Solde insuffisant'), findsOneWidget);
       expect(find.textContaining('en couvre'), findsOneWidget);
-      expect(find.textContaining('Commission requise'), findsNothing);
+      expect(find.textContaining('Frais de service requis'), findsNothing);
     });
 
     testWidgets(
@@ -841,7 +841,7 @@ void main() {
 
       expect(find.text('Succès commission t1'), findsOneWidget);
       expect(
-        find.text('Commission réglée : ce colis est à vous !'),
+        find.text('Frais de service réglés : ce colis est à vous !'),
         findsNothing,
       );
       verify(() => bloc.add(const NegotiationFetchRequested('t1'))).called(1);

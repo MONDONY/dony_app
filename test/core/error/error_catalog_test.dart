@@ -343,7 +343,7 @@ void main() {
       final p = ErrorCatalog.lookup(error);
 
       expect(p.title, 'Accord non validé');
-      expect(p.message, contains('commission'));
+      expect(p.message, contains('frais de service'));
       expect(p.message, contains("L'accord n'est pas validé"));
       expect(p.severity, ErrorSeverity.critical);
     });
@@ -1029,7 +1029,7 @@ void main() {
   group('ErrorCatalog — commission/failed (Ruling R35, jamais le code brut)', () {
     const attendus = <String, String>{
       'no-commission-card':
-          'Aucune carte enregistrée pour régler la commission.',
+          'Aucune carte enregistrée pour régler les frais de service.',
       'card-declined': 'Votre carte a été refusée.',
       'stripe-error': 'Erreur du service de paiement, réessayez.',
       // Repli générique : tout suffixe de statut Stripe, jamais montré brut.
@@ -1061,7 +1061,7 @@ void main() {
 
         final p = ErrorCatalog.lookup(error);
 
-        expect(p.message, 'Règlement de la commission refusé');
+        expect(p.message, 'Règlement des frais de service refusé');
         expect(p.message, isNot(contains('some-future-machine-code')));
       },
     );
@@ -1071,7 +1071,7 @@ void main() {
 
       final p = ErrorCatalog.lookup(error);
 
-      expect(p.message, 'Règlement de la commission refusé');
+      expect(p.message, 'Règlement des frais de service refusé');
     });
 
     test('en anglais aussi, jamais le code brut', () {

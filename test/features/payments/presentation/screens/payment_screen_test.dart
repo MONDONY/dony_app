@@ -250,7 +250,7 @@ void main() {
         // Il ne voit JAMAIS le net voyageur (30 €) ni la commission isolée.
         expect(find.textContaining('30,00'), findsNothing);
         expect(find.textContaining('6,00'), findsNothing);
-        expect(find.textContaining('Commission'), findsNothing);
+        expect(find.textContaining('Frais de service'), findsNothing);
         expect(find.textContaining('+ 3,60'), findsNothing);
         expect(find.textContaining('+3,60'), findsNothing);
       },

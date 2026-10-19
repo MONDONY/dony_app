@@ -234,11 +234,11 @@ void main() {
 
     await tester.enterText(
       find.byKey(const Key('faq-search-field')),
-      'commission',
+      'frais de service',
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Pourquoi une commission ?'), findsOneWidget);
+    expect(find.text('Pourquoi des frais de service ?'), findsOneWidget);
     expect(find.textContaining('% ?'), findsNothing);
   });
 
@@ -246,7 +246,7 @@ void main() {
     Future<void> openCommissionAnswer(WidgetTester tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pump(const Duration(milliseconds: 600));
-      final question = find.text('Pourquoi une commission ?');
+      final question = find.text('Pourquoi des frais de service ?');
       await tester.ensureVisible(question);
       await tester.tap(question);
       await tester.pump(const Duration(milliseconds: 500));
@@ -277,8 +277,8 @@ void main() {
 
       expect(
         find.text(
-          'La commission contribue aux frais de paiement, au support, à la '
-          'prévention de la fraude et au développement de la plateforme.',
+          'Les frais de service couvrent les frais de paiement, le support, la '
+          'prévention de la fraude et le développement de la plateforme.',
         ),
         findsOneWidget,
       );

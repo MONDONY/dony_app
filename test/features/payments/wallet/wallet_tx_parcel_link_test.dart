@@ -189,7 +189,7 @@ void main() {
     ) async {
       await pumpWallet(tester, [commission(bidId: _bidId)]);
 
-      expect(find.text('Commission'), findsOneWidget);
+      expect(find.text('Frais de service'), findsOneWidget);
       expect(parcelRow, findsOneWidget);
       expect(
         find.descendant(of: parcelRow, matching: _chevron),
@@ -215,7 +215,7 @@ void main() {
       // Retour : le solde se recharge sans spinner.
       await tester.tap(find.text('Fiche du colis'));
       await tester.pumpAndSettle();
-      expect(find.text('Commission'), findsOneWidget);
+      expect(find.text('Frais de service'), findsOneWidget);
       verify(
         () => bloc.add(any(that: isA<WalletRefreshRequested>())),
       ).called(1);
@@ -226,7 +226,7 @@ void main() {
     ) async {
       await pumpWallet(tester, [commission()]);
 
-      expect(find.text('Commission'), findsOneWidget);
+      expect(find.text('Frais de service'), findsOneWidget);
       expect(
         find.byWidgetPredicate(
           (w) =>
@@ -239,7 +239,7 @@ void main() {
       );
       expect(_chevron, findsNothing);
 
-      await tester.tap(find.text('Commission'));
+      await tester.tap(find.text('Frais de service'));
       await tester.pumpAndSettle();
       expect(opened, isEmpty);
       verifyNever(

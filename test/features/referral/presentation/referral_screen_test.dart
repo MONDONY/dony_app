@@ -176,7 +176,9 @@ void main() {
     // distingue ce bandeau du sous-titre de la hero card, qui répète la même
     // formulation générique.
     expect(
-      find.text('🎁 Vous avez un bon de -50% sur votre prochaine commission'),
+      find.text(
+        '🎁 Vous avez un bon de -50% sur vos prochains frais de service',
+      ),
       findsOneWidget,
     );
   });
@@ -201,7 +203,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(
-      find.text('🎁 Vous avez 2 bons de -50% sur vos prochaines commissions'),
+      find.text(
+        '🎁 Vous avez 2 bons de -50% sur vos prochains frais de service',
+      ),
       findsOneWidget,
     );
   });
@@ -312,11 +316,11 @@ void main() {
 
       expect(
         find.text(
-          '🎁 Vous avez un bon de réduction sur votre prochaine commission',
+          '🎁 Vous avez un bon de réduction sur vos prochains frais de service',
         ),
         findsOneWidget,
       );
-      expect(find.textContaining('commission -'), findsNothing);
+      expect(find.textContaining('frais de service -'), findsNothing);
       expect(find.textContaining('-0'), findsNothing);
     },
   );
@@ -343,7 +347,7 @@ void main() {
         find.text('🎁 You have a discount voucher on your next service fee'),
         findsOneWidget,
       );
-      expect(find.textContaining('commission -'), findsNothing);
+      expect(find.textContaining('frais de service -'), findsNothing);
       expect(find.textContaining('-0'), findsNothing);
     },
   );
@@ -379,7 +383,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(
-      find.text('🎁 Vous avez 3 bons de -50% sur vos prochaines commissions'),
+      find.text(
+        '🎁 Vous avez 3 bons de -50% sur vos prochains frais de service',
+      ),
       findsOneWidget,
     );
   });

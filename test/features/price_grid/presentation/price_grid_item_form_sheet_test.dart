@@ -302,7 +302,7 @@ void main() {
       expect(
         find.text(
           'L\'expéditeur paiera ${formatPriceActive(15 * (1 + donyCommissionRate))}, '
-          'dont ${formatPriceActive(15 * (1 + donyCommissionRate) - 15)} de commission '
+          'dont ${formatPriceActive(15 * (1 + donyCommissionRate) - 15)} de frais de service '
           'Yadony.',
         ),
         findsOneWidget,

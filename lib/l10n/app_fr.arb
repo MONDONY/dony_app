@@ -47,7 +47,7 @@
   "errorRequestBudgetOutOfBoundsTitle": "Budget trop élevé",
   "errorRequestBudgetOutOfBoundsMessage": "Ce budget dépasse le plafond autorisé pour cette devise. Réduisez le montant puis réessayez.",
   "errorRequestAlreadyAcceptedTitle": "Ce colis est parti",
-  "errorRequestAlreadyAcceptedMessage": "Un autre voyageur a réglé la commission avant vous, ce colis ne peut plus vous revenir.",
+  "errorRequestAlreadyAcceptedMessage": "Un autre voyageur a réglé les frais de service avant vous, ce colis ne peut plus vous revenir.",
   "errorTripNoParcelDepartedTitle": "Aucun colis récupéré",
   "errorTripNoParcelDepartedMessage": "Scannez le départ d'au moins un colis avant de marquer votre trajet arrivé.",
   "errorDepartRequiredTitle": "Scannez d'abord le départ",
@@ -239,7 +239,7 @@
   "errorRatingWindowExpiredTitle": "Délai dépassé",
   "errorRatingWindowExpiredMessage": "La période pour noter cette livraison est expirée.",
   "errorNegotiationCommissionChargeFailedTitle": "Accord non validé",
-  "errorNegotiationCommissionChargeFailedMessage": "La commission n'a pas pu être prélevée au voyageur. L'accord n'est pas validé. Il vient d'être invité à recharger son portefeuille, réessayez ensuite.",
+  "errorNegotiationCommissionChargeFailedMessage": "Les frais de service n'ont pas pu être prélevés au voyageur. L'accord n'est pas validé. Il vient d'être invité à recharger son portefeuille, réessayez ensuite.",
   "errorNegotiationNotAwaitingDepositTitle": "Aucun dépôt en cours",
   "errorNegotiationNotAwaitingDepositMessage": "Ce fil n'attend pas de paiement mobile money.",
   "errorNegotiationDepositInFlightTitle": "Paiement en cours de validation",
@@ -257,9 +257,9 @@
   "errorTravelerStripeInvalidTitle": "Voyageur non configuré",
   "errorTravelerStripeInvalidMessage": "Le voyageur n'a pas terminé la configuration de ses paiements. Le paiement par carte est impossible pour l'instant, contactez-le depuis la discussion.",
   "errorPaymentMethodTravelerInsufficientFundsCashTitle": "Solde insuffisant",
-  "errorPaymentMethodTravelerInsufficientFundsCashMessage": "Votre portefeuille n'a pas assez de fonds pour payer la commission Yadony en espèces. Rechargez-le ou ajoutez une carte.",
+  "errorPaymentMethodTravelerInsufficientFundsCashMessage": "Votre portefeuille n'a pas assez de fonds pour payer les frais de service Yadony en espèces. Rechargez-le ou ajoutez une carte.",
   "errorPaymentMethodNoCommissionCardTitle": "Carte requise",
-  "errorPaymentMethodNoCommissionCardMessage": "Ajoutez d'abord une carte de commission pour payer en espèces sans solde suffisant.",
+  "errorPaymentMethodNoCommissionCardMessage": "Ajoutez d'abord une carte pour les frais de service afin de payer en espèces sans solde suffisant.",
   "errorPaymentMethodNotInAvailableSetTitle": "Moyen de paiement non proposé",
   "errorPaymentMethodNotInAvailableSetMessage": "Ce moyen de paiement n'est pas proposé pour cette offre. Choisissez-en un autre.",
   "errorPaymentMethodMobileMoneyCapabilityRequiredTitle": "Mobile money indisponible",
@@ -1562,7 +1562,7 @@
       }
     }
   },
-  "tripPublishGridCommissionNotice": "Yadony ajoute sa commission sur chaque article et sur le prix au kilo",
+  "tripPublishGridCommissionNotice": "Yadony ajoute ses frais de service sur chaque article et sur le prix au kilo",
   "@tripPublishGridCommissionNotice": {
     "description": "Note sous l'aperçu de grille en mode mixte, sans taux (FLUTTER-R6)"
   },
@@ -1590,7 +1590,7 @@
   "@tripPublishCashLabel": {
     "description": "Titre de la ligne paiement en espèces"
   },
-  "tripPublishCashLockedSubtitle": "Toujours accepté sur ce trajet. Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis",
+  "tripPublishCashLockedSubtitle": "Toujours accepté sur ce trajet. Frais de service prélevés sur votre portefeuille Yadony quand vous acceptez le colis",
   "@tripPublishCashLockedSubtitle": {
     "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
   },
@@ -1606,7 +1606,7 @@
   "@tripPublishCardCheckingSubtitle": {
     "description": "Sous-titre de la ligne carte pendant le rechargement du statut Stripe à l'ouverture du formulaire (prix_conditions_step.dart, Sentry FLUTTER-D2)."
   },
-  "tripPublishCashSubtitle": "Commission prélevée sur votre portefeuille Yadony quand vous acceptez le colis",
+  "tripPublishCashSubtitle": "Frais de service prélevés sur votre portefeuille Yadony quand vous acceptez le colis",
   "@tripPublishCashSubtitle": {
     "description": "Sous-titre de la ligne paiement en espèces. La commission est prélevée sur le portefeuille du voyageur à l'acceptation du colis, pas à la remise (Sentry FLUTTER-MR)."
   },
@@ -1758,7 +1758,7 @@
   "@tripPublishGridSheetEditCta": {
     "description": "Bouton sticky de la feuille de grille complète"
   },
-  "tripPublishGridSheetCommissionNote": "Prix payés par l'expéditeur, commission Yadony comprise.",
+  "tripPublishGridSheetCommissionNote": "Prix payés par l'expéditeur, frais de service Yadony compris.",
   "@tripPublishGridSheetCommissionNote": {
     "description": "Note sous la liste d'articles de la feuille de grille complète, sans taux (FLUTTER-R6)"
   },
@@ -3371,7 +3371,7 @@
   "@requestDetailNotVisibleMessage": {
     "description": "Message du bandeau brouillon (request_detail_view.dart)"
   },
-  "requestDetailCashCommissionTitle": "{name} règle sa commission Yadony",
+  "requestDetailCashCommissionTitle": "{name} règle ses frais de service Yadony",
   "@requestDetailCashCommissionTitle": {
     "description": "Titre du bandeau accord en espèces, commission en attente (request_detail_view.dart)",
     "placeholders": {
@@ -3485,7 +3485,7 @@
   "@requestOfferDealFound": {
     "description": "Étiquette d'offre : accord trouvé, en attente de paiement (request_offer_card.dart)"
   },
-  "requestOfferCashDealCommissionPending": "Accord en espèces, commission en attente",
+  "requestOfferCashDealCommissionPending": "Accord en espèces, frais de service en attente",
   "@requestOfferCashDealCommissionPending": {
     "description": "Étiquette d'offre : accord espèces, commission voyageur en attente (request_offer_card.dart)"
   },
@@ -5402,7 +5402,7 @@
       }
     }
   },
-  "tripPublishCashCommissionIntro": "Vous ne pourrez accepter un colis en espèces que si la commission Yadony peut être prélevée ",
+  "tripPublishCashCommissionIntro": "Vous ne pourrez accepter un colis en espèces que si les frais de service Yadony peuvent être prélevés ",
   "@tripPublishCashCommissionIntro": {
     "description": "Premier segment de l'avertissement commission espèces à la publication (cash_commission_notice.dart)"
   },
@@ -5546,7 +5546,7 @@
   "@negotiationThreadAwaitingSenderPaymentHint": {
     "description": "Accord carte, vue voyageur en attente du paiement (bid_negotiation_thread_screen.dart)"
   },
-  "negotiationThreadCashTravelerHint": "Prix accepté. Paiement en espèces, il vous reste à régler la commission Yadony.",
+  "negotiationThreadCashTravelerHint": "Prix accepté. Paiement en espèces, il vous reste à régler les frais de service Yadony.",
   "@negotiationThreadCashTravelerHint": {
     "description": "Accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart)"
   },
@@ -5554,7 +5554,7 @@
   "@negotiationThreadCashSenderHint": {
     "description": "Accord en espèces, vue expéditeur (bid_negotiation_thread_screen.dart)"
   },
-  "negotiationThreadCashCommissionAmount": "Commission Yadony : {amount}",
+  "negotiationThreadCashCommissionAmount": "Frais de service Yadony : {amount}",
   "@negotiationThreadCashCommissionAmount": {
     "description": "Montant de la commission à régler, accord en espèces vue voyageur (bid_negotiation_thread_screen.dart, FLUTTER-H7)",
     "placeholders": {
@@ -5797,7 +5797,7 @@
   "@negotiationStatusBadgeAwaitingPayment": {
     "description": "Pastille de statut AWAITING_PAYMENT (thread_hero_card.dart)"
   },
-  "negotiationStatusBadgeAwaitingCommission": "COMMISSION",
+  "negotiationStatusBadgeAwaitingCommission": "FRAIS",
   "@negotiationStatusBadgeAwaitingCommission": {
     "description": "Pastille de statut AWAITING_COMMISSION (thread_hero_card.dart)"
   },
@@ -5825,7 +5825,7 @@
   "@negotiationStatusPriceLabelAwaitingPayment": {
     "description": "Libellé au-dessus du prix pour AWAITING_PAYMENT (thread_hero_card.dart)"
   },
-  "negotiationStatusPriceLabelAwaitingCommission": "COMMISSION DUE",
+  "negotiationStatusPriceLabelAwaitingCommission": "FRAIS DE SERVICE DUS",
   "@negotiationStatusPriceLabelAwaitingCommission": {
     "description": "Libellé au-dessus du prix pour AWAITING_COMMISSION (thread_hero_card.dart)"
   },
@@ -6246,7 +6246,7 @@
   "@negotiationStageDepositInProgress": {
     "description": "Libellé compact sous le prix, statut AWAITING_DEPOSIT (my_negotiations_screen.dart, _NegoCard)"
   },
-  "negotiationStageCommissionDue": "commission due",
+  "negotiationStageCommissionDue": "frais de service dus",
   "@negotiationStageCommissionDue": {
     "description": "Libellé compact sous le prix, statut AWAITING_COMMISSION (my_negotiations_screen.dart, _NegoCard)"
   },
@@ -6337,11 +6337,11 @@
   "@errorCommissionFailedTitle": {
     "description": "Titre : le règlement de la commission d'une négociation a été refusé (negotiation_bloc.dart, code commission/failed)"
   },
-  "errorCommissionFailedMessage": "Règlement de la commission refusé",
+  "errorCommissionFailedMessage": "Règlement des frais de service refusé",
   "@errorCommissionFailedMessage": {
     "description": "Repli quand le detail machine (r.error) n'est reconnu ni comme un des trois codes connus ni comme card-status-* — Ruling R35 : jamais le code brut"
   },
-  "errorCommissionFailedNoCardMessage": "Aucune carte enregistrée pour régler la commission.",
+  "errorCommissionFailedNoCardMessage": "Aucune carte enregistrée pour régler les frais de service.",
   "@errorCommissionFailedNoCardMessage": {
     "description": "Traduction du code machine backend no-commission-card (settleNegotiationCommission) — Ruling R35"
   },
@@ -6688,7 +6688,7 @@
   "@negotiationCommissionSettlementTitle": {
     "description": "Titre de la feuille de règlement de commission en solde insuffisant (commission_settlement_sheet.dart)"
   },
-  "negotiationCommissionSettlementHint": "Rechargez votre portefeuille ou payez la commission directement par carte.",
+  "negotiationCommissionSettlementHint": "Rechargez votre portefeuille ou payez les frais de service directement par carte.",
   "@negotiationCommissionSettlementHint": {
     "description": "Texte d'aide de la feuille de règlement de commission (commission_settlement_sheet.dart)"
   },
@@ -7205,11 +7205,11 @@
       }
     }
   },
-  "bidDetailGainCashNote": "Commission Yadony prélevée séparément.",
+  "bidDetailGainCashNote": "Frais de service Yadony prélevés séparément.",
   "@bidDetailGainCashNote": {
     "description": "Note, paiement en especes (traveler_gain_card.dart)"
   },
-  "bidDetailGainCashGrossDetail": "Dont {commission} de commission Yadony, prélevée sur votre solde ou votre carte. Vous gardez {net}.",
+  "bidDetailGainCashGrossDetail": "Dont {commission} de frais de service Yadony, prélevés sur votre solde ou votre carte. Vous gardez {net}.",
   "@bidDetailGainCashGrossDetail": {
     "description": "Detail sous le brut encaisse en especes : commission prelevee a part et net garde par le voyageur (traveler_gain_card.dart, FLUTTER-R8)",
     "placeholders": {
@@ -7273,11 +7273,11 @@
   "@bidDetailCardDeclinedTitle": {
     "description": "Titre du sheet affiché quand la carte de commission est refusée (bid_detail_screen.dart, tâche D2)"
   },
-  "bidDetailCardDeclinedHint": "Changez votre carte de commission pour accepter cette demande.",
+  "bidDetailCardDeclinedHint": "Changez votre carte des frais de service pour accepter cette demande.",
   "@bidDetailCardDeclinedHint": {
     "description": "Indication sous le message d'erreur du sheet carte refusée (bid_detail_screen.dart)"
   },
-  "bidDetailChangeCommissionCard": "Changer ma carte de commission",
+  "bidDetailChangeCommissionCard": "Changer ma carte des frais de service",
   "@bidDetailChangeCommissionCard": {
     "description": "Bouton du sheet carte refusée (bid_detail_screen.dart)"
   },
@@ -7285,7 +7285,7 @@
   "@bidDetailInsufficientBalanceTitle": {
     "description": "Titre du sheet solde insuffisant (bid_detail_screen.dart)"
   },
-  "bidDetailInsufficientBalanceHint": "Rechargez votre portefeuille ou payez la commission directement par carte.",
+  "bidDetailInsufficientBalanceHint": "Rechargez votre portefeuille ou payez les frais de service directement par carte.",
   "@bidDetailInsufficientBalanceHint": {
     "description": "Indication du sheet solde insuffisant (bid_detail_screen.dart)"
   },
@@ -7718,7 +7718,7 @@
   "@parcelRefusalConsequences": {
     "description": "Encart des conséquences du refus (parcel_refusal_sheet.dart)"
   },
-  "parcelRefusalCashNotice": "Paiement en espèces : rendez à l'expéditeur l'argent qu'il vous a déjà remis. La commission Yadony déjà réglée vous est rendue.",
+  "parcelRefusalCashNotice": "Paiement en espèces : rendez à l'expéditeur l'argent qu'il vous a déjà remis. Les frais de service Yadony déjà réglés vous sont rendus.",
   "@parcelRefusalCashNotice": {
     "description": "Encart espèces de la feuille de refus (parcel_refusal_sheet.dart)"
   },
@@ -8742,11 +8742,11 @@
   "@bidListCardDeclinedSheetTitle": {
     "description": "Titre de la sheet « paiement carte refusé » (pending_bids_screen.dart _showCardDeclinedSheet)."
   },
-  "bidListCardDeclinedHint": "Changez votre carte de commission pour accepter cette demande.",
+  "bidListCardDeclinedHint": "Changez votre carte des frais de service pour accepter cette demande.",
   "@bidListCardDeclinedHint": {
     "description": "Indication sous le message d'erreur de la sheet paiement refusé (pending_bids_screen.dart)."
   },
-  "bidListChangeCommissionCardButton": "Changer ma carte de commission",
+  "bidListChangeCommissionCardButton": "Changer ma carte des frais de service",
   "@bidListChangeCommissionCardButton": {
     "description": "Bouton de la sheet « paiement carte refusé » (pending_bids_screen.dart)."
   },
@@ -8754,7 +8754,7 @@
   "@bidListWalletInsufficientTitle": {
     "description": "Titre de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart)."
   },
-  "bidListWalletInsufficientHint": "Rechargez votre portefeuille ou payez la commission directement par carte.",
+  "bidListWalletInsufficientHint": "Rechargez votre portefeuille ou payez les frais de service directement par carte.",
   "@bidListWalletInsufficientHint": {
     "description": "Indication de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart)."
   },
@@ -9205,7 +9205,7 @@
   "@bidCancelWarningMessage": {
     "description": "Message d'avertissement du cas colis déjà remis (cancellation_dialog.dart)."
   },
-  "bidCancelWarningRefundNote": "L'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l'expéditeur n'a rien à payer et la commission Yadony est recréditée au voyageur.",
+  "bidCancelWarningRefundNote": "L'expéditeur sera intégralement remboursé. Si le paiement était en espèces, l'expéditeur n'a rien à payer et les frais de service Yadony sont recrédités au voyageur.",
   "@bidCancelWarningRefundNote": {
     "description": "Note de remboursement du cas colis déjà remis (cancellation_dialog.dart)."
   },
@@ -9805,7 +9805,7 @@
     "description": "Notice de débit de la carte commission sans plancher connu (commission_method_screen.dart) : sans grille de commission et devise active autre que l'EUR, ou grille sans minimum pour la devise. Sans taux (FLUTTER-R6)."
   },
 
-  "commissionCardScreenTitle": "Carte commission",
+  "commissionCardScreenTitle": "Carte des frais de service",
   "@commissionCardScreenTitle": {
     "description": "Titre de l'AppBar de l'écran Carte commission (commission_method_screen.dart)."
   },
@@ -9838,7 +9838,7 @@
   "@commissionCardEmptyTitle": {
     "description": "Titre de l'état vide de la carte commission (commission_card_empty_state.dart)."
   },
-  "commissionCardEmptyBody": "Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission à chaque colis accepté.",
+  "commissionCardEmptyBody": "Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons nos frais de service à chaque colis accepté.",
   "@commissionCardEmptyBody": {
     "description": "Corps de l'état vide de la carte commission (commission_card_empty_state.dart). Sans taux (FLUTTER-R6)."
   },
@@ -10237,7 +10237,7 @@
     }
   },
 
-  "walletShortfallRequired": "Commission requise : {amount}",
+  "walletShortfallRequired": "Frais de service requis : {amount}",
   "@walletShortfallRequired": {
     "description": "Sheet « Solde insuffisant », sans breakdown : première ligne (commission_shortfall_text.dart).",
     "placeholders": {
@@ -10258,7 +10258,7 @@
       }
     }
   },
-  "walletShortfallCommission": "Commission : {amount}",
+  "walletShortfallCommission": "Frais de service : {amount}",
   "@walletShortfallCommission": {
     "description": "Sheet « Solde insuffisant », avec breakdown : montant de la commission dans la devise du colis (commission_shortfall_text.dart).",
     "placeholders": {
@@ -10297,7 +10297,7 @@
       }
     }
   },
-  "walletShortfallCommissionConverted": "Commission : {amount}, soit {converted}",
+  "walletShortfallCommissionConverted": "Frais de service : {amount}, soit {converted}",
   "@walletShortfallCommissionConverted": {
     "description": "Sheet « Solde insuffisant », rien couvert par le portefeuille du colis : commission convertie dans la devise active (commission_shortfall_text.dart).",
     "placeholders": {
@@ -10352,7 +10352,7 @@
       }
     }
   },
-  "walletRefundAbsorbedByFees": "Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l'absorbent entièrement. Il reste utilisable pour régler la commission Yadony de vos demandes payées en espèces.",
+  "walletRefundAbsorbedByFees": "Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l'absorbent entièrement. Il reste utilisable pour régler les frais de service Yadony de vos demandes payées en espèces.",
   "@walletRefundAbsorbedByFees": {
     "description": "Bandeau affiché quand le net remboursable est nul (wallet_screen.dart _LoadedView)."
   },
@@ -10408,7 +10408,7 @@
   "@walletTxTypeBidPayment": {
     "description": "Libellé d'une transaction BID_PAYMENT (wallet_screen.dart _TxTile)."
   },
-  "walletTxTypeCommission": "Commission",
+  "walletTxTypeCommission": "Frais de service",
   "@walletTxTypeCommission": {
     "description": "Libellé d'une transaction COMMISSION_DEDUCTED (wallet_screen.dart _TxTile)."
   },
@@ -10474,7 +10474,7 @@
       }
     }
   },
-  "walletPurposeNote": "Votre solde sert à régler la commission Yadony des demandes payées en espèces. Il ne paie pas l'envoi d'un colis, qui se règle par carte, PayPal ou mobile money.",
+  "walletPurposeNote": "Votre solde sert à régler les frais de service Yadony des demandes payées en espèces. Il ne paie pas l'envoi d'un colis, qui se règle par carte, PayPal ou mobile money.",
   "@walletPurposeNote": {
     "description": "Ligne fixe de l'écran Portefeuille : à quoi sert le solde (commission des demandes en espèces) et ce qu'il ne paie pas (l'envoi d'un colis)."
   },
@@ -10621,7 +10621,7 @@
   "@walletTopupCodeFieldHint": {
       "description": "Exemple dans le champ de saisie du code (wallet_topup_code_sheet.dart)."
   },
-  "walletTopupCodeNotice": "Ce crédit sert uniquement à payer les commissions Yadony. Il n'est ni remboursable ni retirable.",
+  "walletTopupCodeNotice": "Ce crédit sert uniquement à payer les frais de service Yadony. Il n'est ni remboursable ni retirable.",
   "@walletTopupCodeNotice": {
       "description": "Mention sous le champ de la sheet code de recharge (wallet_topup_code_sheet.dart)."
   },
@@ -10767,7 +10767,7 @@
       }
     }
   },
-  "walletRefundFeeRetainedNotice": "Cette recharge n'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu'une recharge a servi à régler une commission.",
+  "walletRefundFeeRetainedNotice": "Cette recharge n'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu'une recharge a servi à régler des frais de service.",
   "@walletRefundFeeRetainedNotice": {
     "description": "Bandeau d'avertissement quand des frais sont retenus sur une recharge jamais utilisée (wallet_refund_confirm_sheet.dart _ConfirmContent)."
   },
@@ -12538,7 +12538,7 @@
   "@profileMoneyMobileMoneyPayoutSubtitle": {
     "description": "Sous-titre de la tuile « Versement mobile money » (profile_sections.dart)."
   },
-  "profileMoneyCashCommissionCard": "Carte commission espèces",
+  "profileMoneyCashCommissionCard": "Carte des frais de service en espèces",
   "@profileMoneyCashCommissionCard": {
     "description": "Tuile de la section ARGENT (profile_sections.dart)."
   },
@@ -13394,11 +13394,11 @@
   "@faqPaymentsRefundA": {
     "description": "Réponse FAQ payments/refund (faq_screen.dart)"
   },
-  "faqPaymentsCommissionQ": "Pourquoi une commission ?",
+  "faqPaymentsCommissionQ": "Pourquoi des frais de service ?",
   "@faqPaymentsCommissionQ": {
     "description": "Question FAQ payments/commission (faq_screen.dart), sans taux (FLUTTER-R6)"
   },
-  "faqPaymentsCommissionA": "La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.",
+  "faqPaymentsCommissionA": "Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme.",
   "@faqPaymentsCommissionA": {
     "description": "Réponse FAQ payments/commission (faq_screen.dart)"
   },
@@ -14500,7 +14500,7 @@
     }
   },
 
-  "prefsCurrencyLockedSheetBody": "Votre portefeuille contient encore de l'argent en {currency} : tant qu'il n'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour régler des commissions, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.",
+  "prefsCurrencyLockedSheetBody": "Votre portefeuille contient encore de l'argent en {currency} : tant qu'il n'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour régler des frais de service, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.",
   "@prefsCurrencyLockedSheetBody": {
     "description": "Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).",
     "placeholders": {
@@ -16636,7 +16636,7 @@
   "@priceGridScreenTitle": {
     "description": "Titre de l'AppBar (price_grid_screen.dart)."
   },
-  "priceGridCommissionNotice": "Yadony ajoute sa commission au prix que vous saisissez. Vous encaissez exactement votre montant.",
+  "priceGridCommissionNotice": "Yadony ajoute ses frais de service au prix que vous saisissez. Vous encaissez exactement votre montant.",
   "@priceGridCommissionNotice": {
     "description": "Note de commission en pied de liste (price_grid_screen.dart), sans taux (FLUTTER-R6)."
   },
@@ -16769,7 +16769,7 @@
   "@priceGridEnterAmountMessage": {
     "description": "Message d'écho invitant à saisir un montant (price_grid_item_form_sheet.dart)."
   },
-  "priceGridSenderWillPayMessage": "L'expéditeur paiera {paid}, dont {fee} de commission Yadony.",
+  "priceGridSenderWillPayMessage": "L'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.",
   "@priceGridSenderWillPayMessage": {
     "description": "Message d'écho annonçant le montant payé par l'expéditeur et la commission comprise, montants déjà formatés dans la devise active (price_grid_item_form_sheet.dart). Sans taux (FLUTTER-R6).",
     "placeholders": {
@@ -16789,7 +16789,7 @@
   "@referralStatSignedUp": {
     "description": "Libellé de la stat « inscrits » (referral_screen.dart)."
   },
-  "referralVouchers": "{count, plural, =1{🎁 Vous avez un bon de -{percent}% sur votre prochaine commission} other{🎁 Vous avez {count} bons de -{percent}% sur vos prochaines commissions}}",
+  "referralVouchers": "{count, plural, =1{🎁 Vous avez un bon de -{percent}% sur vos prochains frais de service} other{🎁 Vous avez {count} bons de -{percent}% sur vos prochains frais de service}}",
   "@referralVouchers": {
     "description": "Bandeau de bons actifs, affiché seulement si activeVoucherCount >= 1 : la branche =1 peut donc écrire « un » en toutes lettres (referral_screen.dart).",
     "placeholders": {
@@ -16801,7 +16801,7 @@
       }
     }
   },
-  "referralVouchersUnknownPercent": "{count, plural, =1{🎁 Vous avez un bon de réduction sur votre prochaine commission} other{🎁 Vous avez {count} bons de réduction sur vos prochaines commissions}}",
+  "referralVouchersUnknownPercent": "{count, plural, =1{🎁 Vous avez un bon de réduction sur vos prochains frais de service} other{🎁 Vous avez {count} bons de réduction sur vos prochains frais de service}}",
   "@referralVouchersUnknownPercent": {
     "description": "Même bandeau que referralVouchers, sans pourcentage : repli défensif quand le serveur ne renseigne pas voucherFactor (backend antérieur au lot 3). Affiché seulement si activeVoucherCount >= 1 (referral_screen.dart).",
     "placeholders": {
@@ -16955,7 +16955,7 @@
   "@referralRefereeCodeExpired": {
     "description": "État d'un code de réduction obtenu en récompense et expiré (referral_screen.dart)."
   },
-  "referralRefereeVoucherObtained": "Bon de commission obtenu",
+  "referralRefereeVoucherObtained": "Bon sur les frais de service obtenu",
   "@referralRefereeVoucherObtained": {
     "description": "Sous-texte d'un filleul récompensé par l'ancien bon de commission, attribué avant le choix de récompense (referral_screen.dart)."
   },
@@ -17053,7 +17053,7 @@
       }
     }
   },
-  "referralChoiceWalletBody": "Ajoutés tout de suite. Utilisables pour régler la commission Yadony de vos demandes payées en espèces.",
+  "referralChoiceWalletBody": "Ajoutés tout de suite. Utilisables pour régler les frais de service Yadony de vos demandes payées en espèces.",
   "@referralChoiceWalletBody": {
     "description": "Description de l'option « crédit sur le solde » (referral_reward_sheets.dart)."
   },
@@ -17079,7 +17079,7 @@
       }
     }
   },
-  "referralChoiceWalletNote": "Le solde Yadony sert à régler la commission Yadony des demandes payées en espèces. Il n'est pas retirable en espèces.",
+  "referralChoiceWalletNote": "Le solde Yadony sert à régler les frais de service Yadony des demandes payées en espèces. Il n'est pas retirable en espèces.",
   "@referralChoiceWalletNote": {
     "description": "Mention sous les options de la feuille de choix (referral_reward_sheets.dart)."
   },
@@ -17118,7 +17118,7 @@
   "@referralCodeSingleUse": {
     "description": "Mention sous le code de réduction obtenu (referral_reward_sheets.dart)."
   },
-  "referralWalletCreditedBody": "Le montant apparaît dans votre Portefeuille. Il sert à régler la commission Yadony de vos demandes payées en espèces.",
+  "referralWalletCreditedBody": "Le montant apparaît dans votre Portefeuille. Il sert à régler les frais de service Yadony de vos demandes payées en espèces.",
   "@referralWalletCreditedBody": {
     "description": "Texte de la confirmation après le choix du crédit sur le solde (referral_reward_sheets.dart)."
   },
@@ -18113,7 +18113,7 @@
   "@trackingStepPhotoLabel": {
     "description": "Libellé d'accessibilité de la miniature photo d'une étape (tracking_timeline_bottom_sheet.dart)."
   },
-  "negotiationCommissionTravelDatePassed": "La date du voyage est passée : la commission ne peut plus être réglée.",
+  "negotiationCommissionTravelDatePassed": "La date du voyage est passée : les frais de service ne peuvent plus être réglés.",
   "@negotiationCommissionTravelDatePassed": {
     "description": "Voyageur, commission à régler alors que le jour du voyage est passé (thread_state_cta_bar.dart, FLUTTER-44)"
   },
@@ -18178,7 +18178,7 @@
   "@errorPaymentMethodNoneAvailableTitle": {
     "description": "Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur"
   },
-  "errorPaymentMethodNoneAvailableMessage": "L'expéditeur accepte plusieurs modes de paiement, mais aucun n'est prêt sur votre compte : configurez votre compte de paiement par carte, ou rechargez votre portefeuille pour couvrir la commission en espèces.",
+  "errorPaymentMethodNoneAvailableMessage": "L'expéditeur accepte plusieurs modes de paiement, mais aucun n'est prêt sur votre compte : configurez votre compte de paiement par carte, ou rechargez votre portefeuille pour couvrir les frais de service en espèces.",
   "@errorPaymentMethodNoneAvailableMessage": {
     "description": "Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur"
   },
@@ -18186,7 +18186,7 @@
   "@errorCashFundsRequiredTitle": {
     "description": "Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces"
   },
-  "errorCashFundsRequiredMessage": "Pour accepter un paiement en espèces, votre portefeuille doit couvrir la commission. Rechargez-le, puis réessayez.",
+  "errorCashFundsRequiredMessage": "Pour accepter un paiement en espèces, votre portefeuille doit couvrir les frais de service. Rechargez-le, puis réessayez.",
   "@errorCashFundsRequiredMessage": {
     "description": "Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces"
   },
@@ -19270,7 +19270,7 @@
   "@negotiationOpenPartnerProfileSemantics": {"description": "Nom accessible de l'en-tête du fil de négociation (avatar + nom) qui ouvre le profil public de l'autre partie (negotiation_thread_screen.dart _PartnerTitle).", "placeholders": {"name": {"type": "String"}}},
   "negotiationCommissionSettledTitle": "Ce colis est à vous !",
   "@negotiationCommissionSettledTitle": {"description": "Titre de l'écran de succès affiché au voyageur quand il a réglé la commission d'un accord en espèces (negotiation_commission_settled_screen.dart)."},
-  "negotiationCommissionSettledSubtitle": "La commission Yadony est réglée et l'accord est scellé. Retrouvez l'envoi et les prochaines étapes dans la négociation.",
+  "negotiationCommissionSettledSubtitle": "Les frais de service Yadony sont réglés et l'accord est scellé. Retrouvez l'envoi et les prochaines étapes dans la négociation.",
   "@negotiationCommissionSettledSubtitle": {"description": "Sous-titre de l'écran de succès après règlement de la commission d'un accord en espèces (negotiation_commission_settled_screen.dart)."},
   "bidAcceptedSuccessTitle": "Demande acceptée !",
   "@bidAcceptedSuccessTitle": {"description": "Titre de l'écran de succès affiché au voyageur quand il accepte une demande depuis « À traiter » (bid_accepted_success_screen.dart)."},
@@ -20503,11 +20503,11 @@
   "@moneyUnavailableBody": {"description": "Description affichée quand le serveur ne fournit pas encore le suivi du séquestre (money_overview_screen.dart, FLUTTER-HV)."},
   "moneyOpenParcelHint": "Ouvrir le colis",
   "@moneyOpenParcelHint": {"description": "Indication d'accessibilité au tap sur une carte « Mon argent » (money_parcel_card.dart, FLUTTER-HV)."},
-  "moneyCashCommissionSettled": "commission réglée",
+  "moneyCashCommissionSettled": "frais de service réglés",
   "@moneyCashCommissionSettled": {"description": "Suffixe d'un colis en espèces dont la commission Yadony est réglée (money_labels.dart, FLUTTER-HV)."},
-  "moneyCashCommissionPending": "commission en attente",
+  "moneyCashCommissionPending": "frais de service en attente",
   "@moneyCashCommissionPending": {"description": "Suffixe d'un colis en espèces dont la commission Yadony n'est pas encore réglée (money_labels.dart, FLUTTER-HV)."},
-  "moneyCashCommissionRefunded": "commission remboursée",
+  "moneyCashCommissionRefunded": "frais de service remboursés",
   "@moneyCashCommissionRefunded": {"description": "Suffixe d'un colis en espèces dont la commission Yadony a été rendue (money_labels.dart, FLUTTER-HV)."},
   "ticketTrackingNumberHelp": "Identifiant public du colis, ce n'est pas un code de remise.",
   "@ticketTrackingNumberHelp": {"description": "Aide sous le numéro de suivi du talon : le numéro est public, ce n'est pas le code de retrait (talon_tracking_strip.dart, FLUTTER-J2)."},
@@ -21338,7 +21338,7 @@
   "@negotiationCashDealConfirmedTitle": {
     "description": "Fil de négociation d'un trajet : accord en espèces conclu, vu par l'expéditeur (FLUTTER-NG)"
   },
-  "negotiationCashDealConfirmedMessage": "Vous paierez {amount} en espèces au voyageur, à la remise du colis. Il règle de son côté la commission Yadony pour confirmer l'envoi.",
+  "negotiationCashDealConfirmedMessage": "Vous paierez {amount} en espèces au voyageur, à la remise du colis. Il règle de son côté les frais de service Yadony pour confirmer l'envoi.",
   "@negotiationCashDealConfirmedMessage": {
     "description": "Détail de l'accord en espèces conclu, montant formaté dans la devise du trajet (FLUTTER-NG)",
     "placeholders": {

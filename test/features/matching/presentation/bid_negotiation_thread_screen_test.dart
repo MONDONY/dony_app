@@ -1368,7 +1368,7 @@ void main() {
       final amount = tester.widget<Text>(
         find.byKey(const Key('nego-cash-commission-amount')),
       );
-      expect(amount.data, startsWith('Commission Yadony : 5'));
+      expect(amount.data, startsWith('Frais de service Yadony : 5'));
       expect(
         find.byKey(const Key('nego-cash-commission-countdown')),
         findsOneWidget,
@@ -1376,8 +1376,8 @@ void main() {
       // Le bandeau garde son texte, cohérent avec le bouton.
       expect(
         find.text(
-          'Prix accepté. Paiement en espèces, il vous reste à régler la '
-          'commission Yadony.',
+          'Prix accepté. Paiement en espèces, il vous reste à régler les '
+          'frais de service Yadony.',
         ),
         findsOneWidget,
       );

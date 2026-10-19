@@ -520,7 +520,7 @@ void main() {
 
       expect(
         find.text(
-          'Yadony ajoute sa commission sur chaque article et sur le prix au '
+          'Yadony ajoute ses frais de service sur chaque article et sur le prix au '
           'kilo',
         ),
         findsOneWidget,

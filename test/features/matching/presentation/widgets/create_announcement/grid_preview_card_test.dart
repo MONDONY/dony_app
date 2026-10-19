@@ -221,7 +221,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Prix payés par l\'expéditeur, commission Yadony comprise.'),
+        find.text(
+          'Prix payés par l\'expéditeur, frais de service Yadony compris.',
+        ),
         findsOneWidget,
       );
     });

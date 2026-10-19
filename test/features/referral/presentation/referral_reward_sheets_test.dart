@@ -105,7 +105,7 @@ void main() {
       expect(_normalized('-5 % sur mon prochain envoi'), findsOneWidget);
       expect(
         find.text(
-          'Le solde Yadony sert à régler la commission Yadony des demandes '
+          'Le solde Yadony sert à régler les frais de service Yadony des demandes '
           "payées en espèces. Il n'est pas retirable en espèces.",
         ),
         findsOneWidget,

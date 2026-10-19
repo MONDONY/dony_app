@@ -3972,7 +3972,7 @@
   "parcelRefusalRemovePhoto": "Remove the photo",
   "parcelRefusalPhotoFailed": "This photo couldn't be read. Try again.",
   "parcelRefusalConsequences": "The sender is notified and fully refunded. Repeated refusals suspend their account.",
-  "parcelRefusalCashNotice": "Cash payment: give back any money the sender already handed you. The Yadony commission already paid is given back to you.",
+  "parcelRefusalCashNotice": "Cash payment: give back any money the sender already handed you. The Yadony service fee already paid is given back to you.",
   "parcelRefusalHandedOverNotice": "You already scanned this parcel: give it back to the sender on the spot.",
   "parcelRefusalSubmit": "Refuse the parcel",
   "parcelRefusalSuccess": "Parcel refused. The sender is notified and refunded.",
@@ -4403,7 +4403,7 @@
   "bidCancelDialogTitle": "Cancel this request?",
   "bidCancelAcceptedSubtitle": "The sender will be automatically refunded.",
   "bidCancelWarningMessage": "The parcel has already been handed over. You'll need to return it to the sender within 3 days by entering the return code they'll give you.",
-  "bidCancelWarningRefundNote": "The sender will be fully refunded. If the payment was in cash, the sender owes nothing and the Yadony commission is credited back to the traveler.",
+  "bidCancelWarningRefundNote": "The sender will be fully refunded. If the payment was in cash, the sender owes nothing and the Yadony service fee is credited back to the traveler.",
   "bidCancelReasonRequiredHint": "Reason for cancellation *",
   "bidCancelReasonOptionalHint": "Reason (optional)",
   "bidCancelReasonRequiredError": "Reason required",
@@ -4882,7 +4882,7 @@
       }
     }
   },
-  "walletRefundAbsorbedByFees": "This balance can't be refunded: the payment provider's fees absorb it entirely. It stays usable to pay the Yadony commission on your cash-paid requests.",
+  "walletRefundAbsorbedByFees": "This balance can't be refunded: the payment provider's fees absorb it entirely. It stays usable to pay the Yadony service fee on your cash-paid requests.",
   "@walletRefundAbsorbedByFees": {
     "description": "Bandeau affiché quand le net remboursable est nul (wallet_screen.dart _LoadedView)."
   },
@@ -5004,7 +5004,7 @@
       }
     }
   },
-  "walletPurposeNote": "Your balance pays the Yadony commission on requests paid in cash. It does not pay for sending a parcel, which is paid by card, PayPal or mobile money.",
+  "walletPurposeNote": "Your balance pays the Yadony service fee on requests paid in cash. It does not pay for sending a parcel, which is paid by card, PayPal or mobile money.",
   "@walletPurposeNote": {
     "description": "Ligne fixe de l'écran Portefeuille : à quoi sert le solde (commission des demandes en espèces) et ce qu'il ne paie pas (l'envoi d'un colis)."
   },
@@ -5297,7 +5297,7 @@
       }
     }
   },
-  "walletRefundFeeRetainedNotice": "This top-up was never used: the payment provider's fees are withheld. They're canceled as soon as a top-up has paid a commission.",
+  "walletRefundFeeRetainedNotice": "This top-up was never used: the payment provider's fees are withheld. They're canceled as soon as a top-up has paid a service fee.",
   "@walletRefundFeeRetainedNotice": {
     "description": "Bandeau d'avertissement quand des frais sont retenus sur une recharge jamais utilisée (wallet_refund_confirm_sheet.dart _ConfirmContent)."
   },
@@ -7575,7 +7575,7 @@
     }
   },
 
-  "prefsCurrencyLockedSheetBody": "Your wallet still holds money in {currency}: until it is back to zero, the currency can't change, so your balance is never converted without you. To unlock it, use this balance to pay commissions, or request a refund from the wallet. Currency choice reopens as soon as the balance is zero.",
+  "prefsCurrencyLockedSheetBody": "Your wallet still holds money in {currency}: until it is back to zero, the currency can't change, so your balance is never converted without you. To unlock it, use this balance to pay service fees, or request a refund from the wallet. Currency choice reopens as soon as the balance is zero.",
   "@prefsCurrencyLockedSheetBody": {
     "description": "Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).",
     "placeholders": {
@@ -8135,17 +8135,17 @@
   "referralChoiceSubtitle": "Thanks for inviting {name}. This choice is final.",
   "referralChoiceSubtitleAnonymous": "Thanks for your invitation. This choice is final.",
   "referralChoiceWalletTitle": "{amount} on my balance",
-  "referralChoiceWalletBody": "Added right away. Usable to pay the Yadony commission on your cash-paid requests.",
+  "referralChoiceWalletBody": "Added right away. Usable to pay the Yadony service fee on your cash-paid requests.",
   "referralChoiceCodeTitle": "{percent}% off my next shipment",
   "referralChoiceCodeBody": "A personal code to enter at checkout. Valid for 6 months, single use.",
   "referralPercentBadge": "-{percent}%",
-  "referralChoiceWalletNote": "Your Yadony balance pays the Yadony commission on cash-paid requests. It can't be withdrawn as cash.",
+  "referralChoiceWalletNote": "Your Yadony balance pays the Yadony service fee on cash-paid requests. It can't be withdrawn as cash.",
   "referralChoiceWalletCta": "Get {amount}",
   "referralChoiceCodeCta": "Get my {percent}% off code",
   "referralCodeReadyTitle": "Your {percent}% off code is ready",
   "referralCodeReadyBody": "Enter it at checkout for your next shipment. It's reserved for your account.",
   "referralCodeSingleUse": "Single use",
-  "referralWalletCreditedBody": "The amount shows in your Wallet. Use it to pay the Yadony commission on your cash-paid requests.",
+  "referralWalletCreditedBody": "The amount shows in your Wallet. Use it to pay the Yadony service fee on your cash-paid requests.",
   "errorReportReasonNotApplicableTitle": "Invalid reason",
   "errorReportReasonNotApplicableMessage": "This reason doesn't apply to this type of report.",
   "errorReportCannotReportSelfTitle": "Can't report yourself",
@@ -8804,7 +8804,7 @@
   "@trackingStepPhotoLabel": {
     "description": "Libellé d'accessibilité de la miniature photo d'une étape (tracking_timeline_bottom_sheet.dart)."
   },
-  "negotiationCommissionTravelDatePassed": "The travel date has passed: the commission can no longer be paid.",
+  "negotiationCommissionTravelDatePassed": "The travel date has passed: the service fee can no longer be paid.",
   "@negotiationCommissionTravelDatePassed": {
     "description": "Voyageur, commission à régler alors que le jour du voyage est passé (thread_state_cta_bar.dart, FLUTTER-44)"
   },
@@ -8869,7 +8869,7 @@
   "@errorPaymentMethodNoneAvailableTitle": {
     "description": "Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur"
   },
-  "errorPaymentMethodNoneAvailableMessage": "The sender accepts several payment methods, but none is ready on your account: set up card payouts, or top up your wallet to cover the cash commission.",
+  "errorPaymentMethodNoneAvailableMessage": "The sender accepts several payment methods, but none is ready on your account: set up card payouts, or top up your wallet to cover the cash service fee.",
   "@errorPaymentMethodNoneAvailableMessage": {
     "description": "Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur"
   },
@@ -8877,7 +8877,7 @@
   "@errorCashFundsRequiredTitle": {
     "description": "Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces"
   },
-  "errorCashFundsRequiredMessage": "To accept a cash payment, your wallet must cover the commission. Top it up, then try again.",
+  "errorCashFundsRequiredMessage": "To accept a cash payment, your wallet must cover the service fee. Top it up, then try again.",
   "@errorCashFundsRequiredMessage": {
     "description": "Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces"
   },
@@ -9839,9 +9839,9 @@
   "moneyUnavailableTitle": "Tracking unavailable",
   "moneyUnavailableBody": "Tracking the money for your parcels isn't available right now. Please try again later.",
   "moneyOpenParcelHint": "Open the parcel",
-  "moneyCashCommissionSettled": "commission settled",
-  "moneyCashCommissionPending": "commission pending",
-  "moneyCashCommissionRefunded": "commission refunded",
+  "moneyCashCommissionSettled": "service fee settled",
+  "moneyCashCommissionPending": "service fee pending",
+  "moneyCashCommissionRefunded": "service fee refunded",
   "ticketTrackingNumberHelp": "Public parcel ID, not a handover code.",
   "ticketPickupCodeSecretHint": "Secret, give it to the traveler only at handover.",
   "bidDetailTrackingNumberLabel": "Tracking number",
