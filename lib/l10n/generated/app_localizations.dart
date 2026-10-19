@@ -21859,6 +21859,42 @@ abstract class AppLocalizations {
   /// **'Suivi des colis qu\'on vous envoie'**
   String get notificationSettingsRecipientParcelsSubtitle;
 
+  /// En-tête de la section des e-mails de notification (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'E-MAILS'**
+  String get notificationSettingsSectionEmails;
+
+  /// Tuile email_recaps : e-mails des étapes d'un colis (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récapitulatifs'**
+  String get notificationSettingsEmailRecapsLabel;
+
+  /// Sous-titre de la tuile email_recaps (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservation, livraison, annulation, retour'**
+  String get notificationSettingsEmailRecapsSubtitle;
+
+  /// Tuile email_alerts_tips : récapitulatif des alertes, prix des vols, rappels (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes et conseils'**
+  String get notificationSettingsEmailAlertsTipsLabel;
+
+  /// Sous-titre de la tuile email_alerts_tips (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récapitulatif de vos alertes, prix des vols, premiers pas'**
+  String get notificationSettingsEmailAlertsTipsSubtitle;
+
+  /// Note sous la section E-MAILS (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les reçus et les décisions de l\'équipe vous sont toujours envoyés par e-mail, si votre compte a une adresse.'**
+  String get notificationSettingsEmailsAlwaysNote;
+
   /// Tuile push_missed_calls : CALL_MISSED (notification_settings_screen.dart)
   ///
   /// In fr, this message translates to:

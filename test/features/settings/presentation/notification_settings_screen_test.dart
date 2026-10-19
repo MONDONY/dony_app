@@ -153,6 +153,8 @@ void main() {
     for (final (label, key) in [
       ('Mes trajets', 'push_my_trips'),
       ('Colis pour moi', 'push_recipient_parcels'),
+      ('Récapitulatifs', 'email_recaps'),
+      ('Alertes et conseils', 'email_alerts_tips'),
       ('Automatisations voyageur', 'push_traveler_automations'),
       ('Rappels et conseils', 'push_reminders_tips'),
       ('Appels manqués', 'push_missed_calls'),
@@ -165,12 +167,26 @@ void main() {
         await tester.pumpWidget(_wrapWithBloc(mockBloc));
         await tester.pumpAndSettle();
 
+        await tester.ensureVisible(find.text(label));
+        await tester.pumpAndSettle();
         await tester.tap(find.text(label));
         await tester.pump();
 
         verify(() => mockBloc.add(NotifPrefToggled(key))).called(1);
       });
     }
+
+    /// Plan bruit, étape 5 : reçus et décisions partent toujours, la note le dit.
+    testWidgets('la section E-MAILS dit ce qui part toujours', (tester) async {
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('E-MAILS'));
+      expect(find.text('E-MAILS'), findsOneWidget);
+      expect(find.textContaining('Les reçus et les décisions'), findsOneWidget);
+    });
 
     testWidgets(
       'un réglage V305 absent du cache s\'affiche coupé, pas inventé',

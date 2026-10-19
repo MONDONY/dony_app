@@ -233,6 +233,44 @@ class _NotificationSettingsScreenState
                         const CallLockScreenTile(),
                     ],
                   ),
+                  // E-mails des notifications (back V342) : les reçus et les
+                  // décisions partent toujours, ces deux familles se coupent.
+                  const SizedBox(height: DonySpacing.xl),
+                  SettingsSectionHeader(l.notificationSettingsSectionEmails),
+                  SettingsFlatGroup(
+                    children: [
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsEmailRecapsLabel,
+                        subtitle: l.notificationSettingsEmailRecapsSubtitle,
+                        key: 'email_recaps',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      _buildTile(
+                        context,
+                        label: l.notificationSettingsEmailAlertsTipsLabel,
+                        subtitle: l.notificationSettingsEmailAlertsTipsSubtitle,
+                        key: 'email_alerts_tips',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.sm,
+                      DonySpacing.lg,
+                      0,
+                    ),
+                    child: Text(
+                      l.notificationSettingsEmailsAlwaysNote,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                 ],
               )
               .animate()

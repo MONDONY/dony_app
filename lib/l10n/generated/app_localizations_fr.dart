@@ -13238,6 +13238,27 @@ class AppLocalizationsFr extends AppLocalizations {
       'Suivi des colis qu\'on vous envoie';
 
   @override
+  String get notificationSettingsSectionEmails => 'E-MAILS';
+
+  @override
+  String get notificationSettingsEmailRecapsLabel => 'Récapitulatifs';
+
+  @override
+  String get notificationSettingsEmailRecapsSubtitle =>
+      'Réservation, livraison, annulation, retour';
+
+  @override
+  String get notificationSettingsEmailAlertsTipsLabel => 'Alertes et conseils';
+
+  @override
+  String get notificationSettingsEmailAlertsTipsSubtitle =>
+      'Récapitulatif de vos alertes, prix des vols, premiers pas';
+
+  @override
+  String get notificationSettingsEmailsAlwaysNote =>
+      'Les reçus et les décisions de l\'équipe vous sont toujours envoyés par e-mail, si votre compte a une adresse.';
+
+  @override
   String get notificationSettingsMissedCallsLabel => 'Appels manqués';
 
   @override
