@@ -10,6 +10,7 @@ import 'package:dony/features/package_request/bloc/package_request_detail_cubit.
 import 'package:dony/features/package_request/bloc/package_request_detail_state.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_detail_bottom_bar.dart';
@@ -318,7 +319,9 @@ class _DetailBottomBar extends StatelessWidget {
             ? null
             : PriceDisplay.money(
                 focus.grossPriceEur ??
-                    PriceDisplay.grossFromNet(focus.currentPriceEur),
+                    ThreadPricer.of(
+                      focus,
+                    ).priceFor(focus.currentPriceEur).gross,
                 focus.currency,
               );
         // Le bid matérialisé (fetch dédié du cubit) prime sur celui porté par

@@ -41,6 +41,7 @@ class PackageRequestSearchItem extends Equatable {
     this.uniqueViewerCount,
     this.grossPriceEur,
     this.myNegotiation,
+    this.commissionGridId,
   });
 
   final String id;
@@ -140,6 +141,10 @@ class PackageRequestSearchItem extends Equatable {
   /// (FLUTTER-NZ). `null` s'il ne négocie pas, ou sur un back antérieur.
   final MyNegotiationSummary? myNegotiation;
 
+  /// Grille de commission figée sur la demande (yadony-back #594), absente
+  /// pour une demande d'avant les grilles et sur un back antérieur.
+  final String? commissionGridId;
+
   factory PackageRequestSearchItem.fromJson(
     Map<String, dynamic> json,
   ) => PackageRequestSearchItem(
@@ -188,6 +193,7 @@ class PackageRequestSearchItem extends Equatable {
     uniqueViewerCount: (json['uniqueViewerCount'] as num?)?.toInt(),
     grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
     myNegotiation: MyNegotiationSummary.tryFromJson(json['myNegotiation']),
+    commissionGridId: json['commissionGridId'] as String?,
   );
 
   @override
@@ -223,6 +229,7 @@ class PackageRequestSearchItem extends Equatable {
     grossPriceEur,
     uniqueViewerCount,
     myNegotiation,
+    commissionGridId,
   ];
 }
 

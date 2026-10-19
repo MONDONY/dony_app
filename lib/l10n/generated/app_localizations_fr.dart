@@ -6378,7 +6378,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String negotiationCommissionTravelerBannerSubtitle(String amount) {
-    return 'L\'expéditeur a retenu votre offre. Réglez la commission Yadony ($amount) avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.';
+    return 'L\'expéditeur a retenu votre offre. Réglez les frais de service Yadony, $amount, avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.';
   }
 
   @override

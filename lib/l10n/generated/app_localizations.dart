@@ -10558,7 +10558,7 @@ abstract class AppLocalizations {
   /// Sous-titre du bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur a retenu votre offre. Réglez la commission Yadony ({amount}) avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.'**
+  /// **'L\'expéditeur a retenu votre offre. Réglez les frais de service Yadony, {amount}, avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.'**
   String negotiationCommissionTravelerBannerSubtitle(String amount);
 
   /// Bouton de règlement de la commission (thread_state_cta_bar.dart)

@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -71,7 +72,7 @@ class RequestOfferCard extends StatelessWidget {
     final name = t.travelerName ?? l.tripTravelerFallbackName;
     final tag = offerTagFor(l, t, firmPrice: firmPrice);
     final price = PriceDisplay.money(
-      t.grossPriceEur ?? PriceDisplay.grossFromNet(t.currentPriceEur),
+      t.grossPriceEur ?? ThreadPricer.of(t).priceFor(t.currentPriceEur).gross,
       t.currency,
     );
     // Même table de tons que RequestPillTone/RequestBannerTone : couleurs

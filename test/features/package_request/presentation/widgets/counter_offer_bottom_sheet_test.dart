@@ -2,12 +2,14 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/widgets/counter_offer_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
@@ -40,6 +42,7 @@ void main() {
     double currentPriceEur = 50,
     int roundsCount = 2,
     String currency = 'EUR',
+    String? gridId,
     bool isTraveler = false,
   }) async {
     await tester.pumpWidget(
@@ -55,7 +58,7 @@ void main() {
                 threadId: 't-1',
                 currentPriceEur: currentPriceEur,
                 roundsCount: roundsCount,
-                currency: currency,
+                pricer: ThreadPricer(gridId: gridId, currency: currency),
                 isTraveler: isTraveler,
               ),
               child: const Text('Ouvrir'),
@@ -101,6 +104,41 @@ void main() {
         expect(find.text('78,40\u00a0€'), findsOneWidget);
       },
     );
+
+    testWidgets('sous grille, net 5 € : frais 1,00 € (minimum), total 6,00 €', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await openSheet(tester, gridId: kTestGridId);
+      await tester.enterText(find.byType(TextFormField).first, '5');
+      await tester.pump();
+      expect(find.text('5,00\u00a0€'), findsOneWidget);
+      expect(find.text('1,00\u00a0€\u00a0(minimum)'), findsOneWidget);
+      expect(find.text('6,00\u00a0€'), findsOneWidget);
+    });
+
+    testWidgets('sous grille, voyageur, net 20 € : 21,40 € puis −1,40 €', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await openSheet(tester, gridId: kTestGridId, isTraveler: true);
+      await tester.enterText(find.byType(TextFormField).first, '20');
+      await tester.pump();
+      expect(find.text('21,40\u00a0€'), findsOneWidget);
+      expect(find.text('−1,40\u00a0€'), findsOneWidget);
+    });
+
+    testWidgets('fil sans grille figée sous grille : taux unique', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await openSheet(tester);
+      await tester.enterText(find.byType(TextFormField).first, '5');
+      await tester.pump();
+      // 5 € × 12 % = 0,60 €, sans minimum.
+      expect(find.text('0,60\u00a0€'), findsOneWidget);
+      expect(find.textContaining('(minimum)'), findsNothing);
+    });
 
     testWidgets('voyageur : le détail part du prix payé jusqu\'au net', (
       tester,

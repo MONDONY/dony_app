@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_conflict.dart';
@@ -47,8 +50,15 @@ class AcceptOfferBottomSheet {
     /// success-screen copy: a traveler accepting with a linked trip skips the
     /// AWAITING_TRIP step (backend goes straight to AWAITING_PAYMENT).
     bool hasLinkedTrip = false,
-    String currency = 'EUR',
+
+    /// Prix du fil (grille figée et devise) : `ThreadPricer.of(thread)`. Ne
+    /// sert qu'en repli, quand ni le devis ni [grossPriceEur] ne sont servis.
+    required ThreadPricer pricer,
   }) async {
+    final currency = pricer.currency;
+    // Repli local : le brut du serveur (scellé pour l'expéditeur d'un fil
+    // scellé) prime, sinon le calcul sur la grille figée du fil.
+    final fallback = pricer.resolve(priceEur, servedGross: grossPriceEur);
     // Garde anti-double-tap : le bouton n'était pas désactivé pendant le flux
     // asynchrone (auth + Stripe), donc un 2e tap relançait l'action (double
     // accept, ou double ouverture de la sheet Stripe en checkout). `processing`
@@ -103,8 +113,7 @@ class AcceptOfferBottomSheet {
             final quote = quoteNotifier.value;
             final displayPrice = isTraveler
                 ? priceEur
-                : (quote?.totalEur ??
-                      (grossPriceEur ?? PriceDisplay.grossFromNet(priceEur)));
+                : (quote?.totalEur ?? fallback.gross);
             final lb = ctx.l10n;
             return DonyButton(
               label: loading
@@ -278,12 +287,10 @@ class AcceptOfferBottomSheet {
                 listenable: quoteNotifier,
                 builder: (context, _) {
                   final quote = quoteNotifier.value;
-                  final fallbackGross =
-                      grossPriceEur ?? PriceDisplay.grossFromNet(priceEur);
                   final netEur = quote?.netEur ?? priceEur;
                   final commissionEur =
-                      quote?.commissionEur ?? (fallbackGross - priceEur);
-                  final totalEur = quote?.totalEur ?? fallbackGross;
+                      quote?.commissionEur ?? fallback.commission;
+                  final totalEur = quote?.totalEur ?? fallback.gross;
                   final promoApplied = quote?.promoApplied ?? false;
                   return _NegotiationPriceBreakdown(
                     isTraveler: isTraveler,
@@ -292,6 +299,11 @@ class AcceptOfferBottomSheet {
                     totalEur: totalEur,
                     promoApplied: promoApplied,
                     originalTotal: promoApplied ? netEur + commissionEur : null,
+                    minimumApplied:
+                        quote?.minimumApplied ?? fallback.minimumApplied,
+                    promoIneffective:
+                        !isTraveler &&
+                        (quote?.promoIneffectiveBecauseMinimum ?? false),
                     currency: currency,
                   );
                 },
@@ -334,6 +346,8 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
     required this.totalEur,
     required this.promoApplied,
     this.originalTotal,
+    this.minimumApplied = false,
+    this.promoIneffective = false,
     this.currency = 'EUR',
   });
 
@@ -343,6 +357,13 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
   final double totalEur;
   final bool promoApplied;
   final double? originalTotal;
+
+  /// Le minimum de la grille a relevé les frais : « (minimum) » les suit.
+  final bool minimumApplied;
+
+  /// Le code promo de l'expéditeur est valide mais sans effet, les frais
+  /// étant déjà au minimum (`promoIneffectiveReason` COMMISSION_MINIMUM).
+  final bool promoIneffective;
   final String currency;
 
   @override
@@ -373,7 +394,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
           tt,
           cs,
           l.requestCreateCommissionLabel,
-          '−${PriceDisplay.money(commissionEur, currency)}',
+          '−${serviceFeeAmountLabel(l, commissionEur, currency, minimum: minimumApplied)}',
         ),
       );
     } else {
@@ -390,7 +411,12 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
           tt,
           cs,
           l.requestCreateCommissionLabel,
-          PriceDisplay.money(commissionEur, currency),
+          serviceFeeAmountLabel(
+            l,
+            commissionEur,
+            currency,
+            minimum: minimumApplied,
+          ),
         ),
       );
       if (hasRealSavings) {
@@ -401,6 +427,25 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
             l.bidCreatePromoDiscountLabel,
             '−${PriceDisplay.money(savings, currency)}',
             valueColor: const Color(0xFF16A34A),
+          ),
+        );
+      }
+      // Code valide, mais le minimum de frais de service annule tout le
+      // gain : indice d'information, sans style d'erreur.
+      if (promoIneffective) {
+        rows.add(
+          Row(
+            key: const Key('negotiation-promo-ineffective'),
+            children: [
+              const DonyIcon('info', size: 16, color: kGreenDark),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l.promoIneffectiveCommissionMinimum,
+                  style: tt.bodySmall?.copyWith(color: kGreenDark),
+                ),
+              ),
+            ],
           ),
         );
       }

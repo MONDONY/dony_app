@@ -83,6 +83,7 @@ class NegotiationThread extends Equatable {
     this.archived = false,
     this.travelerGpPro = false,
     this.senderGpPro = false,
+    this.commissionGridId,
   });
 
   final String id;
@@ -178,6 +179,11 @@ class NegotiationThread extends Equatable {
   final bool travelerGpPro;
   final bool senderGpPro;
 
+  /// Grille de commission figée sur le fil (yadony-back #594). Absente pour un
+  /// fil d'avant les grilles (le back la calcule au taux unique) et sur un back
+  /// antérieur. Voir `ThreadPricer`.
+  final String? commissionGridId;
+
   /// Vrai quand un règlement est resté suspendu à une authentification forte
   /// 3DS. Le voyageur a basculé vers son application bancaire et l'OS a pu tuer
   /// yadony entre-temps : à sa prochaine tentative il faut confirmer le
@@ -255,6 +261,7 @@ class NegotiationThread extends Equatable {
     archived: json['archived'] as bool? ?? false,
     travelerGpPro: json['travelerGpPro'] as bool? ?? false,
     senderGpPro: json['senderGpPro'] as bool? ?? false,
+    commissionGridId: json['commissionGridId'] as String?,
   );
 
   /// Force l'UTC sur un `LocalDateTime` back sans suffixe de zone (ex.
@@ -312,5 +319,6 @@ class NegotiationThread extends Equatable {
     archived,
     travelerGpPro,
     senderGpPro,
+    commissionGridId,
   ];
 }

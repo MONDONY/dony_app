@@ -1,7 +1,9 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +21,9 @@ class CounterOfferBottomSheet {
     double? grossPriceEur,
     bool isTraveler = false,
     int roundsCount = 1,
-    String currency = 'EUR',
+
+    /// Prix du fil (grille figée et devise) : `ThreadPricer.of(thread)`.
+    required ThreadPricer pricer,
   }) {
     final submitNotifier = ValueNotifier<VoidCallback?>(null);
 
@@ -42,7 +46,7 @@ class CounterOfferBottomSheet {
         grossPriceEur: grossPriceEur,
         isTraveler: isTraveler,
         roundsCount: roundsCount,
-        currency: currency,
+        pricer: pricer,
         onSubmitReady: (fn) => WidgetsBinding.instance.addPostFrameCallback(
           (_) => submitNotifier.value = fn,
         ),
@@ -60,7 +64,7 @@ class _CounterOfferContent extends StatefulWidget {
     this.isTraveler = false,
     required this.roundsCount,
     required this.onSubmitReady,
-    this.currency = 'EUR',
+    required this.pricer,
   });
 
   final NegotiationBloc bloc;
@@ -70,7 +74,7 @@ class _CounterOfferContent extends StatefulWidget {
   final bool isTraveler;
   final int roundsCount;
   final void Function(VoidCallback?) onSubmitReady;
-  final String currency;
+  final ThreadPricer pricer;
 
   @override
   State<_CounterOfferContent> createState() => _CounterOfferContentState();
@@ -136,7 +140,8 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
                 widget.currentPriceEur,
                 widget.grossPriceEur,
                 widget.isTraveler,
-                widget.currency,
+                widget.pricer.currency,
+                widget.pricer,
               ),
               widget.roundsCount,
             ),
@@ -175,7 +180,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
                 fontWeight: FontWeight.w800,
                 color: cs.onSurfaceVariant.withValues(alpha: 0.4),
               ),
-              suffixText: SupportedCurrency.symbolOf(widget.currency),
+              suffixText: SupportedCurrency.symbolOf(widget.pricer.currency),
               suffixStyle: tt.bodyMedium!.copyWith(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -221,7 +226,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
                 child: CounterOfferCommissionPreview(
                   net: net,
                   isTraveler: widget.isTraveler,
-                  currency: widget.currency,
+                  pricer: widget.pricer,
                 ),
               );
             },
@@ -282,29 +287,36 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
   }
 }
 
-/// Détail du prix proposé : net du voyageur, commission Yadony et total payé
-/// par l'expéditeur, lu dans l'ordre qui concerne chaque rôle (même calcul que
-/// l'en-tête du fil, [PriceDisplay.grossFromNet]).
+/// Détail du prix proposé : net du voyageur, frais de service Yadony et total
+/// payé par l'expéditeur, lu dans l'ordre qui concerne chaque rôle (même
+/// calcul que l'en-tête du fil, sur la grille figée du fil : [pricer]).
 @visibleForTesting
 class CounterOfferCommissionPreview extends StatelessWidget {
   const CounterOfferCommissionPreview({
     required this.net,
     required this.isTraveler,
-    required this.currency,
+    required this.pricer,
     super.key,
   });
 
   final double net;
   final bool isTraveler;
-  final String currency;
+  final ThreadPricer pricer;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final fee = PriceDisplay.feeFromNet(net);
-    final gross = PriceDisplay.grossFromNet(net);
+    final currency = pricer.currency;
+    final price = pricer.priceFor(net);
+    final gross = price.gross;
+    final fee = serviceFeeAmountLabel(
+      l,
+      price.commission,
+      currency,
+      minimum: price.minimumApplied,
+    );
     final commission = l.requestCreateCommissionLabel;
 
     Widget line(String label, String amount, {bool strong = false}) {
@@ -339,7 +351,7 @@ class CounterOfferCommissionPreview extends StatelessWidget {
         children: isTraveler
             ? [
                 line(l.negotiationPriceBreakdownPaidBySender, money(gross)),
-                line(commission, '−${money(fee)}'),
+                line(commission, '−$fee'),
                 line(
                   l.negotiationPriceBreakdownYouReceive,
                   money(net),
@@ -348,7 +360,7 @@ class CounterOfferCommissionPreview extends StatelessWidget {
               ]
             : [
                 line(l.negotiationPriceBreakdownNetTraveler, money(net)),
-                line(commission, money(fee)),
+                line(commission, fee),
                 line(
                   l.negotiationPriceBreakdownTotalToSettle,
                   money(gross),

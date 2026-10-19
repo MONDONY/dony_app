@@ -1531,7 +1531,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
 
   // Package request marketplace
   getIt.registerLazySingleton<PackageRequestRepository>(
-    () => PackageRequestRepository(getIt<ApiClient>()),
+    () => PackageRequestRepository(
+      getIt<ApiClient>(),
+      gridLoader: (id) => getIt<IConfigRepository>().getCommissionGridById(id),
+    ),
   );
   // Corridor alerts (alertes corridor voyageur)
   getIt.registerLazySingleton<CorridorAlertRepository>(
@@ -1655,7 +1658,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CorridorAlertSummaryCubit(getIt<CorridorAlertRepository>()),
   );
   getIt.registerLazySingleton<NegotiationRepository>(
-    () => NegotiationRepository(getIt<ApiClient>()),
+    () => NegotiationRepository(
+      getIt<ApiClient>(),
+      gridLoader: (id) => getIt<IConfigRepository>().getCommissionGridById(id),
+    ),
   );
   getIt.registerLazySingleton<PriceEstimationRepository>(
     () => PriceEstimationRepository(getIt<ApiClient>()),

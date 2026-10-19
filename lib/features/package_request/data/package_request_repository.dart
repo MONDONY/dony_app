@@ -10,6 +10,7 @@ import 'package:dony/features/package_request/data/models/package_request_insigh
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 
 class PackageRequestPage {
   const PackageRequestPage({
@@ -63,9 +64,17 @@ class PackageRequestSearchPage {
 }
 
 class PackageRequestRepository {
-  const PackageRequestRepository(this._apiClient);
+  const PackageRequestRepository(
+    this._apiClient, {
+    CommissionGridLoader? gridLoader,
+  }) : _gridLoader = gridLoader;
 
   final ApiClient _apiClient;
+
+  /// Lit les grilles figées des fils d'une demande inconnues de l'app avant
+  /// de les rendre (voir `NegotiationRepository`). `null` (tests) : aucune
+  /// lecture.
+  final CommissionGridLoader? _gridLoader;
 
   Future<String> uploadPhoto(File photo) async {
     final bytes = await photo.readAsBytes();
@@ -229,9 +238,14 @@ class PackageRequestRepository {
     final response = await _apiClient.dio.get<List<dynamic>>(
       '/package-requests/$requestId/threads',
     );
-    return (response.data ?? <dynamic>[])
+    final threads = (response.data ?? <dynamic>[])
         .map((e) => NegotiationThread.fromJson(e as Map<String, dynamic>))
         .toList();
+    await preloadCommissionGrids(
+      threads.map((t) => t.commissionGridId),
+      _gridLoader,
+    );
+    return threads;
   }
 
   Future<void> cancel(String id) async {

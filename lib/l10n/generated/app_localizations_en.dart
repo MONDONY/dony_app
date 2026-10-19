@@ -6346,7 +6346,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String negotiationCommissionTravelerBannerSubtitle(String amount) {
-    return 'The sender picked your offer. Pay the Yadony service fee ($amount) before the deadline to get this parcel, or another traveler could beat you to it.';
+    return 'The sender picked your offer. Pay the Yadony service fee, $amount, before the deadline to get this parcel, or another traveler could beat you to it.';
   }
 
   @override

@@ -22,7 +22,6 @@ import 'package:dony/features/package_request/bloc/package_request_form_state.da
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
-import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
@@ -997,7 +996,7 @@ class _BudgetBreakdown extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
 
-    final netBase = PriceDisplay.netFromGross(budgetEur);
+    final netBase = netForSenderGross(budgetEur, null, legacy: true);
     final q = _amountQuote;
     final commissionEur = q?.commissionEur ?? (budgetEur - netBase);
     final net = q?.netEur ?? netBase;

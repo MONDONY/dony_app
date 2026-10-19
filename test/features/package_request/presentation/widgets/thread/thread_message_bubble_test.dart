@@ -1,10 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
 
 NegotiationMessage _msg({
@@ -43,6 +45,7 @@ void main() {
               message: _msg(kind: NegotiationMessageKind.proposal),
               mine: true,
               isTraveler: true,
+              pricer: const ThreadPricer(),
             ),
           ),
         );
@@ -62,6 +65,7 @@ void main() {
               message: _msg(kind: NegotiationMessageKind.counter, price: 30),
               mine: false,
               isTraveler: false,
+              pricer: const ThreadPricer(),
               // gross = 30 * 1.12 = 33.60
             ),
           ),
@@ -70,6 +74,57 @@ void main() {
         expect(find.text('Vous payez 33,60 €'), findsOneWidget);
       },
     );
+
+    testWidgets('expéditeur sous grille, proposition 20 € : « Vous payez '
+        '21,40 € »', (tester) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          ThreadMessageBubble(
+            message: _msg(kind: NegotiationMessageKind.proposal, price: 20),
+            mine: false,
+            isTraveler: false,
+            pricer: const ThreadPricer(gridId: kTestGridId),
+          ),
+        ),
+      );
+      expect(find.text('Vous payez 21,40\u00a0€'), findsOneWidget);
+    });
+
+    testWidgets('voyageur sous grille : « Vous recevez 20,00 € » (inchangé)', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          ThreadMessageBubble(
+            message: _msg(kind: NegotiationMessageKind.proposal, price: 20),
+            mine: true,
+            isTraveler: true,
+            pricer: const ThreadPricer(gridId: kTestGridId),
+          ),
+        ),
+      );
+      expect(find.text('Vous recevez 20,00\u00a0€'), findsOneWidget);
+    });
+
+    testWidgets('fil sans grille figée sous grille : taux unique', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        wrap(
+          ThreadMessageBubble(
+            message: _msg(kind: NegotiationMessageKind.proposal, price: 20),
+            mine: false,
+            isTraveler: false,
+            pricer: const ThreadPricer(),
+          ),
+        ),
+      );
+      // 20 € × 12 % (taux épinglé du fichier).
+      expect(find.text('Vous payez 22,40\u00a0€'), findsOneWidget);
+    });
 
     testWidgets('rend body si fourni', (tester) async {
       await tester.pumpWidget(
@@ -81,6 +136,7 @@ void main() {
             ),
             mine: false,
             isTraveler: false,
+            pricer: const ThreadPricer(),
           ),
         ),
       );
@@ -100,6 +156,7 @@ void main() {
               message: _msg(kind: pair.$1, price: null),
               mine: false,
               isTraveler: false,
+              pricer: const ThreadPricer(),
             ),
           ),
         );
@@ -121,6 +178,7 @@ void main() {
             mine: false,
             highlight: true,
             isTraveler: false,
+            pricer: const ThreadPricer(),
           ),
         ),
       );
@@ -137,6 +195,7 @@ void main() {
             mine: true,
             highlight: true,
             isTraveler: true,
+            pricer: const ThreadPricer(),
           ),
         ),
       );
@@ -150,6 +209,7 @@ void main() {
             message: _msg(kind: NegotiationMessageKind.reject, price: null),
             mine: false,
             isTraveler: false,
+            pricer: const ThreadPricer(),
           ),
         ),
       );
@@ -168,6 +228,7 @@ void main() {
             mine: false,
             highlight: true,
             isTraveler: false,
+            pricer: const ThreadPricer(),
           ),
         ),
       );

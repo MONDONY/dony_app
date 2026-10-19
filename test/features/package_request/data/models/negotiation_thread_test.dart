@@ -36,6 +36,30 @@ Map<String, dynamic> _baseJson({Map<String, dynamic>? overrides}) {
 }
 
 void main() {
+  group('commissionGridId (yadony-back #594)', () {
+    test('lu quand le back le sert', () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(overrides: {'commissionGridId': 'grid-757'}),
+      );
+      expect(t.commissionGridId, 'grid-757');
+    });
+
+    test('absent (fil d\'avant les grilles, back antérieur) : null', () {
+      expect(NegotiationThread.fromJson(_baseJson()).commissionGridId, isNull);
+    });
+
+    test('compte dans l\'égalité', () {
+      expect(
+        NegotiationThread.fromJson(_baseJson()),
+        isNot(
+          NegotiationThread.fromJson(
+            _baseJson(overrides: {'commissionGridId': 'grid-757'}),
+          ),
+        ),
+      );
+    });
+  });
+
   test('NegotiationThread.fromJson parses with messages', () {
     final t = NegotiationThread.fromJson(_baseJson());
 

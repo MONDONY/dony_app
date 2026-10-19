@@ -2,6 +2,7 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
@@ -48,19 +49,25 @@ extension PaymentMethodL10n on PaymentMethod {
 /// Libellé de prix du fil de négociation, adapté au rôle du lecteur.
 ///
 /// - Le voyageur voit son net : « Tu reçois 35,00 € ».
-/// - L'expéditeur voit le brut qu'il paie : « Tu paies 39,20 € » (utilise
-///   [gross] si fourni, sinon le calcule depuis [net]).
+/// - L'expéditeur voit le brut qu'il paie : « Tu paies 39,20 € » ([gross],
+///   montant du serveur, s'il est fourni ; sinon le calcul de [pricer], la
+///   grille figée du fil, ou le taux unique sans [pricer]).
 String threadPriceLabel(
   AppLocalizations l,
   double net,
   double? gross,
   bool isTraveler, [
   String? currencyCode,
+  ThreadPricer? pricer,
 ]) {
   if (isTraveler) {
     return l.requestThreadYouReceive(PriceDisplay.money(net, currencyCode));
   }
-  final g = gross ?? PriceDisplay.grossFromNet(net);
+  final g =
+      gross ??
+      (pricer ?? ThreadPricer(currency: currencyCode ?? 'EUR'))
+          .priceFor(net)
+          .gross;
   return l.requestThreadYouPay(PriceDisplay.money(g, currencyCode));
 }
 

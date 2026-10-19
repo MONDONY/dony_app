@@ -2586,7 +2586,7 @@
   "@negotiationCommissionTravelerBannerTitle": {
     "description": "Bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)"
   },
-  "negotiationCommissionTravelerBannerSubtitle": "The sender picked your offer. Pay the Yadony service fee ({amount}) before the deadline to get this parcel, or another traveler could beat you to it.",
+  "negotiationCommissionTravelerBannerSubtitle": "The sender picked your offer. Pay the Yadony service fee, {amount}, before the deadline to get this parcel, or another traveler could beat you to it.",
   "@negotiationCommissionTravelerBannerSubtitle": {
     "description": "Sous-titre du bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)",
     "placeholders": {
