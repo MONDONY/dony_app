@@ -909,8 +909,8 @@
   "tripPublishRefusedContentHint": "E.g. Liquids, Perishable goods…",
   "tripPublishNoteToSendersSectionLabel": "Note to senders",
   "tripPublishNoteToSendersHint": "E.g. I prefer well-packed parcels. Contact me before departure.",
-  "tripPublishCashOnlyBannerNoConnect": "Card payment depends on the country of residence in your profile, not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash.",
-  "tripPublishCashOnlyBannerNoConnectCountry": "Card payment depends on the country of residence in your profile ({country}), not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash.",
+  "tripPublishCashOnlyBannerNoConnect": "Card payment depends on the country of residence in your profile, not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash, and in mobile money for trips in XOF or XAF.",
+  "tripPublishCashOnlyBannerNoConnectCountry": "Card payment depends on the country of residence in your profile ({country}), not on the country you're in. Stripe doesn't cover it yet: your trips are posted in cash, and in mobile money for trips in XOF or XAF.",
   "@tripPublishCashOnlyBannerNoConnectCountry": {
     "description": "Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).",
     "placeholders": {
@@ -8161,9 +8161,10 @@
   "currencyCardAndCashAvailable": "Card and cash available in {currency}",
   "currencyCardAndCashDescription": "The traveler can accept a card or cash payment in this currency.",
   "currencyMobileMoneyAndCashAvailable": "Mobile money and cash available in {currency}",
-  "currencyMobileMoneyAndCashDescription": "The traveler can accept a mobile money or cash payment in this currency.",
+  "currencyMobileMoneyAndCashDescription": "The traveler can accept mobile money or cash in this currency. Mobile money requires the traveler to have activated a payout account in this currency. Card payment isn't offered in CFA francs.",
   "currencyCashOnlyAvailable": "Cash only in {currency}",
-  "currencyCashOnlyDescription": "Card payment isn't offered for this currency: either the traveler hasn't activated Yadony payments yet, or {currency} isn't supported by Stripe. Only cash payment will be possible.",
+  "currencyCashOnlyDescription": "Card payment isn't offered yet: the traveler hasn't activated Yadony payments. Only cash payment will be possible.",
+  "currencyCashOnlyUnsupportedDescription": "Card payment isn't offered in {currency}. Only cash payment will be possible.",
   "currencyCashOnlyWithDescription": "Cash only in {currency}. {description}",
   "currencyPublishBannerTitle": "Posted in {currencyName} ({code})",
   "currencyPublishBannerTitleUnknown": "Currency to confirm",

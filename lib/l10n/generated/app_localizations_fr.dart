@@ -3058,11 +3058,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishCashOnlyBannerNoConnect =>
-      'Le paiement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.';
+      'Le paiement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.';
 
   @override
   String tripPublishCashOnlyBannerNoConnectCountry(String country) {
-    return 'Le paiement par carte dépend du pays de résidence indiqué dans votre profil ($country), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.';
+    return 'Le paiement par carte dépend du pays de résidence indiqué dans votre profil ($country), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.';
   }
 
   @override
@@ -15465,7 +15465,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get currencyMobileMoneyAndCashDescription =>
-      'Le voyageur peut accepter un paiement par mobile money ou en espèces pour cette devise.';
+      'Le voyageur peut accepter le mobile money ou les espèces pour cette devise. Le mobile money demande que le voyageur ait activé un compte de versement dans cette devise. La carte n\'est pas proposée en francs CFA.';
 
   @override
   String currencyCashOnlyAvailable(String currency) {
@@ -15473,8 +15473,12 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String currencyCashOnlyDescription(String currency) {
-    return 'Le paiement par carte n\'est pas proposé pour cette devise : soit le voyageur n\'a pas encore activé les paiements Yadony, soit $currency n\'est pas prise en charge par Stripe. Seul le paiement en espèces sera possible.';
+  String get currencyCashOnlyDescription =>
+      'Le paiement par carte n\'est pas encore proposé : le voyageur n\'a pas activé les paiements Yadony. Seul le paiement en espèces sera possible.';
+
+  @override
+  String currencyCashOnlyUnsupportedDescription(String currency) {
+    return 'Le paiement par carte n\'est pas proposé en $currency. Seul le paiement en espèces sera possible.';
   }
 
   @override

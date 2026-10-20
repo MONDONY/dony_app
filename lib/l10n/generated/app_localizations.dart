@@ -5183,13 +5183,13 @@ abstract class AppLocalizations {
   /// Bannière quand Stripe n'est pas disponible dans le pays du voyageur
   ///
   /// In fr, this message translates to:
-  /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.'**
+  /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil, et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.'**
   String get tripPublishCashOnlyBannerNoConnect;
 
   /// Bannière carte indisponible du wizard de trajet, pays de résidence du profil nommé (prix_conditions_step.dart, FLUTTER-EE).
   ///
   /// In fr, this message translates to:
-  /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces.'**
+  /// **'Le paiement par carte dépend du pays de résidence indiqué dans votre profil ({country}), et non du pays où vous vous trouvez. Stripe ne le couvre pas encore : vos trajets sont publiés en espèces, et en mobile money pour les trajets en XOF ou XAF.'**
   String tripPublishCashOnlyBannerNoConnectCountry(String country);
 
   /// CTA vers l'onboarding Stripe Connect depuis la bannière espèces uniquement
@@ -25476,7 +25476,7 @@ abstract class AppLocalizations {
   /// Détail de l'encart quand le rail mobile money est disponible (currency_selector.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le voyageur peut accepter un paiement par mobile money ou en espèces pour cette devise.'**
+  /// **'Le voyageur peut accepter le mobile money ou les espèces pour cette devise. Le mobile money demande que le voyageur ait activé un compte de versement dans cette devise. La carte n\'est pas proposée en francs CFA.'**
   String get currencyMobileMoneyAndCashDescription;
 
   /// Titre de l'encart quand seul le paiement en espèces est possible (currency_selector.dart). currency peut être le code ou le nom localisé, selon l'appel.
@@ -25485,11 +25485,17 @@ abstract class AppLocalizations {
   /// **'Espèces uniquement en {currency}'**
   String currencyCashOnlyAvailable(String currency);
 
-  /// Détail de l'encart quand seul le paiement en espèces est possible (currency_selector.dart).
+  /// Détail de l'encart espèces uniquement pour une devise que Stripe prend en charge : le voyageur n'a pas activé ses paiements (currency_selector.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le paiement par carte n\'est pas proposé pour cette devise : soit le voyageur n\'a pas encore activé les paiements Yadony, soit {currency} n\'est pas prise en charge par Stripe. Seul le paiement en espèces sera possible.'**
-  String currencyCashOnlyDescription(String currency);
+  /// **'Le paiement par carte n\'est pas encore proposé : le voyageur n\'a pas activé les paiements Yadony. Seul le paiement en espèces sera possible.'**
+  String get currencyCashOnlyDescription;
+
+  /// Détail de l'encart espèces uniquement pour une devise que Stripe ne prend pas en charge (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement par carte n\'est pas proposé en {currency}. Seul le paiement en espèces sera possible.'**
+  String currencyCashOnlyUnsupportedDescription(String currency);
 
   /// Libellé d'accessibilité regroupant le titre (avec le nom localisé de la devise) et le détail de l'encart espèces uniquement (currency_selector.dart).
   ///
