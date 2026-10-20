@@ -21595,7 +21595,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supplementRecapNet => 'For you';
 
   @override
-  String get supplementRecapCommission => 'Yadony fee';
+  String get supplementRecapCommission => 'Yadony service fee';
 
   @override
   String get supplementRecapGross => 'Paid by the sender';
@@ -21875,7 +21875,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Mobile money payment for the supplement pending';
 
   @override
-  String get supplementCommissionSourceTitle => 'Supplement commission';
+  String get supplementCommissionSourceTitle => 'Supplement service fee';
 
   @override
   String get supplementCommissionSourceHelp =>
@@ -21894,7 +21894,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get supplementCommissionSourceCard => 'My commission card';
+  String get supplementCommissionSourceCard => 'My service fee card';
 
   @override
   String get supplementCommissionSourceCardHint =>
@@ -21906,11 +21906,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supplementCommissionCardMissing =>
-      'No commission card saved. Add one, or pay with your balance.';
+      'No service fee card saved. Add one, or pay with your balance.';
 
   @override
   String get supplementCommissionRetryNotice =>
-      'Your request is saved, but the commission has not been taken yet. Try again to send it to the sender.';
+      'Your request is saved, but the service fee has not been taken yet. Try again to send it to the sender.';
 
   @override
   String get supplementCommissionRetry => 'Try the payment again';
@@ -21921,28 +21921,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supplementCommissionProcessing =>
-      'Request saved: commission payment being confirmed';
+      'Request saved: service fee payment being confirmed';
 
   @override
   String get supplementRecapGrossCash => 'Handed over in cash by the sender';
 
   @override
-  String get supplementTravelerCommissionPending => 'Commission to confirm';
+  String get supplementTravelerCommissionPending => 'Service fee to confirm';
 
   @override
   String get supplementTravelerCommissionPendingHelp =>
-      'Confirm the commission payment to send the request to the sender. Without confirmation within 30 minutes, it is cancelled at no cost.';
+      'Confirm the service fee payment to send the request to the sender. Without confirmation within 30 minutes, it is cancelled at no cost.';
 
   @override
   String get supplementCommissionConfirm => 'Confirm the payment';
 
   @override
   String get supplementCommissionConfirmedSnackbar =>
-      'Commission paid: request sent to the sender';
+      'Service fee paid: request sent to the sender';
 
   @override
   String get supplementTravelerCashCommissionHelp =>
-      'Commission taken. It is given back to you if the request does not go through.';
+      'Service fee taken. It is given back to you if the request does not go through.';
 
   @override
   String supplementTravelerCashPaid(String amount) {
@@ -21955,11 +21955,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supplementTravelerCommissionRefunded =>
-      'The supplement commission has been given back to you.';
+      'The supplement service fee has been given back to you.';
 
   @override
   String get supplementTravelerCommissionRefundPending =>
-      'The supplement commission will be given back to you shortly.';
+      'The supplement service fee will be given back to you shortly.';
 
   @override
   String get supplementTravelerCancelled => 'Supplement request cancelled';
@@ -22013,11 +22013,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Parcel not delivered: the traveler gives the extra cash back to you';
 
   @override
-  String get walletTxTypeSupplementCommission => 'Supplement commission';
+  String get walletTxTypeSupplementCommission => 'Supplement service fee';
 
   @override
   String get walletTxTypeSupplementCommissionRefund =>
-      'Supplement commission refunded';
+      'Supplement service fee refunded';
 
   @override
   String get walletTxTypeOther => 'Balance movement';
@@ -22027,34 +22027,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorSupplementCommissionUnfundedMessage =>
-      'Your balance does not cover the supplement commission. Top it up or pay by card.';
+      'Your balance does not cover the supplement service fee. Top it up or pay by card.';
 
   @override
   String get errorSupplementCommissionCardDeclinedTitle => 'Card declined';
 
   @override
   String get errorSupplementCommissionCardDeclinedMessage =>
-      'Your commission card was declined: nothing was taken and the request is cancelled.';
+      'Your service fee card was declined: nothing was taken and the request is cancelled.';
 
   @override
   String get errorSupplementCommissionChargeFailedTitle =>
-      'Commission not taken';
+      'Service fee not taken';
 
   @override
   String get errorSupplementCommissionChargeFailedMessage =>
-      'The commission charge did not go through. Please try again.';
+      'The service fee charge did not go through. Please try again.';
 
   @override
-  String get errorCommissionMethodMissingTitle => 'No commission card';
+  String get errorCommissionMethodMissingTitle => 'No service fee card';
 
   @override
   String get errorCommissionMethodMissingMessage =>
-      'Save a commission card, or pay with your balance.';
+      'Save a service fee card, or pay with your balance.';
 
   @override
   String get errorFundingCurrencyInvalidTitle => 'Currency not supported';
 
   @override
   String get errorFundingCurrencyInvalidMessage =>
-      'This wallet cannot pay the commission. Choose another one.';
+      'This wallet cannot pay the service fee. Choose another one.';
 }

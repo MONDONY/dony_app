@@ -525,9 +525,9 @@ void main() {
     useEnglish();
     await open(tester);
 
-    expect(find.text('Supplement commission'), findsOneWidget);
+    expect(find.text('Supplement service fee'), findsOneWidget);
     expect(find.text('My Yadony balance'), findsOneWidget);
-    expect(find.text('My commission card'), findsOneWidget);
+    expect(find.text('My service fee card'), findsOneWidget);
   });
 
   testWidgets('envoi en cours : la croix, la barrière et le retour ne '

@@ -25,7 +25,7 @@ void main() {
         paymentRef: 'supplement-6f1c',
       );
       expect(walletTxLabel(fr, tx), 'Frais de service de supplément');
-      expect(walletTxLabel(en, tx), 'Supplement commission');
+      expect(walletTxLabel(en, tx), 'Supplement service fee');
     },
   );
 
@@ -33,7 +33,7 @@ void main() {
     final tx = _tx('REFUND', paymentRef: 'supplement-refund-6f1c');
     expect(tx.isSupplementCommissionRefund, isTrue);
     expect(walletTxLabel(fr, tx), 'Frais de service de supplément rendus');
-    expect(walletTxLabel(en, tx), 'Supplement commission refunded');
+    expect(walletTxLabel(en, tx), 'Supplement service fee refunded');
   });
 
   test('autre remboursement : libellé habituel', () {
