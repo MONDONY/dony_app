@@ -204,11 +204,14 @@ String _formatDeadline(BuildContext context, DateTime? deadline) {
   }
   final l = context.l10n;
   final locale = l.localeName;
+  // Instant UTC : jour de l'appareil, le colis ne porte pas le fuseau du
+  // trajet (PROD-1R).
+  final local = deadline.toLocal();
   try {
-    return l.bidDetailUntil(DateFormat.MMMEd(locale).format(deadline));
+    return l.bidDetailUntil(DateFormat.MMMEd(locale).format(local));
   } catch (_) {
     // Repli quand les données de locale manquent (tests isolés).
-    return l.bidDetailUntil(DateFormat.Md(locale).format(deadline));
+    return l.bidDetailUntil(DateFormat.Md(locale).format(local));
   }
 }
 

@@ -22043,4 +22043,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get demandesTripEmptyDescription =>
       'Requests received for this trip will show up here.';
+
+  @override
+  String tripTimeInCity(String time, String city) {
+    return '$time, $city time';
+  }
+
+  @override
+  String tripTimeInCityElided(String time, String city) {
+    return '$time, $city time';
+  }
+
+  @override
+  String get listingHandoverClosedBadge => 'Drop-off closed';
+
+  @override
+  String get listingHandoverClosedMessage =>
+      'The parcel drop-off deadline has passed: this trip no longer accepts requests.';
 }

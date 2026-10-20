@@ -120,6 +120,33 @@ void main() {
     expect(find.byKey(const Key('detail-stops-chip')), findsNothing);
   });
 
+  // PROD-1R : limite reçue en UTC, affichée à l'heure de la ville de départ.
+  testWidgets('date limite à l\'heure de Paris (18:30Z en été → 20:30)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        AnnouncementModel.fromJson({
+          'id': 'ann-4',
+          'travelerId': 'trav-1',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Dakar',
+          'departureDate': DateTime(2026, 8, 12).toIso8601String(),
+          'availableKg': 5,
+          'totalKg': 5,
+          'pricePerKg': 6,
+          'status': 'ACTIVE',
+          'handoverDeadline': '2026-08-10T18:30:00Z',
+          'departureTimezone': 'Europe/Paris',
+          'createdAt': DateTime(2026, 7).toIso8601String(),
+          'updatedAt': DateTime(2026, 7).toIso8601String(),
+        }),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('20:30'), findsOneWidget);
+  });
+
   testWidgets('modèle complet ACTIVE → corridor + badge + sections présentes', (
     tester,
   ) async {

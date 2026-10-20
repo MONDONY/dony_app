@@ -85,7 +85,10 @@ late _MockRecipientBloc _currentRecipientBloc;
 // Deliberately different from the country the phone prefix (+221) would
 // resolve to (SN) — proves fallbackCountry comes from the announcement, not
 // from `countryFromPhone`.
-AnnouncementModel _announcement({bool cashEnabled = false}) {
+AnnouncementModel _announcement({
+  bool cashEnabled = false,
+  DateTime? handoverDeadline,
+}) {
   final methods = cashEnabled
       ? const {BidPaymentMethod.stripe, BidPaymentMethod.cash}
       : const {BidPaymentMethod.stripe};
@@ -103,6 +106,7 @@ AnnouncementModel _announcement({bool cashEnabled = false}) {
     createdAt: DateTime(2026),
     updatedAt: DateTime(2026),
     acceptedPaymentMethods: methods,
+    handoverDeadline: handoverDeadline,
   );
 }
 
@@ -389,6 +393,34 @@ void main() {
       expect(find.text('Nom du destinataire obligatoire'), findsOneWidget);
       verifyNever(
         () => _currentRecipientBloc.add(any(that: isA<RecipientCreated>())),
+      );
+    });
+
+    testWidgets('date limite passée formulaire ouvert → message clair, '
+        'aucune demande envoyée (PROD-1R)', (tester) async {
+      await _openSheet(
+        tester,
+        _announcement(
+          handoverDeadline: DateTime.now().toUtc().subtract(
+            const Duration(minutes: 1),
+          ),
+        ),
+      );
+
+      await _enableSubmitButton(tester);
+      await _fillMandatoryFields(tester);
+      await tester.tap(find.text('Envoyer'));
+      await tester.pump();
+
+      expect(
+        find.text(
+          'La date limite de remise des colis de ce trajet est passée. '
+          'La demande ne peut plus être acceptée, payée ni renégociée.',
+        ),
+        findsOneWidget,
+      );
+      verifyNever(
+        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
       );
     });
 

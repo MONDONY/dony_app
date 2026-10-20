@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/trip_local_time.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -158,7 +159,7 @@ class AnnouncementDetailBody extends StatelessWidget {
           _BSectionRow(
             iconAsset: 'calendar',
             label: l.listingDeadlineLabel,
-            value: _handoverDeadlineLabel(l, a.handoverDeadline!.toLocal()),
+            value: _handoverDeadlineLabel(l, a),
             iconBg: const Color(0xFFFEF9C3),
             iconColor: const Color(0xFFB45309),
           ).animate().fadeIn(delay: 110.ms),
@@ -627,11 +628,14 @@ class _ParcelStatCell extends StatelessWidget {
 /// Formate la plage de remise — toujours dates complètes début et fin.
 /// Jour ET heure : le jour du départ, la limite est l'heure de départ et non
 /// la fin de journée (Sentry FLUTTER-MY).
-String _handoverDeadlineLabel(AppLocalizations l, DateTime deadline) {
+/// Heure de la ville de départ, comme le départ ; la ville est nommée quand
+/// son fuseau diffère de celui du téléphone (PROD-1R).
+String _handoverDeadlineLabel(AppLocalizations l, AnnouncementModel a) {
+  final t = tripWallTime(a.handoverDeadline!, a.departureTimezone);
   return l.listingHandoverUntil(
     l.commonDateAtTime(
-      DateFormat.MMMEd(l.localeName).format(deadline),
-      DateFormat.jm(l.localeName).format(deadline),
+      DateFormat.MMMEd(l.localeName).format(t.wallClock),
+      formatTripTime(l, t, city: a.departureCity),
     ),
   );
 }

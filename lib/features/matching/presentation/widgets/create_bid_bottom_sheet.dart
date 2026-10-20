@@ -863,6 +863,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// le disclaimer sont demandés dès maintenant : décision produit assumée, le
   /// voyageur doit pouvoir juger le colis complet avant d'accepter un prix.
   void _goToNegotiationPicker() {
+    if (_handoverClosed()) return;
     if (_descriptionValue.isEmpty) {
       _showError(context.l10n.bidCreateDescriptionRequiredError);
       return;
@@ -1079,6 +1080,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   // ── Step navigation ─────────────────────────────────────────────────────────
 
   void _goToPicker() {
+    if (_handoverClosed()) return;
     if (_descriptionValue.isEmpty) {
       _showError(context.l10n.bidCreateDescriptionRequiredError);
       return;
@@ -1162,6 +1164,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         ),
       );
     }
+  }
+
+  /// La date limite de dépôt a pu passer formulaire ouvert : on le dit
+  /// clairement au lieu d'envoyer une demande vouée au 409
+  /// `handover-deadline-passed` (PROD-1R).
+  bool _handoverClosed() {
+    if (!widget.announcement.isHandoverClosed) return false;
+    _showError(context.l10n.errorHandoverDeadlinePassedMessage);
+    return true;
   }
 
   void _showError(String message) {

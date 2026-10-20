@@ -10,6 +10,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/gallery_save_service.dart';
 import 'package:dony/core/utils/share_position.dart';
+import 'package:dony/core/utils/trip_local_time.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -180,7 +181,11 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     final l = context.l10n;
     final locale = l.localeName;
     final a = widget.announcement;
-    final deadline = a.handoverDeadline;
+    // Même heure que l'affiche : celle de la ville de départ (PROD-1R).
+    final deadlineInstant = a.handoverDeadline;
+    final deadline = deadlineInstant == null
+        ? null
+        : tripWallTime(deadlineInstant, a.departureTimezone).wallClock;
     final pickup = a.pickupAddress?.label;
     final delivery = a.deliveryAddress?.label;
     final payment = TripPosterCard.paymentLabel(l, a);
