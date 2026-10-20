@@ -840,10 +840,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Succès commission t1'), findsOneWidget);
-      expect(
-        find.text('Frais de service réglés : ce colis est à vous !'),
-        findsNothing,
-      );
+      // L'ancienne snackbar furtive (clé ARB retirée) n'est plus affichée :
+      // aucune snackbar, l'écran de succès la remplace.
+      expect(find.byType(SnackBar), findsNothing);
       verify(() => bloc.add(const NegotiationFetchRequested('t1'))).called(1);
     });
 
