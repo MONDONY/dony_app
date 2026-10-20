@@ -486,11 +486,18 @@ class _NumberRowState extends State<_NumberRow> {
                 left: DonySpacing.base,
                 right: DonySpacing.sm,
               ),
-              child: Text(
-                phone.dialCode,
-                style: tt.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              // `prefixIcon` est étiré à 48 px de haut : sans `Center`,
+              // l'indicatif se dessinait en haut de la case, plus haut que
+              // le texte saisi et le texte d'aide (PROD-1G).
+              child: Center(
+                widthFactor: 1,
+                child: Text(
+                  phone.dialCode,
+                  key: const Key('mm-number-dial-code'),
+                  style: tt.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
             ),

@@ -250,6 +250,47 @@ void main() {
       verify(() => cubit.phoneChanged('07 48 84 08 56')).called(1);
     });
 
+    // PROD-1G : l'indicatif était collé en haut de la case (prefixIcon
+    // étiré à 48 px), au-dessus du texte d'aide centré.
+    testWidgets('numberField_dialCodePrefix_isVerticallyCentered', (
+      tester,
+    ) async {
+      await pumpWith(
+        tester,
+        kPayerReady.copyWith(country: kCoteDIvoire, operator: kOrangeCiv),
+      );
+
+      final dialCenter = tester.getCenter(
+        find.byKey(const Key('mm-number-dial-code')),
+      );
+      final labelCenter = tester.getCenter(find.text('Numéro Orange Money'));
+      final input = find.descendant(
+        of: find.byKey(const Key('mm-number-field')),
+        matching: find.byType(EditableText),
+      );
+      final inputCenter = tester.getCenter(input);
+      final fieldRect = tester.getRect(
+        find.descendant(
+          of: find.byKey(const Key('mm-number-field')),
+          matching: find.byType(InputDecorator),
+        ),
+      );
+
+      expect((dialCenter.dy - labelCenter.dy).abs(), lessThanOrEqualTo(2));
+      expect((dialCenter.dy - inputCenter.dy).abs(), lessThanOrEqualTo(2));
+      expect((dialCenter.dy - fieldRect.center.dy).abs(), lessThanOrEqualTo(2));
+
+      // Le texte saisi reste aligné avec l'indicatif.
+      await tester.enterText(input, '07 48 84 08 56');
+      await tester.pumpAndSettle();
+      expect(
+        (tester.getCenter(find.byKey(const Key('mm-number-dial-code'))).dy -
+                tester.getCenter(input).dy)
+            .abs(),
+        lessThanOrEqualTo(2),
+      );
+    });
+
     testWidgets('numberField_groupsDigitsByTwo', (tester) async {
       await pumpWith(
         tester,
