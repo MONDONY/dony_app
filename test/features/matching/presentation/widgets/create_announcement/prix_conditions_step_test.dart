@@ -636,7 +636,8 @@ void main() {
         find.text(
           'Le paiement par carte dépend du pays de résidence indiqué dans '
           'votre profil, et non du pays où vous vous trouvez. Stripe ne le '
-          'couvre pas encore : vos trajets sont publiés en espèces.',
+          'couvre pas encore : vos trajets sont publiés en espèces, et en '
+          'mobile money pour les trajets en XOF ou XAF.',
         ),
         findsNWidgets(2),
       );
@@ -952,7 +953,8 @@ void main() {
           'Le paiement par carte dépend du pays de résidence indiqué dans '
           'votre profil (Côte d\'Ivoire), et non du pays où vous vous '
           'trouvez. Stripe ne le couvre pas encore : vos trajets sont '
-          'publiés en espèces.',
+          'publiés en espèces, et en mobile money pour les trajets en XOF '
+          'ou XAF.',
         ),
         findsOneWidget,
       );

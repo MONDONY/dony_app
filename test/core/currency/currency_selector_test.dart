@@ -53,6 +53,12 @@ void main() {
     // La feuille annonce d'emblée les moyens de paiement de la devise du
     // portefeuille (USD), sans que l'utilisateur ait rien sélectionné.
     expect(find.text('Espèces uniquement en USD'), findsOneWidget);
+    // USD a un rail carte : s'il manque, c'est que le voyageur n'a pas
+    // activé ses paiements.
+    expect(
+      find.textContaining("le voyageur n'a pas activé les paiements Yadony"),
+      findsOneWidget,
+    );
     expect(find.text('Confirmer USD'), findsOneWidget);
   });
 
@@ -128,13 +134,15 @@ void main() {
       ],
     );
 
+    // XAF n'a pas de rail carte : le pourquoi tient à la devise, pas au
+    // voyageur.
     expect(
-      find.textContaining('voyageur n\'a pas encore activé les paiements'),
+      find.textContaining('Le paiement par carte n\'est pas proposé en XAF'),
       findsOneWidget,
     );
     expect(
-      find.textContaining('n\'est pas prise en charge par Stripe'),
-      findsOneWidget,
+      find.textContaining('voyageur n\'a pas activé les paiements'),
+      findsNothing,
     );
   });
 
@@ -174,7 +182,7 @@ void main() {
     );
     expect(find.text('Espèces uniquement en XOF'), findsNothing);
     expect(
-      find.textContaining('paiement par mobile money ou en espèces'),
+      find.textContaining('accepter le mobile money ou les espèces'),
       findsOneWidget,
     );
   });
@@ -287,9 +295,8 @@ void main() {
 
     expect(find.text('Cash only in XAF'), findsOneWidget);
     expect(
-      find.textContaining("traveler hasn't activated Yadony payments"),
+      find.textContaining("Card payment isn't offered in XAF"),
       findsOneWidget,
     );
-    expect(find.textContaining("isn't supported by Stripe"), findsOneWidget);
   });
 }

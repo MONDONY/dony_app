@@ -22,8 +22,12 @@ class CurrencySelectionBanner extends StatelessWidget {
   /// Moyens de paiement prévisualisés par devise. `stripeConfigured` reflète
   /// le compte Connect du créateur (seul voyageur concerné à cette étape) ;
   /// l'éligibilité Stripe par devise suit `SupportedCurrency.isStripeEligible`
-  /// (verbatim contrainte serveur). Aperçu client uniquement : le serveur
-  /// reste seul décideur au paiement réel.
+  /// (verbatim contrainte serveur). Le mobile money suit
+  /// `SupportedCurrency.isMobileMoneyEligible`, comme les autres appelants du
+  /// sélecteur : sans lui, un trajet en XOF ou XAF s'annonçait « Espèces
+  /// uniquement » (YADONY-FLUTTER-PROD-19). Aperçu client uniquement : le
+  /// serveur reste seul décideur au paiement réel (mobile money seulement si
+  /// le voyageur a un compte de versement actif dans la devise).
   static List<CurrencyPaymentOption> _options(bool stripeConfigured) => [
     for (final currency in SupportedCurrency.values)
       CurrencyPaymentOption(
@@ -32,6 +36,7 @@ class CurrencySelectionBanner extends StatelessWidget {
           BidPaymentMethod.cash,
           if (stripeConfigured && currency.isStripeEligible)
             BidPaymentMethod.stripe,
+          if (currency.isMobileMoneyEligible) BidPaymentMethod.mobileMoney,
         },
       ),
   ];

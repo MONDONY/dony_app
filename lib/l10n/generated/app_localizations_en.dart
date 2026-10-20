@@ -3022,11 +3022,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCashOnlyBannerNoConnect =>
-      'Card payment depends on the country of residence in your profile, not on the country you\'re in. Stripe doesn\'t cover it yet: your trips are posted in cash.';
+      'Card payment depends on the country of residence in your profile, not on the country you\'re in. Stripe doesn\'t cover it yet: your trips are posted in cash, and in mobile money for trips in XOF or XAF.';
 
   @override
   String tripPublishCashOnlyBannerNoConnectCountry(String country) {
-    return 'Card payment depends on the country of residence in your profile ($country), not on the country you\'re in. Stripe doesn\'t cover it yet: your trips are posted in cash.';
+    return 'Card payment depends on the country of residence in your profile ($country), not on the country you\'re in. Stripe doesn\'t cover it yet: your trips are posted in cash, and in mobile money for trips in XOF or XAF.';
   }
 
   @override
@@ -15397,7 +15397,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currencyMobileMoneyAndCashDescription =>
-      'The traveler can accept a mobile money or cash payment in this currency.';
+      'The traveler can accept mobile money or cash in this currency. Mobile money requires the traveler to have activated a payout account in this currency. Card payment isn\'t offered in CFA francs.';
 
   @override
   String currencyCashOnlyAvailable(String currency) {
@@ -15405,8 +15405,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String currencyCashOnlyDescription(String currency) {
-    return 'Card payment isn\'t offered for this currency: either the traveler hasn\'t activated Yadony payments yet, or $currency isn\'t supported by Stripe. Only cash payment will be possible.';
+  String get currencyCashOnlyDescription =>
+      'Card payment isn\'t offered yet: the traveler hasn\'t activated Yadony payments. Only cash payment will be possible.';
+
+  @override
+  String currencyCashOnlyUnsupportedDescription(String currency) {
+    return 'Card payment isn\'t offered in $currency. Only cash payment will be possible.';
   }
 
   @override
