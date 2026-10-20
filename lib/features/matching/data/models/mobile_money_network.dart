@@ -1,5 +1,5 @@
 import 'package:dony/features/payments/data/models/mobile_money_payout_account.dart';
-import 'package:dony/features/payments/presentation/widgets/payout_account_label.dart';
+import 'package:dony/features/payments/data/payout_account_label.dart';
 import 'package:equatable/equatable.dart';
 
 /// Un réseau mobile money accepté par le voyageur d'un trajet, tel que

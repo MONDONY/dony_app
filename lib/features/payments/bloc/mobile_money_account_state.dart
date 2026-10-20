@@ -48,8 +48,9 @@ class MobileMoneyAccountActionDone extends MobileMoneyAccountState {
   List<Object?> get props => [data, action];
 }
 
-/// Écriture refusée : [data] est la liste d'avant l'action, [error] toujours
-/// l'exception issue de `unwrapDioError` (jamais une chaîne).
+/// Écriture refusée, ou relecture en échec d'une liste déjà connue : [data] est
+/// la liste d'avant, toujours affichée, [error] toujours l'exception issue de
+/// `unwrapDioError` (jamais une chaîne).
 class MobileMoneyAccountActionFailed extends MobileMoneyAccountState {
   const MobileMoneyAccountActionFailed(this.data, this.error);
 
@@ -61,7 +62,9 @@ class MobileMoneyAccountActionFailed extends MobileMoneyAccountState {
   List<Object?> get props => [data, error];
 }
 
-/// Lecture de la liste en échec : l'écran propose de réessayer.
+/// Lecture de la liste en échec sans liste connue (première lecture, ou
+/// écriture partie sans liste lue) : l'écran propose de réessayer. Avec une
+/// liste déjà connue, l'échec passe par [MobileMoneyAccountActionFailed].
 class MobileMoneyAccountError extends MobileMoneyAccountState {
   const MobileMoneyAccountError(this.error);
 

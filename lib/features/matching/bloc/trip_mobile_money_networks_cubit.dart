@@ -9,7 +9,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// Le back ne remplit `acceptedMobileMoneyNetworks` que dans
 /// `GET /announcements/{id}` : un trajet ouvert depuis la recherche ou
-/// l'accueil arrive avec une liste vide. Elle est alors relue ici. État vide :
+/// l'accueil arrive avec une liste vide. Elle est alors relue ici, sauf si le
+/// trajet vient déjà du détail (liste vide = aucun compte). État vide :
 /// rien de connu, la fiche garde la puce « Mobile money » générique (aussi
 /// en cas d'échec ou de 404, sans message).
 class TripMobileMoneyNetworksCubit extends Cubit<List<MobileMoneyNetwork>> {
@@ -18,16 +19,21 @@ class TripMobileMoneyNetworksCubit extends Cubit<List<MobileMoneyNetwork>> {
   final AnnouncementRepository _repository;
 
   /// Liste déjà connue : reprise telle quelle. Sinon, et seulement si le
-  /// trajet accepte le mobile money, lecture du détail du trajet.
-  Future<void> load(AnnouncementModel announcement) async {
+  /// trajet accepte le mobile money et ne vient pas du détail ([fromDetail]),
+  /// lecture du détail du trajet.
+  Future<void> load(
+    AnnouncementModel announcement, {
+    bool fromDetail = false,
+  }) async {
     final known = announcement.acceptedMobileMoneyNetworks;
     if (known.isNotEmpty) {
       emit(known);
       return;
     }
-    if (!announcement.acceptedPaymentMethods.contains(
-      BidPaymentMethod.mobileMoney,
-    )) {
+    if (fromDetail ||
+        !announcement.acceptedPaymentMethods.contains(
+          BidPaymentMethod.mobileMoney,
+        )) {
       return;
     }
     try {

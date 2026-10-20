@@ -25,8 +25,10 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_mobile_money_networks_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -67,6 +69,9 @@ TripAudienceCubit _hiddenAudience() {
 }
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+class _MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
 
 // ── Fixture builder ───────────────────────────────────────────────────────────
 
@@ -207,6 +212,7 @@ Future<GoRouter> _pumpRouted(
   required _MockBidBloc bidBloc,
   required _MockCancellationBloc cancelBloc,
   required _MockAuthBloc authBloc,
+  AnnouncementModel? initial,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1.0;
@@ -221,8 +227,10 @@ Future<GoRouter> _pumpRouted(
       ),
       GoRoute(
         path: '/detail',
-        builder: (ctx, _) =>
-            const TripOwnerDetailScreen(announcementId: 'ann-trip-001'),
+        builder: (ctx, _) => TripOwnerDetailScreen(
+          announcementId: 'ann-trip-001',
+          initial: initial,
+        ),
       ),
     ],
   );
@@ -878,6 +886,94 @@ void main() {
       expect(find.text('Faire une demande'), findsOneWidget);
     },
   );
+
+  // Réseaux mobile money du trajet : relus au détail seulement quand la feuille
+  // reçoit le modèle de la liste (`extra`), jamais pour celui du détail.
+  group('visiteur : relecture des réseaux mobile money', () {
+    late _MockAnnouncementRepository repository;
+
+    const visitor = UserModel(
+      id: 'sender-042',
+      roles: [],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
+
+    setUp(() {
+      repository = _MockAnnouncementRepository();
+      when(
+        () => repository.getAnnouncementDetail(any()),
+      ).thenAnswer((_) async => _makeAnnouncement());
+      getIt.registerFactory<TripMobileMoneyNetworksCubit>(
+        () => TripMobileMoneyNetworksCubit(repository),
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(visitor));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(visitor),
+      );
+    });
+
+    tearDown(() => getIt.unregister<TripMobileMoneyNetworksCubit>());
+
+    final mobileMoneyTrip = _makeAnnouncement(
+      acceptedPaymentMethods: const {
+        BidPaymentMethod.mobileMoney,
+        BidPaymentMethod.stripe,
+      },
+    );
+
+    testWidgets('modèle de la liste (extra) : fromDetail faux, détail relu', (
+      tester,
+    ) async {
+      when(() => annBloc.state).thenReturn(AnnouncementLoading());
+      whenListen(
+        annBloc,
+        const Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementLoading(),
+      );
+
+      await _pumpRouted(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+        initial: mobileMoneyTrip,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Faire une demande'), findsOneWidget);
+      verify(() => repository.getAnnouncementDetail('ann-trip-001')).called(1);
+    });
+
+    testWidgets('modèle de AnnouncementDetailLoaded : fromDetail vrai, '
+        'aucune relecture', (tester) async {
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(mobileMoneyTrip));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(
+          AnnouncementDetailLoaded(mobileMoneyTrip),
+        ),
+        initialState: AnnouncementDetailLoaded(mobileMoneyTrip),
+      );
+
+      await _pumpRouted(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Faire une demande'), findsOneWidget);
+      verifyNever(() => repository.getAnnouncementDetail(any()));
+    });
+  });
 
   testWidgets('propriétaire authentifié → écran propriétaire conservé', (
     tester,

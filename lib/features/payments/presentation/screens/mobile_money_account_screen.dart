@@ -6,7 +6,7 @@ import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_payout_account.dart';
-import 'package:dony/features/payments/presentation/widgets/payout_account_label.dart';
+import 'package:dony/features/payments/data/payout_account_label.dart';
 import 'package:dony/features/payments/presentation/widgets/payout_account_sheets.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -45,6 +45,10 @@ class _MobileMoneyAccountScreenState extends State<MobileMoneyAccountScreen> {
   /// Compte du dernier retrait envoyé : un 409 « bloqué » affiche son nombre
   /// de colis en attente. Simple mémoire, jamais affichée : pas de setState.
   MobileMoneyPayoutAccount? _removing;
+
+  /// Relecture lancée après un 409 « bloqué » en cours : son éventuel échec
+  /// ne doit pas rouvrir un message, la feuille « compte bloqué » suffit.
+  bool _awaitingLockReload = false;
 
   MobileMoneyAccountBloc get _bloc => context.read<MobileMoneyAccountBloc>();
 
@@ -91,28 +95,38 @@ class _MobileMoneyAccountScreenState extends State<MobileMoneyAccountScreen> {
     _bloc.add(MobileMoneyAccountRemoveRequested(account));
   }
 
-  /// Refus d'une écriture. Sur un 409 « bloqué », la liste lue paraissait à
-  /// jour alors qu'un colis attend : elle est relue (la ligne passe bloquée),
-  /// et la feuille s'ouvre une fois la relecture finie, avec le nombre de
-  /// colis qu'elle donne (celui d'avant si elle échoue).
+  /// Refus d'une écriture, ou relecture en échec avec la liste affichée (la
+  /// liste reste, le message passe par `presentPayoutAccountFailure`).
+  ///
+  /// Sur un 409 « bloqué », la liste lue paraissait à jour alors qu'un colis
+  /// attend : elle est relue (la ligne passe bloquée), et la feuille s'ouvre
+  /// une fois la relecture finie, avec le nombre de colis qu'elle donne
+  /// (celui d'avant si elle échoue, sans second message).
   Future<void> _onWriteFailed(
     BuildContext context,
     MobileMoneyAccountState state,
   ) async {
+    if (_awaitingLockReload) return;
     final error = (state as MobileMoneyAccountActionFailed).error;
     final removing = _removing;
     var pendingPayouts = removing?.pendingPayouts ?? 0;
     if (isPayoutAccountLocked(error)) {
       // Abonné avant l'envoi : la réponse ne peut pas filer entre les deux.
       final reloaded = _bloc.stream.firstWhere(
-        (s) => s is MobileMoneyAccountLoaded || s is MobileMoneyAccountError,
+        (s) =>
+            s is MobileMoneyAccountLoaded ||
+            s is MobileMoneyAccountError ||
+            s is MobileMoneyAccountActionFailed,
       );
+      _awaitingLockReload = true;
       _bloc.add(const MobileMoneyAccountsRequested());
       final MobileMoneyAccountState next;
       try {
         next = await reloaded;
       } on StateError {
         return; // BLoC fermé : l'écran est parti.
+      } finally {
+        _awaitingLockReload = false;
       }
       if (!context.mounted) return;
       for (final account in next.data?.accounts ?? const []) {

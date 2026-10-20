@@ -128,7 +128,8 @@ void main() {
     );
 
     blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
-      'relecture d\'une liste affichée en échec : Error, sans Loading',
+      'relecture d\'une liste affichée en échec : la liste reste (ActionFailed), '
+      'sans Loading ni Error',
       build: () {
         when(
           () => repository.accounts(),
@@ -138,8 +139,9 @@ void main() {
       seed: () => const MobileMoneyAccountLoaded(one),
       act: (b) => b.add(const MobileMoneyAccountsRequested()),
       expect: () => [
-        const MobileMoneyAccountError(NetworkException('offline')),
+        const MobileMoneyAccountActionFailed(one, NetworkException('offline')),
       ],
+      verify: (b) => expect(b.state.data, one),
     );
   });
 

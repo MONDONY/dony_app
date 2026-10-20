@@ -5,7 +5,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/mobile_money_network.dart';
 import 'package:dony/features/payments/data/models/mobile_money_payout_account.dart';
 import 'package:dony/features/payments/data/payer_phone_memory.dart';
-import 'package:dony/features/payments/presentation/widgets/payout_account_label.dart';
+import 'package:dony/features/payments/data/payout_account_label.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Opérateur mobile money habituel de l'expéditeur, quand le voyageur d'un

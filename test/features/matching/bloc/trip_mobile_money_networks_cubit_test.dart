@@ -92,6 +92,28 @@ void main() {
   );
 
   blocTest<TripMobileMoneyNetworksCubit, List<MobileMoneyNetwork>>(
+    'trajet issu du détail, liste vide : aucun compte, aucun appel',
+    build: build,
+    act: (c) => c.load(_trip(), fromDetail: true),
+    expect: () => <List<MobileMoneyNetwork>>[],
+    verify: (_) {
+      verifyNever(() => repository.getAnnouncementDetail(any()));
+    },
+  );
+
+  blocTest<TripMobileMoneyNetworksCubit, List<MobileMoneyNetwork>>(
+    'trajet issu du détail avec réseaux : servis tels quels',
+    build: build,
+    act: (c) => c.load(_trip(networks: const [_orangeCi]), fromDetail: true),
+    expect: () => [
+      const [_orangeCi],
+    ],
+    verify: (_) {
+      verifyNever(() => repository.getAnnouncementDetail(any()));
+    },
+  );
+
+  blocTest<TripMobileMoneyNetworksCubit, List<MobileMoneyNetwork>>(
     'mobile money non accepté : aucun appel, rien d\'émis',
     build: build,
     act: (c) => c.load(_trip(methods: const {BidPaymentMethod.stripe})),

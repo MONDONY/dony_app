@@ -187,6 +187,7 @@ Widget _harness({
   BidState? bidState,
   FavoriteIdsCubit? favorites,
   bool fromMap = false,
+  bool fromDetail = false,
 }) {
   final authBloc = _MockAuthBloc();
   when(
@@ -215,6 +216,7 @@ Widget _harness({
                 ctx,
                 announcement: announcement,
                 fromMap: fromMap,
+                fromDetail: fromDetail,
               ),
               child: const Text('Ouvrir'),
             ),
@@ -1290,9 +1292,12 @@ void main() {
         WidgetTester tester,
         AnnouncementModel a, {
         bool english = false,
+        bool fromDetail = false,
       }) async {
         if (english) useEnglish();
-        await tester.pumpWidget(_harness(announcement: a));
+        await tester.pumpWidget(
+          _harness(announcement: a, fromDetail: fromDetail),
+        );
         await tester.tap(find.text('Ouvrir'));
         await tester.pumpAndSettle();
       }
@@ -1425,6 +1430,18 @@ void main() {
           await open(tester, a);
 
           expect(find.text('Orange'), findsOneWidget);
+          verifyNever(() => repository.getAnnouncementDetail(any()));
+        });
+
+        testWidgets('trajet issu du détail, liste vide : aucune relecture, '
+            'puce générique', (tester) async {
+          final a = _buildAnnouncement(
+            kycVerified: true,
+            acceptedPaymentMethods: const {BidPaymentMethod.mobileMoney},
+          );
+          await open(tester, a, fromDetail: true);
+
+          expect(find.text('Mobile money'), findsOneWidget);
           verifyNever(() => repository.getAnnouncementDetail(any()));
         });
 
