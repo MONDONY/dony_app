@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
-import 'package:dony/features/config/data/commission_grid_preload.dart';
+import 'package:dony/core/pricing/commission_grid_preload.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';

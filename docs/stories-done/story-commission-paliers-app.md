@@ -41,13 +41,13 @@ L'app suit :
   `halfMinorUnit`.
 - `lib/core/pricing/commission_rate.dart` : taux unique historique
   (`donyCommissionRate`, `setDonyCommissionRate`), réexporté par `dony_pricing.dart`.
-- `lib/features/config/data/commission_grid_preload.dart` : `CommissionGridLoader`,
+- `lib/core/pricing/commission_grid_preload.dart` : `CommissionGridLoader`,
   `kCommissionGridPreloadTimeout` (3 s), `preloadCommissionGrids`.
 - `lib/features/package_request/data/models/thread_pricing.dart` : `ThreadPricer`
   (prix d'un fil de demande sur sa grille figée, montants serveur prioritaires).
 - Tests : `test/core/pricing/commission_*_test.dart`, `test/fixtures/commission/vectors.json`
   (copie de la fixture du back), `test/helpers/commission_grid_test_doubles.dart`,
-  `test/features/config/data/commission_grid_preload_test.dart`,
+  `test/core/pricing/commission_grid_preload_test.dart`,
   `test/features/package_request/data/models/thread_pricing_test.dart`,
   `test/features/matching/data/models/bid_negotiation_pricing_test.dart`,
   `test/features/matching/data/models/bid_negotiation_test.dart`.

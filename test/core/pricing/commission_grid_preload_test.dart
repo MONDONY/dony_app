@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_preload.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
-import 'package:dony/features/config/data/commission_grid_preload.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../helpers/commission_grid_test_doubles.dart';
+import '../../helpers/commission_grid_test_doubles.dart';
 
 CommissionGrid _frozenGrid() => CommissionGrid(
   id: 'grid-frozen',
