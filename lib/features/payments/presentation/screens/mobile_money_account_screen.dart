@@ -91,10 +91,13 @@ class _MobileMoneyAccountScreenState extends State<MobileMoneyAccountScreen> {
     _bloc.add(MobileMoneyAccountRemoveRequested(account));
   }
 
-  /// Refus d'une écriture. Sur un 409 « bloqué », la liste lue paraissait à
-  /// jour alors qu'un colis attend : elle est relue (la ligne passe bloquée),
-  /// et la feuille s'ouvre une fois la relecture finie, avec le nombre de
-  /// colis qu'elle donne (celui d'avant si elle échoue).
+  /// Refus d'une écriture, ou relecture en échec avec la liste affichée (la
+  /// liste reste, le message passe par `presentPayoutAccountFailure`).
+  ///
+  /// Sur un 409 « bloqué », la liste lue paraissait à jour alors qu'un colis
+  /// attend : elle est relue (la ligne passe bloquée), et la feuille s'ouvre
+  /// une fois la relecture finie, avec le nombre de colis qu'elle donne
+  /// (celui d'avant si elle échoue).
   Future<void> _onWriteFailed(
     BuildContext context,
     MobileMoneyAccountState state,
@@ -105,7 +108,10 @@ class _MobileMoneyAccountScreenState extends State<MobileMoneyAccountScreen> {
     if (isPayoutAccountLocked(error)) {
       // Abonné avant l'envoi : la réponse ne peut pas filer entre les deux.
       final reloaded = _bloc.stream.firstWhere(
-        (s) => s is MobileMoneyAccountLoaded || s is MobileMoneyAccountError,
+        (s) =>
+            s is MobileMoneyAccountLoaded ||
+            s is MobileMoneyAccountError ||
+            s is MobileMoneyAccountActionFailed,
       );
       _bloc.add(const MobileMoneyAccountsRequested());
       final MobileMoneyAccountState next;

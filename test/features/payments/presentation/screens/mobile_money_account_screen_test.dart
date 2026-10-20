@@ -80,6 +80,8 @@ void main() {
   });
 
   setUp(() {
+    // Les erreurs identiques sont dédoublonnées entre tests (état statique).
+    DonySnackbar.clearDedup();
     bloc = _MockBloc();
     states = StreamController<MobileMoneyAccountState>.broadcast();
     addResult = null;
@@ -546,9 +548,26 @@ void main() {
       );
     });
 
-    testWidgets('autre refus : message d\'erreur, liste gardée', (
-      tester,
-    ) async {
+    testWidgets('409 verrouillé, relecture en échec sur la liste connue '
+        '(ActionFailed) : feuille avec au moins un colis', (tester) async {
+      await refuseRemovalAsLocked(tester);
+
+      states.add(
+        const MobileMoneyAccountActionFailed(
+          MobileMoneyPayoutAccounts(accounts: [_orangeCi]),
+          NetworkException('offline'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('1 colis attend encore son versement sur ce compte.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('autre refus ou relecture en échec : message non bloquant, '
+        'liste gardée, pas d\'écran plein', (tester) async {
       await pumpScreen(tester, loaded(const [_orangeCi]));
 
       states.add(
@@ -562,6 +581,8 @@ void main() {
 
       expect(find.byType(SnackBar), findsOneWidget);
       expect(find.text('Orange Money'), findsOneWidget);
+      expect(find.text('Impossible de charger vos comptes'), findsNothing);
+      expect(find.text('Réessayer'), findsNothing);
       // Refus sans rapport avec un versement en attente : pas de relecture.
       verifyNever(() => bloc.add(any()));
     });

@@ -66,11 +66,20 @@ class MobileMoneyAccountBloc
   ) async {
     // Relecture d'une liste déjà affichée (après un 409 « bloqué », au retour
     // d'un écran) : elle reste visible jusqu'à la nouvelle.
-    if (state.data == null) emit(const MobileMoneyAccountLoading());
+    final known = state.data;
+    if (known == null) emit(const MobileMoneyAccountLoading());
     try {
       emit(MobileMoneyAccountLoaded(await _repository.accounts()));
     } catch (e) {
-      emit(MobileMoneyAccountError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      // Relecture en échec sur une liste connue : elle reste affichée et
+      // l'erreur est signalée sans bloquer. Le plein écran « Réessayer » est
+      // réservé à la première lecture.
+      emit(
+        known == null
+            ? MobileMoneyAccountError(error)
+            : MobileMoneyAccountActionFailed(known, error),
+      );
     }
   }
 
