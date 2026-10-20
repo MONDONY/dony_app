@@ -13560,30 +13560,6 @@ abstract class AppLocalizations {
   /// **'Expiré'**
   String get ticketStatusExpiredLabel;
 
-  /// Bouton talon voyageur, action scan (talon_traveler_action_view.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Lire le QR du colis'**
-  String get ticketScanQrActionLabel;
-
-  /// Indication au-dessus du bouton scan (talon_traveler_action_view.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'À la remise, lisez le QR de l\'expéditeur.'**
-  String get ticketScanQrActionHint;
-
-  /// Bouton talon voyageur, action confirmation de livraison (talon_traveler_action_view.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Confirmer la livraison'**
-  String get ticketConfirmDeliveryActionLabel;
-
-  /// Indication au-dessus du bouton confirmation de livraison (talon_traveler_action_view.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'À l\'arrivée, saisissez le code de retrait de l\'expéditeur.'**
-  String get ticketConfirmDeliveryActionHint;
-
   /// Texte de partage sans lien de suivi (talon_tracking_strip.dart)
   ///
   /// In fr, this message translates to:
@@ -17637,54 +17613,6 @@ abstract class AppLocalizations {
   /// **'Photo trop lourde (max {mb} Mo). Réessayez.'**
   String scanPhotoTooLarge(int mb);
 
-  /// Titre de l'écran de lecture QR au départ (qr_scanner_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Lecture au départ'**
-  String get scanDepartureTitle;
-
-  /// Titre de la feuille de confirmation après lecture d'un QR (qr_scanner_screen.dart, _ScanConfirmSheet).
-  ///
-  /// In fr, this message translates to:
-  /// **'QR lu'**
-  String get scanQrReadTitle;
-
-  /// Indicateur de progression de l'écran de lecture au départ (qr_scanner_screen.dart), toujours étape 1 sur 3 : c'est le premier des trois scans du parcours.
-  ///
-  /// In fr, this message translates to:
-  /// **'ÉTAPE 1 SUR 3'**
-  String get scanStepIndicatorStatic;
-
-  /// Sous-titre de l'indicateur de progression de qr_scanner_screen.dart.
-  ///
-  /// In fr, this message translates to:
-  /// **'Colis confirmé en valise'**
-  String get scanConfirmedInSuitcase;
-
-  /// Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart.
-  ///
-  /// In fr, this message translates to:
-  /// **'Photo'**
-  String get scanPhotoWordLabel;
-
-  /// Bouton principal de qr_scanner_screen.dart.
-  ///
-  /// In fr, this message translates to:
-  /// **'Confirmer & continuer'**
-  String get scanConfirmAndContinue;
-
-  /// Titre du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Numéro de suivi'**
-  String get scanTrackingNumberDialogTitle;
-
-  /// Corps du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Entrez le numéro DON-XXXXXX du colis à lire.'**
-  String get scanTrackingNumberDialogBody;
-
   /// Erreur de numéro de suivi introuvable (qr_scanner_screen.dart, scan_identify_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -17696,12 +17624,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Lecture en attente'**
   String get scanQueuedTitle;
-
-  /// Corps du dialogue hors-ligne de qr_scanner_screen.dart.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pas de connexion internet. La lecture sera synchronisée automatiquement dès que vous serez en ligne.'**
-  String get scanQueuedNoConnectionBodyLong;
 
   /// Bouton de fermeture des dialogues hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart).
   ///
@@ -17721,53 +17643,17 @@ abstract class AppLocalizations {
   /// **'Lecture enregistrée !'**
   String get scanRecordedTitle;
 
-  /// Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet).
-  ///
-  /// In fr, this message translates to:
-  /// **'Type d\'étape'**
-  String get scanEventTypeSectionLabel;
-
-  /// Explication de la feuille du scanner QR quand l'étape Arrivée est choisie : la remise continue sur l'écran photo puis l'écran du code (qr_scanner_screen.dart, _ScanConfirmSheet).
-  ///
-  /// In fr, this message translates to:
-  /// **'Pour remettre le colis, prenez-le en photo, puis saisissez le code de retrait à 6 chiffres que vous donne le destinataire.'**
-  String get scanArrivalNextStepsHint;
-
-  /// Bouton de la feuille du scanner QR, étape Arrivée : ferme la feuille et ouvre l'écran photo de la remise (qr_scanner_screen.dart, _ScanConfirmSheet).
-  ///
-  /// In fr, this message translates to:
-  /// **'Prendre la photo du colis'**
-  String get scanArrivalTakePhotoButton;
-
   /// Libellé/titre de la section photo (qr_scanner_screen.dart, scan_photo_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Photo du colis'**
   String get scanPhotoOfParcelLabel;
 
-  /// Libellé Semantics du bouton de suppression de la photo prise (qr_scanner_screen.dart, _ScanConfirmSheet).
-  ///
-  /// In fr, this message translates to:
-  /// **'Supprimer la photo'**
-  String get scanRemovePhotoSemantics;
-
   /// Repli affiché quand une position GPS est enregistrée sans libellé de lieu résolu (qr_scanner_screen.dart, scan_confirm_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Lieu GPS enregistré'**
   String get scanGpsLocationSaved;
-
-  /// Message d'erreur photo trop lourde à taille fixe (qr_scanner_screen.dart:1141), distinct de scanPhotoTooLarge (« MB » au lieu de « Mo », taille non dynamique).
-  ///
-  /// In fr, this message translates to:
-  /// **'Photo trop lourde (max 10 MB). Réessayez.'**
-  String get scanPhotoTooLargeFixed;
-
-  /// Libellé du bouton pendant l'enregistrement d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart, _ScanConfirmSheet).
-  ///
-  /// In fr, this message translates to:
-  /// **'Enregistrement...'**
-  String get scanSubmittingRecording;
 
   /// Bouton de confirmation d'une livraison ARRIVEE (qr_scanner_screen.dart, scan_confirm_screen.dart).
   ///

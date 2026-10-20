@@ -8133,19 +8133,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticketStatusExpiredLabel => 'Expired';
 
   @override
-  String get ticketScanQrActionLabel => 'Scan the parcel QR';
-
-  @override
-  String get ticketScanQrActionHint => 'At drop-off, scan the sender\'s QR.';
-
-  @override
-  String get ticketConfirmDeliveryActionLabel => 'Confirm the delivery';
-
-  @override
-  String get ticketConfirmDeliveryActionHint =>
-      'On arrival, enter the sender\'s pickup code.';
-
-  @override
   String ticketShareTrackingMessage(String trackingNumber) {
     return 'Track my Yadony parcel #$trackingNumber';
   }
@@ -10668,39 +10655,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get scanDepartureTitle => 'Departure scan';
-
-  @override
-  String get scanQrReadTitle => 'QR scanned';
-
-  @override
-  String get scanStepIndicatorStatic => 'STEP 1 OF 3';
-
-  @override
-  String get scanConfirmedInSuitcase => 'Parcel loaded in the suitcase';
-
-  @override
-  String get scanPhotoWordLabel => 'Photo';
-
-  @override
-  String get scanConfirmAndContinue => 'Confirm & continue';
-
-  @override
-  String get scanTrackingNumberDialogTitle => 'Tracking number';
-
-  @override
-  String get scanTrackingNumberDialogBody =>
-      'Enter the parcel\'s DON-XXXXXX number to scan.';
-
-  @override
   String get scanNumberNotFound => 'Number not found. Check and try again.';
 
   @override
   String get scanQueuedTitle => 'Scan pending';
-
-  @override
-  String get scanQueuedNoConnectionBodyLong =>
-      'No internet connection. The scan will sync automatically once you\'re back online.';
 
   @override
   String get scanUnderstoodButton => 'Got it';
@@ -10712,30 +10670,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanRecordedTitle => 'Scan recorded!';
 
   @override
-  String get scanEventTypeSectionLabel => 'Step type';
-
-  @override
-  String get scanArrivalNextStepsHint =>
-      'To hand over the parcel, take a photo of it, then enter the 6-digit pickup code the recipient gives you.';
-
-  @override
-  String get scanArrivalTakePhotoButton => 'Take the parcel photo';
-
-  @override
   String get scanPhotoOfParcelLabel => 'Parcel photo';
 
   @override
-  String get scanRemovePhotoSemantics => 'Remove the photo';
-
-  @override
   String get scanGpsLocationSaved => 'GPS location recorded';
-
-  @override
-  String get scanPhotoTooLargeFixed =>
-      'Photo too large (max 10 MB). Try again.';
-
-  @override
-  String get scanSubmittingRecording => 'Saving...';
 
   @override
   String get scanConfirmDeliveryButton => 'Confirm delivery';

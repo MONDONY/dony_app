@@ -9,14 +9,20 @@ import 'package:go_router/go_router.dart';
 /// son détail (FLUTTER-9N) : le retour ramène au colis, rechargé puisque
 /// son statut a pu avancer pendant le scan.
 Future<void> openTripValidation(BuildContext context, BidModel bid) async {
-  final trip = bid.announcementId;
+  final bloc = _bidBlocOf(context);
+  await pushTripValidation(context, bid.announcementId);
+  if (bloc != null && !bloc.isClosed) bloc.add(BidDetailRequested(bid.id));
+}
+
+/// Pousse Suivi › Valider sur le trajet [tripId] (`/tracking/validate`),
+/// par-dessus l'écran courant : le retour y ramène. Un [tripId] vide laisse
+/// le Suivi choisir le trajet.
+Future<void> pushTripValidation(BuildContext context, String tripId) {
   final location = Uri(
     path: '/tracking/validate',
-    queryParameters: trip.isEmpty ? null : {'trip': trip},
+    queryParameters: tripId.isEmpty ? null : {'trip': tripId},
   ).toString();
-  final bloc = _bidBlocOf(context);
-  await context.push<void>(location);
-  if (bloc != null && !bloc.isClosed) bloc.add(BidDetailRequested(bid.id));
+  return context.push<void>(location);
 }
 
 BidBloc? _bidBlocOf(BuildContext context) {
