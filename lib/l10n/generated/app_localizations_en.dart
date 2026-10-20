@@ -11457,6 +11457,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Response usually within 24 hours';
 
   @override
+  String get profileHelpRateApp => 'Rate Yadony';
+
+  @override
+  String get profileHelpRateAppSubtitle => 'Your review helps others find us';
+
+  @override
   String get profileContactTypePhone => 'PHONE';
 
   @override

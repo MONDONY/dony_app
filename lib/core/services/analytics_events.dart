@@ -490,6 +490,15 @@ abstract final class AnalyticsEvents {
   // Ratings
   static const ratingSubmitted = 'rating_submitted';
 
+  /// Fenêtre native d'avis Store demandée après une note de 4 ou 5 étoiles
+  /// donnée à l'autre partie (`StoreReviewService.requestAfterRating`).
+  /// Propriétés `stars`, `role_rated`. Le système peut ne rien afficher.
+  static const storeReviewRequested = 'store_review_requested';
+
+  /// Fiche Google Play / App Store ouverte pour laisser un avis
+  /// (`StoreReviewService.openStoreListing`). Propriété `source`.
+  static const storeListingOpened = 'store_listing_opened';
+
   // Cancellations
   static const cancellationInitiated = 'cancellation_initiated';
   static const bidCancelled = 'bid_cancelled';

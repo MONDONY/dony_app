@@ -25,6 +25,7 @@ import 'package:dony/core/services/gallery_save_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
+import 'package:dony/core/services/store_review_service.dart';
 import 'package:dony/core/services/trip_arrival_events_service.dart';
 import 'package:dony/core/storage/form_draft_cubit.dart';
 import 'package:dony/core/storage/form_draft_store.dart';
@@ -1323,12 +1324,19 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<RatingPromptTracker>(
     () => RatingPromptTracker(getIt<HiveService>().userPrefs),
   );
+  getIt.registerLazySingleton<StoreReviewService>(
+    () => StoreReviewService(
+      getIt<HiveService>().userPrefs,
+      getIt<AnalyticsService>(),
+    ),
+  );
   getIt.registerFactory<RatingBloc>(
     () => RatingBloc(
       getIt<RatingRepository>(),
       getIt<AnalyticsService>(),
       ratingEvents: getIt<RatingEventsService>(),
       promptTracker: getIt<RatingPromptTracker>(),
+      storeReview: getIt<StoreReviewService>(),
     ),
   );
   getIt.registerLazySingleton<MyReviewsBloc>(

@@ -4,6 +4,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/rating_events_service.dart';
+import 'package:dony/core/services/store_review_service.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/data/rating_prompt_tracker.dart';
@@ -16,8 +17,10 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
     this._analytics, {
     RatingEventsService? ratingEvents,
     RatingPromptTracker? promptTracker,
+    StoreReviewService? storeReview,
   }) : _ratingEvents = ratingEvents,
        _promptTracker = promptTracker,
+       _storeReview = storeReview,
        super(const RatingInitial()) {
     on<RatingSubmitRequested>(_onSubmit);
     on<TravelerRatingSubmitRequested>(_onTravelerSubmit);
@@ -35,6 +38,18 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
   /// Colis déjà proposés automatiquement (FLUTTER-P2). Absent : chaque
   /// vérification propose la note en attente (comportement historique).
   final RatingPromptTracker? _promptTracker;
+
+  /// Avis sur la fiche du Store proposé après une note de 4 ou 5 étoiles.
+  /// Absent : aucune fenêtre de notation du Store.
+  final StoreReviewService? _storeReview;
+
+  void _offerStoreReview(int stars, String roleRated) {
+    final storeReview = _storeReview;
+    if (storeReview == null) return;
+    unawaited(
+      storeReview.requestAfterRating(stars: stars, roleRated: roleRated),
+    );
+  }
 
   /// Échec d'un envoi de note. Un 409 `already-rated` signifie que la note
   /// existe déjà côté serveur : l'écran du colis doit se relire pour retirer
@@ -66,6 +81,7 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
           properties: {'score': event.stars, 'role_rated': 'traveler'},
         ),
       );
+      _offerStoreReview(event.stars, 'traveler');
     } catch (e) {
       _emitSubmitError(event.bidId, e, emit);
     }
@@ -90,6 +106,7 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
           properties: {'score': event.stars, 'role_rated': 'sender'},
         ),
       );
+      _offerStoreReview(event.stars, 'sender');
     } catch (e) {
       _emitSubmitError(event.bidId, e, emit);
     }

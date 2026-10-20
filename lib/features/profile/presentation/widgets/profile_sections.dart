@@ -1,6 +1,8 @@
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/services/store_review_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
@@ -435,8 +437,20 @@ class ProfileHelpSection extends StatelessWidget {
               iconBgColor: cs.primaryContainer,
               label: l.profileHelpContactSupport,
               subtitle: l.profileHelpContactSupportSubtitle,
-              showDivider: false,
               onTap: () => context.push('/support'),
+            ),
+            // Seule voie vers un avis visible sur Google Play / App Store :
+            // les notes entre utilisateurs restent dans Yadony.
+            DonyListTile(
+              iconAsset: 'star',
+              iconColor: cs.primary,
+              iconBgColor: cs.primaryContainer,
+              label: l.profileHelpRateApp,
+              subtitle: l.profileHelpRateAppSubtitle,
+              showDivider: false,
+              onTap: () => getItSafe<StoreReviewService>()?.openStoreListing(
+                source: 'profile',
+              ),
             ),
           ],
         ),
