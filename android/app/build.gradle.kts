@@ -22,8 +22,8 @@ if (hasReleaseKeystore) {
 }
 
 // Clé Google Maps du manifest natif. Elle ne passe pas par le code Dart : Gradle
-// la lit, dans cet ordre :
-//   1. la variable d'environnement GOOGLE_MAPS_API_KEY (CI, build-release.yml) ;
+// la lit, dans cet ordre, pour chaque nom de variable :
+//   1. la variable d'environnement (CI, build-release.yml) ;
 //   2. le fichier passé à --dart-define-from-file (env.staging.json,
 //      env.prod.json…), que Flutter transmet à Gradle dans la propriété
 //      `dart-defines` (entrées KEY=VALUE encodées en base64) ;
@@ -31,6 +31,16 @@ if (hasReleaseKeystore) {
 // Sans l'étape 2, un build lancé à la main avec env.staging.json prenait la
 // clé de env.dev.json, ou rien : l'app se lançait et la carte restait vide
 // (builds 1.0.0+78 à +83, puis Sentry FLUTTER-A7 sur le build 100).
+//
+// Deux noms, parce que deux clés. GOOGLE_MAPS_ANDROID_API_KEY est la clé
+// restreinte Android (yadony-prod-android : package com.yadony.yadony + SHA-1,
+// API maps-android-backend). GOOGLE_MAPS_API_KEY est celle qu'iOS lit
+// (Info.plist, xcconfig) : en production c'est yadony-prod-ios, restreinte au
+// bundle iOS, que le SDK Maps Android refuse. Une seule variable servait les
+// deux plateformes : le build 143 publié sur Play affichait une carte vide
+// (Sentry YADONY-FLUTTER-PROD-1T). Le repli sur GOOGLE_MAPS_API_KEY ne reste
+// permis qu'en dev/staging, où la même clé non restreinte à une plateforme sert
+// encore les deux ; en production, l'absence de la clé Android est une erreur.
 val dartDefines: Map<String, String> =
     (findProperty("dart-defines") as? String).orEmpty()
         .split(",")
@@ -41,15 +51,36 @@ val dartDefines: Map<String, String> =
         .filter { it.contains("=") }
         .associate { it.substringBefore("=") to it.substringAfter("=") }
 
-val googleMapsApiKey: String = run {
-    System.getenv("GOOGLE_MAPS_API_KEY")?.takeIf { it.isNotBlank() }?.let { return@run it }
-    dartDefines["GOOGLE_MAPS_API_KEY"]?.takeIf { it.isNotBlank() }?.let { return@run it }
+val devEnvJson: Map<String, Any?> = run {
     val envFile = rootProject.file("../env.dev.json")
     if (envFile.exists()) {
         @Suppress("UNCHECKED_CAST")
-        val json = JsonSlurper().parse(envFile) as Map<String, Any?>
-        (json["GOOGLE_MAPS_API_KEY"] as? String).orEmpty()
-    } else ""
+        JsonSlurper().parse(envFile) as Map<String, Any?>
+    } else emptyMap()
+}
+
+// ENVIRONMENT vient du même fichier d'environnement que la clé (env.prod.json
+// porte "production"), ou de la variable du même nom.
+val isProductionEnvironment: Boolean =
+    (System.getenv("ENVIRONMENT")?.takeIf { it.isNotBlank() } ?: dartDefines["ENVIRONMENT"])
+        ?.trim() == "production"
+
+// env.dev.json n'est jamais une source en production : une clé de dev dans un
+// binaire publié serait la même panne silencieuse sous un autre nom.
+fun resolveBuildValue(name: String): String =
+    System.getenv(name)?.takeIf { it.isNotBlank() }
+        ?: dartDefines[name]?.takeIf { it.isNotBlank() }
+        ?: if (isProductionEnvironment) "" else (devEnvJson[name] as? String).orEmpty()
+
+val googleMapsAndroidApiKey: String = resolveBuildValue("GOOGLE_MAPS_ANDROID_API_KEY")
+
+val googleMapsApiKey: String = when {
+    googleMapsAndroidApiKey.isNotBlank() -> googleMapsAndroidApiKey
+    // Jamais de repli silencieux sur la clé iOS en production : manifest vide,
+    // et la tâche requireAndroidMapsKeyForProduction plus bas fait échouer
+    // tout build release.
+    isProductionEnvironment -> ""
+    else -> resolveBuildValue("GOOGLE_MAPS_API_KEY")
 }
 
 android {
@@ -132,11 +163,32 @@ val verifyAndroidReleaseConfig = tasks.register<Exec>("verifyAndroidReleaseConfi
     commandLine("$repoRoot/tool/verify_android_release_config.sh")
     // La clé réellement injectée dans le manifest, pas une relecture des
     // fichiers par le script : c'est elle qui décide si la carte s'affiche.
-    environment("GOOGLE_MAPS_API_KEY", googleMapsApiKey)
+    environment("GOOGLE_MAPS_ANDROID_API_KEY", googleMapsApiKey)
+}
+
+// Un build release de production sans clé Android dédiée échoue ici, AAB comme
+// APK : mieux vaut aucun binaire qu'une carte vide publiée (build 143). Les
+// builds debug et ceux de dev/staging ne sont pas concernés.
+val requireAndroidMapsKeyForProduction = tasks.register("requireAndroidMapsKeyForProduction") {
+    val production = isProductionEnvironment
+    val androidKey = googleMapsAndroidApiKey
+    doLast {
+        if (production && androidKey.isBlank()) {
+            throw GradleException(
+                "GOOGLE_MAPS_ANDROID_API_KEY absente pour un build release de production. " +
+                    "La renseigner dans env.prod.json (clé yadony-prod-android) ou l'exporter. " +
+                    "GOOGLE_MAPS_API_KEY est la clé iOS : le SDK Maps Android la refuse."
+            )
+        }
+    }
 }
 
 tasks.matching { it.name.startsWith("bundle") && it.name.endsWith("Release") }
     .configureEach { dependsOn(verifyAndroidReleaseConfig) }
+
+tasks.matching {
+    (it.name.startsWith("bundle") || it.name.startsWith("assemble")) && it.name.endsWith("Release")
+}.configureEach { dependsOn(requireAndroidMapsKeyForProduction) }
 
 flutter {
     source = "../.."
