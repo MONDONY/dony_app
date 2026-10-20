@@ -82,7 +82,8 @@ TripWallTime tripWallTime(
   );
 }
 
-const _vowels = 'AEIOUÀÂÄÉÈÊËÎÏÔÖÙÛÜ';
+const _vowels =
+    'AEIOUÀÂÄÉÈÊËÎÏÔÖÙÛÜ'; // i18n-ignore : voyelles pour l'élision, pas un texte affiché
 
 /// « 20:30 », ou « 20:30, heure de Paris » / « 8:30 PM, Paris time » quand
 /// le fuseau du trajet diffère de celui de l'appareil. [city] = ville de
