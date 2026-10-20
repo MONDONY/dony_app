@@ -256,7 +256,6 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_picker_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_identify_screen.dart';
@@ -783,12 +782,12 @@ final appRouter = GoRouter(
     ),
 
     // ── Routes plein écran (hors shell) ─────────────────────────────────
+    // Ancien lecteur QR plein écran, remplacé par Suivi › Valider
+    // (YADONY-FLUTTER-PROD-1S) : la route reste pour les vieux liens et le
+    // deep link `yadony://tracking/scan`.
     GoRoute(
       path: '/tracking/scan',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<TrackingBloc>(),
-        child: const QrScannerScreen(),
-      ),
+      redirect: (_, _) => '/tracking?mode=${SuiviMode.valider.name}',
     ),
     // Mode Valider sur le trajet d'un colis, poussé depuis son détail : le
     // retour ramène au colis, ce que l'onglet Suivi (go) ne permettait pas

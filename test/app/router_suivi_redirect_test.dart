@@ -48,4 +48,14 @@ void main() {
       '/tracking?mode=valider',
     );
   });
+
+  // Ancien lecteur QR plein écran (YADONY-FLUTTER-PROD-1S) : vieux liens et
+  // deep link `yadony://tracking/scan` ouvrent Suivi › Valider.
+  test('/tracking/scan → onglet Suivi, mode Valider', () async {
+    final redirect = find('/tracking/scan').redirect!;
+    expect(
+      await redirect(_MockContext(), _MockState()),
+      '/tracking?mode=valider',
+    );
+  });
 }

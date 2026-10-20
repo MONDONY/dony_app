@@ -4205,10 +4205,6 @@
   "ticketStatusNoShowLabel": "No-show",
   "ticketStatusParcelRefusedLabel": "Parcel refused",
   "ticketStatusExpiredLabel": "Expired",
-  "ticketScanQrActionLabel": "Scan the parcel QR",
-  "ticketScanQrActionHint": "At drop-off, scan the sender's QR.",
-  "ticketConfirmDeliveryActionLabel": "Confirm the delivery",
-  "ticketConfirmDeliveryActionHint": "On arrival, enter the sender's pickup code.",
   "ticketShareTrackingMessage": "Track my Yadony parcel #{trackingNumber}",
   "ticketShareTrackingMessageWithLink": "Track my Yadony parcel #{trackingNumber} in real time:\n{link}",
   "ticketTrackingNumberSectionLabel": "TRACKING NUMBER",
@@ -6041,38 +6037,6 @@
       }
     }
   },
-  "scanDepartureTitle": "Departure scan",
-  "@scanDepartureTitle": {
-    "description": "Titre de l'écran de lecture QR au départ (qr_scanner_screen.dart)."
-  },
-  "scanQrReadTitle": "QR scanned",
-  "@scanQrReadTitle": {
-    "description": "Titre de la feuille de confirmation après lecture d'un QR (qr_scanner_screen.dart, _ScanConfirmSheet)."
-  },
-  "scanStepIndicatorStatic": "STEP 1 OF 3",
-  "@scanStepIndicatorStatic": {
-    "description": "Indicateur de progression de l'écran de lecture au départ (qr_scanner_screen.dart), toujours étape 1 sur 3 : c'est le premier des trois scans du parcours."
-  },
-  "scanConfirmedInSuitcase": "Parcel loaded in the suitcase",
-  "@scanConfirmedInSuitcase": {
-    "description": "Sous-titre de l'indicateur de progression de qr_scanner_screen.dart."
-  },
-  "scanPhotoWordLabel": "Photo",
-  "@scanPhotoWordLabel": {
-    "description": "Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart."
-  },
-  "scanConfirmAndContinue": "Confirm & continue",
-  "@scanConfirmAndContinue": {
-    "description": "Bouton principal de qr_scanner_screen.dart."
-  },
-  "scanTrackingNumberDialogTitle": "Tracking number",
-  "@scanTrackingNumberDialogTitle": {
-    "description": "Titre du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart)."
-  },
-  "scanTrackingNumberDialogBody": "Enter the parcel's DON-XXXXXX number to scan.",
-  "@scanTrackingNumberDialogBody": {
-    "description": "Corps du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart)."
-  },
   "scanNumberNotFound": "Number not found. Check and try again.",
   "@scanNumberNotFound": {
     "description": "Erreur de numéro de suivi introuvable (qr_scanner_screen.dart, scan_identify_screen.dart)."
@@ -6080,10 +6044,6 @@
   "scanQueuedTitle": "Scan pending",
   "@scanQueuedTitle": {
     "description": "Titre du dialogue de lecture mise en file d'attente hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart)."
-  },
-  "scanQueuedNoConnectionBodyLong": "No internet connection. The scan will sync automatically once you're back online.",
-  "@scanQueuedNoConnectionBodyLong": {
-    "description": "Corps du dialogue hors-ligne de qr_scanner_screen.dart."
   },
   "scanUnderstoodButton": "Got it",
   "@scanUnderstoodButton": {
@@ -6097,37 +6057,13 @@
   "@scanRecordedTitle": {
     "description": "Titre affiché après une lecture QR réussie non finale (qr_scanner_screen.dart, scan_confirm_screen.dart)."
   },
-  "scanEventTypeSectionLabel": "Step type",
-  "@scanEventTypeSectionLabel": {
-    "description": "Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
-  },
-  "scanArrivalNextStepsHint": "To hand over the parcel, take a photo of it, then enter the 6-digit pickup code the recipient gives you.",
-  "@scanArrivalNextStepsHint": {
-    "description": "Explication de la feuille du scanner QR quand l'étape Arrivée est choisie : la remise continue sur l'écran photo puis l'écran du code (qr_scanner_screen.dart, _ScanConfirmSheet)."
-  },
-  "scanArrivalTakePhotoButton": "Take the parcel photo",
-  "@scanArrivalTakePhotoButton": {
-    "description": "Bouton de la feuille du scanner QR, étape Arrivée : ferme la feuille et ouvre l'écran photo de la remise (qr_scanner_screen.dart, _ScanConfirmSheet)."
-  },
   "scanPhotoOfParcelLabel": "Parcel photo",
   "@scanPhotoOfParcelLabel": {
     "description": "Libellé/titre de la section photo (qr_scanner_screen.dart, scan_photo_screen.dart)."
   },
-  "scanRemovePhotoSemantics": "Remove the photo",
-  "@scanRemovePhotoSemantics": {
-    "description": "Libellé Semantics du bouton de suppression de la photo prise (qr_scanner_screen.dart, _ScanConfirmSheet)."
-  },
   "scanGpsLocationSaved": "GPS location recorded",
   "@scanGpsLocationSaved": {
     "description": "Repli affiché quand une position GPS est enregistrée sans libellé de lieu résolu (qr_scanner_screen.dart, scan_confirm_screen.dart)."
-  },
-  "scanPhotoTooLargeFixed": "Photo too large (max 10 MB). Try again.",
-  "@scanPhotoTooLargeFixed": {
-    "description": "Message d'erreur photo trop lourde à taille fixe (qr_scanner_screen.dart:1141), distinct de scanPhotoTooLarge (« MB » au lieu de « Mo », taille non dynamique)."
-  },
-  "scanSubmittingRecording": "Saving...",
-  "@scanSubmittingRecording": {
-    "description": "Libellé du bouton pendant l'enregistrement d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
   "scanConfirmDeliveryButton": "Confirm delivery",
   "@scanConfirmDeliveryButton": {

@@ -8187,20 +8187,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ticketStatusExpiredLabel => 'Expiré';
 
   @override
-  String get ticketScanQrActionLabel => 'Lire le QR du colis';
-
-  @override
-  String get ticketScanQrActionHint =>
-      'À la remise, lisez le QR de l\'expéditeur.';
-
-  @override
-  String get ticketConfirmDeliveryActionLabel => 'Confirmer la livraison';
-
-  @override
-  String get ticketConfirmDeliveryActionHint =>
-      'À l\'arrivée, saisissez le code de retrait de l\'expéditeur.';
-
-  @override
   String ticketShareTrackingMessage(String trackingNumber) {
     return 'Suivez mon colis Yadony #$trackingNumber';
   }
@@ -10745,39 +10731,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get scanDepartureTitle => 'Lecture au départ';
-
-  @override
-  String get scanQrReadTitle => 'QR lu';
-
-  @override
-  String get scanStepIndicatorStatic => 'ÉTAPE 1 SUR 3';
-
-  @override
-  String get scanConfirmedInSuitcase => 'Colis confirmé en valise';
-
-  @override
-  String get scanPhotoWordLabel => 'Photo';
-
-  @override
-  String get scanConfirmAndContinue => 'Confirmer & continuer';
-
-  @override
-  String get scanTrackingNumberDialogTitle => 'Numéro de suivi';
-
-  @override
-  String get scanTrackingNumberDialogBody =>
-      'Entrez le numéro DON-XXXXXX du colis à lire.';
-
-  @override
   String get scanNumberNotFound => 'Numéro introuvable. Vérifiez et réessayez.';
 
   @override
   String get scanQueuedTitle => 'Lecture en attente';
-
-  @override
-  String get scanQueuedNoConnectionBodyLong =>
-      'Pas de connexion internet. La lecture sera synchronisée automatiquement dès que vous serez en ligne.';
 
   @override
   String get scanUnderstoodButton => 'Compris';
@@ -10789,30 +10746,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get scanRecordedTitle => 'Lecture enregistrée !';
 
   @override
-  String get scanEventTypeSectionLabel => 'Type d\'étape';
-
-  @override
-  String get scanArrivalNextStepsHint =>
-      'Pour remettre le colis, prenez-le en photo, puis saisissez le code de retrait à 6 chiffres que vous donne le destinataire.';
-
-  @override
-  String get scanArrivalTakePhotoButton => 'Prendre la photo du colis';
-
-  @override
   String get scanPhotoOfParcelLabel => 'Photo du colis';
 
   @override
-  String get scanRemovePhotoSemantics => 'Supprimer la photo';
-
-  @override
   String get scanGpsLocationSaved => 'Lieu GPS enregistré';
-
-  @override
-  String get scanPhotoTooLargeFixed =>
-      'Photo trop lourde (max 10 MB). Réessayez.';
-
-  @override
-  String get scanSubmittingRecording => 'Enregistrement...';
 
   @override
   String get scanConfirmDeliveryButton => 'Confirmer la livraison';

@@ -83,8 +83,9 @@ Future<void> _pump(
         ),
       ),
       GoRoute(
-        path: '/tracking/scan',
-        builder: (_, _) => const Scaffold(body: Text('scan')),
+        path: '/tracking/validate',
+        builder: (_, state) =>
+            Scaffold(appBar: AppBar(), body: Text('validate ${state.uri}')),
       ),
       GoRoute(
         path: '/home',
@@ -129,10 +130,6 @@ Future<GoRouter> _pumpFromRoot(WidgetTester tester, MockBidBloc bidBloc) async {
         path: '/bids/:id',
         builder: (_, state) =>
             Scaffold(body: Text('Bid detail ${state.pathParameters['id']}')),
-      ),
-      GoRoute(
-        path: '/tracking/scan',
-        builder: (_, _) => const Scaffold(body: Text('scan')),
       ),
     ],
   );
@@ -737,19 +734,38 @@ void main() {
 
   // ── Scanner chip button ─────────────────────────────────────────────────────
 
-  testWidgets('tap sur Scanner navigue vers /tracking/scan', (tester) async {
-    final ctrl = _wireStates(bidBloc, tester);
-    addTearDown(ctrl.close);
+  testWidgets(
+    'Lire le QR ouvre Suivi › Valider sur ce trajet, liste rechargée au retour',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc, tester);
+      addTearDown(ctrl.close);
 
-    await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
-    await tester.pumpAndSettle();
+      await _pump(tester, bidBloc);
+      ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+      await tester.pumpAndSettle();
+      clearInteractions(bidBloc);
 
-    await tester.tap(find.text('Lire le QR'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Lire le QR'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('scan'), findsOneWidget);
-  });
+      // Poussé par-dessus la liste (pas l'ancien lecteur plein écran).
+      expect(
+        find.text('validate /tracking/validate?trip=ann-1'),
+        findsOneWidget,
+      );
+      verifyNever(() => bidBloc.add(any(that: isA<BidListRequested>())));
+
+      GoRouter.of(tester.element(find.textContaining('validate'))).pop();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Lire le QR'), findsOneWidget);
+      final added = verify(
+        () => bidBloc.add(captureAny(that: isA<BidListRequested>())),
+      ).captured;
+      expect(added, hasLength(1));
+      expect((added.single as BidListRequested).announcementId, 'ann-1');
+    },
+  );
 
   // ── Bouton Retour avec canPop ───────────────────────────────────────────────
 

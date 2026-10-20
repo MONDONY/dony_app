@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -151,6 +152,16 @@ class _BidListView extends StatelessWidget {
     return DateFormat.MMMMEEEEd(locale).format(date);
   }
 
+  /// « Lire le QR » : Suivi › Valider sur ce trajet, poussé par-dessus la
+  /// liste (YADONY-FLUTTER-PROD-1S). Le retour ramène ici, liste rechargée :
+  /// un colis validé a pu changer de statut.
+  Future<void> _openTripValidation(BuildContext context) async {
+    await pushTripValidation(context, announcementId);
+    if (context.mounted) {
+      context.read<BidBloc>().add(BidListRequested(announcementId));
+    }
+  }
+
   Future<void> _openPending(BuildContext context) async {
     await context.push('/announcements/$announcementId/bids/pending');
     if (context.mounted) {
@@ -222,7 +233,7 @@ class _BidListView extends StatelessWidget {
                       const SizedBox(width: DonySpacing.sm),
                     ],
                     _ScannerChipButton(
-                      onTap: () => context.push('/tracking/scan'),
+                      onTap: () => _openTripValidation(context),
                     ),
                   ],
                 ),
