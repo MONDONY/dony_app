@@ -98,9 +98,15 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// permis : les « Qui paie ? » suivants ne le rechargent pas.
   bool _payerConfigured = false;
 
-  /// Échéance de repli, figée au premier besoin pour que l'anneau ne reparte
-  /// pas à chaque reconstruction.
-  DateTime? _fallbackDeadline;
+  /// Échéance de repli d'un dépôt sans échéance serveur, figée au premier
+  /// besoin pour que l'anneau ne reparte pas à chaque reconstruction, et
+  /// rattachée à l'identifiant du dépôt : un nouveau dépôt a sa propre fenêtre.
+  ({String depositId, DateTime at})? _fallbackDeadline;
+
+  /// Une vérification de paiement (biométrie, PIN) est en cours : « Payer » et
+  /// « Renvoyer une demande » sont grisés, un double appui ne lance pas deux
+  /// vérifications. Écouté par `ValueListenableBuilder`, jamais par `setState`.
+  final ValueNotifier<bool> _verifying = ValueNotifier(false);
 
   @override
   void initState() {
@@ -172,12 +178,13 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// opérateurs que le voyageur accepte. Première étape « Qui paie ? » :
   /// `configure` (charge le catalogue). Suivantes : seule la restriction est
   /// remise à jour, le compte déjà saisi n'est pas rechargé. Une liste vide
-  /// vaut « aucune restriction » (elle bloquerait tous les opérateurs, et le
-  /// back revérifie à l'initiation).
+  /// restreint à rien (tous les opérateurs grisés « Non accepté », le back
+  /// refuserait de toute façon) ; `null` seulement quand les opérateurs
+  /// acceptés sont inconnus (back ancien, lecture en échec) : aucune
+  /// restriction.
   void _syncPayerAccount(MobileMoneyPaymentChoosePayer state) {
     final cubit = context.read<PayerAccountCubit>();
-    final providers = state.accepted?.providers;
-    final allowed = providers == null || providers.isEmpty ? null : providers;
+    final allowed = state.accepted?.providers;
     if (_payerConfigured) {
       cubit.restrictOperators(allowed);
       return;
@@ -207,13 +214,21 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
 
   /// Un dépôt est un paiement : même confirmation (accessibilité, biométrie,
   /// PIN) que tout autre. Refusé, ou écran quitté pendant la vérification,
-  /// rien n'est lancé.
+  /// rien n'est lancé. Pendant une vérification déjà en cours, un second appui
+  /// est ignoré.
   Future<bool> _confirmPayment() async {
-    final authenticated = await requirePaymentAuth(
-      context,
-      authService: getIt<LocalAuthService>(),
-      userPrefs: getIt<HiveService>().userPrefs,
-    );
+    if (_verifying.value) return false;
+    _verifying.value = true;
+    final bool authenticated;
+    try {
+      authenticated = await requirePaymentAuth(
+        context,
+        authService: getIt<LocalAuthService>(),
+        userPrefs: getIt<HiveService>().userPrefs,
+      );
+    } finally {
+      if (mounted) _verifying.value = false;
+    }
     if (!mounted) return false;
     if (!authenticated) {
       DonySnackbar.show(
@@ -275,6 +290,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     _pollingTimer?.cancel();
     _countdownTimer?.cancel();
     _remaining.dispose();
+    _verifying.dispose();
     _legacyPhoneController.dispose();
     super.dispose();
   }
@@ -395,9 +411,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
       ),
       final MobileMoneyPaymentAwaitingConfirmation s => _AwaitingBody(
         status: s.status,
-        fallbackDeadline: _fallbackDeadline ??= DateTime.now().add(
-          _fallbackWindow,
-        ),
+        fallbackDeadline: _fallbackDeadlineFor(s.status),
       ),
       MobileMoneyPaymentOverdue() => MobileMoneyOutcomeBody(
         iconAsset: 'clock',
@@ -431,15 +445,31 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     };
   }
 
+  /// Échéance du dépôt de [status] quand le serveur n'en a pas rendu : une
+  /// fenêtre de [_fallbackWindow] à partir de la première fois qu'on le voit.
+  DateTime _fallbackDeadlineFor(MobileMoneyPaymentStatus status) {
+    final depositId = status.deposit?.id ?? '';
+    final known = _fallbackDeadline;
+    if (known != null && known.depositId == depositId) return known.at;
+    final at = DateTime.now().add(_fallbackWindow);
+    _fallbackDeadline = (depositId: depositId, at: at);
+    return at;
+  }
+
   /// Boutons du bas : « Payer » à l'étape « Qui paie ? », « Renvoyer une
   /// demande » (seulement avec un numéro complet connu) et « Payer avec un
   /// autre numéro » après un refus. Aucun pendant l'attente : seul le ✕ fait
   /// sortir.
   Widget _bottomFor(BuildContext context, MobileMoneyPaymentState state) =>
       switch (state) {
-        final MobileMoneyPaymentChoosePayer s => _PayBar(state: s, onPay: _pay),
+        final MobileMoneyPaymentChoosePayer s => _PayBar(
+          state: s,
+          verifying: _verifying,
+          onPay: _pay,
+        ),
         MobileMoneyPaymentDepositFailed() => _FailedBar(
           canResend: context.read<MobileMoneyPaymentBloc>().canResend,
+          verifying: _verifying,
           onResend: _resend,
           onChangePayer: _changePayer,
         ),
@@ -673,9 +703,14 @@ class _AcceptsLine extends StatelessWidget {
 /// quand le numéro est reconnu (ou, sans catalogue, toujours), grisé pendant
 /// l'envoi.
 class _PayBar extends StatelessWidget {
-  const _PayBar({required this.state, required this.onPay});
+  const _PayBar({
+    required this.state,
+    required this.verifying,
+    required this.onPay,
+  });
 
   final MobileMoneyPaymentChoosePayer state;
+  final ValueListenable<bool> verifying;
   final VoidCallback onPay;
 
   @override
@@ -693,13 +728,16 @@ class _PayBar extends StatelessWidget {
         builder: (context, payer) {
           final ready =
               payer.status == PayerAccountStatus.legacy || payer.canProceed;
-          return DonyButton(
-            label: l.mobileMoneyPay(
-              formatPriceIn(status.amount ?? 0, status.currency),
+          return ValueListenableBuilder<bool>(
+            valueListenable: verifying,
+            builder: (context, busy, _) => DonyButton(
+              label: l.mobileMoneyPay(
+                formatPriceIn(status.amount ?? 0, status.currency),
+              ),
+              iconAsset: 'smartphone',
+              isLoading: state.isSubmitting,
+              onPressed: state.isSubmitting || busy || !ready ? null : onPay,
             ),
-            iconAsset: 'smartphone',
-            isLoading: state.isSubmitting,
-            onPressed: state.isSubmitting || !ready ? null : onPay,
           );
         },
       ),
@@ -713,11 +751,13 @@ class _PayBar extends StatelessWidget {
 class _FailedBar extends StatelessWidget {
   const _FailedBar({
     required this.canResend,
+    required this.verifying,
     required this.onResend,
     required this.onChangePayer,
   });
 
   final bool canResend;
+  final ValueListenable<bool> verifying;
   final VoidCallback onResend;
   final VoidCallback onChangePayer;
 
@@ -736,10 +776,13 @@ class _FailedBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (canResend) ...[
-            DonyButton(
-              key: const Key('mobile-money-awaiting-resend'),
-              label: l.walletTopupMmResend,
-              onPressed: onResend,
+            ValueListenableBuilder<bool>(
+              valueListenable: verifying,
+              builder: (context, busy, _) => DonyButton(
+                key: const Key('mobile-money-awaiting-resend'),
+                label: l.walletTopupMmResend,
+                onPressed: busy ? null : onResend,
+              ),
             ),
             const SizedBox(height: DonySpacing.sm),
           ],

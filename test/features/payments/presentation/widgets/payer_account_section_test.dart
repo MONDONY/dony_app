@@ -647,6 +647,49 @@ void main() {
       expect(find.textContaining('Ce paiement se fait en'), findsNothing);
     });
 
+    testWidgets(
+      'réduction du mouvement : le retour du numéro change de taille sans '
+      'AnimatedSize ni exception',
+      (tester) async {
+        final controller = stubPayerAccount(cubit, kPayerRecognized);
+        addTearDown(controller.close);
+        await tester.pumpWidget(harness(disableAnimations: true));
+        await tester.pump();
+
+        expect(
+          find.descendant(
+            of: find.byType(PayerAccountSection),
+            matching: find.byType(AnimatedSize),
+          ),
+          findsNothing,
+        );
+
+        // Message présent, puis absent, puis plus long : la taille de la zone
+        // de retour change à chaque étape.
+        controller.add(
+          kPayerRecognized.copyWith(recognition: RecognitionStatus.idle),
+        );
+        await tester.pump();
+        controller.add(
+          kPayerRecognized.copyWith(
+            recognition: RecognitionStatus.unrecognized,
+          ),
+        );
+        await tester.pump();
+        controller.add(
+          kPayerRecognized.copyWith(recognition: RecognitionStatus.failed),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+        expect(
+          find.text('Vérification impossible pour le moment.'),
+          findsOneWidget,
+        );
+      },
+    );
+
     testWidgets('anglais : libellés traduits', (tester) async {
       final controller = stubPayerAccount(
         cubit,

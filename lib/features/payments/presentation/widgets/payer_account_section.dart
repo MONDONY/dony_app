@@ -687,30 +687,30 @@ class _Feedback extends StatelessWidget {
       };
     }
 
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final child = content == null
+        ? const SizedBox(width: double.infinity)
+        : Padding(
+            key: content.key,
+            padding: const EdgeInsets.only(
+              top: DonySpacing.sm,
+              left: DonySpacing.xs,
+              right: DonySpacing.xs,
+            ),
+            child: content,
+          );
+    // Mouvement réduit : l'enfant direct. Un `AnimatedSize` à durée nulle
+    // lève, en debug, « RenderAnimatedSize was mutated in its own
+    // performLayout » quand la taille change.
+    if (MediaQuery.disableAnimationsOf(context)) return child;
     return AnimatedSize(
-      duration: reduceMotion
-          ? Duration.zero
-          : const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 200),
       curve: Curves.easeOutCubic,
       alignment: Alignment.topCenter,
       child: AnimatedSwitcher(
-        duration: reduceMotion
-            ? Duration.zero
-            : const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 200),
         switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
-        child: content == null
-            ? const SizedBox(width: double.infinity)
-            : Padding(
-                key: content.key,
-                padding: const EdgeInsets.only(
-                  top: DonySpacing.sm,
-                  left: DonySpacing.xs,
-                  right: DonySpacing.xs,
-                ),
-                child: content,
-              ),
+        child: child,
       ),
     );
   }

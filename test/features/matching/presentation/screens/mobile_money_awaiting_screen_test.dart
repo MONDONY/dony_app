@@ -19,6 +19,7 @@ import 'package:dony/features/matching/presentation/screens/mobile_money_awaitin
 import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
 import 'package:dony/features/payments/bloc/payer_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_awaiting_ring.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -551,9 +552,7 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('choosePayer_acceptedEmpty_noOperatorRestriction', (
-      tester,
-    ) async {
+    testWidgets('choosePayer_acceptedEmpty_restrictsToNothing', (tester) async {
       stub(
         const MobileMoneyPaymentChoosePayer(
           status: noDepositStatus,
@@ -563,13 +562,34 @@ void main() {
 
       await pumpScreen(tester);
 
-      // Une liste vide bloquerait tous les opérateurs : le back revérifie.
+      // Le voyageur n'accepte aucun opérateur : tout est grisé (le back
+      // refuserait de toute façon), jamais « aucune restriction ».
       verify(
-        () => payerCubit.configure(
-          currency: 'XOF',
-          allowedOperators: any(named: 'allowedOperators', that: isNull),
-        ),
+        () =>
+            payerCubit.configure(currency: 'XOF', allowedOperators: <String>{}),
       ).called(1);
+    });
+
+    testWidgets('choosePayer_acceptedEmpty_allOperatorsGreyedAndPayDisabled', (
+      tester,
+    ) async {
+      payerOn(
+        kPayerReady.copyWith(
+          country: kCoteDIvoire,
+          allowedOperators: <String>{},
+        ),
+      );
+      stub(
+        const MobileMoneyPaymentChoosePayer(
+          status: noDepositStatus,
+          accepted: MobileMoneyAcceptedOperators(),
+        ),
+      );
+
+      await pumpScreen(tester);
+
+      expect(find.text('Non accepté'), findsNWidgets(2));
+      expect(tester.widget<DonyButton>(payButton()).onPressed, isNull);
     });
 
     testWidgets('choosePayer_disallowedOperatorGreyed', (tester) async {
@@ -981,6 +1001,45 @@ void main() {
       ).called(1);
     });
 
+    testWidgets('choosePayer_doubleTap_runsOnlyOneAuthentication', (
+      tester,
+    ) async {
+      when(
+        () => userPrefsBox.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(true);
+      final gate = Completer<bool>();
+      when(
+        () => authService.isBiometricAvailable(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => authService.authenticateWithBiometric(),
+      ).thenAnswer((_) => gate.future);
+      stub(const MobileMoneyPaymentChoosePayer(status: noDepositStatus));
+
+      await pumpScreen(tester);
+      await tester.tap(payButton());
+      await tester.pump();
+      // Vérification en cours : le bouton est grisé, un second appui ne fait
+      // rien.
+      expect(tester.widget<DonyButton>(payButton()).onPressed, isNull);
+      await tester.tap(payButton(), warnIfMissed: false);
+      await tester.pump();
+
+      gate.complete(true);
+      await tester.pump();
+      await tester.pump();
+
+      verify(() => authService.authenticateWithBiometric()).called(1);
+      verify(
+        () => bloc.add(any(that: isA<MobileMoneyPaymentInitiateRequested>())),
+      ).called(1);
+      // Vérification terminée : le bouton redevient actif.
+      expect(tester.widget<DonyButton>(payButton()).onPressed, isNotNull);
+    });
+
     testWidgets('choosePayer_darkTheme_noOverflow', (tester) async {
       tester.view.physicalSize = const Size(320 * 3, 640 * 3);
       tester.view.devicePixelRatio = 3;
@@ -1141,6 +1200,51 @@ void main() {
       expect(find.text('Demande envoyée au +225 07 •• •• 56'), findsOneWidget);
     });
 
+    MobileMoneyPaymentStatus noDeadlineStatus(String depositId) =>
+        MobileMoneyPaymentStatus(
+          subjectId: bidId,
+          paymentStatus: 'PENDING',
+          amount: 12500,
+          deposit: MobileMoneyDeposit(
+            id: depositId,
+            status: MobileMoneyDepositStatus.accepted,
+            providerLabel: 'Orange Money',
+            msisdnMasked: '+225 07 •• •• 56',
+          ),
+        );
+
+    DateTime ringExpiry(WidgetTester tester) => tester
+        .widget<MobileMoneyAwaitingRing>(find.byType(MobileMoneyAwaitingRing))
+        .expiresAt;
+
+    testWidgets('awaiting_noServerDeadline_fallbackIsPerDeposit', (
+      tester,
+    ) async {
+      final controller = StreamController<MobileMoneyPaymentState>.broadcast();
+      addTearDown(controller.close);
+      final emit = drive(const MobileMoneyPaymentLoading(), controller);
+
+      await pumpScreen(tester);
+      emit(MobileMoneyPaymentAwaitingConfirmation(noDeadlineStatus('d1')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      final first = ringExpiry(tester);
+
+      // Même dépôt revu (sondage) : la même échéance, l'anneau ne repart pas.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 30)),
+      );
+      emit(MobileMoneyPaymentAwaitingConfirmation(noDeadlineStatus('d1')));
+      await tester.pump();
+      expect(ringExpiry(tester), first);
+
+      // Nouveau dépôt (renvoi) : sa propre fenêtre, pas celle de l'ancien.
+      emit(MobileMoneyPaymentAwaitingConfirmation(noDeadlineStatus('d2')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(ringExpiry(tester).isAfter(first), isTrue);
+    });
+
     testWidgets('awaiting_closeButton_popsFalse', (tester) async {
       stub(MobileMoneyPaymentAwaitingConfirmation(awaitingStatus()));
 
@@ -1274,6 +1378,51 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
+      verify(
+        () => bloc.add(const MobileMoneyPaymentResendRequested(scope: scope)),
+      ).called(1);
+    });
+
+    testWidgets('failed_resendDoubleTap_runsOnlyOneAuthentication', (
+      tester,
+    ) async {
+      when(
+        () => userPrefsBox.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(true);
+      final gate = Completer<bool>();
+      when(
+        () => authService.isBiometricAvailable(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => authService.authenticateWithBiometric(),
+      ).thenAnswer((_) => gate.future);
+      stub(MobileMoneyPaymentDepositFailed(failedStatus(code: 'not-approved')));
+
+      await pumpScreen(tester);
+      await tester.tap(find.text('Renvoyer une demande'));
+      await tester.pump();
+      expect(
+        tester
+            .widget<DonyButton>(
+              find.byKey(const Key('mobile-money-awaiting-resend')),
+            )
+            .onPressed,
+        isNull,
+      );
+      await tester.tap(
+        find.byKey(const Key('mobile-money-awaiting-resend')),
+        warnIfMissed: false,
+      );
+      await tester.pump();
+
+      gate.complete(true);
+      await tester.pump();
+      await tester.pump();
+
+      verify(() => authService.authenticateWithBiometric()).called(1);
       verify(
         () => bloc.add(const MobileMoneyPaymentResendRequested(scope: scope)),
       ).called(1);
