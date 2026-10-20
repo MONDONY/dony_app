@@ -106,4 +106,21 @@ void main() {
     );
     handle.dispose();
   });
+
+  testWidgets('pastille argent : fond gris clair, texte gris-bleu foncé', (
+    tester,
+  ) async {
+    await tester.pumpWidget(subject());
+    final box = tester.widget<Container>(
+      find
+          .ancestor(
+            of: find.text(l.gpProBadgeLabel),
+            matching: find.byType(Container),
+          )
+          .first,
+    );
+    expect((box.decoration! as BoxDecoration).color, const Color(0xFFE6EAF0));
+    final text = tester.widget<Text>(find.text(l.gpProBadgeLabel));
+    expect(text.style?.color, const Color(0xFF3A4556));
+  });
 }

@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 enum DonyAvatarSize { xs, sm, md, lg, xl }
 
 const Color _kVerifiedBlue = DonyColors.primary;
-const Color _kVerifiedGold = Color(0xFFF0B829);
 
 class DonyAvatar extends StatelessWidget {
   const DonyAvatar({
@@ -18,13 +17,19 @@ class DonyAvatar extends StatelessWidget {
     this.size = DonyAvatarSize.md,
     this.verified = false,
     this.pro = false,
+    this.gpPro = false,
   });
 
   final String name;
   final String? imageUrl;
   final DonyAvatarSize size;
   final bool verified;
+
+  /// Compte PRO : coche dorée (prime sur [gpPro]).
   final bool pro;
+
+  /// Voyageur GP Pro : coche argent, sauf si le compte est aussi PRO.
+  final bool gpPro;
 
   double get _dimension => switch (size) {
     DonyAvatarSize.xs => 24,
@@ -120,29 +125,49 @@ class DonyAvatar extends StatelessWidget {
           Positioned(
             right: -dim * 0.02,
             bottom: 0,
-            child: _VerifiedBadge(size: dim * 0.30, isPro: pro),
+            child: DonyVerifiedBadge(size: dim * 0.30, pro: pro, gpPro: gpPro),
           ),
       ],
     );
   }
 }
 
-class _VerifiedBadge extends StatelessWidget {
-  const _VerifiedBadge({required this.size, required this.isPro});
+/// Coche « identité vérifiée ». Sa couleur dit le niveau du compte : bleue pour
+/// un compte vérifié seul, argent pour un GP Pro, or pour un PRO (l'or prime
+/// quand le compte est PRO et GP Pro).
+class DonyVerifiedBadge extends StatelessWidget {
+  const DonyVerifiedBadge({
+    super.key,
+    required this.size,
+    this.pro = false,
+    this.gpPro = false,
+    this.ringColor = DonyColors.white,
+  });
 
   final double size;
-  final bool isPro;
+  final bool pro;
+  final bool gpPro;
+
+  /// Contour derrière la coche (blanc par défaut, couleur du fond sinon).
+  final Color ringColor;
+
+  @visibleForTesting
+  static Color colorFor({required bool pro, required bool gpPro}) {
+    if (pro) return DonyColors.kycBadgeGold;
+    if (gpPro) return DonyColors.kycBadgeSilver;
+    return _kVerifiedBlue;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final color = isPro ? _kVerifiedGold : _kVerifiedBlue;
+    final color = colorFor(pro: pro, gpPro: gpPro);
     return SizedBox(
       width: size,
       height: size,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          DonyIcon('badge-check', size: size, color: DonyColors.white),
+          DonyIcon('badge-check', size: size, color: ringColor),
           DonyIcon('badge-check', size: size * 0.88, color: color),
         ],
       ),

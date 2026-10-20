@@ -594,7 +594,7 @@ void main() {
     expect(find.byKey(const Key('profile-residence-country')), findsNothing);
   });
 
-  testWidgets('hero sans dégradé : initiales sur un aplat terre cuite', (
+  testWidgets('hero sans dégradé : initiales sur un aplat terre cuite pâle', (
     tester,
   ) async {
     await tester.pumpWidget(_wrapLoaded(profile: _profile));
@@ -626,7 +626,7 @@ void main() {
           .first,
     );
     final decoration = initials.decoration! as BoxDecoration;
-    expect(decoration.color, DonyColors.terra600);
+    expect(decoration.color, DonyColors.terra50);
     expect(decoration.gradient, isNull);
   });
 
@@ -1421,5 +1421,95 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('10/6/2026', skipOffstage: false), findsOneWidget);
+  });
+
+  // ── Bandeau bleu et coche selon le niveau du compte ───────────────────────
+
+  ProfilePublicModel tier({
+    bool kyc = true,
+    bool pro = false,
+    bool gp = false,
+  }) => ProfilePublicModel(
+    userId: _userId,
+    displayName: 'Awa Diallo',
+    kycVerified: kyc,
+    isProAccount: pro,
+    gpPro: gp,
+    completedBidsCount: 47,
+    averageRating: 4.9,
+    ratingCount: 32,
+    memberSince: 'mars 2025',
+    badges: const [],
+  );
+
+  Future<DonyVerifiedBadge?> pumpBadge(
+    WidgetTester tester,
+    ProfilePublicModel profile,
+  ) async {
+    await tester.pumpWidget(_wrapLoaded(profile: profile));
+    await tester.pump(const Duration(milliseconds: 600));
+    final finder = find.byKey(const Key('profile-public-verified-badge'));
+    return finder.evaluate().isEmpty
+        ? null
+        : tester.widget<DonyVerifiedBadge>(finder);
+  }
+
+  testWidgets('bandeau : aplat bleu Yadony (couleur primaire), sans dégradé', (
+    tester,
+  ) async {
+    await pumpBadge(tester, tier());
+    final band = tester.widget<Container>(
+      find.byKey(const Key('profile-public-band')),
+    );
+    final primary = Theme.of(
+      tester.element(find.byKey(const Key('profile-public-band'))),
+    ).colorScheme.primary;
+    expect(band.color, primary);
+    expect(band.decoration, isNull);
+  });
+
+  testWidgets('coche bleue : vérifié seul', (tester) async {
+    final badge = await pumpBadge(tester, tier());
+    expect(badge, isNotNull);
+    expect(badge!.pro, isFalse);
+    expect(badge.gpPro, isFalse);
+    expect(
+      DonyVerifiedBadge.colorFor(pro: badge.pro, gpPro: badge.gpPro),
+      DonyColors.primary,
+    );
+  });
+
+  testWidgets('coche argent : GP Pro vérifié', (tester) async {
+    final badge = await pumpBadge(tester, tier(gp: true));
+    expect(badge!.gpPro, isTrue);
+    expect(
+      DonyVerifiedBadge.colorFor(pro: badge.pro, gpPro: badge.gpPro),
+      DonyColors.kycBadgeSilver,
+    );
+  });
+
+  testWidgets('coche or : PRO vérifié', (tester) async {
+    final badge = await pumpBadge(tester, tier(pro: true));
+    expect(badge!.pro, isTrue);
+    expect(
+      DonyVerifiedBadge.colorFor(pro: badge.pro, gpPro: badge.gpPro),
+      DonyColors.kycBadgeGold,
+    );
+  });
+
+  testWidgets('coche or : PRO et GP Pro, le PRO prime', (tester) async {
+    final badge = await pumpBadge(tester, tier(pro: true, gp: true));
+    expect(badge!.pro, isTrue);
+    expect(badge.gpPro, isTrue);
+    expect(
+      DonyVerifiedBadge.colorFor(pro: badge.pro, gpPro: badge.gpPro),
+      DonyColors.kycBadgeGold,
+    );
+  });
+
+  testWidgets('pas de coche quand l\'identité n\'est pas vérifiée', (
+    tester,
+  ) async {
+    expect(await pumpBadge(tester, tier(kyc: false, gp: true)), isNull);
   });
 }
