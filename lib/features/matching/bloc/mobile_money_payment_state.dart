@@ -1,5 +1,5 @@
+import 'package:dony/features/matching/data/models/mobile_money_accepted_operators.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
-import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class MobileMoneyPaymentState extends Equatable {
@@ -17,43 +17,46 @@ class MobileMoneyPaymentLoading extends MobileMoneyPaymentState {
   const MobileMoneyPaymentLoading();
 }
 
-/// Étape « Avec quel opérateur ? » d'un bid : aucun dépôt encore lancé,
-/// l'expéditeur choisit son numéro payeur et son réseau parmi ceux acceptés
-/// par le voyageur. [catalog] nul pendant le premier chargement ; [error]
-/// porte un échec de catalogue (bandeau dans l'écran, jamais de snackbar).
-/// N'existe pas pour un fil de négociation : le back n'y expose pas de
-/// catalogue, l'initiation y reste directe (lot 2, inchangé).
-class MobileMoneyPaymentChooseOperator extends MobileMoneyPaymentState {
-  const MobileMoneyPaymentChooseOperator({
+/// Étape « Qui paie ? » d'un colis, d'un fil ou d'un supplément : aucun dépôt
+/// vivant, l'expéditeur saisit le numéro qui paie et choisit son opérateur.
+/// [accepted] liste les opérateurs que le voyageur accepte ; nul avec un back
+/// ancien (404) ou quand leur lecture a échoué : aucune restriction côté app,
+/// le back revérifie à l'initiation. [error] porte le refus d'une initiation
+/// (422, réseau), affiché en bandeau dans l'étape, jamais en snackbar.
+/// [isSubmitting] est vrai pendant l'appel `initiate`.
+class MobileMoneyPaymentChoosePayer extends MobileMoneyPaymentState {
+  const MobileMoneyPaymentChoosePayer({
     required this.status,
-    this.catalog,
-    this.payerPhone,
-    this.isLoadingCatalog = false,
+    this.accepted,
     this.error,
+    this.isSubmitting = false,
   });
   final MobileMoneyPaymentStatus status;
-  final MobileMoneyProviderCatalog? catalog;
-
-  /// Numéro payeur normalisé pour lequel le catalogue a été demandé ; nul
-  /// pour le numéro du bid.
-  final String? payerPhone;
-  final bool isLoadingCatalog;
+  final MobileMoneyAcceptedOperators? accepted;
   final Object? error;
+  final bool isSubmitting;
 
   @override
-  List<Object?> get props => [
-    status,
-    catalog,
-    payerPhone,
-    isLoadingCatalog,
-    error,
-  ];
+  List<Object?> get props => [status, accepted, error, isSubmitting];
 }
 
 /// Un dépôt est en cours côté opérateur (PIN à valider, ou redirection Wave
 /// à ouvrir) : l'écran d'attente reste affiché et le sondage continue.
 class MobileMoneyPaymentAwaitingConfirmation extends MobileMoneyPaymentState {
   const MobileMoneyPaymentAwaitingConfirmation(this.status);
+  final MobileMoneyPaymentStatus status;
+
+  @override
+  List<Object?> get props => [status];
+}
+
+/// L'échéance est passée mais le dernier dépôt est encore ouvert côté
+/// opérateur (CREATED, ACCEPTED, PROCESSING) : le back n'annule rien tant que
+/// le dépôt n'a pas de statut final, un code validé à la dernière seconde
+/// aboutit encore. L'écran affiche « Pas encore validé » et le sondage
+/// continue jusqu'au séquestre, au refus ou à l'expiration.
+class MobileMoneyPaymentOverdue extends MobileMoneyPaymentState {
+  const MobileMoneyPaymentOverdue(this.status);
   final MobileMoneyPaymentStatus status;
 
   @override
@@ -79,8 +82,8 @@ class MobileMoneyPaymentDepositFailed extends MobileMoneyPaymentState {
   List<Object?> get props => [status];
 }
 
-/// Le bid a été annulé, ou la fenêtre de 30 minutes pour payer est dépassée
-/// sans que le paiement ait été séquestré.
+/// Le bid a été annulé, ou la fenêtre pour payer est dépassée sans séquestre
+/// ni dépôt encore ouvert (sinon [MobileMoneyPaymentOverdue]).
 class MobileMoneyPaymentExpired extends MobileMoneyPaymentState {
   const MobileMoneyPaymentExpired(this.status);
   final MobileMoneyPaymentStatus status;

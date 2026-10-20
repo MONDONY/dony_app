@@ -19,4 +19,44 @@ void main() {
       ],
     );
   });
+
+  test(
+    'MobileMoneyPaymentOpened : seule la portée compte (plus de numéro)',
+    () {
+      expectValueEquality(
+        () => MobileMoneyPaymentOpened(scope: MobileMoneyScope.bid('b-1')),
+        [
+          MobileMoneyPaymentOpened(scope: MobileMoneyScope.bid('b-2')),
+          MobileMoneyPaymentOpened(scope: MobileMoneyScope.negotiation('b-1')),
+        ],
+      );
+    },
+  );
+
+  test('MobileMoneyPaymentResendRequested : la portée distingue', () {
+    expectValueEquality(
+      () =>
+          MobileMoneyPaymentResendRequested(scope: MobileMoneyScope.bid('b-1')),
+      [
+        MobileMoneyPaymentResendRequested(scope: MobileMoneyScope.bid('b-2')),
+        MobileMoneyPaymentChangePayerRequested(
+          scope: MobileMoneyScope.bid('b-1'),
+        ),
+      ],
+    );
+  });
+
+  test('MobileMoneyPaymentChangePayerRequested : la portée distingue', () {
+    expectValueEquality(
+      () => MobileMoneyPaymentChangePayerRequested(
+        scope: MobileMoneyScope.bid('b-1'),
+      ),
+      [
+        MobileMoneyPaymentChangePayerRequested(
+          scope: MobileMoneyScope.negotiation('b-1'),
+        ),
+        MobileMoneyPaymentResendRequested(scope: MobileMoneyScope.bid('b-1')),
+      ],
+    );
+  });
 }

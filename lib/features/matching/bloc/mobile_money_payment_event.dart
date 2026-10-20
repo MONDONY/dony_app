@@ -8,28 +8,23 @@ sealed class MobileMoneyPaymentEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Ouverture de l'écran d'attente : lit le statut courant de la portée
-/// ([MobileMoneyScope], un bid ou un fil de négociation). Sans dépôt vivant
-/// ni séquestre déjà atteint : pour un bid, charge le catalogue des réseaux
-/// acceptés par le voyageur et attend le choix de l'expéditeur (voir
-/// [MobileMoneyPaymentProvidersRequested]) ; pour un fil de négociation, le
-/// back n'expose pas de catalogue et l'initiation d'un premier dépôt est
-/// lancée directement, avec [phoneNumber] si l'appelant en connaît déjà un
-/// (numéro payeur pré-rempli).
+/// Ouverture de l'écran de paiement : lit le statut courant de la portée
+/// ([MobileMoneyScope] : un bid, un fil de négociation ou un supplément).
+/// Un dépôt déjà vivant reprend l'attente sans second dépôt ; sans dépôt
+/// vivant ni séquestre, les opérateurs acceptés par le voyageur sont lus et
+/// l'étape « Qui paie ? » s'affiche (`MobileMoneyPaymentChoosePayer`).
 class MobileMoneyPaymentOpened extends MobileMoneyPaymentEvent {
-  const MobileMoneyPaymentOpened({required this.scope, this.phoneNumber});
+  const MobileMoneyPaymentOpened({required this.scope});
   final MobileMoneyScope scope;
-  final String? phoneNumber;
 
   @override
-  List<Object?> get props => [scope, phoneNumber];
+  List<Object?> get props => [scope];
 }
 
 /// Lance un dépôt avec le numéro payeur ([phoneNumber], sinon celui du bid
-/// ou du fil) et l'opérateur choisi ([provider], sinon celui prédit par le
-/// back) : nouvel essai déclenché par l'utilisateur (lien expiré, dépôt
-/// refusé), ou validation du choix d'opérateur depuis
-/// [MobileMoneyPaymentChooseOperator].
+/// ou du fil côté back) et l'opérateur choisi ([provider], sinon celui prédit
+/// par le back) : validation de l'étape « Qui paie ? ». Un dépôt créé avec un
+/// numéro connu garde ce couple pour [MobileMoneyPaymentResendRequested].
 class MobileMoneyPaymentInitiateRequested extends MobileMoneyPaymentEvent {
   const MobileMoneyPaymentInitiateRequested({
     required this.scope,
@@ -44,20 +39,25 @@ class MobileMoneyPaymentInitiateRequested extends MobileMoneyPaymentEvent {
   List<Object?> get props => [scope, phoneNumber, provider];
 }
 
-/// (Re)charge le catalogue des réseaux avec lesquels l'expéditeur d'un bid
-/// peut payer, pour son numéro ([phoneNumber], sinon celui du bid). Depuis
-/// un dépôt refusé (`DepositFailed`), ramène à l'étape de choix de
-/// l'opérateur plutôt que de relancer directement un dépôt.
-class MobileMoneyPaymentProvidersRequested extends MobileMoneyPaymentEvent {
-  const MobileMoneyPaymentProvidersRequested({
-    required this.scope,
-    this.phoneNumber,
-  });
+/// « Renvoyer une demande » après un dépôt refusé : relance un dépôt avec le
+/// dernier couple numéro + opérateur connu. Sans couple connu (écran rouvert
+/// depuis une notification, numéro complet inconnu), ne fait rien.
+class MobileMoneyPaymentResendRequested extends MobileMoneyPaymentEvent {
+  const MobileMoneyPaymentResendRequested({required this.scope});
   final MobileMoneyScope scope;
-  final String? phoneNumber;
 
   @override
-  List<Object?> get props => [scope, phoneNumber];
+  List<Object?> get props => [scope];
+}
+
+/// « Payer avec un autre numéro » après un dépôt refusé : retour à l'étape
+/// « Qui paie ? », opérateurs acceptés réutilisés sans nouvel appel.
+class MobileMoneyPaymentChangePayerRequested extends MobileMoneyPaymentEvent {
+  const MobileMoneyPaymentChangePayerRequested({required this.scope});
+  final MobileMoneyScope scope;
+
+  @override
+  List<Object?> get props => [scope];
 }
 
 /// Sondage périodique du statut : silencieux, ne passe jamais par Loading
