@@ -3436,6 +3436,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPosterTitle => 'Mon affiche';
 
   @override
+  String get posterTitleShared => 'Affiche';
+
+  @override
   String get tripPosterNotFoundTitle => 'Trajet introuvable';
 
   @override

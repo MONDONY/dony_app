@@ -5795,6 +5795,12 @@ abstract class AppLocalizations {
   /// **'Mon affiche'**
   String get tripPosterTitle;
 
+  /// Titre de l'écran d'affiche (trajet ou demande) quand la personne qui la partage n'est pas l'auteur de l'annonce
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiche'**
+  String get posterTitleShared;
+
   /// Titre de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)
   ///
   /// In fr, this message translates to:
