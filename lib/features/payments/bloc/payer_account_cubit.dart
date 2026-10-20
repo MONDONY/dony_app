@@ -86,11 +86,15 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       );
       return;
     }
-    final wasRefused = state.recognition == RecognitionStatus.notAllowed;
+    final rejected = state.rejectedOperator;
+    final nowAccepted =
+        state.recognition == RecognitionStatus.notAllowed &&
+        rejected != null &&
+        _isAllowedBy(allowed, rejected);
     emit(state.copyWith(allowedOperators: allowed));
     final country = state.country;
     final e164 = state.e164;
-    if (wasRefused &&
+    if (nowAccepted &&
         operator != null &&
         country != null &&
         e164 != null &&
@@ -103,11 +107,13 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
   /// Charge le catalogue, puis préremplit pays, opérateur et numéro depuis la
   /// mémoire quand le pays est encore ouvert (et de la devise imposée) et
   /// l'opérateur encore proposé et permis.
+  ///
+  /// Restriction et devise sont relues dans [_allowed] / [_currency] à chaque
+  /// `emit` : un [restrictOperators] reçu pendant l'attente du catalogue ou de
+  /// la mémoire ne doit pas être écrasé par la valeur du début du chargement.
   Future<void> load() async {
     final generation = _newSession();
-    final allowed = _allowed;
-    final currency = _currency;
-    emit(PayerAccountState(allowedOperators: allowed, currency: currency));
+    emit(PayerAccountState(allowedOperators: _allowed, currency: _currency));
     final MobileMoneyCountries? loaded;
     try {
       loaded = await _repository.mobileMoneyCountries();
@@ -116,8 +122,8 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       emit(
         PayerAccountState(
           status: PayerAccountStatus.error,
-          allowedOperators: allowed,
-          currency: currency,
+          allowedOperators: _allowed,
+          currency: _currency,
         ),
       );
       return;
@@ -127,12 +133,13 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       emit(
         PayerAccountState(
           status: PayerAccountStatus.legacy,
-          allowedOperators: allowed,
-          currency: currency,
+          allowedOperators: _allowed,
+          currency: _currency,
         ),
       );
       return;
     }
+    final currency = _currency;
     final countries = currency == null ? loaded : loaded.restrictedTo(currency);
 
     // La mémoire est lue avant d'émettre `ready` : sinon l'utilisateur
@@ -151,13 +158,13 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
         PayerAccountState(
           status: PayerAccountStatus.ready,
           countries: countries,
-          allowedOperators: allowed,
-          currency: currency,
+          allowedOperators: _allowed,
+          currency: _currency,
         ),
       );
       return;
     }
-    if (!_isAllowedBy(allowed, operator)) {
+    if (!_isAllowedBy(_allowed, operator)) {
       // Pays gardé, mais l'opérateur mémorisé n'est pas accepté ici : on
       // laisse choisir, sans reprendre un numéro qui ne servirait pas.
       emit(
@@ -165,8 +172,8 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
           status: PayerAccountStatus.ready,
           countries: countries,
           country: country,
-          allowedOperators: allowed,
-          currency: currency,
+          allowedOperators: _allowed,
+          currency: _currency,
         ),
       );
       return;
@@ -180,8 +187,8 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
         operator: operator,
         localNumber: _localPart(remembered.country, remembered.e164),
         e164: remembered.e164,
-        allowedOperators: allowed,
-        currency: currency,
+        allowedOperators: _allowed,
+        currency: _currency,
       ),
     );
     if (_isComplete(remembered.country, remembered.e164)) {
