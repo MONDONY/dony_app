@@ -171,6 +171,35 @@ void main() {
     expect(find.textContaining('5,60'), findsNothing);
   });
 
+  testWidgets('repli sous grille : net au kilo en décimal exact, 1,15 kg × '
+      '8,50 € → 9,78 € + 1,00 € = 10,78 €', (tester) async {
+    // En double, 8,5 × 1,15 vaut 9.774999… : net 9,77 €, total 10,77 €. Le
+    // back calcule 9,775 arrondi HALF_UP, soit 9,78 €.
+    useTestCommissionGrid();
+    final bid = BidModel(
+      id: 'b-exact',
+      announcementId: 'ann-1',
+      senderId: 'user-1',
+      senderKycVerified: true,
+      weightKg: 1.15,
+      pricePerKg: 8.5,
+      status: 'COMPLETED',
+      voyageurConfirmed: true,
+      createdAt: DateTime(2025, 3),
+      updatedAt: DateTime.now().subtract(const Duration(days: 2)),
+      travelerName: 'Fatoumata Bah',
+      travelerKycVerified: true,
+    );
+
+    when(() => bloc.state).thenReturn(BidListLoaded([bid]));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining(formatPriceIn(10.78, 'EUR')), findsOneWidget);
+    expect(find.textContaining(formatPriceIn(10.77, 'EUR')), findsNothing);
+  });
+
   testWidgets('today date shows Aujourd\'hui', (tester) async {
     final todayBid = BidModel(
       id: 'today',

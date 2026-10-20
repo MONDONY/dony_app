@@ -1,5 +1,7 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -123,7 +125,13 @@ class _DeliveryCard extends StatelessWidget {
         : bid.pricePerKg != null
         ? formatPriceIn(
             senderPriceForNet(
-              bid.pricePerKg! * (bid.weightKg ?? 0),
+              // Net au kilo en décimal exact, HALF_UP comme le back : le
+              // produit en double peut s'en écarter d'un centime.
+              exactProductHalfUp(
+                bid.pricePerKg!,
+                bid.weightKg ?? 0,
+                SupportedCurrency.fromCodeOrDefault(bid.currency).minorUnit,
+              ),
               bid.currency,
             ).gross,
             bid.currency,
