@@ -268,7 +268,7 @@ void main() {
     expect(find.text('Full'), findsOneWidget);
   });
 
-  testWidgets('prix au kilo sous grille = net, pas net × (1 + taux)', (
+  testWidgets('prix au kilo sous grille = net + premier palier, sans mention', (
     tester,
   ) async {
     useTestCommissionGrid();
@@ -280,9 +280,9 @@ void main() {
         ),
       ),
     );
-    expect(find.textContaining('8,96'), findsNothing);
-    expect(find.text('8\u00A0€'), findsOneWidget);
-    expect(find.text('+ frais de service'), findsOneWidget);
+    // 8 € net + 7 % (premier palier de la grille) = 8,56 €.
+    expect(find.text('8,56\u00A0€'), findsOneWidget);
+    expect(find.textContaining('frais de service'), findsNothing);
   });
 
   testWidgets('sans grille, aucune mention des frais de service', (

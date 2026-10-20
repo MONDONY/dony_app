@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -34,26 +35,9 @@ class TripMatchCard extends StatelessWidget {
   /// atténuée pour ne pas concurrencer les trajets encore réservables.
   static const double fullOpacity = 0.55;
 
+  /// Prix au kilo frais de service inclus (YADONY-FLUTTER-PROD-1J).
   static String _priceStr(TripMatchModel match) =>
-      '${formatPriceIn(match.pricePerKg!, match.currency)}/kg';
-
-  /// Mention des frais de service sous le prix au kilo, vide sans grille.
-  static List<Widget> _feeSuffix(BuildContext context, TripMatchModel match) {
-    final suffix = listPriceFeeSuffix(context.l10n, match.currency);
-    if (suffix == null) return const [];
-    final tt = Theme.of(context).textTheme;
-    return [
-      Text(
-        suffix,
-        key: const Key('trip-match-fee-suffix'),
-        style: tt.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    ];
-  }
+      '${formatPriceIn(match.pricePerKg! * feeIncludedFactor(match.currency), match.currency)}/kg';
 
   @override
   Widget build(BuildContext context) {
@@ -209,11 +193,6 @@ class TripMatchCard extends StatelessWidget {
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                  // Sous grille, ce prix au kilo est le net du
-                                  // voyageur : les frais de service s'y ajoutent.
-                                  if (!match.gridOnly &&
-                                      match.pricePerKg != null)
-                                    ..._feeSuffix(context, match),
                                 ],
                               ),
                             ),

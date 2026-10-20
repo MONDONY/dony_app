@@ -160,6 +160,15 @@ double listHeadlineCommissionRate(String? currencyCode) {
 double listUnitPriceFeeIncluded(double netUnit, String? currencyCode) =>
     netUnit * (1 + listHeadlineCommissionRate(currencyCode));
 
+/// Facteur qui passe un prix unitaire affiché à l'expéditeur
+/// (`pricePerKgDisplay`, `unitPriceDisplay`, [listUnitPrice]) à son prix
+/// frais inclus : `1 + taux du premier palier` sous grille, où ces prix sont
+/// des nets ; `1` sans grille, où ils portent déjà le taux unique.
+double feeIncludedFactor(String? currencyCode) =>
+    commissionMinimumFor(currencyCode) == null
+    ? 1
+    : 1 + listHeadlineCommissionRate(currencyCode);
+
 /// Brut au taux unique historique, sans arrondi : `net × (1 +
 /// donyCommissionRate)`. Aperçus locaux d'avant les paliers (prix au kilo,
 /// total d'une offre sans grille), où l'arrondi HALF_UP de

@@ -31,7 +31,6 @@ class TravelerAnnouncementCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final gridOnly = announcement.gridOnly;
     final isFull = announcement.availableKg <= 0;
-    final feeSuffix = listPriceFeeSuffix(l, announcement.currency);
 
     return DonyCard(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -68,9 +67,12 @@ class TravelerAnnouncementCard extends StatelessWidget {
                                   )
                                 : formatPriceIn(
                                     listUnitPrice(
-                                      announcement.pricePerKg,
-                                      announcement.currency,
-                                    ),
+                                          announcement.pricePerKg,
+                                          announcement.currency,
+                                        ) *
+                                        feeIncludedFactor(
+                                          announcement.currency,
+                                        ),
                                     announcement.currency,
                                   ),
                             maxLines: 1,
@@ -95,18 +97,6 @@ class TravelerAnnouncementCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    // Sous grille, le prix au kilo est le net du voyageur : les
-                    // frais de service s'y ajoutent.
-                    if (!gridOnly && feeSuffix != null)
-                      Text(
-                        feeSuffix,
-                        key: const Key('announcement-card-fee-suffix'),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                   ],
                 ),
               ),

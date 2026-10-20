@@ -340,12 +340,13 @@ void main() {
     );
   });
 
-  testWidgets('sous grille, le dernier trajet porte les frais de service', (
+  testWidgets('sous grille, le dernier trajet affiche un prix frais inclus', (
     tester,
   ) async {
     useTestCommissionGrid();
     await tester.pumpWidget(host(_item(last: trajet())));
-    expect(find.text('+ frais de service'), findsOneWidget);
+    expect(find.textContaining('frais de service'), findsNothing);
+    expect(find.textContaining('8,56'), findsOneWidget);
   });
 
   testWidgets('sans grille, aucune mention des frais de service', (

@@ -263,9 +263,7 @@ class _LoadedViewState extends State<_LoadedView> {
                   Text(
                     footerMinimum == null
                         ? l.priceGridCommissionNotice
-                        : l.priceGridCommissionNoticeGrid(
-                            formatPriceActive(footerMinimum),
-                          ),
+                        : l.priceGridCommissionNoticeGrid,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     textAlign: TextAlign.center,
                   ),

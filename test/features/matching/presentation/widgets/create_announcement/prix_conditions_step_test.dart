@@ -492,7 +492,7 @@ void main() {
       expect(find.textContaining('min.'), findsNothing);
     });
 
-    testWidgets('sous grille, la notice du mode grille cite le minimum', (
+    testWidgets('sous grille, la notice dit qui paie les frais, sans minimum', (
       tester,
     ) async {
       useTestCommissionGrid();
@@ -503,11 +503,14 @@ void main() {
 
       expect(
         find.text(
-          'Les frais de service Yadony s\'ajoutent au total payé par '
-          'l\'expéditeur (min. ${formatPriceIn(1, 'EUR')})',
+          'Ces prix sont ceux que vous touchez. Les frais de service Yadony '
+          'sont payés par l\'expéditeur, en plus. En espèces, vous les avancez '
+          'sur votre solde Yadony et l\'expéditeur vous les rembourse dans le '
+          'paiement.',
         ),
         findsOneWidget,
       );
+      expect(find.textContaining('min.'), findsNothing);
     });
 
     testWidgets('sans grille, la notice du mode grille est inchangée', (

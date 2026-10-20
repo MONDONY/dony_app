@@ -103,7 +103,7 @@ void main() {
         );
         await tester.enterText(find.byType(TextFormField).first, '70');
         await tester.pump();
-        expect(find.text('Net voyageur'), findsOneWidget);
+        expect(find.text('Prix du voyageur'), findsOneWidget);
         expect(find.text('70,00\u00a0€'), findsOneWidget);
         expect(find.text('Frais de service'), findsOneWidget);
         expect(find.text('8,40\u00a0€'), findsOneWidget);

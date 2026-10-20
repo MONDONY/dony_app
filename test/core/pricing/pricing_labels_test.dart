@@ -3,8 +3,6 @@ import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../helpers/commission_grid_test_doubles.dart';
-
 void main() {
   final fr = lookupAppLocalizations(AppL10n.fr);
   final en = lookupAppLocalizations(AppL10n.en);
@@ -46,21 +44,6 @@ void main() {
         expect(reimbursementCapLabel(en), '0.96');
       },
     );
-  });
-
-  group('listPriceFeeSuffix', () {
-    // YADONY-FLUTTER-PROD-1J : le minimum n'est jamais cité.
-    test('sous grille : mention courte, sans minimum', () {
-      useTestCommissionGrid();
-      expect(listPriceFeeSuffix(fr, 'EUR'), '+ frais de service');
-      expect(listPriceFeeSuffix(en, 'EUR'), '+ service fee');
-      expect(listPriceFeeSuffix(fr, 'XOF'), isNot(contains('650')));
-      expect(listPriceFeeSuffix(fr, null), isNot(contains('min')));
-    });
-
-    test('aucun suffixe sans grille', () {
-      expect(listPriceFeeSuffix(fr, 'EUR'), isNull);
-    });
   });
 
   group('serviceFeeAmountLabel', () {

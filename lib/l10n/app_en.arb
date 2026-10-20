@@ -106,7 +106,7 @@
   "@errorBudgetBelowCommissionMinimumTitle": {
     "description": "Titre : budget sous le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum)"
   },
-  "errorBudgetBelowCommissionMinimumMessage": "This amount does not cover the minimum Yadony service fee.",
+  "errorBudgetBelowCommissionMinimumMessage": "This amount does not cover the Yadony service fee.",
   "@errorBudgetBelowCommissionMinimumMessage": {
     "description": "Message : le budget saisi ne couvre pas le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum). Sans montant ni taux."
   },
@@ -887,7 +887,7 @@
   "tripPublishCardPaymentTitle": "Card payment (Stripe)",
   "tripPublishCardPaymentSubtitle": "Secure payment by default",
   "tripPublishCashLabel": "Cash",
-  "tripPublishCashLockedSubtitle": "Always accepted on this trip. Service fee taken from your Yadony wallet when you accept the parcel",
+  "tripPublishCashLockedSubtitle": "Always accepted on this trip. Service fee advanced from your Yadony balance when you accept the parcel, paid back by the sender in the cash payment",
   "@tripPublishCashLockedSubtitle": {
     "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
   },
@@ -903,7 +903,7 @@
   "@tripPublishCardCheckingSubtitle": {
     "description": "Card row subtitle while the Stripe status reloads."
   },
-  "tripPublishCashSubtitle": "Service fee taken from your Yadony wallet when you accept the parcel",
+  "tripPublishCashSubtitle": "Service fee advanced from your Yadony balance when you accept the parcel, paid back by the sender in the cash payment",
   "tripPublishAcceptedContentSectionLabel": "What I accept",
   "tripPublishRefusedContentSectionLabel": "What I refuse",
   "tripPublishRefusedContentHint": "E.g. Liquids, Perishable goods…",
@@ -2189,7 +2189,7 @@
   "@negotiationThreadAwaitingSenderPaymentHint": {
     "description": "Accord carte, vue voyageur en attente du paiement (bid_negotiation_thread_screen.dart)"
   },
-  "negotiationThreadCashTravelerHint": "Price accepted. Cash payment, you still need to pay the Yadony service fee.",
+  "negotiationThreadCashTravelerHint": "Price accepted. Cash payment: advance the service fee from your Yadony balance, the sender pays it back in the cash payment.",
   "@negotiationThreadCashTravelerHint": {
     "description": "Accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart)"
   },
@@ -2600,7 +2600,7 @@
   "@negotiationCommissionTravelerBannerTitle": {
     "description": "Bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)"
   },
-  "negotiationCommissionTravelerBannerSubtitle": "The sender picked your offer. Pay the Yadony service fee, {amount}, before the deadline to get this parcel, or another traveler could beat you to it.",
+  "negotiationCommissionTravelerBannerSubtitle": "The sender picked your offer. Advance the Yadony service fee, {amount}, from your balance before the deadline to take this parcel: the sender pays it back in the cash payment. Otherwise, another traveler may get there first.",
   "@negotiationCommissionTravelerBannerSubtitle": {
     "description": "Sous-titre du bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)",
     "placeholders": {
@@ -3136,7 +3136,7 @@
   "@negotiationPriceBreakdownPaidBySender": {
     "description": "Ligne de décomposition de prix, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
   },
-  "negotiationPriceBreakdownNetTraveler": "Traveler net",
+  "negotiationPriceBreakdownNetTraveler": "Traveler's price",
   "@negotiationPriceBreakdownNetTraveler": {
     "description": "Ligne de décomposition de prix, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
   },
@@ -3144,6 +3144,9 @@
   "@negotiationPriceBreakdownYouReceive": {
     "description": "Label du total, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
   },
+  "negotiationPriceBreakdownCashInHand": "The sender hands you",
+  "negotiationPriceBreakdownCashFeeFromBalance": "including the service fee, advanced from your Yadony balance",
+  "negotiationPriceBreakdownYouKeep": "For you",
   "negotiationPriceBreakdownTotalToSettle": "Total to settle",
   "@negotiationPriceBreakdownTotalToSettle": {
     "description": "Label du total, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
@@ -3247,27 +3250,16 @@
   "@negotiationPaymentRecapCashHandoverLabel": {
     "description": "Ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
   },
-  "negotiationPaymentRecapCashFeeNote": "including Yadony fees (paid by the traveler)",
-  "@negotiationPaymentRecapCashFeeNote": {
-    "description": "Sous-ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
-  },
-  "negotiationPaymentRecapCashNetLabel": "The traveler keeps net",
-  "@negotiationPaymentRecapCashNetLabel": {
-    "description": "Ligne totale du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
-  },
-  "negotiationPaymentRecapTravelerReceivesLabel": "The traveler receives",
-  "@negotiationPaymentRecapTravelerReceivesLabel": {
-    "description": "Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
-  },
   "negotiationPaymentRecapServiceFeeLabel": "Service fee",
   "@negotiationPaymentRecapServiceFeeLabel": {
     "description": "Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
   },
+  "negotiationPaymentRecapTravelerPriceLabel": "Traveler's price",
   "negotiationPaymentRecapTotalToPayLabel": "Total to pay",
   "@negotiationPaymentRecapTotalToPayLabel": {
     "description": "Ligne totale du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
   },
-  "negotiationPaymentRecapCashNote": "Hand over the full amount in cash to the traveler at parcel drop-off. The traveler will deduct their Yadony fees from that amount.",
+  "negotiationPaymentRecapCashNote": "Hand over the full amount in cash to the traveler at parcel drop-off: it includes the service fee the traveler advanced from their Yadony balance.",
   "@negotiationPaymentRecapCashNote": {
     "description": "Note explicative sous le récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
   },
@@ -3787,11 +3779,11 @@
       }
     }
   },
-  "bidDetailGainCashNote": "Yadony service fee charged separately.",
+  "bidDetailGainCashNote": "Service fee advanced from your Yadony balance, paid back by the sender in this amount.",
   "@bidDetailGainCashNote": {
     "description": "Note, paiement en especes (traveler_gain_card.dart)"
   },
-  "bidDetailGainCashGrossDetail": "Includes {commission} Yadony service fee, charged to your balance or card. You keep {net}.",
+  "bidDetailGainCashGrossDetail": "{net} for you + {commission} service fee, advanced from your Yadony balance and paid back by the sender in this amount.",
   "@bidDetailGainCashGrossDetail": {
     "description": "Detail sous le brut encaisse en especes : commission prelevee a part et net garde par le voyageur (traveler_gain_card.dart, FLUTTER-R8)",
     "placeholders": {
@@ -4565,15 +4557,6 @@
     }
   },
   "paymentContextDefault": "Your parcel shipment",
-  "commissionCardDebitNoticeMin": "This card will be charged the service fee (min. {min}) for each cash parcel you accept.",
-  "@commissionCardDebitNoticeMin": {
-    "description": "Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros. Sans taux (FLUTTER-R6).",
-    "placeholders": {
-      "min": {
-        "type": "String"
-      }
-    }
-  },
   "commissionCardDebitNotice": "This card will be charged the service fee for each cash parcel you accept.",
   "@commissionCardDebitNotice": {
     "description": "Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros. Sans taux (FLUTTER-R6)."
@@ -10920,20 +10903,15 @@
   "@walletTopupAmountAtLeast": {"placeholders": {"min": {"type": "String"}}},
   "walletTopupAmountAtMost": "At most {max}",
   "@walletTopupAmountAtMost": {"placeholders": {"max": {"type": "String"}}},
-  "listPriceServiceFeeShortSuffix": "+ service fee",
-  "tripPublishGridCommissionNoticeGrid": "The Yadony service fee is added to the total paid by the sender (min. {minimum})",
-  "@tripPublishGridCommissionNoticeGrid": {"placeholders": {"minimum": {"type": "String"}}},
-  "tripPublishGridSheetCommissionNoteGrid": "Prices received by the traveler. The Yadony service fee is added to the total (min. {minimum}).",
-  "@tripPublishGridSheetCommissionNoteGrid": {"placeholders": {"minimum": {"type": "String"}}},
-  "priceGridCommissionNoticeGrid": "The Yadony service fee is added to the total paid by the sender, with a minimum of {minimum}. You receive exactly your amount.",
-  "@priceGridCommissionNoticeGrid": {"placeholders": {"minimum": {"type": "String"}}},
+  "tripPublishGridCommissionNoticeGrid": "These are the prices you receive. The Yadony service fee is paid by the sender, on top. For cash, you advance it from your Yadony balance and the sender pays it back in the payment.",
+  "tripPublishGridSheetCommissionNoteGrid": "Prices received by the traveler. The Yadony service fee is paid by the sender, on top. For cash, the traveler advances it from their Yadony balance and the sender pays it back in the payment.",
+  "priceGridCommissionNoticeGrid": "You collect exactly your amount: the Yadony service fee is paid by the sender. For cash, you advance it from your Yadony balance and the sender pays it back in the payment.",
   "priceGridSenderWillPayMessageGrid": "The sender will pay {paid}, including {fee} Yadony service fee.",
   "@priceGridSenderWillPayMessageGrid": {"placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}},
   "promoIneffectiveCommissionMinimum": "This code does not change this amount",
   "bidCreateServiceFeeLineLabel": "Service fee",
   "bidCreateGridSheetServiceFeeIncluded": "Service fee included",
-  "faqPaymentsCommissionAGrid": "The service fee covers payment costs, support, fraud prevention and the development of the platform. It depends on the transport price, with a minimum of {minimum}. The exact amount is shown before you confirm.",
-  "@faqPaymentsCommissionAGrid": {"placeholders": {"minimum": {"type": "String"}}},
+  "faqPaymentsCommissionAGrid": "The service fee covers payment costs, support, fraud prevention and the development of the platform. It depends on the transport price and is paid by the sender. For cash, the traveler advances it from their Yadony balance and the sender pays it back in the payment. The exact amount is shown before you confirm.",
   "bidNegotiationGridLineServiceFee": "{line} + service fee",
   "@bidNegotiationGridLineServiceFee": {"placeholders": {"line": {"type": "String"}}},
   "bidNegotiationHeroServiceFeeIncluded": "Service fee included",

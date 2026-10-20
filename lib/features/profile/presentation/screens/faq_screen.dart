@@ -1,4 +1,3 @@
-import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -166,16 +165,12 @@ class _FaqScreenState extends State<FaqScreen> {
         .replaceAll(RegExp('[ýÿ]'), 'y'); // i18n-ignore
   }
 
-  /// Réponse sur les frais de service : sous grille de commission, elle cite
-  /// le minimum de la grille dans la devise active, jamais un taux ; sans
-  /// grille, le texte historique.
-  static String _commissionAnswer(AppLocalizations l) {
-    final code = ActiveCurrency.current?.code;
-    final minimum = commissionMinimumFor(code);
-    return minimum == null
-        ? l.faqPaymentsCommissionA
-        : l.faqPaymentsCommissionAGrid(formatPriceIn(minimum, code));
-  }
+  /// Réponse sur les frais de service : sous grille de commission, elle dit
+  /// qui les paie, jamais un taux ni le minimum (YADONY-FLUTTER-PROD-1J) ;
+  /// sans grille, le texte historique.
+  static String _commissionAnswer(AppLocalizations l) => commissionGridActive
+      ? l.faqPaymentsCommissionAGrid
+      : l.faqPaymentsCommissionA;
 
   static List<_FaqSectionData> _filterSections(
     String rawQuery,

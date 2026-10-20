@@ -330,46 +330,30 @@ class PaymentRecapContent extends StatelessWidget {
             border: Border.all(color: cs.outline),
           ),
           child: Column(
-            children: isCash
-                ? [
-                    _FeeRow(
-                      label: l.negotiationPaymentRecapCashHandoverLabel,
-                      amount: PriceDisplay.money(gross, currency),
-                      isTotal: false,
-                    ),
-                    const _Divider(),
-                    _FeeRow(
-                      label: l.negotiationPaymentRecapCashFeeNote,
-                      amount: PriceDisplay.money(fee, currency),
-                      isTotal: false,
-                      isSubNote: true,
-                    ),
-                    const _Divider(),
-                    _FeeRow(
-                      label: l.negotiationPaymentRecapCashNetLabel,
-                      amount: PriceDisplay.money(net, currency),
-                      isTotal: true,
-                    ),
-                  ]
-                : [
-                    _FeeRow(
-                      label: l.negotiationPaymentRecapTravelerReceivesLabel,
-                      amount: PriceDisplay.money(net, currency),
-                      isTotal: false,
-                    ),
-                    const _Divider(),
-                    _FeeRow(
-                      label: l.negotiationPaymentRecapServiceFeeLabel,
-                      amount: PriceDisplay.money(fee, currency),
-                      isTotal: false,
-                    ),
-                    const _Divider(isTotal: true),
-                    _FeeRow(
-                      label: l.negotiationPaymentRecapTotalToPayLabel,
-                      amount: PriceDisplay.money(gross, currency),
-                      isTotal: true,
-                    ),
-                  ],
+            // Même explication pour tous les moyens de paiement
+            // (YADONY-FLUTTER-PROD-1J) : prix du voyageur + frais de service =
+            // total. En espèces, ce total est remis en main propre au voyageur.
+            children: [
+              _FeeRow(
+                label: l.negotiationPaymentRecapTravelerPriceLabel,
+                amount: PriceDisplay.money(net, currency),
+                isTotal: false,
+              ),
+              const _Divider(),
+              _FeeRow(
+                label: l.negotiationPaymentRecapServiceFeeLabel,
+                amount: PriceDisplay.money(fee, currency),
+                isTotal: false,
+              ),
+              const _Divider(isTotal: true),
+              _FeeRow(
+                label: isCash
+                    ? l.negotiationPaymentRecapCashHandoverLabel
+                    : l.negotiationPaymentRecapTotalToPayLabel,
+                amount: PriceDisplay.money(gross, currency),
+                isTotal: true,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: DonySpacing.base),
@@ -454,25 +438,18 @@ class _FeeRow extends StatelessWidget {
     required this.label,
     required this.amount,
     required this.isTotal,
-    this.isSubNote = false,
   });
 
   final String label;
   final String amount;
   final bool isTotal;
-  final bool isSubNote;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final labelStyle = isSubNote
-        ? tt.bodySmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontStyle: FontStyle.italic,
-          )
-        : isTotal
+    final labelStyle = isTotal
         ? tt.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: cs.onSurface,
@@ -486,7 +463,7 @@ class _FeeRow extends StatelessWidget {
             fontFeatures: const [FontFeature.tabularFigures()],
           )
         : tt.bodyMedium?.copyWith(
-            color: isSubNote ? cs.onSurfaceVariant : cs.onSurface,
+            color: cs.onSurface,
             fontFeatures: const [FontFeature.tabularFigures()],
           );
 

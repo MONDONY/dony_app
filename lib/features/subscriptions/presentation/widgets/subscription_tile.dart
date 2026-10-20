@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
@@ -225,8 +226,9 @@ class _LastTripLine extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final currency = SupportedCurrency.fromCodeOrDefault(last.currency);
+    // Prix au kilo frais de service inclus (YADONY-FLUTTER-PROD-1J).
     final price = CurrencyFormatter.format(
-      last.pricePerKg,
+      last.pricePerKg * feeIncludedFactor(last.currency),
       currency,
       compact: true,
     );
@@ -235,13 +237,6 @@ class _LastTripLine extends StatelessWidget {
       color: cs.onSurface,
       fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
     );
-
-    // Sous grille de commission, ce prix est le net du voyageur : les frais de
-    // service s'y ajoutent. Mention sur sa propre ligne, faute de place dans la
-    // rangée du corridor.
-    final feeSuffix = last.gridOnly
-        ? null
-        : listPriceFeeSuffix(l, last.currency);
 
     final ligne = Row(
       children: [
@@ -279,25 +274,7 @@ class _LastTripLine extends StatelessWidget {
       ],
     );
 
-    final contenu = feeSuffix == null
-        ? ligne
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ligne,
-              Padding(
-                padding: const EdgeInsets.only(left: 13 + DonySpacing.xs),
-                child: Text(
-                  feeSuffix,
-                  key: const Key('subscription-tile-fee-suffix'),
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          );
+    final contenu = ligne;
 
     if (onOpen == null) {
       return Padding(

@@ -1376,8 +1376,9 @@ void main() {
       // Le bandeau garde son texte, cohérent avec le bouton.
       expect(
         find.text(
-          'Prix accepté. Paiement en espèces, il vous reste à régler les '
-          'frais de service Yadony.',
+          'Prix accepté. Paiement en espèces : avancez les frais de service '
+          'sur votre solde Yadony, l\'expéditeur vous les rembourse dans le '
+          'paiement en espèces.',
         ),
         findsOneWidget,
       );

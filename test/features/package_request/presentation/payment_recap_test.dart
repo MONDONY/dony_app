@@ -112,7 +112,7 @@ void main() {
       );
 
       // Line 1: traveler net amount
-      expect(find.text('Le voyageur touche'), findsOneWidget);
+      expect(find.text('Prix du voyageur'), findsOneWidget);
       expect(find.text('35,00 €'), findsOneWidget);
 
       // Line 2: service fee
@@ -139,27 +139,24 @@ void main() {
   });
 
   group('PaymentRecapContent — CASH payment', () {
-    testWidgets('shows amount to hand over, fee note, and traveler net', (
+    // YADONY-FLUTTER-PROD-1J : même explication que les autres moyens de
+    // paiement (prix du voyageur + frais de service = total), le total étant
+    // remis en main propre. Jamais « minimum ».
+    testWidgets('prix du voyageur + frais de service = total à remettre', (
       tester,
     ) async {
       await tester.pumpWidget(
         _wrapContent(net: 35.0, gross: 39.20, fee: 4.20, isCash: true),
       );
 
-      // Line 1: cash handover amount
+      expect(find.text('Prix du voyageur'), findsOneWidget);
+      expect(find.textContaining('35,00'), findsOneWidget);
+      expect(find.text('Frais de service'), findsOneWidget);
+      expect(find.textContaining('4,20'), findsOneWidget);
       expect(find.text('À remettre au voyageur (en espèces)'), findsOneWidget);
-      expect(find.text('39,20 €'), findsOneWidget);
-
-      // Line 2: fee note (traveler covers fees)
-      expect(
-        find.text('dont frais Yadony (réglés par le voyageur)'),
-        findsOneWidget,
-      );
-      expect(find.text('4,20 €'), findsOneWidget);
-
-      // Line 3: traveler net
-      expect(find.text('Le voyageur garde net'), findsOneWidget);
-      expect(find.text('35,00 €'), findsOneWidget);
+      expect(find.textContaining('39,20'), findsWidgets);
+      expect(find.textContaining('minimum'), findsNothing);
+      expect(find.textContaining('min.'), findsNothing);
     });
 
     testWidgets('shows cash trust banner for cash', (tester) async {
@@ -190,7 +187,7 @@ void main() {
         );
 
         // Même grille qu'un paiement en ligne : rien d'« espèces ».
-        expect(find.text('Le voyageur touche'), findsOneWidget);
+        expect(find.text('Prix du voyageur'), findsOneWidget);
         expect(find.text('Frais de service'), findsOneWidget);
         expect(find.text('Total à payer'), findsOneWidget);
         expect(find.text('À remettre au voyageur (en espèces)'), findsNothing);
@@ -272,7 +269,7 @@ void main() {
         _wrapContent(net: 35.0, gross: 39.20, fee: 4.20, isCash: false),
       );
 
-      expect(find.text('The traveler receives'), findsOneWidget);
+      expect(find.text("Traveler's price"), findsOneWidget);
       expect(find.text('Service fee'), findsOneWidget);
       expect(find.text('Total to pay'), findsOneWidget);
       expect(find.textContaining('Secure · held until'), findsOneWidget);
@@ -288,11 +285,8 @@ void main() {
         find.text('To hand over to the traveler (in cash)'),
         findsOneWidget,
       );
-      expect(
-        find.text('including Yadony fees (paid by the traveler)'),
-        findsOneWidget,
-      );
-      expect(find.text('The traveler keeps net'), findsOneWidget);
+      expect(find.text("Traveler's price"), findsOneWidget);
+      expect(find.text('Service fee'), findsOneWidget);
       expect(find.textContaining('Cash payment in person'), findsOneWidget);
     });
 

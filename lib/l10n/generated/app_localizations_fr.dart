@@ -375,7 +375,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorBudgetBelowCommissionMinimumMessage =>
-      'Ce montant ne couvre pas les frais de service minimum de Yadony.';
+      'Ce montant ne couvre pas les frais de service de Yadony.';
 
   @override
   String get errorNotADraftTitle => 'Déjà publié';
@@ -3021,7 +3021,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishCashLockedSubtitle =>
-      'Toujours accepté sur ce trajet. Frais de service prélevés sur votre portefeuille Yadony quand vous acceptez le colis';
+      'Toujours accepté sur ce trajet. Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l\'expéditeur dans le paiement en espèces';
 
   @override
   String get tripPublishCashLockedExplanation =>
@@ -3037,7 +3037,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishCashSubtitle =>
-      'Frais de service prélevés sur votre portefeuille Yadony quand vous acceptez le colis';
+      'Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l\'expéditeur dans le paiement en espèces';
 
   @override
   String get tripPublishAcceptedContentSectionLabel => 'Ce que j\'accepte';
@@ -6108,7 +6108,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationThreadCashTravelerHint =>
-      'Prix accepté. Paiement en espèces, il vous reste à régler les frais de service Yadony.';
+      'Prix accepté. Paiement en espèces : avancez les frais de service sur votre solde Yadony, l\'expéditeur vous les rembourse dans le paiement en espèces.';
 
   @override
   String get negotiationThreadCashSenderHint =>
@@ -6440,7 +6440,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String negotiationCommissionTravelerBannerSubtitle(String amount) {
-    return 'L\'expéditeur a retenu votre offre. Réglez les frais de service Yadony, $amount, avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.';
+    return 'L\'expéditeur a retenu votre offre. Avancez les frais de service Yadony, $amount, sur votre solde avant l\'échéance pour emporter ce colis : l\'expéditeur vous les rembourse dans le paiement en espèces. Sinon, un autre voyageur peut vous doubler.';
   }
 
   @override
@@ -6851,10 +6851,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Prix payé par l\'expéditeur';
 
   @override
-  String get negotiationPriceBreakdownNetTraveler => 'Net voyageur';
+  String get negotiationPriceBreakdownNetTraveler => 'Prix du voyageur';
 
   @override
   String get negotiationPriceBreakdownYouReceive => 'Vous recevez';
+
+  @override
+  String get negotiationPriceBreakdownCashInHand => 'L\'expéditeur vous remet';
+
+  @override
+  String get negotiationPriceBreakdownCashFeeFromBalance =>
+      'dont frais de service, avancés sur votre solde Yadony';
+
+  @override
+  String get negotiationPriceBreakdownYouKeep => 'Pour vous';
 
   @override
   String get negotiationPriceBreakdownTotalToSettle => 'Total à régler';
@@ -6932,25 +6942,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'À remettre au voyageur (en espèces)';
 
   @override
-  String get negotiationPaymentRecapCashFeeNote =>
-      'dont frais Yadony (réglés par le voyageur)';
-
-  @override
-  String get negotiationPaymentRecapCashNetLabel => 'Le voyageur garde net';
-
-  @override
-  String get negotiationPaymentRecapTravelerReceivesLabel =>
-      'Le voyageur touche';
-
-  @override
   String get negotiationPaymentRecapServiceFeeLabel => 'Frais de service';
+
+  @override
+  String get negotiationPaymentRecapTravelerPriceLabel => 'Prix du voyageur';
 
   @override
   String get negotiationPaymentRecapTotalToPayLabel => 'Total à payer';
 
   @override
   String get negotiationPaymentRecapCashNote =>
-      'Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais Yadony de ce montant.';
+      'Remettez le montant total en espèces au voyageur lors de la remise du colis : il comprend les frais de service que le voyageur a avancés sur son solde Yadony.';
 
   @override
   String get negotiationPaymentRecapMobileMoneyNote =>
@@ -7372,11 +7374,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailGainCashNote =>
-      'Frais de service Yadony prélevés séparément.';
+      'Frais de service avancés sur votre solde Yadony, remboursés par l\'expéditeur dans ce montant.';
 
   @override
   String bidDetailGainCashGrossDetail(String commission, String net) {
-    return 'Dont $commission de frais de service Yadony, prélevés sur votre solde ou votre carte. Vous gardez $net.';
+    return '$net pour vous + $commission de frais de service, avancés sur votre solde Yadony et remboursés par l\'expéditeur dans ce montant.';
   }
 
   @override
@@ -9463,11 +9465,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paymentContextDefault => 'Envoi de votre colis';
-
-  @override
-  String commissionCardDebitNoticeMin(String min) {
-    return 'Cette carte sera débitée des frais de service (min. $min) à chaque colis en espèces accepté.';
-  }
 
   @override
   String get commissionCardDebitNotice =>
@@ -21557,22 +21554,16 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get listPriceServiceFeeShortSuffix => '+ frais de service';
+  String get tripPublishGridCommissionNoticeGrid =>
+      'Ces prix sont ceux que vous touchez. Les frais de service Yadony sont payés par l\'expéditeur, en plus. En espèces, vous les avancez sur votre solde Yadony et l\'expéditeur vous les rembourse dans le paiement.';
 
   @override
-  String tripPublishGridCommissionNoticeGrid(String minimum) {
-    return 'Les frais de service Yadony s\'ajoutent au total payé par l\'expéditeur (min. $minimum)';
-  }
+  String get tripPublishGridSheetCommissionNoteGrid =>
+      'Prix touchés par le voyageur. Les frais de service Yadony sont payés par l\'expéditeur, en plus. En espèces, le voyageur les avance sur son solde Yadony et l\'expéditeur les lui rembourse dans le paiement.';
 
   @override
-  String tripPublishGridSheetCommissionNoteGrid(String minimum) {
-    return 'Prix touchés par le voyageur. Les frais de service Yadony s\'ajoutent au total (min. $minimum).';
-  }
-
-  @override
-  String priceGridCommissionNoticeGrid(String minimum) {
-    return 'Les frais de service Yadony s\'ajoutent au total payé par l\'expéditeur, avec un minimum de $minimum. Vous encaissez exactement votre montant.';
-  }
+  String get priceGridCommissionNoticeGrid =>
+      'Vous encaissez exactement votre montant : les frais de service Yadony sont payés par l\'expéditeur. En espèces, vous les avancez sur votre solde Yadony et l\'expéditeur vous les rembourse dans le paiement.';
 
   @override
   String priceGridSenderWillPayMessageGrid(String paid, String fee) {
@@ -21590,9 +21581,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidCreateGridSheetServiceFeeIncluded => 'Frais de service inclus';
 
   @override
-  String faqPaymentsCommissionAGrid(String minimum) {
-    return 'Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme. Ils dépendent du prix du transport, avec un minimum de $minimum. Le montant exact est affiché avant de confirmer.';
-  }
+  String get faqPaymentsCommissionAGrid =>
+      'Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme. Ils dépendent du prix du transport et sont payés par l\'expéditeur. En espèces, le voyageur les avance sur son solde Yadony et l\'expéditeur les lui rembourse dans le paiement. Le montant exact est affiché avant de confirmer.';
 
   @override
   String bidNegotiationGridLineServiceFee(String line) {

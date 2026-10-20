@@ -372,7 +372,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorBudgetBelowCommissionMinimumMessage =>
-      'This amount does not cover the minimum Yadony service fee.';
+      'This amount does not cover the Yadony service fee.';
 
   @override
   String get errorNotADraftTitle => 'Already posted';
@@ -3008,7 +3008,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCashLockedSubtitle =>
-      'Always accepted on this trip. Service fee taken from your Yadony wallet when you accept the parcel';
+      'Always accepted on this trip. Service fee advanced from your Yadony balance when you accept the parcel, paid back by the sender in the cash payment';
 
   @override
   String get tripPublishCashLockedExplanation =>
@@ -3024,7 +3024,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCashSubtitle =>
-      'Service fee taken from your Yadony wallet when you accept the parcel';
+      'Service fee advanced from your Yadony balance when you accept the parcel, paid back by the sender in the cash payment';
 
   @override
   String get tripPublishAcceptedContentSectionLabel => 'What I accept';
@@ -6077,7 +6077,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get negotiationThreadCashTravelerHint =>
-      'Price accepted. Cash payment, you still need to pay the Yadony service fee.';
+      'Price accepted. Cash payment: advance the service fee from your Yadony balance, the sender pays it back in the cash payment.';
 
   @override
   String get negotiationThreadCashSenderHint =>
@@ -6407,7 +6407,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String negotiationCommissionTravelerBannerSubtitle(String amount) {
-    return 'The sender picked your offer. Pay the Yadony service fee, $amount, before the deadline to get this parcel, or another traveler could beat you to it.';
+    return 'The sender picked your offer. Advance the Yadony service fee, $amount, from your balance before the deadline to take this parcel: the sender pays it back in the cash payment. Otherwise, another traveler may get there first.';
   }
 
   @override
@@ -6814,10 +6814,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Price paid by the sender';
 
   @override
-  String get negotiationPriceBreakdownNetTraveler => 'Traveler net';
+  String get negotiationPriceBreakdownNetTraveler => 'Traveler\'s price';
 
   @override
   String get negotiationPriceBreakdownYouReceive => 'You receive';
+
+  @override
+  String get negotiationPriceBreakdownCashInHand => 'The sender hands you';
+
+  @override
+  String get negotiationPriceBreakdownCashFeeFromBalance =>
+      'including the service fee, advanced from your Yadony balance';
+
+  @override
+  String get negotiationPriceBreakdownYouKeep => 'For you';
 
   @override
   String get negotiationPriceBreakdownTotalToSettle => 'Total to settle';
@@ -6893,25 +6903,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'To hand over to the traveler (in cash)';
 
   @override
-  String get negotiationPaymentRecapCashFeeNote =>
-      'including Yadony fees (paid by the traveler)';
-
-  @override
-  String get negotiationPaymentRecapCashNetLabel => 'The traveler keeps net';
-
-  @override
-  String get negotiationPaymentRecapTravelerReceivesLabel =>
-      'The traveler receives';
-
-  @override
   String get negotiationPaymentRecapServiceFeeLabel => 'Service fee';
+
+  @override
+  String get negotiationPaymentRecapTravelerPriceLabel => 'Traveler\'s price';
 
   @override
   String get negotiationPaymentRecapTotalToPayLabel => 'Total to pay';
 
   @override
   String get negotiationPaymentRecapCashNote =>
-      'Hand over the full amount in cash to the traveler at parcel drop-off. The traveler will deduct their Yadony fees from that amount.';
+      'Hand over the full amount in cash to the traveler at parcel drop-off: it includes the service fee the traveler advanced from their Yadony balance.';
 
   @override
   String get negotiationPaymentRecapMobileMoneyNote =>
@@ -7328,11 +7330,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get bidDetailGainCashNote => 'Yadony service fee charged separately.';
+  String get bidDetailGainCashNote =>
+      'Service fee advanced from your Yadony balance, paid back by the sender in this amount.';
 
   @override
   String bidDetailGainCashGrossDetail(String commission, String net) {
-    return 'Includes $commission Yadony service fee, charged to your balance or card. You keep $net.';
+    return '$net for you + $commission service fee, advanced from your Yadony balance and paid back by the sender in this amount.';
   }
 
   @override
@@ -9399,11 +9402,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentContextDefault => 'Your parcel shipment';
-
-  @override
-  String commissionCardDebitNoticeMin(String min) {
-    return 'This card will be charged the service fee (min. $min) for each cash parcel you accept.';
-  }
 
   @override
   String get commissionCardDebitNotice =>
@@ -21414,22 +21412,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get listPriceServiceFeeShortSuffix => '+ service fee';
+  String get tripPublishGridCommissionNoticeGrid =>
+      'These are the prices you receive. The Yadony service fee is paid by the sender, on top. For cash, you advance it from your Yadony balance and the sender pays it back in the payment.';
 
   @override
-  String tripPublishGridCommissionNoticeGrid(String minimum) {
-    return 'The Yadony service fee is added to the total paid by the sender (min. $minimum)';
-  }
+  String get tripPublishGridSheetCommissionNoteGrid =>
+      'Prices received by the traveler. The Yadony service fee is paid by the sender, on top. For cash, the traveler advances it from their Yadony balance and the sender pays it back in the payment.';
 
   @override
-  String tripPublishGridSheetCommissionNoteGrid(String minimum) {
-    return 'Prices received by the traveler. The Yadony service fee is added to the total (min. $minimum).';
-  }
-
-  @override
-  String priceGridCommissionNoticeGrid(String minimum) {
-    return 'The Yadony service fee is added to the total paid by the sender, with a minimum of $minimum. You receive exactly your amount.';
-  }
+  String get priceGridCommissionNoticeGrid =>
+      'You collect exactly your amount: the Yadony service fee is paid by the sender. For cash, you advance it from your Yadony balance and the sender pays it back in the payment.';
 
   @override
   String priceGridSenderWillPayMessageGrid(String paid, String fee) {
@@ -21447,9 +21439,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidCreateGridSheetServiceFeeIncluded => 'Service fee included';
 
   @override
-  String faqPaymentsCommissionAGrid(String minimum) {
-    return 'The service fee covers payment costs, support, fraud prevention and the development of the platform. It depends on the transport price, with a minimum of $minimum. The exact amount is shown before you confirm.';
-  }
+  String get faqPaymentsCommissionAGrid =>
+      'The service fee covers payment costs, support, fraud prevention and the development of the platform. It depends on the transport price and is paid by the sender. For cash, the traveler advances it from their Yadony balance and the sender pays it back in the payment. The exact amount is shown before you confirm.';
 
   @override
   String bidNegotiationGridLineServiceFee(String line) {

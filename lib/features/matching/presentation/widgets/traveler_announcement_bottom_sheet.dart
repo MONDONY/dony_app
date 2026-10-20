@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/utils/map_launcher.dart';
@@ -821,9 +821,8 @@ class _StatCardsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final deadline = announcement.handoverDeadline?.toLocal();
-    // Sous grille de commission, les prix de la fiche sont des nets : les
-    // frais de service s'y ajoutent.
-    final feeNote = listPriceFeeSuffix(l, announcement.currency);
+    // Prix frais de service inclus, comme la carte de recherche
+    // (YADONY-FLUTTER-PROD-1J) : aucune mention séparée des frais.
     // IntrinsicHeight : égalise la hauteur des deux cartes sans stretch
     // non borné (la colonne parente est dans un scrollable).
     return IntrinsicHeight(
@@ -835,9 +834,8 @@ class _StatCardsRow extends StatelessWidget {
                 ? _GridStatCard(
                     items: announcement.priceGridItems,
                     currency: announcement.currency,
-                    feeNote: feeNote,
                   )
-                : _PriceStatCard(announcement: announcement, feeNote: feeNote),
+                : _PriceStatCard(announcement: announcement),
           ),
           if (deadline != null) ...[
             const SizedBox(width: DonySpacing.sm),
@@ -866,7 +864,6 @@ class _StatCard extends StatelessWidget {
     this.valueColor,
     this.secondary,
     this.subtitle,
-    this.feeNote,
   });
 
   final String value;
@@ -878,9 +875,6 @@ class _StatCard extends StatelessWidget {
 
   /// Ligne discrète sous la valeur (équivalent « environ » multidevise).
   final String? subtitle;
-
-  /// Mention des frais de service qui s'ajoutent à la valeur (sous grille).
-  final String? feeNote;
 
   @override
   Widget build(BuildContext context) {
@@ -922,13 +916,6 @@ class _StatCard extends StatelessWidget {
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
-          if (feeNote != null)
-            Text(
-              feeNote!,
-              key: const Key('stat-card-fee-note'),
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
           if (subtitle != null)
             Text(
               subtitle!,
@@ -947,10 +934,9 @@ class _StatCard extends StatelessWidget {
 }
 
 class _PriceStatCard extends StatelessWidget {
-  const _PriceStatCard({required this.announcement, this.feeNote});
+  const _PriceStatCard({required this.announcement});
 
   final AnnouncementModel announcement;
-  final String? feeNote;
 
   @override
   Widget build(BuildContext context) {
@@ -964,24 +950,23 @@ class _PriceStatCard extends StatelessWidget {
     }
     return _StatCard(
       value: formatPriceIn(
-        announcement.senderPricePerKg!,
+        announcement.searchCardPricePerKg!,
         announcement.currency,
       ),
       // Repère « environ » du même montant (brut expéditeur) dans la devise du
       // lecteur, servi par le détail depuis le lot 5.
       subtitle:
-          announcement.pricePerKgDisplayConverted != null &&
+          announcement.searchCardPricePerKgDisplayConverted != null &&
               announcement.convertedCurrency != null
           ? l.listingApproxPricePerKg(
               formatPriceIn(
-                announcement.pricePerKgDisplayConverted!,
+                announcement.searchCardPricePerKgDisplayConverted!,
                 announcement.convertedCurrency,
               ),
             )
           : null,
       label: l.listingPricePerKiloLabel,
       valueColor: cs.primary,
-      feeNote: feeNote,
     );
   }
 }
@@ -989,24 +974,19 @@ class _PriceStatCard extends StatelessWidget {
 /// Carte compacte annonçant la grille tarifaire, avec le nombre d'articles et
 /// le prix d'appel le plus bas — le détail vit dans [_PriceGridCard].
 class _GridStatCard extends StatelessWidget {
-  const _GridStatCard({
-    required this.items,
-    required this.currency,
-    this.feeNote,
-  });
+  const _GridStatCard({required this.items, required this.currency});
 
   final List<AnnouncementGridItemModel> items;
   final String currency;
-  final String? feeNote;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    final minPrice = items
-        .map((i) => i.unitPriceDisplay)
-        .reduce((a, b) => a < b ? a : b);
+    final minPrice =
+        items.map((i) => i.unitPriceDisplay).reduce((a, b) => a < b ? a : b) *
+        feeIncludedFactor(currency);
     return Container(
       padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
@@ -1043,13 +1023,6 @@ class _GridStatCard extends StatelessWidget {
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
-          if (feeNote != null)
-            Text(
-              feeNote!,
-              key: const Key('stat-card-fee-note'),
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
         ],
       ),
     );
@@ -1162,7 +1135,8 @@ class _PriceGridCardState extends State<_PriceGridCard> {
                               children: [
                                 Text(
                                   formatPriceIn(
-                                    visible[i].unitPriceDisplay,
+                                    visible[i].unitPriceDisplay *
+                                        feeIncludedFactor(widget.currency),
                                     widget.currency,
                                   ),
                                   style: tt.titleSmall?.copyWith(
@@ -1177,7 +1151,8 @@ class _PriceGridCardState extends State<_PriceGridCard> {
                                   Text(
                                     l.listingApproxPrice(
                                       formatPriceIn(
-                                        visible[i].convertedUnitPriceDisplay!,
+                                        visible[i].convertedUnitPriceDisplay! *
+                                            feeIncludedFactor(widget.currency),
                                         widget.convertedCurrency,
                                       ),
                                     ),

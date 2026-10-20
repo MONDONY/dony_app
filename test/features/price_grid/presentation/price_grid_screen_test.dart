@@ -156,17 +156,15 @@ void main() {
       expect(find.textContaining('5,25'), findsNothing);
     });
 
-    testWidgets('sous grille, la notice de pied cite le minimum', (
+    testWidgets('sous grille, la notice de pied dit qui paie, sans minimum', (
       tester,
     ) async {
       useTestCommissionGrid();
       await tester.pumpWidget(_wrap(_blocWith(const PriceGridLoaded(_items))));
       await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('avec un minimum de 1\u00A0€'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('minimum'), findsNothing);
+      expect(find.textContaining('payés par l\'expéditeur'), findsOneWidget);
       expect(
         find.textContaining('Vous encaissez exactement votre montant'),
         findsOneWidget,

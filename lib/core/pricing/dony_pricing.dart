@@ -314,10 +314,21 @@ extension AnnouncementSenderPricing on AnnouncementModel {
   /// [senderPricePerKg].
   double? get searchCardPricePerKg {
     final sender = senderPricePerKg;
-    if (sender == null || commissionMinimumFor(currency) == null) {
-      return sender;
-    }
-    return listUnitPriceFeeIncluded(sender, currency);
+    return sender == null ? null : sender * feeIncludedFactor(currency);
+  }
+
+  /// Article le moins cher de la grille de prix, frais de service inclus
+  /// comme [searchCardPricePerKg] (fiche, affiche).
+  double? get searchCheapestGridPrice {
+    final cheapest = cheapestGridPrice;
+    return cheapest == null ? null : cheapest * feeIncludedFactor(currency);
+  }
+
+  /// [AnnouncementModel.pricePerKgDisplayConverted] (servi par le détail)
+  /// porté frais de service inclus, comme [searchCardPricePerKg].
+  double? get searchCardPricePerKgDisplayConverted {
+    final converted = pricePerKgDisplayConverted;
+    return converted == null ? null : converted * feeIncludedFactor(currency);
   }
 
   /// Équivalent converti de [searchCardPricePerKg] : même majoration que

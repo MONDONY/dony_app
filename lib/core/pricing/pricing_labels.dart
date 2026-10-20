@@ -62,20 +62,13 @@ String gridPriceLabel(
   String? currency,
 ) {
   final min = minGridUnitPriceDisplay;
+  // Frais de service inclus, comme les prix des cartes de recherche.
   return min != null && min > 0
-      ? l.tripPosterFromPrice(formatPriceIn(min, currency))
+      ? l.tripPosterFromPrice(
+          formatPriceIn(min * feeIncludedFactor(currency), currency),
+        )
       : l.listingPriceGridLabel;
 }
-
-/// Mention « + frais de service » à poser sous un prix au kilo affiché au
-/// net, `null` sans grille de commission en vigueur (ou sans minimum pour
-/// [currencyCode]) : l'affichage reste alors celui du taux unique. Le minimum
-/// de frais n'est jamais cité (YADONY-FLUTTER-PROD-1J) : il entre dans le
-/// montant des frais calculé à la fin, pas dans le libellé.
-String? listPriceFeeSuffix(AppLocalizations l, String? currencyCode) =>
-    commissionMinimumFor(currencyCode) == null
-    ? null
-    : l.listPriceServiceFeeShortSuffix;
 
 /// Montant de frais de service avec ses décimales. Jamais suivi de
 /// « (minimum) » (YADONY-FLUTTER-PROD-1J) : quand le plancher de la grille

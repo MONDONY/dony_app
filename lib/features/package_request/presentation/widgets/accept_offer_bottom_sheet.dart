@@ -8,6 +8,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart'
+    as dony;
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
@@ -54,6 +56,11 @@ class AcceptOfferBottomSheet {
     /// Prix du fil (grille figée et devise) : `ThreadPricer.of(thread)`. Ne
     /// sert qu'en repli, quand ni le devis ni [grossPriceEur] ne sont servis.
     required ThreadPricer pricer,
+
+    /// Moyen de paiement du fil, s'il est déjà choisi. Côté voyageur, les
+    /// espèces changent la lecture : il reçoit tout en main propre et les
+    /// frais de service sont prélevés sur son solde.
+    dony.PaymentMethod? paymentMethod,
   }) async {
     final currency = pricer.currency;
     // Repli local : le brut du serveur (scellé pour l'expéditeur d'un fil
@@ -294,6 +301,7 @@ class AcceptOfferBottomSheet {
                   final promoApplied = quote?.promoApplied ?? false;
                   return _NegotiationPriceBreakdown(
                     isTraveler: isTraveler,
+                    isCash: paymentMethod == dony.PaymentMethod.cash,
                     netEur: netEur,
                     commissionEur: commissionEur,
                     totalEur: totalEur,
@@ -339,6 +347,7 @@ class AcceptOfferBottomSheet {
 class _NegotiationPriceBreakdown extends StatelessWidget {
   const _NegotiationPriceBreakdown({
     required this.isTraveler,
+    this.isCash = false,
     required this.netEur,
     required this.commissionEur,
     required this.totalEur,
@@ -349,6 +358,10 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
   });
 
   final bool isTraveler;
+
+  /// Paiement en espèces : côté voyageur, total reçu en main propre et frais
+  /// de service prélevés sur son solde.
+  final bool isCash;
   final double netEur;
   final double commissionEur;
   final double totalEur;
@@ -375,22 +388,28 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
 
     final rows = <Widget>[];
     if (isTraveler) {
-      rows.add(
-        _line(
-          tt,
-          cs,
-          l.negotiationPriceBreakdownPaidBySender,
-          PriceDisplay.money(totalEur, currency),
-        ),
-      );
-      rows.add(
-        _line(
-          tt,
-          cs,
-          l.requestCreateCommissionLabel,
-          '−${serviceFeeAmountLabel(commissionEur, currency)}',
-        ),
-      );
+      // Carte et mobile money : le voyageur ne voit que son net (ligne de
+      // total), les frais sont payés par l'expéditeur. Espèces : l'expéditeur
+      // lui remet le total, dont les frais de service qu'il a avancés sur son
+      // solde Yadony.
+      if (isCash) {
+        rows.add(
+          _line(
+            tt,
+            cs,
+            l.negotiationPriceBreakdownCashInHand,
+            PriceDisplay.money(totalEur, currency),
+          ),
+        );
+        rows.add(
+          _line(
+            tt,
+            cs,
+            l.negotiationPriceBreakdownCashFeeFromBalance,
+            serviceFeeAmountLabel(commissionEur, currency),
+          ),
+        );
+      }
     } else {
       rows.add(
         _line(
@@ -441,7 +460,9 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
     }
 
     final totalLabel = isTraveler
-        ? l.negotiationPriceBreakdownYouReceive
+        ? (isCash
+              ? l.negotiationPriceBreakdownYouKeep
+              : l.negotiationPriceBreakdownYouReceive)
         : l.negotiationPriceBreakdownTotalToSettle;
     final totalValue = isTraveler ? netEur : totalEur;
 
@@ -456,8 +477,10 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final r in rows) ...[r, const SizedBox(height: DonySpacing.xs)],
-          Divider(color: kGreenDark.withValues(alpha: 0.2)),
-          const SizedBox(height: DonySpacing.xs),
+          if (rows.isNotEmpty) ...[
+            Divider(color: kGreenDark.withValues(alpha: 0.2)),
+            const SizedBox(height: DonySpacing.xs),
+          ],
           SizedBox(
             width: double.infinity,
             child: Wrap(

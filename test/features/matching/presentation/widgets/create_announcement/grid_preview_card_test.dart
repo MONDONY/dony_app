@@ -205,8 +205,10 @@ void main() {
 
       expect(
         find.text(
-          'Prix touchés par le voyageur. Les frais de service Yadony '
-          's\'ajoutent au total (min. 1\u00A0€).',
+          'Prix touchés par le voyageur. Les frais de service Yadony sont '
+          'payés par l\'expéditeur, en plus. En espèces, le voyageur les '
+          'avance sur son solde Yadony et l\'expéditeur les lui rembourse '
+          'dans le paiement.',
         ),
         findsOneWidget,
       );
