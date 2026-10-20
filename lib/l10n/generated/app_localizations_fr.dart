@@ -5331,6 +5331,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le paiement se fait en main propre au voyageur, Yadony ne séquestre pas votre argent et ne peut pas le rembourser automatiquement en cas de litige.';
 
   @override
+  String listingHabitualOperatorNotAcceptedCard(String operator) {
+    return 'Vous payez d\'habitude avec $operator, que ce voyageur n\'accepte pas. Vous pourrez payer par carte.';
+  }
+
+  @override
+  String listingHabitualOperatorNotAcceptedCash(String operator) {
+    return 'Vous payez d\'habitude avec $operator, que ce voyageur n\'accepte pas. Vous pourrez payer en espèces.';
+  }
+
+  @override
   String get listingNewRatingLabel => 'Nouveau';
 
   @override

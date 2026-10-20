@@ -1533,6 +1533,8 @@
   "listingRouteLabel": "Directions",
   "listingCashOnlyWarningBold": "Cash-only trip. ",
   "listingCashOnlyWarningBody": "Payment is made directly to the traveler in person. Yadony does not put your money on hold and cannot refund it automatically in case of a dispute.",
+  "listingHabitualOperatorNotAcceptedCard": "You usually pay with {operator}, which this traveler does not accept. You will be able to pay by card.",
+  "listingHabitualOperatorNotAcceptedCash": "You usually pay with {operator}, which this traveler does not accept. You will be able to pay in cash.",
   "listingNewRatingLabel": "New",
   "listingTravelerTrips": "{count, plural, =1{· {count} trip} other{· {count} trips}}",
   "searchCardViews": "{count, plural, =0{0 views} =1{{count} view} other{{count} views}}",

@@ -219,6 +219,14 @@ abstract final class AnalyticsEvents {
   static const mobileMoneySwitchToCardTapped =
       'mobile_money_switch_to_card_tapped';
 
+  /// Fiche d'un trajet : l'opérateur mobile money habituel de l'expéditeur
+  /// (dernier paiement ou dernière recharge réussis, gardé sur l'appareil)
+  /// n'est pas accepté par le voyageur, l'encart « Vous payez d'habitude avec
+  /// … » est affiché. Propriété `operator` (code opérateur pawaPay). Jamais le
+  /// numéro.
+  static const mobileMoneyHabitualOperatorNotAcceptedViewed =
+      'mobile_money_habitual_operator_not_accepted_viewed';
+
   // Tracking / QR
   static const qrScanSuccess = 'qr_scan_success';
   static const deliveryConfirmed = 'delivery_confirmed';

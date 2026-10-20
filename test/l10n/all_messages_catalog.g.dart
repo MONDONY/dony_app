@@ -1848,6 +1848,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'listingRouteLabel': (l) => l.listingRouteLabel,
   'listingCashOnlyWarningBold': (l) => l.listingCashOnlyWarningBold,
   'listingCashOnlyWarningBody': (l) => l.listingCashOnlyWarningBody,
+  'listingHabitualOperatorNotAcceptedCard': (l) =>
+      l.listingHabitualOperatorNotAcceptedCard(placeholderMarker('operator')),
+  'listingHabitualOperatorNotAcceptedCash': (l) =>
+      l.listingHabitualOperatorNotAcceptedCash(placeholderMarker('operator')),
   'listingNewRatingLabel': (l) => l.listingNewRatingLabel,
   'listingTravelerTrips': (l) => l.listingTravelerTrips(intPlaceholderValue),
   'searchCardViews': (l) => l.searchCardViews(intPlaceholderValue),
@@ -7757,6 +7761,8 @@ const textParameters = <String, List<String>>{
   'listingApproxPricePerKg': ['price'],
   'listingApproxPrice': ['price'],
   'listingKgAvailableLabel': ['kg'],
+  'listingHabitualOperatorNotAcceptedCard': ['operator'],
+  'listingHabitualOperatorNotAcceptedCash': ['operator'],
   'listingDateTodayLabel': ['date'],
   'listingDateTomorrowLabel': ['date'],
   'listingDateInDaysLabel': ['date'],

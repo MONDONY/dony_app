@@ -141,6 +141,7 @@ import 'package:dony/features/matching/bloc/bid_supplement/supplement_action_cub
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_commission_flow.dart';
 import 'package:dony/features/matching/bloc/bid_supplement/supplement_request_cubit.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/habitual_operator_cubit.dart';
 import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/parcel_refusal/parcel_refusal_cubit.dart';
@@ -661,6 +662,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       announcement,
       getIt<AnnouncementRepository>(),
       getIt<TripTemplateRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<HabitualOperatorCubit>(
+    () => HabitualOperatorCubit(
+      getIt<PayerPhoneMemory>(),
       getIt<AnalyticsService>(),
     ),
   );

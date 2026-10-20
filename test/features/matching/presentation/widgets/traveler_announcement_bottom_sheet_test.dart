@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -22,16 +23,19 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/habitual_operator_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/models/mobile_money_network.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/data/payer_phone_memory.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
@@ -82,6 +86,10 @@ class _MockBidRepository extends Mock implements BidRepository {}
 class _MockBidNegotiationRepository extends Mock
     implements BidNegotiationRepository {}
 
+class _MockPayerPhoneMemory extends Mock implements PayerPhoneMemory {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
 class _FakeUri extends Fake implements Uri {}
 
 class _MockTripSpaceAlertRepository extends Mock
@@ -123,6 +131,7 @@ AnnouncementModel _buildAnnouncement({
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
     BidPaymentMethod.stripe,
   },
+  List<MobileMoneyNetwork> acceptedMobileMoneyNetworks = const [],
   String status = 'ACTIVE',
   String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
@@ -149,6 +158,7 @@ AnnouncementModel _buildAnnouncement({
     deliveryAddress: deliveryAddress,
     arrivalInstructions: arrivalInstructions,
     acceptedPaymentMethods: acceptedPaymentMethods,
+    acceptedMobileMoneyNetworks: acceptedMobileMoneyNetworks,
     traveler: TravelerProfile(
       id: 't1',
       displayName: displayName,
@@ -1231,6 +1241,223 @@ void main() {
       expect(find.text('Paiements acceptés'), findsOneWidget);
       expect(find.text('Espèces'), findsOneWidget);
       expect(find.text('Carte'), findsOneWidget);
+    });
+
+    group('pastilles mobile money et opérateur habituel', () {
+      const orangeCi = MobileMoneyNetwork(
+        code: 'ORANGE_CIV',
+        label: 'Orange Money',
+        brand: 'ORANGE',
+        country: 'CI',
+      );
+      const orangeSn = MobileMoneyNetwork(
+        code: 'ORANGE_SEN',
+        label: 'Orange Money',
+        brand: 'ORANGE',
+        country: 'SN',
+      );
+      const mtnCi = MobileMoneyNetwork(
+        code: 'MTN_MOMO_CIV',
+        label: 'MTN MoMo',
+        brand: 'MTN',
+        country: 'CI',
+      );
+      const habitualMoov = RememberedPayer(
+        country: 'CI',
+        operatorCode: 'MOOV_CIV',
+        e164: '+2250100000000',
+      );
+
+      late _MockPayerPhoneMemory memory;
+      late _MockAnalyticsService analytics;
+
+      setUp(() {
+        memory = _MockPayerPhoneMemory();
+        analytics = _MockAnalyticsService();
+        when(() => memory.read()).thenAnswer((_) async => null);
+        when(
+          () => analytics.logEvent(any(), properties: any(named: 'properties')),
+        ).thenAnswer((_) async {});
+        getIt.registerFactory<HabitualOperatorCubit>(
+          () => HabitualOperatorCubit(memory, analytics),
+        );
+      });
+      tearDown(() => getIt.unregister<HabitualOperatorCubit>());
+
+      Future<void> open(
+        WidgetTester tester,
+        AnnouncementModel a, {
+        bool english = false,
+      }) async {
+        if (english) useEnglish();
+        await tester.pumpWidget(_harness(announcement: a));
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('une pastille par réseau remplace la puce Mobile money', (
+        tester,
+      ) async {
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          currency: 'XOF',
+          acceptedPaymentMethods: const {
+            BidPaymentMethod.mobileMoney,
+            BidPaymentMethod.stripe,
+          },
+          acceptedMobileMoneyNetworks: const [orangeCi, mtnCi],
+        );
+        await open(tester, a);
+
+        expect(find.text('Orange'), findsOneWidget);
+        // « MTN » : le libellé de la pastille et le sigle de sa marque.
+        expect(find.text('MTN'), findsNWidgets(2));
+        expect(find.byType(DonyBrandMark), findsNWidgets(2));
+        expect(find.text('Mobile money'), findsNothing);
+        expect(find.text('Carte'), findsOneWidget);
+      });
+
+      testWidgets('deux comptes Orange de deux pays : « Orange CI » / '
+          '« Orange SN »', (tester) async {
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          currency: 'XOF',
+          acceptedPaymentMethods: const {BidPaymentMethod.mobileMoney},
+          acceptedMobileMoneyNetworks: const [orangeCi, orangeSn],
+        );
+        await open(tester, a);
+
+        expect(find.text('Orange CI'), findsOneWidget);
+        expect(find.text('Orange SN'), findsOneWidget);
+      });
+
+      testWidgets('liste vide : la puce Mobile money d\'avant reste', (
+        tester,
+      ) async {
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          acceptedPaymentMethods: const {BidPaymentMethod.mobileMoney},
+        );
+        await open(tester, a);
+
+        expect(find.text('Mobile money'), findsOneWidget);
+        expect(find.byType(DonyBrandMark), findsNothing);
+        verifyNever(() => memory.read());
+      });
+
+      testWidgets('opérateur habituel non accepté + carte : encart carte', (
+        tester,
+      ) async {
+        when(() => memory.read()).thenAnswer((_) async => habitualMoov);
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          currency: 'XOF',
+          acceptedPaymentMethods: const {
+            BidPaymentMethod.mobileMoney,
+            BidPaymentMethod.stripe,
+          },
+          acceptedMobileMoneyNetworks: const [orangeCi],
+        );
+        await open(tester, a);
+
+        expect(
+          find.text(
+            "Vous payez d'habitude avec Moov, que ce voyageur n'accepte pas. "
+            'Vous pourrez payer par carte.',
+          ),
+          findsOneWidget,
+        );
+        verify(
+          () => analytics.logEvent(
+            'mobile_money_habitual_operator_not_accepted_viewed',
+            properties: {'operator': 'MOOV_CIV'},
+          ),
+        ).called(1);
+      });
+
+      testWidgets('sans carte, espèces acceptées : encart espèces', (
+        tester,
+      ) async {
+        when(() => memory.read()).thenAnswer((_) async => habitualMoov);
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          currency: 'XOF',
+          acceptedPaymentMethods: const {
+            BidPaymentMethod.mobileMoney,
+            BidPaymentMethod.cash,
+          },
+          acceptedMobileMoneyNetworks: const [orangeCi],
+        );
+        await open(tester, a);
+
+        expect(
+          find.text(
+            "Vous payez d'habitude avec Moov, que ce voyageur n'accepte pas. "
+            'Vous pourrez payer en espèces.',
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('ni carte ni espèces : pas d\'encart', (tester) async {
+        when(() => memory.read()).thenAnswer((_) async => habitualMoov);
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          currency: 'XOF',
+          acceptedPaymentMethods: const {BidPaymentMethod.mobileMoney},
+          acceptedMobileMoneyNetworks: const [orangeCi],
+        );
+        await open(tester, a);
+
+        expect(find.textContaining("Vous payez d'habitude"), findsNothing);
+        verifyNever(
+          () => analytics.logEvent(any(), properties: any(named: 'properties')),
+        );
+      });
+
+      testWidgets('opérateur habituel accepté : pas d\'encart', (tester) async {
+        when(() => memory.read()).thenAnswer(
+          (_) async => const RememberedPayer(
+            country: 'CI',
+            operatorCode: 'ORANGE_CIV',
+            e164: '+2250700000000',
+          ),
+        );
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          currency: 'XOF',
+          acceptedPaymentMethods: const {
+            BidPaymentMethod.mobileMoney,
+            BidPaymentMethod.stripe,
+          },
+          acceptedMobileMoneyNetworks: const [orangeCi, mtnCi],
+        );
+        await open(tester, a);
+
+        expect(find.textContaining("Vous payez d'habitude"), findsNothing);
+      });
+
+      testWidgets('encart en anglais', (tester) async {
+        when(() => memory.read()).thenAnswer((_) async => habitualMoov);
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          currency: 'XOF',
+          acceptedPaymentMethods: const {
+            BidPaymentMethod.mobileMoney,
+            BidPaymentMethod.stripe,
+          },
+          acceptedMobileMoneyNetworks: const [orangeCi],
+        );
+        await open(tester, a, english: true);
+
+        expect(
+          find.text(
+            'You usually pay with Moov, which this traveler does not accept. '
+            'You will be able to pay by card.',
+          ),
+          findsOneWidget,
+        );
+      });
     });
 
     testWidgets('instructions renseignées → encart affiché', (tester) async {

@@ -10,14 +10,30 @@ import 'package:dony/features/payments/data/models/mobile_money_payout_account.d
 String payoutAccountLabel(
   MobileMoneyPayoutAccount account,
   List<MobileMoneyPayoutAccount> all,
-) {
+) => brandCountryLabel(
+  brand: account.brand,
+  country: account.country,
+  fallback: account.providerLabel,
+  all: [for (final a in all) (brand: a.brand, country: a.country)],
+);
+
+/// Cœur de [payoutAccountLabel], valable pour tout réseau décrit par sa marque
+/// et son pays (compte de versement, pastille de la fiche d'un trajet,
+/// opérateur habituel de l'expéditeur) : [fallback] tant que la marque n'est
+/// portée que par un pays dans [all], sinon la marque suivie du code pays.
+String brandCountryLabel({
+  required String brand,
+  required String country,
+  required String fallback,
+  required Iterable<({String brand, String country})> all,
+}) {
   final twin = all.any(
     (other) =>
-        other.brand == account.brand &&
-        other.country.toUpperCase() != account.country.toUpperCase(),
+        other.brand == brand &&
+        other.country.toUpperCase() != country.toUpperCase(),
   );
-  if (!twin || account.country.isEmpty) return account.providerLabel;
-  return '${brandDisplayName(account.brand)} ${account.country.toUpperCase()}';
+  if (!twin || country.isEmpty) return fallback;
+  return '${brandDisplayName(brand)} ${country.toUpperCase()}';
 }
 
 /// Nom de marque lisible depuis son code (`ORANGE` devient « Orange »). Un

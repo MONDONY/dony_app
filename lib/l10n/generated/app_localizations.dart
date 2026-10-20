@@ -8889,6 +8889,18 @@ abstract class AppLocalizations {
   /// **'Le paiement se fait en main propre au voyageur, Yadony ne séquestre pas votre argent et ne peut pas le rembourser automatiquement en cas de litige.'**
   String get listingCashOnlyWarningBody;
 
+  /// Encart orange de la fiche d'un trajet : l'opérateur mobile money habituel de l'expéditeur n'est pas accepté, la carte l'est (traveler_announcement_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous payez d\'habitude avec {operator}, que ce voyageur n\'accepte pas. Vous pourrez payer par carte.'**
+  String listingHabitualOperatorNotAcceptedCard(String operator);
+
+  /// Même encart quand seules les espèces sont acceptées en repli (traveler_announcement_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous payez d\'habitude avec {operator}, que ce voyageur n\'accepte pas. Vous pourrez payer en espèces.'**
+  String listingHabitualOperatorNotAcceptedCash(String operator);
+
   /// Repli affiché quand le voyageur n'a pas encore de note (traveler_announcement_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:

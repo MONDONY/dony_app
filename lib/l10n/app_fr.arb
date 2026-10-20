@@ -4596,6 +4596,24 @@
   "@listingCashOnlyWarningBody": {
     "description": "Corps de l'avertissement paiement cash uniquement (traveler_announcement_bottom_sheet.dart)"
   },
+  "listingHabitualOperatorNotAcceptedCard": "Vous payez d'habitude avec {operator}, que ce voyageur n'accepte pas. Vous pourrez payer par carte.",
+  "@listingHabitualOperatorNotAcceptedCard": {
+    "description": "Encart orange de la fiche d'un trajet : l'opérateur mobile money habituel de l'expéditeur n'est pas accepté, la carte l'est (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "operator": {
+        "type": "String"
+      }
+    }
+  },
+  "listingHabitualOperatorNotAcceptedCash": "Vous payez d'habitude avec {operator}, que ce voyageur n'accepte pas. Vous pourrez payer en espèces.",
+  "@listingHabitualOperatorNotAcceptedCash": {
+    "description": "Même encart quand seules les espèces sont acceptées en repli (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "operator": {
+        "type": "String"
+      }
+    }
+  },
   "listingNewRatingLabel": "Nouveau",
   "@listingNewRatingLabel": {
     "description": "Repli affiché quand le voyageur n'a pas encore de note (traveler_announcement_bottom_sheet.dart)"

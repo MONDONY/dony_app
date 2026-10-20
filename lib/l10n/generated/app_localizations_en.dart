@@ -5303,6 +5303,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Payment is made directly to the traveler in person. Yadony does not put your money on hold and cannot refund it automatically in case of a dispute.';
 
   @override
+  String listingHabitualOperatorNotAcceptedCard(String operator) {
+    return 'You usually pay with $operator, which this traveler does not accept. You will be able to pay by card.';
+  }
+
+  @override
+  String listingHabitualOperatorNotAcceptedCash(String operator) {
+    return 'You usually pay with $operator, which this traveler does not accept. You will be able to pay in cash.';
+  }
+
+  @override
   String get listingNewRatingLabel => 'New';
 
   @override

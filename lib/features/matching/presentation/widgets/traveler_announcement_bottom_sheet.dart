@@ -21,10 +21,12 @@ import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.d
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/habitual_operator_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/mobile_money_network.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/existing_trip_request.dart';
@@ -626,9 +628,24 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             runSpacing: DonySpacing.xs,
             children: [
               for (final m in announcement.acceptedPaymentMethods)
-                _PaymentChip(method: m),
+                if (m == BidPaymentMethod.mobileMoney &&
+                    announcement.acceptedMobileMoneyNetworks.isNotEmpty)
+                  // Une pastille par compte du voyageur, à la place de la
+                  // puce générique « Mobile money ».
+                  for (final n in announcement.acceptedMobileMoneyNetworks)
+                    _MobileMoneyNetworkChip(
+                      network: n,
+                      label: mobileMoneyNetworkChipLabel(
+                        n,
+                        announcement.acceptedMobileMoneyNetworks,
+                      ),
+                    )
+                else
+                  _PaymentChip(method: m),
             ],
           ),
+          if (announcement.acceptedMobileMoneyNetworks.isNotEmpty)
+            _HabitualOperatorHint(announcement: announcement),
           // Avertissement porté jusqu'ici par le seul écran « Détail annonce ».
           // Il ne relève pas de la présentation : un trajet payé de la main à
           // la main sort du séquestre, donc de toute garantie de remboursement.
@@ -1409,6 +1426,90 @@ class _RouteMiniMapState extends State<_RouteMiniMap> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Pastille d'un réseau mobile money accepté : marque et nom d'opérateur, sans
+/// numéro. Même gabarit que [_PaymentChip].
+class _MobileMoneyNetworkChip extends StatelessWidget {
+  const _MobileMoneyNetworkChip({required this.network, required this.label});
+
+  final MobileMoneyNetwork network;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ExcludeSemantics(
+            child: DonyBrandMark(brand: network.brand, size: 20),
+          ),
+          const SizedBox(width: DonySpacing.xs + 2),
+          Text(
+            label,
+            style: tt.bodySmall?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Encart orange « Vous payez d'habitude avec {opérateur}, que ce voyageur
+/// n'accepte pas » : l'opérateur du dernier paiement ou de la dernière
+/// recharge mobile money réussis, gardé sur l'appareil, n'est pas parmi ceux
+/// du voyageur. Annonce le repli (carte, sinon espèces) ; rien à dire sans
+/// repli.
+class _HabitualOperatorHint extends StatelessWidget {
+  const _HabitualOperatorHint({required this.announcement});
+
+  final AnnouncementModel announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    final methods = announcement.acceptedPaymentMethods;
+    final card = methods.contains(BidPaymentMethod.stripe);
+    final cash = methods.contains(BidPaymentMethod.cash);
+    return BlocProvider<HabitualOperatorCubit>(
+      // Un autre trajet dans la même feuille repart d'une lecture neuve.
+      key: ValueKey(announcement.id),
+      create: (_) => getIt<HabitualOperatorCubit>()
+        ..load(
+          announcement.acceptedMobileMoneyNetworks,
+          fallbackAvailable: card || cash,
+        ),
+      child: BlocBuilder<HabitualOperatorCubit, String?>(
+        builder: (context, operator) {
+          if (operator == null) return const SizedBox.shrink();
+          final l = context.l10n;
+          return Padding(
+            padding: const EdgeInsets.only(top: DonySpacing.md),
+            child: DonyStatusBanner(
+              type: DonyStatusBannerType.warning,
+              iconAsset: 'triangle-alert',
+              message: card
+                  ? l.listingHabitualOperatorNotAcceptedCard(operator)
+                  : l.listingHabitualOperatorNotAcceptedCash(operator),
+            ),
+          );
+        },
       ),
     );
   }
