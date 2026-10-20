@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
@@ -24,6 +25,7 @@ import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/habitual_operator_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_mobile_money_networks_cubit.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -1343,6 +1345,98 @@ void main() {
         expect(find.text('Mobile money'), findsOneWidget);
         expect(find.byType(DonyBrandMark), findsNothing);
         verifyNever(() => memory.read());
+      });
+
+      group('trajet ouvert depuis la recherche (liste vide)', () {
+        late _MockAnnouncementRepository repository;
+
+        setUp(() {
+          repository = _MockAnnouncementRepository();
+          getIt.registerFactory<TripMobileMoneyNetworksCubit>(
+            () => TripMobileMoneyNetworksCubit(repository),
+          );
+        });
+        tearDown(() => getIt.unregister<TripMobileMoneyNetworksCubit>());
+
+        testWidgets('réseaux relus au détail : pastilles et encart', (
+          tester,
+        ) async {
+          when(() => memory.read()).thenAnswer((_) async => habitualMoov);
+          when(() => repository.getAnnouncementDetail('a1')).thenAnswer(
+            (_) async => _buildAnnouncement(
+              kycVerified: true,
+              currency: 'XOF',
+              acceptedPaymentMethods: const {
+                BidPaymentMethod.mobileMoney,
+                BidPaymentMethod.stripe,
+              },
+              acceptedMobileMoneyNetworks: const [orangeCi, mtnCi],
+            ),
+          );
+          final a = _buildAnnouncement(
+            kycVerified: true,
+            currency: 'XOF',
+            acceptedPaymentMethods: const {
+              BidPaymentMethod.mobileMoney,
+              BidPaymentMethod.stripe,
+            },
+          );
+          await open(tester, a);
+
+          expect(find.text('Orange'), findsOneWidget);
+          expect(find.byType(DonyBrandMark), findsNWidgets(2));
+          expect(find.text('Mobile money'), findsNothing);
+          expect(
+            find.text(
+              "Vous payez d'habitude avec Moov, que ce voyageur n'accepte "
+              'pas. Vous pourrez payer par carte.',
+            ),
+            findsOneWidget,
+          );
+          verify(() => repository.getAnnouncementDetail('a1')).called(1);
+        });
+
+        testWidgets('détail en échec : la puce Mobile money reste, sans '
+            'message', (tester) async {
+          when(
+            () => repository.getAnnouncementDetail('a1'),
+          ).thenThrow(const NotFoundException());
+          final a = _buildAnnouncement(
+            kycVerified: true,
+            acceptedPaymentMethods: const {BidPaymentMethod.mobileMoney},
+          );
+          await open(tester, a);
+
+          expect(find.text('Mobile money'), findsOneWidget);
+          expect(find.byType(DonyBrandMark), findsNothing);
+          expect(find.byType(SnackBar), findsNothing);
+          verifyNever(() => memory.read());
+        });
+
+        testWidgets('liste reçue avec le trajet : aucune relecture', (
+          tester,
+        ) async {
+          final a = _buildAnnouncement(
+            kycVerified: true,
+            currency: 'XOF',
+            acceptedPaymentMethods: const {BidPaymentMethod.mobileMoney},
+            acceptedMobileMoneyNetworks: const [orangeCi],
+          );
+          await open(tester, a);
+
+          expect(find.text('Orange'), findsOneWidget);
+          verifyNever(() => repository.getAnnouncementDetail(any()));
+        });
+
+        testWidgets('mobile money non accepté : aucune relecture', (
+          tester,
+        ) async {
+          final a = _buildAnnouncement(kycVerified: true);
+          await open(tester, a);
+
+          expect(find.text('Carte'), findsOneWidget);
+          verifyNever(() => repository.getAnnouncementDetail(any()));
+        });
       });
 
       testWidgets('opérateur habituel non accepté + carte : encart carte', (
