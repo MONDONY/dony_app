@@ -624,7 +624,7 @@ void main() {
       }
       getIt.registerFactory<HiveService>(() => _FakeHiveService(userPrefsBox));
 
-      // Compte connecté avec un numéro : le champ payeur doit démarrer dessus.
+      // Compte connecté avec un numéro : la feuille ne doit pas le reprendre.
       authBloc = _MockAuthBloc();
       whenListen(
         authBloc,
@@ -652,8 +652,8 @@ void main() {
     });
 
     /// Routeur de test : la vraie route d'attente est remplacée par un stub qui
-    /// capture `state.extra` (le numéro payeur normalisé) et se referme avec
-    /// le résultat choisi ; la route de succès monte le vrai
+    /// capture `state.extra` (attendu null : le payeur se choisit sur l'écran
+    /// d'attente) et se referme avec le résultat choisi ; la route de succès monte le vrai
     /// [NegotiationPaidSuccessScreen].
     Widget buildRoutedApp({required List<Object?> capturedExtras}) {
       final thread = _makeThread(paymentMethod: PaymentMethod.mobileMoney);
@@ -740,8 +740,9 @@ void main() {
     }
 
     testWidgets(
-      'la feuille affiche le titre, la bannière, le champ pré-rempli avec le '
-      'numéro du compte et le bouton « Payer … par mobile money »',
+      'mobileMoneyMode_noPayerPhoneField : la feuille affiche le titre, la '
+      'bannière et le bouton « Payer … par mobile money », sans champ numéro '
+      'payeur ni reprise du numéro du compte',
       (tester) async {
         await tester.pumpWidget(buildRoutedApp(capturedExtras: []));
         await tester.tap(find.byKey(const Key('open')));
@@ -752,8 +753,9 @@ void main() {
           find.textContaining('Vous validez le paiement sur votre téléphone'),
           findsOneWidget,
         );
-        expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
-        expect(find.text('+221771234567'), findsOneWidget);
+        expect(find.byKey(const Key('payer-phone-field')), findsNothing);
+        expect(find.text('Numéro qui paiera (facultatif)'), findsNothing);
+        expect(find.textContaining('221771234567'), findsNothing);
         expect(
           find.widgetWithText(
             DonyButton,
@@ -767,66 +769,50 @@ void main() {
       },
     );
 
-    testWidgets(
-      'tap → route d\'attente poussée avec le numéro saisi normalisé en extra ; '
-      'dépôt séquestré → rechargement du fil + écran « Offre acceptée et payée ! » '
-      'puis CTA vers /negotiations/{threadId}',
-      (tester) async {
-        final extras = <Object?>[];
-        await tester.pumpWidget(buildRoutedApp(capturedExtras: extras));
-        await tester.tap(find.byKey(const Key('open')));
-        await tester.pumpAndSettle();
+    testWidgets('tap → route d\'attente poussée sans extra ; '
+        'dépôt séquestré → rechargement du fil + écran « Offre acceptée et payée ! » '
+        'puis CTA vers /negotiations/{threadId}', (tester) async {
+      final extras = <Object?>[];
+      await tester.pumpWidget(buildRoutedApp(capturedExtras: extras));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
 
-        await tester.enterText(
-          find.byKey(const Key('payer-phone-field')),
-          '+221 77 345 67 89',
-        );
-        // Referme la sélection : sa poignée, dessinée dans l'overlay juste
-        // sous le champ, recouvre sinon le bouton du stickyBottom.
-        FocusManager.instance.primaryFocus?.unfocus();
-        await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(DonyButton, 'Payer 39,20\u00A0€ par mobile money'),
+      );
+      await tester.pumpAndSettle();
 
-        await tester.tap(
-          find.widgetWithText(
-            DonyButton,
-            'Payer 39,20\u00A0€ par mobile money',
-          ),
-        );
-        await tester.pumpAndSettle();
+      expect(extras, [null]);
+      expect(find.text('ATTENTE thread-recap-1'), findsOneWidget);
+      // Rien n'est envoyé au bloc tant que l'écran d'attente est ouvert.
+      verifyNever(() => bloc.add(any()));
 
-        expect(extras, ['+221773456789']);
-        expect(find.text('ATTENTE thread-recap-1'), findsOneWidget);
-        // Rien n'est envoyé au bloc tant que l'écran d'attente est ouvert.
-        verifyNever(() => bloc.add(any()));
+      await tester.tap(find.byKey(const Key('deposit-ok')));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.byKey(const Key('deposit-ok')));
-        await tester.pumpAndSettle();
-
-        verify(
-          () => bloc.add(
-            any(
-              that: isA<NegotiationFetchRequested>().having(
-                (e) => e.threadId,
-                'threadId',
-                'thread-recap-1',
-              ),
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<NegotiationFetchRequested>().having(
+              (e) => e.threadId,
+              'threadId',
+              'thread-recap-1',
             ),
           ),
-        ).called(1);
-        expect(find.byType(NegotiationPaidSuccessScreen), findsOneWidget);
-        expect(find.text('Offre acceptée et payée !'), findsOneWidget);
+        ),
+      ).called(1);
+      expect(find.byType(NegotiationPaidSuccessScreen), findsOneWidget);
+      expect(find.text('Offre acceptée et payée !'), findsOneWidget);
 
-        await tester.ensureVisible(find.text('Voir le suivi'));
-        await tester.tap(find.text('Voir le suivi'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+      await tester.ensureVisible(find.text('Voir le suivi'));
+      await tester.tap(find.text('Voir le suivi'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-        expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
-      },
-    );
+      expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
+    });
 
     testWidgets(
-      'champ vidé → extra null (repli backend sur le numéro Firebase) ; '
       'dépôt expiré → le fil est rechargé mais aucun écran de succès',
       (tester) async {
         final extras = <Object?>[];
@@ -834,8 +820,6 @@ void main() {
         await tester.tap(find.byKey(const Key('open')));
         await tester.pumpAndSettle();
 
-        await tester.enterText(find.byKey(const Key('payer-phone-field')), '');
-        await tester.pump();
         await tester.tap(
           find.widgetWithText(
             DonyButton,

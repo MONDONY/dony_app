@@ -277,7 +277,6 @@ void main() {
   Future<void> pumpScreen(
     WidgetTester tester, {
     MobileMoneyScope scope = scope,
-    String? initialPhone,
     ThemeData? theme,
   }) async {
     final router = GoRouter(
@@ -294,10 +293,7 @@ void main() {
               BlocProvider<MobileMoneyPaymentBloc>.value(value: bloc),
               BlocProvider<PayerAccountCubit>.value(value: payerCubit),
             ],
-            child: MobileMoneyAwaitingScreen(
-              scope: scope,
-              initialPhone: initialPhone,
-            ),
+            child: MobileMoneyAwaitingScreen(scope: scope),
           ),
         ),
         GoRoute(
@@ -390,19 +386,6 @@ void main() {
       expect(find.text('Payer le colis'), findsOneWidget);
       // L'ouverture déclenche Opened, pas un simple sondage : Opened décide
       // entre reprendre un dépôt et afficher « Qui paie ? ».
-      verify(
-        () => bloc.add(const MobileMoneyPaymentOpened(scope: scope)),
-      ).called(1);
-    });
-
-    testWidgets('initialPhone_isIgnored', (tester) async {
-      stub(
-        const MobileMoneyPaymentInitial(),
-        previous: const MobileMoneyPaymentInitial(),
-      );
-
-      await pumpScreen(tester, initialPhone: '+221771234567');
-
       verify(
         () => bloc.add(const MobileMoneyPaymentOpened(scope: scope)),
       ).called(1);

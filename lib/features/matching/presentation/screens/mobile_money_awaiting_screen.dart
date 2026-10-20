@@ -56,19 +56,10 @@ import 'package:go_router/go_router.dart';
 /// validé » et continue de sonder, il n'annonce jamais un délai dépassé tant
 /// que l'opérateur n'a pas tranché.
 class MobileMoneyAwaitingScreen extends StatefulWidget {
-  const MobileMoneyAwaitingScreen({
-    super.key,
-    required this.scope,
-    this.initialPhone,
-  });
+  const MobileMoneyAwaitingScreen({super.key, required this.scope});
 
   /// Bid ou fil de négociation dont ce dépôt paie l'escrow.
   final MobileMoneyScope scope;
-
-  /// Ignoré : le numéro payeur se choisit à l'étape « Qui paie ? ». Retiré
-  /// avec ses appelants (feuille d'offre, récapitulatif de négociation) à la
-  /// tâche 10 du lot B.
-  final String? initialPhone;
 
   @override
   State<MobileMoneyAwaitingScreen> createState() =>

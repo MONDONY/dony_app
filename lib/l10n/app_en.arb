@@ -1907,18 +1907,6 @@
   "@bidCreatePhotosVisibleHint": {
     "description": "Explication de l'utilité des photos du colis (create_bid/photo_section.dart)"
   },
-  "bidCreatePayerPhoneLabel": "Payer's number (optional)",
-  "@bidCreatePayerPhoneLabel": {
-    "description": "Libellé du champ numéro payeur mobile money (create_bid/payer_phone_field.dart)"
-  },
-  "bidCreatePayerPhoneHintWithProfile": "By default, your Yadony number. You'll receive the payment request on this number.",
-  "@bidCreatePayerPhoneHintWithProfile": {
-    "description": "Texte d'aide quand le compte a un numéro de téléphone (create_bid/payer_phone_field.dart)"
-  },
-  "bidCreatePayerPhoneHintNoProfile": "Your account has no number: enter the one that will pay. You'll receive the payment request on it.",
-  "@bidCreatePayerPhoneHintNoProfile": {
-    "description": "Texte d'aide quand le compte n'a pas de numéro de téléphone (create_bid/payer_phone_field.dart)"
-  },
   "bidCreateCustomItemsSectionTitle": "Other items",
   "@bidCreateCustomItemsSectionTitle": {
     "description": "Titre de la section articles hors grille en négociation (custom_items_section.dart)"

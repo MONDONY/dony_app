@@ -9669,24 +9669,6 @@ abstract class AppLocalizations {
   /// **'Visibles par le voyageur, elles rassurent sur le contenu.'**
   String get bidCreatePhotosVisibleHint;
 
-  /// Libellé du champ numéro payeur mobile money (create_bid/payer_phone_field.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Numéro qui paiera (facultatif)'**
-  String get bidCreatePayerPhoneLabel;
-
-  /// Texte d'aide quand le compte a un numéro de téléphone (create_bid/payer_phone_field.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Par défaut, votre numéro Yadony. Vous recevrez la demande de paiement sur ce numéro.'**
-  String get bidCreatePayerPhoneHintWithProfile;
-
-  /// Texte d'aide quand le compte n'a pas de numéro de téléphone (create_bid/payer_phone_field.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre compte n\'a pas de numéro : indiquez celui qui paiera. Vous recevrez la demande de paiement dessus.'**
-  String get bidCreatePayerPhoneHintNoProfile;
-
   /// Titre de la section articles hors grille en négociation (custom_items_section.dart)
   ///
   /// In fr, this message translates to:

@@ -5843,17 +5843,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Visibles par le voyageur, elles rassurent sur le contenu.';
 
   @override
-  String get bidCreatePayerPhoneLabel => 'Numéro qui paiera (facultatif)';
-
-  @override
-  String get bidCreatePayerPhoneHintWithProfile =>
-      'Par défaut, votre numéro Yadony. Vous recevrez la demande de paiement sur ce numéro.';
-
-  @override
-  String get bidCreatePayerPhoneHintNoProfile =>
-      'Votre compte n\'a pas de numéro : indiquez celui qui paiera. Vous recevrez la demande de paiement dessus.';
-
-  @override
   String get bidCreateCustomItemsSectionTitle => 'Autres articles';
 
   @override

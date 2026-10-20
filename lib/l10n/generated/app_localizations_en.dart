@@ -5815,17 +5815,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Visible to the traveler, they reassure about the content.';
 
   @override
-  String get bidCreatePayerPhoneLabel => 'Payer\'s number (optional)';
-
-  @override
-  String get bidCreatePayerPhoneHintWithProfile =>
-      'By default, your Yadony number. You\'ll receive the payment request on this number.';
-
-  @override
-  String get bidCreatePayerPhoneHintNoProfile =>
-      'Your account has no number: enter the one that will pay. You\'ll receive the payment request on it.';
-
-  @override
   String get bidCreateCustomItemsSectionTitle => 'Other items';
 
   @override

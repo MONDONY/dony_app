@@ -2008,10 +2008,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidCreatePromoBadge': (l) => l.bidCreatePromoBadge,
   'bidCreateServiceFeeIncludedLabel': (l) => l.bidCreateServiceFeeIncludedLabel,
   'bidCreatePhotosVisibleHint': (l) => l.bidCreatePhotosVisibleHint,
-  'bidCreatePayerPhoneLabel': (l) => l.bidCreatePayerPhoneLabel,
-  'bidCreatePayerPhoneHintWithProfile': (l) =>
-      l.bidCreatePayerPhoneHintWithProfile,
-  'bidCreatePayerPhoneHintNoProfile': (l) => l.bidCreatePayerPhoneHintNoProfile,
   'bidCreateCustomItemsSectionTitle': (l) => l.bidCreateCustomItemsSectionTitle,
   'bidCreateCustomItemsSectionHint': (l) => l.bidCreateCustomItemsSectionHint,
   'bidCreateCustomItemsEmpty': (l) => l.bidCreateCustomItemsEmpty,

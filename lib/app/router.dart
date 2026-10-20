@@ -2277,21 +2277,16 @@ List<GoRoute> buildMobileMoneyAwaitingRoutes() => [
       MobileMoneyScope.bid(state.pathParameters['bidId']!),
     ),
   ),
-  // `extra` : numéro payeur saisi dans la feuille de récapitulatif, absent
-  // depuis un lien profond (ignoré par l'écran, retiré avec ses appelants).
+  // Aucun `extra` : le numéro qui paiera se choisit sur l'écran lui-même.
   GoRoute(
     path: '/negotiations/:id/mobile-money/awaiting',
     builder: (context, state) => _mobileMoneyAwaitingPage(
       MobileMoneyScope.negotiation(state.pathParameters['id']!),
-      initialPhone: state.extra is String ? state.extra! as String : null,
     ),
   ),
 ];
 
-Widget _mobileMoneyAwaitingPage(
-  MobileMoneyScope scope, {
-  String? initialPhone,
-}) {
+Widget _mobileMoneyAwaitingPage(MobileMoneyScope scope) {
   return MultiBlocProvider(
     providers: [
       BlocProvider<MobileMoneyPaymentBloc>(
@@ -2301,7 +2296,7 @@ Widget _mobileMoneyAwaitingPage(
         create: (_) => getIt<PayerAccountCubit>(param1: scope.analyticsName),
       ),
     ],
-    child: MobileMoneyAwaitingScreen(scope: scope, initialPhone: initialPhone),
+    child: MobileMoneyAwaitingScreen(scope: scope),
   );
 }
 

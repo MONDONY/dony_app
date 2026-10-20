@@ -40,9 +40,10 @@ class BidCreateRequested extends BidEvent {
   final String recipientPhone;
   final BidPaymentMethod paymentMethod;
 
-  /// Numéro payeur d'une offre mobile money, facultatif : normalisé côté
-  /// app avant l'envoi (voir `normalizePayerPhone`). Si absent, le backend
-  /// se replie sur le téléphone Firebase de l'expéditeur à l'initiation.
+  /// Numéro payeur d'une offre mobile money, facultatif. L'app ne le fournit
+  /// plus : le payeur se choisit sur l'écran « Payer le colis » une fois
+  /// l'offre acceptée. Si absent, le backend se replie sur le téléphone
+  /// Firebase de l'expéditeur à l'initiation.
   final String? phoneNumber;
 
   /// Code pays ISO 3166-1 alpha-2 (requis si WAVE ou ORANGE_MONEY).

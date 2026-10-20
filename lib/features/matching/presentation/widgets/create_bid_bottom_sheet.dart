@@ -5,14 +5,11 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/phone/normalize_payer_phone.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
@@ -30,7 +27,6 @@ import 'package:dony/features/matching/data/grid_item_declaration_matcher.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
-import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone_field.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/custom_items_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
@@ -196,19 +192,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   // l'annonce l'accepte (le backend restreint déjà pawaPay aux annonces
   // XOF/XAF à la création, rien à revérifier côté app).
   late final bool _isMobileMoneyAvailable;
-
-  /// Numéro qui recevra la demande de paiement mobile money. Pré-rempli avec
-  /// le téléphone de l'utilisateur connecté quand `AuthBloc` est accessible
-  /// depuis ce contexte (toujours vrai dans l'app réelle — voir
-  /// [_initialPayerPhone] pour le repli en test) ; toujours modifiable ou
-  /// effaçable par l'expéditeur, jamais requis pour soumettre.
-  late final TextEditingController _payerPhoneCtrl;
-
-  /// Vrai quand [_initialPayerPhone] est vide (compte Yadony sans numéro de
-  /// téléphone, vérification SMS pas encore configurée) : fait basculer le
-  /// texte d'aide de [PayerPhoneField], qui ne peut plus affirmer un
-  /// pré-remplissage qui n'a pas eu lieu.
-  late final bool _payerPhoneEmpty;
 
   // ── Form step fields ────────────────────────────────────────────────────────
   final _descCtrl = TextEditingController();
@@ -438,9 +421,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           ? BidPaymentMethod.cash
           : BidPaymentMethod.mobileMoney,
     );
-    final initialPayerPhone = _initialPayerPhone();
-    _payerPhoneEmpty = initialPayerPhone.isEmpty;
-    _payerPhoneCtrl = TextEditingController(text: initialPayerPhone);
 
     // Toujours 0 au départ, y compris en tarification kilo pure : la
     // grille et le kilo-libre partent aussi de 0 désormais. Sur un trajet
@@ -489,19 +469,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _syncFormButtonState();
     });
     _captureInitialSignature();
-  }
-
-  /// Numéro de l'utilisateur connecté, si `AuthBloc` est accessible depuis ce
-  /// contexte. Dans l'app réelle il l'est toujours (fourni à la racine de
-  /// `app.dart`) ; certains harnais de test ne le fournissent pas — dans ce
-  /// cas (`ProviderNotFoundException`) le champ démarre simplement vide,
-  /// jamais de plantage.
-  String _initialPayerPhone() {
-    try {
-      return context.read<AuthBloc>().state.currentUser?.phoneNumber ?? '';
-    } on ProviderNotFoundException {
-      return '';
-    }
   }
 
   /// Prend la référence de comparaison une fois les post-frames
@@ -592,7 +559,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _recipientPhoneCtrl.dispose();
     _recipientPhoneErrorNotifier.dispose();
     _promoCtrl.dispose();
-    _payerPhoneCtrl.dispose();
     _weightNotifier.removeListener(_syncFormButtonState);
     _categoriesNotifier.removeListener(_syncFormButtonState);
     _disclaimerNotifier.removeListener(_syncFormButtonState);
@@ -886,9 +852,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         // appliquera à l'accord (carte → escrow à payer, espèces → commission
         // réglée par le voyageur, mobile money → dépôt à confirmer).
         paymentMethod: method,
-        phoneNumber: method == BidPaymentMethod.mobileMoney
-            ? normalizePayerPhone(_payerPhoneCtrl.text)
-            : null,
         photoKeys: _photosCubit.readyKeys,
         customItems: _customItemsNotifier.value
             .map((item) => item.toJson())
@@ -1056,9 +1019,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           recipientName: data.recipientName,
           recipientPhone: data.recipientPhone,
           paymentMethod: method,
-          phoneNumber: method == BidPaymentMethod.mobileMoney
-              ? normalizePayerPhone(_payerPhoneCtrl.text)
-              : null,
           promoCode: data.promoCode,
           gridItems: data.gridItems,
           photoKeys: data.photoKeys,
@@ -1927,8 +1887,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             isMobileMoneyAvailable: _isMobileMoneyAvailable,
             total: total,
             currency: widget.announcement.currency,
-            payerPhoneController: _payerPhoneCtrl,
-            hasProfilePhone: !_payerPhoneEmpty,
             negotiation: widget.negotiation,
           ),
         ),
@@ -2638,8 +2596,6 @@ class _PaymentMethodSelector extends StatelessWidget {
     this.isMobileMoneyAvailable = false,
     this.total,
     this.currency,
-    this.payerPhoneController,
-    this.hasProfilePhone = true,
     this.negotiation = false,
   });
 
@@ -2653,10 +2609,6 @@ class _PaymentMethodSelector extends StatelessWidget {
   /// prix n'y est pas encore connu, la carte n'explique alors que le mode.
   final double? total;
   final String? currency;
-
-  /// Champ numéro payeur, révélé dans la carte mobile money ouverte.
-  final TextEditingController? payerPhoneController;
-  final bool hasProfilePhone;
 
   /// Proposition de prix : la carte n'est débitée qu'une fois le prix accepté.
   final bool negotiation;
@@ -2687,12 +2639,8 @@ class _PaymentMethodSelector extends StatelessWidget {
           subtitle: l.bidCreateMobileMoneySubtitle,
           iconAsset: 'smartphone',
           key: const Key('payment-method-mobile-money'),
-          expanded: (context) => _MobileMoneyModeContent(
-            total: total,
-            currency: currency,
-            payerPhoneController: payerPhoneController,
-            hasProfilePhone: hasProfilePhone,
-          ),
+          expanded: (context) =>
+              _MobileMoneyModeContent(total: total, currency: currency),
         ),
       if (isCashAvailable)
         DonyChoice(
@@ -2789,17 +2737,10 @@ class _CardModeContent extends StatelessWidget {
 }
 
 class _MobileMoneyModeContent extends StatelessWidget {
-  const _MobileMoneyModeContent({
-    required this.total,
-    required this.currency,
-    required this.payerPhoneController,
-    required this.hasProfilePhone,
-  });
+  const _MobileMoneyModeContent({required this.total, required this.currency});
 
   final double? total;
   final String? currency;
-  final TextEditingController? payerPhoneController;
-  final bool hasProfilePhone;
 
   @override
   Widget build(BuildContext context) {
@@ -2822,13 +2763,6 @@ class _MobileMoneyModeContent extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.md),
         const _OperatorChips(),
-        if (payerPhoneController != null) ...[
-          const SizedBox(height: DonySpacing.md),
-          PayerPhoneField(
-            controller: payerPhoneController!,
-            hasProfilePhone: hasProfilePhone,
-          ),
-        ],
         const SizedBox(height: DonySpacing.md),
         _PanelAssurance(text: context.l10n.bidCreateRefundAssurance),
       ],

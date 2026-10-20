@@ -165,23 +165,23 @@ void main() {
     });
   }
 
-  testWidgets('route_negotiation_stringExtraIsAcceptedAndIgnored', (
-    tester,
-  ) async {
+  testWidgets('route_negotiation_strayStringExtraIsIgnored', (tester) async {
     await open(
       tester,
       '/negotiations/thread-1/mobile-money/awaiting',
       extra: '+221771234567',
     );
 
+    // Un ancien appelant qui poserait encore un `extra` ne casse rien : la
+    // route ne le lit pas, le payeur se choisit sur l'écran.
     expect(tester.takeException(), isNull);
     expect(
       tester
           .widget<MobileMoneyAwaitingScreen>(
             find.byType(MobileMoneyAwaitingScreen),
           )
-          .initialPhone,
-      '+221771234567',
+          .scope,
+      const MobileMoneyScope.negotiation('thread-1'),
     );
   });
 }
