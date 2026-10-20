@@ -8759,9 +8759,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripOwnerRequestsTile => 'Demandes';
 
   @override
-  String get tripOwnerRequestsDisabledMessage => 'Aucune demande à traiter';
-
-  @override
   String get tripOwnerParcelsTile => 'Colis';
 
   @override
@@ -22238,4 +22235,23 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mobileMoneyPayoutLockedConfirm => 'Compris';
+
+  @override
+  String demandesTripFilterLabel(String route) {
+    return 'Trajet : $route';
+  }
+
+  @override
+  String get demandesTripFilterFallback => 'Ce trajet';
+
+  @override
+  String get demandesTripFilterClear => 'Voir toutes les demandes';
+
+  @override
+  String get demandesTripEmptyPendingTitle =>
+      'Aucune demande à traiter pour ce trajet';
+
+  @override
+  String get demandesTripEmptyDescription =>
+      'Les demandes reçues sur ce trajet apparaîtront ici.';
 }

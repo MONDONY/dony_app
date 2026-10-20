@@ -3176,7 +3176,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'tripOwnerUnpublishDialogTitle': (l) => l.tripOwnerUnpublishDialogTitle,
   'tripOwnerUnpublishDialogMessage': (l) => l.tripOwnerUnpublishDialogMessage,
   'tripOwnerRequestsTile': (l) => l.tripOwnerRequestsTile,
-  'tripOwnerRequestsDisabledMessage': (l) => l.tripOwnerRequestsDisabledMessage,
   'tripOwnerParcelsTile': (l) => l.tripOwnerParcelsTile,
   'tripOwnerNoParcelsMessage': (l) => l.tripOwnerNoParcelsMessage,
   'tripOwnerEditDisabledMessage': (l) => l.tripOwnerEditDisabledMessage,
@@ -7675,6 +7674,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.mobileMoneyPayoutLockedCount(intPlaceholderValue),
   'mobileMoneyPayoutLockedHint': (l) => l.mobileMoneyPayoutLockedHint,
   'mobileMoneyPayoutLockedConfirm': (l) => l.mobileMoneyPayoutLockedConfirm,
+  'demandesTripFilterLabel': (l) =>
+      l.demandesTripFilterLabel(placeholderMarker('route')),
+  'demandesTripFilterFallback': (l) => l.demandesTripFilterFallback,
+  'demandesTripFilterClear': (l) => l.demandesTripFilterClear,
+  'demandesTripEmptyPendingTitle': (l) => l.demandesTripEmptyPendingTitle,
+  'demandesTripEmptyDescription': (l) => l.demandesTripEmptyDescription,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8289,4 +8294,5 @@ const textParameters = <String, List<String>>{
   'mobileMoneyPayoutReviewOperatorCountry': ['operator', 'country'],
   'mobileMoneyPayoutRemoveTitle': ['operator'],
   'mobileMoneyPayoutRemoveBody': ['operator'],
+  'demandesTripFilterLabel': ['route'],
 };

@@ -91,6 +91,7 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.d
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/pinned_trips_cubit.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_group_cubit.dart';
@@ -1555,10 +1556,21 @@ final appRouter = GoRouter(
     ),
     // `?bid=<id>` : posé par la notification « Nouvelle demande d'envoi »,
     // ouvre cette demande par-dessus la liste (validé comme UUID par l'écran).
+    // `?filter=<onglet>` (nom de `TravelerBidFilter`) impose l'onglet, et
+    // `?announcement=<uuid>` restreint la liste à un trajet : posés par la
+    // tuile « Demandes » de la fiche trajet. Une valeur inconnue ou un id qui
+    // n'est pas un UUID sont ignorés (écran ouvert comme sans paramètre).
     GoRoute(
       path: '/demandes',
-      builder: (_, state) =>
-          DemandesScreen(focusBidId: state.uri.queryParameters['bid']),
+      builder: (_, state) => DemandesScreen(
+        focusBidId: state.uri.queryParameters['bid'],
+        initialFilter: resolveTravelerBidFilter(
+          state.uri.queryParameters['filter'],
+        ),
+        announcementId: validUuidParam(
+          state.uri.queryParameters['announcement'],
+        ),
+      ),
     ),
 
     // ── Profile — quick wins (hors shell) ────────────────────────────

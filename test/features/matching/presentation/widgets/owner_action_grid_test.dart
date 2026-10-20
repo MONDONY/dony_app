@@ -98,6 +98,11 @@ Future<void> _pump(
         path: '/announcements/:id/bids/pending',
         builder: (ctx, _) => const Scaffold(body: Text('PENDING_SCREEN')),
       ),
+      GoRoute(
+        path: '/demandes',
+        builder: (ctx, state) =>
+            Scaffold(body: Text('DEMANDES_SCREEN ${state.uri.query}')),
+      ),
     ],
   );
 
@@ -331,46 +336,65 @@ void main() {
     expect(find.text('Annuler'), findsNothing);
   });
 
-  // ── Bouton Demandes → écran « À traiter » ──────────────────────────────────
+  // ── Bouton Demandes → Activité › Demandes « À traiter » du trajet ────────
 
-  testWidgets('Demandes actif (demande en attente) → écran À traiter', (
+  testWidgets(
+    'Demandes (demande en attente) → /demandes filtré sur le trajet + badge',
+    (tester) async {
+      when(
+        () => bidBloc.state,
+      ).thenReturn(BidListLoaded([_makeBid(status: 'PENDING')]));
+      final a = _makeAnnouncement();
+
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: a,
+        isOwner: true,
+      );
+
+      expect(find.text('1'), findsOneWidget);
+      await tester.tap(find.text('Demandes'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('DEMANDES_SCREEN filter=aTraiter&announcement=${a.id}'),
+        findsOneWidget,
+      );
+      expect(find.text('PENDING_SCREEN'), findsNothing);
+    },
+  );
+
+  testWidgets('Demandes reste active sans demande en attente (PROD-1N)', (
     tester,
   ) async {
-    when(
-      () => bidBloc.state,
-    ).thenReturn(BidListLoaded([_makeBid(status: 'PENDING')]));
-
+    final a = _makeAnnouncement();
     await _pump(
       tester,
       annBloc: annBloc,
       bidBloc: bidBloc,
-      a: _makeAnnouncement(),
+      a: a,
       isOwner: true,
     );
+
+    // Plus de tuile grisée ni d'infobulle « rien à traiter ».
+    expect(find.byTooltip('Aucune demande à traiter'), findsNothing);
 
     await tester.tap(find.text('Demandes'));
     await tester.pumpAndSettle();
 
-    expect(find.text('PENDING_SCREEN'), findsOneWidget);
+    expect(
+      find.text('DEMANDES_SCREEN filter=aTraiter&announcement=${a.id}'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('Demandes désactivé sans demande en attente (tap sans effet)', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      annBloc: annBloc,
-      bidBloc: bidBloc,
-      a: _makeAnnouncement(),
-      isOwner: true,
+  test('tripRequestsLocation compose la route filtrée', () {
+    expect(
+      tripRequestsLocation('11111111-2222-3333-4444-555555555555'),
+      '/demandes?filter=aTraiter&announcement=11111111-2222-3333-4444-555555555555',
     );
-
-    expect(find.byTooltip('Aucune demande à traiter'), findsOneWidget);
-
-    await tester.tap(find.text('Demandes'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('PENDING_SCREEN'), findsNothing);
   });
 
   // ── Bouton Colis → écran des colis ─────────────────────────────────────────

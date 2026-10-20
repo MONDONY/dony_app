@@ -15,15 +15,16 @@ class _MockBidRepository extends Mock implements BidRepository {}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
-BidModel _bid(String id, String status) => BidModel(
-  id: id,
-  announcementId: 'a1',
-  senderId: 's1',
-  weightKg: 5,
-  status: status,
-  createdAt: DateTime(2026),
-  updatedAt: DateTime(2026),
-);
+BidModel _bid(String id, String status, {String announcementId = 'a1'}) =>
+    BidModel(
+      id: id,
+      announcementId: announcementId,
+      senderId: 's1',
+      weightKg: 5,
+      status: status,
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    );
 
 TravelerBidsPage _page(
   List<BidModel> bids, {
@@ -727,5 +728,129 @@ void main() {
       );
       await b.close();
     });
+  });
+
+  group('filtre par trajet (tuile Demandes de la fiche trajet)', () {
+    final mixed = [
+      _bid('b1', 'PENDING'),
+      _bid('b2', 'PENDING', announcementId: 'a2'),
+      _bid('b3', 'ACCEPTED', announcementId: 'a2'),
+    ];
+
+    test('resolveTravelerBidFilter : nom connu, sinon null', () {
+      expect(resolveTravelerBidFilter('aTraiter'), TravelerBidFilter.aTraiter);
+      expect(
+        resolveTravelerBidFilter('terminees'),
+        TravelerBidFilter.terminees,
+      );
+      expect(resolveTravelerBidFilter('bidon'), isNull);
+      expect(resolveTravelerBidFilter(null), isNull);
+    });
+
+    test('restreint liste et onglets, jamais pendingCount', () {
+      final state = TravelerBidsLoaded(
+        bids: mixed,
+        page: 0,
+        hasMore: false,
+        filter: TravelerBidFilter.aTraiter,
+        announcementId: 'a2',
+      );
+      expect(state.visibleBids.map((b) => b.id), ['b2']);
+      expect(state.countFor(TravelerBidFilter.aTraiter), 1);
+      expect(state.countFor(TravelerBidFilter.acceptees), 1);
+      // Le hub et la barre d'onglets gardent le total tous trajets.
+      expect(state.pendingCount, 2);
+      expect(state.announcementSample?.id, 'b2');
+      final cleared = state.copyWith(clearAnnouncement: true);
+      expect(cleared.announcementId, isNull);
+      expect(cleared.visibleBids.map((b) => b.id), ['b1', 'b2']);
+      expect(cleared.announcementSample, isNull);
+    });
+
+    test('aucune demande du trajet : liste vide, pas d’échantillon', () {
+      final state = TravelerBidsLoaded(
+        bids: mixed,
+        page: 0,
+        hasMore: false,
+        filter: TravelerBidFilter.aTraiter,
+        announcementId: 'zz',
+      );
+      expect(state.visibleBids, isEmpty);
+      expect(state.announcementSample, isNull);
+    });
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'posé avant la liste : appliqué au chargement avec l’onglet imposé',
+      build: () {
+        stub(_page(mixed));
+        return bloc();
+      },
+      act: (b) => b
+        ..add(const TravelerBidsAnnouncementChanged('a2'))
+        ..add(const TravelerBidsFilterChanged(TravelerBidFilter.acceptees))
+        ..add(const TravelerBidsRequested(force: true)),
+      expect: () => [
+        isA<TravelerBidsLoading>(),
+        isA<TravelerBidsLoaded>()
+            .having((s) => s.announcementId, 'trajet', 'a2')
+            .having((s) => s.filter, 'onglet', TravelerBidFilter.acceptees)
+            .having((s) => s.visibleBids.map((b) => b.id), 'visibles', ['b3']),
+      ],
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'posé puis retiré sur une liste chargée',
+      build: () {
+        stub(_page(mixed));
+        return bloc();
+      },
+      act: (b) async {
+        b.add(const TravelerBidsRequested());
+        await Future<void>.delayed(Duration.zero);
+        b
+          ..add(const TravelerBidsAnnouncementChanged('a2'))
+          ..add(const TravelerBidsAnnouncementChanged(null));
+      },
+      expect: () => [
+        isA<TravelerBidsLoading>(),
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.announcementId,
+          'trajet',
+          isNull,
+        ),
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.announcementId,
+          'trajet',
+          'a2',
+        ),
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.announcementId,
+          'trajet',
+          isNull,
+        ),
+      ],
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'survit à un rechargement',
+      build: () {
+        stub(_page(mixed));
+        return bloc();
+      },
+      act: (b) async {
+        b.add(const TravelerBidsAnnouncementChanged('a2'));
+        b.add(const TravelerBidsRequested());
+        await Future<void>.delayed(Duration.zero);
+        b.add(const TravelerBidsRequested(force: true));
+      },
+      skip: 1,
+      expect: () => [
+        isA<TravelerBidsLoaded>().having(
+          (s) => s.announcementId,
+          'trajet',
+          'a2',
+        ),
+      ],
+    );
   });
 }

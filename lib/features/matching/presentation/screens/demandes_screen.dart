@@ -6,6 +6,7 @@ import 'package:dony/core/error/error_catalog.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
@@ -41,7 +42,12 @@ import 'package:go_router/go_router.dart';
 /// (`/envois`) aux côtés de la liste d'envois : les deux y parlent du même
 /// objet, un colis que j'expédie.
 class DemandesScreen extends StatelessWidget {
-  const DemandesScreen({super.key, this.focusBidId});
+  const DemandesScreen({
+    super.key,
+    this.focusBidId,
+    this.initialFilter,
+    this.announcementId,
+  });
 
   /// Demande à ouvrir dès l'arrivée (`/demandes?bid=<id>`), posée par la
   /// notification « Nouvelle demande d'envoi ». L'écran se met alors sur
@@ -50,35 +56,45 @@ class DemandesScreen extends StatelessWidget {
   /// Ignorée si ce n'est pas un UUID (lien forgé ou tronqué).
   final String? focusBidId;
 
+  /// Onglet imposé à l'ouverture (`/demandes?filter=aTraiter`), posé par la
+  /// tuile « Demandes » de la fiche trajet. `null` : l'écran choisit.
+  final TravelerBidFilter? initialFilter;
+
+  /// Trajet auquel restreindre la liste (`/demandes?announcement=<id>`).
+  /// Ignoré si ce n'est pas un UUID. Retirable par la croix de la pastille.
+  final String? announcementId;
+
   @override
   Widget build(BuildContext context) {
     final focus = validFocusBidId(focusBidId);
+    // Venu d'une notification, on force « À traiter » : le singleton garde le
+    // dernier filtre choisi, et une nouvelle demande n'apparaît pas sous
+    // « Terminées ».
+    final filter =
+        initialFilter ?? (focus != null ? TravelerBidFilter.aTraiter : null);
+    final bloc = getIt<TravelerBidsBloc>()
+      // Toujours posé, même à `null` : le bloc est un singleton, un filtre
+      // par trajet laissé par une visite précédente ne doit pas survivre.
+      ..add(TravelerBidsAnnouncementChanged(validUuidParam(announcementId)));
+    if (filter != null) {
+      // Filtre d'abord (appliqué tout de suite si la liste est déjà là),
+      // rechargement ensuite : la demande de la notification est peut-être
+      // plus récente que la liste en mémoire.
+      bloc
+        ..add(TravelerBidsFilterChanged(filter))
+        ..add(const TravelerBidsRequested(force: true));
+    } else {
+      // Sans onglet imposé, le bloc ouvre sur le premier onglet non vide une
+      // fois la liste chargée.
+      bloc.add(
+        const TravelerBidsRequested(force: true, autoSelectFilter: true),
+      );
+    }
     return MultiBlocProvider(
       providers: [
         // Singleton partagé avec le hub et l'onglet Activités : `.value` (ne pas
         // le fermer au pop). On force un chargement à l'ouverture de l'écran.
-        // Venu d'une notification, on force aussi « À traiter » : le singleton
-        // garde le dernier filtre choisi, et une nouvelle demande n'apparaît
-        // pas sous « Terminées ».
-        BlocProvider.value(
-          value: focus != null
-              // Filtre d'abord (appliqué tout de suite si la liste est déjà
-              // là), rechargement ensuite : la demande de la notification est
-              // peut-être plus récente que la liste en mémoire.
-              ? (getIt<TravelerBidsBloc>()
-                  ..add(
-                    const TravelerBidsFilterChanged(TravelerBidFilter.aTraiter),
-                  )
-                  ..add(const TravelerBidsRequested(force: true)))
-              // Sans onglet imposé, le bloc ouvre sur le premier onglet non
-              // vide une fois la liste chargée.
-              : (getIt<TravelerBidsBloc>()..add(
-                  const TravelerBidsRequested(
-                    force: true,
-                    autoSelectFilter: true,
-                  ),
-                )),
-        ),
+        BlocProvider.value(value: bloc),
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
       ],
@@ -93,10 +109,13 @@ final RegExp _uuidRegex = RegExp(
 );
 
 /// [raw] s'il s'agit d'un UUID, `null` sinon : l'id vient d'une URL et finit
-/// dans une route, il ne doit rien pouvoir y injecter.
-@visibleForTesting
-String? validFocusBidId(String? raw) =>
+/// dans une route ou un filtre, il ne doit rien pouvoir y injecter.
+String? validUuidParam(String? raw) =>
     raw != null && _uuidRegex.hasMatch(raw) ? raw : null;
+
+/// Id de demande d'un lien `/demandes?bid=<id>`, validé par [validUuidParam].
+@visibleForTesting
+String? validFocusBidId(String? raw) => validUuidParam(raw);
 
 /// Variante de test : les blocs sont fournis par le contexte parent.
 @visibleForTesting
@@ -509,6 +528,14 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
             onClear: () => setState(() => _query = ''),
           ),
         ),
+        if (state.announcementId != null)
+          Padding(
+            padding: EdgeInsets.fromLTRB(hp, 0, hp, DonySpacing.sm),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _TripFilterChip(state: state),
+            ),
+          ),
         Padding(
           padding: EdgeInsets.fromLTRB(hp, 0, hp, DonySpacing.sm),
           child: Row(
@@ -534,7 +561,10 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
             child: visible.isEmpty
                 ? (searching
                       ? const _NoSearchResult()
-                      : _EmptyForFilter(filter: state.filter))
+                      : _EmptyForFilter(
+                          filter: state.filter,
+                          scopedToTrip: state.announcementId != null,
+                        ))
                 : ListView.separated(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -595,13 +625,34 @@ class _NoSearchResult extends StatelessWidget {
 }
 
 class _EmptyForFilter extends StatelessWidget {
-  const _EmptyForFilter({required this.filter});
+  const _EmptyForFilter({required this.filter, this.scopedToTrip = false});
 
   final TravelerBidFilter filter;
+
+  /// Liste restreinte à un trajet : rien à publier, l'écran dit seulement que
+  /// ce trajet n'a pas de demande dans cet onglet.
+  final bool scopedToTrip;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    if (scopedToTrip) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          const SizedBox(height: DonySpacing.huge),
+          DonyEmptyState(
+            mascotte: DonyMascotteType.assis,
+            title: switch (filter) {
+              TravelerBidFilter.aTraiter => l.demandesTripEmptyPendingTitle,
+              TravelerBidFilter.acceptees => l.bidListEmptyAcceptedTitle,
+              TravelerBidFilter.terminees => l.bidListEmptyCompletedTitle,
+            },
+            description: l.demandesTripEmptyDescription,
+          ),
+        ],
+      );
+    }
     final (title, description) = switch (filter) {
       TravelerBidFilter.aTraiter => (
         l.bidListEmptyPendingTitle,
@@ -643,6 +694,57 @@ class _EmptyForFilter extends StatelessWidget {
               : null,
         ),
       ],
+    );
+  }
+}
+
+/// Pastille « Trajet : Ville → Ville » : la liste est restreinte au trajet
+/// ouvert depuis sa fiche. La croix rend toutes les demandes.
+class _TripFilterChip extends StatelessWidget {
+  const _TripFilterChip({required this.state});
+
+  final TravelerBidsLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final sample = state.announcementSample;
+    final from = sample?.departureCity;
+    final to = sample?.arrivalCity;
+    final label = from != null && to != null
+        ? l.demandesTripFilterLabel('$from → $to')
+        : l.demandesTripFilterFallback;
+    return Container(
+      key: const Key('demandes-trip-filter'),
+      padding: const EdgeInsetsDirectional.only(start: DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: tt.labelLarge?.copyWith(color: cs.onPrimaryContainer),
+            ),
+          ),
+          IconButton(
+            key: const Key('demandes-trip-filter-clear'),
+            tooltip: l.demandesTripFilterClear,
+            visualDensity: VisualDensity.compact,
+            icon: DonyIcon('x', size: 16, color: cs.onPrimaryContainer),
+            onPressed: () => context.read<TravelerBidsBloc>().add(
+              const TravelerBidsAnnouncementChanged(null),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

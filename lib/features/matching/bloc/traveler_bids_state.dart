@@ -27,6 +27,11 @@ extension TravelerBidFilterX on TravelerBidFilter {
   };
 }
 
+/// Onglet nommé par un paramètre d'URL (`/demandes?filter=aTraiter`), `null`
+/// si la valeur est absente ou inconnue : l'écran choisit alors lui-même.
+TravelerBidFilter? resolveTravelerBidFilter(String? value) =>
+    value == null ? null : TravelerBidFilter.values.asNameMap()[value];
+
 sealed class TravelerBidsState extends Equatable {
   const TravelerBidsState();
 
@@ -52,6 +57,15 @@ class TravelerBidsLoaded extends TravelerBidsState {
   /// courante reste affichée.
   final bool isLoadingMore;
 
+  /// Trajet auquel la vue est restreinte (`/demandes?announcement=<id>`,
+  /// ouvert par la tuile « Demandes » de la fiche trajet), `null` pour toutes
+  /// les demandes. Restreint la liste visible et les compteurs des onglets,
+  /// jamais [pendingCount] : le hub et la barre d'onglets montrent le total.
+  final String? announcementId;
+
+  /// Répartition de toutes les bids par filtre, tous trajets confondus.
+  final Map<TravelerBidFilter, List<BidModel>> _allByFilter;
+
   /// Répartition des bids par filtre, calculée une fois à la construction.
   ///
   /// L'écran lit les trois compteurs et la liste visible à chaque build ;
@@ -65,14 +79,39 @@ class TravelerBidsLoaded extends TravelerBidsState {
     required this.hasMore,
     required this.filter,
     this.isLoadingMore = false,
-  }) : _byFilter = {
-         for (final f in TravelerBidFilter.values)
-           f: bids.where(f.matches).toList(growable: false),
-       };
+    this.announcementId,
+  }) : _allByFilter = _split(bids, null),
+       _byFilter = _split(bids, announcementId);
 
-  /// Nombre de demandes en attente d'une décision — la valeur portée par la
-  /// tuile « Demandes reçues » du hub Activités.
-  int get pendingCount => countFor(TravelerBidFilter.aTraiter);
+  /// Bids rangées par onglet, restreintes au trajet [announcementId] s'il est
+  /// posé.
+  static Map<TravelerBidFilter, List<BidModel>> _split(
+    List<BidModel> bids,
+    String? announcementId,
+  ) {
+    final scoped = announcementId == null
+        ? bids
+        : bids.where((b) => b.announcementId == announcementId);
+    return {
+      for (final f in TravelerBidFilter.values)
+        f: scoped.where(f.matches).toList(growable: false),
+    };
+  }
+
+  /// Nombre de demandes en attente d'une décision, tous trajets confondus :
+  /// la valeur portée par la tuile « Demandes reçues » du hub Activités.
+  int get pendingCount => _allByFilter[TravelerBidFilter.aTraiter]!.length;
+
+  /// Une demande du trajet de [announcementId], s'il y en a une : elle porte
+  /// les villes du trajet, affichées sur la pastille du filtre.
+  BidModel? get announcementSample {
+    final id = announcementId;
+    if (id == null) return null;
+    for (final b in bids) {
+      if (b.announcementId == id) return b;
+    }
+    return null;
+  }
 
   /// Bids correspondant au filtre courant.
   List<BidModel> get visibleBids => _byFilter[filter]!;
@@ -96,16 +135,28 @@ class TravelerBidsLoaded extends TravelerBidsState {
     bool? hasMore,
     TravelerBidFilter? filter,
     bool? isLoadingMore,
+    String? announcementId,
+    bool clearAnnouncement = false,
   }) => TravelerBidsLoaded(
     bids: bids ?? this.bids,
     page: page ?? this.page,
     hasMore: hasMore ?? this.hasMore,
     filter: filter ?? this.filter,
     isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    announcementId: clearAnnouncement
+        ? null
+        : (announcementId ?? this.announcementId),
   );
 
   @override
-  List<Object?> get props => [bids, page, hasMore, filter, isLoadingMore];
+  List<Object?> get props => [
+    bids,
+    page,
+    hasMore,
+    filter,
+    isLoadingMore,
+    announcementId,
+  ];
 }
 
 class TravelerBidsError extends TravelerBidsState {
