@@ -9033,10 +9033,6 @@
   "@tripOwnerRequestsTile": {
     "description": "Tuile « Demandes » (owner_action_grid.dart). Clé dédiée (R40) : distincte de bidListDemandesTitle."
   },
-  "tripOwnerRequestsDisabledMessage": "Aucune demande à traiter",
-  "@tripOwnerRequestsDisabledMessage": {
-    "description": "Tooltip de la tuile « Demandes » désactivée (owner_action_grid.dart). Clé dédiée (R40) : distincte de bidListEmptyPendingTitle, texte identique, doublon accepté."
-  },
   "tripOwnerParcelsTile": "Colis",
   "@tripOwnerParcelsTile": {
     "description": "Tuile « Colis » (owner_action_grid.dart), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur)."
@@ -22418,5 +22414,15 @@
   "mobileMoneyPayoutLockedHint": "Vous pourrez le retirer ou changer de numéro une fois le versement reçu.",
   "@mobileMoneyPayoutLockedHint": {"description": "Feuille « compte bloqué » (payout_account_sheets.dart), sous le nombre de colis."},
   "mobileMoneyPayoutLockedConfirm": "Compris",
-  "@mobileMoneyPayoutLockedConfirm": {"description": "Bouton unique de la feuille « compte bloqué » (payout_account_sheets.dart)."}
+  "@mobileMoneyPayoutLockedConfirm": {"description": "Bouton unique de la feuille « compte bloqué » (payout_account_sheets.dart)."},
+  "demandesTripFilterLabel": "Trajet : {route}",
+  "@demandesTripFilterLabel": {"description": "Pastille du filtre par trajet (demandes_screen.dart), ouverte par la tuile « Demandes » de la fiche trajet. {route} = « Ville → Ville ».", "placeholders": {"route": {"type": "String"}}},
+  "demandesTripFilterFallback": "Ce trajet",
+  "@demandesTripFilterFallback": {"description": "Pastille du filtre par trajet quand aucune demande ne donne les villes du trajet (demandes_screen.dart)."},
+  "demandesTripFilterClear": "Voir toutes les demandes",
+  "@demandesTripFilterClear": {"description": "Infobulle et libellé d'accessibilité de la croix qui retire le filtre par trajet (demandes_screen.dart)."},
+  "demandesTripEmptyPendingTitle": "Aucune demande à traiter pour ce trajet",
+  "@demandesTripEmptyPendingTitle": {"description": "État vide de l'onglet « À traiter » filtré sur un trajet (demandes_screen.dart)."},
+  "demandesTripEmptyDescription": "Les demandes reçues sur ce trajet apparaîtront ici.",
+  "@demandesTripEmptyDescription": {"description": "Description de l'état vide filtré sur un trajet (demandes_screen.dart)."}
 }

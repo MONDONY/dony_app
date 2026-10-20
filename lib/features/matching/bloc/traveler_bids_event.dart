@@ -52,3 +52,16 @@ class TravelerBidsFilterChanged extends TravelerBidsEvent {
   @override
   List<Object?> get props => [filter];
 }
+
+/// Restreint la vue aux demandes d'un trajet ([announcementId]), ou la rend à
+/// tous les trajets (`null`). Posé à chaque ouverture de l'écran « Demandes »
+/// (le bloc est un singleton : un filtre laissé par une visite précédente ne
+/// doit pas survivre) et par la croix de la pastille « Trajet ».
+class TravelerBidsAnnouncementChanged extends TravelerBidsEvent {
+  final String? announcementId;
+
+  const TravelerBidsAnnouncementChanged(this.announcementId);
+
+  @override
+  List<Object?> get props => [announcementId];
+}

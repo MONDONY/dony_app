@@ -19,12 +19,19 @@ import 'package:go_router/go_router.dart';
 ///
 /// Grille = source de vérité du gating propriétaire (Demandes / Colis /
 /// Modifier / Supprimer) :
-/// - **Demandes** → écran « À traiter » (PendingBidsScreen). Désactivé s'il n'y
-///   a aucune demande en attente.
+/// - **Demandes** → Activité › Demandes, onglet « À traiter », restreint à ce
+///   trajet (`/demandes?filter=aTraiter&announcement=<id>`). Toujours active :
+///   l'écran dit lui-même qu'il n'y a rien à traiter (PROD-1N).
 /// - **Colis** → écran des colis (BidListScreen). Désactivé s'il n'y a aucun
 ///   colis embarqué.
 /// - **Modifier** → édition (uniquement si 0 demande, sinon désactivé).
 /// - **Supprimer** (si supprimable) ou **Annuler** (si ACTIVE non supprimable).
+/// Activité › Demandes, onglet « À traiter », restreint au trajet [tripId].
+String tripRequestsLocation(String tripId) => Uri(
+  path: '/demandes',
+  queryParameters: {'filter': 'aTraiter', 'announcement': tripId},
+).toString();
+
 class OwnerActionGrid extends StatelessWidget {
   const OwnerActionGrid({super.key, required this.a, required this.isOwner});
 
@@ -130,16 +137,15 @@ class OwnerActionGrid extends StatelessWidget {
             }
           },
         ),
-      // ── Demandes → écran « À traiter » ; désactivé si rien en attente ──
+      // ── Demandes → Activité › Demandes « À traiter » de ce trajet ──
+      // Toujours active : grisée à zéro, elle laissait croire à une panne
+      // (PROD-1N). L'écran filtré dit lui-même qu'il n'y a rien à traiter.
       _tile(
         iconAsset: 'package',
         label: l.tripOwnerRequestsTile,
         accent: cs.primary,
         badgeCount: pendingCount,
-        onTap: hasPending
-            ? () => context.push('/announcements/${a.id}/bids/pending')
-            : null,
-        disabledMessage: l.tripOwnerRequestsDisabledMessage,
+        onTap: () => context.push(tripRequestsLocation(a.id)),
       ),
       // ── Colis → écran des colis ; désactivé si aucun colis embarqué ──
       _tile(

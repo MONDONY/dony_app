@@ -4361,7 +4361,6 @@
   "tripOwnerUnpublishDialogTitle": "Unpublish this trip?",
   "tripOwnerUnpublishDialogMessage": "The trip will no longer be visible and will stay in your drafts.",
   "tripOwnerRequestsTile": "Requests",
-  "tripOwnerRequestsDisabledMessage": "No requests to review",
   "tripOwnerParcelsTile": "Parcels",
   "tripOwnerNoParcelsMessage": "No parcels on board",
   "tripOwnerEditDisabledMessage": "Editable only while there's no request",
@@ -11095,5 +11094,10 @@
   "mobileMoneyPayoutRemoveConfirm": "Remove this account",
   "mobileMoneyPayoutLockedCount": "{count, plural, =1{1 parcel is still waiting for its payout on this account.} other{{count} parcels are still waiting for their payout on this account.}}",
   "mobileMoneyPayoutLockedHint": "You can remove it or change its number once the payout has arrived.",
-  "mobileMoneyPayoutLockedConfirm": "Got it"
+  "mobileMoneyPayoutLockedConfirm": "Got it",
+  "demandesTripFilterLabel": "Trip: {route}",
+  "demandesTripFilterFallback": "This trip",
+  "demandesTripFilterClear": "Show all requests",
+  "demandesTripEmptyPendingTitle": "No requests to review for this trip",
+  "demandesTripEmptyDescription": "Requests received for this trip will show up here."
 }

@@ -8703,9 +8703,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripOwnerRequestsTile => 'Requests';
 
   @override
-  String get tripOwnerRequestsDisabledMessage => 'No requests to review';
-
-  @override
   String get tripOwnerParcelsTile => 'Parcels';
 
   @override
@@ -22089,4 +22086,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mobileMoneyPayoutLockedConfirm => 'Got it';
+
+  @override
+  String demandesTripFilterLabel(String route) {
+    return 'Trip: $route';
+  }
+
+  @override
+  String get demandesTripFilterFallback => 'This trip';
+
+  @override
+  String get demandesTripFilterClear => 'Show all requests';
+
+  @override
+  String get demandesTripEmptyPendingTitle =>
+      'No requests to review for this trip';
+
+  @override
+  String get demandesTripEmptyDescription =>
+      'Requests received for this trip will show up here.';
 }

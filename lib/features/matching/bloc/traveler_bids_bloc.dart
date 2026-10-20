@@ -34,6 +34,14 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
   /// chargement plus récent (hub, push) peut doubler celui de l'écran.
   bool _autoSelectPending = false;
 
+  /// Onglet imposé avant que la liste soit là (`/demandes?filter=…` ou une
+  /// notification au démarrage) : appliqué au premier chargement abouti.
+  TravelerBidFilter? _pendingFilter;
+
+  /// Trajet auquel la vue est restreinte, gardé hors de l'état pour survivre
+  /// à un chargement lancé avant la liste.
+  String? _announcementId;
+
   /// Toutes les demandes sont chargées d'un bloc puis filtrées côté client :
   /// les compteurs par onglet doivent rester justes sans un appel par filtre.
   TravelerBidsBloc(this._repository, this._analytics)
@@ -41,6 +49,7 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
     on<TravelerBidsRequested>(_onRequested);
     on<TravelerBidsNextPageRequested>(_onNextPageRequested);
     on<TravelerBidsFilterChanged>(_onFilterChanged);
+    on<TravelerBidsAnnouncementChanged>(_onAnnouncementChanged);
   }
 
   Future<void> _onRequested(
@@ -57,7 +66,7 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
 
     final filter = current is TravelerBidsLoaded
         ? current.filter
-        : TravelerBidFilter.aTraiter;
+        : (_pendingFilter ?? TravelerBidFilter.aTraiter);
 
     if (current is! TravelerBidsLoaded) {
       emit(const TravelerBidsLoading());
@@ -90,8 +99,10 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
         // changer d'onglet pendant le chargement.
         filter: state is TravelerBidsLoaded
             ? (state as TravelerBidsLoaded).filter
-            : filter,
+            : (_pendingFilter ?? filter),
+        announcementId: _announcementId,
       );
+      _pendingFilter = null;
       final autoSelect = _autoSelectPending;
       _autoSelectPending = false;
       emit(autoSelect ? loaded.copyWith(filter: loaded.openingFilter) : loaded);
@@ -152,6 +163,23 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
         ),
       );
       emit(current.copyWith(filter: event.filter));
+    } else {
+      _pendingFilter = event.filter;
+    }
+  }
+
+  void _onAnnouncementChanged(
+    TravelerBidsAnnouncementChanged event,
+    Emitter<TravelerBidsState> emit,
+  ) {
+    _announcementId = event.announcementId;
+    final current = state;
+    if (current is TravelerBidsLoaded) {
+      emit(
+        event.announcementId == null
+            ? current.copyWith(clearAnnouncement: true)
+            : current.copyWith(announcementId: event.announcementId),
+      );
     }
   }
 }

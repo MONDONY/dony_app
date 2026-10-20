@@ -14496,12 +14496,6 @@ abstract class AppLocalizations {
   /// **'Demandes'**
   String get tripOwnerRequestsTile;
 
-  /// Tooltip de la tuile « Demandes » désactivée (owner_action_grid.dart). Clé dédiée (R40) : distincte de bidListEmptyPendingTitle, texte identique, doublon accepté.
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucune demande à traiter'**
-  String get tripOwnerRequestsDisabledMessage;
-
   /// Tuile « Colis » (owner_action_grid.dart), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur).
   ///
   /// In fr, this message translates to:
@@ -35849,6 +35843,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Compris'**
   String get mobileMoneyPayoutLockedConfirm;
+
+  /// Pastille du filtre par trajet (demandes_screen.dart), ouverte par la tuile « Demandes » de la fiche trajet. {route} = « Ville → Ville ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet : {route}'**
+  String demandesTripFilterLabel(String route);
+
+  /// Pastille du filtre par trajet quand aucune demande ne donne les villes du trajet (demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet'**
+  String get demandesTripFilterFallback;
+
+  /// Infobulle et libellé d'accessibilité de la croix qui retire le filtre par trajet (demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir toutes les demandes'**
+  String get demandesTripFilterClear;
+
+  /// État vide de l'onglet « À traiter » filtré sur un trajet (demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande à traiter pour ce trajet'**
+  String get demandesTripEmptyPendingTitle;
+
+  /// Description de l'état vide filtré sur un trajet (demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les demandes reçues sur ce trajet apparaîtront ici.'**
+  String get demandesTripEmptyDescription;
 }
 
 class _AppLocalizationsDelegate

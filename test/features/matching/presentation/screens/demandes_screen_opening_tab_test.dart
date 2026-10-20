@@ -79,9 +79,17 @@ class _StaticHelpCenterSource implements HelpCenterConfigSource {
   Future<String?> fetchAndActivate() async => json;
 }
 
-BidModel _bid(String id, String status) => BidModel(
+BidModel _bid(
+  String id,
+  String status, {
+  String announcementId = 'a1',
+  String? departureCity,
+  String? arrivalCity,
+}) => BidModel(
   id: id,
-  announcementId: 'a1',
+  announcementId: announcementId,
+  departureCity: departureCity,
+  arrivalCity: arrivalCity,
   senderId: 's1',
   weightKg: 5,
   status: status,
@@ -145,7 +153,12 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  Future<void> pumpScreen(WidgetTester tester, {String? focusBidId}) async {
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    String? focusBidId,
+    TravelerBidFilter? initialFilter,
+    String? announcementId,
+  }) async {
     tester.view.physicalSize = const Size(900, 1800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -174,7 +187,11 @@ void main() {
                 )..add(const HelpCenterLoadRequested()),
               ),
             ],
-            child: DemandesScreen(focusBidId: focusBidId),
+            child: DemandesScreen(
+              focusBidId: focusBidId,
+              initialFilter: initialFilter,
+              announcementId: announcementId,
+            ),
           ),
         ),
         GoRoute(
@@ -300,5 +317,103 @@ void main() {
       (bloc().state as TravelerBidsLoaded).filter,
       TravelerBidFilter.aTraiter,
     );
+  });
+
+  group('tuile « Demandes » de la fiche trajet (PROD-1N)', () {
+    const trip = '11111111-2222-3333-4444-555555555555';
+
+    List<BidModel> mixed() => [
+      _bid('b1', 'PENDING'),
+      _bid(
+        'b2',
+        'PENDING',
+        announcementId: trip,
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+      ),
+      _bid('b3', 'ACCEPTED', announcementId: trip),
+    ];
+
+    testWidgets('ouvre « À traiter » restreint au trajet, pastille retirable', (
+      tester,
+    ) async {
+      responses = [_page(mixed())];
+
+      await pumpScreen(
+        tester,
+        initialFilter: TravelerBidFilter.aTraiter,
+        announcementId: trip,
+      );
+
+      expect(selectedChip(tester), TravelerBidFilter.aTraiter);
+      expect(find.text('Trajet : Paris → Dakar'), findsOneWidget);
+      // Onglets comptés sur le trajet seul.
+      expect(find.text('À traiter (1)'), findsOneWidget);
+      expect(find.text('Acceptées (1)'), findsOneWidget);
+      expect(
+        (bloc().state as TravelerBidsLoaded).visibleBids.map((b) => b.id),
+        ['b2'],
+      );
+
+      await tester.tap(find.byKey(const Key('demandes-trip-filter-clear')));
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byKey(const Key('demandes-trip-filter')), findsNothing);
+      expect(find.text('À traiter (2)'), findsOneWidget);
+      expect(selectedChip(tester), TravelerBidFilter.aTraiter);
+    });
+
+    testWidgets(
+      'rien à traiter sur ce trajet : état vide dédié, pas de bascule',
+      (tester) async {
+        responses = [
+          _page([
+            _bid('b1', 'PENDING'),
+            _bid('b3', 'ACCEPTED', announcementId: trip),
+          ]),
+        ];
+
+        await pumpScreen(
+          tester,
+          initialFilter: TravelerBidFilter.aTraiter,
+          announcementId: trip,
+        );
+
+        expect(selectedChip(tester), TravelerBidFilter.aTraiter);
+        expect(
+          find.text('Aucune demande à traiter pour ce trajet'),
+          findsOneWidget,
+        );
+        // Pas d'invitation à publier un trajet : on est déjà sur le sien.
+        expect(find.text('Publier un trajet'), findsNothing);
+        // Aucune demande du trajet ne donne ses villes : libellé générique.
+        expect(find.text('Ce trajet'), findsOneWidget);
+      },
+    );
+
+    testWidgets('trajet non UUID ignoré : toutes les demandes', (tester) async {
+      responses = [_page(mixed())];
+
+      await pumpScreen(
+        tester,
+        initialFilter: TravelerBidFilter.aTraiter,
+        announcementId: 'pas-un-uuid',
+      );
+
+      expect(find.byKey(const Key('demandes-trip-filter')), findsNothing);
+      expect(find.text('À traiter (2)'), findsOneWidget);
+    });
+
+    testWidgets('une visite sans trajet efface le filtre laissé au singleton', (
+      tester,
+    ) async {
+      responses = [_page(mixed())];
+      bloc().add(const TravelerBidsAnnouncementChanged(trip));
+
+      await pumpScreen(tester);
+
+      expect((bloc().state as TravelerBidsLoaded).announcementId, isNull);
+      expect(find.byKey(const Key('demandes-trip-filter')), findsNothing);
+    });
   });
 }
