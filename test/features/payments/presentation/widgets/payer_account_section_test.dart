@@ -278,10 +278,7 @@ void main() {
 
       expect((dialCenter.dy - labelCenter.dy).abs(), lessThanOrEqualTo(2));
       expect((dialCenter.dy - inputCenter.dy).abs(), lessThanOrEqualTo(2));
-      expect(
-        (dialCenter.dy - fieldRect.center.dy).abs(),
-        lessThanOrEqualTo(2),
-      );
+      expect((dialCenter.dy - fieldRect.center.dy).abs(), lessThanOrEqualTo(2));
 
       // Le texte saisi reste aligné avec l'indicatif.
       await tester.enterText(input, '07 48 84 08 56');
