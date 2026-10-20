@@ -74,6 +74,21 @@ void main() {
     ],
   );
   const countries = MobileMoneyCountries(available: [ci, sn], upcoming: ['ML']);
+  const cm = MobileMoneyCountry(
+    country: 'CM',
+    currency: 'XAF',
+    operators: [
+      MobileMoneyOperator(
+        code: 'MTN_MOMO_CMR',
+        label: 'MTN MoMo',
+        brand: 'MTN',
+      ),
+    ],
+  );
+  const mixedCountries = MobileMoneyCountries(
+    available: [ci, sn, cm],
+    upcoming: ['ML'],
+  );
 
   const e164 = '+2250748840856';
 
@@ -878,6 +893,332 @@ void main() {
       verifyLogged(AnalyticsEvents.mobileMoneySwitchToCardTapped, {
         'country': 'ML',
         'flow': 'topup',
+      });
+    });
+  });
+
+  group('devise imposée et opérateurs permis', () {
+    test('configure_loadsWithCurrencyAndRestriction', () async {
+      when(
+        () => repo.mobileMoneyCountries(),
+      ).thenAnswer((_) async => mixedCountries);
+
+      await cubit.configure(
+        currency: 'XOF',
+        allowedOperators: {'ORANGE_CIV', 'WAVE_CIV'},
+      );
+
+      expect(cubit.state.status, PayerAccountStatus.ready);
+      expect(cubit.state.allowedOperators, {'ORANGE_CIV', 'WAVE_CIV'});
+      expect(cubit.state.currency, 'XOF');
+      expect(cubit.state.countries?.available, [ci, sn]);
+      expect(cubit.state.countries?.otherCurrency, [cm]);
+      verify(() => repo.mobileMoneyCountries()).called(1);
+    });
+
+    test('configure_withoutArguments_isPlainLoad', () async {
+      await cubit.configure();
+
+      expect(cubit.state.countries, countries);
+      expect(cubit.state.allowedOperators, isNull);
+      expect(cubit.state.currency, isNull);
+    });
+
+    test('load_afterConfigure_keepsRestriction', () async {
+      when(
+        () => repo.mobileMoneyCountries(),
+      ).thenAnswer((_) async => mixedCountries);
+      await cubit.configure(currency: 'XOF', allowedOperators: {'WAVE_CIV'});
+
+      await cubit.load();
+
+      expect(cubit.state.countries?.otherCurrency, [cm]);
+      expect(cubit.state.allowedOperators, {'WAVE_CIV'});
+    });
+
+    test('load_withCurrency_movesOtherCurrencyCountries', () async {
+      when(
+        () => repo.mobileMoneyCountries(),
+      ).thenAnswer((_) async => mixedCountries);
+
+      await cubit.configure(currency: 'XOF');
+
+      expect(cubit.state.countries?.byCode('CI'), ci);
+      expect(cubit.state.countries?.byCode('CM'), isNull);
+      expect(cubit.state.countries?.otherCurrency, [cm]);
+      // Un pays d'une autre devise ne se choisit pas.
+      cubit.selectCountry('CM');
+      expect(cubit.state.country, isNull);
+    });
+
+    test('load_rememberedCountryOtherCurrency_noPrefill', () async {
+      when(
+        () => repo.mobileMoneyCountries(),
+      ).thenAnswer((_) async => mixedCountries);
+      await memory.save(
+        const RememberedPayer(
+          country: 'CM',
+          operatorCode: 'MTN_MOMO_CMR',
+          e164: '+237670123456',
+        ),
+      );
+
+      await cubit.configure(currency: 'XOF');
+
+      expect(cubit.state.status, PayerAccountStatus.ready);
+      expect(cubit.state.country, isNull);
+      expect(cubit.state.operator, isNull);
+      expect(cubit.state.e164, isNull);
+      verifyNever(() => repo.topupProviders(any()));
+    });
+
+    test('load_rememberedOperatorDisallowed_keepsCountryOnly', () async {
+      await memory.save(
+        const RememberedPayer(
+          country: 'CI',
+          operatorCode: 'ORANGE_CIV',
+          e164: e164,
+        ),
+      );
+
+      await cubit.configure(allowedOperators: {'WAVE_CIV'});
+
+      expect(cubit.state.country, ci);
+      expect(cubit.state.operator, isNull);
+      expect(cubit.state.localNumber, '');
+      expect(cubit.state.e164, isNull);
+      expect(cubit.state.recognition, RecognitionStatus.idle);
+      verifyNever(() => repo.topupProviders(any()));
+    });
+
+    test('load_rememberedOperatorAllowed_prefillsAsBefore', () async {
+      await memory.save(
+        const RememberedPayer(
+          country: 'CI',
+          operatorCode: 'ORANGE_CIV',
+          e164: e164,
+        ),
+      );
+
+      await cubit.configure(allowedOperators: {'ORANGE_CIV'});
+      await Future<void>.delayed(Duration.zero);
+
+      expect(cubit.state.operator, orange);
+      expect(cubit.state.e164, e164);
+      expect(cubit.state.recognition, RecognitionStatus.recognized);
+    });
+
+    test('restrictOperators_dropsCurrentDisallowedOperator_keepsNumber', () {
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+        expect(cubit.state.recognition, RecognitionStatus.recognized);
+
+        cubit.restrictOperators({'WAVE_CIV'});
+
+        expect(cubit.state.allowedOperators, {'WAVE_CIV'});
+        expect(cubit.state.operator, isNull);
+        expect(cubit.state.localNumber, '0748840856');
+        expect(cubit.state.e164, e164);
+        expect(cubit.state.recognition, RecognitionStatus.idle);
+        expect(cubit.state.canProceed, isFalse);
+      });
+    });
+
+    test('restrictOperators_keepsAllowedOperator', () async {
+      await readyOnOrange();
+
+      cubit.restrictOperators({'ORANGE_CIV', 'WAVE_CIV'});
+
+      expect(cubit.state.operator, orange);
+    });
+
+    test('restrictOperators_null_allowsEverythingAgain', () async {
+      await cubit.load();
+      cubit.selectCountry('CI');
+      cubit.restrictOperators({'WAVE_CIV'});
+      cubit.selectOperator('ORANGE_CIV');
+      expect(cubit.state.operator, isNull);
+
+      cubit.restrictOperators(null);
+      cubit.selectOperator('ORANGE_CIV');
+
+      expect(cubit.state.allowedOperators, isNull);
+      expect(cubit.state.operator, orange);
+    });
+
+    test('restrictOperators_dropsInFlightRecognition', () {
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+
+        // Avant la fin du debounce : la reconnaissance ne doit pas partir.
+        cubit.restrictOperators({'WAVE_CIV'});
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.idle);
+        verifyNever(() => repo.topupProviders(any()));
+      });
+    });
+
+    test('selectOperator_disallowed_ignored', () async {
+      await cubit.load();
+      cubit.selectCountry('CI');
+      cubit.restrictOperators({'WAVE_CIV'});
+
+      cubit.selectOperator('ORANGE_CIV');
+
+      expect(cubit.state.operator, isNull);
+
+      cubit.selectOperator('WAVE_CIV');
+      expect(cubit.state.operator, wave);
+    });
+
+    test('isAllowed_followsRestriction', () async {
+      await cubit.load();
+      expect(cubit.state.isAllowed(orange), isTrue);
+
+      cubit.restrictOperators({'WAVE_CIV'});
+
+      expect(cubit.state.isAllowed(orange), isFalse);
+      expect(cubit.state.isAllowed(wave), isTrue);
+    });
+
+    test('phoneChanged_detectedDisallowed_notAllowed_noSwitch_logsEvent', () {
+      when(
+        () => repo.topupProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('MTN_MOMO_CIV'));
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.restrictOperators({'ORANGE_CIV', 'WAVE_CIV'});
+        cubit.selectOperator('ORANGE_CIV');
+
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.notAllowed);
+        expect(cubit.state.operator?.code, 'ORANGE_CIV');
+        expect(cubit.state.rejectedOperator?.code, 'MTN_MOMO_CIV');
+        expect(cubit.state.switchedFrom, isNull);
+        expect(cubit.state.canProceed, isFalse);
+        verifyLogged(AnalyticsEvents.mobileMoneyOperatorNotAllowed, {
+          'operator': 'MTN_MOMO_CIV',
+          'flow': 'topup',
+        });
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyOperatorAutoSwitched,
+            properties: any(named: 'properties'),
+          ),
+        );
+      });
+    });
+
+    test('selectOperator_afterNotAllowed_allowedChoice_overridden', () {
+      when(
+        () => repo.topupProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('MTN_MOMO_CIV'));
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.restrictOperators({'ORANGE_CIV', 'WAVE_CIV'});
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+        expect(cubit.state.recognition, RecognitionStatus.notAllowed);
+
+        cubit.selectOperator('WAVE_CIV');
+        async.flushMicrotasks();
+
+        expect(cubit.state.operator?.code, 'WAVE_CIV');
+        expect(cubit.state.recognition, RecognitionStatus.overridden);
+        expect(cubit.state.rejectedOperator, isNull);
+        expect(cubit.state.canProceed, isTrue);
+        // Aucun nouvel appel : le choix est respecté.
+        verify(() => repo.topupProviders(e164)).called(1);
+      });
+    });
+
+    test('phoneChanged_afterNotAllowed_clearsRejectedOperator', () {
+      when(
+        () => repo.topupProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('MTN_MOMO_CIV'));
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.restrictOperators({'ORANGE_CIV'});
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+        expect(cubit.state.rejectedOperator, isNotNull);
+
+        cubit.phoneChanged('074884085');
+
+        expect(cubit.state.recognition, RecognitionStatus.idle);
+        expect(cubit.state.rejectedOperator, isNull);
+      });
+    });
+
+    test('restrictOperators_widenedAfterNotAllowed_recognizesAgain', () {
+      when(
+        () => repo.topupProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('MTN_MOMO_CIV'));
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.restrictOperators({'ORANGE_CIV'});
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+        expect(cubit.state.recognition, RecognitionStatus.notAllowed);
+
+        cubit.restrictOperators({'ORANGE_CIV', 'MTN_MOMO_CIV'});
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.autoSwitched);
+        expect(cubit.state.operator?.code, 'MTN_MOMO_CIV');
+        expect(cubit.state.rejectedOperator, isNull);
+      });
+    });
+
+    test('phoneChanged_detectedAllowed_autoSwitchStillWorks', () {
+      when(
+        () => repo.topupProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('WAVE_CIV'));
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.restrictOperators({'ORANGE_CIV', 'WAVE_CIV'});
+        cubit.selectOperator('ORANGE_CIV');
+
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
+        expect(cubit.state.operator?.code, 'WAVE_CIV');
+        expect(cubit.state.recognition, RecognitionStatus.autoSwitched);
+        expect(cubit.state.switchedFrom, 'ORANGE_CIV');
+        expect(cubit.state.rejectedOperator, isNull);
+        expect(cubit.state.canProceed, isTrue);
       });
     });
   });

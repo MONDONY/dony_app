@@ -31,6 +31,12 @@ enum RecognitionStatus {
   /// ensuite choisi lui-même : son choix est respecté, sans nouvel appel.
   overridden,
 
+  /// Le numéro appartient à un opérateur du pays que ce paiement n'accepte
+  /// pas (`rejectedOperator`) : aucune bascule, le choix de l'utilisateur est
+  /// gardé et le paiement bloqué. Choisir ensuite un opérateur permis donne
+  /// [overridden].
+  notAllowed,
+
   /// Reconnaissance impossible (coupure réseau, erreur serveur) : le numéro
   /// n'est pas en cause, `retryRecognition` relance l'appel.
   failed,
@@ -50,6 +56,9 @@ class PayerAccountState extends Equatable {
     this.e164,
     this.recognition = RecognitionStatus.idle,
     this.switchedFrom,
+    this.allowedOperators,
+    this.rejectedOperator,
+    this.currency,
   });
 
   final PayerAccountStatus status;
@@ -74,6 +83,20 @@ class PayerAccountState extends Equatable {
   /// Code de l'opérateur quitté lors d'un basculement automatique.
   final String? switchedFrom;
 
+  /// Codes d'opérateurs acceptés pour ce paiement ; `null` = tous.
+  final Set<String>? allowedOperators;
+
+  /// Opérateur détecté sur le numéro mais non permis ([RecognitionStatus
+  /// .notAllowed]) ; `null` dans tout autre état.
+  final MobileMoneyOperator? rejectedOperator;
+
+  /// Devise imposée au catalogue (`configure`) ; `null` = aucune.
+  final String? currency;
+
+  /// L'opérateur [o] est-il accepté pour ce paiement ?
+  bool isAllowed(MobileMoneyOperator o) =>
+      allowedOperators == null || allowedOperators!.contains(o.code);
+
   bool get canProceed =>
       recognition == RecognitionStatus.recognized ||
       recognition == RecognitionStatus.autoSwitched ||
@@ -89,6 +112,9 @@ class PayerAccountState extends Equatable {
     Object? e164 = _unset,
     RecognitionStatus? recognition,
     Object? switchedFrom = _unset,
+    Object? allowedOperators = _unset,
+    Object? rejectedOperator = _unset,
+    Object? currency = _unset,
   }) => PayerAccountState(
     status: status ?? this.status,
     countries: identical(countries, _unset)
@@ -109,6 +135,17 @@ class PayerAccountState extends Equatable {
     switchedFrom: identical(switchedFrom, _unset)
         ? this.switchedFrom
         : switchedFrom as String?,
+    allowedOperators: identical(allowedOperators, _unset)
+        ? this.allowedOperators
+        : allowedOperators as Set<String>?,
+    // L'opérateur refusé n'a de sens que dans l'état `notAllowed` : tout autre
+    // état de reconnaissance l'efface, sauf mention contraire.
+    rejectedOperator: identical(rejectedOperator, _unset)
+        ? (recognition != null && recognition != RecognitionStatus.notAllowed
+              ? null
+              : this.rejectedOperator)
+        : rejectedOperator as MobileMoneyOperator?,
+    currency: identical(currency, _unset) ? this.currency : currency as String?,
   );
 
   @override
@@ -122,5 +159,8 @@ class PayerAccountState extends Equatable {
     e164,
     recognition,
     switchedFrom,
+    allowedOperators,
+    rejectedOperator,
+    currency,
   ];
 }

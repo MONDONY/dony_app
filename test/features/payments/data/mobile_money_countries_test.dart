@@ -145,6 +145,39 @@ void main() {
     });
   });
 
+  group('MobileMoneyCountries.restrictedTo', () {
+    const ci = MobileMoneyCountry(country: 'CI', currency: 'XOF');
+    const sn = MobileMoneyCountry(country: 'SN', currency: 'XOF');
+    const cm = MobileMoneyCountry(country: 'CM', currency: 'XAF');
+    const all = MobileMoneyCountries(available: [ci, cm, sn], upcoming: ['ML']);
+
+    test('garde les pays de la devise et range le reste à part', () {
+      final restricted = all.restrictedTo('XOF');
+
+      expect(restricted.available, [ci, sn]);
+      expect(restricted.otherCurrency, [cm]);
+      expect(restricted.upcoming, ['ML']);
+      expect(restricted.byCode('CM'), isNull);
+    });
+
+    test('otherCurrency est vide par défaut', () {
+      expect(all.otherCurrency, isEmpty);
+    });
+
+    test('devise sans pays servi : tout passe dans otherCurrency', () {
+      final restricted = all.restrictedTo('GNF');
+
+      expect(restricted.available, isEmpty);
+      expect(restricted.otherCurrency, [ci, cm, sn]);
+    });
+
+    test('restreindre deux fois à la même devise ne change rien', () {
+      final once = all.restrictedTo('XOF');
+
+      expect(once.restrictedTo('XOF'), once);
+    });
+  });
+
   test('égalité par valeur (Equatable)', () {
     expect(
       MobileMoneyCountries.fromJson(backExample()),

@@ -34666,6 +34666,30 @@ abstract class AppLocalizations {
   /// **'Vérification impossible pour le moment.'**
   String get mobileMoneyRecognitionFailed;
 
+  /// Libellé sous le nom d'une pastille d'opérateur grisée : ce paiement n'accepte pas cet opérateur (payer_account_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non accepté'**
+  String get mobileMoneyOperatorNotAccepted;
+
+  /// Message sous le compte qui paie : le numéro appartient à un opérateur que le voyageur n'accepte pas, l'app ne bascule pas dessus. {operator} : nom de l'opérateur détecté.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est un numéro {operator}, que ce voyageur n\'accepte pas.'**
+  String mobileMoneyNumberOperatorNotAccepted(String operator);
+
+  /// Sous-titre d'un pays grisé dans la recherche du pays mobile money : il paie dans une autre devise que celle du colis. {currency} : code de la devise du colis (ex. XOF).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce paiement se fait en {currency}'**
+  String mobileMoneyCountryOtherCurrency(String currency);
+
+  /// Aide sous le champ numéro du compte qui paie un colis : le numéro peut être celui de l'expéditeur ou d'un proche (payer_account_section.dart, numberHelper).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le vôtre ou celui d\'un proche.'**
+  String get mobileMoneyPayerHelper;
+
   /// Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire.
   ///
   /// In fr, this message translates to:

@@ -7370,6 +7370,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.mobileMoneyOperatorSwitched(placeholderMarker('operator')),
   'mobileMoneyNumberUnrecognized': (l) => l.mobileMoneyNumberUnrecognized,
   'mobileMoneyRecognitionFailed': (l) => l.mobileMoneyRecognitionFailed,
+  'mobileMoneyOperatorNotAccepted': (l) => l.mobileMoneyOperatorNotAccepted,
+  'mobileMoneyNumberOperatorNotAccepted': (l) =>
+      l.mobileMoneyNumberOperatorNotAccepted(placeholderMarker('operator')),
+  'mobileMoneyCountryOtherCurrency': (l) =>
+      l.mobileMoneyCountryOtherCurrency(placeholderMarker('currency')),
+  'mobileMoneyPayerHelper': (l) => l.mobileMoneyPayerHelper,
   'walletTopupSwitchToCard': (l) => l.walletTopupSwitchToCard,
   'walletTopupMmRingCaption': (l) => l.walletTopupMmRingCaption,
   'walletTopupMmSmsSentTitle': (l) =>
@@ -8200,6 +8206,8 @@ const textParameters = <String, List<String>>{
   'mobileMoneyOperatorNumberLabel': ['operator'],
   'mobileMoneyNumberRecognized': ['operator'],
   'mobileMoneyOperatorSwitched': ['operator'],
+  'mobileMoneyNumberOperatorNotAccepted': ['operator'],
+  'mobileMoneyCountryOtherCurrency': ['currency'],
   'walletTopupMmSmsSentTitle': ['number'],
   'walletTopupMmPromptTitle': ['number'],
   'walletTopupMmFromValue': ['operator', 'last2'],

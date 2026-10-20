@@ -21470,6 +21470,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vérification impossible pour le moment.';
 
   @override
+  String get mobileMoneyOperatorNotAccepted => 'Non accepté';
+
+  @override
+  String mobileMoneyNumberOperatorNotAccepted(String operator) {
+    return 'C\'est un numéro $operator, que ce voyageur n\'accepte pas.';
+  }
+
+  @override
+  String mobileMoneyCountryOtherCurrency(String currency) {
+    return 'Ce paiement se fait en $currency';
+  }
+
+  @override
+  String get mobileMoneyPayerHelper => 'Le vôtre ou celui d\'un proche.';
+
+  @override
   String get walletTopupSwitchToCard => 'Recharger par carte';
 
   @override

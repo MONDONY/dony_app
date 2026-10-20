@@ -21331,6 +21331,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'We can\'t check this number right now.';
 
   @override
+  String get mobileMoneyOperatorNotAccepted => 'Not accepted';
+
+  @override
+  String mobileMoneyNumberOperatorNotAccepted(String operator) {
+    return 'This is a $operator number, which this traveler does not accept.';
+  }
+
+  @override
+  String mobileMoneyCountryOtherCurrency(String currency) {
+    return 'This payment is in $currency';
+  }
+
+  @override
+  String get mobileMoneyPayerHelper => 'Yours or a relative\'s.';
+
+  @override
   String get walletTopupSwitchToCard => 'Top up by card';
 
   @override

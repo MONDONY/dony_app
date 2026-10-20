@@ -21,8 +21,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// (reconnu, opérateur changé, non reconnu, vérification impossible) s'affiche
 /// sous la carte. En état `legacy` (back sans catalogue des pays), rien n'est
 /// rendu : l'appelant garde son ancien champ.
+///
+/// Quand le cubit restreint les opérateurs, les pastilles non permises sont
+/// grisées et non cliquables, avec un libellé dessous. Les textes propres à
+/// l'appelant se règlent ici :
+/// - [disallowedOperatorLabel] : libellé sous une pastille non permise
+///   (défaut « Non accepté ») ;
+/// - [notAllowedMessage] : message quand le numéro est d'un opérateur non
+///   permis, reçoit le nom de cet opérateur ;
+/// - [numberHelper] : aide affichée sous le champ numéro.
 class PayerAccountSection extends StatelessWidget {
-  const PayerAccountSection({super.key});
+  const PayerAccountSection({
+    super.key,
+    this.disallowedOperatorLabel,
+    this.notAllowedMessage,
+    this.numberHelper,
+  });
+
+  final String? disallowedOperatorLabel;
+  final String Function(String operatorLabel)? notAllowedMessage;
+  final String? numberHelper;
 
   @override
   Widget build(BuildContext context) {
@@ -63,9 +81,13 @@ class PayerAccountSection extends StatelessWidget {
                   child: Text(l.commonRetry),
                 ),
               ),
-              _ => _AccountCard(state: state),
+              _ => _AccountCard(
+                state: state,
+                disallowedOperatorLabel: disallowedOperatorLabel,
+                numberHelper: numberHelper,
+              ),
             },
-            _Feedback(state: state),
+            _Feedback(state: state, notAllowedMessage: notAllowedMessage),
           ],
         );
       },
@@ -92,9 +114,15 @@ Widget _reveal(BuildContext context, Widget child, {Key? key}) {
 }
 
 class _AccountCard extends StatelessWidget {
-  const _AccountCard({required this.state});
+  const _AccountCard({
+    required this.state,
+    required this.disallowedOperatorLabel,
+    required this.numberHelper,
+  });
 
   final PayerAccountState state;
+  final String? disallowedOperatorLabel;
+  final String? numberHelper;
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +142,7 @@ class _AccountCard extends StatelessWidget {
               padding: const EdgeInsets.all(DonySpacing.md),
               child: MobileMoneyCountryField(
                 countries: countries,
+                currency: state.currency,
                 initialUpcoming: state.unavailableCountry,
                 onSelected: cubit.selectCountry,
                 onCleared: () {
@@ -130,6 +159,10 @@ class _AccountCard extends StatelessWidget {
               _OperatorRow(
                 operators: country.operators,
                 selected: operator?.code,
+                isAllowed: state.isAllowed,
+                disallowedLabel:
+                    disallowedOperatorLabel ??
+                    context.l10n.mobileMoneyOperatorNotAccepted,
                 onSelect: cubit.selectOperator,
               ),
               key: ValueKey('mm-operator-row-${country.country}'),
@@ -144,6 +177,7 @@ class _AccountCard extends StatelessWidget {
                 operatorLabel: operator.label,
                 localNumber: state.localNumber,
                 checking: state.recognition == RecognitionStatus.checking,
+                helper: numberHelper,
                 onChanged: cubit.phoneChanged,
               ),
               key: ValueKey('mm-number-row-${country.country}'),
@@ -214,11 +248,15 @@ class _OperatorRow extends StatelessWidget {
   const _OperatorRow({
     required this.operators,
     required this.selected,
+    required this.isAllowed,
+    required this.disallowedLabel,
     required this.onSelect,
   });
 
   final List<MobileMoneyOperator> operators;
   final String? selected;
+  final bool Function(MobileMoneyOperator operator) isAllowed;
+  final String disallowedLabel;
   final ValueChanged<String> onSelect;
 
   @override
@@ -249,6 +287,7 @@ class _OperatorRow extends StatelessWidget {
                   key: Key('mm-operator-${o.code}'),
                   operator: o,
                   selected: o.code == selected,
+                  disallowedLabel: isAllowed(o) ? null : disallowedLabel,
                   onTap: () => onSelect(o.code),
                 ),
             ],
@@ -261,42 +300,54 @@ class _OperatorRow extends StatelessWidget {
 
 /// Pastille d'opérateur : marque + nom. La zone tactile fait 44 px de haut,
 /// la pastille visible 36.
+///
+/// Avec [disallowedLabel], l'opérateur n'est pas accepté pour ce paiement : la
+/// pastille est grisée (opacité 0,4), le libellé passe sous le nom, et rien
+/// ne se touche ni ne s'annonce comme actif.
 class _OperatorPill extends StatelessWidget {
   const _OperatorPill({
     super.key,
     required this.operator,
     required this.selected,
     required this.onTap,
+    this.disallowedLabel,
   });
 
   final MobileMoneyOperator operator;
   final bool selected;
   final VoidCallback onTap;
+  final String? disallowedLabel;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final disallowed = disallowedLabel;
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : const Duration(milliseconds: 160);
-    return Semantics(
+    final pill = Semantics(
       button: true,
+      enabled: disallowed == null,
       selected: selected,
-      label: operator.label,
+      label: disallowed == null
+          ? operator.label
+          : '${operator.label}, $disallowed',
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: onTap,
+        onTap: disallowed == null ? onTap : null,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
           child: AnimatedContainer(
             duration: duration,
             curve: Curves.easeOut,
-            height: 36,
-            padding: const EdgeInsets.only(
+            height: disallowed == null ? 36 : null,
+            padding: EdgeInsets.only(
               left: DonySpacing.xs + 2,
               right: DonySpacing.md,
+              top: disallowed == null ? 0 : DonySpacing.xxs,
+              bottom: disallowed == null ? 0 : DonySpacing.xxs,
             ),
             decoration: BoxDecoration(
               color: selected
@@ -316,19 +367,41 @@ class _OperatorPill extends StatelessWidget {
               children: [
                 DonyBrandMark(brand: operator.brand, size: 24),
                 const SizedBox(width: DonySpacing.sm),
-                Text(
-                  operator.label,
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: selected ? cs.primary : cs.onSurface,
+                if (disallowed == null)
+                  Text(
+                    operator.label,
+                    style: tt.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: selected ? cs.primary : cs.onSurface,
+                    ),
+                  )
+                else
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        operator.label,
+                        style: tt.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      Text(
+                        disallowed,
+                        style: tt.labelMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
               ],
             ),
           ),
         ),
       ),
     );
+    return disallowed == null ? pill : Opacity(opacity: 0.4, child: pill);
   }
 }
 
@@ -348,6 +421,7 @@ class _NumberRow extends StatefulWidget {
     required this.localNumber,
     required this.checking,
     required this.onChanged,
+    this.helper,
   });
 
   final String countryCode;
@@ -355,6 +429,9 @@ class _NumberRow extends StatefulWidget {
   final String localNumber;
   final bool checking;
   final ValueChanged<String> onChanged;
+
+  /// Aide sous le champ, ou `null`.
+  final String? helper;
 
   @override
   State<_NumberRow> createState() => _NumberRowState();
@@ -393,45 +470,63 @@ class _NumberRowState extends State<_NumberRow> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final phone = phoneCountryForCode(widget.countryCode);
-    return Padding(
-      padding: const EdgeInsets.all(DonySpacing.md),
-      child: DonyTextField(
-        key: const Key('mm-number-field'),
-        controller: _controller,
-        label: l.mobileMoneyOperatorNumberLabel(widget.operatorLabel),
-        hint: phone?.hint,
-        keyboardType: TextInputType.phone,
-        textInputAction: TextInputAction.done,
-        onChanged: widget.onChanged,
-        inputFormatters: [_formatter],
-        prefixWidget: phone == null
-            ? null
-            : Padding(
-                padding: const EdgeInsets.only(
-                  left: DonySpacing.base,
-                  right: DonySpacing.sm,
-                ),
-                child: Text(
-                  phone.dialCode,
-                  style: tt.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
+    final field = DonyTextField(
+      key: const Key('mm-number-field'),
+      controller: _controller,
+      label: l.mobileMoneyOperatorNumberLabel(widget.operatorLabel),
+      hint: phone?.hint,
+      keyboardType: TextInputType.phone,
+      textInputAction: TextInputAction.done,
+      onChanged: widget.onChanged,
+      inputFormatters: [_formatter],
+      prefixWidget: phone == null
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(
+                left: DonySpacing.base,
+                right: DonySpacing.sm,
+              ),
+              child: Text(
+                phone.dialCode,
+                style: tt.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
-        suffixIcon: widget.checking
-            ? Padding(
-                padding: const EdgeInsets.all(DonySpacing.md),
-                child: SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: cs.primary,
+            ),
+      suffixIcon: widget.checking
+          ? Padding(
+              padding: const EdgeInsets.all(DonySpacing.md),
+              child: SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: cs.primary,
+                ),
+              ),
+            )
+          : null,
+    );
+    return Padding(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      child: widget.helper == null
+          ? field
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                field,
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: DonySpacing.sm,
+                    left: DonySpacing.xs,
+                  ),
+                  child: Text(
+                    widget.helper!,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
-              )
-            : null,
-      ),
+              ],
+            ),
     );
   }
 }
@@ -500,9 +595,10 @@ class _PhonePairsFormatter extends TextInputFormatter {
 // ─── Retour sous la carte ───────────────────────────────────────────────────
 
 class _Feedback extends StatelessWidget {
-  const _Feedback({required this.state});
+  const _Feedback({required this.state, required this.notAllowedMessage});
 
   final PayerAccountState state;
+  final String Function(String operatorLabel)? notAllowedMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -554,6 +650,24 @@ class _Feedback extends StatelessWidget {
           leading: DonyIcon('circle-alert', size: 18, color: cs.warning),
           text: l.mobileMoneyNumberUnrecognized,
         ),
+        RecognitionStatus.notAllowed =>
+          state.rejectedOperator == null
+              ? null
+              : _Note(
+                  key: const ValueKey('notAllowed'),
+                  background: cs.warningLight,
+                  foreground: cs.onSurface,
+                  leading: DonyIcon(
+                    'circle-alert',
+                    size: 18,
+                    color: cs.warning,
+                  ),
+                  text:
+                      notAllowedMessage?.call(state.rejectedOperator!.label) ??
+                      l.mobileMoneyNumberOperatorNotAccepted(
+                        state.rejectedOperator!.label,
+                      ),
+                ),
         RecognitionStatus.failed => _Note(
           key: const ValueKey('failed'),
           background: cs.warningLight,
