@@ -4640,37 +4640,8 @@
   "paymentSheetSecureFooter": "Payment secured by Stripe",
 
   "mobileMoneyAccountTitle": "Mobile money payout",
-  "mobileMoneyAccountLoadError": "Couldn't load your account",
-  "mobileMoneyExplanationActivate": "Enter the mobile money number that will receive your payouts. It can be different from your Yadony number.",
-  "mobileMoneyExplanationReactivateNoPrevious": "Your payout is turned off. Enter the mobile money number to turn it back on.",
-  "mobileMoneyReactivateWithPrevious": "Your payout is turned off. Enter the mobile money number to turn it back on (previous: {masked}).",
-  "@mobileMoneyReactivateWithPrevious": {
-    "placeholders": {
-      "masked": {
-        "type": "String"
-      }
-    }
-  },
-  "mobileMoneyExplanationChangeNumber": "Enter the new payout number. You'll need to check the networks again for this number.",
-  "mobileMoneyButtonActivate": "Activate mobile money payout",
-  "mobileMoneyButtonReactivate": "Turn back on",
-  "mobileMoneyButtonChangeNumber": "Save the new number",
-  "mobileMoneyPayoutNumberLabel": "Payout number",
-  "mobileMoneyConfirmNumberLabel": "Confirm the number",
-  "mobileMoneyNetworksSectionTitle": "Networks on this number",
-  "mobileMoneyNetworksUnavailable": "Choosing networks isn't available yet. Your mobile operator will be detected automatically.",
-  "mobileMoneyNoNetworksAvailable": "No network is available for this number.",
-  "mobileMoneyPayerChoosesNetwork": "The sender pays with one of the checked networks. You receive on that same network.",
-  "mobileMoneyConfirmToSeeNetworks": "Confirm your number to see the available networks.",
-  "mobileMoneyAcceptedNetworksTitle": "Accepted networks",
-  "mobileMoneyActiveBadge": "ACTIVE",
-  "mobileMoneyNumberLabel": "Number",
-  "mobileMoneyNotProvided": "Not provided",
+  "mobileMoneyAccountLoadError": "Couldn't load your accounts",
   "mobileMoneyCountryLabel": "Country",
-  "mobileMoneyCurrencyLabel": "Currency",
-  "mobileMoneyPayerChoosesOneNetwork": "The sender picks one of these networks to pay. You receive on the same one.",
-  "mobileMoneyChangeNumberButton": "Change number",
-  "mobileMoneyDisableButton": "Turn off",
 
   "mobileMoneyAllNetworks": "All networks",
   "mobileMoneyDetectedForNumber": "Detected for this number",
@@ -11115,5 +11086,27 @@
   "errorCommissionMethodMissingTitle": "No service fee card",
   "errorCommissionMethodMissingMessage": "Save a service fee card, or pay with your balance.",
   "errorFundingCurrencyInvalidTitle": "Currency not supported",
-  "errorFundingCurrencyInvalidMessage": "This wallet cannot pay the service fee. Choose another one."
+  "errorFundingCurrencyInvalidMessage": "This wallet cannot pay the service fee. Choose another one.",
+  "mobileMoneyPayoutAccountsSectionLabel": "YOUR ACCOUNTS",
+  "mobileMoneyPayoutAccountAdd": "Add an account",
+  "mobileMoneyPayoutAccountChangeNumber": "Change number",
+  "mobileMoneyPayoutAccountRemove": "Remove",
+  "mobileMoneyPayoutAccountActions": "{operator} account options",
+  "mobileMoneyPayoutAccountsRule": "Senders pay you with {operators}. You receive the money on the account of the same network.",
+  "mobileMoneyPayoutAccountsSuggested": "You also accepted {operators} on the same number. Add an account for each one to get paid on the right network.",
+  "mobileMoneyPayoutAccountsEmpty": "Add the mobile money account that will receive your earnings. It can differ from your Yadony number.",
+  "mobileMoneyPayoutAccountGone": "This account has already been removed.",
+  "mobileMoneyPayoutSectionLabel": "RECEIVING ACCOUNT",
+  "mobileMoneyOperatorAdded": "Added",
+  "mobileMoneyPayoutReviewTitle": "Is this your number?",
+  "mobileMoneyPayoutReviewBody": "Your earnings will be sent here. One wrong digit and the money goes to someone else.",
+  "mobileMoneyPayoutReviewOperatorCountry": "{operator} · {country}",
+  "mobileMoneyPayoutReviewConfirm": "Yes, it's my number",
+  "mobileMoneyPayoutReviewEdit": "Edit",
+  "mobileMoneyPayoutRemoveTitle": "Remove {operator}?",
+  "mobileMoneyPayoutRemoveBody": "Senders will no longer be able to pay you with {operator}.",
+  "mobileMoneyPayoutRemoveConfirm": "Remove this account",
+  "mobileMoneyPayoutLockedCount": "{count, plural, =1{1 parcel is still waiting for its payout on this account.} other{{count} parcels are still waiting for their payout on this account.}}",
+  "mobileMoneyPayoutLockedHint": "You can remove it or change its number once the payout has arrived.",
+  "mobileMoneyPayoutLockedConfirm": "Got it"
 }

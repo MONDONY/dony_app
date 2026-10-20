@@ -760,6 +760,17 @@ void main() {
       ),
     );
 
+    testWidgets('section_customLabel_replacesPayerLabel', (tester) async {
+      await pumpWith(
+        tester,
+        orangeAdded,
+        section: const PayerAccountSection(sectionLabel: 'COMPTE QUI REÇOIT'),
+      );
+
+      expect(find.text('COMPTE QUI REÇOIT'), findsOneWidget);
+      expect(find.text('COMPTE QUI PAIE'), findsNothing);
+    });
+
     testWidgets('section_addedPill_greyed_notTappable', (tester) async {
       await pumpWith(tester, orangeAdded, section: addSection());
 

@@ -5,6 +5,7 @@ import 'package:dony/core/config/flights_flag.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/di/payer_account_injection.dart';
 import 'package:dony/core/services/analytics_route_filter.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
@@ -162,6 +163,7 @@ import 'package:dony/features/payments/money/presentation/screens/money_overview
 import 'package:dony/features/payments/money/presentation/screens/money_trips_screen.dart';
 import 'package:dony/features/payments/money/presentation/widgets/money_header_button.dart';
 import 'package:dony/features/payments/presentation/screens/mobile_money_account_screen.dart';
+import 'package:dony/features/payments/presentation/screens/mobile_money_payout_account_add_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/payments/presentation/stripe_onboarding_return.dart';
@@ -1008,12 +1010,48 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/payments/mobile-money/account',
+      name: '/payments/mobile-money/account',
       builder: (_, _) => BlocProvider(
         create: (_) =>
             getIt<MobileMoneyAccountBloc>()
               ..add(const MobileMoneyAccountsRequested()),
         child: const MobileMoneyAccountScreen(),
       ),
+      routes: [
+        // « Ajouter un compte », ou « Changer de numéro » avec `account`
+        // (identifiant), `provider` et `country` du compte. Son propre BLoC
+        // relit la liste (opérateurs déjà ajoutés, compte à changer) ; le
+        // composant « compte qui paie » lit le catalogue des versements,
+        // réglé par l'écran. Rend `true` après une écriture réussie.
+        GoRoute(
+          path: 'add',
+          name: '/payments/mobile-money/account/add',
+          builder: (_, state) {
+            final query = state.uri.queryParameters;
+            final provider = query['provider'];
+            final country = query['country'];
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (_) =>
+                      getIt<MobileMoneyAccountBloc>()
+                        ..add(const MobileMoneyAccountsRequested()),
+                ),
+                BlocProvider<PayerAccountCubit>(
+                  create: (_) =>
+                      getIt<PayerAccountCubit>(param1: payerAccountPayoutFlow),
+                ),
+              ],
+              child: MobileMoneyPayoutAccountAddScreen(
+                accountId: query['account'],
+                fixed: provider != null && country != null
+                    ? (country: country, operator: provider)
+                    : null,
+              ),
+            );
+          },
+        ),
+      ],
     ),
     GoRoute(
       path: '/payments/pay',

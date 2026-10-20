@@ -9487,86 +9487,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mobileMoneyAccountTitle => 'Mobile money payout';
 
   @override
-  String get mobileMoneyAccountLoadError => 'Couldn\'t load your account';
-
-  @override
-  String get mobileMoneyExplanationActivate =>
-      'Enter the mobile money number that will receive your payouts. It can be different from your Yadony number.';
-
-  @override
-  String get mobileMoneyExplanationReactivateNoPrevious =>
-      'Your payout is turned off. Enter the mobile money number to turn it back on.';
-
-  @override
-  String mobileMoneyReactivateWithPrevious(String masked) {
-    return 'Your payout is turned off. Enter the mobile money number to turn it back on (previous: $masked).';
-  }
-
-  @override
-  String get mobileMoneyExplanationChangeNumber =>
-      'Enter the new payout number. You\'ll need to check the networks again for this number.';
-
-  @override
-  String get mobileMoneyButtonActivate => 'Activate mobile money payout';
-
-  @override
-  String get mobileMoneyButtonReactivate => 'Turn back on';
-
-  @override
-  String get mobileMoneyButtonChangeNumber => 'Save the new number';
-
-  @override
-  String get mobileMoneyPayoutNumberLabel => 'Payout number';
-
-  @override
-  String get mobileMoneyConfirmNumberLabel => 'Confirm the number';
-
-  @override
-  String get mobileMoneyNetworksSectionTitle => 'Networks on this number';
-
-  @override
-  String get mobileMoneyNetworksUnavailable =>
-      'Choosing networks isn\'t available yet. Your mobile operator will be detected automatically.';
-
-  @override
-  String get mobileMoneyNoNetworksAvailable =>
-      'No network is available for this number.';
-
-  @override
-  String get mobileMoneyPayerChoosesNetwork =>
-      'The sender pays with one of the checked networks. You receive on that same network.';
-
-  @override
-  String get mobileMoneyConfirmToSeeNetworks =>
-      'Confirm your number to see the available networks.';
-
-  @override
-  String get mobileMoneyAcceptedNetworksTitle => 'Accepted networks';
-
-  @override
-  String get mobileMoneyActiveBadge => 'ACTIVE';
-
-  @override
-  String get mobileMoneyNumberLabel => 'Number';
-
-  @override
-  String get mobileMoneyNotProvided => 'Not provided';
+  String get mobileMoneyAccountLoadError => 'Couldn\'t load your accounts';
 
   @override
   String get mobileMoneyCountryLabel => 'Country';
-
-  @override
-  String get mobileMoneyCurrencyLabel => 'Currency';
-
-  @override
-  String get mobileMoneyPayerChoosesOneNetwork =>
-      'The sender picks one of these networks to pay. You receive on the same one.';
-
-  @override
-  String get mobileMoneyChangeNumberButton => 'Change number';
-
-  @override
-  String get mobileMoneyDisableButton => 'Turn off';
 
   @override
   String get mobileMoneyAllNetworks => 'All networks';
@@ -22037,4 +21961,98 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorFundingCurrencyInvalidMessage =>
       'This wallet cannot pay the service fee. Choose another one.';
+
+  @override
+  String get mobileMoneyPayoutAccountsSectionLabel => 'YOUR ACCOUNTS';
+
+  @override
+  String get mobileMoneyPayoutAccountAdd => 'Add an account';
+
+  @override
+  String get mobileMoneyPayoutAccountChangeNumber => 'Change number';
+
+  @override
+  String get mobileMoneyPayoutAccountRemove => 'Remove';
+
+  @override
+  String mobileMoneyPayoutAccountActions(String operator) {
+    return '$operator account options';
+  }
+
+  @override
+  String mobileMoneyPayoutAccountsRule(String operators) {
+    return 'Senders pay you with $operators. You receive the money on the account of the same network.';
+  }
+
+  @override
+  String mobileMoneyPayoutAccountsSuggested(String operators) {
+    return 'You also accepted $operators on the same number. Add an account for each one to get paid on the right network.';
+  }
+
+  @override
+  String get mobileMoneyPayoutAccountsEmpty =>
+      'Add the mobile money account that will receive your earnings. It can differ from your Yadony number.';
+
+  @override
+  String get mobileMoneyPayoutAccountGone =>
+      'This account has already been removed.';
+
+  @override
+  String get mobileMoneyPayoutSectionLabel => 'RECEIVING ACCOUNT';
+
+  @override
+  String get mobileMoneyOperatorAdded => 'Added';
+
+  @override
+  String get mobileMoneyPayoutReviewTitle => 'Is this your number?';
+
+  @override
+  String get mobileMoneyPayoutReviewBody =>
+      'Your earnings will be sent here. One wrong digit and the money goes to someone else.';
+
+  @override
+  String mobileMoneyPayoutReviewOperatorCountry(
+    String operator,
+    String country,
+  ) {
+    return '$operator · $country';
+  }
+
+  @override
+  String get mobileMoneyPayoutReviewConfirm => 'Yes, it\'s my number';
+
+  @override
+  String get mobileMoneyPayoutReviewEdit => 'Edit';
+
+  @override
+  String mobileMoneyPayoutRemoveTitle(String operator) {
+    return 'Remove $operator?';
+  }
+
+  @override
+  String mobileMoneyPayoutRemoveBody(String operator) {
+    return 'Senders will no longer be able to pay you with $operator.';
+  }
+
+  @override
+  String get mobileMoneyPayoutRemoveConfirm => 'Remove this account';
+
+  @override
+  String mobileMoneyPayoutLockedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count parcels are still waiting for their payout on this account.',
+      one: '1 parcel is still waiting for its payout on this account.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mobileMoneyPayoutLockedHint =>
+      'You can remove it or change its number once the payout has arrived.';
+
+  @override
+  String get mobileMoneyPayoutLockedConfirm => 'Got it';
 }

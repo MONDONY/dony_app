@@ -29,7 +29,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///   (défaut « Non accepté ») ;
 /// - [notAllowedMessage] : message quand le numéro est d'un opérateur non
 ///   permis, reçoit le nom de cet opérateur ;
-/// - [numberHelper] : aide affichée sous le champ numéro.
+/// - [numberHelper] : aide affichée sous le champ numéro ;
+/// - [sectionLabel] : titre du bloc (défaut « COMPTE QUI PAIE »), l'ajout
+///   d'un compte de versement y met le compte qui reçoit.
 ///
 /// En mode imposé (`PayerAccountState.fixed`, changement de numéro), le pays
 /// n'a pas de bouton pour l'effacer et seule la pastille de l'opérateur
@@ -40,11 +42,13 @@ class PayerAccountSection extends StatelessWidget {
     this.disallowedOperatorLabel,
     this.notAllowedMessage,
     this.numberHelper,
+    this.sectionLabel,
   });
 
   final String? disallowedOperatorLabel;
   final String Function(String operatorLabel)? notAllowedMessage;
   final String? numberHelper;
+  final String? sectionLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +69,7 @@ class PayerAccountSection extends StatelessWidget {
                 bottom: DonySpacing.sm,
               ),
               child: Text(
-                l.mobileMoneyPayerSectionLabel,
+                sectionLabel ?? l.mobileMoneyPayerSectionLabel,
                 style: tt.labelMedium?.copyWith(
                   color: cs.onSurfaceVariant,
                   letterSpacing: 0.8,

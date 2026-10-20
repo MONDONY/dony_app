@@ -15771,146 +15771,14 @@ abstract class AppLocalizations {
   /// Titre du DonyEmptyState quand le compte de versement mobile money ne peut pas être chargé (mobile_money_account_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Impossible de charger votre compte'**
+  /// **'Impossible de charger vos comptes'**
   String get mobileMoneyAccountLoadError;
-
-  /// Explication du formulaire de versement mobile money, première activation (mobile_money_account_screen.dart _PayoutNumberForm).
-  ///
-  /// In fr, this message translates to:
-  /// **'Indiquez le numéro mobile money qui recevra vos versements. Il peut être différent de votre numéro Yadony.'**
-  String get mobileMoneyExplanationActivate;
-
-  /// Explication du formulaire de versement mobile money, réactivation sans numéro précédent connu (mobile_money_account_screen.dart _PayoutNumberForm).
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre versement est désactivé. Indiquez le numéro mobile money pour le réactiver.'**
-  String get mobileMoneyExplanationReactivateNoPrevious;
-
-  /// Explication du formulaire de versement mobile money, réactivation avec un numéro précédent masqué connu (mobile_money_account_screen.dart _PayoutNumberForm).
-  ///
-  /// In fr, this message translates to:
-  /// **'Votre versement est désactivé. Indiquez le numéro mobile money pour le réactiver (précédent : {masked}).'**
-  String mobileMoneyReactivateWithPrevious(String masked);
-
-  /// Explication du formulaire de versement mobile money, changement de numéro (mobile_money_account_screen.dart _PayoutNumberForm).
-  ///
-  /// In fr, this message translates to:
-  /// **'Indiquez le nouveau numéro de versement. Les réseaux seront à cocher de nouveau pour ce numéro.'**
-  String get mobileMoneyExplanationChangeNumber;
-
-  /// Bouton du formulaire de versement mobile money, première activation (mobile_money_account_screen.dart _PayoutNumberForm).
-  ///
-  /// In fr, this message translates to:
-  /// **'Activer le versement mobile money'**
-  String get mobileMoneyButtonActivate;
-
-  /// Bouton du formulaire de versement mobile money, réactivation (mobile_money_account_screen.dart _PayoutNumberForm).
-  ///
-  /// In fr, this message translates to:
-  /// **'Réactiver'**
-  String get mobileMoneyButtonReactivate;
-
-  /// Bouton du formulaire de versement mobile money, changement de numéro (mobile_money_account_screen.dart _PayoutNumberForm).
-  ///
-  /// In fr, this message translates to:
-  /// **'Enregistrer le nouveau numéro'**
-  String get mobileMoneyButtonChangeNumber;
-
-  /// Libellé du premier champ du formulaire de versement mobile money (mobile_money_account_screen.dart _PayoutNumberForm).
-  ///
-  /// In fr, this message translates to:
-  /// **'Numéro de versement'**
-  String get mobileMoneyPayoutNumberLabel;
-
-  /// Libellé du champ de confirmation du formulaire de versement mobile money (mobile_money_account_screen.dart _PayoutNumberForm).
-  ///
-  /// In fr, this message translates to:
-  /// **'Confirmez le numéro'**
-  String get mobileMoneyConfirmNumberLabel;
-
-  /// Titre de la section réseaux du formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Réseaux sur ce numéro'**
-  String get mobileMoneyNetworksSectionTitle;
-
-  /// Bandeau info quand l'ancien contrat backend ne fournit pas de catalogue de réseaux (mobile_money_account_screen.dart _NetworksSection et _ProvidersSheetContent).
-  ///
-  /// In fr, this message translates to:
-  /// **'Le choix des réseaux n\'est pas encore disponible. Votre opérateur sera détecté automatiquement.'**
-  String get mobileMoneyNetworksUnavailable;
-
-  /// Message quand le catalogue de réseaux mobile money est vide pour le numéro confirmé (mobile_money_account_screen.dart _NetworksSection et _ProvidersSheetContent).
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun réseau disponible sur ce numéro.'**
-  String get mobileMoneyNoNetworksAvailable;
-
-  /// Rappel de la règle de couplage sous la checklist du formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'L\'expéditeur paie avec l\'un des réseaux cochés. Vous recevez sur ce même réseau.'**
-  String get mobileMoneyPayerChoosesNetwork;
-
-  /// Invite affichée tant qu'aucun numéro n'est confirmé dans le formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'Confirmez votre numéro pour voir les réseaux disponibles.'**
-  String get mobileMoneyConfirmToSeeNetworks;
-
-  /// Titre de la carte et de la feuille « Réseaux acceptés » de la vue active du compte de versement mobile money (mobile_money_account_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Réseaux acceptés'**
-  String get mobileMoneyAcceptedNetworksTitle;
-
-  /// Badge de statut de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
-  ///
-  /// In fr, this message translates to:
-  /// **'ACTIF'**
-  String get mobileMoneyActiveBadge;
-
-  /// Libellé de la ligne numéro de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
-  ///
-  /// In fr, this message translates to:
-  /// **'Numéro'**
-  String get mobileMoneyNumberLabel;
-
-  /// Valeur de repli des lignes numéro, pays et devise de la vue active du compte de versement mobile money, quand la donnée est absente (mobile_money_account_screen.dart _ActiveView).
-  ///
-  /// In fr, this message translates to:
-  /// **'Non renseigné'**
-  String get mobileMoneyNotProvided;
 
   /// Libellé « Pays » du mobile money : ligne pays de la vue active du compte de versement (mobile_money_account_screen.dart _ActiveView) et champ pays du compte qui paie (payer_account_section.dart).
   ///
   /// In fr, this message translates to:
   /// **'Pays'**
   String get mobileMoneyCountryLabel;
-
-  /// Libellé de la ligne devise de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
-  ///
-  /// In fr, this message translates to:
-  /// **'Devise'**
-  String get mobileMoneyCurrencyLabel;
-
-  /// Note sous les pastilles de réseaux acceptés de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
-  ///
-  /// In fr, this message translates to:
-  /// **'L\'expéditeur choisit l\'un de ces réseaux pour payer. Vous recevez sur le même.'**
-  String get mobileMoneyPayerChoosesOneNetwork;
-
-  /// Bouton de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
-  ///
-  /// In fr, this message translates to:
-  /// **'Changer de numéro'**
-  String get mobileMoneyChangeNumberButton;
-
-  /// Bouton de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView).
-  ///
-  /// In fr, this message translates to:
-  /// **'Désactiver'**
-  String get mobileMoneyDisableButton;
 
   /// Ligne « tout cocher / tout décocher » de la checklist des réseaux mobile money (mobile_money_networks_checklist.dart).
   ///
@@ -35789,6 +35657,141 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce portefeuille ne peut pas payer les frais de service. Choisissez-en un autre.'**
   String get errorFundingCurrencyInvalidMessage;
+
+  /// Titre de section au-dessus de la liste des comptes de versement (mobile_money_account_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'VOS COMPTES'**
+  String get mobileMoneyPayoutAccountsSectionLabel;
+
+  /// Ligne et bouton pour ajouter un compte de versement, et titre de l'écran d'ajout (mobile_money_account_screen.dart, mobile_money_payout_account_add_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un compte'**
+  String get mobileMoneyPayoutAccountAdd;
+
+  /// Entrée du menu d'un compte de versement et titre de l'écran de changement de numéro (mobile_money_account_screen.dart, mobile_money_payout_account_add_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de numéro'**
+  String get mobileMoneyPayoutAccountChangeNumber;
+
+  /// Entrée du menu d'un compte de versement qui ouvre la feuille de retrait (mobile_money_account_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer'**
+  String get mobileMoneyPayoutAccountRemove;
+
+  /// Info-bulle et libellé d'accessibilité du bouton ⋯ d'un compte de versement (mobile_money_account_screen.dart). {operator} : opérateur du compte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Options du compte {operator}'**
+  String mobileMoneyPayoutAccountActions(String operator);
+
+  /// Encart sous la liste des comptes de versement (mobile_money_account_screen.dart). {operators} : opérateurs des comptes, joints par joinList.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs vous paient avec {operators}. Vous recevez sur le compte du même réseau.'**
+  String mobileMoneyPayoutAccountsRule(String operators);
+
+  /// Encart pour un voyageur repris de l'ancien contrat qui avait coché plusieurs réseaux (mobile_money_account_screen.dart). {operators} : réseaux suggérés, joints par joinList.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous acceptiez aussi {operators} sur le même numéro. Ajoutez un compte pour chacun afin d\'être payé sur le bon réseau.'**
+  String mobileMoneyPayoutAccountsSuggested(String operators);
+
+  /// Explication quand le voyageur n'a encore aucun compte de versement (mobile_money_account_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez le compte mobile money qui recevra vos gains. Il peut être différent de votre numéro Yadony.'**
+  String get mobileMoneyPayoutAccountsEmpty;
+
+  /// Message de l'écran de changement de numéro quand le compte n'existe plus (mobile_money_payout_account_add_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte a déjà été retiré.'**
+  String get mobileMoneyPayoutAccountGone;
+
+  /// Titre du bloc pays, opérateur, numéro sur l'écran d'ajout d'un compte de versement (mobile_money_payout_account_add_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'COMPTE QUI REÇOIT'**
+  String get mobileMoneyPayoutSectionLabel;
+
+  /// Libellé sous un opérateur grisé pour lequel le voyageur a déjà un compte de versement (mobile_money_payout_account_add_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouté'**
+  String get mobileMoneyOperatorAdded;
+
+  /// Titre de la feuille de relecture du numéro de versement (payout_account_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est bien votre numéro ?'**
+  String get mobileMoneyPayoutReviewTitle;
+
+  /// Texte de la feuille de relecture du numéro de versement (payout_account_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos gains seront envoyés ici. Un chiffre faux et l\'argent part chez quelqu\'un d\'autre.'**
+  String get mobileMoneyPayoutReviewBody;
+
+  /// Opérateur et pays sous le numéro relu (payout_account_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{operator} · {country}'**
+  String mobileMoneyPayoutReviewOperatorCountry(
+    String operator,
+    String country,
+  );
+
+  /// Bouton principal de la feuille de relecture du numéro (payout_account_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui, c\'est mon numéro'**
+  String get mobileMoneyPayoutReviewConfirm;
+
+  /// Bouton secondaire de la feuille de relecture : ferme la feuille sans rien envoyer (payout_account_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Corriger'**
+  String get mobileMoneyPayoutReviewEdit;
+
+  /// Titre de la feuille de retrait d'un compte de versement (payout_account_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer {operator} ?'**
+  String mobileMoneyPayoutRemoveTitle(String operator);
+
+  /// Texte de la feuille de retrait d'un compte de versement (payout_account_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs ne pourront plus vous payer avec {operator}.'**
+  String mobileMoneyPayoutRemoveBody(String operator);
+
+  /// Bouton rouge de la feuille de retrait d'un compte de versement (payout_account_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer ce compte'**
+  String get mobileMoneyPayoutRemoveConfirm;
+
+  /// Feuille « compte bloqué » (payout_account_sheets.dart) : colis payés sur ce compte qui attendent leur versement.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 colis attend encore son versement sur ce compte.} other{{count} colis attendent encore leur versement sur ce compte.}}'**
+  String mobileMoneyPayoutLockedCount(int count);
+
+  /// Feuille « compte bloqué » (payout_account_sheets.dart), sous le nombre de colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez le retirer ou changer de numéro une fois le versement reçu.'**
+  String get mobileMoneyPayoutLockedHint;
+
+  /// Bouton unique de la feuille « compte bloqué » (payout_account_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compris'**
+  String get mobileMoneyPayoutLockedConfirm;
 }
 
 class _AppLocalizationsDelegate
