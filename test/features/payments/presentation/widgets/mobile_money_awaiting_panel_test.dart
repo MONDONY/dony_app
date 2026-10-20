@@ -137,6 +137,22 @@ void main() {
     ).called(1);
   });
 
+  test('panel_authorizationUrlWithoutLabel_assertsInDebug', () {
+    // En debug, l'oubli du nom d'opérateur est signalé tout de suite ; en
+    // release (assertion retirée), le build ne force plus le nom : le bouton
+    // n'est simplement pas affiché au lieu de planter.
+    expect(
+      () => MobileMoneyAwaitingPanel(
+        expiresAt: fixedNow,
+        hint: MobileMoneyValidationHint.generic,
+        msisdnMasked: '+225 07 •• •• 56',
+        recap: const [],
+        authorizationUrl: 'https://pay.example.com/auth',
+      ),
+      throwsAssertionError,
+    );
+  });
+
   testWidgets('panel_ring_utiliseLHorlogeInjectee', (tester) async {
     await tester.pumpWidget(panel());
     await tester.pump(const Duration(milliseconds: 100));

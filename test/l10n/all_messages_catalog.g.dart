@@ -3448,37 +3448,17 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'mobileMoneyDisableButton': (l) => l.mobileMoneyDisableButton,
   'mobileMoneyAllNetworks': (l) => l.mobileMoneyAllNetworks,
   'mobileMoneyDetectedForNumber': (l) => l.mobileMoneyDetectedForNumber,
-  'mobileMoneyAwaitingTitle': (l) => l.mobileMoneyAwaitingTitle,
   'mobileMoneyPaymentConfirmedSecured': (l) =>
       l.mobileMoneyPaymentConfirmedSecured,
   'mobileMoneyTimeLeft': (l) =>
       l.mobileMoneyTimeLeft(placeholderMarker('time')),
   'mobileMoneyTravelerFallback': (l) => l.mobileMoneyTravelerFallback,
-  'mobileMoneyChooseOperatorTitle': (l) => l.mobileMoneyChooseOperatorTitle,
   'mobileMoneyPayingNumberLabel': (l) => l.mobileMoneyPayingNumberLabel,
-  'mobileMoneyPayWithAnotherNumberOptional': (l) =>
-      l.mobileMoneyPayWithAnotherNumberOptional,
-  'mobileMoneyConfirmInWaveApp': (l) => l.mobileMoneyConfirmInWaveApp,
   'mobileMoneyAcceptsAndReceives': (l) => l.mobileMoneyAcceptsAndReceives(
     placeholderMarker('name'),
     placeholderMarker('networks'),
   ),
-  'mobileMoneyNoNetworkForPayment': (l) => l.mobileMoneyNoNetworkForPayment,
-  'mobileMoneyNoCommonNetwork': (l) => l.mobileMoneyNoCommonNetwork(
-    placeholderMarker('name'),
-    placeholderMarker('networks'),
-    placeholderMarker('country'),
-  ),
   'mobileMoneyPay': (l) => l.mobileMoneyPay(placeholderMarker('amount')),
-  'mobileMoneyFinishInWaveApp': (l) => l.mobileMoneyFinishInWaveApp,
-  'mobileMoneyOpenWave': (l) => l.mobileMoneyOpenWave,
-  'mobileMoneyPinSent': (l) =>
-      l.mobileMoneyPinSent(placeholderMarker('provider')),
-  'mobileMoneyPinSentUnknownProvider': (l) =>
-      l.mobileMoneyPinSentUnknownProvider,
-  'mobileMoneyConfirmationAutomatic': (l) => l.mobileMoneyConfirmationAutomatic,
-  'mobileMoneyDepositRefusedFallback': (l) =>
-      l.mobileMoneyDepositRefusedFallback,
   'mobileMoneyPhoneRequiredExplanation': (l) =>
       l.mobileMoneyPhoneRequiredExplanation,
   'mobileMoneyPayerUnsupportedExplanation': (l) =>
@@ -7376,6 +7356,12 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'mobileMoneyCountryOtherCurrency': (l) =>
       l.mobileMoneyCountryOtherCurrency(placeholderMarker('currency')),
   'mobileMoneyPayerHelper': (l) => l.mobileMoneyPayerHelper,
+  'mobileMoneyPayParcelTitle': (l) => l.mobileMoneyPayParcelTitle,
+  'mobileMoneyPaySupplementTitle': (l) => l.mobileMoneyPaySupplementTitle,
+  'mobileMoneyOverdueBody': (l) => l.mobileMoneyOverdueBody,
+  'mobileMoneyPaymentFailedTitle': (l) => l.mobileMoneyPaymentFailedTitle,
+  'mobileMoneyPaidToTravelerLabel': (l) => l.mobileMoneyPaidToTravelerLabel,
+  'mobileMoneyPaidToTravelerValue': (l) => l.mobileMoneyPaidToTravelerValue,
   'walletTopupSwitchToCard': (l) => l.walletTopupSwitchToCard,
   'walletTopupMmRingCaption': (l) => l.walletTopupMmRingCaption,
   'walletTopupMmSmsSentTitle': (l) =>
@@ -7854,9 +7840,7 @@ const textParameters = <String, List<String>>{
   'mobileMoneyReactivateWithPrevious': ['masked'],
   'mobileMoneyTimeLeft': ['time'],
   'mobileMoneyAcceptsAndReceives': ['name', 'networks'],
-  'mobileMoneyNoCommonNetwork': ['name', 'networks', 'country'],
   'mobileMoneyPay': ['amount'],
-  'mobileMoneyPinSent': ['provider'],
   'walletTopupMmCreditedTo': ['currency'],
   'walletTopupMmOpenProvider': ['provider'],
   'walletShortfallRequired': ['amount'],

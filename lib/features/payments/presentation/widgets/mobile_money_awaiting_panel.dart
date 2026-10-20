@@ -26,7 +26,7 @@ class MobileMoneyAwaitingPanel extends StatelessWidget {
     this.now = DateTime.now,
   }) : assert(
          authorizationUrl == null || providerLabel != null,
-         'providerLabel est requis avec authorizationUrl (libellé du bouton)',
+         'providerLabel est requis avec authorizationUrl (libellé du bouton)', // i18n-ignore
        );
 
   /// Échéance de la demande de paiement (instant du serveur).
@@ -46,7 +46,8 @@ class MobileMoneyAwaitingPanel extends StatelessWidget {
   final String? authorizationUrl;
 
   /// Nom de l'opérateur, utilisé par le libellé du bouton d'ouverture :
-  /// obligatoire dès que [authorizationUrl] est fourni.
+  /// obligatoire dès que [authorizationUrl] est fourni (assertion en debug ;
+  /// en release, un lien sans nom n'affiche simplement pas le bouton).
   final String? providerLabel;
 
   /// Horloge, injectable pour les tests.
@@ -57,6 +58,8 @@ class MobileMoneyAwaitingPanel extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
+    final url = authorizationUrl;
+    final label = providerLabel;
     final (title, body) = switch (hint) {
       MobileMoneyValidationHint.smsLink => (
         l.walletTopupMmSmsSentTitle(msisdnMasked),
@@ -101,11 +104,11 @@ class MobileMoneyAwaitingPanel extends StatelessWidget {
               ],
             ),
           ),
-          if (authorizationUrl case final String url) ...[
+          if (url != null && label != null) ...[
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
               key: const Key('mobile-money-awaiting-open-authorization'),
-              label: l.walletTopupMmOpenProvider(providerLabel!),
+              label: l.walletTopupMmOpenProvider(label),
               iconAsset: 'external-link',
               onPressed: () =>
                   getIt<ExternalUrlLauncher>().open(Uri.parse(url)),

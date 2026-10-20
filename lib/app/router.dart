@@ -696,13 +696,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
       name: '/bids/:bidId/supplements/:supplementId/mobile-money/awaiting',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<MobileMoneyPaymentBloc>(),
-        child: MobileMoneyAwaitingScreen(
-          scope: MobileMoneyScope.supplement(
-            bidId: state.pathParameters['bidId']!,
-            supplementId: state.pathParameters['supplementId']!,
-          ),
+      builder: (context, state) => _mobileMoneyAwaitingPage(
+        MobileMoneyScope.supplement(
+          bidId: state.pathParameters['bidId']!,
+          supplementId: state.pathParameters['supplementId']!,
         ),
       ),
     ),
@@ -734,10 +731,7 @@ final appRouter = GoRouter(
       path: '/bids/:bidId/mobile-money/awaiting',
       builder: (context, state) {
         final bidId = state.pathParameters['bidId']!;
-        return BlocProvider(
-          create: (_) => getIt<MobileMoneyPaymentBloc>(),
-          child: MobileMoneyAwaitingScreen(scope: MobileMoneyScope.bid(bidId)),
-        );
+        return _mobileMoneyAwaitingPage(MobileMoneyScope.bid(bidId));
       },
     ),
     // Même écran pour le dépôt d'un fil de négociation (colis). `extra` : numéro
@@ -747,12 +741,9 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final threadId = state.pathParameters['id']!;
         final phone = state.extra is String ? state.extra! as String : null;
-        return BlocProvider(
-          create: (_) => getIt<MobileMoneyPaymentBloc>(),
-          child: MobileMoneyAwaitingScreen(
-            scope: MobileMoneyScope.negotiation(threadId),
-            initialPhone: phone,
-          ),
+        return _mobileMoneyAwaitingPage(
+          MobileMoneyScope.negotiation(threadId),
+          initialPhone: phone,
         );
       },
     ),
@@ -2290,6 +2281,28 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+/// Écran « Payer le colis » en mobile money (bid, fil ou supplément) : son bloc
+/// de paiement et le composant « compte qui paie ». Le composant naît sans
+/// devise (elle n'est connue qu'avec le statut) et reste inerte tant que
+/// l'écran ne l'a pas configuré : un dépôt repris n'appelle jamais le
+/// catalogue des pays. Son [flow] étiquette les events analytics.
+Widget _mobileMoneyAwaitingPage(
+  MobileMoneyScope scope, {
+  String? initialPhone,
+}) {
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<MobileMoneyPaymentBloc>(
+        create: (_) => getIt<MobileMoneyPaymentBloc>(),
+      ),
+      BlocProvider<PayerAccountCubit>(
+        create: (_) => getIt<PayerAccountCubit>(param1: scope.analyticsName),
+      ),
+    ],
+    child: MobileMoneyAwaitingScreen(scope: scope, initialPhone: initialPhone),
+  );
+}
 
 GoRoute buildHelpTutorialRoute({
   HelpTutorialPlayerSessionFactory playerSessionFactory =

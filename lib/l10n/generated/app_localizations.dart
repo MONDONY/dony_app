@@ -15906,17 +15906,11 @@ abstract class AppLocalizations {
   /// **'Tous les réseaux'**
   String get mobileMoneyAllNetworks;
 
-  /// Sous-titre du réseau détecté par pawaPay pour le numéro confirmé, partagé par la checklist des réseaux (mobile_money_networks_checklist.dart) et l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody).
+  /// Sous-titre du réseau détecté par pawaPay pour le numéro confirmé, affiché par la checklist des réseaux (mobile_money_networks_checklist.dart).
   ///
   /// In fr, this message translates to:
   /// **'Détecté pour ce numéro'**
   String get mobileMoneyDetectedForNumber;
-
-  /// Titre de l'AppBar de l'écran d'attente du paiement mobile money d'un bid ou d'un fil de négociation (mobile_money_awaiting_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Paiement mobile money'**
-  String get mobileMoneyAwaitingTitle;
 
   /// Snackbar de succès à la mise en séquestre du paiement mobile money (mobile_money_awaiting_screen.dart).
   ///
@@ -15930,113 +15924,43 @@ abstract class AppLocalizations {
   /// **'Temps restant {time}'**
   String mobileMoneyTimeLeft(String time);
 
-  /// Repli du prénom du voyageur quand le catalogue mobile money ne le porte pas (mobile_money_awaiting_screen.dart _ChooseOperatorBody).
+  /// Repli du prénom du voyageur quand les opérateurs acceptés ne le portent pas (mobile_money_awaiting_screen.dart _AcceptsLine).
   ///
   /// In fr, this message translates to:
   /// **'Le voyageur'**
   String get mobileMoneyTravelerFallback;
 
-  /// Titre de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Avec quel opérateur ?'**
-  String get mobileMoneyChooseOperatorTitle;
-
-  /// Libellé du numéro payeur de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody).
+  /// Libellé du numéro payeur de l'écran Recharger (wallet_topup_method_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Numéro qui paie'**
   String get mobileMoneyPayingNumberLabel;
 
-  /// Libellé du champ de saisie d'un numéro payeur alternatif, partagé par l'étape de choix de l'opérateur et le dépôt refusé du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody et _FailedBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Payer avec un autre numéro (facultatif)'**
-  String get mobileMoneyPayWithAnotherNumberOptional;
-
-  /// Sous-titre de l'opérateur Wave dans la liste des opérateurs du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Vous confirmez dans l\'application Wave'**
-  String get mobileMoneyConfirmInWaveApp;
-
-  /// Note sous la liste des opérateurs de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {networks} déjà joint (joinList).
+  /// Note sous le compte qui paie, à l'étape « Qui paie ? » du paiement d'un colis (mobile_money_awaiting_screen.dart _AcceptsLine). {networks} déjà joint (joinList).
   ///
   /// In fr, this message translates to:
   /// **'{name} accepte {networks}, et reçoit sur le réseau que vous choisissez.'**
   String mobileMoneyAcceptsAndReceives(String name, String networks);
 
-  /// Bandeau quand le voyageur n'accepte aucun réseau pour ce paiement (mobile_money_awaiting_screen.dart _ChooseOperatorBody, garde défensive).
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun réseau mobile money disponible pour ce paiement.'**
-  String get mobileMoneyNoNetworkForPayment;
-
-  /// Bandeau quand aucun réseau accepté par le voyageur n'est disponible pour le numéro payeur (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {networks} déjà joint (joinList).
-  ///
-  /// In fr, this message translates to:
-  /// **'{name} accepte {networks}, qui n\'existent pas pour votre numéro ({country}). Changez de numéro payeur ou écrivez-lui depuis la conversation.'**
-  String mobileMoneyNoCommonNetwork(
-    String name,
-    String networks,
-    String country,
-  );
-
-  /// Bouton de paiement de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {amount} déjà formaté dans sa devise (formatPriceIn).
+  /// Bouton de paiement de l'étape « Qui paie ? » du paiement d'un colis (mobile_money_awaiting_screen.dart _PayBar). {amount} déjà formaté dans sa devise (formatPriceIn).
   ///
   /// In fr, this message translates to:
   /// **'Payer {amount}'**
   String mobileMoneyPay(String amount);
 
-  /// Texte du dépôt en cours, redirection Wave (mobile_money_awaiting_screen.dart _AwaitingBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Terminez le paiement dans l\'application Wave'**
-  String get mobileMoneyFinishInWaveApp;
-
-  /// Bouton d'ouverture de la redirection Wave du dépôt en cours (mobile_money_awaiting_screen.dart _AwaitingBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ouvrir Wave'**
-  String get mobileMoneyOpenWave;
-
-  /// Texte du dépôt en cours quand l'opérateur est connu, PIN opérateur (mobile_money_awaiting_screen.dart _AwaitingBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par {provider}.'**
-  String mobileMoneyPinSent(String provider);
-
-  /// Texte du dépôt en cours quand l'opérateur n'est pas connu, PIN opérateur (mobile_money_awaiting_screen.dart _AwaitingBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par votre opérateur.'**
-  String get mobileMoneyPinSentUnknownProvider;
-
-  /// Note de bas de l'écran d'attente du paiement mobile money d'un bid ou d'un fil de négociation (mobile_money_awaiting_screen.dart _AwaitingBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'La confirmation est automatique, gardez cet écran ouvert.'**
-  String get mobileMoneyConfirmationAutomatic;
-
-  /// Repli du message de dépôt refusé quand le backend n'en fournit aucun (mobile_money_awaiting_screen.dart _FailedBody).
-  ///
-  /// In fr, this message translates to:
-  /// **'Le paiement a été refusé par l\'opérateur'**
-  String get mobileMoneyDepositRefusedFallback;
-
-  /// Explication du corps dédié quand l'expéditeur n'a aucun numéro de téléphone (mobile_money_awaiting_screen.dart _PhoneRequiredBody).
+  /// Explication, en bandeau de l'étape « Qui paie ? », quand l'expéditeur n'a aucun numéro de téléphone (mobile_money_awaiting_screen.dart _initiationErrorMessage).
   ///
   /// In fr, this message translates to:
   /// **'Votre compte Yadony n\'a pas de numéro de téléphone : indiquez le numéro mobile money qui paiera.'**
   String get mobileMoneyPhoneRequiredExplanation;
 
-  /// Écran de paiement mobile money quand le numéro payeur est refusé, souvent un numéro étranger comme +33 (mobile_money_awaiting_screen.dart, Sentry FLUTTER-DE).
+  /// Bandeau de l'étape « Qui paie ? » du paiement d'un colis quand le numéro payeur est refusé, souvent un numéro étranger comme +33 (mobile_money_awaiting_screen.dart _initiationErrorMessage, Sentry FLUTTER-DE).
   ///
   /// In fr, this message translates to:
   /// **'Ce numéro ne peut pas payer en mobile money pour ce colis. Indiquez le numéro mobile money qui paiera (Côte d\'Ivoire, Sénégal, Mali…).'**
   String get mobileMoneyPayerUnsupportedExplanation;
 
-  /// Libellé du champ de saisie obligatoire du corps dédié « numéro manquant » (mobile_money_awaiting_screen.dart _PhoneRequiredBody).
+  /// Libellé du champ numéro de l'étape « Qui paie ? » quand le back n'a pas de catalogue des pays (mobile_money_awaiting_screen.dart _ChoosePayerBody).
   ///
   /// In fr, this message translates to:
   /// **'Numéro qui paiera'**
@@ -34689,6 +34613,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le vôtre ou celui d\'un proche.'**
   String get mobileMoneyPayerHelper;
+
+  /// Titre de l'écran de paiement mobile money d'un colis, d'un fil de négociation ou d'une offre (mobile_money_awaiting_screen.dart), dans tous ses états.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer le colis'**
+  String get mobileMoneyPayParcelTitle;
+
+  /// Titre de ce même écran quand il paie le supplément de prix demandé à la remise d'un colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer le supplément'**
+  String get mobileMoneyPaySupplementTitle;
+
+  /// Texte de l'état « Pas encore validé » du paiement d'un colis : l'échéance est passée mais le dépôt reste ouvert, il peut encore aboutir. Ne dit jamais que le délai est dépassé ni que le paiement est perdu (mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous validez quand même dans les prochaines minutes, votre paiement sera pris en compte.'**
+  String get mobileMoneyOverdueBody;
+
+  /// Titre de l'écran d'échec final du paiement mobile money d'un colis (mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement non abouti'**
+  String get mobileMoneyPaymentFailedTitle;
+
+  /// Libellé de la ligne « quand le voyageur est payé » du récapitulatif d'attente du paiement d'un colis (mobile_money_awaiting_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Versé au voyageur'**
+  String get mobileMoneyPaidToTravelerLabel;
+
+  /// Valeur de cette ligne : l'argent est séquestré et versé au voyageur à la livraison.
+  ///
+  /// In fr, this message translates to:
+  /// **'À la livraison'**
+  String get mobileMoneyPaidToTravelerValue;
 
   /// Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire.
   ///

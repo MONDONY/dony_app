@@ -10060,13 +10060,9 @@
   },
   "mobileMoneyDetectedForNumber": "Détecté pour ce numéro",
   "@mobileMoneyDetectedForNumber": {
-    "description": "Sous-titre du réseau détecté par pawaPay pour le numéro confirmé, partagé par la checklist des réseaux (mobile_money_networks_checklist.dart) et l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
+    "description": "Sous-titre du réseau détecté par pawaPay pour le numéro confirmé, affiché par la checklist des réseaux (mobile_money_networks_checklist.dart)."
   },
 
-  "mobileMoneyAwaitingTitle": "Paiement mobile money",
-  "@mobileMoneyAwaitingTitle": {
-    "description": "Titre de l'AppBar de l'écran d'attente du paiement mobile money d'un bid ou d'un fil de négociation (mobile_money_awaiting_screen.dart)."
-  },
   "mobileMoneyPaymentConfirmedSecured": "Paiement confirmé, votre envoi est sécurisé",
   "@mobileMoneyPaymentConfirmedSecured": {
     "description": "Snackbar de succès à la mise en séquestre du paiement mobile money (mobile_money_awaiting_screen.dart)."
@@ -10082,104 +10078,44 @@
   },
   "mobileMoneyTravelerFallback": "Le voyageur",
   "@mobileMoneyTravelerFallback": {
-    "description": "Repli du prénom du voyageur quand le catalogue mobile money ne le porte pas (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
-  },
-  "mobileMoneyChooseOperatorTitle": "Avec quel opérateur ?",
-  "@mobileMoneyChooseOperatorTitle": {
-    "description": "Titre de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
+    "description": "Repli du prénom du voyageur quand les opérateurs acceptés ne le portent pas (mobile_money_awaiting_screen.dart _AcceptsLine)."
   },
   "mobileMoneyPayingNumberLabel": "Numéro qui paie",
   "@mobileMoneyPayingNumberLabel": {
-    "description": "Libellé du numéro payeur de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
-  },
-  "mobileMoneyPayWithAnotherNumberOptional": "Payer avec un autre numéro (facultatif)",
-  "@mobileMoneyPayWithAnotherNumberOptional": {
-    "description": "Libellé du champ de saisie d'un numéro payeur alternatif, partagé par l'étape de choix de l'opérateur et le dépôt refusé du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody et _FailedBody)."
-  },
-  "mobileMoneyConfirmInWaveApp": "Vous confirmez dans l'application Wave",
-  "@mobileMoneyConfirmInWaveApp": {
-    "description": "Sous-titre de l'opérateur Wave dans la liste des opérateurs du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
+    "description": "Libellé du numéro payeur de l'écran Recharger (wallet_topup_method_screen.dart)."
   },
   "mobileMoneyAcceptsAndReceives": "{name} accepte {networks}, et reçoit sur le réseau que vous choisissez.",
   "@mobileMoneyAcceptsAndReceives": {
-    "description": "Note sous la liste des opérateurs de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {networks} déjà joint (joinList).",
+    "description": "Note sous le compte qui paie, à l'étape « Qui paie ? » du paiement d'un colis (mobile_money_awaiting_screen.dart _AcceptsLine). {networks} déjà joint (joinList).",
     "placeholders": {
       "name": {
         "type": "String"
       },
       "networks": {
-        "type": "String"
-      }
-    }
-  },
-  "mobileMoneyNoNetworkForPayment": "Aucun réseau mobile money disponible pour ce paiement.",
-  "@mobileMoneyNoNetworkForPayment": {
-    "description": "Bandeau quand le voyageur n'accepte aucun réseau pour ce paiement (mobile_money_awaiting_screen.dart _ChooseOperatorBody, garde défensive)."
-  },
-  "mobileMoneyNoCommonNetwork": "{name} accepte {networks}, qui n'existent pas pour votre numéro ({country}). Changez de numéro payeur ou écrivez-lui depuis la conversation.",
-  "@mobileMoneyNoCommonNetwork": {
-    "description": "Bandeau quand aucun réseau accepté par le voyageur n'est disponible pour le numéro payeur (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {networks} déjà joint (joinList).",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "networks": {
-        "type": "String"
-      },
-      "country": {
         "type": "String"
       }
     }
   },
   "mobileMoneyPay": "Payer {amount}",
   "@mobileMoneyPay": {
-    "description": "Bouton de paiement de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {amount} déjà formaté dans sa devise (formatPriceIn).",
+    "description": "Bouton de paiement de l'étape « Qui paie ? » du paiement d'un colis (mobile_money_awaiting_screen.dart _PayBar). {amount} déjà formaté dans sa devise (formatPriceIn).",
     "placeholders": {
       "amount": {
         "type": "String"
       }
     }
   },
-  "mobileMoneyFinishInWaveApp": "Terminez le paiement dans l'application Wave",
-  "@mobileMoneyFinishInWaveApp": {
-    "description": "Texte du dépôt en cours, redirection Wave (mobile_money_awaiting_screen.dart _AwaitingBody)."
-  },
-  "mobileMoneyOpenWave": "Ouvrir Wave",
-  "@mobileMoneyOpenWave": {
-    "description": "Bouton d'ouverture de la redirection Wave du dépôt en cours (mobile_money_awaiting_screen.dart _AwaitingBody)."
-  },
-  "mobileMoneyPinSent": "Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par {provider}.",
-  "@mobileMoneyPinSent": {
-    "description": "Texte du dépôt en cours quand l'opérateur est connu, PIN opérateur (mobile_money_awaiting_screen.dart _AwaitingBody).",
-    "placeholders": {
-      "provider": {
-        "type": "String"
-      }
-    }
-  },
-  "mobileMoneyPinSentUnknownProvider": "Validez le paiement sur votre téléphone : une demande de code PIN vient de vous être envoyée par votre opérateur.",
-  "@mobileMoneyPinSentUnknownProvider": {
-    "description": "Texte du dépôt en cours quand l'opérateur n'est pas connu, PIN opérateur (mobile_money_awaiting_screen.dart _AwaitingBody)."
-  },
-  "mobileMoneyConfirmationAutomatic": "La confirmation est automatique, gardez cet écran ouvert.",
-  "@mobileMoneyConfirmationAutomatic": {
-    "description": "Note de bas de l'écran d'attente du paiement mobile money d'un bid ou d'un fil de négociation (mobile_money_awaiting_screen.dart _AwaitingBody)."
-  },
-  "mobileMoneyDepositRefusedFallback": "Le paiement a été refusé par l'opérateur",
-  "@mobileMoneyDepositRefusedFallback": {
-    "description": "Repli du message de dépôt refusé quand le backend n'en fournit aucun (mobile_money_awaiting_screen.dart _FailedBody)."
-  },
   "mobileMoneyPhoneRequiredExplanation": "Votre compte Yadony n'a pas de numéro de téléphone : indiquez le numéro mobile money qui paiera.",
   "@mobileMoneyPhoneRequiredExplanation": {
-    "description": "Explication du corps dédié quand l'expéditeur n'a aucun numéro de téléphone (mobile_money_awaiting_screen.dart _PhoneRequiredBody)."
+    "description": "Explication, en bandeau de l'étape « Qui paie ? », quand l'expéditeur n'a aucun numéro de téléphone (mobile_money_awaiting_screen.dart _initiationErrorMessage)."
   },
   "mobileMoneyPayerUnsupportedExplanation": "Ce numéro ne peut pas payer en mobile money pour ce colis. Indiquez le numéro mobile money qui paiera (Côte d'Ivoire, Sénégal, Mali…).",
   "@mobileMoneyPayerUnsupportedExplanation": {
-    "description": "Écran de paiement mobile money quand le numéro payeur est refusé, souvent un numéro étranger comme +33 (mobile_money_awaiting_screen.dart, Sentry FLUTTER-DE)."
+    "description": "Bandeau de l'étape « Qui paie ? » du paiement d'un colis quand le numéro payeur est refusé, souvent un numéro étranger comme +33 (mobile_money_awaiting_screen.dart _initiationErrorMessage, Sentry FLUTTER-DE)."
   },
   "mobileMoneyPhoneThatWillPayLabel": "Numéro qui paiera",
   "@mobileMoneyPhoneThatWillPayLabel": {
-    "description": "Libellé du champ de saisie obligatoire du corps dédié « numéro manquant » (mobile_money_awaiting_screen.dart _PhoneRequiredBody)."
+    "description": "Libellé du champ numéro de l'étape « Qui paie ? » quand le back n'a pas de catalogue des pays (mobile_money_awaiting_screen.dart _ChoosePayerBody)."
   },
   "mobileMoneyExpiredBid": "Délai dépassé. La demande a été annulée, refaites une offre au voyageur.",
   "@mobileMoneyExpiredBid": {
@@ -22123,6 +22059,18 @@
   "@mobileMoneyCountryOtherCurrency": {"description": "Sous-titre d'un pays grisé dans la recherche du pays mobile money : il paie dans une autre devise que celle du colis. {currency} : code de la devise du colis (ex. XOF).", "placeholders": {"currency": {"type": "String"}}},
   "mobileMoneyPayerHelper": "Le vôtre ou celui d'un proche.",
   "@mobileMoneyPayerHelper": {"description": "Aide sous le champ numéro du compte qui paie un colis : le numéro peut être celui de l'expéditeur ou d'un proche (payer_account_section.dart, numberHelper)."},
+  "mobileMoneyPayParcelTitle": "Payer le colis",
+  "@mobileMoneyPayParcelTitle": {"description": "Titre de l'écran de paiement mobile money d'un colis, d'un fil de négociation ou d'une offre (mobile_money_awaiting_screen.dart), dans tous ses états."},
+  "mobileMoneyPaySupplementTitle": "Payer le supplément",
+  "@mobileMoneyPaySupplementTitle": {"description": "Titre de ce même écran quand il paie le supplément de prix demandé à la remise d'un colis."},
+  "mobileMoneyOverdueBody": "Si vous validez quand même dans les prochaines minutes, votre paiement sera pris en compte.",
+  "@mobileMoneyOverdueBody": {"description": "Texte de l'état « Pas encore validé » du paiement d'un colis : l'échéance est passée mais le dépôt reste ouvert, il peut encore aboutir. Ne dit jamais que le délai est dépassé ni que le paiement est perdu (mobile_money_awaiting_screen.dart)."},
+  "mobileMoneyPaymentFailedTitle": "Paiement non abouti",
+  "@mobileMoneyPaymentFailedTitle": {"description": "Titre de l'écran d'échec final du paiement mobile money d'un colis (mobile_money_awaiting_screen.dart)."},
+  "mobileMoneyPaidToTravelerLabel": "Versé au voyageur",
+  "@mobileMoneyPaidToTravelerLabel": {"description": "Libellé de la ligne « quand le voyageur est payé » du récapitulatif d'attente du paiement d'un colis (mobile_money_awaiting_screen.dart)."},
+  "mobileMoneyPaidToTravelerValue": "À la livraison",
+  "@mobileMoneyPaidToTravelerValue": {"description": "Valeur de cette ligne : l'argent est séquestré et versé au voyageur à la livraison."},
   "walletTopupSwitchToCard": "Recharger par carte",
   "@walletTopupSwitchToCard": {"description": "Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire."},
   "walletTopupMmRingCaption": "pour valider",
