@@ -4,7 +4,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Anneau d'attente d'un paiement mobile money : un arc qui tourne, avec au
-/// centre le temps restant (`mm:ss`) jusqu'à l'échéance donnée par le
+/// centre le temps restant (`mm:ss`, `h:mm:ss` dès une heure) jusqu'à l'échéance donnée par le
 /// serveur, et la légende « pour valider ».
 ///
 /// Le chrono se recalcule chaque seconde à partir de [expiresAt] et [now]
@@ -64,9 +64,12 @@ class _MobileMoneyAwaitingRingState extends State<MobileMoneyAwaitingRing> {
     super.dispose();
   }
 
+  /// `mm:ss` sous l'heure, `h:mm:ss` dès une heure restante (une demande de
+  /// paiement de colis peut courir plus d'une heure : `75:00` se lirait mal).
   static String _format(Duration d) {
-    final mm = d.inMinutes.toString().padLeft(2, '0');
+    final mm = (d.inMinutes % 60).toString().padLeft(2, '0');
     final ss = (d.inSeconds % 60).toString().padLeft(2, '0');
+    if (d.inHours >= 1) return '${d.inHours}:$mm:$ss';
     return '$mm:$ss';
   }
 
