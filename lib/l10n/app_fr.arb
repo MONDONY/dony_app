@@ -22084,6 +22084,8 @@
   "@mobileMoneyPaidToTravelerLabel": {"description": "Libellé de la ligne « quand le voyageur est payé » du récapitulatif d'attente du paiement d'un colis (mobile_money_awaiting_screen.dart)."},
   "mobileMoneyPaidToTravelerValue": "À la livraison",
   "@mobileMoneyPaidToTravelerValue": {"description": "Valeur de cette ligne : l'argent est séquestré et versé au voyageur à la livraison."},
+  "mobileMoneyOperatorAlreadyAdded": "Vous avez déjà un compte {operator}.",
+  "@mobileMoneyOperatorAlreadyAdded": {"description": "Message sous le compte à ajouter (comptes de versement) : le numéro saisi est d'un opérateur pour lequel l'utilisateur a déjà un compte. {operator} : nom de l'opérateur détecté.", "placeholders": {"operator": {"type": "String"}}},
   "walletTopupSwitchToCard": "Recharger par carte",
   "@walletTopupSwitchToCard": {"description": "Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire."},
   "walletTopupMmRingCaption": "pour valider",

@@ -10900,6 +10900,7 @@
   "mobileMoneyPaymentFailedTitle": "Payment not completed",
   "mobileMoneyPaidToTravelerLabel": "Paid to the traveler",
   "mobileMoneyPaidToTravelerValue": "On delivery",
+  "mobileMoneyOperatorAlreadyAdded": "You already have an account with {operator}.",
   "walletTopupSwitchToCard": "Top up by card",
   "walletTopupMmRingCaption": "to approve",
   "walletTopupMmSmsSentTitle": "SMS sent to {number}",

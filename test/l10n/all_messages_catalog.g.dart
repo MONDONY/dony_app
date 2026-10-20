@@ -7366,6 +7366,8 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'mobileMoneyPaymentFailedTitle': (l) => l.mobileMoneyPaymentFailedTitle,
   'mobileMoneyPaidToTravelerLabel': (l) => l.mobileMoneyPaidToTravelerLabel,
   'mobileMoneyPaidToTravelerValue': (l) => l.mobileMoneyPaidToTravelerValue,
+  'mobileMoneyOperatorAlreadyAdded': (l) =>
+      l.mobileMoneyOperatorAlreadyAdded(placeholderMarker('operator')),
   'walletTopupSwitchToCard': (l) => l.walletTopupSwitchToCard,
   'walletTopupMmRingCaption': (l) => l.walletTopupMmRingCaption,
   'walletTopupMmSmsSentTitle': (l) =>
@@ -8223,6 +8225,7 @@ const textParameters = <String, List<String>>{
   'mobileMoneyOperatorSwitched': ['operator'],
   'mobileMoneyNumberOperatorNotAccepted': ['operator'],
   'mobileMoneyCountryOtherCurrency': ['currency'],
+  'mobileMoneyOperatorAlreadyAdded': ['operator'],
   'walletTopupMmSmsSentTitle': ['number'],
   'walletTopupMmPromptTitle': ['number'],
   'walletTopupMmFromValue': ['operator', 'last2'],

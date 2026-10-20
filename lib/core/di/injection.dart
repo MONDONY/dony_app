@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/ai_form_draft_injection.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
+import 'package:dony/core/di/payer_account_injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/di/supplement_injection.dart';
 import 'package:dony/core/network/api_client.dart';
@@ -204,7 +205,6 @@ import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
-import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/data/datasources/commission_method_remote_datasource.dart';
@@ -868,15 +868,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       currentUid: () => FirebaseAuth.instance.currentUser?.uid,
     ),
   );
-  // Composant « compte qui paie » : [flow] (`topup`...) étiquette les events.
-  getIt.registerFactoryParam<PayerAccountCubit, String, void>(
-    (flow, _) => PayerAccountCubit(
-      getIt<WalletRepository>(),
-      getIt<PayerPhoneMemory>(),
-      getIt<AnalyticsService>(),
-      flow: flow,
-    ),
-  );
+  registerPayerAccountDependencies(getIt);
   getIt.registerFactory<WalletTopupMobileMoneyCubit>(
     () => WalletTopupMobileMoneyCubit(
       getIt<WalletRepository>(),

@@ -59,6 +59,7 @@ class PayerAccountState extends Equatable {
     this.allowedOperators,
     this.rejectedOperator,
     this.currency,
+    this.fixed = false,
   });
 
   final PayerAccountStatus status;
@@ -93,9 +94,16 @@ class PayerAccountState extends Equatable {
   /// Devise imposée au catalogue (`configure`) ; `null` = aucune.
   final String? currency;
 
-  /// L'opérateur [o] est-il accepté pour ce paiement ?
-  bool isAllowed(MobileMoneyOperator o) =>
-      allowedOperators == null || allowedOperators!.contains(o.code);
+  /// Pays et opérateur imposés (changement de numéro d'un compte) : seul le
+  /// numéro se saisit.
+  final bool fixed;
+
+  /// L'opérateur [o] est-il accepté ici ? En mode [fixed], seul l'opérateur
+  /// imposé l'est, quelle que soit la restriction.
+  bool isAllowed(MobileMoneyOperator o) {
+    if (fixed) return o.code == operator?.code;
+    return allowedOperators == null || allowedOperators!.contains(o.code);
+  }
 
   bool get canProceed =>
       recognition == RecognitionStatus.recognized ||
@@ -115,6 +123,7 @@ class PayerAccountState extends Equatable {
     Object? allowedOperators = _unset,
     Object? rejectedOperator = _unset,
     Object? currency = _unset,
+    bool? fixed,
   }) => PayerAccountState(
     status: status ?? this.status,
     countries: identical(countries, _unset)
@@ -146,6 +155,7 @@ class PayerAccountState extends Equatable {
               : this.rejectedOperator)
         : rejectedOperator as MobileMoneyOperator?,
     currency: identical(currency, _unset) ? this.currency : currency as String?,
+    fixed: fixed ?? this.fixed,
   );
 
   @override
@@ -162,5 +172,6 @@ class PayerAccountState extends Equatable {
     allowedOperators,
     rejectedOperator,
     currency,
+    fixed,
   ];
 }

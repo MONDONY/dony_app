@@ -7,22 +7,28 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/bloc/payer_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
+import 'package:dony/features/payments/data/payer_account_source.dart';
 import 'package:dony/features/payments/data/payer_phone_memory.dart';
-import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+/// Pays (code ISO) et code opérateur imposés au composant : changement de
+/// numéro d'un compte existant.
+typedef FixedPayerAccount = ({String country, String operator});
 
 /// Composant partagé « compte qui paie » : pays, opérateur et numéro mobile
 /// money, avec reconnaissance du numéro par pawaPay.
 ///
-/// Réutilisé par la recharge, puis par le paiement d'un colis et le versement.
-/// [flow] (`topup`...) étiquette les événements analytics, qui ne portent
-/// jamais de numéro.
+/// Réutilisé par la recharge, le paiement d'un colis et l'ajout d'un compte
+/// de versement : [PayerAccountSource] fournit le catalogue (dépôts ou
+/// versements). Sans [PayerPhoneMemory] (versement), rien n'est prérempli ni
+/// retenu. [flow] (`topup`, `payout`...) étiquette les événements analytics,
+/// qui ne portent jamais de numéro.
 ///
 /// Le minuteur de debounce vit ici, jamais côté écran : [close] l'annule, et
 /// aucun `emit` n'a lieu après fermeture.
 class PayerAccountCubit extends Cubit<PayerAccountState> {
   PayerAccountCubit(
-    this._repository,
+    this._source,
     this._memory,
     this._analytics, {
     required this.flow,
@@ -38,17 +44,19 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     'topup-phone-unsupported',
   };
 
-  final WalletRepository _repository;
-  final PayerPhoneMemory _memory;
+  final PayerAccountSource _source;
+  final PayerPhoneMemory? _memory;
   final AnalyticsService _analytics;
   final String flow;
 
   Timer? _debounceTimer;
 
-  /// Devise imposée au catalogue et opérateurs permis, retenus par
-  /// [configure] / [restrictOperators] et rejoués à chaque [load].
+  /// Devise imposée au catalogue, opérateurs permis et compte imposé,
+  /// retenus par [configure] / [restrictOperators] et rejoués à chaque [load]
+  /// (le « Réessayer » d'une erreur de chargement les garde).
   String? _currency;
   Set<String>? _allowed;
+  FixedPayerAccount? _fixed;
 
   /// Incrémenté à chaque changement de saisie ou de choix : une réponse de
   /// reconnaissance qui résout avec un jeton périmé est ignorée.
@@ -60,18 +68,37 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
   String? _recognizedE164;
 
   /// Impose la devise du paiement et/ou limite les opérateurs acceptés, puis
-  /// charge le catalogue (voir [load]). Sans argument, équivaut à [load].
-  Future<void> configure({String? currency, Set<String>? allowedOperators}) {
+  /// charge le catalogue (voir [load]). Sans argument, équivaut à [load]
+  /// sans réglage.
+  ///
+  /// [fixed] : pays et opérateur imposés (changement de numéro d'un compte).
+  /// Ils sont posés au chargement, sans préremplissage du numéro, et ne
+  /// peuvent plus changer ; un numéro d'un autre opérateur donne
+  /// [RecognitionStatus.notAllowed]. Absents du catalogue, le chargement
+  /// finit en erreur : on ne laisse pas choisir un autre opérateur à la place.
+  Future<void> configure({
+    String? currency,
+    Set<String>? allowedOperators,
+    FixedPayerAccount? fixed,
+  }) {
     _currency = currency;
     _allowed = allowedOperators;
+    _fixed = fixed;
     return load();
   }
 
   /// Limite les opérateurs acceptés (`null` = tous). L'opérateur déjà choisi
   /// qui ne l'est plus est retiré, le numéro reste saisi. Si un numéro refusé
   /// pour son opérateur devient acceptable, il est reconnu de nouveau.
+  ///
+  /// En mode [PayerAccountState.fixed], la restriction est retenue mais
+  /// l'opérateur imposé reste en place.
   void restrictOperators(Set<String>? allowed) {
     _allowed = allowed;
+    if (state.fixed) {
+      emit(state.copyWith(allowedOperators: allowed));
+      return;
+    }
     final operator = state.operator;
     if (operator != null && !_isAllowedBy(allowed, operator)) {
       _reset();
@@ -106,46 +133,42 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
 
   /// Charge le catalogue, puis préremplit pays, opérateur et numéro depuis la
   /// mémoire quand le pays est encore ouvert (et de la devise imposée) et
-  /// l'opérateur encore proposé et permis.
+  /// l'opérateur encore proposé et permis. En mode imposé ([configure]
+  /// `fixed`), pose le pays et l'opérateur imposés sans lire la mémoire.
   ///
   /// Restriction et devise sont relues dans [_allowed] / [_currency] à chaque
   /// `emit` : un [restrictOperators] reçu pendant l'attente du catalogue ou de
   /// la mémoire ne doit pas être écrasé par la valeur du début du chargement.
   Future<void> load() async {
     final generation = _newSession();
-    emit(PayerAccountState(allowedOperators: _allowed, currency: _currency));
+    emit(_base(PayerAccountStatus.loading));
     final MobileMoneyCountries? loaded;
     try {
-      loaded = await _repository.mobileMoneyCountries();
+      loaded = await _source.countries();
     } on Object {
       if (isClosed || generation != _generation) return;
-      emit(
-        PayerAccountState(
-          status: PayerAccountStatus.error,
-          allowedOperators: _allowed,
-          currency: _currency,
-        ),
-      );
+      emit(_base(PayerAccountStatus.error));
       return;
     }
     if (isClosed || generation != _generation) return;
     if (loaded == null) {
-      emit(
-        PayerAccountState(
-          status: PayerAccountStatus.legacy,
-          allowedOperators: _allowed,
-          currency: _currency,
-        ),
-      );
+      emit(_base(PayerAccountStatus.legacy));
       return;
     }
     final currency = _currency;
     final countries = currency == null ? loaded : loaded.restrictedTo(currency);
 
+    final fixed = _fixed;
+    if (fixed != null) {
+      _emitFixed(countries, fixed);
+      return;
+    }
+
     // La mémoire est lue avant d'émettre `ready` : sinon l'utilisateur
     // pourrait choisir un pays pendant la lecture, et le préremplissage
     // écraserait son choix.
-    final remembered = await _memory.read();
+    final memory = _memory;
+    final remembered = memory == null ? null : await memory.read();
     if (isClosed || generation != _generation) return;
     final country = remembered == null
         ? null
@@ -153,42 +176,26 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     final operator = country == null
         ? null
         : _operatorOf(country, remembered!.operatorCode);
+    final ready = _base(
+      PayerAccountStatus.ready,
+    ).copyWith(countries: countries);
     if (remembered == null || country == null || operator == null) {
-      emit(
-        PayerAccountState(
-          status: PayerAccountStatus.ready,
-          countries: countries,
-          allowedOperators: _allowed,
-          currency: _currency,
-        ),
-      );
+      emit(ready);
       return;
     }
     if (!_isAllowedBy(_allowed, operator)) {
       // Pays gardé, mais l'opérateur mémorisé n'est pas accepté ici : on
       // laisse choisir, sans reprendre un numéro qui ne servirait pas.
-      emit(
-        PayerAccountState(
-          status: PayerAccountStatus.ready,
-          countries: countries,
-          country: country,
-          allowedOperators: _allowed,
-          currency: _currency,
-        ),
-      );
+      emit(ready.copyWith(country: country));
       return;
     }
 
     emit(
-      PayerAccountState(
-        status: PayerAccountStatus.ready,
-        countries: countries,
+      ready.copyWith(
         country: country,
         operator: operator,
         localNumber: _localPart(remembered.country, remembered.e164),
         e164: remembered.e164,
-        allowedOperators: _allowed,
-        currency: _currency,
       ),
     );
     if (_isComplete(remembered.country, remembered.e164)) {
@@ -196,11 +203,37 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     }
   }
 
+  /// Pays et opérateur imposés, numéro vide. Absents du catalogue (fermés au
+  /// versement, autre devise) : erreur plutôt qu'un autre choix.
+  void _emitFixed(MobileMoneyCountries countries, FixedPayerAccount fixed) {
+    final country = countries.byCode(fixed.country);
+    final operator = country == null
+        ? null
+        : _operatorOf(country, fixed.operator);
+    if (country == null || operator == null) {
+      emit(_base(PayerAccountStatus.error));
+      return;
+    }
+    emit(
+      _base(
+        PayerAccountStatus.ready,
+      ).copyWith(countries: countries, country: country, operator: operator),
+    );
+  }
+
+  /// État vide qui garde les réglages de [configure] / [restrictOperators].
+  PayerAccountState _base(PayerAccountStatus status) => PayerAccountState(
+    status: status,
+    allowedOperators: _allowed,
+    currency: _currency,
+    fixed: _fixed != null,
+  );
+
   /// Choisit un pays servi (vide opérateur et numéro) ou affiche l'état
   /// « Bientôt ». Un pays absent des deux listes est ignoré.
   void selectCountry(String isoCode) {
     final countries = state.countries;
-    if (countries == null) return;
+    if (countries == null || state.fixed) return;
     final iso = isoCode.toUpperCase();
     final country = countries.byCode(iso);
     final upcoming = country == null && countries.isUpcoming(iso);
@@ -230,7 +263,9 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     }
   }
 
+  /// Sans effet en mode [PayerAccountState.fixed].
   void clearCountry() {
+    if (state.fixed) return;
     _reset();
     _forgetDetection();
     emit(
@@ -246,7 +281,9 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
     );
   }
 
-  /// Choisit l'opérateur du pays courant ; le numéro est conservé.
+  /// Choisit l'opérateur du pays courant ; le numéro est conservé. Sans
+  /// effet en mode [PayerAccountState.fixed] (seul l'opérateur imposé y est
+  /// permis).
   ///
   /// Re-choisir l'opérateur déjà retenu ne fait rien. Une fois le numéro
   /// reconnu, un autre choix est respecté sans nouvel appel
@@ -390,13 +427,15 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
   }
 
   /// À appeler à la confirmation d'une recharge : retient pays, opérateur et
-  /// numéro pour préremplir la prochaine fois.
+  /// numéro pour préremplir la prochaine fois. Sans mémoire, ne fait rien.
   Future<void> rememberSuccess() async {
+    final memory = _memory;
+    if (memory == null) return;
     final country = state.country;
     final operator = state.operator;
     final e164 = state.e164;
     if (country == null || operator == null || e164 == null) return;
-    await _memory.save(
+    await memory.save(
       RememberedPayer(
         country: country.country,
         operatorCode: operator.code,
@@ -452,7 +491,7 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       ),
     );
     try {
-      final catalog = await _repository.topupProviders(e164);
+      final catalog = await _source.recognize(e164);
       if (isClosed || generation != _generation) return;
 
       final detected = catalog.detected;
@@ -471,8 +510,9 @@ class PayerAccountCubit extends Cubit<PayerAccountState> {
       _detectedCode = detected;
       _recognizedE164 = e164;
       if (!state.isAllowed(target)) {
-        // L'opérateur du numéro existe ici mais ce paiement ne l'accepte pas :
-        // pas de bascule, le choix de l'utilisateur reste en place.
+        // L'opérateur du numéro existe ici mais n'est pas accepté (restriction
+        // du paiement, ou opérateur imposé d'un changement de numéro) : pas
+        // de bascule, le choix de l'utilisateur reste en place.
         emit(
           state.copyWith(
             recognition: RecognitionStatus.notAllowed,

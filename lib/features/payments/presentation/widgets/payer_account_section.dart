@@ -30,6 +30,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// - [notAllowedMessage] : message quand le numéro est d'un opérateur non
 ///   permis, reçoit le nom de cet opérateur ;
 /// - [numberHelper] : aide affichée sous le champ numéro.
+///
+/// En mode imposé (`PayerAccountState.fixed`, changement de numéro), le pays
+/// n'a pas de bouton pour l'effacer et seule la pastille de l'opérateur
+/// imposé est montrée : seul le numéro se modifie.
 class PayerAccountSection extends StatelessWidget {
   const PayerAccountSection({
     super.key,
@@ -136,7 +140,10 @@ class _AccountCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (country != null)
-            _CountryRow(code: country.country, onClear: cubit.clearCountry)
+            _CountryRow(
+              code: country.country,
+              onClear: state.fixed ? null : cubit.clearCountry,
+            )
           else if (countries != null)
             Padding(
               padding: const EdgeInsets.all(DonySpacing.md),
@@ -157,7 +164,9 @@ class _AccountCard extends StatelessWidget {
             _reveal(
               context,
               _OperatorRow(
-                operators: country.operators,
+                operators: state.fixed && operator != null
+                    ? [operator]
+                    : country.operators,
                 selected: operator?.code,
                 isAllowed: state.isAllowed,
                 disallowedLabel:
@@ -195,7 +204,9 @@ class _CountryRow extends StatelessWidget {
   const _CountryRow({required this.code, required this.onClear});
 
   final String code;
-  final VoidCallback onClear;
+
+  /// `null` : pays imposé, pas de bouton pour l'effacer.
+  final VoidCallback? onClear;
 
   @override
   Widget build(BuildContext context) {
@@ -231,11 +242,15 @@ class _CountryRow extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            tooltip: l.commonClear,
-            onPressed: onClear,
-            icon: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
-          ),
+          if (onClear != null)
+            IconButton(
+              tooltip: l.commonClear,
+              onPressed: onClear,
+              icon: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
+            )
+          else
+            // Même hauteur de ligne que celle qui porte le bouton.
+            const SizedBox(height: kMinInteractiveDimension),
         ],
       ),
     );

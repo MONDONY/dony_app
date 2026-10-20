@@ -746,6 +746,108 @@ void main() {
     });
   });
 
+  group('ajout d\'un compte de versement', () {
+    /// Orange déjà ajouté : seuls MTN et les autres restent proposés.
+    final orangeAdded = kPayerReady.copyWith(
+      country: kCoteDIvoire,
+      allowedOperators: const {'MTN_MOMO_CIV'},
+    );
+
+    Widget addSection() => Builder(
+      builder: (context) => PayerAccountSection(
+        disallowedOperatorLabel: 'Ajouté',
+        notAllowedMessage: context.l10n.mobileMoneyOperatorAlreadyAdded,
+      ),
+    );
+
+    testWidgets('section_addedPill_greyed_notTappable', (tester) async {
+      await pumpWith(tester, orangeAdded, section: addSection());
+
+      final orange = find.byKey(const Key('mm-operator-ORANGE_CIV'));
+      expect(
+        find.descendant(of: orange, matching: find.text('Ajouté')),
+        findsOneWidget,
+      );
+      await tester.tap(orange);
+      await tester.pump();
+      verifyNever(() => cubit.selectOperator(any()));
+    });
+
+    testWidgets('section_numberOfAddedOperator_alreadyAddedMessage', (
+      tester,
+    ) async {
+      await pumpWith(
+        tester,
+        kPayerRecognized.copyWith(
+          operator: kMtnCiv,
+          allowedOperators: const {'MTN_MOMO_CIV'},
+          recognition: RecognitionStatus.notAllowed,
+          rejectedOperator: kOrangeCiv,
+        ),
+        section: addSection(),
+      );
+
+      expect(
+        find.text('Vous avez déjà un compte Orange Money.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('anglais : message « already have »', (tester) async {
+      final controller = stubPayerAccount(
+        cubit,
+        kPayerRecognized.copyWith(
+          operator: kMtnCiv,
+          allowedOperators: const {'MTN_MOMO_CIV'},
+          recognition: RecognitionStatus.notAllowed,
+          rejectedOperator: kOrangeCiv,
+        ),
+      );
+      addTearDown(controller.close);
+      await tester.pumpWidget(
+        harness(locale: AppL10n.en, section: addSection()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('You already have an account with Orange Money.'),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('compte imposé (changement de numéro)', () {
+    final fixedMtn = kPayerReady.copyWith(
+      country: kCoteDIvoire,
+      operator: kMtnCiv,
+      fixed: true,
+    );
+
+    testWidgets('section_fixed_noClearButton', (tester) async {
+      await pumpWith(tester, fixedMtn);
+
+      expect(find.text("Côte d'Ivoire"), findsOneWidget);
+      expect(find.byTooltip('Effacer'), findsNothing);
+    });
+
+    testWidgets('section_fixed_onlyTheFixedPill', (tester) async {
+      await pumpWith(tester, fixedMtn);
+
+      expect(find.byKey(const Key('mm-operator-MTN_MOMO_CIV')), findsOneWidget);
+      expect(find.byKey(const Key('mm-operator-ORANGE_CIV')), findsNothing);
+      // La pastille retenue n'est pas grisée.
+      expect(find.byType(Opacity), findsNothing);
+      expect(find.byKey(const Key('mm-number-field')), findsOneWidget);
+    });
+
+    testWidgets('section_notFixed_allPillsAndClearButton', (tester) async {
+      await pumpWith(tester, fixedMtn.copyWith(fixed: false));
+
+      expect(find.byTooltip('Effacer'), findsOneWidget);
+      expect(find.byKey(const Key('mm-operator-ORANGE_CIV')), findsOneWidget);
+    });
+  });
+
   testWidgets(
     'réduction du mouvement : les lignes apparaissent sans animation',
     (tester) async {

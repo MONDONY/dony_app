@@ -21469,6 +21469,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mobileMoneyPaidToTravelerValue => 'À la livraison';
 
   @override
+  String mobileMoneyOperatorAlreadyAdded(String operator) {
+    return 'Vous avez déjà un compte $operator.';
+  }
+
+  @override
   String get walletTopupSwitchToCard => 'Recharger par carte';
 
   @override

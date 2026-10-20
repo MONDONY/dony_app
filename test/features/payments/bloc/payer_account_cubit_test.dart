@@ -8,7 +8,9 @@ import 'package:dony/features/payments/bloc/payer_account_cubit.dart';
 import 'package:dony/features/payments/bloc/payer_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
+import 'package:dony/features/payments/data/payer_account_source.dart';
 import 'package:dony/features/payments/data/payer_phone_memory.dart';
+import 'package:dony/features/payments/data/repositories/mobile_money_account_repository.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,6 +21,9 @@ import '../../../helpers/form_draft_test_doubles.dart';
 class MockWalletRepository extends Mock implements WalletRepository {}
 
 class MockAnalyticsService extends Mock implements AnalyticsService {}
+
+class MockMobileMoneyAccountRepository extends Mock
+    implements MobileMoneyAccountRepository {}
 
 class _Invalid extends ValidationException {
   const _Invalid()
@@ -105,8 +110,12 @@ void main() {
   late PayerPhoneMemory memory;
   late PayerAccountCubit cubit;
 
-  PayerAccountCubit build() =>
-      PayerAccountCubit(repo, memory, analytics, flow: 'topup');
+  PayerAccountCubit build() => PayerAccountCubit(
+    TopupPayerAccountSource(repo),
+    memory,
+    analytics,
+    flow: 'topup',
+  );
 
   setUp(() {
     repo = MockWalletRepository();
@@ -212,7 +221,7 @@ void main() {
       final gate = Completer<void>();
       final slow = _SlowStorage(storage, gate.future);
       cubit = PayerAccountCubit(
-        repo,
+        TopupPayerAccountSource(repo),
         PayerPhoneMemory(storage: slow, currentUid: () => 'uid-1'),
         analytics,
         flow: 'topup',
@@ -1304,6 +1313,276 @@ void main() {
         expect(cubit.state.rejectedOperator, isNull);
         expect(cubit.state.canProceed, isTrue);
       });
+    });
+  });
+
+  group('catalogue de versement (payout)', () {
+    late MockMobileMoneyAccountRepository accounts;
+
+    setUp(() {
+      accounts = MockMobileMoneyAccountRepository();
+      when(() => accounts.payoutCountries()).thenAnswer((_) async => countries);
+      when(
+        () => accounts.payoutProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('ORANGE_CIV'));
+      cubit = PayerAccountCubit(
+        PayoutPayerAccountSource(accounts),
+        null,
+        analytics,
+        flow: 'payout',
+      );
+    });
+
+    test('load_readsPayoutCatalogue_neverTheTopupOne', () async {
+      await cubit.load();
+
+      expect(cubit.state.status, PayerAccountStatus.ready);
+      expect(cubit.state.countries, countries);
+      verify(() => accounts.payoutCountries()).called(1);
+      verifyNever(() => repo.mobileMoneyCountries());
+    });
+
+    test('load_withoutMemory_noPrefill_evenIfSomethingWasRemembered', () async {
+      await memory.save(
+        const RememberedPayer(
+          country: 'CI',
+          operatorCode: 'ORANGE_CIV',
+          e164: e164,
+        ),
+      );
+
+      await cubit.load();
+
+      expect(cubit.state.country, isNull);
+      expect(cubit.state.operator, isNull);
+      expect(cubit.state.e164, isNull);
+      verifyNever(() => accounts.payoutProviders(any()));
+    });
+
+    test('load_oldBackend_legacy', () async {
+      when(() => accounts.payoutCountries()).thenAnswer((_) async => null);
+
+      await cubit.load();
+
+      expect(cubit.state.status, PayerAccountStatus.legacy);
+    });
+
+    test('phoneChanged_recognizesWithPayoutProviders_andLogsPayoutFlow', () {
+      when(
+        () => accounts.payoutProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('MTN_MOMO_CIV'));
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
+        expect(cubit.state.operator?.code, 'MTN_MOMO_CIV');
+        expect(cubit.state.recognition, RecognitionStatus.autoSwitched);
+        verify(() => accounts.payoutProviders(e164)).called(1);
+        verifyNever(() => repo.topupProviders(any()));
+        verifyLogged(AnalyticsEvents.mobileMoneyOperatorAutoSwitched, {
+          'from': 'ORANGE_CIV',
+          'to': 'MTN_MOMO_CIV',
+          'flow': 'payout',
+        });
+      });
+    });
+
+    test('phoneChanged_invalidPayoutNumber_unrecognized', () {
+      when(() => accounts.payoutProviders(any())).thenThrow(const _Invalid());
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.unrecognized);
+      });
+    });
+
+    test('rememberSuccess_withoutMemory_writesNothing', () {
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+        expect(cubit.state.canProceed, isTrue);
+
+        cubit.rememberSuccess();
+        async.flushMicrotasks();
+
+        expect(storage.values, isEmpty);
+      });
+    });
+
+    test('restrictOperators_alreadyAddedCodes_greyedAndRejected', () {
+      when(
+        () => accounts.payoutProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('ORANGE_CIV'));
+      fakeAsync((async) {
+        cubit.load();
+        async.flushMicrotasks();
+        // Orange déjà ajouté : seuls MTN et Wave restent proposés.
+        cubit.restrictOperators({'MTN_MOMO_CIV', 'WAVE_CIV'});
+        cubit.selectCountry('CI');
+        cubit.selectOperator('ORANGE_CIV');
+        expect(cubit.state.operator, isNull);
+        cubit.selectOperator('MTN_MOMO_CIV');
+
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.notAllowed);
+        expect(cubit.state.rejectedOperator, orange);
+        expect(cubit.state.operator, mtn);
+        expect(cubit.state.canProceed, isFalse);
+      });
+    });
+  });
+
+  group('compte imposé (changement de numéro)', () {
+    const fixedMtn = (country: 'CI', operator: 'MTN_MOMO_CIV');
+
+    test('configure_fixed_setsCountryAndOperator_numberEmpty', () async {
+      // Même avec un numéro mémorisé : changer de numéro part d'un champ vide.
+      await memory.save(
+        const RememberedPayer(
+          country: 'CI',
+          operatorCode: 'MTN_MOMO_CIV',
+          e164: e164,
+        ),
+      );
+
+      await cubit.configure(fixed: fixedMtn);
+
+      expect(cubit.state.status, PayerAccountStatus.ready);
+      expect(cubit.state.fixed, isTrue);
+      expect(cubit.state.country, ci);
+      expect(cubit.state.operator, mtn);
+      expect(cubit.state.e164, isNull);
+      expect(cubit.state.localNumber, '');
+      verifyNever(() => repo.topupProviders(any()));
+    });
+
+    test('load_afterConfigureFixed_keepsFixed', () async {
+      await cubit.configure(fixed: fixedMtn);
+
+      await cubit.load();
+
+      expect(cubit.state.fixed, isTrue);
+      expect(cubit.state.operator, mtn);
+    });
+
+    test('configure_withoutFixed_clearsFixed', () async {
+      await cubit.configure(fixed: fixedMtn);
+
+      await cubit.configure();
+
+      expect(cubit.state.fixed, isFalse);
+      expect(cubit.state.country, isNull);
+    });
+
+    test('configure_fixedOperatorMissing_error', () async {
+      await cubit.configure(fixed: (country: 'CI', operator: 'MOOV_CIV'));
+
+      expect(cubit.state.status, PayerAccountStatus.error);
+      expect(cubit.state.country, isNull);
+    });
+
+    test('configure_fixedCountryMissing_error', () async {
+      await cubit.configure(fixed: (country: 'BF', operator: 'ORANGE_BFA'));
+
+      expect(cubit.state.status, PayerAccountStatus.error);
+    });
+
+    test('fixed_countryAndOperatorCannotChange', () async {
+      await cubit.configure(fixed: fixedMtn);
+
+      cubit.clearCountry();
+      cubit.selectCountry('SN');
+      cubit.selectOperator('ORANGE_CIV');
+
+      expect(cubit.state.country, ci);
+      expect(cubit.state.operator, mtn);
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.mobileMoneyCountrySelected,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    test('fixed_onlyTheFixedOperatorIsAllowed', () async {
+      await cubit.configure(fixed: fixedMtn);
+
+      expect(cubit.state.isAllowed(mtn), isTrue);
+      expect(cubit.state.isAllowed(orange), isFalse);
+      expect(cubit.state.isAllowed(wave), isFalse);
+    });
+
+    test('fixed_numberOfAnotherOperator_notAllowed_noSwitch', () {
+      when(
+        () => repo.topupProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('ORANGE_CIV'));
+      fakeAsync((async) {
+        cubit.configure(fixed: fixedMtn);
+        async.flushMicrotasks();
+
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.notAllowed);
+        expect(cubit.state.rejectedOperator, orange);
+        expect(cubit.state.operator, mtn);
+        expect(cubit.state.canProceed, isFalse);
+
+        // Le choix d'un autre opérateur reste impossible après le refus.
+        cubit.selectOperator('ORANGE_CIV');
+        expect(cubit.state.operator, mtn);
+      });
+    });
+
+    test('fixed_numberOfTheFixedOperator_recognized', () {
+      when(
+        () => repo.topupProviders(any()),
+      ).thenAnswer((_) async => catalogDetecting('MTN_MOMO_CIV'));
+      fakeAsync((async) {
+        cubit.configure(fixed: fixedMtn);
+        async.flushMicrotasks();
+
+        cubit.phoneChanged('0748840856');
+        async.elapse(PayerAccountCubit.debounce);
+        async.flushMicrotasks();
+
+        expect(cubit.state.recognition, RecognitionStatus.recognized);
+        expect(cubit.state.e164, e164);
+        expect(cubit.state.canProceed, isTrue);
+      });
+    });
+
+    test('fixed_restrictionWithoutTheFixedOperator_keepsIt', () async {
+      await cubit.configure(fixed: fixedMtn);
+
+      // L'écran passe « catalogue moins codes déjà ajoutés », MTN compris.
+      cubit.restrictOperators({'ORANGE_CIV', 'WAVE_CIV'});
+
+      expect(cubit.state.operator, mtn);
+      expect(cubit.state.isAllowed(mtn), isTrue);
+      expect(cubit.state.allowedOperators, {'ORANGE_CIV', 'WAVE_CIV'});
     });
   });
 }

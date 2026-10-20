@@ -34662,6 +34662,12 @@ abstract class AppLocalizations {
   /// **'À la livraison'**
   String get mobileMoneyPaidToTravelerValue;
 
+  /// Message sous le compte à ajouter (comptes de versement) : le numéro saisi est d'un opérateur pour lequel l'utilisateur a déjà un compte. {operator} : nom de l'opérateur détecté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà un compte {operator}.'**
+  String mobileMoneyOperatorAlreadyAdded(String operator);
+
   /// Bouton du bas de l'écran Recharger quand le pays choisi n'a pas encore le mobile money : passe à la carte bancaire.
   ///
   /// In fr, this message translates to:
