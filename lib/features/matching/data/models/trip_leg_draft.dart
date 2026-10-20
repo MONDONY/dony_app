@@ -124,7 +124,7 @@ class TripLegPaymentRails extends Equatable {
   const TripLegPaymentRails({
     this.stripeConfigured = false,
     this.mobileMoneyAccountActive = false,
-    this.mobileMoneyAccountCurrency,
+    this.mobileMoneyAccountCurrencies = const {},
   });
 
   static const card = 'STRIPE';
@@ -137,20 +137,22 @@ class TripLegPaymentRails extends Equatable {
   /// Compte Stripe Connect prêt.
   final bool stripeConfigured;
 
-  /// Compte de versement mobile money actif, et sa devise (`null` = inconnue).
+  /// Compte de versement mobile money actif, et devises (codes ISO) reçues
+  /// par l'ensemble des comptes (vide = inconnues).
   final bool mobileMoneyAccountActive;
-  final SupportedCurrency? mobileMoneyAccountCurrency;
+  final Set<String> mobileMoneyAccountCurrencies;
 
   /// Carte : hors zone CFA, Stripe Connect prêt.
   bool cardAvailable(SupportedCurrency currency) =>
       stripeConfigured && currency.isStripeEligible;
 
-  /// Mobile money : zone CFA, compte de versement actif dans cette devise.
+  /// Mobile money : zone CFA, compte de versement actif dans cette devise
+  /// (la devise de l'étape fait partie de celles des comptes).
   bool mobileMoneyAvailable(SupportedCurrency currency) =>
       currency.isMobileMoneyEligible &&
       mobileMoneyAccountActive &&
-      (mobileMoneyAccountCurrency == null ||
-          mobileMoneyAccountCurrency == currency);
+      (mobileMoneyAccountCurrencies.isEmpty ||
+          mobileMoneyAccountCurrencies.contains(currency.code));
 
   bool isAvailable(String method, SupportedCurrency currency) =>
       switch (method) {
@@ -193,7 +195,7 @@ class TripLegPaymentRails extends Equatable {
   List<Object?> get props => [
     stripeConfigured,
     mobileMoneyAccountActive,
-    mobileMoneyAccountCurrency?.code,
+    (mobileMoneyAccountCurrencies.toList()..sort()),
   ];
 }
 

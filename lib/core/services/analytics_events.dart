@@ -167,9 +167,21 @@ abstract final class AnalyticsEvents {
   /// Propriétés `source`, `reason`, `error_code`.
   static const bankAccountChangeLinkFailed = 'bank_account_change_link_failed';
 
-  /// Compte de versement mobile money (voyageur) activé ou désactivé.
-  static const mobileMoneyAccountActivated = 'mobile_money_account_activated';
-  static const mobileMoneyAccountDisabled = 'mobile_money_account_disabled';
+  /// Comptes de versement mobile money du voyageur : ajout, changement de
+  /// numéro, retrait (propriétés `provider` = code opérateur, `accounts_count`
+  /// = comptes restants après relecture). Jamais le numéro, même masqué.
+  static const mobileMoneyPayoutAccountAdded =
+      'mobile_money_payout_account_added';
+  static const mobileMoneyPayoutAccountNumberChanged =
+      'mobile_money_payout_account_number_changed';
+  static const mobileMoneyPayoutAccountRemoved =
+      'mobile_money_payout_account_removed';
+
+  /// Écriture sur un compte de versement refusée par le back. Propriétés
+  /// `action` (`added`/`number_changed`/`removed`) et `error_code`
+  /// (`AppException.code`, `unknown` sinon).
+  static const mobileMoneyPayoutAccountActionFailed =
+      'mobile_money_payout_account_action_failed';
 
   /// Paiement mobile money d'un bid (pawaPay) : initiation d'un dépôt,
   /// séquestre atteint, dépôt refusé.

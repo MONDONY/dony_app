@@ -72,10 +72,11 @@ class PrixConditionsStep extends StatelessWidget {
   /// bascule reste désactivée même en zone CFA.
   final bool mobileMoneyAccountActive;
 
-  /// Devise reçue par le compte mobile money actif (ex. XOF), `null` si
-  /// inconnue ou aucun compte actif. Sert à proposer de publier le trajet
-  /// dans cette devise quand celle du trajet ne permet pas le mobile money.
-  final SupportedCurrency? mobileMoneyCurrency;
+  /// Devises (codes ISO, ex. `XOF`) reçues par les comptes mobile money du
+  /// voyageur, vide si inconnues ou sans compte. Le trajet ne peut accepter
+  /// le mobile money que dans l'une d'elles ; sert aussi à proposer de le
+  /// publier dans cette devise quand ce n'est pas le cas.
+  final Set<String> mobileMoneyCurrencies;
 
   /// Devises des étapes ajoutées au voyage (FLUTTER-HP), lues au moment de
   /// confirmer un changement de devise : elles ne changent pas avec le
@@ -139,7 +140,7 @@ class PrixConditionsStep extends StatelessWidget {
     required this.mobileMoneyEnabledNotifier,
     required this.currencyNotifier,
     this.mobileMoneyAccountActive = false,
-    this.mobileMoneyCurrency,
+    this.mobileMoneyCurrencies = const {},
     this.legCurrencies,
     this.onMobileMoneySetupReturned,
     required this.negotiableNotifier,
@@ -1098,7 +1099,12 @@ class PrixConditionsStep extends StatelessWidget {
     required SupportedCurrency currency,
   }) {
     final eligible = currency.isMobileMoneyEligible;
-    final usable = eligible && mobileMoneyAccountActive;
+    // Un compte existe, mais aucun dans la devise de ce trajet : le back
+    // refuserait le mobile money. Vide = devises inconnues, on laisse faire.
+    final covered =
+        mobileMoneyCurrencies.isEmpty ||
+        mobileMoneyCurrencies.contains(currency.code);
+    final usable = eligible && mobileMoneyAccountActive && covered;
     return Column(
       children: [
         ValueListenableBuilder<bool>(
@@ -1151,7 +1157,7 @@ class PrixConditionsStep extends StatelessWidget {
         // Compte activé mais trajet dans une autre devise : l'option grisée
         // ne disait pas pourquoi (FLUTTER-55). On l'explique et on propose de
         // publier dans la devise du compte, comme le sélecteur de devise.
-        if (!eligible && mobileMoneyAccountActive)
+        if (mobileMoneyAccountActive && !(eligible && covered))
           Builder(
             builder: (context) => _noticePadding(
               _mobileMoneyCurrencyNotice(context, l, tripCurrency: currency),
@@ -1185,14 +1191,21 @@ class PrixConditionsStep extends StatelessWidget {
     AppLocalizations l, {
     required SupportedCurrency tripCurrency,
   }) {
-    final target = mobileMoneyCurrency;
+    // Une seule devise de compte possible : on la propose. Plusieurs : le
+    // voyageur choisit lui-même, l'encart reste générique.
+    final targets = {
+      for (final code in mobileMoneyCurrencies)
+        if (SupportedCurrency.fromCode(code)?.isMobileMoneyEligible ?? false)
+          SupportedCurrency.fromCode(code)!,
+    };
+    final target = targets.length == 1 ? targets.first : null;
     if (currencyLocked) {
       return PaymentSetupNotice(
         key: const Key('mobile-money-currency-notice'),
         message: l.tripEditMobileMoneyCurrencyLockedNotice(tripCurrency.code),
       );
     }
-    if (target == null || !target.isMobileMoneyEligible) {
+    if (target == null) {
       return PaymentSetupNotice(
         key: const Key('mobile-money-currency-notice'),
         message: l.tripPublishMobileMoneyCurrencyNoticeGeneric(

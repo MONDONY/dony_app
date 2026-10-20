@@ -685,12 +685,12 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(
                 mobileMoneyState,
               ),
-              mobileMoneyCurrency: SupportedCurrency.fromCode(
-                mobileMoneyAccountCurrencyFrom(mobileMoneyState),
+              mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
+                mobileMoneyState,
               ),
               onMobileMoneySetupReturned: () => context
                   .read<MobileMoneyAccountBloc>()
-                  .add(const MobileMoneyAccountRequested()),
+                  .add(const MobileMoneyAccountsRequested()),
               negotiableNotifier: _fields.negotiable,
               selectedContentNotifier: _fields.selectedContent,
               customAcceptedNotifier: _fields.customAccepted,

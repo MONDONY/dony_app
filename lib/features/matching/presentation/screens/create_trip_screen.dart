@@ -439,7 +439,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       BlocProvider<MobileMoneyAccountBloc>(
         create: (_) =>
             getIt<MobileMoneyAccountBloc>()
-              ..add(const MobileMoneyAccountRequested()),
+              ..add(const MobileMoneyAccountsRequested()),
       ),
       // `.value` obligatoire : StripeAccountBloc est un lazySingleton GetIt
       // partagé par toute l'app. Avec `create:`, le provider fermerait le
@@ -1803,8 +1803,8 @@ class _TripFormContentState extends State<_TripFormContent> {
     return TripLegPaymentRails(
       stripeConfigured: _isStripeConfigured(),
       mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(mobileMoneyState),
-      mobileMoneyAccountCurrency: SupportedCurrency.fromCode(
-        mobileMoneyAccountCurrencyFrom(mobileMoneyState),
+      mobileMoneyAccountCurrencies: mobileMoneyAccountCurrenciesFrom(
+        mobileMoneyState,
       ),
     );
   }
@@ -3046,15 +3046,15 @@ class _TripFormContentState extends State<_TripFormContent> {
               mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
               currencyNotifier: widget.currencyNotifier,
               mobileMoneyAccountActive: mobileMoneyAccountActive,
-              mobileMoneyCurrency: SupportedCurrency.fromCode(
-                mobileMoneyAccountCurrencyFrom(mobileMoneyState),
+              mobileMoneyCurrencies: mobileMoneyAccountCurrenciesFrom(
+                mobileMoneyState,
               ),
               // Changer la devise du premier trajet ne touche pas celle des
               // étapes ajoutées (FLUTTER-HP) : la confirmation les cite.
               legCurrencies: _isEdit || _isLocked ? null : _extraLegCurrencies,
               onMobileMoneySetupReturned: () => context
                   .read<MobileMoneyAccountBloc>()
-                  .add(const MobileMoneyAccountRequested()),
+                  .add(const MobileMoneyAccountsRequested()),
               negotiableNotifier: _negotiableNotifier,
               selectedContentNotifier: _selectedContentNotifier,
               customAcceptedNotifier: _customAcceptedNotifier,

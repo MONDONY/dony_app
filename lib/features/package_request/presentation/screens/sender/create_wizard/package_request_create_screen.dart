@@ -422,7 +422,7 @@ class _PackageRequestCreateScreenState
         BlocProvider<MobileMoneyAccountBloc>(
           create: (_) =>
               getIt<MobileMoneyAccountBloc>()
-                ..add(const MobileMoneyAccountRequested()),
+                ..add(const MobileMoneyAccountsRequested()),
         ),
         BlocProvider<AiFilledFieldsCubit>.value(value: _aiFilled),
         if (_draftCubit != null)
@@ -751,7 +751,7 @@ class _PackageRequestCreateScreenState
                       // encore « non configuré » après l'activation.
                       onMobileMoneySetupReturned: () => context
                           .read<MobileMoneyAccountBloc>()
-                          .add(const MobileMoneyAccountRequested()),
+                          .add(const MobileMoneyAccountsRequested()),
                     ),
                   ),
               },

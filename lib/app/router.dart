@@ -947,7 +947,7 @@ final appRouter = GoRouter(
             BlocProvider<MobileMoneyAccountBloc>(
               create: (_) =>
                   getIt<MobileMoneyAccountBloc>()
-                    ..add(const MobileMoneyAccountRequested()),
+                    ..add(const MobileMoneyAccountsRequested()),
             ),
             // `.value` obligatoire : StripeAccountBloc est un lazySingleton
             // GetIt partagé par toute l'app (cf. create_trip_screen.dart).
@@ -1011,7 +1011,7 @@ final appRouter = GoRouter(
       builder: (_, _) => BlocProvider(
         create: (_) =>
             getIt<MobileMoneyAccountBloc>()
-              ..add(const MobileMoneyAccountRequested()),
+              ..add(const MobileMoneyAccountsRequested()),
         child: const MobileMoneyAccountScreen(),
       ),
     ),

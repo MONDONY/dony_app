@@ -191,7 +191,7 @@ void main() {
       const ready = TripLegPaymentRails(
         stripeConfigured: true,
         mobileMoneyAccountActive: true,
-        mobileMoneyAccountCurrency: xof,
+        mobileMoneyAccountCurrencies: {'XOF'},
       );
       expect(ready.defaultsFor(eur), ['STRIPE']);
       expect(ready.defaultsFor(xof), ['MOBILE_MONEY']);
@@ -209,6 +209,24 @@ void main() {
       );
     });
 
+    test('plusieurs devises de comptes : mobile money dans chacune', () {
+      const rails = TripLegPaymentRails(
+        mobileMoneyAccountActive: true,
+        mobileMoneyAccountCurrencies: {'XOF', 'XAF'},
+      );
+      expect(rails.isAvailable('MOBILE_MONEY', xof), isTrue);
+      expect(rails.isAvailable('MOBILE_MONEY', xaf), isTrue);
+      expect(rails.isAvailable('MOBILE_MONEY', eur), isFalse);
+      // Ordre d'insertion sans effet sur l'égalité.
+      expect(
+        rails,
+        const TripLegPaymentRails(
+          mobileMoneyAccountActive: true,
+          mobileMoneyAccountCurrencies: {'XAF', 'XOF'},
+        ),
+      );
+    });
+
     test('disponibilité par moyen', () {
       const rails = TripLegPaymentRails(stripeConfigured: true);
       expect(rails.isAvailable('STRIPE', eur), isTrue);
@@ -222,7 +240,7 @@ void main() {
       const rails = TripLegPaymentRails(
         stripeConfigured: true,
         mobileMoneyAccountActive: true,
-        mobileMoneyAccountCurrency: xof,
+        mobileMoneyAccountCurrencies: {'XOF'},
       );
       expect(rails.reconcile(['STRIPE', 'CASH'], xof), ['CASH']);
       expect(rails.reconcile(['CASH', 'MOBILE_MONEY'], eur), ['CASH']);
@@ -240,7 +258,7 @@ void main() {
         const TripLegPaymentRails(
           stripeConfigured: true,
           mobileMoneyAccountActive: true,
-          mobileMoneyAccountCurrency: xof,
+          mobileMoneyAccountCurrencies: {'XOF'},
         ),
       );
     });
@@ -538,7 +556,7 @@ void main() {
       TripLegPaymentRails rails = const TripLegPaymentRails(
         stripeConfigured: true,
         mobileMoneyAccountActive: true,
-        mobileMoneyAccountCurrency: SupportedCurrency.xof,
+        mobileMoneyAccountCurrencies: {'XOF'},
       ),
     }) async {
       await t.pumpWidget(
@@ -628,7 +646,7 @@ void main() {
     const rails = TripLegPaymentRails(
       stripeConfigured: true,
       mobileMoneyAccountActive: true,
-      mobileMoneyAccountCurrency: SupportedCurrency.xof,
+      mobileMoneyAccountCurrencies: {'XOF'},
     );
 
     DonyCheckbox box(WidgetTester t, String method) =>

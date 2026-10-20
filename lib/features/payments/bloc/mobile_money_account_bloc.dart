@@ -5,241 +5,145 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
-import 'package:dony/features/payments/data/models/mobile_money_account.dart';
 import 'package:dony/features/payments/data/repositories/mobile_money_account_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Compte de versement mobile money du voyageur (Wave / Orange Money via
-/// pawaPay) : consultation, activation et désactivation.
+/// Comptes de versement mobile money du voyageur (un par code opérateur
+/// pawaPay) : consultation, ajout, changement de numéro, retrait.
 ///
 /// Style identique à `BidNegotiationBloc` : le repository ne fait que
 /// passer, c'est ici que les erreurs sont déballées (`unwrapDioError`) et
-/// que les events analytics sont tirés, en `unawaited`.
+/// que les events analytics sont tirés, en `unawaited`, sans jamais de
+/// numéro.
+///
+/// Toute écriture suppose la liste lue : c'est `accounts()` qui apprend au
+/// repository si le back est ancien (repli sur l'ancien contrat). Une
+/// écriture partie sans cette lecture (après un échec de chargement, par
+/// exemple) viserait donc la mauvaise route : la liste est relue d'abord.
 class MobileMoneyAccountBloc
     extends Bloc<MobileMoneyAccountEvent, MobileMoneyAccountState> {
   MobileMoneyAccountBloc(this._repository, this._analytics)
     : super(const MobileMoneyAccountInitial()) {
-    on<MobileMoneyAccountRequested>(_onRequested);
-    on<MobileMoneyAccountActivateRequested>(_onActivateRequested);
-    on<MobileMoneyAccountDisableRequested>(_onDisableRequested);
-    on<MobileMoneyAccountProvidersRequested>(_onProvidersRequested);
-    on<MobileMoneyAccountProvidersCleared>(_onProvidersCleared);
-    on<MobileMoneyAccountProvidersUpdateRequested>(_onProvidersUpdateRequested);
-    on<MobileMoneyAccountChangeNumberRequested>(_onChangeNumberRequested);
-    on<MobileMoneyAccountChangeNumberCancelled>(_onChangeNumberCancelled);
+    on<MobileMoneyAccountsRequested>(_onRequested);
+    on<MobileMoneyAccountAddRequested>(
+      (event, emit) => _write(
+        emit,
+        action: MobileMoneyAccountAction.added,
+        provider: event.provider,
+        call: () => _repository.addAccount(
+          phoneNumber: event.phoneNumber,
+          provider: event.provider,
+        ),
+      ),
+    );
+    on<MobileMoneyAccountNumberChangeRequested>(
+      (event, emit) => _write(
+        emit,
+        action: MobileMoneyAccountAction.numberChanged,
+        provider: event.account.provider,
+        call: () => _repository.changeNumber(
+          account: event.account,
+          phoneNumber: event.phoneNumber,
+        ),
+      ),
+    );
+    on<MobileMoneyAccountRemoveRequested>(
+      (event, emit) => _write(
+        emit,
+        action: MobileMoneyAccountAction.removed,
+        provider: event.account.provider,
+        call: () => _repository.removeAccount(event.account),
+      ),
+    );
   }
 
   final MobileMoneyAccountRepository _repository;
   final AnalyticsService _analytics;
 
-  static const _fallbackAccount = MobileMoneyAccount(
-    status: MobileMoneyAccountStatus.notConfigured,
-  );
-
-  /// Compte porté par l'état courant, quand il y en a un.
-  MobileMoneyAccount? get _currentAccount {
-    final s = state;
-    return switch (s) {
-      MobileMoneyAccountLoaded() => s.account,
-      MobileMoneyAccountUpdating() => s.account,
-      MobileMoneyAccountError() => s.account,
-      MobileMoneyAccountPhoneRequired() => s.account,
-      MobileMoneyAccountProvidersLoading() => s.account,
-      MobileMoneyAccountProvidersLoaded() => s.account,
-      MobileMoneyAccountProvidersError() => s.account,
-      MobileMoneyAccountProvidersUnavailable() => s.account,
-      _ => null,
-    };
-  }
-
-  /// Le voyageur est-il en train de changer son numéro ? Porté d'état en
-  /// état pendant le catalogue et l'activation, pour que l'écran garde le
-  /// formulaire affiché sur un compte encore actif.
-  bool get _editingNumber {
-    final s = state;
-    return switch (s) {
-      MobileMoneyAccountLoaded() => s.editingNumber,
-      MobileMoneyAccountUpdating() => s.editingNumber,
-      MobileMoneyAccountProvidersLoading() => s.editingNumber,
-      MobileMoneyAccountProvidersLoaded() => s.editingNumber,
-      MobileMoneyAccountProvidersError() => s.editingNumber,
-      MobileMoneyAccountProvidersUnavailable() => s.editingNumber,
-      MobileMoneyAccountPhoneRequired() => s.editingNumber,
-      MobileMoneyAccountError() => s.editingNumber,
-      _ => false,
-    };
-  }
-
   Future<void> _onRequested(
-    MobileMoneyAccountRequested event,
+    MobileMoneyAccountsRequested event,
     Emitter<MobileMoneyAccountState> emit,
   ) async {
     emit(const MobileMoneyAccountLoading());
     try {
-      final account = await _repository.get();
-      emit(MobileMoneyAccountLoaded(account));
+      emit(MobileMoneyAccountLoaded(await _repository.accounts()));
     } catch (e) {
       emit(MobileMoneyAccountError(unwrapDioError(e)));
     }
   }
 
-  Future<void> _onActivateRequested(
-    MobileMoneyAccountActivateRequested event,
-    Emitter<MobileMoneyAccountState> emit,
-  ) async {
-    final base = _currentAccount ?? _fallbackAccount;
-    // Capturé avant l'émission de Updating : un échec doit rendre l'écran au
-    // formulaire de changement de numéro s'il en venait, jamais à la vue
-    // active (ni à un état vide) au premier aléa réseau.
-    final editing = _editingNumber;
-    emit(MobileMoneyAccountUpdating(base, editingNumber: editing));
-    try {
-      final account = await _repository.activate(
-        phoneNumber: event.phoneNumber,
-        providers: event.providers,
-      );
-      // Activation réussie : la vue active reprend la main, l'édition du
-      // numéro est terminée.
-      emit(MobileMoneyAccountLoaded(account));
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.mobileMoneyAccountActivated,
-          properties: {
-            'provider': account.providerLabel ?? 'inconnu',
-            'providers_count': account.providers.length,
-            'currency': account.currency ?? '',
-          },
-        ),
-      );
-    } catch (e) {
-      final error = unwrapDioError(e);
-      if (error.code == 'mobile-money-phone-required') {
-        emit(MobileMoneyAccountPhoneRequired(base, editingNumber: editing));
-      } else {
-        emit(
-          MobileMoneyAccountError(error, account: base, editingNumber: editing),
-        );
-      }
-    }
-  }
+  Future<void> _write(
+    Emitter<MobileMoneyAccountState> emit, {
+    required MobileMoneyAccountAction action,
+    required String provider,
+    required Future<void> Function() call,
+  }) async {
+    final current = state;
+    // Une écriture à la fois : le second appui pendant l'envoi est ignoré.
+    if (current is MobileMoneyAccountLoaded && current.submitting) return;
 
-  Future<void> _onDisableRequested(
-    MobileMoneyAccountDisableRequested event,
-    Emitter<MobileMoneyAccountState> emit,
-  ) async {
-    final base = _currentAccount ?? _fallbackAccount;
-    emit(MobileMoneyAccountUpdating(base));
-    try {
-      final account = await _repository.disable();
-      emit(MobileMoneyAccountLoaded(account));
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.mobileMoneyAccountDisabled,
-          properties: {
-            'provider': account.providerLabel ?? 'inconnu',
-            'currency': account.currency ?? '',
-          },
-        ),
-      );
-    } catch (e) {
-      emit(MobileMoneyAccountError(unwrapDioError(e), account: base));
-    }
-  }
-
-  Future<void> _onProvidersRequested(
-    MobileMoneyAccountProvidersRequested event,
-    Emitter<MobileMoneyAccountState> emit,
-  ) async {
-    final base = _currentAccount ?? _fallbackAccount;
-    final editing = _editingNumber;
-    emit(MobileMoneyAccountProvidersLoading(base, editingNumber: editing));
-    try {
-      final catalog = await _repository.providers(
-        phoneNumber: event.phoneNumber,
-      );
-      emit(
-        MobileMoneyAccountProvidersLoaded(
-          base,
-          catalog,
-          editingNumber: editing,
-        ),
-      );
-    } catch (e) {
-      final error = unwrapDioError(e);
-      // Un 404 signale un backend sans la route catalogue (ancien contrat,
-      // prod gelée sans dony-back #296), pas un aléa réseau à signaler par
-      // un bandeau d'erreur.
-      if (error is NotFoundException) {
-        emit(
-          MobileMoneyAccountProvidersUnavailable(base, editingNumber: editing),
-        );
+    var before = current.data;
+    if (before == null) {
+      try {
+        before = await _repository.accounts();
+      } catch (e) {
+        emit(MobileMoneyAccountError(unwrapDioError(e)));
         return;
       }
-      emit(
-        MobileMoneyAccountProvidersError(base, error, editingNumber: editing),
-      );
     }
-  }
 
-  void _onProvidersCleared(
-    MobileMoneyAccountProvidersCleared event,
-    Emitter<MobileMoneyAccountState> emit,
-  ) {
-    final base = _currentAccount;
-    if (base != null) {
-      emit(MobileMoneyAccountLoaded(base, editingNumber: _editingNumber));
-    }
-  }
-
-  Future<void> _onProvidersUpdateRequested(
-    MobileMoneyAccountProvidersUpdateRequested event,
-    Emitter<MobileMoneyAccountState> emit,
-  ) async {
-    final base = _currentAccount ?? _fallbackAccount;
-    final editing = _editingNumber;
-    emit(MobileMoneyAccountUpdating(base, editingNumber: editing));
+    emit(MobileMoneyAccountLoaded(before, submitting: true));
     try {
-      final account = await _repository.updateProviders(event.providers);
-      emit(MobileMoneyAccountLoaded(account));
+      await call();
+    } catch (e) {
+      final error = unwrapDioError(e);
+      emit(MobileMoneyAccountActionFailed(before, error));
       unawaited(
         _analytics.logEvent(
-          AnalyticsEvents.mobileMoneyAccountActivated,
+          AnalyticsEvents.mobileMoneyPayoutAccountActionFailed,
           properties: {
-            'provider': account.providerLabel ?? 'inconnu',
-            'providers_count': account.providers.length,
-            'currency': account.currency ?? '',
-            'update': true,
+            'action': action.analyticsName,
+            'error_code': error.code ?? 'unknown',
           },
         ),
       );
-    } catch (e) {
-      emit(
-        MobileMoneyAccountError(
-          unwrapDioError(e),
-          account: base,
-          editingNumber: editing,
-        ),
+      return;
+    }
+
+    // Écriture passée : la liste est relue, c'est elle que l'écran affiche.
+    try {
+      final after = await _repository.accounts();
+      emit(MobileMoneyAccountActionDone(after, action));
+      unawaited(
+        _logDone(action, provider, accountsCount: after.accounts.length),
       );
+    } catch (e) {
+      emit(MobileMoneyAccountError(unwrapDioError(e)));
+      unawaited(_logDone(action, provider));
     }
   }
 
-  void _onChangeNumberRequested(
-    MobileMoneyAccountChangeNumberRequested event,
-    Emitter<MobileMoneyAccountState> emit,
-  ) {
-    final base = _currentAccount;
-    if (base != null) {
-      emit(MobileMoneyAccountLoaded(base, editingNumber: true));
-    }
-  }
+  Future<void> _logDone(
+    MobileMoneyAccountAction action,
+    String provider, {
+    int? accountsCount,
+  }) => _analytics.logEvent(
+    switch (action) {
+      MobileMoneyAccountAction.added =>
+        AnalyticsEvents.mobileMoneyPayoutAccountAdded,
+      MobileMoneyAccountAction.numberChanged =>
+        AnalyticsEvents.mobileMoneyPayoutAccountNumberChanged,
+      MobileMoneyAccountAction.removed =>
+        AnalyticsEvents.mobileMoneyPayoutAccountRemoved,
+    },
+    properties: {'provider': provider, 'accounts_count': ?accountsCount},
+  );
+}
 
-  void _onChangeNumberCancelled(
-    MobileMoneyAccountChangeNumberCancelled event,
-    Emitter<MobileMoneyAccountState> emit,
-  ) {
-    final base = _currentAccount;
-    if (base != null) {
-      emit(MobileMoneyAccountLoaded(base));
-    }
-  }
+extension on MobileMoneyAccountAction {
+  String get analyticsName => switch (this) {
+    MobileMoneyAccountAction.added => 'added',
+    MobileMoneyAccountAction.numberChanged => 'number_changed',
+    MobileMoneyAccountAction.removed => 'removed',
+  };
 }
