@@ -97,7 +97,13 @@
   "errorDraftLimitReachedTitle": "Draft limit reached",
   "errorDraftLimitReachedMessage": "Upgrade to Pro to create more drafts.",
   "errorBudgetBelowCommissionMinimumTitle": "Budget too low",
+  "@errorBudgetBelowCommissionMinimumTitle": {
+    "description": "Titre : budget sous le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum)"
+  },
   "errorBudgetBelowCommissionMinimumMessage": "This amount does not cover the minimum Yadony service fee.",
+  "@errorBudgetBelowCommissionMinimumMessage": {
+    "description": "Message : le budget saisi ne couvre pas le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum). Sans montant ni taux."
+  },
   "errorNotADraftTitle": "Already posted",
   "errorNotADraftMessage": "This trip isn't a draft.",
   "errorPublishingSuspendedTitle": "Posting suspended",

@@ -674,13 +674,13 @@ abstract class AppLocalizations {
   /// **'Passez en PRO pour créer davantage de brouillons.'**
   String get errorDraftLimitReachedMessage;
 
-  /// No description provided for @errorBudgetBelowCommissionMinimumTitle.
+  /// Titre : budget sous le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum)
   ///
   /// In fr, this message translates to:
   /// **'Budget trop faible'**
   String get errorBudgetBelowCommissionMinimumTitle;
 
-  /// No description provided for @errorBudgetBelowCommissionMinimumMessage.
+  /// Message : le budget saisi ne couvre pas le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum). Sans montant ni taux.
   ///
   /// In fr, this message translates to:
   /// **'Ce montant ne couvre pas les frais de service minimum de Yadony.'**

@@ -113,7 +113,13 @@
   "errorDraftLimitReachedTitle": "Limite de brouillons atteinte",
   "errorDraftLimitReachedMessage": "Passez en PRO pour créer davantage de brouillons.",
   "errorBudgetBelowCommissionMinimumTitle": "Budget trop faible",
+  "@errorBudgetBelowCommissionMinimumTitle": {
+    "description": "Titre : budget sous le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum)"
+  },
   "errorBudgetBelowCommissionMinimumMessage": "Ce montant ne couvre pas les frais de service minimum de Yadony.",
+  "@errorBudgetBelowCommissionMinimumMessage": {
+    "description": "Message : le budget saisi ne couvre pas le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum). Sans montant ni taux."
+  },
   "errorNotADraftTitle": "Déjà publié",
   "errorNotADraftMessage": "Ce trajet n'est pas un brouillon.",
   "errorPublishingSuspendedTitle": "Publication suspendue",
