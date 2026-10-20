@@ -24,6 +24,22 @@ abstract final class BidNegotiationParcelSheet {
   }
 }
 
+/// Ligne d'un article de grille du colis : « quantité × prix ». Sous grille
+/// de commission, le prix servi est celui du voyageur : l'expéditeur lit alors
+/// « + frais de service » à la suite, les frais s'ajoutant au total. Sans
+/// grille (prix déjà majoré) ou pour le voyageur, la ligne reste nue.
+String bidNegotiationGridLineLabel(
+  AppLocalizations l,
+  BidNegotiation negotiation,
+  BidGridLine line,
+) {
+  final base =
+      '${line.quantity} × ${formatPriceIn(line.unitPriceDisplayEur, negotiation.currency)}';
+  return negotiation.senderSeesNetGridLines
+      ? l.bidNegotiationGridLineServiceFee(base)
+      : base;
+}
+
 /// Poids lisible, sans décimale inutile (« 5 kg », « 2,5 kg »).
 String negotiationParcelWeightLabel(double weight) =>
     '${weight.toStringAsFixed(weight % 1 == 0 ? 0 : 1)} kg';
@@ -65,8 +81,7 @@ class _ParcelDetails extends StatelessWidget {
           for (final line in negotiation.gridItems)
             DonyInfoRow(
               label: line.label,
-              value:
-                  '${line.quantity} × ${formatPriceIn(line.unitPriceDisplayEur, negotiation.currency)}',
+              value: bidNegotiationGridLineLabel(l, negotiation, line),
             ),
           for (final item in negotiation.customItems)
             DonyInfoRow(

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../helpers/commission_grid_test_doubles.dart';
 import '../../helpers/l10n_test_helpers.dart';
 
 void main() {
@@ -265,5 +266,39 @@ void main() {
       ),
     );
     expect(find.text('Full'), findsOneWidget);
+  });
+
+  testWidgets('prix au kilo sous grille = net, pas net × (1 + taux)', (
+    tester,
+  ) async {
+    useTestCommissionGrid();
+    await tester.pumpWidget(
+      wrap(
+        TravelerAnnouncementCard(
+          announcement: announcement(),
+          onReserve: () {},
+        ),
+      ),
+    );
+    expect(find.textContaining('8,96'), findsNothing);
+    expect(find.text('8\u00A0€'), findsOneWidget);
+    expect(
+      find.text('+ frais de service Yadony (min. 1\u00A0€)'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('sans grille, aucune mention des frais de service', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        TravelerAnnouncementCard(
+          announcement: announcement(),
+          onReserve: () {},
+        ),
+      ),
+    );
+    expect(find.byKey(const Key('announcement-card-fee-suffix')), findsNothing);
   });
 }

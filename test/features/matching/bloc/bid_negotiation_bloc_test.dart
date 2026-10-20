@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
@@ -11,9 +16,23 @@ import 'package:dony/features/matching/data/repositories/bid_negotiation_reposit
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/commission_grid_test_doubles.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements BidNegotiationRepository {}
+
+class _MockConfig extends Mock implements IConfigRepository {}
+
+/// Grille figée d'un fil, mêmes tranches que la grille de référence.
+CommissionGrid _threadGrid() {
+  final ref = testGrid757();
+  return CommissionGrid(
+    id: 'g-thread',
+    effectiveFrom: ref.effectiveFrom,
+    tiers: ref.tiers,
+    minimums: ref.minimums,
+  );
+}
 
 BidNegotiation _thread({
   String bidId = 'bid1',
@@ -21,6 +40,7 @@ BidNegotiation _thread({
   int round = 1,
   bool canCounter = true,
   double? netEur,
+  String? commissionGridId,
   List<BidCustomItem> customItems = const [],
 }) => BidNegotiation(
   bidId: bidId,
@@ -34,11 +54,13 @@ BidNegotiation _thread({
   canCounter: canCounter,
   proposedGrossEur: 42,
   netEur: netEur,
+  commissionGridId: commissionGridId,
   customItems: customItems,
 );
 
 void main() {
   late _MockRepo repo;
+  late _MockConfig config;
   late MockAnalyticsBackend backend;
 
   setUpAll(() {
@@ -47,15 +69,27 @@ void main() {
 
   setUp(() {
     repo = _MockRepo();
+    config = _MockConfig();
     backend = MockAnalyticsBackend();
+    CommissionGridStore.reset();
   });
 
-  BidNegotiationBloc buildBloc({bool enabled = true}) {
+  tearDown(CommissionGridStore.reset);
+
+  BidNegotiationBloc buildBloc({
+    bool enabled = true,
+    Duration gridTimeout = const Duration(seconds: 3),
+  }) {
     final analytics = enabled
         ? makeEnabledAnalytics(backend)
         : makeDisabledAnalytics(backend);
     analytics.onConfigured();
-    return BidNegotiationBloc(repo, analytics);
+    return BidNegotiationBloc(
+      repo,
+      analytics,
+      config,
+      gridTimeout: gridTimeout,
+    );
   }
 
   void stubPropose(BidNegotiation result) {
@@ -140,6 +174,181 @@ void main() {
         ),
       ],
     );
+  });
+
+  group('grille figée du fil', () {
+    // Seul le voyageur calcule un aperçu sur la grille figée, et seulement
+    // tant que le fil se négocie : c'est le fil qui attend la grille.
+    BidNegotiation travelerThread({String status = 'NEGOTIATING'}) =>
+        _thread(commissionGridId: 'g-thread', netEur: 40, status: status);
+
+    test('fetch charge la grille figée avant d émettre le fil', () async {
+      final grid = Completer<CommissionGrid?>();
+      when(() => repo.thread('bid1')).thenAnswer((_) async => travelerThread());
+      when(
+        () => config.getCommissionGridById('g-thread'),
+      ).thenAnswer((_) => grid.future);
+      final bloc = buildBloc();
+      final states = <BidNegotiationState>[];
+      final sub = bloc.stream.listen(states.add);
+
+      bloc.add(const BidNegotiationFetchRequested('bid1'));
+      await pumpEventQueue();
+      // Le fil est lu, mais pas encore émis : la grille est attendue.
+      expect(states, [isA<BidNegotiationLoading>()]);
+
+      grid.complete(_threadGrid());
+      await pumpEventQueue();
+      expect(states.last, isA<BidNegotiationLoaded>());
+      expect(CommissionGridStore.byId('g-thread'), isNotNull);
+      verify(() => config.getCommissionGridById('g-thread')).called(1);
+
+      await sub.cancel();
+      await bloc.close();
+    });
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'échec du chargement de la grille : le fil est émis quand même',
+      build: () {
+        when(
+          () => repo.thread('bid1'),
+        ).thenAnswer((_) async => travelerThread());
+        when(
+          () => config.getCommissionGridById('g-thread'),
+        ).thenThrow(const OfflineException());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationFetchRequested('bid1')),
+      expect: () => [
+        isA<BidNegotiationLoading>(),
+        isA<BidNegotiationLoaded>().having(
+          (s) => s.negotiation.commissionGridId,
+          'commissionGridId',
+          'g-thread',
+        ),
+      ],
+      verify: (_) => expect(CommissionGridStore.byId('g-thread'), isNull),
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'grille trop lente : le fil est émis après le délai',
+      build: () {
+        when(
+          () => repo.thread('bid1'),
+        ).thenAnswer((_) async => travelerThread());
+        when(
+          () => config.getCommissionGridById('g-thread'),
+        ).thenAnswer((_) => Completer<CommissionGrid?>().future);
+        return buildBloc(gridTimeout: const Duration(milliseconds: 10));
+      },
+      act: (bloc) => bloc.add(const BidNegotiationFetchRequested('bid1')),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'grille déjà connue : aucune lecture',
+      build: () {
+        CommissionGridStore.put(_threadGrid());
+        when(
+          () => repo.thread('bid1'),
+        ).thenAnswer((_) async => travelerThread());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationFetchRequested('bid1')),
+      expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
+      verify: (_) => verifyNever(() => config.getCommissionGridById(any())),
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'fil sans grille : aucune lecture',
+      build: () {
+        when(() => repo.thread('bid1')).thenAnswer((_) async => _thread());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationFetchRequested('bid1')),
+      expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
+      verify: (_) => verifyNever(() => config.getCommissionGridById(any())),
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'propose : réponse en vue expéditeur, aucune lecture de grille figée',
+      build: () {
+        stubPropose(_thread(commissionGridId: 'g-thread'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(proposeEvent),
+      wait: const Duration(milliseconds: 1),
+      expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
+      verify: (_) => verifyNever(() => config.getCommissionGridById(any())),
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'vue expéditeur : le fil à grille n attend aucune lecture',
+      build: () {
+        when(
+          () => repo.thread('bid1'),
+        ).thenAnswer((_) async => _thread(commissionGridId: 'g-thread'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationFetchRequested('bid1')),
+      expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
+      verify: (_) => verifyNever(() => config.getCommissionGridById(any())),
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'fil fermé côté voyageur : aucune lecture',
+      build: () {
+        when(
+          () => repo.accept('bid1'),
+        ).thenAnswer((_) async => travelerThread(status: 'ACCEPTED'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationAcceptRequested('bid1')),
+      wait: const Duration(milliseconds: 1),
+      expect: () => [isA<BidNegotiationLoading>(), isA<BidNegotiationLoaded>()],
+      verify: (_) => verifyNever(() => config.getCommissionGridById(any())),
+    );
+
+    for (final entry in <String, void Function(BidNegotiationBloc)>{
+      'counter': (b) => b.add(
+        const BidNegotiationCounterRequested('bid1', proposedNetEur: 50),
+      ),
+      'accept': (b) => b.add(const BidNegotiationAcceptRequested('bid1')),
+      'reject': (b) => b.add(const BidNegotiationRejectRequested('bid1')),
+      'cancel': (b) => b.add(const BidNegotiationCancelRequested('bid1')),
+    }.entries) {
+      blocTest<BidNegotiationBloc, BidNegotiationState>(
+        '${entry.key} : la grille figée du fil est chargée avant l émission',
+        build: () {
+          final thread = travelerThread();
+          when(
+            () => repo.counter(
+              'bid1',
+              proposedTotalEur: any(named: 'proposedTotalEur'),
+              proposedNetEur: any(named: 'proposedNetEur'),
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer((_) async => thread);
+          when(() => repo.accept('bid1')).thenAnswer((_) async => thread);
+          when(() => repo.reject('bid1')).thenAnswer((_) async => thread);
+          when(() => repo.cancel('bid1')).thenAnswer((_) async => thread);
+          when(
+            () => config.getCommissionGridById('g-thread'),
+          ).thenAnswer((_) async => _threadGrid());
+          return buildBloc();
+        },
+        act: entry.value,
+        wait: const Duration(milliseconds: 1),
+        expect: () => [
+          isA<BidNegotiationLoading>(),
+          isA<BidNegotiationLoaded>(),
+        ],
+        verify: (_) {
+          verify(() => config.getCommissionGridById('g-thread')).called(1);
+        },
+      );
+    }
   });
 
   group('propose', () {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../helpers/commission_grid_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
 TripMatchModel _trip({double availableKg = 12.0, String? status}) =>
@@ -319,5 +320,25 @@ void main() {
       expect(find.bySemanticsLabel(RegExp('Trip full')), findsOneWidget);
       handle.dispose();
     });
+  });
+
+  testWidgets('sous grille, le prix au kilo porte les frais de service', (
+    tester,
+  ) async {
+    useTestCommissionGrid();
+    await _pump(tester, _trip());
+
+    expect(
+      find.text('+ frais de service Yadony (min. 1\u00A0€)'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('sans grille, aucune mention des frais de service', (
+    tester,
+  ) async {
+    await _pump(tester, _trip());
+
+    expect(find.byKey(const Key('trip-match-fee-suffix')), findsNothing);
   });
 }

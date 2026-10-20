@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/accept_offer_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/counter_offer_bottom_sheet.dart';
@@ -195,7 +197,9 @@ class ThreadStateCtaBar extends StatelessWidget {
                 label: l.negotiationCompleteAndPayButton(
                   PriceDisplay.money(
                     thread.grossPriceEur ??
-                        PriceDisplay.grossFromNet(thread.currentPriceEur),
+                        ThreadPricer.of(
+                          thread,
+                        ).priceFor(thread.currentPriceEur).gross,
                     thread.currency,
                   ),
                 ),
@@ -525,7 +529,9 @@ class _SenderOpenActions extends StatelessWidget {
           label: l.negotiationSenderAcceptButton(
             PriceDisplay.money(
               thread.grossPriceEur ??
-                  PriceDisplay.grossFromNet(thread.currentPriceEur),
+                  ThreadPricer.of(
+                    thread,
+                  ).priceFor(thread.currentPriceEur).gross,
               thread.currency,
             ),
           ),
@@ -538,7 +544,7 @@ class _SenderOpenActions extends StatelessWidget {
                   priceEur: thread.currentPriceEur,
                   grossPriceEur: thread.grossPriceEur,
                   hasLinkedTrip: thread.travelerAnnouncementId != null,
-                  currency: thread.currency,
+                  pricer: ThreadPricer.of(thread),
                 ),
         ),
         const SizedBox(height: 10),
@@ -558,7 +564,7 @@ class _SenderOpenActions extends StatelessWidget {
                           currentPriceEur: thread.currentPriceEur,
                           grossPriceEur: thread.grossPriceEur,
                           roundsCount: thread.roundsCount,
-                          currency: thread.currency,
+                          pricer: ThreadPricer.of(thread),
                         ),
                 ),
               ),
@@ -615,7 +621,7 @@ class _TravelerOpenActions extends StatelessWidget {
                     grossPriceEur: thread.grossPriceEur,
                     isTraveler: true,
                     hasLinkedTrip: thread.travelerAnnouncementId != null,
-                    currency: thread.currency,
+                    pricer: ThreadPricer.of(thread),
                   ),
           ),
           const SizedBox(height: 10),
@@ -650,7 +656,7 @@ class _TravelerOpenActions extends StatelessWidget {
                           grossPriceEur: thread.grossPriceEur,
                           isTraveler: true,
                           roundsCount: thread.roundsCount,
-                          currency: thread.currency,
+                          pricer: ThreadPricer.of(thread),
                         ),
                 ),
               ),
@@ -696,10 +702,12 @@ class _TravelerCommissionActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    // Estimation locale (mêmes bases que _NegotiationPriceBreakdown /
-    // AcceptOfferBottomSheet) : le montant exact éventuellement ajusté par
-    // un promo n'est recalculé côté serveur qu'au règlement lui-même.
-    final commissionEur = PriceDisplay.feeFromNet(thread.currentPriceEur);
+    // Montant que le back prélèvera (taux spécial et bon compris) ; repli
+    // sur le calcul local de la grille figée pour un back antérieur.
+    final commission = ThreadPricer.of(thread).resolve(
+      thread.currentPriceEur,
+      servedCommission: thread.travelerCashCommissionEur,
+    );
     final now = DateTime.now();
     final travelOver = isTravelDayOver(thread.travelerTravelDate, now);
     final deadline = effectiveCommissionDeadline(
@@ -719,7 +727,12 @@ class _TravelerCommissionActions extends StatelessWidget {
           tint: cs.warning,
           message: l.negotiationCommissionTravelerBannerTitle,
           subtitle: l.negotiationCommissionTravelerBannerSubtitle(
-            PriceDisplay.money(commissionEur, thread.currency),
+            serviceFeeAmountLabel(
+              l,
+              commission.commission,
+              thread.currency,
+              minimum: commission.minimumApplied,
+            ),
           ),
         ),
         if (travelOver) ...[

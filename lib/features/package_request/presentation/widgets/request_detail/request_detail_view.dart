@@ -4,6 +4,7 @@ import 'package:dony/features/package_request/bloc/package_request_detail_state.
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
 import 'package:dony/features/package_request/presentation/request_time_label.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/compatible_traveler_card.dart';
@@ -312,7 +313,8 @@ class _TravelerStub extends StatelessWidget {
     final l = context.l10n;
     final name = thread.travelerName ?? l.tripTravelerFallbackName;
     final price = PriceDisplay.money(
-      thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur),
+      thread.grossPriceEur ??
+          ThreadPricer.of(thread).priceFor(thread.currentPriceEur).gross,
       thread.currency,
     );
     // Espèces : aucun argent ne transite par Yadony, le libellé « bloqué chez

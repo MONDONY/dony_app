@@ -11,12 +11,19 @@ class GridPreviewItem extends Equatable {
   final String label;
   final double unitPriceDisplay;
 
+  /// Prix net saisi par le voyageur, ce qu'il touche. Sous grille de
+  /// commission l'aperçu l'affiche tel quel (les frais de service s'ajoutent
+  /// au total payé) ; `null` quand la source ne le fournit pas, l'aperçu garde
+  /// alors [unitPriceDisplay].
+  final double? unitPriceNet;
+
   const GridPreviewItem({
     required this.id,
     required this.label,
     required this.unitPriceDisplay,
+    this.unitPriceNet,
   });
 
   @override
-  List<Object?> get props => [id, label, unitPriceDisplay];
+  List<Object?> get props => [id, label, unitPriceDisplay, unitPriceNet];
 }

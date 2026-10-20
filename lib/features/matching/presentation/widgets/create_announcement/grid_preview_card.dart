@@ -2,6 +2,8 @@ import 'package:dony/core/currency/currency_conversion.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -56,6 +58,22 @@ class GridPriceDisplay {
     );
   }
 
+  /// Frais de service minimum de la grille de commission en vigueur dans la
+  /// devise affichée, `null` sans grille : les prix sont alors ceux que
+  /// l'expéditeur paie, commission comprise.
+  double? get feeMinimum => commissionMinimumFor(currency?.code);
+
+  /// Prix d'un article tel qu'il doit s'afficher. Sous grille de commission,
+  /// le net du voyageur (les frais de service s'ajoutent au total) ; sinon le
+  /// prix servi, commission comprise.
+  String formatItem(GridPreviewItem item, {bool compact = false}) {
+    final net = item.unitPriceNet;
+    final amount = feeMinimum != null && net != null
+        ? net
+        : item.unitPriceDisplay;
+    return format(amount, compact: compact);
+  }
+
   /// Prix [amount] (dans la devise de la grille) tel qu'il doit s'afficher.
   String format(double amount, {bool compact = false}) {
     final from = convertedFrom;
@@ -76,7 +94,7 @@ Widget _tag(
   return DonyPriceTag(
     label: item.label,
     emoji: emojiForLabel(item.label),
-    price: display.format(item.unitPriceDisplay),
+    price: display.formatItem(item),
     compact: compact,
   );
 }
@@ -269,7 +287,11 @@ class _GridPreviewSheetContent extends StatelessWidget {
         _convertedNote(context, display),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          l.tripPublishGridSheetCommissionNote,
+          display.feeMinimum == null
+              ? l.tripPublishGridSheetCommissionNote
+              : l.tripPublishGridSheetCommissionNoteGrid(
+                  formatPriceIn(display.feeMinimum!, display.currency?.code),
+                ),
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),

@@ -4,6 +4,7 @@ import 'package:dony/features/matching/presentation/widgets/grid_item_selection_
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 Widget _wrap(Widget child) {
@@ -254,6 +255,8 @@ void main() {
       // 11,20 + 22,40 = 33,60.
       expect(find.byKey(const Key('grid-sheet-total')), findsOneWidget);
       expect(find.textContaining('33,60'), findsOneWidget);
+      // Sans grille, les prix portent déjà la commission : pas de mention.
+      expect(find.byKey(const Key('grid-sheet-fee-included')), findsNothing);
     });
 
     testWidgets('le total suit les quantités', (tester) async {
@@ -337,5 +340,101 @@ void main() {
       expect(find.text('Available items'), findsOneWidget);
       expect(find.text('Confirm selection'), findsOneWidget);
     });
+
+    testWidgets('total sous grille : 1 article à 5 € → 6,00 €', (tester) async {
+      useTestCommissionGrid();
+      const cheap = [
+        AnnouncementGridItemModel(
+          id: 'item-1',
+          label: 'Téléphone',
+          unitPriceNet: 5.0,
+          unitPriceDisplay: 5.0,
+        ),
+      ];
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () => GridItemSelectionSheet.show(
+                  context,
+                  items: cheap,
+                  initialQuantities: {},
+                  corridor: 'Paris → Dakar',
+                ),
+                child: const Text('Ouvrir'),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('grid-item-add-item-1')));
+      await tester.pump();
+
+      // Net 5 € + frais de service au minimum de 1 € : 7 % de 5 € (0,35 €)
+      // ne couvre pas le plancher.
+      expect(find.byKey(const Key('grid-sheet-total')), findsOneWidget);
+      expect(find.textContaining('6'), findsWidgets);
+      final total = tester.widget<Text>(
+        find.byKey(const Key('grid-sheet-total')),
+      );
+      expect(total.data, anyOf('6,00\u00A0€', '6\u00A0€'));
+      expect(find.text('Frais de service inclus'), findsOneWidget);
+    });
+
+    testWidgets(
+      'total sous grille : 2 articles nets 10 € + 20 € → 32,10 €, frais de '
+      'service inclus',
+      (tester) async {
+        useTestCommissionGrid();
+        const nets = [
+          AnnouncementGridItemModel(
+            id: 'item-1',
+            label: 'Téléphone',
+            unitPriceNet: 10.0,
+            unitPriceDisplay: 10.0,
+          ),
+          AnnouncementGridItemModel(
+            id: 'item-2',
+            label: 'Valise cabine',
+            unitPriceNet: 20.0,
+            unitPriceDisplay: 20.0,
+          ),
+        ];
+        await tester.pumpWidget(
+          _wrap(
+            Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () => GridItemSelectionSheet.show(
+                    context,
+                    items: nets,
+                    initialQuantities: {},
+                    corridor: 'Paris → Dakar',
+                  ),
+                  child: const Text('Ouvrir'),
+                );
+              },
+            ),
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('grid-item-add-item-1')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('grid-item-add-item-2')));
+        await tester.pump();
+
+        // Net 30 € : 7 % = 2,10 € de frais, au-dessus du minimum. Les frais
+        // se calculent une fois sur le total, pas article par article.
+        final total = tester.widget<Text>(
+          find.byKey(const Key('grid-sheet-total')),
+        );
+        expect(total.data, '32,10\u00A0€');
+        expect(find.text('Frais de service inclus'), findsOneWidget);
+      },
+    );
   });
 }

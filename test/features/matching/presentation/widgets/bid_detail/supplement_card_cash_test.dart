@@ -204,9 +204,9 @@ void main() {
         traveler(_cash(BidSupplementStatus.commissionPending)),
       );
 
-      expect(find.text('Commission à valider'), findsOneWidget);
+      expect(find.text('Frais de service à valider'), findsOneWidget);
       expect(
-        find.textContaining('Validez le paiement de la commission'),
+        find.textContaining('Validez le paiement des frais de service'),
         findsOneWidget,
       );
       expect(find.text('Retirer la demande'), findsOneWidget);
@@ -219,7 +219,7 @@ void main() {
       expect(authorizations, 1);
       verify(() => repository.confirmCommission('bid-1', 'sup-1')).called(1);
       expect(
-        find.text('Commission payée : demande envoyée à l\'expéditeur'),
+        find.text('Frais de service payés : demande envoyée à l\'expéditeur'),
         findsOneWidget,
       );
       verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
@@ -310,7 +310,7 @@ void main() {
 
       expect(
         find.text(
-          'Demande enregistrée : paiement de la commission en cours de '
+          'Demande enregistrée : paiement des frais de service en cours de '
           'validation',
         ),
         findsOneWidget,
@@ -334,7 +334,8 @@ void main() {
       expect(find.text('En attente de l\'expéditeur'), findsOneWidget);
       expect(
         find.text(
-          'Commission prélevée. Elle vous est rendue si la demande n\'aboutit '
+          'Frais de service prélevés. Ils vous sont rendus si la demande '
+          'n\'aboutit '
           'pas.',
         ),
         findsOneWidget,
@@ -380,7 +381,7 @@ void main() {
 
       expect(find.text('L\'expéditeur a refusé le supplément'), findsOneWidget);
       expect(
-        find.text('La commission du supplément vous a été rendue.'),
+        find.text('Les frais de service du supplément vous ont été rendus.'),
         findsOneWidget,
       );
     });
@@ -399,7 +400,9 @@ void main() {
       );
 
       expect(
-        find.text('La commission du supplément vous sera rendue sous peu.'),
+        find.text(
+          'Les frais de service du supplément vous seront rendus sous peu.',
+        ),
         findsOneWidget,
       );
     });
@@ -431,7 +434,7 @@ void main() {
 
       expect(find.text('Demande retirée'), findsOneWidget);
       expect(
-        find.text('La commission du supplément vous a été rendue.'),
+        find.text('Les frais de service du supplément vous ont été rendus.'),
         findsOneWidget,
       );
     });

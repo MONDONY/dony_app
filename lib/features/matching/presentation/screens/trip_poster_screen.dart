@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_capture.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/gallery_save_service.dart';
@@ -218,12 +219,30 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
         ? l.tripPosterPricePerKg(formatPriceIn(senderPricePerKg!, a.currency))
         : null;
     final grid = a.cheapestGridPrice;
-    if (grid == null) return kilo ?? l.tripPosterPriceUnavailable;
+    if (grid == null) {
+      if (kilo == null) return l.tripPosterPriceUnavailable;
+      return _withFeeSuffix(l, a, kilo);
+    }
 
     final article = l.tripPosterPriceFromItem(formatPriceIn(grid, a.currency));
-    return (a.hasKgPrice && kilo != null)
-        ? l.commonListPair(article, kilo)
-        : article;
+    return _withFeeSuffix(
+      l,
+      a,
+      (a.hasKgPrice && kilo != null)
+          ? l.commonListPair(article, kilo)
+          : article,
+    );
+  }
+
+  /// Sous grille de commission, les prix de l'affiche sont des nets : la
+  /// légende le dit comme l'affiche (« + frais de service Yadony (min. X) »).
+  static String _withFeeSuffix(
+    AppLocalizations l,
+    AnnouncementModel a,
+    String sentence,
+  ) {
+    final suffix = listPriceFeeSuffix(l, a.currency);
+    return suffix == null ? sentence : '$sentence $suffix';
   }
 
   /// Capture l'affiche en PNG (1080 x 1350), une seule fois par écran.

@@ -898,7 +898,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Solde insuffisant'), findsOneWidget);
-      expect(find.textContaining('Commission requise'), findsOneWidget);
+      expect(find.textContaining('Frais de service requis'), findsOneWidget);
       expect(find.textContaining('Solde du portefeuille'), findsOneWidget);
     });
 

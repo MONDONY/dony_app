@@ -235,6 +235,7 @@ class AnnouncementFormBloc
               id: e.id,
               label: e.label,
               unitPriceDisplay: e.unitPriceDisplay,
+              unitPriceNet: e.unitPriceNet,
             ),
           )
           .toList();

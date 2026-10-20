@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../helpers/commission_grid_test_doubles.dart';
 import '../../helpers/l10n_test_helpers.dart';
 
 AnnouncementModel _announcement({
@@ -98,7 +99,7 @@ void main() {
     await _pump(tester, _announcement(pricePerKg: 6, pricePerKgDisplay: null));
 
     expect(
-      find.text(formatPriceIn(netToSenderPrice(6), 'EUR')),
+      find.text(formatPriceIn(6 * (1 + donyCommissionRate), 'EUR')),
       findsOneWidget,
     );
     expect(find.text(formatPriceIn(6, 'EUR')), findsNothing);
@@ -615,5 +616,29 @@ void main() {
       expect(find.text('MARSEILLE'), findsOneWidget);
       expect(find.text('OUAGADOUGOU'), findsOneWidget);
     });
+  });
+
+  testWidgets('l\'affiche porte le suffixe sous grille', (tester) async {
+    useTestCommissionGrid();
+    await _pump(tester, _announcement(pricePerKg: 8, pricePerKgDisplay: 8));
+
+    expect(
+      find.text('+ frais de service Yadony (min. 1\u00A0€)'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('affiche sans suffixe sans grille', (tester) async {
+    await _pump(tester, _announcement());
+
+    expect(find.byKey(const Key('poster-tile-note')), findsNothing);
+    expect(find.textContaining('frais de service'), findsNothing);
+  });
+
+  testWidgets('pas de suffixe quand aucun prix n\'est affiché', (tester) async {
+    useTestCommissionGrid();
+    await _pump(tester, _announcement(pricePerKg: 0, pricePerKgDisplay: 0));
+
+    expect(find.byKey(const Key('poster-tile-note')), findsNothing);
   });
 }

@@ -2,6 +2,8 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/commission_grid_test_doubles.dart';
+
 AnnouncementModel _ann({
   required double? pricePerKg,
   double? pricePerKgDisplay,
@@ -32,18 +34,15 @@ void main() {
   tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
   group('dony_pricing — défaut', () {
-    test('taux et multiplicateur par défaut alignés sur le backend (5 %)', () {
+    test('taux par défaut aligné sur le backend (5 %)', () {
       expect(donyCommissionRate, 0.05);
-      expect(donyCommissionMultiplier, closeTo(1.05, 1e-9));
     });
   });
 
   group('setDonyCommissionRate (source unique ajustable)', () {
-    test('met à jour taux, multiplicateur et conversion', () {
+    test('met à jour le taux', () {
       setDonyCommissionRate(0.20);
       expect(donyCommissionRate, 0.20);
-      expect(donyCommissionMultiplier, closeTo(1.20, 1e-9));
-      expect(netToSenderPrice(10), closeTo(12.0, 1e-9));
     });
 
     test('ignore les valeurs aberrantes (reste sur le repli)', () {
@@ -51,14 +50,6 @@ void main() {
       expect(donyCommissionRate, kDonyCommissionRateDefault);
       setDonyCommissionRate(-0.1);
       expect(donyCommissionRate, kDonyCommissionRateDefault);
-    });
-  });
-
-  group('netToSenderPrice', () {
-    test('applique +5 % au net', () {
-      expect(netToSenderPrice(10), closeTo(10.50, 1e-9));
-      expect(netToSenderPrice(5), closeTo(5.25, 1e-9));
-      expect(netToSenderPrice(0), 0);
     });
   });
 
@@ -113,6 +104,20 @@ void main() {
         expect(a.senderPricePerKg, isNull);
       },
     );
+
+    test('senderPricePerKg sous grille sans pricePerKgDisplay vaut le net', () {
+      // Sous grille, la commission ne se répartit plus au kilo : la liste
+      // affiche le net, les frais de service s'ajoutent au total.
+      useTestCommissionGrid();
+      final a = _ann(pricePerKg: 10);
+      expect(a.senderPricePerKg, 10);
+    });
+
+    test('senderPricePerKg sous grille garde pricePerKgDisplay du serveur', () {
+      useTestCommissionGrid();
+      final a = _ann(pricePerKg: 10, pricePerKgDisplay: 10);
+      expect(a.senderPricePerKg, 10);
+    });
   });
 
   group('AnnouncementSenderPricing.hasKgPrice', () {
@@ -230,6 +235,16 @@ void main() {
         expect(a.convertedSenderPricePerKg, closeTo(7347.2, 1e-6));
       },
     );
+
+    test('convertedSenderPricePerKg sous grille vaut convertedPricePerKg', () {
+      useTestCommissionGrid();
+      final a = _ann(
+        pricePerKg: 10,
+        convertedPricePerKg: 6560,
+        convertedCurrency: 'XOF',
+      );
+      expect(a.convertedSenderPricePerKg, closeTo(6560, 1e-6));
+    });
   });
 
   group('parsePriceInput', () {

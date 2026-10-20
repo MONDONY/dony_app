@@ -1,5 +1,6 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +38,7 @@ void main() {
             message: makeMessage(proposedPriceEur: 35),
             mine: true,
             isTraveler: true,
+            pricer: const ThreadPricer(),
           ),
         ),
       );
@@ -54,6 +56,7 @@ void main() {
             message: makeMessage(proposedPriceEur: 35),
             mine: false,
             isTraveler: false,
+            pricer: const ThreadPricer(),
             // grossPriceEur intentionally omitted (null)
           ),
         ),
@@ -73,6 +76,7 @@ void main() {
             message: makeMessage(),
             mine: false,
             isTraveler: false,
+            pricer: const ThreadPricer(),
           ),
         ),
       );

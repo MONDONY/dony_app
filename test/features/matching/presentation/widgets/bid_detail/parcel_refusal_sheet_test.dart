@@ -224,7 +224,7 @@ void main() {
     await open(tester, bid: _bid(paymentMethod: BidPaymentMethod.cash));
 
     expect(
-      find.textContaining('La commission Yadony déjà réglée'),
+      find.textContaining('Les frais de service Yadony déjà réglés'),
       findsOneWidget,
     );
     await fillForm(tester);

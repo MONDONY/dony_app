@@ -38,7 +38,6 @@ import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
-import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
@@ -1058,15 +1057,8 @@ final appRouter = GoRouter(
       path: '/payments/pay',
       builder: (context, state) {
         final bid = state.extra as BidModel;
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => getIt<PaymentBloc>()),
-            BlocProvider(
-              create: (_) =>
-                  getIt<ConfigBloc>()
-                    ..add(const ConfigCommissionRateRequested()),
-            ),
-          ],
+        return BlocProvider(
+          create: (_) => getIt<PaymentBloc>(),
           child: PaymentScreen(bid: bid),
         );
       },

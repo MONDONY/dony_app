@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -493,6 +494,11 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     BidQuoteRequested event,
     Emitter<BidState> emit,
   ) async {
+    final backgroundKey = event.backgroundKey;
+    if (backgroundKey != null) {
+      await _backgroundQuote(event, backgroundKey, emit);
+      return;
+    }
     emit(BidQuoteLoading());
     try {
       final quote = await _repository.quoteBid(
@@ -505,19 +511,67 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     } on DioException catch (e) {
       final wrapped = unwrapDioError(e);
       // Erreurs promo → BidPromoError (ne polluent pas les autres états du BLoC).
-      const promoCodes = {
-        'promo-not-found',
-        'promo-expired',
-        'promo-limit-reached',
-        'promo-not-eligible',
-      };
-      if (promoCodes.contains(wrapped.code)) {
+      if (_promoErrorCodes.contains(wrapped.code)) {
         emit(BidPromoError(wrapped));
       } else {
         emit(BidError(wrapped));
       }
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
+    }
+  }
+
+  static const _promoErrorCodes = {
+    'promo-not-found',
+    'promo-expired',
+    'promo-limit-reached',
+    'promo-not-eligible',
+  };
+
+  /// Devis d'arrière-plan (grille de commission) : jamais d'erreur affichée.
+  /// Avec un code appliqué qui n'est plus valide, le refus est signalé
+  /// ([BidQuoteBackgroundPromoRejected]) puis le devis repart sans code, pour
+  /// que le total montré reste celui qui sera prélevé.
+  Future<void> _backgroundQuote(
+    BidQuoteRequested event,
+    String backgroundKey,
+    Emitter<BidState> rawEmit,
+  ) async {
+    // Une offre en cours d'envoi (BidLoading) ne doit jamais être recouverte
+    // par un devis de fond : son résultat est alors abandonné.
+    void emit(BidState next) {
+      if (state is! BidLoading) rawEmit(next);
+    }
+
+    Future<BidQuoteResponse> quote(String? promoCode) => _repository.quoteBid(
+      announcementId: event.announcementId,
+      weightKg: event.weightKg,
+      promoCode: promoCode,
+      gridItems: event.gridItems,
+    );
+    try {
+      emit(
+        BidQuoteLoaded(
+          await quote(event.promoCode),
+          backgroundKey: backgroundKey,
+        ),
+      );
+      return;
+    } on DioException catch (e) {
+      final wrapped = unwrapDioError(e);
+      if (event.promoCode == null || !_promoErrorCodes.contains(wrapped.code)) {
+        emit(BidQuoteBackgroundFailed(backgroundKey));
+        return;
+      }
+      emit(BidQuoteBackgroundPromoRejected(wrapped, backgroundKey));
+    } catch (_) {
+      emit(BidQuoteBackgroundFailed(backgroundKey));
+      return;
+    }
+    try {
+      emit(BidQuoteLoaded(await quote(null), backgroundKey: backgroundKey));
+    } catch (_) {
+      emit(BidQuoteBackgroundFailed(backgroundKey));
     }
   }
 }

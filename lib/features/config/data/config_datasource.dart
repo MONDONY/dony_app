@@ -1,5 +1,7 @@
 import 'package:dony/core/config/payment_methods_flag.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 
 class ConfigDatasource {
   final ApiClient _client;
@@ -51,6 +53,24 @@ class ConfigDatasource {
     final response = await _client.dio.get('/config/pro-enabled');
     final data = response.data as Map<String, dynamic>;
     return data['enabled'] as bool;
+  }
+
+  /// Grilles de commission par paliers : `{"current": GridView|null,
+  /// "next": GridView|null}`. Un 404 (back sans la route) remonte en
+  /// `DioException`, le repository le traduit en « pas de grille ».
+  Future<CommissionGridConfig> getCommissionGrid() async {
+    final response = await _client.dio.get('/config/commission-grid');
+    return CommissionGridConfig.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
+
+  /// Grille figée d'une demande, par identifiant (404 si inconnue ou annulée).
+  Future<CommissionGrid> getCommissionGridById(String id) async {
+    final response = await _client.dio.get('/config/commission-grid/$id');
+    return CommissionGrid.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
   }
 
   /// Drapeaux des moyens de la feuille de paiement. Champ absent : faux.

@@ -1,8 +1,11 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/commission_grid_test_doubles.dart';
 
 void main() {
   final fr = lookupAppLocalizations(AppL10n.fr);
@@ -73,6 +76,48 @@ void main() {
     test('expéditeur sans gross : net*1.12 arrondi à 2 décimales (en) — '
         '100 → 112,00', () {
       expect(threadPriceLabel(en, 100, null, false), 'You pay 112,00 €');
+    });
+  });
+
+  group('threadPriceLabel sous grille', () {
+    test('expéditeur sans gross, fil à grille : 20 € → 21,40 €', () {
+      useTestCommissionGrid();
+      expect(
+        threadPriceLabel(
+          fr,
+          20,
+          null,
+          false,
+          'EUR',
+          const ThreadPricer(gridId: kTestGridId),
+        ),
+        'Vous payez 21,40\u00a0€',
+      );
+    });
+
+    test('expéditeur sans gross, fil sans grille figée : taux unique', () {
+      useTestCommissionGrid();
+      setDonyCommissionRate(0.05);
+      addTearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+      expect(
+        threadPriceLabel(fr, 20, null, false, 'EUR', const ThreadPricer()),
+        'Vous payez 21,00\u00a0€',
+      );
+    });
+
+    test('le brut du serveur prime sur la grille', () {
+      useTestCommissionGrid();
+      expect(
+        threadPriceLabel(
+          fr,
+          20,
+          21.10,
+          false,
+          'EUR',
+          const ThreadPricer(gridId: kTestGridId),
+        ),
+        'Vous payez 21,10\u00a0€',
+      );
     });
   });
 

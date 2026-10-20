@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -290,7 +291,13 @@ class PrixConditionsStep extends StatelessWidget {
                           final pricePerKg = _pricePerKg;
                           final kg = availableKgNotifier.value;
                           final travelerNet = kg * pricePerKg;
-                          final senderTotal = netToSenderPrice(travelerNet);
+                          // Sous grille, le prix saisi est le net du voyageur et les frais de
+                          // service (minimum compris) s'ajoutent au total ; sans
+                          // grille, le taux unique s'applique comme avant.
+                          final senderTotal = senderPriceForNet(
+                            travelerNet,
+                            currency?.code,
+                          ).gross;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,6 +524,7 @@ class PrixConditionsStep extends StatelessWidget {
               if (formState.pricingMode != PricingMode.mixed) {
                 return const SizedBox.shrink();
               }
+              final commissionMinimum = commissionMinimumFor(currency?.code);
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -534,7 +542,11 @@ class PrixConditionsStep extends StatelessWidget {
                       borderRadius: BorderRadius.circular(DonyRadius.sm),
                     ),
                     child: Text(
-                      l.tripPublishGridCommissionNotice,
+                      commissionMinimum == null
+                          ? l.tripPublishGridCommissionNotice
+                          : l.tripPublishGridCommissionNoticeGrid(
+                              formatPriceIn(commissionMinimum, currency?.code),
+                            ),
                       style: tt.bodySmall?.copyWith(color: cs.primary),
                     ),
                   ),

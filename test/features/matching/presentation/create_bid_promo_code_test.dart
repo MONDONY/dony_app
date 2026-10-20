@@ -655,7 +655,7 @@ void main() {
       expect(find.textContaining('3,60'), findsWidgets);
       // Plus aucune ligne « Commission » en addition : les lignes du récap sont
       // déjà exprimées commission comprise, l'ajouter la compterait deux fois.
-      expect(find.textContaining('Commission Yadony ('), findsNothing);
+      expect(find.textContaining('Frais de service Yadony ('), findsNothing);
     },
   );
 
@@ -736,7 +736,7 @@ void main() {
     expect(find.textContaining('60,00'), findsNothing);
     // Et plus de ligne « Commission » : elle est comprise dans la ligne
     // ci-dessus, l'afficher en addition la compterait deux fois.
-    expect(find.textContaining('Commission Yadony ('), findsNothing);
+    expect(find.textContaining('Frais de service Yadony ('), findsNothing);
 
     final totalFinder = find.byKey(const Key('bid-total-amount'));
     await scrollTo(tester, totalFinder);

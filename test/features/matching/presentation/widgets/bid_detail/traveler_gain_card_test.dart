@@ -66,7 +66,10 @@ void main() {
     );
     expect(find.text('VOUS ENCAISSEZ'), findsOneWidget);
     expect(find.text('${formatPriceIn(48, 'EUR')} en espèces'), findsOneWidget);
-    expect(find.text('Commission Yadony prélevée séparément.'), findsOneWidget);
+    expect(
+      find.text('Frais de service Yadony prélevés séparément.'),
+      findsOneWidget,
+    );
     expect(find.textContaining('Vous gardez'), findsNothing);
   });
 
@@ -90,12 +93,15 @@ void main() {
     );
     expect(
       find.text(
-        'Dont ${formatPriceIn(2.4, 'EUR')} de commission Yadony, prélevée sur '
+        'Dont ${formatPriceIn(2.4, 'EUR')} de frais de service Yadony, prélevés sur '
         'votre solde ou votre carte. Vous gardez ${formatPriceIn(48, 'EUR')}.',
       ),
       findsOneWidget,
     );
-    expect(find.text('Commission Yadony prélevée séparément.'), findsNothing);
+    expect(
+      find.text('Frais de service Yadony prélevés séparément.'),
+      findsNothing,
+    );
   });
 
   testWidgets('Cash avec brut en XOF → montants dans la devise du colis', (
@@ -120,7 +126,9 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.textContaining('Dont ${formatPriceIn(1000, 'XOF')} de commission'),
+      find.textContaining(
+        'Dont ${formatPriceIn(1000, 'XOF')} de frais de service',
+      ),
       findsOneWidget,
     );
   });
@@ -134,7 +142,10 @@ void main() {
     );
     expect(find.text('${formatPriceIn(48, 'EUR')} en espèces'), findsOneWidget);
     expect(find.textContaining('Vous gardez'), findsNothing);
-    expect(find.text('Commission Yadony prélevée séparément.'), findsOneWidget);
+    expect(
+      find.text('Frais de service Yadony prélevés séparément.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Stripe avec brut → toujours le net, sans détail espèces', (

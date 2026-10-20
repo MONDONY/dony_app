@@ -1,4 +1,35 @@
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+
+/// Brut que paiera l'expéditeur pour un net voyageur [net] sur le fil [n] :
+/// l'aperçu de la contre-offre du voyageur. Le serveur recalcule et fait foi.
+///
+/// - Fil à grille (`commissionGridId`) : grille FIGÉE du bid (mise en cache
+///   dans [CommissionGridStore] par `BidNegotiationBloc` avant l'affichage du
+///   fil, sinon la grille en vigueur faute de mieux, et à défaut des deux le
+///   taux figé du fil) et réductions figées du bid (taux spécial, bon de
+///   parrainage), comme `CommissionCalculator.compute(net, …).gross` du back.
+/// - Fil d'avant les grilles : taux figé du fil ([grossForNet]), inchangé.
+double grossForNegotiationNet(BidNegotiation n, double net) {
+  final gridId = n.commissionGridId;
+  if (gridId == null) {
+    return grossForNet(net, n.commissionRate ?? donyCommissionRate, n.currency);
+  }
+  return senderPriceForNet(
+    net,
+    n.currency,
+    grid: CommissionGridStore.byId(gridId) ?? activeCommissionGrid,
+    legacyRate: n.commissionRate,
+    reductions: CommissionReductions(
+      overrideRate: n.commissionOverrideRate,
+      voucherFactor: n.commissionVoucherFactor,
+    ),
+  ).gross;
+}
 
 /// Brut que paiera l'expéditeur pour un net voyageur donné, au taux figé du
 /// fil (FLUTTER-NS). Réplique exacte de `BidNegotiationPricing.grossForNet`

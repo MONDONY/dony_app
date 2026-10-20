@@ -1,14 +1,33 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/pricing/commission_grid_preload.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 
+/// Code du 409 que renvoie le devis d'un fil dont le prix est déjà scellé.
+const _threadSealedCode = 'negotiation/thread-sealed';
+
 class NegotiationRepository {
-  const NegotiationRepository(this._apiClient);
+  const NegotiationRepository(
+    this._apiClient, {
+    CommissionGridLoader? gridLoader,
+  }) : _gridLoader = gridLoader;
 
   final ApiClient _apiClient;
+
+  /// Lit la grille figée d'un fil inconnue de l'app, avant de rendre le fil :
+  /// ses aperçus de prix (`ThreadPricer`) tombent alors sur la grille du back.
+  /// `null` (tests) : aucune lecture.
+  final CommissionGridLoader? _gridLoader;
+
+  Future<NegotiationThread> _thread(Map<String, dynamic> json) async {
+    final thread = NegotiationThread.fromJson(json);
+    await preloadCommissionGrids([thread.commissionGridId], _gridLoader);
+    return thread;
+  }
 
   Future<NegotiationThread> start({
     required String packageRequestId,
@@ -36,7 +55,7 @@ class NegotiationRepository {
         'dedicatedTrip': ?dedicatedTripPayload,
       },
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   /// Fils de l'appelant. [archived] choisit entre la liste courante et le
@@ -48,9 +67,14 @@ class NegotiationRepository {
       '/negotiations/me',
       queryParameters: {'archived': archived},
     );
-    return (response.data ?? <dynamic>[])
+    final threads = (response.data ?? <dynamic>[])
         .map((e) => NegotiationThread.fromJson(e as Map<String, dynamic>))
         .toList();
+    await preloadCommissionGrids(
+      threads.map((t) => t.commissionGridId),
+      _gridLoader,
+    );
+    return threads;
   }
 
   /// Range un fil terminé dans ses archives (pour soi seulement). 204.
@@ -73,7 +97,7 @@ class NegotiationRepository {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/negotiations/$id',
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   Future<NegotiationThread> counter(
@@ -85,7 +109,7 @@ class NegotiationRepository {
       '/negotiations/$id/counter',
       data: {'proposedPriceEur': proposedPriceEur, 'body': ?body},
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   Future<NegotiationThread> accept(String id, {String? body}) async {
@@ -93,7 +117,7 @@ class NegotiationRepository {
       '/negotiations/$id/accept',
       data: {'body': ?body},
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   Future<void> reject(String id, {String? reason}) async {
@@ -128,7 +152,7 @@ class NegotiationRepository {
         'useCardForCommission': useCardForCommission,
       },
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   /// Traveler creates a brand-new "dedicated" trip linked exclusively to this
@@ -165,7 +189,7 @@ class NegotiationRepository {
         'useCardForCommission': useCardForCommission,
       },
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   /// Sender initiates the Stripe escrow payment for an AWAITING_PAYMENT thread.
@@ -205,14 +229,26 @@ class NegotiationRepository {
 
   /// Devis transparent avant paiement : net voyageur, commission Yadony (taux +
   /// montant), total, et prévisualisation d'un code promo optionnel.
-  Future<NegotiationQuote> quote(String id, {String? promoCode}) async {
-    final response = await _apiClient.dio.get<Map<String, dynamic>>(
-      '/negotiations/$id/quote',
-      queryParameters: promoCode != null && promoCode.isNotEmpty
-          ? {'promoCode': promoCode}
-          : null,
-    );
-    return NegotiationQuote.fromJson(response.data!);
+  ///
+  /// Renvoie `null` quand le fil est scellé (409 `negotiation/thread-sealed`) :
+  /// le paiement est fait, le total scellé est déjà dans `grossPriceEur` du fil
+  /// et il n'y a plus rien à chiffrer. Tout autre échec est relancé.
+  Future<NegotiationQuote?> quote(String id, {String? promoCode}) async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/negotiations/$id/quote',
+        queryParameters: promoCode != null && promoCode.isNotEmpty
+            ? {'promoCode': promoCode}
+            : null,
+      );
+      return NegotiationQuote.fromJson(response.data!);
+    } on DioException catch (e) {
+      final error = unwrapDioError(e);
+      if (error is ConflictException && error.code == _threadSealedCode) {
+        return null;
+      }
+      rethrow;
+    }
   }
 
   /// Sender confirms payment (Stripe paymentIntentId or placeholder) for an
@@ -231,7 +267,7 @@ class NegotiationRepository {
         if (paymentMethod != null) 'paymentMethod': paymentMethod.wireName,
       },
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   /// Sender refuses the linked trip on an AWAITING_PAYMENT thread.
@@ -241,7 +277,7 @@ class NegotiationRepository {
       '/negotiations/$id/refuse-trip',
       data: reason != null && reason.isNotEmpty ? {'reason': reason} : null,
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   /// Traveler changes the trip already linked to an OPEN thread (before
@@ -257,7 +293,7 @@ class NegotiationRepository {
       '/negotiations/$threadId/trip',
       data: {'travelerAnnouncementId': travelerAnnouncementId},
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   /// Sends a nudge on this thread to prompt the other party to act.
@@ -266,7 +302,7 @@ class NegotiationRepository {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$id/nudge',
     );
-    return NegotiationThread.fromJson(response.data!);
+    return _thread(response.data!);
   }
 
   /// Traveler settles the Yadony commission for a cash-agreed offer the

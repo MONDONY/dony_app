@@ -97,7 +97,7 @@ void main() {
       expect(find.textContaining('code de retour'), findsOneWidget);
       // Disclaimer espèces : rien à payer, commission recréditée.
       expect(
-        find.textContaining('commission Yadony est recréditée'),
+        find.textContaining('frais de service Yadony sont recrédités'),
         findsOneWidget,
       );
     });

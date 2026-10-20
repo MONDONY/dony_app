@@ -24,16 +24,16 @@ void main() {
         'SUPPLEMENT_COMMISSION_DEDUCTED',
         paymentRef: 'supplement-6f1c',
       );
-      expect(walletTxLabel(fr, tx), 'Commission de supplément');
-      expect(walletTxLabel(en, tx), 'Supplement commission');
+      expect(walletTxLabel(fr, tx), 'Frais de service de supplément');
+      expect(walletTxLabel(en, tx), 'Supplement service fee');
     },
   );
 
   test('commission de supplément rendue : REFUND supplement-refund-', () {
     final tx = _tx('REFUND', paymentRef: 'supplement-refund-6f1c');
     expect(tx.isSupplementCommissionRefund, isTrue);
-    expect(walletTxLabel(fr, tx), 'Commission de supplément rendue');
-    expect(walletTxLabel(en, tx), 'Supplement commission refunded');
+    expect(walletTxLabel(fr, tx), 'Frais de service de supplément rendus');
+    expect(walletTxLabel(en, tx), 'Supplement service fee refunded');
   });
 
   test('autre remboursement : libellé habituel', () {
@@ -44,7 +44,7 @@ void main() {
   });
 
   test('types connus inchangés', () {
-    expect(walletTxLabel(fr, _tx('COMMISSION_DEDUCTED')), 'Commission');
+    expect(walletTxLabel(fr, _tx('COMMISSION_DEDUCTED')), 'Frais de service');
     expect(walletTxLabel(fr, _tx('TOP_UP')), 'Recharge');
     expect(
       walletTxLabel(fr, _tx('TOP_UP', paymentRef: 'pawapay:1')),

@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/commission_grid_store.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
@@ -14,6 +15,7 @@ import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/commission_grid_test_doubles.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockRepo extends Mock implements PackageRequestRepository {}
@@ -781,6 +783,72 @@ void main() {
     // editRequest), pas celle du portefeuille actif.
     expect(s.currency, SupportedCurrency.eur);
     bloc.close();
+  });
+
+  group('mode édition : budget brut sous grille de commission', () {
+    PackageRequest request({double? gross, String? gridId}) => PackageRequest(
+      id: 'r-grid',
+      senderId: 's-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      dateToleranceDays: 0,
+      weightKg: 5,
+      parcelSize: ParcelSize.small,
+      transportMode: TransportMode.plane,
+      status: PackageRequestStatus.open,
+      createdAt: DateTime(2026, 10, 19),
+      targetPriceEur: 20,
+      grossPriceEur: gross,
+      commissionGridId: gridId,
+    );
+
+    PackageRequestFormState prefilled(PackageRequest r) {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: r,
+      );
+      addTearDown(bloc.close);
+      return bloc.state;
+    }
+
+    test("l'édition préremplit grossPriceEur du serveur", () {
+      useTestCommissionGrid();
+      final s = prefilled(request(gross: 21.37, gridId: kTestGridId));
+      expect(s.totalBudgetEur, 21.37);
+      expect(s.commissionGridId, kTestGridId);
+    });
+
+    test('sans grille, grossPriceEur du serveur prime aussi sur le taux', () {
+      // 20 × 1,12 = 22,40 en local : le brut du serveur l'emporte.
+      expect(prefilled(request(gross: 22.5)).totalBudgetEur, 22.5);
+    });
+
+    test('sans grossPriceEur, sous grille, net 20 → 21,40', () {
+      useTestCommissionGrid();
+      expect(
+        prefilled(request(gridId: kTestGridId)).totalBudgetEur,
+        closeTo(21.40, 1e-9),
+      );
+    });
+
+    test('demande sans grille figée, grille active : taux unique (créée '
+        'avant les paliers, le back la recalcule ainsi)', () {
+      useTestCommissionGrid();
+      expect(prefilled(request()).totalBudgetEur, closeTo(22.40, 1e-9));
+    });
+
+    test('sans grossPriceEur, grille figée connue : calcul sur elle', () {
+      // Aucune grille en vigueur, la grille figée de la demande est en cache.
+      CommissionGridStore.put(testGrid757());
+      addTearDown(CommissionGridStore.reset);
+      final s = prefilled(request(gridId: kTestGridId));
+      expect(s.totalBudgetEur, closeTo(21.40, 1e-9));
+    });
+
+    test('sans grossPriceEur, sans grille : taux unique (20 × 1,12)', () {
+      expect(prefilled(request()).totalBudgetEur, closeTo(22.40, 1e-9));
+    });
   });
 
   test('I1 : mode édition d\'une demande XOF : state.currency == xof, pas la '

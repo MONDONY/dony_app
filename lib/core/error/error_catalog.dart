@@ -756,6 +756,12 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.drafts_outlined,
     ),
+    'budget-below-commission-minimum': _Entry(
+      title: (l) => l.errorBudgetBelowCommissionMinimumTitle,
+      message: (l) => l.errorBudgetBelowCommissionMinimumMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.price_change_outlined,
+    ),
     'not-a-draft': _Entry(
       title: (l) => l.errorNotADraftTitle,
       message: (l) => l.errorNotADraftMessage,

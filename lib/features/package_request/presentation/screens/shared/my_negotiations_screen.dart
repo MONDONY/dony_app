@@ -16,6 +16,7 @@ import 'package:dony/features/package_request/data/models/nego_archive.dart';
 import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/widgets/nego_archive_actions.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
@@ -837,7 +838,7 @@ class _NegoCard extends StatelessWidget {
     final displayPrice = isTraveler
         ? thread.currentPriceEur
         : (thread.grossPriceEur ??
-              PriceDisplay.grossFromNet(thread.currentPriceEur));
+              ThreadPricer.of(thread).priceFor(thread.currentPriceEur).gross);
 
     return _NegoCardShell(
       stripColor: _stripColor,

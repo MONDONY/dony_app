@@ -314,7 +314,10 @@ void main() {
         ],
       ),
     );
-    expect(find.text('Awa K. règle sa commission Yadony'), findsOneWidget);
+    expect(
+      find.text('Awa K. règle ses frais de service Yadony'),
+      findsOneWidget,
+    );
     expect(find.byType(RequestOfferCard), findsNWidgets(2));
   });
 

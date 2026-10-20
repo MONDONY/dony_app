@@ -27,6 +27,7 @@ class DonyNegoHeroCard extends StatelessWidget {
     required this.roundsCount,
     required this.maxRounds,
     this.amountKey,
+    this.amountNote,
     this.warning,
     this.turnLabel,
     this.myTurn = false,
@@ -52,6 +53,10 @@ class DonyNegoHeroCard extends StatelessWidget {
   /// Montant déjà formaté, devise comprise.
   final String amount;
   final Key? amountKey;
+
+  /// Précision sous le montant (« Frais de service compris »), absente sinon.
+  /// Seulement dans la carte entière : la version réduite n'a pas la place.
+  final String? amountNote;
   final String badgeLabel;
 
   /// Libellé des tours (« Round 2/5 », « Tour 2 sur 6 »).
@@ -136,6 +141,18 @@ class DonyNegoHeroCard extends StatelessWidget {
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
+                      if (amountNote != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          amountNote!,
+                          key: const Key('nego-hero-amount-note'),
+                          style: tt.bodyMedium!.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.80),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

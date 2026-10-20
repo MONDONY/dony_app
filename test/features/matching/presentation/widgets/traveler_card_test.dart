@@ -15,6 +15,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/commission_grid_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
@@ -36,6 +37,7 @@ AnnouncementModel _makeAnn({
   int? uniqueViewerCount,
   String status = 'ACTIVE',
   TripStops? stops,
+  double? pricePerKgDisplay,
 }) => AnnouncementModel(
   id: 'a1',
   travelerId: 't1',
@@ -47,6 +49,7 @@ AnnouncementModel _makeAnn({
   availableKg: 8,
   totalKg: 8,
   pricePerKg: 12,
+  pricePerKgDisplay: pricePerKgDisplay,
   currency: currency,
   pricingMode: pricingMode,
   convertedPricePerKg: convertedPricePerKg,
@@ -1210,5 +1213,61 @@ void main() {
         expect(find.textContaining(RegExp(r'^\d+ vues?$')), findsNothing);
       });
     }
+  });
+
+  group('frais de service (commission par paliers)', () {
+    testWidgets('sous grille, prix au kilo net et suffixe affichés', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(pricePerKgDisplay: 8),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('8\u00A0€/kg'), findsOneWidget);
+      expect(
+        find.text('+ frais de service Yadony (min. 1\u00A0€)'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sans grille, aucun suffixe', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(pricePerKgDisplay: 8),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('traveler-card-fee-suffix')), findsNothing);
+      expect(find.textContaining('frais de service'), findsNothing);
+    });
+
+    testWidgets('trajet en grille tarifaire : pas de suffixe', (tester) async {
+      useTestCommissionGrid();
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(pricingMode: 'MIXED'),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('traveler-card-fee-suffix')), findsNothing);
+    });
   });
 }

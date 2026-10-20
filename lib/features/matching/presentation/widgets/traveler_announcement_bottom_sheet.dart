@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/utils/map_launcher.dart';
@@ -84,12 +85,16 @@ final class TravelerSheetFollowUp extends TravelerSheetExit {
 /// elles-mêmes : elles la ferment avec un [TravelerSheetExit] que la route
 /// exécute (FLUTTER-HR). Les autres appelants (carte, liste, recherche…)
 /// laissent [returnsNavigation] à faux et ignorent le résultat, toujours nul.
+///
+/// [fromMap] : fiche ouverte depuis la carte des trajets, où la mention des
+/// frais de service ne dit pas leur minimum (« + frais de service »).
 Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
   BuildContext context, {
   required AnnouncementModel announcement,
   String? existingBidStatus,
   BidModel? existingBid,
   bool returnsNavigation = false,
+  bool fromMap = false,
 }) {
   // Captured before DonyBottomSheet.show() — context may be invalid inside
   // onPressed since useRootNavigator: true places the sheet outside BlocProvider.
@@ -444,6 +449,7 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
       avecFavori: favoris != null && !estProprietaire,
       lecteurId: lecteurId,
       returnsNavigation: returnsNavigation,
+      fromMap: fromMap,
     ),
   );
 }
@@ -526,7 +532,11 @@ class _TravelerAnnouncementContent extends StatelessWidget {
     this.avecFavori = false,
     this.lecteurId,
     this.returnsNavigation = false,
+    this.fromMap = false,
   });
+
+  /// Ouverte depuis la carte : frais de service sans minimum.
+  final bool fromMap;
 
   /// Ouverte par `/traveler/:id` : « Signaler ce trajet » rend sa route au
   /// lieu de naviguer (voir [TravelerSheetExit]).
@@ -570,7 +580,11 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         else
           TripBilletCard(announcement: announcement),
         const SizedBox(height: DonySpacing.md),
-        _StatCardsRow(announcement: announcement, hasGrid: hasGrid),
+        _StatCardsRow(
+          announcement: announcement,
+          hasGrid: hasGrid,
+          fromMap: fromMap,
+        ),
         if (hasGrid) ...[
           const SizedBox(height: DonySpacing.md),
           _PriceGridCard(
@@ -812,15 +826,27 @@ class _HeroWithFavorite extends StatelessWidget {
 }
 
 class _StatCardsRow extends StatelessWidget {
-  const _StatCardsRow({required this.announcement, required this.hasGrid});
+  const _StatCardsRow({
+    required this.announcement,
+    required this.hasGrid,
+    this.fromMap = false,
+  });
 
   final AnnouncementModel announcement;
   final bool hasGrid;
+  final bool fromMap;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final deadline = announcement.handoverDeadline?.toLocal();
+    // Sous grille de commission, les prix de la fiche sont des nets : les
+    // frais de service s'y ajoutent (sans minimum depuis la carte).
+    final feeNote = listPriceFeeSuffix(
+      l,
+      announcement.currency,
+      withMinimum: !fromMap,
+    );
     // IntrinsicHeight : égalise la hauteur des deux cartes sans stretch
     // non borné (la colonne parente est dans un scrollable).
     return IntrinsicHeight(
@@ -832,8 +858,9 @@ class _StatCardsRow extends StatelessWidget {
                 ? _GridStatCard(
                     items: announcement.priceGridItems,
                     currency: announcement.currency,
+                    feeNote: feeNote,
                   )
-                : _PriceStatCard(announcement: announcement),
+                : _PriceStatCard(announcement: announcement, feeNote: feeNote),
           ),
           if (deadline != null) ...[
             const SizedBox(width: DonySpacing.sm),
@@ -862,6 +889,7 @@ class _StatCard extends StatelessWidget {
     this.valueColor,
     this.secondary,
     this.subtitle,
+    this.feeNote,
   });
 
   final String value;
@@ -873,6 +901,9 @@ class _StatCard extends StatelessWidget {
 
   /// Ligne discrète sous la valeur (équivalent « environ » multidevise).
   final String? subtitle;
+
+  /// Mention des frais de service qui s'ajoutent à la valeur (sous grille).
+  final String? feeNote;
 
   @override
   Widget build(BuildContext context) {
@@ -914,6 +945,13 @@ class _StatCard extends StatelessWidget {
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
+          if (feeNote != null)
+            Text(
+              feeNote!,
+              key: const Key('stat-card-fee-note'),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
           if (subtitle != null)
             Text(
               subtitle!,
@@ -932,9 +970,10 @@ class _StatCard extends StatelessWidget {
 }
 
 class _PriceStatCard extends StatelessWidget {
-  const _PriceStatCard({required this.announcement});
+  const _PriceStatCard({required this.announcement, this.feeNote});
 
   final AnnouncementModel announcement;
+  final String? feeNote;
 
   @override
   Widget build(BuildContext context) {
@@ -965,6 +1004,7 @@ class _PriceStatCard extends StatelessWidget {
           : null,
       label: l.listingPricePerKiloLabel,
       valueColor: cs.primary,
+      feeNote: feeNote,
     );
   }
 }
@@ -972,10 +1012,15 @@ class _PriceStatCard extends StatelessWidget {
 /// Carte compacte annonçant la grille tarifaire, avec le nombre d'articles et
 /// le prix d'appel le plus bas — le détail vit dans [_PriceGridCard].
 class _GridStatCard extends StatelessWidget {
-  const _GridStatCard({required this.items, required this.currency});
+  const _GridStatCard({
+    required this.items,
+    required this.currency,
+    this.feeNote,
+  });
 
   final List<AnnouncementGridItemModel> items;
   final String currency;
+  final String? feeNote;
 
   @override
   Widget build(BuildContext context) {
@@ -1021,6 +1066,13 @@ class _GridStatCard extends StatelessWidget {
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
+          if (feeNote != null)
+            Text(
+              feeNote!,
+              key: const Key('stat-card-fee-note'),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
         ],
       ),
     );

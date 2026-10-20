@@ -57,5 +57,61 @@ void main() {
       expect(quote.netEur, 40.0);
       expect(quote.rate, 0.0);
     });
+
+    test('lit minimumApplied, minimumAmount, commissionGridId, '
+        'promoIneffectiveReason', () {
+      final quote = NegotiationQuote.fromJson({
+        'netEur': 40.0,
+        'rate': 0.05,
+        'commissionEur': 2.0,
+        'totalEur': 42.0,
+        'promoApplied': false,
+        'minimumApplied': true,
+        'minimumAmount': 1.2,
+        'commissionGridId': 'grid-1',
+        'promoIneffectiveReason': 'COMMISSION_MINIMUM',
+      });
+
+      expect(quote.minimumApplied, isTrue);
+      expect(quote.minimumAmount, 1.2);
+      expect(quote.commissionGridId, 'grid-1');
+      expect(quote.promoIneffectiveReason, 'COMMISSION_MINIMUM');
+    });
+
+    test('ancien contrat sans ces champs : minimumApplied faux, le reste '
+        'null', () {
+      final quote = NegotiationQuote.fromJson({
+        'netEur': 40.0,
+        'rate': 0.05,
+        'commissionEur': 2.0,
+        'totalEur': 42.0,
+      });
+
+      expect(quote.minimumApplied, isFalse);
+      expect(quote.minimumAmount, isNull);
+      expect(quote.commissionGridId, isNull);
+      expect(quote.promoIneffectiveReason, isNull);
+      expect(quote.promoIneffectiveBecauseMinimum, isFalse);
+    });
+
+    test('promoIneffectiveBecauseMinimum vrai pour COMMISSION_MINIMUM', () {
+      final quote = NegotiationQuote.fromJson({
+        'netEur': 40.0,
+        'rate': 0.05,
+        'commissionEur': 2.0,
+        'totalEur': 42.0,
+        'promoIneffectiveReason': 'COMMISSION_MINIMUM',
+      });
+      final autre = NegotiationQuote.fromJson({
+        'netEur': 40.0,
+        'rate': 0.05,
+        'commissionEur': 2.0,
+        'totalEur': 42.0,
+        'promoIneffectiveReason': 'AUTRE',
+      });
+
+      expect(quote.promoIneffectiveBecauseMinimum, isTrue);
+      expect(autre.promoIneffectiveBecauseMinimum, isFalse);
+    });
   });
 }

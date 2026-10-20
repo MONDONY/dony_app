@@ -49,7 +49,7 @@ void main() {
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Ce colis est à vous !'), findsOneWidget);
     expect(
-      find.textContaining('La commission Yadony est réglée'),
+      find.textContaining('Les frais de service Yadony sont réglés'),
       findsOneWidget,
     );
     expect(find.text('Voir la négociation'), findsOneWidget);

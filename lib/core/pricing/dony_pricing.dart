@@ -1,49 +1,33 @@
+/// Formatage des prix, bornes de saisie et repères de prix côté app.
+///
+/// Le passage **net voyageur → prix payé par l'expéditeur** ne se calcule
+/// plus ici : il passe par la façade `commission_pricing.dart`
+/// ([senderPriceForNet], [listUnitPrice]), qui applique la grille de
+/// commission par paliers quand le serveur en publie une, sinon le taux
+/// unique historique ([donyCommissionRate], `commission_rate.dart`, réexporté
+/// ici pour les appelants existants). Un montant servi par le backend
+/// (`pricePerKgDisplay`, `unitPriceDisplay`, `totalSenderAmountEur`) passe
+/// toujours avant ce calcul.
+///
+/// Modèle métier (vérifié backend, `PaymentService` / `PriceGridService`) :
+/// - `pricePerKg` (mode KG) et `unitPriceNet` (mode MIXED) = **NET** = ce que
+///   le voyageur touche réellement.
+/// - Sans grille, l'expéditeur paie `net × (1 + taux)` ; sous grille, il paie
+///   le net plus des frais de service calculés sur le total (paliers et
+///   minimum par devise), et les listes affichent le net suivi de la mention
+///   « + frais de service ».
+library;
+
 import 'dart:math' as math;
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/active_rates.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/foundation.dart';
 
-/// Source unique de vérité, côté app, pour le passage **prix net voyageur →
-/// prix affiché expéditeur** (commission Yadony incluse).
-///
-/// Modèle métier (vérifié backend, `PaymentService` / `PriceGridService`) :
-/// - `pricePerKg` (mode KG) et `unitPriceNet` (mode MIXED) = **NET** = ce que
-///   le voyageur touche réellement.
-/// - L'expéditeur paie ce net **+ la commission** : `display = net × (1 + taux)`. Le backend
-///   expose déjà ce prix via `unitPriceDisplay` (MIXED) et `pricePerKgDisplay`
-///   (KG). Ce helper centralise le multiplicateur pour les rares cas sans champ
-///   display fourni (ex. suggestions de re-match, montant dérivé d'un bid).
-///
-/// SOURCE UNIQUE du taux : `dony.commission.rate` côté backend. Le front le
-/// charge une fois au démarrage (`GET /config/commission-rate` → [setDonyCommissionRate])
-/// et retombe sur [kDonyCommissionRateDefault] tant qu'il n'est pas chargé /
-/// en cas d'erreur. Changer la valeur backend suffit donc à ajuster la
-/// commission partout.
-const double kDonyCommissionRateDefault = 0.05;
-
-double _donyCommissionRate = kDonyCommissionRateDefault;
-
-/// Taux de commission Yadony courant (ex. 0,05 = 5 %).
-double get donyCommissionRate => _donyCommissionRate;
-
-/// Multiplicateur net → prix affiché à l'expéditeur (= 1 + commission).
-double get donyCommissionMultiplier => 1 + _donyCommissionRate;
-
-/// Met à jour le taux au démarrage avec la valeur backend. Ignore les valeurs
-/// aberrantes (hors ]0,1[) pour rester sur le repli [kDonyCommissionRateDefault].
-void setDonyCommissionRate(double rate) {
-  if (rate > 0 && rate < 1) {
-    _donyCommissionRate = rate;
-  }
-}
-
-/// Convertit un prix **net** (ce que touche le voyageur) en prix **affiché à
-/// l'expéditeur** (commission Yadony incluse). À n'utiliser que faute de champ
-/// `*Display` fourni par le backend.
-double netToSenderPrice(double net) => net * donyCommissionMultiplier;
+export 'package:dony/core/pricing/commission_rate.dart';
 
 /// Formate un prix au kilo : entier si rond, 2 décimales sinon
 /// (ex. 6 → « 6 », 5,6 → « 5.60 »). Aligné sur l'affichage du mode MIXED.
@@ -265,10 +249,13 @@ void setDonyReimbursementCap(double amount) {
 }
 
 extension AnnouncementSenderPricing on AnnouncementModel {
-  /// Prix au kilo **affiché à l'expéditeur** (net + commission). Préfère le
-  /// champ backend [AnnouncementModel.pricePerKgDisplay] s'il est présent, sinon
-  /// recalcule via [donyCommissionMultiplier]. À utiliser sur toutes les
-  /// surfaces vues par l'expéditeur ; les surfaces voyageur gardent `pricePerKg`.
+  /// Prix au kilo **affiché à l'expéditeur**. Préfère le champ backend
+  /// [AnnouncementModel.pricePerKgDisplay] s'il est présent, sinon
+  /// [listUnitPrice] : le net sous grille de commission (les frais de service
+  /// s'ajoutent au total, le serveur sert alors le net dans
+  /// `pricePerKgDisplay`), le net majoré du taux unique sans grille. À utiliser
+  /// sur toutes les surfaces vues par l'expéditeur ; les surfaces voyageur
+  /// gardent `pricePerKg`.
   ///
   /// `null` quand ni [pricePerKgDisplay] ni [pricePerKg] ne sont exploitables :
   /// mode `MIXED` sans grille de prix au kilo, ou (net masqué pour un
@@ -278,7 +265,7 @@ extension AnnouncementSenderPricing on AnnouncementModel {
     final display = pricePerKgDisplay;
     if (display != null) return display;
     final net = pricePerKg;
-    return net == null ? null : netToSenderPrice(net);
+    return net == null ? null : listUnitPrice(net, currency);
   }
 
   /// Équivalent, dans la devise convertie par le serveur
@@ -295,6 +282,9 @@ extension AnnouncementSenderPricing on AnnouncementModel {
   /// que celui qui produit [senderPricePerKg] — jamais un nouveau calcul de
   /// taux de change, seulement la majoration commission déjà appliquée au
   /// montant d'origine.
+  ///
+  /// Sous grille de commission, [senderPricePerKg] vaut le net : le ratio vaut
+  /// 1 et le résultat est [AnnouncementModel.convertedPricePerKg] tel quel.
   ///
   /// Pour un lecteur anonyme (net masqué, [pricePerKg] absent), aucun ratio
   /// net→brut n'est calculable ici : on retombe alors sur

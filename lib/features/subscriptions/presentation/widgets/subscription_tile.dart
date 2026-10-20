@@ -236,7 +236,14 @@ class _LastTripLine extends StatelessWidget {
       fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
     );
 
-    final contenu = Row(
+    // Sous grille de commission, ce prix est le net du voyageur : les frais de
+    // service s'y ajoutent. Mention sur sa propre ligne, faute de place dans la
+    // rangée du corridor.
+    final feeSuffix = last.gridOnly
+        ? null
+        : listPriceFeeSuffix(l, last.currency);
+
+    final ligne = Row(
       children: [
         DonyIcon(
           'plane',
@@ -271,6 +278,26 @@ class _LastTripLine extends StatelessWidget {
         ],
       ],
     );
+
+    final contenu = feeSuffix == null
+        ? ligne
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ligne,
+              Padding(
+                padding: const EdgeInsets.only(left: 13 + DonySpacing.xs),
+                child: Text(
+                  feeSuffix,
+                  key: const Key('subscription-tile-fee-suffix'),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          );
 
     if (onOpen == null) {
       return Padding(

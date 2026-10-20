@@ -42,6 +42,7 @@ class PackageRequestFormState extends Equatable {
     this.createdRequest,
     this.editingRequestId,
     this.currency,
+    this.commissionGridId,
     this.draftRevision = 0,
   });
 
@@ -90,6 +91,11 @@ class PackageRequestFormState extends Equatable {
   /// Devise choisie pour cette demande. `null` tant que l'écran ne l'a pas
   /// encore initialisée (repli sur la devise du portefeuille côté serveur).
   final SupportedCurrency? currency;
+
+  /// Grille de commission figée de la demande éditée
+  /// ([PackageRequest.commissionGridId]) : le back recalcule le net d'un
+  /// nouveau budget sur elle. `null` en création (grille en vigueur).
+  final String? commissionGridId;
 
   /// Incrémenté à chaque reprise d'un brouillon local : l'écran recrée alors
   /// les étapes, qui ne relisent l'état du bloc qu'à leur `initState`.
@@ -140,6 +146,7 @@ class PackageRequestFormState extends Equatable {
     PackageRequest? createdRequest,
     String? editingRequestId,
     SupportedCurrency? currency,
+    String? commissionGridId,
     int? draftRevision,
   }) => PackageRequestFormState(
     currentStep: currentStep ?? this.currentStep,
@@ -175,6 +182,7 @@ class PackageRequestFormState extends Equatable {
     createdRequest: createdRequest ?? this.createdRequest,
     editingRequestId: editingRequestId ?? this.editingRequestId,
     currency: currency ?? this.currency,
+    commissionGridId: commissionGridId ?? this.commissionGridId,
     draftRevision: draftRevision ?? this.draftRevision,
   );
 
@@ -206,6 +214,7 @@ class PackageRequestFormState extends Equatable {
     createdRequest,
     editingRequestId,
     currency,
+    commissionGridId,
     draftRevision,
   ];
 }

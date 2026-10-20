@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -137,6 +138,7 @@ class ThreadHeroCard extends StatelessWidget {
         thread.grossPriceEur,
         isTraveler,
         thread.currency,
+        ThreadPricer.of(thread),
       ),
       badgeLabel: statusVariant.badge(l),
       roundLabel: l.negotiationRoundCounter(

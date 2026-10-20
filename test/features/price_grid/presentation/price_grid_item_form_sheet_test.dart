@@ -14,6 +14,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/commission_grid_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockPriceGridBloc extends MockBloc<PriceGridEvent, PriceGridState>
@@ -300,13 +301,56 @@ void main() {
       // FLUTTER-R6 : le montant de la commission, plus son taux.
       expect(
         find.text(
-          'L\'expéditeur paiera ${formatPriceActive(netToSenderPrice(15))}, '
-          'dont ${formatPriceActive(netToSenderPrice(15) - 15)} de commission '
+          'L\'expéditeur paiera ${formatPriceActive(15 * (1 + donyCommissionRate))}, '
+          'dont ${formatPriceActive(15 * (1 + donyCommissionRate) - 15)} de frais de service '
           'Yadony.',
         ),
         findsOneWidget,
       );
       expect(find.textContaining('%'), findsNothing);
+    });
+
+    testWidgets(
+      'sous grille, article à 5 € : l\'expéditeur paiera 6,00 €, dont 1,00 € '
+      '(minimum)',
+      (tester) async {
+        useTestCommissionGrid();
+        await _open(tester);
+        await tester.tap(find.text('Chaussures'));
+        await tester.pumpAndSettle();
+
+        await _type(tester, '5');
+
+        // 7 % de 5 € = 0,35 € : le minimum de 1 € s'applique.
+        expect(
+          find.text(
+            'L\'expéditeur paiera 6,00\u00A0€, dont 1,00\u00A0€\u00A0'
+            '(minimum) de frais de service Yadony.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.textContaining('commission'), findsNothing);
+      },
+    );
+
+    testWidgets('sous grille, au-dessus du minimum : pas de mention minimum', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      await _open(tester);
+      await tester.tap(find.text('Chaussures'));
+      await tester.pumpAndSettle();
+
+      await _type(tester, '20');
+
+      // 7 % de 20 € = 1,40 € : le palier s'applique, sans « (minimum) ».
+      expect(
+        find.text(
+          'L\'expéditeur paiera 21,40\u00A0€, dont 1,40\u00A0€ de frais de '
+          'service Yadony.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('un montant hors plafond bloque et l\'explique', (

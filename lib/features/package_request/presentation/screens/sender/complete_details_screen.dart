@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -326,7 +327,7 @@ class _RecapCard extends StatelessWidget {
 
     final double? gross = thread != null
         ? (thread!.grossPriceEur ??
-              PriceDisplay.grossFromNet(thread!.currentPriceEur))
+              ThreadPricer.of(thread!).priceFor(thread!.currentPriceEur).gross)
         : request.targetPriceEur;
 
     final rows = <(String, String)>[

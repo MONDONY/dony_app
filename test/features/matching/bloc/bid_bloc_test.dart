@@ -1703,6 +1703,142 @@ void main() {
     );
 
     blocTest<BidBloc, BidState>(
+      'devis d\'arrière-plan : pas de BidQuoteLoading, BidQuoteLoaded porte '
+      'la clé de la demande',
+      build: () {
+        when(
+          () => mockRepo.quoteBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            promoCode: any(named: 'promoCode'),
+          ),
+        ).thenAnswer((_) async => quote);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        BidQuoteRequested(
+          announcementId: 'ann-001',
+          weightKg: 5.0,
+          backgroundKey: '5.0|',
+        ),
+      ),
+      expect: () => [
+        isA<BidQuoteLoaded>().having(
+          (s) => s.backgroundKey,
+          'backgroundKey',
+          '5.0|',
+        ),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'devis d\'arrière-plan avec un code devenu invalide : '
+      'BidQuoteBackgroundPromoRejected puis devis sans code',
+      build: () {
+        when(
+          () => mockRepo.quoteBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            promoCode: 'PROMO6',
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/bids/quote'),
+            error: const NetworkException('expiré', code: 'promo-expired'),
+          ),
+        );
+        when(
+          () => mockRepo.quoteBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+          ),
+        ).thenAnswer((_) async => quote);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        BidQuoteRequested(
+          announcementId: 'ann-001',
+          weightKg: 5.0,
+          promoCode: 'PROMO6',
+          backgroundKey: '5.0|',
+        ),
+      ),
+      expect: () => [
+        isA<BidQuoteBackgroundPromoRejected>()
+            .having((s) => s.backgroundKey, 'backgroundKey', '5.0|')
+            .having((s) => s.error.code, 'code', 'promo-expired'),
+        isA<BidQuoteLoaded>().having(
+          (s) => s.backgroundKey,
+          'backgroundKey',
+          '5.0|',
+        ),
+      ],
+      verify: (_) {
+        verify(
+          () => mockRepo.quoteBid(announcementId: 'ann-001', weightKg: 5.0),
+        ).called(1);
+      },
+    );
+
+    blocTest<BidBloc, BidState>(
+      'devis d\'arrière-plan pendant l\'envoi d\'une offre (BidLoading) : '
+      'rien n\'est émis',
+      build: () {
+        when(
+          () => mockRepo.quoteBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            promoCode: any(named: 'promoCode'),
+          ),
+        ).thenAnswer((_) async => quote);
+        return buildBloc();
+      },
+      seed: () => BidLoading(),
+      act: (bloc) => bloc.add(
+        BidQuoteRequested(
+          announcementId: 'ann-001',
+          weightKg: 5.0,
+          backgroundKey: '5.0|',
+        ),
+      ),
+      expect: () => <BidState>[],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'devis d\'arrière-plan en échec : BidQuoteBackgroundFailed, jamais '
+      'BidError',
+      build: () {
+        when(
+          () => mockRepo.quoteBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            promoCode: any(named: 'promoCode'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/bids/quote'),
+            error: const NetworkException('hors ligne'),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        BidQuoteRequested(
+          announcementId: 'ann-001',
+          weightKg: 5.0,
+          backgroundKey: '5.0|',
+        ),
+      ),
+      expect: () => [
+        isA<BidQuoteBackgroundFailed>().having(
+          (s) => s.backgroundKey,
+          'backgroundKey',
+          '5.0|',
+        ),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
       'mode GRID (poids null + gridItems) → forwarde gridItems au repository',
       build: () {
         when(

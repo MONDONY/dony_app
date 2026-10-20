@@ -57,8 +57,12 @@ class BidCustomItem {
   double get totalEur => amountEur * quantity;
 }
 
-/// Ligne de grille telle qu'affichée dans le fil. Le prix porté est le prix
-/// EXPÉDITEUR (commission incluse), jamais le net voyageur.
+/// Ligne de grille telle qu'affichée dans le fil.
+///
+/// Fil sans grille de commission : prix EXPÉDITEUR (commission au taux figé
+/// incluse). Fil à grille (`commissionGridId`) : prix du VOYAGEUR, les frais
+/// de service ne se répartissant pas par article (tranches, minimum) ; ils ne
+/// comptent que sur le total frais compris, `suggestedGrossEur`.
 class BidGridLine {
   final String id;
   final String label;
@@ -178,13 +182,26 @@ class BidNegotiation {
   final DateTime? commissionDueBy;
 
   /// Taux de commission figé du fil (ex. `0.12`), servi au seul voyageur
-  /// (FLUTTER-NS, yadony-back #516). Présent, le voyageur saisit sa
-  /// contre-offre en NET ; absent (expéditeur, serveur antérieur), la saisie
-  /// reste en brut comme avant.
+  /// (FLUTTER-NS, yadony-back #516). Présent (ou [commissionGridId] présent),
+  /// le voyageur saisit sa contre-offre en NET ; absent (expéditeur, serveur
+  /// antérieur), la saisie reste en brut comme avant.
   final double? commissionRate;
 
   /// L'autre partie détient le badge GP Pro (yadony-back #560).
   final bool counterpartyGpPro;
+
+  /// Grille de commission figée du bid à son ouverture (commission par
+  /// paliers). Nulle pour un fil d'avant les grilles ou avec un serveur
+  /// antérieur : le fil garde alors son taux figé ([commissionRate]).
+  final String? commissionGridId;
+
+  /// Taux spécial figé du bid, servi au seul voyageur (nul sinon). Les frais
+  /// de grille sont plafonnés à `net × taux spécial`.
+  final double? commissionOverrideRate;
+
+  /// Bon de parrainage figé du bid (ex. `0.5`), servi au seul voyageur (nul
+  /// sinon). Il multiplie les frais APRÈS le minimum de la devise.
+  final double? commissionVoucherFactor;
 
   const BidNegotiation({
     required this.bidId,
@@ -218,6 +235,9 @@ class BidNegotiation {
     this.commissionDueBy,
     this.commissionRate,
     this.counterpartyGpPro = false,
+    this.commissionGridId,
+    this.commissionOverrideRate,
+    this.commissionVoucherFactor,
   });
 
   factory BidNegotiation.fromJson(Map<String, dynamic> json) => BidNegotiation(
@@ -262,10 +282,21 @@ class BidNegotiation {
     commissionDueBy: _asDate(json['commissionDueBy']),
     commissionRate: _asDouble(json['commissionRate']),
     counterpartyGpPro: json['counterpartyGpPro'] as bool? ?? false,
+    commissionGridId: json['commissionGridId'] as String?,
+    commissionOverrideRate: _asDouble(json['commissionOverrideRate']),
+    commissionVoucherFactor: _asDouble(json['commissionVoucherFactor']),
   );
 
-  /// Le voyageur contre-propose en net : il connaît le taux du fil.
-  bool get counterInNet => isTravelerView && commissionRate != null;
+  /// Le voyageur contre-propose en net : il connaît la grille figée du fil
+  /// ou, pour un fil d'avant les grilles, son taux figé.
+  bool get counterInNet =>
+      isTravelerView && (commissionGridId != null || commissionRate != null);
+
+  /// L'expéditeur lit des lignes de grille au prix du voyageur : sous grille
+  /// de commission, le serveur sert `unitPriceDisplay` au net et les frais de
+  /// service s'ajoutent au total, alors que sans grille ce prix les inclut.
+  bool get senderSeesNetGridLines =>
+      !isTravelerView && commissionGridId != null;
 
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
   bool get isClosed => status != 'NEGOTIATING';
