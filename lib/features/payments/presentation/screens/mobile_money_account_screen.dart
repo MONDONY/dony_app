@@ -89,6 +89,21 @@ class _MobileMoneyAccountScreenState extends State<MobileMoneyAccountScreen> {
     _bloc.add(MobileMoneyAccountRemoveRequested(account));
   }
 
+  /// Refus d'une écriture. Sur un 409 « bloqué », la liste lue paraissait à
+  /// jour mais un colis attend : elle est relue pour que la ligne passe
+  /// bloquée avec le vrai nombre de colis, puis la feuille s'ouvre.
+  void _onWriteFailed(BuildContext context, MobileMoneyAccountState state) {
+    final error = (state as MobileMoneyAccountActionFailed).error;
+    if (isPayoutAccountLocked(error)) {
+      _bloc.add(const MobileMoneyAccountsRequested());
+    }
+    presentPayoutAccountFailure(
+      context,
+      error,
+      pendingPayouts: _removing?.pendingPayouts ?? 0,
+    );
+  }
+
   /// Relit la liste au retour d'un écran qui l'a changée, sauf pendant une
   /// écriture : sa propre relecture suit.
   void _reloadIfChanged(bool? changed) {
@@ -123,11 +138,7 @@ class _MobileMoneyAccountScreenState extends State<MobileMoneyAccountScreen> {
         child: BlocConsumer<MobileMoneyAccountBloc, MobileMoneyAccountState>(
           listenWhen: (previous, current) =>
               previous != current && current is MobileMoneyAccountActionFailed,
-          listener: (context, state) => presentPayoutAccountFailure(
-            context,
-            (state as MobileMoneyAccountActionFailed).error,
-            pendingPayouts: _removing?.pendingPayouts ?? 0,
-          ),
+          listener: _onWriteFailed,
           builder: (context, state) {
             final data = state.data;
             if (data != null) {

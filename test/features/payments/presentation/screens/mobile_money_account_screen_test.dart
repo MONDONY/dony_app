@@ -511,6 +511,19 @@ void main() {
         find.text('1 colis attend encore son versement sur ce compte.'),
         findsOneWidget,
       );
+      // La liste est relue : la ligne passe bloquée avec le vrai nombre.
+      verify(() => bloc.add(const MobileMoneyAccountsRequested())).called(1);
+      await tester.tap(find.text('Compris'));
+      await tester.pumpAndSettle();
+      states.add(loaded(const [_lockedOrange]));
+      await tester.pumpAndSettle();
+      await openMenu(tester, 'a1');
+      await tester.tap(find.text('Retirer'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('2 colis attendent encore leur versement sur ce compte.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('autre refus : message d\'erreur, liste gardée', (
@@ -529,6 +542,8 @@ void main() {
 
       expect(find.byType(SnackBar), findsOneWidget);
       expect(find.text('Orange Money'), findsOneWidget);
+      // Refus sans rapport avec un versement en attente : pas de relecture.
+      verifyNever(() => bloc.add(any()));
     });
 
     testWidgets('écriture en cours : barre de progression, menu inactif', (
