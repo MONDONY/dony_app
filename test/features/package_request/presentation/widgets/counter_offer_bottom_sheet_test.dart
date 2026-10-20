@@ -103,9 +103,9 @@ void main() {
         );
         await tester.enterText(find.byType(TextFormField).first, '70');
         await tester.pump();
-        expect(find.text('Net voyageur'), findsOneWidget);
+        expect(find.text('Prix du voyageur'), findsOneWidget);
         expect(find.text('70,00\u00a0€'), findsOneWidget);
-        expect(find.text('Frais de service Yadony'), findsOneWidget);
+        expect(find.text('Frais de service'), findsOneWidget);
         expect(find.text('8,40\u00a0€'), findsOneWidget);
         expect(find.text('Total à régler'), findsOneWidget);
         expect(find.text('78,40\u00a0€'), findsOneWidget);
@@ -120,7 +120,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField).first, '5');
       await tester.pump();
       expect(find.text('5,00\u00a0€'), findsOneWidget);
-      expect(find.text('1,00\u00a0€\u00a0(minimum)'), findsOneWidget);
+      expect(find.text('1,00\u00a0€'), findsOneWidget);
       expect(find.text('6,00\u00a0€'), findsOneWidget);
     });
 

@@ -8,6 +8,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/thread_pricing.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/accept_offer_bottom_sheet.dart';
@@ -56,6 +57,7 @@ Widget _buildApp({
   double? grossPriceEur,
   double priceEur = 35.0,
   String? gridId,
+  PaymentMethod? paymentMethod,
 }) {
   return MaterialApp(
     theme: AppTheme.light(),
@@ -75,6 +77,7 @@ Widget _buildApp({
               isCheckout: isCheckout,
               hasLinkedTrip: hasLinkedTrip,
               pricer: ThreadPricer(gridId: gridId),
+              paymentMethod: paymentMethod,
             ),
             child: const Text('Ouvrir'),
           ),
@@ -136,44 +139,64 @@ void main() {
     await tester.pumpWidget(_buildApp(bloc: bloc, grossPriceEur: 39.20));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Frais de service Yadony'), findsOneWidget);
-    expect(find.text('Net voyageur'), findsOneWidget);
+    expect(find.textContaining('Frais de service'), findsOneWidget);
+    expect(find.text('Prix du voyageur'), findsOneWidget);
   });
 
-  testWidgets('affiche le détail de la commission Yadony (%) au voyageur', (
+  // YADONY-FLUTTER-PROD-1J : carte et mobile money, le voyageur ne voit que
+  // son net ; les frais sont payés par l'expéditeur.
+  for (final method in [
+    PaymentMethod.stripe,
+    PaymentMethod.mobileMoney,
+    null,
+  ]) {
+    testWidgets('voyageur, paiement $method : seulement son net', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildApp(
+          bloc: bloc,
+          isTraveler: true,
+          grossPriceEur: 39.20,
+          paymentMethod: method,
+        ),
+      );
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('Vous recevez'), findsOneWidget);
+      expect(find.textContaining('35,00'), findsWidgets);
+      expect(find.textContaining('Frais de service'), findsNothing);
+      expect(find.text('Prix payé par l\'expéditeur'), findsNothing);
+      expect(find.textContaining('39,20'), findsNothing);
+      expect(find.textContaining('min'), findsNothing);
+    });
+  }
+
+  // Espèces : l'expéditeur remet le total, frais de service compris ; le
+  // voyageur les a avancés sur son solde Yadony.
+  testWidgets('voyageur, espèces : total remis, frais avancés sur le solde', (
     tester,
   ) async {
     await tester.pumpWidget(
-      _buildApp(bloc: bloc, isTraveler: true, grossPriceEur: 39.20),
+      _buildApp(
+        bloc: bloc,
+        isTraveler: true,
+        grossPriceEur: 39.20,
+        paymentMethod: PaymentMethod.cash,
+      ),
     );
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Frais de service Yadony'), findsOneWidget);
-    expect(find.text('Prix payé par l\'expéditeur'), findsOneWidget);
-  });
-
-  testWidgets(
-    'code promo absent pour le voyageur et pour l\'accord de prix (pas encore de paiement)',
-    (tester) async {
-      await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: true));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
-
-      await tester.pumpWidget(_buildApp(bloc: bloc));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
-    },
-  );
-
-  testWidgets('confirms button label uses Confirmer when not checkout', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_buildApp(bloc: bloc));
-    await tester.tap(find.byKey(const Key('open')));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Confirmer'), findsOneWidget);
+    expect(find.text('L\'expéditeur vous remet'), findsOneWidget);
+    expect(find.textContaining('39,20'), findsOneWidget);
+    expect(
+      find.text('dont frais de service, avancés sur votre solde Yadony'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('4,20'), findsOneWidget);
+    expect(find.text('Pour vous'), findsOneWidget);
+    expect(find.textContaining('35,00'), findsWidgets);
+    expect(find.textContaining('minimum'), findsNothing);
   });
 
   testWidgets('confirms button label uses Payer (amount) when isCheckout', (
@@ -683,8 +706,8 @@ void main() {
 
       expect(find.text('Accept the offer'), findsOneWidget);
       expect(find.text('You receive'), findsOneWidget);
-      expect(find.text('Price paid by the sender'), findsOneWidget);
-      expect(find.textContaining('Yadony service fee'), findsOneWidget);
+      expect(find.text('Price paid by the sender'), findsNothing);
+      expect(find.textContaining('Service fee'), findsNothing);
       expect(find.textContaining('Confirm'), findsOneWidget);
     });
 
@@ -714,7 +737,7 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Frais de service Yadony'), findsOneWidget);
+      expect(find.text('Frais de service'), findsOneWidget);
       expect(find.textContaining('%'), findsNothing);
     });
 
@@ -726,7 +749,7 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Yadony service fee'), findsOneWidget);
+      expect(find.text('Service fee'), findsOneWidget);
       expect(find.textContaining('%'), findsNothing);
     });
   });
@@ -820,7 +843,7 @@ void main() {
         await tester.tap(find.byKey(const Key('open')));
         await tester.pumpAndSettle();
         expect(find.text('Payer (6,00\u00a0€)'), findsOneWidget);
-        expect(find.text('1,00\u00a0€\u00a0(minimum)'), findsOneWidget);
+        expect(find.text('1,00\u00a0€'), findsOneWidget);
       },
     );
 
@@ -832,7 +855,7 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
-      expect(find.text('1,00 € (minimum)'), findsOneWidget);
+      expect(find.text('1,00 €'), findsOneWidget);
       expect(find.text('Confirmer (6,00 €)'), findsOneWidget);
     });
 
@@ -880,7 +903,7 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
-      expect(find.text('1,00 € (minimum)'), findsOneWidget);
+      expect(find.text('1,00 €'), findsOneWidget);
       expect(find.text('Payer (6,00 €)'), findsOneWidget);
     });
 
@@ -919,7 +942,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text('Ce code ne change rien sur ce montant (frais minimum)'),
+        find.text('Ce code ne change rien sur ce montant'),
         findsOneWidget,
       );
     });

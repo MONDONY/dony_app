@@ -4,7 +4,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -262,13 +261,11 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
               ]),
               builder: (context, _) => _PublicPricePreview(
                 netPricePerKg: _pricePerKg,
-                // Sous grille, le prix au kilo reste le net et les frais de
-                // service se lisent en suffixe ; sinon, prix majoré du taux.
-                senderPricePerKg: listUnitPrice(
-                  _pricePerKg,
-                  widget.announcement.currency,
-                ),
-                feeSuffix: listPriceFeeSuffix(l, widget.announcement.currency),
+                // Ce que verront les expéditeurs : prix au kilo frais de
+                // service inclus, comme la carte de recherche.
+                senderPricePerKg:
+                    listUnitPrice(_pricePerKg, widget.announcement.currency) *
+                    feeIncludedFactor(widget.announcement.currency),
                 currency: widget.announcement.currency,
               ),
             ),
@@ -508,16 +505,12 @@ class _PublicPricePreview extends StatelessWidget {
   const _PublicPricePreview({
     required this.netPricePerKg,
     required this.senderPricePerKg,
-    this.feeSuffix,
     this.currency = 'EUR',
   });
 
   final double netPricePerKg;
   final double senderPricePerKg;
 
-  /// Mention « + frais de service Yadony (min. X) » sous le prix au kilo,
-  /// `null` sans grille de commission.
-  final String? feeSuffix;
   final String currency;
 
   @override
@@ -555,11 +548,6 @@ class _PublicPricePreview extends StatelessWidget {
                   color: cs.success,
                 ),
               ),
-              if (hasPrice && feeSuffix != null)
-                Text(
-                  feeSuffix!,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
             ],
           ),
         ],

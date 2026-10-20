@@ -324,8 +324,8 @@ void main() {
         // 7 % de 5 € = 0,35 € : le minimum de 1 € s'applique.
         expect(
           find.text(
-            'L\'expéditeur paiera 6,00\u00A0€, dont 1,00\u00A0€\u00A0'
-            '(minimum) de frais de service Yadony.',
+            'L\'expéditeur paiera 6,00\u00A0€, dont 1,00\u00A0€ '
+            'de frais de service Yadony.',
           ),
           findsOneWidget,
         );

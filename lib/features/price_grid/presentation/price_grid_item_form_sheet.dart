@@ -586,12 +586,7 @@ class _Echo extends StatelessWidget {
                   p.gross,
                   SupportedCurrency.fromCodeOrDefault(code),
                 ),
-                serviceFeeAmountLabel(
-                  l,
-                  p.commission,
-                  code,
-                  minimum: p.minimumApplied,
-                ),
+                serviceFeeAmountLabel(p.commission, code),
               );
     }
 

@@ -74,6 +74,16 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   final _quoteNotifier = ValueNotifier<Object?>(null);
   final _quoteLoadingNotifier = ValueNotifier<bool>(false);
 
+  /// Devis serveur demandé en fond, sans attendre un code promo, pour que les
+  /// frais de service affichés au récapitulatif soient ceux qui seront
+  /// prélevés (palier + minimum de la grille, appliqués par le back).
+  Timer? _backgroundQuoteTimer;
+
+  /// Numéro du dernier devis demandé : une réponse plus ancienne est écartée.
+  int _quoteSeq = 0;
+
+  static const _backgroundQuoteDelay = Duration(milliseconds: 400);
+
   /// Grille de commission figée de la demande éditée, `null` en création ou
   /// tant qu'elle n'est pas lue : la grille en vigueur s'applique alors.
   late final ValueNotifier<CommissionGrid?> _frozenGridNotifier;
@@ -101,6 +111,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _sync();
+      _scheduleBackgroundQuote();
       // Seed la devise dans le bloc si elle n'y est pas déjà : sans ce sync,
       // une demande jamais retouchée par l'utilisateur partirait sans
       // devise, alors que la borne d'affichage (widget.currency) en montre
@@ -183,6 +194,9 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     final budget = state.totalBudgetEur;
     if (budget == null) return;
     final code = _promoCtrl.text.trim();
+    // Un devis de fond encore en vol ne doit pas écraser celui-ci.
+    _backgroundQuoteTimer?.cancel();
+    final seq = ++_quoteSeq;
     _quoteLoadingNotifier.value = true;
     try {
       // La devise de la demande : sous grille, elle choisit le minimum de
@@ -192,6 +206,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         promoCode: code.isEmpty ? null : code,
         currency: _resolveCurrency(state).code,
       );
+      if (seq != _quoteSeq) return;
       _quoteNotifier.value = quote;
       // Persisté dans l'état du formulaire dès validation réussie — envoyé à
       // la publication, appliqué automatiquement au paiement (jamais resaisi,
@@ -232,10 +247,44 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   /// Retombe sur l'estimation locale instantanée jusqu'au prochain "Appliquer".
   void _invalidateQuote() {
     if (_quoteNotifier.value != null) _quoteNotifier.value = null;
+    _scheduleBackgroundQuote();
+  }
+
+  /// Redemande le devis serveur [_backgroundQuoteDelay] après le dernier
+  /// changement de budget (et à l'ouverture de l'étape).
+  void _scheduleBackgroundQuote() {
+    _backgroundQuoteTimer?.cancel();
+    _backgroundQuoteTimer = Timer(
+      _backgroundQuoteDelay,
+      () => unawaited(_fetchBackgroundQuote()),
+    );
+  }
+
+  /// Devis de fond avec le code promo déjà accepté s'il y en a un. Un échec
+  /// garde l'estimation locale, sans message : seul « Appliquer » signale
+  /// un code refusé.
+  Future<void> _fetchBackgroundQuote() async {
+    if (!mounted) return;
+    final state = context.read<PackageRequestFormBloc>().state;
+    final budget = state.totalBudgetEur;
+    if (budget == null || budget <= 0) return;
+    final seq = ++_quoteSeq;
+    try {
+      final quote = await getIt<PackageRequestRepository>().quote(
+        budget,
+        promoCode: state.promoCode,
+        currency: _resolveCurrency(state).code,
+      );
+      if (!mounted || seq != _quoteSeq) return;
+      _quoteNotifier.value = quote;
+    } on Object {
+      // Estimation locale conservée.
+    }
   }
 
   @override
   void dispose() {
+    _backgroundQuoteTimer?.cancel();
     _budgetCtrl.dispose();
     _promoCtrl.dispose();
     _quoteNotifier.dispose();
@@ -838,9 +887,8 @@ class _BudgetTotalInput extends StatelessWidget {
                 grid: grid,
                 legacy: legacy,
               )) {
-            return l10n.requestBudgetBelowCommissionMinimum(
-              CurrencyFormatter.format(minimum, effectiveCurrency),
-            );
+            // Le minimum n'est jamais cité (YADONY-FLUTTER-PROD-1J).
+            return l10n.requestBudgetBelowServiceFee;
           }
           final min = CurrencyFormatter.formatOrPlain(
             PackageRequestLimits.minBudgetFor(effectiveCurrency),
@@ -934,7 +982,6 @@ class _BudgetBreakdown extends StatelessWidget {
     final publicBudget = baseGross < budgetEur ? baseGross : budgetEur;
     final commission = q?.commissionEur ?? base.commission;
     final total = q?.totalEur ?? baseGross;
-    final minimum = q?.minimumApplied ?? base.minimumApplied;
     final discount = baseGross - total;
     // Seul un code saisi et appliqué ouvre une ligne de réduction : sans code,
     // les frais du devis intègrent déjà un éventuel taux spécial.
@@ -950,7 +997,7 @@ class _BudgetBreakdown extends StatelessWidget {
           tt,
           cs,
           l10n.requestCreateCommissionLabel,
-          serviceFeeAmountLabel(l10n, commission, cur.code, minimum: minimum),
+          serviceFeeAmountLabel(commission, cur.code),
         ),
         if (hasDiscount) ...[
           const SizedBox(height: DonySpacing.xs),

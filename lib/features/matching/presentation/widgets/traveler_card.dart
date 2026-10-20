@@ -1,7 +1,6 @@
 import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/owner_views_label.dart';
@@ -64,6 +63,10 @@ class TravelerCard extends StatelessWidget {
   /// Opacité d'une carte déjà sollicitée ou complète : moins visible, mais
   /// encore lisible.
   static const double _dimmedOpacity = 0.55;
+
+  /// Part maximale de la ligne voyageur + prix laissée à la colonne du prix :
+  /// le reste garde le nom et la note du voyageur lisibles.
+  static const double _priceMaxWidthFactor = 0.55;
 
   String _displayName(BuildContext context) =>
       announcement.traveler?.travelerName(context.l10n) ??
@@ -165,170 +168,175 @@ class TravelerCard extends StatelessWidget {
     // Garde sur hasKgPrice (valeur > 0) : senderPricePerKg n'est en pratique
     // jamais null (pricePerKgDisplay est toujours servi, y compris à un
     // invité), c'est 0 la valeur trompeuse à écarter en mode MIXED.
-    final senderPricePerKg = announcement.senderPricePerKg;
+    // Un seul prix, frais de service inclus (taux du premier palier de la
+    // grille) : pas de mention séparée des frais ni du minimum.
+    final senderPricePerKg = announcement.searchCardPricePerKg;
     final priceLabel = announcement.pricingMode == 'MIXED'
         ? l.listingPriceGridLabel
         : !announcement.hasKgPrice
         ? l.tripPosterPriceUnavailable
         : '${formatPriceIn(senderPricePerKg!, announcement.currency)}/kg';
-    // Sous grille, le prix au kilo est le net du voyageur : les frais de
-    // service s'y ajoutent. Seulement quand un vrai prix au kilo est affiché.
-    final feeSuffix =
-        announcement.pricingMode != 'MIXED' && announcement.hasKgPrice
-        ? listPriceFeeSuffix(l, announcement.currency)
-        : null;
+    // YADONY-FLUTTER-PROD-1J : la mention « + frais de service Yadony
+    // (min. 650 F CFA) » élargissait la colonne du prix au point d'écraser la
+    // note et le nom du voyageur, rendus un caractère par ligne. La carte
+    // montre un seul prix frais inclus ; le détail des frais n'apparaît qu'au
+    // récapitulatif de l'offre.
 
     return _PressableCard(
-          onTap: onTap,
-          child: Opacity(
-            key: const Key('traveler-card-opacity'),
-            opacity: dimmed ? _dimmedOpacity : 1,
-            child: Container(
-              decoration: BoxDecoration(
-                color: cs.surface,
-                borderRadius: BorderRadius.circular(DonyRadius.card),
-                border: Border.all(color: borderColor, width: borderWidth),
-                boxShadow: const [
-                  BoxShadow(
-                    color: DonyColors.shadow,
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
+      onTap: onTap,
+      child: Opacity(
+        key: const Key('traveler-card-opacity'),
+        opacity: dimmed ? _dimmedOpacity : 1,
+        child: Container(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: Border.all(color: borderColor, width: borderWidth),
+            boxShadow: const [
+              BoxShadow(
+                color: DonyColors.shadow,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(DonySpacing.base),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (hasExistingBid) ...[
+                _ExistingBidChip(
+                  label: bidStyle.label,
+                  bg: bidStyle.chipBg,
+                  fg: bidStyle.chipFg,
+                ),
+                const SizedBox(height: DonySpacing.sm),
+              ] else if (isFull) ...[
+                _FullTripChip(label: l.listingStatusFull),
+                const SizedBox(height: DonySpacing.sm),
+              ],
+              if (distanceBadge != null) ...[
+                _DistanceBadge(label: distanceBadge!),
+                const SizedBox(height: DonySpacing.sm),
+              ],
+
+              // ── Zone 1 : trajet (hero) ──
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _RouteHeader(
+                      departureCity: announcement.departureCity,
+                      arrivalCity: announcement.arrivalCity,
+                      depFlag: depFlag,
+                      arrFlag: arrFlag,
+                      showChevron: isOwnAnnouncement,
+                    ),
                   ),
+                  // Pas de SizedBox : le padding interne du bouton (halo autour
+                  // de l'icône) suffit à l'écarter du corridor. En ajouter un
+                  // creusait un vide visible entre le signet et le trajet.
+                  if (showFavorite)
+                    _buildFavoriteHeart(context, announcement.id),
                 ],
               ),
-              padding: const EdgeInsets.all(DonySpacing.base),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: DonySpacing.xs),
+              Row(
                 children: [
-                  if (hasExistingBid) ...[
-                    _ExistingBidChip(
-                      label: bidStyle.label,
-                      bg: bidStyle.chipBg,
-                      fg: bidStyle.chipFg,
+                  DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
+                  const SizedBox(width: DonySpacing.xs),
+                  Text(
+                    dateStr,
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
-                    const SizedBox(height: DonySpacing.sm),
-                  ] else if (isFull) ...[
-                    _FullTripChip(label: l.listingStatusFull),
-                    const SizedBox(height: DonySpacing.sm),
-                  ],
-                  if (distanceBadge != null) ...[
-                    _DistanceBadge(label: distanceBadge!),
-                    const SizedBox(height: DonySpacing.sm),
-                  ],
-
-                  // ── Zone 1 : trajet (hero) ──
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _RouteHeader(
-                          departureCity: announcement.departureCity,
-                          arrivalCity: announcement.arrivalCity,
-                          depFlag: depFlag,
-                          arrFlag: arrFlag,
-                          showChevron: isOwnAnnouncement,
-                        ),
-                      ),
-                      // Pas de SizedBox : le padding interne du bouton (halo autour
-                      // de l'icône) suffit à l'écarter du corridor. En ajouter un
-                      // creusait un vide visible entre le signet et le trajet.
-                      if (showFavorite)
-                        _buildFavoriteHeart(context, announcement.id),
-                    ],
                   ),
-                  const SizedBox(height: DonySpacing.xs),
-                  Row(
-                    children: [
-                      DonyIcon(
-                        'calendar',
-                        size: 13,
-                        color: cs.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: DonySpacing.xs),
-                      Text(
-                        dateStr,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                      // Audience de mon trajet : visible de moi seul.
-                      if (OwnerViewsLabel.isVisible(
-                        count: announcement.uniqueViewerCount,
-                        isOwner: isOwnAnnouncement,
-                      )) ...[
-                        Text(
-                          '  ·  ',
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
+                  // Audience de mon trajet : visible de moi seul.
+                  if (OwnerViewsLabel.isVisible(
+                    count: announcement.uniqueViewerCount,
+                    isOwner: isOwnAnnouncement,
+                  )) ...[
+                    Text(
+                      '  ·  ',
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    OwnerViewsLabel(
+                      count: announcement.uniqueViewerCount,
+                      isOwner: isOwnAnnouncement,
+                    ),
+                  ],
+                ],
+              ),
+
+              const SizedBox(height: DonySpacing.md),
+              Divider(height: 1, thickness: 1, color: cs.outline),
+              const SizedBox(height: DonySpacing.md),
+
+              // ── Zone 2 : voyageur + prix ──
+              // La colonne du prix prend sa largeur naturelle, bornée à 55 %
+              // de la ligne : au-delà, ses textes passent en points de
+              // suspension plutôt que d'écraser la colonne du voyageur
+              // (YADONY-FLUTTER-PROD-1J).
+              LayoutBuilder(
+                builder: (context, constraints) => Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DonyAvatar(
+                      name: _displayName(context),
+                      imageUrl: traveler?.avatarUrl,
+                      verified: traveler?.kycVerified ?? false,
+                      pro: isProAccount,
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _displayName(context),
+                            style: tt.titleLarge,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        OwnerViewsLabel(
-                          count: announcement.uniqueViewerCount,
-                          isOwner: isOwnAnnouncement,
-                        ),
-                      ],
-                    ],
-                  ),
-
-                  const SizedBox(height: DonySpacing.md),
-                  Divider(height: 1, thickness: 1, color: cs.outline),
-                  const SizedBox(height: DonySpacing.md),
-
-                  // ── Zone 2 : voyageur + prix ──
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DonyAvatar(
-                        name: _displayName(context),
-                        imageUrl: traveler?.avatarUrl,
-                        verified: traveler?.kycVerified ?? false,
-                        pro: isProAccount,
-                      ),
-                      const SizedBox(width: DonySpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _displayName(context),
-                              style: tt.titleLarge,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: DonySpacing.xxs),
-                            // Note et trajets seuls ici ; les badges sont en dessous,
-                            // pleine largeur (voir plus bas). Wrap et non Row : ne
-                            // déborde jamais si l'espace manque.
-                            Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: DonySpacing.xxs,
-                              children: [
-                                DonyIcon('star', size: 13, color: cs.warning),
+                          const SizedBox(height: DonySpacing.xxs),
+                          // Note et trajets seuls ici ; les badges sont en dessous,
+                          // pleine largeur (voir plus bas). Wrap et non Row : ne
+                          // déborde jamais si l'espace manque.
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: DonySpacing.xxs,
+                            children: [
+                              DonyIcon('star', size: 13, color: cs.warning),
+                              Text(
+                                rating != null
+                                    ? rating.toStringAsFixed(1)
+                                    : '-',
+                                style: tt.titleSmall?.copyWith(
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
+                              if (totalTrips != null)
                                 Text(
-                                  rating != null
-                                      ? rating.toStringAsFixed(1)
-                                      : '-',
-                                  style: tt.titleSmall?.copyWith(
-                                    fontFeatures: const [
-                                      FontFeature.tabularFigures(),
-                                    ],
+                                  l.listingTravelerTrips(totalTrips),
+                                  style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
                                   ),
                                 ),
-                                if (totalTrips != null)
-                                  Text(
-                                    l.listingTravelerTrips(totalTrips),
-                                    style: tt.bodySmall?.copyWith(
-                                      color: cs.onSurfaceVariant,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: DonySpacing.sm),
-                      Column(
+                    ),
+                    const SizedBox(width: DonySpacing.sm),
+                    ConstrainedBox(
+                      key: const Key('traveler-card-price-column'),
+                      constraints: BoxConstraints(
+                        maxWidth: constraints.maxWidth * _priceMaxWidthFactor,
+                      ),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -344,16 +352,6 @@ class TravelerCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
-                          if (feeSuffix != null)
-                            Text(
-                              feeSuffix,
-                              key: const Key('traveler-card-fee-suffix'),
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
                           // Mode MIXED : le prix est une grille, pas un montant
                           // unique au kilo, donc pas d'équivalent converti ici.
                           if (announcement.pricingMode != 'MIXED')
@@ -365,77 +363,76 @@ class TravelerCard extends StatelessWidget {
                               // la même base, pas le net voyageur converti tel
                               // quel par le serveur.
                               convertedPricePerKg:
-                                  announcement.convertedSenderPricePerKg,
+                                  announcement.convertedSearchCardPricePerKg,
                               convertedCurrency: announcement.convertedCurrency,
                             ),
                         ],
                       ),
-                    ],
-                  ),
-                  // Badges pleine largeur, hors de la colonne du voyageur : sinon ils
-                  // partageaient l'espace avec le prix et débordaient différemment
-                  // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
-                  // ils disposent de toute la largeur de la carte et s'alignent de
-                  // façon identique dans les deux vues.
-                  if (isGpPro ||
-                      isProAccount ||
-                      announcement.isUrgent ||
-                      announcement.stops != null) ...[
-                    const SizedBox(height: DonySpacing.sm),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: DonySpacing.xxs,
-                      runSpacing: DonySpacing.xxs,
-                      children: [
-                        if (isGpPro)
-                          const GpProBadge(
-                            surface: 'trip_card',
-                            interactive: false,
-                          ),
-                        if (isProAccount) const _ProBadge(),
-                        if (announcement.isUrgent) const DonyUrgentBadge(),
-                        // Escales (FLUTTER-GE) : rien si non renseignées.
-                        TripStopsBadge(stops: announcement.stops),
-                      ],
                     ),
                   ],
-                  const SizedBox(height: DonySpacing.sm),
-                  Row(
-                    children: [
-                      const DonyEmoji.parcel(size: 13),
-                      const SizedBox(width: DonySpacing.xxs),
-                      Text(
-                        announcement.capacityUnit == 'KG_FREE'
-                            ? l.tripKgFree
-                            : l.listingKgAvailableLabel(
-                                announcement.availableKg.toStringAsFixed(0),
-                              ),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
+                ),
+              ),
+              // Badges pleine largeur, hors de la colonne du voyageur : sinon ils
+              // partageaient l'espace avec le prix et débordaient différemment
+              // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
+              // ils disposent de toute la largeur de la carte et s'alignent de
+              // façon identique dans les deux vues.
+              if (isGpPro ||
+                  isProAccount ||
+                  announcement.isUrgent ||
+                  announcement.stops != null) ...[
+                const SizedBox(height: DonySpacing.sm),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: DonySpacing.xxs,
+                  runSpacing: DonySpacing.xxs,
+                  children: [
+                    if (isGpPro)
+                      const GpProBadge(
+                        surface: 'trip_card',
+                        interactive: false,
                       ),
-                      if (isOwnAnnouncement) ...[
-                        const Spacer(),
-                        const _OwnTripPill(),
-                      ],
-                    ],
-                  ),
-                  if (categories.isNotEmpty) ...[
-                    const SizedBox(height: DonySpacing.sm),
-                    _CategoryChips(
-                      categories: categories,
-                      maxVisible: _maxVisibleChips,
+                    if (isProAccount) const _ProBadge(),
+                    if (announcement.isUrgent) const DonyUrgentBadge(),
+                    // Escales (FLUTTER-GE) : rien si non renseignées.
+                    TripStopsBadge(stops: announcement.stops),
+                  ],
+                ),
+              ],
+              const SizedBox(height: DonySpacing.sm),
+              Row(
+                children: [
+                  const DonyEmoji.parcel(size: 13),
+                  const SizedBox(width: DonySpacing.xxs),
+                  Text(
+                    announcement.capacityUnit == 'KG_FREE'
+                        ? l.tripKgFree
+                        : l.listingKgAvailableLabel(
+                            announcement.availableKg.toStringAsFixed(0),
+                          ),
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
+                  ),
+                  if (isOwnAnnouncement) ...[
+                    const Spacer(),
+                    const _OwnTripPill(),
                   ],
                 ],
               ),
-            ),
+              if (categories.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.sm),
+                _CategoryChips(
+                  categories: categories,
+                  maxVisible: _maxVisibleChips,
+                ),
+              ],
+            ],
           ),
-        )
-        .animate()
-        .fadeIn(delay: Duration(milliseconds: 60 * index))
-        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+        ),
+      ),
+    ).animate().fadeIn(delay: Duration(milliseconds: 60 * index)).slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 }
 

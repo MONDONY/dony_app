@@ -719,7 +719,7 @@ abstract class AppLocalizations {
   /// Message : le budget saisi ne couvre pas le minimum des frais de service de la grille en vigueur (error_catalog.dart, code budget-below-commission-minimum). Sans montant ni taux.
   ///
   /// In fr, this message translates to:
-  /// **'Ce montant ne couvre pas les frais de service minimum de Yadony.'**
+  /// **'Ce montant ne couvre pas les frais de service de Yadony.'**
   String get errorBudgetBelowCommissionMinimumMessage;
 
   /// No description provided for @errorNotADraftTitle.
@@ -5123,7 +5123,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M).
   ///
   /// In fr, this message translates to:
-  /// **'Toujours accepté sur ce trajet. Frais de service prélevés sur votre portefeuille Yadony quand vous acceptez le colis'**
+  /// **'Toujours accepté sur ce trajet. Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l\'expéditeur dans le paiement en espèces'**
   String get tripPublishCashLockedSubtitle;
 
   /// Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M).
@@ -5147,7 +5147,7 @@ abstract class AppLocalizations {
   /// Sous-titre de la ligne paiement en espèces. La commission est prélevée sur le portefeuille du voyageur à l'acceptation du colis, pas à la remise (Sentry FLUTTER-MR).
   ///
   /// In fr, this message translates to:
-  /// **'Frais de service prélevés sur votre portefeuille Yadony quand vous acceptez le colis'**
+  /// **'Frais de service avancés sur votre solde Yadony quand vous acceptez le colis, remboursés par l\'expéditeur dans le paiement en espèces'**
   String get tripPublishCashSubtitle;
 
   /// Libellé de la section des contenus acceptés
@@ -6872,7 +6872,7 @@ abstract class AppLocalizations {
   /// Libellé de la ligne commission d'une décomposition de prix, le montant s'affiche à côté (step_3_recap_budget.dart, accept_offer_bottom_sheet.dart, counter_offer_bottom_sheet.dart). Sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Frais de service Yadony'**
+  /// **'Frais de service'**
   String get requestCreateCommissionLabel;
 
   /// Libellé de la ligne de bonus promo dans la décomposition du budget (step_3_recap_budget.dart)
@@ -6899,11 +6899,11 @@ abstract class AppLocalizations {
   /// **'Vous paierez'**
   String get requestCreateYouPayLabel;
 
-  /// Erreur de validation du budget d'une demande : il ne couvre pas les frais de service minimum de la grille, formaté dans la devise de la demande (step_3_recap_budget.dart)
+  /// Erreur de validation du budget d'une demande : il ne couvre pas les frais de service de la grille. Sans montant : le minimum n'est jamais cité (step_3_recap_budget.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le budget doit dépasser les frais de service minimum ({minimum}).'**
-  String requestBudgetBelowCommissionMinimum(String minimum);
+  /// **'Ce budget est trop bas pour couvrir les frais de service.'**
+  String get requestBudgetBelowServiceFee;
 
   /// Libellé d'accessibilité du sélecteur de devise (step_3_recap_budget.dart)
   ///
@@ -7988,6 +7988,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Budget'**
   String get requestPublicBudget;
+
+  /// Libellé devant le montant que touche le voyageur, frais de service Yadony exclus, sur la carte d'une demande de colis vue par un voyageur (package_request_list_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous recevez'**
+  String get requestCardTravelerReceives;
 
   /// Titre de la carte pickup/livraison (package_request_public_detail_screen.dart)
   ///
@@ -10078,7 +10084,7 @@ abstract class AppLocalizations {
   /// Accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Prix accepté. Paiement en espèces, il vous reste à régler les frais de service Yadony.'**
+  /// **'Prix accepté. Paiement en espèces : avancez les frais de service sur votre solde Yadony, l\'expéditeur vous les rembourse dans le paiement en espèces.'**
   String get negotiationThreadCashTravelerHint;
 
   /// Accord en espèces, vue expéditeur (bid_negotiation_thread_screen.dart)
@@ -10642,7 +10648,7 @@ abstract class AppLocalizations {
   /// Sous-titre du bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur a retenu votre offre. Réglez les frais de service Yadony, {amount}, avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut vous doubler.'**
+  /// **'L\'expéditeur a retenu votre offre. Avancez les frais de service Yadony, {amount}, sur votre solde avant l\'échéance pour emporter ce colis : l\'expéditeur vous les rembourse dans le paiement en espèces. Sinon, un autre voyageur peut vous doubler.'**
   String negotiationCommissionTravelerBannerSubtitle(String amount);
 
   /// Bouton de règlement de la commission (thread_state_cta_bar.dart)
@@ -11331,7 +11337,7 @@ abstract class AppLocalizations {
   /// Ligne de décomposition de prix, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
   ///
   /// In fr, this message translates to:
-  /// **'Net voyageur'**
+  /// **'Prix du voyageur'**
   String get negotiationPriceBreakdownNetTraveler;
 
   /// Label du total, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
@@ -11339,6 +11345,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous recevez'**
   String get negotiationPriceBreakdownYouReceive;
+
+  /// Récapitulatif voyageur d'une offre payée en espèces : montant total reçu en main propre (accept_offer_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur vous remet'**
+  String get negotiationPriceBreakdownCashInHand;
+
+  /// Récapitulatif voyageur d'une offre payée en espèces : frais de service prélevés sur le solde du voyageur (accept_offer_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'dont frais de service, avancés sur votre solde Yadony'**
+  String get negotiationPriceBreakdownCashFeeFromBalance;
+
+  /// Récapitulatif voyageur d'une offre payée en espèces : ce qu'il garde une fois les frais prélevés (accept_offer_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour vous'**
+  String get negotiationPriceBreakdownYouKeep;
 
   /// Label du total, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
   ///
@@ -11460,29 +11484,17 @@ abstract class AppLocalizations {
   /// **'À remettre au voyageur (en espèces)'**
   String get negotiationPaymentRecapCashHandoverLabel;
 
-  /// Sous-ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)
-  ///
-  /// In fr, this message translates to:
-  /// **'dont frais Yadony (réglés par le voyageur)'**
-  String get negotiationPaymentRecapCashFeeNote;
-
-  /// Ligne totale du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)
-  ///
-  /// In fr, this message translates to:
-  /// **'Le voyageur garde net'**
-  String get negotiationPaymentRecapCashNetLabel;
-
   /// Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
   ///
   /// In fr, this message translates to:
-  /// **'Le voyageur touche'**
-  String get negotiationPaymentRecapTravelerReceivesLabel;
-
-  /// Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
-  ///
-  /// In fr, this message translates to:
-  /// **'Frais de service Yadony'**
+  /// **'Frais de service'**
   String get negotiationPaymentRecapServiceFeeLabel;
+
+  /// Récapitulatif de paiement de l'expéditeur, tous moyens de paiement : prix du voyageur, avant les frais de service (payment_recap_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix du voyageur'**
+  String get negotiationPaymentRecapTravelerPriceLabel;
 
   /// Ligne totale du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
   ///
@@ -11493,7 +11505,7 @@ abstract class AppLocalizations {
   /// Note explicative sous le récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)
   ///
   /// In fr, this message translates to:
-  /// **'Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais Yadony de ce montant.'**
+  /// **'Remettez le montant total en espèces au voyageur lors de la remise du colis : il comprend les frais de service que le voyageur a avancés sur son solde Yadony.'**
   String get negotiationPaymentRecapCashNote;
 
   /// Note explicative sous le récapitulatif de frais, mode mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
@@ -12159,13 +12171,13 @@ abstract class AppLocalizations {
   /// Note, paiement en especes (traveler_gain_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Frais de service Yadony prélevés séparément.'**
+  /// **'Frais de service avancés sur votre solde Yadony, remboursés par l\'expéditeur dans ce montant.'**
   String get bidDetailGainCashNote;
 
   /// Detail sous le brut encaisse en especes : commission prelevee a part et net garde par le voyageur (traveler_gain_card.dart, FLUTTER-R8)
   ///
   /// In fr, this message translates to:
-  /// **'Dont {commission} de frais de service Yadony, prélevés sur votre solde ou votre carte. Vous gardez {net}.'**
+  /// **'{net} pour vous + {commission} de frais de service, avancés sur votre solde Yadony et remboursés par l\'expéditeur dans ce montant.'**
   String bidDetailGainCashGrossDetail(String commission, String net);
 
   /// Pastille, paiement en especes (traveler_gain_card.dart)
@@ -15611,12 +15623,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Envoi de votre colis'**
   String get paymentContextDefault;
-
-  /// Notice de débit de la carte commission avec le plancher (commission_method_screen.dart) : sous grille de commission, minimum de la grille dans la devise active ; sans grille, plancher historique de 1 € en EUR seulement. {min} est déjà formaté dans sa devise (formatPriceIn). Sans taux (FLUTTER-R6).
-  ///
-  /// In fr, this message translates to:
-  /// **'Cette carte sera débitée des frais de service (min. {min}) à chaque colis en espèces accepté.'**
-  String commissionCardDebitNoticeMin(String min);
 
   /// Notice de débit de la carte commission sans plancher connu (commission_method_screen.dart) : sans grille de commission et devise active autre que l'EUR, ou grille sans minimum pour la devise. Sans taux (FLUTTER-R6).
   ///
@@ -34767,41 +34773,23 @@ abstract class AppLocalizations {
   /// **'Au plus {max}'**
   String walletTopupAmountAtMost(String max);
 
-  /// Mention sous le prix au kilo d'une annonce, d'une affiche ou d'une carte de trajet quand une grille de commission est en vigueur (pricing_labels.dart). {minimum} : frais de service minimum formatés dans la devise du prix.
+  /// Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : qui paie les frais de service. Jamais le minimum (YADONY-FLUTTER-PROD-1J). Variante de tripPublishGridCommissionNotice.
   ///
   /// In fr, this message translates to:
-  /// **'+ frais de service Yadony (min. {minimum})'**
-  String listPriceServiceFeeSuffix(String minimum);
+  /// **'Ces prix sont ceux que vous touchez. Les frais de service Yadony sont payés par l\'expéditeur, en plus. En espèces, vous les avancez sur votre solde Yadony et l\'expéditeur vous les rembourse dans le paiement.'**
+  String get tripPublishGridCommissionNoticeGrid;
 
-  /// Mention courte sous le prix au kilo sur la carte des trajets, sans le minimum, faute de place (pricing_labels.dart).
+  /// Pied de la feuille complète de l'aperçu de grille quand une grille de commission est en vigueur. Jamais le minimum (YADONY-FLUTTER-PROD-1J).
   ///
   /// In fr, this message translates to:
-  /// **'+ frais de service'**
-  String get listPriceServiceFeeShortSuffix;
+  /// **'Prix touchés par le voyageur. Les frais de service Yadony sont payés par l\'expéditeur, en plus. En espèces, le voyageur les avance sur son solde Yadony et l\'expéditeur les lui rembourse dans le paiement.'**
+  String get tripPublishGridSheetCommissionNoteGrid;
 
-  /// Précision accolée à un montant de frais de service relevé au minimum de la grille (pricing_labels.dart).
+  /// Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. Jamais le minimum (YADONY-FLUTTER-PROD-1J).
   ///
   /// In fr, this message translates to:
-  /// **'(minimum)'**
-  String get serviceFeeMinimumTag;
-
-  /// Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : les prix saisis sont ceux du voyageur, les frais s'ajoutent au total. {minimum} : frais de service minimum formatés dans la devise du trajet. Variante de tripPublishGridCommissionNotice.
-  ///
-  /// In fr, this message translates to:
-  /// **'Les frais de service Yadony s\'ajoutent au total payé par l\'expéditeur (min. {minimum})'**
-  String tripPublishGridCommissionNoticeGrid(String minimum);
-
-  /// Pied de la feuille complète de l'aperçu de grille quand une grille de commission est en vigueur. {minimum} : frais de service minimum dans la devise affichée. Variante de tripPublishGridSheetCommissionNote.
-  ///
-  /// In fr, this message translates to:
-  /// **'Prix touchés par le voyageur. Les frais de service Yadony s\'ajoutent au total (min. {minimum}).'**
-  String tripPublishGridSheetCommissionNoteGrid(String minimum);
-
-  /// Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. {minimum} : frais de service minimum formatés dans la devise active. Variante de priceGridCommissionNotice.
-  ///
-  /// In fr, this message translates to:
-  /// **'Les frais de service Yadony s\'ajoutent au total payé par l\'expéditeur, avec un minimum de {minimum}. Vous encaissez exactement votre montant.'**
-  String priceGridCommissionNoticeGrid(String minimum);
+  /// **'Vous encaissez exactement votre montant : les frais de service Yadony sont payés par l\'expéditeur. En espèces, vous les avancez sur votre solde Yadony et l\'expéditeur vous les rembourse dans le paiement.'**
+  String get priceGridCommissionNoticeGrid;
 
   /// Écho de la feuille de saisie d'un article de la grille de prix quand une grille de commission est en vigueur. {paid} : total payé par l'expéditeur, {fee} : frais de service avec la mention (minimum) si le plancher s'applique (serviceFeeAmountLabel). Variante de priceGridSenderWillPayMessage.
   ///
@@ -34812,13 +34800,13 @@ abstract class AppLocalizations {
   /// Indice affiché sous le code promo quand le code est valide mais sans effet, le minimum de frais de service annulant tout le gain (promoIneffectiveReason COMMISSION_MINIMUM).
   ///
   /// In fr, this message translates to:
-  /// **'Ce code ne change rien sur ce montant (frais minimum)'**
+  /// **'Ce code ne change rien sur ce montant'**
   String get promoIneffectiveCommissionMinimum;
 
   /// Ligne des frais de service du récapitulatif de prix d'une offre sur un trajet, sous grille de commission : les lignes au-dessus sont au net, celle-ci s'y ajoute (create_bid_bottom_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Frais de service Yadony'**
+  /// **'Frais de service'**
   String get bidCreateServiceFeeLineLabel;
 
   /// Mention à côté du total de la feuille de choix des articles de grille, sous grille de commission : le total affiché comprend les frais de service, alors que les prix des articles sont au net (grid_item_selection_sheet.dart).
@@ -34827,11 +34815,11 @@ abstract class AppLocalizations {
   /// **'Frais de service inclus'**
   String get bidCreateGridSheetServiceFeeIncluded;
 
-  /// Réponse FAQ payments/commission quand une grille de commission est en vigueur (faq_screen.dart). {minimum} : frais de service minimum de la grille, formatés dans la devise active. Sans taux. Variante de faqPaymentsCommissionA.
+  /// Réponse FAQ payments/commission quand une grille de commission est en vigueur (faq_screen.dart). Jamais le minimum (YADONY-FLUTTER-PROD-1J).
   ///
   /// In fr, this message translates to:
-  /// **'Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme. Ils dépendent du prix du transport, avec un minimum de {minimum}. Le montant exact est affiché avant de confirmer.'**
-  String faqPaymentsCommissionAGrid(String minimum);
+  /// **'Les frais de service couvrent les frais de paiement, le support, la prévention de la fraude et le développement de la plateforme. Ils dépendent du prix du transport et sont payés par l\'expéditeur. En espèces, le voyageur les avance sur son solde Yadony et l\'expéditeur les lui rembourse dans le paiement. Le montant exact est affiché avant de confirmer.'**
+  String get faqPaymentsCommissionAGrid;
 
   /// Ligne d'un article de grille dans le récapitulatif d'un fil de négociation sur un trajet, vue expéditeur, quand le fil porte une grille de commission : {line} est « quantité × prix voyageur », les frais de service s'ajoutent au total (bid_negotiation_thread_screen.dart, bid_negotiation_parcel_sheet.dart).
   ///

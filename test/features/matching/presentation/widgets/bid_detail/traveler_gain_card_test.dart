@@ -67,10 +67,13 @@ void main() {
     expect(find.text('VOUS ENCAISSEZ'), findsOneWidget);
     expect(find.text('${formatPriceIn(48, 'EUR')} en espèces'), findsOneWidget);
     expect(
-      find.text('Frais de service Yadony prélevés séparément.'),
+      find.text(
+        'Frais de service avancés sur votre solde Yadony, remboursés par '
+        'l\'expéditeur dans ce montant.',
+      ),
       findsOneWidget,
     );
-    expect(find.textContaining('Vous gardez'), findsNothing);
+    expect(find.textContaining('pour vous'), findsNothing);
   });
 
   // FLUTTER-R8 : en espèces, l'expéditeur remet le BRUT au voyageur ; la
@@ -93,13 +96,17 @@ void main() {
     );
     expect(
       find.text(
-        'Dont ${formatPriceIn(2.4, 'EUR')} de frais de service Yadony, prélevés sur '
-        'votre solde ou votre carte. Vous gardez ${formatPriceIn(48, 'EUR')}.',
+        '${formatPriceIn(48, 'EUR')} pour vous + ${formatPriceIn(2.4, 'EUR')} '
+        'de frais de service, avancés sur votre solde Yadony et remboursés '
+        'par l\'expéditeur dans ce montant.',
       ),
       findsOneWidget,
     );
     expect(
-      find.text('Frais de service Yadony prélevés séparément.'),
+      find.text(
+        'Frais de service avancés sur votre solde Yadony, remboursés par '
+        'l\'expéditeur dans ce montant.',
+      ),
       findsNothing,
     );
   });
@@ -122,12 +129,12 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.textContaining('Vous gardez ${formatPriceIn(20000, 'XOF')}'),
+      find.textContaining('${formatPriceIn(20000, 'XOF')} pour vous'),
       findsOneWidget,
     );
     expect(
       find.textContaining(
-        'Dont ${formatPriceIn(1000, 'XOF')} de frais de service',
+        '+ ${formatPriceIn(1000, 'XOF')} de frais de service, avancés',
       ),
       findsOneWidget,
     );
@@ -141,9 +148,12 @@ void main() {
       _bid(status: 'ACCEPTED', method: BidPaymentMethod.cash, senderTotal: 48),
     );
     expect(find.text('${formatPriceIn(48, 'EUR')} en espèces'), findsOneWidget);
-    expect(find.textContaining('Vous gardez'), findsNothing);
+    expect(find.textContaining('pour vous'), findsNothing);
     expect(
-      find.text('Frais de service Yadony prélevés séparément.'),
+      find.text(
+        'Frais de service avancés sur votre solde Yadony, remboursés par '
+        'l\'expéditeur dans ce montant.',
+      ),
       findsOneWidget,
     );
   });
@@ -153,7 +163,7 @@ void main() {
   ) async {
     await _pump(tester, _bid(status: 'ACCEPTED', senderTotal: 50.4));
     expect(find.text(formatPriceIn(48, 'EUR')), findsOneWidget);
-    expect(find.textContaining('Vous gardez'), findsNothing);
+    expect(find.textContaining('pour vous'), findsNothing);
     expect(find.textContaining('espèces'), findsNothing);
   });
 

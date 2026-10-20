@@ -1760,7 +1760,7 @@ void main() {
     expect(p.title, 'Budget trop faible');
     expect(
       p.message,
-      'Ce montant ne couvre pas les frais de service minimum de Yadony.',
+      'Ce montant ne couvre pas les frais de service de Yadony.',
     );
     expect(p.severity, ErrorSeverity.warning);
   });

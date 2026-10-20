@@ -196,18 +196,46 @@ void main() {
       expect(find.text('35 €'), findsNothing);
     });
 
-    testWidgets(
-      'affiche le brut (grossPriceEur) au lieu du net quand le serveur le fournit',
-      (tester) async {
-        await tester.pumpWidget(
-          wrap(PackageRequestListCard(item: _item(grossPrice: 40))),
-        );
-        await tester.pumpAndSettle();
-        expect(find.textContaining('40'), findsWidgets);
-        // Jamais les deux montants côte à côte (révélerait la commission).
-        expect(find.textContaining('35'), findsNothing);
-      },
-    );
+    testWidgets('voyageur : affiche le net touché, jamais le brut (PROD-1J)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(grossPrice: 40))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Vous recevez'), findsOneWidget);
+      expect(find.textContaining('35'), findsWidgets);
+      // Jamais les deux montants côte à côte (révélerait la commission).
+      expect(find.textContaining('40'), findsNothing);
+    });
+
+    testWidgets('ma demande : le budget brut que je paie', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(grossPrice: 40),
+            isOwnRequest: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Budget'), findsWidgets);
+      expect(find.textContaining('40'), findsWidgets);
+      expect(find.textContaining('35'), findsNothing);
+    });
+
+    testWidgets('net absent : déduit du brut par le taux', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(targetPrice: null, grossPrice: 44.8),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Vous recevez'), findsOneWidget);
+      expect(find.textContaining('44'), findsNothing);
+    });
 
     testWidgets(
       'retombe sur le net (targetPriceEur) quand grossPriceEur est absent (ancien payload)',

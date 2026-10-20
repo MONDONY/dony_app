@@ -1,6 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
-import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
@@ -220,16 +219,16 @@ void main() {
     await tester.pump();
 
     expect(find.text('Service fee card'), findsOneWidget);
-    expect(
-      find.textContaining('charged the service fee (min.'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('charged the service fee'), findsOneWidget);
+    expect(find.textContaining('min.'), findsNothing);
     expect(find.textContaining('%'), findsNothing);
     expect(find.text('Replace card'), findsOneWidget);
     expect(find.text('Delete card'), findsOneWidget);
   });
 
-  group('minimum du texte de débit', () {
+  // YADONY-FLUTTER-PROD-1J : le minimum des frais n'est jamais cité, avec
+  // ou sans grille, quelle que soit la devise.
+  group('texte de débit sans minimum', () {
     Future<void> pumpLoaded(WidgetTester tester) async {
       whenListen(
         bloc,
@@ -245,87 +244,26 @@ void main() {
         .map((t) => t.data ?? '')
         .firstWhere((t) => t.startsWith('Cette carte sera débitée'));
 
-    testWidgets('sous grille, devise active XOF : « min. 650 F CFA »', (
-      tester,
-    ) async {
+    const expected =
+        'Cette carte sera débitée des frais de service à chaque colis en '
+        'espèces accepté.';
+
+    testWidgets('sous grille, XOF', (tester) async {
       useTestCommissionGrid();
       registerCurrencyPreference('XOF');
       await pumpLoaded(tester);
-
-      expect(
-        debitNotice(tester),
-        'Cette carte sera débitée des frais de service '
-        '(min. ${formatPriceIn(650, 'XOF')}) à chaque colis en espèces accepté.',
-      );
-      expect(debitNotice(tester), allOf(contains('650'), contains('CFA')));
+      expect(debitNotice(tester), expected);
     });
 
-    testWidgets(
-      'sous grille, EUR : minimum lu de la grille (« min. 1,20 € »)',
-      (tester) async {
-        useTestCommissionGrid(
-          CommissionGrid(
-            id: 'grid-min-120',
-            effectiveFrom: DateTime.utc(2026, 10),
-            tiers: const [CommissionTier(fromEur: 0, rate: 0.07)],
-            minimums: const {'EUR': 1.20},
-          ),
-        );
-        await pumpLoaded(tester);
-
-        expect(
-          debitNotice(tester),
-          contains('(min. ${formatPriceIn(1.2, 'EUR')})'),
-        );
-        expect(debitNotice(tester), contains('1,20'));
-      },
-    );
-
-    testWidgets(
-      'sous grille sans minimum pour la devise active : notice sans minimum, '
-      'jamais le plancher de 1 €',
-      (tester) async {
-        useTestCommissionGrid(
-          CommissionGrid(
-            id: 'grid-eur-only',
-            effectiveFrom: DateTime.utc(2026, 10),
-            tiers: const [CommissionTier(fromEur: 0, rate: 0.07)],
-            minimums: const {'EUR': 1.20},
-          ),
-        );
-        registerCurrencyPreference('XOF');
-        await pumpLoaded(tester);
-
-        expect(
-          debitNotice(tester),
-          'Cette carte sera débitée des frais de service à chaque colis en '
-          'espèces accepté.',
-        );
-        expect(debitNotice(tester), isNot(contains('min.')));
-      },
-    );
-
-    testWidgets('sans grille, EUR : texte actuel au minimum de 1 €', (
-      tester,
-    ) async {
+    testWidgets('sous grille, EUR', (tester) async {
+      useTestCommissionGrid();
       await pumpLoaded(tester);
-
-      expect(
-        debitNotice(tester),
-        'Cette carte sera débitée des frais de service '
-        '(min. ${formatPriceIn(1, 'EUR')}) à chaque colis en espèces accepté.',
-      );
+      expect(debitNotice(tester), expected);
     });
 
-    testWidgets('sans grille, XOF : texte actuel sans minimum', (tester) async {
-      registerCurrencyPreference('XOF');
+    testWidgets('sans grille, EUR', (tester) async {
       await pumpLoaded(tester);
-
-      expect(
-        debitNotice(tester),
-        'Cette carte sera débitée des frais de service à chaque colis en '
-        'espèces accepté.',
-      );
+      expect(debitNotice(tester), expected);
     });
   });
 }

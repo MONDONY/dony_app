@@ -525,6 +525,8 @@ class PrixConditionsStep extends StatelessWidget {
               if (formState.pricingMode != PricingMode.mixed) {
                 return const SizedBox.shrink();
               }
+              // Grille en vigueur pour la devise : le minimum sert de témoin, il
+              // n'est jamais affiché (YADONY-FLUTTER-PROD-1J).
               final commissionMinimum = commissionMinimumFor(currency?.code);
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,9 +547,7 @@ class PrixConditionsStep extends StatelessWidget {
                     child: Text(
                       commissionMinimum == null
                           ? l.tripPublishGridCommissionNotice
-                          : l.tripPublishGridCommissionNoticeGrid(
-                              formatPriceIn(commissionMinimum, currency?.code),
-                            ),
+                          : l.tripPublishGridCommissionNoticeGrid,
                       style: tt.bodySmall?.copyWith(color: cs.primary),
                     ),
                   ),

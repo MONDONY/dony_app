@@ -322,16 +322,13 @@ void main() {
     });
   });
 
-  testWidgets('sous grille, le prix au kilo porte les frais de service', (
-    tester,
-  ) async {
+  testWidgets('sous grille, un seul prix au kilo frais inclus', (tester) async {
     useTestCommissionGrid();
     await _pump(tester, _trip());
 
-    expect(
-      find.text('+ frais de service Yadony (min. 1\u00A0€)'),
-      findsOneWidget,
-    );
+    // 9,50 € net + 7 % = 10,17 €, aucune mention séparée des frais.
+    expect(find.textContaining('frais de service'), findsNothing);
+    expect(find.textContaining('9,5'), findsNothing);
   });
 
   testWidgets('sans grille, aucune mention des frais de service', (

@@ -545,6 +545,7 @@ class _SenderOpenActions extends StatelessWidget {
                   grossPriceEur: thread.grossPriceEur,
                   hasLinkedTrip: thread.travelerAnnouncementId != null,
                   pricer: ThreadPricer.of(thread),
+                  paymentMethod: thread.paymentMethod,
                 ),
         ),
         const SizedBox(height: 10),
@@ -622,6 +623,7 @@ class _TravelerOpenActions extends StatelessWidget {
                     isTraveler: true,
                     hasLinkedTrip: thread.travelerAnnouncementId != null,
                     pricer: ThreadPricer.of(thread),
+                    paymentMethod: thread.paymentMethod,
                   ),
           ),
           const SizedBox(height: 10),
@@ -727,12 +729,7 @@ class _TravelerCommissionActions extends StatelessWidget {
           tint: cs.warning,
           message: l.negotiationCommissionTravelerBannerTitle,
           subtitle: l.negotiationCommissionTravelerBannerSubtitle(
-            serviceFeeAmountLabel(
-              l,
-              commission.commission,
-              thread.currency,
-              minimum: commission.minimumApplied,
-            ),
+            serviceFeeAmountLabel(commission.commission, thread.currency),
           ),
         ),
         if (travelOver) ...[

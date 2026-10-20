@@ -618,14 +618,14 @@ void main() {
     });
   });
 
-  testWidgets('l\'affiche porte le suffixe sous grille', (tester) async {
+  testWidgets('sous grille, l\'affiche montre le prix frais inclus, sans '
+      'mention séparée', (tester) async {
     useTestCommissionGrid();
     await _pump(tester, _announcement(pricePerKg: 8, pricePerKgDisplay: 8));
 
-    expect(
-      find.text('+ frais de service Yadony (min. 1\u00A0€)'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('8,56'), findsWidgets);
+    expect(find.textContaining('frais de service'), findsNothing);
+    expect(find.byKey(const Key('poster-tile-note')), findsNothing);
   });
 
   testWidgets('affiche sans suffixe sans grille', (tester) async {

@@ -134,17 +134,15 @@ void main() {
     expect(find.textContaining('frais de service'), findsNothing);
   });
 
-  testWidgets('aperçu public sous grille : prix au kilo net et suffixe', (
+  testWidgets('aperçu public sous grille : prix au kilo frais inclus', (
     tester,
   ) async {
     useTestCommissionGrid();
     await open(tester);
 
-    expect(find.text('${formatPriceIn(7, 'EUR')}/kg'), findsOneWidget);
-    expect(
-      find.text('+ frais de service Yadony (min. ${formatPriceIn(1, 'EUR')})'),
-      findsOneWidget,
-    );
+    // 7 € net + 7 % du premier palier : le prix que verront les expéditeurs.
+    expect(find.text('${formatPriceIn(7 * 1.07, 'EUR')}/kg'), findsOneWidget);
+    expect(find.textContaining('frais de service'), findsNothing);
   });
 
   testWidgets('le bouton Publier est désactivé tant que les kg sont absents', (

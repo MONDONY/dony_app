@@ -252,7 +252,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
     }
 
-    testWidgets('sous grille, la réponse cite le minimum dans la devise active', (
+    testWidgets('sous grille, la réponse dit qui paie, sans minimum', (
       tester,
     ) async {
       useTestCommissionGrid();
@@ -263,12 +263,15 @@ void main() {
         find.text(
           'Les frais de service couvrent les frais de paiement, le support, '
           'la prévention de la fraude et le développement de la plateforme. '
-          'Ils dépendent du prix du transport, avec un minimum de '
-          '${formatPriceIn(650, 'XOF')}. Le montant exact est affiché avant de '
-          'confirmer.',
+          'Ils dépendent du prix du transport et sont payés par l\'expéditeur. '
+          'En espèces, le voyageur les avance sur son solde Yadony et '
+          'l\'expéditeur les lui rembourse dans le paiement. Le montant exact '
+          'est affiché avant de confirmer.',
         ),
         findsOneWidget,
       );
+      expect(find.textContaining('minimum'), findsNothing);
+      expect(find.textContaining('650'), findsNothing);
       expect(find.textContaining('%'), findsNothing);
     });
 

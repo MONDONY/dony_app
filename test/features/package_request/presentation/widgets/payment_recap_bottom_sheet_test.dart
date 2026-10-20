@@ -571,7 +571,7 @@ void main() {
           find.text('To hand over to the traveler (in cash)'),
           findsOneWidget,
         );
-        expect(find.text('The traveler keeps net'), findsOneWidget);
+        expect(find.text("Traveler's price"), findsOneWidget);
 
         await tester.tap(
           find.widgetWithText(DonyButton, 'Confirm the agreement'),

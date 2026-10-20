@@ -311,12 +311,7 @@ class CounterOfferCommissionPreview extends StatelessWidget {
     final currency = pricer.currency;
     final price = pricer.resolve(net, servedGross: pricer.servedGrossFor(net));
     final gross = price.gross;
-    final fee = serviceFeeAmountLabel(
-      l,
-      price.commission,
-      currency,
-      minimum: price.minimumApplied,
-    );
+    final fee = serviceFeeAmountLabel(price.commission, currency);
     final commission = l.requestCreateCommissionLabel;
 
     Widget line(String label, String amount, {bool strong = false}) {

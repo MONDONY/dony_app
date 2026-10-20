@@ -62,41 +62,19 @@ String gridPriceLabel(
   String? currency,
 ) {
   final min = minGridUnitPriceDisplay;
+  // Frais de service inclus, comme les prix des cartes de recherche.
   return min != null && min > 0
-      ? l.tripPosterFromPrice(formatPriceIn(min, currency))
+      ? l.tripPosterFromPrice(
+          formatPriceIn(min * feeIncludedFactor(currency), currency),
+        )
       : l.listingPriceGridLabel;
 }
 
-/// Mention « + frais de service Yadony (min. 1 €) » à poser sous un prix au
-/// kilo affiché au net, `null` sans grille de commission en vigueur (ou sans
-/// minimum pour [currencyCode]) : l'affichage reste alors celui du taux unique.
-///
-/// Le minimum est formaté dans [currencyCode], la devise du prix qu'elle
-/// accompagne. Avec [withMinimum] à `false` (carte des trajets, faute de
-/// place), la mention se limite à « + frais de service ».
-String? listPriceFeeSuffix(
-  AppLocalizations l,
-  String? currencyCode, {
-  bool withMinimum = true,
-}) {
-  final minimum = commissionMinimumFor(currencyCode);
-  if (minimum == null) return null;
-  return withMinimum
-      ? l.listPriceServiceFeeSuffix(formatPriceIn(minimum, currencyCode))
-      : l.listPriceServiceFeeShortSuffix;
-}
-
-/// Montant de frais de service avec ses décimales, suivi de « (minimum) »
-/// quand [minimum] indique que le plancher de la grille s'applique.
-String serviceFeeAmountLabel(
-  AppLocalizations l,
-  double amount,
-  String? currencyCode, {
-  required bool minimum,
-}) {
-  final money = CurrencyFormatter.format(
-    amount,
-    SupportedCurrency.fromCodeOrDefault(currencyCode),
-  );
-  return minimum ? '$money\u00A0${l.serviceFeeMinimumTag}' : money;
-}
+/// Montant de frais de service avec ses décimales. Jamais suivi de
+/// « (minimum) » (YADONY-FLUTTER-PROD-1J) : quand le plancher de la grille
+/// s'applique, il est déjà dans le montant.
+String serviceFeeAmountLabel(double amount, String? currencyCode) =>
+    CurrencyFormatter.format(
+      amount,
+      SupportedCurrency.fromCodeOrDefault(currencyCode),
+    );

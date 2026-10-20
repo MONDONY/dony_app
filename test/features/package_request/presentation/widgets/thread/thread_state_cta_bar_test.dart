@@ -795,7 +795,7 @@ void main() {
 
   group('commission par paliers', () {
     testWidgets(
-      'commission espèces du voyageur sous grille, net 5 € : 1,00 € (minimum)',
+      'commission espèces du voyageur sous grille, net 5 € : 1,00 €',
       (tester) async {
         useTestCommissionGrid();
         await tester.pumpWidget(
@@ -809,10 +809,7 @@ void main() {
             _viewerTraveler,
           ),
         );
-        expect(
-          find.textContaining('1,00\u00a0€\u00a0(minimum)'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('1,00\u00a0€'), findsOneWidget);
       },
     );
 
@@ -852,7 +849,7 @@ void main() {
           _viewerTraveler,
         ),
       );
-      expect(find.textContaining('1,00\u00a0€\u00a0(minimum)'), findsOneWidget);
+      expect(find.textContaining('1,00\u00a0€'), findsOneWidget);
     });
 
     testWidgets('commission espèces d\'un fil sans grille figée : taux unique, '

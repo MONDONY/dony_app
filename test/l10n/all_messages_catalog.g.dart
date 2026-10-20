@@ -1455,8 +1455,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.requestCreateTravelerReceivesLabel,
   'requestCreatePromoDiscountLabel': (l) => l.requestCreatePromoDiscountLabel,
   'requestCreateYouPayLabel': (l) => l.requestCreateYouPayLabel,
-  'requestBudgetBelowCommissionMinimum': (l) =>
-      l.requestBudgetBelowCommissionMinimum(placeholderMarker('minimum')),
+  'requestBudgetBelowServiceFee': (l) => l.requestBudgetBelowServiceFee,
   'requestCreateCurrencySemanticLabel': (l) =>
       l.requestCreateCurrencySemanticLabel(
         placeholderMarker('name'),
@@ -1684,6 +1683,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestPublicParcelHintSuitcase': (l) => l.requestPublicParcelHintSuitcase,
   'requestPublicCategoriesLabel': (l) => l.requestPublicCategoriesLabel,
   'requestPublicBudget': (l) => l.requestPublicBudget,
+  'requestCardTravelerReceives': (l) => l.requestCardTravelerReceives,
   'requestPublicZonesLabel': (l) => l.requestPublicZonesLabel,
   'requestPublicPickupLabel': (l) => l.requestPublicPickupLabel,
   'requestPublicDeliveryLabel': (l) => l.requestPublicDeliveryLabel,
@@ -2440,6 +2440,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.negotiationPriceBreakdownNetTraveler,
   'negotiationPriceBreakdownYouReceive': (l) =>
       l.negotiationPriceBreakdownYouReceive,
+  'negotiationPriceBreakdownCashInHand': (l) =>
+      l.negotiationPriceBreakdownCashInHand,
+  'negotiationPriceBreakdownCashFeeFromBalance': (l) =>
+      l.negotiationPriceBreakdownCashFeeFromBalance,
+  'negotiationPriceBreakdownYouKeep': (l) => l.negotiationPriceBreakdownYouKeep,
   'negotiationPriceBreakdownTotalToSettle': (l) =>
       l.negotiationPriceBreakdownTotalToSettle,
   'negotiationPriceBreakdownPromoBadge': (l) =>
@@ -2477,14 +2482,10 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.negotiationPaymentRecapCashSuccessSubtitle,
   'negotiationPaymentRecapCashHandoverLabel': (l) =>
       l.negotiationPaymentRecapCashHandoverLabel,
-  'negotiationPaymentRecapCashFeeNote': (l) =>
-      l.negotiationPaymentRecapCashFeeNote,
-  'negotiationPaymentRecapCashNetLabel': (l) =>
-      l.negotiationPaymentRecapCashNetLabel,
-  'negotiationPaymentRecapTravelerReceivesLabel': (l) =>
-      l.negotiationPaymentRecapTravelerReceivesLabel,
   'negotiationPaymentRecapServiceFeeLabel': (l) =>
       l.negotiationPaymentRecapServiceFeeLabel,
+  'negotiationPaymentRecapTravelerPriceLabel': (l) =>
+      l.negotiationPaymentRecapTravelerPriceLabel,
   'negotiationPaymentRecapTotalToPayLabel': (l) =>
       l.negotiationPaymentRecapTotalToPayLabel,
   'negotiationPaymentRecapCashNote': (l) => l.negotiationPaymentRecapCashNote,
@@ -3398,8 +3399,6 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'paymentContextRecipient': (l) =>
       l.paymentContextRecipient(placeholderMarker('name')),
   'paymentContextDefault': (l) => l.paymentContextDefault,
-  'commissionCardDebitNoticeMin': (l) =>
-      l.commissionCardDebitNoticeMin(placeholderMarker('min')),
   'commissionCardDebitNotice': (l) => l.commissionCardDebitNotice,
   'commissionCardScreenTitle': (l) => l.commissionCardScreenTitle,
   'commissionCardLoadError': (l) => l.commissionCardLoadError,
@@ -7412,16 +7411,11 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.walletTopupAmountAtLeast(placeholderMarker('min')),
   'walletTopupAmountAtMost': (l) =>
       l.walletTopupAmountAtMost(placeholderMarker('max')),
-  'listPriceServiceFeeSuffix': (l) =>
-      l.listPriceServiceFeeSuffix(placeholderMarker('minimum')),
-  'listPriceServiceFeeShortSuffix': (l) => l.listPriceServiceFeeShortSuffix,
-  'serviceFeeMinimumTag': (l) => l.serviceFeeMinimumTag,
   'tripPublishGridCommissionNoticeGrid': (l) =>
-      l.tripPublishGridCommissionNoticeGrid(placeholderMarker('minimum')),
+      l.tripPublishGridCommissionNoticeGrid,
   'tripPublishGridSheetCommissionNoteGrid': (l) =>
-      l.tripPublishGridSheetCommissionNoteGrid(placeholderMarker('minimum')),
-  'priceGridCommissionNoticeGrid': (l) =>
-      l.priceGridCommissionNoticeGrid(placeholderMarker('minimum')),
+      l.tripPublishGridSheetCommissionNoteGrid,
+  'priceGridCommissionNoticeGrid': (l) => l.priceGridCommissionNoticeGrid,
   'priceGridSenderWillPayMessageGrid': (l) =>
       l.priceGridSenderWillPayMessageGrid(
         placeholderMarker('paid'),
@@ -7432,8 +7426,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'bidCreateServiceFeeLineLabel': (l) => l.bidCreateServiceFeeLineLabel,
   'bidCreateGridSheetServiceFeeIncluded': (l) =>
       l.bidCreateGridSheetServiceFeeIncluded,
-  'faqPaymentsCommissionAGrid': (l) =>
-      l.faqPaymentsCommissionAGrid(placeholderMarker('minimum')),
+  'faqPaymentsCommissionAGrid': (l) => l.faqPaymentsCommissionAGrid,
   'bidNegotiationGridLineServiceFee': (l) =>
       l.bidNegotiationGridLineServiceFee(placeholderMarker('line')),
   'bidNegotiationHeroServiceFeeIncluded': (l) =>
@@ -7754,7 +7747,6 @@ const textParameters = <String, List<String>>{
   'requestTimeOn': ['verb', 'date'],
   'requestCreateToleranceRangeHint': ['from', 'to'],
   'requestCreateBudgetRange': ['min', 'max'],
-  'requestBudgetBelowCommissionMinimum': ['minimum'],
   'requestCreateCurrencySemanticLabel': ['name', 'code'],
   'requestDetailCashCommissionTitle': ['name'],
   'requestTravelerAddingTrip': ['name'],
@@ -7899,7 +7891,6 @@ const textParameters = <String, List<String>>{
   'activityNewSinceLastVisit': ['label', 'title'],
   'bidCreateMaxWeightLabel': ['maxKg'],
   'paymentContextRecipient': ['name'],
-  'commissionCardDebitNoticeMin': ['min'],
   'commissionCardExpiringMessage': ['date'],
   'commissionCardExpiryLabel': ['date'],
   'paymentPayButtonLabel': ['price'],
@@ -8270,12 +8261,7 @@ const textParameters = <String, List<String>>{
   'walletTopupCreditedLineUnchanged': ['currency', 'active'],
   'walletTopupAmountAtLeast': ['min'],
   'walletTopupAmountAtMost': ['max'],
-  'listPriceServiceFeeSuffix': ['minimum'],
-  'tripPublishGridCommissionNoticeGrid': ['minimum'],
-  'tripPublishGridSheetCommissionNoteGrid': ['minimum'],
-  'priceGridCommissionNoticeGrid': ['minimum'],
   'priceGridSenderWillPayMessageGrid': ['paid', 'fee'],
-  'faqPaymentsCommissionAGrid': ['minimum'],
   'bidNegotiationGridLineServiceFee': ['line'],
   'supplementRequestSuggestionKg': ['amount'],
   'supplementRequestSuggestionItem': ['label', 'amount'],

@@ -304,6 +304,46 @@ extension AnnouncementSenderPricing on AnnouncementModel {
     return converted * markupRatio;
   }
 
+  /// Prix au kilo des cartes de recherche vues par l'expéditeur : un seul
+  /// prix, frais de service inclus (YADONY-FLUTTER-PROD-1J).
+  ///
+  /// Sous grille de commission, [senderPricePerKg] est le net du voyageur :
+  /// on y applique le taux du premier palier de la grille
+  /// ([listUnitPriceFeeIncluded]). Sans grille, [senderPricePerKg] est déjà
+  /// majoré du taux unique et reste tel quel. `null` dans les mêmes cas que
+  /// [senderPricePerKg].
+  double? get searchCardPricePerKg {
+    final sender = senderPricePerKg;
+    return sender == null ? null : sender * feeIncludedFactor(currency);
+  }
+
+  /// Article le moins cher de la grille de prix, frais de service inclus
+  /// comme [searchCardPricePerKg] (fiche, affiche).
+  double? get searchCheapestGridPrice {
+    final cheapest = cheapestGridPrice;
+    return cheapest == null ? null : cheapest * feeIncludedFactor(currency);
+  }
+
+  /// [AnnouncementModel.pricePerKgDisplayConverted] (servi par le détail)
+  /// porté frais de service inclus, comme [searchCardPricePerKg].
+  double? get searchCardPricePerKgDisplayConverted {
+    final converted = pricePerKgDisplayConverted;
+    return converted == null ? null : converted * feeIncludedFactor(currency);
+  }
+
+  /// Équivalent converti de [searchCardPricePerKg] : même majoration que
+  /// [convertedSenderPricePerKg], plus celle des frais de service quand la
+  /// grille est en vigueur.
+  double? get convertedSearchCardPricePerKg {
+    final converted = convertedSenderPricePerKg;
+    final sender = senderPricePerKg;
+    final card = searchCardPricePerKg;
+    if (converted == null || sender == null || sender <= 0 || card == null) {
+      return converted;
+    }
+    return converted * (card / sender);
+  }
+
   /// Le trajet porte-t-il un tarif au kilo exploitable **à afficher à
   /// l'expéditeur** ?
   ///

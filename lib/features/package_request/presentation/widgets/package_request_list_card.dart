@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/owner_views_label.dart';
@@ -209,7 +210,12 @@ class PackageRequestListCard extends StatelessWidget {
                                       const SizedBox(height: DonySpacing.xs),
                                       _RouteMeta(item: item, cs: cs, tt: tt),
                                       const SizedBox(height: DonySpacing.xs),
-                                      _Budget(item: item, cs: cs, tt: tt),
+                                      _Budget(
+                                        item: item,
+                                        cs: cs,
+                                        tt: tt,
+                                        ownRequest: isOwnRequest,
+                                      ),
                                       // Audience de ma demande, visible de moi
                                       // seul : sous le budget plutôt que sur la
                                       // ligne du trajet, dont la date serait
@@ -370,19 +376,47 @@ class _RouteMeta extends StatelessWidget {
 // ── Budget ───────────────────────────────────────────────────────────────────
 
 class _Budget extends StatelessWidget {
-  const _Budget({required this.item, required this.cs, required this.tt});
+  const _Budget({
+    required this.item,
+    required this.cs,
+    required this.tt,
+    this.ownRequest = false,
+  });
   final PackageRequestSearchItem item;
+
+  /// Demande de l'expéditeur lui-même : il voit le budget qu'il paie (brut),
+  /// pas ce que touchera le voyageur.
+  final bool ownRequest;
   final ColorScheme cs;
   final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
-    // grossPriceEur (PR #219) est le prix réellement payé par l'expéditeur ;
-    // targetPriceEur seul est un NET, un tarif que personne ne paie. Repli
-    // sur ce dernier uniquement si le serveur ne sert pas encore le brut
-    // (ancien payload/cache). Jamais les deux affichés ensemble : ça
-    // révélerait le taux de commission par soustraction.
-    final displayPrice = item.grossPriceEur ?? item.targetPriceEur;
+    // Carte vue par un voyageur : elle montre ce qu'il TOUCHE, le net
+    // (targetPriceEur), frais de service Yadony exclus (payés par
+    // l'expéditeur). Repli : net déduit du brut par la grille ; à défaut
+    // (brut sous le minimum de frais), le brut sous l'ancien libellé
+    // « Budget ». Jamais net et brut ensemble : ça révélerait le taux de
+    // commission par soustraction.
+    final gross = item.grossPriceEur;
+    final net = ownRequest
+        ? null
+        : item.targetPriceEur ?? _netFromGross(gross, item.currency);
+    final displayPrice = net ?? gross ?? item.targetPriceEur;
+    final label = net != null
+        ? context.l10n.requestCardTravelerReceives
+        : context.l10n.requestPublicBudget;
+    // Équivalent converti : le serveur convertit le brut ; on lui applique le
+    // même rapport net/brut que le montant d'origine.
+    final convertedGross = item.convertedDisplayPrice;
+    final double? converted;
+    if (net == null) {
+      converted = convertedGross;
+    } else if (convertedGross != null && gross != null && gross > 0) {
+      converted = convertedGross * (net / gross);
+    } else {
+      converted = null;
+    }
     if (displayPrice == null) {
       return Text(
         context.l10n.requestBudgetFreeLabel,
@@ -396,34 +430,48 @@ class _Budget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              '${context.l10n.requestPublicBudget} ',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            Text(
-              formatPriceIn(displayPrice, item.currency),
-              style: tt.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: cs.primary,
-                letterSpacing: -0.3,
+        // Un seul Text.rich : libellé et montant passent à la ligne au
+        // besoin au lieu de déborder (« Vous recevez » est plus long que
+        // « Budget »).
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '$label ',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
-            ),
-          ],
+              TextSpan(
+                text: formatPriceIn(displayPrice, item.currency),
+                style: tt.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.primary,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
         ),
         // Repère « environ » dans la devise du lecteur (serveur, lot 5) : le
         // budget d'origine reste seul montant réel.
         ConvertedPriceLabel(
           originalCurrency: item.currency,
-          convertedPricePerKg: item.convertedDisplayPrice,
+          convertedPricePerKg: converted,
           convertedCurrency: item.convertedCurrency,
           suffix: '',
         ),
       ],
     );
+  }
+}
+
+/// Net du voyageur contenu dans [gross], `null` sans brut ou quand le brut ne
+/// couvre pas le minimum de frais de la grille.
+double? _netFromGross(double? gross, String? currency) {
+  if (gross == null) return null;
+  try {
+    return netForSenderGross(gross, currency);
+  } on Object {
+    return null;
   }
 }
 
