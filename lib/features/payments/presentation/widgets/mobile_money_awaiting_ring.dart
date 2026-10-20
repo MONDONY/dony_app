@@ -4,8 +4,11 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Anneau d'attente d'un paiement mobile money : un arc qui tourne, avec au
-/// centre le temps restant (`mm:ss`, `h:mm:ss` dès une heure) jusqu'à l'échéance donnée par le
-/// serveur, et la légende « pour valider ».
+/// centre le temps restant jusqu'à l'échéance donnée par le serveur
+/// (`mm:ss`, `h:mm:ss` dès une heure), et la légende « pour valider ».
+///
+/// Le centre est réduit (jamais agrandi) pour tenir dans l'anneau : un
+/// `1:59:58` en grande échelle de police ne mord pas sur l'arc.
 ///
 /// Le chrono se recalcule chaque seconde à partir de [expiresAt] et [now]
 /// (jamais un décompte local qui dériverait) et s'arrête à `00:00`. Seul le
@@ -97,26 +100,37 @@ class _MobileMoneyAwaitingRingState extends State<MobileMoneyAwaitingRing> {
             ),
           ),
           Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ValueListenableBuilder<Duration>(
-                  valueListenable: _remaining,
-                  builder: (context, value, _) => Text(
-                    _format(value),
-                    style: tt.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      height: 1,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+            child: Padding(
+              // Largeur utile à l'intérieur de l'arc, avec un peu d'air.
+              padding: const EdgeInsets.symmetric(
+                horizontal: MobileMoneyAwaitingRing.strokeWidth + 6,
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ValueListenableBuilder<Duration>(
+                      valueListenable: _remaining,
+                      builder: (context, value, _) => Text(
+                        _format(value),
+                        style: tt.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          height: 1,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.l10n.walletTopupMmRingCaption,
+                      style: tt.labelMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.walletTopupMmRingCaption,
-                  style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
+              ),
             ),
           ),
         ],
