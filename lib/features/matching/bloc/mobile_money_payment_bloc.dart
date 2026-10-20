@@ -126,6 +126,12 @@ class MobileMoneyPaymentBloc
     Emitter<MobileMoneyPaymentState> emit,
   ) async {
     final choosing = state;
+    // Jamais de second dépôt : ni pendant un envoi déjà en cours (double
+    // appui, le transformateur d'événements est concurrent), ni pendant
+    // l'attente d'un dépôt vivant, ni une fois le paiement séquestré. Le
+    // premier handler émet `isSubmitting`/`Loading` avant tout `await` : le
+    // second voit donc déjà cet état.
+    if (_initiateBlocked(choosing)) return;
     if (choosing is MobileMoneyPaymentChoosePayer) {
       // Le bandeau d'un refus précédent disparaît pendant le nouvel essai.
       emit(
@@ -164,6 +170,19 @@ class MobileMoneyPaymentBloc
     }
   }
 
+  /// États où une initiation ne doit pas partir : envoi déjà en cours,
+  /// chargement, dépôt vivant (avant ou après l'échéance), paiement
+  /// séquestré. `Initial`, `Error`, `ChoosePayer` (hors envoi),
+  /// `DepositFailed` et `Expired` restent ouverts, comme avant.
+  bool _initiateBlocked(MobileMoneyPaymentState s) => switch (s) {
+    MobileMoneyPaymentChoosePayer(:final isSubmitting) => isSubmitting,
+    MobileMoneyPaymentLoading() ||
+    MobileMoneyPaymentAwaitingConfirmation() ||
+    MobileMoneyPaymentOverdue() ||
+    MobileMoneyPaymentEscrowed() => true,
+    _ => false,
+  };
+
   /// Relance depuis un dépôt refusé avec le dernier couple connu. Sans
   /// couple connu, ou hors d'un dépôt refusé (un dépôt est en cours, ou le
   /// paiement est clos), rien ne part : jamais de second dépôt en parallèle.
@@ -196,16 +215,16 @@ class MobileMoneyPaymentBloc
     final current = state;
     final status = switch (current) {
       MobileMoneyPaymentDepositFailed() => current.status,
-      MobileMoneyPaymentChoosePayer() => current.status,
+      MobileMoneyPaymentChoosePayer(isSubmitting: false) => current.status,
       _ => null,
     };
     if (status == null) return;
-    emit(
-      MobileMoneyPaymentChoosePayer(
-        status: status,
-        accepted: await _loadAccepted(event.scope),
-      ),
-    );
+    final accepted = await _loadAccepted(event.scope);
+    // Pendant la lecture des opérateurs, une relance a pu lancer un dépôt
+    // (ou un sondage clore le paiement) : ne jamais masquer ce nouvel état
+    // sous l'étape « Qui paie ? » (dépôt vivant caché, sondage coupé).
+    if (state != current) return;
+    emit(MobileMoneyPaymentChoosePayer(status: status, accepted: accepted));
   }
 
   Future<void> _onPolled(
@@ -406,7 +425,9 @@ class MobileMoneyPaymentBloc
   /// Supplément : un statut que l'app ne connaît pas encore (back plus
   /// récent) passe d'abord par l'échéance : échu, il expire ; sinon il
   /// s'affiche « en cours » plutôt que de rouvrir un choix que le back
-  /// refuserait.
+  /// refuserait. Exception : avec un dépôt encore ouvert et l'échéance
+  /// passée, `Overdue` prime aussi pour ce statut inconnu (le back attend
+  /// l'issue du dépôt avant de clore le supplément).
   MobileMoneyPaymentState? _stateFor(
     MobileMoneyPaymentStatus s,
     MobileMoneyScope scope,

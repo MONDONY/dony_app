@@ -4,6 +4,8 @@
 // stubs ci-dessous répètent donc `phoneNumber: null`/`provider: null` là où
 // c'est la valeur par défaut, uniquement pour que le mock matche l'appel.
 // ignore_for_file: avoid_redundant_argument_values
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -685,6 +687,75 @@ void main() {
     );
   });
 
+  group('garde anti second dépôt (InitiateRequested)', () {
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'double appui dans la même frame : un seul initiate',
+      build: () {
+        final pending = Completer<MobileMoneyPaymentStatus>();
+        addTearDown(() {
+          if (!pending.isCompleted) pending.complete(liveStatus);
+        });
+        when(
+          () => repository.initiate(
+            scope,
+            phoneNumber: '+2250707070707',
+            provider: 'ORANGE_CIV',
+          ),
+        ).thenAnswer((_) => pending.future);
+        return bloc();
+      },
+      seed: () => const MobileMoneyPaymentChoosePayer(status: noDepositStatus),
+      act: (b) {
+        const e = MobileMoneyPaymentInitiateRequested(
+          scope: scope,
+          phoneNumber: '+2250707070707',
+          provider: 'ORANGE_CIV',
+        );
+        b
+          ..add(e)
+          ..add(e);
+      },
+      expect: () => [
+        const MobileMoneyPaymentChoosePayer(
+          status: noDepositStatus,
+          isSubmitting: true,
+        ),
+      ],
+      verify: (_) {
+        verify(
+          () => repository.initiate(
+            scope,
+            phoneNumber: '+2250707070707',
+            provider: 'ORANGE_CIV',
+          ),
+        ).called(1);
+      },
+    );
+
+    for (final entry in <String, MobileMoneyPaymentState Function()>{
+      'AwaitingConfirmation': () =>
+          const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
+      'Overdue': () => MobileMoneyPaymentOverdue(statusNearDeadline),
+      'Escrowed': () => const MobileMoneyPaymentEscrowed(escrowedStatus),
+      'Loading': () => const MobileMoneyPaymentLoading(),
+    }.entries) {
+      blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+        'InitiateRequested en ${entry.key} : aucun initiate, aucune émission',
+        build: () => bloc(),
+        seed: entry.value,
+        act: (b) => b.add(
+          const MobileMoneyPaymentInitiateRequested(
+            scope: scope,
+            phoneNumber: '+2250707070707',
+            provider: 'ORANGE_CIV',
+          ),
+        ),
+        expect: () => [],
+        verify: (_) => verifyNoInitiate(),
+      );
+    }
+  });
+
   group('MobileMoneyPaymentResendRequested', () {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'resend_afterFailed_reusesPhoneAndProvider',
@@ -959,6 +1030,58 @@ void main() {
         ),
       ],
       verify: (_) {
+        verify(() => repository.acceptedOperators(scope)).called(1);
+      },
+    );
+
+    late Completer<MobileMoneyAcceptedOperators?> slowAccepted;
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'relance pendant la lecture des opérateurs du changement de payeur : '
+      'l\'attente du nouveau dépôt reste affichée',
+      build: () {
+        slowAccepted = Completer<MobileMoneyAcceptedOperators?>();
+        when(
+          () => repository.acceptedOperators(scope),
+        ).thenAnswer((_) => slowAccepted.future);
+        var call = 0;
+        when(
+          () => repository.initiate(
+            scope,
+            phoneNumber: '+2250707070707',
+            provider: 'ORANGE_CIV',
+          ),
+        ).thenAnswer((_) async => ++call == 1 ? failedStatus : liveStatus);
+        return bloc();
+      },
+      seed: () => const MobileMoneyPaymentChoosePayer(status: noDepositStatus),
+      act: (b) async {
+        // Premier dépôt refusé : couple connu, état DepositFailed.
+        b.add(
+          const MobileMoneyPaymentInitiateRequested(
+            scope: scope,
+            phoneNumber: '+2250707070707',
+            provider: 'ORANGE_CIV',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        // Changement de payeur (lecture des opérateurs en attente), puis
+        // relance qui lance un dépôt vivant avant la fin de la lecture.
+        b
+          ..add(const MobileMoneyPaymentChangePayerRequested(scope: scope))
+          ..add(const MobileMoneyPaymentResendRequested(scope: scope));
+        await Future<void>.delayed(Duration.zero);
+        // La lecture se termine après coup : rien ne doit recouvrir l'attente.
+        slowAccepted.complete(accepted);
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<MobileMoneyPaymentChoosePayer>(),
+        const MobileMoneyPaymentDepositFailed(failedStatus),
+        isA<MobileMoneyPaymentLoading>(),
+        const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
+      ],
+      verify: (b) {
+        expect(b.state, isA<MobileMoneyPaymentAwaitingConfirmation>());
         verify(() => repository.acceptedOperators(scope)).called(1);
       },
     );
