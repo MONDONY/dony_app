@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
+import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -25,6 +26,72 @@ void main() {
         expect(deposit.authorizationUrl, isNull);
         expect(deposit.failureCode, isNull);
         expect(deposit.failureMessage, isNull);
+      });
+
+      test('deposit_fromJson_readsNewFields', () {
+        final deposit = MobileMoneyDeposit.fromJson(const {
+          'id': 'deposit-uuid-2',
+          'status': 'FAILED',
+          'provider': 'ORANGE_CIV',
+          'providerLabel': 'Orange Money',
+          'failureCode': 'PAYER_LIMIT_REACHED',
+          'failureReasonCode': 'payer-limit-reached',
+          'failureReason': 'Votre plafond est atteint.',
+          'failureMessage': 'Votre plafond est atteint.',
+          'validationHint': 'SMS_LINK',
+        });
+
+        expect(deposit.provider, 'ORANGE_CIV');
+        expect(deposit.failureReasonCode, 'payer-limit-reached');
+        expect(deposit.failureReason, 'Votre plafond est atteint.');
+        expect(deposit.validationHint, MobileMoneyValidationHint.smsLink);
+      });
+
+      test('deposit_fromJson_oldBack_defaults', () {
+        final deposit = MobileMoneyDeposit.fromJson(const {
+          'id': 'deposit-uuid-3',
+          'status': 'ACCEPTED',
+        });
+
+        expect(deposit.provider, isNull);
+        expect(deposit.failureReasonCode, isNull);
+        expect(deposit.failureReason, isNull);
+        expect(deposit.validationHint, MobileMoneyValidationHint.generic);
+      });
+
+      test('deposit_equality_includesNewFields', () {
+        const base = MobileMoneyDeposit(
+          id: 'd',
+          status: MobileMoneyDepositStatus.failed,
+          provider: 'ORANGE_CIV',
+          failureReasonCode: 'expired',
+          failureReason: 'Expiré',
+          validationHint: MobileMoneyValidationHint.pinPrompt,
+        );
+        expect(
+          base,
+          const MobileMoneyDeposit(
+            id: 'd',
+            status: MobileMoneyDepositStatus.failed,
+            provider: 'ORANGE_CIV',
+            failureReasonCode: 'expired',
+            failureReason: 'Expiré',
+            validationHint: MobileMoneyValidationHint.pinPrompt,
+          ),
+        );
+        expect(
+          base,
+          isNot(
+            const MobileMoneyDeposit(
+              id: 'd',
+              status: MobileMoneyDepositStatus.failed,
+              provider: 'MTN_MOMO_CIV',
+              failureReasonCode: 'expired',
+              failureReason: 'Expiré',
+              validationHint: MobileMoneyValidationHint.pinPrompt,
+            ),
+          ),
+        );
       });
 
       test('parses chaque statut connu', () {

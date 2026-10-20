@@ -239,45 +239,6 @@ void main() {
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'ouverture sur un bid avec une ligne CANCELLED résiduelle '
-      '(paymentStatus CANCELLED, bidStatus toujours AWAITING_PAYMENT) : '
-      'charge le catalogue, initiate jamais appelé, jamais Expired',
-      build: () {
-        when(() => repository.getStatus(scope)).thenAnswer(
-          (_) async => const MobileMoneyPaymentStatus(
-            subjectId: bidId,
-            subjectStatus: 'AWAITING_PAYMENT',
-            paymentStatus: 'CANCELLED',
-            amount: 50.0,
-          ),
-        );
-        when(
-          () => repository.providers(scope, phoneNumber: null),
-        ).thenAnswer((_) async => catalog);
-        return bloc();
-      },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
-      expect: () => [
-        isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentChooseOperator>(),
-        isA<MobileMoneyPaymentChooseOperator>().having(
-          (s) => s.catalog,
-          'catalog',
-          catalog,
-        ),
-      ],
-      verify: (_) {
-        verifyNever(
-          () => repository.initiate(
-            any(),
-            phoneNumber: any(named: 'phoneNumber'),
-            provider: any(named: 'provider'),
-          ),
-        );
-      },
-    );
-
-    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'ouverture en portée négociation après un dépôt refusé puis libéré '
       '(CANCELLED + dépôt FAILED) : initiate appelé, jamais Expired',
       build: () {
@@ -487,99 +448,21 @@ void main() {
   });
 
   group('MobileMoneyPaymentOpened sans dépôt', () {
+    // Transitoire (lot B, tâche 5) : le catalogue payeur est retiré du
+    // contrat, le bloc initie directement en attendant sa réécriture.
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'charge le catalogue payeur et émet ChooseOperator, sans initier',
+      'bid sans dépôt : initiate direct avec le numéro payeur, sans opérateur',
       build: () {
         when(
           () => repository.getStatus(scope),
         ).thenAnswer((_) async => noDepositStatus);
         when(
-          () => repository.providers(scope, phoneNumber: null),
-        ).thenAnswer((_) async => catalog);
-        return bloc();
-      },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
-      expect: () => [
-        isA<MobileMoneyPaymentLoading>(),
-        const MobileMoneyPaymentChooseOperator(
-          status: noDepositStatus,
-          isLoadingCatalog: true,
-        ),
-        const MobileMoneyPaymentChooseOperator(
-          status: noDepositStatus,
-          catalog: catalog,
-        ),
-      ],
-      verify: (_) => verifyNever(
-        () => repository.initiate(
-          any(),
-          phoneNumber: any(named: 'phoneNumber'),
-          provider: any(named: 'provider'),
-        ),
-      ),
-    );
-
-    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'catalogue en 404 (ancien back) : initiation directe sans opérateur',
-      build: () {
-        when(
-          () => repository.getStatus(scope),
-        ).thenAnswer((_) async => noDepositStatus);
-        when(
-          () => repository.providers(scope, phoneNumber: null),
-        ).thenThrow(const NotFoundException());
-        when(
-          () => repository.initiate(scope, phoneNumber: null, provider: null),
+          () => repository.initiate(
+            scope,
+            phoneNumber: '+221771234567',
+            provider: null,
+          ),
         ).thenAnswer((_) async => liveStatus);
-        return bloc();
-      },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
-      expect: () => [
-        isA<MobileMoneyPaymentLoading>(),
-        const MobileMoneyPaymentChooseOperator(
-          status: noDepositStatus,
-          isLoadingCatalog: true,
-        ),
-        isA<MobileMoneyPaymentAwaitingConfirmation>(),
-      ],
-    );
-
-    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'catalogue en erreur : ChooseOperator porte l\'erreur (bandeau)',
-      build: () {
-        when(
-          () => repository.getStatus(scope),
-        ).thenAnswer((_) async => noDepositStatus);
-        when(
-          () => repository.providers(scope, phoneNumber: null),
-        ).thenThrow(const OfflineException());
-        return bloc();
-      },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
-      expect: () => [
-        isA<MobileMoneyPaymentLoading>(),
-        const MobileMoneyPaymentChooseOperator(
-          status: noDepositStatus,
-          isLoadingCatalog: true,
-        ),
-        isA<MobileMoneyPaymentChooseOperator>().having(
-          (s) => s.error,
-          'error',
-          isA<OfflineException>(),
-        ),
-      ],
-    );
-
-    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'ouverture avec un numéro payeur et sans dépôt vivant : le catalogue '
-      'est demandé avec ce numéro',
-      build: () {
-        when(
-          () => repository.getStatus(scope),
-        ).thenAnswer((_) async => noDepositStatus);
-        when(
-          () => repository.providers(scope, phoneNumber: '+221771234567'),
-        ).thenAnswer((_) async => catalog);
         return bloc();
       },
       act: (b) => b.add(
@@ -590,22 +473,53 @@ void main() {
       ),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
-        const MobileMoneyPaymentChooseOperator(
-          status: noDepositStatus,
-          payerPhone: '+221771234567',
-          isLoadingCatalog: true,
-        ),
-        const MobileMoneyPaymentChooseOperator(
-          status: noDepositStatus,
-          catalog: catalog,
-          payerPhone: '+221771234567',
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'bid avec ligne CANCELLED résiduelle : initiate direct, jamais Expired',
+      build: () {
+        when(() => repository.getStatus(scope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'AWAITING_PAYMENT',
+            paymentStatus: 'CANCELLED',
+            amount: 50.0,
+          ),
+        );
+        when(
+          () => repository.initiate(scope, phoneNumber: null, provider: null),
+        ).thenAnswer((_) async => liveStatus);
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'initiate en échec après un statut sans dépôt : Error',
+      build: () {
+        when(
+          () => repository.getStatus(scope),
+        ).thenAnswer((_) async => noDepositStatus);
+        when(
+          () => repository.initiate(scope, phoneNumber: null, provider: null),
+        ).thenThrow(const OfflineException());
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentError>().having(
+          (s) => s.error,
+          'error',
+          isA<OfflineException>(),
         ),
       ],
-      verify: (_) {
-        verify(
-          () => repository.providers(scope, phoneNumber: '+221771234567'),
-        ).called(1);
-      },
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
@@ -638,58 +552,17 @@ void main() {
             provider: null,
           ),
         ).called(1);
-        verifyNever(
-          () => repository.providers(
-            any(),
-            phoneNumber: any(named: 'phoneNumber'),
-          ),
-        );
       },
     );
   });
 
   group('MobileMoneyPaymentProvidersRequested', () {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'recharge le catalogue pour un autre numéro payeur, catalogue '
-      'précédent gardé pendant le chargement',
+      'depuis DepositFailed (« Réessayer ») : initiate direct, sans catalogue',
       build: () {
         when(
-          () => repository.providers(scope, phoneNumber: '+22505'),
-        ).thenAnswer((_) async => catalog);
-        return bloc();
-      },
-      seed: () => const MobileMoneyPaymentChooseOperator(
-        status: noDepositStatus,
-        catalog: catalog,
-      ),
-      act: (b) => b.add(
-        const MobileMoneyPaymentProvidersRequested(
-          scope: scope,
-          phoneNumber: '+22505',
-        ),
-      ),
-      expect: () => [
-        const MobileMoneyPaymentChooseOperator(
-          status: noDepositStatus,
-          catalog: catalog,
-          payerPhone: '+22505',
-          isLoadingCatalog: true,
-        ),
-        const MobileMoneyPaymentChooseOperator(
-          status: noDepositStatus,
-          catalog: catalog,
-          payerPhone: '+22505',
-        ),
-      ],
-    );
-
-    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'depuis DepositFailed (« Réessayer ») : revient au choix de '
-      'l\'opérateur',
-      build: () {
-        when(
-          () => repository.providers(scope, phoneNumber: null),
-        ).thenAnswer((_) async => catalog);
+          () => repository.initiate(scope, phoneNumber: null, provider: null),
+        ).thenAnswer((_) async => liveStatus);
         return bloc();
       },
       seed: () => const MobileMoneyPaymentDepositFailed(liveStatus),
@@ -700,52 +573,13 @@ void main() {
           status: liveStatus,
           isLoadingCatalog: true,
         ),
-        const MobileMoneyPaymentChooseOperator(
-          status: liveStatus,
-          catalog: catalog,
-        ),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
       ],
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'recharge du catalogue en échec : le catalogue précédent reste '
-      'affiché sous le bandeau d\'erreur',
+      'initiate en échec : Error, jamais figé sur isLoadingCatalog',
       build: () {
-        when(
-          () => repository.providers(scope, phoneNumber: '+22505'),
-        ).thenThrow(const OfflineException());
-        return bloc();
-      },
-      seed: () => const MobileMoneyPaymentChooseOperator(
-        status: noDepositStatus,
-        catalog: catalog,
-      ),
-      act: (b) => b.add(
-        const MobileMoneyPaymentProvidersRequested(
-          scope: scope,
-          phoneNumber: '+22505',
-        ),
-      ),
-      expect: () => [
-        const MobileMoneyPaymentChooseOperator(
-          status: noDepositStatus,
-          catalog: catalog,
-          payerPhone: '+22505',
-          isLoadingCatalog: true,
-        ),
-        isA<MobileMoneyPaymentChooseOperator>()
-            .having((s) => s.catalog, 'catalog', catalog)
-            .having((s) => s.error, 'error', isA<OfflineException>()),
-      ],
-    );
-
-    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'catalogue en 404 puis initiate en échec : Error, jamais figé sur '
-      'isLoadingCatalog',
-      build: () {
-        when(
-          () => repository.providers(scope, phoneNumber: null),
-        ).thenThrow(const NotFoundException());
         when(
           () => repository.initiate(scope, phoneNumber: null, provider: null),
         ).thenThrow(const OfflineException());
@@ -777,14 +611,7 @@ void main() {
       act: (b) =>
           b.add(const MobileMoneyPaymentProvidersRequested(scope: scope)),
       expect: () => [],
-      verify: (_) {
-        verifyNever(
-          () => repository.providers(
-            any(),
-            phoneNumber: any(named: 'phoneNumber'),
-          ),
-        );
-      },
+      verify: (_) {},
     );
   });
 
@@ -982,12 +809,6 @@ void main() {
       act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [],
       verify: (_) {
-        verifyNever(
-          () => repository.providers(
-            any(),
-            phoneNumber: any(named: 'phoneNumber'),
-          ),
-        );
         verifyNever(
           () => repository.initiate(
             any(),
@@ -1390,41 +1211,25 @@ void main() {
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'sans dépôt : catalogue DU SUPPLÉMENT chargé, jamais celui du colis',
+      'sans dépôt : initiate direct sur le supplément (transitoire, lot B)',
       build: () {
         when(
           () => repository.getStatus(supplementScope),
         ).thenAnswer((_) async => pending);
         when(
-          () => repository.providers(supplementScope, phoneNumber: null),
-        ).thenAnswer((_) async => catalog);
+          () => repository.initiate(
+            supplementScope,
+            phoneNumber: null,
+            provider: null,
+          ),
+        ).thenAnswer((_) async => liveStatus);
         return bloc();
       },
       act: (b) => b.add(const MobileMoneyPaymentOpened(scope: supplementScope)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentChooseOperator>().having(
-          (s) => s.isLoadingCatalog,
-          'isLoadingCatalog',
-          true,
-        ),
-        isA<MobileMoneyPaymentChooseOperator>().having(
-          (s) => s.catalog,
-          'catalog',
-          catalog,
-        ),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
       ],
-      verify: (_) {
-        verify(
-          () => repository.providers(supplementScope, phoneNumber: null),
-        ).called(1);
-        verifyNever(
-          () => repository.providers(
-            scope,
-            phoneNumber: any(named: 'phoneNumber'),
-          ),
-        );
-      },
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
@@ -1447,12 +1252,6 @@ void main() {
         isA<MobileMoneyPaymentExpired>(),
       ],
       verify: (_) {
-        verifyNever(
-          () => repository.providers(
-            any(),
-            phoneNumber: any(named: 'phoneNumber'),
-          ),
-        );
         verifyNever(
           () => repository.initiate(
             any(),
@@ -1558,14 +1357,7 @@ void main() {
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentAwaitingConfirmation>(),
       ],
-      verify: (_) {
-        verifyNever(
-          () => repository.providers(
-            any(),
-            phoneNumber: any(named: 'phoneNumber'),
-          ),
-        );
-      },
+      verify: (_) {},
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(

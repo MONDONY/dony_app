@@ -65,17 +65,10 @@ class MobileMoneyPaymentBloc
         _emitKnown(known, emit, event.scope);
         return;
       }
-      final scope = event.scope;
-      if (scope.providersPath != null) {
-        // Aucun dépôt encore tenté (ou ligne recyclable) pour ce bid ou ce
-        // supplément : l'expéditeur choisit d'abord son opérateur parmi ceux
-        // acceptés par le voyageur (spec du 2026-09-11).
-        await _loadCatalogAndEmit(scope, status, event.phoneNumber, null, emit);
-      } else {
-        // Fil de négociation : pas de catalogue côté back (lot 2), on initie
-        // directement, comme avant.
-        await _initiateAndEmit(scope, event.phoneNumber, null, emit);
-      }
+      // TEMPORAIRE (lot B, tâche 5) : le catalogue payeur `providers` est
+      // retiré du contrat ; le choix d'opérateur est réécrit aux tâches 8-9.
+      // En attendant, initiation directe, comme l'ancien repli 404.
+      await _initiateAndEmit(event.scope, event.phoneNumber, null, emit);
     } catch (e) {
       _emitError(emit, e, event.scope, 'open');
     }
@@ -133,37 +126,9 @@ class MobileMoneyPaymentBloc
         isLoadingCatalog: true,
       ),
     );
-    if (scope.providersPath == null) {
-      await _initiateAndEmit(scope, phoneNumber, null, emit);
-      return;
-    }
-    try {
-      final catalog = await _repository.providers(
-        scope,
-        phoneNumber: phoneNumber,
-      );
-      emit(
-        MobileMoneyPaymentChooseOperator(
-          status: status,
-          catalog: catalog,
-          payerPhone: phoneNumber,
-        ),
-      );
-    } catch (e) {
-      final error = unwrapDioError(e);
-      if (error is NotFoundException) {
-        await _initiateAndEmit(scope, phoneNumber, null, emit);
-        return;
-      }
-      emit(
-        MobileMoneyPaymentChooseOperator(
-          status: status,
-          catalog: previous,
-          payerPhone: phoneNumber,
-          error: error,
-        ),
-      );
-    }
+    // TEMPORAIRE (lot B, tâche 5) : plus de catalogue payeur, initiation
+    // directe sans opérateur (réécrit aux tâches 8-9).
+    await _initiateAndEmit(scope, phoneNumber, null, emit);
   }
 
   Future<void> _onInitiateRequested(
