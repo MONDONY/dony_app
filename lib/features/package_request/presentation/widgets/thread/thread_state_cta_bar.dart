@@ -727,12 +727,7 @@ class _TravelerCommissionActions extends StatelessWidget {
           tint: cs.warning,
           message: l.negotiationCommissionTravelerBannerTitle,
           subtitle: l.negotiationCommissionTravelerBannerSubtitle(
-            serviceFeeAmountLabel(
-              l,
-              commission.commission,
-              thread.currency,
-              minimum: commission.minimumApplied,
-            ),
+            serviceFeeAmountLabel(commission.commission, thread.currency),
           ),
         ),
         if (travelOver) ...[

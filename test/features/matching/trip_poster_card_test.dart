@@ -622,10 +622,7 @@ void main() {
     useTestCommissionGrid();
     await _pump(tester, _announcement(pricePerKg: 8, pricePerKgDisplay: 8));
 
-    expect(
-      find.text('+ frais de service Yadony (min. 1\u00A0€)'),
-      findsOneWidget,
-    );
+    expect(find.text('+ frais de service'), findsOneWidget);
   });
 
   testWidgets('affiche sans suffixe sans grille', (tester) async {

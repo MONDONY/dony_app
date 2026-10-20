@@ -282,10 +282,7 @@ void main() {
     );
     expect(find.textContaining('8,96'), findsNothing);
     expect(find.text('8\u00A0€'), findsOneWidget);
-    expect(
-      find.text('+ frais de service Yadony (min. 1\u00A0€)'),
-      findsOneWidget,
-    );
+    expect(find.text('+ frais de service'), findsOneWidget);
   });
 
   testWidgets('sans grille, aucune mention des frais de service', (

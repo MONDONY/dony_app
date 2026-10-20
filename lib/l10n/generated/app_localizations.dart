@@ -6872,7 +6872,7 @@ abstract class AppLocalizations {
   /// Libellé de la ligne commission d'une décomposition de prix, le montant s'affiche à côté (step_3_recap_budget.dart, accept_offer_bottom_sheet.dart, counter_offer_bottom_sheet.dart). Sans taux (FLUTTER-R6)
   ///
   /// In fr, this message translates to:
-  /// **'Frais de service Yadony'**
+  /// **'Frais de service'**
   String get requestCreateCommissionLabel;
 
   /// Libellé de la ligne de bonus promo dans la décomposition du budget (step_3_recap_budget.dart)
@@ -6899,11 +6899,11 @@ abstract class AppLocalizations {
   /// **'Vous paierez'**
   String get requestCreateYouPayLabel;
 
-  /// Erreur de validation du budget d'une demande : il ne couvre pas les frais de service minimum de la grille, formaté dans la devise de la demande (step_3_recap_budget.dart)
+  /// Erreur de validation du budget d'une demande : il ne couvre pas les frais de service de la grille. Sans montant : le minimum n'est jamais cité (step_3_recap_budget.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le budget doit dépasser les frais de service minimum ({minimum}).'**
-  String requestBudgetBelowCommissionMinimum(String minimum);
+  /// **'Ce budget est trop bas pour couvrir les frais de service.'**
+  String get requestBudgetBelowServiceFee;
 
   /// Libellé d'accessibilité du sélecteur de devise (step_3_recap_budget.dart)
   ///
@@ -7988,6 +7988,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Budget'**
   String get requestPublicBudget;
+
+  /// Libellé devant le montant que touche le voyageur, frais de service Yadony exclus, sur la carte d'une demande de colis vue par un voyageur (package_request_list_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous recevez'**
+  String get requestCardTravelerReceives;
 
   /// Titre de la carte pickup/livraison (package_request_public_detail_screen.dart)
   ///
@@ -11481,7 +11487,7 @@ abstract class AppLocalizations {
   /// Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
   ///
   /// In fr, this message translates to:
-  /// **'Frais de service Yadony'**
+  /// **'Frais de service'**
   String get negotiationPaymentRecapServiceFeeLabel;
 
   /// Ligne totale du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
@@ -34767,23 +34773,11 @@ abstract class AppLocalizations {
   /// **'Au plus {max}'**
   String walletTopupAmountAtMost(String max);
 
-  /// Mention sous le prix au kilo d'une annonce, d'une affiche ou d'une carte de trajet quand une grille de commission est en vigueur (pricing_labels.dart). {minimum} : frais de service minimum formatés dans la devise du prix.
-  ///
-  /// In fr, this message translates to:
-  /// **'+ frais de service Yadony (min. {minimum})'**
-  String listPriceServiceFeeSuffix(String minimum);
-
   /// Mention courte sous le prix au kilo sur la carte des trajets, sans le minimum, faute de place (pricing_labels.dart).
   ///
   /// In fr, this message translates to:
   /// **'+ frais de service'**
   String get listPriceServiceFeeShortSuffix;
-
-  /// Précision accolée à un montant de frais de service relevé au minimum de la grille (pricing_labels.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'(minimum)'**
-  String get serviceFeeMinimumTag;
 
   /// Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : les prix saisis sont ceux du voyageur, les frais s'ajoutent au total. {minimum} : frais de service minimum formatés dans la devise du trajet. Variante de tripPublishGridCommissionNotice.
   ///
@@ -34812,13 +34806,13 @@ abstract class AppLocalizations {
   /// Indice affiché sous le code promo quand le code est valide mais sans effet, le minimum de frais de service annulant tout le gain (promoIneffectiveReason COMMISSION_MINIMUM).
   ///
   /// In fr, this message translates to:
-  /// **'Ce code ne change rien sur ce montant (frais minimum)'**
+  /// **'Ce code ne change rien sur ce montant'**
   String get promoIneffectiveCommissionMinimum;
 
   /// Ligne des frais de service du récapitulatif de prix d'une offre sur un trajet, sous grille de commission : les lignes au-dessus sont au net, celle-ci s'y ajoute (create_bid_bottom_sheet.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Frais de service Yadony'**
+  /// **'Frais de service'**
   String get bidCreateServiceFeeLineLabel;
 
   /// Mention à côté du total de la feuille de choix des articles de grille, sous grille de commission : le total affiché comprend les frais de service, alors que les prix des articles sont au net (grid_item_selection_sheet.dart).

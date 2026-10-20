@@ -1455,8 +1455,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.requestCreateTravelerReceivesLabel,
   'requestCreatePromoDiscountLabel': (l) => l.requestCreatePromoDiscountLabel,
   'requestCreateYouPayLabel': (l) => l.requestCreateYouPayLabel,
-  'requestBudgetBelowCommissionMinimum': (l) =>
-      l.requestBudgetBelowCommissionMinimum(placeholderMarker('minimum')),
+  'requestBudgetBelowServiceFee': (l) => l.requestBudgetBelowServiceFee,
   'requestCreateCurrencySemanticLabel': (l) =>
       l.requestCreateCurrencySemanticLabel(
         placeholderMarker('name'),
@@ -1684,6 +1683,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'requestPublicParcelHintSuitcase': (l) => l.requestPublicParcelHintSuitcase,
   'requestPublicCategoriesLabel': (l) => l.requestPublicCategoriesLabel,
   'requestPublicBudget': (l) => l.requestPublicBudget,
+  'requestCardTravelerReceives': (l) => l.requestCardTravelerReceives,
   'requestPublicZonesLabel': (l) => l.requestPublicZonesLabel,
   'requestPublicPickupLabel': (l) => l.requestPublicPickupLabel,
   'requestPublicDeliveryLabel': (l) => l.requestPublicDeliveryLabel,
@@ -7412,10 +7412,7 @@ final allMessages = <String, String Function(AppLocalizations)>{
       l.walletTopupAmountAtLeast(placeholderMarker('min')),
   'walletTopupAmountAtMost': (l) =>
       l.walletTopupAmountAtMost(placeholderMarker('max')),
-  'listPriceServiceFeeSuffix': (l) =>
-      l.listPriceServiceFeeSuffix(placeholderMarker('minimum')),
   'listPriceServiceFeeShortSuffix': (l) => l.listPriceServiceFeeShortSuffix,
-  'serviceFeeMinimumTag': (l) => l.serviceFeeMinimumTag,
   'tripPublishGridCommissionNoticeGrid': (l) =>
       l.tripPublishGridCommissionNoticeGrid(placeholderMarker('minimum')),
   'tripPublishGridSheetCommissionNoteGrid': (l) =>
@@ -7754,7 +7751,6 @@ const textParameters = <String, List<String>>{
   'requestTimeOn': ['verb', 'date'],
   'requestCreateToleranceRangeHint': ['from', 'to'],
   'requestCreateBudgetRange': ['min', 'max'],
-  'requestBudgetBelowCommissionMinimum': ['minimum'],
   'requestCreateCurrencySemanticLabel': ['name', 'code'],
   'requestDetailCashCommissionTitle': ['name'],
   'requestTravelerAddingTrip': ['name'],
@@ -8270,7 +8266,6 @@ const textParameters = <String, List<String>>{
   'walletTopupCreditedLineUnchanged': ['currency', 'active'],
   'walletTopupAmountAtLeast': ['min'],
   'walletTopupAmountAtMost': ['max'],
-  'listPriceServiceFeeSuffix': ['minimum'],
   'tripPublishGridCommissionNoticeGrid': ['minimum'],
   'tripPublishGridSheetCommissionNoteGrid': ['minimum'],
   'priceGridCommissionNoticeGrid': ['minimum'],

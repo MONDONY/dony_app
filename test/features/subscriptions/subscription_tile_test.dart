@@ -345,10 +345,7 @@ void main() {
   ) async {
     useTestCommissionGrid();
     await tester.pumpWidget(host(_item(last: trajet())));
-    expect(
-      find.text('+ frais de service Yadony (min. 1\u00A0€)'),
-      findsOneWidget,
-    );
+    expect(find.text('+ frais de service'), findsOneWidget);
   });
 
   testWidgets('sans grille, aucune mention des frais de service', (

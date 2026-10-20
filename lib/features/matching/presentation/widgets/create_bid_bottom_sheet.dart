@@ -464,6 +464,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _gridQuantitiesNotifier.addListener(_invalidateQuote);
     _weightNotifier.addListener(_scheduleAutoQuote);
     _gridQuantitiesNotifier.addListener(_scheduleAutoQuote);
+    // Poids prérempli à l'ouverture : le devis serveur part aussi sans
+    // attendre un premier changement, pour que les frais de service affichés
+    // soient ceux qui seront prélevés.
+    _scheduleAutoQuote();
 
     _stepNotifier.addListener(_onStepChanged);
     _methodNotifier.addListener(_syncPickerButtonState);
@@ -1964,7 +1968,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       serviceFee: quote != null
           ? quote.totalEur - quote.netEur
           : local.commission,
-      serviceFeeMinimum: quote?.minimumApplied ?? local.minimumApplied,
       currency: quote?.currency ?? widget.announcement.currency,
     );
   }
@@ -3209,7 +3212,6 @@ class _PriceBreakdown extends StatelessWidget {
     this.originalTotal,
     this.promoApplied = false,
     this.serviceFee,
-    this.serviceFeeMinimum = false,
   });
 
   final double weightKg;
@@ -3235,9 +3237,6 @@ class _PriceBreakdown extends StatelessWidget {
   /// lignes ci-dessus sont alors au net et cette ligne s'y ajoute. `null`
   /// sans grille, où les lignes portent déjà la commission (aucune ligne).
   final double? serviceFee;
-
-  /// Les frais ont été relevés au minimum de la grille.
-  final bool serviceFeeMinimum;
 
   @override
   Widget build(BuildContext context) {
@@ -3282,12 +3281,7 @@ class _PriceBreakdown extends StatelessWidget {
         _line(
           tt,
           context.l10n.bidCreateServiceFeeLineLabel,
-          serviceFeeAmountLabel(
-            context.l10n,
-            fee,
-            currency,
-            minimum: serviceFeeMinimum,
-          ),
+          serviceFeeAmountLabel(fee, currency),
           valueKey: const Key('bid-service-fee-amount'),
         ),
       );

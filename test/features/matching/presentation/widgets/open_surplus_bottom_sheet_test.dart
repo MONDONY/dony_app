@@ -141,10 +141,7 @@ void main() {
     await open(tester);
 
     expect(find.text('${formatPriceIn(7, 'EUR')}/kg'), findsOneWidget);
-    expect(
-      find.text('+ frais de service Yadony (min. ${formatPriceIn(1, 'EUR')})'),
-      findsOneWidget,
-    );
+    expect(find.text('+ frais de service'), findsOneWidget);
   });
 
   testWidgets('le bouton Publier est désactivé tant que les kg sont absents', (

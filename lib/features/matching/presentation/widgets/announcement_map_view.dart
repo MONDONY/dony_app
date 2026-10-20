@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/commission_pricing.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -489,7 +488,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
                     ? a
                     : b,
               );
-        final cheapest = cheapestItem.announcement.senderPricePerKg ?? 0.0;
+        final cheapest = cheapestItem.announcement.searchCardPricePerKg ?? 0.0;
         final earliest = cluster.items
             .map((it) => it.announcement.departureDate)
             .reduce((a, b) => a.isBefore(b) ? a : b);
@@ -509,13 +508,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
           prefix: '✈️',
           currencyCode: cheapestItem.announcement.currency,
           gridLabel: context.l10n.listingPriceGridShort,
-          feeSuffix:
-              listPriceFeeSuffix(
-                context.l10n,
-                cheapestItem.announcement.currency,
-                withMinimum: false,
-              ) ??
-              '',
         );
         return Marker(
           markerId: MarkerId(
@@ -549,20 +541,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
     final isSelected = item.announcement.id == widget.selectedAnnouncementId;
     final icon = await MarkerBitmapFactory.pricePill(
       // Idem : absent → sentinelle `<= 0`, déjà rendue comme « Grille ».
-      pricePerKg: item.announcement.senderPricePerKg ?? 0,
+      pricePerKg: item.announcement.searchCardPricePerKg ?? 0,
       dotColor: urgencyColor,
       isSelected: isSelected,
       brightness: _brightness,
       prefix: '✈️',
       currencyCode: item.announcement.currency,
       gridLabel: context.l10n.listingPriceGridShort,
-      feeSuffix:
-          listPriceFeeSuffix(
-            context.l10n,
-            item.announcement.currency,
-            withMinimum: false,
-          ) ??
-          '',
     );
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),

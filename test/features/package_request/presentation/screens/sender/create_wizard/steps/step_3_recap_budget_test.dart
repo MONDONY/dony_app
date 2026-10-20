@@ -617,7 +617,7 @@ void main() {
         );
         await tester.pump();
 
-        expect(find.text('Frais de service Yadony'), findsOneWidget);
+        expect(find.text('Frais de service'), findsOneWidget);
         expect(find.textContaining('12,5'), findsNothing);
       });
 
@@ -631,7 +631,7 @@ void main() {
         );
         await tester.pump();
 
-        expect(find.text('Yadony service fee'), findsOneWidget);
+        expect(find.text('Service fee'), findsOneWidget);
         expect(find.textContaining('12.5'), findsNothing);
       });
     });
@@ -689,6 +689,33 @@ void main() {
 
     tearDown(_unregisterRepos);
 
+    // YADONY-FLUTTER-PROD-1J : le devis serveur part seul, sans attendre un
+    // code promo, et ses frais (minimum compris) s'affichent sans la mention
+    // « (minimum) » ni le montant du minimum.
+    testWidgets('devis de fond sans code : frais du serveur, jamais « min »', (
+      tester,
+    ) async {
+      stubQuote(
+        quote(net: 4, commission: 1.00, total: 5.00, minimumApplied: true),
+      );
+      const seed = PackageRequestFormState(
+        totalBudgetEur: 5,
+        currency: SupportedCurrency.eur,
+      );
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump();
+
+      verify(() => repo.quote(5, currency: 'EUR')).called(1);
+      expect(find.text('Frais de service'), findsOneWidget);
+      expect(find.text(eur(1)), findsOneWidget);
+      expect(find.textContaining('minimum'), findsNothing);
+      expect(find.textContaining('min.'), findsNothing);
+    });
+
     testWidgets('budget 21,40 € sans devis : frais 1,40 €, le voyageur reçoit '
         '20,00 €', (tester) async {
       const seed = PackageRequestFormState(
@@ -700,7 +727,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Frais de service Yadony'), findsOneWidget);
+      expect(find.text('Frais de service'), findsOneWidget);
       expect(find.text(eur(1.40)), findsOneWidget);
       expect(find.text(eur(20)), findsOneWidget);
       expect(find.text('Vous paierez'), findsNothing);
@@ -737,7 +764,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('${eur(1)} (minimum)'), findsOneWidget);
+      expect(find.text(eur(1)), findsOneWidget);
       expect(find.text(eur(4)), findsOneWidget);
     });
 
@@ -808,7 +835,7 @@ void main() {
 
       await applyPromo(tester, 'PROMO');
 
-      expect(find.text('${eur(1)} (minimum)'), findsOneWidget);
+      expect(find.text(eur(1)), findsOneWidget);
     });
 
     testWidgets('promo sans effet : message « Ce code ne change rien sur ce '
@@ -833,7 +860,7 @@ void main() {
       await applyPromo(tester, 'PROMO');
 
       expect(
-        find.text('Ce code ne change rien sur ce montant (frais minimum)'),
+        find.text('Ce code ne change rien sur ce montant'),
         findsOneWidget,
       );
       expect(find.text('Réduction du code promo'), findsNothing);
@@ -871,10 +898,7 @@ void main() {
 
       expect(canContinue.value, isFalse);
       expect(
-        find.text(
-          'Le budget doit dépasser les frais de service minimum '
-          '(${eur(1)}).',
-        ),
+        find.text('Ce budget est trop bas pour couvrir les frais de service.'),
         findsOneWidget,
       );
       // Le message des bornes ne s'y superpose pas.

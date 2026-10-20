@@ -116,7 +116,7 @@ void main() {
       expect(find.text('35,00 €'), findsOneWidget);
 
       // Line 2: service fee
-      expect(find.text('Frais de service Yadony'), findsOneWidget);
+      expect(find.text('Frais de service'), findsOneWidget);
       expect(find.text('4,20 €'), findsOneWidget);
 
       // Line 3: total
@@ -191,7 +191,7 @@ void main() {
 
         // Même grille qu'un paiement en ligne : rien d'« espèces ».
         expect(find.text('Le voyageur touche'), findsOneWidget);
-        expect(find.text('Frais de service Yadony'), findsOneWidget);
+        expect(find.text('Frais de service'), findsOneWidget);
         expect(find.text('Total à payer'), findsOneWidget);
         expect(find.text('À remettre au voyageur (en espèces)'), findsNothing);
 
@@ -273,7 +273,7 @@ void main() {
       );
 
       expect(find.text('The traveler receives'), findsOneWidget);
-      expect(find.text('Yadony service fee'), findsOneWidget);
+      expect(find.text('Service fee'), findsOneWidget);
       expect(find.text('Total to pay'), findsOneWidget);
       expect(find.textContaining('Secure · held until'), findsOneWidget);
     });

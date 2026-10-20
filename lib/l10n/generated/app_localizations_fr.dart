@@ -4091,7 +4091,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get requestCreateCommissionLabel => 'Frais de service Yadony';
+  String get requestCreateCommissionLabel => 'Frais de service';
 
   @override
   String get requestCreatePromoBoostLabel =>
@@ -4107,9 +4107,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestCreateYouPayLabel => 'Vous paierez';
 
   @override
-  String requestBudgetBelowCommissionMinimum(String minimum) {
-    return 'Le budget doit dépasser les frais de service minimum ($minimum).';
-  }
+  String get requestBudgetBelowServiceFee =>
+      'Ce budget est trop bas pour couvrir les frais de service.';
 
   @override
   String requestCreateCurrencySemanticLabel(String name, String code) {
@@ -4776,6 +4775,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPublicBudget => 'Budget';
+
+  @override
+  String get requestCardTravelerReceives => 'Vous recevez';
 
   @override
   String get requestPublicZonesLabel => 'Zones';
@@ -6941,8 +6943,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le voyageur touche';
 
   @override
-  String get negotiationPaymentRecapServiceFeeLabel =>
-      'Frais de service Yadony';
+  String get negotiationPaymentRecapServiceFeeLabel => 'Frais de service';
 
   @override
   String get negotiationPaymentRecapTotalToPayLabel => 'Total à payer';
@@ -21556,15 +21557,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String listPriceServiceFeeSuffix(String minimum) {
-    return '+ frais de service Yadony (min. $minimum)';
-  }
-
-  @override
   String get listPriceServiceFeeShortSuffix => '+ frais de service';
-
-  @override
-  String get serviceFeeMinimumTag => '(minimum)';
 
   @override
   String tripPublishGridCommissionNoticeGrid(String minimum) {
@@ -21588,10 +21581,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get promoIneffectiveCommissionMinimum =>
-      'Ce code ne change rien sur ce montant (frais minimum)';
+      'Ce code ne change rien sur ce montant';
 
   @override
-  String get bidCreateServiceFeeLineLabel => 'Frais de service Yadony';
+  String get bidCreateServiceFeeLineLabel => 'Frais de service';
 
   @override
   String get bidCreateGridSheetServiceFeeIncluded => 'Frais de service inclus';

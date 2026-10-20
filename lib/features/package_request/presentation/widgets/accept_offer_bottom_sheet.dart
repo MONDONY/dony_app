@@ -299,8 +299,6 @@ class AcceptOfferBottomSheet {
                     totalEur: totalEur,
                     promoApplied: promoApplied,
                     originalTotal: promoApplied ? netEur + commissionEur : null,
-                    minimumApplied:
-                        quote?.minimumApplied ?? fallback.minimumApplied,
                     promoIneffective:
                         !isTraveler &&
                         (quote?.promoIneffectiveBecauseMinimum ?? false),
@@ -346,7 +344,6 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
     required this.totalEur,
     required this.promoApplied,
     this.originalTotal,
-    this.minimumApplied = false,
     this.promoIneffective = false,
     this.currency = 'EUR',
   });
@@ -357,9 +354,6 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
   final double totalEur;
   final bool promoApplied;
   final double? originalTotal;
-
-  /// Le minimum de la grille a relevé les frais : « (minimum) » les suit.
-  final bool minimumApplied;
 
   /// Le code promo de l'expéditeur est valide mais sans effet, les frais
   /// étant déjà au minimum (`promoIneffectiveReason` COMMISSION_MINIMUM).
@@ -394,7 +388,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
           tt,
           cs,
           l.requestCreateCommissionLabel,
-          '−${serviceFeeAmountLabel(l, commissionEur, currency, minimum: minimumApplied)}',
+          '−${serviceFeeAmountLabel(commissionEur, currency)}',
         ),
       );
     } else {
@@ -411,12 +405,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
           tt,
           cs,
           l.requestCreateCommissionLabel,
-          serviceFeeAmountLabel(
-            l,
-            commissionEur,
-            currency,
-            minimum: minimumApplied,
-          ),
+          serviceFeeAmountLabel(commissionEur, currency),
         ),
       );
       if (hasRealSavings) {

@@ -4071,7 +4071,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get requestCreateCommissionLabel => 'Yadony service fee';
+  String get requestCreateCommissionLabel => 'Service fee';
 
   @override
   String get requestCreatePromoBoostLabel =>
@@ -4087,9 +4087,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestCreateYouPayLabel => 'You will pay';
 
   @override
-  String requestBudgetBelowCommissionMinimum(String minimum) {
-    return 'The budget must be above the minimum service fee ($minimum).';
-  }
+  String get requestBudgetBelowServiceFee =>
+      'This budget is too low to cover the service fee.';
 
   @override
   String requestCreateCurrencySemanticLabel(String name, String code) {
@@ -4752,6 +4751,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestPublicBudget => 'Budget';
+
+  @override
+  String get requestCardTravelerReceives => 'You receive';
 
   @override
   String get requestPublicZonesLabel => 'Zones';
@@ -6902,7 +6904,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The traveler receives';
 
   @override
-  String get negotiationPaymentRecapServiceFeeLabel => 'Yadony service fee';
+  String get negotiationPaymentRecapServiceFeeLabel => 'Service fee';
 
   @override
   String get negotiationPaymentRecapTotalToPayLabel => 'Total to pay';
@@ -21412,15 +21414,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String listPriceServiceFeeSuffix(String minimum) {
-    return '+ Yadony service fee (min. $minimum)';
-  }
-
-  @override
   String get listPriceServiceFeeShortSuffix => '+ service fee';
-
-  @override
-  String get serviceFeeMinimumTag => '(minimum)';
 
   @override
   String tripPublishGridCommissionNoticeGrid(String minimum) {
@@ -21444,10 +21438,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get promoIneffectiveCommissionMinimum =>
-      'This code does not change this amount (minimum fee)';
+      'This code does not change this amount';
 
   @override
-  String get bidCreateServiceFeeLineLabel => 'Yadony service fee';
+  String get bidCreateServiceFeeLineLabel => 'Service fee';
 
   @override
   String get bidCreateGridSheetServiceFeeIncluded => 'Service fee included';

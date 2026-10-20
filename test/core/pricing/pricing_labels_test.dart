@@ -49,58 +49,24 @@ void main() {
   });
 
   group('listPriceFeeSuffix', () {
-    test(
-      'suffixe sous grille en EUR : « + frais de service Yadony (min. 1 €) »',
-      () {
-        useTestCommissionGrid();
-        expect(
-          listPriceFeeSuffix(fr, 'EUR'),
-          '+ frais de service Yadony (min. 1\u00A0€)',
-        );
-        expect(listPriceFeeSuffix(en, 'EUR'), contains('Yadony service fee'));
-      },
-    );
-
-    test('suffixe en XOF contient « 650 » et « F CFA »', () {
+    // YADONY-FLUTTER-PROD-1J : le minimum n'est jamais cité.
+    test('sous grille : mention courte, sans minimum', () {
       useTestCommissionGrid();
-      final suffix = listPriceFeeSuffix(fr, 'XOF')!;
-      expect(suffix, contains('650'));
-      expect(suffix, contains('F CFA'));
-    });
-
-    test('devise absente : repli EUR', () {
-      useTestCommissionGrid();
-      expect(listPriceFeeSuffix(fr, null), contains('min. 1'));
-    });
-
-    test('sans minimum : mention courte, sans montant', () {
-      useTestCommissionGrid();
-      expect(
-        listPriceFeeSuffix(fr, 'EUR', withMinimum: false),
-        '+ frais de service',
-      );
-      expect(
-        listPriceFeeSuffix(en, 'EUR', withMinimum: false),
-        '+ service fee',
-      );
+      expect(listPriceFeeSuffix(fr, 'EUR'), '+ frais de service');
+      expect(listPriceFeeSuffix(en, 'EUR'), '+ service fee');
+      expect(listPriceFeeSuffix(fr, 'XOF'), isNot(contains('650')));
+      expect(listPriceFeeSuffix(fr, null), isNot(contains('min')));
     });
 
     test('aucun suffixe sans grille', () {
       expect(listPriceFeeSuffix(fr, 'EUR'), isNull);
-      expect(listPriceFeeSuffix(fr, 'EUR', withMinimum: false), isNull);
     });
   });
 
   group('serviceFeeAmountLabel', () {
-    test('ajoute « (minimum) » seulement si minimum', () {
-      expect(
-        serviceFeeAmountLabel(fr, 1, 'EUR', minimum: true),
-        '1,00\u00A0€\u00A0(minimum)',
-      );
-      expect(
-        serviceFeeAmountLabel(fr, 1, 'EUR', minimum: false),
-        '1,00\u00A0€',
-      );
+    test('montant seul, jamais « (minimum) »', () {
+      expect(serviceFeeAmountLabel(1, 'EUR'), '1,00\u00A0€');
+      expect(serviceFeeAmountLabel(650, 'XOF'), isNot(contains('minimum')));
     });
   });
 }

@@ -2995,7 +2995,7 @@
       }
     }
   },
-  "requestCreateCommissionLabel": "Frais de service Yadony",
+  "requestCreateCommissionLabel": "Frais de service",
   "@requestCreateCommissionLabel": {
     "description": "Libellé de la ligne commission d'une décomposition de prix, le montant s'affiche à côté (step_3_recap_budget.dart, accept_offer_bottom_sheet.dart, counter_offer_bottom_sheet.dart). Sans taux (FLUTTER-R6)"
   },
@@ -3015,15 +3015,8 @@
   "@requestCreateYouPayLabel": {
     "description": "Sous grille de commission : total payé par l'expéditeur quand un code promo le baisse sous le budget public (step_3_recap_budget.dart)"
   },
-  "requestBudgetBelowCommissionMinimum": "Le budget doit dépasser les frais de service minimum ({minimum}).",
-  "@requestBudgetBelowCommissionMinimum": {
-    "description": "Erreur de validation du budget d'une demande : il ne couvre pas les frais de service minimum de la grille, formaté dans la devise de la demande (step_3_recap_budget.dart)",
-    "placeholders": {
-      "minimum": {
-        "type": "String"
-      }
-    }
-  },
+  "requestBudgetBelowServiceFee": "Ce budget est trop bas pour couvrir les frais de service.",
+  "@requestBudgetBelowServiceFee": {"description": "Erreur de validation du budget d'une demande : il ne couvre pas les frais de service de la grille. Sans montant : le minimum n'est jamais cité (step_3_recap_budget.dart)."},
   "requestCreateCurrencySemanticLabel": "Devise de la demande : {name}, {code}. Bouton, modifier la devise.",
   "@requestCreateCurrencySemanticLabel": {
     "description": "Libellé d'accessibilité du sélecteur de devise (step_3_recap_budget.dart)",
@@ -3876,6 +3869,8 @@
   "@requestPublicBudget": {
     "description": "Titre de la carte budget et libellé quand la demande est négociable (package_request_public_detail_screen.dart) ; réutilisé pour le titre de l'étape 3 et la ligne budget de la décomposition (step_3_recap_budget.dart)"
   },
+  "requestCardTravelerReceives": "Vous recevez",
+  "@requestCardTravelerReceives": {"description": "Libellé devant le montant que touche le voyageur, frais de service Yadony exclus, sur la carte d'une demande de colis vue par un voyageur (package_request_list_card.dart)."},
   "requestPublicZonesLabel": "Zones",
   "@requestPublicZonesLabel": {
     "description": "Titre de la carte pickup/livraison (package_request_public_detail_screen.dart)"
@@ -6686,7 +6681,7 @@
   "@negotiationPaymentRecapTravelerReceivesLabel": {
     "description": "Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
   },
-  "negotiationPaymentRecapServiceFeeLabel": "Frais de service Yadony",
+  "negotiationPaymentRecapServiceFeeLabel": "Frais de service",
   "@negotiationPaymentRecapServiceFeeLabel": {
     "description": "Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
   },
@@ -22079,12 +22074,8 @@
   "@walletTopupAmountAtLeast": {"description": "Seule borne publiée par l'opérateur : le minimum, sous le montant saisi (wallet_topup_amount_screen.dart). {min} : montant formaté.", "placeholders": {"min": {"type": "String"}}},
   "walletTopupAmountAtMost": "Au plus {max}",
   "@walletTopupAmountAtMost": {"description": "Seule borne publiée par l'opérateur : le maximum, sous le montant saisi (wallet_topup_amount_screen.dart). {max} : montant formaté.", "placeholders": {"max": {"type": "String"}}},
-  "listPriceServiceFeeSuffix": "+ frais de service Yadony (min. {minimum})",
-  "@listPriceServiceFeeSuffix": {"description": "Mention sous le prix au kilo d'une annonce, d'une affiche ou d'une carte de trajet quand une grille de commission est en vigueur (pricing_labels.dart). {minimum} : frais de service minimum formatés dans la devise du prix.", "placeholders": {"minimum": {"type": "String"}}},
   "listPriceServiceFeeShortSuffix": "+ frais de service",
   "@listPriceServiceFeeShortSuffix": {"description": "Mention courte sous le prix au kilo sur la carte des trajets, sans le minimum, faute de place (pricing_labels.dart)."},
-  "serviceFeeMinimumTag": "(minimum)",
-  "@serviceFeeMinimumTag": {"description": "Précision accolée à un montant de frais de service relevé au minimum de la grille (pricing_labels.dart)."},
   "tripPublishGridCommissionNoticeGrid": "Les frais de service Yadony s'ajoutent au total payé par l'expéditeur (min. {minimum})",
   "@tripPublishGridCommissionNoticeGrid": {"description": "Sous l'aperçu de la grille à l'étape Prix & conditions quand une grille de commission est en vigueur : les prix saisis sont ceux du voyageur, les frais s'ajoutent au total. {minimum} : frais de service minimum formatés dans la devise du trajet. Variante de tripPublishGridCommissionNotice.", "placeholders": {"minimum": {"type": "String"}}},
   "tripPublishGridSheetCommissionNoteGrid": "Prix touchés par le voyageur. Les frais de service Yadony s'ajoutent au total (min. {minimum}).",
@@ -22093,9 +22084,9 @@
   "@priceGridCommissionNoticeGrid": {"description": "Pied de l'écran de la grille de prix du voyageur quand une grille de commission est en vigueur. {minimum} : frais de service minimum formatés dans la devise active. Variante de priceGridCommissionNotice.", "placeholders": {"minimum": {"type": "String"}}},
   "priceGridSenderWillPayMessageGrid": "L'expéditeur paiera {paid}, dont {fee} de frais de service Yadony.",
   "@priceGridSenderWillPayMessageGrid": {"description": "Écho de la feuille de saisie d'un article de la grille de prix quand une grille de commission est en vigueur. {paid} : total payé par l'expéditeur, {fee} : frais de service avec la mention (minimum) si le plancher s'applique (serviceFeeAmountLabel). Variante de priceGridSenderWillPayMessage.", "placeholders": {"paid": {"type": "String"}, "fee": {"type": "String"}}},
-  "promoIneffectiveCommissionMinimum": "Ce code ne change rien sur ce montant (frais minimum)",
+  "promoIneffectiveCommissionMinimum": "Ce code ne change rien sur ce montant",
   "@promoIneffectiveCommissionMinimum": {"description": "Indice affiché sous le code promo quand le code est valide mais sans effet, le minimum de frais de service annulant tout le gain (promoIneffectiveReason COMMISSION_MINIMUM)."},
-  "bidCreateServiceFeeLineLabel": "Frais de service Yadony",
+  "bidCreateServiceFeeLineLabel": "Frais de service",
   "@bidCreateServiceFeeLineLabel": {"description": "Ligne des frais de service du récapitulatif de prix d'une offre sur un trajet, sous grille de commission : les lignes au-dessus sont au net, celle-ci s'y ajoute (create_bid_bottom_sheet.dart)."},
   "bidCreateGridSheetServiceFeeIncluded": "Frais de service inclus",
   "@bidCreateGridSheetServiceFeeIncluded": {"description": "Mention à côté du total de la feuille de choix des articles de grille, sous grille de commission : le total affiché comprend les frais de service, alors que les prix des articles sont au net (grid_item_selection_sheet.dart)."},

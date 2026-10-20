@@ -136,7 +136,7 @@ void main() {
     await tester.pumpWidget(_buildApp(bloc: bloc, grossPriceEur: 39.20));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Frais de service Yadony'), findsOneWidget);
+    expect(find.textContaining('Frais de service'), findsOneWidget);
     expect(find.text('Net voyageur'), findsOneWidget);
   });
 
@@ -148,7 +148,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Frais de service Yadony'), findsOneWidget);
+    expect(find.textContaining('Frais de service'), findsOneWidget);
     expect(find.text('Prix payé par l\'expéditeur'), findsOneWidget);
   });
 
@@ -684,7 +684,7 @@ void main() {
       expect(find.text('Accept the offer'), findsOneWidget);
       expect(find.text('You receive'), findsOneWidget);
       expect(find.text('Price paid by the sender'), findsOneWidget);
-      expect(find.textContaining('Yadony service fee'), findsOneWidget);
+      expect(find.textContaining('Service fee'), findsOneWidget);
       expect(find.textContaining('Confirm'), findsOneWidget);
     });
 
@@ -714,7 +714,7 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Frais de service Yadony'), findsOneWidget);
+      expect(find.text('Frais de service'), findsOneWidget);
       expect(find.textContaining('%'), findsNothing);
     });
 
@@ -726,7 +726,7 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Yadony service fee'), findsOneWidget);
+      expect(find.text('Service fee'), findsOneWidget);
       expect(find.textContaining('%'), findsNothing);
     });
   });
@@ -820,7 +820,7 @@ void main() {
         await tester.tap(find.byKey(const Key('open')));
         await tester.pumpAndSettle();
         expect(find.text('Payer (6,00\u00a0€)'), findsOneWidget);
-        expect(find.text('1,00\u00a0€\u00a0(minimum)'), findsOneWidget);
+        expect(find.text('1,00\u00a0€'), findsOneWidget);
       },
     );
 
@@ -832,7 +832,7 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
-      expect(find.text('1,00 € (minimum)'), findsOneWidget);
+      expect(find.text('1,00 €'), findsOneWidget);
       expect(find.text('Confirmer (6,00 €)'), findsOneWidget);
     });
 
@@ -880,7 +880,7 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
-      expect(find.text('1,00 € (minimum)'), findsOneWidget);
+      expect(find.text('1,00 €'), findsOneWidget);
       expect(find.text('Payer (6,00 €)'), findsOneWidget);
     });
 
@@ -919,7 +919,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text('Ce code ne change rien sur ce montant (frais minimum)'),
+        find.text('Ce code ne change rien sur ce montant'),
         findsOneWidget,
       );
     });

@@ -1,3 +1,4 @@
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/widgets/gp_pro_badge.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -1216,7 +1217,7 @@ void main() {
   });
 
   group('frais de service (commission par paliers)', () {
-    testWidgets('sous grille, prix au kilo net et suffixe affichés', (
+    testWidgets('sous grille, un seul prix au kilo frais inclus (PROD-1J)', (
       tester,
     ) async {
       useTestCommissionGrid();
@@ -1231,11 +1232,84 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('8\u00A0€/kg'), findsOneWidget);
-      expect(
-        find.text('+ frais de service Yadony (min. 1\u00A0€)'),
-        findsOneWidget,
+      // Un seul prix, frais inclus au taux du premier palier de la grille
+      // (7 %) : 8 € × 1,07 = 8,56 €. Ni mention des frais ni minimum.
+      expect(find.text('8,56\u00A0€/kg'), findsOneWidget);
+      expect(find.textContaining('frais de service'), findsNothing);
+      expect(find.textContaining('min'), findsNothing);
+    });
+
+    // YADONY-FLUTTER-PROD-1J : iPhone 12 (390 pt), thème sombre, trajet en
+    // francs CFA sous grille. La mention « + frais de service Yadony
+    // (min. 650 F CFA) » élargissait la colonne du prix et la note « 5.0 ·
+    // 2 trajets » s'affichait un caractère par ligne.
+    testWidgets('carte de recherche à 390 pt en F CFA : note et nom lisibles', (
+      tester,
+    ) async {
+      useTestCommissionGrid();
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark(),
+          home: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TravelerCard(
+                announcement: _makeAnn(
+                  departureCity: 'Adjamé',
+                  arrivalCity: 'Paris',
+                  currency: 'XOF',
+                  pricePerKgDisplay: 1000,
+                  convertedPricePerKg: 1.52,
+                  convertedCurrency: 'EUR',
+                ),
+                index: 0,
+                isOwnAnnouncement: false,
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
       );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('frais de service'), findsNothing);
+      expect(find.textContaining('/kg'), findsWidgets);
+      // Avant le correctif, la colonne du voyageur tombait à la largeur d'un
+      // caractère (note et trajets rendus un caractère par ligne). La police
+      // de test (un carré par caractère) est bien plus large que la vraie :
+      // on vérifie une largeur utile plutôt qu'une seule ligne.
+      final rating = tester.getSize(find.text('4.8'));
+      expect(rating.width, greaterThan(rating.height));
+      expect(tester.getSize(find.text('· 5 trajets')).width, greaterThan(60));
+      expect(
+        tester.getSize(find.text('Mamadou Diallo')).width,
+        greaterThan(60),
+      );
+    });
+
+    testWidgets('colonne du prix bornée à 55 % de la ligne', (tester) async {
+      await tester.pumpWidget(
+        _wrapAt(
+          300,
+          TravelerCard(
+            announcement: _makeAnn(currency: 'XOF', pricePerKgDisplay: 1234567),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final column = tester.getSize(
+        find.byKey(const Key('traveler-card-price-column')),
+      );
+      // Ligne = 300 - 2 × 16 (padding de la carte) = 268.
+      expect(column.width, lessThanOrEqualTo(268 * 0.55 + 0.01));
     });
 
     testWidgets('sans grille, aucun suffixe', (tester) async {

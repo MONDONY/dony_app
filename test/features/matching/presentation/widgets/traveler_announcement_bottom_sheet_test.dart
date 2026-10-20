@@ -455,9 +455,7 @@ void main() {
   });
 
   group('frais de service sous grille de commission', () {
-    testWidgets('fiche d\'une liste : « + frais de service Yadony (min. X) »', (
-      tester,
-    ) async {
+    testWidgets('fiche d\'une liste : « + frais de service »', (tester) async {
       useTestCommissionGrid();
       await tester.pumpWidget(
         _harness(announcement: _buildAnnouncement(kycVerified: true)),
@@ -465,10 +463,7 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('+ frais de service Yadony (min. 1\u00A0€)'),
-        findsOneWidget,
-      );
+      expect(find.text('+ frais de service'), findsOneWidget);
     });
 
     testWidgets('fiche ouverte depuis la carte : « + frais de service » seul', (

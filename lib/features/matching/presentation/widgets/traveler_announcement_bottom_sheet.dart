@@ -822,12 +822,8 @@ class _StatCardsRow extends StatelessWidget {
     final l = context.l10n;
     final deadline = announcement.handoverDeadline?.toLocal();
     // Sous grille de commission, les prix de la fiche sont des nets : les
-    // frais de service s'y ajoutent (sans minimum depuis la carte).
-    final feeNote = listPriceFeeSuffix(
-      l,
-      announcement.currency,
-      withMinimum: !fromMap,
-    );
+    // frais de service s'y ajoutent.
+    final feeNote = listPriceFeeSuffix(l, announcement.currency);
     // IntrinsicHeight : égalise la hauteur des deux cartes sans stretch
     // non borné (la colonne parente est dans un scrollable).
     return IntrinsicHeight(

@@ -282,8 +282,8 @@ void main() {
         expect(find.textContaining('2 kg × 2,50'), findsOneWidget);
         expect(find.textContaining('5,00'), findsWidgets);
         // 7 % de 5 € = 0,35 €, relevé au minimum EUR de la grille (1 €).
-        expect(squash(textOf(tester, feeKey)), '1,00 € (minimum)');
-        expect(find.text('Frais de service Yadony'), findsOneWidget);
+        expect(squash(textOf(tester, feeKey)), '1,00 €');
+        expect(find.text('Frais de service'), findsOneWidget);
         expect(squash(textOf(tester, totalKey)), '6,00 €');
       },
     );
@@ -330,7 +330,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(squash(textOf(tester, totalKey)), '21,00 €');
-        expect(squash(textOf(tester, feeKey)), '1,00 € (minimum)');
+        expect(squash(textOf(tester, feeKey)), '1,00 €');
       },
     );
 
@@ -401,9 +401,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final message = find.text(
-          'Ce code ne change rien sur ce montant (frais minimum)',
-        );
+        final message = find.text('Ce code ne change rien sur ce montant');
         expect(message, findsOneWidget);
         // Information, pas erreur : jamais la couleur d'erreur.
         final style = tester.widget<Text>(message).style;
@@ -470,7 +468,7 @@ void main() {
       expect(find.textContaining('9,78'), findsOneWidget);
       expect(find.textContaining('9,77'), findsNothing);
       // 7 % de 9,78 € < 1 € : minimum, total 10,78 €.
-      expect(squash(textOf(tester, feeKey)), '1,00 € (minimum)');
+      expect(squash(textOf(tester, feeKey)), '1,00 €');
       expect(squash(textOf(tester, totalKey)), '10,78 €');
     });
 
@@ -784,7 +782,7 @@ void main() {
         expect(find.textContaining('5 kg × 11,20'), findsOneWidget);
         expect(squash(textOf(tester, totalKey)), '56,00 €');
         expect(find.byKey(feeKey), findsNothing);
-        expect(find.text('Frais de service Yadony'), findsNothing);
+        expect(find.text('Frais de service'), findsNothing);
 
         // Devis promo : la ligne poids prend tout le total (prorata).
         await applyPromo(tester, 'WELCOME10');
