@@ -179,17 +179,6 @@ void main() {
       expect(result.detected, 'ORANGE_CIV');
       expect(result.providers.length, 2);
     });
-
-    test('sans numéro : POST sans corps', () async {
-      when(
-        () => mockDio.post(_providersPath),
-      ).thenAnswer((_) async => _ok(catalogJson, _providersPath));
-
-      final result = await datasource.providers();
-
-      expect(result.country, 'CI');
-      verify(() => mockDio.post(_providersPath)).called(1);
-    });
   });
 
   group('activate avec réseaux', () {
@@ -210,31 +199,6 @@ void main() {
       );
 
       expect(result.status, MobileMoneyAccountStatus.active);
-    });
-  });
-
-  group('updateProviders', () {
-    test('PUT /payments/mobile-money/account/providers', () async {
-      when(
-        () => mockDio.put(
-          '$_path/providers',
-          data: {
-            'providers': ['WAVE_CIV'],
-          },
-        ),
-      ).thenAnswer((_) async => _ok(accountJson, '$_path/providers'));
-
-      final result = await datasource.updateProviders(['WAVE_CIV']);
-
-      expect(result.status, MobileMoneyAccountStatus.active);
-      verify(
-        () => mockDio.put(
-          '$_path/providers',
-          data: {
-            'providers': ['WAVE_CIV'],
-          },
-        ),
-      ).called(1);
     });
   });
 

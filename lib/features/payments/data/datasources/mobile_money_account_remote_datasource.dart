@@ -16,16 +16,15 @@ class MobileMoneyAccountRemoteDatasource {
     return MobileMoneyAccount.fromJson(response.data as Map<String, dynamic>);
   }
 
-  /// Réseaux utilisables pour le versement sur [phoneNumber] (sinon sur le
-  /// numéro déjà enregistré côté back). POST : le numéro voyage dans le
-  /// corps, jamais dans l'URL.
-  Future<MobileMoneyProviderCatalog> providers({String? phoneNumber}) async {
-    final response = phoneNumber != null
-        ? await _client.dio.post(
-            '/payments/mobile-money/providers',
-            data: {'phoneNumber': phoneNumber},
-          )
-        : await _client.dio.post('/payments/mobile-money/providers');
+  /// Réseaux utilisables pour le versement sur [phoneNumber]. POST : le
+  /// numéro voyage dans le corps, jamais dans l'URL.
+  Future<MobileMoneyProviderCatalog> providers({
+    required String phoneNumber,
+  }) async {
+    final response = await _client.dio.post(
+      '/payments/mobile-money/providers',
+      data: {'phoneNumber': phoneNumber},
+    );
     return MobileMoneyProviderCatalog.fromJson(
       response.data as Map<String, dynamic>,
     );
@@ -46,15 +45,6 @@ class MobileMoneyAccountRemoteDatasource {
     final response = body.isEmpty
         ? await _client.dio.post('/payments/mobile-money/account')
         : await _client.dio.post('/payments/mobile-money/account', data: body);
-    return MobileMoneyAccount.fromJson(response.data as Map<String, dynamic>);
-  }
-
-  /// Remplace les réseaux acceptés du compte actif, sans ressaisir le numéro.
-  Future<MobileMoneyAccount> updateProviders(List<String> providers) async {
-    final response = await _client.dio.put(
-      '/payments/mobile-money/account/providers',
-      data: {'providers': providers},
-    );
     return MobileMoneyAccount.fromJson(response.data as Map<String, dynamic>);
   }
 

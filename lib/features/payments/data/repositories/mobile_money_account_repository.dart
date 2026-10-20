@@ -5,8 +5,8 @@ import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:dony/features/payments/data/models/mobile_money_payout_account.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 
-/// Façade sur [MobileMoneyAccountRemoteDatasource] : ancien contrat (un seul
-/// compte) en 1:1, plus la liste des comptes avec repli sur l'ancien contrat
+/// Façade sur [MobileMoneyAccountRemoteDatasource] : comptes de versement
+/// (un par code opérateur), avec repli sur l'ancien contrat (un seul compte)
 /// quand le back n'a pas encore `/accounts`.
 class MobileMoneyAccountRepository {
   MobileMoneyAccountRepository(this._datasource);
@@ -18,33 +18,6 @@ class MobileMoneyAccountRepository {
 
   /// Identifiant de la ligne unique reconstruite depuis l'ancien contrat.
   static const legacyAccountId = 'legacy';
-
-  Future<MobileMoneyAccount> get() => _datasource.get();
-
-  /// Voir [MobileMoneyAccountRemoteDatasource.providers] pour [phoneNumber].
-  /// Le repli sans argument (plutôt que `phoneNumber: null`) évite d'envoyer
-  /// un named argument explicite au datasource quand il n'y a rien à
-  /// transmettre.
-  Future<MobileMoneyProviderCatalog> providers({String? phoneNumber}) =>
-      phoneNumber != null
-      ? _datasource.providers(phoneNumber: phoneNumber)
-      : _datasource.providers();
-
-  /// Voir [MobileMoneyAccountRemoteDatasource.activate]. [providers] est
-  /// toujours transmis (vide par défaut) : le datasource décide seul de ce
-  /// qui rentre dans le corps de la requête.
-  Future<MobileMoneyAccount> activate({
-    String? phoneNumber,
-    List<String> providers = const [],
-  }) => _datasource.activate(phoneNumber: phoneNumber, providers: providers);
-
-  /// Voir [MobileMoneyAccountRemoteDatasource.updateProviders].
-  Future<MobileMoneyAccount> updateProviders(List<String> providers) =>
-      _datasource.updateProviders(providers);
-
-  Future<MobileMoneyAccount> disable() => _datasource.disable();
-
-  // --- Plusieurs comptes de versement ---
 
   /// Comptes de versement. Sur un back sans `/accounts` (404), lit l'ancien
   /// contrat : au plus une ligne `legacy`, [MobileMoneyPayoutAccounts.legacy]
@@ -127,5 +100,5 @@ class MobileMoneyAccountRepository {
 
   /// Réseaux utilisables sur [e164] pour un nouveau compte.
   Future<MobileMoneyProviderCatalog> payoutProviders(String e164) =>
-      providers(phoneNumber: e164);
+      _datasource.providers(phoneNumber: e164);
 }
