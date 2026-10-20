@@ -2,7 +2,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/data/models/mobile_money_countries.dart';
 import 'package:dony/features/payments/data/models/mobile_money_payout_account.dart';
-import 'package:dony/features/payments/presentation/widgets/payout_account_label.dart';
 import 'package:dony/features/payments/presentation/widgets/payout_account_sheets.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -310,36 +309,6 @@ void main() {
       expect(groupPayoutNumber('ZZ', '+2250748840856'), '+2250748840856');
       expect(groupPayoutNumber('CI', '+225'), '+225');
       expect(groupPayoutNumber('CI', '+225123'), '+225 123');
-    });
-
-    test('payoutAccountLabel : marque et pays seulement en doublon', () {
-      const sn = MobileMoneyPayoutAccount(
-        id: 'a3',
-        provider: 'ORANGE_SEN',
-        providerLabel: 'Orange Money',
-        brand: 'ORANGE',
-        country: 'SN',
-        currency: 'XOF',
-        msisdnMasked: '',
-      );
-      const mtn = MobileMoneyPayoutAccount(
-        id: 'a2',
-        provider: 'MTN_MOMO_CIV',
-        providerLabel: 'MTN MoMo',
-        brand: 'MTN',
-        country: 'CI',
-        currency: 'XOF',
-        msisdnMasked: '',
-      );
-      expect(
-        payoutAccountLabel(_account, const [_account, mtn]),
-        'Orange Money',
-      );
-      expect(payoutAccountLabel(_account, const [_account, sn]), 'Orange CI');
-      expect(payoutAccountLabel(sn, const [_account, sn]), 'Orange SN');
-      expect(payoutAccountLabel(mtn, const [_account, sn, mtn]), 'MTN MoMo');
-      expect(brandDisplayName('MTN'), 'MTN');
-      expect(brandDisplayName('moov'), 'Moov');
     });
   });
 }

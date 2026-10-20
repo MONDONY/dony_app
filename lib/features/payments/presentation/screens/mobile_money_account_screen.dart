@@ -6,7 +6,7 @@ import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_payout_account.dart';
-import 'package:dony/features/payments/presentation/widgets/payout_account_label.dart';
+import 'package:dony/features/payments/data/payout_account_label.dart';
 import 'package:dony/features/payments/presentation/widgets/payout_account_sheets.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
