@@ -1,5 +1,6 @@
 import 'package:dony/core/pricing/commission_calculator.dart';
 import 'package:dony/core/pricing/commission_grid_store.dart';
+import 'package:dony/core/pricing/commission_rate.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -190,6 +191,42 @@ void main() {
       expect(empty.next, isNull);
     });
 
+    test('lit legacyRate quand il est présent et valide', () {
+      final config = CommissionGridConfig.fromJson({
+        'current': gridJson('a'),
+        'next': null,
+        'legacyRate': 0.05,
+      });
+      expect(config.legacyRate, 0.05);
+      expect(
+        CommissionGridConfig.fromJson({
+          'current': null,
+          'legacyRate': 0,
+        }).legacyRate,
+        0.0,
+      );
+    });
+
+    test('legacyRate absent (back sans le champ) : null', () {
+      final config = CommissionGridConfig.fromJson({
+        'current': gridJson('a'),
+        'next': null,
+      });
+      expect(config.legacyRate, isNull);
+      expect(config.current?.id, 'a');
+    });
+
+    test('legacyRate invalide : ignoré sans casser la grille', () {
+      for (final raw in <Object?>[1, 1.5, -0.01, '0.05', true]) {
+        final config = CommissionGridConfig.fromJson({
+          'current': gridJson('a'),
+          'legacyRate': raw,
+        });
+        expect(config.legacyRate, isNull, reason: '$raw');
+        expect(config.current?.id, 'a');
+      }
+    });
+
     test('un JSON malformé lève une erreur que l\'appelant attrape', () {
       expect(
         () => CommissionGridConfig.fromJson({
@@ -197,6 +234,60 @@ void main() {
         }),
         throwsA(anyOf(isA<TypeError>(), isA<FormatException>())),
       );
+    });
+  });
+
+  group('applyCommissionGridConfig', () {
+    final grid = CommissionGrid(
+      id: 'g',
+      effectiveFrom: DateTime.utc(2026, 10),
+      tiers: const [CommissionTier(fromEur: 0, rate: 0.07)],
+      minimums: const {'EUR': 1.0},
+    );
+
+    setUp(resetDonyCommissionRate);
+    tearDown(resetDonyCommissionRate);
+
+    test('pose la grille et legacyRate comme taux des objets sans grille', () {
+      setDonyCommissionRate(0.07); // 1re tranche servie par commission-rate
+      applyCommissionGridConfig(
+        CommissionGridConfig(current: grid, legacyRate: 0.05),
+      );
+      expect(CommissionGridStore.byId('g'), same(grid));
+      expect(donyCommissionRate, 0.05);
+    });
+
+    test('legacyRate prime sur commission-rate arrivé après', () {
+      applyCommissionGridConfig(
+        CommissionGridConfig(current: grid, legacyRate: 0.05),
+      );
+      setDonyCommissionRate(0.07);
+      expect(donyCommissionRate, 0.05);
+    });
+
+    test('sans legacyRate, le taux de commission-rate reste', () {
+      setDonyCommissionRate(0.12);
+      applyCommissionGridConfig(CommissionGridConfig(current: grid));
+      expect(donyCommissionRate, 0.12);
+      // Et commission-rate arrivé après s'applique toujours.
+      setDonyCommissionRate(0.08);
+      expect(donyCommissionRate, 0.08);
+    });
+
+    test('un legacyRate hors [0,1[ ne remplace rien', () {
+      setDonyCommissionRate(0.12);
+      setLegacyCommissionRate(1);
+      setLegacyCommissionRate(-0.1);
+      setLegacyCommissionRate(double.nan);
+      setLegacyCommissionRate(null);
+      expect(donyCommissionRate, 0.12);
+      setDonyCommissionRate(0.08);
+      expect(donyCommissionRate, 0.08);
+    });
+
+    test('legacyRate à 0 est accepté', () {
+      setLegacyCommissionRate(0);
+      expect(donyCommissionRate, 0);
     });
   });
 }

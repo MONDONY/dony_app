@@ -1,4 +1,5 @@
 import 'package:dony/core/pricing/commission_calculator.dart';
+import 'package:dony/core/pricing/commission_rate.dart';
 import 'package:flutter/foundation.dart';
 
 /// Réponse de `GET /config/commission-grid` : la grille en vigueur et la
@@ -7,13 +8,19 @@ import 'package:flutter/foundation.dart';
 /// `current` vaut aussi `null` avant la toute première grille : l'app garde
 /// alors le taux unique historique.
 class CommissionGridConfig {
-  const CommissionGridConfig({this.current, this.next});
+  const CommissionGridConfig({this.current, this.next, this.legacyRate});
 
   /// Aucune grille connue : le comportement historique (taux unique) reste.
   static const none = CommissionGridConfig();
 
   final CommissionGrid? current;
   final CommissionGrid? next;
+
+  /// Taux unique des objets SANS grille (offres d'avant les paliers), envoyé
+  /// par le back récent. `null` quand le back ne l'envoie pas encore ou que
+  /// la valeur est hors [0,1[ : l'app garde le taux de
+  /// `/config/commission-rate`.
+  final double? legacyRate;
 
   /// Lève une erreur de type ou de format si le JSON est malformé : l'appelant
   /// (`main.dart`, [CommissionGridStore.ensure]) l'attrape et retombe sur
@@ -22,11 +29,25 @@ class CommissionGridConfig {
     CommissionGrid? read(Object? raw) => raw == null
         ? null
         : CommissionGrid.fromJson(Map<String, dynamic>.from(raw as Map));
+    final legacy = json['legacyRate'];
     return CommissionGridConfig(
       current: read(json['current']),
       next: read(json['next']),
+      // Champ optionnel : absent ou invalide, ignoré sans casser la grille.
+      legacyRate: legacy is num && legacy >= 0 && legacy < 1
+          ? legacy.toDouble()
+          : null,
     );
   }
+}
+
+/// Applique la réponse de `GET /config/commission-grid` au démarrage : les
+/// grilles dans [CommissionGridStore], et `legacyRate` (quand il est présent
+/// et valide) comme taux des objets sans grille, prioritaire sur
+/// `/config/commission-rate` quel que soit l'ordre d'arrivée.
+void applyCommissionGridConfig(CommissionGridConfig config) {
+  CommissionGridStore.setConfig(config);
+  setLegacyCommissionRate(config.legacyRate);
 }
 
 /// Mémoire des grilles de commission connues de l'app : celles en vigueur

@@ -273,7 +273,7 @@ Future<void> _loadDonyCommissionRate() async {
 
 Future<void> _loadCommissionGrid() async {
   try {
-    CommissionGridStore.setConfig(
+    applyCommissionGridConfig(
       await getIt<IConfigRepository>().getCommissionGrid(),
     );
   } catch (_) {
