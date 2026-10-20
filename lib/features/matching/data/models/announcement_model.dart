@@ -275,6 +275,12 @@ class AnnouncementModel {
   /// lecteur ou sur un back antérieur, la devise reste alors figée.
   final bool? currencyEditable;
 
+  /// Fuseau IANA de la ville de départ (ex. `Europe/Paris`, yadony-back
+  /// #627, PROD-1R). Sert à afficher [handoverDeadline] (instant UTC) à
+  /// l'heure de la ville, comme le départ. `null` sur un back antérieur :
+  /// l'app retombe alors sur l'heure de l'appareil.
+  final String? departureTimezone;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -330,6 +336,7 @@ class AnnouncementModel {
     this.tripLegCount,
     this.seriesId,
     this.currencyEditable,
+    this.departureTimezone,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
@@ -350,6 +357,15 @@ class AnnouncementModel {
 
   /// Trajet complet : il n'accepte plus de demande, mais reste consultable.
   bool get isFull => status == 'FULL';
+
+  /// Dépôt clos : la date limite (instant UTC) est passée, le back refuserait
+  /// toute demande en 409 `handover-deadline-passed` (PROD-1R).
+  bool isHandoverClosedAt(DateTime now) {
+    final deadline = handoverDeadline;
+    return deadline != null && deadline.toUtc().isBefore(now.toUtc());
+  }
+
+  bool get isHandoverClosed => isHandoverClosedAt(DateTime.now());
 
   /// Urgence effective : la valeur backend prime ; repli sur le calcul local
   /// depuis [departureDate] uniquement si absente (ancien backend).

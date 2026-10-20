@@ -11035,5 +11035,9 @@
   "demandesTripFilterFallback": "This trip",
   "demandesTripFilterClear": "Show all requests",
   "demandesTripEmptyPendingTitle": "No requests to review for this trip",
-  "demandesTripEmptyDescription": "Requests received for this trip will show up here."
+  "demandesTripEmptyDescription": "Requests received for this trip will show up here.",
+  "tripTimeInCity": "{time}, {city} time",
+  "tripTimeInCityElided": "{time}, {city} time",
+  "listingHandoverClosedBadge": "Drop-off closed",
+  "listingHandoverClosedMessage": "The parcel drop-off deadline has passed: this trip no longer accepts requests."
 }

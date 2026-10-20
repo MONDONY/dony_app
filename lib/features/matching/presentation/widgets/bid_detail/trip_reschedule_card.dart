@@ -69,7 +69,11 @@ class TripRescheduleCard extends StatelessWidget {
     final pending = r.decisionPending;
     final deadline = r.decisionDeadline == null
         ? ''
-        : DateFormat.MMMEd(l.localeName).add_Hm().format(r.decisionDeadline!);
+        // Envoyée en UTC depuis yadony-back #627 (PROD-1R) : heure de
+        // l'appareil, le colis ne porte pas le fuseau du trajet.
+        : DateFormat.MMMEd(
+            l.localeName,
+          ).add_Hm().format(r.decisionDeadline!.toLocal());
     return DonyCard(
       key: const Key('trip-reschedule-card'),
       child: Column(

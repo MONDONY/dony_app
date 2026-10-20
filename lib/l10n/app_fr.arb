@@ -22348,5 +22348,13 @@
   "demandesTripEmptyPendingTitle": "Aucune demande à traiter pour ce trajet",
   "@demandesTripEmptyPendingTitle": {"description": "État vide de l'onglet « À traiter » filtré sur un trajet (demandes_screen.dart)."},
   "demandesTripEmptyDescription": "Les demandes reçues sur ce trajet apparaîtront ici.",
-  "@demandesTripEmptyDescription": {"description": "Description de l'état vide filtré sur un trajet (demandes_screen.dart)."}
+  "@demandesTripEmptyDescription": {"description": "Description de l'état vide filtré sur un trajet (demandes_screen.dart)."},
+  "tripTimeInCity": "{time}, heure de {city}",
+  "@tripTimeInCity": {"description": "Heure d'une date limite dans le fuseau du trajet, quand il diffère de celui du téléphone (PROD-1R). {city} = ville de départ, commençant par une consonne.", "placeholders": {"time": {"type": "String"}, "city": {"type": "String"}}},
+  "tripTimeInCityElided": "{time}, heure d'{city}",
+  "@tripTimeInCityElided": {"description": "Comme tripTimeInCity, pour une ville commençant par une voyelle (élision : « heure d'Abidjan »).", "placeholders": {"time": {"type": "String"}, "city": {"type": "String"}}},
+  "listingHandoverClosedBadge": "Dépôt clos",
+  "@listingHandoverClosedBadge": {"description": "Badge de la fiche trajet quand la date limite de dépôt des colis est passée (PROD-1R)."},
+  "listingHandoverClosedMessage": "La date limite de dépôt des colis est passée : ce trajet n'accepte plus de demande.",
+  "@listingHandoverClosedMessage": {"description": "Message sous le badge « Dépôt clos » de la fiche trajet, à la place des boutons de demande (PROD-1R)."}
 }

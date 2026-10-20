@@ -35759,6 +35759,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les demandes reçues sur ce trajet apparaîtront ici.'**
   String get demandesTripEmptyDescription;
+
+  /// Heure d'une date limite dans le fuseau du trajet, quand il diffère de celui du téléphone (PROD-1R). {city} = ville de départ, commençant par une consonne.
+  ///
+  /// In fr, this message translates to:
+  /// **'{time}, heure de {city}'**
+  String tripTimeInCity(String time, String city);
+
+  /// Comme tripTimeInCity, pour une ville commençant par une voyelle (élision : « heure d'Abidjan »).
+  ///
+  /// In fr, this message translates to:
+  /// **'{time}, heure d\'{city}'**
+  String tripTimeInCityElided(String time, String city);
+
+  /// Badge de la fiche trajet quand la date limite de dépôt des colis est passée (PROD-1R).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt clos'**
+  String get listingHandoverClosedBadge;
+
+  /// Message sous le badge « Dépôt clos » de la fiche trajet, à la place des boutons de demande (PROD-1R).
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt des colis est passée : ce trajet n\'accepte plus de demande.'**
+  String get listingHandoverClosedMessage;
 }
 
 class _AppLocalizationsDelegate

@@ -7661,6 +7661,14 @@ final allMessages = <String, String Function(AppLocalizations)>{
   'demandesTripFilterClear': (l) => l.demandesTripFilterClear,
   'demandesTripEmptyPendingTitle': (l) => l.demandesTripEmptyPendingTitle,
   'demandesTripEmptyDescription': (l) => l.demandesTripEmptyDescription,
+  'tripTimeInCity': (l) =>
+      l.tripTimeInCity(placeholderMarker('time'), placeholderMarker('city')),
+  'tripTimeInCityElided': (l) => l.tripTimeInCityElided(
+    placeholderMarker('time'),
+    placeholderMarker('city'),
+  ),
+  'listingHandoverClosedBadge': (l) => l.listingHandoverClosedBadge,
+  'listingHandoverClosedMessage': (l) => l.listingHandoverClosedMessage,
 };
 
 /// Paramètres texte (`String` ou non typés) de chaque message qui
@@ -8276,4 +8284,6 @@ const textParameters = <String, List<String>>{
   'mobileMoneyPayoutRemoveTitle': ['operator'],
   'mobileMoneyPayoutRemoveBody': ['operator'],
   'demandesTripFilterLabel': ['route'],
+  'tripTimeInCity': ['time', 'city'],
+  'tripTimeInCityElided': ['time', 'city'],
 };

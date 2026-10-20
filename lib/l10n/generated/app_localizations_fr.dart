@@ -22191,4 +22191,21 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get demandesTripEmptyDescription =>
       'Les demandes reçues sur ce trajet apparaîtront ici.';
+
+  @override
+  String tripTimeInCity(String time, String city) {
+    return '$time, heure de $city';
+  }
+
+  @override
+  String tripTimeInCityElided(String time, String city) {
+    return '$time, heure d\'$city';
+  }
+
+  @override
+  String get listingHandoverClosedBadge => 'Dépôt clos';
+
+  @override
+  String get listingHandoverClosedMessage =>
+      'La date limite de dépôt des colis est passée : ce trajet n\'accepte plus de demande.';
 }

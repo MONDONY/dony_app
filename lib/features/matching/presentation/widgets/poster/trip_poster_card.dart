@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/poster/poster_parts.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/utils/trip_local_time.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -343,7 +344,11 @@ class TripPosterCard extends StatelessWidget {
   /// reste deux, plus larges, plutôt qu'une case vide.
   Widget _tiles(AppLocalizations l) {
     final a = announcement;
-    final deadline = a.handoverDeadline;
+    // Heure murale de la ville de départ, comme le départ (PROD-1R).
+    final deadlineInstant = a.handoverDeadline;
+    final deadline = deadlineInstant == null
+        ? null
+        : tripWallTime(deadlineInstant, a.departureTimezone).wallClock;
     final locale = l.localeName;
     final total = a.totalKg;
     final tiles = <Widget>[

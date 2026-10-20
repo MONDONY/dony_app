@@ -137,6 +137,7 @@ AnnouncementModel _buildAnnouncement({
   String status = 'ACTIVE',
   String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
+  String? departureTimezone,
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -173,6 +174,7 @@ AnnouncementModel _buildAnnouncement({
     createdAt: now,
     updatedAt: now,
     handoverDeadline: handoverDeadline,
+    departureTimezone: departureTimezone,
   );
 }
 
@@ -551,6 +553,80 @@ void main() {
     );
     expect(button.onPressed, isNull);
     expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
+  });
+
+  group('dépôt clos (PROD-1R)', () {
+    testWidgets('date limite passée → badge « Dépôt clos », demande et '
+        'proposition de prix désactivées', (tester) async {
+      final a = _buildAnnouncement(
+        negotiable: true,
+        departureTimezone: 'Europe/Paris',
+        handoverDeadline: DateTime.now().toUtc().subtract(
+          const Duration(hours: 1),
+        ),
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('handover-closed-footer')), findsOneWidget);
+      expect(find.byKey(const Key('handover-closed-badge')), findsOneWidget);
+      expect(find.text('Dépôt clos'), findsWidgets);
+      expect(
+        find.text(
+          'La date limite de dépôt des colis est passée : '
+          "ce trajet n'accepte plus de demande.",
+        ),
+        findsOneWidget,
+      );
+      final button = tester.widget<DonyButton>(
+        find.byKey(const Key('make-request-btn-disabled')),
+      );
+      expect(button.onPressed, isNull);
+      expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
+    });
+
+    testWidgets('date limite à venir → « Faire une demande » actif', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(
+        negotiable: true,
+        departureTimezone: 'Europe/Paris',
+        handoverDeadline: DateTime.now().toUtc().add(const Duration(days: 2)),
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('handover-closed-footer')), findsNothing);
+      final button = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Faire une demande'),
+      );
+      expect(button.onPressed, isNotNull);
+    });
+  });
+
+  testWidgets('date limite affichée à l\'heure de la ville de départ', (
+    tester,
+  ) async {
+    // 18:30Z en été = 20:30 à Paris, quel que soit le fuseau de la machine.
+    final year = DateTime.now().year + 1;
+    final a = _buildAnnouncement(
+      departureTimezone: 'Europe/Paris',
+      departureDate: DateTime(year, 7, 21),
+      handoverDeadline: DateTime.utc(year, 7, 20, 18, 30),
+    );
+    await tester.pumpWidget(_harness(announcement: a));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('trip-deadline-stat')),
+        matching: find.textContaining('20:30'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('affiche le badge KYC quand le voyageur est vérifié', (

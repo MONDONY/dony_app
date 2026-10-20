@@ -7,6 +7,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/utils/map_launcher.dart';
+import 'package:dony/core/utils/trip_local_time.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -320,6 +321,12 @@ Future<TravelerSheetExit?> showTravelerAnnouncementSheet(
             ),
           );
         }
+        // Date limite de dépôt passée : le back refuserait la demande en 409
+        // `handover-deadline-passed`. On le dit au lieu d'ouvrir un
+        // formulaire voué au refus (PROD-1R).
+        if (announcement.isHandoverClosed) {
+          return const _HandoverClosedFooter();
+        }
         Future<void> continueCreateBid(
           BuildContext rootCtx, {
           required bool negotiation,
@@ -490,6 +497,64 @@ void _openExistingTripRequest(
     case ExistingTripNegotiation(:final bidId):
       DonySnackbar.show(context, message: l.listingAlreadyNegotiatingMessage);
       unawaited(context.push('/bids/$bidId/negotiation'));
+  }
+}
+
+/// Pied de la feuille quand la date limite de dépôt est passée : badge
+/// « Dépôt clos », explication et bouton de demande désactivé (PROD-1R).
+class _HandoverClosedFooter extends StatelessWidget {
+  const _HandoverClosedFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return Column(
+      key: const Key('handover-closed-footer'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          key: const Key('handover-closed-badge'),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.sm,
+            vertical: DonySpacing.xxs,
+          ),
+          decoration: BoxDecoration(
+            color: cs.errorContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DonyIcon('calendar', size: 14, color: cs.onErrorContainer),
+              const SizedBox(width: DonySpacing.xxs),
+              Text(
+                l.listingHandoverClosedBadge,
+                style: tt.labelMedium?.copyWith(
+                  color: cs.onErrorContainer,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+          child: Text(
+            l.listingHandoverClosedMessage,
+            textAlign: TextAlign.center,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+        DonyButton(
+          key: const Key('make-request-btn-disabled'),
+          label: l.listingMakeRequestButton,
+          iconAsset: 'send',
+          onPressed: null,
+        ),
+      ],
+    );
   }
 }
 
@@ -820,7 +885,12 @@ class _StatCardsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final deadline = announcement.handoverDeadline?.toLocal();
+    // Heure de la ville de départ, comme le départ (PROD-1R).
+    final deadlineInstant = announcement.handoverDeadline;
+    final deadline = deadlineInstant == null
+        ? null
+        : tripWallTime(deadlineInstant, announcement.departureTimezone);
+    final handoverClosed = announcement.isHandoverClosed;
     // Prix frais de service inclus, comme la carte de recherche
     // (YADONY-FLUTTER-PROD-1J) : aucune mention séparée des frais.
     // IntrinsicHeight : égalise la hauteur des deux cartes sans stretch
@@ -843,11 +913,18 @@ class _StatCardsRow extends StatelessWidget {
               child: _StatCard(
                 // Jour et heure (Sentry FLUTTER-MY), sur deux lignes : en une
                 // seule, la demi-largeur coupait l'heure (FLUTTER-Q2).
-                value: DateFormat.MMMEd(l.localeName).format(deadline),
+                key: const Key('trip-deadline-stat'),
+                value: DateFormat.MMMEd(
+                  l.localeName,
+                ).format(deadline.wallClock),
                 secondary: l.tripPosterTileDeadlineTime(
-                  DateFormat.jm(l.localeName).format(deadline),
+                  formatTripTime(l, deadline, city: announcement.departureCity),
                 ),
                 label: l.listingDepositDeadlineLabel,
+                valueColor: handoverClosed
+                    ? Theme.of(context).colorScheme.error
+                    : null,
+                subtitle: handoverClosed ? l.listingHandoverClosedBadge : null,
               ),
             ),
           ],
@@ -859,6 +936,7 @@ class _StatCardsRow extends StatelessWidget {
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
+    super.key,
     required this.value,
     required this.label,
     this.valueColor,
@@ -907,7 +985,10 @@ class _StatCard extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 color: valueColor ?? cs.onSurface,
               ),
-              maxLines: 1,
+              textAlign: TextAlign.center,
+              // Deux lignes : « à 20:30, heure de Paris » quand le fuseau du
+              // trajet diffère de celui du téléphone (PROD-1R).
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           const SizedBox(height: DonySpacing.xxs),
